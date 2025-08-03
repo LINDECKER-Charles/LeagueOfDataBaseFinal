@@ -1,0 +1,30 @@
+@font-face {
+  font-family: 'Beaufort';
+  src: url('../assets/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Spiegel';
+  src: url('../assets/fonts/Spiegel-TTF/Spiegel_TT_Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+select {
+  /* Cache la flèche par défaut sur la majorité des navigateurs */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Optionnel : padding supplémentaire pour équilibrer visuellement */
+  background-position: right 1rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+}
