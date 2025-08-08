@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@source not "../../public";
+
+/* @font-face (mets les bonnes paths selon ton projet) */
+@font-face {
+  font-family: 'Beaufort';
+  src: url('../fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf') format('truetype');
+  font-weight: 400; font-style: normal;
+}
+@font-face {
+  font-family: 'Beaufort';
+  src: url('../fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf') format('truetype');
+  font-weight: 700; font-style: normal;
+}
+@font-face {
+  font-family: 'Spiegel';
+  src: url('../fonts/Spiegel-TTF/Spiegel_TT_Regular.ttf') format('truetype');
+  font-weight: 400; font-style: normal;
+}
+
+
+select {
+  /* Cache la flèche par défaut sur la majorité des navigateurs */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Optionnel : padding supplémentaire pour équilibrer visuellement */
+  background-position: right 1rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+}
+
+@theme {
+  /* Colors */
+  --color-test-500: #c9ad78;
+  --color-gold: #c9ad78;
+  --color-black: #111111;
+  --color-blue-200: #00a0ba;
+  --color-blue-850: #162033;
+  --color-blue-950: #0a1428;
+  --color-white: #FAFAFA;
+  --color-grey: #292929;
+  --color-grey-700: #444444;
+
+  /* Fonts */
+  --font-beaufort: "Beaufort", serif;
+  --font-spiegel: "Spiegel", sans-serif;
+}
