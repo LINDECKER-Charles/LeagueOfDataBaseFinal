@@ -36,9 +36,11 @@ select {
   --color-test-500: #c9ad78;
   --color-gold: #c9ad78;
   --color-black: #111111;
+
   --color-blue-200: #00a0ba;
   --color-blue-850: #162033;
   --color-blue-950: #0a1428;
+
   --color-white: #FAFAFA;
   --color-grey: #292929;
   --color-grey-700: #444444;
@@ -46,4 +48,41 @@ select {
   /* Fonts */
   --font-beaufort: "Beaufort", serif;
   --font-spiegel: "Spiegel", sans-serif;
+}
+
+@utility nav-link {
+  @apply transition-colors duration-300 hover:text-blue-200
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-blue-200/40
+         motion-reduce:transition-none;
+}
+
+/* Glow doré au survol (arbitrary value ok) */
+.group:hover .brand-logo,
+.group:hover .brand-title {
+  filter: drop-shadow(0 0 14px rgba(201, 173, 120, .35));
+}
+
+/* Le logo et le titre réagissent au survol du parent .group */
+@utility brand-logo {
+  @apply transition-all duration-300 transform-gpu
+         group-hover:scale-110;
+}
+
+@utility brand-title {
+  @apply transition-all duration-300;
+}
+
+
+@layer components {
+  .nav-link {
+    @apply transition-colors duration-300 hover:text-blue-200
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-blue-200/40
+           motion-reduce:transition-none;
+  }
+
+  .brand-link {
+    @apply inline-block relative cursor-pointer select-none
+           transition-transform duration-300 hover:-translate-y-0.5
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200/40;
+  }
 }

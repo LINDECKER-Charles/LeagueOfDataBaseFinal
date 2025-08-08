@@ -1,0 +1,55 @@
+{# templates/partials/_toasts.html.twig #}
+<div id="toasts" class="fixed top-4 right-4 z-50 flex flex-col gap-3 pointer-events-none">
+  {% for type, messages in app.flashes %}
+    {% for message in messages %}
+      {% set bg =
+        type == 'success' ? 'bg-emerald-600/90' :
+        (type == 'error' ? 'bg-red-600/90' :
+        (type == 'warning' ? 'bg-amber-600/90' : 'bg-slate-700/90')) %}
+      {% set icon %}
+        {% if type == 'success' %}
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+        {% elseif type == 'warning' %}
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        {% elseif type == 'error' %}
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        {% else %}
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        {% endif %}
+      {% endset %}
+
+      <div class="pointer-events-auto w-80 rounded-xl p-4 text-white shadow-xl ring-1 ring-white/10 backdrop-blur-sm
+                  {{ bg }} transition duration-300 transform translate-x-4 opacity-0"
+           role="alert" data-toast>
+        <div class="flex items-start gap-3">
+          <div class="opacity-90">{{ icon|raw }}</div>
+          <div class="text-sm leading-5 flex-1">
+            {{ message|raw }}
+          </div>
+          <button type="button" class="ml-2 -m-1 inline-flex h-6 w-6 items-center justify-center rounded hover:bg-white/10 focus:outline-none"
+                  aria-label="Fermer" data-close>
+            <svg class="h-4 w-4 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+    {% endfor %}
+  {% endfor %}
+</div>
+
+<script>
+  (function () {
+    const els = document.querySelectorAll('[data-toast]');
+    els.forEach((el, i) => {
+      // apparition
+      setTimeout(() => { el.classList.remove('translate-x-4','opacity-0'); }, 40 + i*60);
+      // auto-dismiss
+      const timer = setTimeout(() => dismiss(el), 5000);
+      // close button
+      el.querySelector('[data-close]')?.addEventListener('click', () => { clearTimeout(timer); dismiss(el); });
+    });
+    function dismiss(el) {
+      el.classList.add('translate-x-4','opacity-0');
+      setTimeout(() => el.remove(), 220);
+    }
+  })();
+</script>
