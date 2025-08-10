@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Dto\ClientData;
 use App\Service\ClientManager;
 use App\Service\VersionManager;
 use App\Service\SummonerManager;
@@ -35,11 +36,7 @@ final class SummonerController extends AbstractController
         return $this->render('sumonner/liste.html.twig', [
             'summoners' => $summoners,
             'images'    => $images,
-            'versions' => $this->versionManager->getVersions(),
-            'languages' => $this->versionManager->getLanguages(),
-            'languageLabels' => $this->versionManager->getLanguageLabels(),
-            'currentLocale'  => $this->clientManager->getLangue(),
-            'session' => $this->clientManager->getOrHydratePreferences(),
+            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
         ]);
     }
 }

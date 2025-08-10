@@ -24,8 +24,9 @@
     </ul>
   </nav>
 
-  {% set selectedLocale  = app.session.get('_locale') ?? currentLocale ?? 'en_US' %}
-  {% set selectedVersion = app.session.get('dd_version') ?? (versions|default([])|first) %}
+  {# Pré-sélection depuis le DTO #}
+  {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
+  {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
 
   {# Formulaire sur 2 lignes #}
   <form action="{{ path('app_setup_save') }}" method="post" class="flex flex-col gap-2 text-sm w-full max-w-md">
@@ -36,7 +37,7 @@
       <label for="version" class="sr-only">Version</label>
       <select id="version" name="version"
               class="flex-1 px-3 py-2 rounded-lg bg-blue-950 text-white border border-grey-700">
-        {% for v in versions %}
+        {% for v in client.versions %}
           <option value="{{ v }}" {{ v == selectedVersion ? 'selected' : '' }}>{{ v }}</option>
         {% endfor %}
       </select>
@@ -44,9 +45,9 @@
       <label for="langue" class="sr-only">Langue</label>
       <select id="langue" name="langue"
               class="flex-1 px-3 py-2 rounded-lg bg-blue-950 text-white border border-grey-700">
-        {% for lang in languages %}
+        {% for lang in client.languages %}
           <option value="{{ lang }}" {{ lang == selectedLocale ? 'selected' : '' }}>
-            {{ languageLabels[lang] ?? lang }}
+            {{ client.languageLabels[lang] ?? lang }}
           </option>
         {% endfor %}
       </select>
