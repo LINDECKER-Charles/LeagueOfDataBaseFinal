@@ -77,3 +77,28 @@ jobs:
 
           # Pousser vers main
           git push origin HEAD:main 
+
+  deploy:
+    needs: test
+    if: success()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛡️ Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PROD_SSH_KEY }}
+
+      - name: 🔐 Add known_hosts
+        run: |
+          ssh-keyscan -H league-of-data-base.fr >> ~/.ssh/known_hosts
+
+      - name: 🚀 Deploy to production server
+        run: |
+          ssh root@league-of-data-base.fr "\
+            cd /var/www/leagueofdatabase/LeagueOfDataBaseFinal/app && \
+            git pull origin main && \
+            composer install && \
+            php bin/console cache:clear --env=prod && \
+          "
+
