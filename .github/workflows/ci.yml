@@ -2,8 +2,8 @@ name: CI Symfony
 
 on:
   push:
-    branches:
-      - main
+    branches: [ dev ]
+
 permissions:
   contents: write
 
@@ -23,39 +23,57 @@ jobs:
       - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
+          php-version: '8.3'
           coverage: none
-        
-      - name: Create .env file
-        run: |
-            echo "APP_ENV=test" > .env
+          extensions: sqlite3, pdo_sqlite   # 👈 nécessaire pour SQLite
 
-      - name: ⚙️ Create .env.test
+      - name: 🧩 Prepare .env files for test
         run: |
-          echo "APP_ENV=test" > .env.test
+          mkdir -p var
+          {
+            echo "APP_ENV=test"
+            echo "APP_DEBUG=1"
+            echo "APP_SECRET=dev-secret"
+            echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db"
+          } > .env
+          cp .env .env.test
 
       - name: 💾 Cache Composer
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.composer/cache
+          path: ~/.composer/cache
           key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-
-    
-      - name: 📦 Install Composer dependencies
-        run: | 
-            composer install --no-interaction --prefer-dist
 
-      - name:  Lint YAML, Twig and Container
+      - name: 📦 Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: 🔍 Lint YAML, Twig and Container
         run: |
           php bin/console lint:yaml config
           php bin/console lint:twig templates
           php bin/console lint:container
 
       - name: ✅ Run Tests
+        run: php bin/phpunit
+
+      - name: ⬆️ Merge the tested commit into main (if tests passed)
+        if: success() && github.ref == 'refs/heads/dev'
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            APP_ENV=test php bin/phpunit
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          git fetch --all --prune
 
+          # Se placer sur main à jour
+          git checkout main
+          git reset --hard origin/main
 
+          # Merger le COMMIT EXACT testé par cette exécution
+          git merge --no-ff --no-edit "${GITHUB_SHA}"
 
+          # Pousser vers main
+          git push origin HEAD:main
