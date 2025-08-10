@@ -27,11 +27,25 @@ doctrine:
         controller_resolver:
             auto_mapping: false
 
+when@dev:
+  doctrine:
+    dbal:
+      url: '%env(resolve:DATABASE_URL)%'
+    orm:
+      auto_generate_proxy_classes: true
+      mappings:
+        App:
+          type: attribute
+          dir: '%kernel.project_dir%/src/Entity'
+          prefix: 'App\Entity'
+          is_bundle: false
+
 when@test:
-    doctrine:
-        dbal:
-            # "TEST_TOKEN" is typically set by ParaTest
-            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+  doctrine:
+    dbal:
+      url: '%env(resolve:DATABASE_URL)%'
+    orm:
+      auto_generate_proxy_classes: true
 
 when@prod:
     doctrine:
