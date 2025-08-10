@@ -56,3 +56,24 @@ jobs:
 
       - name: ✅ Run Tests
         run: php bin/phpunit
+
+      - name: ⬆️ Merge the tested commit into main (if tests passed)
+        if: success() && github.ref == 'refs/heads/dev'
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch --all --prune
+
+          # Se placer sur main à jour
+          git checkout main
+          git reset --hard origin/main
+
+          # Merger le COMMIT EXACT testé par cette exécution
+          git merge --no-ff --no-edit "${GITHUB_SHA}"
+
+          # Pousser vers main
+          git push origin HEAD:main
