@@ -95,10 +95,13 @@ jobs:
 
       - name: 🚀 Deploy to production server
         run: |
-          ssh root@league-of-data-base.fr "\
-            cd /var/www/leagueofdatabase/LeagueOfDataBaseFinal/app && \
-            git pull origin main && \
-            composer install && \
-            php bin/console cache:clear --env=prod && \
-          "
+          ssh root@league-of-data-base.fr <<'EOSSH'
+            set -e
+            cd /var/www/leagueofdatabase/LeagueOfDataBaseFinal/app
+            git pull origin main
+            export APP_ENV=prod APP_DEBUG=0 COMPOSER_ALLOW_SUPERUSER=1
+            composer install --no-dev --optimize-autoloader --no-interaction
+            php bin/console cache:clear --env=prod
+          EOSSH
+
 
