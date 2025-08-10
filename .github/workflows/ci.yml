@@ -98,8 +98,11 @@ jobs:
           ssh root@league-of-data-base.fr <<'EOSSH'
             set -e
             cd /var/www/leagueofdatabase/LeagueOfDataBaseFinal/app
-            git pull origin main
-            composer install
+            git fetch --all --prune
+            git reset --hard origin/main
+            export APP_ENV=prod APP_DEBUG=0 COMPOSER_ALLOW_SUPERUSER=1
+            composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
           EOSSH
+
 
 
