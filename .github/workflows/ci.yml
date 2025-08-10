@@ -1,0 +1,61 @@
+name: CI Symfony
+
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          coverage: none
+        
+      - name: Create .env file
+        run: |
+            echo "APP_ENV=test" > .env
+
+      - name: ⚙️ Create .env.test
+        run: |
+          echo "APP_ENV=test" > .env.test
+
+      - name: 💾 Cache Composer
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.composer/cache
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-php-
+    
+      - name: 📦 Install Composer dependencies
+        run: | 
+            composer install --no-interaction --prefer-dist
+
+      - name:  Lint YAML, Twig and Container
+        run: |
+          php bin/console lint:yaml config
+          php bin/console lint:twig templates
+          php bin/console lint:container
+
+      - name: ✅ Run Tests
+        run: |
+            APP_ENV=test php bin/phpunit
+
+
+
+
