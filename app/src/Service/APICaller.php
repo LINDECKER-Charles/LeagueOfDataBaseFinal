@@ -24,7 +24,7 @@ final class APICaller
     {
         try {
             $response = $this->http->request('GET', $url);
-            return $response->getContent(); // lève si non-2xx
+            return $response->getContent();
         } catch (\Throwable $e) {
             throw new \RuntimeException('APICaller: échec requête GET: '.$e->getMessage(), 0, $e);
         }

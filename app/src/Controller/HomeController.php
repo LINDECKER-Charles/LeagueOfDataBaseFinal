@@ -38,6 +38,14 @@ class HomeController extends AbstractController
         ]);
     }
 
+    #[Route('/working-progess', name: 'app_working')]
+    public function working(): Response
+    {
+        return $this->render('home/working.html.twig', [
+            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
+        ]);
+    }
+
     /**
      * Page de configuration initiale (version/langue).
      *
