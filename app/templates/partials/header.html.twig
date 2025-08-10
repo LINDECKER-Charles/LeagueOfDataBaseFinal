@@ -1,0 +1,69 @@
+{# templates/_partials/header_with_selector.html.twig #}
+<header class="bg-black font-beaufort text-white flex flex-row justify-between w-full items-center py-6 px-6 gap-6">
+  <a href="{{ url('app_setup') }}" class="brand-link group">
+    <div class="flex flex-row gap-2 items-center brand-logo">
+      {# Logo League of Legends — inchangé #}
+      <svg id="FINAL" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" class="w-10 h-10">
+        <defs><style>.cls-1{fill:#fff;}</style></defs>
+        <g>
+          <path class="cls-1" d="M438.14,168A235.31,235.31,0,0,1,580.08,552.7h79.45a299,299,0,0,0,41.4-152.25c0-153.18-114.63-279.58-262.79-298.11Z"/>
+          <path class="cls-1" d="M208.88,631.86V537.33a235.17,235.17,0,0,1,0-273.77V169a300.44,300.44,0,0,0,0,462.83Z"/>
+        </g>
+        <polygon class="cls-1" points="393.14 75 220.98 75 253.88 142.3 253.88 658.33 221.32 724.89 611.49 724.89 647.14 597.7 393.14 597.7 393.14 75"/>
+      </svg>
+      <h1 class="text-2xl brand-title nav-link">League Of Data Base</h1>
+    </div>
+  </a>
+
+  <nav class="flex-1 flex flex-row items-center justify-center">
+    <ul class="flex flex-row justify-center gap-8 text-xl">
+      <li><a href="#" class="nav-link">Champion</a></li>
+      <li><a href="#" class="nav-link">Object</a></li>
+      <li><a href="#" class="nav-link">Runes</a></li>
+      <li><a href="{{ url('app_summoners_index') }}" class="nav-link">Summoner</a></li>
+    </ul>
+  </nav>
+
+  {% set selectedLocale  = app.session.get('_locale') ?? currentLocale ?? 'en_US' %}
+  {% set selectedVersion = app.session.get('dd_version') ?? (versions|default([])|first) %}
+
+  {# Formulaire sur 2 lignes #}
+  <form action="{{ path('app_setup_save') }}" method="post" class="flex flex-col gap-2 text-sm w-full max-w-md">
+    <input type="hidden" name="_token" value="{{ csrf_token('setup_form') }}">
+
+    {# Ligne 1 : selects #}
+    <div class="flex items-center gap-2">
+      <label for="version" class="sr-only">Version</label>
+      <select id="version" name="version"
+              class="flex-1 px-3 py-2 rounded-lg bg-blue-950 text-white border border-grey-700">
+        {% for v in versions %}
+          <option value="{{ v }}" {{ v == selectedVersion ? 'selected' : '' }}>{{ v }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="langue" class="sr-only">Langue</label>
+      <select id="langue" name="langue"
+              class="flex-1 px-3 py-2 rounded-lg bg-blue-950 text-white border border-grey-700">
+        {% for lang in languages %}
+          <option value="{{ lang }}" {{ lang == selectedLocale ? 'selected' : '' }}>
+            {{ languageLabels[lang] ?? lang }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {# Ligne 2 : checkbox + bouton #}
+    <div class="flex items-center gap-3">
+      <label for="remember" class="flex items-center gap-2 cursor-pointer select-none">
+        <input type="checkbox" id="remember" name="remember"
+               class="w-4 h-4 rounded border-grey-700 bg-blue-950">
+        <span class="opacity-70">Se souvenir</span>
+      </label>
+
+      <button type="submit"
+              class="ml-auto px-4 py-2 rounded-lg bg-blue-200 text-blue-950 font-semibold border border-grey-700 hover:bg-blue-100 hover:cursor-pointer transition-colors">
+        Valider
+      </button>
+    </div>
+  </form>
+</header>

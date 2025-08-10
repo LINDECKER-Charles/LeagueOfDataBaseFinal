@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Service\VersionManager;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -16,6 +17,7 @@ final class ClientManager
         private readonly RequestStack $requestStack,
         private readonly string $appSecret = '', // injecte %kernel.secret% via services.yaml si tu veux signer
         private readonly string $defaultLocale = 'en_US', // fallback si pas d'entête
+        private readonly VersionManager $versionManager,
     ) {}
 
     /**
@@ -264,6 +266,7 @@ final class ClientManager
     public function getOrHydratePreferences(): array
     {
         $sess = $this->requestStack->getSession();
+
         if (!$sess) {
             return ['locale' => null, 'version' => null];
         }
@@ -290,5 +293,10 @@ final class ClientManager
         ];
     }
 
-    
+    public function getSession(): array{
+        $val = $this->getOrHydratePreferences();
+        $lang    = $val['locale']  ?? $this->getLangue(); 
+        $version = $val['version'] ?? $this->versionManager->getVersions()[0];
+        return ['version' => $version, 'lang' => $lang];     
+    }
 }

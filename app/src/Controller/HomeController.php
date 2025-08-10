@@ -55,14 +55,22 @@ class HomeController extends AbstractController
         /* dd($language, $version, $remember); */
         $report = $this->versionManager->validateSelection($version, $language);
 
+        $backUrl = $request->headers->get('referer') ?: $this->generateUrl('app_setup');
+
+        // (optionnel) sécurité basique: ne redirige que vers le même host
+        if (!str_starts_with($backUrl, $request->getSchemeAndHttpHost())) {
+            $backUrl = $this->generateUrl('app_setup');
+        }
+
         if (!$report['ok']) {
             foreach ($report['errors'] as $field => $msg) {
                 $this->addFlash('error', sprintf('%s: %s', ucfirst($field), $msg));
             }
-            return $this->redirectToRoute('app_setup');
+            return $this->redirect($backUrl);
         }
 
-        $response = $this->redirectToRoute('app_setup');
+        // Succès
+        $response = $this->redirect($backUrl);
         if ($remember) {
             $response->headers->setCookie(
                 $this->clientManager->makeRememberCookie($language, $version, 7)

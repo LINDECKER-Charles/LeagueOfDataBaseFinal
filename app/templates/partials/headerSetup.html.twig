@@ -1,5 +1,5 @@
     <header class="bg-black font-beaufort text-white flex flex-row justify-between w-full items-center py-10 px-14">
-      <a href="#" class="brand-link group">
+      <a href="{{ url('app_setup') }}" class="brand-link group">
         <div class=" flex flex-row gap-2 justify-center items-center brand-logo">
           <svg id="FINAL" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
             <defs>
@@ -23,7 +23,7 @@
           <li ><a href="#" class="nav-link">Champion</a></li>
           <li><a href="#" class="nav-link">Object</a></li>
           <li><a href="#" class="nav-link">Runes</a></li>
-          <li><a href="#" class="nav-link">Summoner</a></li>
+          <li><a href="{{ url('app_summoners_index') }}" class="nav-link">Summoner</a></li>
         </ul>
       </nav>
     </header>

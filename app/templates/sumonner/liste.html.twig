@@ -1,0 +1,90 @@
+{# templates/sumonner/liste.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Summoners{% endblock %}
+
+{% block body %}
+<main class="px-6 py-10">
+  <div class="mx-auto max-w-7xl">
+    <header class="mb-8 flex items-end justify-between">
+      <h1 class="font-beaufort text-3xl text-white tracking-wide">
+        Summoner Spells
+        <span class="ml-2 text-base text-blue-200/80 font-spiegel">({{ summoners|length }})</span>
+      </h1>
+    </header>
+
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {% for s in summoners %}
+        {% set id   = s.id|default('') %}
+        {% set name = s.name|default('') %}
+        {% set lvl  = s.summonerLevel|default(0) %}
+        {% set cd   = s.cooldownBurn is defined and s.cooldownBurn ? s.cooldownBurn : (s.cooldown|default([])|join('/')) %}
+        {% set cost = s.costBurn is defined and s.costBurn ? s.costBurn : (s.cost|default([])|join('/')) %}
+        {% set modes = s.modes is defined and s.modes is iterable ? (s.modes|join(', ')) : '' %}
+        {% set desc = s.description is defined ? s.description : (s.tooltip|default('')) %}
+        {% set imgPath = images[id]|default(null) %}
+
+        <article class="group rounded-2xl border border-grey-700 bg-blue-850/90 p-4 shadow-sm hover:shadow-md transition">
+          <header class="mb-4 flex items-center gap-3">
+            {% if imgPath %}
+              <img src="/{{ imgPath }}" alt="{{ name }}" class="h-12 w-12 rounded-lg object-contain bg-blue-950 border border-grey-700">
+            {% else %}
+              <div class="h-12 w-12 rounded-lg grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-xs">
+                {{ name|slice(0,2)|upper }}
+              </div>
+            {% endif %}
+
+            <div class="min-w-0">
+              <h3 class="truncate text-[15px] font-semibold text-white" title="{{ name }}">{{ name }}</h3>
+              <p class="truncate text-xs text-blue-200/70" title="{{ id }}">{{ id }}</p>
+            </div>
+          </header>
+
+          <dl class="mb-4 grid grid-cols-3 gap-2 text-xs">
+            <div class="rounded-lg bg-blue-950 p-2 border border-grey-700">
+              <dt class="text-blue-200/70">Cooldown</dt>
+              <dd class="font-medium text-white/90">{{ cd ?: '–' }}</dd>
+            </div>
+            <div class="rounded-lg bg-blue-950 p-2 border border-grey-700">
+              <dt class="text-blue-200/70">Coût</dt>
+              <dd class="font-medium text-white/90">{{ cost ?: '–' }}</dd>
+            </div>
+            <div class="rounded-lg bg-blue-950 p-2 border border-grey-700">
+              <dt class="text-blue-200/70">Niv. invoc.</dt>
+              <dd class="font-medium text-white/90">{{ lvl }}</dd>
+            </div>
+          </dl>
+
+          {% if modes %}
+            <div class="mb-4 flex flex-wrap gap-2">
+              {% for m in s.modes %}
+                <span class="rounded-full bg-blue-950 px-2 py-1 text-[11px] border border-grey-700 text-blue-200/90">
+                  {{ m }}
+                </span>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if desc %}
+            <details class="rounded-xl border border-grey-700 bg-blue-950 open:bg-blue-950/90">
+              <summary class="cursor-pointer list-none select-none px-3 py-2 text-sm text-white/90 flex items-center justify-between">
+                <span>Description</span>
+                <svg class="h-4 w-4 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
+                </svg>
+              </summary>
+              <div class="prose prose-invert max-w-none px-3 pb-3 text-sm text-blue-100/90">
+                {{ desc|raw }}
+              </div>
+            </details>
+          {% endif %}
+        </article>
+      {% else %}
+        <div class="col-span-full rounded-xl border border-grey-700 bg-blue-850 p-6 text-center text-blue-100/80">
+          Aucun sort.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</main>
+{% endblock %}
