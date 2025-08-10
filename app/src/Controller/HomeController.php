@@ -63,7 +63,7 @@ class HomeController extends AbstractController
      *
      * @return \Symfony\Component\HttpFoundation\Response Réponse HTML de la page setup.
      */
-    #[Route('/setup', name: 'app_setup')]
+    #[Route('/', name: 'app_setup')]
     public function setup(): Response
     {
         return $this->render('home/setupPage.html.twig', [
