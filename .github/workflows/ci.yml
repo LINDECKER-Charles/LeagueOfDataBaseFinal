@@ -76,4 +76,4 @@ jobs:
           git merge --no-ff --no-edit "${GITHUB_SHA}"
 
           # Pousser vers main
-          git push origin HEAD:main
+          git push origin HEAD:main 
