@@ -105,7 +105,7 @@ jobs:
             git clean -fd
 
             export APP_ENV=prod APP_DEBUG=0 COMPOSER_ALLOW_SUPERUSER=1
-            composer install --no-dev --optimize-autoloader --no-interaction
+            composer install
             php bin/console cache:clear --env=prod
           EOSSH
 
