@@ -28,71 +28,80 @@
       <p>session.locale : <strong>{{ session.locale ?? '—' }}</strong></p>
       <p>session.version: <strong>{{ session.version ?? '—' }}</strong></p>
     {% endif %}
+    <main class="relative flex-1 flex flex-col justify-center items-center bg-blue-950 px-4 overflow-hidden">
 
-    <main class="flex-1 flex flex-col justify-center items-center bg-blue-950 px-4">
-      {# avant le <form>, calcule les valeurs sélectionnées à partir du DTO #}
+      {# Sélection par défaut depuis le DTO (inchangé) #}
       {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
       {% set selectedVersion = client.session.version ?? (client.versions|first) %}
 
-      <form action="{{ path('app_setup_save') }}" method="post" class="w-full max-w-xl flex flex-col items-center gap-12 bg-blue-850 text-white p-8 border border-grey-700 rounded-lg">
-        <input type="hidden" name="_token" value="{{ csrf_token('setup_form') }}">
+      {# Carte formulaire (inchangé, juste contenu) #}
+      <section class="w-full max-w-xl bg-blue-850/90 text-white p-8 border border-grey-700 rounded-2xl shadow-xl backdrop-blur-md">
+        <form action="{{ path('app_setup_save') }}" method="post" class="w-full flex flex-col items-center gap-12">
+          <input type="hidden" name="_token" value="{{ csrf_token('setup_form') }}">
 
-        <!-- Version -->
-        <div class="w-full flex flex-col items-center gap-4 ">
-          <label for="version" class="font-beaufort text-4xl">Version</label>
-          <select
-            id="version"
-            name="version"
-            class="w-4/5 text-2xl px-6 py-5 bg-blue-950 text-white border border-grey-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 hover:cursor-pointer"
+          <!-- Version -->
+          <div class="w-full flex flex-col items-center gap-4">
+            <label for="version" class="font-beaufort text-4xl">Version</label>
+            <div class="relative w-4/5">
+              <select
+                id="version"
+                name="version"
+                class="w-full text-2xl px-6 py-5 bg-blue-950 text-white border border-grey-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 hover:cursor-pointer appearance-none pr-12"
+              >
+                {% for version in client.versions %}
+                  <option value="{{ version }}" {{ version == selectedVersion ? 'selected' : '' }}>
+                    {{ version }}
+                  </option>
+                {% endfor %}
+              </select>
+              <span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-200/70">▾</span>
+            </div>
+          </div>
+
+          <!-- Langue -->
+          <div class="w-full flex flex-col items-center gap-4">
+            <label for="langue" class="font-beaufort text-4xl">Langue</label>
+            <div class="relative w-4/5">
+              <select
+                id="langue"
+                name="langue"
+                class="hover:cursor-pointer w-full text-2xl px-6 py-5 bg-blue-950 text-white border border-grey-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 appearance-none pr-12"
+              >
+                {% for lang in client.languages %}
+                  <option value="{{ lang }}" {{ lang == selectedLocale ? 'selected' : '' }}>
+                    {{ client.languageLabels[lang] ?? lang }}
+                  </option>
+                {% endfor %}
+              </select>
+              <span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-200/70">▾</span>
+            </div>
+            <p class="italic text-sm opacity-70 text-white mt-2">
+              *La dernière version est automatiquement proposée
+            </p>
+          </div>
+
+          <!-- Rappel -->
+          <div class="w-4/5 flex items-center gap-4">
+            <input
+              type="checkbox"
+              id="remember"
+              name="remember"
+              class="w-5 h-5 appearance-none border-2 border-grey-700 rounded-sm bg-blue-950 checked:bg-blue-200 checked:border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+            <label for="remember" class="font-semibold italic text-sm select-none">
+              Se souvenir de mon choix
+            </label>
+          </div>
+
+          <!-- Bouton -->
+          <button
+            type="submit"
+            class="duration-300 w-4/5 text-2xl font-bold py-5 rounded-lg bg-blue-200 text-blue-950 border border-grey-700 shadow hover:bg-blue-100 hover:shadow-lg hover:cursor-pointer transition"
           >
-            {% for version in client.versions %}
-              <option value="{{ version }}" {{ version == selectedVersion ? 'selected' : '' }}>
-                {{ version }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Langue -->
-        <div class="w-full flex flex-col items-center gap-4">
-          <label for="langue" class="font-beaufort text-4xl">Langue</label>
-          <select
-            id="langue"
-            name="langue"
-            class="hover:cursor-pointer w-4/5 text-2xl px-6 py-5 bg-blue-950 text-white border border-grey-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
-          >
-            {% for lang in client.languages %}
-              <option value="{{ lang }}" {{ lang == selectedLocale ? 'selected' : '' }}>
-                {{ client.languageLabels[lang] ?? lang }}
-              </option>
-            {% endfor %}
-          </select>
-          <p class="italic text-sm opacity-60 text-white mt-2">
-            *La dernière version est automatiquement proposée
-          </p>
-        </div>
-
-        <!-- Rappel -->
-        <div class="w-4/5 flex items-center gap-4">
-          <input
-            type="checkbox"
-            id="remember"
-            name="remember"
-            class="w-5 h-5 appearance-none border-2 border-grey-700 rounded-sm bg-blue-950 checked:bg-blue-200 checked:border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-          <label for="remember" class="font-semibold italic text-sm select-none">
-            Se souvenir de mon choix
-          </label>
-        </div>
-
-        <!-- Bouton -->
-        <button
-          type="submit"
-          class="duration-300 w-4/5 text-2xl font-bold py-5 rounded-lg bg-blue-200 text-blue-950 hover:bg-blue-100 transition-colors hover:cursor-pointer"
-        >
-          Valider
-        </button>
-      </form>
+            Valider
+          </button>
+        </form>
+      </section>
     </main>
   </div>
   {% include 'partials/toaster.html.twig' %}
