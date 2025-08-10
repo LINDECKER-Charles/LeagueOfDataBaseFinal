@@ -99,7 +99,6 @@ jobs:
             set -e
             cd /var/www/leagueofdatabase/LeagueOfDataBaseFinal/app
             git pull origin main
-            composer install
           EOSSH
 
 
