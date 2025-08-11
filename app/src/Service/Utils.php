@@ -7,7 +7,10 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class Utils
 {
-    public function __construct(private Filesystem $fs) {}
+    public function __construct(
+        private Filesystem $fs,
+        private readonly VersionManager $versionManager,
+    ) {}
 
     /**
      * Retourne le contenu du fichier s'il existe, sinon null.
@@ -85,5 +88,55 @@ final class Utils
         }
 
         return strtolower($tag);
+    }
+
+    /**
+     * Chemin relatif pour les summoners: upload/{version}/{lang}/summoner
+     *
+     * @param string $version
+     * @param string $lang
+     * @return string
+     */
+    public function buildDir(string $version, string $lang, string $type, bool $img = false): string
+    {   
+        if($img){
+            return "upload/{$version}/{$type}_img"; 
+        }
+        return "upload/{$version}/{$lang}/{$type}";
+    }
+
+    /**
+     * Recherche un doublon binaire de l’image dans les autres versions et renvoie son chemin.
+     *
+     * Parcourt toutes les versions retournées par VersionManager et, pour chacune,
+     * construit le chemin `upload/{version}/{type}_img/{name}`. Si un fichier existe,
+     * il compare d’abord la longueur puis le contenu **octet à octet** avec `$bin`.
+     * Le premier fichier strictement identique trouvé est retourné.
+     *
+     * @param string $bin  Contenu binaire du fichier courant (ex. bytes de l’image).
+     * @param string $name Nom de fichier (avec extension), ex. "SummonerBarrier.png".
+     * @param string $type Type logique utilisé dans le chemin (ex. "summoner" → dossier "{type}_img").
+     *
+     * @return string|null Chemin **relatif** vers le doublon (ex. "upload/15.4.1/summoner_img/SummonerBarrier.png"),
+     *                     ou `null` si aucun fichier identique n’a été trouvé.
+     *
+     * @note Compare le contenu en mémoire (`===`) ; retourne le **premier** match rencontré.
+     */
+    public function binaryExisting(string $bin, string $name, $type): ?string{
+        $versions = $this->versionManager->getVersions();
+        foreach($versions as $version){
+            $path = "upload/{$version}/{$type}_img/$name";
+            $file = $this->fileIsExisting($path);
+            if(!$file){
+                continue;
+            }
+            if(strlen($bin) !== strlen($file)){
+                continue;
+            }
+            if($bin === $file){
+                return $path;
+            }
+        }
+        return null;
     }
 }
