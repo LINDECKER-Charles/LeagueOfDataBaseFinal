@@ -6,6 +6,7 @@
         type == 'success' ? 'bg-emerald-600/90' :
         (type == 'error' ? 'bg-red-600/90' :
         (type == 'warning' ? 'bg-amber-600/90' : 'bg-slate-700/90')) %}
+
       {% set icon %}
         {% if type == 'success' %}
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
@@ -19,13 +20,16 @@
       {% endset %}
 
       <div class="pointer-events-auto w-80 rounded-xl p-4 text-white shadow-xl ring-1 ring-white/10 backdrop-blur-sm
-                  {{ bg }} transition duration-300 transform translate-x-4 opacity-0"
-           role="alert" data-toast>
+                  {{ bg }} transition duration-300 transform translate-x-4 opacity-0 cursor-pointer"
+           role="alert" data-toast data-type="{{ type }}">
         <div class="flex items-start gap-3">
           <div class="opacity-90">{{ icon|raw }}</div>
-          <div class="text-sm leading-5 flex-1">
+
+          {# contenu cliquable, avec retours à la ligne visibles #}
+          <div class="text-sm leading-5 flex-1 select-text whitespace-pre-line break-words truncate" data-msg>
             {{ message|raw }}
           </div>
+
           <button type="button" class="ml-2 -m-1 inline-flex h-6 w-6 items-center justify-center rounded hover:bg-white/10 focus:outline-none"
                   aria-label="Fermer" data-close>
             <svg class="h-4 w-4 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -36,20 +40,101 @@
   {% endfor %}
 </div>
 
+{# ----- MODAL OVERLAY (centré, extérieur translucide, intérieur opaque) ----- #}
+<div id="toast-modal" class="fixed inset-0 z-[60] hidden grid place-items-center" aria-hidden="true">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-modal-backdrop></div>
+  <div
+    class="relative z-10 w-[min(92vw,48rem)] max-h-[80vh] overflow-hidden
+           rounded-2xl bg-blue-950 text-white shadow-2xl ring-1 ring-white/10
+           opacity-0 scale-95 transition duration-200"
+    role="dialog" aria-modal="true" aria-labelledby="toast-modal-title"
+    data-modal-panel tabindex="-1"
+  >
+    <div class="flex items-start justify-between gap-4 p-5 border-b border-white/10">
+      <h2 id="toast-modal-title" class="text-base font-semibold">Message</h2>
+      <button type="button" class="rounded p-2 hover:bg-white/10 focus:outline-none"
+              aria-label="Fermer" data-modal-close>
+        <svg class="h-5 w-5 opacity-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="p-5">
+      <div
+        class="prose prose-invert max-w-none max-h-[68vh] overflow-auto
+               text-[15px] leading-6 whitespace-pre-line break-words"
+        data-modal-content
+      ></div>
+    </div>
+  </div>
+</div>
+
+
 <script>
   (function () {
+    // --- TOASTS (apparition + auto-dismiss + close) ---
     const els = document.querySelectorAll('[data-toast]');
     els.forEach((el, i) => {
-      // apparition
       setTimeout(() => { el.classList.remove('translate-x-4','opacity-0'); }, 40 + i*60);
-      // auto-dismiss
       const timer = setTimeout(() => dismiss(el), 5000);
-      // close button
-      el.querySelector('[data-close]')?.addEventListener('click', () => { clearTimeout(timer); dismiss(el); });
+      el.querySelector('[data-close]')?.addEventListener('click', (ev) => {
+        ev.stopPropagation(); // évite d’ouvrir le modal en cliquant sur la croix
+        clearTimeout(timer);
+        dismiss(el);
+      });
+      // CLIC SUR LE TOAST => OUVRIR LE MODAL
+      el.addEventListener('click', (ev) => {
+        if (ev.target.closest('[data-close]')) return; // déjà géré
+        const html = el.querySelector('[data-msg]')?.innerHTML ?? '';
+        const type = el.getAttribute('data-type') || 'info';
+        openModal(html, type, el);
+      });
     });
+
     function dismiss(el) {
       el.classList.add('translate-x-4','opacity-0');
       setTimeout(() => el.remove(), 220);
+    }
+
+    // --- MODAL LOGIQUE ---
+    const modal        = document.getElementById('toast-modal');
+    const panel        = modal.querySelector('[data-modal-panel]');
+    const contentEl    = modal.querySelector('[data-modal-content]');
+    const backdrop     = modal.querySelector('[data-modal-backdrop]');
+    const closeBtn     = modal.querySelector('[data-modal-close]');
+    let lastActive = null;
+
+    function openModal(html, type) {
+      lastActive = document.activeElement;
+      contentEl.innerHTML = html;
+
+      // bordure selon type
+      panel.classList.remove('ring-emerald-600/40','ring-amber-600/40','ring-red-600/40');
+      if (type === 'success') panel.classList.add('ring-emerald-600/40');
+      else if (type === 'warning') panel.classList.add('ring-amber-600/40');
+      else if (type === 'error') panel.classList.add('ring-red-600/40');
+
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        panel.classList.remove('opacity-0','scale-95');
+        panel.focus();
+      });
+
+      // Fermer : croix, backdrop, ESC
+      const onEsc = (e) => { if (e.key === 'Escape') closeModal(); };
+      closeBtn.addEventListener('click', closeModal, { once: true });
+      backdrop.addEventListener('click', closeModal, { once: true });
+      document.addEventListener('keydown', onEsc, { once: true });
+      modal._cleanup = () => document.removeEventListener('keydown', onEsc);
+    }
+
+    function closeModal() {
+      panel.classList.add('opacity-0','scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        if (typeof modal._cleanup === 'function') modal._cleanup();
+        if (lastActive && lastActive.focus) lastActive.focus();
+      }, 160);
     }
   })();
 </script>

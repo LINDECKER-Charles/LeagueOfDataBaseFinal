@@ -18,6 +18,7 @@ final class ClientManager
         private readonly string $appSecret = '', // injecte %kernel.secret% via services.yaml si tu veux signer
         private readonly string $defaultLocale = 'en_US', // fallback si pas d'entête
         private readonly VersionManager $versionManager,
+        private readonly Utils $utils,
     ) {}
 
     /**
@@ -32,7 +33,7 @@ final class ClientManager
     {
         $request = $this->requestStack->getCurrentRequest();
         if (!$request) {
-            return $this->defaultLocale; // contexte CLI/worker
+            return $this->defaultLocale;
         }
 
         // Langues triées par priorité (q)
@@ -43,27 +44,10 @@ final class ClientManager
             return $this->defaultLocale;
         }
 
-        return $this->normalizeTag($first);
+        return $this->utils->normalizeTag($first);
     }
 
-    /**
-     * A Spliter dans un service d'edition TXT
-     * Normalise un tag BCP47 en format "xx_YY"
-     * - 'fr'      -> 'fr'
-     * - 'fr-FR'   -> 'fr_FR'
-     * - 'EN-us'   -> 'en_US'
-     */
-    private function normalizeTag(string $tag): string
-    {
-        $tag = str_replace('-', '_', $tag);
 
-        if (str_contains($tag, '_')) {
-            [$lang, $region] = explode('_', $tag, 2);
-            return strtolower($lang) . '_' . strtoupper($region);
-        }
-
-        return strtolower($tag);
-    }
 
     /** --- SET --- */
 
@@ -273,6 +257,7 @@ final class ClientManager
 
         $loc = $sess->get(self::K_LOCALE);
         $ver = $sess->get(self::K_VERSION);
+        
         $hasLoc = is_string($loc) && $loc !== '';
         $hasVer = is_string($ver) && $ver !== '';
 

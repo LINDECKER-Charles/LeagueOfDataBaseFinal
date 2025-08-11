@@ -67,4 +67,23 @@ final class Utils
         }
         return $json;
     }
+
+    /**
+     * A Spliter dans un service d'edition TXT
+     * Normalise un tag BCP47 en format "xx_YY"
+     * - 'fr'      -> 'fr'
+     * - 'fr-FR'   -> 'fr_FR'
+     * - 'EN-us'   -> 'en_US'
+     */
+    public function normalizeTag(string $tag): string
+    {
+        $tag = str_replace('-', '_', $tag);
+
+        if (str_contains($tag, '_')) {
+            [$lang, $region] = explode('_', $tag, 2);
+            return strtolower($lang) . '_' . strtoupper($region);
+        }
+
+        return strtolower($tag);
+    }
 }
