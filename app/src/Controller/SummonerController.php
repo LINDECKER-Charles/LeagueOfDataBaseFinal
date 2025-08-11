@@ -9,6 +9,7 @@ use App\Service\VersionManager;
 use App\Service\SummonerManager;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class SummonerController extends AbstractController
@@ -17,7 +18,8 @@ final class SummonerController extends AbstractController
         private readonly SummonerManager $summoners,
         private readonly ClientManager $client,
         private readonly VersionManager $versionManager, 
-        private readonly ClientManager $clientManager
+        private readonly ClientManager $clientManager,
+        private readonly RequestStack $requestStack,
     ) {}
 
     #[Route('/summoners', name: 'app_summoners_index', methods: ['GET'])]
@@ -30,8 +32,20 @@ final class SummonerController extends AbstractController
             return new Response('Langue/version introuvables. Définissez vos préférences.', 400);
         }
 
-        $summoners = $this->summoners->getSummonersParsed($session['version'], $session['lang']);
-        $images = $this->summoners->fetchSummonerImages($session['version'], $session['lang'], false);
+        
+        try {
+            $summoners = $this->summoners->getSummonersParsed($session['version'], $session['lang']);
+            $images    = $this->summoners->fetchSummonerImages($session['version'], $session['lang'], false);
+        } catch (\Throwable $e) {
+            $this->requestStack->getSession()->getFlashBag()->clear();
+            $this->addFlash('error', sprintf(
+                "Donnés absente de l\'API sur la version %s%s%s",
+                $session['version'] ?? 'n/a',
+                PHP_EOL,
+                $e->getMessage()
+            ));
+            return $this->redirectToRoute('app_setup');
+        }
 
         return $this->render('sumonner/liste.html.twig', [
             'summoners' => $summoners,

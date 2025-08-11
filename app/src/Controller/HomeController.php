@@ -112,6 +112,7 @@ class HomeController extends AbstractController
     {
         // On valide le token csrf
         if (!$this->isCsrfTokenValid('setup_form', (string) $request->request->get('_token'))) {
+            $request->getSession()?->getFlashBag()->clear();
             $this->addFlash('error', 'CSRF token invalide.');
             return $this->redirectToRoute('app_setup');
         }
