@@ -38,6 +38,18 @@ class HomeController extends AbstractController
         ]);
     }
 
+    /**
+     * Affiche la page « Work in progress ».
+     *
+     * Prépare les données transverses du client (versions, langues, libellés,
+     * locale courante, préférences de session) via ClientData::fromServices()
+     * puis rend le template Twig `home/working.html.twig`.
+     *
+     * @see ClientData::fromServices()
+     *
+     * @return \Symfony\Component\HttpFoundation\Response Réponse HTML.
+     * @throws \Twig\Error\Error Si le template ne peut pas être rendu.
+     */
     #[Route('/working-progess', name: 'app_working')]
     public function working(): Response
     {
@@ -98,6 +110,7 @@ class HomeController extends AbstractController
     #[Route('/setup-submit', name: 'app_setup_save', methods: ['POST'])]
     public function save(Request $request): RedirectResponse
     {
+        // On valide le token csrf
         if (!$this->isCsrfTokenValid('setup_form', (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'CSRF token invalide.');
             return $this->redirectToRoute('app_setup');
