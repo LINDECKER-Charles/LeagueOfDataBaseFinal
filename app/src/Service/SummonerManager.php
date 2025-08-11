@@ -159,7 +159,6 @@ final class SummonerManager
                 /* dd('pas de li'); */
                 $this->fs->dumpFile($absPath, $binary);
             }
-            
 
             $result[$id] = $relPath;
         }
