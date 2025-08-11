@@ -111,11 +111,11 @@ class HomeController extends AbstractController
     public function save(Request $request): RedirectResponse
     {
         // On valide le token csrf
-        if (!$this->isCsrfTokenValid('setup_form', (string) $request->request->get('_token'))) {
+/*         if (!$this->isCsrfTokenValid('setup_form', (string) $request->request->get('_token'))) {
             $request->getSession()?->getFlashBag()->clear();
             $this->addFlash('error', 'CSRF token invalide.');
             return $this->redirectToRoute('app_setup');
-        }
+        } */
 
         // On recupere les donnees
         $language = (string) $request->request->get('langue', '');

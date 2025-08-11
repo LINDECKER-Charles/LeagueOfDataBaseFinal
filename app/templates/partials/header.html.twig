@@ -30,7 +30,7 @@
 
   {# Formulaire sur 2 lignes #}
   <form action="{{ path('app_setup_save') }}" method="post" class="flex flex-col gap-2 text-sm w-full max-w-md">
-    <input type="hidden" name="_token" value="{{ csrf_token('setup_form') }}">
+    {# <input type="hidden" name="_token" value="{{ csrf_token('setup_form') }}"> #}
 
     {# Ligne 1 : selects #}
     <div class="flex items-center gap-2">
