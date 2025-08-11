@@ -37,7 +37,7 @@
       {# Carte formulaire (inchangé, juste contenu) #}
       <section class="w-full max-w-xl bg-blue-850/90 text-white p-8 border border-grey-700 rounded-2xl shadow-xl backdrop-blur-md">
         <form action="{{ path('app_setup_save') }}" method="post" class="w-full flex flex-col items-center gap-12">
-          <input type="hidden" name="_token" value="{{ csrf_token('setup_form') }}">
+          {# <input type="hidden" name="_token" value="{{ csrf_token('setup_form') }}"> #}
 
           <!-- Version -->
           <div class="w-full flex flex-col items-center gap-4">
