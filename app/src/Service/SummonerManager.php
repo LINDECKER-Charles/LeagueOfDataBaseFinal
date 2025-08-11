@@ -86,7 +86,7 @@ public function fetchSummonerImages(string $version, string $lang, bool $force =
     $spells  = array_values($decoded['data'] ?? []);
 
     // 2) Dossiers (abs/rel)
-    $relBase = $this->buildSummonerDir($version, $lang);
+    $relBase = $this->buildSummonerDir($version, $lang, true);
     $relImg  = $relBase . '/img';
     $absImg  = Path::join($this->baseDir, $relImg);
     $this->fs->mkdir($absImg);
@@ -127,8 +127,11 @@ public function fetchSummonerImages(string $version, string $lang, bool $force =
      * @param string $lang
      * @return string
      */
-    private function buildSummonerDir(string $version, string $lang): string
-    {
+    private function buildSummonerDir(string $version, string $lang, bool $img = false): string
+    {   
+        if($img){
+            return "upload/{$version}/summoner_img"; 
+        }
         return "upload/{$version}/{$lang}/summoner";
     }
     
