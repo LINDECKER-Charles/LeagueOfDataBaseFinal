@@ -29,14 +29,4 @@ final class APICaller
             throw new \RuntimeException('APICaller: échec requête GET: '.$e->getMessage(), 0, $e);
         }
     }
-
-        public function call(string $url): string
-    {
-        try {
-            $response = $this->http->request('GET', $url);
-            return $response->getContent();
-        } catch (\Throwable $e) {
-            throw new \RuntimeException('APICaller: échec requête GET: '.$e->getMessage(), 0, $e);
-        }
-    }
 }
