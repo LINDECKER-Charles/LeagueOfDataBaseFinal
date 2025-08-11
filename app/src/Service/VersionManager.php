@@ -14,7 +14,8 @@ class VersionManager
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly CacheInterface $cache,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly APICaller $aPICaller,
     ) {}
 
     /**
@@ -24,10 +25,12 @@ class VersionManager
      */
     public function getVersions(): array
     {
+        //$this->cache->delete('riot_versions'); //pour les tests d'optimisation
         return $this->cache->get('riot_versions', function (ItemInterface $item) {
-            $item->expiresAfter(600); // Cache 1 heure
+            $item->expiresAfter(600); //Expire dans 10min
             try {
                 $response = $this->httpClient->request('GET', self::RIOT_VERSIONS_URL);
+                
                 return $response->toArray();
             } catch (\Throwable $e) {
                 $this->logger->error('Erreur lors de la récupération des versions Riot', [
@@ -50,7 +53,6 @@ class VersionManager
         return $this->cache->get('riot_languages', function (ItemInterface $item) {
             // Expiration dans 1 mois
             $item->expiresAfter(2592000);
-
             try {
                 $response = $this->httpClient->request(
                     'GET',
