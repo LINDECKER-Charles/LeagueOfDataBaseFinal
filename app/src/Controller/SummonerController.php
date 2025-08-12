@@ -47,7 +47,7 @@ final class SummonerController extends AbstractController
             return $this->redirectToRoute('app_setup');
         }
 
-        return $this->render('sumonner/liste.html.twig', [
+        return $this->render('summoner/liste.html.twig', [
             'summoners' => $summoners,
             'images'    => $images,
             'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
