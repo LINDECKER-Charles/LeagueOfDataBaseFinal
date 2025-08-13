@@ -27,15 +27,15 @@ final class SummonerController extends AbstractController
     {
         // 1) Préférences depuis la session (ou cookie signé)
         $session = $this->client->getSession();
-        if (!$session['version'] || !$session['version']) {
+        if (!$session['version'] || !$session['lang']) {
             // Ultra simple: on refuse si on n’a rien de fiable
             return new Response('Langue/version introuvables. Définissez vos préférences.', 400);
         }
 
         
         try {
-            $summoners = $this->summoners->getSummonersParsed($session['version'], $session['lang']);
-            $images    = $this->summoners->fetchSummonerImages($session['version'], $session['lang'], false);
+            $summoners = $this->summoners->getSummonersOrderAndParsed($session['version'], $session['lang']);
+            $images    = $this->summoners->getSummonersImages($session['version'], $session['lang'], false);
         } catch (\Throwable $e) {
             $this->requestStack->getSession()->getFlashBag()->clear();
             $this->addFlash('error', sprintf(

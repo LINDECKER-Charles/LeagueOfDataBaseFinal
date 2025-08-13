@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use Symfony\Component\Filesystem\Path;
 use Symfony\Component\Filesystem\Filesystem;
 
 final class Utils
@@ -10,6 +11,7 @@ final class Utils
     public function __construct(
         private Filesystem $fs,
         private readonly VersionManager $versionManager,
+        private readonly string $baseDir,
     ) {}
 
     /**
@@ -91,19 +93,75 @@ final class Utils
     }
 
     /**
-     * Chemin relatif pour les summoners: upload/{version}/{lang}/summoner
+     * Construit le dossier cible (relatif + absolu) pour un type de ressource.
+     * Règles :
+     *  - JSON (img=false) : upload/{version}/{lang}/{type}
+     *  - IMG  (img=true)  : upload/{version}/{type}_img   (lang ignoré)
      *
-     * @param string $version
-     * @param string $lang
-     * @return string
+     * Aucun accès disque ici : fonction pure.
+     *
+     * @param string $version Ex.: "15.1.1"
+     * @param string $lang    Ex.: "fr_FR" (ignoré si $img === true)
+     * @param string $type    Ex.: "summoner", "champion", "rune", ...
+     * @param bool   $img     true => chemin dédié aux images
+     *
+     * @return array{relDir:string, absDir:string} Dossiers relatif et absolu.
      */
-    public function buildDir(string $version, string $lang, string $type, bool $img = false): string
-    {   
-        if($img){
-            return "upload/{$version}/{$type}_img"; 
-        }
-        return "upload/{$version}/{$lang}/{$type}";
+    public function buildDir(string $version, string $lang, string $type, bool $img = false): array{
+        $relDir = $img
+            ? "upload/{$version}/{$type}_img"
+            : "upload/{$version}/{$lang}/{$type}";
+        $absDir  = Path::join($this->baseDir, $relDir); //Chemin absolut
+        $this->fs->mkdir($absDir);
+        return [
+            'relDir' => $relDir,
+            'absDir' => $absDir,
+        ];
     }
+
+    /**
+     * Construit les chemins (relatif/absolu) d’un fichier à partir d’un dossier construit par buildDir().
+     *
+     * @param array{relDir:string, absDir:string} $dir Dossier retourné par buildDir().
+     * @param string $name                           Nom de fichier (ex.: "summoner.json", "Flash.png").
+     *
+     * @return array{relPath:string, absPath:string, nameFile:string} Chemins + nom.
+     */
+    public function buildPath(array $dir, string $name): array{
+        $relPath = Path::join($dir['relDir'], $name);
+        $absPath = Path::join($dir['absDir'], $name);
+        $this->fs->mkdir($dir['absDir']);
+        return [
+            'relPath' => $relPath,
+            'absPath' => $absPath,
+            'fileName' => $name,
+        ];
+    }
+
+    /**
+     * Helper combinant buildDir() + buildPath() en un seul appel.
+     *
+     * @param string $version Ex.: "15.1.1"
+     * @param string $lang    Ex.: "fr_FR"
+     * @param string $type    Ex.: "summoner"
+     * @param string $name    Ex.: "summoner.json" ou "Flash.png"
+     * @param bool   $img     true => chemin image (lang ignoré)
+     *
+     * @return array{
+     *   relDir:string,
+     *   absDir:string,
+     *   relPath:string,
+     *   absPath:string,
+     *   nameFile:string
+     * }
+     */
+    public function buildDirAndPath(string $version, string $lang, string $type, string $name, bool $img = false): array{
+        $dir = $this->buildDir($version, $lang, $type, $img);
+        $path = $this->buildPath($dir, $name);
+        return array_merge($dir, $path);
+    }
+
+    
 
     /**
      * Recherche un doublon binaire de l’image dans les autres versions et renvoie son chemin.
@@ -122,7 +180,10 @@ final class Utils
      *
      * @note Compare le contenu en mémoire (`===`) ; retourne le **premier** match rencontré.
      */
-    public function binaryExisting(string $bin, string $name, $type): ?string{
+    public function binaryExisting(string $bin, string $name, string $type): ?string{
+        if(!$bin){
+            return null;
+        }
         $versions = $this->versionManager->getVersions();
         foreach($versions as $version){
             $path = "upload/{$version}/{$type}_img/$name";
@@ -139,4 +200,5 @@ final class Utils
         }
         return null;
     }
+
 }
