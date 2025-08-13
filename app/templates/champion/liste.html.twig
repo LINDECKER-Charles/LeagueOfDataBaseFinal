@@ -1,0 +1,136 @@
+{# templates/champion/liste.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Champions{% endblock %}
+
+{% block body %}
+<main class="relative px-6 py-10">
+  {# Halo + étoiles #}
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+    <div class="absolute -top-1/3 left-1/2 -translate-x-1/2 h-[65rem] w-[65rem] rounded-full opacity-25 blur-3xl"
+         style="background: radial-gradient(closest-side, rgba(191,219,254,.25), rgba(30,58,138,.25) 45%, transparent 70%);"></div>
+    <div class="absolute inset-0">
+      {% for i in 1..28 %}
+        <span class="absolute block h-1 w-1 rounded-full bg-blue-200/30"
+              style="top: {{ random(2,98) }}%; left: {{ random(2,98) }}%;"></span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="relative mx-auto max-w-7xl">
+    {# En-tête #}
+    <header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div class="group flex items-center gap-4">
+        <div class="relative grid place-items-center h-14 w-14 rounded-2xl bg-blue-850 border border-grey-700 shadow brand-logo">
+          <div class="absolute inset-0 rounded-2xl blur-xl opacity-50"
+               style="background: radial-gradient(closest-side, rgba(191,219,254,.25), transparent);"></div>
+          {# Logo LoL #}
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" class="relative z-10 h-8 w-8">
+            <defs><style>.cls-1{fill:#fff;}</style></defs>
+            <g>
+              <path class="cls-1" d="M438.14,168A235.31,235.31,0,0,1,580.08,552.7h79.45a299,299,0,0,0,41.4-152.25c0-153.18-114.63-279.58-262.79-298.11Z"/>
+              <path class="cls-1" d="M208.88,631.86V537.33a235.17,235.17,0,0,1,0-273.77V169a300.44,300.44,0,0,0,0,462.83Z"/>
+            </g>
+            <polygon class="cls-1" points="393.14 75 220.98 75 253.88 142.3 253.88 658.33 221.32 724.89 611.49 724.89 647.14 597.7 393.14 597.7 393.14 75"/>
+          </svg>
+        </div>
+
+        <div>
+          <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 brand-title">
+            Champions
+          </h1>
+          <p class="font-spiegel text-blue-200/80 mt-1">
+            <span class="align-middle">Catalogue des champions</span>
+            <span class="ml-2 text-sm inline-block rounded-full border border-grey-700 bg-blue-950 px-2 py-0.5">
+              {{ champions|length }} items
+            </span>
+          </p>
+        </div>
+      </div>
+
+      {# Barre d’actions légère (optionnelle, sans JS requis) #}
+      <div class="w-full sm:w-auto flex gap-3 sm:gap-4">
+        <div class="relative flex-1 sm:w-64">
+          <input type="search" name="q" placeholder="Rechercher un champion..."
+                 class="w-full rounded-lg bg-blue-950 border border-grey-700 px-4 py-2.5 text-sm placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-200">
+          <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-200/70">⌕</span>
+        </div>
+        <a href="{{ path('app_setup') }}"
+           class="px-2 inline-flex items-center justify-center rounded-lg border border-grey-700 bg-blue-200 text-blue-950 px-4 py-2.5 text-sm font-semibold hover:bg-blue-100 transition">
+          Changer version/langue
+        </a>
+      </div>
+    </header>
+
+    {# Grille #}
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {% for s in champions %}
+        {% set id    = s.id|default('') %}
+        {% set name  = s.name|default('') %}
+        {% set title   = s.title|default('') %}
+        {% set imgPath = images[id]|default(null) %}
+        {% set desc = s.desc|default('') %}
+
+        <article class="group h-full flex flex-col rounded-2xl border border-grey-700 bg-blue-850/80 backdrop-blur shadow-sm hover:shadow-md hover:-translate-y-0.5 transition relative overflow-hidden">
+          {# Liseré haut subtil #}
+          <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-200/40 to-transparent"></div>
+
+          {# -- Haut de carte : header + stats -- #}
+          <div class="flex-1">
+            <header class="mb-3 flex items-center gap-3 px-4 pt-4">
+              {% if imgPath %}
+                <div class="relative shrink-0 h-14 w-14 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
+                  <img src="/{{ imgPath }}" alt="{{ name }}" class="h-12 w-12 object-contain transition group-hover:scale-105 duration-300">
+                </div>
+              {% else %}
+                <div class="h-14 w-14 rounded-xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-xs">
+                  {{ name|slice(0,2)|upper }}
+                </div>
+              {% endif %}
+
+              <div class="min-w-0">
+                <h3 class="truncate text-[15px] font-semibold text-white" title="{{ name }}">{{ name }}</h3>
+                <p class="truncate text-xs text-blue-200/70" title="{{ title }}">{{ title }}</p>
+              </div>
+            </header>
+          </div>
+
+          {# -- Bas de carte : accordéons collés en bas -- #}
+          {% set hasBottom = desc %}
+          {% if hasBottom %}
+            <div class="mt-auto">
+              {% if desc %}
+                <details class="group/desc border-t border-grey-700 bg-blue-950/60 open:bg-blue-950/70">
+                  <summary class="cursor-pointer list-none select-none px-4 py-3 text-sm text-white/90 flex items-center justify-between">
+                    <span>Titre</span>
+                    <svg class="h-4 w-4 transition-transform group-open/desc:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
+                    </svg>
+                  </summary>
+                  <div class="prose prose-invert max-w-none px-4 pb-4 text-sm text-blue-100/90">
+                    {{ desc|raw }}
+                  </div>
+                </details>
+              {% endif %}
+            </div>
+          {% endif %}
+        </article>
+      {% else %}
+        <div class="col-span-full rounded-2xl border border-grey-700 bg-blue-850/80 backdrop-blur p-8 text-center">
+          <p class="text-blue-100/85">Aucun champion disponible.</p>
+          <div class="mt-4 flex items-center justify-center gap-3">
+            <a href="javascript:history.back()"
+               class="px-4 py-2 rounded-lg border border-grey-700 bg-transparent text-white hover:bg-blue-900 transition">
+              ← Retour
+            </a>
+            <a href="{{ path('app_setup') }}"
+               class="px-4 py-2 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
+              Choisir version & langue
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</main>
+{% endblock %}
