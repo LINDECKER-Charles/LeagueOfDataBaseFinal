@@ -50,7 +50,7 @@ class HomeController extends AbstractController
      * @return \Symfony\Component\HttpFoundation\Response Réponse HTML.
      * @throws \Twig\Error\Error Si le template ne peut pas être rendu.
      */
-    #[Route('/working-progess', name: 'app_working')]
+    #[Route('/working-progress', name: 'app_working')]
     public function working(): Response
     {
         return $this->render('home/working.html.twig', [
