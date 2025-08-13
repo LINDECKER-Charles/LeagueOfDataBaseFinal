@@ -8,7 +8,10 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 final class UploadManager
 {
-    public function __construct(private Filesystem $fs) {}
+    public function __construct(
+        private readonly Filesystem $fs,
+        private readonly Utils $utils,
+    ) {}
 
     /**
      * Enregistre un contenu au format JSON dans un fichier.
@@ -25,14 +28,16 @@ final class UploadManager
      *
      * @throws \RuntimeException Si l'encodage JSON échoue.
      */
-    public function saveJson(string $dir, string $filename, mixed $content): string
+    public function saveJson(string $dir, string $filename, mixed $json, bool $encoded): string
     {
         // Crée le dossier si besoin
         $this->fs->mkdir($dir);
 
         $path = $dir . '/' . $filename;
 
-        $json = json_encode($content);
+        if(!$encoded){
+            $json = json_encode($json);
+        }
         if ($json === false) {
             throw new \RuntimeException(json_last_error_msg());
         }
