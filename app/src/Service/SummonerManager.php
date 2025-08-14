@@ -55,7 +55,42 @@ final class SummonerManager
         return $data;
     }
 
+    /**
+     * Récupère les informations détaillées d'un sort d'invocateur par son identifiant.
+     *
+     * - Charge la liste complète via {@see getSummoners()}.
+     * - Décode le JSON en tableau associatif.
+     * - Recherche et retourne uniquement l'élément correspondant à l'ID donné.
+     *
+     * @param string $name    Identifiant interne du sort d'invocateur (ex: "SummonerBarrier").
+     * @param string $version Version du jeu (ex: "15.12.1").
+     * @param string $lang    Code de langue (ex: "fr_FR").
+     *
+     * @return array Tableau associatif contenant les données du sort d'invocateur.
+     *
+     * @throws \RuntimeException Si le format du JSON est invalide ou si aucun sort ne correspond.
+     */
+    public function getSummonerByName(string $name, string $version, string $lang): array{
+        (string) $json = $this->getSummoners($version,$lang);
 
+        // Décodage en tableau associatif
+        $data = json_decode($json, true);
+
+        // Vérification que la clé "data" existe
+        if (!isset($data['data']) || !is_array($data['data'])) {
+            throw new \RuntimeException('Format de données invalide.');
+        }
+
+        // Recherche de l'invocateur par id
+        foreach ($data['data'] as $summoner) {
+            if (isset($summoner['id']) && $summoner['id'] === $name) {
+                return $summoner;
+            }
+        }
+
+        // Si non trouvé
+        throw new \RuntimeException(sprintf('Aucun invocateur trouvé avec l\'ID "%s".', $name));
+    }
 
     /**
      * Télécharge toutes les images des summoners pour une version/langue.
@@ -100,9 +135,30 @@ final class SummonerManager
         return $result;
     }
     
-    private function getSummonerImage(string $name, string $version, array $dir, bool $force){
+    /**
+     * Récupère et stocke localement l'image d'un sort d'invocateur.
+     *
+     * - Construit l'URL de l'image sur l'API DDragon.
+     * - Si le chemin n'est pas fourni, le génère via {@see utils::buildDirAndPath()}.
+     * - Retourne l'image depuis le cache local si elle existe, sauf si `$force` est activé.
+     * - Sinon, télécharge l'image depuis l'API et la sauvegarde localement.
+     *
+     * @param string $name   Nom de fichier de l'image (ex: "SummonerBarrier.png").
+     * @param string $version Version du jeu (ex: "15.12.1").
+     * @param array  $dir    Tableau de chemins généré par buildDirAndPath() (optionnel).
+     * @param bool   $force  Si `true`, force le téléchargement même si l'image existe déjà.
+     * @param string $lang   Code de langue (ex: "fr_FR"), nécessaire si `$dir` est vide.
+     *
+     * @return string Chemin relatif vers l'image enregistrée.
+     *
+     * @throws \RuntimeException Si le téléchargement ou la sauvegarde échoue.
+     */
+    public function getSummonerImage(string $name, string $version, array $dir = [], bool $force = false, string $lang = ''):string {
         $baseUrl = "https://ddragon.leagueoflegends.com/cdn/{$version}/img/spell/";
 
+        if(!$dir){
+            $dir = $this->utils->buildDirAndPath($version, $lang, 'summoner', $name, true);
+        }
         $path = $this->utils->buildPath($dir, $name);
         if (!$force && $this->fs->exists($path['absPath'])) {
             return $path['relPath'];
