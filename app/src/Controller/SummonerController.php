@@ -22,20 +22,36 @@ final class SummonerController extends AbstractController
         private readonly RequestStack $requestStack,
     ) {}
 
-    #[Route('/summoners', name: 'app_summoners_index', methods: ['GET'])]
-    public function index(): Response
-    {
-        // 1) Préférences depuis la session (ou cookie signé)
+    #[Route('/summoners_redirect', name: 'app_summoners_redirect', methods: ['GET'])]
+    public function summoners_redirect(): Response{
+        // On recupere les informations en session
         $session = $this->client->getSession();
+        // On les ajoutes en parametre dans l URL
+        return $this->redirectToRoute('app_summoners', [
+            'version' => $session['version'],
+            'lang' => $session['lang'],
+        ]);
+    }
+
+    #[Route('/summoners', name: 'app_summoners', methods: ['GET'])]
+    public function summoners(): Response
+    {
+        // 1) On récupère les paramètres
+        $session = $this->client->getParams();
+        // 1.1) Si nos paramètres ne sont pas défini alors on les définis via la redirection
+        if(!$session['param']){
+            return $this->redirectToRoute('app_summoners_redirect');
+        }
+        // 2) Verification de securite mais ne devrais pas etre appeler
         if (!$session['version'] || !$session['lang']) {
             // Ultra simple: on refuse si on n’a rien de fiable
             return new Response('Langue/version introuvables. Définissez vos préférences.', 400);
         }
-
         
         try {
             $summoners = $this->summoners->getSummonersOrderAndParsed($session['version'], $session['lang']);
             $images    = $this->summoners->getSummonersImages($session['version'], $session['lang'], false);
+            /* dd($images, $summoners); */
         } catch (\Throwable $e) {
             $this->requestStack->getSession()->getFlashBag()->clear();
             $this->addFlash('error', sprintf(

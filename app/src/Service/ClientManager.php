@@ -278,10 +278,46 @@ final class ClientManager
         ];
     }
 
+    /**
+     * Récupère les paramètres `version` et `lang` depuis la requête HTTP actuelle.
+     *
+     * Valide les paramètres en vérifiant que la langue et la version existent
+     * dans le VersionManager. Si l’un des paramètres est invalide, retourne
+     * uniquement ['param' => false].
+     *
+     * @return array{
+     *     version?: string,
+     *     lang?: string,
+     *     param: bool
+     * }
+     */
+    public function getParams(): array {
+        $req = $this->requestStack->getCurrentRequest();
+        $version = $req->query->get('version');
+        $lang = $req->query->get('lang');
+        if(!$this->versionManager->languageExists($lang) || !$this->versionManager->versionExists($version)){
+            return ['param' => false];
+        }
+        return ['version' => $version, 'lang' => $lang, 'param' => true];
+    }
+
+        /**
+     * Récupère la version et la langue stockées dans la session de l’utilisateur.
+     *
+     * Si aucune préférence n’est trouvée dans la session, utilise la langue
+     * détectée par défaut et la dernière version disponible depuis le VersionManager.
+     *
+     * @return array{
+     *     version: string,
+     *     lang: string
+     * }
+     */
     public function getSession(): array{
         $val = $this->getOrHydratePreferences();
-        $lang    = $val['locale']  ?? $this->getLangue(); 
-        $version = $val['version'] ?? $this->versionManager->getVersions()[0];
-        return ['version' => $version, 'lang' => $lang];     
+        if(!$this->versionManager->languageExists($val['locale']) || !$this->versionManager->versionExists($val['version'])){
+            $val['version'] = $this->versionManager->getVersions()[0];
+            $val['locale'] = $this->getLangue();
+        }
+        return ['version' => $val['version'], 'lang' => $val['locale']];     
     }
 }
