@@ -301,7 +301,7 @@ final class ClientManager
         return ['version' => $version, 'lang' => $lang, 'param' => true];
     }
 
-        /**
+    /**
      * Récupère la version et la langue stockées dans la session de l’utilisateur.
      *
      * Si aucune préférence n’est trouvée dans la session, utilise la langue

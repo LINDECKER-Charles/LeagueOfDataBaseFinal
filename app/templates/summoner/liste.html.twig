@@ -81,22 +81,31 @@
           {# -- Haut de carte : header + stats -- #}
           <div class="flex-1">
             <header class="mb-3 flex items-center gap-3 px-4 pt-4">
-              {% if imgPath %}
-                <div class="relative shrink-0 h-14 w-14 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
-                  <img src="/{{ imgPath }}" alt="{{ name }}" class="h-12 w-12 object-contain transition group-hover:scale-105 duration-300">
-                </div>
-              {% else %}
-                <div class="h-14 w-14 rounded-xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-xs">
-                  {{ name|slice(0,2)|upper }}
-                </div>
-              {% endif %}
-
+              <a href="{{ path('app_summoner', { name: id }) }}">
+                {% if imgPath %}
+                  <div class="relative shrink-0 h-14 w-14 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
+                    <img src="/{{ imgPath }}" alt="{{ name }}" class="h-12 w-12 object-contain transition group-hover:scale-105 duration-300">
+                  </div>
+                {% else %}
+                  <div class="h-14 w-14 rounded-xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-xs">
+                    {{ name|slice(0,2)|upper }}
+                  </div>
+                {% endif %}
+              </a>
               <div class="min-w-0">
-                <h3 class="truncate text-[15px] font-semibold text-white" title="{{ name }}">{{ name }}</h3>
-                <p class="truncate text-xs text-blue-200/70" title="{{ id }}">{{ id }}</p>
+                <a href="{{ path('app_summoner', { name: id }) }}"
+                  class="group transition-all duration-300 ease-out">
+                  <h3 class="truncate text-[15px] font-semibold text-white group-hover:text-blue-300 group-hover:scale-[1.03] transform transition-all duration-300" 
+                      title="{{ name }}">
+                    {{ name }}
+                  </h3>
+                  <p class="truncate text-xs text-blue-200/70 group-hover:text-blue-400 transition-colors duration-300" 
+                    title="{{ id }}">
+                    {{ id }}
+                  </p>
+                </a>
               </div>
             </header>
-
             <div class="px-4">
               <dl class="mb-3 grid grid-cols-3 gap-2 text-[11px]">
                 <div class="rounded-lg bg-blue-950/80 p-2 border border-grey-700">
