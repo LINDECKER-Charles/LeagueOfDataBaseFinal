@@ -34,7 +34,7 @@ final class Utils
         return null;
     }
 
-        /**
+    /**
      * Décode une chaîne JSON et renvoie la structure PHP.
      *
      * @param string $json  Chaîne JSON à décoder.

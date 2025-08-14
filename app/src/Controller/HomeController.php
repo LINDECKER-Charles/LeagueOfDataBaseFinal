@@ -126,6 +126,7 @@ class HomeController extends AbstractController
         $report = $this->versionManager->validateSelection($version, $language);
 
         $backUrl = $request->headers->get('referer') ?: $this->generateUrl('app_setup');
+
         // (optionnel) sécurité basique: ne redirige que vers le même host
         if (!str_starts_with($backUrl, $request->getSchemeAndHttpHost())) {
             $backUrl = $this->generateUrl('app_setup');
@@ -139,8 +140,21 @@ class HomeController extends AbstractController
             return $this->redirect($backUrl);
         }
 
+        // Retirer tout ce qui vient après le ?
+        $path = parse_url($backUrl, PHP_URL_PATH) ?: '/';
+        if (!($path === '/') && !($path === '/working-progress')) {
+            $backUrl = strtok($backUrl, '?');
+            
+            $backUrl .= '?' . http_build_query([
+                'version' => $version,
+                'lang'    => $language
+            ]);
+        }
+
+
         // Succès, on enregistre le cookie si l'utilisateur le demande et on save les preference dans la session
         $response = $this->redirect($backUrl);
+
         if ($remember) {
             $response->headers->setCookie(
                 $this->clientManager->makeRememberCookie($language, $version, 7)
@@ -154,6 +168,7 @@ class HomeController extends AbstractController
         $this->clientManager->setVersionInSession($version);
 
 
+        /* dd($language, $version, $backUrl); */
         // Petit feedback facultatif
         $request->getSession()?->getFlashBag()->clear();
         $this->addFlash('success', 'Préférences reçues 👍');
