@@ -278,27 +278,90 @@ final class ClientManager
         ];
     }
 
+
     /**
-     * Récupère les paramètres `version` et `lang` depuis la requête HTTP actuelle.
+     * Récupère et valide les paramètres GET en fonction des besoins.
      *
-     * Valide les paramètres en vérifiant que la langue et la version existent
-     * dans le VersionManager. Si l’un des paramètres est invalide, retourne
-     * uniquement ['param' => false].
-     *
-     * @return array{
-     *     version?: string,
-     *     lang?: string,
-     *     param: bool
-     * }
+     * @param array $needs Liste des paramètres à récupérer : 'version', 'lang', 'numpage', 'itemperpage' ou 'full'
+     * @return array Tableau contenant ['param' => bool, ...] avec les valeurs récupérées ou un message d'erreur
      */
-    public function getParams(): array {
-        $req = $this->requestStack->getCurrentRequest();
-        $version = $req->query->get('version');
-        $lang = $req->query->get('lang');
-        if(!$this->versionManager->languageExists($lang) || !$this->versionManager->versionExists($version)){
-            return ['param' => false];
+    public function getParams(array $needs = ['full']): array
+    {
+        $result = ['param' => true];
+
+        if (in_array('full', $needs, true)) {
+            $needs = ['version', 'lang', 'numpage', 'itemperpage'];
         }
-        return ['version' => $version, 'lang' => $lang, 'param' => true];
+
+        foreach ($needs as $need) {
+            $method = 'handle' . ucfirst($need);
+            if (method_exists($this, $method)) {
+                $res = $this->$method();
+                if (isset($res['param'])) {
+                    return $res; // Erreur → on stoppe tout
+                }
+                $result = array_merge($result, $res);
+            } else {
+                return ['param' => false, 'message' => "Paramètre inconnu : {$need}"];
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Récupère et valide le paramètre "version" depuis la requête GET.
+     *
+     * @return array ['version' => string] si valide, ou ['param' => false, 'message' => string] en cas d'erreur.
+     */
+    private function handleVersion(): array
+    {
+        $version = (string) $this->requestStack->getCurrentRequest()->query->get('version');
+        if (!$this->versionManager->versionExists($version)) {
+            return ['param' => false, 'message' => 'Version inexistante'];
+        }
+        return ['version' => $version];
+    }
+
+    /**
+     * Récupère et valide le paramètre "lang" depuis la requête GET.
+     *
+     * @return array ['lang' => string] si valide, ou ['param' => false, 'message' => string] en cas d'erreur.
+     */
+    private function handleLang(): array
+    {
+        $lang = (string) $this->requestStack->getCurrentRequest()->query->get('lang');
+        if (!$this->versionManager->languageExists($lang)) {
+            return ['param' => false, 'message' => 'Langue inexistante'];
+        }
+        return ['lang' => $lang];
+    }
+
+    /**
+     * Récupère et valide le paramètre "numpage" depuis la requête GET.
+     *
+     * @return array ['numPage' => int] si valide, ou ['param' => false, 'message' => string] en cas d'erreur.
+     */
+    private function handleNumpage(): array
+    {
+        $numPage = (int) $this->requestStack->getCurrentRequest()->query->get('numpage');
+        if ($numPage <= 0) {
+            return ['param' => false, 'message' => 'Numéro de page impossible'];
+        }
+        return ['numPage' => $numPage];
+    }
+
+    /**
+     * Récupère et valide le paramètre "itemperpage" depuis la requête GET.
+     *
+     * @return array ['itemPerPage' => int] si valide, ou ['param' => false, 'message' => string] en cas d'erreur.
+     */
+    private function handleItemperpage(): array
+    {
+        $itemPerPage = (int) $this->requestStack->getCurrentRequest()->query->get('itemperpage');
+        if ($itemPerPage <= 0) {
+            return ['param' => false, 'message' => 'Nombre objet par page impossible'];
+        }
+        return ['itemPerPage' => $itemPerPage];
     }
 
     /**

@@ -50,6 +50,19 @@
 
       {# Barre d’actions légère (optionnelle, sans JS requis) #}
       <div class="w-full sm:w-auto flex gap-3 sm:gap-4">
+        <div class="flex items-center gap-2 text-sm text-blue-200/80">
+            <span>Résultats par page :</span>
+            {% for option in [4, 8, 16, meta.totalItem] %}
+              <a href="{{ path('app_summoners_redirect', { numpage: meta.currentPage, itemperpage: option }) }}" 
+              class="px-2 py-1 rounded-lg border border-grey-700 bg-blue-950 text-white hover:bg-blue-900 transition">
+              {% if option == meta.totalItem %}
+                MAX
+              {% else %}
+                {{option}}
+              {% endif %}
+              </a>
+            {% endfor %}
+        </div>
         <div class="relative flex-1 sm:w-64">
           <input type="search" name="q" placeholder="Rechercher un sort…"
                  class="w-full rounded-lg bg-blue-950 border border-grey-700 px-4 py-2.5 text-sm placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-200">
@@ -81,7 +94,8 @@
           {# -- Haut de carte : header + stats -- #}
           <div class="flex-1">
             <header class="mb-3 flex items-center gap-3 px-4 pt-4">
-              <a href="{{ path('app_summoner', { name: id }) }}">
+
+              <a href="{{ path('app_summoner_redirect', { name: id }) }}">
                 {% if imgPath %}
                   <div class="relative shrink-0 h-14 w-14 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
                     <img src="/{{ imgPath }}" alt="{{ name }}" class="h-12 w-12 object-contain transition group-hover:scale-105 duration-300">
@@ -193,6 +207,7 @@
       {% endfor %}
     </div>
   </div>
+  {% include 'partials/pagination.html.twig' %}
 </main>
 
 {% endblock %}

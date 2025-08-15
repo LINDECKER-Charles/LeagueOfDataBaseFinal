@@ -201,4 +201,8 @@ final class Utils
         return null;
     }
 
+    public function splitJson(int $nb, int $start, array $json): array{
+        return array_slice($json, $start, $nb, true);
+    }
+
 }

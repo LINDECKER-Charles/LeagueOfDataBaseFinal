@@ -22,6 +22,8 @@ final class SummonerManager
         private readonly VersionManager $versionManager,
     ) {}
 
+
+    /* Getter */
     /**
      * Retourne le JSON des summoners (sorts d'invocateur) pour une version et une langue.
      * - Si le fichier existe localement: lit et renvoie son contenu.
@@ -74,7 +76,7 @@ final class SummonerManager
         (string) $json = $this->getSummoners($version,$lang);
 
         // Décodage en tableau associatif
-        $data = json_decode($json, true);
+        (array) $data = json_decode($json, true);
 
         // Vérification que la clé "data" existe
         if (!isset($data['data']) || !is_array($data['data'])) {
@@ -93,6 +95,87 @@ final class SummonerManager
     }
 
     /**
+     * Récupère les informations détaillées d'un sort d'invocateur à partir de son identifiant exact.
+     *
+     * - Charge la liste complète des sorts d'invocateur via {@see getSummoners()}.
+     * - Décode le JSON en tableau associatif.
+     * - Parcourt les données et retourne le sort dont la clé `id` correspond exactement au nom donné.
+     *
+     * @param string $name    Identifiant exact du sort d'invocateur (ex: "SummonerBarrier").
+     * @param string $version Version du jeu (ex: "15.12.1").
+     * @param string $lang    Code de langue (ex: "fr_FR").
+     *
+     * @return array Tableau associatif contenant les données complètes du sort d'invocateur.
+     *
+     * @throws \RuntimeException Si le format des données est invalide ou si aucun sort ne correspond.
+     */
+    public function getSummonersByName(string $name, string $version, string $lang): array{
+        (string) $json = $this->getSummoners($version,$lang);
+
+        // Décodage en tableau associatif
+        $data = json_decode($json, true);
+
+        (array) $result = [];
+        // Vérification que la clé "data" existe
+        if (!isset($data['data']) || !is_array($data['data'])) {
+            throw new \RuntimeException('Format de données invalide.');
+        }
+
+        // Recherche de l'invocateur par id
+        foreach ($data['data'] as $summoner) {
+            if (isset($summoner['id']) && $summoner['id'] === $name) {
+                $result = array_merge($result, $summoner);
+            }
+        }
+
+        if($result){
+            return $result;
+        }
+
+        // Si non trouvé
+        throw new \RuntimeException(sprintf('Aucun invocateur trouvé avec l\'ID "%s".', $name));
+    }
+
+    /**
+     * Recherche les sorts d'invocateur dont l'ID ou le nom contient une chaîne donnée.
+     *
+     * La recherche est insensible à la casse et peut retourner plusieurs résultats.
+     *
+     * @param string $name    Sous-chaîne à rechercher (ex: "riere").
+     * @param string $version Version du jeu (ex: "15.12.1").
+     * @param string $lang    Code de langue (ex: "fr_FR").
+     *
+     * @return array[] Liste des sorts d'invocateur correspondants.
+     *
+     * @throws \RuntimeException Si le format des données est invalide.
+     */
+    public function searchSummonersByName(string $name, string $version, string $lang): array
+    {
+        (string) $json = $this->getSummoners($version, $lang);
+
+        // Décodage en tableau associatif
+        $data = json_decode($json, true);
+
+        if (!isset($data['data']) || !is_array($data['data'])) {
+            throw new \RuntimeException('Format de données invalide.');
+        }
+
+        $results = [];
+        $search = mb_strtolower($name); // normalisation pour recherche insensible à la casse
+
+        foreach ($data['data'] as $summoner) {
+            $idMatch   = isset($summoner['id']) && str_contains(mb_strtolower($summoner['id']), $search);
+            $nameMatch = isset($summoner['name']) && str_contains(mb_strtolower($summoner['name']), $search);
+
+            if ($idMatch || $nameMatch) {
+                $results[] = $summoner;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * Télécharge toutes les images des summoners pour une version/langue.
      *
      * - Utilise getSummoners() (cache disque si déjà présent) pour récupérer le JSON
@@ -107,15 +190,16 @@ final class SummonerManager
      *
      * @throws \RuntimeException En cas d'erreur réseau/écriture
      */
-    public function getSummonersImages(string $version, string $lang, bool $force = false): array
+    public function getSummonersImages(string $version, string $lang, bool $force = false, array $sums = []): array
     {
 
-        // 1) Récup JSON (cache + fetch)
-        $json = $this->getSummoners($version, $lang);
-        
-        $sums = array_values($this->utils->decodeJson($json, true)['data'] ?? []);
+        if(!$sums){
+            // 1) Récup JSON (cache + fetch)
+            (string) $data = $this->getSummoners($version, $lang);
+            // 2) Dossiers (abs/rel)
+            (array) $sums = array_values($this->utils->decodeJson($data, true)['data'] ?? []);
+        }
 
-        // 2) Dossiers (abs/rel)
         $dir = $this->utils->buildDir($version, $lang, 'summoner', true);
 
         // 3) Boucle téléchargement
@@ -174,6 +258,7 @@ final class SummonerManager
         return $path['relPath'];
     }
 
+    /* Fonction de trie */
     /**
      * Décode le JSON DDragon et trie les summoners par nom (insensible à la casse).
      *
@@ -199,10 +284,65 @@ final class SummonerManager
      * @return array<int, array<string, mixed>>
      * @throws \RuntimeException|\JsonException
      */
-    public function getSummonersOrderAndParsed(string $version, string $lang): array
+    public function getSummonersParsed(string $version, string $lang): array
     {
-        $json = $this->utils->decodeJson($this->getSummoners($version, $lang), true);
-        return $this->orderAcsSummoners($json);
+        return json_decode($this->getSummoners($version, $lang), true)['data'];
     }
-    
+
+    /**
+     * Paginateur pour la liste des sorts d’invocateur (Summoner Spells).
+     *
+     * Cette méthode récupère la liste complète des sorts pour une version et une langue données,
+     * calcule le nombre total de pages en fonction du nombre d’éléments par page demandé,
+     * et retourne uniquement la tranche correspondant à la page courante avec leurs images associées.
+     *
+     * @param string $version  Version du jeu à utiliser (ex. "15.1.1").
+     * @param string $langue   Code de langue à utiliser (ex. "fr_FR").
+     * @param int    $nb       Nombre d’éléments par page. Si 0 ou supérieur au total, tout est affiché.
+     * @param int    $numPage  Numéro de la page à afficher (1 par défaut).
+     *
+     * @return array{
+     *     summoners: array,     // Liste paginée des sorts d’invocateur
+     *     images: array,        // Tableau des chemins d'images associés
+     *     meta: array{          // Informations de pagination
+     *         currentPage: int,
+     *         nombrePage: int,
+     *         itemPerPage: int,
+     *         totalItem: int,
+     *         type: string
+     *     },
+     * }
+     */
+    public function paginateSummoners(string $version, string $langue, int $nb = 1, int $numPage = 1): array{
+        (array) $json = json_decode($this->getSummoners($version, $langue), true)['data'];
+        (int) $ttSum = count($json);
+        if($nb === 0 || $nb > $ttSum){
+            $nb = $ttSum;
+        }
+        $ttPage = ceil($ttSum / $nb);
+        if( $numPage > $ttPage ){
+            $numPage = 1;
+        }
+        
+        if($numPage <= 1){
+            (array) $json = $this->utils->splitJson($nb, 0, $json);
+        }else{
+            (array) $json = $this->utils->splitJson($nb, $nb*($numPage-1), $json);
+        }
+        
+        (array) $images = $this->getSummonersImages($version, $langue, false, $json);
+        return [
+            'summoners' =>  $json,
+            'images' => $images,
+            'meta' => [
+                'currentPage' => $numPage,
+                'nombrePage' => $ttPage,
+                'itemPerPage' => $nb,
+                'totalItem' => $ttSum,
+                'type' => 'summoners',
+            ],
+        ];
+    }
+
+
 }

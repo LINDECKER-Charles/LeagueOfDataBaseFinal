@@ -18,9 +18,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
     <link rel="manifest" href="/favicon/site.webmanifest" />
 </head>
-<body class="bg-blue-950 text-white font-spiegel transition-all duration-300 ease-in-out w-screen" id="content">
+<body class="bg-blue-950 text-white font-spiegel transition-all duration-300 ease-in-out w-screen flex flex-col min-h-screen" id="content">
   {% include 'partials/headerSetup.html.twig' %}
-  <div class="min-h-screen flex flex-col">
+  <main class="flex flex-1">
 
     {% if 0 %}
       <p>selectedLocale : <strong>{{ selectedLocale }}</strong></p>
@@ -28,7 +28,7 @@
       <p>session.locale : <strong>{{ session.locale ?? '—' }}</strong></p>
       <p>session.version: <strong>{{ session.version ?? '—' }}</strong></p>
     {% endif %}
-    <main class="relative flex-1 flex flex-col justify-center items-center bg-blue-950 px-4 overflow-hidden">
+    <div class="relative flex-1 flex flex-col justify-center items-center bg-blue-950 px-4 overflow-hidden my-8">
 
       {# Sélection par défaut depuis le DTO (inchangé) #}
       {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
@@ -102,8 +102,8 @@
           </button>
         </form>
       </section>
-    </main>
-  </div>
+    </div>
+  </main>
   {% include 'partials/toaster.html.twig' %}
   {% include 'partials/footer.html.twig' %}
 </body>
