@@ -149,25 +149,31 @@ final class SummonerManager
      *
      * @throws \RuntimeException Si le format des données est invalide.
      */
-    public function searchSummonersByName(string $name, string $version, string $lang): array
+    public function searchSummonersByName(string $name, string $version, string $lang, int $max = 0): array
     {
+        if (mb_strlen($name) < 2 || mb_strlen($name) > 50) {
+            throw new \InvalidArgumentException('Nom invalide.');
+        }
         (string) $json = $this->getSummoners($version, $lang);
 
         // Décodage en tableau associatif
-        $data = json_decode($json, true);
+        $data = json_decode($json, true)['data'];
 
-        if (!isset($data['data']) || !is_array($data['data'])) {
+        if (!isset($data) || !is_array($data)) {
             throw new \RuntimeException('Format de données invalide.');
         }
 
         $results = [];
         $search = mb_strtolower($name); // normalisation pour recherche insensible à la casse
 
-        foreach ($data['data'] as $summoner) {
+        foreach ($data as $summoner) {
+            if($max !== 0 && count($results) >= $max){
+                break;
+            }
             $idMatch   = isset($summoner['id']) && str_contains(mb_strtolower($summoner['id']), $search);
             $nameMatch = isset($summoner['name']) && str_contains(mb_strtolower($summoner['name']), $search);
 
-            if ($idMatch || $nameMatch) {
+            if (($idMatch || $nameMatch)) {
                 $results[] = $summoner;
             }
         }

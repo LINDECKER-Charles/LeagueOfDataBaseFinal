@@ -65,7 +65,7 @@
         </div>
         <div class="relative flex-1 sm:w-64">
           <input type="search" name="q" placeholder="Rechercher un sort…"
-                 class="w-full rounded-lg bg-blue-950 border border-grey-700 px-4 py-2.5 text-sm placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                 class="w-full rounded-lg bg-blue-950 border border-grey-700 px-4 py-2.5 text-sm placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-white">
           <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-200/70">⌕</span>
         </div>
         <a href="{{ path('app_setup') }}"
@@ -209,5 +209,8 @@
   </div>
   {% include 'partials/pagination.html.twig' %}
 </main>
-
+<script type="module" data-reload>
+  import initAddonScript from '{{ asset("js/ajaxSummoner.js") }}';
+  initAddonScript();
+</script>
 {% endblock %}
