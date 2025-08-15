@@ -31,14 +31,21 @@ final class SummonerController extends AbstractController
     *
     * @return Response
     */
-    #[Route('/summoners_redirect', name: 'app_summoners_redirect', methods: ['GET'])]
-    public function summoners_redirect(): Response{
+    #[Route('/summoners_redirect/{numpage}/{itemperpage}', 
+        name: 'app_summoners_redirect', 
+        methods: ['GET'], 
+        defaults: ['numpage' => 1,'itemperpage' => 8]
+    )]
+    public function summoners_redirect(int $numpage, int $itemperpage): Response{
         // On recupere les informations en session
         $session = $this->client->getSession();
+        
         // On les ajoutes en parametre dans l URL
         return $this->redirectToRoute('app_summoners', [
             'version' => $session['version'],
             'lang' => $session['lang'],
+            'numpage' => $numpage,
+            'itemperpage' => $itemperpage,
         ]);
     }
 
@@ -59,8 +66,10 @@ final class SummonerController extends AbstractController
     #[Route('/summoners', name: 'app_summoners', methods: ['GET'])]
     public function summoners(): Response
     {
+        
         // 1) On récupère les paramètres
         $session = $this->client->getParams();
+        /* dd($session); */
         // 1.1) Si nos paramètres ne sont pas défini alors on les définis via la redirection
         if(!$session['param']){
             return $this->redirectToRoute('app_summoners_redirect');
@@ -70,25 +79,24 @@ final class SummonerController extends AbstractController
             // Ultra simple: on refuse si on n’a rien de fiable
             return new Response('Langue/version introuvables. Définissez vos préférences.', 400);
         }
-        
         try {
-            $summoners = $this->summoners->getSummonersOrderAndParsed($session['version'], $session['lang']);
-            $images    = $this->summoners->getSummonersImages($session['version'], $session['lang'], false);
-            /* dd($images, $summoners); */
+            $data = $this->summoners->paginateSummoners($session['version'], $session['lang'], $session['itemPerPage'], $session['numPage']);
+            /* dd($data); */
         } catch (\Throwable $e) {
             $this->requestStack->getSession()->getFlashBag()->clear();
             $this->addFlash('error', sprintf(
-                "Donnés absente de l\'API sur la version %s%s%s",
+                "Donnés absente sur la version %s et la langue %s Message --> %s",
                 $session['version'] ?? 'n/a',
-                PHP_EOL,
+                $session['lang'] ?? 'n/a',
                 $e->getMessage()
             ));
             return $this->redirectToRoute('app_setup');
         }
-
+        /* dd($data['meta']); */
         return $this->render('summoner/liste.html.twig', [
-            'summoners' => $summoners,
-            'images'    => $images,
+            'summoners' => $data['summoners'],
+            'images'    => $data['images'],
+            'meta' => $data['meta'],
             'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
         ]);
     }
@@ -111,7 +119,7 @@ final class SummonerController extends AbstractController
     {
         // On récupère les informations en session
         $session = $this->clientManager->getSession();
-
+        /* dd(); */
         // On les ajoute en paramètre dans l'URL de la page détail
         return $this->redirectToRoute('app_summoner', [
             'name'    => $name,
@@ -139,17 +147,27 @@ final class SummonerController extends AbstractController
     #[Route('/summoner/{name}', name: 'app_summoner', methods: ['GET'])]
     public function summoner(string $name): Response{
 
-        $session = $this->clientManager->getParams();
+        $session = $this->clientManager->getParams(['version', 'lang']);
 
         // Si pas de paramètres valides → redirection
         if (!$session['param']) {
             return $this->redirectToRoute('app_summoner_redirect', ['name' => $name]);
         }
 
-        $image = $this->summoners->getSummonerImage($name . '.png', $session['version'], [], false, $session['lang']);
-        $summoner = $this->summoners->getSummonerByName($name, $session['version'], $session['lang']);
-        /* dd($image, $summoner); */
 
+        try {
+            $image = $this->summoners->getSummonerImage($name . '.png', $session['version'], [], false, $session['lang']);
+            $summoner = $this->summoners->getSummonerByName($name, $session['version'], $session['lang']);
+        } catch (\Throwable $e) {
+            $this->requestStack->getSession()->getFlashBag()->clear();
+            $this->addFlash('error', sprintf(
+                "Donnés absente sur la version %s et la langue %s Message --> %s",
+                $session['version'] ?? 'n/a',
+                $session['lang'] ?? 'n/a',
+                $e->getMessage()
+            ));
+            return $this->redirectToRoute('app_setup');
+        }
 
         return $this->render('summoner/detail.html.twig', [
             'summoner' => $summoner,

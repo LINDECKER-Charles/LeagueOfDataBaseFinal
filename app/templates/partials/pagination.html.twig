@@ -1,0 +1,17 @@
+{# templates/partials/pagination.html.twig #}
+
+{% if meta.nombrePage > 1 %}
+<nav class="mt-8 flex justify-center gap-2">
+  {% for page in 1.. meta.nombrePage %}
+    <a 
+        {% if meta.type == "summoners" %}
+            href="{{ path('app_summoners_redirect', { numpage: page, itemperpage: meta.itemPerPage }) }}"
+        {% else %}
+            href=""
+        {% endif %}
+       class="px-3 py-1 rounded border border-grey-700 bg-blue-950 text-white hover:bg-blue-900 transition">
+      {{ page }}
+    </a>
+  {% endfor %}
+</nav>
+{% endif %}
