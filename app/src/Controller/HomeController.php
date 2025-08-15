@@ -110,17 +110,10 @@ class HomeController extends AbstractController
     #[Route('/setup-submit', name: 'app_setup_save', methods: ['POST'])]
     public function save(Request $request): RedirectResponse
     {
-        // On valide le token csrf
-/*         if (!$this->isCsrfTokenValid('setup_form', (string) $request->request->get('_token'))) {
-            $request->getSession()?->getFlashBag()->clear();
-            $this->addFlash('error', 'CSRF token invalide.');
-            return $this->redirectToRoute('app_setup');
-        } */
-
         // On recupere les donnees
-        $language = (string) $request->request->get('langue', '');
-        $version  = (string) $request->request->get('version', '');
-        $remember = $request->request->getBoolean('remember');
+        (string) $language = (string) $request->request->get('langue', '');
+        (string) $version  = (string) $request->request->get('version', '');
+        (bool) $remember = $request->request->getBoolean('remember');
 
         //On les valides
         $report = $this->versionManager->validateSelection($version, $language);
@@ -142,13 +135,21 @@ class HomeController extends AbstractController
 
         // Retirer tout ce qui vient après le ?
         $path = parse_url($backUrl, PHP_URL_PATH) ?: '/';
+
         if (!($path === '/') && !($path === '/working-progress')) {
-            $backUrl = strtok($backUrl, '?');
-            
-            $backUrl .= '?' . http_build_query([
-                'version' => $version,
-                'lang'    => $language
-            ]);
+            // Récupérer les paramètres existants
+            $queryString = parse_url($backUrl, PHP_URL_QUERY) ?: '';
+            parse_str($queryString, $queryParams);
+
+            // Retirer les anciennes valeurs de lang et version
+            unset($queryParams['lang'], $queryParams['version']);
+
+            // Ajouter les nouvelles valeurs
+            $queryParams['version'] = $version;
+            $queryParams['lang'] = $language;
+
+            // Reconstruire l'URL
+            $backUrl = $path . '?' . http_build_query($queryParams);
         }
 
 

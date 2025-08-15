@@ -9,6 +9,7 @@ use App\Service\VersionManager;
 use App\Service\SummonerManager;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
@@ -66,22 +67,16 @@ final class SummonerController extends AbstractController
     #[Route('/summoners', name: 'app_summoners', methods: ['GET'])]
     public function summoners(): Response
     {
-        
         // 1) On récupère les paramètres
         $session = $this->client->getParams();
-        /* dd($session); */
+
         // 1.1) Si nos paramètres ne sont pas défini alors on les définis via la redirection
         if(!$session['param']){
+            /* dd($session); */
             return $this->redirectToRoute('app_summoners_redirect');
-        }
-        // 2) Verification de securite mais ne devrais pas etre appeler
-        if (!$session['version'] || !$session['lang']) {
-            // Ultra simple: on refuse si on n’a rien de fiable
-            return new Response('Langue/version introuvables. Définissez vos préférences.', 400);
         }
         try {
             $data = $this->summoners->paginateSummoners($session['version'], $session['lang'], $session['itemPerPage'], $session['numPage']);
-            /* dd($data); */
         } catch (\Throwable $e) {
             $this->requestStack->getSession()->getFlashBag()->clear();
             $this->addFlash('error', sprintf(
@@ -92,7 +87,6 @@ final class SummonerController extends AbstractController
             ));
             return $this->redirectToRoute('app_setup');
         }
-        /* dd($data['meta']); */
         return $this->render('summoner/liste.html.twig', [
             'summoners' => $data['summoners'],
             'images'    => $data['images'],
@@ -154,7 +148,6 @@ final class SummonerController extends AbstractController
             return $this->redirectToRoute('app_summoner_redirect', ['name' => $name]);
         }
 
-
         try {
             $image = $this->summoners->getSummonerImage($name . '.png', $session['version'], [], false, $session['lang']);
             $summoner = $this->summoners->getSummonerByName($name, $session['version'], $session['lang']);
@@ -174,5 +167,11 @@ final class SummonerController extends AbstractController
             'image'    => $image,
             'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
         ]);
+    }
+
+    #[Route('/api/summoners/search/{name}', name: 'api_summoners_search', methods: ['GET'])]
+    public function searchSummonersApi(string $name): JsonResponse
+    {
+        return $this->json('En cours de construction');
     }
 }
