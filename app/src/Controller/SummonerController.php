@@ -172,6 +172,29 @@ final class SummonerController extends AbstractController
     #[Route('/api/summoners/search/{name}', name: 'api_summoners_search', methods: ['GET'])]
     public function searchSummonersApi(string $name): JsonResponse
     {
-        return $this->json('En cours de construction');
+        $session = $this->clientManager->getSession();
+        try {
+            $summoners = $this->summoners->searchSummonersByName($name, $session['version'], $session['lang'], 20);
+        } catch (\Throwable $e) {
+            return $this->json( sprintf(
+                "Donnés absente sur la version %s et la langue %s Message --> %s",
+                $session['version'] ?? 'n/a',
+                $session['lang'] ?? 'n/a',
+                $e->getMessage()
+            ));
+        }
+        $images = $this->summoners->getSummonersImages($session['version'], $session['lang'], false, $summoners);
+        
+        // Filtrer uniquement id, name et image
+        $final = array_map(function ($summoner) use ($images) {
+            $id = $summoner['id'] ?? null;
+            return [
+                'id'    => $id,
+                'name'  => $summoner['name'] ?? '',
+                'image' => $id && isset($images[$id]) ? $images[$id] : null,
+            ];
+        }, $summoners);
+        /* dd($final); */
+        return $this->json($final);
     }
 }
