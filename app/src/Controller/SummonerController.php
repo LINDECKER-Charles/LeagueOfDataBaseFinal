@@ -169,6 +169,33 @@ final class SummonerController extends AbstractController
         ]);
     }
 
+    /**
+     * API : Recherche de sorts d'invocateur par nom ou ID partiel.
+     *
+     * Cette route permet de rechercher jusqu'à un nombre défini de sorts d'invocateur
+     * dont l'ID ou le nom contient une chaîne donnée. Les résultats incluent uniquement
+     * les champs essentiels : `id`, `name` et l'URL de l'image.
+     *
+     * @param string $name Chaîne à rechercher dans l'ID ou le nom (recherche insensible à la casse).
+     *
+     * @return JsonResponse Réponse JSON contenant un tableau d'objets {id, name, image}.
+     *
+     * @throws \RuntimeException Si les données source sont introuvables ou au format invalide.
+     *
+     * Exemple de retour :
+     * [
+     *   {
+     *     "id": "SummonerBarrier",
+     *     "name": "Barrière",
+     *     "image": "upload/15.16.1/summoner_img/SummonerBarrier.png"
+     *   },
+     *   {
+     *     "id": "SummonerFlash",
+     *     "name": "Saut Éclair",
+     *     "image": "upload/15.16.1/summoner_img/SummonerFlash.png"
+     *   }
+     * ]
+     */
     #[Route('/api/summoners/search/{name}', name: 'api_summoners_search', methods: ['GET'])]
     public function searchSummonersApi(string $name): JsonResponse
     {
