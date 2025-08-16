@@ -1,17 +1,63 @@
-{# templates/partials/pagination.html.twig #}
-
 {% if meta.nombrePage > 1 %}
 <nav class="mt-8 flex justify-center gap-2">
-  {% for page in 1.. meta.nombrePage %}
-    <a 
-        {% if meta.type == "summoners" %}
-            href="{{ path('app_summoners_redirect', { numpage: page, itemperpage: meta.itemPerPage }) }}"
-        {% else %}
-            href=""
-        {% endif %}
-       class="px-3 py-1 rounded border border-grey-700 bg-blue-950 text-white hover:bg-blue-900 transition">
-      {{ page }}
-    </a>
+
+  {# 1. Toujours afficher les deux premières pages #}
+  {% for page in 1..2 %}
+    {% if page <= meta.nombrePage %}
+      <a href="{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: page, itemperpage: meta.itemPerPage }) }}"
+         class="px-3 py-1 rounded border border-grey-700 
+                {% if page == meta.currentPage %} bg-blue-700 text-white {% else %} bg-blue-950 text-white hover:bg-blue-900 {% endif %} transition">
+        {{ page }}
+      </a>
+    {% endif %}
   {% endfor %}
+
+  {# 2. Affichage bloc centré sur la page courante #}
+  {% set start = max(meta.currentPage - 1, 3) %}
+  {% set end   = min(meta.currentPage + 1, meta.nombrePage - 2)%}
+
+  {% if start > 3 %}
+    <span class="px-2 text-blue-200/70">…</span>
+  {% endif %}
+
+  {% for page in start..end %}
+    {% if page > 2 and page < meta.nombrePage - 1 %}
+      <a href="{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: page, itemperpage: meta.itemPerPage }) }}"
+         class="px-3 py-1 rounded border border-grey-700 
+                {% if page == meta.currentPage %} bg-blue-700 text-white {% else %} bg-blue-950 text-white hover:bg-blue-900 {% endif %} transition">
+        {{ page }}
+      </a>
+    {% endif %}
+  {% endfor %}
+
+  {% if end < meta.nombrePage - 2 %}
+    <span class="px-2 text-blue-200/70">…</span>
+  {% endif %}
+
+  {# 3. Toujours afficher les deux dernières pages #}
+  {% for page in (meta.nombrePage-1)..meta.nombrePage %}
+    {% if page > 2 %}
+      <a href="{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: page, itemperpage: meta.itemPerPage }) }}"
+         class="px-3 py-1 rounded border border-grey-700 
+                {% if page == meta.currentPage %} bg-blue-700 text-white {% else %} bg-blue-950 text-white hover:bg-blue-900 {% endif %} transition">
+        {{ page }}
+      </a>
+    {% endif %}
+  {% endfor %}
+  <!-- Input personnalisé -->
+  <input type="number"
+        min="1"
+        max="{{ meta.nombrePage }}"
+        value="{{ meta.currentPage }}"
+        oninput="document.getElementById('customPageLink').href='{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: 'REPLACE_ME', itemperpage: meta.itemPerPage }) }}'.replace('REPLACE_ME', this.value)"
+        class="w-14 h-[30px] text-center rounded-lg border border-grey-700 bg-blue-950 text-white 
+                placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-200/60 transition" />
+
+  <!-- Bouton lien -->
+  <a id="customPageLink"
+    href="{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: meta.currentPage, itemperpage: meta.itemPerPage }) }}"
+    class="px-3 py-1 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
+    OK
+  </a>
 </nav>
 {% endif %}

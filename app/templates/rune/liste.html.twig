@@ -1,0 +1,230 @@
+{# templates/summoner/liste.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Summoners{% endblock %}
+
+{% block body %}
+<main class="relative px-6 py-10">
+  {# Halo + étoiles #}
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+    <div class="absolute -top-1/3 left-1/2 -translate-x-1/2 h-[65rem] w-[65rem] rounded-full opacity-25 blur-3xl"
+         style="background: radial-gradient(closest-side, rgba(191,219,254,.25), rgba(30,58,138,.25) 45%, transparent 70%);"></div>
+    <div class="absolute inset-0">
+      {% for i in 1..28 %}
+        <span class="absolute block h-1 w-1 rounded-full bg-blue-200/30"
+              style="top: {{ random(2,98) }}%; left: {{ random(2,98) }}%;"></span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="relative mx-auto max-w-7xl">
+    {# En-tête #}
+    <header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div class="group flex items-center gap-4">
+        <div class="relative grid place-items-center h-14 w-14 rounded-2xl bg-blue-850 border border-grey-700 shadow brand-logo">
+          <div class="absolute inset-0 rounded-2xl blur-xl opacity-50"
+               style="background: radial-gradient(closest-side, rgba(191,219,254,.25), transparent);"></div>
+          {# Logo LoL #}
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" class="relative z-10 h-8 w-8">
+            <defs><style>.cls-1{fill:#fff;}</style></defs>
+            <g>
+              <path class="cls-1" d="M438.14,168A235.31,235.31,0,0,1,580.08,552.7h79.45a299,299,0,0,0,41.4-152.25c0-153.18-114.63-279.58-262.79-298.11Z"/>
+              <path class="cls-1" d="M208.88,631.86V537.33a235.17,235.17,0,0,1,0-273.77V169a300.44,300.44,0,0,0,0,462.83Z"/>
+            </g>
+            <polygon class="cls-1" points="393.14 75 220.98 75 253.88 142.3 253.88 658.33 221.32 724.89 611.49 724.89 647.14 597.7 393.14 597.7 393.14 75"/>
+          </svg>
+        </div>
+
+        <div>
+          <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 brand-title">
+            Summoner Spells
+          </h1>
+          <p class="font-spiegel text-blue-200/80 mt-1">
+            <span class="align-middle">Catalogue des sorts d’invocateur</span>
+            <span class="ml-2 text-sm inline-block rounded-full border border-grey-700 bg-blue-950 px-2 py-0.5">
+              {{ summoners|length }} items
+            </span>
+          </p>
+        </div>
+      </div>
+
+      {# Barre d’actions légère (optionnelle, sans JS requis) #}
+      <div class="w-full sm:w-auto flex gap-3 sm:gap-4">
+        <div class="flex items-center gap-2 text-sm text-blue-200/80">
+            <span>Résultats par page :</span>
+
+            {% for option in [4, 8, 16, meta.totalItem] %}
+                <a href="{{ path('app_summoners_redirect', { numpage: meta.currentPage, itemperpage: option }) }}"
+                  class="px-2 py-1 rounded-lg border border-grey-700 bg-blue-950 text-white hover:bg-blue-900 transition">
+                    {% if option == meta.totalItem %}
+                        MAX
+                    {% else %}
+                        {{ option }}
+                    {% endif %}
+                </a>
+            {% endfor %}
+
+            <!-- Input personnalisé -->
+            <input type="number" min="1" max="{{ meta.totalItem }}" value=""
+                  oninput="document.getElementById('customLink').href='{{ path('app_summoners_redirect', { numpage: meta.currentPage, itemperpage: 'REPLACE_ME' }) }}'.replace('REPLACE_ME', this.value)"
+                  class="w-12 h-[30px] text-center rounded-lg border border-grey-700 bg-blue-950 text-white 
+                          placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-200/60 transition" />
+
+            <!-- Bouton lien -->
+            <a id="customLink"
+              href="{{ path('app_summoners_redirect', { numpage: meta.currentPage, itemperpage: 8 }) }}"
+              class="px-2 py-1 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
+                OK
+            </a>
+        </div>
+        <div class="relative flex-1 sm:w-64">
+          <input type="search" name="q" placeholder="Rechercher un sort…"
+                 class="w-full rounded-lg bg-blue-950 border border-grey-700 px-4 py-2.5 text-sm placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-white">
+          <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-200/70">⌕</span>
+        </div>
+        <a href="{{ path('app_setup') }}"
+           class="px-2 inline-flex items-center justify-center rounded-lg border border-grey-700 bg-blue-200 text-blue-950 px-4 py-2.5 text-sm font-semibold hover:bg-blue-100 transition">
+          Changer version/langue
+        </a>
+      </div>
+    </header>
+
+    {# Grille #}
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {% for s in summoners %}
+        {% set id    = s.id|default('') %}
+        {% set name  = s.name|default('') %}
+        {% set lvl   = s.summonerLevel|default(0) %}
+        {% set cd    = s.cooldownBurn is defined and s.cooldownBurn ? s.cooldownBurn : (s.cooldown|default([])|join('/')) %}
+        {% set cost  = s.costBurn is defined and s.costBurn ? s.costBurn : (s.cost|default([])|join('/')) %}
+        {% set modes = s.modes is defined and s.modes is iterable ? s.modes : [] %}
+        {% set desc  = s.description is defined ? s.description : (s.tooltip|default('')) %}
+        {% set imgPath = images[id]|default(null) %}
+
+        <article class="group h-full flex flex-col rounded-2xl border border-grey-700 bg-blue-850/80 backdrop-blur shadow-sm hover:shadow-md hover:-translate-y-0.5 transition relative overflow-hidden">
+          {# Liseré haut subtil #}
+          <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-200/40 to-transparent"></div>
+
+          {# -- Haut de carte : header + stats -- #}
+          <div class="flex-1">
+            <header class="mb-3 flex items-center gap-3 px-4 pt-4">
+
+              <a href="{{ path('app_summoner_redirect', { name: id }) }}">
+                {% if imgPath %}
+                  <div class="relative shrink-0 h-14 w-14 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
+                    <img src="/{{ imgPath }}" alt="{{ name }}" class="h-12 w-12 object-contain transition group-hover:scale-105 duration-300">
+                  </div>
+                {% else %}
+                  <div class="h-14 w-14 rounded-xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-xs">
+                    {{ name|slice(0,2)|upper }}
+                  </div>
+                {% endif %}
+              </a>
+              <div class="min-w-0">
+                <a href="{{ path('app_summoner', { name: id }) }}"
+                  class="group transition-all duration-300 ease-out">
+                  <h3 class="truncate text-[15px] font-semibold text-white group-hover:text-blue-300 group-hover:scale-[1.03] transform transition-all duration-300" 
+                      title="{{ name }}">
+                    {{ name }}
+                  </h3>
+                  <p class="truncate text-xs text-blue-200/70 group-hover:text-blue-400 transition-colors duration-300" 
+                    title="{{ id }}">
+                    {{ id }}
+                  </p>
+                </a>
+              </div>
+            </header>
+            <div class="px-4">
+              <dl class="mb-3 grid grid-cols-3 gap-2 text-[11px]">
+                <div class="rounded-lg bg-blue-950/80 p-2 border border-grey-700">
+                  <dt class="text-blue-200/70">Cooldown</dt>
+                  <dd class="font-medium text-white/90">{{ cd ?: '–' }}</dd>
+                </div>
+                <div class="rounded-lg bg-blue-950/80 p-2 border border-grey-700">
+                  <dt class="text-blue-200/70">Coût</dt>
+                  <dd class="font-medium text-white/90">{{ cost ?: '–' }}</dd>
+                </div>
+                <div class="rounded-lg bg-blue-950/80 p-2 border border-grey-700">
+                  <dt class="text-blue-200/70">Niv. invoc.</dt>
+                  <dd class="font-medium text-white/90">{{ lvl }}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          {# -- Bas de carte : accordéons collés en bas -- #}
+          {% set hasBottom = (modes is not empty) or desc %}
+          {% if hasBottom %}
+            <div class="mt-auto">
+              {% if modes is not empty %}
+                {% set modesCount = modes|length %}
+                {% set previewModes = modes|slice(0,2) %}
+
+                <details class="group/modes border-t border-grey-700 bg-blue-950/60 open:bg-blue-950/70">
+                  <summary class="cursor-pointer list-none select-none px-4 py-3 text-sm text-white/90 flex items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="font-medium">Modes compatibles</span>
+                      <span class="text-xs text-blue-200/70">({{ modesCount }})</span>
+                      <span class="hidden md:flex flex-wrap gap-1">
+                        {% for m in previewModes %}
+                          <span class="rounded-full bg-blue-950/70 px-2 py-0.5 text-[11px] border border-grey-700 text-blue-200/90">{{ m }}</span>
+                        {% endfor %}
+                        {% if modesCount > 2 %}
+                          <span class="rounded-full bg-blue-950/70 px-2 py-0.5 text-[11px] border border-grey-700 text-blue-200/90">+{{ modesCount - 2 }}</span>
+                        {% endif %}
+                      </span>
+                    </div>
+                    <svg class="h-4 w-4 shrink-0 transition-transform group-open/modes:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
+                    </svg>
+                  </summary>
+                  <div class="px-4 pb-4">
+                    <div class="flex flex-wrap gap-2">
+                      {% for m in modes %}
+                        <span class="rounded-full bg-blue-950/70 px-2 py-1 text-[11px] border border-grey-700 text-blue-200/90">{{ m }}</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </details>
+              {% endif %}
+
+              {% if desc %}
+                <details class="group/desc border-t border-grey-700 bg-blue-950/60 open:bg-blue-950/70">
+                  <summary class="cursor-pointer list-none select-none px-4 py-3 text-sm text-white/90 flex items-center justify-between">
+                    <span>Description</span>
+                    <svg class="h-4 w-4 transition-transform group-open/desc:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
+                    </svg>
+                  </summary>
+                  <div class="prose prose-invert max-w-none px-4 pb-4 text-sm text-blue-100/90">
+                    {{ desc|raw }}
+                  </div>
+                </details>
+              {% endif %}
+            </div>
+          {% endif %}
+        </article>
+      {% else %}
+        <div class="col-span-full rounded-2xl border border-grey-700 bg-blue-850/80 backdrop-blur p-8 text-center">
+          <p class="text-blue-100/85">Aucun sort d’invocateur disponible.</p>
+          <div class="mt-4 flex items-center justify-center gap-3">
+            <a href="javascript:history.back()"
+               class="px-4 py-2 rounded-lg border border-grey-700 bg-transparent text-white hover:bg-blue-900 transition">
+              ← Retour
+            </a>
+            <a href="{{ path('app_setup') }}"
+               class="px-4 py-2 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
+              Choisir version & langue
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% include 'partials/pagination.html.twig' %}
+</main>
+<script type="module" data-reload>
+  import initAddonScript from '{{ asset("js/ajaxSummoner.js") }}';
+  initAddonScript();
+</script>
+{% endblock %}

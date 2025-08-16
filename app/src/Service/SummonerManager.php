@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Service\Utils;
 use App\Service\APICaller;
+use App\Service\RiotManager;
 use App\Service\VersionManager;
 use Symfony\Component\Filesystem\Path;
 use function PHPUnit\Framework\fileExists;
@@ -12,6 +13,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class SummonerManager
 {
+    private const TYPE = 'summoner';
+
     public function __construct(
         private readonly HttpClientInterface $http,
         private readonly UploadManager $uploader,
@@ -20,41 +23,25 @@ final class SummonerManager
         private readonly string $baseDir,
         private readonly Filesystem $fs = new Filesystem(),
         private readonly VersionManager $versionManager,
+        private readonly RiotManager $riotManager,
     ) {}
 
 
     /* Getter */
     /**
-     * Retourne le JSON des summoners (sorts d'invocateur) pour une version et une langue.
-     * - Si le fichier existe localement: lit et renvoie son contenu.
-     * - Sinon: récupère depuis Data Dragon, sauvegarde, puis renvoie le JSON.
+     * Récupère la liste des sorts d'invocateur depuis Riot (DDragon).
      *
-     * URL DDragon: https://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/summoner.json
+     * - Utilise RiotManager pour chercher les données JSON correspondantes.
+     * - Retourne le contenu JSON brut sous forme de chaîne.
      *
-     * @param string $version Version DDragon (ex: "14.15.1").
-     * @param string $lang    Langue DDragon (ex: "fr_FR").
+     * @param string $version Version du jeu (ex. "15.1.1").
+     * @param string $lang    Langue/locale des données (ex. "fr_FR").
      *
-     * @return string JSON brut.
-     *
-     * @throws \RuntimeException En cas d'erreur réseau/lecture/encodage.
+     * @return string Contenu JSON des sorts d'invocateur.
      */
-    public function getSummoners(string $version, string $lang): string
+    public function getSummoners(string $version, string $lang): array
     {
-        $path = $this->utils->buildDirAndPath($version, $lang, 'summoner', 'summoner.json');
-        
-        
-        // Cache local
-        if ($file = $this->utils->fileIsExisting($path['absPath'])) {
-            return $file;
-        }
-        
-        // Fetch DDragon
-        $data = $this->aPICaller->call("https://ddragon.leagueoflegends.com/cdn/{$version}/data/{$lang}/summoner.json");
-        
-        // Sauvegarde (chemin absolu pour garantir l'emplacement)
-        $this->uploader->saveJson($path['absDir'], $path['fileName'], $data, true);
-
-        return $data;
+        return $this->riotManager->getJson($version, $lang, self::TYPE);
     }
 
     /**
@@ -73,25 +60,7 @@ final class SummonerManager
      * @throws \RuntimeException Si le format du JSON est invalide ou si aucun sort ne correspond.
      */
     public function getSummonerByName(string $name, string $version, string $lang): array{
-        (string) $json = $this->getSummoners($version,$lang);
-
-        // Décodage en tableau associatif
-        (array) $data = json_decode($json, true);
-
-        // Vérification que la clé "data" existe
-        if (!isset($data['data']) || !is_array($data['data'])) {
-            throw new \RuntimeException('Format de données invalide.');
-        }
-
-        // Recherche de l'invocateur par id
-        foreach ($data['data'] as $summoner) {
-            if (isset($summoner['id']) && $summoner['id'] === $name) {
-                return $summoner;
-            }
-        }
-
-        // Si non trouvé
-        throw new \RuntimeException(sprintf('Aucun invocateur trouvé avec l\'ID "%s".', $name));
+        return $this->riotManager->getDataByKey($name, $version, $lang, 'id', self::TYPE);
     }
 
     /**
@@ -154,10 +123,7 @@ final class SummonerManager
         if (mb_strlen($name) < 2 || mb_strlen($name) > 50) {
             throw new \InvalidArgumentException('Nom invalide.');
         }
-        (string) $json = $this->getSummoners($version, $lang);
-
-        // Décodage en tableau associatif
-        $data = json_decode($json, true)['data'];
+        (array) $data = $this->getSummoners($version, $lang)['data'];
 
         if (!isset($data) || !is_array($data)) {
             throw new \RuntimeException('Format de données invalide.');
@@ -198,31 +164,7 @@ final class SummonerManager
      */
     public function getSummonersImages(string $version, string $lang, bool $force = false, array $sums = []): array
     {
-
-        if(!$sums){
-            // 1) Récup JSON (cache + fetch)
-            (string) $data = $this->getSummoners($version, $lang);
-            // 2) Dossiers (abs/rel)
-            (array) $sums = array_values($this->utils->decodeJson($data, true)['data'] ?? []);
-        }
-
-        $dir = $this->utils->buildDir($version, $lang, 'summoner', true);
-
-        // 3) Boucle téléchargement
-        $result = [];
-
-        foreach ($sums as $s) {
-            $id  = $s['id']   ?? null;
-            $img = $s['image']['full'] ?? null;
-
-            if (!$id || !$img) {
-                continue;
-            }
-
-            $result[$id] = $this->getSummonerImage($img, $version, $dir, $force);
-        }
-
-        return $result;
+        return $this->riotManager->getImages($version, $lang, $force, 'summoner', 'id', $sums);
     }
     
     /**
@@ -244,24 +186,7 @@ final class SummonerManager
      * @throws \RuntimeException Si le téléchargement ou la sauvegarde échoue.
      */
     public function getSummonerImage(string $name, string $version, array $dir = [], bool $force = false, string $lang = ''):string {
-        $baseUrl = "https://ddragon.leagueoflegends.com/cdn/{$version}/img/spell/";
-
-        if(!$dir){
-            $dir = $this->utils->buildDirAndPath($version, $lang, 'summoner', $name, true);
-        }
-        $path = $this->utils->buildPath($dir, $name);
-        if (!$force && $this->fs->exists($path['absPath'])) {
-            return $path['relPath'];
-        }
-
-        $binary = $this->aPICaller->call($baseUrl . $name);
-        if($src = $this->utils->binaryExisting($binary, $name, 'summoner')){
-            @link($src, $path['absPath']);
-        }else{
-            $this->fs->dumpFile($path['absPath'], $binary);
-        }
-
-        return $path['relPath'];
+        return $this->riotManager->getImage($name, $version, $dir, $force, $lang,  'summoner');
     }
 
     /* Fonction de trie */
@@ -320,34 +245,7 @@ final class SummonerManager
      * }
      */
     public function paginateSummoners(string $version, string $langue, int $nb = 1, int $numPage = 1): array{
-        (array) $json = json_decode($this->getSummoners($version, $langue), true)['data'];
-        (int) $ttSum = count($json);
-        if($nb === 0 || $nb > $ttSum){
-            $nb = $ttSum;
-        }
-        $ttPage = ceil($ttSum / $nb);
-        if( $numPage > $ttPage ){
-            $numPage = 1;
-        }
-        
-        if($numPage <= 1){
-            (array) $json = $this->utils->splitJson($nb, 0, $json);
-        }else{
-            (array) $json = $this->utils->splitJson($nb, $nb*($numPage-1), $json);
-        }
-        
-        (array) $images = $this->getSummonersImages($version, $langue, false, $json);
-        return [
-            'summoners' =>  $json,
-            'images' => $images,
-            'meta' => [
-                'currentPage' => $numPage,
-                'nombrePage' => $ttPage,
-                'itemPerPage' => $nb,
-                'totalItem' => $ttSum,
-                'type' => 'summoners',
-            ],
-        ];
+        return $this->riotManager->paginate($version, $langue, 'summoner', 'id', $nb, $numPage);
     }
 
 
