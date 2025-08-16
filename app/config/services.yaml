@@ -27,5 +27,11 @@ services:
     App\Service\Utils:
         arguments:
             $baseDir: '%upload_manager.base_dir%'
+    App\Service\ItemManager:
+        arguments:
+            $baseDir: '%upload_manager.base_dir%'
+    App\Service\RiotManager:
+        arguments:
+            $baseDir: '%upload_manager.base_dir%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

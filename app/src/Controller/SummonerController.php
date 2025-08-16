@@ -35,7 +35,7 @@ final class SummonerController extends AbstractController
     #[Route('/summoners_redirect/{numpage}/{itemperpage}', 
         name: 'app_summoners_redirect', 
         methods: ['GET'], 
-        defaults: ['numpage' => 1,'itemperpage' => 8]
+        defaults: ['numpage' => 1,'itemperpage' => 9]
     )]
     public function summoners_redirect(int $numpage, int $itemperpage): Response{
         // On recupere les informations en session
@@ -210,6 +210,7 @@ final class SummonerController extends AbstractController
                 $e->getMessage()
             ));
         }
+
         $images = $this->summoners->getSummonersImages($session['version'], $session['lang'], false, $summoners);
         
         // Filtrer uniquement id, name et image
