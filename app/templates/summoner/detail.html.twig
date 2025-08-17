@@ -1,18 +1,19 @@
 {# templates/summoner/detail.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ summoner.name ?? 'Summoner' }}{% endblock %}
+{% block title %}{{ summoner.name ?? 'Summoner' }} - {{client.session.version}}{% endblock %}
 
 {% block body %}
 <main class="relative min-h-[65vh] bg-blue-950 overflow-hidden flex items-center justify-center py-7 w-full">
 
-  {% include 'partials/visual/gradient.html.twig' %}
+  {% include 'partials/main/gradient.html.twig' %}
   
-    {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
-    {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
-    <div class="relative mx-auto max-w-5xl">
+  {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
+  {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
+  <div class="relative mx-auto max-w-5xl px-4">
     {# En-tête #}
     <article class="mb-10 flex items-center gap-6">
+        {# Image #}
         {% if image %}
             <div class="relative shrink-0 h-20 w-20 rounded-2xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
             <img src="/{{ image }}" alt="{{ summoner.name }}" class="h-16 w-16 object-contain transition group-hover:scale-105 duration-300">
@@ -29,7 +30,6 @@
             <p class="font-spiegel text-blue-200/80 mt-1">
             {{ summoner.id ?? '' }}
             </p>
-
             {# Ajout : affichage version/langue #}
             <p class="mt-1 text-sm text-blue-200/60">
             Version : {{ selectedVersion }} — Langue : {{ selectedLocale }}
@@ -44,11 +44,19 @@
         <dd class="font-medium text-white/90">{{ summoner.cooldownBurn ?? (summoner.cooldown|default([])|join('/')) ?: '–' }}</dd>
       </div>
       <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Coût</dt>
-        <dd class="font-medium text-white/90">{{ summoner.costBurn ?? (summoner.cost|default([])|join('/')) ?: '–' }}</dd>
+        <dt class="text-blue-200/70 text-sm">Number of charges</dt>
+        <dd class="font-medium text-white/90">{{ summoner.maxammo < 0 ? 1 : summoner.maxammo }}</dd>
       </div>
       <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Niv. invoc.</dt>
+        <dt class="text-blue-200/70 text-sm">Usage range</dt>
+        <dd class="font-medium text-white/90">{{ summoner.rangeBurn  ?? (summoner.rangeBurn |default([])|join('/')) ?: '–' }}</dd>
+      </div>
+      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
+        <dt class="text-blue-200/70 text-sm">Cost</dt>
+        <dd class="font-medium text-white/90">{{ summoner.costType  ?? (summoner.costType |default([])|join('/')) ?: '–' }}</dd>
+      </div>
+      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
+        <dt class="text-blue-200/70 text-sm">Summoner level</dt>
         <dd class="font-medium text-white/90">{{ summoner.summonerLevel ?? '–' }}</dd>
       </div>
     </div>
@@ -56,7 +64,7 @@
     {# Modes compatibles #}
     {% if summoner.modes is defined and summoner.modes is iterable and summoner.modes is not empty %}
       <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">Modes compatibles</h2>
+        <h2 class="text-lg font-semibold text-white mb-3">Compatible modes</h2>
         <div class="flex flex-wrap gap-2">
           {% for m in summoner.modes %}
             <span class="rounded-full bg-blue-950/70 px-3 py-1 text-sm border border-grey-700 text-blue-200/90">{{ m }}</span>
@@ -76,16 +84,7 @@
     {% endif %}
 
     {# Actions #}
-    <div class="mt-10 flex gap-4">
-      <a href="{{ path('app_summoners') }}"
-         class="px-4 py-2 rounded-lg border border-grey-700 bg-transparent text-white hover:bg-blue-900 transition">
-        ← Retour à la liste
-      </a>
-      <a href="{{ path('app_setup') }}"
-         class="px-4 py-2 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
-        Changer version & langue
-      </a>
-    </div>
+    {% include 'partials/main/elem/change.html.twig' %}
   </div>
 </main>
 {% endblock %}
