@@ -5,17 +5,7 @@
 {% block body %}
 <main class="relative min-h-[65vh] bg-blue-950 overflow-hidden flex items-center justify-center py-7 w-full">
 
-  {# Halo + étoiles décoratives #}
-  <div aria-hidden="true" class="pointer-events-none absolute inset-0">
-    <div class="absolute -top-1/3 left-1/2 -translate-x-1/2 h-[65rem] w-[65rem] rounded-full opacity-25 blur-3xl"
-         style="background: radial-gradient(closest-side, rgba(191,219,254,.25), rgba(30,58,138,.25) 45%, transparent 70%);"></div>
-    <div class="absolute inset-0">
-      {% for i in 1..28 %}
-        <span class="absolute block h-1 w-1 rounded-full bg-blue-200/30"
-              style="top: {{ random(2,98) }}%; left: {{ random(2,98) }}%;"></span>
-      {% endfor %}
-    </div>
-  </div>
+  {% include 'partials/visual/gradient.html.twig' %}
 
   {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
   {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}

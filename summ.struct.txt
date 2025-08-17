@@ -1,0 +1,9 @@
+Name
+id
+
+CooldownBurn, maxammo, rangeBurn 
+costType, SummonerLevel
+
+Description
+modes
+ 
