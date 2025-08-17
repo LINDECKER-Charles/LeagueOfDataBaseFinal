@@ -16,13 +16,7 @@ final class SummonerManager
     private const TYPE = 'summoner';
 
     public function __construct(
-        private readonly HttpClientInterface $http,
-        private readonly UploadManager $uploader,
-        private readonly APICaller $aPICaller,
-        private readonly Utils $utils,
         private readonly string $baseDir,
-        private readonly Filesystem $fs = new Filesystem(),
-        private readonly VersionManager $versionManager,
         private readonly RiotManager $riotManager,
     ) {}
 
@@ -61,48 +55,6 @@ final class SummonerManager
      */
     public function getSummonerByName(string $name, string $version, string $lang): array{
         return $this->riotManager->getDataByKey($name, $version, $lang, 'id', self::TYPE);
-    }
-
-    /**
-     * Récupère les informations détaillées d'un sort d'invocateur à partir de son identifiant exact.
-     *
-     * - Charge la liste complète des sorts d'invocateur via {@see getSummoners()}.
-     * - Décode le JSON en tableau associatif.
-     * - Parcourt les données et retourne le sort dont la clé `id` correspond exactement au nom donné.
-     *
-     * @param string $name    Identifiant exact du sort d'invocateur (ex: "SummonerBarrier").
-     * @param string $version Version du jeu (ex: "15.12.1").
-     * @param string $lang    Code de langue (ex: "fr_FR").
-     *
-     * @return array Tableau associatif contenant les données complètes du sort d'invocateur.
-     *
-     * @throws \RuntimeException Si le format des données est invalide ou si aucun sort ne correspond.
-     */
-    public function getSummonersByName(string $name, string $version, string $lang): array{
-        (string) $json = $this->getSummoners($version,$lang);
-
-        // Décodage en tableau associatif
-        $data = json_decode($json, true);
-
-        (array) $result = [];
-        // Vérification que la clé "data" existe
-        if (!isset($data['data']) || !is_array($data['data'])) {
-            throw new \RuntimeException('Format de données invalide.');
-        }
-
-        // Recherche de l'invocateur par id
-        foreach ($data['data'] as $summoner) {
-            if (isset($summoner['id']) && $summoner['id'] === $name) {
-                $result = array_merge($result, $summoner);
-            }
-        }
-
-        if($result){
-            return $result;
-        }
-
-        // Si non trouvé
-        throw new \RuntimeException(sprintf('Aucun invocateur trouvé avec l\'ID "%s".', $name));
     }
 
     /**
@@ -187,37 +139,6 @@ final class SummonerManager
      */
     public function getSummonerImage(string $name, string $version, array $dir = [], bool $force = false, string $lang = ''):string {
         return $this->riotManager->getImage($name, $version, $dir, $force, $lang,  'summoner');
-    }
-
-    /* Fonction de trie */
-    /**
-     * Décode le JSON DDragon et trie les summoners par nom (insensible à la casse).
-     *
-     * @param string $json JSON brut renvoyé par DDragon (summoner.json)
-     * @return array<int, array<string, mixed>> Tableau indexé des sorts triés
-     * @throws \JsonException Si le JSON est invalide
-     */
-    public function orderAcsSummoners(array $json): array
-    {
-        /** @var array{data?: array<string, array{name?: string}>} $decoded */
-        $summoners = array_values($json['data'] ?? []);
-        usort($summoners, static fn(array $a, array $b): int =>
-            strcasecmp($a['name'] ?? '', $b['name'] ?? '')
-        );
-        return $summoners;
-    }
-
-    /**
-     * Récupère (avec cache disque) puis parse+trie les summoners.
-     *
-     * @param string $version Ex: "14.16.1"
-     * @param string $lang    Ex: "fr_FR"
-     * @return array<int, array<string, mixed>>
-     * @throws \RuntimeException|\JsonException
-     */
-    public function getSummonersParsed(string $version, string $lang): array
-    {
-        return json_decode($this->getSummoners($version, $lang), true)['data'];
     }
 
     /**

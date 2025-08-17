@@ -76,21 +76,18 @@ final class RiotManager{
      *
      * @throws \RuntimeException Si le format des données est invalide ou si aucune entrée correspondante n'est trouvée.
      */
-    public function getDataByKey(string $name, string $version, string $lang, string $key = 'id', string $type = 'summoner'): array{
+    public function getDataByKey(string $name, string $version, string $lang, string $key = 'id', string $type = 'summoner', bool $noData = false): array{
 
         (array) $data = $this->getJson($version,$lang, $type);
-        
-        // Vérification que la clé "data" existe
-        if (!isset($data['data']) || !is_array($data['data'])) {
-            throw new \RuntimeException('Format de données invalide.');
-        }
 
         if($key === ''){
             return $data['data'][$name];
+        }else if(!$noData){
+            $data = $data['data'];
         }
 
         // Recherche de l'invocateur par id
-        foreach ($data['data'] as $d) {
+        foreach ($data as $d) {
             if (isset($d[$key]) && $d[$key] === $name) {
                 return $d;
             }
@@ -157,7 +154,9 @@ final class RiotManager{
      *
      * @return array  Tableau associatif [id => cheminRelatifImage].
      */
-    public function getImages(string $version, string $lang, bool $force = false, string $type, string $key, array $data = []): array{
+    public function getImages(string $version, string $lang, bool $force = false, 
+    string $type, string $key, 
+    array $data = []): array{
         if(!$data){
             (array) $data = array_values($this->getJson($version, $lang, $type)['data'] ?? []);
         }
