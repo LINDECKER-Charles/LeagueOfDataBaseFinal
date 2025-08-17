@@ -20,25 +20,6 @@ class HomeController extends AbstractController
     ){}
 
     /**
-     * Page de test/sandbox.
-     *
-     * Rend le template `home/test.html.twig` avec un view-model `client`
-     * (voir {@see App\Dto\ClientData::fromServices()}) pour disposer des
-     * versions/langues/labels, de la locale courante et des préférences session.
-     *
-     * @route  /test  name=app_test
-     *
-     * @return \Symfony\Component\HttpFoundation\Response Réponse HTML de la page de test.
-     */
-    #[Route('/test', name: 'app_test')]
-    public function index(): Response
-    {
-        return $this->render('home/test.html.twig', [
-            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
-        ]);
-    }
-
-    /**
      * Affiche la page « Work in progress ».
      *
      * Prépare les données transverses du client (versions, langues, libellés,
@@ -168,11 +149,10 @@ class HomeController extends AbstractController
         $this->clientManager->setLocaleInSession($language);
         $this->clientManager->setVersionInSession($version);
 
-
         /* dd($language, $version, $backUrl); */
         // Petit feedback facultatif
         $request->getSession()?->getFlashBag()->clear();
-        $this->addFlash('success', 'Préférences reçues 👍');
+        $this->addFlash('success', 'Preferences saved');
         return $response;
     }
 }

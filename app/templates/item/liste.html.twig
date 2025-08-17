@@ -1,11 +1,11 @@
 {# templates/summoner/liste.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Summoners{% endblock %}
+{% block title %}Summoners - {{client.session.version}}{% endblock %}
 
 {% block body %}
 <main class="relative px-6 py-10">
-  {% include 'partials/visual/gradient.html.twig' %}
+  {% include 'partials/main/gradient.html.twig' %}
 
   <div class="relative mx-auto max-w-7xl">
     {# En-tête #}

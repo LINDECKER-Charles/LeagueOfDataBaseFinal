@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ item.name ?? 'Item' }}{% endblock %}
+{% block title %}{{ item.name ?? 'Item' }} - {{client.session.version}}{% endblock %}
 
 {% block body %}
 <main class="relative min-h-[65vh] bg-blue-950 overflow-hidden flex items-center justify-center py-7 w-full">
 
-  {% include 'partials/visual/gradient.html.twig' %}
+  {% include 'partials/main/gradient.html.twig' %}
 
   {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
   {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}

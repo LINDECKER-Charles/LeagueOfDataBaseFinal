@@ -1,5 +1,6 @@
 Name
 id
+version - langue
 
 CooldownBurn, maxammo, rangeBurn 
 costType, SummonerLevel

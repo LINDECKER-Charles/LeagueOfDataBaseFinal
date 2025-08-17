@@ -1,0 +1,102 @@
+        <section class="group h-full flex flex-col rounded-2xl border border-grey-700 bg-blue-850/80 backdrop-blur shadow-sm hover:shadow-md hover:-translate-y-0.5 transition relative overflow-hidden">
+          {# Liseré haut subtil #}
+          <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-200/40 to-transparent"></div>
+
+          {# -- Haut de carte : header + stats -- #}
+          <div class="flex-1">
+            <header class="mb-3 flex items-center gap-3 px-4 pt-4">
+              {# Image #}
+              <a href="{{ path('app_summoner_redirect', { name: id }) }}">
+                {% if imgPath %}
+                  <div class="relative shrink-0 h-14 w-14 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
+                    <img src="/{{ imgPath }}" alt="{{ name }}" class="h-14 w-14 object-cover transition group-hover:scale-105 duration-300">
+                  </div>
+                {% else %}
+                  <div class="h-14 w-14 rounded-xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-xs">
+                    {{ name|slice(0,2)|upper }}
+                  </div>
+                {% endif %}
+              </a>
+              {# Titre - Sous Titre #}
+              <div class="min-w-0">
+                <a href="{{ path('app_summoner', { name: id }) }}"
+                  class="group transition-all duration-300 ease-out">
+                  <h3 class="truncate text-[15px] font-semibold text-white group-hover:text-blue-300 group-hover:scale-[1.03] transform transition-all duration-300" 
+                      title="{{ name }}">
+                    {{ name }}
+                  </h3>
+                  <p class="truncate text-xs text-blue-200/70 group-hover:text-blue-400 transition-colors duration-300" 
+                    title="{{ id }}">
+                    {{ id }}
+                  </p>
+                </a>
+              </div>
+            </header>
+            {# Propriété #}
+            <div class="px-4">
+              <dl class="mb-3 grid grid-cols-3 gap-2 text-[11px]">
+                <div class="rounded-lg bg-blue-950/80 p-2 border border-grey-700">
+                  <dt class="text-blue-200/70">Cooldown</dt>
+                  <dd class="font-medium text-white/90">{{ cd ?: '–' }}</dd>
+                </div>
+                <div class="rounded-lg bg-blue-950/80 p-2 border border-grey-700">
+                  <dt class="text-blue-200/70">Niv. invoc.</dt>
+                  <dd class="font-medium text-white/90">{{ lvl }}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          {# -- Bas de carte : accordéons collés en bas -- #}
+          {% set hasBottom = (modes is not empty) or desc %}
+          {% if hasBottom %}
+            <div class="mt-auto">
+              {# Liste des modes de jeux dans le qu'elle il est disponible #}
+              {% if modes is not empty %}
+                {% set modesCount = modes|length %}
+                {% set previewModes = modes|slice(0,2) %}
+                <details class="group/modes border-t border-grey-700 bg-blue-950/60 open:bg-blue-950/70">
+                  <summary class="cursor-pointer list-none select-none px-4 py-3 text-sm text-white/90 flex items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="font-medium">Modes compatibles</span>
+                      <span class="text-xs text-blue-200/70">({{ modesCount }})</span>
+                      <span class="hidden md:flex flex-wrap gap-1">
+                        {% for m in previewModes %}
+                          <span class="rounded-full bg-blue-950/70 px-2 py-0.5 text-[11px] border border-grey-700 text-blue-200/90">{{ m }}</span>
+                        {% endfor %}
+                        {% if modesCount > 2 %}
+                          <span class="rounded-full bg-blue-950/70 px-2 py-0.5 text-[11px] border border-grey-700 text-blue-200/90">+{{ modesCount - 2 }}</span>
+                        {% endif %}
+                      </span>
+                    </div>
+                    <svg class="h-4 w-4 shrink-0 transition-transform group-open/modes:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
+                    </svg>
+                  </summary>
+                  <div class="px-4 pb-4">
+                    <div class="flex flex-wrap gap-2">
+                      {% for m in modes %}
+                        <span class="rounded-full bg-blue-950/70 px-2 py-1 text-[11px] border border-grey-700 text-blue-200/90">{{ m }}</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </details>
+              {% endif %}
+
+              {# Description du Summoner #}
+              {% if desc %}
+                <details class="group/desc border-t border-grey-700 bg-blue-950/60 open:bg-blue-950/70">
+                  <summary class="cursor-pointer list-none select-none px-4 py-3 text-sm text-white/90 flex items-center justify-between">
+                    <span>Description</span>
+                    <svg class="h-4 w-4 transition-transform group-open/desc:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
+                    </svg>
+                  </summary>
+                  <div class="prose prose-invert max-w-none px-4 pb-4 text-sm text-blue-100/90">
+                    {{ desc|raw }}
+                  </div>
+                </details>
+              {% endif %}
+            </div>
+          {% endif %}
+        </section>
