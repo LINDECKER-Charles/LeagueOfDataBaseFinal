@@ -35,7 +35,7 @@ final class SummonerController extends AbstractController
     #[Route('/summoners_redirect/{numpage}/{itemperpage}', 
         name: 'app_summoners_redirect', 
         methods: ['GET'], 
-        defaults: ['numpage' => 1,'itemperpage' => 9]
+        defaults: ['numpage' => 1,'itemperpage' => 8]
     )]
     public function summoners_redirect(int $numpage, int $itemperpage): Response{
         // On recupere les informations en session
@@ -161,6 +161,11 @@ final class SummonerController extends AbstractController
             ));
             return $this->redirectToRoute('app_setup');
         }
+
+        //Refactoriser Element pour n'envoyer que la partie utils
+        /* dd($summoner); */
+/*         (array) $props = array_find($summoner, array_flip(['cooldownBurn', 'maxammo', 'rangeBurn', 'costType', 'summonerLevel']));
+        dd($summoner, $props, array_flip(['cooldownBurn', 'maxammo', 'rangeBurn', 'costType', 'summonerLevel'])); */
 
         return $this->render('summoner/detail.html.twig', [
             'summoner' => $summoner,

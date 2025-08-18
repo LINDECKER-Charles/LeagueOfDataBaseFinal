@@ -39,29 +39,31 @@
 
     {# Infos principales #}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Cooldown</dt>
-        <dd class="font-medium text-white/90">{{ summoner.cooldownBurn ?? (summoner.cooldown|default([])|join('/')) ?: '–' }}</dd>
-      </div>
-      {% if summoner.maxammo is defined %}
-        <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-          <dt class="text-blue-200/70 text-sm">Number of charges</dt>
-          <dd class="font-medium text-white/90">{{ (summoner.maxammo < 0 ? 1 : summoner.maxammo) }}</dd>
-        </div> 
-      {% endif %}
+      {% set fields = {
+        'Cooldown': 'cooldownBurn',
+        'Number of charges': 'maxammo',
+        'Usage range': 'rangeBurn',
+        'Cost': 'costType',
+        'Summoner level': 'summonerLevel'
+      } %}
 
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Usage range</dt>
-        <dd class="font-medium text-white/90">{{ summoner.rangeBurn  ?? (summoner.rangeBurn |default([])|join('/')) ?: '–' }}</dd>
-      </div>
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Cost</dt>
-        <dd class="font-medium text-white/90">{{ summoner.costType  ?? (summoner.costType |default([])|join('/')) ?: '–' }}</dd>
-      </div>
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Summoner level</dt>
-        <dd class="font-medium text-white/90">{{ summoner.summonerLevel  ?? (summoner.summonerLevel |default([])|join('/')) ?: '–' }}</dd>
-      </div>
+      {% set indexs = {} %}
+      {% for label, key in fields %}
+        {% set val = attribute(summoner, key)|default(null) %}
+        {% if val is not null %}
+          {% set indexs = indexs|merge({ (label): val }) %}
+        {% endif %}
+      {% endfor %}
+      {% for name, val in indexs %}
+        <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
+            <dt class="text-blue-200/70 text-sm">{{ name }}</dt>
+            <dd class="font-medium text-white/90">
+              {{ val is iterable
+                ? val|join('/')
+                : val|capitalize }}
+            </dd>
+        </div>
+      {% endfor %}
     </div>
 
     {# Modes compatibles #}
@@ -81,7 +83,7 @@
       <section>
         <h2 class="text-lg font-semibold text-white mb-3">Description</h2>
         <div class="prose prose-invert max-w-none text-blue-100/90">
-          {{ summoner.description|raw }}
+          {{ summoner.description|raw|capitalize }}
         </div>
       </section>
     {% endif %}
