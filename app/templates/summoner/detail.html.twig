@@ -43,7 +43,7 @@
         <dt class="text-blue-200/70 text-sm">Cooldown</dt>
         <dd class="font-medium text-white/90">{{ summoner.cooldownBurn ?? (summoner.cooldown|default([])|join('/')) ?: '–' }}</dd>
       </div>
-      {% if summoner.maxammo is defined  %}
+      {% if summoner.maxammo is defined %}
         <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
           <dt class="text-blue-200/70 text-sm">Number of charges</dt>
           <dd class="font-medium text-white/90">{{ (summoner.maxammo < 0 ? 1 : summoner.maxammo) }}</dd>
