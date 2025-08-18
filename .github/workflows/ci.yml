@@ -97,7 +97,7 @@ jobs:
         run: |
           ssh root@league-of-data-base.fr <<'EOSSH'
             set -e
-            cd /var/www/leagueofdatabase/LeagueOfDataBaseFinal/app
+            cd ${{ secrets.PATH_PROD }}
             git fetch --all --prune
             git reset --hard origin/main
             export APP_ENV=prod APP_DEBUG=0 COMPOSER_ALLOW_SUPERUSER=1
