@@ -43,10 +43,13 @@
         <dt class="text-blue-200/70 text-sm">Cooldown</dt>
         <dd class="font-medium text-white/90">{{ summoner.cooldownBurn ?? (summoner.cooldown|default([])|join('/')) ?: '–' }}</dd>
       </div>
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Number of charges</dt>
-        <dd class="font-medium text-white/90">{{ summoner.maxammo < 0 ? 1 : summoner.maxammo }}</dd>
-      </div>
+      {% if summoner.maxammo is defined %}
+        <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
+          <dt class="text-blue-200/70 text-sm">Number of charges</dt>
+          <dd class="font-medium text-white/90">{{ (summoner.maxammo < 0 ? 1 : summoner.maxammo) }}</dd>
+        </div> 
+      {% endif %}
+
       <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
         <dt class="text-blue-200/70 text-sm">Usage range</dt>
         <dd class="font-medium text-white/90">{{ summoner.rangeBurn  ?? (summoner.rangeBurn |default([])|join('/')) ?: '–' }}</dd>
@@ -57,7 +60,7 @@
       </div>
       <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
         <dt class="text-blue-200/70 text-sm">Summoner level</dt>
-        <dd class="font-medium text-white/90">{{ summoner.summonerLevel ?? '–' }}</dd>
+        <dd class="font-medium text-white/90">{{ summoner.summonerLevel  ?? (summoner.summonerLevel |default([])|join('/')) ?: '–' }}</dd>
       </div>
     </div>
 
