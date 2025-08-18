@@ -1,16 +1,9 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Setpup{% endblock %}
+{% block title %}Setup{% endblock %}
 
 {% block body %}
-  <main class="flex flex-1">
-    {% if 0 %}
-      <p>selectedLocale : <strong>{{ selectedLocale }}</strong></p>
-      <p>currentLocale  : <strong>{{ currentLocale }}</strong></p>
-      <p>session.locale : <strong>{{ session.locale ?? '—' }}</strong></p>
-      <p>session.version: <strong>{{ session.version ?? '—' }}</strong></p>
-    {% endif %}
-    <div class="relative flex-1 flex flex-col justify-center items-center bg-blue-950 px-4 overflow-hidden my-8">
+<main class="relative flex flex-col justify-center items-center bg-blue-950 px-4 overflow-hidden min-h-screen" id="content">
 
       {# Sélection par défaut depuis le DTO (inchangé) #}
       {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
@@ -84,7 +77,6 @@
           </button>
         </form>
       </section>
-    </div>
   </main>
   <script type="module" data-reload>
     import initAddonScript from '{{ asset("js/centerPage.js") }}';
