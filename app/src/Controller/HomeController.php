@@ -60,7 +60,8 @@ class HomeController extends AbstractController
     public function setup(): Response
     {
         return $this->render('home/setupPage.html.twig', [
-            'client' => ClientData::fromServices($this->versionManager, $this->clientManager)
+            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'typeV' => 'LOL',
         ]);
     }
 
