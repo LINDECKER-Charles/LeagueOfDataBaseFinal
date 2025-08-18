@@ -1,27 +1,9 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Setup</title>
-    {% block stylesheets %}
-        {{ encore_entry_link_tags('app') }}
-    {% endblock %}
+{% extends 'base.html.twig' %}
 
-    {% block javascripts %}
-        {{ encore_entry_script_tags('app') }}
-    {% endblock %}
+{% block title %}Setpup{% endblock %}
 
-    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
-    <link rel="manifest" href="/favicon/site.webmanifest" />
-</head>
-<body class="bg-blue-950 text-white font-spiegel transition-all duration-300 ease-in-out w-screen flex flex-col min-h-screen" id="content">
-  {% include 'partials/headerSetup.html.twig' %}
+{% block body %}
   <main class="flex flex-1">
-
     {% if 0 %}
       <p>selectedLocale : <strong>{{ selectedLocale }}</strong></p>
       <p>currentLocale  : <strong>{{ currentLocale }}</strong></p>
@@ -104,11 +86,8 @@
       </section>
     </div>
   </main>
-  {% include 'partials/toaster.html.twig' %}
-  {% include 'partials/footer.html.twig' %}
-</body>
-<script type="module" data-reload>
-  import initAddonScript from '{{ asset("js/centerPage.js") }}';
-  initAddonScript();
-</script>
-</html>
+  <script type="module" data-reload>
+    import initAddonScript from '{{ asset("js/centerPage.js") }}';
+    initAddonScript();
+  </script>
+{% endblock %}

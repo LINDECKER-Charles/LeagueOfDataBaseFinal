@@ -20,7 +20,11 @@
     </div>
   </a>
 
+  {% if typeV is not defined %}
   <nav class="flex-1 flex flex-row items-center justify-center">
+  {% else %}
+  <nav class="flex-1 flex flex-row items-center justify-end">
+  {% endif %}
     <ul class="flex flex-col sm:flex-row justify-center gap-8 text-xl items-center">
       <li><a href="{{ url('app_working') }}" class="nav-link">Champion</a></li>
       <li><a href="{{ url('app_items_redirect') }}" class="nav-link">Object</a></li>
@@ -29,7 +33,8 @@
     </ul>
   </nav>
 
-  {# Pré-sélection depuis le DTO #}
+  {% if typeV is not defined %}
+    {# Pré-sélection depuis le DTO #}
   {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
   {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
 
@@ -72,4 +77,5 @@
       </button>
     </div>
   </form>
+  {% endif %}
 </header>
