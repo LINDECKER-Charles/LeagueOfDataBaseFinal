@@ -164,4 +164,7 @@ final class Utils
         return array_slice($json, $start, $nb, true);
     }
 
+    public function generateBackurl(){
+        
+    }
 }

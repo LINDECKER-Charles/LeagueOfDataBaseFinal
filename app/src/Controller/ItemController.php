@@ -123,7 +123,7 @@ final class ItemController extends AbstractController{
         }
         return $this->render('item/liste.html.twig', [
             'items' => $data['items'],
-            'images'    => $data['images'],
+            'images' => $data['images'],
             'meta' => $data['meta'],
             'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
         ]);
@@ -144,7 +144,7 @@ final class ItemController extends AbstractController{
      * @return Response Redirection HTTP vers la route 'app_item' avec name, version et langue.
      */
     #[Route('/object_redirect/{name}', name: 'app_item_redirect', methods: ['GET'])]
-    public function summoner_redirect(string $name): Response
+    public function object_redirect(string $name): Response
     {
         // On récupère les informations en session
         $session = $this->clientManager->getSession();
@@ -181,7 +181,7 @@ final class ItemController extends AbstractController{
      *                  ou redirection si paramètres absents/erreur.
      */
     #[Route('/object/{name}', name: 'app_item', methods: ['GET'])]
-    public function summoner(string $name): Response{
+    public function object(string $name): Response{
 
         $session = $this->clientManager->getParams(['version', 'lang']);
 

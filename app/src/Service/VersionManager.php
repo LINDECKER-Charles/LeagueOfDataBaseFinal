@@ -18,6 +18,8 @@ class VersionManager
         private readonly APICaller $aPICaller,
     ) {}
 
+    /* Partie API */
+
     /**
      * Récupère la liste complète des versions depuis Riot (Data Dragon)
      *
@@ -40,6 +42,7 @@ class VersionManager
             }
         });
     }
+
     /**
      * Récupère la liste des langues disponibles dans Data Dragon (API Riot Games)
      *
@@ -106,6 +109,8 @@ class VersionManager
             'zh_TW' => 'Chinois traditionnel',
         ];
     }
+
+    /* Vérification */
 
     /**
      * Retourne true si la version existe dans la liste Riot.

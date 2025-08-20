@@ -103,12 +103,12 @@ final class ItemManager extends AbstractManager{
         if(!$data){
             (array) $data = array_values($this->getData($version, $lang)['data'] ?? []);
         }
-
+        
         $dir = $this->buildDir($version, $lang, SELF::TYPE, true);
 
         $result = [];
-
         foreach ($data as $d) {
+            
             $id  = $d['name'] ?? null;
             $img = $d['image']['full'] ?? null;
 
@@ -152,7 +152,7 @@ final class ItemManager extends AbstractManager{
      *                           ou si la construction des chemins échoue.
      */
     public function getImage(string $name, string $version, array $dir = [], bool $force = false, string $lang = ''):string {
-
+        
         $baseUrl = "https://ddragon.leagueoflegends.com/cdn/{$version}/img/". SELF::TYPE . "/";
         if(!$dir){
             $dir = $this->buildDir($version, $lang, SELF::TYPE, true);
@@ -205,12 +205,18 @@ final class ItemManager extends AbstractManager{
 
         (int) $ttSum = count($json);
         if($nb === 0 || $nb > $ttSum){
-            $nb = $ttSum;
+            if($ttSum > 20){
+                $nb = 20;
+            }else{
+                $nb = $ttSum;
+            }
         }
+
         $ttPage = ceil($ttSum / $nb);
         if( $numPage > $ttPage ){
             $numPage = 1;
         }
+        
         
         if($numPage <= 1){
             (array) $json = $this->splitJson($nb, 0, $json);
@@ -219,6 +225,7 @@ final class ItemManager extends AbstractManager{
         }
         
         (array) $images = $this->getImages($version, $langue, false, $json);
+        /* dd($json, $images); */
         return [
             SELF::TYPE . 's' =>  $json,
             'images' => $images,
