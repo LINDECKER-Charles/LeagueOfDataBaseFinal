@@ -76,7 +76,7 @@ final class SummonerController extends AbstractController
             return $this->redirectToRoute('app_summoners_redirect');
         }
         try {
-            $data = $this->summoners->paginateSummoners($session['version'], $session['lang'], $session['itemPerPage'], $session['numPage']);
+            $data = $this->summoners->paginate($session['version'], $session['lang'], $session['itemPerPage'], $session['numPage']);
         } catch (\Throwable $e) {
             $this->requestStack->getSession()->getFlashBag()->clear();
             $this->addFlash('error', sprintf(
@@ -87,6 +87,7 @@ final class SummonerController extends AbstractController
             ));
             return $this->redirectToRoute('app_setup');
         }
+
         return $this->render('summoner/liste.html.twig', [
             'summoners' => $data['summoners'],
             'images'    => $data['images'],
@@ -149,8 +150,8 @@ final class SummonerController extends AbstractController
         }
 
         try {
-            $image = $this->summoners->getSummonerImage($name . '.png', $session['version'], [], false, $session['lang']);
-            $summoner = $this->summoners->getSummonerByName($name, $session['version'], $session['lang']);
+            $image = $this->summoners->getImage($name . '.png', $session['version'], [], false, $session['lang']);
+            $summoner = $this->summoners->getByName($name, $session['version'], $session['lang']);
         } catch (\Throwable $e) {
             $this->requestStack->getSession()->getFlashBag()->clear();
             $this->addFlash('error', sprintf(
@@ -201,7 +202,7 @@ final class SummonerController extends AbstractController
     {
         $session = $this->clientManager->getSession();
         try {
-            $summoners = $this->summoners->searchSummonersByName($name, $session['version'], $session['lang'], 20);
+            $summoners = $this->summoners->searchByName($name, $session['version'], $session['lang'], 20);
         } catch (\Throwable $e) {
             return $this->json( sprintf(
                 "Donnés absente sur la version %s et la langue %s Message --> %s",
@@ -211,7 +212,7 @@ final class SummonerController extends AbstractController
             ));
         }
 
-        $images = $this->summoners->getSummonersImages($session['version'], $session['lang'], false, $summoners);
+        $images = $this->summoners->getImages($session['version'], $session['lang'], false, $summoners);
         
         // Filtrer uniquement id, name et image
         $final = array_map(function ($summoner) use ($images) {

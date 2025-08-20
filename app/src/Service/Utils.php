@@ -35,45 +35,6 @@ final class Utils
     }
 
     /**
-     * Décode une chaîne JSON et renvoie la structure PHP.
-     *
-     * @param string $json  Chaîne JSON à décoder.
-     * @param bool   $assoc Si true, renvoie des tableaux associatifs (sinon des objets).
-     * @param int    $depth Profondeur maximale de décodage.
-     *
-     * @return mixed Données décodées.
-     *
-     * @throws \RuntimeException Si le JSON est invalide.
-     */
-    public function decodeJson(string $json, bool $assoc = true, int $depth = 512): mixed
-    {
-        $data = json_decode($json, $assoc, $depth);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException('JSON invalide: ' . json_last_error_msg());
-        }
-        return $data;
-    }
-
-    /**
-     * Encode des données PHP en JSON.
-     *
-     * @param mixed $data  Données à encoder.
-     * @param int   $flags Options d'encodage JSON (ex: JSON_UNESCAPED_UNICODE).
-     *
-     * @return string Chaîne JSON encodée.
-     *
-     * @throws \RuntimeException Si l'encodage échoue.
-     */
-    public function encodeJson(mixed $data, int $flags = 0): string
-    {
-        $json = json_encode($data, $flags);
-        if ($json === false) {
-            throw new \RuntimeException('Échec encodage JSON: ' . json_last_error_msg());
-        }
-        return $json;
-    }
-
-    /**
      * A Spliter dans un service d'edition TXT
      * Normalise un tag BCP47 en format "xx_YY"
      * - 'fr'      -> 'fr'
@@ -160,8 +121,6 @@ final class Utils
         $path = $this->buildPath($dir, $name);
         return array_merge($dir, $path);
     }
-
-    
 
     /**
      * Recherche un doublon binaire de l’image dans les autres versions et renvoie son chemin.

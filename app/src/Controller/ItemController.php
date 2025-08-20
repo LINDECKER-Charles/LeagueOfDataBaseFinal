@@ -22,6 +22,18 @@ final class ItemController extends AbstractController{
         private readonly ItemManager $itemManager,
     ) {}
 
+
+    /**
+     * Redirige vers la liste des objets (items) avec pagination.
+     *
+     * Ajoute les paramètres de version/langue depuis la session et applique une limite
+     * au nombre d’éléments par page (max 20).
+     *
+     * @param int $numpage      Numéro de page.
+     * @param int $itemperpage  Nombre d’items par page (max 20).
+     *
+     * @return Response Redirection vers la route app_items.
+     */
     #[Route('/objects_redirect/{numpage}/{itemperpage}', 
         name: 'app_items_redirect', 
         methods: ['GET'], 
@@ -40,7 +52,15 @@ final class ItemController extends AbstractController{
         ]);
     }
 
-
+    /**
+     * Affiche la liste paginée des objets (items).
+     *
+     * Récupère les paramètres (version, langue, pagination) depuis la session.
+     * Si les paramètres sont absents, redirige vers la route de redirection.
+     * Les données paginées incluent les items, leurs images et des métadonnées.
+     *
+     * @return Response Vue Twig affichant la liste paginée des items.
+     */
     #[Route('/objects', name: 'app_items', methods: ['GET'])]
     public function objects(): Response{
         // 1) On récupère les paramètres
@@ -53,7 +73,7 @@ final class ItemController extends AbstractController{
         }
 
         try {
-            $data = $this->itemManager->paginateItems($session['version'], $session['lang'], $session['itemPerPage'] > 20 ? 20 : $session['itemPerPage'], $session['numPage']);
+            $data = $this->itemManager->paginate($session['version'], $session['lang'], $session['itemPerPage'] > 20 ? 20 : $session['itemPerPage'], $session['numPage']);
             /* dd($data, $data['images']); */
         } catch (\Throwable $e) {
             $this->requestStack->getSession()->getFlashBag()->clear();
@@ -101,8 +121,8 @@ final class ItemController extends AbstractController{
         }
 
         try {
-            $image = $this->itemManager->getObjectImage($name . '.png', $session['version'], [], false, $session['lang']);
-            $item = $this->itemManager->getObjectByName($name, $session['version'], $session['lang']);
+            $image = $this->itemManager->getImage($name . '.png', $session['version'], [], false, $session['lang']);
+            $item = $this->itemManager->getByName($name, $session['version'], $session['lang']);
         } catch (\Throwable $e) {
             $this->requestStack->getSession()->getFlashBag()->clear();
             $this->addFlash('error', sprintf(
@@ -126,8 +146,8 @@ final class ItemController extends AbstractController{
     {
         $session = $this->clientManager->getSession();
         try {
-            $items = $this->itemManager->searchObjectsByName($name, $session['version'], $session['lang'], 20);
-            $images = $this->itemManager->getObjectsImages($session['version'], $session['lang'], false, $items);
+            $items = $this->itemManager->searchByName($name, $session['version'], $session['lang'], 20);
+            $images = $this->itemManager->getImages($session['version'], $session['lang'], false, $items);
         } catch (\Throwable $e) {
             return $this->json( sprintf(
                 "Donnés absente sur la version %s et la langue %s Message --> %s",
@@ -137,7 +157,6 @@ final class ItemController extends AbstractController{
             ));
         }
     
-        /* dd($items, $images); */
         // Filtrer uniquement id, name et image
         $final = array_map(function ($item) use ($images) {
             $id = $item['id'] ?? null;
