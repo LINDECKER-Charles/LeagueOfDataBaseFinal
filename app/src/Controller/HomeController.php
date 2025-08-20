@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Dto\ClientData;
 use App\Service\ClientManager;
+use App\Service\UrlGenerator;
 use App\Service\VersionManager;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +18,7 @@ class HomeController extends AbstractController
     public function __construct(
         private readonly VersionManager $versionManager, 
         private readonly ClientManager $clientManager,
+        private readonly UrlGenerator $urlGenerator,
     ){}
 
     /**
@@ -95,17 +97,12 @@ class HomeController extends AbstractController
         // On recupere les donnees
         (string) $language = (string) $request->request->get('langue', '');
         (string) $version  = (string) $request->request->get('version', '');
-        (bool) $remember = $request->request->getBoolean('remember');
+        (bool) $remember = (bool) $request->request->getBoolean('remember');
 
         //On les valides
         $report = $this->versionManager->validateSelection($version, $language);
 
-        $backUrl = $request->headers->get('referer') ?: $this->generateUrl('app_setup');
-
-        // (optionnel) sécurité basique: ne redirige que vers le même host
-        if (!str_starts_with($backUrl, $request->getSchemeAndHttpHost())) {
-            $backUrl = $this->generateUrl('app_setup');
-        }
+        $backUrl = $this->urlGenerator->generateBackUrl();
 
         if (!$report['ok']) {
             $request->getSession()?->getFlashBag()->clear();
@@ -115,24 +112,12 @@ class HomeController extends AbstractController
             return $this->redirect($backUrl);
         }
 
-        // Retirer tout ce qui vient après le ?
-        $path = parse_url($backUrl, PHP_URL_PATH) ?: '/';
-
-        if (!($path === '/') && !($path === '/working-progress')) {
-            // Récupérer les paramètres existants
-            $queryString = parse_url($backUrl, PHP_URL_QUERY) ?: '';
-            parse_str($queryString, $queryParams);
-
-            // Retirer les anciennes valeurs de lang et version
-            unset($queryParams['lang'], $queryParams['version']);
-
-            // Ajouter les nouvelles valeurs
-            $queryParams['version'] = $version;
-            $queryParams['lang'] = $language;
-
-            // Reconstruire l'URL
-            $backUrl = $path . '?' . http_build_query($queryParams);
-        }
+        // 2) Réécrit la query (sauf sur / et /working-progress), en nettoyant l’existant
+        $backUrl = $this->urlGenerator->rewriteQueryParams(
+            $backUrl,
+            overrides: ['version' => $version, 'lang' => $language],
+            removeKeys: ['version', 'lang']
+        );
 
 
         // Succès, on enregistre le cookie si l'utilisateur le demande et on save les preference dans la session
@@ -150,7 +135,7 @@ class HomeController extends AbstractController
         $this->clientManager->setLocaleInSession($language);
         $this->clientManager->setVersionInSession($version);
 
-        /* dd($language, $version, $backUrl); */
+
         // Petit feedback facultatif
         $request->getSession()?->getFlashBag()->clear();
         $this->addFlash('success', 'Preferences saved');
