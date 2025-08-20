@@ -55,7 +55,9 @@ final class ItemController extends AbstractController{
     )]
     public function objects_redirect(int $numpage, int $itemperpage): Response{
         // On recupere les informations en session
+
         $session = $this->client->getSession();
+        
         
         // On les ajoutes en parametre dans l URL
         return $this->redirectToRoute('app_items', [
@@ -100,11 +102,11 @@ final class ItemController extends AbstractController{
     #[Route('/objects', name: 'app_items', methods: ['GET'])]
     public function objects(): Response{
         // 1) On récupère les paramètres
+        
         $session = $this->client->getParams();
 
         // 1.1) Si nos paramètres ne sont pas défini alors on les définis via la redirection
         if(!$session['param']){
-            /* dd($session); */
             return $this->redirectToRoute('app_items_redirect');
         }
 
