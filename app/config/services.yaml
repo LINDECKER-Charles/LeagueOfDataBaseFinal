@@ -21,17 +21,22 @@ services:
             $defaultLocale: 'en_US'
             $appSecret: '%kernel.secret%'
 
-    App\Service\SummonerManager:
-        arguments:
-            $baseDir: '%upload_manager.base_dir%'
-    App\Service\Utils:
-        arguments:
-            $baseDir: '%upload_manager.base_dir%'
     App\Service\ItemManager:
+        parent: App\Service\AbstractManager
+    App\Service\SummonerManager:
+        parent: App\Service\AbstractManager
+    App\Service\AbstractManager:
+        abstract: true                # <— déclaré abstrait (non instanciable)
+        bind:
+            $baseDir: '%upload_manager.base_dir%'
+
+    App\Service\Utils:
         arguments:
             $baseDir: '%upload_manager.base_dir%'
     App\Service\RiotManager:
         arguments:
             $baseDir: '%upload_manager.base_dir%'
+
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
