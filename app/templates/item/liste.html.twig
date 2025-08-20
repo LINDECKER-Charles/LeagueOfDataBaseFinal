@@ -1,7 +1,7 @@
 {# templates/summoner/liste.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Summoners - {{client.session.version}}{% endblock %}
+{% block title %}Summoners - {{client.session.version ?? (client.versions|first)}}{% endblock %}
 
 {% block body %}
 <main class="relative px-6 py-10">
