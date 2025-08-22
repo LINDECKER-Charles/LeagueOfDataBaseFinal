@@ -48,14 +48,14 @@
         {# Les Images #}
 
         {% set default_image = '/preview/setup.png' %}
-        {% if block('image') is defined %}
-            {% set image = block('image')|default(default_image) %}
+        {% if block('img') is defined %}
+            {% set img = block('img')|default(default_image) %}
         {% else %}
-            {% set image = default_image %}
+            {% set img = default_image %}
         {% endif %}
         
-        <meta property="og:image" content="{% block og_image %}{{ image }}{% endblock %}">
-        <meta name="twitter:image" content="{% block twitter_image %}{{ image }}{% endblock %}">
+        <meta property="og:image" content="{% block og_image %}{{ img }}{% endblock %}">
+        <meta name="twitter:image" content="{% block twitter_image %}{{ img }}{% endblock %}">
 
         {# Défini si un robot est autorisier à index la page dans un moteur de rechercher et a suivre les liens présents dans la page. Valeur possible :
             --> index, noindex
