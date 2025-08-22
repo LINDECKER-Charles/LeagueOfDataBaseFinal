@@ -2,7 +2,69 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}League of Data Base{% endblock %}</title>
+        {# Paramètre par défaut à définir #}
+        {% set default_title = 'League of Data Base' %} {# Titre par défaut à définir par sécurité #}
+        {% set default_description = 'League of Data Base is a community-driven platform that provides detailed information, stats, and insights about League of Legends. Fast, reliable, and always up to date.' %} {# Description par défaut à définir par sécurité #}
+
+        {# Mise en place des titre #}
+        <title>{% block title %}{{ default_title }}{% endblock %}</title>
+        <meta property="og:title" content="{% block og_title %}{{ block('title')|default(default_title) }}{% endblock %}">
+        <meta name="twitter:title" content="{% block twitter_title %}{{ block('title')|default(default_title) }}{% endblock %}">
+
+        {# Remplire la balise {% block title %}Exemple{% endblock %} dans vos pages enfant va automatiquement remplir tous les titres. Possible quand même de choisir si vous voulez mettre un titre différent pour chaque propriété #}
+
+        {# Mise en place des titre #}
+        <meta name="description" content="{% block meta_description %}{{ default_description }}{% endblock %}">
+        <meta property="og:description" content="{% block og_description %}{{ default_description|default(default_description) }}{% endblock %}">
+        <meta name="twitter:description" content="{% block twitter_description %}{{ default_description|default(default_description) }}{% endblock %}">
+
+        {# SiteMap si utilisé #}
+        {# <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ path('app_sitemap') }}"> #}
+                
+        {# --- Open Graph --- #}
+
+        {# Url affiché par Open Graph, vous êtes libre de la redéfinir mais ici c'est l'url par défaut qui est indiqué #}
+        <meta property="og:url" content="{% block og_url %}{{ app.request.uri }}{% endblock %}">
+
+        {# Plusieur valeurs possible
+            website --> contenu générique, type site ou page classique (par défaut).
+            article --> pour un article de blog, une actu, une page éditoriale.
+            video.movie, video.episode, video.tv_show --> si c’est une vidéo.
+            music.song, music.album --> pour du contenu audio.
+            product --> pour une fiche produit (e-commerce).
+        #}
+        <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+
+        {# --- Twitter Cards --- #}
+
+        {# Défini la taille de la card qui s'affiche sur twitter :
+            summary --> petite carte, image carrée à gauche + titre/description à droite.
+            summary_large_image --> grande image en pleine largeur + titre/description dessous.
+            app --> pour promouvoir une application mobile (rarement utilisé sauf pour les grosses apps).
+            player --> carte multimédia (intégrer un lecteur vidéo/audio).
+        #}
+        <meta name="twitter:card" content="{% block twitter_card %}summary_large_image{% endblock %}">
+
+        {# Les Images #}
+
+        {% set default_image = '/preview/setup.png' %}
+        {% if block('image') is defined %}
+            {% set image = block('image')|default(default_image) %}
+        {% else %}
+            {% set image = default_image %}
+        {% endif %}
+        
+        <meta property="og:image" content="{% block og_image %}{{ image }}{% endblock %}">
+        <meta name="twitter:image" content="{% block twitter_image %}{{ image }}{% endblock %}">
+
+        {# Défini si un robot est autorisier à index la page dans un moteur de rechercher et a suivre les liens présents dans la page. Valeur possible :
+            --> index, noindex
+            --> follow, nofollow
+        #}
+        <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+        {# Défini la couleur de fond de certain navigateur moderne #}
+        <meta name="theme-color" content="{% block theme_color %}#162033{% endblock %}">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         {% block stylesheets %}
             {{ encore_entry_link_tags('app') }}
@@ -12,7 +74,7 @@
             {{ encore_entry_script_tags('app') }}
         {% endblock %}
 
-        {% include 'partials/meta.html.twig' %}
+        {% include 'partials/favicon.html.twig' %}
     </head>
 
     <body class="bg-blue-950 flex flex-col min-h-screen">
