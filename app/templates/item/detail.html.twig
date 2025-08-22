@@ -1,7 +1,11 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}{{ item.name ?? 'Item' }} - {{client.session.version ?? (client.versions|first)}}{% endblock %}
-
+{% block meta_description %}
+Discover everything about the item {{ item.name ?? 'Item' }} in League of Legends. 
+Stats, effects, and build information updated for patch {{ client.session.version ?? (client.versions|first) }}.
+{% endblock %}
+{% block image %}/preview/objects.png{% endblock %}
 {% block body %}
 <main class="relative min-h-[65vh] bg-blue-950 overflow-hidden flex items-center justify-center py-7 w-full">
 
