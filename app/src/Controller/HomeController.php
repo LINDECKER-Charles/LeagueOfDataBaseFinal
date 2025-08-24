@@ -3,9 +3,11 @@
 namespace App\Controller;
 
 use App\Dto\ClientData;
-use App\Service\ClientManager;
+use App\Service\ItemManager;
 use App\Service\UrlGenerator;
+use App\Service\ClientManager;
 use App\Service\VersionManager;
+use App\Service\SummonerManager;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -19,6 +21,8 @@ class HomeController extends AbstractController
         private readonly VersionManager $versionManager, 
         private readonly ClientManager $clientManager,
         private readonly UrlGenerator $urlGenerator,
+        private readonly ItemManager $itemManager,
+        private readonly SummonerManager $summonerManager,
     ){}
 
     /**
@@ -140,5 +144,42 @@ class HomeController extends AbstractController
         $request->getSession()?->getFlashBag()->clear();
         $this->addFlash('success', 'Preferences saved');
         return $response;
+    }
+
+    /**
+     * Page d'accueil de l'application.
+     *
+     * Comportement :
+     * 1. Récupère les informations de session (version et langue courantes)
+     *    via {@see ClientManager::getSession()}.
+     * 2. Charge un aperçu limité de données :
+     *    - 4 sorts d'invocateur (page 1) via {@see SummonerManager::paginate()}.
+     *    - 4 items (page 1) via {@see ItemManager::paginate()}.
+     * 3. Construit un objet {@see ClientData} pour exposer les données globales
+     *    (versions disponibles, langues, locale courante, etc.).
+     * 4. Rend le template Twig `home/home.html.twig` avec les données préparées.
+     *
+     * Variables injectées dans la vue :
+     * - client    : objet {@see ClientData} contenant les métadonnées de version/langue.
+     * - summoners : tableau paginé contenant 4 sorts d'invocateur + images + meta.
+     * - items     : tableau paginé contenant 4 items + images + meta.
+     *
+     * @see SummonerManager::paginate()
+     * @see ItemManager::paginate()
+     * @see ClientData::fromServices()
+     *
+     * @return Response Page HTML de la home affichant les aperçus de Summoners et Items.
+     */
+    #[Route('/home', name: 'app_home')]
+    public function home(): Response{
+        $session = $this->clientManager->getSession();
+        $summoners = $this->summonerManager->paginate($session['version'], $session['lang'], 4, 1);
+        $items = $this->itemManager->paginate($session['version'], $session['lang'], 4, 1);
+
+        return $this->render('home/home.html.twig', [
+            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'summoners' => $summoners,
+            'items' => $items,
+        ]);
     }
 }
