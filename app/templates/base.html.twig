@@ -13,10 +13,10 @@
 
         {# Remplire la balise {% block title %}Exemple{% endblock %} dans vos pages enfant va automatiquement remplir tous les titres. Possible quand même de choisir si vous voulez mettre un titre différent pour chaque propriété #}
 
-        {# Mise en place des titre #}
+        {# Mise en place des descriptions #}
         <meta name="description" content="{% block meta_description %}{{ default_description }}{% endblock %}">
-        <meta property="og:description" content="{% block og_description %}{{ default_description|default(default_description) }}{% endblock %}">
-        <meta name="twitter:description" content="{% block twitter_description %}{{ default_description|default(default_description) }}{% endblock %}">
+        <meta property="og:description" content="{% block og_description %}{{ block('meta_description')|default(default_description) }}{% endblock %}">
+        <meta name="twitter:description" content="{% block twitter_description %}{{ block('meta_description')|default(default_description) }}{% endblock %}">
 
         {# SiteMap si utilisé #}
         {# <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ path('app_sitemap') }}"> #}
