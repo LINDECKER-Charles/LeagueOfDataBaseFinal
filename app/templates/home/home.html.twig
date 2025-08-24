@@ -1,0 +1,116 @@
+{# templates/home/home.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Home - {{ client.session.version ?? (client.versions|first) }}{% endblock %}
+{% block meta_description %}
+  Welcome to League of Data Base. Explore League of Legends items and summoner spells with stats and details 
+  for patch {{ client.session.version ?? (client.versions|first) }}.
+{% endblock %}
+{% block img %}/preview/home.png{% endblock %}
+
+{% block body %}
+<main class="relative px-6 py-12">
+  {% include 'partials/main/gradient.html.twig' %}
+  <div class="relative mx-auto max-w-7xl flex flex-col gap-12">
+
+    {# HERO SECTION #}
+    <section class="text-center mb-16">
+      <h1 class="font-beaufort text-5xl sm:text-6xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 brand-title">
+        League of Data Base
+      </h1>
+      <p class="font-spiegel text-blue-200/80 mt-4 text-lg max-w-2xl mx-auto">
+        Browse detailed information about <strong>Summoner Spells</strong> and <strong>Items</strong> from League of Legends.
+        Updated for patch {{ client.session.version ?? (client.versions|first) }}.
+      </p>
+      <div class="mt-6 flex flex-wrap justify-center gap-4">
+        <a href="{{ path('app_summoners_redirect') }}" 
+           class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
+          Explore Summoners
+        </a>
+        <a href="{{ path('app_items_redirect') }}" 
+           class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
+          Explore Items
+        </a>
+      </div>
+    </section>
+
+    {# SUMMONERS PREVIEW #}
+    <section class="">
+      <header class="flex items-center justify-between mb-6">
+        <h2 class="font-beaufort text-2xl text-white">Summoner Spells</h2>
+        <a href="{{ path('app_summoners_redirect') }}" 
+           class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">See all →</a>
+      </header>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for key, s in summoners.summoners %}
+          {% set imgPath = summoners.images[key]|default(null) %}
+          <a href="{{ path('app_summoner_redirect', { name: key }) }}" 
+             class="group rounded-xl border border-grey-700 bg-blue-950/60 p-5 hover:border-blue-500 transition">
+            <div class="flex items-center gap-4">
+              <div class="h-16 w-16 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
+                {% if imgPath %}
+                  <img src="/{{ imgPath }}" alt="{{ s.name }}" class="h-14 w-14 object-contain">
+                {% else %}
+                  <span class="text-blue-200/70 text-xl">{{ s.name|slice(0,2)|upper }}</span>
+                {% endif %}
+              </div>
+              <div>
+                <h3 class="font-beaufort text-lg text-white group-hover:text-blue-200">{{ s.name }}</h3>
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    {# ITEMS PREVIEW #}
+    <section>
+      <header class="flex items-center justify-between mb-6">
+        <h2 class="font-beaufort text-2xl text-white">Items</h2>
+        <a href="{{ path('app_items_redirect') }}" 
+           class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">See all →</a>
+      </header>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for key, i in items.items %}
+          {% set imgPath = items.images[i.name]|default(null) %}
+          <a href="{{ path('app_item_redirect', { name: key }) }}" 
+             class="group rounded-xl border border-grey-700 bg-blue-950/60 p-5 hover:border-blue-500 transition">
+            <div class="flex items-center gap-4">
+              <div class="h-16 w-16 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
+                {% if imgPath %}
+                  <img src="/{{ imgPath }}" alt="{{ i.name }}" class="h-14 w-14 object-contain">
+                {% else %}
+                  <span class="text-blue-200/70 text-xl">{{ i.name|slice(0,2)|upper }}</span>
+                {% endif %}
+              </div>
+              <div>
+                <h3 class="font-beaufort text-lg text-white group-hover:text-blue-200">{{ i.name }}</h3>
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+    <section class="">
+        <header class="flex items-center justify-between mb-6">
+            <h2 class="font-beaufort text-2xl text-white">Champions</h2>
+        </header>
+        <div class="rounded-xl border border-grey-700 bg-blue-950/60 p-6 text-center">
+            <p class="font-spiegel text-blue-200/80">
+            This section is under construction. Soon you’ll be able to browse all champions.
+            </p>
+        </div>
+    </section>
+    <section class="">
+        <header class="flex items-center justify-between mb-6">
+            <h2 class="font-beaufort text-2xl text-white">Runes</h2>
+        </header>
+        <div class="rounded-xl border border-grey-700 bg-blue-950/60 p-6 text-center">
+            <p class="font-spiegel text-blue-200/80">
+            This section is under construction. Soon you’ll be able to explore runes.
+            </p>
+        </div>
+    </section>
+  </div>
+</main>
+{% endblock %}
