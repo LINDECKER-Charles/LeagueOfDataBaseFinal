@@ -36,9 +36,9 @@ final class ClientManager
             return $this->defaultLocale;
         }
 
-        // Langues triées par priorité (q)
-        $langs = $request->getLanguages(); // ex: ['fr-CA', 'fr', 'en-US', 'en']
-        $first = $langs[0] ?? null;
+        // Langues triées par priorité (q) 
+    //Correction pour les navigateur qui ne supporte pas le format de langue, à changer
+        $first = null;
 
         if (!$first) {
             return $this->defaultLocale;
