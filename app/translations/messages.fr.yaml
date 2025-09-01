@@ -1,0 +1,29 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Bienvenue sur League of Data Base. Explorez les objets et sorts d’invocateur de League of Legends avec statistiques et détails pour le patch %version%."
+  hero:
+    browse: "Parcourez des informations détaillées sur les <strong>Sorts d’invocateur</strong> et les <strong>Objets</strong> de League of Legends. Mis à jour pour le patch %version%."
+    explore_summoners: "Explorer les sorts"
+    explore_items: "Explorer les objets"
+  summoners:
+    title: "Sorts d’invocateur"
+    see_all: "Voir tout →"
+  items:
+    title: "Objets"
+    see_all: "Voir tout →"
+  champions:
+    title: "Champions"
+    wip: "Cette section est en construction. Bientôt vous pourrez parcourir tous les champions."
+  runes:
+    title: "Runes"
+    wip: "Cette section est en construction. Bientôt vous pourrez explorer les runes."
+
+setup:
+  title: "Configuration"
+  meta: "Choisissez votre version du jeu et votre langue préférées pour personnaliser votre expérience League of Data Base. Toutes les statistiques et données s’adapteront à vos paramètres."
+  form:
+    version: "Version"
+    language: "Langue"
+    note_latest: "*La dernière version est automatiquement sélectionnée."
+    remember: "Se souvenir de moi"
+    submit: "Valider"

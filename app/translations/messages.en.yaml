@@ -1,0 +1,29 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Welcome to League of Data Base. Explore League of Legends items and summoner spells with stats and details for patch %version%."
+  hero:
+    browse: "Browse detailed information about <strong>Summoner Spells</strong> and <strong>Items</strong> from League of Legends. Updated for patch %version%."
+    explore_summoners: "Explore Summoners"
+    explore_items: "Explore Items"
+  summoners:
+    title: "Summoner Spells"
+    see_all: "See all →"
+  items:
+    title: "Items"
+    see_all: "See all →"
+  champions:
+    title: "Champions"
+    wip: "This section is under construction. Soon you’ll be able to browse all champions."
+  runes:
+    title: "Runes"
+    wip: "This section is under construction. Soon you’ll be able to explore runes."
+
+setup:
+  title: "Setup"
+  meta: "Choose your preferred game version and language to customize your League of Data Base experience. All stats and data will adapt to your settings."
+  form:
+    version: "Version"
+    language: "Language"
+    note_latest: "*The latest version is automatically selected."
+    remember: "Remember me"
+    submit: "Submit"
