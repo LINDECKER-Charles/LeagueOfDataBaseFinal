@@ -22,7 +22,7 @@ final class ClientManager
     ) {}
 
     /**
-     * Récupère la langue par défaut 
+     * Récupère la langue par défaut  
      */
     public function getLangue(): string
     {
