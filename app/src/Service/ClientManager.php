@@ -31,20 +31,7 @@ final class ClientManager
      */
     public function getLangue(): string
     {
-        $request = $this->requestStack->getCurrentRequest();
-        if (!$request) {
-            return $this->defaultLocale;
-        }
-
-        // Langues triées par priorité (q) 
-    //Correction pour les navigateur qui ne supporte pas le format de langue, à changer
-        $first = null;
-
-        if (!$first) {
-            return $this->defaultLocale;
-        }
-
-        return $this->utils->normalizeTag($first);
+        return $this->defaultLocale;
     }
 
 
