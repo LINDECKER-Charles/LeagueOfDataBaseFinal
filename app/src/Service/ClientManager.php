@@ -31,7 +31,7 @@ final class ClientManager
      */
     public function getLangue(): string
     {
-        return $this->defaultLocale;
+        return $this->defaultLocale; 
     }
 
 
