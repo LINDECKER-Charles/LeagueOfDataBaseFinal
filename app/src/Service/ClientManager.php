@@ -21,8 +21,8 @@ final class ClientManager
         private readonly Utils $utils,
     ) {}
 
-    /**
-     * Retourne la langue par défaut
+     /**
+     * Récupère la langue par défaut
      */
     public function getLangue(): string
     {
