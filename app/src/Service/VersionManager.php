@@ -32,8 +32,11 @@ class VersionManager
             $item->expiresAfter(600); //Expire dans 10min
             try {
                 $response = $this->httpClient->request('GET', self::RIOT_VERSIONS_URL);
-                
-                return $response->toArray();
+                $versions = array_values(array_filter(
+                    $response->toArray(),
+                    fn($v) => !(is_string($v) && preg_match('/^lol/', $v))
+                ));
+                return $versions;
             } catch (\Throwable $e) {
                 $this->logger->error('Erreur lors de la récupération des versions Riot', [
                     'message' => $e->getMessage(),
