@@ -138,3 +138,11 @@ footer:
 pagination:
   ok: "Valider"
   more: "…"
+
+header:
+  navigation:
+    home: "Accueil"
+    champion: "Champions"
+    item: "Objets"
+    runes: "Runes"
+    summoner: "Sorts d’invocateur"

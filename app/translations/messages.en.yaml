@@ -136,3 +136,11 @@ footer:
 pagination:
   ok: "OK"
   more: "…"
+
+header:
+  navigation:
+    home: "Home"
+    champion: "Champions"
+    item: "Items"
+    runes: "Runes"
+    summoner: "Summoner Spells"

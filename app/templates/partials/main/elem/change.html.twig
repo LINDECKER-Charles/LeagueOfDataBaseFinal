@@ -1,10 +1,10 @@
     <div class="mt-10 flex gap-4">
       <a href="{{ path('app_summoners') }}"
          class="px-4 py-2 rounded-lg border border-grey-700 bg-transparent text-white hover:bg-blue-900 transition">
-        ← Retour à la liste
+        {{ 'item.detail.back'|trans }}
       </a>
       <a href="{{ path('app_setup') }}"
          class="px-4 py-2 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
-        Changer version & langue
+        {{ 'item.detail.setup'|trans }}
       </a>
     </div>
