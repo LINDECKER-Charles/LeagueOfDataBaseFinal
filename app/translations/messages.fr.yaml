@@ -92,7 +92,7 @@ summoner:
   list:
     title: "Sorts d’invocateur"
     subtitle: "Catalogue des sorts d’invocateur"
-    count: "count sorts
+    count: "count sorts"
 
 common:
   no_result:
