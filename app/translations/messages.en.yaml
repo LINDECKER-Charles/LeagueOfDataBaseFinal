@@ -101,3 +101,38 @@ common:
 base:
   title: "League of Data Base"
   description: "League of Data Base is a community-driven platform that provides detailed information, stats, and insights about League of Legends. Fast, reliable, and always up to date."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Legal Notice"
+
+  navigation:
+    title: "Navigation"
+    home: "Home"
+    champion: "Champion"
+    item: "Item"
+    runes: "Runes"
+    summoner: "Summoner"
+
+  links:
+    title: "Useful Links"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Project"
+    version: "Version: Beta 2.0"
+    updated: "Updated: 03/08/2025"
+
+  contact:
+    title: "Contact"
+    email: "Email"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+pagination:
+  ok: "OK"
+  more: "…"
