@@ -3,8 +3,10 @@
 
 {% block title %}{{ summoner.name ?? 'Summoner' }} - {{client.session.version ?? (client.versions|first)}}{% endblock %}
 {% block meta_description %}
-  Explore the details of the summoner spell {{ summoner.name ?? 'Summoner Spell' }} in League of Legends. 
-  Stats and effects updated for patch {{ client.session.version ?? (client.versions|first) }}.
+  {{ 'summoner.detail.meta_description'|trans({
+    '%name%': summoner.name ?? 'Summoner Spell',
+    '%version%': client.session.version ?? (client.versions|first)
+  }) }}
 {% endblock %}
 {% block img %}/preview/summoners.png{% endblock %}
 {% block body %}
@@ -36,20 +38,23 @@
             </p>
             {# Ajout : affichage version/langue #}
             <p class="mt-1 text-sm text-blue-200/60">
-            Version : {{ selectedVersion }} — Langue : {{ selectedLocale }}
+              {{ 'summoner.detail.version_locale'|trans({
+                '%version%': selectedVersion,
+                '%locale%': selectedLocale
+              }) }}
             </p>
         </section>
     </article>
 
     {# Infos principales #}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-      {% set fields = {
-        'Cooldown': 'cooldownBurn',
-        'Number of charges': 'maxammo',
-        'Usage range': 'rangeBurn',
-        'Cost': 'costType',
-        'Summoner level': 'summonerLevel'
-      } %}
+    {% set fields = {
+      'summoner.detail.fields.cooldown' : 'cooldownBurn',
+      'summoner.detail.fields.maxammo' : 'maxammo',
+      'summoner.detail.fields.range' : 'rangeBurn',
+      'summoner.detail.fields.cost' : 'costType',
+      'summoner.detail.fields.summoner_level' : 'summonerLevel'
+    } %}
 
       {% set indexs = {} %}
       {% for label, key in fields %}
@@ -71,7 +76,7 @@
     {# Modes compatibles #}
     {% if summoner.modes is defined and summoner.modes is iterable and summoner.modes is not empty %}
       <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">Compatible modes</h2>
+        <h2 class="text-lg font-semibold text-white mb-3">{{ 'summoner.detail.modes'|trans }}</h2>
         <div class="flex flex-wrap gap-2">
           {% for m in summoner.modes %}
             <span class="rounded-full bg-blue-950/70 px-3 py-1 text-sm border border-grey-700 text-blue-200/90">{{ m }}</span>
@@ -83,7 +88,7 @@
     {# Description #}
     {% if summoner.description is defined and summoner.description %}
       <section>
-        <h2 class="text-lg font-semibold text-white mb-3">Description</h2>
+        <h2 class="text-lg font-semibold text-white mb-3">{{ 'summoner.detail.description'|trans }}</h2>
         <div class="prose prose-invert max-w-none text-blue-100/90">
           {{ summoner.description|raw|capitalize }}
         </div>

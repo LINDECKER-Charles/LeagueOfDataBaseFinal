@@ -71,3 +71,70 @@ item:
     categories: "Catégories"
     evolutions: "Évolutions possibles"
     description: "Description"
+
+summoner:
+  detail:
+    meta_description: "Découvrez les détails du sort d’invocateur %name% dans League of Legends. Statistiques et effets mis à jour pour le patch %version%."
+    version_locale: "Version : %version% — Langue : %locale%"
+    fields:
+      cooldown: "Temps de recharge"
+      maxammo: "Nombre de charges"
+      range: "Portée d’utilisation"
+      cost: "Coût"
+      summoner_level: "Niveau d’invocateur"
+    modes: "Modes compatibles"
+    description: "Description"
+  card:
+    cooldown: "Temps de recharge"
+    level: "Niveau d’invocateur"
+    modes: "Modes compatibles"
+    description: "Description"
+  list:
+    title: "Sorts d’invocateur"
+    subtitle: "Catalogue des sorts d’invocateur"
+    count: "count sorts"
+
+common:
+  no_result:
+    text: "Aucun résultat trouvé pour votre recherche."
+    back: "← Retour"
+    setup: "Choisir la version et la langue"
+
+base:
+  title: "League of Data Base"
+  description: "League of Data Base est une plateforme communautaire qui fournit des informations détaillées, statistiques et analyses sur League of Legends. Rapide, fiable et toujours à jour."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Mentions légales"
+
+  navigation:
+    title: "Navigation"
+    home: "Accueil"
+    champion: "Champions"
+    item: "Objets"
+    runes: "Runes"
+    summoner: "Sorts d’invocateur"
+
+  links:
+    title: "Liens utiles"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Support Riot"
+    opgg: "OP.GG"
+
+  project:
+    title: "Projet"
+    version: "Version : Beta 2.0"
+    updated: "Mis à jour : 03/08/2025"
+
+  contact:
+    title: "Contact"
+    email: "Email"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+pagination:
+  ok: "Valider"
+  more: "…"

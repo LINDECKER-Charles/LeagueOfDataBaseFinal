@@ -17,7 +17,7 @@
   {% set end   = min(meta.currentPage + 1, meta.nombrePage - 2)%}
 
   {% if start > 3 %}
-    <span class="px-2 text-blue-200/70">…</span>
+    <span class="px-2 text-blue-200/70">{{ 'pagination.more'|trans }}</span>
   {% endif %}
 
   {% for page in start..end %}
@@ -31,7 +31,7 @@
   {% endfor %}
 
   {% if end < meta.nombrePage - 2 %}
-    <span class="px-2 text-blue-200/70">…</span>
+    <span class="px-2 text-blue-200/70">{{ 'pagination.more'|trans }}</span>
   {% endif %}
 
   {# 3. Toujours afficher les deux dernières pages #}
@@ -57,7 +57,7 @@
   <a id="customPageLink"
     href="{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: meta.currentPage, itemperpage: meta.itemPerPage }) }}"
     class="px-3 py-1 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
-    OK
+    {{ 'pagination.ok'|trans }}
   </a>
 </nav>
 {% endif %}

@@ -18,12 +18,12 @@
         {% include 'partials/main/viewLogo.html.twig' %}
         <div>
           <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 brand-title">
-            Summoner Spells
+            {{ 'summoner.list.title'|trans }}
           </h1>
           <p class="font-spiegel text-blue-200/80 mt-1">
-            <span class="align-middle">Summoner Spells Catalog</span>
+            <span class="align-middle">{{ 'summoner.list.subtitle'|trans }}</span>
             <span class="ml-2 text-sm inline-block rounded-full border border-grey-700 bg-blue-950 px-2 py-0.5">
-              {{ summoners|length }} items
+              {{ 'summoner.list.count'|trans({ count: summoners|length }) }}
             </span>
           </p>
         </div>
