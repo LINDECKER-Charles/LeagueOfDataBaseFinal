@@ -27,3 +27,17 @@ setup:
     note_latest: "*The latest version is automatically selected."
     remember: "Remember me"
     submit: "Submit"
+
+system:
+  under_construction:
+    title: "Under Construction"
+    meta_description: "League of Data Base is currently under construction. We are working hard to bring you detailed stats, insights, and tools for League of Legends. Stay tuned for updates."
+    heading: "This page is under construction"
+    subheading: "We’re forging this feature in the Rift. Check back soon for something epic."
+    info: "If you reached this page, the content isn’t shipped yet. We’re working on performance, data accuracy and a smooth UX that matches the rest of League Of Data Base."
+    progress_label: "Build progress"
+    back: "← Go back"
+    summoners: "See Summoner Spells"
+    setup: "Choose version & language"
+    footer: "Need this soon? Ping us or check the roadmap. More updates are coming."
+    meanwhile: "Meanwhile, you can:"

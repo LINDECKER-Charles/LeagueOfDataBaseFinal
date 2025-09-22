@@ -28,3 +28,17 @@ setup:
     note_latest: "*La dernière version est automatiquement sélectionnée."
     remember: "Se souvenir de moi"
     submit: "Valider"
+
+system:
+  under_construction:
+    title: "En construction"
+    meta_description: "League of Data Base est actuellement en construction. Nous travaillons dur pour vous apporter des statistiques détaillées, des analyses et des outils pour League of Legends. Restez à l’écoute pour les prochaines mises à jour."
+    heading: "Cette page est en construction"
+    subheading: "Nous forgeons cette fonctionnalité dans la Faille. Revenez bientôt pour découvrir quelque chose d’épique."
+    info: "Si vous êtes arrivé ici, le contenu n’est pas encore disponible. Nous travaillons sur les performances, la précision des données et une expérience fluide conforme au reste de League Of Data Base."
+    progress_label: "Progression du build"
+    back: "← Retour"
+    summoners: "Voir les sorts d’invocateur"
+    setup: "Choisir la version et la langue"
+    footer: "Vous en avez besoin rapidement ? Contactez-nous ou consultez la roadmap. D’autres mises à jour arrivent."
+    meanwhile: "En attendant, vous pouvez :"

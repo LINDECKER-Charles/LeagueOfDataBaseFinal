@@ -1,8 +1,8 @@
 {# templates/system/under_construction.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Under Construction{% endblock %}
-{% block meta_description %}League of Data Base is currently under construction. We are working hard to bring you detailed stats, insights, and tools for League of Legends. Stay tuned for updates.{% endblock %}
+{% block title %}{{ 'system.under_construction.title'|trans }}{% endblock %}
+{% block meta_description %}{{ 'system.under_construction.meta_description'|trans }}{% endblock %}
 {% block img %}/preview/working.png{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
@@ -42,10 +42,10 @@
 
       <div>
         <h1 class="font-beaufort text-4xl sm:text-5xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100">
-          This page is under construction
+          {{ 'system.under_construction.heading'|trans }}
         </h1>
         <p class="font-spiegel text-blue-200/85 mt-1">
-          We’re forging this feature in the Rift. Check back soon for something epic.
+          {{ 'system.under_construction.subheading'|trans }}
         </p>
       </div>
     </header>
@@ -57,15 +57,14 @@
         <div class="lg:col-span-2 space-y-6">
           <div class="rounded-xl border border-grey-700 bg-blue-950/80 p-4">
             <p class="font-spiegel text-blue-100/85">
-              If you reached this page, the content isn’t shipped yet. We’re working on performance,
-              data accuracy and a smooth UX that matches the rest of League Of Data Base.
+              {{ 'system.under_construction.info'|trans }}
             </p>
           </div>
 
           {# Barre de progression stylée #}
           <div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm text-blue-200/80 font-spiegel">Build progress</span>
+              <span class="text-sm text-blue-200/80 font-spiegel">{{ 'system.under_construction.progress_label'|trans }}</span>
               <span class="text-sm text-blue-200/80 font-spiegel" id="uc-percent">~10%</span>
             </div>
             <div class="relative h-3 rounded-full border border-grey-700 bg-blue-950 overflow-hidden">
@@ -83,15 +82,15 @@
           <div class="flex flex-col gap-3">
             <a href="javascript:history.back()"
                class="px-4 py-2 rounded-lg border border-grey-700 bg-transparent text-white hover:bg-blue-900 transition-colors text-center">
-              ← Go back
+              {{ 'system.under_construction.back'|trans }}
             </a>
             <a href="{{ path('app_summoners') }}"
                class="px-4 py-2 rounded-lg border border-grey-700 bg-blue-950 text-white hover:bg-blue-900 transition-colors text-center">
-              See Summoner Spells
+              {{ 'system.under_construction.summoners'|trans }}
             </a>
             <a href="{{ path('app_setup') }}"
                class="px-4 py-2 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition-colors text-center">
-              Choose version & language
+              {{ 'system.under_construction.setup'|trans }}
             </a>
           </div>
         </aside>
@@ -101,7 +100,7 @@
     {# Bandeau bas #}
     <footer class="mt-10 text-center">
       <p class="text-xs text-blue-200/60 font-spiegel">
-        Need this soon? Ping us or check the roadmap. More updates are coming.
+        {{ 'system.under_construction.footer'|trans }}
       </p>
     </footer>
   </section>
