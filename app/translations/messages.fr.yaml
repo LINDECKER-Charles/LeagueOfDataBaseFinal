@@ -1,0 +1,4 @@
+welcome: "Bienvenue sur mon site"
+error_not_found: "Page introuvable"
+home:
+  explore_summoners: "Explorer les sorts invocateurs"
