@@ -22,29 +22,11 @@ final class ClientManager
     ) {}
 
     /**
-     * Retourne la langue préférée du client telle qu'envoyée dans l'entête Accept-Language.
-     * - Exemple header: "fr-CA, fr;q=0.9, en-US;q=0.8"
-     * - Renverra: "fr_CA"
-     * - Si aucune langue n'est fournie: $defaultLocale
-     *
-     * ⚠️ Ici on ne vérifie PAS si la langue est supportée par votre app/RIOT.
+     * Récupère la langue par défaut 
      */
     public function getLangue(): string
     {
-        $request = $this->requestStack->getCurrentRequest();
-        if (!$request) {
-            return $this->defaultLocale;
-        }
-
-        // Langues triées par priorité (q)
-        $langs = $request->getLanguages(); // ex: ['fr-CA', 'fr', 'en-US', 'en']
-        $first = $langs[0] ?? null;
-
-        if (!$first) {
-            return $this->defaultLocale;
-        }
-
-        return $this->utils->normalizeTag($first);
+        return $this->defaultLocale;
     }
 
 

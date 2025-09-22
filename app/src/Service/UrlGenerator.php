@@ -14,18 +14,37 @@ class UrlGenerator {
 
     
     /**
-     * 1) Back URL sûr : referer si même host, sinon fallback route.
+     * Génère une URL de retour (backurl) en se basant sur l'en-tête HTTP "referer".
+     *
+     * Comportement :
+     * 1. Si la requête courante est absente → retourne la route de fallback.
+     * 2. Si aucun "referer" n'est présent dans les en-têtes → retourne la route de fallback.
+     * 3. Si l'option $sameHostOnly est activée, vérifie que le referer partage le même host :
+     *    - si ce n'est pas le cas → retourne la route de fallback.
+     * 4. Si le referer pointe vers la racine `/` → redirige automatiquement vers la route `app_home`.
+     * 5. Dans tous les autres cas → retourne l'URL du referer tel quel.
+     *
+     * @param string $fallbackRoute   Nom de la route Symfony à utiliser comme URL de secours
+     *                                si aucune URL valide ne peut être générée (par défaut "app_setup").
+     * @param array  $fallbackParams  Paramètres éventuels à passer à la route de fallback.
+     * @param bool   $sameHostOnly    Si `true`, n'autorise que des referers provenant du même host
+     *                                que la requête courante (sécurité contre redirection externe).
+     *
+     * @return string L'URL de retour (soit le referer, soit `/home` si referer == `/`,
+     *                soit l'URL générée de fallback).
+     *
+     * @see \Symfony\Component\HttpFoundation\Request::headers
+     * @see \Symfony\Component\Routing\RouterInterface::generate()
      */
     public function generateBackurl(
         string $fallbackRoute = 'app_setup',
         array $fallbackParams = [],
         bool $sameHostOnly = true
-    ){
-
-        //On récupère la requête
+    ) {
+        // On récupère la requête
         $request = $this->requestStack->getCurrentRequest();
 
-        //On génère la route de retour en cas d'erreur
+        // On génère la route de fallback en cas d'erreur
         $fallback = $this->router->generate($fallbackRoute, $fallbackParams);
         if (!$request) {
             return $fallback;
@@ -44,8 +63,15 @@ class UrlGenerator {
             }
         }
 
+        // Vérifie si l'URL précédente correspond à la racine `/`
+        $path = parse_url($referer, PHP_URL_PATH);
+        if ($path === '/' || $path === '') {
+            return $this->router->generate('app_home');
+        }
+
         return $referer;
     }
+
 
     /**
      * 2) Réécrit l'URL en remplaçant/supprimant des query params,
