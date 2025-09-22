@@ -27,11 +27,11 @@
   {% endif %}
     <ul class="flex flex-col sm:flex-row justify-center gap-8 text-xl items-center">
       
-      <li><a href="{{ path('app_home') }}" class="nav-link">Home</a></li>
-      <li><a href="{{ url('app_working') }}" class="nav-link">Champion</a></li>
-      <li><a href="{{ url('app_items_redirect') }}" class="nav-link">Object</a></li>
-      <li><a href="{{ url('app_working') }}" class="nav-link">Runes</a></li>
-      <li><a href="{{ url('app_summoners_redirect') }}" class="nav-link">Summoner</a></li>
+      <li><a href="{{ path('app_home') }}" class="nav-link">{{ 'header.navigation.home'|trans }}</a></li>
+      <li><a href="{{ url('app_working') }}" class="nav-link">{{ 'header.navigation.champion'|trans }}</a></li>
+      <li><a href="{{ url('app_items_redirect') }}" class="nav-link">{{ 'header.navigation.item'|trans }}</a></li>
+      <li><a href="{{ url('app_working') }}" class="nav-link">{{ 'header.navigation.runes'|trans }}</a></li>
+      <li><a href="{{ url('app_summoners_redirect') }}" class="nav-link">{{ 'header.navigation.summoner'|trans }}</a></li>
     </ul>
   </nav>
 
@@ -46,7 +46,7 @@
 
     {# Ligne 1 : selects #}
     <div class="flex items-center gap-2">
-      <label for="version" class="sr-only">Version</label>
+      <label for="version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
       <select id="version" name="version"
               class="flex-1 px-3 py-2 rounded-lg bg-blue-950 text-white border border-grey-700">
         {% for v in client.versions %}
@@ -54,7 +54,7 @@
         {% endfor %}
       </select>
 
-      <label for="langue" class="sr-only">Language</label>
+      <label for="langue" class="sr-only">{{ 'setup.form.language'|trans }}</label>
       <select id="langue" name="langue"
               class="flex-1 px-3 py-2 rounded-lg bg-blue-950 text-white border border-grey-700">
         {% for lang in client.languages %}
@@ -70,12 +70,12 @@
       <label for="remember" class="flex items-center gap-2 cursor-pointer select-none">
         <input type="checkbox" id="remember" name="remember"
                class="w-4 h-4 rounded border-grey-700 bg-blue-950">
-        <span class="opacity-70">Remember me</span>
+        <span class="opacity-70">{{ 'setup.form.remember'|trans }}</span>
       </label>
 
       <button type="submit"
               class="ml-auto px-4 py-2 rounded-lg bg-blue-200 text-blue-950 font-semibold border border-grey-700 hover:bg-blue-100 hover:cursor-pointer transition-colors">
-        Submit
+        {{ 'setup.form.submit'|trans }}
       </button>
     </div>
   </form>
