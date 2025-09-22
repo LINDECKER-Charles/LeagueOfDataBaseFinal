@@ -163,6 +163,11 @@ final class SummonerController extends AbstractController
             return $this->redirectToRoute('app_setup');
         }
 
+        //Refactoriser Element pour n'envoyer que la partie utils
+        /* dd($summoner); */
+/*         (array) $props = array_find($summoner, array_flip(['cooldownBurn', 'maxammo', 'rangeBurn', 'costType', 'summonerLevel']));
+        dd($summoner, $props, array_flip(['cooldownBurn', 'maxammo', 'rangeBurn', 'costType', 'summonerLevel'])); */
+
         return $this->render('summoner/detail.html.twig', [
             'summoner' => $summoner,
             'image'    => $image,

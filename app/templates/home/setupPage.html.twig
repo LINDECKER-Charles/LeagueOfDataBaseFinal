@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Setup{% endblock %}
-{% block meta_description %}Choose your preferred game version and language to customize your League of Data Base experience. All stats and data will adapt to your settings.{% endblock %}
+{% block title %}{{ 'setup.title'|trans }}{% endblock %}
+{% block meta_description %}{{ 'setup.meta'|trans }}{% endblock %}
 {% block img %}/preview/setup.png{% endblock %}
 {# {% block og_title %}{% endblock %} #}
 {# {% block twitter_title %}{% endblock %} #}
@@ -30,7 +30,7 @@
 
           <!-- Version -->
           <div class="w-full flex flex-col items-center gap-4">
-            <label for="version" class="font-beaufort text-4xl">Version</label>
+            <label for="version" class="font-beaufort text-4xl">{{ 'setup.form.version'|trans }}</label>
             <div class="relative w-4/5">
               <select
                 id="version"
@@ -49,7 +49,7 @@
 
           <!-- Langue -->
           <div class="w-full flex flex-col items-center gap-4">
-            <label for="langue" class="font-beaufort text-4xl">Language</label>
+            <label for="langue" class="font-beaufort text-4xl">{{ 'setup.form.language'|trans }}</label>
             <div class="relative w-4/5">
               <select
                 id="langue"
@@ -65,7 +65,7 @@
               <span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-200/70">▾</span>
             </div>
             <p class="italic text-sm opacity-70 text-white mt-2">
-              *The latest version is automatically selected.
+              {{ 'setup.form.note_latest'|trans }}
             </p>
           </div>
 
@@ -78,7 +78,7 @@
               class="w-5 h-5 appearance-none border-2 border-grey-700 rounded-sm bg-blue-950 checked:bg-blue-200 checked:border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
             <label for="remember" class="font-semibold italic text-sm select-none">
-              Remember me
+              {{ 'setup.form.remember'|trans }}
             </label>
           </div>
 
@@ -87,7 +87,7 @@
             type="submit"
             class="duration-300 w-4/5 text-2xl font-bold py-5 rounded-lg bg-blue-200 text-blue-950 border border-grey-700 shadow hover:bg-blue-100 hover:shadow-lg hover:cursor-pointer transition"
           >
-            Submit
+            {{ 'setup.form.submit'|trans }}
           </button>
         </form>
       </section>

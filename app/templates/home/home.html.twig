@@ -3,8 +3,7 @@
 
 {% block title %}Home - {{ client.session.version ?? (client.versions|first) }}{% endblock %}
 {% block meta_description %}
-  Welcome to League of Data Base. Explore League of Legends items and summoner spells with stats and details 
-  for patch {{ client.session.version ?? (client.versions|first) }}.
+  {{ 'homepage.meta'|trans({'%version%': client.session.version ?? (client.versions|first)})|raw }}
 {% endblock %}
 {% block img %}/preview/home.png{% endblock %}
 
@@ -16,20 +15,19 @@
     {# HERO SECTION #}
     <section class="text-center mb-16">
       <h1 class="font-beaufort text-5xl sm:text-6xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 brand-title">
-        League of Data Base
+        {{ 'homepage.title'|trans }}
       </h1>
       <p class="font-spiegel text-blue-200/80 mt-4 text-lg max-w-2xl mx-auto">
-        Browse detailed information about <strong>Summoner Spells</strong> and <strong>Items</strong> from League of Legends.
-        Updated for patch {{ client.session.version ?? (client.versions|first) }}.
+        {{ 'homepage.hero.browse'|trans({'%version%': client.session.version ?? (client.versions|first)})|raw }}
       </p>
       <div class="mt-6 flex flex-wrap justify-center gap-4">
         <a href="{{ path('app_summoners_redirect') }}" 
            class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
-          {{ 'home.explore_summoners'|trans }}
+          {{ 'homepage.hero.explore_summoners'|trans }}
         </a>
         <a href="{{ path('app_items_redirect') }}" 
            class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
-          Explore Items
+          {{ 'homepage.hero.explore_items'|trans }}
         </a>
       </div>
     </section>
@@ -37,9 +35,9 @@
     {# SUMMONERS PREVIEW #}
     <section class="">
       <header class="flex items-center justify-between mb-6">
-        <h2 class="font-beaufort text-2xl text-white">Summoner Spells</h2>
+        <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.summoners.title'|trans }}</h2>
         <a href="{{ path('app_summoners_redirect') }}" 
-           class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">See all →</a>
+           class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">{{ 'homepage.summoners.see_all'|trans }}</a>
       </header>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {% for key, s in summoners.summoners %}
@@ -66,9 +64,9 @@
     {# ITEMS PREVIEW #}
     <section>
       <header class="flex items-center justify-between mb-6">
-        <h2 class="font-beaufort text-2xl text-white">Items</h2>
+        <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.items.title'|trans }}</h2>
         <a href="{{ path('app_items_redirect') }}" 
-           class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">See all →</a>
+           class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">{{ 'homepage.items.see_all'|trans }}</a>
       </header>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {% for key, i in items.items %}
@@ -93,21 +91,21 @@
     </section>
     <section class="">
         <header class="flex items-center justify-between mb-6">
-            <h2 class="font-beaufort text-2xl text-white">Champions</h2>
+            <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.champions.title'|trans }}</h2>
         </header>
         <div class="rounded-xl border border-grey-700 bg-blue-950/60 p-6 text-center">
             <p class="font-spiegel text-blue-200/80">
-            This section is under construction. Soon you’ll be able to browse all champions.
+            {{ 'homepage.champions.wip'|trans }}
             </p>
         </div>
     </section>
     <section class="">
         <header class="flex items-center justify-between mb-6">
-            <h2 class="font-beaufort text-2xl text-white">Runes</h2>
+            <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.runes.title'|trans }}</h2>
         </header>
         <div class="rounded-xl border border-grey-700 bg-blue-950/60 p-6 text-center">
             <p class="font-spiegel text-blue-200/80">
-            This section is under construction. Soon you’ll be able to explore runes.
+            {{ 'homepage.runes.wip'|trans }}
             </p>
         </div>
     </section>

@@ -1,0 +1,10 @@
+{% if val is not null %}
+    <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
+        <dt class="text-blue-200/70 text-sm">{{ name }}</dt>
+        <dd class="font-medium text-white/90">
+          {{ val is iterable
+            ? val|join('/')
+            : val|capitalize }}
+        </dd>
+    </div>  
+{% endif %}   

@@ -21,3 +21,4 @@ yarn-error.log
 ###< symfony/webpack-encore-bundle ###
 
 .env
+.php-version
