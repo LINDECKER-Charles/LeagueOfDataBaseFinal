@@ -70,3 +70,34 @@ item:
       categories: "Categories"
       evolutions: "Possible evolutions"
       description: "Description"
+
+summoner:
+  detail:
+    meta_description: "Explore the details of the summoner spell %name% in League of Legends. Stats and effects updated for patch %version%."
+    version_locale: "Version: %version% — Language: %locale%"
+    fields:
+      cooldown: "Cooldown"
+      maxammo: "Number of charges"
+      range: "Usage range"
+      cost: "Cost"
+      summoner_level: "Summoner level"
+    modes: "Compatible modes"
+    description: "Description"
+  card:
+    cooldown: "Cooldown"
+    level: "Summoner level"
+    modes: "Compatible modes"
+    description: "Description"
+  list:
+    title: "Summoner Spells"
+    subtitle: "Summoner Spells Catalog"
+    count: "count spells"
+
+common:
+  no_result:
+    text: "No results found for your search."
+    back: "← Back"
+    setup: "Choose version & language"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base is a community-driven platform that provides detailed information, stats, and insights about League of Legends. Fast, reliable, and always up to date."

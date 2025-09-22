@@ -3,8 +3,8 @@
     <head>
         <meta charset="UTF-8">
         {# Paramètre par défaut à définir #}
-        {% set default_title = 'League of Data Base' %} {# Titre par défaut à définir par sécurité #}
-        {% set default_description = 'League of Data Base is a community-driven platform that provides detailed information, stats, and insights about League of Legends. Fast, reliable, and always up to date.' %} {# Description par défaut à définir par sécurité #}
+        {% set default_title = 'base.title'|trans %} {# Titre par défaut à définir par sécurité #}
+        {% set default_description = 'base.description'|trans %} {# Description par défaut à définir par sécurité #}
 
         {# Mise en place des titre #}
         <title>{% block title %}{{ default_title }}{% endblock %}</title>

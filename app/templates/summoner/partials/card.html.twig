@@ -36,11 +36,11 @@
             <div class="px-4">
               <dl class="mb-3 grid grid-cols-3 gap-2 text-[11px]">
                 <div class="rounded-lg bg-blue-950/80 p-2 border border-grey-700">
-                  <dt class="text-blue-200/70">Cooldown</dt>
+                  <dt class="text-blue-200/70">{{ 'summoner.card.cooldown'|trans }}</dt>
                   <dd class="font-medium text-white/90">{{ cd ?: '–' }}</dd>
                 </div>
                 <div class="rounded-lg bg-blue-950/80 p-2 border border-grey-700">
-                  <dt class="text-blue-200/70">Niv. invoc.</dt>
+                  <dt class="text-blue-200/70">{{ 'summoner.card.level'|trans }}</dt>
                   <dd class="font-medium text-white/90">{{ lvl }}</dd>
                 </div>
               </dl>
@@ -58,7 +58,7 @@
                 <details class="group/modes border-t border-grey-700 bg-blue-950/60 open:bg-blue-950/70">
                   <summary class="cursor-pointer list-none select-none px-4 py-3 text-sm text-white/90 flex items-center justify-between gap-3">
                     <div class="flex flex-wrap items-center gap-2">
-                      <span class="font-medium">Modes compatibles</span>
+                      <span class="font-medium">{{ 'summoner.card.modes'|trans }}</span>
                       <span class="text-xs text-blue-200/70">({{ modesCount }})</span>
                       <span class="hidden md:flex flex-wrap gap-1">
                         {% for m in previewModes %}
@@ -87,7 +87,7 @@
               {% if desc %}
                 <details class="group/desc border-t border-grey-700 bg-blue-950/60 open:bg-blue-950/70">
                   <summary class="cursor-pointer list-none select-none px-4 py-3 text-sm text-white/90 flex items-center justify-between">
-                    <span>Description</span>
+                    <span>{{ 'summoner.card.description'|trans }}</span>
                     <svg class="h-4 w-4 transition-transform group-open/desc:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
                     </svg>

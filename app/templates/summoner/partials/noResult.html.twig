@@ -1,13 +1,13 @@
         <div class="col-span-full rounded-2xl border border-grey-700 bg-blue-850/80 backdrop-blur p-8 text-center">
-          <p class="text-blue-100/85"></p>
+          <p class="text-blue-100/85">{{ 'common.no_result.text'|trans }}</p>
           <div class="mt-4 flex items-center justify-center gap-3">
             <a href="javascript:history.back()"
                class="px-4 py-2 rounded-lg border border-grey-700 bg-transparent text-white hover:bg-blue-900 transition">
-              ← Back
+              {{ 'common.no_result.back'|trans }}
             </a>
             <a href="{{ path('app_setup') }}"
                class="px-4 py-2 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
-              Choose version & language
+              {{ 'common.no_result.setup'|trans }}
             </a>
           </div>
         </div>
