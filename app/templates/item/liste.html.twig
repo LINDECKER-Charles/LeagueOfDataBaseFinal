@@ -3,8 +3,9 @@
 
 {% block title %}Objects - {{client.session.version ?? (client.versions|first)}}{% endblock %}
 {% block meta_description %}
-Browse all League of Legends items available in patch {{ client.session.version ?? (client.versions|first) }}. 
-Find detailed stats, costs, and effects updated for the latest version.
+{{ 'item.list.meta_description'|trans({
+    '%version%': client.session.version ?? (client.versions|first)
+  }) }}
 {% endblock %}
 {% block img %}/preview/objects.png{% endblock %}
 {% block body %}
@@ -34,9 +35,9 @@ Find detailed stats, costs, and effects updated for the latest version.
             Objects
           </h1>
           <p class="font-spiegel text-blue-200/80 mt-1">
-            <span class="align-middle">Catalogue des objets</span>
+            <span class="align-middle">{{ 'item.list.header'|trans }}</span>
             <span class="ml-2 text-sm inline-block rounded-full border border-grey-700 bg-blue-950 px-2 py-0.5">
-              {{ items|length }} items
+              {{ items|length }} {{ 'item.list.title'|trans|lower }}
             </span>
           </p>
         </div>
@@ -45,13 +46,13 @@ Find detailed stats, costs, and effects updated for the latest version.
       {# Barre d’actions légère (optionnelle, sans JS requis) #}
       <div class="w-full sm:w-auto flex gap-3 sm:gap-4">
         <div class="flex items-center gap-2 text-sm text-blue-200/80">
-            <span>Résultats par page :</span>
+            <span>{{ 'item.list.results_per_page'|trans }}</span>
 
             {% for option in [4, 8, 16, meta.totalItem] %}
                 <a href="{{ path('app_items_redirect', { numpage: meta.currentPage, itemperpage: option }) }}"
                   class="px-2 py-1 rounded-lg border border-grey-700 bg-blue-950 text-white hover:bg-blue-900 transition">
                     {% if option == meta.totalItem %}
-                        MAX
+                        {{ 'item.list.max'|trans }}
                     {% else %}
                         {{ option }}
                     {% endif %}
@@ -68,17 +69,17 @@ Find detailed stats, costs, and effects updated for the latest version.
             <a id="customLink"
               href="{{ path('app_items_redirect', { numpage: meta.currentPage, itemperpage: 8 }) }}"
               class="px-2 py-1 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
-                OK
+                {{ 'item.list.ok'|trans }}
             </a>
         </div>
         <div class="relative flex-1 sm:w-64">
-          <input type="search" name="q" placeholder="Rechercher un sort…"
+          <input type="search" name="q" placeholder="{{ 'item.list.search_placeholder'|trans }}"
                  class="w-full rounded-lg bg-blue-950 border border-grey-700 px-4 py-2.5 text-sm placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-white">
           <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-200/70">⌕</span>
         </div>
         <a href="{{ path('app_setup') }}"
            class="px-2 inline-flex items-center justify-center rounded-lg border border-grey-700 bg-blue-200 text-blue-950 px-4 py-2.5 text-sm font-semibold hover:bg-blue-100 transition">
-          Changer version/langue
+          {{ 'item.list.change_version'|trans }}
         </a>
       </div>
     </header>
@@ -129,11 +130,11 @@ Find detailed stats, costs, and effects updated for the latest version.
             <div class="px-4">
             <dl class="mb-3 grid grid-cols-2 gap-2 text-[11px]">
                 <div class="rounded-lg bg-blue-950/80 p-2 border border-grey-700">
-                <dt class="text-blue-200/70">Coût total</dt>
+                <dt class="text-blue-200/70">{{ 'item.list.cost_total'|trans }}</dt>
                 <dd class="font-medium text-white/90">{{ costTotal }}</dd>
                 </div>
                 <div class="rounded-lg bg-blue-950/80 p-2 border border-grey-700">
-                <dt class="text-blue-200/70">Revente</dt>
+                <dt class="text-blue-200/70">{{ 'item.list.cost_sell'|trans }}</dt>
                 <dd class="font-medium text-white/90">{{ costSell }}</dd>
                 </div>
             </dl>
@@ -146,7 +147,7 @@ Find detailed stats, costs, and effects updated for the latest version.
             {% if tags is not empty %}
                 <details class="group/tags border-t border-grey-700 bg-blue-950/60 open:bg-blue-950/70">
                 <summary class="cursor-pointer list-none px-4 py-3 text-sm text-white/90 flex items-center justify-between">
-                    <span>Catégories</span>
+                    <span>{{ 'item.list.categories'|trans }}</span>
                     <svg class="h-4 w-4 transition-transform group-open/tags:rotate-180" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
                     </svg>
@@ -162,7 +163,7 @@ Find detailed stats, costs, and effects updated for the latest version.
             {% if intoItems is not empty %}
                 <details class="group/into border-t border-grey-700 bg-blue-950/60 open:bg-blue-950/70">
                 <summary class="cursor-pointer list-none px-4 py-3 text-sm text-white/90 flex items-center justify-between">
-                    <span>Évolutions possibles</span>
+                    <span>{{ 'item.list.evolutions'|trans }}</span>
                     <svg class="h-4 w-4 transition-transform group-open/into:rotate-180" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
                     </svg>
@@ -184,7 +185,7 @@ Find detailed stats, costs, and effects updated for the latest version.
             {% if desc %}
                 <details class="group/desc border-t border-grey-700 bg-blue-950/60 open:bg-blue-950/70">
                 <summary class="cursor-pointer list-none px-4 py-3 text-sm text-white/90 flex items-center justify-between">
-                    <span>Description</span>
+                    <span>{{ 'item.list.description'|trans }}</span>
                     <svg class="h-4 w-4 transition-transform group-open/desc:rotate-180" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
                     </svg>

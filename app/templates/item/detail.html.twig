@@ -2,8 +2,10 @@
 
 {% block title %}{{ item.name ?? 'Item' }} - {{client.session.version ?? (client.versions|first)}}{% endblock %}
 {% block meta_description %}
-Discover everything about the item {{ item.name ?? 'Item' }} in League of Legends. 
-Stats, effects, and build information updated for patch {{ client.session.version ?? (client.versions|first) }}.
+{{ 'item.detail.meta_description'|trans({
+    '%name%': item.name ?? 'Item',
+    '%version%': client.session.version ?? (client.versions|first)
+  }) }}
 {% endblock %}
 {% block img %}/preview/objects.png{% endblock %}
 {% block body %}
@@ -36,7 +38,10 @@ Stats, effects, and build information updated for patch {{ client.session.versio
           {{ item.plaintext ?? '' }}
         </p>
         <p class="mt-1 text-sm text-blue-200/60">
-          Version : {{ selectedVersion }} — Langue : {{ selectedLocale }}
+          {{ 'item.detail.version_locale'|trans({
+            '%version%': selectedVersion,
+            '%locale%': selectedLocale
+          }) }}
         </p>
       </section>
     </article>
@@ -44,15 +49,15 @@ Stats, effects, and build information updated for patch {{ client.session.versio
     {# --- Infos principales --- #}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
       <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Prix total</dt>
+        <dt class="text-blue-200/70 text-sm">{{ 'item.detail.price_total'|trans }}</dt>
         <dd class="font-medium text-white/90">{{ item.gold.total ?? '–' }}</dd>
       </div>
       <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Prix d'achat</dt>
+        <dt class="text-blue-200/70 text-sm">{{ 'item.detail.price_base'|trans }}</dt>
         <dd class="font-medium text-white/90">{{ item.gold.base ?? '–' }}</dd>
       </div>
       <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Revente</dt>
+        <dt class="text-blue-200/70 text-sm">{{ 'item.detail.price_sell'|trans }}</dt>
         <dd class="font-medium text-white/90">{{ item.gold.sell ?? '–' }}</dd>
       </div>
     </div>
@@ -60,7 +65,7 @@ Stats, effects, and build information updated for patch {{ client.session.versio
     {# --- Catégories / tags --- #}
     {% if item.tags is defined and item.tags is iterable and item.tags is not empty %}
       <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">Catégories</h2>
+        <h2 class="text-lg font-semibold text-white mb-3">{{ 'item.detail.categories'|trans }}</h2>
         <div class="flex flex-wrap gap-2">
           {% for tag in item.tags %}
             <span class="rounded-full bg-blue-950/70 px-3 py-1 text-sm border border-grey-700 text-blue-200/90">{{ tag }}</span>
@@ -72,7 +77,7 @@ Stats, effects, and build information updated for patch {{ client.session.versio
     {# --- Évolutions possibles --- #}
     {% if item.into is defined and item.into is iterable and item.into is not empty %}
       <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">Évolutions possibles</h2>
+        <h2 class="text-lg font-semibold text-white mb-3">{{ 'item.detail.evolutions'|trans }}</h2>
         <div class="flex flex-wrap gap-3">
           {% for child in item.into %}
             {% set childImg = images[child]|default(null) %}
@@ -90,7 +95,7 @@ Stats, effects, and build information updated for patch {{ client.session.versio
     {# --- Stats --- #}
     {% if item.stats is defined and item.stats is not empty %}
       <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">Statistiques</h2>
+        <h2 class="text-lg font-semibold text-white mb-3">{{ 'item.detail.stats'|trans }}</h2>
         <ul class="space-y-2 text-sm text-blue-100/90">
           {% for key, val in item.stats %}
             <li><span class="text-blue-200/70">{{ key }} :</span> {{ val }}</li>
@@ -102,7 +107,7 @@ Stats, effects, and build information updated for patch {{ client.session.versio
     {# --- Description complète --- #}
     {% if item.description is defined and item.description %}
       <section>
-        <h2 class="text-lg font-semibold text-white mb-3">Description</h2>
+        <h2 class="text-lg font-semibold text-white mb-3">{{ 'item.detail.description'|trans }}</h2>
         <div class="prose prose-invert max-w-none text-blue-100/90">
           {{ item.description|raw }}
         </div>
@@ -113,11 +118,11 @@ Stats, effects, and build information updated for patch {{ client.session.versio
     <div class="mt-10 flex gap-4">
       <a href="{{ path('app_items') }}"
          class="px-4 py-2 rounded-lg border border-grey-700 bg-transparent text-white hover:bg-blue-900 transition">
-        ← Retour à la liste
+        {{ 'item.detail.back'|trans }}
       </a>
       <a href="{{ path('app_setup') }}"
          class="px-4 py-2 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
-        Changer version & langue
+        {{ 'item.detail.setup'|trans }}
       </a>
     </div>
 
