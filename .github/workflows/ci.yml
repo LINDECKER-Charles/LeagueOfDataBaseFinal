@@ -98,8 +98,7 @@ jobs:
           ssh root@league-of-data-base.fr <<'EOSSH'
             set -e
             cd ${{ secrets.PATH_PROD }}
-            git fetch --all --prune
-            git reset --hard origin/main
+            git pull origin main && \
             export APP_ENV=prod APP_DEBUG=0 COMPOSER_ALLOW_SUPERUSER=1
             composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
             npm ci
