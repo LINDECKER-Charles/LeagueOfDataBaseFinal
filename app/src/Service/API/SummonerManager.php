@@ -1,8 +1,8 @@
 <?php
 // src/Service/SummonerManager.php
-namespace App\Service;
+namespace App\Service\API;
 
-use App\Service\AbstractManager;
+use App\Service\API\AbstractManager;
 
 
 final class SummonerManager extends AbstractManager

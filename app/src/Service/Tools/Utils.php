@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Service\Tools;
 
+use App\Service\Client\VersionManager;
 use Symfony\Component\Filesystem\Path;
 use Symfony\Component\Filesystem\Filesystem;
 

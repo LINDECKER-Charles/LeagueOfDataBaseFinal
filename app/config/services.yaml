@@ -16,24 +16,21 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
-    App\Service\ClientManager:
+    App\Service\Client\ClientManager:
         arguments:
             $defaultLocale: 'en_US'
             $appSecret: '%kernel.secret%'
 
-    App\Service\ItemManager:
-        parent: App\Service\AbstractManager
-    App\Service\SummonerManager:
-        parent: App\Service\AbstractManager
-    App\Service\AbstractManager:
+    App\Service\API\ItemManager:
+        parent: App\Service\API\AbstractManager
+    App\Service\API\SummonerManager:
+        parent: App\Service\API\AbstractManager
+    App\Service\API\AbstractManager:
         abstract: true                # <— déclaré abstrait (non instanciable)
         bind:
             $baseDir: '%upload_manager.base_dir%'
 
-    App\Service\Utils:
-        arguments:
-            $baseDir: '%upload_manager.base_dir%'
-    App\Service\RiotManager:
+    App\Service\Tools\Utils:
         arguments:
             $baseDir: '%upload_manager.base_dir%'
     App\EventListener\LocaleDomainListener:

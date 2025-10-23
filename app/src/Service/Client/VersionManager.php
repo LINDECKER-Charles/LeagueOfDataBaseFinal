@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Client;
 
+use App\Service\Tools\APICaller;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;

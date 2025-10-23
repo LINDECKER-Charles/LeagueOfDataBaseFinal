@@ -3,11 +3,12 @@
 namespace App\Controller;
 
 use App\Dto\ClientData;
-use App\Service\ItemManager;
-use App\Service\UrlGenerator;
-use App\Service\ClientManager;
-use App\Service\VersionManager;
-use App\Service\SummonerManager;
+
+use App\Service\API\ItemManager;
+use App\Service\API\SummonerManager;
+use App\Service\Client\ClientManager;
+use App\Service\Client\VersionManager;
+use App\Service\Tools\UrlGenerator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;

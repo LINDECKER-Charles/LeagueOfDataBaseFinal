@@ -1,10 +1,11 @@
 <?php
 // src/Service/AbstractManager.php
-namespace App\Service;
+namespace App\Service\API;
 
-use App\Service\APICaller;
-use App\Service\UploadManager;
-use App\Service\VersionManager;
+
+use App\Service\Client\VersionManager;
+use App\Service\Tools\APICaller;
+use App\Service\Tools\UploadManager;
 use Symfony\Component\Filesystem\Path;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -182,7 +183,7 @@ abstract class AbstractManager
      *   fileName:string
      * }
      */
-    protected final function buildDirAndPath(string $version, string $lang, string $type, string $name = null, bool $img = false): array{
+    protected final function buildDirAndPath(string $version, string $lang, string $type, ?string $name = null, bool $img = false): array{
         if(!$name){
             $name = $type . '.json';
         }
