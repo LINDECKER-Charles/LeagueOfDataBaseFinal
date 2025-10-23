@@ -3,9 +3,9 @@
 namespace App\Service\API;
 
 use App\Service\API\AbstractManager;
+use App\Service\API\CategoriesInterface;
 
-
-final class SummonerManager extends AbstractManager
+final class SummonerManager extends AbstractManager implements CategoriesInterface
 {
     private const TYPE = 'summoner';
 

@@ -25,6 +25,8 @@ services:
         parent: App\Service\API\AbstractManager
     App\Service\API\SummonerManager:
         parent: App\Service\API\AbstractManager
+    App\Service\API\ChampionManager:
+        parent: App\Service\API\AbstractManager
     App\Service\API\AbstractManager:
         abstract: true                # <— déclaré abstrait (non instanciable)
         bind:
