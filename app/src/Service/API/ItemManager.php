@@ -1,8 +1,8 @@
 <?php
 // src/Service/ObjectManager.php
-namespace App\Service;
+namespace App\Service\API;
 
-use App\Service\AbstractManager;
+use App\Service\API\AbstractManager;
 
 final class ItemManager extends AbstractManager{
 

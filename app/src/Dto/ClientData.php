@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace App\Dto;
 
-use App\Service\ClientManager;
-use App\Service\VersionManager;
+use App\Service\Client\ClientManager;
+use App\Service\Client\VersionManager;
 
 /**
  * Données client transverses (utilisables sur toutes les pages).

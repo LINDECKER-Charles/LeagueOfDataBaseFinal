@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Service\Client;
 
-use App\Service\VersionManager;
+use App\Service\Client\VersionManager;
+use App\Service\Tools\Utils;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\RequestStack;
 

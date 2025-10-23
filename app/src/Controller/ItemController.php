@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Dto\ClientData;
-use App\Service\ItemManager;
-use App\Service\ClientManager;
-use App\Service\VersionManager;
+use App\Service\API\ItemManager;
+use App\Service\Client\ClientManager;
+use App\Service\Client\VersionManager;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,7 +15,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class ItemController extends AbstractController{
     public function __construct(
-        private readonly ClientManager $client,
         private readonly VersionManager $versionManager, 
         private readonly ClientManager $clientManager,
         private readonly RequestStack $requestStack,
@@ -56,7 +55,7 @@ final class ItemController extends AbstractController{
     public function objects_redirect(int $numpage, int $itemperpage): Response{
         // On recupere les informations en session
 
-        $session = $this->client->getSession();
+        $session = $this->clientManager->getSession();
         
         
         // On les ajoutes en parametre dans l URL
@@ -103,7 +102,7 @@ final class ItemController extends AbstractController{
     public function objects(): Response{
         // 1) On récupère les paramètres
         
-        $session = $this->client->getParams();
+        $session = $this->clientManager->getParams();
 
         // 1.1) Si nos paramètres ne sont pas défini alors on les définis via la redirection
         if(!$session['param']){

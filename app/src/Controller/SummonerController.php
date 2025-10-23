@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Dto\ClientData;
-use App\Service\ClientManager;
-use App\Service\VersionManager;
-use App\Service\SummonerManager;
+use App\Service\API\SummonerManager;
+use App\Service\Client\ClientManager;
+use App\Service\Client\VersionManager;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,7 +17,6 @@ final class SummonerController extends AbstractController
 {
     public function __construct(
         private readonly SummonerManager $summoners,
-        private readonly ClientManager $client,
         private readonly VersionManager $versionManager, 
         private readonly ClientManager $clientManager,
         private readonly RequestStack $requestStack,
@@ -39,7 +38,7 @@ final class SummonerController extends AbstractController
     )]
     public function summoners_redirect(int $numpage, int $itemperpage): Response{
         // On recupere les informations en session
-        $session = $this->client->getSession();
+        $session = $this->clientManager->getSession();
         
         // On les ajoutes en parametre dans l URL
         return $this->redirectToRoute('app_summoners', [
@@ -68,7 +67,7 @@ final class SummonerController extends AbstractController
     public function summoners(): Response
     {
         // 1) On récupère les paramètres
-        $session = $this->client->getParams();
+        $session = $this->clientManager->getParams();
 
         // 1.1) Si nos paramètres ne sont pas défini alors on les définis via la redirection
         if(!$session['param']){
