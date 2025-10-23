@@ -3,11 +3,10 @@
 namespace App\Service\API;
 
 use App\Service\API\AbstractManager;
-use App\Service\API\CategoriesInterface;
 
-final class ItemManager extends AbstractManager implements CategoriesInterface{
+final class ChampionManager extends AbstractManager{
 
-    private const TYPE = 'item';
+    private const TYPE = 'champion';
 
     /**
      * Récupère les données JSON des items via l’API Riot (Data Dragon)
@@ -117,7 +116,7 @@ final class ItemManager extends AbstractManager implements CategoriesInterface{
                 continue;
             }
 
-            $result[$id] = $this->getImage($img, $version, $dir, $force);
+            $result[] = $this->getImage($img, $version, $dir, $force);
         }
 
         return $result;
@@ -206,17 +205,12 @@ final class ItemManager extends AbstractManager implements CategoriesInterface{
 
         (int) $ttSum = count($json);
         if($nb === 0 || $nb > $ttSum){
-            if($ttSum > 20){
-                $nb = 20;
-            }else{
-                $nb = $ttSum;
-            }
+            $ttSum > 20 ? $nb = 20 : $nb = $ttSum;
         }
 
         $ttPage = ceil($ttSum / $nb);
-        if( $numPage > $ttPage ){
-            $numPage = 1;
-        }
+        if( $numPage > $ttPage ) $numPage = 1;
+
         
         
         if($numPage <= 1){
@@ -226,7 +220,7 @@ final class ItemManager extends AbstractManager implements CategoriesInterface{
         }
         
         (array) $images = $this->getImages($version, $langue, false, $json);
-        /* dd($json, $images); */
+        
         return [
             SELF::TYPE . 's' =>  $json,
             'images' => $images,
@@ -262,7 +256,7 @@ final class ItemManager extends AbstractManager implements CategoriesInterface{
      * @throws \InvalidArgumentException Si $name a une longueur invalide.
      * @throws \RuntimeException         Si le format des données est invalide.
      */
-    public function searchByName(string $name, string $version, string $lang, int $max = 0): array
+/*     public function searchByName(string $name, string $version, string $lang, int $max = 0): array
     {
         if (mb_strlen($name) < 2 || mb_strlen($name) > 50) {
             throw new \InvalidArgumentException('Nom invalide.');
@@ -289,6 +283,6 @@ final class ItemManager extends AbstractManager implements CategoriesInterface{
         }
 
         return $results;
-    }
+    } */
 
 }

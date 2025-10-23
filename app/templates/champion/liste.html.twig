@@ -63,12 +63,13 @@
     </header>
 
     {# Grille #}
+    {% set imgId = 0 %}
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for s in champions %}
         {% set id    = s.id|default('') %}
         {% set name  = s.name|default('') %}
         {% set title   = s.title|default('') %}
-        {% set imgPath = images[id]|default(null) %}
+        {% set imgPath = images[imgId]|default(null) %}
         {% set desc = s.desc|default('') %}
 
         <article class="group h-full flex flex-col rounded-2xl border border-grey-700 bg-blue-850/80 backdrop-blur shadow-sm hover:shadow-md hover:-translate-y-0.5 transition relative overflow-hidden">
@@ -115,6 +116,7 @@
             </div>
           {% endif %}
         </article>
+        {% set imgId = imgId + 1 %}
       {% else %}
         <div class="col-span-full rounded-2xl border border-grey-700 bg-blue-850/80 backdrop-blur p-8 text-center">
           <p class="text-blue-100/85">Aucun champion disponible.</p>
