@@ -1,0 +1,27 @@
+        <div class="flex items-center gap-2 text-sm text-blue-200/80">
+            <span>Résultats par page :</span>
+
+            {% for option in [4, 8, 16, meta.totalItem] %}
+                <a href="{{ path('app_objects_redirect', { numpage: meta.currentPage, itemperpage: option }) }}"
+                  class="px-2 py-1 rounded-lg border border-grey-700 bg-blue-950 text-white hover:bg-blue-900 transition">
+                    {% if option == meta.totalItem %}
+                        MAX
+                    {% else %}
+                        {{ option }}
+                    {% endif %}
+                </a>
+            {% endfor %}
+
+            <!-- Input personnalisé -->
+            <input type="number" min="1" max="{{ meta.totalItem }}" value=""
+                  oninput="document.getElementById('customLink').href='{{ path('app_objects_redirect', { numpage: meta.currentPage, itemperpage: 'REPLACE_ME' }) }}'.replace('REPLACE_ME', this.value)"
+                  class="w-12 h-[30px] text-center rounded-lg border border-grey-700 bg-blue-950 text-white 
+                          placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-200/60 transition" />
+
+            <!-- Bouton lien -->
+            <a id="customLink"
+              href="{{ path('app_objects_redirect', { numpage: meta.currentPage, itemperpage: 8 }) }}"
+              class="px-2 py-1 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
+                OK
+            </a>
+        </div>

@@ -92,12 +92,21 @@ summoner:
     title: "Summoner Spells"
     subtitle: "Summoner Spells Catalog"
     count: "count spells"
+champion:
+  list:
+    title: "Champions"
+    meta_description: "Browse all League of Legends champions. Find detailed stats, abilities, and lore for each champion in the game."
+    header: "Champions"
+    subtitle: "Champion catalog"
+    search_placeholder: "Search for a champion…"
+    change_version: "Change version/language"
 
 common:
   no_result:
     text: "No results found for your search."
     back: "← Back"
     setup: "Choose version & language"
+  detail : "See details →"
 base:
   title: "League of Data Base"
   description: "League of Data Base is a community-driven platform that provides detailed information, stats, and insights about League of Legends. Fast, reliable, and always up to date."
