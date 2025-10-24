@@ -93,12 +93,22 @@ summoner:
     title: "Sorts d’invocateur"
     subtitle: "Catalogue des sorts d’invocateur"
     count: "count sorts"
+champion:
+  list:
+    title: "Champions"
+    meta_description: "Parcourez tous les champions de League of Legends. Retrouvez statistiques détaillées, compétences et lore pour chaque champion du jeu."
+    header: "Champions"
+    subtitle: "Catalogue des champions"
+    search_placeholder: "Rechercher un champion…"
+    change_version: "Changer version/langue"
+
 
 common:
   no_result:
     text: "Aucun résultat trouvé pour votre recherche."
     back: "← Retour"
     setup: "Choisir la version et la langue"
+  detail : "Voir le détail →"
 
 base:
   title: "League of Data Base"

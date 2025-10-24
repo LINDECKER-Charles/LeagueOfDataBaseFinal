@@ -1,6 +1,14 @@
       {# Barre d’actions légère (optionnelle) #}
       <div class="w-full sm:w-auto flex gap-3 sm:gap-4">
-        {% include 'partials/main/elem/numberResult.html.twig' %}
+        {% set currentRoute = app.request.attributes.get('_route') %}
+
+        {% if 'champion' in currentRoute %}
+          {% include 'partials/main/elem/numberResultChamps.html.twig' %}
+        {% elseif 'summoner' in currentRoute %}
+          {% include 'partials/main/elem/numberResultSums.html.twig' %}
+        {% elseif 'object' in currentRoute %}
+          {% include 'partials/main/elem/numberResultObjs.html.twig' %}
+        {% endif %}
         {% include 'partials/main/elem/searchBarre.html.twig' %}
         {% include 'partials/main/elem/changelorv.html.twig' %}
       </div>

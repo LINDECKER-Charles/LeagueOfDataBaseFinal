@@ -1,0 +1,46 @@
+{# templates/champion/partials/card.html.twig #}
+<section class="group h-full flex flex-col rounded-2xl border border-grey-700 bg-blue-850/80 backdrop-blur shadow-sm hover:shadow-md hover:-translate-y-0.5 transition relative overflow-hidden">
+  {# Liseré haut subtil #}
+  <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-200/40 to-transparent"></div>
+
+  {# -- Haut de carte : image + nom + titre -- #}
+  <header class="mb-2 flex items-center gap-3 px-4 pt-4">
+    {% if imgPath %}
+    <div class="relative h-14 w-14 rounded-xl bg-blue-950 border border-grey-700 overflow-hidden">
+      <img
+        src="/{{ imgPath }}"
+        alt="{{ name }}"
+        class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 scale-110 group-hover:scale-120"
+      >
+    </div>
+
+
+    {% else %}
+      <div class="h-14 w-14 rounded-xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-xs">
+        {{ name|slice(0,2)|upper }}
+      </div>
+    {% endif %}
+
+    <div class="min-w-0">
+      <h3 class="truncate text-[15px] font-semibold text-white" title="{{ name }}">{{ name }}</h3>
+      <p class="truncate text-xs text-blue-200/70" title="{{ title }}">{{ title }}</p>
+    </div>
+  </header>
+
+  {# -- Corps de carte : rôles et description -- #}
+  <div class="px-4 pb-4 text-sm text-blue-100/80">
+    {% if tags is defined and tags|length > 0 %}
+      <p class="text-xs text-blue-200/70 mb-1">{{ tags|join(', ') }}</p>
+    {% endif %}
+    {% if desc %}
+      <p class="text-[13px] leading-snug text-blue-100/90 line-clamp-3">{{ desc }}</p>
+    {% endif %}
+  </div>
+
+  {# -- Pied de carte : lien vers détail (inactif pour l’instant) -- #}
+  <footer class="mt-auto border-t border-grey-700 bg-blue-950/50">
+    <a href="#" class="block text-center text-sm font-semibold text-blue-200/80 py-2 hover:text-blue-100 transition">
+        {{ 'common.detail'|trans }}
+    </a>
+  </footer>
+</section>
