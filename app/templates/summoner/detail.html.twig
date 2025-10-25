@@ -65,7 +65,7 @@
       {% endfor %}
       {% for name, val in indexs %}
         <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-            <dt class="text-blue-200/70 text-sm">{{ name|capitalize }}</dt>
+            <dt class="text-blue-200/70 text-sm">{{ name|trans }}</dt>
             <dd class="font-medium text-white/90">
               {{ val == -1 ? 1 : val }}
             </dd>
