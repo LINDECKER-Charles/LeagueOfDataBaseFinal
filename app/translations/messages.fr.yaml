@@ -8,13 +8,15 @@ homepage:
     explore_items: "Explorer les objets"
   summoners:
     title: "Sorts d’invocateur"
-    see_all: "Voir tout →"
+    see_all: "Voir touts les sorts"
   items:
     title: "Objets"
-    see_all: "Voir tout →"
+    see_all: "Voir touts les objets"
   champions:
     title: "Champions"
     wip: "Cette section est en construction. Bientôt vous pourrez parcourir tous les champions."
+    see_all: "Voir tous les champions"
+    no_data: "Aucun champion disponible pour cette version."
   runes:
     title: "Runes"
     wip: "Cette section est en construction. Bientôt vous pourrez explorer les runes."
@@ -101,7 +103,20 @@ champion:
     subtitle: "Catalogue des champions"
     search_placeholder: "Rechercher un champion…"
     change_version: "Changer version/langue"
-
+  detail:
+    meta_description: "Découvrez %name% de League of Legends avec statistiques, rôles et détails pour le patch %version%."
+    version_locale: "Patch %version% • %locale%"
+    partype: "Ressource : %partype%"
+    stats:
+      title: "Statistiques de base"
+    profile:
+      title: "Profil du champion"
+      attack: "Attaque"
+      defense: "Défense"
+      magic: "Magie"
+      difficulty: "Difficulté"
+    lore:
+      title: "Lore"
 
 common:
   no_result:

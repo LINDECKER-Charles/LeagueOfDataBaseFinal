@@ -1,100 +1,113 @@
-{# templates/summoner/detail.html.twig #}
+{# templates/champion/detail.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ summoner.name ?? 'Summoner' }}{% endblock %}
+{% block title %}{{ champion.name ?? 'Champion' }} - {{ client.session.version ?? (client.versions|first) }}{% endblock %}
+{% block meta_description %}
+  {{ 'champion.detail.meta_description'|trans({
+    '%name%': champion.name ?? 'Champion',
+    '%version%': client.session.version ?? (client.versions|first)
+  }) }}
+{% endblock %}
+{% block img %}/preview/champions.png{% endblock %}
 
 {% block body %}
-<main class="relative min-h-[65vh] bg-blue-950 overflow-hidden flex items-center justify-center py-7 w-full">
+<main class="relative min-h-[70vh] bg-blue-950 overflow-hidden py-10 w-full">
+  {% include 'partials/main/gradient.html.twig' %}
 
-  {# Halo + étoiles #}
-    <div aria-hidden="true" class="pointer-events-none absolute inset-0">
-        <div class="absolute -top-1/3 left-1/2 -translate-x-1/2 h-[65rem] w-[65rem] rounded-full opacity-25 blur-3xl"
-            style="background: radial-gradient(closest-side, rgba(191,219,254,.25), rgba(30,58,138,.25) 45%, transparent 70%);"></div>
-        <div class="absolute inset-0">
-            {% for i in 1..28 %}
-                <span class="absolute block h-1 w-1 rounded-full bg-blue-200/30"
-                    style="top: {{ random(2,98) }}%; left: {{ random(2,98) }}%;"></span>
-            {% endfor %}
-        </div>
-    </div>
-    {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
-    {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
-    <div class="relative mx-auto max-w-5xl">
-    {# En-tête #}
+  {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
+  {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
+
+  <div class="relative mx-auto max-w-5xl px-4">
+    {# === En-tête === #}
     <article class="mb-10 flex items-center gap-6">
-        {% if image %}
-            <div class="relative shrink-0 h-20 w-20 rounded-2xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
-            <img src="/{{ image }}" alt="{{ summoner.name }}" class="h-16 w-16 object-contain transition group-hover:scale-105 duration-300">
-            </div>
-        {% else %}
-            <div class="h-20 w-20 rounded-2xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-lg">
-            {{ summoner.name|slice(0,2)|upper }}
-            </div>
-        {% endif %}
-        <section>
-            <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100">
-            {{ summoner.name ?? 'Summoner' }}
-            </h1>
-            <p class="font-spiegel text-blue-200/80 mt-1">
-            {{ summoner.id ?? '' }}
-            </p>
+      {% if image %}
+        <div class="relative shrink-0 h-28 w-28 rounded-2xl bg-blue-950 border border-grey-700 overflow-hidden">
+          <img src="{{ asset(image) }}" alt="{{ champion.name }}" class="absolute inset-0 w-full h-full object-cover">
+        </div>
+      {% else %}
+        <div class="h-24 w-24 rounded-2xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-lg">
+          {{ champion.name|slice(0,2)|upper }}
+        </div>
+      {% endif %}
 
-            {# Ajout : affichage version/langue #}
-            <p class="mt-1 text-sm text-blue-200/60">
-            Version : {{ selectedVersion }} — Langue : {{ selectedLocale }}
-            </p>
-        </section>
+      <section>
+        <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100">
+          {{ champion.name ?? 'Champion' }}
+        </h1>
+        <p class="font-spiegel text-blue-200/80 mt-1">{{ champion.title ?? '' }}</p>
+        <p class="mt-1 text-sm text-blue-200/60">
+          {{ 'champion.detail.version_locale'|trans({
+            '%version%': selectedVersion,
+            '%locale%': selectedLocale
+          }) }}
+        </p>
+      </section>
     </article>
 
-    {# Infos principales #}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Cooldown</dt>
-        <dd class="font-medium text-white/90">{{ summoner.cooldownBurn ?? (summoner.cooldown|default([])|join('/')) ?: '–' }}</dd>
+    {# === Rôles + Énergie === #}
+    <section class="mb-8">
+      <div class="flex flex-wrap gap-2 mb-3">
+        {% for tag in champion.tags %}
+          <span class="rounded-full bg-blue-950/70 px-3 py-1 text-sm border border-grey-700 text-blue-200/90">{{ tag }}</span>
+        {% endfor %}
       </div>
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Coût</dt>
-        <dd class="font-medium text-white/90">{{ summoner.costBurn ?? (summoner.cost|default([])|join('/')) ?: '–' }}</dd>
-      </div>
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">Niv. invoc.</dt>
-        <dd class="font-medium text-white/90">{{ summoner.summonerLevel ?? '–' }}</dd>
-      </div>
-    </div>
+      {% if champion.partype %}
+        <p class="text-blue-200/70 text-sm italic">
+          {{ 'champion.detail.partype'|trans({'%partype%': champion.partype}) }}
+        </p>
+      {% endif %}
+    </section>
 
-    {# Modes compatibles #}
-    {% if summoner.modes is defined and summoner.modes is iterable and summoner.modes is not empty %}
+    {# === Statistiques de base === #}
+    {% if champion.stats is defined %}
       <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">Modes compatibles</h2>
-        <div class="flex flex-wrap gap-2">
-          {% for m in summoner.modes %}
-            <span class="rounded-full bg-blue-950/70 px-3 py-1 text-sm border border-grey-700 text-blue-200/90">{{ m }}</span>
+        <h2 class="text-lg font-semibold text-white mb-3">{{ 'champion.detail.stats.title'|trans }}</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {% for key, val in champion.stats %}
+            <div class="rounded-lg bg-blue-950/80 p-3 border border-grey-700">
+              <dt class="text-blue-200/70 text-sm">{{ key|replace({'perlevel': ' /niveau'})|capitalize }}</dt>
+              <dd class="font-medium text-white/90">{{ val }}</dd>
+            </div>
           {% endfor %}
         </div>
       </section>
     {% endif %}
 
-    {# Description #}
-    {% if summoner.description is defined and summoner.description %}
-      <section>
-        <h2 class="text-lg font-semibold text-white mb-3">Description</h2>
-        <div class="prose prose-invert max-w-none text-blue-100/90">
-          {{ summoner.description|raw }}
+    {# === Informations complémentaires === #}
+    {% if champion.info is defined %}
+      <section class="mb-8">
+        <h2 class="text-lg font-semibold text-white mb-3">{{ 'champion.detail.profile.title'|trans }}</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="rounded-lg bg-blue-950/80 p-3 border border-grey-700">
+            <dt class="text-blue-200/70 text-sm">{{ 'champion.detail.profile.attack'|trans }}</dt>
+            <dd class="font-medium text-white/90">{{ champion.info.attack }}</dd>
+          </div>
+          <div class="rounded-lg bg-blue-950/80 p-3 border border-grey-700">
+            <dt class="text-blue-200/70 text-sm">{{ 'champion.detail.profile.defense'|trans }}</dt>
+            <dd class="font-medium text-white/90">{{ champion.info.defense }}</dd>
+          </div>
+          <div class="rounded-lg bg-blue-950/80 p-3 border border-grey-700">
+            <dt class="text-blue-200/70 text-sm">{{ 'champion.detail.profile.magic'|trans }}</dt>
+            <dd class="font-medium text-white/90">{{ champion.info.magic }}</dd>
+          </div>
+          <div class="rounded-lg bg-blue-950/80 p-3 border border-grey-700">
+            <dt class="text-blue-200/70 text-sm">{{ 'champion.detail.profile.difficulty'|trans }}</dt>
+            <dd class="font-medium text-white/90">{{ champion.info.difficulty }}</dd>
+          </div>
         </div>
       </section>
     {% endif %}
 
-    {# Actions #}
-    <div class="mt-10 flex gap-4">
-      <a href="{{ path('app_summoners') }}"
-         class="px-4 py-2 rounded-lg border border-grey-700 bg-transparent text-white hover:bg-blue-900 transition">
-        ← Retour à la liste
-      </a>
-      <a href="{{ path('app_setup') }}"
-         class="px-4 py-2 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
-        Changer version & langue
-      </a>
-    </div>
+    {# === Description === #}
+    {% if champion.blurb %}
+      <section class="mb-10">
+        <h2 class="text-lg font-semibold text-white mb-3">{{ 'champion.detail.lore.title'|trans }}</h2>
+        <p class="text-blue-100/90 leading-relaxed">{{ champion.blurb }}</p>
+      </section>
+    {% endif %}
+
+    {# === Actions === #}
+    {% include 'partials/main/elem/change.html.twig' %}
   </div>
 </main>
 {% endblock %}

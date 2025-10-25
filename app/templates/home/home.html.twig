@@ -32,34 +32,41 @@
       </div>
     </section>
 
-    {# SUMMONERS PREVIEW #}
-    <section class="">
+    {# CHAMPIONS PREVIEW #}
+    <section>
       <header class="flex items-center justify-between mb-6">
-        <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.summoners.title'|trans }}</h2>
-        <a href="{{ path('app_summoners_redirect') }}" 
-           class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">{{ 'homepage.summoners.see_all'|trans }}</a>
+        <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.champions.title'|trans }}</h2>
+        <a href="{{ path('app_champions_redirect') }}" 
+          class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">{{ 'homepage.champions.see_all'|trans }}</a>
       </header>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {% for key, s in summoners.summoners %}
-          {% set imgPath = summoners.images[key]|default(null) %}
-          <a href="{{ path('app_summoner_redirect', { name: key }) }}" 
-             class="group rounded-xl border border-grey-700 bg-blue-950/60 p-5 hover:border-blue-500 transition">
+        {% for key, c in champions.champions|slice(0, 4) %}
+          {% set imgPath = champions.images[loop.index0]|default(null) %}
+          <a href="{{ path('app_champion_redirect', { name: key }) }}" 
+            class="group rounded-xl border border-grey-700 bg-blue-950/60 p-5 hover:border-blue-500 transition">
             <div class="flex items-center gap-4">
               <div class="h-16 w-16 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
                 {% if imgPath %}
-                  <img src="/{{ imgPath }}" alt="{{ s.name }}" class="h-14 w-14 object-contain">
+                  <img src="/{{ imgPath }}" alt="{{ c.name }}" class="h-14 w-14 object-cover scale-120">
                 {% else %}
-                  <span class="text-blue-200/70 text-xl">{{ s.name|slice(0,2)|upper }}</span>
+                  <span class="text-blue-200/70 text-xl">{{ c.name|slice(0,2)|upper }}</span>
                 {% endif %}
               </div>
               <div>
-                <h3 class="font-beaufort text-lg text-white group-hover:text-blue-200">{{ s.name }}</h3>
+                <h3 class="font-beaufort text-lg text-white group-hover:text-blue-200">{{ c.name }}</h3>
+                <p class="text-xs text-blue-200/70 truncate">{{ c.title }}</p>
               </div>
             </div>
           </a>
+        {% else %}
+          <div class="col-span-full rounded-xl border border-grey-700 bg-blue-950/60 p-6 text-center">
+            <p class="font-spiegel text-blue-200/80">{{ 'homepage.champions.no_data'|trans }}</p>
+          </div>
         {% endfor %}
       </div>
     </section>
+
 
     {# ITEMS PREVIEW #}
     <section>
@@ -76,7 +83,7 @@
             <div class="flex items-center gap-4">
               <div class="h-16 w-16 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
                 {% if imgPath %}
-                  <img src="/{{ imgPath }}" alt="{{ i.name }}" class="h-14 w-14 object-contain">
+                  <img src="/{{ imgPath }}" alt="{{ i.name }}" class="h-14 w-14 object-contain scale-110">
                 {% else %}
                   <span class="text-blue-200/70 text-xl">{{ i.name|slice(0,2)|upper }}</span>
                 {% endif %}
@@ -89,16 +96,36 @@
         {% endfor %}
       </div>
     </section>
-    <section class="">
-        <header class="flex items-center justify-between mb-6">
-            <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.champions.title'|trans }}</h2>
-        </header>
-        <div class="rounded-xl border border-grey-700 bg-blue-950/60 p-6 text-center">
-            <p class="font-spiegel text-blue-200/80">
-            {{ 'homepage.champions.wip'|trans }}
-            </p>
-        </div>
+
+    {# SUMMONERS PREVIEW #}
+    <section>
+      <header class="flex items-center justify-between mb-6">
+        <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.summoners.title'|trans }}</h2>
+        <a href="{{ path('app_summoners_redirect') }}" 
+           class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">{{ 'homepage.summoners.see_all'|trans }}</a>
+      </header>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for key, s in summoners.summoners %}
+          {% set imgPath = summoners.images[key]|default(null) %}
+          <a href="{{ path('app_summoner_redirect', { name: key }) }}" 
+             class="group rounded-xl border border-grey-700 bg-blue-950/60 p-5 hover:border-blue-500 transition">
+            <div class="flex items-center gap-4">
+              <div class="h-16 w-16 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
+                {% if imgPath %}
+                  <img src="/{{ imgPath }}" alt="{{ s.name }}" class="h-14 w-14 object-contain scale-120">
+                {% else %}
+                  <span class="text-blue-200/70 text-xl">{{ s.name|slice(0,2)|upper }}</span>
+                {% endif %}
+              </div>
+              <div>
+                <h3 class="font-beaufort text-lg text-white group-hover:text-blue-200">{{ s.name }}</h3>
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
     </section>
+
     <section class="">
         <header class="flex items-center justify-between mb-6">
             <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.runes.title'|trans }}</h2>

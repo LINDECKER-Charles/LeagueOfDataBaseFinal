@@ -7,6 +7,7 @@ use App\Dto\ClientData;
 use App\Service\API\ChampionManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\VersionManager;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,7 +33,6 @@ final class ChampionController extends AbstractController{
 
         $session = $this->clientManager->getSession();
         
-        
         // On les ajoutes en parametre dans l URL
         return $this->redirectToRoute('app_champions', [
             'version' => $session['version'],
@@ -43,35 +43,17 @@ final class ChampionController extends AbstractController{
     }
 
     /**
-     * Affiche la liste des items avec pagination, version et langue définies en session.
+     * Affiche la liste paginée des champions disponibles.
      *
-     * Comportement :
-     * 1. Récupère les paramètres depuis la session via {@see Client::getParams()} :
-     *    - version (string)      : version de League of Legends en cours.
-     *    - lang (string)         : code de langue (ex. "fr_FR", "en_US").
-     *    - numPage (int)         : numéro de la page courante.
-     *    - itemPerPage (int)     : nombre d’items par page.
-     *    - param (bool)          : indicateur de validité des paramètres.
+     * Récupère la version et la langue depuis la session client,
+     * puis charge la liste complète des champions via le ChampionManager.
+     * Fournit à la vue les images, les données et les métadonnées de pagination.
      *
-     * 2. Si les paramètres ne sont pas définis (`param = false`), redirige vers la route
-     *    'app_items_redirect' afin de forcer leur initialisation.
+     * @param Request $request Requête HTTP contenant les paramètres de page (optionnels).
      *
-     * 3. Sinon, tente de récupérer les items via {@see ItemManager::paginate()} :
-     *    - Applique un plafond de 20 items par page.
-     *    - Récupère les données paginées + images + métadonnées.
+     * @return Response Page affichant la liste des champions avec pagination.
      *
-     * 4. En cas d’erreur (ex. données absentes pour la version/langue choisies),
-     *    vide les messages flash existants, ajoute un flash "error" avec les détails,
-     *    puis redirige vers la route 'app_setup'.
-     *
-     * 5. Rend le template Twig `item/liste.html.twig` avec :
-     *    - items   : sous-ensemble d’items pour la page courante.
-     *    - images  : chemins relatifs des images d’items.
-     *    - meta    : informations de pagination (page courante, nb pages, total, etc.).
-     *    - client  : objet {@see ClientData} construit depuis les services versionManager et clientManager.
-     *
-     * @return Response Page HTML affichant la liste paginée des items,
-     *                  ou redirection vers une autre route en cas de paramètres absents/erreur.
+     * @throws \Throwable Si une erreur survient lors du chargement des données ou de la communication avec l’API.
      */
     #[Route('/champions', name: 'app_champions', methods: ['GET'])]
     public function champions(): Response{
@@ -84,8 +66,6 @@ final class ChampionController extends AbstractController{
             return $this->redirectToRoute('app_champions_redirect');
         }
 
-/*         $data = $this->championManager->getData($session['version'], $session['lang']);
-        dd($data); */
 
         try {
             $data = $this->championManager->paginate($session['version'], $session['lang'], $session['itemPerPage'] > 20 ? 20 : $session['itemPerPage'], $session['numPage']);
@@ -107,5 +87,113 @@ final class ChampionController extends AbstractController{
             'meta' => $data['meta'],
             'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
         ]);
+    }
+
+
+
+    #[Route('/champion_redirect/{name}', name: 'app_champion_redirect', methods: ['GET'])]
+    public function champion_redirect(string $name): Response
+    {
+        // On récupère les informations en session
+        $session = $this->clientManager->getSession();
+
+        // On les ajoute en paramètre dans l'URL de la page détail
+        return $this->redirectToRoute('app_champion', [
+            'name'    => $name,
+            'version' => $session['version'],
+            'lang'    => $session['lang'],
+        ]);
+    }
+
+    /**
+     * Affiche le détail complet d’un champion spécifique.
+     *
+     * Récupère les informations détaillées d’un champion (nom, titre, stats, rôles, image, lore)
+     * en fonction du nom passé dans l’URL. En cas d’absence de données sur la version/langue courante,
+     * l’utilisateur est redirigé vers la page de configuration.
+     *
+     * @param string $name Nom du champion (identifiant interne de Data Dragon).
+     *
+     * @return Response Page détaillée du champion demandé.
+     *
+     * @throws \RuntimeException Si le champion n’est pas trouvé pour la version/langue spécifiée.
+     * @throws \Throwable Si une erreur survient pendant la récupération des données ou des images.
+     */
+    #[Route('/champion/{name}', name: 'app_champion', methods: ['GET'])]
+    public function champion(string $name): Response{
+
+        $session = $this->clientManager->getParams(['version', 'lang']);
+
+        // Si pas de paramètres valides → redirection
+        if (!$session['param']) {
+            return $this->redirectToRoute('app_summoner_redirect', ['name' => $name]);
+        }
+
+        try {
+            $image = $this->championManager->getImage($name . '.png', $session['version'], [], false, $session['lang']);
+            $champion = $this->championManager->getByName($name, $session['version'], $session['lang']);
+        } catch (\Throwable $e) {
+            $this->requestStack->getSession()->getFlashBag()->clear();
+            $this->addFlash('error', sprintf(
+                "Donnés absente sur la version %s et la langue %s Message --> %s",
+                $session['version'] ?? 'n/a',
+                $session['lang'] ?? 'n/a',
+                $e->getMessage()
+            ));
+            return $this->redirectToRoute('app_setup');
+        }
+        /* dd($champion, $image); */
+        return $this->render('champion/detail.html.twig', [
+            'champion' => $champion,
+            'image'    => $image,
+            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
+        ]);
+    }
+
+    /**
+     * Endpoint API pour la recherche de champions.
+     *
+     * Permet la recherche asynchrone (AJAX) de champions à partir d’un nom partiel.
+     * Retourne un JSON contenant les id, noms et images des champions correspondants.
+     *
+     * @param string $name Nom ou partie du nom du champion à rechercher.
+     *
+     * @return JsonResponse Tableau JSON contenant les résultats de la recherche.
+     *
+     * @throws \Throwable Si la récupération des données échoue ou si la requête est invalide.
+     */
+    #[Route('/api/champions/search/{name}', name: 'api_champions_search', methods: ['GET'])]
+    public function searchChampionsApi(string $name): JsonResponse
+    {
+        $session = $this->clientManager->getSession();
+        try {
+            $champions = $this->championManager->searchByName($name, $session['version'], $session['lang'], 20);
+        } catch (\Throwable $e) {
+            return $this->json( sprintf(
+                "Donnés absente sur la version %s et la langue %s Message --> %s",
+                $session['version'] ?? 'n/a',
+                $session['lang'] ?? 'n/a',
+                $e->getMessage()
+            ));
+        }
+
+        if (empty($champions)) {
+            return $this->json([]);
+        }
+
+        $images = $this->championManager->getImages($session['version'], $session['lang'], false, $champions);
+        
+        // Filtrer uniquement id, name et image
+
+        $final = array_map(function ($champion, $image) {
+            $id = $champion['id'] ?? null;
+            return [
+                'id'    => $id,
+                'name'  => $champion['name'] ?? '',
+                'image' => $image,
+            ];
+        }, $champions, $images);
+
+        return $this->json($final);
     }
 }

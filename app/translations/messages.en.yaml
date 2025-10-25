@@ -7,12 +7,14 @@ homepage:
     explore_items: "Explore Items"
   summoners:
     title: "Summoner Spells"
-    see_all: "See all →"
+    see_all: "See all spells"
   items:
     title: "Items"
-    see_all: "See all →"
+    see_all: "See all items"
   champions:
     title: "Champions"
+    see_all: "See all champions"
+    no_data: "No champions available for this version."
     wip: "This section is under construction. Soon you’ll be able to browse all champions."
   runes:
     title: "Runes"
@@ -92,6 +94,7 @@ summoner:
     title: "Summoner Spells"
     subtitle: "Summoner Spells Catalog"
     count: "count spells"
+
 champion:
   list:
     title: "Champions"
@@ -100,6 +103,20 @@ champion:
     subtitle: "Champion catalog"
     search_placeholder: "Search for a champion…"
     change_version: "Change version/language"
+  detail:
+    meta_description: "Discover %name% from League of Legends, with stats, roles and details for patch %version%."
+    version_locale: "Patch %version% • %locale%"
+    partype: "Resource: %partype%"
+    stats:
+      title: "Base Statistics"
+    profile:
+      title: "Champion Profile"
+      attack: "Attack"
+      defense: "Defense"
+      magic: "Magic"
+      difficulty: "Difficulty"
+    lore:
+      title: "Lore"
 
 common:
   no_result:

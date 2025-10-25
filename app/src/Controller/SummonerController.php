@@ -216,6 +216,10 @@ final class SummonerController extends AbstractController
             ));
         }
 
+        if (empty($summoners)) {
+            return $this->json([]);
+        }
+        
         $images = $this->summoners->getImages($session['version'], $session['lang'], false, $summoners);
         
         // Filtrer uniquement id, name et image

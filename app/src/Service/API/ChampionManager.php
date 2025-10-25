@@ -4,25 +4,24 @@ namespace App\Service\API;
 
 use App\Service\API\AbstractManager;
 
-final class ChampionManager extends AbstractManager{
+final class ChampionManager extends AbstractManager implements CategoriesInterface{
 
     private const TYPE = 'champion';
 
+
     /**
-     * Récupère les données JSON des items via l’API Riot (Data Dragon)
-     * et les stocke/relit depuis le répertoire public de l’application Symfony.
+     * Récupère les données brutes des champions pour une version et une langue données.
      *
-     * - Vérifie si le fichier JSON des items correspondant à la version et à la langue
-     *   existe déjà dans le répertoire public. Si oui, lit ce fichier et retourne son contenu décodé.
-     * - Sinon, télécharge le JSON des items depuis l’API Riot, le sauvegarde dans le répertoire public,
-     *   puis retourne les données décodées.
+     * Tente d'abord de charger les données depuis le cache local si disponible.
+     * Si le fichier n'existe pas, récupère les données depuis l'API Data Dragon de Riot,
+     * puis les sauvegarde localement au format JSON.
      *
-     * @param string $version Version de League of Legends (ex. "15.1.1").
+     * @param string $version Version du jeu (ex. "14.10.1").
      * @param string $lang    Code de langue (ex. "fr_FR", "en_US").
      *
-     * @return array Tableau associatif contenant les données décodées des items.
+     * @return array Données JSON décodées contenant tous les champions pour cette version et langue.
      *
-     * @throws \RuntimeException En cas d’échec de lecture/écriture du fichier ou de JSON invalide.
+     * @throws \RuntimeException Si l'appel à l’API échoue ou renvoie un format inattendu.
      */
     public function getData(string $version, string $lang): array
     {
@@ -42,24 +41,22 @@ final class ChampionManager extends AbstractManager{
         return $data;
     }
 
+
     /**
-     * Récupère les données d'un item précis par son identifiant, 
-     * en fonction de la version et de la langue demandées.
+     * Retourne les informations détaillées d’un champion spécifique à partir de son nom.
      *
-     * - Charge la liste complète des items via {@see getData()} depuis 
-     *   le répertoire public (ou via l'API Riot si non présent).
-     * - Vérifie si l'item demandé existe dans le tableau retourné.
-     * - Retourne directement les données de l'item s'il est trouvé.
-     * - Lance une exception sinon.
+     * Utilise les données chargées via getData() et recherche l’entrée correspondante
+     * au nom du champion fourni (ex. "Aatrox"). Si aucun champion ne correspond,
+     * une exception est levée.
      *
-     * @param string $name    Identifiant unique de l'item (ex. "1001" pour les Bottes).
-     * @param string $version Version de League of Legends (ex. "15.1.1").
-     * @param string $lang    Code de langue (ex. "fr_FR", "en_US").
+     * @param string $name    Nom ou identifiant interne du champion.
+     * @param string $version Version du jeu.
+     * @param string $lang    Code de langue.
      *
-     * @return array Tableau associatif contenant les données de l'item trouvé.
+     * @return array Tableau associatif contenant les informations du champion.
      *
-     * @throws \RuntimeException Si aucun item correspondant n'est trouvé.
-     */ 
+     * @throws \RuntimeException Si aucun champion n’est trouvé avec cet identifiant.
+     */
     public function getByName(string $name, string $version, string $lang): array{
         
         (array) $data = $this->getData($version,$lang)['data'];
@@ -72,31 +69,62 @@ final class ChampionManager extends AbstractManager{
     }
 
     /**
-     * Télécharge (ou relit) les images des items pour une version et une langue données,
-     * puis retourne un tableau associatif des résultats.
+     * Recherche des champions par nom ou identifiant partiel.
      *
-     * Comportement :
-     * - Si $data est vide, charge la liste des items via {@see getData()} et en extrait
-     *   les entrées (champ 'data'), puis itère dessus.
-     * - Pour chaque item, récupère le nom ($d['name']) et le nom de fichier image
-     *   ($d['image']['full']), puis appelle {@see getImage()} pour persister/relire l’image
-     *   dans le répertoire public correspondant à la version/langue/type.
-     * - Construit et retourne un tableau: [ <nomItem> => résultatDeGetImage, ... ].
+     * Permet une recherche insensible à la casse dans les champs `id` et `name`
+     * du fichier de données des champions. Limite les résultats à $max entrées si précisé.
      *
-     * @param string $version Version de League of Legends (ex. "15.1.1").
-     * @param string $lang    Code de langue (ex. "fr_FR", "en_US").
-     * @param bool   $force   Si true, (ré)télécharge l’image même si elle existe déjà en local.
-     * @param array  $data    Liste d’items optionnelle. Si vide, utilise getData($version, $lang)['data'].
-     *                        Chaque entrée doit contenir au minimum:
-     *                        - 'name' (nom affiché de l’item)
-     *                        - 'image'['full'] (nom de fichier image dans Data Dragon, ex. "1001.png")
+     * @param string $name    Terme recherché (au moins 2 caractères).
+     * @param string $version Version du jeu.
+     * @param string $lang    Code de langue.
+     * @param int    $max     Nombre maximal de résultats à retourner (0 = illimité).
      *
-     * @return array Tableau associatif des résultats par nom d’item :
-     *               [ 'Nom de l’item' => (valeur renvoyée par getImage), ... ].
-     *               Voir le contrat de {@see getImage()} pour le type exact retourné (chemin, bool, etc.).
+     * @return array Tableau de champions correspondant à la recherche.
      *
-     * @throws \RuntimeException En cas d’erreur réseau (appel API), d’E/S (écriture/lecture fichier)
-     *                           ou de données d’item/structure manquantes.
+     * @throws \InvalidArgumentException Si la longueur du nom est invalide.
+     * @throws \RuntimeException         Si les données chargées sont corrompues ou mal formatées.
+     */
+    public function searchByName(string $name, string $version, string $lang, int $max = 0): array
+    {
+        if (mb_strlen($name) < 2 || mb_strlen($name) > 50) {
+            throw new \InvalidArgumentException('Nom invalide.');
+        }
+        (array) $data = $this->getData($version, $lang)['data'];
+
+        if (!isset($data) || !is_array($data)) {
+            throw new \RuntimeException('Format de données invalide.');
+        }
+
+        $results = [];
+        $search = mb_strtolower($name); // normalisation pour recherche insensible à la casse
+
+        foreach ($data as $champion) {
+            if($max !== 0 && count($results) >= $max){
+                break;
+            }
+            $idMatch   = isset($champion['id']) && str_contains(mb_strtolower($champion['id']), $search);
+            $nameMatch = isset($champion['name']) && str_contains(mb_strtolower($champion['name']), $search);
+
+            if (($idMatch || $nameMatch)) {
+                $results[] = $champion;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Génère la liste des images locales associées aux champions.
+     *
+     * Télécharge et stocke les icônes des champions depuis le CDN Data Dragon.
+     * Si le cache local est disponible, les chemins relatifs sont retournés sans rechargement.
+     *
+     * @param string $version Version du jeu.
+     * @param string $lang    Code de langue.
+     * @param bool   $force   Force le re-téléchargement même si le fichier existe déjà.
+     * @param array  $data    Tableau de champions à traiter (facultatif).
+     *
+     * @return array Tableau des chemins relatifs vers les images locales des champions.
      */
     public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
     {
@@ -123,33 +151,19 @@ final class ChampionManager extends AbstractManager{
     }
     
     /**
-     * Récupère l’image d’un item depuis Data Dragon et la place dans le répertoire public.
+     * Télécharge ou retourne le chemin local d’une image de champion spécifique.
      *
-     * Comportement :
-     * - Construit l’URL Data Dragon des images d’items pour la version donnée.
-     * - Si $dir est vide, calcule le répertoire cible via {@see buildDir()} en utilisant
-     *   $version, $lang et self::TYPE (items).
-     * - Construit les chemins absolu/relatif du fichier via {@see buildPath()}.
-     * - Si le fichier existe déjà en local et que $force=false, retourne immédiatement
-     *   le chemin relatif.
-     * - Sinon, télécharge le binaire. S’il correspond à un fichier déjà présent (via
-     *   {@see binaryExisting()}), crée un lien (hard link) vers ce fichier ; à défaut,
-     *   écrit le binaire sur disque.
+     * Si l’image existe déjà localement et que $force est à false, le chemin local
+     * est directement retourné. Sinon, l’image est téléchargée depuis Data Dragon
+     * et enregistrée dans le répertoire correspondant à la version et la langue.
      *
-     * @param string $name   Nom de fichier de l’image (ex. "1001.png").
-     * @param string $version Version de LoL (ex. "15.1.1").
-     * @param array  $dir    Tableau de chemins retourné par {@see buildDir()} :
-     *                       doit contenir au minimum 'absDir' et/ou être compatible
-     *                       avec {@see buildPath()}. Si vide, il sera calculé.
-     * @param bool   $force  Si true, force le re-téléchargement/réécriture même si le
-     *                       fichier existe déjà.
-     * @param string $lang   Code de langue (ex. "fr_FR"). Utilisé uniquement si $dir est vide
-     *                       afin de déterminer le répertoire cible.
+     * @param string $name   Nom du fichier image (ex. "Aatrox.png").
+     * @param string $version Version du jeu.
+     * @param array  $dir    Tableau contenant les chemins de répertoire générés via buildDir().
+     * @param bool   $force  Force le téléchargement même si le fichier existe déjà.
+     * @param string $lang   Code de langue utilisé pour la génération du chemin.
      *
-     * @return string Chemin relatif du fichier image dans le répertoire public.
-     *
-     * @throws \RuntimeException En cas d’échec réseau (appel HTTP), d’E/S (écriture/liaison),
-     *                           ou si la construction des chemins échoue.
+     * @return string Chemin relatif vers l’image locale sauvegardée.
      */
     public function getImage(string $name, string $version, array $dir = [], bool $force = false, string $lang = ''):string {
         
@@ -172,32 +186,23 @@ final class ChampionManager extends AbstractManager{
         return $path['relPath'];
     }
 
+
     /**
-     * Paginer la liste des items pour une version/langue données et préparer leurs images.
+     * Fournit une pagination complète sur la liste des champions disponibles.
      *
-     * - Charge les items via {@see getData()} (champ 'data').
-     * - Calcule la pagination selon $nb (items par page) et $numPage.
-     * - Extrait le sous-ensemble d’items de la page courante via {@see splitJson()}.
-     * - Prépare les images associées via {@see getImages()}.
+     * Charge toutes les données, calcule le nombre total de pages et retourne
+     * uniquement les entrées correspondant à la page demandée. Inclut également
+     * les métadonnées de pagination et les chemins d’images correspondants.
      *
-     * @param string $version  Version de League of Legends (ex. "15.1.1").
-     * @param string $langue   Code de langue (ex. "fr_FR", "en_US").
-     * @param int    $nb       Nombre d’items par page (si 0 ou > total, prend tout).
-     * @param int    $numPage  Numéro de page 1‑based (si hors bornes, retombe à 1).
+     * @param string $version Version du jeu.
+     * @param string $langue  Code de langue.
+     * @param int    $nb      Nombre d’éléments par page (par défaut 20).
+     * @param int    $numPage Numéro de la page demandée.
      *
-     * @return array{
-     *     items: array,                         // Sous-ensemble d’items pour la page
-     *     images: array,                        // [nomItem => chemin relatif de l’image]
-     *     meta: array{
-     *         currentPage:int,
-     *         nombrePage:int,
-     *         itemPerPage:int,
-     *         totalItem:int,
-     *         type:string
-     *     }
-     * }
-     *
-     * @throws \RuntimeException En cas d’échec de lecture/écriture ou données invalides.
+     * @return array Tableau contenant :
+     *               - 'champions' : liste partielle des champions,
+     *               - 'images'    : chemins des images locales associées,
+     *               - 'meta'      : métadonnées (page actuelle, total, etc.).
      */
     public function paginate(string $version, string $langue, int $nb = 1, int $numPage = 1): array{
 
@@ -233,56 +238,5 @@ final class ChampionManager extends AbstractManager{
             ],
         ];
     }
-
-    /**
-     * Recherche des items par leur nom (partiel ou complet), insensible à la casse,
-     * pour une version et une langue données. Limite optionnelle du nombre de résultats.
-     *
-     * - Charge les items via {@see getData()} (champ 'data').
-     * - Normalise la chaîne de recherche en minuscules.
-     * - Parcourt chaque item et teste si $item['name'] contient la sous-chaîne recherchée.
-     * - Ajoute la clé (ID d’item) dans chaque résultat sous la forme 'id' => <clé>, afin de
-     *   pouvoir réutiliser l’identifiant de l’item.
-     * - S’arrête dès que $max résultats ont été collectés (si $max > 0).
-     *
-     * @param string $name    Terme recherché (2 à 50 caractères).
-     * @param string $version Version de League of Legends (ex. "15.1.1").
-     * @param string $lang    Code de langue (ex. "fr_FR", "en_US").
-     * @param int    $max     Nombre max. de résultats (0 = illimité).
-     *
-     * @return array<int,array> Liste d’items trouvés (chaque entrée = tableau associatif de l’item
-     *                          + clé 'id' contenant l’identifiant/clé de l’item).
-     *
-     * @throws \InvalidArgumentException Si $name a une longueur invalide.
-     * @throws \RuntimeException         Si le format des données est invalide.
-     */
-/*     public function searchByName(string $name, string $version, string $lang, int $max = 0): array
-    {
-        if (mb_strlen($name) < 2 || mb_strlen($name) > 50) {
-            throw new \InvalidArgumentException('Nom invalide.');
-        }
-
-        (array) $data = $this->getData($version, $lang)['data'];
-
-        if (!isset($data) || !is_array($data)) {
-            throw new \RuntimeException('Format de données invalide.');
-        }
-
-        $results = [];
-        $search = mb_strtolower($name); // normalisation pour recherche insensible à la casse
-
-        foreach ($data as $key => $item) {
-            if($max !== 0 && count($results) >= $max){
-                break;
-            }
-            $nameMatch = isset($item['name']) && str_contains(mb_strtolower($item['name']), $search);
-
-            if (($nameMatch)) {
-                $results[] = array_merge($item, ['id' => $key]);
-            }
-        }
-
-        return $results;
-    } */
 
 }
