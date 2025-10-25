@@ -5,21 +5,21 @@
 
   {# -- Haut de carte : image + nom + titre -- #}
   <header class="mb-2 flex items-center gap-3 px-4 pt-4">
+  <a href="{{ path('app_champion_redirect', {'name': name}) }}">
     {% if imgPath %}
-    <div class="relative h-14 w-14 rounded-xl bg-blue-950 border border-grey-700 overflow-hidden">
-      <img
-        src="/{{ imgPath }}"
-        alt="{{ name }}"
-        class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 scale-110 group-hover:scale-120"
-      >
-    </div>
-
-
+      <div class="relative h-14 w-14 rounded-xl bg-blue-950 border border-grey-700 overflow-hidden">
+        <img
+          src="/{{ imgPath }}"
+          alt="{{ name }}"
+          class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 scale-110 group-hover:scale-120"
+        >
+      </div>
     {% else %}
       <div class="h-14 w-14 rounded-xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-xs">
         {{ name|slice(0,2)|upper }}
       </div>
     {% endif %}
+  </a>
 
     <div class="min-w-0">
       <h3 class="truncate text-[15px] font-semibold text-white" title="{{ name }}">{{ name }}</h3>

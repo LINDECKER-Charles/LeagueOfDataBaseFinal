@@ -239,7 +239,7 @@ final class ItemController extends AbstractController{
         $session = $this->clientManager->getSession();
         try {
             $items = $this->itemManager->searchByName($name, $session['version'], $session['lang'], 20);
-            $images = $this->itemManager->getImages($session['version'], $session['lang'], false, $items);
+            
         } catch (\Throwable $e) {
             return $this->json( sprintf(
                 "Donnés absente sur la version %s et la langue %s Message --> %s",
@@ -249,6 +249,10 @@ final class ItemController extends AbstractController{
             ));
         }
     
+        if (empty($items)) {
+            return $this->json([]);
+        }
+        $images = $this->itemManager->getImages($session['version'], $session['lang'], false, $items);
         // Filtrer uniquement id, name et image
         $final = array_map(function ($item) use ($images) {
             $id = $item['id'] ?? null;

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Dto\ClientData;
 
+use App\Service\API\ChampionManager;
 use App\Service\API\ItemManager;
 use App\Service\API\SummonerManager;
 use App\Service\Client\ClientManager;
@@ -24,6 +25,7 @@ class HomeController extends AbstractController
         private readonly UrlGenerator $urlGenerator,
         private readonly ItemManager $itemManager,
         private readonly SummonerManager $summonerManager,
+        private readonly ChampionManager $championManager,
     ){}
 
     /**
@@ -176,11 +178,12 @@ class HomeController extends AbstractController
         $session = $this->clientManager->getSession();
         $summoners = $this->summonerManager->paginate($session['version'], $session['lang'], 4, 1);
         $items = $this->itemManager->paginate($session['version'], $session['lang'], 4, 1);
-
+        $champions = $this->championManager->paginate($session['version'], $session['lang'], 4, 1);
         return $this->render('home/home.html.twig', [
             'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
             'summoners' => $summoners,
             'items' => $items,
+            'champions' => $champions,
         ]);
     }
 }
