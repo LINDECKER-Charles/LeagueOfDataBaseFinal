@@ -34,7 +34,7 @@
         <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100">
           {{ champion.name ?? 'Champion' }}
         </h1>
-        <p class="font-spiegel text-blue-200/80 mt-1">{{ champion.title ?? '' }}</p>
+        <p class="font-spiegel text-blue-200/80 mt-1">{{ champion.title | capitalize }}</p>
         <p class="mt-1 text-sm text-blue-200/60">
           {{ 'champion.detail.version_locale'|trans({
             '%version%': selectedVersion,
