@@ -5,6 +5,8 @@ homepage:
     browse: "Browse detailed information about <strong>Summoner Spells</strong> and <strong>Items</strong> from League of Legends. Updated for patch %version%."
     explore_summoners: "Explore Summoners"
     explore_items: "Explore Items"
+    explore_champions: "Explore Champions"
+    explore_runes: "Explore Runes"
   summoners:
     title: "Summoner Spells"
     see_all: "See all spells"
@@ -19,6 +21,8 @@ homepage:
   runes:
     title: "Runes"
     wip: "This section is under construction. Soon you’ll be able to explore runes."
+    see_all: "See all runes"
+  
 
 setup:
   title: "Setup"
@@ -118,7 +122,21 @@ champion:
     lore:
       title: "Lore"
 
+rune:
+  list:
+    title: "Runes"
+    meta_description: "Browse all League of Legends runes. Find detailed stats and effects for each rune in the game."
+    header: "Runes"
+    subtitle: "Rune catalog"
+    search_placeholder: "Search for a rune…"
+    change_version: "Change version/language"
+  detail:
+    title: "Rune: %name%"
+    meta_description: "Discover the details of the rune %name% in League of Legends. Stats and effects updated for patch %version%."
+  slot: "Slot"
+
 common:
+  back: "Back"
   no_result:
     text: "No results found for your search."
     back: "← Back"

@@ -9,6 +9,8 @@
         {% elseif 'object' in currentRoute %}
           {% include 'partials/main/elem/numberResultObjs.html.twig' %}
         {% endif %}
-        {% include 'partials/main/elem/searchBarre.html.twig' %}
+        {% if 'runes' not in currentRoute %}
+          {% include 'partials/main/elem/searchBarre.html.twig' %}
+        {% endif %}
         {% include 'partials/main/elem/changelorv.html.twig' %}
       </div>
