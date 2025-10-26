@@ -160,7 +160,7 @@ composer install
 ```
 
 **4. Problème avec les assets**
-```bash
+```bash 
 # Nettoyer et rebuilder
 rm -rf node_modules/
 rm -rf public/build/
