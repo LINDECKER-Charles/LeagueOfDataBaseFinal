@@ -126,7 +126,7 @@ abstract class AbstractManager
      * @return string|null  Chemin relatif du fichier correspondant si trouvé, sinon null.
      */
     protected final function binaryExisting(string $bin, string $name, string $type): ?string{
-        if(!$bin){
+        if(!$bin || $type === 'runesReforged') {
             return null;
         }
         $versions = $this->versionManager->getVersions();

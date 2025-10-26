@@ -1,0 +1,46 @@
+<section class="group h-full flex flex-col rounded-2xl border border-grey-700 bg-blue-850/80 backdrop-blur shadow-sm hover:shadow-md hover:-translate-y-0.5 transition relative overflow-hidden">
+  <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-300/40 to-transparent"></div>
+
+  <header class="mb-3 flex items-center gap-3 px-4 pt-4">
+    {% if iconPath %}
+      <div class="relative h-14 w-14 rounded-xl bg-blue-950 border border-grey-700 overflow-hidden">
+        <img
+          src="/{{ iconPath }}"
+          alt="{{ runeTree.name }}"
+          class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 scale-70 group-hover:scale-80"
+        >
+      </div>
+    {% else %}
+      <div class="h-14 w-14 rounded-xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-xs">
+        {{ runeTree.name|slice(0,2)|upper }}
+      </div>
+    {% endif %}
+
+    <div class="min-w-0">
+      <h3 class="truncate text-[15px] font-semibold text-white">{{ runeTree.name }}</h3>
+      <p class="truncate text-xs text-blue-200/70">{{ runeTree.key }}</p>
+    </div>
+  </header>
+
+  {# Aperçu du premier slot : runes principales #}
+  {% set slot0 = runeTree.slots[0].runes ?? [] %}
+
+  {% if slot0 is not empty %}
+    <div class="grid grid-cols-4 gap-2 px-4 pb-4">
+      {% for r in slot0 %}
+        {% set runeIcon = images[key].slots[0][r.key] ?? null %}
+        {% if runeIcon %}
+          <div class="relative aspect-square rounded-lg overflow-hidden border border-grey-700 bg-blue-950/60">
+            <img src="/{{ runeIcon }}" alt="{{ r.name }}" class="object-cover w-full h-full">
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <footer class="mt-auto border-t border-grey-700 bg-blue-950/50">
+    <a href="{{ path('app_rune_redirect', {'name': runeTree.key}) }}" class="block text-center text-sm font-semibold text-blue-200/80 py-2 hover:text-blue-100 transition">
+      {{ 'common.detail'|trans }}
+    </a>
+  </footer>
+</section>

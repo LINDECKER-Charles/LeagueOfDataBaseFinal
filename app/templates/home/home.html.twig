@@ -29,6 +29,14 @@
            class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
           {{ 'homepage.hero.explore_items'|trans }}
         </a>
+        <a href="{{ path('app_champions_redirect') }}" 
+           class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
+          {{ 'homepage.hero.explore_champions'|trans }}
+        </a>
+        <a href="{{ path('app_runes_redirect') }}" 
+           class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
+          {{ 'homepage.hero.explore_items'|trans }}
+        </a>
       </div>
     </section>
 
@@ -126,16 +134,46 @@
       </div>
     </section>
 
-    <section class="">
-        <header class="flex items-center justify-between mb-6">
-            <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.runes.title'|trans }}</h2>
-        </header>
-        <div class="rounded-xl border border-grey-700 bg-blue-950/60 p-6 text-center">
-            <p class="font-spiegel text-blue-200/80">
-            {{ 'homepage.runes.wip'|trans }}
-            </p>
-        </div>
+    {# RUNES PREVIEW #}
+    <section>
+      <header class="flex items-center justify-between mb-6">
+        <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.runes.title'|trans }}</h2>
+        <a href="{{ path('app_runes_redirect') }}"
+          class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">
+          {{ 'homepage.runes.see_all'|trans }}
+        </a>
+      </header>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for r in runes.runesReforgeds|slice(0, 4) %}
+          {% set name = r.name %}
+          {% set key = r.key %}
+          {% set iconPath = runes.images[key].icon ?? null %}
+          <a href="{{ path('app_rune_redirect', { name: key }) }}"
+            class="group rounded-xl border border-grey-700 bg-blue-950/60 p-5 hover:border-blue-500 transition">
+            <div class="flex items-center gap-4">
+              <div class="h-16 w-16 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
+                {% if iconPath %}
+                  <img src="/{{ iconPath }}" alt="{{ name }}" class="h-14 w-14 object-cover scale-70">
+                {% else %}
+                  <span class="text-blue-200/70 text-xl">{{ name|slice(0,2)|upper }}</span>
+                {% endif %}
+              </div>
+              <div>
+                <h3 class="font-beaufort text-lg text-white group-hover:text-blue-200">{{ name }}</h3>
+                <p class="text-xs text-blue-200/70 truncate">{{ key }}</p>
+              </div>
+            </div>
+          </a>
+        {% else %}
+          <div class="col-span-full rounded-xl border border-grey-700 bg-blue-950/60 p-6 text-center">
+            <p class="font-spiegel text-blue-200/80">{{ 'homepage.runes.no_data'|trans }}</p>
+          </div>
+        {% endfor %}
+      </div>
     </section>
+
+
   </div>
 </main>
 {% endblock %}

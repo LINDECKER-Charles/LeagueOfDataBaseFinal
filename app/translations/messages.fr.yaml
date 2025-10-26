@@ -6,6 +6,8 @@ homepage:
     browse: "Parcourez des informations détaillées sur les <strong>Sorts d’invocateur</strong> et les <strong>Objets</strong> de League of Legends. Mis à jour pour le patch %version%."
     explore_summoners: "Explorer les sorts"
     explore_items: "Explorer les objets"
+    explore_champions: "Explorer les champions"
+    explore_runes: "Explorer les runes"
   summoners:
     title: "Sorts d’invocateur"
     see_all: "Voir touts les sorts"
@@ -20,6 +22,7 @@ homepage:
   runes:
     title: "Runes"
     wip: "Cette section est en construction. Bientôt vous pourrez explorer les runes."
+    see_all: "Voir toutes les runes"
 
 setup:
   title: "Configuration"
@@ -74,6 +77,19 @@ item:
     evolutions: "Évolutions possibles"
     description: "Description"
 
+rune:
+  list:
+    title: "Runes"
+    meta_description: "Parcourez toutes les runes de League of Legends. Retrouvez des statistiques détaillées et des effets pour chaque rune du jeu."
+    header: "Runes"
+    subtitle: "Catalogue des runes"
+    search_placeholder: "Rechercher une rune…"
+    change_version: "Changer version/langue"
+  detail:
+    meta_description: "Découvrez tout sur la rune %name% dans League of Legends. Statistiques et effets mis à jour pour le patch %version%."
+    title: "Rune : %name%"
+  slot: "Emplacement"
+
 summoner:
   detail:
     meta_description: "Découvrez les détails du sort d’invocateur %name% dans League of Legends. Statistiques et effets mis à jour pour le patch %version%."
@@ -95,6 +111,7 @@ summoner:
     title: "Sorts d’invocateur"
     subtitle: "Catalogue des sorts d’invocateur"
     count: "count sorts"
+
 champion:
   list:
     title: "Champions"
@@ -119,6 +136,7 @@ champion:
       title: "Lore"
 
 common:
+  back: "Retour"
   no_result:
     text: "Aucun résultat trouvé pour votre recherche."
     back: "← Retour"
