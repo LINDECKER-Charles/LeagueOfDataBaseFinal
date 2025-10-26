@@ -28,7 +28,7 @@ cd LeagueOfDataBaseFinal/app
 
 # Ou si vous contribuez (fork)
 git clone https://github.com/VOTRE_USERNAME/LeagueOfDataBaseFinal.git
-cd league-of-database
+cd LeagueOfDataBaseFinal/app
 git remote add upstream https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
 ```
 
@@ -128,7 +128,7 @@ php -S 127.0.0.1:8000 -t public/
 symfony serve -d
 
 # Terminal 2 : Serveur Webpack (pour le hot reload)
-npm run dev-server
+npm run watch
 # ou
 yarn dev-server
 ```
