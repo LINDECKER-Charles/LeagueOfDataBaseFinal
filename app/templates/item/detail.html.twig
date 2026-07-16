@@ -1,131 +1,97 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ item.name ?? 'Item' }} - {{client.session.version ?? (client.versions|first)}}{% endblock %}
+{% block title %}{{ item.name ?? 'Item' }} - {{ client.session.version ?? (client.versions|first) }}{% endblock %}
 {% block meta_description %}
-{{ 'item.detail.meta_description'|trans({
+  {{ 'item.detail.meta_description'|trans({
     '%name%': item.name ?? 'Item',
     '%version%': client.session.version ?? (client.versions|first)
   }) }}
 {% endblock %}
 {% block img %}/preview/objects.png{% endblock %}
-{% block body %}
-<main class="relative min-h-[65vh] bg-blue-950 overflow-hidden flex items-center justify-center py-7 w-full">
 
+{% block body %}
+{% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
+{% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
+
+<main class="relative px-6 py-12">
   {% include 'partials/main/gradient.html.twig' %}
 
-  {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
-  {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
-
   <div class="relative mx-auto max-w-5xl">
+    {% include 'components/detail_hero.html.twig' with {
+      img: image,
+      img_fit: 'contain',
+      name: item.name ?? 'Item',
+      sub: item.plaintext ?? '',
+      eyebrow: 'item.list.title'|trans,
+      meta_line: 'item.detail.version_locale'|trans({ '%version%': selectedVersion, '%locale%': selectedLocale })
+    } %}
 
-    {# --- En-tête --- #}
-    <article class="mb-10 flex items-center gap-6">
-      {% if image %}
-        <div class="relative shrink-0 h-20 w-20 rounded-2xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
-          <img src="/{{ image }}" alt="{{ item.name }}" class="h-16 w-16 object-contain transition group-hover:scale-105 duration-300">
-        </div>
-      {% else %}
-        <div class="h-20 w-20 rounded-2xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-lg">
-          {{ item.name|slice(0,2)|upper }}
-        </div>
-      {% endif %}
-
-      <section>
-        <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100">
-          {{ item.name ?? 'Item' }}
-        </h1>
-        <p class="font-spiegel text-blue-200/80 mt-1">
-          {{ item.plaintext ?? '' }}
-        </p>
-        <p class="mt-1 text-sm text-blue-200/60">
-          {{ 'item.detail.version_locale'|trans({
-            '%version%': selectedVersion,
-            '%locale%': selectedLocale
-          }) }}
-        </p>
-      </section>
-    </article>
-
-    {# --- Infos principales --- #}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">{{ 'item.detail.price_total'|trans }}</dt>
-        <dd class="font-medium text-white/90">{{ item.gold.total ?? '–' }}</dd>
+    {# Prices #}
+    <section class="mb-10 grid grid-cols-3 gap-2">
+      <div class="stat-cell">
+        <div class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ 'item.detail.price_total'|trans }}</div>
+        <div class="mt-0.5 font-beaufort text-gold">{{ item.gold.total ?? '–' }}</div>
       </div>
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">{{ 'item.detail.price_base'|trans }}</dt>
-        <dd class="font-medium text-white/90">{{ item.gold.base ?? '–' }}</dd>
+      <div class="stat-cell">
+        <div class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ 'item.detail.price_base'|trans }}</div>
+        <div class="mt-0.5 font-beaufort text-text">{{ item.gold.base ?? '–' }}</div>
       </div>
-      <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-        <dt class="text-blue-200/70 text-sm">{{ 'item.detail.price_sell'|trans }}</dt>
-        <dd class="font-medium text-white/90">{{ item.gold.sell ?? '–' }}</dd>
+      <div class="stat-cell">
+        <div class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ 'item.detail.price_sell'|trans }}</div>
+        <div class="mt-0.5 font-beaufort text-text">{{ item.gold.sell ?? '–' }}</div>
       </div>
-    </div>
+    </section>
 
-    {# --- Catégories / tags --- #}
+    {# Categories #}
     {% if item.tags is defined and item.tags is iterable and item.tags is not empty %}
-      <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">{{ 'item.detail.categories'|trans }}</h2>
+      <section class="mb-10">
+        <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'item.detail.categories'|trans }}</h2>
         <div class="flex flex-wrap gap-2">
-          {% for tag in item.tags %}
-            <span class="rounded-full bg-blue-950/70 px-3 py-1 text-sm border border-grey-700 text-blue-200/90">{{ tag }}</span>
-          {% endfor %}
+          {% for tag in item.tags %}<span class="hx-chip">{{ tag }}</span>{% endfor %}
         </div>
       </section>
     {% endif %}
 
-    {# --- Évolutions possibles --- #}
+    {# Builds into #}
     {% if item.into is defined and item.into is iterable and item.into is not empty %}
-      <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">{{ 'item.detail.evolutions'|trans }}</h2>
+      <section class="mb-10">
+        <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'item.detail.evolutions'|trans }}</h2>
         <div class="flex flex-wrap gap-3">
           {% for child in item.into %}
             {% set childImg = images[child]|default(null) %}
-            <div class="flex items-center gap-2">
-              {% if childImg %}
-                <img src="/{{ childImg }}" alt="Item {{ child }}" class="h-8 w-8 object-contain rounded border border-grey-700">
-              {% endif %}
-              <span class="text-sm text-blue-200/90">{{ child }}</span>
+            <div class="flex items-center gap-2 stat-cell">
+              {% if childImg %}<img src="/{{ childImg }}" alt="Item {{ child }}" class="h-8 w-8 object-contain">{% endif %}
+              <span class="font-mono text-sm text-text-muted">{{ child }}</span>
             </div>
           {% endfor %}
         </div>
       </section>
     {% endif %}
 
-    {# --- Stats --- #}
+    {# Stats #}
     {% if item.stats is defined and item.stats is not empty %}
-      <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">{{ 'item.detail.stats'|trans }}</h2>
-        <ul class="space-y-2 text-sm text-blue-100/90">
+      <section class="mb-10">
+        <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'item.detail.stats'|trans }}</h2>
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {% for key, val in item.stats %}
-            <li><span class="text-blue-200/70">{{ key }} :</span> {{ val }}</li>
+            <div class="stat-cell flex items-baseline justify-between">
+              <span class="font-mono text-[11px] text-text-muted">{{ key }}</span>
+              <span class="font-beaufort text-text">{{ val }}</span>
+            </div>
           {% endfor %}
-        </ul>
-      </section>
-    {% endif %}
-
-    {# --- Description complète --- #}
-    {% if item.description is defined and item.description %}
-      <section>
-        <h2 class="text-lg font-semibold text-white mb-3">{{ 'item.detail.description'|trans }}</h2>
-        <div class="prose prose-invert max-w-none text-blue-100/90">
-          {{ item.description|raw }}
         </div>
       </section>
     {% endif %}
 
-    {# --- Actions --- #}
-    <div class="mt-10 flex gap-4">
-      <a href="{{ path('app_items') }}"
-         class="px-4 py-2 rounded-lg border border-grey-700 bg-transparent text-white hover:bg-blue-900 transition">
-        {{ 'item.detail.back'|trans }}
-      </a>
-      <a href="{{ path('app_setup') }}"
-         class="px-4 py-2 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
-        {{ 'item.detail.setup'|trans }}
-      </a>
-    </div>
+    {# Description #}
+    {% if item.description is defined and item.description %}
+      <section class="mb-4">
+        <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'item.detail.description'|trans }}</h2>
+        <div class="hextech-frame p-6 leading-relaxed text-text">{{ item.description|raw }}</div>
+      </section>
+    {% endif %}
 
+    {% include 'components/detail_actions.html.twig' with { back_href: path('app_items') } %}
   </div>
 </main>
 {% endblock %}

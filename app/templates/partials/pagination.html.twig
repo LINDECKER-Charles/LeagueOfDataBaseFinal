@@ -1,63 +1,47 @@
-{% if meta.nombrePage > 1 %}
-<nav class="mt-8 flex justify-center gap-2">
+{% macro plink(page, meta, route) %}
+  {% set active = page == meta.currentPage %}
+  <a href="{{ path(route, { numpage: page, itemperpage: meta.itemPerPage }) }}"
+     class="inline-flex h-9 min-w-9 items-center justify-center px-3 font-mono text-sm transition-colors
+            {{ active
+                ? 'border border-gold/70 bg-gold/15 text-gold-bright'
+                : 'border border-gold-deep/40 bg-void/60 text-text-muted hover:border-hex/60 hover:text-hex' }}">
+    {{ page }}
+  </a>
+{% endmacro %}
 
-  {# 1. Toujours afficher les deux premières pages #}
+{% import _self as pg %}
+{% set route = route|default('app_' ~ meta.type ~ 's_redirect') %}
+
+{% if meta.nombrePage > 1 %}
+<nav class="mt-12 flex flex-wrap items-center justify-center gap-2">
+  {# First two #}
   {% for page in 1..2 %}
-    {% if page <= meta.nombrePage %}
-      <a href="{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: page, itemperpage: meta.itemPerPage }) }}"
-         class="px-3 py-1 rounded border border-grey-700 
-                {% if page == meta.currentPage %} bg-blue-700 text-white {% else %} bg-blue-950 text-white hover:bg-blue-900 {% endif %} transition">
-        {{ page }}
-      </a>
-    {% endif %}
+    {% if page <= meta.nombrePage %}{{ pg.plink(page, meta, route) }}{% endif %}
   {% endfor %}
 
-  {# 2. Affichage bloc centré sur la page courante #}
   {% set start = max(meta.currentPage - 1, 3) %}
-  {% set end   = min(meta.currentPage + 1, meta.nombrePage - 2)%}
+  {% set end   = min(meta.currentPage + 1, meta.nombrePage - 2) %}
 
-  {% if start > 3 %}
-    <span class="px-2 text-blue-200/70">{{ 'pagination.more'|trans }}</span>
-  {% endif %}
+  {% if start > 3 %}<span class="px-1 font-mono text-gold/60">…</span>{% endif %}
 
   {% for page in start..end %}
-    {% if page > 2 and page < meta.nombrePage - 1 %}
-      <a href="{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: page, itemperpage: meta.itemPerPage }) }}"
-         class="px-3 py-1 rounded border border-grey-700 
-                {% if page == meta.currentPage %} bg-blue-700 text-white {% else %} bg-blue-950 text-white hover:bg-blue-900 {% endif %} transition">
-        {{ page }}
-      </a>
-    {% endif %}
+    {% if page > 2 and page < meta.nombrePage - 1 %}{{ pg.plink(page, meta, route) }}{% endif %}
   {% endfor %}
 
-  {% if end < meta.nombrePage - 2 %}
-    <span class="px-2 text-blue-200/70">{{ 'pagination.more'|trans }}</span>
-  {% endif %}
+  {% if end < meta.nombrePage - 2 %}<span class="px-1 font-mono text-gold/60">…</span>{% endif %}
 
-  {# 3. Toujours afficher les deux dernières pages #}
-  {% for page in (meta.nombrePage-1)..meta.nombrePage %}
-    {% if page > 2 %}
-      <a href="{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: page, itemperpage: meta.itemPerPage }) }}"
-         class="px-3 py-1 rounded border border-grey-700 
-                {% if page == meta.currentPage %} bg-blue-700 text-white {% else %} bg-blue-950 text-white hover:bg-blue-900 {% endif %} transition">
-        {{ page }}
-      </a>
-    {% endif %}
+  {# Last two #}
+  {% for page in (meta.nombrePage - 1)..meta.nombrePage %}
+    {% if page > 2 %}{{ pg.plink(page, meta, route) }}{% endif %}
   {% endfor %}
-  <!-- Input personnalisé -->
-  <input type="number"
-        min="1"
-        max="{{ meta.nombrePage }}"
-        value="{{ meta.currentPage }}"
-        oninput="document.getElementById('customPageLink').href='{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: 'REPLACE_ME', itemperpage: meta.itemPerPage }) }}'.replace('REPLACE_ME', this.value)"
-        class="w-14 h-[30px] text-center rounded-lg border border-grey-700 bg-blue-950 text-white 
-                placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-200/60 transition" />
 
-  <!-- Bouton lien -->
-  <a id="customPageLink"
-    href="{{ path('app_' ~ meta.type ~ 's_redirect', { numpage: meta.currentPage, itemperpage: meta.itemPerPage }) }}"
-    class="px-3 py-1 rounded-lg border border-grey-700 bg-blue-200 text-blue-950 font-semibold hover:bg-blue-100 transition">
-    {{ 'pagination.ok'|trans }}
-  </a>
+  {# Jump-to-page island (replaces the legacy inline oninput hack) #}
+  <div class="ml-2" data-vue="number-nav" data-props="{{ {
+        pathTemplate: path(route, { numpage: '__P__', itemperpage: meta.itemPerPage }),
+        min: 1,
+        max: meta.nombrePage,
+        value: meta.currentPage,
+        label: 'pagination.ok'|trans
+      }|json_encode|e('html_attr') }}"></div>
 </nav>
 {% endif %}

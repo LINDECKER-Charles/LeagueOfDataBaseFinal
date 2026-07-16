@@ -1,7 +1,7 @@
 {# templates/summoner/liste.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Summoners - {{client.session.version ?? (client.versions|first) }}{% endblock %}
+{% block title %}Summoners - {{ client.session.version ?? (client.versions|first) }}{% endblock %}
 {% block meta_description %}
   Browse all League of Legends summoner spells for patch {{ client.session.version ?? (client.versions|first) }}.
   Find detailed cooldowns, effects, and stats updated.
@@ -9,50 +9,85 @@
 {% block img %}/preview/summoners.png{% endblock %}
 
 {% block body %}
-<main class="relative px-6 py-10">
+<main class="relative px-6 py-12">
   {% include 'partials/main/gradient.html.twig' %}
-  <div class="relative mx-auto max-w-7xl">
-    {# En-tête #}
-    <header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-      <div class="group flex items-center gap-4">
-        {% include 'partials/main/viewLogo.html.twig' %}
-        <div>
-          <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 brand-title">
-            {{ 'summoner.list.title'|trans }}
-          </h1>
-          <p class="font-spiegel text-blue-200/80 mt-1">
-            <span class="align-middle">{{ 'summoner.list.subtitle'|trans }}</span>
-            <span class="ml-2 text-sm inline-block rounded-full border border-grey-700 bg-blue-950 px-2 py-0.5">
-              {{ 'summoner.list.count'|trans({ count: summoners|length }) }}
-            </span>
-          </p>
-        </div>
-      </div>
-      {% include 'partials/main/actionBarre.html.twig' %}
+
+  <div class="relative mx-auto max-w-[110rem]">
+    <header class="mb-10 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+      {% include 'components/section_header.html.twig' with {
+        eyebrow: 'Data Dragon · ' ~ (client.session.version ?? (client.versions|first)),
+        title: 'summoner.list.title'|trans,
+        count: meta.totalItem,
+        count_label: 'summoner.list.title'|trans|lower
+      } %}
+      {% include 'components/list_controls.html.twig' with {
+        meta: meta,
+        search_base: '/api/summoners/search',
+        detail_base: '/summoner',
+        search_placeholder: 'common.search'|trans,
+        version: client.session.version ?? (client.versions|first),
+        lang: client.session.locale ?? client.currentLocale ?? 'en_US'
+      } %}
     </header>
 
-    {# Grille #}
-    <article class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for s in summoners %}
-        {% set id    = s.id|default('') %}
-        {% set name  = s.name|default('') %}
-        {% set lvl   = s.summonerLevel|default(0) %}
-        {% set cd    = s.cooldownBurn is defined and s.cooldownBurn ? s.cooldownBurn : (s.cooldown|default([])|join('/')) %}
-        {% set cost  = s.costBurn is defined and s.costBurn ? s.costBurn : (s.cost|default([])|join('/')) %}
+        {% set cd = s.cooldownBurn is defined and s.cooldownBurn ? s.cooldownBurn : (s.cooldown|default([])|join('/')) %}
         {% set modes = s.modes is defined and s.modes is iterable ? s.modes : [] %}
-        {% set desc  = s.description is defined ? s.description : (s.tooltip|default('')) %}
-        {% set imgPath = images[id]|default(null) %}
+        {% set desc = s.description is defined ? s.description : (s.tooltip|default('')) %}
+        {% embed 'components/entity_card.html.twig' with {
+          href: path('app_summoner_redirect', { name: s.id|default('') }),
+          img: images[s.id|default('')]|default(null),
+          name: s.name|default(''),
+          sub: s.id|default(''),
+          img_fit: 'contain'
+        } %}
+          {% block card_body %}
+            <div class="px-4 pb-3">
+              <div class="grid grid-cols-2 gap-2">
+                <div class="stat-cell">
+                  <div class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ 'summoner.card.cooldown'|trans }}</div>
+                  <div class="mt-0.5 font-beaufort text-gold">{{ cd ?: '–' }}</div>
+                </div>
+                <div class="stat-cell">
+                  <div class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ 'summoner.card.level'|trans }}</div>
+                  <div class="mt-0.5 font-beaufort text-text">{{ s.summonerLevel|default(0) }}</div>
+                </div>
+              </div>
+            </div>
 
-        {% include 'summoner/partials/card.html.twig' %}
+            {% if modes is not empty or desc %}
+              <div class="mt-auto">
+                {% if modes is not empty %}
+                  <details class="group/acc border-t border-gold-deep/30">
+                    <summary class="flex cursor-pointer list-none items-center justify-between px-4 py-2.5 font-mono text-[11px] uppercase tracking-wider text-text-muted hover:text-hex">
+                      <span>{{ 'summoner.card.modes'|trans }} <span class="text-gold/60">({{ modes|length }})</span></span>
+                      <svg class="h-3.5 w-3.5 transition-transform group-open/acc:rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/></svg>
+                    </summary>
+                    <div class="flex flex-wrap gap-1.5 px-4 pb-4">
+                      {% for m in modes %}<span class="hx-chip">{{ m }}</span>{% endfor %}
+                    </div>
+                  </details>
+                {% endif %}
+                {% if desc %}
+                  <details class="group/acc border-t border-gold-deep/30">
+                    <summary class="flex cursor-pointer list-none items-center justify-between px-4 py-2.5 font-mono text-[11px] uppercase tracking-wider text-text-muted hover:text-hex">
+                      <span>{{ 'summoner.card.description'|trans }}</span>
+                      <svg class="h-3.5 w-3.5 transition-transform group-open/acc:rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/></svg>
+                    </summary>
+                    <div class="px-4 pb-4 text-[13px] leading-snug text-text-muted">{{ desc|raw }}</div>
+                  </details>
+                {% endif %}
+              </div>
+            {% endif %}
+          {% endblock %}
+        {% endembed %}
       {% else %}
-        {% include 'summoner/partials/noResult.html.twig' %}
+        {% include 'components/empty_state.html.twig' %}
       {% endfor %}
-    </article>
+    </div>
+
+    {% include 'partials/pagination.html.twig' %}
   </div>
-  {% include 'partials/pagination.html.twig' %}
 </main>
-<script type="module" data-reload>
-  import initAddonScript from '{{ asset("js/ajaxSummoner.js") }}';
-  initAddonScript();
-</script>
 {% endblock %}

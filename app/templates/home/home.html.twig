@@ -8,171 +8,111 @@
 {% block img %}/preview/home.png{% endblock %}
 
 {% block body %}
-<main class="relative px-6 py-12">
+<main class="relative px-6 py-14">
   {% include 'partials/main/gradient.html.twig' %}
-  <div class="relative mx-auto max-w-7xl flex flex-col gap-12">
+  <div class="relative mx-auto flex max-w-7xl flex-col gap-16">
 
-    {# HERO SECTION #}
-    <section class="text-center mb-16">
-      <h1 class="font-beaufort text-5xl sm:text-6xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 brand-title">
+    {# HERO #}
+    <section class="text-center">
+      <p class="eyebrow mb-4">Patch {{ client.session.version ?? (client.versions|first) }}</p>
+      <h1 class="font-beaufort text-4xl uppercase tracking-wide text-gold-bright sm:text-6xl">
         {{ 'homepage.title'|trans }}
       </h1>
-      <p class="font-spiegel text-blue-200/80 mt-4 text-lg max-w-2xl mx-auto">
+      <p class="mx-auto mt-5 max-w-2xl font-spiegel text-text-muted">
         {{ 'homepage.hero.browse'|trans({'%version%': client.session.version ?? (client.versions|first)})|raw }}
       </p>
-      <div class="mt-6 flex flex-wrap justify-center gap-4">
-        <a href="{{ path('app_summoners_redirect') }}" 
-           class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
-          {{ 'homepage.hero.explore_summoners'|trans }}
-        </a>
-        <a href="{{ path('app_items_redirect') }}" 
-           class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
-          {{ 'homepage.hero.explore_items'|trans }}
-        </a>
-        <a href="{{ path('app_champions_redirect') }}" 
-           class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
-          {{ 'homepage.hero.explore_champions'|trans }}
-        </a>
-        <a href="{{ path('app_runes_redirect') }}" 
-           class="px-6 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 transition text-white font-medium shadow">
-          {{ 'homepage.hero.explore_items'|trans }}
-        </a>
+
+      {# Category portals — the gateway into each dataset #}
+      {% set portals = [
+        { href: path('app_champions_redirect'), label: 'homepage.champions.title', cta: 'homepage.champions.see_all' },
+        { href: path('app_items_redirect'),     label: 'homepage.items.title',     cta: 'homepage.items.see_all' },
+        { href: path('app_runes_redirect'),     label: 'homepage.runes.title',     cta: 'homepage.runes.see_all' },
+        { href: path('app_summoners_redirect'), label: 'homepage.summoners.title', cta: 'homepage.summoners.see_all' }
+      ] %}
+      <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {% for p in portals %}
+          <a href="{{ p.href }}" class="hextech-frame hextech-frame-hover group flex flex-col items-start gap-3 p-6 text-left">
+            <span class="text-gold/80 transition-colors group-hover:text-gold">
+              {% include 'components/logo.html.twig' with { class: 'h-8 w-8' } %}
+            </span>
+            <span class="font-beaufort text-xl uppercase tracking-wide text-text transition-colors group-hover:text-gold-bright">
+              {{ p.label|trans }}
+            </span>
+            <span class="mt-auto inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-hex">
+              {{ p.cta|trans }}
+              <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </a>
+        {% endfor %}
       </div>
     </section>
 
     {# CHAMPIONS PREVIEW #}
     <section>
-      <header class="flex items-center justify-between mb-6">
-        <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.champions.title'|trans }}</h2>
-        <a href="{{ path('app_champions_redirect') }}" 
-          class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">{{ 'homepage.champions.see_all'|trans }}</a>
-      </header>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {% include 'home/_preview_header.html.twig' with { title: 'homepage.champions.title'|trans, href: path('app_champions_redirect'), link: 'homepage.champions.see_all'|trans } %}
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {% for key, c in champions.champions|slice(0, 4) %}
-          {% set imgPath = champions.images[loop.index0]|default(null) %}
-          <a href="{{ path('app_champion_redirect', { name: key }) }}" 
-            class="group rounded-xl border border-grey-700 bg-blue-950/60 p-5 hover:border-blue-500 transition">
-            <div class="flex items-center gap-4">
-              <div class="h-16 w-16 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
-                {% if imgPath %}
-                  <img src="/{{ imgPath }}" alt="{{ c.name }}" class="h-14 w-14 object-cover scale-120">
-                {% else %}
-                  <span class="text-blue-200/70 text-xl">{{ c.name|slice(0,2)|upper }}</span>
-                {% endif %}
-              </div>
-              <div>
-                <h3 class="font-beaufort text-lg text-white group-hover:text-blue-200">{{ c.name }}</h3>
-                <p class="text-xs text-blue-200/70 truncate">{{ c.title }}</p>
-              </div>
-            </div>
-          </a>
+          {% include 'components/entity_card.html.twig' with {
+            href: path('app_champion_redirect', { name: key }),
+            img: champions.images[loop.index0]|default(null),
+            name: c.name,
+            sub: c.title|default('')
+          } %}
         {% else %}
-          <div class="col-span-full rounded-xl border border-grey-700 bg-blue-950/60 p-6 text-center">
-            <p class="font-spiegel text-blue-200/80">{{ 'homepage.champions.no_data'|trans }}</p>
-          </div>
+          {% include 'components/empty_state.html.twig' with { text: 'homepage.champions.no_data'|trans } %}
         {% endfor %}
       </div>
     </section>
 
-
     {# ITEMS PREVIEW #}
     <section>
-      <header class="flex items-center justify-between mb-6">
-        <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.items.title'|trans }}</h2>
-        <a href="{{ path('app_items_redirect') }}" 
-           class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">{{ 'homepage.items.see_all'|trans }}</a>
-      </header>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {% include 'home/_preview_header.html.twig' with { title: 'homepage.items.title'|trans, href: path('app_items_redirect'), link: 'homepage.items.see_all'|trans } %}
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {% for key, i in items.items %}
-          {% set imgPath = items.images[i.name]|default(null) %}
-          <a href="{{ path('app_item_redirect', { name: key }) }}" 
-             class="group rounded-xl border border-grey-700 bg-blue-950/60 p-5 hover:border-blue-500 transition">
-            <div class="flex items-center gap-4">
-              <div class="h-16 w-16 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
-                {% if imgPath %}
-                  <img src="/{{ imgPath }}" alt="{{ i.name }}" class="h-14 w-14 object-contain scale-110">
-                {% else %}
-                  <span class="text-blue-200/70 text-xl">{{ i.name|slice(0,2)|upper }}</span>
-                {% endif %}
-              </div>
-              <div>
-                <h3 class="font-beaufort text-lg text-white group-hover:text-blue-200">{{ i.name }}</h3>
-              </div>
-            </div>
-          </a>
+          {% include 'components/entity_card.html.twig' with {
+            href: path('app_item_redirect', { name: key }),
+            img: items.images[i.name]|default(null),
+            name: i.name,
+            sub: key,
+            img_fit: 'contain'
+          } %}
         {% endfor %}
       </div>
     </section>
 
     {# SUMMONERS PREVIEW #}
     <section>
-      <header class="flex items-center justify-between mb-6">
-        <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.summoners.title'|trans }}</h2>
-        <a href="{{ path('app_summoners_redirect') }}" 
-           class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">{{ 'homepage.summoners.see_all'|trans }}</a>
-      </header>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {% include 'home/_preview_header.html.twig' with { title: 'homepage.summoners.title'|trans, href: path('app_summoners_redirect'), link: 'homepage.summoners.see_all'|trans } %}
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {% for key, s in summoners.summoners %}
-          {% set imgPath = summoners.images[key]|default(null) %}
-          <a href="{{ path('app_summoner_redirect', { name: key }) }}" 
-             class="group rounded-xl border border-grey-700 bg-blue-950/60 p-5 hover:border-blue-500 transition">
-            <div class="flex items-center gap-4">
-              <div class="h-16 w-16 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
-                {% if imgPath %}
-                  <img src="/{{ imgPath }}" alt="{{ s.name }}" class="h-14 w-14 object-contain scale-120">
-                {% else %}
-                  <span class="text-blue-200/70 text-xl">{{ s.name|slice(0,2)|upper }}</span>
-                {% endif %}
-              </div>
-              <div>
-                <h3 class="font-beaufort text-lg text-white group-hover:text-blue-200">{{ s.name }}</h3>
-              </div>
-            </div>
-          </a>
+          {% include 'components/entity_card.html.twig' with {
+            href: path('app_summoner_redirect', { name: key }),
+            img: summoners.images[key]|default(null),
+            name: s.name,
+            sub: key,
+            img_fit: 'contain'
+          } %}
         {% endfor %}
       </div>
     </section>
 
     {# RUNES PREVIEW #}
     <section>
-      <header class="flex items-center justify-between mb-6">
-        <h2 class="font-beaufort text-2xl text-white">{{ 'homepage.runes.title'|trans }}</h2>
-        <a href="{{ path('app_runes_redirect') }}"
-          class="text-blue-300 hover:text-blue-100 font-spiegel text-sm">
-          {{ 'homepage.runes.see_all'|trans }}
-        </a>
-      </header>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {% include 'home/_preview_header.html.twig' with { title: 'homepage.runes.title'|trans, href: path('app_runes_redirect'), link: 'homepage.runes.see_all'|trans } %}
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {% for r in runes.runesReforgeds|slice(0, 4) %}
-          {% set name = r.name %}
-          {% set key = r.key %}
-          {% set iconPath = runes.images[key].icon ?? null %}
-          <a href="{{ path('app_rune_redirect', { name: key }) }}"
-            class="group rounded-xl border border-grey-700 bg-blue-950/60 p-5 hover:border-blue-500 transition">
-            <div class="flex items-center gap-4">
-              <div class="h-16 w-16 rounded-xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
-                {% if iconPath %}
-                  <img src="/{{ iconPath }}" alt="{{ name }}" class="h-14 w-14 object-cover scale-70">
-                {% else %}
-                  <span class="text-blue-200/70 text-xl">{{ name|slice(0,2)|upper }}</span>
-                {% endif %}
-              </div>
-              <div>
-                <h3 class="font-beaufort text-lg text-white group-hover:text-blue-200">{{ name }}</h3>
-                <p class="text-xs text-blue-200/70 truncate">{{ key }}</p>
-              </div>
-            </div>
-          </a>
+          {% include 'components/entity_card.html.twig' with {
+            href: path('app_rune_redirect', { name: r.key }),
+            img: runes.images[r.key].icon ?? null,
+            name: r.name,
+            sub: r.key,
+            img_scale: 0.72
+          } %}
         {% else %}
-          <div class="col-span-full rounded-xl border border-grey-700 bg-blue-950/60 p-6 text-center">
-            <p class="font-spiegel text-blue-200/80">{{ 'homepage.runes.no_data'|trans }}</p>
-          </div>
+          {% include 'components/empty_state.html.twig' with { text: 'homepage.runes.no_data'|trans } %}
         {% endfor %}
       </div>
     </section>
-
 
   </div>
 </main>

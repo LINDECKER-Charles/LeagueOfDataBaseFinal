@@ -137,6 +137,7 @@ rune:
 
 common:
   back: "Back"
+  search: "Search…"
   no_result:
     text: "No results found for your search."
     back: "← Back"
@@ -176,6 +177,14 @@ footer:
     email: "Email"
     github: "GitHub"
     linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Summoning data"
+  subtitle: "Fetching resources from the Rift…"
+  status:
+    fetching: "fetching"
+    ready: "ready"
 
 pagination:
   ok: "OK"

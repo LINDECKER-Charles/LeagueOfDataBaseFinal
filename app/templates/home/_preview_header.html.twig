@@ -1,0 +1,8 @@
+{# Home preview-section header. Params: title, href, link #}
+<div class="mb-6 flex items-end justify-between gap-4 border-b border-gold-deep/30 pb-3">
+  <h2 class="font-beaufort text-2xl uppercase tracking-wide text-gold-bright">{{ title }}</h2>
+  <a href="{{ href }}" class="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-text-muted transition-colors hover:text-hex">
+    {{ link }}
+    <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </a>
+</div>

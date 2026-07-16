@@ -137,6 +137,7 @@ champion:
 
 common:
   back: "Retour"
+  search: "Rechercher…"
   no_result:
     text: "Aucun résultat trouvé pour votre recherche."
     back: "← Retour"
@@ -177,6 +178,14 @@ footer:
     email: "Email"
     github: "GitHub"
     linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Invocation des données"
+  subtitle: "Récupération des ressources depuis la Faille…"
+  status:
+    fetching: "récupération"
+    ready: "prêt"
 
 pagination:
   ok: "Valider"

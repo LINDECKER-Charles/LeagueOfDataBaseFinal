@@ -8,51 +8,58 @@
 {% block img %}/preview/runes.png{% endblock %}
 
 {% block body %}
-<main class="relative px-6 py-10">
+<main class="relative px-6 py-12">
   {% include 'partials/main/gradient.html.twig' %}
 
-  <div class="relative mx-auto max-w-7xl">
-    <header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-      <div class="group flex items-center gap-4">
-        {% include 'partials/main/viewLogo.html.twig' %}
-        <div>
-          <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 brand-title">
-            {{ 'rune.list.title'|trans }}
-          </h1>
-          <p class="font-spiegel text-blue-200/80 mt-1">
-            <span class="align-middle">{{ 'rune.list.subtitle'|trans }}</span>
-            <span class="ml-2 text-sm inline-block rounded-full border border-grey-700 bg-blue-950 px-2 py-0.5">
-              {{ meta.totalItem }} runes
-            </span>
-          </p>
-        </div>
-      </div>
-
-      {% include 'partials/main/actionBarre.html.twig' %}
+  <div class="relative mx-auto max-w-[110rem]">
+    <header class="mb-10 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+      {% include 'components/section_header.html.twig' with {
+        eyebrow: 'Data Dragon · ' ~ (client.session.version ?? (client.versions|first)),
+        title: 'rune.list.title'|trans,
+        count: meta.totalItem,
+        count_label: 'rune.list.title'|trans|lower
+      } %}
+      {% include 'components/list_controls.html.twig' with {
+        meta: meta,
+        per_page: false,
+        route: 'app_runes_redirect',
+        version: client.session.version ?? (client.versions|first),
+        lang: client.session.locale ?? client.currentLocale ?? 'en_US'
+      } %}
     </header>
 
-    {# === Grille des arbres de runes === #}
-    <article class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for runeTree in runesReforgeds %}
-        {% set key = runeTree.key %}
-        {% set name = runeTree.name %}
-        {% set iconPath = images[key].icon ?? null %}
-        {% include 'rune/partials/card.html.twig' with {
-          'runeTree': runeTree,
-          'iconPath': iconPath
+        {% embed 'components/entity_card.html.twig' with {
+          href: path('app_rune_redirect', { name: runeTree.key }),
+          img: images[runeTree.key].icon ?? null,
+          name: runeTree.name,
+          sub: runeTree.key,
+          img_scale: 0.72,
+          footer_label: 'common.detail'|trans
         } %}
+          {% block card_body %}
+            {% set slot0 = runeTree.slots[0].runes ?? [] %}
+            {% if slot0 is not empty %}
+              <div class="grid grid-cols-4 gap-2 px-4 pb-4">
+                {% for r in slot0 %}
+                  {% set runeIcon = images[runeTree.key].slots[0][r.key] ?? null %}
+                  {% if runeIcon %}
+                    <div class="aspect-square overflow-hidden border border-gold-deep/40 bg-void/60">
+                      <img src="/{{ runeIcon }}" alt="{{ r.name }}" class="h-full w-full object-cover">
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endblock %}
+        {% endembed %}
       {% else %}
-        {% include 'rune/partials/noResult.html.twig' %}
+        {% include 'components/empty_state.html.twig' %}
       {% endfor %}
-    </article>
-  </div>
+    </div>
 
-  {% include 'partials/pagination.html.twig' with {
-    currentPage: meta.currentPage,
-    totalPages: meta.nombrePage,
-    itemPerPage: meta.itemPerPage,
-    totalItems: meta.totalItem,
-    type: meta.type
-  } %}
+    {% include 'partials/pagination.html.twig' with { route: 'app_runes_redirect' } %}
+  </div>
 </main>
 {% endblock %}

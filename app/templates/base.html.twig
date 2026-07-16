@@ -63,26 +63,54 @@
         #}
         <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
         {# Défini la couleur de fond de certain navigateur moderne #}
-        <meta name="theme-color" content="{% block theme_color %}#162033{% endblock %}">
+        <meta name="theme-color" content="{% block theme_color %}#0a1428{% endblock %}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         {% block stylesheets %}
-            {{ encore_entry_link_tags('app') }}
+            {{ vite_entry_link_tags('app') }}
         {% endblock %}
 
         {% block javascripts %}
-            {{ encore_entry_script_tags('app') }}
+            {{ vite_entry_script_tags('app') }}
         {% endblock %}
 
         {% include 'partials/favicon.html.twig' %}
     </head>
 
-    <body class="bg-blue-950 flex flex-col min-h-screen w-screen">
+    <body class="flex min-h-screen flex-col overflow-x-hidden">
         {% include 'partials/header.html.twig' %}
         <div class="flex-1">
             {% block body %}{% endblock %}
         </div>
         {% include 'partials/footer.html.twig' %}
-        {% include 'partials/toaster.html.twig' %}
+
+        {# Flash messages — mounted as a Vue island (replaces the legacy inline toaster script). #}
+        {% set flashMessages = [] %}
+        {% for type, msgs in app.flashes %}
+            {% for m in msgs %}
+                {% set flashMessages = flashMessages|merge([{ type: type, text: m }]) %}
+            {% endfor %}
+        {% endfor %}
+        <div data-vue="toaster" data-props="{{ { messages: flashMessages }|json_encode|e('html_attr') }}"></div>
+
+        {# Global navigation loader — persists across Turbo visits (data-turbo-permanent),
+           names the resources the destination page is loading during cold DDragon renders. #}
+        <div
+            id="resource-loader"
+            data-turbo-permanent
+            data-vue="resource-loader"
+            data-props="{{ {
+                eyebrow: 'loader.eyebrow'|trans,
+                title: 'loader.title'|trans,
+                subtitle: 'loader.subtitle'|trans,
+                status: { fetching: 'loader.status.fetching'|trans, ready: 'loader.status.ready'|trans },
+                labels: {
+                    champions: 'header.navigation.champion'|trans,
+                    items: 'header.navigation.item'|trans,
+                    runes: 'header.navigation.runes'|trans,
+                    summoners: 'header.navigation.summoner'|trans
+                }
+            }|json_encode|e('html_attr') }}"
+        ></div>
     </body>
 </html>

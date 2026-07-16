@@ -7,74 +7,53 @@
 {% block img %}/{{ images[rune.name].icon ?? '' }}{% endblock %}
 
 {% block body %}
-<main class="relative px-6 py-10">
+<main class="relative px-6 py-12">
   {% include 'partials/main/gradient.html.twig' %}
 
   <div class="relative mx-auto max-w-6xl">
-    {# === En-tête de la rune principale === #}
-    <header class="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-      <div class="flex items-center gap-4">
-        {% set iconPath = images[rune.key].icon ?? null %}
-        {% if iconPath %}
-          <div class="relative h-20 w-20 rounded-2xl bg-blue-950 border border-grey-700 overflow-hidden">
-            <img src="/{{ iconPath }}" alt="{{ rune.name }}" class="object-cover w-full h-full scale-70">
-          </div>
-        {% endif %}
-        <div>
-          <h1 class="font-beaufort text-4xl text-white tracking-wide">{{ rune.name }}</h1>
-          <p class="text-blue-200/80 text-lg">{{ rune.key }}</p>
-        </div>
-      </div>
+    {% include 'components/detail_hero.html.twig' with {
+      img: images[rune.key].icon ?? null,
+      img_scale: 0.72,
+      name: rune.name,
+      sub: rune.key,
+      eyebrow: 'rune.list.title'|trans
+    } %}
 
-      <a href="{{ path('app_runes_redirect') }}"
-         class="text-sm text-blue-300 hover:text-blue-100 underline transition">
-         ← {{ 'common.back'|trans }}
-      </a>
-    </header>
-
-    {# === Description principale === #}
-    <section class="rounded-2xl gap-3 flex flex-col border text-blue-100/90 border-grey-700 bg-blue-850/70 p-6 backdrop-blur-sm shadow-md mb-10">
-      <h2 class="font-beaufort text-xl text-blue-200/80 mb-4">
-        {{ 'rune.detail.title'|trans({'%name%': rune.name}) }}
-      </h2>
+    {# Tree summary #}
+    <section class="mb-10 hextech-frame p-6">
+      <h2 class="mb-3 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'rune.detail.title'|trans({'%name%': rune.name}) }}</h2>
       {% if rune.slots is defined and rune.slots|length > 0 %}
-        <p class="text-sm leading-relaxed">
-          {{ rune.slots[0].runes[0].longDesc|default('')|raw }}
-        </p>
+        <p class="leading-relaxed text-text-muted">{{ rune.slots[0].runes[0].longDesc|default('')|raw }}</p>
       {% else %}
-        <p class="text-blue-100/80 italic">{{ 'rune.detail.no_description'|trans }}</p>
+        <p class="italic text-text-muted">{{ 'rune.detail.no_description'|trans }}</p>
       {% endif %}
     </section>
 
-    {# === Slots de runes === #}
+    {# Slots #}
     {% if rune.slots is defined and rune.slots|length > 0 %}
       {% for slotIndex, slot in rune.slots %}
         <section class="mb-10">
-          <h3 class="text-lg font-semibold text-blue-100 mb-4">
-            {{ 'rune.slot'|trans }} {{ slotIndex + 1 }}
+          <h3 class="mb-4 flex items-center gap-3 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">
+            <span class="font-mono text-hex">{{ '%02d'|format(slotIndex + 1) }}</span>
+            {{ 'rune.slot'|trans }}
           </h3>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {% for r in slot.runes %}
               {% set runeIcon = images[rune.key].slots[slotIndex][r.key] ?? null %}
-
-              <div class="group rounded-2xl border border-grey-700 bg-blue-950/60 hover:bg-blue-900/60 transition overflow-hidden shadow-sm flex flex-col">
+              <div class="hextech-frame hextech-frame-hover group flex flex-col overflow-hidden">
                 <div class="flex items-center gap-3 p-4">
                   {% if runeIcon %}
-                    <div class="relative h-12 w-12 rounded-lg overflow-hidden border border-grey-700 bg-blue-950 flex-shrink-0">
-                      <img src="/{{ runeIcon }}" alt="{{ r.name }}" class="object-cover w-full h-full">
+                    <div class="h-12 w-12 shrink-0 overflow-hidden border border-gold-deep/40 bg-void">
+                      <img src="/{{ runeIcon }}" alt="{{ r.name }}" class="h-full w-full object-cover">
                     </div>
                   {% endif %}
                   <div class="min-w-0">
-                    <h4 class="text-white text-sm font-semibold truncate">{{ r.name }}</h4>
-                    <p class="text-blue-200/70 text-xs truncate">{{ r.key }}</p>
+                    <h4 class="truncate font-beaufort text-sm tracking-wide text-text">{{ r.name }}</h4>
+                    <p class="truncate font-mono text-xs text-text-muted">{{ r.key }}</p>
                   </div>
                 </div>
-
                 {% if r.longDesc %}
-                  <div class="px-4 pb-4 text-xs text-blue-100/85 leading-snug">
-                    {{ r.longDesc|raw }}
-                  </div>
+                  <div class="border-t border-gold-deep/25 px-4 py-3 text-xs leading-snug text-text-muted">{{ r.longDesc|raw }}</div>
                 {% endif %}
               </div>
             {% endfor %}
@@ -82,8 +61,10 @@
         </section>
       {% endfor %}
     {% else %}
-      {% include 'rune/partials/noResult.html.twig' %}
+      {% include 'components/empty_state.html.twig' %}
     {% endif %}
+
+    {% include 'components/detail_actions.html.twig' with { back_href: path('app_runes'), back_label: 'common.back'|trans } %}
   </div>
 </main>
 {% endblock %}

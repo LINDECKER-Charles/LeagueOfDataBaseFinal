@@ -1,7 +1,7 @@
 {# templates/summoner/detail.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ summoner.name ?? 'Summoner' }} - {{client.session.version ?? (client.versions|first)}}{% endblock %}
+{% block title %}{{ summoner.name ?? 'Summoner' }} - {{ client.session.version ?? (client.versions|first) }}{% endblock %}
 {% block meta_description %}
   {{ 'summoner.detail.meta_description'|trans({
     '%name%': summoner.name ?? 'Summoner Spell',
@@ -9,45 +9,25 @@
   }) }}
 {% endblock %}
 {% block img %}/preview/summoners.png{% endblock %}
+
 {% block body %}
-<main class="relative min-h-[65vh] bg-blue-950 overflow-hidden flex items-center justify-center py-7 w-full">
+{% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
+{% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
 
+<main class="relative px-6 py-12">
   {% include 'partials/main/gradient.html.twig' %}
-  
-  {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
-  {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
-  <div class="relative mx-auto max-w-5xl px-4">
-    {# En-tête #}
-    <article class="mb-10 flex items-center gap-6">
-        {# Image #}
-        {% if image %}
-            <div class="relative shrink-0 h-20 w-20 rounded-2xl bg-blue-950 border border-grey-700 grid place-items-center overflow-hidden">
-            <img src="/{{ image }}" alt="{{ summoner.name }}" class="h-16 w-16 object-contain transition group-hover:scale-105 duration-300">
-            </div>
-        {% else %}
-            <div class="h-20 w-20 rounded-2xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-lg">
-            {{ summoner.name|slice(0,2)|upper }}
-            </div>
-        {% endif %}
-        <section>
-            <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100">
-            {{ summoner.name ?? 'Summoner' }}
-            </h1>
-            <p class="font-spiegel text-blue-200/80 mt-1">
-            {{ summoner.id ?? '' }}
-            </p>
-            {# Ajout : affichage version/langue #}
-            <p class="mt-1 text-sm text-blue-200/60">
-              {{ 'summoner.detail.version_locale'|trans({
-                '%version%': selectedVersion,
-                '%locale%': selectedLocale
-              }) }}
-            </p>
-        </section>
-    </article>
 
-    {# Infos principales #}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+  <div class="relative mx-auto max-w-5xl">
+    {% include 'components/detail_hero.html.twig' with {
+      img: image,
+      img_fit: 'contain',
+      name: summoner.name ?? 'Summoner',
+      sub: summoner.id ?? '',
+      eyebrow: 'summoner.list.title'|trans,
+      meta_line: 'summoner.detail.version_locale'|trans({ '%version%': selectedVersion, '%locale%': selectedLocale })
+    } %}
+
+    {# Fields #}
     {% set fields = {
       'summoner.detail.fields.cooldown' : 'cooldownBurn',
       'summoner.detail.fields.maxammo' : 'maxammo',
@@ -55,48 +35,40 @@
       'summoner.detail.fields.cost' : 'costType',
       'summoner.detail.fields.summoner_level' : 'summonerLevel'
     } %}
+    {% set indexs = {} %}
+    {% for label, key in fields %}
+      {% set val = attribute(summoner, key)|default(null) %}
+      {% if val is not null %}{% set indexs = indexs|merge({ (label): val }) %}{% endif %}
+    {% endfor %}
 
-      {% set indexs = {} %}
-      {% for label, key in fields %}
-        {% set val = attribute(summoner, key)|default(null) %}
-        {% if val is not null %}
-          {% set indexs = indexs|merge({ (label): val }) %}
-        {% endif %}
-      {% endfor %}
+    <section class="mb-10 grid grid-cols-2 gap-2 sm:grid-cols-3">
       {% for name, val in indexs %}
-        <div class="rounded-lg bg-blue-950/80 p-4 border border-grey-700">
-            <dt class="text-blue-200/70 text-sm">{{ name|trans }}</dt>
-            <dd class="font-medium text-white/90">
-              {{ val == -1 ? 1 : val }}
-            </dd>
+        <div class="stat-cell">
+          <div class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ name|trans }}</div>
+          <div class="mt-0.5 font-beaufort text-text">{{ val == -1 ? 1 : val }}</div>
         </div>
       {% endfor %}
-    </div>
+    </section>
 
-    {# Modes compatibles #}
+    {# Modes #}
     {% if summoner.modes is defined and summoner.modes is iterable and summoner.modes is not empty %}
-      <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">{{ 'summoner.detail.modes'|trans }}</h2>
+      <section class="mb-10">
+        <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'summoner.detail.modes'|trans }}</h2>
         <div class="flex flex-wrap gap-2">
-          {% for m in summoner.modes %}
-            <span class="rounded-full bg-blue-950/70 px-3 py-1 text-sm border border-grey-700 text-blue-200/90">{{ m }}</span>
-          {% endfor %}
+          {% for m in summoner.modes %}<span class="hx-chip">{{ m }}</span>{% endfor %}
         </div>
       </section>
     {% endif %}
 
     {# Description #}
     {% if summoner.description is defined and summoner.description %}
-      <section>
-        <h2 class="text-lg font-semibold text-white mb-3">{{ 'summoner.detail.description'|trans }}</h2>
-        <div class="prose prose-invert max-w-none text-blue-100/90">
-          {{ summoner.description|raw|capitalize }}
-        </div>
+      <section class="mb-4">
+        <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'summoner.detail.description'|trans }}</h2>
+        <div class="hextech-frame p-6 leading-relaxed text-text">{{ summoner.description|raw|capitalize }}</div>
       </section>
     {% endif %}
 
-    {# Actions #}
-    {% include 'partials/main/elem/change.html.twig' %}
+    {% include 'components/detail_actions.html.twig' with { back_href: path('app_summoners') } %}
   </div>
 </main>
 {% endblock %}

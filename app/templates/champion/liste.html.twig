@@ -9,59 +9,55 @@
 {% block img %}/preview/champions.png{% endblock %}
 
 {% block body %}
-<main class="relative px-6 py-10">
+<main class="relative px-6 py-12">
   {% include 'partials/main/gradient.html.twig' %}
 
-  <div class="relative mx-auto max-w-7xl">
-    {# === En-tête === #}
-    <header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-      <div class="group flex items-center gap-4">
-        {% include 'partials/main/viewLogo.html.twig' %}
-        <div>
-          <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 brand-title">
-            {{ 'champion.list.title'|trans }}
-          </h1>
-          <p class="font-spiegel text-blue-200/80 mt-1">
-            <span class="align-middle">{{ 'champion.list.subtitle'|trans }}</span>
-            <span class="ml-2 text-sm inline-block rounded-full border border-grey-700 bg-blue-950 px-2 py-0.5">
-              {{ meta.totalItem }} champions
-            </span>
-          </p>
-        </div>
-      </div>
-
-      {% include 'partials/main/actionBarre.html.twig' %}
+  <div class="relative mx-auto max-w-[110rem]">
+    <header class="mb-10 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+      {% include 'components/section_header.html.twig' with {
+        eyebrow: 'Data Dragon · ' ~ (client.session.version ?? (client.versions|first)),
+        title: 'champion.list.title'|trans,
+        count: meta.totalItem,
+        count_label: 'champion.list.title'|trans|lower
+      } %}
+      {% include 'components/list_controls.html.twig' with {
+        meta: meta,
+        search_base: '/api/champions/search',
+        detail_base: '/champion',
+        search_placeholder: 'common.search'|trans,
+        version: client.session.version ?? (client.versions|first),
+        lang: client.session.locale ?? client.currentLocale ?? 'en_US'
+      } %}
     </header>
 
-    {# === Grille des champions === #}
-    <article class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for c in champions %}
-        {% set id      = c.id|default('') %}
-        {% set name    = c.name|default('') %}
-        {% set title   = c.title|default('') %}
-        {% set tags    = c.tags is defined ? c.tags : [] %}
-        {% set desc    = c.blurb|default('') %}
-        {% set imgPath = images[loop.index0]|default(null) %}
-        {% include 'champion/partials/card.html.twig' %}
+        {% embed 'components/entity_card.html.twig' with {
+          href: path('app_champion_redirect', { name: c.id|default(c.name) }),
+          img: images[loop.index0]|default(null),
+          name: c.name|default(''),
+          sub: c.title|default('')|capitalize,
+          footer_label: 'common.detail'|trans
+        } %}
+          {% block card_body %}
+            <div class="px-4 pb-4">
+              {% if c.tags is defined and c.tags is not empty %}
+                <div class="mb-2.5 flex flex-wrap gap-1.5">
+                  {% for t in c.tags %}<span class="hx-chip">{{ t }}</span>{% endfor %}
+                </div>
+              {% endif %}
+              {% if c.blurb is defined and c.blurb %}
+                <p class="line-clamp-3 text-[13px] leading-snug text-text-muted">{{ c.blurb }}</p>
+              {% endif %}
+            </div>
+          {% endblock %}
+        {% endembed %}
       {% else %}
-        {% include 'champion/partials/noResult.html.twig' %}
+        {% include 'components/empty_state.html.twig' %}
       {% endfor %}
-    </article>
+    </div>
+
+    {% include 'partials/pagination.html.twig' %}
   </div>
-
-  {# === Pagination === #}
-  {% include 'partials/pagination.html.twig' with {
-    currentPage: meta.currentPage,
-    totalPages: meta.nombrePage,
-    itemPerPage: meta.itemPerPage,
-    totalItems: meta.totalItem,
-    type: meta.type
-  } %}
 </main>
-
-{# === Script JS pour pagination asynchrone === #}
-<script type="module" data-reload>
-  import initAddonScript from '{{ asset("js/ajaxChampion.js") }}';
-  initAddonScript();
-</script>
 {% endblock %}

@@ -1,83 +1,55 @@
-{# templates/_partials/header_with_selector.html.twig #}
-<header class="bg-black font-beaufort text-white flex gap-18 justify-between flex-col lg:flex-row w-full items-center py-10 px-14">
-  <a href="{{ url('app_setup') }}" class="brand-link group">
-    <div class=" flex flex-row gap-2 justify-center items-center brand-logo">
-      <svg id="FINAL" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
-          <defs>
-            <style>
-                .cls-1 {
-                  fill: #fff;
-                }
-            </style>
-          </defs>
-          <g>
-            <path class="cls-1" d="M438.14,168A235.31,235.31,0,0,1,580.08,552.7h79.45a299,299,0,0,0,41.4-152.25c0-153.18-114.63-279.58-262.79-298.11Z"/>
-            <path class="cls-1" d="M208.88,631.86V537.33a235.17,235.17,0,0,1,0-273.77V169a300.44,300.44,0,0,0,0,462.83Z"/>
-          </g>
-        <polygon class="cls-1" points="393.14 75 220.98 75 253.88 142.3 253.88 658.33 221.32 724.89 611.49 724.89 647.14 597.7 393.14 597.7 393.14 75"/>
-      </svg>
-      <h1 class=" text-3xl brand-title nav-link">League Of Data Base</h1>
-    </div>
-  </a>
+{# Global header — Hextech bar. The version/language form shows only on the setup
+   context (typeV undefined); inner pages carry their own switcher in the action bar. #}
+<header class="relative z-30 border-b border-gold-deep/40 bg-hextech-black/95 backdrop-blur">
+  <div class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
 
-  {% if typeV is not defined %}
-  <nav class="flex-1 flex flex-row items-center justify-center">
-  {% else %}
-  <nav class="flex-1 flex flex-row items-center justify-end">
-  {% endif %}
-    <ul class="flex flex-col sm:flex-row justify-center gap-8 text-xl items-center">
-      
-      <li><a href="{{ path('app_home') }}" class="nav-link">{{ 'header.navigation.home'|trans }}</a></li>
-      <li><a href="{{ url('app_champions_redirect') }}" class="nav-link">{{ 'header.navigation.champion'|trans }}</a></li>
-      <li><a href="{{ url('app_items_redirect') }}" class="nav-link">{{ 'header.navigation.item'|trans }}</a></li>
-      <li><a href="{{ url('app_runes_redirect') }}" class="nav-link">{{ 'header.navigation.runes'|trans }}</a></li>
-      <li><a href="{{ url('app_summoners_redirect') }}" class="nav-link">{{ 'header.navigation.summoner'|trans }}</a></li>
-    </ul>
-  </nav>
+  <div class="mx-auto flex max-w-[110rem] flex-col items-center gap-6 px-6 py-5 lg:flex-row lg:gap-10">
+    {# Brand #}
+    <a href="{{ url('app_setup') }}" class="brand-link group flex items-center gap-3">
+      <span class="brand-logo text-gold">{% include 'components/logo.html.twig' with { class: 'h-9 w-9' } %}</span>
+      <span class="brand-title font-beaufort text-lg uppercase tracking-[0.18em] text-gold-bright sm:text-xl">League Of Data Base</span>
+    </a>
 
-  {% if typeV is not defined %}
-    {# Pré-sélection depuis le DTO #}
-  {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
-  {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
+    {# Navigation #}
+    <nav class="flex flex-1 justify-center {% if typeV is defined %}lg:justify-end{% else %}lg:justify-center{% endif %}">
+      <ul class="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 font-beaufort text-sm uppercase tracking-[0.15em] text-text-muted">
+        <li><a href="{{ path('app_home') }}" class="nav-link">{{ 'header.navigation.home'|trans }}</a></li>
+        <li><a href="{{ url('app_champions_redirect') }}" class="nav-link">{{ 'header.navigation.champion'|trans }}</a></li>
+        <li><a href="{{ url('app_items_redirect') }}" class="nav-link">{{ 'header.navigation.item'|trans }}</a></li>
+        <li><a href="{{ url('app_runes_redirect') }}" class="nav-link">{{ 'header.navigation.runes'|trans }}</a></li>
+        <li><a href="{{ url('app_summoners_redirect') }}" class="nav-link">{{ 'header.navigation.summoner'|trans }}</a></li>
+      </ul>
+    </nav>
 
-  {# Formulaire sur 2 lignes #}
-  <form action="{{ path('app_setup_save') }}" method="post" class="flex flex-col gap-2 text-sm w-full max-w-md">
-    {# <input type="hidden" name="_token" value="{{ csrf_token('setup_form') }}"> #}
+    {% if typeV is not defined %}
+      {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
+      {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
 
-    {# Ligne 1 : selects #}
-    <div class="flex items-center gap-2">
-      <label for="version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
-      <select id="version" name="version"
-              class="flex-1 px-3 py-2 rounded-lg bg-blue-950 text-white border border-grey-700">
-        {% for v in client.versions %}
-          <option value="{{ v }}" {{ v == selectedVersion ? 'selected' : '' }}>{{ v }}</option>
-        {% endfor %}
-      </select>
+      <form action="{{ path('app_setup_save') }}" method="post" class="flex w-full max-w-md flex-col gap-2 lg:w-auto lg:min-w-[22rem]">
+        <div class="flex items-center gap-2">
+          <label for="version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
+          <select id="version" name="version" class="hx-select flex-1">
+            {% for v in client.versions %}
+              <option value="{{ v }}" {{ v == selectedVersion ? 'selected' : '' }}>{{ v }}</option>
+            {% endfor %}
+          </select>
 
-      <label for="langue" class="sr-only">{{ 'setup.form.language'|trans }}</label>
-      <select id="langue" name="langue"
-              class="flex-1 px-3 py-2 rounded-lg bg-blue-950 text-white border border-grey-700">
-        {% for lang in client.languages %}
-          <option value="{{ lang }}" {{ lang == selectedLocale ? 'selected' : '' }}>
-            {{ client.languageLabels[lang] ?? lang }}
-          </option>
-        {% endfor %}
-      </select>
-    </div>
+          <label for="langue" class="sr-only">{{ 'setup.form.language'|trans }}</label>
+          <select id="langue" name="langue" class="hx-select flex-1">
+            {% for lang in client.languages %}
+              <option value="{{ lang }}" {{ lang == selectedLocale ? 'selected' : '' }}>{{ client.languageLabels[lang] ?? lang }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-    {# Ligne 2 : checkbox + bouton #}
-    <div class="flex items-center gap-3">
-      <label for="remember" class="flex items-center gap-2 cursor-pointer select-none">
-        <input type="checkbox" id="remember" name="remember"
-               class="w-4 h-4 rounded border-grey-700 bg-blue-950">
-        <span class="opacity-70">{{ 'setup.form.remember'|trans }}</span>
-      </label>
-
-      <button type="submit"
-              class="ml-auto px-4 py-2 rounded-lg bg-blue-200 text-blue-950 font-semibold border border-grey-700 hover:bg-blue-100 hover:cursor-pointer transition-colors">
-        {{ 'setup.form.submit'|trans }}
-      </button>
-    </div>
-  </form>
-  {% endif %}
+        <div class="flex items-center gap-3">
+          <label for="remember" class="flex cursor-pointer select-none items-center gap-2 text-xs text-text-muted">
+            <input type="checkbox" id="remember" name="remember" class="hx-check">
+            <span>{{ 'setup.form.remember'|trans }}</span>
+          </label>
+          <button type="submit" class="hx-btn ml-auto py-2">{{ 'setup.form.submit'|trans }}</button>
+        </div>
+      </form>
+    {% endif %}
+  </div>
 </header>
