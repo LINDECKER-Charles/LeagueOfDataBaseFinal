@@ -1,0 +1,104 @@
+name: lodb
+
+# Production-oriented stack. Local dev conveniences live in compose.override.yaml
+# (auto-merged by `docker compose`). Variable substitution reads the repo-root .env
+# (copy .env.example -> .env). See SECRET_CONFIG.md for the required secrets.
+
+services:
+  php:
+    image: ${REGISTRY:-lodb}/app:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: app
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: "0"
+      APP_SECRET: ${APP_SECRET:?APP_SECRET is required}
+      GO_FETCHER_URL: http://go-fetcher:8085
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_REGION: us-east-1
+      MINIO_BUCKET: ${MINIO_BUCKET:-ddragon}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-lodb}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    depends_on:
+      go-fetcher:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(0);"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: ${REGISTRY:-lodb}/nginx:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+      args:
+        APP_IMAGE: ${REGISTRY:-lodb}/app:${IMAGE_TAG:-latest}
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    depends_on:
+      php:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  go-fetcher:
+    image: ${REGISTRY:-lodb}/go-fetcher:${IMAGE_TAG:-latest}
+    build:
+      context: ./go-workers
+      dockerfile: Dockerfile
+    environment:
+      PORT: "8085"
+      ALLOWED_HOSTS: ddragon.leagueoflegends.com
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8085/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lodb}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+    # No self-healthcheck: the minio server image is shell-less (no curl/mc).
+    # Readiness is gated by minio-init, which retries `mc alias set` until the API answers.
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_started
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lodb}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      MINIO_BUCKET: ${MINIO_BUCKET:-ddragon}
+    entrypoint: ["/bin/sh", "/docker-entrypoint-init.sh"]
+    volumes:
+      - ./docker/minio/init.sh:/docker-entrypoint-init.sh:ro
+    restart: "no"
+
+  mailer:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+
+volumes:
+  minio_data:

@@ -1,0 +1,32 @@
+# Build context = repository root (php + nginx images). Keep it lean and secret-free.
+
+# VCS
+.git
+.gitattributes
+
+# Dependencies (reinstalled inside the build)
+**/node_modules
+app/vendor
+
+# Generated / runtime artifacts (rebuilt by the image)
+app/var
+app/public/build
+app/public/bundles
+app/public/upload
+app/.phpunit.cache
+
+# Local env & secrets — never bake these into an image
+.env
+app/.env
+app/.env.local
+app/.env.*.local
+SECRET_CONFIG.md
+
+# Not part of the php/nginx image (built from their own contexts / unrelated)
+go-workers
+front-test
+docs
+screenshot
+tailwind.config.js
+commande.md
+summ.struct.txt
