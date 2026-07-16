@@ -21,6 +21,48 @@ Prérequis : copier `.env.example` → `.env` (voir `docs/configuration.md`).
 
 ---
 
+## ⚡ Perf en dev : volumes nommés + APCu (A1)
+
+En dev, `./app` est bind-mounté dans le conteneur `php` pour l'édition live. Sur
+Windows ce mount traverse la frontière 9p/gRPC-FUSE : chaque `stat()`/`open()`
+est lent, et opcache (`validate_timestamps=1`) re-`stat()` tous les fichiers
+inclus à **chaque requête**. Mesuré : une même page passait de **~9 ms (prod) à
+~4,8 s (dev)**, `/healthz` (nginx seul) restant à 3 ms — l'overhead est 100 %
+dans la couche PHP/FS.
+
+Correctif retenu : sortir `vendor/` (~9 k fichiers) et `var/` (~3 k) du mount
+vers des **volumes nommés** (`lodb_app_vendor` / `lodb_app_var`, sur le FS de la
+VM Linux), et poser le pool `ddragon.cache` sur **APCu** (mémoire) au lieu du
+filesystem. `src/` reste bind-mounté (édition live). Mesuré : **~4,8 s → ~450 ms**.
+
+### Première mise en route (clone frais)
+
+```bash
+docker compose up -d
+docker compose exec -u www-data php composer install   # peuple le volume vendor
+cd app && npm run build                                 # public/build (bind-mounté)
+```
+
+> `vendor/` et `var/` vivent dans les volumes nommés, **pas** sur l'hôte :
+> - `composer install` / `cache:clear` se lancent **dans le conteneur**
+>   (`docker compose exec -u www-data php …`), plus sur l'hôte.
+> - L'`app/vendor` de l'hôte (s'il existe) ne sert plus qu'à l'IDE et peut
+>   diverger du runtime — relancer un `composer install` hôte si besoin.
+> - Le profiler (`var/cache/dev/profiler`) n'est plus lisible depuis l'hôte :
+>   passer par l'UI `/_profiler`.
+> - Reset : `docker compose down -v` (efface aussi MinIO), puis re-`composer install`.
+
+### APCu : dev uniquement
+
+`ddragon.cache` est sur APCu **seulement en dev** (`config/packages/cache.yaml`
+→ `when@dev`) ; l'extension est ajoutée à l'image de base (inoffensive en prod).
+APCu est une mémoire **par conteneur** : dès que `php` scale à plusieurs
+conteneurs, chaque instance aurait son propre cache et réécrirait un manifeste
+périmé (cf. audit A2). La prod garde donc `cache.adapter.filesystem` (ou Redis
+en multi-nœuds).
+
+---
+
 ## 🚀 Cycle de vie de la stack
 
 ```bash
@@ -92,8 +134,10 @@ docker rmi lodb/app:latest
 ```
 
 > En **dev**, le service `php` tourne sur la source live (`./app` bind-mount) via
-> l'override, cible `php_base` : pas besoin de rebuild pour voir tes modifs PHP.
-> En **prod** (`compose.yaml` seul), la source est copiée dans l'image (cible `app`).
+> l'override, cible `php_dev` (= `php_base` + composer) : pas besoin de rebuild
+> pour voir tes modifs PHP. `vendor/` et `var/` sont en volumes nommés (voir
+> « Perf en dev » plus haut). En **prod** (`compose.yaml` seul), la source est
+> copiée dans l'image (cible `app`).
 
 ---
 
