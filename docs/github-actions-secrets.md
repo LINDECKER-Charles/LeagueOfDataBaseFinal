@@ -7,12 +7,22 @@ Secrets à configurer pour le pipeline `CI/CD` (`.github/workflows/ci.yml`).
 ## 🔁 Flux (promotion à deux étages, *build once*)
 
 ```
-push dev  ─▶ test-php · test-go · test-js ─▶ merge-to-test (dev→test)
-          ─▶ build-and-push (GHCR: :<sha> + :staging) ─▶ deploy-staging  (test.league-of-data-base.com)
+push dev  ─▶ _tests ─▶ merge-to-test (dev→test)
+          ─▶ _build (GHCR: :<sha> + :staging) ─▶ _deploy staging  (test.league-of-data-base.com)
 
 merge test→main (manuel)  ─▶ push main
-          ─▶ promote-and-deploy-prod : retag :staging→:prod (sans rebuild) ─▶ deploy prod (league-of-data-base.fr/.com)
+          ─▶ _promote : retag :staging→:prod (sans rebuild) ─▶ _deploy prod (league-of-data-base.fr/.com)
 ```
+
+### 🧩 Structure des workflows (reusable, responsabilité unique)
+
+| Fichier | Rôle |
+|---|---|
+| `ci.yml` | Orchestrateur : déclencheurs `dev`/`main`, gardes `if`, câblage. Aucun secret en dur. |
+| `_tests.yml` | PHP / Go / JS. |
+| `_build.yml` | Build + push des 3 images (`:<sha>` + tag mouvant). |
+| `_deploy.yml` | Déploiement SSH d'**un** hôte, **paramétré** → appelé pour staging **et** prod (DRY). |
+| `_promote.yml` | Retag `:staging → :prod` (aucun rebuild). |
 
 - `test` est mis à jour automatiquement depuis `dev` et **ne déclenche jamais** le workflow (pas de boucle).
 - `main` n'est atteint que par un **merge manuel `test → main`** : c'est le *gate* humain qui met en production.
@@ -22,11 +32,11 @@ merge test→main (manuel)  ─▶ push main
 
 ---
 
-## 🧪 Tests (jobs `test-*`)
+## 🧪 Tests appli (workflow `_tests.yml` — jobs `php` / `go` / `js`)
 
 | Secret | Requis | Description |
 |---|:---:|---|
-| `ENV_TEST` | ✅ | Dotenv de test **complet**. Écrit dans `app/.env.test.local` avant PHPUnit / lints. |
+| `ENV_TEST` | ✅ | Dotenv de test appli **complet** (source : `.env.test`). Écrit dans `app/.env.test.local` avant PHPUnit / lints. **Sans rapport avec le déploiement staging.** |
 
 ---
 
@@ -45,7 +55,7 @@ Serveur **dédié** au staging. Son `.env` doit fixer `IMAGE_TAG=staging` et
 
 ---
 
-## 🚀 Déploiement production (job `promote-and-deploy-prod`)
+## 🚀 Déploiement production (jobs `promote` + `deploy-prod`)
 
 Serveur **dédié** à la prod. Son `.env` doit fixer `IMAGE_TAG=prod` et les domaines apex.
 
@@ -98,6 +108,12 @@ Clés à mettre dans `ENV_STAGING` / `ENV_PROD` :
 
 ## 📝 Notes
 
+- **Mapping fichier → secret** : le dotenv local de chaque environnement devient le secret correspondant.
+  - `.env.test` → secret **`ENV_TEST`** → env de test appli (PHPUnit/CI ; écrit dans `app/.env.test.local`)
+  - `.env.staging` → secret **`ENV_STAGING`** → déploiement staging (`test.league-of-data-base.com`)
+  - `.env.prod` → secret **`ENV_PROD`** → déploiement prod
+  - ⚠️ `test` (env applicatif) ≠ `staging` (déploiement pré-prod) : deux choses distinctes, deux fichiers, deux secrets.
+- **`CADDY_DOMAINS` / `ACME_EMAIL`** sont des **lignes** de ces dotenv (donc dans `ENV_STAGING` / `ENV_PROD`), jamais dans les workflows.
 - **`ENV_*`** contiennent le fichier dotenv intégral (une variable par ligne), pas une valeur unique — coller le contenu complet du `.env` correspondant.
 - **Staging et prod ne diffèrent que par leur `.env`** (`IMAGE_TAG`, `CADDY_DOMAINS`, secrets) : mêmes fichiers compose, même overlay Caddy.
 - **`*_SSH_KEY`** : copier l'intégralité du fichier clé, en-têtes `-----BEGIN … PRIVATE KEY-----` / `-----END … PRIVATE KEY-----` inclus.

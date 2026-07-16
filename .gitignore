@@ -7,6 +7,7 @@ commande.md
 # Repo-root compose env — single source of truth per environment (anchored: only repo root)
 /.env
 /.env.test
+/.env.staging
 /.env.prod
 
 # Symfony host-level secret overrides (real secrets live here locally / written by CI)
