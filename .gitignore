@@ -16,3 +16,6 @@ commande.md
 
 # Node deps anywhere outside app/ (e.g. tools/screenshots). Unanchored: matches at any depth.
 node_modules/
+
+# JetBrains IDE
+.idea/
