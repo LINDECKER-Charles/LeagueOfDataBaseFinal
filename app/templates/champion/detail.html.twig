@@ -39,13 +39,13 @@
           <h1 class="font-beaufort text-5xl uppercase leading-none tracking-wide text-gold-bright sm:text-7xl">
             {{ champion.name ?? 'Champion' }}
           </h1>
-          {% if champion.title %}
+          {% if champion.title is defined and champion.title %}
             <p class="mt-2 font-spiegel text-lg text-text-muted">{{ champion.title|capitalize }}</p>
           {% endif %}
 
           <div class="mt-4 flex flex-wrap items-center gap-2">
             {% for tag in champion.tags|default([]) %}<span class="hx-chip">{{ tag }}</span>{% endfor %}
-            {% if champion.partype %}
+            {% if champion.partype is defined and champion.partype %}
               <span class="hx-chip font-mono text-xs text-text-dim">
                 {{ 'champion.detail.partype'|trans({'%partype%': champion.partype}) }}
               </span>
@@ -164,15 +164,33 @@
           <h2 class="mb-5 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'champion.detail.skins'|trans }}</h2>
           <div class="-mx-6 flex gap-4 overflow-x-auto px-6 pb-2">
             {% for skin in champion.skins %}
-              {% if skin.num != 0 %}
+              {# Vieilles données (< ~3.13) : pas de `num`, les skins sont
+                 positionnels → l'index reproduit la numérotation des splashs. #}
+              {% set skinNum = skin.num ?? loop.index0 %}
+              {% if skinNum != 0 %}
+                {% set skinName = skin.name == 'default' ? champion.name : skin.name %}
+                {# Chromas : absents de DDragon, joints par id de skin (source CommunityDragon). #}
+                {% set skinId = skin.id ?? null %}
+                {% set skinChromas = skinId ? (chromas[skinId] ?? []) : [] %}
                 <figure class="w-64 shrink-0">
-                  <div class="hextech-frame overflow-hidden">
-                    <img src="{{ splashBase }}/{{ champId }}_{{ skin.num }}.jpg" loading="lazy"
+                  <div class="hextech-frame relative overflow-hidden">
+                    <img src="{{ splashBase }}/{{ champId }}_{{ skinNum }}.jpg" loading="lazy"
                          alt="{{ skin.name }}" class="h-36 w-full object-cover object-top">
+                    {% if skinChromas|length %}
+                      <span class="chroma-badge"
+                            title="{{ 'champion.detail.chromas_available'|trans({'%count%': skinChromas|length}) }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                          <path d="M12 3 21 12 12 21 3 12z" /><path d="M7.5 12 12 7.5 16.5 12 12 16.5z" />
+                        </svg>
+                        {{ skinChromas|length }}
+                      </span>
+                    {% endif %}
                   </div>
-                  <figcaption class="mt-2 font-mono text-xs text-text-muted">
-                    {{ skin.name == 'default' ? champion.name : skin.name }}
-                  </figcaption>
+                  <figcaption class="mt-2 font-mono text-xs text-text-muted">{{ skinName }}</figcaption>
+                  {% if skinChromas|length %}
+                    <div data-vue="chroma-strip"
+                         data-props="{{ { skinName: skinName, chromas: skinChromas }|json_encode|e('html_attr') }}"></div>
+                  {% endif %}
                 </figure>
               {% endif %}
             {% endfor %}

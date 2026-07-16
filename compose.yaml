@@ -64,7 +64,9 @@ services:
       dockerfile: Dockerfile
     environment:
       PORT: "8085"
-      ALLOWED_HOSTS: ddragon.leagueoflegends.com
+      # raw.communitydragon.org backs the chroma metadata (colours + preview art) —
+      # Data Dragon exposes only a boolean `chromas` flag, no chroma assets.
+      ALLOWED_HOSTS: ddragon.leagueoflegends.com,raw.communitydragon.org
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8085/healthz"]
