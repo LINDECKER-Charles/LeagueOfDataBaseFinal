@@ -48,6 +48,7 @@ jobs:
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
         run: |
+          ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} "mkdir -p ${{ secrets.DEPLOY_PATH }}"
           printf '%s\n' "$ENV_FILE" \
             | ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} "cat > ${{ secrets.DEPLOY_PATH }}/.env"
 
@@ -55,10 +56,17 @@ jobs:
         run: |
           ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} <<'EOSSH'
             set -e
+            mkdir -p ${{ secrets.DEPLOY_PATH }}
             cd ${{ secrets.DEPLOY_PATH }}
+            # First deploy on a fresh host: clone; subsequent deploys: pull.
+            if [ ! -d .git ]; then
+              git clone ${{ secrets.REPO_URL || 'https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git' }} .
+            fi
             # Deploy overlay (Caddy/TLS), WITHOUT compose.override.yaml (dev conveniences).
             export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
-            git pull origin ${{ inputs.branch }}
+            git fetch origin ${{ inputs.branch }}
+            git checkout ${{ inputs.branch }}
+            git reset --hard origin/${{ inputs.branch }}
             docker compose pull
             docker compose up -d --remove-orphans
             # Pré-chauffe (détaché → hors chemin critique) : JSON + images des 3 dernières
