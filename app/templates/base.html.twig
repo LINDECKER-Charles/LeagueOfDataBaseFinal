@@ -66,6 +66,14 @@
         <meta name="theme-color" content="{% block theme_color %}#0a1428{% endblock %}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+        {# Effective DDragon selection, re-rendered every Turbo visit (NOT permanent
+           like the loader island) so ResourceLoader reads a fresh version/lang when
+           the destination URL doesn't carry them (e.g. the /home nav link). #}
+        {% if client is defined %}
+        <meta name="dd-version" content="{{ client.session.version ?? (client.versions|default([])|first) }}">
+        <meta name="dd-lang" content="{{ client.session.locale ?? client.currentLocale ?? 'en_US' }}">
+        {% endif %}
+
         {# Preload the self-hosted display/body faces (above-the-fold) so the swap
            happens on first paint instead of after the CSS is parsed. #}
         <link rel="preload" as="font" type="font/woff2" href="/fonts/Spiegel_TT_Regular.woff2" crossorigin>
@@ -109,6 +117,7 @@
                 eyebrow: 'loader.eyebrow'|trans,
                 title: 'loader.title'|trans,
                 subtitle: 'loader.subtitle'|trans,
+                preparing: 'loader.preparing'|trans,
                 status: { fetching: 'loader.status.fetching'|trans, ready: 'loader.status.ready'|trans },
                 labels: {
                     champions: 'header.navigation.champion'|trans,

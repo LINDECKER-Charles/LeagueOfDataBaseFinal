@@ -19,11 +19,68 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 final class PageContextResolver
 {
+    /** Home preview count per resource (mirrors {@see \App\Controller\HomeController::home()}). */
+    public const HOME_PER_PAGE = 4;
+
+    /** Resource types the home page previews, in display order. */
+    private const HOME_TYPES = ['champion', 'item', 'summoner', 'runesReforged'];
+
+    /**
+     * List route (path) => the resource type it renders and its pagination
+     * defaults. Kept in sync with each list controller's listContext() call;
+     * the streaming loader reads it to warm exactly what the destination shows.
+     * Drift only under-/over-warms a few images — the deferred ingestor and the
+     * next visit reconcile it — so it never breaks a render.
+     */
+    public const LIST_PAGES = [
+        '/champions' => ['type' => 'champion',      'defaultPerPage' => 20, 'maxPerPage' => 20],
+        '/objects'   => ['type' => 'item',          'defaultPerPage' => 8,  'maxPerPage' => 20],
+        '/runes'     => ['type' => 'runesReforged', 'defaultPerPage' => 8,  'maxPerPage' => 20],
+        '/summoners' => ['type' => 'summoner',      'defaultPerPage' => 8,  'maxPerPage' => 0],
+    ];
+
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly ClientManager $clientManager,
         private readonly VersionManager $versionManager,
     ) {}
+
+    /**
+     * Resource-warming steps for a destination path, read purely from the request
+     * query (numpage/itemperpage) — never the session, so the loader SSE stream
+     * holds no session lock. Empty for pages that ingest no image batch (detail,
+     * setup, working-progress).
+     *
+     * @return list<array{type:string, perPage:int, page:int}>
+     */
+    public function loaderSteps(string $path): array
+    {
+        $p = strtolower(rtrim($path, '/')) ?: '/';
+
+        if ($p === '/home') {
+            return array_map(
+                static fn (string $type): array => ['type' => $type, 'perPage' => self::HOME_PER_PAGE, 'page' => 1],
+                self::HOME_TYPES,
+            );
+        }
+
+        $cfg = self::LIST_PAGES[$p] ?? null;
+        if ($cfg === null) {
+            return [];
+        }
+
+        $query   = $this->requestStack->getCurrentRequest()?->query;
+        $page    = max(1, (int) ($query?->get('numpage') ?? 1));
+        $perPage = (int) ($query?->get('itemperpage') ?? $cfg['defaultPerPage']);
+        if ($perPage <= 0) {
+            $perPage = $cfg['defaultPerPage'];
+        }
+        if ($cfg['maxPerPage'] > 0) {
+            $perPage = min($perPage, $cfg['maxPerPage']);
+        }
+
+        return [['type' => $cfg['type'], 'perPage' => $perPage, 'page' => $page]];
+    }
 
     /**
      * Version + language for the current request: valid query params win
