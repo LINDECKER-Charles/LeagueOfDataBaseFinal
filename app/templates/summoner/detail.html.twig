@@ -14,60 +14,120 @@
 {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
 {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
 
+{# ---- Normalised, meaningful values only (no -1 / No Cost noise) ------------ #}
+{% set cd        = summoner.cooldown|default([])|first %}
+{% set rng       = summoner.range|default([])|first %}
+{% set ammo      = summoner.maxammo|default(-1) %}
+{% set costVal   = summoner.cost|default([])|first %}
+{% set costType  = summoner.costType|default(summoner.resource|default('')) %}
+{% set noCost    = costType is empty or costType|lower in ['no cost', 'nocost'] or costVal in [0, null] %}
+{% set modeLabels = {
+  'CLASSIC': 'Classic', 'ARAM': 'ARAM', 'CHERRY': 'Arena',
+  'NEXUSBLITZ': 'Nexus Blitz', 'URF': 'URF', 'ONEFORALL': 'One for All',
+  'PRACTICETOOL': 'Practice Tool', 'TUTORIAL': 'Tutorial'
+} %}
+
 <main class="relative px-6 py-12">
   {% include 'partials/main/gradient.html.twig' %}
 
-  <div class="relative mx-auto max-w-5xl">
-    {% include 'components/detail_hero.html.twig' with {
-      img: image,
-      img_fit: 'contain',
-      name: summoner.name ?? 'Summoner',
-      sub: summoner.id ?? '',
-      eyebrow: 'summoner.list.title'|trans,
-      meta_line: 'summoner.detail.version_locale'|trans({ '%version%': selectedVersion, '%locale%': selectedLocale })
-    } %}
+  <div class="relative mx-auto max-w-4xl">
 
-    {# Fields #}
-    {% set fields = {
-      'summoner.detail.fields.cooldown' : 'cooldownBurn',
-      'summoner.detail.fields.maxammo' : 'maxammo',
-      'summoner.detail.fields.range' : 'rangeBurn',
-      'summoner.detail.fields.cost' : 'costType',
-      'summoner.detail.fields.summoner_level' : 'summonerLevel'
-    } %}
-    {% set indexs = {} %}
-    {% for label, key in fields %}
-      {% set val = attribute(summoner, key)|default(null) %}
-      {% if val is not null %}{% set indexs = indexs|merge({ (label): val }) %}{% endif %}
-    {% endfor %}
+    {# ---- Hero : spell card centred on the cooldown hero-metric ------------- #}
+    <section class="flex flex-col gap-8 sm:flex-row sm:items-center">
+      <div class="flex min-w-0 flex-1 items-center gap-5 sm:gap-6">
+        {% if image %}
+          <div class="hextech-frame hex-glow relative h-24 w-24 shrink-0 overflow-hidden sm:h-28 sm:w-28">
+            <img src="/{{ image }}" alt="{{ summoner.name ?? 'Summoner spell' }}"
+                 class="absolute inset-0 h-full w-full object-contain p-2">
+          </div>
+        {% else %}
+          <div class="hextech-frame hex-glow grid h-24 w-24 shrink-0 place-items-center font-beaufort text-xl text-gold/70 sm:h-28 sm:w-28">
+            {{ (summoner.name ?? '??')|slice(0, 2)|upper }}
+          </div>
+        {% endif %}
 
-    <section class="mb-10 grid grid-cols-2 gap-2 sm:grid-cols-3">
-      {% for name, val in indexs %}
-        <div class="stat-cell">
-          <div class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ name|trans }}</div>
-          <div class="mt-0.5 font-beaufort text-text">{{ val == -1 ? 1 : val }}</div>
+        <div class="min-w-0">
+          <p class="eyebrow mb-2">{{ 'summoner.list.title'|trans }}</p>
+          <h1 class="font-beaufort text-3xl uppercase leading-tight tracking-wide text-gold-bright sm:text-4xl">
+            {{ summoner.name ?? 'Summoner' }}
+          </h1>
+          <p class="mt-2 font-mono text-xs text-text-dim">
+            {{ 'summoner.detail.version_locale'|trans({ '%version%': selectedVersion, '%locale%': selectedLocale }) }}
+          </p>
         </div>
-      {% endfor %}
+      </div>
+
+      {# Cooldown = the defining metric of a summoner spell #}
+      {% if cd is not null %}
+        <div class="flex shrink-0 flex-col items-center gap-2 sm:pl-6">
+          <div class="cd-medallion">
+            <span class="font-beaufort text-2xl text-hex-bright">{{ cd }}s</span>
+          </div>
+          <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">
+            {{ 'summoner.detail.fields.cooldown'|trans }}
+          </span>
+        </div>
+      {% endif %}
     </section>
 
-    {# Modes #}
+    <hr class="hx-rule my-10">
+
+    {# ---- Key metrics (significant data only) ------------------------------- #}
+    <section class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {% if rng is not null %}
+        <div class="stat-row">
+          <span class="font-mono text-[11px] uppercase tracking-wider text-text-muted">{{ 'summoner.detail.fields.range'|trans }}</span>
+          <span class="v">{{ rng >= 25000 ? 'summoner.detail.range_global'|trans : rng }}</span>
+        </div>
+      {% endif %}
+
+      {% if summoner.summonerLevel is defined and summoner.summonerLevel %}
+        <div class="stat-row">
+          <span class="font-mono text-[11px] uppercase tracking-wider text-text-muted">{{ 'summoner.detail.fields.summoner_level'|trans }}</span>
+          <span class="v">{{ 'summoner.detail.unlocked_at'|trans({ '%level%': summoner.summonerLevel }) }}</span>
+        </div>
+      {% endif %}
+
+      {% if not noCost %}
+        <div class="stat-row">
+          <span class="font-mono text-[11px] uppercase tracking-wider text-text-muted">{{ 'summoner.detail.fields.cost'|trans }}</span>
+          <span class="v">{{ costType ? costVal ~ ' ' ~ costType : costVal }}</span>
+        </div>
+      {% endif %}
+
+      {% if ammo > 0 %}
+        <div class="stat-row">
+          <span class="font-mono text-[11px] uppercase tracking-wider text-text-muted">{{ 'summoner.detail.fields.maxammo'|trans }}</span>
+          <span class="v">{{ ammo }}</span>
+        </div>
+      {% endif %}
+    </section>
+
+    {# ---- Game modes ------------------------------------------------------- #}
     {% if summoner.modes is defined and summoner.modes is iterable and summoner.modes is not empty %}
-      <section class="mb-10">
+      <hr class="hx-rule my-10">
+      <section>
         <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'summoner.detail.modes'|trans }}</h2>
         <div class="flex flex-wrap gap-2">
-          {% for m in summoner.modes %}<span class="hx-chip">{{ m }}</span>{% endfor %}
+          {% for m in summoner.modes %}
+            <span class="hx-chip">{{ modeLabels[m]|default(m) }}</span>
+          {% endfor %}
         </div>
       </section>
     {% endif %}
 
-    {# Description #}
+    {# ---- Description (DDragon rich HTML) ---------------------------------- #}
     {% if summoner.description is defined and summoner.description %}
-      <section class="mb-4">
+      <hr class="hx-rule my-10">
+      <section>
         <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'summoner.detail.description'|trans }}</h2>
-        <div class="hextech-frame p-6 leading-relaxed text-text">{{ summoner.description|raw|capitalize }}</div>
+        <div class="hextech-frame p-6">
+          <div class="ddragon-rich">{{ summoner.description|raw }}</div>
+        </div>
       </section>
     {% endif %}
 
+    <hr class="hx-rule my-10">
     {% include 'components/detail_actions.html.twig' with { back_href: path('app_summoners') } %}
   </div>
 </main>

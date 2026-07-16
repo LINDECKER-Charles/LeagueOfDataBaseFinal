@@ -234,6 +234,125 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Detail redesign toolkit — shared primitives used by the champion / item /
+   rune / summoner detail pages. Single-authored here so the four pages read as
+   one system; templates compose these + Tailwind, they never re-declare them.
+--------------------------------------------------------------------------- */
+
+/* Section divider — gold hairline with a centered hex diamond node.
+   Encodes a genuine break between content blocks (the page's connective tissue). */
+@utility hx-rule {
+  position: relative;
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgba(200, 170, 110, 0.55), transparent);
+}
+.hx-rule::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--color-gold);
+  box-shadow: 0 0 10px -1px rgba(200, 170, 110, 0.7);
+}
+
+/* Full-bleed splash hero scrim — lifts white display type off cinematic art. */
+@utility splash-scrim {
+  background:
+    linear-gradient(180deg, rgba(1, 10, 19, 0.15) 0%, rgba(1, 10, 19, 0.55) 55%, rgba(10, 20, 40, 0.97) 100%),
+    linear-gradient(90deg, rgba(1, 10, 19, 0.75) 0%, transparent 45%);
+}
+
+@layer components {
+  /* ---- DDragon rich text ---------------------------------------------------
+     Spell/rune/item copy ships DDragon's own markup: <br>, <b>, deprecated
+     <font color>, and semantic damage/keyword tags rendered as unknown inline
+     elements. We colour the common tags to the Hextech palette and keep the
+     block readable. Always paired with |raw in the template. */
+  .ddragon-rich { line-height: 1.65; color: var(--color-text); }
+  .ddragon-rich b, .ddragon-rich strong { color: var(--color-gold-bright); font-weight: 700; }
+  .ddragon-rich br { content: ""; display: block; margin-top: 0.35rem; }
+  .ddragon-rich a { color: var(--color-hex); text-decoration: underline; text-underline-offset: 2px; }
+
+  .ddragon-rich physicaldamage, .ddragon-rich scalead, .ddragon-rich ornnbonus { color: #f0a868; font-weight: 600; }
+  .ddragon-rich magicdamage, .ddragon-rich scaleap, .ddragon-rich scalemana { color: var(--color-hex); font-weight: 600; }
+  .ddragon-rich truedamage { color: #f5e9c8; font-weight: 600; }
+  .ddragon-rich healing, .ddragon-rich lifesteal { color: #3fb96f; font-weight: 600; }
+  .ddragon-rich shield { color: #d6c38a; font-weight: 600; }
+  .ddragon-rich speed, .ddragon-rich haste { color: #63d8e0; font-weight: 600; }
+  .ddragon-rich status, .ddragon-rich onhit { color: #c99bff; font-weight: 600; }
+  .ddragon-rich attention, .ddragon-rich keywordmajor, .ddragon-rich keywordstealth, .ddragon-rich rarementionable {
+    color: var(--color-gold); font-weight: 600;
+  }
+  .ddragon-rich active { color: var(--color-gold-bright); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .ddragon-rich passive { color: var(--color-hex); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .ddragon-rich keyword, .ddragon-rich lol-uikit-tooltipped-keyword {
+    color: var(--color-gold-light); border-bottom: 1px dotted rgba(200, 170, 110, 0.5);
+  }
+  .ddragon-rich rules {
+    display: block; margin-top: 0.75rem; padding-top: 0.6rem;
+    border-top: 1px solid rgba(200, 170, 110, 0.18);
+    font-size: 0.8125rem; color: var(--color-text-muted);
+  }
+
+  /* ---- Ability key badge (P / Q / W / E / R) — a real cast sequence -------- */
+  .ability-key {
+    display: grid; place-items: center;
+    width: 1.5rem; height: 1.5rem;
+    border: 1px solid var(--color-gold-deep);
+    background: var(--color-void);
+    font-family: var(--font-beaufort); font-weight: 700; font-size: 0.75rem;
+    color: var(--color-gold-bright);
+    clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  }
+  .ability-key[data-key="P"] { color: var(--color-hex-bright); border-color: var(--color-hex-deep); }
+
+  /* ---- Cooldown medallion — the defining metric of a summoner spell -------- */
+  .cd-medallion {
+    display: grid; place-items: center;
+    width: 6.5rem; height: 6.5rem; border-radius: 9999px;
+    background:
+      radial-gradient(closest-side, rgba(10, 20, 40, 0.9), rgba(1, 10, 19, 0.9)),
+      conic-gradient(var(--color-hex) 0deg, var(--color-hex-deep) 210deg, rgba(120, 90, 40, 0.35) 210deg 360deg);
+    box-shadow: 0 0 30px -8px rgba(10, 200, 185, 0.5), inset 0 0 0 1px rgba(200, 170, 110, 0.3);
+    padding: 4px;
+  }
+  .cd-medallion > span {
+    display: grid; place-items: center; width: 100%; height: 100%; border-radius: 9999px;
+    background: var(--color-void); border: 1px solid rgba(200, 170, 110, 0.25);
+  }
+
+  /* ---- Rune path theming — colour deduced from the tree key (game's own) --- */
+  .path-precision   { --path: #c8aa6e; }
+  .path-domination  { --path: #dc3d3d; }
+  .path-sorcery     { --path: #6a8cff; }
+  .path-resolve     { --path: #37b06e; }
+  .path-inspiration { --path: #49cfd6; }
+  .path-text  { color: var(--path, var(--color-gold)); }
+  .path-border{ border-color: color-mix(in srgb, var(--path, var(--color-gold)) 55%, transparent); }
+  .path-glow  { box-shadow: 0 0 26px -8px var(--path, var(--color-gold)); }
+  .path-bar   { background: linear-gradient(90deg, var(--path, var(--color-gold)), transparent); }
+
+  /* ---- Recipe tree connector — a real build dependency, not decoration ----- */
+  .recipe-link {
+    background-image: linear-gradient(var(--color-gold-deep), var(--color-gold-deep));
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  /* ---- Stat delta row — leading + value emphasis for item/champion stats --- */
+  .stat-row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem;
+    border-left: 2px solid var(--color-gold-deep);
+    padding: 0.5rem 0.75rem; background: rgba(10, 20, 40, 0.5);
+  }
+  .stat-row .v { font-family: var(--font-beaufort); color: var(--color-hex-bright); }
+}
+
+/* ---------------------------------------------------------------------------
    PrimeVue AutoComplete — Hextech skin (targets PrimeVue-generated classes,
    which live outside Tailwind's scope, hence plain rules with !important).
 --------------------------------------------------------------------------- */
