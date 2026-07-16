@@ -22,10 +22,15 @@ une à la **langue** (axe orthogonal, cf. bug D) :
 | **A** | `runesReforged.json` inexistant avant le patch 7.22 | `/home` | **180** versions `≤ 7.21.1` | **HTTP 500** | **tous** (prod incluse) |
 | **A** | idem | `/runes` (liste) | 180 versions `≤ 7.21.1` | 302 → `/setup` (page inutilisable) | tous |
 | **A** | idem | `/rune/{key}` (détail) | 180 versions `≤ 7.21.1` | 302 → `/setup` | tous |
-| **B** | Accès Twig non gardés sur des clés absentes des vieilles données champion | `/champion/{name}` (détail) | **20** versions (major `0.x` + début `3.x`, `≤ 3.12.x`) | **HTTP 500** | **dev / test uniquement** (`strict_variables`) |
+| **B** | Accès Twig non gardés sur des clés absentes des vieilles données champion | `/champion/{name}` (détail) | **33** versions · **2 612** couples (version, champion) | **HTTP 500** | **dev / test uniquement** (`strict_variables`) |
 | **C** | `HomeController::home()` sans gestion d'erreur (amplifie A + D) | `/home` | — (cause structurelle) | 500 au lieu d'une dégradation | tous |
 | **D** | Langue valide **globalement** mais absente d'une version | `/home` | jusqu'à **348** versions (`ar_AE`) | **HTTP 500** | **tous** (prod incluse) |
 | **D** | idem | listes + détails (toutes ressources) | idem | 302 → `/setup` | tous |
+
+**Chiffre marquant (balayage exhaustif version × langue, cf. §9)** : sur les
+**11 116** couples (version, langue) sélectionnables, **5 477 (49,3 %)** rendent
+`/home` en **HTTP 500**. Seuls **50,7 %** des couples sont sains sur toutes les
+pages.
 
 **Pages non impactées** (confirmé de `0.151.2` à `16.14.1`, en `en_US`) : listes
 `/champions`, `/objects`, `/summoners` ; détails `/object/{id}`,
@@ -224,20 +229,33 @@ C'est pourquoi la liste des versions cassées est **discontinue** dans les
 `3.x` (elle suit la disponibilité des fichiers de détail par champion sur le
 CDN).
 
-### 4.3 Périmètre — 20 versions (vérité terrain `/champion/Annie`)
+### 4.3 Périmètre — balayage exhaustif tous champions (33 versions, 2 612 couples)
 
-Mesuré page par page sur l'app (dev). Les autres champions peuvent décaler la
-liste de quelques patchs (selon la présence du fichier de détail par champion),
-mais la **plage** est stable : major `0.x` + début `3.x` (`≤ 3.12.x`). Majors
-`4.x` et au-delà : **sains** (les skins portent `num` dès `~3.13.24`).
+Un premier relevé limité à **Annie** avait donné 20 versions ; il **sous-estimait**
+le périmètre (le fichier détail d'Annie est absent — `403` — sur plusieurs
+patchs où *d'autres* champions crashent). Le balayage **champion par champion**
+sur les majors `0` et `3` (validé point par point sur l'app, cf. §9) donne :
 
-**`partype` manquant (9 versions, major-0) :**
-`0.151.2, 0.151.101, 0.152.55, 0.152.107, 0.152.108, 0.152.115, 0.153.2,
-0.154.2, 0.154.3`
+- **2 612** couples (version, champion) provoquant un `500`, sur **33 versions**.
+- **major-0 (9 versions)** : `partype` absent au niveau du résumé → **tous** les
+  champions crashent (107–110 champions chacun).
+- **major-3** : trois régimes selon la disponibilité du fichier détail par
+  champion (qui conditionne le bloc skins) :
+  - **ALL** (7 v. : `3.10.2/.3`, `3.12.2/.24/.26/.33/.34`) — détail servi pour
+    tous → `skin.num` fait tomber tout le monde.
+  - **partiel** (17 v. : `3.6.14/.15`, `3.7.1/.2/.9`, `3.8.1/.3/.5`, `3.9.4/.5`,
+    `3.10.6`, `3.11.2`, `3.12.36/.37`, `3.13.1/.6/.8`) — seuls les champions dont
+    le détail est servi **et** qui ont > 1 skin sans `num` crashent (de 2/116 à
+    103/114 selon le patch).
+  - **clean** malgré l'ancienneté (`3.9.7`, `3.11.4`) — tous les détails `403` →
+    rendu sur le résumé seul → bloc skins ignoré → pas de crash.
+- **≥ `3.13.24` et majors `4.x`+** : **sains** (les skins portent `num`, `partype`
+  présent) — 0 crash même quand beaucoup de fichiers détail sont `403`.
 
-**`skin.num` manquant (11 versions, major-3) :**
-`3.8.1, 3.8.3, 3.9.4, 3.9.5, 3.10.2, 3.10.3, 3.12.2, 3.12.24, 3.12.26, 3.12.33,
-3.12.34`
+> Conséquence pratique : la plage de crash est **stable au niveau version**
+> (`0.x` + `3.x` ≤ `3.13.8`), mais l'ensemble exact des champions touchés varie
+> par patch. Les 9 versions major-0 sont **intégralement** cassées (n'importe
+> quel champion).
 
 ### 4.4 Comportement en production (`strict_variables=false`)
 
@@ -317,7 +335,7 @@ try/catch → 500 ; listes/détails → 302).
 C'est un axe **orthogonal** à la version : il touche même des versions récentes
 qui, elles, ont bien leurs runes (p.ex. `ar_AE` casse `13.x`).
 
-### 6.2 Surface (mesurée : 9 langues × 397 versions)
+### 6.2 Surface (exhaustif : 28 langues × 397 versions, cf. §9)
 
 | Langue | Dispo sur | Versions cassées | Plus récente version cassée |
 |--------|-----------|------------------|------------------------------|
@@ -325,12 +343,12 @@ qui, elles, ont bien leurs runes (p.ex. `ar_AE` casse `13.x`).
 | `vi_VN` (vietnamien) | 85 / 397 | **312** | `≤ 12.23.1` (OK dès `13.1.1`) |
 | `id_ID` (indonésien) | 251 / 397 | ~146 | disponibilité **non contiguë** |
 | `es_AR` | 382 / 397 | ~15 (anciennes) | `≤ 3.8.1` |
-| `es_MX`, `en_AU` | 388–391 / 397 | tail major-0 | — |
-| `pt_BR`, `ru_RU`, `zh_CN` | 397 / 397 | aucune | — |
+| `ja_JP` (japonais) | 384 / 397 | 13 | serveur JP lancé fin 2016 |
+| `en_AU`, `es_MX` | 388–391 / 397 | 6–9 (tail major-0) | — |
+| `pt_BR`, `ru_RU`, `zh_CN`, `en_US`, + 16 autres | 397 / 397 | aucune | `en_US` = seul garanti partout |
 
-Les 19 autres langues n'ont pas été mesurées exhaustivement (cf. §8 couverture),
-mais le mécanisme est identique pour toute langue introduite après une version
-donnée.
+Mesure **désormais exhaustive** : les 28 langues × 397 versions ont été balayées
+(cf. §9). 7 langues sont incomplètes ; les 21 autres couvrent les 397 versions.
 
 ### 6.3 Vérité terrain (app, version `5.1.1`)
 
@@ -385,27 +403,74 @@ Ce qui a été réellement exercé, pour éviter toute sur-affirmation :
 
 | Endpoint / ressource DDragon exploité | Couverture | Détail |
 |----------------------------------------|-----------|--------|
-| `data/{lang}/champion.json` | **397 versions** (en_US) + 9 langues × 397 | exhaustif version ; échantillon langue |
-| `data/{lang}/item.json` | **397 versions** (en_US) | exhaustif version ; langue non exhaustive |
-| `data/{lang}/summoner.json` | **397 versions** (en_US) | idem |
-| `data/{lang}/runesReforged.json` | **397 versions** (en_US) | exhaustif version |
-| `data/{lang}/champion/{name}.json` (détail) | majors 0/3/4 + début 5, **Annie seule** | échantillon ; autres champions non balayés |
+| `data/{lang}/champion.json` | **397 versions × 28 langues** | exhaustif (matrice complète) |
+| `data/{lang}/item.json` | **397 versions** (en_US) + atomicité langue prouvée | présence langue = celle du dossier (proxy validé) |
+| `data/{lang}/summoner.json` | **397 versions × 28 langues** | exhaustif (proxy de présence de dossier) |
+| `data/{lang}/runesReforged.json` | **397 versions** (en_US) | exhaustif version (indépendant langue) |
+| `data/{lang}/champion/{name}.json` (détail) | **majors 0 & 3 : tous les champions** (2 612 couples) + 4.x/5.x vérifiés sains | exhaustif sur la plage à risque |
 | `img/champion/{name}.png` | newest + oldest | 200 ; pas de balayage complet |
 | `img/item/{name}.png` | newest + oldest | 200 |
 | `img/spell/{name}.png` (sort d'invocateur) | newest + oldest | 200 |
 | `img/passive/{name}.png`, `img/spell/*` (sorts champion) | newest + oldest (Annie) | 200 |
 | `cdn/img/…` (icônes de runes, version-less) | 1 échantillon | 200 |
 | `img/champion/splash/{id}_{n}.jpg` (splash direct navigateur) | 1 échantillon | 200 |
-| `/api/{res}/search/{name}` (autocomplete) | **non testé** | même couche managers (session) ; probablement 302/erreur JSON sur versions/langues cassées |
-| `/api/loader/prepare` (SSE `LoaderController`) | **non testé** | réutilise `collectPlan`/`getData` → mêmes causes A/D probables |
+| `/api/{res}/search/{name}` (autocomplete) | **non testé** | même couche managers (session) ; 302/erreur JSON attendus sur versions/langues cassées |
+| `/api/loader/prepare` (SSE `LoaderController`) | **non testé** | réutilise `collectPlan`/`getData` → mêmes causes A/D attendues |
 
-**Non exhaustif** : matrice complète version × langue × 4 ressources
-(397 × 28 × 4 ≈ 44 k requêtes) non exécutée — les **frontières** et le
-**mécanisme** suffisent à caractériser A et D. Le détail par champion n'a été
-sondé que pour Annie (la plage de crash B est stable, mais la liste exacte de
-versions peut varier de quelques patchs selon le champion). Les endpoints
-`/api/*` search et le SSE loader n'ont pas été exercés page par page mais
-partagent la couche `AbstractManager` → mêmes causes racines attendues.
+**Reste non couvert** (faible valeur ajoutée) : le balayage complet des
+**endpoints images** par version (échantillon récent+ancien = 200, patterns
+d'URL stables), le détail item/summoner par entité (templates prouvés
+défensifs, `200` sur toute la plage), et les endpoints `/api/*` search + SSE
+loader (mêmes managers, mêmes causes racines A/D). Le cœur — matrice
+version × langue et crash détail champion — est **exhaustif**.
+
+---
+
+## 9. Balayage exhaustif — synthèse chiffrée
+
+### 9.1 Matrice complète version × langue (11 116 couples)
+
+Les 397 versions × 28 langues ont été balayées (présence du dossier
+`data/{lang}/` via `summoner.json`, atomicité prouvée : 0 divergence sur 40
+triples summoner/champion/item échantillonnés). Croisée avec la disponibilité
+version-gated de `runesReforged`, cela donne le nombre exact de couples cassés
+**par page** :
+
+| Page(s) | Couples cassés / 11 116 | % | Condition |
+|---------|-------------------------|---|-----------|
+| listes + détails champion/item/summoner | **849** | 7,6 % | dossier langue absent → `302` |
+| `/runes` + `/rune/{key}` | **5 477** | 49,3 % | langue absente **ou** version < 7.22 → `302` |
+| **`/home`** | **5 477** | **49,3 %** | idem → **`500`** |
+| **Sains sur toutes les pages** | **5 639** | **50,7 %** | — |
+
+Décomposition du `/home` 500 : 180 versions < 7.22 × 28 langues = 5 040 couples
+(cassés quelle que soit la langue) + 437 couples version ≥ 7.22 mais langue
+absente.
+
+### 9.2 Détail champion — balayage tous champions (2 612 couples)
+
+Majors 0 & 3 balayés champion par champion (fichier `champion/{id}.json` de
+chaque champion de chaque version) ; majors 4.x/5.x vérifiés sains.
+
+- **2 612** couples (version, champion) → `500` (dev/test), sur **33 versions**.
+- 9 versions major-0 **intégralement** cassées (`partype`) ; 24 versions major-3
+  ALL/partiel (`skin.num`).
+
+### 9.3 Validations sur l'application (vérité terrain)
+
+Le modèle dérivé des données a été confronté à l'app pour des cas **non-Annie** :
+
+| Requête | Attendu | Obtenu |
+|---------|---------|--------|
+| `/champion/Aatrox?version=3.13.1` | 500 (skin.num) | ✅ 500 |
+| `/champion/Jinx?version=3.12.37` | 500 (skin.num) | ✅ 500 |
+| `/champion/Annie?version=3.12.37` | 200 (non-crasher) | ✅ 200 |
+| `/champion/Aatrox?version=3.11.4` | 200 (détail 403 → résumé) | ✅ 200 |
+| `/champion/Ashe?version=0.151.2` | 500 (partype) | ✅ 500 |
+| `/home` session(`5.1.1`,`ar_AE`) | 500 (bug D) | ✅ 500 |
+| `/champions?version=5.1.1&lang=ar_AE` | 302 | ✅ 302 |
+
+Concordance **7/7**. Les chiffres dérivés sont donc fiables.
 
 ---
 
@@ -419,11 +484,14 @@ partagent la couche `AbstractManager` → mêmes causes racines attendues.
 - Frontière `partype` (données champion) : présent dès `~3.8`, absent sur les
   9 versions major `0.x`.
 - Frontière `skin.num` : présent dès `~3.13.24` ; absent avant.
-- Crashs `/champion/{name}` confirmés (Annie) : **20** versions (majors `0` et
-  `3`).
+- Crashs `/champion/{name}` (tous champions, majors 0 & 3) : **33** versions ·
+  **2 612** couples (version, champion). Major-0 intégralement cassé.
+- Matrice version × langue : **11 116** couples ; **/home 500 sur 5 477 (49,3 %)** ;
+  sains partout : 5 639 (50,7 %).
 - Langues (`/languages`) : **28** annoncées globalement ; disponibilité par
-  version très variable — `ar_AE` 49/397, `vi_VN` 85/397, `id_ID` 251/397, …,
-  `en_US`/`pt_BR`/`ru_RU`/`zh_CN` 397/397. `en_US` est le seul garanti partout.
+  version — `ar_AE` 49/397, `vi_VN` 85/397, `id_ID` 251/397, `es_AR` 382,
+  `ja_JP` 384, `en_AU` 388, `es_MX` 391 ; 21 langues à 397/397. `en_US` est le
+  seul garanti partout **et** utilisable comme fallback sûr.
 - Endpoints images : `200` du plus récent au plus ancien (aucun bug).
 - Sémantique clé : `GoFetcherClient::fetch()` **lève** sur non-2xx
   (`GoFetcherClient.php:128-131`) ; les controllers de liste rattrapent,

@@ -36,15 +36,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 🛡️ Setup SSH
+      - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: 🔐 Known hosts
+      - name: Known hosts
         run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: 🔑 Push env to host (from ENV_FILE secret)
+      - name: Push env to host (from ENV_FILE secret)
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
         run: |
@@ -52,20 +52,23 @@ jobs:
           printf '%s\n' "$ENV_FILE" \
             | ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} "cat > ${{ secrets.DEPLOY_PATH }}/.env"
 
-      - name: 🚀 Deploy (compose pull + up)
+      - name: Deploy (compose pull + up)
         run: |
           ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} <<'EOSSH'
             set -e
             mkdir -p ${{ secrets.DEPLOY_PATH }}
             cd ${{ secrets.DEPLOY_PATH }}
-            # First deploy on a fresh host: clone; subsequent deploys: pull.
+            # Idempotent init: `git clone .` refuse un répertoire non vide (le .env y est
+            # déjà poussé à l'étape précédente). `git init` + remote tolère ce cas et
+            # `reset --hard` ne touche pas au .env non suivi.
             if [ ! -d .git ]; then
-              git clone ${{ secrets.REPO_URL || 'https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git' }} .
+              git init -q
+              git remote add origin ${{ secrets.REPO_URL || 'https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git' }}
             fi
             # Deploy overlay (Caddy/TLS), WITHOUT compose.override.yaml (dev conveniences).
             export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
             git fetch origin ${{ inputs.branch }}
-            git checkout ${{ inputs.branch }}
+            git checkout -B ${{ inputs.branch }} origin/${{ inputs.branch }}
             git reset --hard origin/${{ inputs.branch }}
             docker compose pull
             docker compose up -d --remove-orphans
