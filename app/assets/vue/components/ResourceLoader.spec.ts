@@ -163,6 +163,42 @@ describe('ResourceLoader', () => {
         w.unmount()
     })
 
+    it('rearms the inactivity watchdog on each event so a long but progressing warm is not cut', async () => {
+        const w = mountLoader()
+        beforeVisit('/champions?version=15.1.1&lang=en_US')
+        vi.advanceTimersByTime(300)
+        const es = FakeEventSource.last!
+        es.emit('start', { total: 3, categories: { champion: 3 } })
+
+        // Three items, each 12s after the previous — 36s total, well past the old
+        // 15s absolute cap, but never 15s of silence. Must not trigger a visit.
+        for (let i = 1; i <= 3; i++) {
+            vi.advanceTimersByTime(12000)
+            es.emit('item', { name: 'Champ' + i, category: 'champion', index: i, total: 3 })
+        }
+        expect(visit).not.toHaveBeenCalled()
+        expect(es.closed).toBe(false)
+
+        es.emit('done', { stored: 3, total: 3 })
+        vi.advanceTimersByTime(500)
+        expect(visit).toHaveBeenCalledWith('/champions?version=15.1.1&lang=en_US')
+        w.unmount()
+    })
+
+    it('still gives up when the stream goes silent past the idle window', async () => {
+        const w = mountLoader()
+        beforeVisit('/champions?version=15.1.1&lang=en_US')
+        const es = FakeEventSource.last!
+        es.emit('start', { total: 5, categories: { champion: 5 } })
+
+        // No further events: after WATCHDOG_IDLE of silence, bail out to a visit.
+        vi.advanceTimersByTime(15000)
+        expect(es.closed).toBe(true)
+        vi.advanceTimersByTime(500) // ready-hold before the gated visit
+        expect(visit).toHaveBeenCalledWith('/champions?version=15.1.1&lang=en_US')
+        w.unmount()
+    })
+
     it('hides once the warm destination has loaded', async () => {
         const w = mountLoader()
         beforeVisit('/champions?version=15.1.1&lang=en_US')

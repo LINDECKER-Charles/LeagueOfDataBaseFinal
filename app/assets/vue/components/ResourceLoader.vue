@@ -55,7 +55,7 @@ function resourcesFor(pathname: string): ResourceKey[] {
 
 const SHOW_DELAY = 280 // warm visits resolve first and never flash the overlay
 const READY_HOLD = 450 // once shown, hold 100%/"ready" long enough to read
-const WATCHDOG = 15000 // no `done` within this window → give up and visit anyway
+const WATCHDOG_IDLE = 15000 // no stream activity for this long → assume it's dead and visit anyway
 const LOG_LIMIT = 6 // live rows kept on screen
 
 const visible = ref(false)
@@ -164,7 +164,15 @@ function startPrepare(destUrl: string, override?: { version: string; lang: strin
         if (gen === generation && !finished) visible.value = true
     }, SHOW_DELAY)
 
-    watchdog = setTimeout(() => { if (gen === generation) finishRun(destUrl, version, lang, gen) }, WATCHDOG)
+    // Inactivity watchdog: a cold page legitimately outlasts any fixed budget, so
+    // we don't cap the total — we only bail if the stream falls silent (no start/
+    // phase/item) for WATCHDOG_IDLE. Every event below re-arms it, so a long warm
+    // that keeps progressing is never cut, while a truly dead stream still is.
+    const rearmWatchdog = (): void => {
+        if (watchdog) clearTimeout(watchdog)
+        watchdog = setTimeout(() => { if (gen === generation) finishRun(destUrl, version, lang, gen) }, WATCHDOG_IDLE)
+    }
+    rearmWatchdog()
 
     try {
         es = new EventSource(prepareUrl(destUrl, version, lang))
@@ -175,6 +183,7 @@ function startPrepare(destUrl: string, override?: { version: string; lang: strin
 
     es.addEventListener('start', (ev) => {
         if (gen !== generation) return
+        rearmWatchdog()
         const d = parse(ev)
         const cats = (d.categories ?? {}) as Record<string, number>
         for (const [type, n] of Object.entries(cats)) {
@@ -188,8 +197,13 @@ function startPrepare(destUrl: string, override?: { version: string; lang: strin
         if (!d.total) progress.value = 1
     })
 
+    // Dataset phase (cold JSON fetch) emits `phase` before `start`; keep the
+    // watchdog alive across it so a slow-but-progressing warm isn't cut.
+    es.addEventListener('phase', () => { if (gen === generation) rearmWatchdog() })
+
     es.addEventListener('item', (ev) => {
         if (gen !== generation) return
+        rearmWatchdog()
         const d = parse(ev)
         const key = TYPE_TO_KEY[String(d.category)] ?? active.value[0]
         entries.value.push({ id: ++entrySeq, name: String(d.name ?? ''), key })
