@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service\Storage;
 
 use App\Service\Storage\BlobStore;
+use App\Service\Storage\ImageTranscoder;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
@@ -36,7 +37,7 @@ final class BlobStoreTest extends TestCase
     private function makeStore(): array
     {
         $fs = new Filesystem(new LocalFilesystemAdapter($this->dir));
-        return [new BlobStore($fs), $fs];
+        return [new BlobStore($fs, new ImageTranscoder()), $fs];
     }
 
     private function blobCount(Filesystem $fs): int

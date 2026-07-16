@@ -17,7 +17,10 @@ final class BlobStore
 {
     private const PREFIX = 'blobs';
 
-    public function __construct(private readonly FilesystemOperator $ddragonStorage) {}
+    public function __construct(
+        private readonly FilesystemOperator $ddragonStorage,
+        private readonly ImageTranscoder $transcoder,
+    ) {}
 
     /**
      * Store the bytes once and return the public CDN path
@@ -33,8 +36,27 @@ final class BlobStore
         if (!$this->ddragonStorage->fileExists($key)) {
             $this->ddragonStorage->write($key, $bytes);
         }
+        $this->ensureWebp($key, $bytes);
 
         return 'cdn/'.$key;
+    }
+
+    /**
+     * Write the WebP sibling (blobs/<sha>.webp) next to the original, once.
+     * Best-effort: a transcode failure (SVG, GD missing) leaves only the original
+     * and the template's <picture> falls back to it. The URL is derived from the
+     * original by swapping the extension, so no manifest entry is needed.
+     */
+    private function ensureWebp(string $key, string $bytes): void
+    {
+        $webpKey = preg_replace('/\.[a-z0-9]+$/i', '.webp', $key);
+        if ($webpKey === null || $webpKey === $key || $this->ddragonStorage->fileExists($webpKey)) {
+            return;
+        }
+        $webp = $this->transcoder->toWebp($bytes);
+        if ($webp !== null) {
+            $this->ddragonStorage->write($webpKey, $webp);
+        }
     }
 
     /**
