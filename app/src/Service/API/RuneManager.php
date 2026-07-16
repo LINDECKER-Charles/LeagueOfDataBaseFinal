@@ -25,26 +25,41 @@ final class RuneManager extends AbstractManager
         throw new \RuntimeException(sprintf('Aucune rune trouvée avec le nom "%s".', $name));
     }
 
-    public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
+    protected function dataList(array $raw): array
     {
-        if (!$data) {
-            $data = array_values($this->getData($version, $lang) ?? []);
-        }
+        return array_values($raw);
+    }
 
-        $names = [];
+    /**
+     * Rune trees are nested: the tree icon plus every keystone/minor rune icon,
+     * each mapped to its display name.
+     */
+    protected function imageEntries(array $data): array
+    {
+        $entries = [];
         foreach ($data as $d) {
-            if ($d['icon'] ?? null) {
-                $names[] = $d['icon'];
+            if ($icon = $d['icon'] ?? null) {
+                $entries[$icon] = $d['name'] ?? $icon;
             }
             foreach ($d['slots'] ?? [] as $slot) {
                 foreach ($slot['runes'] ?? [] as $rune) {
-                    if ($rune['icon'] ?? null) {
-                        $names[] = $rune['icon'];
+                    if ($icon = $rune['icon'] ?? null) {
+                        $entries[$icon] = $rune['name'] ?? $icon;
                     }
                 }
             }
         }
-        $resolved = $this->resolveImages($version, $names, $force);
+
+        return $entries;
+    }
+
+    public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
+    {
+        if (!$data) {
+            $data = $this->dataList($this->getData($version, $lang));
+        }
+
+        $resolved = $this->resolveImages($version, array_keys($this->imageEntries($data)), $force);
 
         $result = [];
         foreach ($data as $d) {

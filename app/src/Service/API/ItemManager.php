@@ -22,6 +22,60 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
         throw new \RuntimeException(sprintf('Aucun objet trouvé avec l\'ID "%s".', $name));
     }
 
+    /**
+     * Résout une liste d'identifiants d'objets liés (item.into / item.from) en
+     * entrées enrichies prêtes à lier vers leur page détail. Les IDs absents du
+     * jeu de données courant (objets retirés d'un patch) sont ignorés, les
+     * doublons dédupliqués, et l'ordre d'entrée (= ordre de recette) préservé.
+     *
+     * @param list<int|string> $ids
+     * @return list<array{id: string, name: string, image: ?string, gold: ?int}>
+     */
+    public function resolveRelated(array $ids, string $version, string $lang): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $data = $this->getData($version, $lang)['data'] ?? [];
+
+        $picked = [];
+        foreach ($ids as $id) {
+            $id = (string) $id;
+            if (isset($data[$id]) && !isset($picked[$id])) {
+                $picked[$id] = $data[$id];
+            }
+        }
+        if ($picked === []) {
+            return [];
+        }
+
+        // Icônes secondaires : on laisse le batch froid se déférer après la
+        // réponse (comme les listes) plutôt que bloquer le rendu. La feature (nom
+        // + lien) ne dépend pas de l'image ; elle apparaît au prochain passage à chaud.
+        $files = array_values(array_filter(array_map(
+            static fn (array $entry): ?string => $entry['image']['full'] ?? null,
+            $picked,
+        )));
+        $paths = $files === [] ? [] : $this->resolveImages($version, $files);
+
+        $result = [];
+        foreach ($picked as $id => $entry) {
+            $file = $entry['image']['full'] ?? null;
+            $result[] = [
+                // PHP recaste les clés de tableau numériques en int → on rétablit.
+                'id'    => (string) $id,
+                'name'  => (string) ($entry['name'] ?? ''),
+                'image' => $file !== null ? ($paths[$file] ?? null) : null,
+                // Coût total du composant/évolution — permet d'afficher le prix
+                // sur les nœuds de l'arbre de recette sans requête additionnelle.
+                'gold'  => isset($entry['gold']['total']) ? (int) $entry['gold']['total'] : null,
+            ];
+        }
+
+        return $result;
+    }
+
     public function searchByName(string $name, string $version, string $lang, int $max = 0): array
     {
         if (mb_strlen($name) < 2 || mb_strlen($name) > 50) {
@@ -47,19 +101,30 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
         return $results;
     }
 
+    protected function dataList(array $raw): array
+    {
+        return array_values($raw['data'] ?? []);
+    }
+
+    protected function imageEntries(array $data): array
+    {
+        $entries = [];
+        foreach ($data as $d) {
+            if (($name = $d['name'] ?? null) && ($img = $d['image']['full'] ?? null)) {
+                $entries[$img] = $name;
+            }
+        }
+
+        return $entries;
+    }
+
     public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
     {
         if (!$data) {
-            $data = array_values($this->getData($version, $lang)['data'] ?? []);
+            $data = $this->dataList($this->getData($version, $lang));
         }
 
-        $names = [];
-        foreach ($data as $d) {
-            if (($d['name'] ?? null) && ($img = $d['image']['full'] ?? null)) {
-                $names[] = $img;
-            }
-        }
-        $resolved = $this->resolveImages($version, $names, $force);
+        $resolved = $this->resolveImages($version, array_keys($this->imageEntries($data)), $force);
 
         $result = [];
         foreach ($data as $d) {

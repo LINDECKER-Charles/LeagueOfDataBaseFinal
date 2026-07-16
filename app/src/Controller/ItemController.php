@@ -61,14 +61,24 @@ final class ItemController extends AbstractController
         try {
             $image = $this->itemManager->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
             $item  = $this->itemManager->getByName($name, $sel['version'], $sel['lang']);
+            // Les IDs de item.into / item.from ne parlent pas au joueur : on les
+            // résout en objets réels (nom + image + prix) liables vers leur page
+            // détail. `components` (from) + cet objet + `related` (into) forment
+            // l'arbre de recette affiché par le template.
+            $related    = $this->itemManager->resolveRelated($item['into'] ?? [], $sel['version'], $sel['lang']);
+            $components = $this->itemManager->resolveRelated($item['from'] ?? [], $sel['version'], $sel['lang']);
         } catch (\Throwable $e) {
             return $this->redirectToSetupWithError($sel, $e);
         }
 
         return $this->render('item/detail.html.twig', [
-            'item'   => $item,
-            'image'  => $image,
-            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'item'       => $item,
+            'image'      => $image,
+            'related'    => $related,
+            'components' => $components,
+            'version'    => $sel['version'],
+            'lang'       => $sel['lang'],
+            'client'  => ClientData::fromServices($this->versionManager, $this->clientManager),
         ]);
     }
 

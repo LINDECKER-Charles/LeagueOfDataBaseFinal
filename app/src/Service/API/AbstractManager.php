@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Service\API;
 
 use App\Service\Storage\BlobStore;
+use App\Service\Storage\DeferredImageIngestor;
 use App\Service\Tools\GoFetcherClient;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\UnableToReadFile;
@@ -36,10 +37,31 @@ abstract class AbstractManager implements WarmableManagerInterface
         protected readonly BlobStore $blobStore,
         #[Autowire(service: 'ddragon.cache')]
         private readonly CacheInterface $ddragonCache,
+        private readonly DeferredImageIngestor $ingestion,
     ) {}
 
     /** Build the DDragon image URL for a single file name (per-resource). */
     abstract protected function imageUrl(string $version, string $name): string;
+
+    /**
+     * Flatten a raw getData() payload into the list of entries to iterate.
+     * Shape differs per resource (champion/item/summoner nest under 'data',
+     * runes are a top-level list).
+     *
+     * @param array<mixed> $raw
+     * @return array<mixed>
+     */
+    abstract protected function dataList(array $raw): array;
+
+    /**
+     * Map every image of a data slice to a human-readable display name — the
+     * single source of "which images this slice needs", shared by getImages,
+     * collectPlan and ingest.
+     *
+     * @param array<mixed> $data
+     * @return array<string,string> imageFileName => display name
+     */
+    abstract protected function imageEntries(array $data): array;
 
     /**
      * Resolve every image of the resource for a version/language.
@@ -48,6 +70,11 @@ abstract class AbstractManager implements WarmableManagerInterface
      * @return array<mixed>
      */
     abstract public function getImages(string $version, string $lang, bool $force = false, array $data = []): array;
+
+    public function type(): string
+    {
+        return static::TYPE;
+    }
 
     /**
      * Fetch the resource's JSON for a version/language, cached in object storage.
@@ -107,9 +134,10 @@ abstract class AbstractManager implements WarmableManagerInterface
      * and recorded in the manifest.
      *
      * @param string[] $names
+     * @param bool     $allowDefer defer a cold batch to after the response (list pages); false ingests inline
      * @return array<string,string> name => cdn path
      */
-    protected function resolveImages(string $version, array $names, bool $force = false): array
+    protected function resolveImages(string $version, array $names, bool $force = false, bool $allowDefer = true): array
     {
         $manifest = $this->loadManifest($version);
         $result = [];
@@ -123,26 +151,146 @@ abstract class AbstractManager implements WarmableManagerInterface
             }
         }
 
-        if ($missing !== []) {
-            $bytesByUrl = $this->goFetcher->fetchMany(array_keys($missing));
-            foreach ($missing as $url => $name) {
-                if (!isset($bytesByUrl[$url])) {
-                    continue;
-                }
-                $cdn = $this->blobStore->store($bytesByUrl[$url], $name);
-                $manifest[$name] = $cdn;
-                $result[$name] = $cdn;
+        if ($missing === []) {
+            return $result;
+        }
+
+        // Cold on a user request: don't block the render on a multi-second batch
+        // fetch. Queue the ingestion for after the response is sent (kernel.terminate)
+        // — this page shows placeholders, the next visit is warm. Detail pages
+        // (allowDefer=false) and the warmup command (CLI, no request) ingest now.
+        if ($allowDefer && $this->ingestion->shouldDefer()) {
+            $this->ingestion->defer(fn (): array => $this->ingestMissing($version, $missing));
+
+            return $result;
+        }
+
+        return $result + $this->ingestMissing($version, $missing);
+    }
+
+    /**
+     * Fetch the missing images through the gateway, store them content-addressed
+     * (dedup + WebP sibling) and record them in the manifest.
+     *
+     * @param array<string,string> $missing    ddragon url => name
+     * @param (callable(string):void)|null $onStored invoked with each image name as it lands
+     * @return array<string,string> name => cdn path (only the ones fetched)
+     */
+    private function ingestMissing(string $version, array $missing, ?callable $onStored = null): array
+    {
+        $manifest = $this->loadManifest($version);
+        $resolved = [];
+
+        $bytesByUrl = $this->goFetcher->fetchMany(array_keys($missing));
+        foreach ($missing as $url => $name) {
+            if (!isset($bytesByUrl[$url])) {
+                continue;
             }
+            $cdn = $this->blobStore->store($bytesByUrl[$url], $name);
+            $manifest[$name] = $cdn;
+            $resolved[$name] = $cdn;
+            if ($onStored !== null) {
+                $onStored($name);
+            }
+        }
+
+        if ($resolved !== []) {
             $this->saveManifest($version, $manifest);
         }
 
-        return $result;
+        return $resolved;
     }
 
-    /** Resolve a single image (detail pages). */
+    /**
+     * Cost of warming the images of a page slice, computed without fetching:
+     * the full entry map plus how many of those images are not yet stored.
+     * Backs the streaming loader's determinate progress total.
+     *
+     * @return array{entries: array<string,string>, missing: int}
+     */
+    public function collectPlan(string $version, string $lang, int $perPage, int $page): array
+    {
+        $list  = $this->dataList($this->getData($version, $lang));
+        $slice = $perPage <= 0
+            ? $list
+            : $this->splitJson($perPage, $page <= 1 ? 0 : $perPage * ($page - 1), $list);
+
+        $entries  = $this->imageEntries($slice);
+        $manifest = $this->loadManifest($version);
+        $missing  = 0;
+        foreach (array_keys($entries) as $image) {
+            if (!isset($manifest[$image])) {
+                $missing++;
+            }
+        }
+
+        return ['entries' => $entries, 'missing' => $missing];
+    }
+
+    /**
+     * Synchronously fetch + store the still-missing images of a pre-computed
+     * entry map, reporting each stored entry's display name via $onStored. Used
+     * by the streaming loader ({@see \App\Controller\LoaderController}) to warm a
+     * destination inline while emitting live progress — never deferred.
+     *
+     * @param array<string,string> $entries imageFileName => display name
+     * @param callable(string):void $onStored invoked with each stored display name
+     */
+    public function ingest(string $version, array $entries, callable $onStored): void
+    {
+        $manifest = $this->loadManifest($version);
+        $missing  = []; // ddragon url => image name
+        foreach (array_keys($entries) as $image) {
+            if (!isset($manifest[$image])) {
+                $missing[$this->imageUrl($version, $image)] = $image;
+            }
+        }
+
+        if ($missing === []) {
+            return;
+        }
+
+        $this->ingestMissing(
+            $version,
+            $missing,
+            static fn (string $image): mixed => $onStored($entries[$image] ?? $image),
+        );
+    }
+
+    /**
+     * Ingest images from explicit DDragon URLs whose shape differs from
+     * {@see imageUrl()} — champion spell/passive icons ({@code img/spell/…},
+     * {@code img/passive/…}), splash art, etc. Reuses the per-type manifest,
+     * blob dedup and WebP sibling; synchronous, for detail pages.
+     *
+     * @param array<string,string> $urlsByName name => ddragon url
+     * @return array<string,string> name => cdn path
+     */
+    protected function resolveExternalImages(string $version, array $urlsByName, bool $force = false): array
+    {
+        $manifest = $this->loadManifest($version);
+        $result = [];
+        $missing = []; // ddragon url => name
+
+        foreach ($urlsByName as $name => $url) {
+            if (!$force && isset($manifest[$name])) {
+                $result[$name] = $manifest[$name];
+            } else {
+                $missing[$url] = $name;
+            }
+        }
+
+        if ($missing === []) {
+            return $result;
+        }
+
+        return $result + $this->ingestMissing($version, $missing);
+    }
+
+    /** Resolve a single image (detail pages) — always synchronous. */
     protected function resolveImage(string $version, string $name, bool $force = false): string
     {
-        $resolved = $this->resolveImages($version, [$name], $force);
+        $resolved = $this->resolveImages($version, [$name], $force, allowDefer: false);
         if (!isset($resolved[$name])) {
             throw new \RuntimeException(sprintf('Image indisponible: %s (%s)', $name, static::TYPE));
         }

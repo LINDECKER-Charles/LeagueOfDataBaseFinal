@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Service\API;
 
+use League\Flysystem\UnableToReadFile;
+
 final class ChampionManager extends AbstractManager implements CategoriesInterface
 {
     protected const TYPE = 'champion';
@@ -10,6 +12,65 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
     protected function imageUrl(string $version, string $name): string
     {
         return sprintf('https://ddragon.leagueoflegends.com/cdn/%s/img/champion/%s', $version, $name);
+    }
+
+    /**
+     * Full champion detail (spells, passive, skins, lore, tips) — a heavier
+     * per-champion payload than {@see getByName()}'s summary. Cached in object
+     * storage under its own key, fetched once through the gateway on a miss.
+     *
+     * @return array<mixed> the champion node, or [] when unavailable
+     */
+    public function getDetail(string $name, string $version, string $lang): array
+    {
+        $key = sprintf('data/%s/%s/championDetail/%s.json', $version, $lang, $name);
+
+        try {
+            $data = json_decode($this->ddragonStorage->read($key), true) ?? [];
+        } catch (UnableToReadFile) {
+            $url = sprintf(
+                'https://ddragon.leagueoflegends.com/cdn/%s/data/%s/champion/%s.json',
+                $version,
+                $lang,
+                $name
+            );
+            $data = json_decode($this->goFetcher->fetch($url), true) ?? [];
+            $this->ddragonStorage->write($key, json_encode($data));
+        }
+
+        return $data['data'][$name] ?? [];
+    }
+
+    /**
+     * Ingest the passive + spell icons of a detail payload (their DDragon paths
+     * differ from champion portraits — {@code img/passive/…}, {@code img/spell/…}).
+     *
+     * @param array<mixed> $detail a {@see getDetail()} node
+     * @return array<string,string> image.full => cdn path
+     */
+    public function getAbilityImages(array $detail, string $version): array
+    {
+        $urlsByName = [];
+
+        if ($passive = $detail['passive']['image']['full'] ?? null) {
+            $urlsByName[$passive] = sprintf(
+                'https://ddragon.leagueoflegends.com/cdn/%s/img/passive/%s',
+                $version,
+                $passive
+            );
+        }
+
+        foreach ($detail['spells'] ?? [] as $spell) {
+            if ($full = $spell['image']['full'] ?? null) {
+                $urlsByName[$full] = sprintf(
+                    'https://ddragon.leagueoflegends.com/cdn/%s/img/spell/%s',
+                    $version,
+                    $full
+                );
+            }
+        }
+
+        return $urlsByName === [] ? [] : $this->resolveExternalImages($version, $urlsByName);
     }
 
     public function getByName(string $name, string $version, string $lang): array
@@ -49,19 +110,30 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
         return $results;
     }
 
+    protected function dataList(array $raw): array
+    {
+        return array_values($raw['data'] ?? []);
+    }
+
+    protected function imageEntries(array $data): array
+    {
+        $entries = [];
+        foreach ($data as $d) {
+            if (($name = $d['name'] ?? null) && ($img = $d['image']['full'] ?? null)) {
+                $entries[$img] = $name;
+            }
+        }
+
+        return $entries;
+    }
+
     public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
     {
         if (!$data) {
-            $data = array_values($this->getData($version, $lang)['data'] ?? []);
+            $data = $this->dataList($this->getData($version, $lang));
         }
 
-        $names = [];
-        foreach ($data as $d) {
-            if (($d['name'] ?? null) && ($img = $d['image']['full'] ?? null)) {
-                $names[] = $img;
-            }
-        }
-        $resolved = $this->resolveImages($version, $names, $force);
+        $resolved = $this->resolveImages($version, array_keys($this->imageEntries($data)), $force);
 
         $result = [];
         foreach ($data as $d) {

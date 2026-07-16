@@ -65,10 +65,25 @@ final class ChampionController extends AbstractController
             return $this->redirectToSetupWithError($sel, $e);
         }
 
+        // The full detail (spells, skins, lore, tips) is best-effort: if the
+        // heavier payload or its icons fail, the page still renders on the summary.
+        $abilityImages = [];
+        try {
+            $detail = $this->championManager->getDetail($name, $sel['version'], $sel['lang']);
+            if ($detail !== []) {
+                $champion = array_merge($champion, $detail);
+                $abilityImages = $this->championManager->getAbilityImages($detail, $sel['version']);
+            }
+        } catch (\Throwable) {
+            // Degrade silently to the summary — the page must not break.
+        }
+
         return $this->render('champion/detail.html.twig', [
-            'champion' => $champion,
-            'image'    => $image,
-            'client'   => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'champion'      => $champion,
+            'image'         => $image,
+            'abilityImages' => $abilityImages,
+            'version'       => $sel['version'],
+            'client'        => ClientData::fromServices($this->versionManager, $this->clientManager),
         ]);
     }
 

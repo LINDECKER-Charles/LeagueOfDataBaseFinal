@@ -51,19 +51,30 @@ final class SummonerManager extends AbstractManager implements CategoriesInterfa
         return $results;
     }
 
+    protected function dataList(array $raw): array
+    {
+        return array_values($raw['data'] ?? []);
+    }
+
+    protected function imageEntries(array $data): array
+    {
+        $entries = [];
+        foreach ($data as $d) {
+            if (($id = $d['id'] ?? null) && ($img = $d['image']['full'] ?? null)) {
+                $entries[$img] = $d['name'] ?? $id;
+            }
+        }
+
+        return $entries;
+    }
+
     public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
     {
         if (!$data) {
-            $data = array_values($this->getData($version, $lang)['data'] ?? []);
+            $data = $this->dataList($this->getData($version, $lang));
         }
 
-        $names = [];
-        foreach ($data as $d) {
-            if (($d['id'] ?? null) && ($img = $d['image']['full'] ?? null)) {
-                $names[] = $img;
-            }
-        }
-        $resolved = $this->resolveImages($version, $names, $force);
+        $resolved = $this->resolveImages($version, array_keys($this->imageEntries($data)), $force);
 
         $result = [];
         foreach ($data as $d) {
