@@ -39,7 +39,7 @@ jobs:
         run: printf '%s\n' "$ENV_CI" > .env.test.local
 
       - name: Cache Composer
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache
           key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
@@ -70,6 +70,9 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: '1.25'
+          # Module vit dans go-workers/ et n'a pas de go.sum (deps stdlib) :
+          # cible go.mod pour la clé de cache, sinon setup-go cherche à la racine.
+          cache-dependency-path: go-workers/go.mod
 
       - name: Vet
         run: go vet ./...
