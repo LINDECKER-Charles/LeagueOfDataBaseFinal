@@ -46,7 +46,11 @@ async function search(event: AutoCompleteCompleteEvent): Promise<void> {
 function onSelect(): void {
     const choice = selected.value
     if (choice && typeof choice !== 'string') {
-        window.location.href = `${props.detailBase}/${encodeURIComponent(choice.id)}`
+        const params = new URLSearchParams()
+        if (props.version) params.set('version', props.version)
+        if (props.lang) params.set('lang', props.lang)
+        const qs = params.toString()
+        window.location.href = `${props.detailBase}/${encodeURIComponent(choice.id)}${qs ? `?${qs}` : ''}`
     }
 }
 </script>

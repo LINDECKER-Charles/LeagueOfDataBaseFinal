@@ -8,6 +8,8 @@
 {% block img %}/preview/home.png{% endblock %}
 
 {% block body %}
+{% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
+{% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
 <main class="relative px-6 py-14">
   {% include 'partials/main/gradient.html.twig' %}
   <div class="relative mx-auto flex max-w-7xl flex-col gap-16">
@@ -24,10 +26,10 @@
 
       {# Category portals — the gateway into each dataset #}
       {% set portals = [
-        { href: path('app_champions_redirect'), label: 'homepage.champions.title', cta: 'homepage.champions.see_all' },
-        { href: path('app_items_redirect'),     label: 'homepage.items.title',     cta: 'homepage.items.see_all' },
-        { href: path('app_runes_redirect'),     label: 'homepage.runes.title',     cta: 'homepage.runes.see_all' },
-        { href: path('app_summoners_redirect'), label: 'homepage.summoners.title', cta: 'homepage.summoners.see_all' }
+        { href: path('app_champions', {version: navVersion, lang: navLang}), label: 'homepage.champions.title', cta: 'homepage.champions.see_all' },
+        { href: path('app_items', {version: navVersion, lang: navLang}),     label: 'homepage.items.title',     cta: 'homepage.items.see_all' },
+        { href: path('app_runes', {version: navVersion, lang: navLang}),     label: 'homepage.runes.title',     cta: 'homepage.runes.see_all' },
+        { href: path('app_summoners', {version: navVersion, lang: navLang}), label: 'homepage.summoners.title', cta: 'homepage.summoners.see_all' }
       ] %}
       <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {% for p in portals %}
@@ -49,11 +51,11 @@
 
     {# CHAMPIONS PREVIEW #}
     <section>
-      {% include 'home/_preview_header.html.twig' with { title: 'homepage.champions.title'|trans, href: path('app_champions_redirect'), link: 'homepage.champions.see_all'|trans } %}
+      {% include 'home/_preview_header.html.twig' with { title: 'homepage.champions.title'|trans, href: path('app_champions', {version: navVersion, lang: navLang}), link: 'homepage.champions.see_all'|trans } %}
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {% for key, c in champions.champions|slice(0, 4) %}
           {% include 'components/entity_card.html.twig' with {
-            href: path('app_champion_redirect', { name: key }),
+            href: path('app_champion', { name: key, version: navVersion, lang: navLang }),
             img: champions.images[loop.index0]|default(null),
             name: c.name,
             sub: c.title|default('')
@@ -66,11 +68,11 @@
 
     {# ITEMS PREVIEW #}
     <section>
-      {% include 'home/_preview_header.html.twig' with { title: 'homepage.items.title'|trans, href: path('app_items_redirect'), link: 'homepage.items.see_all'|trans } %}
+      {% include 'home/_preview_header.html.twig' with { title: 'homepage.items.title'|trans, href: path('app_items', {version: navVersion, lang: navLang}), link: 'homepage.items.see_all'|trans } %}
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {% for key, i in items.items %}
           {% include 'components/entity_card.html.twig' with {
-            href: path('app_item_redirect', { name: key }),
+            href: path('app_item', { name: key, version: navVersion, lang: navLang }),
             img: items.images[i.name]|default(null),
             name: i.name,
             sub: key,
@@ -82,11 +84,11 @@
 
     {# SUMMONERS PREVIEW #}
     <section>
-      {% include 'home/_preview_header.html.twig' with { title: 'homepage.summoners.title'|trans, href: path('app_summoners_redirect'), link: 'homepage.summoners.see_all'|trans } %}
+      {% include 'home/_preview_header.html.twig' with { title: 'homepage.summoners.title'|trans, href: path('app_summoners', {version: navVersion, lang: navLang}), link: 'homepage.summoners.see_all'|trans } %}
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {% for key, s in summoners.summoners %}
           {% include 'components/entity_card.html.twig' with {
-            href: path('app_summoner_redirect', { name: key }),
+            href: path('app_summoner', { name: key, version: navVersion, lang: navLang }),
             img: summoners.images[key]|default(null),
             name: s.name,
             sub: key,
@@ -98,11 +100,11 @@
 
     {# RUNES PREVIEW #}
     <section>
-      {% include 'home/_preview_header.html.twig' with { title: 'homepage.runes.title'|trans, href: path('app_runes_redirect'), link: 'homepage.runes.see_all'|trans } %}
+      {% include 'home/_preview_header.html.twig' with { title: 'homepage.runes.title'|trans, href: path('app_runes', {version: navVersion, lang: navLang}), link: 'homepage.runes.see_all'|trans } %}
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {% for r in runes.runesReforgeds|slice(0, 4) %}
           {% include 'components/entity_card.html.twig' with {
-            href: path('app_rune_redirect', { name: r.key }),
+            href: path('app_rune', { name: r.key, version: navVersion, lang: navLang }),
             img: runes.images[r.key].icon ?? null,
             name: r.name,
             sub: r.key,

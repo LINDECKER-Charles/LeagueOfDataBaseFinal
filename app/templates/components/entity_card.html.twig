@@ -5,9 +5,12 @@
   <a href="{{ href|default('#') }}" class="flex items-center gap-3 px-4 pb-3 pt-4">
     {% if img %}
       <div class="relative h-14 w-14 shrink-0 overflow-hidden border border-gold-deep/50 bg-void">
-        <img src="/{{ img }}" alt="{{ name }}"
-             class="absolute inset-0 h-full w-full {{ img_fit|default('cover') == 'contain' ? 'object-contain' : 'object-cover' }} transition-transform duration-500 group-hover:scale-110"
-             {% if img_scale is defined %}style="transform: scale({{ img_scale }});"{% endif %}>
+        <picture>
+          {% if img ends with '.png' %}<source srcset="/{{ img|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
+          <img src="/{{ img }}" alt="{{ name }}" width="56" height="56" loading="lazy" decoding="async"
+               class="absolute inset-0 h-full w-full {{ img_fit|default('cover') == 'contain' ? 'object-contain' : 'object-cover' }} transition-transform duration-500 group-hover:scale-110"
+               {% if img_scale is defined %}style="transform: scale({{ img_scale }});"{% endif %}>
+        </picture>
       </div>
     {% else %}
       <div class="grid h-14 w-14 shrink-0 place-items-center border border-gold-deep/50 bg-void font-beaufort text-sm text-gold/70">

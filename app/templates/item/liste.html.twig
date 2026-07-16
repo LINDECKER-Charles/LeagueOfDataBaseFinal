@@ -33,7 +33,7 @@
       {% for id, item in items %}
         {% set desc = item.plaintext is not empty ? item.plaintext : (item.description|default('')) %}
         {% embed 'components/entity_card.html.twig' with {
-          href: path('app_item_redirect', { name: id }),
+          href: path('app_item', { name: id, version: meta.version, lang: meta.lang }),
           img: images[item.name]|default(null),
           name: item.name|default(''),
           sub: id,
@@ -78,7 +78,7 @@
                       {% for iid in intoItems %}
                         {% set imgChild = images[iid]|default(null) %}
                         <div class="flex items-center gap-1.5">
-                          {% if imgChild %}<img src="/{{ imgChild }}" alt="{{ iid }}" class="h-6 w-6 border border-gold-deep/40 object-contain">{% endif %}
+                          {% if imgChild %}<img src="/{{ imgChild }}" alt="{{ iid }}" width="24" height="24" loading="lazy" decoding="async" class="h-6 w-6 border border-gold-deep/40 object-contain">{% endif %}
                           <span class="font-mono text-xs text-text-muted">{{ iid }}</span>
                         </div>
                       {% endfor %}

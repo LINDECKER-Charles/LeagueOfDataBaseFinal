@@ -110,18 +110,22 @@ onBeforeUnmount(() => {
     if (showTimer) clearTimeout(showTimer)
     if (hideTimer) clearTimeout(hideTimer)
 })
+
+// Test seam: expose the state machine so specs assert on it directly rather
+// than on class-driven CSS visibility.
+defineExpose({ visible, finishing, active })
 </script>
 
 <template>
-    <Transition name="hx-loader">
-        <div
-            v-show="visible"
-            class="hx-loader"
-            role="status"
-            aria-live="polite"
-            :aria-busy="!finishing"
-        >
-            <div class="hx-loader__panel hextech-frame">
+    <div
+        class="hx-loader"
+        :class="{ 'is-open': visible }"
+        role="status"
+        aria-live="polite"
+        :aria-busy="visible && !finishing"
+        :aria-hidden="!visible"
+    >
+        <div class="hx-loader__panel hextech-frame">
                 <!-- Signature: charging Hextech core -->
                 <div class="hx-core" aria-hidden="true">
                     <span class="hx-core__glow"></span>
@@ -190,8 +194,7 @@ onBeforeUnmount(() => {
 
                 <div class="hx-bar" aria-hidden="true"><span class="hx-bar__seg"></span></div>
             </div>
-        </div>
-    </Transition>
+    </div>
 </template>
 
 <style scoped>
@@ -205,6 +208,17 @@ onBeforeUnmount(() => {
     background: radial-gradient(130% 120% at 50% 28%, rgba(10, 20, 40, 0.72), rgba(1, 10, 19, 0.94));
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
+    /* Visibility is a deterministic class toggle (no <Transition> leave to await). */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s var(--ease-hextech), visibility 0s linear 0.3s;
+}
+.hx-loader.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.35s var(--ease-hextech), visibility 0s linear 0s;
 }
 
 .hx-loader__panel {
@@ -212,6 +226,11 @@ onBeforeUnmount(() => {
     max-width: 26rem;
     padding: 2.25rem 2rem 1.9rem;
     text-align: center;
+    transform: translateY(10px) scale(0.985);
+    transition: transform 0.35s var(--ease-hextech);
+}
+.hx-loader.is-open .hx-loader__panel {
+    transform: none;
 }
 
 /* ---- Signature core ---- */
@@ -397,14 +416,6 @@ onBeforeUnmount(() => {
     100% { left: 100%; }
 }
 
-/* ---- Enter / leave ---- */
-.hx-loader-enter-active,
-.hx-loader-leave-active { transition: opacity 0.3s var(--ease-hextech); }
-.hx-loader-enter-from,
-.hx-loader-leave-to { opacity: 0; }
-.hx-loader-enter-active .hx-loader__panel { transition: transform 0.35s var(--ease-hextech), opacity 0.35s var(--ease-hextech); }
-.hx-loader-enter-from .hx-loader__panel { transform: translateY(10px) scale(0.98); opacity: 0; }
-
 @media (prefers-reduced-motion: reduce) {
     .hx-core__sweep,
     .hx-core__inner,
@@ -413,9 +424,9 @@ onBeforeUnmount(() => {
     .hx-core__glow,
     .hx-row__icon,
     .hx-bar__seg { animation: none !important; }
-    .hx-loader-enter-active,
-    .hx-loader-leave-active,
-    .hx-loader-enter-active .hx-loader__panel { transition: opacity 0.2s linear; }
+    .hx-loader,
+    .hx-loader.is-open { transition: opacity 0.15s linear, visibility 0s; }
+    .hx-loader__panel { transform: none !important; transition: none; }
     .hx-bar__seg { left: 0; width: 100%; opacity: 0.6; }
 }
 </style>

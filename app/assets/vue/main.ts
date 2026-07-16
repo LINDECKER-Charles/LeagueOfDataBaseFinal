@@ -1,28 +1,42 @@
 import '@hotwired/turbo'
 import '../styles/app.css'
-import 'primeicons/primeicons.css'
 
-import { createApp, type Component } from 'vue'
-import PrimeVue from 'primevue/config'
-import Aura from '@primevue/themes/aura'
+import { createApp, type App, type Component } from 'vue'
 
 /**
  * Island registry: Twig renders a shell `<div data-vue="name" data-props="{...}">`,
  * and the matching component is lazily mounted into it. Keeps Symfony routing/SEO/i18n
  * while moving interactive pieces to Vue 3 + PrimeVue.
+ *
+ * PrimeVue (config + Aura theme, ~heavy) is only pulled in by islands that declare
+ * `setup: usePrimeVue`, so pages without a PrimeVue widget never download it — it is
+ * code-split out of the main entry chunk instead of loading on every page.
  */
-const registry: Record<string, () => Promise<{ default: Component }>> = {
-    'search-autocomplete': () => import('./components/SearchAutocomplete.vue'),
-    'toaster': () => import('./components/Toaster.vue'),
-    'number-nav': () => import('./components/NumberNav.vue'),
-    'resource-loader': () => import('./components/ResourceLoader.vue'),
+interface Island {
+    load: () => Promise<{ default: Component }>
+    setup?: (app: App) => Promise<void>
+}
+
+async function usePrimeVue(app: App): Promise<void> {
+    const [{ default: PrimeVue }, { default: Aura }] = await Promise.all([
+        import('primevue/config'),
+        import('@primevue/themes/aura'),
+    ])
+    app.use(PrimeVue, { theme: { preset: Aura, options: { darkModeSelector: 'system' } } })
+}
+
+const registry: Record<string, Island> = {
+    'search-autocomplete': { load: () => import('./components/SearchAutocomplete.vue'), setup: usePrimeVue },
+    'toaster': { load: () => import('./components/Toaster.vue') },
+    'number-nav': { load: () => import('./components/NumberNav.vue') },
+    'resource-loader': { load: () => import('./components/ResourceLoader.vue') },
 }
 
 function mountIslands(root: ParentNode = document): void {
     root.querySelectorAll<HTMLElement>('[data-vue]:not([data-vue-mounted])').forEach(async (el) => {
         const name = el.dataset.vue
-        const loader = name ? registry[name] : undefined
-        if (!loader) {
+        const island = name ? registry[name] : undefined
+        if (!island) {
             return
         }
         el.dataset.vueMounted = 'true'
@@ -34,9 +48,11 @@ function mountIslands(root: ParentNode = document): void {
             props = {}
         }
 
-        const { default: component } = await loader()
+        const { default: component } = await island.load()
         const app = createApp(component, props)
-        app.use(PrimeVue, { theme: { preset: Aura, options: { darkModeSelector: 'system' } } })
+        if (island.setup) {
+            await island.setup(app)
+        }
         app.mount(el)
     })
 }

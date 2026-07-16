@@ -36,7 +36,7 @@
         {% set modes = s.modes is defined and s.modes is iterable ? s.modes : [] %}
         {% set desc = s.description is defined ? s.description : (s.tooltip|default('')) %}
         {% embed 'components/entity_card.html.twig' with {
-          href: path('app_summoner_redirect', { name: s.id|default('') }),
+          href: path('app_summoner', { name: s.id|default(''), version: meta.version, lang: meta.lang }),
           img: images[s.id|default('')]|default(null),
           name: s.name|default(''),
           sub: s.id|default(''),

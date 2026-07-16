@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}">
     <head>
         <meta charset="UTF-8">
         {# Paramètre par défaut à définir #}
@@ -65,7 +65,13 @@
         {# Défini la couleur de fond de certain navigateur moderne #}
         <meta name="theme-color" content="{% block theme_color %}#0a1428{% endblock %}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        
+
+        {# Preload the self-hosted display/body faces (above-the-fold) so the swap
+           happens on first paint instead of after the CSS is parsed. #}
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/Spiegel_TT_Regular.woff2" crossorigin>
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/BeaufortforLOL-Regular.woff2" crossorigin>
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/BeaufortforLOL-Bold.woff2" crossorigin>
+
         {% block stylesheets %}
             {{ vite_entry_link_tags('app') }}
         {% endblock %}

@@ -12,12 +12,14 @@
 
     {# Navigation #}
     <nav class="flex flex-1 justify-center {% if typeV is defined %}lg:justify-end{% else %}lg:justify-center{% endif %}">
+      {% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
+      {% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
       <ul class="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 font-beaufort text-sm uppercase tracking-[0.15em] text-text-muted">
         <li><a href="{{ path('app_home') }}" class="nav-link">{{ 'header.navigation.home'|trans }}</a></li>
-        <li><a href="{{ url('app_champions_redirect') }}" class="nav-link">{{ 'header.navigation.champion'|trans }}</a></li>
-        <li><a href="{{ url('app_items_redirect') }}" class="nav-link">{{ 'header.navigation.item'|trans }}</a></li>
-        <li><a href="{{ url('app_runes_redirect') }}" class="nav-link">{{ 'header.navigation.runes'|trans }}</a></li>
-        <li><a href="{{ url('app_summoners_redirect') }}" class="nav-link">{{ 'header.navigation.summoner'|trans }}</a></li>
+        <li><a href="{{ path('app_champions', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'header.navigation.champion'|trans }}</a></li>
+        <li><a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'header.navigation.item'|trans }}</a></li>
+        <li><a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'header.navigation.runes'|trans }}</a></li>
+        <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'header.navigation.summoner'|trans }}</a></li>
       </ul>
     </nav>
 

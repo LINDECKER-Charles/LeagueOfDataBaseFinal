@@ -22,7 +22,7 @@
       {% include 'components/list_controls.html.twig' with {
         meta: meta,
         per_page: false,
-        route: 'app_runes_redirect',
+        route: 'app_runes',
         version: client.session.version ?? (client.versions|first),
         lang: client.session.locale ?? client.currentLocale ?? 'en_US'
       } %}
@@ -31,7 +31,7 @@
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for runeTree in runesReforgeds %}
         {% embed 'components/entity_card.html.twig' with {
-          href: path('app_rune_redirect', { name: runeTree.key }),
+          href: path('app_rune', { name: runeTree.key, version: meta.version, lang: meta.lang }),
           img: images[runeTree.key].icon ?? null,
           name: runeTree.name,
           sub: runeTree.key,
@@ -59,7 +59,7 @@
       {% endfor %}
     </div>
 
-    {% include 'partials/pagination.html.twig' with { route: 'app_runes_redirect' } %}
+    {% include 'partials/pagination.html.twig' with { route: 'app_runes' } %}
   </div>
 </main>
 {% endblock %}

@@ -1,8 +1,10 @@
 {# List action bar — results-per-page (SSR links + NumberNav island), live search
-   (SearchAutocomplete island), and the change-version shortcut. Replaces the old
-   actionBarre + numberResult* + searchBarre + changelorv partials.
+   (SearchAutocomplete island), and the change-version shortcut.
+   Links carry version+lang (from meta) so every navigation is a single request
+   and the resulting URL is cacheable.
    Params: meta, search_base, detail_base, search_placeholder, version, lang, per_page, route #}
-{% set route = route|default('app_' ~ meta.type ~ 's_redirect') %}
+{% set route = route|default('app_' ~ meta.type ~ 's') %}
+{% set nav = { version: meta.version, lang: meta.lang } %}
 <div class="flex w-full flex-col items-stretch gap-3 lg:w-auto lg:flex-row lg:items-center">
   {# Results per page #}
   {% if per_page|default(true) %}
@@ -10,16 +12,16 @@
     <span class="hidden font-mono text-[11px] uppercase tracking-wider text-text-muted xl:inline">{{ 'item.list.results_per_page'|trans }}</span>
     <div class="flex items-center gap-1">
       {% for option in [4, 8, 16] %}
-        <a href="{{ path(route, { numpage: meta.currentPage, itemperpage: option }) }}"
+        <a href="{{ path(route, nav|merge({ numpage: meta.currentPage, itemperpage: option })) }}"
            class="inline-flex h-9 min-w-9 items-center justify-center px-2.5 font-mono text-sm transition-colors
                   {{ option == meta.itemPerPage ? 'border border-gold/70 bg-gold/15 text-gold-bright' : 'border border-gold-deep/40 bg-void/60 text-text-muted hover:border-hex/60 hover:text-hex' }}">{{ option }}</a>
       {% endfor %}
-      <a href="{{ path(route, { numpage: meta.currentPage, itemperpage: meta.totalItem }) }}"
+      <a href="{{ path(route, nav|merge({ numpage: meta.currentPage, itemperpage: meta.totalItem })) }}"
          class="inline-flex h-9 items-center justify-center px-2.5 font-beaufort text-xs uppercase tracking-wider transition-colors
                 {{ meta.totalItem == meta.itemPerPage ? 'border border-gold/70 bg-gold/15 text-gold-bright' : 'border border-gold-deep/40 bg-void/60 text-text-muted hover:border-hex/60 hover:text-hex' }}">{{ 'item.list.max'|trans }}</a>
     </div>
     <div data-vue="number-nav" data-props="{{ {
-          pathTemplate: path(route, { numpage: meta.currentPage, itemperpage: '__P__' }),
+          pathTemplate: path(route, nav|merge({ numpage: meta.currentPage, itemperpage: '__P__' })),
           min: 1, max: meta.totalItem, placeholder: '#', label: 'item.list.ok'|trans
         }|json_encode|e('html_attr') }}"></div>
   </div>
@@ -31,8 +33,8 @@
           searchBase: search_base,
           detailBase: detail_base,
           placeholder: search_placeholder|default('Rechercher…'),
-          version: version,
-          lang: lang
+          version: meta.version,
+          lang: meta.lang
         }|json_encode|e('html_attr') }}"></div>
   {% endif %}
 

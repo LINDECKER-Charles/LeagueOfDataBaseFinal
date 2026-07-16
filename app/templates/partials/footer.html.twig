@@ -15,12 +15,14 @@
     {# Navigation #}
     <div>
       <h3 class="eyebrow mb-3">{{ 'footer.navigation.title'|trans }}</h3>
+      {% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
+      {% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
       <ul class="flex flex-col gap-1.5 text-sm">
         <li><a href="{{ path('app_home') }}" class="nav-link">{{ 'footer.navigation.home'|trans }}</a></li>
         <li><a href="{{ url('app_working') }}" class="nav-link">{{ 'footer.navigation.champion'|trans }}</a></li>
-        <li><a href="{{ url('app_items_redirect') }}" class="nav-link">{{ 'footer.navigation.item'|trans }}</a></li>
+        <li><a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.item'|trans }}</a></li>
         <li><a href="{{ url('app_working') }}" class="nav-link">{{ 'footer.navigation.runes'|trans }}</a></li>
-        <li><a href="{{ url('app_summoners_redirect') }}" class="nav-link">{{ 'footer.navigation.summoner'|trans }}</a></li>
+        <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.summoner'|trans }}</a></li>
       </ul>
     </div>
 

@@ -1,6 +1,6 @@
 {% macro plink(page, meta, route) %}
   {% set active = page == meta.currentPage %}
-  <a href="{{ path(route, { numpage: page, itemperpage: meta.itemPerPage }) }}"
+  <a href="{{ path(route, { version: meta.version, lang: meta.lang, numpage: page, itemperpage: meta.itemPerPage }) }}"
      class="inline-flex h-9 min-w-9 items-center justify-center px-3 font-mono text-sm transition-colors
             {{ active
                 ? 'border border-gold/70 bg-gold/15 text-gold-bright'
@@ -10,7 +10,7 @@
 {% endmacro %}
 
 {% import _self as pg %}
-{% set route = route|default('app_' ~ meta.type ~ 's_redirect') %}
+{% set route = route|default('app_' ~ meta.type ~ 's') %}
 
 {% if meta.nombrePage > 1 %}
 <nav class="mt-12 flex flex-wrap items-center justify-center gap-2">
@@ -37,7 +37,7 @@
 
   {# Jump-to-page island (replaces the legacy inline oninput hack) #}
   <div class="ml-2" data-vue="number-nav" data-props="{{ {
-        pathTemplate: path(route, { numpage: '__P__', itemperpage: meta.itemPerPage }),
+        pathTemplate: path(route, { version: meta.version, lang: meta.lang, numpage: '__P__', itemperpage: meta.itemPerPage }),
         min: 1,
         max: meta.nombrePage,
         value: meta.currentPage,

@@ -6,17 +6,17 @@
 --------------------------------------------------------------------------- */
 @font-face {
   font-family: 'Beaufort';
-  src: url('../fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf') format('truetype');
+  src: url('/fonts/BeaufortforLOL-Regular.woff2') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Beaufort';
-  src: url('../fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf') format('truetype');
+  src: url('/fonts/BeaufortforLOL-Bold.woff2') format('woff2');
   font-weight: 700; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Spiegel';
-  src: url('../fonts/Spiegel-TTF/Spiegel_TT_Regular.ttf') format('truetype');
+  src: url('/fonts/Spiegel_TT_Regular.woff2') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
 }
 
