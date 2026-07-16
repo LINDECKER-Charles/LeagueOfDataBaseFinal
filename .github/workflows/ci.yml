@@ -1,109 +1,206 @@
-name: CI Symfony
+name: CI/CD
 
 on:
   push:
-    branches: [ dev ]
+    branches: [dev]
 
 permissions:
-  contents: write
+  contents: write   # auto-merge dev -> main
+  packages: write   # push images to GHCR
 
 jobs:
-  test:
+  test-php:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: app
-
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
 
       - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
+          extensions: intl, ctype, iconv
           coverage: none
-          extensions: sqlite3, pdo_sqlite   # 👈 nécessaire pour SQLite
 
-      - name: 🧩 Prepare .env files for test
+      - name: 🧩 Prepare test .env
         run: |
-          mkdir -p var
           {
             echo "APP_ENV=test"
-            echo "APP_DEBUG=1"
-            echo "APP_SECRET=dev-secret"
-            echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db"
+            echo "APP_SECRET=ci-secret"
+            echo "GO_FETCHER_URL=http://127.0.0.1:8085"
+            echo "MINIO_ENDPOINT=http://127.0.0.1:9000"
+            echo "MINIO_REGION=us-east-1"
+            echo "MINIO_BUCKET=ddragon"
+            echo "MINIO_ACCESS_KEY=ci"
+            echo "MINIO_SECRET_KEY=ci-secret"
           } > .env
-          cp .env .env.test
 
       - name: 💾 Cache Composer
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.composer/cache
           key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-
 
-      - name: 📦 Install Composer dependencies
+      - name: 📦 Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: 🔍 Lint YAML, Twig and Container
+      - name: 🔍 Lint YAML, Twig, Container
         run: |
           php bin/console lint:yaml config
           php bin/console lint:twig templates
           php bin/console lint:container
 
-      - name: ✅ Run Tests
+      - name: ✅ PHPUnit
         run: php bin/phpunit
 
-      - name: ⬆️ Merge the tested commit into main (if tests passed)
-        if: success() && github.ref == 'refs/heads/dev'
-        working-directory: .
+  test-go:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: go-workers
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: 🔍 Vet
+        run: go vet ./...
+
+      - name: ✅ Test
+        run: go test ./... -count=1
+
+  test-js:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ⬢ Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: ✅ Vitest (Vue islands)
+        run: npm test
+
+  merge:
+    needs: [test-php, test-go, test-js]
+    if: success() && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⬆️ Merge dev -> main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
           git fetch --all --prune
-
-          # Se placer sur main à jour
           git checkout main
           git reset --hard origin/main
-
-          # Merger le COMMIT EXACT testé par cette exécution
           git merge --no-ff --no-edit "${GITHUB_SHA}"
+          git push origin HEAD:main
 
-          # Pousser vers main
-          git push origin HEAD:main 
+  build-and-push:
+    needs: merge
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: 🔡 Compute image prefix (lowercase owner)
+        run: echo "IMG=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb" >> "$GITHUB_ENV"
+
+      - name: 🐳 Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏗️ Build & push app (php-fpm)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/php/Dockerfile
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ${{ env.IMG }}/app:latest
+            ${{ env.IMG }}/app:${{ github.sha }}
+
+      - name: 🏗️ Build & push nginx
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/nginx/Dockerfile
+          push: true
+          build-args: |
+            APP_IMAGE=${{ env.IMG }}/app:${{ github.sha }}
+          tags: |
+            ${{ env.IMG }}/nginx:latest
+            ${{ env.IMG }}/nginx:${{ github.sha }}
+
+      - name: 🏗️ Build & push go-fetcher
+        uses: docker/build-push-action@v6
+        with:
+          context: go-workers
+          file: go-workers/Dockerfile
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ${{ env.IMG }}/go-fetcher:latest
+            ${{ env.IMG }}/go-fetcher:${{ github.sha }}
 
   deploy:
-    needs: test
-    if: success()
+    needs: build-and-push
     runs-on: ubuntu-latest
-
     steps:
       - name: 🛡️ Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.PROD_SSH_KEY }}
 
-      - name: 🔐 Add known_hosts
-        run: |
-          ssh-keyscan -H league-of-data-base.fr >> ~/.ssh/known_hosts
+      - name: 🔐 Known hosts
+        run: ssh-keyscan -H ${{ secrets.PROD_HOST }} >> ~/.ssh/known_hosts
 
-      - name: 🚀 Deploy to production server
+      - name: 🚀 Deploy (compose pull + up)
         run: |
-          ssh root@league-of-data-base.fr <<'EOSSH'
+          ssh ${{ secrets.PROD_SSH_USER || 'root' }}@${{ secrets.PROD_HOST }} <<'EOSSH'
             set -e
-            cd ${{ secrets.PATH_PROD }}
-            git pull origin main && \
-            export APP_ENV=prod APP_DEBUG=0 COMPOSER_ALLOW_SUPERUSER=1
-            composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
-            npm ci
-            npm run build
+            cd ${{ secrets.PROD_PATH }}
+            git pull origin main
+            docker compose pull
+            docker compose up -d --remove-orphans
+            # Pré-chauffe JSON + images de la version courante dans MinIO (best-effort :
+            # idempotent, ne doit pas faire échouer le déploiement).
+            docker compose exec -T php php bin/console app:ddragon:warmup --limit=1 || true
+            docker image prune -f
           EOSSH
-
-
-

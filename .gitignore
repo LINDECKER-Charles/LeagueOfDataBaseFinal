@@ -1,2 +1,6 @@
 front-test/node_modules
 commande.md
+
+# Local secrets & compose env (see SECRET_CONFIG.example.md)
+.env
+SECRET_CONFIG.md
