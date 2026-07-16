@@ -200,8 +200,11 @@ jobs:
             git pull origin main
             docker compose pull
             docker compose up -d --remove-orphans
-            # Pré-chauffe JSON + images de la version courante dans MinIO (best-effort :
-            # idempotent, ne doit pas faire échouer le déploiement).
-            docker compose exec -T php php bin/console app:ddragon:warmup --limit=1 || true
+            # Pré-chauffe (détaché → hors chemin critique du déploiement) : JSON + images
+            # des 3 dernières versions dans MinIO, puis backfill des variantes WebP des
+            # blobs antérieurs à la fonctionnalité (les nouveaux blobs l'obtiennent via
+            # BlobStore::store). Idempotent + best-effort : n'allonge ni ne casse le deploy.
+            docker compose exec -d php php bin/console app:ddragon:warmup --limit=3
+            docker compose exec -d php php bin/console app:ddragon:webp
             docker image prune -f
           EOSSH
