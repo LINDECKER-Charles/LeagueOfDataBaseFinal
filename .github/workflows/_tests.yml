@@ -23,38 +23,38 @@ jobs:
       run:
         working-directory: app
     steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: 🐘 Setup PHP
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           extensions: intl, ctype, iconv
           coverage: none
 
-      - name: 🧩 Prepare test env (from ENV_CI secret)
+      - name: Prepare test env (from ENV_CI secret)
         env:
           ENV_CI: ${{ secrets.ENV_CI }}
         run: printf '%s\n' "$ENV_CI" > .env.test.local
 
-      - name: 💾 Cache Composer
+      - name: Cache Composer
         uses: actions/cache@v4
         with:
           path: ~/.composer/cache
           key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: 🔍 Lint YAML, Twig, Container
+      - name: Lint YAML, Twig, Container
         run: |
           php bin/console lint:yaml config
           php bin/console lint:twig templates
           php bin/console lint:container
 
-      - name: ✅ PHPUnit
+      - name: PHPUnit
         run: php bin/phpunit
 
   go:
@@ -63,18 +63,18 @@ jobs:
       run:
         working-directory: go-workers
     steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
+      - name: Setup Go
+        uses: actions/setup-go@v6
         with:
           go-version: '1.25'
 
-      - name: 🔍 Vet
+      - name: Vet
         run: go vet ./...
 
-      - name: ✅ Test
+      - name: Test
         run: go test ./... -count=1
 
   js:
@@ -83,18 +83,18 @@ jobs:
       run:
         working-directory: app
     steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: ⬢ Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: app/package-lock.json
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: ✅ Vitest (Vue islands)
+      - name: Vitest (Vue islands)
         run: npm test
