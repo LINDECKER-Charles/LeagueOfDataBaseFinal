@@ -1,6 +1,14 @@
-front-test/node_modules
 commande.md
 
-# Local secrets & compose env (see SECRET_CONFIG.example.md)
-.env
-SECRET_CONFIG.md
+# Env & secrets (see docs/github-actions-secrets.md).
+# Real env files are git-ignored; committed *.example templates and the non-secret
+# Symfony defaults (app/.env, app/.env.test) are not.
+
+# Repo-root compose env — single source of truth per environment (anchored: only repo root)
+/.env
+/.env.test
+/.env.prod
+
+# Symfony host-level secret overrides (real secrets live here locally / written by CI)
+/app/.env.local
+/app/.env.*.local
