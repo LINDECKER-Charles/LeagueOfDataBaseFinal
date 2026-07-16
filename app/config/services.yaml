@@ -21,22 +21,25 @@ services:
             $defaultLocale: 'en_US'
             $appSecret: '%kernel.secret%'
 
-    App\Service\API\ItemManager:
-        parent: App\Service\API\AbstractManager
-    App\Service\API\SummonerManager:
-        parent: App\Service\API\AbstractManager
-    App\Service\API\ChampionManager:
-        parent: App\Service\API\AbstractManager
-    App\Service\API\RuneManager:
-        parent: App\Service\API\AbstractManager
-    App\Service\API\AbstractManager:
-        abstract: true                # <— déclaré abstrait (non instanciable)
-        bind:
-            $baseDir: '%upload_manager.base_dir%'
+    # S3 client for MinIO (path-style endpoint). Consumed by the flysystem "ddragon.storage".
+    ddragon.s3_client:
+        class: AsyncAws\S3\S3Client
+        arguments:
+            $configuration:
+                endpoint: '%env(MINIO_ENDPOINT)%'
+                accessKeyId: '%env(MINIO_ACCESS_KEY)%'
+                accessKeySecret: '%env(MINIO_SECRET_KEY)%'
+                region: '%env(MINIO_REGION)%'
+                pathStyleEndpoint: true
 
     App\Service\Tools\Utils:
         arguments:
             $baseDir: '%upload_manager.base_dir%'
+
+    # All Data Dragon egress flows through the Go fetch gateway (scoped HTTP client).
+    App\Service\Tools\GoFetcherClient:
+        arguments:
+            $http: '@go_fetcher.client'
     App\EventListener\LocaleDomainListener:
         tags:
             - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }

@@ -2,21 +2,17 @@
 
 namespace App\Service\Client;
 
-use App\Service\Tools\APICaller;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
+use App\Service\Tools\GoFetcherClient;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 class VersionManager
 {
-    private const RIOT_VERSIONS_URL = 'https://ddragon.leagueoflegends.com/api/versions.json';
-
     public function __construct(
-        private readonly HttpClientInterface $httpClient,
+        private readonly GoFetcherClient $goFetcher,
         private readonly CacheInterface $cache,
         private readonly LoggerInterface $logger,
-        private readonly APICaller $aPICaller,
     ) {}
 
     /* Partie API */
@@ -32,9 +28,8 @@ class VersionManager
         return $this->cache->get('riot_versions', function (ItemInterface $item) {
             $item->expiresAfter(600); //Expire dans 10min
             try {
-                $response = $this->httpClient->request('GET', self::RIOT_VERSIONS_URL);
                 $versions = array_values(array_filter(
-                    $response->toArray(),
+                    $this->goFetcher->versions(),
                     fn($v) => !(is_string($v) && preg_match('/^lol/', $v))
                 ));
                 return $versions;
@@ -61,11 +56,7 @@ class VersionManager
             // Expiration dans 1 mois
             $item->expiresAfter(2592000);
             try {
-                $response = $this->httpClient->request(
-                    'GET',
-                    'https://ddragon.leagueoflegends.com/cdn/languages.json'
-                );
-                return $response->toArray();
+                return $this->goFetcher->languages();
             } catch (\Throwable $e) {
                 $this->logger->error('Erreur lors de la récupération des langues Riot', [
                     'message' => $e->getMessage(),

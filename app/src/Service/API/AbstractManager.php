@@ -1,163 +1,205 @@
 <?php
-// src/Service/AbstractManager.php
+declare(strict_types=1);
+
 namespace App\Service\API;
 
+use App\Service\Storage\BlobStore;
+use App\Service\Tools\GoFetcherClient;
+use League\Flysystem\FilesystemOperator;
+use League\Flysystem\UnableToReadFile;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
-use App\Service\Client\VersionManager;
-use App\Service\Tools\APICaller;
-use App\Service\Tools\UploadManager;
-use Symfony\Component\Filesystem\Path;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
-
-abstract class AbstractManager
+/**
+ * Base for the DDragon resource managers (champion, item, rune, summoner).
+ *
+ * Storage model (MinIO / object storage):
+ *  - JSON data : data/{version}/{lang}/{type}.json          (logical cache)
+ *  - Images    : blobs/{sha256}.{ext}                        (content-addressed, deduped)
+ *  - Manifest  : manifest/{version}/{type}.json  name => cdn (image lookup without re-download)
+ *
+ * All Data Dragon egress goes through the Go fetch gateway ({@see GoFetcherClient}),
+ * which fetches image batches in parallel.
+ */
+abstract class AbstractManager implements WarmableManagerInterface
 {
+    /** @var array<string,array<mixed>> in-request decoded-data memo, keyed by storage key */
+    private array $dataCache = [];
+
+    /** @var array<string,array<string,string>> in-request manifest memo, keyed by storage key */
+    private array $manifestCache = [];
+
     public function __construct(
-        protected readonly string $baseDir,
-        protected readonly HttpClientInterface $http,
-        protected readonly UploadManager $uploader,
-        protected readonly APICaller $aPICaller,
-        protected readonly Filesystem $fs = new Filesystem(),
-        protected readonly VersionManager $versionManager,
+        protected readonly GoFetcherClient $goFetcher,
+        protected readonly FilesystemOperator $ddragonStorage,
+        protected readonly BlobStore $blobStore,
+        #[Autowire(service: 'ddragon.cache')]
+        private readonly CacheInterface $ddragonCache,
     ) {}
 
-    /* Utils */
-    /**
-     * Construit le dossier cible (relatif + absolu) pour un type de ressource.
-     * Règles :
-     *  - JSON (img=false) : upload/{version}/{lang}/{type}
-     *  - IMG  (img=true)  : upload/{version}/{type}_img   (lang ignoré)
-     *
-     * Aucun accès disque ici : fonction pure.
-     *
-     * @param string $version Ex.: "15.1.1"
-     * @param string $lang    Ex.: "fr_FR" (ignoré si $img === true)
-     * @param string $type    Ex.: "summoner", "champion", "rune", ...
-     * @param bool   $img     true => chemin dédié aux images
-     *
-     * @return array{relDir:string, absDir:string} Dossiers relatif et absolu.
-     */
-    protected final function buildDir(string $version, string $lang, string $type, bool $img = false): array{
-        $relDir = $img
-            ? "upload/{$version}/{$type}_img"
-            : "upload/{$version}/{$lang}/{$type}";
-        $absDir  = Path::join($this->baseDir, $relDir); //Chemin absolut
-        $this->fs->mkdir($absDir);
-        return [
-            'relDir' => $relDir,
-            'absDir' => $absDir,
-        ];
-    }
+    /** Build the DDragon image URL for a single file name (per-resource). */
+    abstract protected function imageUrl(string $version, string $name): string;
 
     /**
-     * Construit les chemins (relatif/absolu) d’un fichier à partir d’un dossier construit par buildDir().
+     * Resolve every image of the resource for a version/language.
      *
-     * @param array{relDir:string, absDir:string} $dir Dossier retourné par buildDir().
-     * @param string $name                           Nom de fichier (ex.: "summoner.json", "Flash.png").
-     *
-     * @return array{relPath:string, absPath:string, nameFile:string} Chemins + nom.
+     * @param array<mixed> $data
+     * @return array<mixed>
      */
-    protected final function buildPath(array $dir, string $name): array{
-        $relPath = Path::join($dir['relDir'], $name);
-        $absPath = Path::join($dir['absDir'], $name);
-        $this->fs->mkdir($dir['absDir']);
-        return [
-            'relPath' => $relPath,
-            'absPath' => $absPath,
-            'fileName' => $name,
-        ];
-    }
+    abstract public function getImages(string $version, string $lang, bool $force = false, array $data = []): array;
 
     /**
-     * Helper combinant buildDir() + buildPath() en un seul appel.
+     * Fetch the resource's JSON for a version/language, cached in object storage.
      *
-     * @param string $version Ex.: "15.1.1"
-     * @param string $lang    Ex.: "fr_FR"
-     * @param string $type    Ex.: "summoner"
-     * @param string $name    Ex.: "summoner.json" ou "Flash.png"
-     * @param bool   $img     true => chemin image (lang ignoré)
-     *
-     * @return array{
-     *   relDir:string,
-     *   absDir:string,
-     *   relPath:string,
-     *   absPath:string,
-     *   fileName:string
-     * }
+     * @return array<mixed>
      */
-    protected final function buildDirAndPath(string $version, string $lang, string $type, ?string $name = null, bool $img = false): array{
-        if(!$name){
-            $name = $type . '.json';
-        }
-        $dir = $this->buildDir($version, $lang, $type, $img);
-        $path = $this->buildPath($dir, $name);
-        return array_merge($dir, $path);
-    }
-
-    /**
-     * Retourne le contenu du fichier s'il existe, sinon null.
-     *
-     * @param string $absPath Chemin absolu du fichier.
-     * @return string|null
-     *
-     * @throws \RuntimeException Si le fichier existe mais n'est pas lisible.
-     */
-    protected final function fileIsExisting(string $absPath): ?string
+    public function getData(string $version, string $lang): array
     {
-        if ($this->fs->exists($absPath)) {
-            $cached = @file_get_contents($absPath);
-            if ($cached === false) {
-                throw new \RuntimeException("Impossible de lire le fichier: $absPath");
-            }
-            return $cached;
-        }
-        return null;
+        $key = sprintf('data/%s/%s/%s.json', $version, $lang, static::TYPE);
+
+        // The dataset is immutable per (version, lang): serve it from the
+        // in-request memo, then the cross-request cache, before ever touching
+        // object storage or the gateway. Avoids a MinIO round-trip + a full
+        // json_decode of the whole resource on every page render.
+        return $this->dataCache[$key] ??= $this->ddragonCache->get(
+            $this->cacheKey($key),
+            fn (ItemInterface $item): array => $this->loadOrFetchData($key, $version, $lang),
+        );
     }
 
     /**
-     * Vérifie si un binaire existe déjà dans les versions locales.
+     * Read the dataset from object storage, falling back to a one-time fetch
+     * through the Go gateway (then persisted) when it is not yet stored.
      *
-     * Compare la taille et le contenu du binaire donné avec les fichiers enregistrés.
-     *
-     * @param string $bin   Contenu binaire à vérifier.
-     * @param string $name  Nom du fichier cible (ex. "Flash.png").
-     * @param string $type  Type de ressource (ex. "summoner", "champion").
-     *
-     * @return string|null  Chemin relatif du fichier correspondant si trouvé, sinon null.
+     * @return array<mixed>
      */
-    protected final function binaryExisting(string $bin, string $name, string $type): ?string{
-        if(!$bin || $type === 'runesReforged') {
-            return null;
+    private function loadOrFetchData(string $key, string $version, string $lang): array
+    {
+        try {
+            return json_decode($this->ddragonStorage->read($key), true) ?? [];
+        } catch (UnableToReadFile) {
+            // Not in object storage yet → fetch once and persist.
         }
-        $versions = $this->versionManager->getVersions();
-        foreach($versions as $version){
-            $path = "upload/{$version}/{$type}_img/$name";
-            $file = $this->fileIsExisting($path);
-            if(!$file){
-                continue;
-            }
-            if(strlen($bin) !== strlen($file)){
-                continue;
-            }
-            if($bin === $file){
-                return $path;
-            }
-        }
-        return null;
+
+        $data = json_decode($this->goFetcher->fetch($this->jsonUrl($version, $lang)), true) ?? [];
+        $this->ddragonStorage->write($key, json_encode($data));
+
+        return $data;
+    }
+
+    /** DDragon JSON endpoint for this manager's resource type. */
+    protected function jsonUrl(string $version, string $lang): string
+    {
+        return sprintf(
+            'https://ddragon.leagueoflegends.com/cdn/%s/data/%s/%s.json',
+            $version,
+            $lang,
+            static::TYPE
+        );
     }
 
     /**
-     * Extrait une portion d’un tableau JSON.
+     * Resolve image file names to public CDN paths for a version.
      *
-     * Utilise array_slice pour renvoyer une sous-partie du tableau d’entrée.
+     * Cache hits come from the per-(version,type) manifest; misses are fetched in a
+     * single parallel batch through the gateway, stored content-addressed (dedup),
+     * and recorded in the manifest.
      *
-     * @param int   $nb    Nombre d’éléments à extraire.
-     * @param int   $start Index de départ (0-based).
-     * @param array $json  Tableau source (JSON décodé).
-     *
-     * @return array       Portion du tableau correspondant.
+     * @param string[] $names
+     * @return array<string,string> name => cdn path
      */
-    protected final function splitJson(int $nb, int $start, array $json): array{
+    protected function resolveImages(string $version, array $names, bool $force = false): array
+    {
+        $manifest = $this->loadManifest($version);
+        $result = [];
+        $missing = []; // ddragon url => name
+
+        foreach (array_unique($names) as $name) {
+            if (!$force && isset($manifest[$name])) {
+                $result[$name] = $manifest[$name];
+            } else {
+                $missing[$this->imageUrl($version, $name)] = $name;
+            }
+        }
+
+        if ($missing !== []) {
+            $bytesByUrl = $this->goFetcher->fetchMany(array_keys($missing));
+            foreach ($missing as $url => $name) {
+                if (!isset($bytesByUrl[$url])) {
+                    continue;
+                }
+                $cdn = $this->blobStore->store($bytesByUrl[$url], $name);
+                $manifest[$name] = $cdn;
+                $result[$name] = $cdn;
+            }
+            $this->saveManifest($version, $manifest);
+        }
+
+        return $result;
+    }
+
+    /** Resolve a single image (detail pages). */
+    protected function resolveImage(string $version, string $name, bool $force = false): string
+    {
+        $resolved = $this->resolveImages($version, [$name], $force);
+        if (!isset($resolved[$name])) {
+            throw new \RuntimeException(sprintf('Image indisponible: %s (%s)', $name, static::TYPE));
+        }
+
+        return $resolved[$name];
+    }
+
+    /**
+     * @return array<string,string> name => cdn path
+     */
+    private function loadManifest(string $version): array
+    {
+        $key = sprintf('manifest/%s/%s.json', $version, static::TYPE);
+
+        return $this->manifestCache[$key] ??= $this->ddragonCache->get(
+            $this->cacheKey($key),
+            fn (ItemInterface $item): array => $this->readManifest($key),
+        );
+    }
+
+    /**
+     * @return array<string,string> name => cdn path
+     */
+    private function readManifest(string $key): array
+    {
+        try {
+            return json_decode($this->ddragonStorage->read($key), true) ?: [];
+        } catch (UnableToReadFile) {
+            return [];
+        }
+    }
+
+    /**
+     * @param array<string,string> $manifest
+     */
+    private function saveManifest(string $version, array $manifest): void
+    {
+        $key = sprintf('manifest/%s/%s.json', $version, static::TYPE);
+        $this->manifestCache[$key] = $manifest;
+        $this->ddragonStorage->write($key, json_encode($manifest));
+        // Write-through: drop the stale cross-request copy so other workers
+        // repopulate from the freshly written manifest on their next read.
+        $this->ddragonCache->delete($this->cacheKey($key));
+    }
+
+    /** PSR-6 safe cache key derived from a storage path ('/' is reserved). */
+    private function cacheKey(string $storageKey): string
+    {
+        return str_replace('/', '.', $storageKey);
+    }
+
+    /**
+     * @param array<mixed> $json
+     * @return array<mixed>
+     */
+    protected final function splitJson(int $nb, int $start, array $json): array
+    {
         return array_slice($json, $start, $nb, true);
     }
 }

@@ -76,10 +76,10 @@ final class FetchSummonerJsonCommand extends Command
         foreach ($versions as $v) {
             foreach ($languages as $lang) {
                 try {
-                    // getSummoners écrit le JSON si absent (ou renvoie celui en cache local)
-                    $json = $this->summoners->getSummoners($v, $lang);
-                    $len  = strlen($json);
-                    $io->writeln(sprintf('• %s / %s : %d octets', $v, $lang, $len));
+                    // getData writes the JSON to object storage if absent (or returns the cached copy)
+                    $data  = $this->summoners->getData($v, $lang);
+                    $count = count($data['data'] ?? []);
+                    $io->writeln(sprintf('• %s / %s : %d sort(s)', $v, $lang, $count));
                     $ok++;
                 } catch (\Throwable $e) {
                     $io->writeln(sprintf('<error>× %s / %s : %s</error>', $v, $lang, $e->getMessage()));

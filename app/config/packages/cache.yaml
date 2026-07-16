@@ -15,5 +15,13 @@ framework:
         #app: cache.adapter.apcu
 
         # Namespaced pools use the above "app" backend by default
-        #pools:
-            #my.dedicated.cache: null
+        pools:
+            # Read-through cache in front of the MinIO object storage for the
+            # DDragon datasets + image manifests. The data is immutable per
+            # (version, lang), so a long TTL is safe; the manifest pool is
+            # invalidated write-through on ingest. Filesystem here (guaranteed);
+            # switch `adapter` to cache.adapter.apcu (single node) or
+            # cache.adapter.redis (multi-node) for an in-memory backend.
+            ddragon.cache:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 604800 # 7 days

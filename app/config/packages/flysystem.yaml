@@ -1,0 +1,7 @@
+# DDragon object storage (MinIO / S3-compatible). The S3 client is defined in services.yaml.
+flysystem:
+    storages:
+        ddragon.storage:
+            asyncaws:
+                client: 'ddragon.s3_client'
+                bucket: '%env(MINIO_BUCKET)%'

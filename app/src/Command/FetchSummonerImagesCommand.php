@@ -49,7 +49,7 @@ final class FetchSummonerImagesCommand extends Command
         foreach ($allVersions as $v) {
             foreach ($allLangs as $lang) {
                 try {
-                    $result = $this->summoners->fetchSummonerImages($v, $lang, $force);
+                    $result = $this->summoners->getImages($v, $lang, $force);
                     $io->writeln(sprintf('• %s / %s : %d image(s)', $v, $lang, count($result)));
                 } catch (\Throwable $e) {
                     $io->writeln(sprintf('<error>× %s / %s : %s</error>', $v, $lang, $e->getMessage()));

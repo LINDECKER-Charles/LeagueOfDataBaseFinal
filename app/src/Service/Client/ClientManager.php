@@ -16,10 +16,10 @@ final class ClientManager
 
     public function __construct(
         private readonly RequestStack $requestStack,
-        private readonly string $appSecret = '', // injecte %kernel.secret% via services.yaml si tu veux signer
-        private readonly string $defaultLocale = 'en_US', // fallback si pas d'entête
         private readonly VersionManager $versionManager,
         private readonly Utils $utils,
+        private readonly string $appSecret = '', // injecté via services.yaml (%kernel.secret%) pour signer les cookies
+        private readonly string $defaultLocale = 'en_US', // fallback si pas d'en-tête
     ) {}
 
     /**
