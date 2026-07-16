@@ -1,0 +1,430 @@
+# Audit de compatibilité des versions Data Dragon
+
+> **Statut : diagnostic uniquement — aucun correctif appliqué.**
+> Ce document recense les pages qui plantent (ou se dégradent) selon la version
+> d'API Data Dragon sélectionnée, identifie la cause racine de chaque bug et
+> propose un plan de correction. Il ne modifie aucun code.
+
+Date : 2026-07-16 · Branche : `feat/archi-refacto`
+
+---
+
+## 1. Résumé exécutif
+
+Sur les **397 versions sélectionnables** exposées par l'application (toutes les
+versions Data Dragon numériques de `0.151.2` à `16.14.1` ; les entrées
+`lolpatch_*` sont filtrées par `VersionManager::getVersions()`), **quatre**
+familles de défauts ont été confirmées. Trois sont corrélées à la **version**,
+une à la **langue** (axe orthogonal, cf. bug D) :
+
+| # | Bug | Page(s) | Périmètre | Symptôme | Environnement |
+|---|-----|---------|-----------|----------|---------------|
+| **A** | `runesReforged.json` inexistant avant le patch 7.22 | `/home` | **180** versions `≤ 7.21.1` | **HTTP 500** | **tous** (prod incluse) |
+| **A** | idem | `/runes` (liste) | 180 versions `≤ 7.21.1` | 302 → `/setup` (page inutilisable) | tous |
+| **A** | idem | `/rune/{key}` (détail) | 180 versions `≤ 7.21.1` | 302 → `/setup` | tous |
+| **B** | Accès Twig non gardés sur des clés absentes des vieilles données champion | `/champion/{name}` (détail) | **20** versions (major `0.x` + début `3.x`, `≤ 3.12.x`) | **HTTP 500** | **dev / test uniquement** (`strict_variables`) |
+| **C** | `HomeController::home()` sans gestion d'erreur (amplifie A + D) | `/home` | — (cause structurelle) | 500 au lieu d'une dégradation | tous |
+| **D** | Langue valide **globalement** mais absente d'une version | `/home` | jusqu'à **348** versions (`ar_AE`) | **HTTP 500** | **tous** (prod incluse) |
+| **D** | idem | listes + détails (toutes ressources) | idem | 302 → `/setup` | tous |
+
+**Pages non impactées** (confirmé de `0.151.2` à `16.14.1`, en `en_US`) : listes
+`/champions`, `/objects`, `/summoners` ; détails `/object/{id}`,
+`/summoner/{id}`. Toutes rendent `200` sur l'ensemble de la plage de versions.
+
+**Endpoints images** (portrait champion, icône item, sort d'invocateur, passif,
+icône de rune *version-less*, splash art direct) : testés du plus récent au plus
+ancien → **`200` partout, aucun bug corrélé à la version**.
+
+> **Priorité** : le bug **A** est le seul qui casse en **production** (le
+> `fetch` lève une exception quel que soit l'environnement). Le bug **B** ne se
+> manifeste qu'avec `strict_variables` actif (dev + test) ; en prod la page se
+> rend mais avec des artefacts (splashs de skins cassés).
+
+---
+
+## 2. Méthodologie
+
+Le test a combiné deux approches complémentaires :
+
+1. **Sonde exhaustive de forme (rapide, déterministe)** — pour chacune des 397
+   versions, interrogation directe du micro-service Go (`POST :8085/fetch`) du
+   statut HTTP des 4 JSON de ressources (`champion`, `item`, `summoner`,
+   `runesReforged`) en `en_US`. Combinée à la sémantique d'erreur du code (cf.
+   §3), cela donne la matrice complète des crashs de façon déterministe.
+2. **Validation sur l'application réelle (vérité terrain)** — rendu HTTP effectif
+   des pages via `:8080` sur les versions frontières et sur toute la plage
+   ancienne, pour capter les plantages de **rendu Twig** que la sonde JSON ne
+   voit pas (dépendants de la forme des données, pas seulement de la présence du
+   fichier).
+
+Résultats bruts de la sonde :
+
+- `champion.json`, `item.json`, `summoner.json` : **`200` sur les 397 versions**
+  (y compris la plus ancienne `0.151.2`). Ces ressources ne provoquent jamais de
+  404.
+- `runesReforged.json` : **`200` sur 217 versions** (`7.22.1` → `16.14.1`),
+  **`403` sur 180 versions** (`7.21.1` → `0.151.2`). Frontière nette : le fichier
+  apparaît à partir du patch **7.22.1**.
+
+Sondes complémentaires (ajoutées après une première passe `en_US` seule) :
+
+- **Axe langue** : les 28 langues annoncées par `/languages`, croisées avec un
+  échantillon de versions + une passe frontière (9 langues × 397 versions). A
+  révélé le **bug D** (cf. §6).
+- **Endpoints images** : portrait/item/sort/passif/icône-rune/splash, testés sur
+  la version la plus récente et la plus ancienne → tous `200`, **aucun** défaut.
+
+### Reproduction
+
+```bash
+# Frontière runes : 500 sur /home, 302 sur /runes
+curl -s -o /dev/null -w '%{http_code}\n' \
+  'http://localhost:8080/runes?version=7.21.1&lang=en_US'   # 302 -> /setup
+# /home lit la version en SESSION (pas la query) :
+J=/tmp/j; rm -f $J
+curl -s -o /dev/null -c $J -b $J \
+  --data-urlencode version=7.21.1 --data-urlencode langue=en_US \
+  http://localhost:8080/setup-submit
+curl -s -o /dev/null -w '%{http_code}\n' -b $J http://localhost:8080/home  # 500
+
+# Détail champion (dev/test) : 500 sur les vieilles données
+curl -s -o /dev/null -w '%{http_code}\n' \
+  'http://localhost:8080/champion/Annie?version=0.151.2&lang=en_US'  # 500 (partype)
+curl -s -o /dev/null -w '%{http_code}\n' \
+  'http://localhost:8080/champion/Annie?version=3.10.3&lang=en_US'   # 500 (skin.num)
+```
+
+---
+
+## 3. Bug A — `runesReforged.json` absent avant le patch 7.22
+
+### 3.1 Cause racine
+
+Le système de runes « Runes Reforged » (`runesReforged.json`) a été introduit au
+**patch 7.22** (novembre 2017). Pour toute version antérieure, le CDN Data Dragon
+répond **HTTP 403** sur `…/data/{lang}/runesReforged.json`.
+
+La chaîne d'accès aux données ne tolère pas ce non-2xx :
+
+- `GoFetcherClient::fetch()` **lève une `\RuntimeException`** sur tout statut hors
+  2xx (`app/src/Service/Tools/GoFetcherClient.php:128-131`, méthode `decodeItem`).
+- `AbstractManager::getData()` → `loadOrFetchData()` appelle ce `fetch()` et
+  laisse l'exception se propager (`app/src/Service/API/AbstractManager.php:121`).
+- L'exception remonte donc hors de `RuneManager::paginate()` et de
+  `RuneManager::getByName()`.
+
+L'exception étant levée à l'intérieur du callback de cache
+(`ddragonCache->get`), rien n'est mis en cache : **chaque requête reproduit le
+crash** de façon déterministe.
+
+### 3.2 Conséquences par page
+
+| Page | Code | Comportement | Explication |
+|------|------|--------------|-------------|
+| `/home` | **500** | Page d'accueil totalement cassée | `HomeController::home()` appelle `runeManager->paginate()` **sans try/catch** (`app/src/Controller/HomeController.php:184`). L'exception n'est pas rattrapée → 500. |
+| `/runes` (liste) | **302** → `/setup` | Liste inaccessible, redirigée vers la page de config avec un flash d'erreur | `RuneController::runes()` **rattrape** l'exception (`RuneController.php:37`) et redirige. |
+| `/rune/{key}` (détail) | **302** → `/setup` | Détail inaccessible | `RuneController::rune()` rattrape (`RuneController.php:63`). |
+
+> Les autres previews de `/home` (champion, item, summoner) fonctionnent : ces
+> JSON existent sur toutes les versions. C'est **uniquement** l'appel runes qui
+> fait tomber la page.
+
+### 3.3 Périmètre (180 versions, `≤ 7.21.1`)
+
+Plus récente cassée : `7.21.1`. Plus ancienne : `0.151.2`. Toutes les versions
+`< 7.22.1`. Première version saine : `7.22.1`.
+
+### 3.4 Correctifs proposés
+
+Deux niveaux, complémentaires :
+
+**A-1 — Rendre `/home` résiliente (indispensable, corrige le 500).**
+`HomeController::home()` est la seule action qui n'imite pas le patron
+try/catch → dégradation des controllers de liste. Chaque preview doit être
+indépendante : l'échec d'une ressource ne doit pas tuer la page.
+
+```php
+// HomeController::home() — esquisse
+$preview = function (callable $fn): array {
+    try { return $fn(); } catch (\Throwable) { return []; }
+};
+$summoners = $preview(fn () => $this->summonerManager->paginate($v, $l, 4, 1));
+$items     = $preview(fn () => $this->itemManager->paginate($v, $l, 4, 1));
+$champions = $preview(fn () => $this->championManager->paginate($v, $l, 4, 1));
+$runes     = $preview(fn () => $this->runeManager->paginate($v, $l, 4, 1)); // [] avant 7.22
+```
+Le template `home/home.html.twig` devra tolérer une preview vide (à vérifier :
+sections déjà gardées par `is defined`/`is not empty`).
+
+**A-2 — Traiter « ressource absente pour cette version » comme un jeu vide,
+pas comme une erreur (recommandé).** Une version pré-7.22 sans runes n'est pas
+une panne : c'est une absence légitime. On peut distinguer, dans la couche
+données, un **403/404 définitif** (ressource inexistante → renvoyer `[]`) d'une
+**erreur transitoire** (5xx/timeout → continuer à lever). Cela rend la liste
+`/runes` gracieuse (état vide explicite) au lieu de rebondir sur `/setup`.
+
+> ⚠️ *Trade-off* : ne pas mettre en cache un `[]` issu d'une panne transitoire
+> (sinon une version valide resterait « vide » 1h). Le distinguo doit porter sur
+> le **statut HTTP** (403/404 = absent, cacheable ; le reste = throw).
+> `GoFetcherClient` expose déjà le statut : il faut un chemin qui le remonte sans
+> lever, p.ex. une variante `tryFetch(): ?string` ou un code d'erreur typé.
+
+**A-3 — UX (optionnel).** Signaler côté interface que les runes n'existent pas
+avant 7.22 (état vide expliqué), voire masquer l'entrée « Runes » / la preview
+runes quand la version sélectionnée est antérieure. Évite de proposer une
+navigation qui mène à une impasse.
+
+---
+
+## 4. Bug B — Détail champion : accès Twig non gardés sur vieilles données
+
+### 4.1 Cause racine
+
+`templates/champion/detail.html.twig` accède à plusieurs clés **sans garde**
+(`is defined` / `?? ` / `|default`). Sur les données champion anciennes, ces
+clés sont absentes. Avec `strict_variables` actif, Twig lève alors
+`Key "…" does not exist` → **500**.
+
+`strict_variables` vaut `%kernel.debug%` par défaut (fixé explicitement à `true`
+`when@test` dans `config/packages/twig.yaml`). Donc :
+
+| Environnement | `strict_variables` | Détail champion vieille version |
+|---------------|--------------------|---------------------------------|
+| **test**      | `true` (explicite) | **500** |
+| **dev**       | `true` (= debug)   | **500** |
+| **prod**      | `false` (= debug off) | Se rend, mais artefacts (voir 4.4) |
+
+Accès fautifs identifiés (tous dans `champion/detail.html.twig`) :
+
+| Ligne | Expression | Absente sur | Vérifié |
+|-------|-----------|-------------|---------|
+| **48** | `{% if champion.partype %}` | données major `0.x` (`partype` ajouté au patch ~3.8) | ✅ crash `0.151.2` |
+| **167** | `{% if skin.num != 0 %}` | skins des vieux patchs (skins `{id,name}` sans `num`) | ✅ crash `3.10.3` |
+| 42 | `{% if champion.title %}` | (présent partout dans l'échantillon) | latent |
+| 89–92 | `champion.info.attack/defense/magic/difficulty` | (présent partout) | latent |
+
+> `champion.name`, `champion.tags|default([])`, `champion.stats is defined`,
+> `champion.lore|default(...)`, blocs `passive`/`spells`/`allytips`/`enemytips`
+> sont **déjà** gardés → sains.
+
+### 4.2 Interaction avec `getDetail()` (important)
+
+`ChampionController::champion()` fusionne le résumé (`champion.json`) avec le
+détail complet (`champion/{name}.json`) dans un **second** try/catch
+(`ChampionController.php:71-79`). Si le fichier de détail par champion est absent
+(certains vieux patchs renvoient **403** dessus), la fusion est ignorée et la
+page se rend sur le **résumé seul** :
+
+- Résumé seul ⇒ `champion.skins` **non défini** ⇒ bloc skins sauté ⇒ pas de
+  crash `skin.num`.
+- Le crash `skin.num` ne survient donc **que** lorsque le fichier de détail
+  existe (`200`) ET que ses skins n'ont pas de `num`.
+
+C'est pourquoi la liste des versions cassées est **discontinue** dans les
+`3.x` (elle suit la disponibilité des fichiers de détail par champion sur le
+CDN).
+
+### 4.3 Périmètre — 20 versions (vérité terrain `/champion/Annie`)
+
+Mesuré page par page sur l'app (dev). Les autres champions peuvent décaler la
+liste de quelques patchs (selon la présence du fichier de détail par champion),
+mais la **plage** est stable : major `0.x` + début `3.x` (`≤ 3.12.x`). Majors
+`4.x` et au-delà : **sains** (les skins portent `num` dès `~3.13.24`).
+
+**`partype` manquant (9 versions, major-0) :**
+`0.151.2, 0.151.101, 0.152.55, 0.152.107, 0.152.108, 0.152.115, 0.153.2,
+0.154.2, 0.154.3`
+
+**`skin.num` manquant (11 versions, major-3) :**
+`3.8.1, 3.8.3, 3.9.4, 3.9.5, 3.10.2, 3.10.3, 3.12.2, 3.12.24, 3.12.26, 3.12.33,
+3.12.34`
+
+### 4.4 Comportement en production (`strict_variables=false`)
+
+La page **ne plante pas**, mais :
+
+- Bloc `partype` (L48) : `null` → condition fausse → simplement omis (bénin).
+- Skins (L167) : `skin.num` → `null` → l'URL de splash devient
+  `…/splash/{id}_.jpg` (numéro vide) → **toutes les vignettes de skins cassées**,
+  et `null != 0` étant vrai, le skin « default » n'est plus filtré.
+
+Donc même sans le 500, ces versions ont un **rendu dégradé** en prod → à
+corriger malgré tout.
+
+### 4.5 Correctifs proposés
+
+Garder chaque accès (indépendant de `strict_variables`, corrige aussi le rendu
+prod) :
+
+```twig
+{# L48 #}
+{% if champion.partype is defined and champion.partype %}
+
+{# L166-167 : filtrer par index quand num est absent, ou garder num #}
+{% for skin in champion.skins %}
+  {% set skinNum = skin.num ?? loop.index0 %}
+  {% if skinNum != 0 %}
+    <img src="{{ splashBase }}/{{ champId }}_{{ skinNum }}.jpg" …>
+  {% endif %}
+{% endfor %}
+
+{# L42 (latent) #}
+{% if champion.title is defined and champion.title %}
+```
+
+**Recommandation transverse** : ajouter un **test fonctionnel** qui rend les 4
+pages de détail sur une version ancienne (p.ex. `0.151.2` et `3.10.3`). Comme
+`strict_variables=true` `when@test`, ce test aurait attrapé les deux crashs. À
+défaut, tout nouvel accès non gardé restera invisible jusqu'à la prod-dégradée.
+
+---
+
+## 5. Bug C — `HomeController` sans stratégie d'erreur (cause structurelle)
+
+Tous les controllers de **liste** (`Champion/Item/Rune/Summoner`) enveloppent
+leur `paginate()` dans un `try/catch` qui dégrade proprement vers `/setup`
+(`redirectToSetupWithError`). `HomeController::home()` est la **seule** action
+qui appelle les managers **sans aucune protection** (`HomeController.php:180-184`).
+
+Conséquence : la page la plus visitée est aussi la plus fragile — n'importe
+quelle défaillance d'**une** des 4 ressources (indisponibilité CDN, version sans
+runes, timeout Go) renvoie un **500** intégral au lieu d'une dégradation.
+
+Le correctif **A-1** (isolation par preview) résout à la fois le bug A sur
+`/home` et cette fragilité structurelle. À traiter en priorité.
+
+---
+
+## 6. Bug D — Langue valide globalement mais absente d'une version
+
+### 6.1 Cause racine
+
+`/languages` (passthrough Go de `cdn/languages.json`) renvoie la liste des
+langues de la **dernière** version — **28 langues**. `VersionManager` valide
+ensuite toute sélection contre cette liste **globale**, jamais par version :
+
+- `languageExists()` (`VersionManager.php:134-144`) : `in_array($lang, getLanguages())`.
+- `validateSelection()` (POST `/setup-submit`) et
+  `PageContextResolver::selection()` / `ClientManager::getSession()` s'appuient
+  dessus.
+
+Or une langue récente n'existe pas sur les anciennes versions du CDN. La
+sélection passe donc la validation, puis le `fetch` de
+`data/{lang}/{ressource}.json` renvoie **404** → `GoFetcherClient::fetch()`
+**lève** → **exactement la même propagation que le bug A** (`/home` sans
+try/catch → 500 ; listes/détails → 302).
+
+C'est un axe **orthogonal** à la version : il touche même des versions récentes
+qui, elles, ont bien leurs runes (p.ex. `ar_AE` casse `13.x`).
+
+### 6.2 Surface (mesurée : 9 langues × 397 versions)
+
+| Langue | Dispo sur | Versions cassées | Plus récente version cassée |
+|--------|-----------|------------------|------------------------------|
+| `ar_AE` (arabe) | 49 / 397 | **348** | `≤ 14.13.1` (OK dès `14.14.1`) |
+| `vi_VN` (vietnamien) | 85 / 397 | **312** | `≤ 12.23.1` (OK dès `13.1.1`) |
+| `id_ID` (indonésien) | 251 / 397 | ~146 | disponibilité **non contiguë** |
+| `es_AR` | 382 / 397 | ~15 (anciennes) | `≤ 3.8.1` |
+| `es_MX`, `en_AU` | 388–391 / 397 | tail major-0 | — |
+| `pt_BR`, `ru_RU`, `zh_CN` | 397 / 397 | aucune | — |
+
+Les 19 autres langues n'ont pas été mesurées exhaustivement (cf. §8 couverture),
+mais le mécanisme est identique pour toute langue introduite après une version
+donnée.
+
+### 6.3 Vérité terrain (app, version `5.1.1`)
+
+| Requête | Code | Note |
+|---------|------|------|
+| `/champions?version=5.1.1&lang=ar_AE` | **302** | langue absente → throw → redirect |
+| `/champions?version=5.1.1&lang=fr_FR` | 200 | langue présente → OK (isole bien l'axe langue) |
+| `/champion/Annie?version=5.1.1&lang=vi_VN` | **302** | détail dégradé (données absentes) |
+| `/home` (session `version=5.1.1, lang=ar_AE`) | **500** | idem bug A, pas de try/catch |
+
+> Sur les détails, l'axe langue produit un **302** (données introuvables dans le
+> 1er try/catch), pas le 500 `strict_variables` du bug B — les deux sont
+> distincts.
+
+### 6.4 Correctifs proposés
+
+- **D-1** — Les correctifs **A-1** (résilience `/home`) et **A-2** (404/403
+  définitif → jeu vide non cacheable si transitoire) **corrigent aussi le bug
+  D** : bugs A et D empruntent le même chemin d'erreur. C'est le levier
+  principal.
+- **D-2 — Validation par version.** Restreindre les langues sélectionnables à
+  celles réellement disponibles pour la version choisie. DDragon n'expose pas de
+  `languages.json` par version : la liste par version se **dérive** (sonder les
+  ressources, ou tenir une table). Alternative pragmatique : rendre le sélecteur
+  de langue dépendant de la version, et retomber en `en_US` (toujours présent)
+  quand la langue demandée est absente pour la version — plutôt qu'échouer.
+- **D-3 — Fallback `en_US`.** `en_US` est présent sur les 397 versions : un
+  fallback silencieux vers `en_US` (avec avertissement UI) élimine tout crash de
+  cet axe sans bloquer l'utilisateur.
+
+---
+
+## 7. Plan de correction priorisé (à appliquer ultérieurement)
+
+| Prio | Action | Corrige | Fichier(s) | Risque |
+|------|--------|---------|-----------|--------|
+| **P0** | Isoler chaque preview de `/home` par try/catch (A-1) | Bug A + **D** (`/home` 500) + Bug C | `HomeController.php` | faible |
+| **P1** | 403/404 définitif → jeu vide (non cacheable si transitoire) (A-2) | Bug A + **D** (listes/détails) | `GoFetcherClient.php`, `AbstractManager.php` | moyen (distinguer absent vs panne) |
+| **P1** | Garder `partype` (L48), `skin.num` (L167), `title` (L42) | Bug B (500 dev/test + rendu prod dégradé) | `templates/champion/detail.html.twig` | faible |
+| **P1** | Fallback `en_US` quand la langue est absente pour la version (D-3) | Bug D | `PageContextResolver` / `ClientManager` / `VersionManager` | faible |
+| **P2** | Validation des langues **par version** (D-2) | Bug D (à la racine) | `VersionManager` + sélecteur front | moyen (pas de `languages.json` par version) |
+| **P2** | Test fonctionnel « détails sur version ancienne + langue tardive » | Non-régression B & D | `tests/` | faible |
+| **P3** | UX : état vide runes / langues indispo expliqués (A-3) | Confort | templates + front | faible |
+
+> **Aucune** de ces actions n'a été appliquée dans le cadre de ce document.
+
+---
+
+## 8. Couverture de test (honnêteté du périmètre)
+
+Ce qui a été réellement exercé, pour éviter toute sur-affirmation :
+
+| Endpoint / ressource DDragon exploité | Couverture | Détail |
+|----------------------------------------|-----------|--------|
+| `data/{lang}/champion.json` | **397 versions** (en_US) + 9 langues × 397 | exhaustif version ; échantillon langue |
+| `data/{lang}/item.json` | **397 versions** (en_US) | exhaustif version ; langue non exhaustive |
+| `data/{lang}/summoner.json` | **397 versions** (en_US) | idem |
+| `data/{lang}/runesReforged.json` | **397 versions** (en_US) | exhaustif version |
+| `data/{lang}/champion/{name}.json` (détail) | majors 0/3/4 + début 5, **Annie seule** | échantillon ; autres champions non balayés |
+| `img/champion/{name}.png` | newest + oldest | 200 ; pas de balayage complet |
+| `img/item/{name}.png` | newest + oldest | 200 |
+| `img/spell/{name}.png` (sort d'invocateur) | newest + oldest | 200 |
+| `img/passive/{name}.png`, `img/spell/*` (sorts champion) | newest + oldest (Annie) | 200 |
+| `cdn/img/…` (icônes de runes, version-less) | 1 échantillon | 200 |
+| `img/champion/splash/{id}_{n}.jpg` (splash direct navigateur) | 1 échantillon | 200 |
+| `/api/{res}/search/{name}` (autocomplete) | **non testé** | même couche managers (session) ; probablement 302/erreur JSON sur versions/langues cassées |
+| `/api/loader/prepare` (SSE `LoaderController`) | **non testé** | réutilise `collectPlan`/`getData` → mêmes causes A/D probables |
+
+**Non exhaustif** : matrice complète version × langue × 4 ressources
+(397 × 28 × 4 ≈ 44 k requêtes) non exécutée — les **frontières** et le
+**mécanisme** suffisent à caractériser A et D. Le détail par champion n'a été
+sondé que pour Annie (la plage de crash B est stable, mais la liste exacte de
+versions peut varier de quelques patchs selon le champion). Les endpoints
+`/api/*` search et le SSE loader n'ont pas été exercés page par page mais
+partagent la couche `AbstractManager` → mêmes causes racines attendues.
+
+---
+
+## Annexe — Données de référence
+
+- Versions sélectionnables : **397** (`lolpatch_*` exclues par `VersionManager`).
+  Plus récente `16.14.1`, plus ancienne `0.151.2`.
+- `runesReforged.json` : `200` sur **217** (`≥ 7.22.1`), `403` sur **180**
+  (`≤ 7.21.1`).
+- `champion.json` / `item.json` / `summoner.json` : `200` sur les **397**.
+- Frontière `partype` (données champion) : présent dès `~3.8`, absent sur les
+  9 versions major `0.x`.
+- Frontière `skin.num` : présent dès `~3.13.24` ; absent avant.
+- Crashs `/champion/{name}` confirmés (Annie) : **20** versions (majors `0` et
+  `3`).
+- Langues (`/languages`) : **28** annoncées globalement ; disponibilité par
+  version très variable — `ar_AE` 49/397, `vi_VN` 85/397, `id_ID` 251/397, …,
+  `en_US`/`pt_BR`/`ru_RU`/`zh_CN` 397/397. `en_US` est le seul garanti partout.
+- Endpoints images : `200` du plus récent au plus ancien (aucun bug).
+- Sémantique clé : `GoFetcherClient::fetch()` **lève** sur non-2xx
+  (`GoFetcherClient.php:128-131`) ; les controllers de liste rattrapent,
+  `HomeController` non. Bugs A (version) et D (langue) empruntent ce même chemin.
