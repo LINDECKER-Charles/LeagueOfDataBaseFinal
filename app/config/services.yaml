@@ -40,9 +40,11 @@ services:
     App\Service\Tools\GoFetcherClient:
         arguments:
             $http: '@go_fetcher.client'
-    App\EventListener\LocaleDomainListener:
-        tags:
-            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    # Resolves the UI locale from the enabled catalogs (see framework.enabled_locales).
+    App\Service\I18n\UiLocaleResolver:
+        arguments:
+            $enabledLocales: '%kernel.enabled_locales%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
