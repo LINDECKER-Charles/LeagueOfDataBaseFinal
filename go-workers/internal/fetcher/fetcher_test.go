@@ -6,7 +6,7 @@ import (
 )
 
 func TestAllowed(t *testing.T) {
-	f := New([]string{"ddragon.leagueoflegends.com"}, time.Second)
+	f := New([]string{"ddragon.leagueoflegends.com"}, time.Second, 16)
 	cases := []struct {
 		name    string
 		url     string

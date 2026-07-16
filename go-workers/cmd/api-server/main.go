@@ -18,7 +18,9 @@ import (
 func main() {
 	cfg := config.Load()
 
-	f := fetcher.New(cfg.AllowedHosts, cfg.RequestTimeout)
+	// Idle pool sized to the batch concurrency: DDragon is HTTP/1.1, so each
+	// concurrent fetch needs its own reusable keep-alive connection.
+	f := fetcher.New(cfg.AllowedHosts, cfg.RequestTimeout, cfg.MaxConcurrency)
 	srv := &http.Server{
 		Addr:              cfg.Addr(),
 		Handler:           api.NewServer(f, cfg.MaxConcurrency, cfg.MaxURLsPerRequest),
