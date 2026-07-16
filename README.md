@@ -55,7 +55,7 @@
 git clone https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
 cd LeagueOfDataBaseFinal
 
-# 2. Configurer l'environnement (secrets documentés dans SECRET_CONFIG.md)
+# 2. Configurer l'environnement (secrets CI : docs/github-actions-secrets.md)
 cp .env.example .env
 
 # 3. Pré-requis dev (le conteneur php monte ./app en bind-mount)
@@ -125,7 +125,7 @@ Captures d'écran Playwright : `node tools/screenshots/capture.mjs` → dossier 
 git clone https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
 cd LeagueOfDataBaseFinal
 
-# 2. Configure the environment (secrets documented in SECRET_CONFIG.md)
+# 2. Configure the environment (CI secrets: docs/github-actions-secrets.md)
 cp .env.example .env
 
 # 3. Dev prerequisite (the php container bind-mounts ./app)
@@ -195,7 +195,7 @@ Playwright screenshots: `node tools/screenshots/capture.mjs` → [`screenshot/`]
 git clone https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
 cd LeagueOfDataBaseFinal
 
-# 2. Configurar el entorno (secretos documentados en SECRET_CONFIG.md)
+# 2. Configurar el entorno (secretos CI: docs/github-actions-secrets.md)
 cp .env.example .env
 
 # 3. Requisito de desarrollo (el contenedor php monta ./app)

@@ -1,50 +1,46 @@
-# GitHub Actions — Secrets à configurer
+# 🔐 GitHub Actions — Secrets
 
-Secrets à définir dans **Settings → Secrets and variables → Actions → Repository secrets**.
+Secrets à configurer pour le pipeline `CI/CD` (`.github/workflows/ci.yml`).
 
-> Seuls les secrets consommés par `.github/workflows/ci.yml` sont listés. Les valeurs applicatives de prod
-> (`APP_SECRET`, `MINIO_ROOT_*`, …) ne sont **pas** injectées par le pipeline : elles vivent dans le
-> `${PROD_PATH}/.env` du serveur (cf. [configuration.md](configuration.md)).
+**Où** : `Settings` → `Secrets and variables` → `Actions` → onglet `Repository secrets`.
 
----
-
-## Secrets requis
-
-| Secret | Job | Rôle | Exemple |
-|---|---|---|---|
-| `PROD_SSH_KEY` | `deploy` | Clé privée SSH (format PEM/OpenSSH) pour se connecter au serveur de prod. Charger la **clé privée** complète, la publique correspondante étant dans `~/.ssh/authorized_keys` côté serveur. | contenu de `id_ed25519` |
-| `PROD_HOST` | `deploy` | Hôte cible (`ssh-keyscan` + destination SSH). | `league-of-data-base.fr` |
-| `PROD_PATH` | `deploy` | Répertoire du projet compose sur le serveur (`cd` avant `docker compose`). | `/opt/lodb` |
-
-## Secret optionnel
-
-| Secret | Job | Rôle | Défaut |
-|---|---|---|---|
-| `PROD_SSH_USER` | `deploy` | Utilisateur SSH. | `root` (fallback `${{ secrets.PROD_SSH_USER || 'root' }}`) |
-
-## Fourni automatiquement — ne pas créer
-
-| Secret | Jobs | Note |
-|---|---|---|
-| `GITHUB_TOKEN` | `merge`, `build-and-push` | Injecté par GitHub. Nécessite `permissions: contents: write` (auto-merge dev→main) et `packages: write` (push GHCR), déjà déclarés dans le workflow. |
+Le workflow se déclenche sur un `push` vers `dev` et enchaîne :
+`test-php · test-go · test-js` → `merge` (dev → main) → `build-and-push` (GHCR) → `deploy` (SSH prod).
 
 ---
 
-## Vérification rapide (GitHub CLI)
+## 🚀 Déploiement production (job `deploy`)
 
-```bash
-# Lister les secrets configurés
-gh secret list
+Accès SSH au serveur de prod et publication du `.env` de production.
 
-# Définir les secrets requis
-gh secret set PROD_SSH_KEY < ~/.ssh/id_ed25519_prod
-gh secret set PROD_HOST   --body "league-of-data-base.fr"
-gh secret set PROD_PATH   --body "/opt/lodb"
-gh secret set PROD_SSH_USER --body "deploy"   # optionnel
-```
+| Secret | Requis | Description |
+|---|:---:|---|
+| `PROD_SSH_KEY` | ✅ | Clé privée SSH (format PEM complet, en-têtes inclus) chargée dans `ssh-agent`. La clé publique correspondante doit être dans les `authorized_keys` du serveur. |
+| `PROD_HOST` | ✅ | Hôte du serveur de prod (IP ou FQDN). Utilisé pour le `ssh-keyscan` et les connexions SSH. |
+| `PROD_PATH` | ✅ | Chemin absolu du projet sur le serveur (dossier du `compose.yaml`). Cible du `git pull` et du `docker compose`. |
+| `PROD_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
+| `ENV_PROD` | ✅ | Dotenv de prod **complet**. Poussé tel quel dans `${PROD_PATH}/.env` sur le serveur avant `docker compose up`. |
 
-## Prérequis serveur (hors secrets)
+---
 
-- Clé **publique** SSH ajoutée dans `~/.ssh/authorized_keys` de `PROD_SSH_USER@PROD_HOST`.
-- Docker Engine + Compose v2, login GHCR effectué (`docker login ghcr.io`).
-- `${PROD_PATH}` = clone du repo (le job fait `git pull origin main`) avec `compose.yaml` et un `.env` de prod peuplé.
+## 🧪 Tests (job `test-php`)
+
+| Secret | Requis | Description |
+|---|:---:|---|
+| `ENV_TEST` | ✅ | Dotenv de test **complet**. Écrit dans `app/.env.test.local` avant l'exécution de PHPUnit / des lints. |
+
+---
+
+## ⚙️ Secrets automatiques (aucune action requise)
+
+| Secret | Description |
+|---|---|
+| `GITHUB_TOKEN` | Fourni automatiquement par GitHub Actions. Utilisé pour le merge `dev → main` (job `merge`) et le push des images sur GHCR (job `build-and-push`). **Ne pas créer manuellement.** |
+
+---
+
+## 📝 Notes
+
+- **`ENV_PROD` / `ENV_TEST`** contiennent le fichier dotenv intégral (une variable par ligne), pas une valeur unique — coller le contenu complet du `.env` correspondant.
+- **`PROD_SSH_KEY`** : copier l'intégralité du fichier clé, y compris les lignes `-----BEGIN … PRIVATE KEY-----` / `-----END … PRIVATE KEY-----`.
+- Les secrets ne sont **jamais** affichés dans les logs (masqués par GitHub) ; leur mise à jour ne s'applique qu'aux exécutions suivantes.
