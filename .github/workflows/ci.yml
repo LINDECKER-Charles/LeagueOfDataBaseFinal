@@ -197,6 +197,9 @@ jobs:
           ssh ${{ secrets.PROD_SSH_USER || 'root' }}@${{ secrets.PROD_HOST }} <<'EOSSH'
             set -e
             cd ${{ secrets.PROD_PATH }}
+            # Prod = base + TLS overlay, explicitly. Selecting files disables the automatic
+            # merge of compose.override.yaml (dev-only conveniences) that git pull ships.
+            export COMPOSE_FILE=compose.yaml:compose.prod.yaml
             git pull origin main
             docker compose pull
             docker compose up -d --remove-orphans

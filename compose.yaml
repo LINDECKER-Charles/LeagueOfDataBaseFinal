@@ -15,6 +15,9 @@ services:
       APP_ENV: prod
       APP_DEBUG: "0"
       APP_SECRET: ${APP_SECRET:?APP_SECRET is required}
+      # Behind Caddy -> nginx (Docker): trust the direct upstream so Symfony reads
+      # the relayed X-Forwarded-* (https scheme + real client IP). See framework.yaml.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.1,REMOTE_ADDR}
       GO_FETCHER_URL: http://go-fetcher:8085
       MINIO_ENDPOINT: http://minio:9000
       MINIO_REGION: us-east-1
@@ -42,8 +45,8 @@ services:
       dockerfile: docker/nginx/Dockerfile
       args:
         APP_IMAGE: ${REGISTRY:-lodb}/app:${IMAGE_TAG:-latest}
-    ports:
-      - "${HTTP_PORT:-8080}:80"
+    # No host port here: in prod Caddy (compose.prod.yaml) is the public entrypoint and
+    # reaches nginx internally; dev publishes ${HTTP_PORT} via compose.override.yaml.
     depends_on:
       php:
         condition: service_started

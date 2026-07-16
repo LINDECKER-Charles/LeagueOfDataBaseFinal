@@ -19,7 +19,34 @@ Accès SSH au serveur de prod et publication du `.env` de production.
 | `PROD_HOST` | ✅ | Hôte du serveur de prod (IP ou FQDN). Utilisé pour le `ssh-keyscan` et les connexions SSH. |
 | `PROD_PATH` | ✅ | Chemin absolu du projet sur le serveur (dossier du `compose.yaml`). Cible du `git pull` et du `docker compose`. |
 | `PROD_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
-| `ENV_PROD` | ✅ | Dotenv de prod **complet**. Poussé tel quel dans `${PROD_PATH}/.env` sur le serveur avant `docker compose up`. |
+| `ENV_PROD` | ✅ | Dotenv de prod **complet**. Poussé tel quel dans `${PROD_PATH}/.env` sur le serveur avant `docker compose up`. Doit inclure `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG`, les secrets applicatifs (`APP_SECRET`, `MINIO_*`, `ADMIN_*`) **et** la conf TLS `CADDY_DOMAINS` + `ACME_EMAIL` (voir ci-dessous). |
+
+### 🔒 TLS / reverse-proxy (Caddy)
+
+Le job `deploy` lance la stack via `COMPOSE_FILE=compose.yaml:compose.prod.yaml`
+(overlay prod = Caddy en frontal, **sans** `compose.override.yaml` dev). Caddy publie
+`80/443`, obtient et renouvelle seul les certificats Let's Encrypt, et proxifie vers le
+nginx interne. Clés à ajouter dans `ENV_PROD` :
+
+| Variable | Exemple | Rôle |
+|---|---|---|
+| `CADDY_DOMAINS` | `league-of-data-base.fr, league-of-data-base.com` | Domaine(s) servis (liste séparée par virgules). Un certificat par domaine. |
+| `ACME_EMAIL` | `admin@league-of-data-base.fr` | Contact Let's Encrypt (expiration/incidents). |
+
+> ⚠️ **Ordre au premier déploiement** : les enregistrements DNS (A/AAAA) de chaque
+> domaine doivent pointer vers `PROD_HOST` **avant** que le déploiement tourne, et les
+> ports **80 + 443** doivent être ouverts (pare-feu / groupe de sécurité) — l'émission
+> ACME (HTTP-01/TLS-ALPN) échoue sinon. Caddy réessaie tout seul une fois le DNS propagé.
+
+### 🖥️ Prérequis serveur (one-shot, non automatisés)
+
+À faire **une fois** sur `PROD_HOST` avant le premier push (le reste est ensuite 100 % auto) :
+
+1. Docker Engine + plugin `docker compose` installés.
+2. Repo cloné dans `PROD_PATH` (le job fait `git pull`, pas `git clone`).
+3. `docker login ghcr.io` persistant si les packages GHCR sont **privés** (PAT `read:packages`),
+   sinon les rendre publics — sans ça `docker compose pull` échoue.
+4. Ports **80/443** ouverts et DNS pointé (cf. ci-dessus).
 
 ---
 
