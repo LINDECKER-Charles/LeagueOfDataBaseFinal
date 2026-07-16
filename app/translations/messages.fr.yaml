@@ -59,6 +59,10 @@ item:
     evolutions: "Évolutions possibles"
     stats: "Statistiques"
     description: "Description"
+    recipe: "Recette"
+    builds_from: "Composants"
+    tier: "Palier %depth%"
+    availability: "Disponibilité"
     back: "← Retour à la liste"
     setup: "Changer version & langue"
   list:
@@ -88,6 +92,10 @@ rune:
   detail:
     meta_description: "Découvrez tout sur la rune %name% dans League of Legends. Statistiques et effets mis à jour pour le patch %version%."
     title: "Rune : %name%"
+    overview: "Aperçu"
+    keystone: "Pierre angulaire"
+    minor: "Runes mineures"
+    slot_n: "Emplacement %n%"
   slot: "Emplacement"
 
 summoner:
@@ -100,6 +108,9 @@ summoner:
       range: "Portée d’utilisation"
       cost: "Coût"
       summoner_level: "Niveau d’invocateur"
+    unlocked_at: "Débloqué au niveau %level%"
+    range_global: "Globale"
+    no_cost: "Sans coût"
     modes: "Modes compatibles"
     description: "Description"
   card:
@@ -124,6 +135,15 @@ champion:
     meta_description: "Découvrez %name% de League of Legends avec statistiques, rôles et détails pour le patch %version%."
     version_locale: "Patch %version% • %locale%"
     partype: "Ressource : %partype%"
+    roles: "Rôles"
+    abilities: "Compétences"
+    passive: "Passif"
+    skins: "Skins"
+    cooldown: "Recharge"
+    cost: "Coût"
+    range: "Portée"
+    tips_as: "En jouant"
+    tips_against: "Face à"
     stats:
       title: "Statistiques de base"
     profile:
@@ -137,6 +157,7 @@ champion:
 
 common:
   back: "Retour"
+  search: "Rechercher…"
   no_result:
     text: "Aucun résultat trouvé pour votre recherche."
     back: "← Retour"
@@ -177,6 +198,15 @@ footer:
     email: "Email"
     github: "GitHub"
     linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Invocation des données"
+  subtitle: "Récupération des ressources depuis la Faille…"
+  preparing: "Préparation des données…"
+  status:
+    fetching: "récupération"
+    ready: "prêt"
 
 pagination:
   ok: "Valider"

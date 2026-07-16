@@ -1,0 +1,220 @@
+homepage:
+  title: "League of Data Base"
+  meta: "歡迎來到 League of Data Base。探索 League of Legends 的召喚師技能與物品，查看 %version% 版本的數值與詳細資料。"
+  hero:
+    browse: "瀏覽 League of Legends <strong>召喚師技能</strong>與<strong>物品</strong>的詳細資訊，已更新至 %version% 版本。"
+    explore_summoners: "探索召喚師技能"
+    explore_items: "探索物品"
+    explore_champions: "探索英雄"
+    explore_runes: "探索符文"
+  summoners:
+    title: "召喚師技能"
+    see_all: "查看所有技能"
+  items:
+    title: "物品"
+    see_all: "查看所有物品"
+  champions:
+    title: "英雄"
+    see_all: "查看所有英雄"
+    no_data: "此版本暫無可用的英雄資料。"
+    wip: "此區塊仍在建置中，很快就能瀏覽所有英雄。"
+  runes:
+    title: "符文"
+    wip: "此區塊仍在建置中，很快就能探索符文。"
+    see_all: "查看所有符文"
+
+
+setup:
+  title: "設定"
+  meta: "選擇您偏好的遊戲版本與語言，自訂您的 League of Data Base 體驗。所有數值與資料都會依您的設定調整。"
+  form:
+    version: "版本"
+    language: "語言"
+    note_latest: "*系統會自動選擇最新版本。"
+    remember: "記住我的選擇"
+    submit: "送出"
+
+system:
+  under_construction:
+    title: "建置中"
+    meta_description: "League of Data Base 目前正在建置中。我們正努力為您帶來 League of Legends 的詳細數值、深度分析與實用工具，敬請期待更新。"
+    heading: "此頁面正在建置中"
+    subheading: "我們正在符文之地中打造這項功能，敬請期待精彩內容。"
+    info: "若您看到這個頁面，代表相關內容尚未上線。我們正在努力提升效能、資料準確度，並打造與 League Of Data Base 其餘部分一致的流暢使用體驗。"
+    progress_label: "建置進度"
+    back: "← 返回"
+    summoners: "查看召喚師技能"
+    setup: "選擇版本與語言"
+    footer: "急需這項功能嗎？歡迎與我們聯繫，或查看開發藍圖，更多更新即將推出。"
+    meanwhile: "在此期間，您可以："
+
+item:
+  detail:
+    meta_description: "深入了解 League of Legends 中 %name% 的所有資訊。數值、效果與出裝資訊已更新至 %version% 版本。"
+    version_locale: "版本：%version% — 語言：%locale%"
+    price_total: "總價"
+    price_base: "購買價格"
+    price_sell: "出售價值"
+    categories: "分類"
+    evolutions: "可能的進化"
+    stats: "數值"
+    description: "描述"
+    recipe: "配方"
+    builds_from: "合成所需"
+    tier: "第 %depth% 層"
+    availability: "可用性"
+    back: "← 返回列表"
+    setup: "變更版本與語言"
+  list:
+      title: "物品"
+      meta_description: "瀏覽 %version% 版本中所有 League of Legends 物品。查看已更新至最新版本的詳細數值、價格與效果。"
+      header: "物品"
+      subtitle: "物品目錄"
+      results_per_page: "每頁顯示筆數："
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "搜尋物品…"
+      change_version: "變更版本/語言"
+      cost_total: "總價"
+      cost_sell: "出售價值"
+      categories: "分類"
+      evolutions: "可能的進化"
+      description: "描述"
+
+summoner:
+  detail:
+    meta_description: "探索 League of Legends 中召喚師技能 %name% 的詳細資訊。數值與效果已更新至 %version% 版本。"
+    version_locale: "版本：%version% — 語言：%locale%"
+    fields:
+      cooldown: "冷卻時間"
+      maxammo: "充能次數"
+      range: "使用範圍"
+      cost: "消耗"
+      summoner_level: "召喚師等級"
+    unlocked_at: "在 %level% 級解鎖"
+    range_global: "全圖"
+    no_cost: "無消耗"
+    modes: "適用模式"
+    description: "描述"
+  card:
+    cooldown: "冷卻時間"
+    level: "召喚師等級"
+    modes: "適用模式"
+    description: "描述"
+  list:
+    title: "召喚師技能"
+    subtitle: "召喚師技能目錄"
+    count: "count 個技能"
+
+champion:
+  list:
+    title: "英雄"
+    meta_description: "瀏覽所有 League of Legends 英雄，查看遊戲中每位英雄的詳細數值、技能與背景故事。"
+    header: "英雄"
+    subtitle: "英雄目錄"
+    search_placeholder: "搜尋英雄…"
+    change_version: "變更版本/語言"
+  detail:
+    meta_description: "探索 League of Legends 中的 %name%，查看 %version% 版本的數值、定位與詳細資料。"
+    version_locale: "%version% 版本 • %locale%"
+    partype: "資源：%partype%"
+    roles: "定位"
+    abilities: "技能"
+    passive: "被動"
+    skins: "造型"
+    cooldown: "冷卻時間"
+    cost: "消耗"
+    range: "射程"
+    tips_as: "使用技巧"
+    tips_against: "對抗技巧"
+    stats:
+      title: "基礎數值"
+    profile:
+      title: "英雄簡介"
+      attack: "攻擊"
+      defense: "防禦"
+      magic: "法術"
+      difficulty: "難度"
+    lore:
+      title: "背景故事"
+
+rune:
+  list:
+    title: "符文"
+    meta_description: "瀏覽所有 League of Legends 符文，查看遊戲中每個符文的詳細數值與效果。"
+    header: "符文"
+    subtitle: "符文目錄"
+    search_placeholder: "搜尋符文…"
+    change_version: "變更版本/語言"
+  detail:
+    title: "符文：%name%"
+    meta_description: "探索 League of Legends 中符文 %name% 的詳細資訊。數值與效果已更新至 %version% 版本。"
+    overview: "概覽"
+    keystone: "基石符文"
+    minor: "次級符文"
+    slot_n: "欄位 %n%"
+  slot: "符文位"
+
+common:
+  back: "返回"
+  search: "搜尋…"
+  no_result:
+    text: "找不到符合您搜尋條件的結果。"
+    back: "← 返回"
+    setup: "選擇版本與語言"
+  detail : "查看詳情 →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base 是一個由社群共同打造的平台，提供 League of Legends 的詳細資訊、數值與深度分析。快速、可靠，並隨時保持最新。"
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "法律聲明"
+
+  navigation:
+    title: "導覽"
+    home: "首頁"
+    champion: "英雄"
+    item: "物品"
+    runes: "符文"
+    summoner: "召喚師技能"
+
+  links:
+    title: "實用連結"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "專案"
+    version: "版本：Beta 2.0"
+    updated: "更新日期：03/08/2025"
+
+  contact:
+    title: "聯絡方式"
+    email: "電子郵件"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "召喚資料中"
+  subtitle: "正在從符文之地擷取資源…"
+  preparing: "正在準備資料…"
+  status:
+    fetching: "擷取中"
+    ready: "已就緒"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "首頁"
+    champion: "英雄"
+    item: "物品"
+    runes: "符文"
+    summoner: "召喚師技能"

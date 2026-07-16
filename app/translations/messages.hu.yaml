@@ -1,0 +1,220 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Üdvözlünk a League of Data Base oldalán. Fedezd fel a League of Legends tárgyait és idéző varázslatait statisztikákkal és részletekkel a(z) %version% patchhez."
+  hero:
+    browse: "Böngéssz részletes információkat a League of Legends <strong>Idéző varázslatairól</strong> és <strong>Tárgyairól</strong>. Frissítve a(z) %version% patchhez."
+    explore_summoners: "Idéző varázslatok felfedezése"
+    explore_items: "Tárgyak felfedezése"
+    explore_champions: "Bajnokok felfedezése"
+    explore_runes: "Rúnák felfedezése"
+  summoners:
+    title: "Idéző varázslatok"
+    see_all: "Összes varázslat megtekintése"
+  items:
+    title: "Tárgyak"
+    see_all: "Összes tárgy megtekintése"
+  champions:
+    title: "Bajnokok"
+    see_all: "Összes bajnok megtekintése"
+    no_data: "Nincs elérhető bajnok ehhez a verzióhoz."
+    wip: "Ez a rész még fejlesztés alatt áll. Hamarosan böngészheted majd az összes bajnokot."
+  runes:
+    title: "Rúnák"
+    wip: "Ez a rész még fejlesztés alatt áll. Hamarosan felfedezheted majd a rúnákat."
+    see_all: "Összes rúna megtekintése"
+
+
+setup:
+  title: "Beállítás"
+  meta: "Válaszd ki a preferált játékverziót és nyelvet a League of Data Base élményed testreszabásához. Minden statisztika és adat a beállításaidhoz igazodik."
+  form:
+    version: "Verzió"
+    language: "Nyelv"
+    note_latest: "*A legújabb verzió automatikusan ki van választva."
+    remember: "Emlékezz rám"
+    submit: "Küldés"
+
+system:
+  under_construction:
+    title: "Fejlesztés alatt"
+    meta_description: "A League of Data Base jelenleg fejlesztés alatt áll. Keményen dolgozunk azon, hogy részletes statisztikákat, elemzéseket és eszközöket kínáljunk a League of Legendshez. Kövesd a frissítéseket."
+    heading: "Ez az oldal fejlesztés alatt áll"
+    subheading: "Ezt a funkciót éppen a Riften kovácsoljuk. Nézz vissza hamarosan valami epikusért."
+    info: "Ha idáig jutottál, a tartalom még nincs kész. A teljesítményen, az adatok pontosságán és egy zökkenőmentes felhasználói élményen dolgozunk, amely illeszkedik a League Of Data Base többi részéhez."
+    progress_label: "Fejlesztés állapota"
+    back: "← Vissza"
+    summoners: "Idéző varázslatok megtekintése"
+    setup: "Verzió és nyelv kiválasztása"
+    footer: "Sürgősen szükséged van rá? Írj nekünk, vagy nézd meg a fejlesztési tervet. Több frissítés is érkezik."
+    meanwhile: "Addig is megteheted a következőket:"
+
+item:
+  detail:
+    meta_description: "Fedezz fel mindent a(z) %name% tárgyról a League of Legendsben. Statisztikák, hatások és build információk frissítve a(z) %version% patchhez."
+    version_locale: "Verzió: %version% — Nyelv: %locale%"
+    price_total: "Teljes ár"
+    price_base: "Vásárlási ár"
+    price_sell: "Eladási érték"
+    categories: "Kategóriák"
+    evolutions: "Lehetséges fejlődések"
+    stats: "Statisztikák"
+    description: "Leírás"
+    recipe: "Recept"
+    builds_from: "Összetevők"
+    tier: "%depth%. szint"
+    availability: "Elérhetőség"
+    back: "← Vissza a listához"
+    setup: "Verzió és nyelv módosítása"
+  list:
+      title: "Tárgyak"
+      meta_description: "Böngéssz az összes League of Legends tárgy között, amely elérhető a(z) %version% patchben. Találj részletes statisztikákat, árakat és hatásokat, frissítve a legújabb verzióhoz."
+      header: "Tárgyak"
+      subtitle: "Tárgykatalógus"
+      results_per_page: "Találatok oldalanként:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "Tárgy keresése…"
+      change_version: "Verzió/nyelv módosítása"
+      cost_total: "Teljes ár"
+      cost_sell: "Eladási érték"
+      categories: "Kategóriák"
+      evolutions: "Lehetséges fejlődések"
+      description: "Leírás"
+
+summoner:
+  detail:
+    meta_description: "Fedezd fel a(z) %name% idéző varázslat részleteit a League of Legendsben. Statisztikák és hatások frissítve a(z) %version% patchhez."
+    version_locale: "Verzió: %version% — Nyelv: %locale%"
+    fields:
+      cooldown: "Visszatöltési idő"
+      maxammo: "Töltetek száma"
+      range: "Hatótávolság"
+      cost: "Költség"
+      summoner_level: "Idéző szint"
+    unlocked_at: "Feloldva a(z) %level%. szinten"
+    range_global: "Globális"
+    no_cost: "Nincs költség"
+    modes: "Kompatibilis módok"
+    description: "Leírás"
+  card:
+    cooldown: "Visszatöltési idő"
+    level: "Idéző szint"
+    modes: "Kompatibilis módok"
+    description: "Leírás"
+  list:
+    title: "Idéző varázslatok"
+    subtitle: "Idéző varázslatok katalógusa"
+    count: "count varázslat"
+
+champion:
+  list:
+    title: "Bajnokok"
+    meta_description: "Böngéssz az összes League of Legends bajnok között. Találj részletes statisztikákat, képességeket és történetet minden játékban szereplő bajnokhoz."
+    header: "Bajnokok"
+    subtitle: "Bajnokkatalógus"
+    search_placeholder: "Bajnok keresése…"
+    change_version: "Verzió/nyelv módosítása"
+  detail:
+    meta_description: "Fedezd fel %name% bajnokot a League of Legendsből, statisztikákkal, szerepkörökkel és részletekkel a(z) %version% patchhez."
+    version_locale: "%version% patch • %locale%"
+    partype: "Erőforrás: %partype%"
+    roles: "Szerepek"
+    abilities: "Képességek"
+    passive: "Passzív"
+    skins: "Kinézetek"
+    cooldown: "Újratöltődés"
+    cost: "Költség"
+    range: "Hatótávolság"
+    tips_as: "Amikor vele játszol"
+    tips_against: "Amikor ellene játszol"
+    stats:
+      title: "Alapstatisztikák"
+    profile:
+      title: "Bajnok profil"
+      attack: "Támadás"
+      defense: "Védekezés"
+      magic: "Mágia"
+      difficulty: "Nehézség"
+    lore:
+      title: "Történet"
+
+rune:
+  list:
+    title: "Rúnák"
+    meta_description: "Böngéssz az összes League of Legends rúna között. Találj részletes statisztikákat és hatásokat minden játékban szereplő rúnához."
+    header: "Rúnák"
+    subtitle: "Rúnakatalógus"
+    search_placeholder: "Rúna keresése…"
+    change_version: "Verzió/nyelv módosítása"
+  detail:
+    title: "Rúna: %name%"
+    meta_description: "Fedezd fel a(z) %name% rúna részleteit a League of Legendsben. Statisztikák és hatások frissítve a(z) %version% patchhez."
+    overview: "Áttekintés"
+    keystone: "Fő rúna"
+    minor: "Kisebb rúnák"
+    slot_n: "%n%. hely"
+  slot: "Hely"
+
+common:
+  back: "Vissza"
+  search: "Keresés…"
+  no_result:
+    text: "Nincs találat a keresésedre."
+    back: "← Vissza"
+    setup: "Verzió és nyelv kiválasztása"
+  detail : "Részletek megtekintése →"
+base:
+  title: "League of Data Base"
+  description: "A League of Data Base egy közösség által vezérelt platform, amely részletes információkat, statisztikákat és elemzéseket nyújt a League of Legendsről. Gyors, megbízható és mindig naprakész."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Jogi nyilatkozat"
+
+  navigation:
+    title: "Navigáció"
+    home: "Kezdőlap"
+    champion: "Bajnok"
+    item: "Tárgy"
+    runes: "Rúnák"
+    summoner: "Idéző"
+
+  links:
+    title: "Hasznos linkek"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Projekt"
+    version: "Verzió: Beta 2.0"
+    updated: "Frissítve: 03/08/2025"
+
+  contact:
+    title: "Kapcsolat"
+    email: "Email"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Adatok idézése"
+  subtitle: "Erőforrások lekérése a Riftről…"
+  preparing: "Adatok előkészítése…"
+  status:
+    fetching: "letöltés"
+    ready: "kész"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Kezdőlap"
+    champion: "Bajnokok"
+    item: "Tárgyak"
+    runes: "Rúnák"
+    summoner: "Idéző varázslatok"

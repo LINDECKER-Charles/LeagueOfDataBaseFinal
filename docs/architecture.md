@@ -21,8 +21,7 @@ league-of-database/
 │   ├── public/               # Assets publics et uploads
 │   └── config/               # Configuration Symfony
 ├── go-workers/               # Workers Go pour le traitement asynchrone
-├── docs/                    # Documentation
-└── front-test/              # Tests frontend séparés
+└── docs/                    # Documentation
 ```
 
 ## 🔧 Architecture des services

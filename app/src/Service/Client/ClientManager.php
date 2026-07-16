@@ -6,6 +6,7 @@ namespace App\Service\Client;
 use App\Service\Client\VersionManager;
 use App\Service\Tools\Utils;
 use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 final class ClientManager
@@ -16,10 +17,10 @@ final class ClientManager
 
     public function __construct(
         private readonly RequestStack $requestStack,
-        private readonly string $appSecret = '', // injecte %kernel.secret% via services.yaml si tu veux signer
-        private readonly string $defaultLocale = 'en_US', // fallback si pas d'entête
         private readonly VersionManager $versionManager,
         private readonly Utils $utils,
+        private readonly string $appSecret = '', // injecté via services.yaml (%kernel.secret%) pour signer les cookies
+        private readonly string $defaultLocale = 'en_US', // fallback si pas d'en-tête
     ) {}
 
     /**
@@ -206,21 +207,65 @@ final class ClientManager
             return; // déjà hydraté
         }
 
-        $raw = $req->cookies->get(self::REMEMBER_NAME);
-        if (!$raw || !str_contains($raw, '|')) return;
-
-        [$b64, $sig] = explode('|', $raw, 2);
-        $json = base64_decode($b64, true);
-        if ($json === false) return;
-
-        $expected = hash_hmac('sha256', $json, $this->appSecret ?: 'fallback-secret');
-        if (!hash_equals($expected, $sig)) return; // cookie altéré → on ignore
-
-        $data = json_decode($json, true);
-        if (!is_array($data)) return;
+        $data = $this->readRememberPayload($req);
+        if ($data === null) return;
 
         if (!empty($data['l'])) $sess->set(self::K_LOCALE, (string)$data['l']);
         if (!empty($data['v'])) $sess->set(self::K_VERSION, (string)$data['v']);
+    }
+
+    /**
+     * Décode et vérifie l'intégrité du cookie "remember" (base64(json).'|'.hmac).
+     * Lecture seule : ne touche ni la session ni la requête.
+     *
+     * @return array{l?: string, v?: ?string}|null Payload validé, ou null si absent/altéré.
+     */
+    private function readRememberPayload(Request $req): ?array
+    {
+        $raw = $req->cookies->get(self::REMEMBER_NAME);
+        if (!is_string($raw) || !str_contains($raw, '|')) {
+            return null;
+        }
+
+        [$b64, $sig] = explode('|', $raw, 2);
+        $json = base64_decode($b64, true);
+        if ($json === false) {
+            return null;
+        }
+
+        $expected = hash_hmac('sha256', $json, $this->appSecret ?: 'fallback-secret');
+        if (!hash_equals($expected, $sig)) {
+            return null; // cookie altéré → on ignore
+        }
+
+        $data = json_decode($json, true);
+        return is_array($data) ? $data : null;
+    }
+
+    /**
+     * Récupère la locale DDragon sélectionnée (session puis cookie "remember"),
+     * sans démarrer ni écrire la session. Pensé pour piloter la locale d'UI à
+     * chaque requête sans surcoût.
+     *
+     * @return string|null "fr_FR" par ex., ou null si rien de mémorisé.
+     */
+    public function getSelectedLocale(): ?string
+    {
+        $req = $this->requestStack->getCurrentRequest();
+        if ($req === null) {
+            return null;
+        }
+
+        // Session d'abord, mais seulement si elle existe déjà (ne pas la démarrer).
+        if ($req->hasSession() && $req->hasPreviousSession()) {
+            $loc = $req->getSession()->get(self::K_LOCALE);
+            if (is_string($loc) && $loc !== '') {
+                return $loc;
+            }
+        }
+
+        $loc = $this->readRememberPayload($req)['l'] ?? null;
+        return (is_string($loc) && $loc !== '') ? $loc : null;
     }
 
     /**

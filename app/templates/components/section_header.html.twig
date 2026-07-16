@@ -1,0 +1,18 @@
+{# Page/section header — eyebrow + title + optional count. Params: eyebrow, title, count, count_label, with_logo #}
+<div class="flex items-center gap-4">
+  {% if with_logo|default(true) %}
+    <div class="hextech-frame relative grid h-14 w-14 shrink-0 place-items-center text-gold">
+      <div class="absolute inset-0 opacity-40 blur-lg" style="background: radial-gradient(closest-side, rgba(10,200,185,0.35), transparent);"></div>
+      {% include 'components/logo.html.twig' with { class: 'relative z-10 h-7 w-7' } %}
+    </div>
+  {% endif %}
+  <div>
+    {% if eyebrow is defined %}<p class="eyebrow mb-1.5">{{ eyebrow }}</p>{% endif %}
+    <h1 class="font-beaufort text-3xl uppercase tracking-wide text-gold-bright sm:text-4xl">{{ title }}</h1>
+    {% if count is defined and count is not null %}
+      <p class="mt-1.5 font-mono text-sm text-text-muted">
+        <span class="text-hex">{{ count }}</span> {{ count_label|default('') }}
+      </p>
+    {% endif %}
+  </div>
+</div>

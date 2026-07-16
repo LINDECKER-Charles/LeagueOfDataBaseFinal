@@ -3,93 +3,60 @@
 {% block title %}{{ 'setup.title'|trans }}{% endblock %}
 {% block meta_description %}{{ 'setup.meta'|trans }}{% endblock %}
 {% block img %}/preview/setup.png{% endblock %}
-{# {% block og_title %}{% endblock %} #}
-{# {% block twitter_title %}{% endblock %} #}
-{# {% block og_description %}{% endblock %} #}
-{# {% block twitter_description %}{% endblock %} #}
-{# {% block og_url %}{% endblock %} #}
-{# {% block og_type %}{% endblock %} #}
-{# {% block twitter_card %}{% endblock %} #}
-{# {% block theme_color %}{% endblock %} #}
-{# {% block meta_robots %}{% endblock %} #}
-{# {% block og_image %}{% endblock %} #}
-{# {% block twitter_image %}{% endblock %} #}
-
 
 {% block body %}
-<main class="relative flex flex-col justify-center items-center bg-blue-950 px-4 overflow-hidden min-h-screen" id="content">
+<main class="relative flex min-h-[80vh] items-center justify-center overflow-hidden px-4 py-16" id="content">
+  {% include 'partials/main/gradient.html.twig' %}
 
-      {# Sélection par défaut depuis le DTO (inchangé) #}
-      {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
-      {% set selectedVersion = client.session.version ?? (client.versions|first) %}
+  {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
+  {% set selectedVersion = client.session.version ?? (client.versions|first) %}
 
-      {# Carte formulaire (inchangé, juste contenu) #}
-      <section class="w-full max-w-xl bg-blue-850/90 text-white p-8 border border-grey-700 rounded-2xl shadow-xl backdrop-blur-md">
-        <form action="{{ path('app_setup_save') }}" method="post" class="w-full flex flex-col items-center gap-12">
-          {# <input type="hidden" name="_token" value="{{ csrf_token('setup_form') }}"> #}
+  <section class="relative w-full max-w-xl">
+    {# Intro #}
+    <div class="mb-8 text-center">
+      <p class="eyebrow mb-4">{{ 'header.navigation.home'|trans }} · Data Dragon</p>
+      <h1 class="font-beaufort text-4xl uppercase leading-tight tracking-wide text-gold-bright sm:text-5xl">
+        League Of Data Base
+      </h1>
+      <div class="mx-auto mt-4 h-px w-40 bg-gradient-to-r from-transparent via-gold to-transparent"></div>
+    </div>
 
-          <!-- Version -->
-          <div class="w-full flex flex-col items-center gap-4">
-            <label for="version" class="font-beaufort text-4xl">{{ 'setup.form.version'|trans }}</label>
-            <div class="relative w-4/5">
-              <select
-                id="version"
-                name="version"
-                class="w-full text-2xl px-6 py-5 bg-blue-950 text-white border border-grey-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 hover:cursor-pointer appearance-none pr-12"
-              >
-                {% for version in client.versions %}
-                  <option value="{{ version }}" {{ version == selectedVersion ? 'selected' : '' }}>
-                    {{ version }}
-                  </option>
-                {% endfor %}
-              </select>
-              <span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-200/70">▾</span>
-            </div>
-          </div>
+    {# Console #}
+    <div class="hextech-frame p-8 sm:p-10">
+      <form action="{{ path('app_setup_save') }}" method="post" class="flex w-full flex-col gap-9">
+        {# Version #}
+        <div class="flex flex-col items-center gap-3">
+          <label for="version" class="eyebrow">{{ 'setup.form.version'|trans }}</label>
+          <select id="version" name="version" class="hx-select w-full text-center text-lg">
+            {% for version in client.versions %}
+              <option value="{{ version }}" {{ version == selectedVersion ? 'selected' : '' }}>{{ version }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-          <!-- Langue -->
-          <div class="w-full flex flex-col items-center gap-4">
-            <label for="langue" class="font-beaufort text-4xl">{{ 'setup.form.language'|trans }}</label>
-            <div class="relative w-4/5">
-              <select
-                id="langue"
-                name="langue"
-                class="hover:cursor-pointer w-full text-2xl px-6 py-5 bg-blue-950 text-white border border-grey-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 appearance-none pr-12"
-              >
-                {% for lang in client.languages %}
-                  <option value="{{ lang }}" {{ lang == selectedLocale ? 'selected' : '' }}>
-                    {{ client.languageLabels[lang] ?? lang }}
-                  </option>
-                {% endfor %}
-              </select>
-              <span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-200/70">▾</span>
-            </div>
-            <p class="italic text-sm opacity-70 text-white mt-2">
-              {{ 'setup.form.note_latest'|trans }}
-            </p>
-          </div>
+        {# Language #}
+        <div class="flex flex-col items-center gap-3">
+          <label for="langue" class="eyebrow">{{ 'setup.form.language'|trans }}</label>
+          <select id="langue" name="langue" class="hx-select w-full text-center text-lg">
+            {% for lang in client.languages %}
+              <option value="{{ lang }}" {{ lang == selectedLocale ? 'selected' : '' }}>{{ client.languageLabels[lang] ?? lang }}</option>
+            {% endfor %}
+          </select>
+          <p class="mt-1 text-center text-xs italic text-text-muted">{{ 'setup.form.note_latest'|trans }}</p>
+        </div>
 
-          <!-- Rappel -->
-          <div class="w-4/5 flex items-center gap-4">
-            <input
-              type="checkbox"
-              id="remember"
-              name="remember"
-              class="w-5 h-5 appearance-none border-2 border-grey-700 rounded-sm bg-blue-950 checked:bg-blue-200 checked:border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-200"
-            />
-            <label for="remember" class="font-semibold italic text-sm select-none">
-              {{ 'setup.form.remember'|trans }}
-            </label>
-          </div>
+        {# Remember #}
+        <label for="remember" class="flex cursor-pointer select-none items-center justify-center gap-3 text-sm text-text-muted">
+          <input type="checkbox" id="remember" name="remember" class="hx-check">
+          <span class="italic">{{ 'setup.form.remember'|trans }}</span>
+        </label>
 
-          <!-- Bouton -->
-          <button
-            type="submit"
-            class="duration-300 w-4/5 text-2xl font-bold py-5 rounded-lg bg-blue-200 text-blue-950 border border-grey-700 shadow hover:bg-blue-100 hover:shadow-lg hover:cursor-pointer transition"
-          >
-            {{ 'setup.form.submit'|trans }}
-          </button>
-        </form>
-      </section>
-  </main>
+        {# Submit #}
+        <button type="submit" class="hx-btn w-full py-4 text-base">
+          {{ 'setup.form.submit'|trans }}
+        </button>
+      </form>
+    </div>
+  </section>
+</main>
 {% endblock %}

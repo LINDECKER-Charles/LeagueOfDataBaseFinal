@@ -1,0 +1,79 @@
+name: _build
+
+# Reusable: build the 3 images and push them to GHCR, tagged with the triggering SHA
+# (immutable) plus a moving tag (default: staging). Single responsibility = "produce the
+# candidate artifacts". Uses the automatic GITHUB_TOKEN (no extra secret needed).
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to build from (e.g. the test branch after merge).
+        required: true
+        type: string
+      moving_tag:
+        description: Moving tag applied alongside the immutable SHA tag (e.g. staging).
+        required: false
+        type: string
+        default: staging
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ${{ inputs.ref }}
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Compute image prefix (lowercase owner)
+        run: echo "IMG=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb" >> "$GITHUB_ENV"
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push app (php-fpm)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/php/Dockerfile
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ${{ env.IMG }}/app:${{ github.sha }}
+            ${{ env.IMG }}/app:${{ inputs.moving_tag }}
+
+      - name: Build & push nginx
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/nginx/Dockerfile
+          push: true
+          build-args: |
+            APP_IMAGE=${{ env.IMG }}/app:${{ github.sha }}
+          tags: |
+            ${{ env.IMG }}/nginx:${{ github.sha }}
+            ${{ env.IMG }}/nginx:${{ inputs.moving_tag }}
+
+      - name: Build & push go-fetcher
+        uses: docker/build-push-action@v6
+        with:
+          context: go-workers
+          file: go-workers/Dockerfile
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ${{ env.IMG }}/go-fetcher:${{ github.sha }}
+            ${{ env.IMG }}/go-fetcher:${{ inputs.moving_tag }}

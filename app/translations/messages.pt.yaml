@@ -1,0 +1,220 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Bem-vindo ao League of Data Base. Explore itens e feitiços de invocador de League of Legends com estatísticas e detalhes do patch %version%."
+  hero:
+    browse: "Veja informações detalhadas sobre <strong>Feitiços de Invocador</strong> e <strong>Itens</strong> de League of Legends. Atualizado para o patch %version%."
+    explore_summoners: "Explorar Feitiços de Invocador"
+    explore_items: "Explorar Itens"
+    explore_champions: "Explorar Campeões"
+    explore_runes: "Explorar Runas"
+  summoners:
+    title: "Feitiços de Invocador"
+    see_all: "Ver todos os feitiços"
+  items:
+    title: "Itens"
+    see_all: "Ver todos os itens"
+  champions:
+    title: "Campeões"
+    see_all: "Ver todos os campeões"
+    no_data: "Nenhum campeão disponível para esta versão."
+    wip: "Esta seção está em construção. Em breve você poderá navegar por todos os campeões."
+  runes:
+    title: "Runas"
+    wip: "Esta seção está em construção. Em breve você poderá explorar as runas."
+    see_all: "Ver todas as runas"
+
+
+setup:
+  title: "Configuração"
+  meta: "Escolha a versão do jogo e o idioma de sua preferência para personalizar sua experiência no League of Data Base. Todas as estatísticas e dados serão adaptados às suas configurações."
+  form:
+    version: "Versão"
+    language: "Idioma"
+    note_latest: "*A versão mais recente é selecionada automaticamente."
+    remember: "Lembrar de mim"
+    submit: "Enviar"
+
+system:
+  under_construction:
+    title: "Em Construção"
+    meta_description: "League of Data Base está atualmente em construção. Estamos trabalhando muito para trazer estatísticas detalhadas, insights e ferramentas para League of Legends. Fique de olho nas atualizações."
+    heading: "Esta página está em construção"
+    subheading: "Estamos forjando este recurso na Fenda. Volte em breve para conferir algo épico."
+    info: "Se você chegou a esta página, o conteúdo ainda não foi lançado. Estamos trabalhando na performance, na precisão dos dados e em uma UX fluida que combine com o resto do League Of Data Base."
+    progress_label: "Progresso da construção"
+    back: "← Voltar"
+    summoners: "Ver Feitiços de Invocador"
+    setup: "Escolher versão e idioma"
+    footer: "Precisa disso logo? Fale conosco ou consulte o roadmap. Mais atualizações estão a caminho."
+    meanwhile: "Enquanto isso, você pode:"
+
+item:
+  detail:
+    meta_description: "Descubra tudo sobre o item %name% em League of Legends. Estatísticas, efeitos e informações de build atualizadas para o patch %version%."
+    version_locale: "Versão: %version% — Idioma: %locale%"
+    price_total: "Custo total"
+    price_base: "Custo de compra"
+    price_sell: "Valor de venda"
+    categories: "Categorias"
+    evolutions: "Possíveis evoluções"
+    stats: "Estatísticas"
+    description: "Descrição"
+    recipe: "Receita"
+    builds_from: "Composto por"
+    tier: "Nível %depth%"
+    availability: "Disponibilidade"
+    back: "← Voltar à lista"
+    setup: "Alterar versão e idioma"
+  list:
+      title: "Itens"
+      meta_description: "Navegue por todos os itens de League of Legends disponíveis no patch %version%. Encontre estatísticas, custos e efeitos detalhados atualizados para a versão mais recente."
+      header: "Itens"
+      subtitle: "Catálogo de itens"
+      results_per_page: "Resultados por página:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "Buscar um item…"
+      change_version: "Alterar versão/idioma"
+      cost_total: "Custo total"
+      cost_sell: "Valor de venda"
+      categories: "Categorias"
+      evolutions: "Possíveis evoluções"
+      description: "Descrição"
+
+summoner:
+  detail:
+    meta_description: "Explore os detalhes do feitiço de invocador %name% em League of Legends. Estatísticas e efeitos atualizados para o patch %version%."
+    version_locale: "Versão: %version% — Idioma: %locale%"
+    fields:
+      cooldown: "Recarga"
+      maxammo: "Número de cargas"
+      range: "Alcance de uso"
+      cost: "Custo"
+      summoner_level: "Nível do invocador"
+    unlocked_at: "Desbloqueado no nível %level%"
+    range_global: "Global"
+    no_cost: "Sem custo"
+    modes: "Modos compatíveis"
+    description: "Descrição"
+  card:
+    cooldown: "Recarga"
+    level: "Nível do invocador"
+    modes: "Modos compatíveis"
+    description: "Descrição"
+  list:
+    title: "Feitiços de Invocador"
+    subtitle: "Catálogo de Feitiços de Invocador"
+    count: "count feitiços"
+
+champion:
+  list:
+    title: "Campeões"
+    meta_description: "Navegue por todos os campeões de League of Legends. Encontre estatísticas detalhadas, habilidades e lore de cada campeão do jogo."
+    header: "Campeões"
+    subtitle: "Catálogo de campeões"
+    search_placeholder: "Buscar um campeão…"
+    change_version: "Alterar versão/idioma"
+  detail:
+    meta_description: "Descubra %name% de League of Legends, com estatísticas, papéis e detalhes do patch %version%."
+    version_locale: "Patch %version% • %locale%"
+    partype: "Recurso: %partype%"
+    roles: "Funções"
+    abilities: "Habilidades"
+    passive: "Passiva"
+    skins: "Skins"
+    cooldown: "Tempo de recarga"
+    cost: "Custo"
+    range: "Alcance"
+    tips_as: "Ao jogar como"
+    tips_against: "Ao enfrentar"
+    stats:
+      title: "Estatísticas Base"
+    profile:
+      title: "Perfil do Campeão"
+      attack: "Ataque"
+      defense: "Defesa"
+      magic: "Magia"
+      difficulty: "Dificuldade"
+    lore:
+      title: "História"
+
+rune:
+  list:
+    title: "Runas"
+    meta_description: "Navegue por todas as runas de League of Legends. Encontre estatísticas e efeitos detalhados de cada runa do jogo."
+    header: "Runas"
+    subtitle: "Catálogo de runas"
+    search_placeholder: "Buscar uma runa…"
+    change_version: "Alterar versão/idioma"
+  detail:
+    title: "Runa: %name%"
+    meta_description: "Descubra os detalhes da runa %name% em League of Legends. Estatísticas e efeitos atualizados para o patch %version%."
+    overview: "Visão geral"
+    keystone: "Runa fundamental"
+    minor: "Runas menores"
+    slot_n: "Compartimento %n%"
+  slot: "Slot"
+
+common:
+  back: "Voltar"
+  search: "Buscar…"
+  no_result:
+    text: "Nenhum resultado encontrado para sua busca."
+    back: "← Voltar"
+    setup: "Escolher versão e idioma"
+  detail : "Ver detalhes →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base é uma plataforma mantida pela comunidade que fornece informações detalhadas, estatísticas e insights sobre League of Legends. Rápida, confiável e sempre atualizada."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Aviso Legal"
+
+  navigation:
+    title: "Navegação"
+    home: "Início"
+    champion: "Campeão"
+    item: "Item"
+    runes: "Runas"
+    summoner: "Invocador"
+
+  links:
+    title: "Links Úteis"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Projeto"
+    version: "Versão: Beta 2.0"
+    updated: "Atualizado: 03/08/2025"
+
+  contact:
+    title: "Contato"
+    email: "Email"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Invocando dados"
+  subtitle: "Buscando recursos na Fenda…"
+  preparing: "Preparando dados…"
+  status:
+    fetching: "buscando"
+    ready: "pronto"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Início"
+    champion: "Campeões"
+    item: "Itens"
+    runes: "Runas"
+    summoner: "Feitiços de Invocador"

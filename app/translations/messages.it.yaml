@@ -1,0 +1,220 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Benvenuto su League of Data Base. Esplora oggetti e incantesimi da evocatore di League of Legends con statistiche e dettagli per la patch %version%."
+  hero:
+    browse: "Consulta informazioni dettagliate su <strong>Incantesimi da Evocatore</strong> e <strong>Oggetti</strong> di League of Legends. Aggiornato per la patch %version%."
+    explore_summoners: "Esplora gli Incantesimi da Evocatore"
+    explore_items: "Esplora gli Oggetti"
+    explore_champions: "Esplora i Campioni"
+    explore_runes: "Esplora le Rune"
+  summoners:
+    title: "Incantesimi da Evocatore"
+    see_all: "Vedi tutti gli incantesimi"
+  items:
+    title: "Oggetti"
+    see_all: "Vedi tutti gli oggetti"
+  champions:
+    title: "Campioni"
+    see_all: "Vedi tutti i campioni"
+    no_data: "Nessun campione disponibile per questa versione."
+    wip: "Questa sezione è in costruzione. Presto potrai sfogliare tutti i campioni."
+  runes:
+    title: "Rune"
+    wip: "Questa sezione è in costruzione. Presto potrai esplorare le rune."
+    see_all: "Vedi tutte le rune"
+
+
+setup:
+  title: "Configurazione"
+  meta: "Scegli la versione di gioco e la lingua preferite per personalizzare la tua esperienza su League of Data Base. Tutte le statistiche e i dati si adatteranno alle tue impostazioni."
+  form:
+    version: "Versione"
+    language: "Lingua"
+    note_latest: "*L'ultima versione viene selezionata automaticamente."
+    remember: "Ricordami"
+    submit: "Invia"
+
+system:
+  under_construction:
+    title: "In Costruzione"
+    meta_description: "League of Data Base è attualmente in costruzione. Stiamo lavorando duramente per offrirti statistiche dettagliate, approfondimenti e strumenti per League of Legends. Resta sintonizzato per gli aggiornamenti."
+    heading: "Questa pagina è in costruzione"
+    subheading: "Stiamo forgiando questa funzionalità nella Landa. Torna presto per qualcosa di epico."
+    info: "Se sei arrivato a questa pagina, il contenuto non è ancora disponibile. Stiamo lavorando su prestazioni, accuratezza dei dati e un'esperienza utente fluida che rispecchi il resto di League Of Data Base."
+    progress_label: "Avanzamento della build"
+    back: "← Torna indietro"
+    summoners: "Vedi gli Incantesimi da Evocatore"
+    setup: "Scegli versione e lingua"
+    footer: "Ti serve presto? Contattaci o consulta la roadmap. Altri aggiornamenti in arrivo."
+    meanwhile: "Nel frattempo, puoi:"
+
+item:
+  detail:
+    meta_description: "Scopri tutto sull'oggetto %name% in League of Legends. Statistiche, effetti e informazioni sulle build aggiornate per la patch %version%."
+    version_locale: "Versione: %version% — Lingua: %locale%"
+    price_total: "Costo totale"
+    price_base: "Costo di acquisto"
+    price_sell: "Valore di vendita"
+    categories: "Categorie"
+    evolutions: "Possibili evoluzioni"
+    stats: "Statistiche"
+    description: "Descrizione"
+    recipe: "Ricetta"
+    builds_from: "Composto da"
+    tier: "Livello %depth%"
+    availability: "Disponibilità"
+    back: "← Torna all'elenco"
+    setup: "Cambia versione e lingua"
+  list:
+      title: "Oggetti"
+      meta_description: "Sfoglia tutti gli oggetti di League of Legends disponibili nella patch %version%. Trova statistiche dettagliate, costi ed effetti aggiornati all'ultima versione."
+      header: "Oggetti"
+      subtitle: "Catalogo oggetti"
+      results_per_page: "Risultati per pagina:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "Cerca un oggetto…"
+      change_version: "Cambia versione/lingua"
+      cost_total: "Costo totale"
+      cost_sell: "Valore di vendita"
+      categories: "Categorie"
+      evolutions: "Possibili evoluzioni"
+      description: "Descrizione"
+
+summoner:
+  detail:
+    meta_description: "Esplora i dettagli dell'incantesimo da evocatore %name% in League of Legends. Statistiche ed effetti aggiornati per la patch %version%."
+    version_locale: "Versione: %version% — Lingua: %locale%"
+    fields:
+      cooldown: "Tempo di ricarica"
+      maxammo: "Numero di cariche"
+      range: "Raggio d'uso"
+      cost: "Costo"
+      summoner_level: "Livello dell'evocatore"
+    unlocked_at: "Sbloccato al livello %level%"
+    range_global: "Globale"
+    no_cost: "Nessun costo"
+    modes: "Modalità compatibili"
+    description: "Descrizione"
+  card:
+    cooldown: "Tempo di ricarica"
+    level: "Livello dell'evocatore"
+    modes: "Modalità compatibili"
+    description: "Descrizione"
+  list:
+    title: "Incantesimi da Evocatore"
+    subtitle: "Catalogo Incantesimi da Evocatore"
+    count: "conteggio incantesimi"
+
+champion:
+  list:
+    title: "Campioni"
+    meta_description: "Sfoglia tutti i campioni di League of Legends. Trova statistiche dettagliate, abilità e lore per ogni campione del gioco."
+    header: "Campioni"
+    subtitle: "Catalogo campioni"
+    search_placeholder: "Cerca un campione…"
+    change_version: "Cambia versione/lingua"
+  detail:
+    meta_description: "Scopri %name% di League of Legends, con statistiche, ruoli e dettagli per la patch %version%."
+    version_locale: "Patch %version% • %locale%"
+    partype: "Risorsa: %partype%"
+    roles: "Ruoli"
+    abilities: "Abilità"
+    passive: "Passiva"
+    skins: "Skin"
+    cooldown: "Tempo di recupero"
+    cost: "Costo"
+    range: "Gittata"
+    tips_as: "Giocando come"
+    tips_against: "Giocando contro"
+    stats:
+      title: "Statistiche Base"
+    profile:
+      title: "Profilo del Campione"
+      attack: "Attacco"
+      defense: "Difesa"
+      magic: "Magia"
+      difficulty: "Difficoltà"
+    lore:
+      title: "Lore"
+
+rune:
+  list:
+    title: "Rune"
+    meta_description: "Sfoglia tutte le rune di League of Legends. Trova statistiche dettagliate ed effetti per ogni runa del gioco."
+    header: "Rune"
+    subtitle: "Catalogo rune"
+    search_placeholder: "Cerca una runa…"
+    change_version: "Cambia versione/lingua"
+  detail:
+    title: "Runa: %name%"
+    meta_description: "Scopri i dettagli della runa %name% in League of Legends. Statistiche ed effetti aggiornati per la patch %version%."
+    overview: "Panoramica"
+    keystone: "Runa fondamentale"
+    minor: "Rune minori"
+    slot_n: "Slot %n%"
+  slot: "Slot"
+
+common:
+  back: "Indietro"
+  search: "Cerca…"
+  no_result:
+    text: "Nessun risultato trovato per la tua ricerca."
+    back: "← Indietro"
+    setup: "Scegli versione e lingua"
+  detail : "Vedi dettagli →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base è una piattaforma gestita dalla community che offre informazioni dettagliate, statistiche e approfondimenti su League of Legends. Veloce, affidabile e sempre aggiornata."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Note Legali"
+
+  navigation:
+    title: "Navigazione"
+    home: "Home"
+    champion: "Campione"
+    item: "Oggetto"
+    runes: "Rune"
+    summoner: "Evocatore"
+
+  links:
+    title: "Link Utili"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Progetto"
+    version: "Versione: Beta 2.0"
+    updated: "Aggiornato: 03/08/2025"
+
+  contact:
+    title: "Contatti"
+    email: "Email"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Evocazione dati in corso"
+  subtitle: "Recupero risorse dalla Landa…"
+  preparing: "Preparazione dei dati…"
+  status:
+    fetching: "recupero in corso"
+    ready: "pronto"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Home"
+    champion: "Campioni"
+    item: "Oggetti"
+    runes: "Rune"
+    summoner: "Incantesimi da Evocatore"

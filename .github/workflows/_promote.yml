@@ -1,0 +1,50 @@
+name: _promote
+
+# Reusable: promote already-validated images by retagging them on the registry
+# (source_tag -> target tags). Build once, promote the same artifact — no rebuild.
+# Single responsibility = "bless the staging images as prod".
+on:
+  workflow_call:
+    inputs:
+      source_tag:
+        description: Tag to promote from (the validated staging images).
+        required: false
+        type: string
+        default: staging
+      target_tags:
+        description: Space-separated tags to create (all point at source_tag's digest).
+        required: false
+        type: string
+        default: prod latest
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compute image prefix (lowercase owner)
+        run: echo "IMG=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb" >> "$GITHUB_ENV"
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Retag ${{ inputs.source_tag }} → ${{ inputs.target_tags }} (no rebuild)
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+          TARGET_TAGS: ${{ inputs.target_tags }}
+        run: |
+          for svc in app nginx go-fetcher; do
+            tags=""
+            for t in $TARGET_TAGS; do tags="$tags --tag ${IMG}/${svc}:${t}"; done
+            docker buildx imagetools create $tags "${IMG}/${svc}:${SOURCE_TAG}"
+          done

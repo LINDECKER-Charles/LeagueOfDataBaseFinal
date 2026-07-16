@@ -15,5 +15,26 @@ framework:
         #app: cache.adapter.apcu
 
         # Namespaced pools use the above "app" backend by default
-        #pools:
-            #my.dedicated.cache: null
+        pools:
+            # Read-through cache in front of the MinIO object storage for the
+            # DDragon datasets + image manifests. The data is immutable per
+            # (version, lang), so a long TTL is safe; the manifest pool is
+            # invalidated write-through on ingest. Filesystem here (guaranteed);
+            # switch `adapter` to cache.adapter.apcu (single node) or
+            # cache.adapter.redis (multi-node) for an in-memory backend.
+            ddragon.cache:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 604800 # 7 days
+
+# In dev the ddragon.cache pool lives in APCu (shared memory) instead of the
+# filesystem, so every manifest/dataset read stops hitting the slow bind-mounted
+# var/ (see docs/docker.md, A1). Single-node only: APCu is per-container, so prod
+# keeps the filesystem backend above — a shared manifest is required the moment
+# php scales out, otherwise workers serve a stale copy (see the audit's A2).
+when@dev:
+    framework:
+        cache:
+            pools:
+                ddragon.cache:
+                    adapter: cache.adapter.apcu
+                    default_lifetime: 604800 # 7 days

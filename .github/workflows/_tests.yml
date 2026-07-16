@@ -1,0 +1,103 @@
+name: _tests
+
+# Reusable: PHP / Go / JS test suites. Single responsibility = "is the code green?".
+# Called by ci.yml on dev pushes. No deploy, no registry access.
+# ENV_TEST = the app's test-env dotenv (source file .env.test), distinct from the
+# staging DEPLOY (.env.staging / ENV_STAGING).
+on:
+  workflow_call:
+    secrets:
+      ENV_TEST:
+        description: App test-env dotenv, written to app/.env.test.local before PHPUnit/lints.
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: test
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, ctype, iconv
+          coverage: none
+
+      - name: Prepare test env (from ENV_CI secret)
+        env:
+          ENV_CI: ${{ secrets.ENV_CI }}
+        run: printf '%s\n' "$ENV_CI" > .env.test.local
+
+      - name: Cache Composer
+        uses: actions/cache@v5
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Lint YAML, Twig, Container
+        run: |
+          php bin/console lint:yaml config
+          php bin/console lint:twig templates
+          php bin/console lint:container
+
+      - name: PHPUnit
+        run: php bin/phpunit
+
+  go:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: go-workers
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25'
+          # Module vit dans go-workers/ et n'a pas de go.sum (deps stdlib) :
+          # cible go.mod pour la clé de cache, sinon setup-go cherche à la racine.
+          cache-dependency-path: go-workers/go.mod
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./... -count=1
+
+  js:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Vitest (Vue islands)
+        run: npm test
