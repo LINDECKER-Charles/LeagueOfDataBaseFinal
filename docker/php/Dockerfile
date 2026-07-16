@@ -7,9 +7,10 @@
 ########################################################################
 FROM php:8.4-fpm-alpine AS php_base
 
-# Reliable multi-extension installer (intl/icu, opcache, zip, ...)
+# Reliable multi-extension installer (intl/icu, opcache, zip, ...).
+# gd (with libwebp) powers WebP transcoding of DDragon images at ingestion.
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions intl opcache zip
+RUN install-php-extensions intl opcache zip gd
 
 # Application PHP configuration
 COPY docker/php/php.ini      /usr/local/etc/php/conf.d/zz-app.ini

@@ -11,6 +11,8 @@ permissions:
 jobs:
   test-php:
     runs-on: ubuntu-latest
+    env:
+      APP_ENV: test   # lint + phpunit run in test env; secrets come from .env.test.local
     defaults:
       run:
         working-directory: app
@@ -25,18 +27,10 @@ jobs:
           extensions: intl, ctype, iconv
           coverage: none
 
-      - name: 🧩 Prepare test .env
-        run: |
-          {
-            echo "APP_ENV=test"
-            echo "APP_SECRET=ci-secret"
-            echo "GO_FETCHER_URL=http://127.0.0.1:8085"
-            echo "MINIO_ENDPOINT=http://127.0.0.1:9000"
-            echo "MINIO_REGION=us-east-1"
-            echo "MINIO_BUCKET=ddragon"
-            echo "MINIO_ACCESS_KEY=ci"
-            echo "MINIO_SECRET_KEY=ci-secret"
-          } > .env
+      - name: 🧩 Prepare test env (from ENV_TEST secret)
+        env:
+          ENV_TEST: ${{ secrets.ENV_TEST }}
+        run: printf '%s\n' "$ENV_TEST" > .env.test.local
 
       - name: 💾 Cache Composer
         uses: actions/cache@v4
@@ -190,6 +184,13 @@ jobs:
 
       - name: 🔐 Known hosts
         run: ssh-keyscan -H ${{ secrets.PROD_HOST }} >> ~/.ssh/known_hosts
+
+      - name: 🔑 Push prod env to server (from ENV_PROD secret)
+        env:
+          ENV_PROD: ${{ secrets.ENV_PROD }}
+        run: |
+          printf '%s\n' "$ENV_PROD" \
+            | ssh ${{ secrets.PROD_SSH_USER || 'root' }}@${{ secrets.PROD_HOST }} "cat > ${{ secrets.PROD_PATH }}/.env"
 
       - name: 🚀 Deploy (compose pull + up)
         run: |
