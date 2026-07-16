@@ -45,8 +45,8 @@ services:
       dockerfile: docker/nginx/Dockerfile
       args:
         APP_IMAGE: ${REGISTRY:-lodb}/app:${IMAGE_TAG:-latest}
-    # No host port here: in prod Caddy (compose.prod.yaml) is the public entrypoint and
-    # reaches nginx internally; dev publishes ${HTTP_PORT} via compose.override.yaml.
+    # No host port here: when deployed, Caddy (compose.deploy.yaml) is the public
+    # entrypoint and reaches nginx internally; dev publishes ${HTTP_PORT} via compose.override.yaml.
     depends_on:
       php:
         condition: service_started

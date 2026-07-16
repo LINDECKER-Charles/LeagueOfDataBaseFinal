@@ -1,13 +1,14 @@
 name: lodb
 
-# Production TLS overlay — applied ON TOP of compose.yaml, explicitly and WITHOUT
-# compose.override.yaml (which carries dev-only conveniences). The deploy job selects
-# the files via COMPOSE_FILE (see .github/workflows/ci.yml):
+# Deployment overlay — applied ON TOP of compose.yaml for ANY served environment
+# (staging AND prod), explicitly and WITHOUT compose.override.yaml (dev conveniences).
+# The deploy jobs select the files via COMPOSE_FILE (see .github/workflows/ci.yml):
 #
-#   COMPOSE_FILE=compose.yaml:compose.prod.yaml docker compose up -d
+#   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
 #
-# Caddy becomes the sole public entrypoint (80/443, automatic Let's Encrypt) and
-# reverse-proxies to the internal nginx, which is no longer host-published in prod.
+# What differs between staging and prod is ONLY the host's .env (CADDY_DOMAINS, secrets,
+# IMAGE_TAG=staging|prod). Caddy is the sole public entrypoint (80/443, automatic
+# Let's Encrypt) and reverse-proxies to the internal nginx, which is not host-published.
 
 services:
   caddy:
