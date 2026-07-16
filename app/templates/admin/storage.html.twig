@@ -1,0 +1,65 @@
+{% extends 'admin/_base.html.twig' %}
+{% import _self as fmt %}
+
+{% macro bytes(n) %}
+    {%- if n >= 1099511627776 -%}{{ (n / 1099511627776)|number_format(2) }} TB
+    {%- elseif n >= 1073741824 -%}{{ (n / 1073741824)|number_format(2) }} GB
+    {%- elseif n >= 1048576 -%}{{ (n / 1048576)|number_format(2) }} MB
+    {%- elseif n >= 1024 -%}{{ (n / 1024)|number_format(2) }} KB
+    {%- else -%}{{ n }} B
+    {%- endif -%}
+{% endmacro %}
+
+{% block title %}Stockage · Admin · LODB{% endblock %}
+
+{% block nav %}
+    <nav><a href="{{ path('admin_storage') }}" class="is-active">Stockage</a></nav>
+{% endblock %}
+
+{% block admin_body %}
+    <section class="card">
+        <div class="card__head">
+            <h1>Stockage objet (MinIO)</h1>
+            <p class="muted">Poids des ressources de l'application, agrégé par famille (préfixe du bucket <code>{{ 'ddragon' }}</code>).</p>
+        </div>
+
+        {% if not report.ok %}
+            <p class="alert">Stockage indisponible : {{ report.error }}</p>
+        {% else %}
+            <div class="totals">
+                <div class="stat"><span class="stat__val">{{ fmt.bytes(report.total.bytes) }}</span><span class="stat__lbl">Poids total</span></div>
+                <div class="stat"><span class="stat__val">{{ report.total.objects }}</span><span class="stat__lbl">Objets</span></div>
+                <div class="stat"><span class="stat__val">{{ report.prefixes|length }}</span><span class="stat__lbl">Familles</span></div>
+            </div>
+
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th>Famille</th>
+                        <th class="num">Objets</th>
+                        <th class="num">Poids</th>
+                        <th>Part</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for family, row in report.prefixes %}
+                        {% set pct = report.total.bytes > 0 ? (row.bytes / report.total.bytes * 100) : 0 %}
+                        <tr>
+                            <td><code>{{ family }}</code></td>
+                            <td class="num">{{ row.objects }}</td>
+                            <td class="num">{{ fmt.bytes(row.bytes) }}</td>
+                            <td>
+                                <div class="share">
+                                    <div class="bar"><span style="width: {{ pct|round(1) }}%"></span></div>
+                                    <em>{{ pct|round(1) }} %</em>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4" class="muted">Aucune donnée stockée pour le moment.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </section>
+{% endblock %}
