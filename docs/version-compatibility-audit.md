@@ -1,11 +1,11 @@
 # Audit de compatibilité des versions Data Dragon
 
-> **Statut : diagnostic uniquement — aucun correctif appliqué.**
-> Ce document recense les pages qui plantent (ou se dégradent) selon la version
-> d'API Data Dragon sélectionnée, identifie la cause racine de chaque bug et
-> propose un plan de correction. Il ne modifie aucun code.
+> **Statut : correctifs appliqués + vérifiés (cf. §10).** Les 4 bugs (A/B/C/D)
+> décrits ci-dessous ont été corrigés ; ce document conserve le diagnostic
+> complet (cause racine, périmètre exhaustif) et documente l'implémentation et
+> la vérification end-to-end.
 
-Date : 2026-07-16 · Branche : `feat/archi-refacto`
+Date : audit 2026-07-16 · correctifs 2026-07-17 · Branche : `feat/archi-refacto`
 
 ---
 
@@ -381,7 +381,7 @@ Mesure **désormais exhaustive** : les 28 langues × 397 versions ont été bala
 
 ---
 
-## 7. Plan de correction priorisé (à appliquer ultérieurement)
+## 7. Plan de correction priorisé (✅ appliqué — cf. §10)
 
 | Prio | Action | Corrige | Fichier(s) | Risque |
 |------|--------|---------|-----------|--------|
@@ -393,7 +393,9 @@ Mesure **désormais exhaustive** : les 28 langues × 397 versions ont été bala
 | **P2** | Test fonctionnel « détails sur version ancienne + langue tardive » | Non-régression B & D | `tests/` | faible |
 | **P3** | UX : état vide runes / langues indispo expliqués (A-3) | Confort | templates + front | faible |
 
-> **Aucune** de ces actions n'a été appliquée dans le cadre de ce document.
+> Ces actions ont été **appliquées et vérifiées** (§10). La validation par
+> version (D-2, table de langues par version) et l'UX état-vide (A-3, P3) restent
+> optionnelles : le repli `en_US` (D-3) neutralise déjà tout crash de l'axe langue.
 
 ---
 
@@ -471,6 +473,43 @@ Le modèle dérivé des données a été confronté à l'app pour des cas **non-
 | `/champions?version=5.1.1&lang=ar_AE` | 302 | ✅ 302 |
 
 Concordance **7/7**. Les chiffres dérivés sont donc fiables.
+
+---
+
+## 10. Correctifs appliqués + vérification
+
+### 10.1 Implémentation
+
+Principe : traiter l'absence définitive (403/404) **à la racine** — le chemin
+d'erreur commun aux bugs A et D — plutôt que de rustiner chaque page.
+
+| Fichier | Changement |
+|---------|-----------|
+| `src/Service/Tools/UpstreamNotFoundException.php` *(nouveau)* | Exception typée « ressource définitivement absente » (extends `RuntimeException`). |
+| `src/Service/Tools/GoFetcherClient.php` | `fetch()` lève `UpstreamNotFoundException` sur **403/404**, `RuntimeException` sur les autres non-2xx (transitoire). |
+| `src/Service/API/AbstractManager.php` | `getData()` : sur absence définitive → repli `en_US` si seule la **langue** manque, sinon **jeu vide** ; les deux persistés. Transitoire (5xx) propagé (jamais figé en vide). **Corrige A + D à la source.** |
+| `src/Service/API/ChampionManager.php` | `getDetail()` : détail par champion `403` → résumé seul (plus d'exception). |
+| `src/Controller/HomeController.php` | `home()` : chaque preview isolée (`preview()`), forme vide complète compatible `strict_variables`. **Corrige C** + durcit contre les pannes transitoires. |
+| `templates/champion/detail.html.twig` | Gardes `champion.title`, `champion.partype` ; skins : `skin.num ?? loop.index0` (repli positionnel = numérotation correcte des splashs). **Corrige B** (+ rendu prod des splashs). |
+| `tests/Unit/.../GoFetcherClientTest.php`, `AbstractManagerDataResolutionTest.php` *(nouveau)* | Non-régression : 403/404 → `NotFound`, 5xx → générique ; jeu vide / repli langue / propagation transitoire. |
+
+> `/rune/{key}` sur une version sans runes reste un `302` → `/setup` : c'est le
+> comportement « entité inexistante » (getByName sur jeu vide), pas un crash. La
+> **liste** `/runes`, elle, dégrade désormais en état vide. Un vrai `404` de
+> détail serait une amélioration UX transverse hors périmètre de ce correctif.
+
+### 10.2 Vérification
+
+- **Suite PHPUnit** : **54 tests / 93 assertions verts** (`APP_ENV=test`), dont
+  5 nouveaux.
+- **Bug A** (end-to-end) : `/home` + `/runes` = `200` sur 12 versions < 7.22
+  réparties sur toutes les époques (0.x → 7.21.1). 0 échec.
+- **Bug B** : les **66** vrais couples (version, champion) crasheurs (1–2 par
+  version sur les 33 versions du balayage §9.2) = `200`. 0 échec.
+- **Bug D** : `200` sur 8 couples (version, langue-absente) — `ar_AE`/`vi_VN`/
+  `en_AU`/`es_MX`/`id_ID`/`ja_JP` sur versions anciennes → repli `en_US`.
+- **Non-régression** : versions saines (`16.14.1` home/détail/runes, `0.151.2`
+  `/objects`) inchangées à `200`.
 
 ---
 

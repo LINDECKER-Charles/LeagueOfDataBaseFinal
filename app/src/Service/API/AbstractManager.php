@@ -6,6 +6,7 @@ namespace App\Service\API;
 use App\Service\Storage\BlobStore;
 use App\Service\Storage\DeferredImageIngestor;
 use App\Service\Tools\GoFetcherClient;
+use App\Service\Tools\UpstreamNotFoundException;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\UnableToReadFile;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -33,6 +34,9 @@ abstract class AbstractManager implements WarmableManagerInterface
      *    bounds the read-modify-write race window to a single batch.
      */
     private const INGEST_CHUNK_SIZE = 12;
+
+    /** Locale served on the 397 versions — used as the fallback when a requested language is absent. */
+    private const FALLBACK_LANG = 'en_US';
 
     /** @var array<string,array<mixed>> in-request decoded-data memo, keyed by storage key */
     private array $dataCache = [];
@@ -100,7 +104,7 @@ abstract class AbstractManager implements WarmableManagerInterface
         // json_decode of the whole resource on every page render.
         return $this->dataCache[$key] ??= $this->ddragonCache->get(
             $this->cacheKey($key),
-            fn (ItemInterface $item): array => $this->loadOrFetchData($key, $version, $lang),
+            fn (ItemInterface $item): array => $this->loadOrFetchData($version, $lang),
         );
     }
 
@@ -108,17 +112,33 @@ abstract class AbstractManager implements WarmableManagerInterface
      * Read the dataset from object storage, falling back to a one-time fetch
      * through the Go gateway (then persisted) when it is not yet stored.
      *
+     * A definitive upstream absence (403/404) is not an error: either the
+     * requested *language* does not exist for this version — Data Dragon's
+     * back-catalogue carries fewer locales the older the patch — in which case
+     * we serve {@see self::FALLBACK_LANG}; or the *resource* predates the version
+     * (e.g. runesReforged before 7.22), which yields an empty dataset. Both
+     * outcomes are persisted so we never re-hit the CDN for an immutable "absent".
+     * Transient failures (5xx/timeout) are intentionally left to bubble up, so a
+     * flaky upstream is never frozen as empty.
+     *
      * @return array<mixed>
      */
-    private function loadOrFetchData(string $key, string $version, string $lang): array
+    private function loadOrFetchData(string $version, string $lang): array
     {
+        $key = sprintf('data/%s/%s/%s.json', $version, $lang, static::TYPE);
+
         try {
             return json_decode($this->ddragonStorage->read($key), true) ?? [];
         } catch (UnableToReadFile) {
             // Not in object storage yet → fetch once and persist.
         }
 
-        $data = json_decode($this->goFetcher->fetch($this->jsonUrl($version, $lang)), true) ?? [];
+        try {
+            $data = json_decode($this->goFetcher->fetch($this->jsonUrl($version, $lang)), true) ?? [];
+        } catch (UpstreamNotFoundException) {
+            $data = $lang === self::FALLBACK_LANG ? [] : $this->getData($version, self::FALLBACK_LANG);
+        }
+
         $this->ddragonStorage->write($key, json_encode($data));
 
         return $data;

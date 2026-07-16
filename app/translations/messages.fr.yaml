@@ -139,6 +139,7 @@ champion:
     abilities: "Compétences"
     passive: "Passif"
     skins: "Skins"
+    chromas_available: "%count% chromas disponibles"
     cooldown: "Recharge"
     cost: "Coût"
     range: "Portée"

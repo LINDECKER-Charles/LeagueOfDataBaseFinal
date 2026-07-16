@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service\Tools;
 
 use App\Service\Tools\GoFetcherClient;
+use App\Service\Tools\UpstreamNotFoundException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -38,6 +39,46 @@ final class GoFetcherClientTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         (new GoFetcherClient($client))->fetch('https://ddragon.leagueoflegends.com/x.json');
+    }
+
+    private function fetchWithStatus(int $status): void
+    {
+        $client = new MockHttpClient($this->json(['results' => [[
+            'url' => 'https://ddragon.leagueoflegends.com/x.json',
+            'status' => $status,
+        ]]]));
+        (new GoFetcherClient($client))->fetch('https://ddragon.leagueoflegends.com/x.json');
+    }
+
+    /** 403 = ressource définitivement absente → exception typée dédiée. */
+    public function testFetchThrowsNotFoundOn403(): void
+    {
+        $this->expectException(UpstreamNotFoundException::class);
+        $this->fetchWithStatus(403);
+    }
+
+    /** 404 = ressource définitivement absente → exception typée dédiée. */
+    public function testFetchThrowsNotFoundOn404(): void
+    {
+        $this->expectException(UpstreamNotFoundException::class);
+        $this->fetchWithStatus(404);
+    }
+
+    /** Une panne transitoire (5xx) reste une RuntimeException générique, pas une absence. */
+    public function testFetchThrowsGenericRuntimeOnTransientUpstream(): void
+    {
+        $client = new MockHttpClient($this->json(['results' => [[
+            'url' => 'https://ddragon.leagueoflegends.com/x.json',
+            'status' => 503,
+        ]]]));
+
+        $go = new GoFetcherClient($client);
+        try {
+            $go->fetch('https://ddragon.leagueoflegends.com/x.json');
+            self::fail('expected an exception');
+        } catch (\RuntimeException $e) {
+            self::assertNotInstanceOf(UpstreamNotFoundException::class, $e);
+        }
     }
 
     public function testFetchManyReturnsOnlySuccessfulEntries(): void

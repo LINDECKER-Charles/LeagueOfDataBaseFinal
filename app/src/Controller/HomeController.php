@@ -178,17 +178,36 @@ class HomeController extends AbstractController
     #[Route('/home', name: 'app_home')]
     public function home(): Response{
         $session = $this->clientManager->getSession();
-        $summoners = $this->summonerManager->paginate($session['version'], $session['lang'], 4, 1);
-        $items = $this->itemManager->paginate($session['version'], $session['lang'], 4, 1);
-        $champions = $this->championManager->paginate($session['version'], $session['lang'], 4, 1);
-        $runes = $this->runeManager->paginate($session['version'], $session['lang'], 4, 1);
-        
+        $version = $session['version'];
+        $lang    = $session['lang'];
+
         return $this->render('home/home.html.twig', [
-            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
-            'summoners' => $summoners,
-            'items' => $items,
-            'champions' => $champions,
-            'runes' => $runes,
+            'client'    => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'champions' => $this->preview('champion',      fn () => $this->championManager->paginate($version, $lang, 4, 1)),
+            'items'     => $this->preview('item',          fn () => $this->itemManager->paginate($version, $lang, 4, 1)),
+            'summoners' => $this->preview('summoner',      fn () => $this->summonerManager->paginate($version, $lang, 4, 1)),
+            'runes'     => $this->preview('runesReforged', fn () => $this->runeManager->paginate($version, $lang, 4, 1)),
         ]);
+    }
+
+    /**
+     * Rend une preview de la home isolée : l'échec d'une ressource (panne
+     * transitoire de l'upstream) renvoie une section vide au lieu de faire tomber
+     * toute la page. L'absence légitime de données est déjà neutralisée en amont
+     * (jeu vide côté managers) ; ce garde-fou couvre les erreurs que la couche
+     * données propage volontairement. La forme vide conserve les clés attendues
+     * par le template (`<type>s`, `images`, `meta`) pour rester compatible
+     * strict_variables.
+     *
+     * @param callable():array<mixed> $fetch
+     * @return array<mixed>
+     */
+    private function preview(string $type, callable $fetch): array
+    {
+        try {
+            return $fetch();
+        } catch (\Throwable) {
+            return [$type . 's' => [], 'images' => [], 'meta' => []];
+        }
     }
 }

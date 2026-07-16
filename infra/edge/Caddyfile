@@ -1,0 +1,8 @@
+# Base Caddyfile for the VPS-global edge proxy (caddy-docker-proxy).
+# Global options ONLY — every site block is generated from container labels
+# (`caddy: <domains>` + `caddy.reverse_proxy: {{upstreams <port>}}`), so this
+# file never needs editing when a new project is added.
+
+{
+	email {$ACME_EMAIL}
+}

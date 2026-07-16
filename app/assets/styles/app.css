@@ -266,6 +266,19 @@
     linear-gradient(90deg, rgba(1, 10, 19, 0.75) 0%, transparent 45%);
 }
 
+/* Skin card corner badge — server-rendered marker that a skin has chromas
+   (count + diamond glyph). The interactive swatches/zoom are the chroma-strip
+   island; this stays visible without JS. */
+@utility chroma-badge {
+  @apply absolute right-1.5 top-1.5 inline-flex items-center gap-1 border border-gold-deep/70
+         bg-hextech-black/80 px-1.5 py-0.5 font-mono text-[11px] leading-none text-gold-bright;
+  backdrop-filter: blur(2px);
+}
+.chroma-badge svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
 @layer components {
   /* ---- DDragon rich text ---------------------------------------------------
      Spell/rune/item copy ships DDragon's own markup: <br>, <b>, deprecated
