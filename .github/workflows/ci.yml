@@ -1,114 +1,35 @@
 name: CI/CD
 
+# Orchestrator only — wiring + branch guards. All real work lives in reusable
+# workflows (_tests, _build, _deploy, _promote), each with a single responsibility.
+# No sensitive value here: hosts, paths, domains and app secrets are passed as
+# repository secrets / live inside the per-host ENV_FILE.
+#
 # Two-stage promotion (build once, promote the same artifact):
+#   push dev  ─▶ _tests ─▶ merge dev→test ─▶ _build (:sha + :staging) ─▶ _deploy STAGING
+#   push main ─▶ _promote (:staging → :prod) ─▶ _deploy PROD
 #
-#   push dev  ─▶ tests ─▶ merge dev→test ─▶ build & push images ─▶ deploy STAGING
-#   push main ─▶ promote validated images (:staging → :prod) ─▶ deploy PROD
-#
-# `test` is auto-updated from dev and is never a trigger (no loop). `main` is reached
-# ONLY by a manual test→main merge — that human gate is what promotes to production.
-# Prod does NOT rebuild: it retags and deploys the exact images validated on staging.
+# `test` never triggers this workflow. `main` is reached only by a manual test→main
+# merge — that human gate promotes to production (prod never rebuilds).
 on:
   push:
     branches: [dev, main]
 
 permissions:
-  contents: write   # auto-merge dev → test
-  packages: write   # push / retag images on GHCR
+  contents: write   # merge-to-test pushes to the test branch
+  packages: write   # _build / _promote push & retag on GHCR
 
 jobs:
-  # ─────────────────────────────── dev · tests ───────────────────────────────
-  test-php:
+  # ───────────────────────────────── dev path ────────────────────────────────
+  tests:
     if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    env:
-      APP_ENV: test   # lint + phpunit run in test env; secrets come from .env.test.local
-    defaults:
-      run:
-        working-directory: app
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
+    uses: ./.github/workflows/_tests.yml
+    secrets:
+      ENV_TEST: ${{ secrets.ENV_TEST }}
 
-      - name: 🐘 Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: intl, ctype, iconv
-          coverage: none
-
-      - name: 🧩 Prepare test env (from ENV_TEST secret)
-        env:
-          ENV_TEST: ${{ secrets.ENV_TEST }}
-        run: printf '%s\n' "$ENV_TEST" > .env.test.local
-
-      - name: 💾 Cache Composer
-        uses: actions/cache@v4
-        with:
-          path: ~/.composer/cache
-          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-php-
-
-      - name: 📦 Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: 🔍 Lint YAML, Twig, Container
-        run: |
-          php bin/console lint:yaml config
-          php bin/console lint:twig templates
-          php bin/console lint:container
-
-      - name: ✅ PHPUnit
-        run: php bin/phpunit
-
-  test-go:
-    if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: go-workers
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-
-      - name: 🔍 Vet
-        run: go vet ./...
-
-      - name: ✅ Test
-        run: go test ./... -count=1
-
-  test-js:
-    if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: app
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: ⬢ Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-
-      - name: 📦 Install dependencies
-        run: npm ci
-
-      - name: ✅ Vitest (Vue islands)
-        run: npm test
-
-  # ──────────────────────────── dev · merge dev → test ───────────────────────
   merge-to-test:
-    needs: [test-php, test-go, test-js]
-    if: success() && github.ref == 'refs/heads/dev'
+    needs: tests
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
@@ -131,160 +52,44 @@ jobs:
           git merge --no-ff --no-edit "${GITHUB_SHA}"
           git push origin HEAD:test
 
-  # ─────────────────────── dev · build & push images (GHCR) ──────────────────
-  build-and-push:
+  build:
     needs: merge-to-test
     if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout test
-        uses: actions/checkout@v4
-        with:
-          ref: test
+    uses: ./.github/workflows/_build.yml
+    with:
+      ref: test
+      moving_tag: staging
 
-      - name: 🔡 Compute image prefix (lowercase owner)
-        run: echo "IMG=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb" >> "$GITHUB_ENV"
-
-      - name: 🐳 Setup Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 🔐 Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🏗️ Build & push app (php-fpm)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: docker/php/Dockerfile
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            ${{ env.IMG }}/app:${{ github.sha }}
-            ${{ env.IMG }}/app:staging
-
-      - name: 🏗️ Build & push nginx
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: docker/nginx/Dockerfile
-          push: true
-          build-args: |
-            APP_IMAGE=${{ env.IMG }}/app:${{ github.sha }}
-          tags: |
-            ${{ env.IMG }}/nginx:${{ github.sha }}
-            ${{ env.IMG }}/nginx:staging
-
-      - name: 🏗️ Build & push go-fetcher
-        uses: docker/build-push-action@v6
-        with:
-          context: go-workers
-          file: go-workers/Dockerfile
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            ${{ env.IMG }}/go-fetcher:${{ github.sha }}
-            ${{ env.IMG }}/go-fetcher:staging
-
-  # ───────────────────────────── dev · deploy STAGING ────────────────────────
   deploy-staging:
-    needs: build-and-push
+    needs: build
     if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🛡️ Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.STAGING_SSH_KEY }}
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      branch: test
+    secrets:
+      SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+      SSH_HOST: ${{ secrets.STAGING_HOST }}
+      DEPLOY_PATH: ${{ secrets.STAGING_PATH }}
+      SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      ENV_FILE: ${{ secrets.ENV_STAGING }}
 
-      - name: 🔐 Known hosts
-        run: ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts
-
-      - name: 🔑 Push staging env to server (from ENV_STAGING secret)
-        env:
-          ENV_STAGING: ${{ secrets.ENV_STAGING }}
-        run: |
-          printf '%s\n' "$ENV_STAGING" \
-            | ssh ${{ secrets.STAGING_SSH_USER || 'root' }}@${{ secrets.STAGING_HOST }} "cat > ${{ secrets.STAGING_PATH }}/.env"
-
-      - name: 🚀 Deploy (compose pull + up)
-        run: |
-          ssh ${{ secrets.STAGING_SSH_USER || 'root' }}@${{ secrets.STAGING_HOST }} <<'EOSSH'
-            set -e
-            cd ${{ secrets.STAGING_PATH }}
-            # Deploy overlay (Caddy/TLS), WITHOUT compose.override.yaml (dev conveniences).
-            export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
-            git pull origin test
-            docker compose pull
-            docker compose up -d --remove-orphans
-            docker compose exec -d php php bin/console app:ddragon:warmup --limit=3
-            docker compose exec -d php php bin/console app:ddragon:webp
-            docker image prune -f
-          EOSSH
-
-  # ──────────────────── main · promote images + deploy PROD ──────────────────
-  # Runs only when test→main is merged. Retags the validated :staging images to :prod
-  # (build once, promote the same artifact) then deploys prod — no rebuild.
-  promote-and-deploy-prod:
+  # ──────────────────────────────── main path ────────────────────────────────
+  promote:
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🔡 Compute image prefix (lowercase owner)
-        run: echo "IMG=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb" >> "$GITHUB_ENV"
+    uses: ./.github/workflows/_promote.yml
+    with:
+      source_tag: staging
+      target_tags: prod latest
 
-      - name: 🔐 Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🐳 Setup Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 🏷️ Promote :staging → :prod (registry retag, no rebuild)
-        run: |
-          for svc in app nginx go-fetcher; do
-            docker buildx imagetools create \
-              --tag "${IMG}/${svc}:prod" \
-              --tag "${IMG}/${svc}:latest" \
-              "${IMG}/${svc}:staging"
-          done
-
-      - name: 🛡️ Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.PROD_SSH_KEY }}
-
-      - name: 🔐 Known hosts
-        run: ssh-keyscan -H ${{ secrets.PROD_HOST }} >> ~/.ssh/known_hosts
-
-      - name: 🔑 Push prod env to server (from ENV_PROD secret)
-        env:
-          ENV_PROD: ${{ secrets.ENV_PROD }}
-        run: |
-          printf '%s\n' "$ENV_PROD" \
-            | ssh ${{ secrets.PROD_SSH_USER || 'root' }}@${{ secrets.PROD_HOST }} "cat > ${{ secrets.PROD_PATH }}/.env"
-
-      - name: 🚀 Deploy (compose pull + up)
-        run: |
-          ssh ${{ secrets.PROD_SSH_USER || 'root' }}@${{ secrets.PROD_HOST }} <<'EOSSH'
-            set -e
-            cd ${{ secrets.PROD_PATH }}
-            # Deploy overlay (Caddy/TLS), WITHOUT compose.override.yaml (dev conveniences).
-            export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
-            git pull origin main
-            docker compose pull
-            docker compose up -d --remove-orphans
-            # Pré-chauffe (détaché → hors chemin critique du déploiement) : JSON + images
-            # des 3 dernières versions dans MinIO, puis backfill des variantes WebP.
-            # Idempotent + best-effort : n'allonge ni ne casse le deploy.
-            docker compose exec -d php php bin/console app:ddragon:warmup --limit=3
-            docker compose exec -d php php bin/console app:ddragon:webp
-            docker image prune -f
-          EOSSH
+  deploy-prod:
+    needs: promote
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      branch: main
+    secrets:
+      SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+      SSH_HOST: ${{ secrets.PROD_HOST }}
+      DEPLOY_PATH: ${{ secrets.PROD_PATH }}
+      SSH_USER: ${{ secrets.PROD_SSH_USER }}
+      ENV_FILE: ${{ secrets.ENV_PROD }}
