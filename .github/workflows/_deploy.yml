@@ -70,7 +70,15 @@ jobs:
             git fetch origin ${{ inputs.branch }}
             git checkout -B ${{ inputs.branch }} origin/${{ inputs.branch }}
             git reset --hard origin/${{ inputs.branch }}
-            docker compose pull
+            # Pull résilient : le registry casse parfois un layer en cours de copie
+            # (connection reset by peer). Retry avec backoff avant d'abandonner, sinon
+            # `up` retomberait sur un build local lourd des services à `build:`.
+            for attempt in 1 2 3 4 5; do
+              if docker compose pull; then break; fi
+              [ "$attempt" = 5 ] && { echo "docker compose pull: échec après 5 tentatives" >&2; exit 1; }
+              echo "pull échec (tentative $attempt), retry dans $((attempt * 10))s…" >&2
+              sleep $((attempt * 10))
+            done
             docker compose up -d --remove-orphans
             # Pré-chauffe (détaché → hors chemin critique) : JSON + images des 3 dernières
             # versions dans MinIO, puis backfill WebP. Idempotent + best-effort.
