@@ -59,6 +59,10 @@ item:
     evolutions: "Mögliche Weiterentwicklungen"
     stats: "Statistiken"
     description: "Beschreibung"
+    recipe: "Rezept"
+    builds_from: "Besteht aus"
+    tier: "Stufe %depth%"
+    availability: "Verfügbarkeit"
     back: "← Zurück zur Liste"
     setup: "Version & Sprache ändern"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Nutzungsreichweite"
       cost: "Kosten"
       summoner_level: "Beschwörerstufe"
+    unlocked_at: "Freigeschaltet auf Stufe %level%"
+    range_global: "Global"
+    no_cost: "Keine Kosten"
     modes: "Kompatible Modi"
     description: "Beschreibung"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Entdecke %name% aus League of Legends mit Statistiken, Rollen und Details für Patch %version%."
     version_locale: "Patch %version% • %locale%"
     partype: "Ressource: %partype%"
+    roles: "Rollen"
+    abilities: "Fähigkeiten"
+    passive: "Passiv"
+    skins: "Skins"
+    cooldown: "Abklingzeit"
+    cost: "Kosten"
+    range: "Reichweite"
+    tips_as: "Beim Spielen"
+    tips_against: "Gegen diesen Champion"
     stats:
       title: "Basisstatistiken"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Rune: %name%"
     meta_description: "Entdecke die Details der Rune %name% in League of Legends. Statistiken und Effekte aktualisiert für Patch %version%."
+    overview: "Übersicht"
+    keystone: "Schlüsselstein"
+    minor: "Kleinere Runen"
+    slot_n: "Slot %n%"
   slot: "Slot"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Daten werden beschworen"
   subtitle: "Ressourcen werden aus der Kluft geladen…"
+  preparing: "Daten werden vorbereitet…"
   status:
     fetching: "lädt"
     ready: "bereit"

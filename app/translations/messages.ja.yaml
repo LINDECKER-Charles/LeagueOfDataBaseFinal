@@ -59,6 +59,10 @@ item:
     evolutions: "進化候補"
     stats: "ステータス"
     description: "説明"
+    recipe: "レシピ"
+    builds_from: "構成アイテム"
+    tier: "ティア %depth%"
+    availability: "入手可否"
     back: "← リストに戻る"
     setup: "バージョンと言語を変更"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "使用射程"
       cost: "コスト"
       summoner_level: "サモナーレベル"
+    unlocked_at: "レベル %level% で解放"
+    range_global: "グローバル"
+    no_cost: "コストなし"
     modes: "対応モード"
     description: "説明"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "League of Legendsの%name%について、パッチ%version%のステータス、ロール、詳細情報をご覧ください。"
     version_locale: "パッチ%version% • %locale%"
     partype: "リソース: %partype%"
+    roles: "ロール"
+    abilities: "スキル"
+    passive: "パッシブ"
+    skins: "スキン"
+    cooldown: "クールダウン"
+    cost: "コスト"
+    range: "射程"
+    tips_as: "使用時のコツ"
+    tips_against: "対策のコツ"
     stats:
       title: "基本ステータス"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "ルーン: %name%"
     meta_description: "League of Legendsのルーン「%name%」の詳細をご覧ください。ステータスと効果はパッチ%version%に対応しています。"
+    overview: "概要"
+    keystone: "キーストーン"
+    minor: "マイナールーン"
+    slot_n: "スロット %n%"
   slot: "スロット"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "データをサモン中"
   subtitle: "リフトからリソースを取得中…"
+  preparing: "データを準備中…"
   status:
     fetching: "取得中"
     ready: "準備完了"

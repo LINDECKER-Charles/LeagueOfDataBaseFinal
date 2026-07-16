@@ -59,6 +59,10 @@ item:
     evolutions: "가능한 진화"
     stats: "능력치"
     description: "설명"
+    recipe: "조합법"
+    builds_from: "하위 아이템"
+    tier: "%depth% 단계"
+    availability: "사용 가능 여부"
     back: "← 목록으로 돌아가기"
     setup: "버전 및 언어 변경"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "사용 범위"
       cost: "소모값"
       summoner_level: "소환사 레벨"
+    unlocked_at: "%level% 레벨에 해제"
+    range_global: "글로벌"
+    no_cost: "소모값 없음"
     modes: "사용 가능한 모드"
     description: "설명"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "League of Legends의 %name%에 대해 알아보세요. 패치 %version% 기준의 스탯, 역할, 세부 정보를 제공합니다."
     version_locale: "패치 %version% • %locale%"
     partype: "자원: %partype%"
+    roles: "역할"
+    abilities: "스킬"
+    passive: "지속 효과"
+    skins: "스킨"
+    cooldown: "재사용 대기시간"
+    cost: "소모값"
+    range: "사거리"
+    tips_as: "플레이할 때"
+    tips_against: "상대할 때"
     stats:
       title: "기본 능력치"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "룬: %name%"
     meta_description: "League of Legends의 룬 %name%에 대한 세부 정보를 확인해보세요. 패치 %version% 기준으로 업데이트된 스탯과 효과를 제공합니다."
+    overview: "개요"
+    keystone: "핵심 룬"
+    minor: "하위 룬"
+    slot_n: "%n% 슬롯"
   slot: "슬롯"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "데이터 소환 중"
   subtitle: "협곡에서 리소스를 가져오는 중…"
+  preparing: "데이터 준비 중…"
   status:
     fetching: "가져오는 중"
     ready: "완료"

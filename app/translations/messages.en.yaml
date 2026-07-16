@@ -59,6 +59,10 @@ item:
     evolutions: "Possible evolutions"
     stats: "Statistics"
     description: "Description"
+    recipe: "Recipe"
+    builds_from: "Builds from"
+    tier: "Tier %depth%"
+    availability: "Availability"
     back: "← Back to list"
     setup: "Change version & language"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Usage range"
       cost: "Cost"
       summoner_level: "Summoner level"
+    unlocked_at: "Unlocked at level %level%"
+    range_global: "Global"
+    no_cost: "No cost"
     modes: "Compatible modes"
     description: "Description"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Discover %name% from League of Legends, with stats, roles and details for patch %version%."
     version_locale: "Patch %version% • %locale%"
     partype: "Resource: %partype%"
+    roles: "Roles"
+    abilities: "Abilities"
+    passive: "Passive"
+    skins: "Skins"
+    cooldown: "Cooldown"
+    cost: "Cost"
+    range: "Range"
+    tips_as: "Playing as"
+    tips_against: "Playing against"
     stats:
       title: "Base Statistics"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Rune: %name%"
     meta_description: "Discover the details of the rune %name% in League of Legends. Stats and effects updated for patch %version%."
+    overview: "Overview"
+    keystone: "Keystone"
+    minor: "Minor runes"
+    slot_n: "Slot %n%"
   slot: "Slot"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Summoning data"
   subtitle: "Fetching resources from the Rift…"
+  preparing: "Preparing datasets…"
   status:
     fetching: "fetching"
     ready: "ready"

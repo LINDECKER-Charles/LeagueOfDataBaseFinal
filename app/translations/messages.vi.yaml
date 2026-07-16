@@ -59,6 +59,10 @@ item:
     evolutions: "Các dạng tiến hóa có thể"
     stats: "Chỉ số"
     description: "Mô tả"
+    recipe: "Công thức"
+    builds_from: "Ghép từ"
+    tier: "Bậc %depth%"
+    availability: "Khả dụng"
     back: "← Quay lại danh sách"
     setup: "Thay đổi phiên bản & ngôn ngữ"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Tầm sử dụng"
       cost: "Chi phí"
       summoner_level: "Cấp độ người triệu hồi"
+    unlocked_at: "Mở khóa ở cấp %level%"
+    range_global: "Toàn cầu"
+    no_cost: "Không tốn chi phí"
     modes: "Chế độ tương thích"
     description: "Mô tả"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Khám phá %name% của League of Legends, cùng chỉ số, vai trò và chi tiết cho phiên bản %version%."
     version_locale: "Phiên bản %version% • %locale%"
     partype: "Tài nguyên: %partype%"
+    roles: "Vai trò"
+    abilities: "Kỹ năng"
+    passive: "Nội tại"
+    skins: "Trang phục"
+    cooldown: "Hồi chiêu"
+    cost: "Chi phí"
+    range: "Tầm xa"
+    tips_as: "Khi chơi với"
+    tips_against: "Khi đối đầu"
     stats:
       title: "Chỉ Số Cơ Bản"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Ngọc Bổ Trợ: %name%"
     meta_description: "Khám phá chi tiết ngọc bổ trợ %name% trong League of Legends. Chỉ số và hiệu ứng được cập nhật cho phiên bản %version%."
+    overview: "Tổng quan"
+    keystone: "Ngọc Chính"
+    minor: "Ngọc phụ"
+    slot_n: "Ô %n%"
   slot: "Ô ngọc"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Đang triệu hồi dữ liệu"
   subtitle: "Đang tải tài nguyên từ Rift…"
+  preparing: "Đang chuẩn bị dữ liệu…"
   status:
     fetching: "đang tải"
     ready: "sẵn sàng"

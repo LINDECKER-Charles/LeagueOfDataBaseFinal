@@ -59,6 +59,10 @@ item:
     evolutions: "Возможные улучшения"
     stats: "Характеристики"
     description: "Описание"
+    recipe: "Рецепт"
+    builds_from: "Составляющие"
+    tier: "Уровень %depth%"
+    availability: "Доступность"
     back: "← Назад к списку"
     setup: "Изменить версию и язык"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Дальность применения"
       cost: "Стоимость"
       summoner_level: "Уровень призывателя"
+    unlocked_at: "Открывается на уровне %level%"
+    range_global: "Глобальная"
+    no_cost: "Без затрат"
     modes: "Совместимые режимы"
     description: "Описание"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Узнайте о %name% из League of Legends: статистика, роли и подробности для патча %version%."
     version_locale: "Патч %version% • %locale%"
     partype: "Ресурс: %partype%"
+    roles: "Роли"
+    abilities: "Способности"
+    passive: "Пассивное умение"
+    skins: "Образы"
+    cooldown: "Перезарядка"
+    cost: "Стоимость"
+    range: "Дальность"
+    tips_as: "Играя за"
+    tips_against: "Играя против"
     stats:
       title: "Базовые характеристики"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Руна: %name%"
     meta_description: "Узнайте подробности о руне %name% в League of Legends. Статистика и эффекты обновлены для патча %version%."
+    overview: "Обзор"
+    keystone: "Ключевая руна"
+    minor: "Второстепенные руны"
+    slot_n: "Слот %n%"
   slot: "Слот"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Загрузка данных"
   subtitle: "Получение ресурсов с Разлома…"
+  preparing: "Подготовка данных…"
   status:
     fetching: "загрузка"
     ready: "готово"

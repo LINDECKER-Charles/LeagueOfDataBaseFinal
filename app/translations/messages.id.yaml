@@ -59,6 +59,10 @@ item:
     evolutions: "Kemungkinan evolusi"
     stats: "Statistik"
     description: "Deskripsi"
+    recipe: "Resep"
+    builds_from: "Dibuat dari"
+    tier: "Tingkat %depth%"
+    availability: "Ketersediaan"
     back: "← Kembali ke daftar"
     setup: "Ubah versi & bahasa"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Jarak penggunaan"
       cost: "Biaya"
       summoner_level: "Level summoner"
+    unlocked_at: "Terbuka di level %level%"
+    range_global: "Global"
+    no_cost: "Tanpa biaya"
     modes: "Mode yang kompatibel"
     description: "Deskripsi"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Temukan %name% dari League of Legends, beserta statistik, peran, dan detail untuk patch %version%."
     version_locale: "Patch %version% • %locale%"
     partype: "Resource: %partype%"
+    roles: "Peran"
+    abilities: "Kemampuan"
+    passive: "Pasif"
+    skins: "Skin"
+    cooldown: "Waktu Jeda"
+    cost: "Biaya"
+    range: "Jangkauan"
+    tips_as: "Saat memainkan"
+    tips_against: "Saat melawan"
     stats:
       title: "Statistik Dasar"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Rune: %name%"
     meta_description: "Temukan detail rune %name% di League of Legends. Statistik dan efek diperbarui untuk patch %version%."
+    overview: "Ikhtisar"
+    keystone: "Rune Utama"
+    minor: "Rune Minor"
+    slot_n: "Slot %n%"
   slot: "Slot"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Memanggil data"
   subtitle: "Mengambil sumber daya dari Rift…"
+  preparing: "Menyiapkan data…"
   status:
     fetching: "mengambil"
     ready: "siap"

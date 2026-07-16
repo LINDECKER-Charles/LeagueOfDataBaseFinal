@@ -59,6 +59,10 @@ item:
     evolutions: "可能的進化"
     stats: "數值"
     description: "描述"
+    recipe: "配方"
+    builds_from: "合成所需"
+    tier: "第 %depth% 層"
+    availability: "可用性"
     back: "← 返回列表"
     setup: "變更版本與語言"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "使用範圍"
       cost: "消耗"
       summoner_level: "召喚師等級"
+    unlocked_at: "在 %level% 級解鎖"
+    range_global: "全圖"
+    no_cost: "無消耗"
     modes: "適用模式"
     description: "描述"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "探索 League of Legends 中的 %name%，查看 %version% 版本的數值、定位與詳細資料。"
     version_locale: "%version% 版本 • %locale%"
     partype: "資源：%partype%"
+    roles: "定位"
+    abilities: "技能"
+    passive: "被動"
+    skins: "造型"
+    cooldown: "冷卻時間"
+    cost: "消耗"
+    range: "射程"
+    tips_as: "使用技巧"
+    tips_against: "對抗技巧"
     stats:
       title: "基礎數值"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "符文：%name%"
     meta_description: "探索 League of Legends 中符文 %name% 的詳細資訊。數值與效果已更新至 %version% 版本。"
+    overview: "概覽"
+    keystone: "基石符文"
+    minor: "次級符文"
+    slot_n: "欄位 %n%"
   slot: "符文位"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "召喚資料中"
   subtitle: "正在從符文之地擷取資源…"
+  preparing: "正在準備資料…"
   status:
     fetching: "擷取中"
     ready: "已就緒"

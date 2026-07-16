@@ -59,6 +59,10 @@ item:
     evolutions: "Πιθανές εξελίξεις"
     stats: "Στατιστικά"
     description: "Περιγραφή"
+    recipe: "Συνταγή"
+    builds_from: "Δημιουργείται από"
+    tier: "Επίπεδο %depth%"
+    availability: "Διαθεσιμότητα"
     back: "← Επιστροφή στη λίστα"
     setup: "Αλλαγή έκδοσης & γλώσσας"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Εμβέλεια χρήσης"
       cost: "Κόστος"
       summoner_level: "Επίπεδο επικαλεστή"
+    unlocked_at: "Ξεκλειδώνεται στο επίπεδο %level%"
+    range_global: "Παγκόσμια"
+    no_cost: "Χωρίς κόστος"
     modes: "Συμβατοί τρόποι παιχνιδιού"
     description: "Περιγραφή"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Ανακαλύψτε τον/την %name% από το League of Legends, με στατιστικά, ρόλους και λεπτομέρειες για την έκδοση %version%."
     version_locale: "Έκδοση %version% • %locale%"
     partype: "Πόρος: %partype%"
+    roles: "Ρόλοι"
+    abilities: "Ικανότητες"
+    passive: "Παθητική"
+    skins: "Εμφανίσεις"
+    cooldown: "Χρόνος επαναφόρτισης"
+    cost: "Κόστος"
+    range: "Εμβέλεια"
+    tips_as: "Όταν παίζετε ως"
+    tips_against: "Όταν αντιμετωπίζετε"
     stats:
       title: "Βασικά Στατιστικά"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Ρούνος: %name%"
     meta_description: "Ανακαλύψτε τις λεπτομέρειες του ρούνου %name% στο League of Legends. Στατιστικά και εφέ ενημερωμένα για την έκδοση %version%."
+    overview: "Επισκόπηση"
+    keystone: "Θεμέλια ρούνα"
+    minor: "Δευτερεύουσες ρούνες"
+    slot_n: "Θέση %n%"
   slot: "Θέση"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Φόρτωση δεδομένων"
   subtitle: "Ανάκτηση πόρων από το Rift…"
+  preparing: "Προετοιμασία δεδομένων…"
   status:
     fetching: "ανάκτηση"
     ready: "έτοιμο"

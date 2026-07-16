@@ -59,6 +59,10 @@ item:
     evolutions: "Possibili evoluzioni"
     stats: "Statistiche"
     description: "Descrizione"
+    recipe: "Ricetta"
+    builds_from: "Composto da"
+    tier: "Livello %depth%"
+    availability: "Disponibilità"
     back: "← Torna all'elenco"
     setup: "Cambia versione e lingua"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Raggio d'uso"
       cost: "Costo"
       summoner_level: "Livello dell'evocatore"
+    unlocked_at: "Sbloccato al livello %level%"
+    range_global: "Globale"
+    no_cost: "Nessun costo"
     modes: "Modalità compatibili"
     description: "Descrizione"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Scopri %name% di League of Legends, con statistiche, ruoli e dettagli per la patch %version%."
     version_locale: "Patch %version% • %locale%"
     partype: "Risorsa: %partype%"
+    roles: "Ruoli"
+    abilities: "Abilità"
+    passive: "Passiva"
+    skins: "Skin"
+    cooldown: "Tempo di recupero"
+    cost: "Costo"
+    range: "Gittata"
+    tips_as: "Giocando come"
+    tips_against: "Giocando contro"
     stats:
       title: "Statistiche Base"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Runa: %name%"
     meta_description: "Scopri i dettagli della runa %name% in League of Legends. Statistiche ed effetti aggiornati per la patch %version%."
+    overview: "Panoramica"
+    keystone: "Runa fondamentale"
+    minor: "Rune minori"
+    slot_n: "Slot %n%"
   slot: "Slot"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Evocazione dati in corso"
   subtitle: "Recupero risorse dalla Landa…"
+  preparing: "Preparazione dei dati…"
   status:
     fetching: "recupero in corso"
     ready: "pronto"

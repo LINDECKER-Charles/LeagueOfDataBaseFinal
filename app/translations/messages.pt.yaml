@@ -59,6 +59,10 @@ item:
     evolutions: "Possíveis evoluções"
     stats: "Estatísticas"
     description: "Descrição"
+    recipe: "Receita"
+    builds_from: "Composto por"
+    tier: "Nível %depth%"
+    availability: "Disponibilidade"
     back: "← Voltar à lista"
     setup: "Alterar versão e idioma"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Alcance de uso"
       cost: "Custo"
       summoner_level: "Nível do invocador"
+    unlocked_at: "Desbloqueado no nível %level%"
+    range_global: "Global"
+    no_cost: "Sem custo"
     modes: "Modos compatíveis"
     description: "Descrição"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Descubra %name% de League of Legends, com estatísticas, papéis e detalhes do patch %version%."
     version_locale: "Patch %version% • %locale%"
     partype: "Recurso: %partype%"
+    roles: "Funções"
+    abilities: "Habilidades"
+    passive: "Passiva"
+    skins: "Skins"
+    cooldown: "Tempo de recarga"
+    cost: "Custo"
+    range: "Alcance"
+    tips_as: "Ao jogar como"
+    tips_against: "Ao enfrentar"
     stats:
       title: "Estatísticas Base"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Runa: %name%"
     meta_description: "Descubra os detalhes da runa %name% em League of Legends. Estatísticas e efeitos atualizados para o patch %version%."
+    overview: "Visão geral"
+    keystone: "Runa fundamental"
+    minor: "Runas menores"
+    slot_n: "Compartimento %n%"
   slot: "Slot"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Invocando dados"
   subtitle: "Buscando recursos na Fenda…"
+  preparing: "Preparando dados…"
   status:
     fetching: "buscando"
     ready: "pronto"

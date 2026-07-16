@@ -59,6 +59,10 @@ item:
     evolutions: "Posibles evoluciones"
     stats: "Estadísticas"
     description: "Descripción"
+    recipe: "Receta"
+    builds_from: "Se compone de"
+    tier: "Nivel %depth%"
+    availability: "Disponibilidad"
     back: "← Volver a la lista"
     setup: "Cambiar versión e idioma"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Alcance de uso"
       cost: "Coste"
       summoner_level: "Nivel de invocador"
+    unlocked_at: "Desbloqueado en el nivel %level%"
+    range_global: "Global"
+    no_cost: "Sin coste"
     modes: "Modos compatibles"
     description: "Descripción"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Descubre a %name% de League of Legends, con estadísticas, roles y detalles para el parche %version%."
     version_locale: "Parche %version% • %locale%"
     partype: "Recurso: %partype%"
+    roles: "Roles"
+    abilities: "Habilidades"
+    passive: "Pasiva"
+    skins: "Aspectos"
+    cooldown: "Tiempo de reutilización"
+    cost: "Coste"
+    range: "Alcance"
+    tips_as: "Al jugar como"
+    tips_against: "Al enfrentarte a"
     stats:
       title: "Estadísticas Base"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Runa: %name%"
     meta_description: "Descubre los detalles de la runa %name% en League of Legends. Estadísticas y efectos actualizados para el parche %version%."
+    overview: "Resumen"
+    keystone: "Runa clave"
+    minor: "Runas menores"
+    slot_n: "Ranura %n%"
   slot: "Ranura"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Invocando datos"
   subtitle: "Obteniendo recursos de la Grieta…"
+  preparing: "Preparando datos…"
   status:
     fetching: "obteniendo"
     ready: "listo"

@@ -59,6 +59,10 @@ item:
     evolutions: "Evoluții posibile"
     stats: "Statistici"
     description: "Descriere"
+    recipe: "Rețetă"
+    builds_from: "Compus din"
+    tier: "Nivel %depth%"
+    availability: "Disponibilitate"
     back: "← Înapoi la listă"
     setup: "Schimbă versiunea și limba"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Rază de utilizare"
       cost: "Cost"
       summoner_level: "Nivel de invocator"
+    unlocked_at: "Deblocat la nivelul %level%"
+    range_global: "Global"
+    no_cost: "Fără cost"
     modes: "Moduri compatibile"
     description: "Descriere"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Descoperă %name% din League of Legends, cu statistici, roluri și detalii pentru patch-ul %version%."
     version_locale: "Patch %version% • %locale%"
     partype: "Resursă: %partype%"
+    roles: "Roluri"
+    abilities: "Abilități"
+    passive: "Pasivă"
+    skins: "Skinuri"
+    cooldown: "Timp de reîncărcare"
+    cost: "Cost"
+    range: "Rază de acțiune"
+    tips_as: "Când joci cu"
+    tips_against: "Când joci împotriva"
     stats:
       title: "Statistici de bază"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Rună: %name%"
     meta_description: "Descoperă detaliile runei %name% din League of Legends. Statistici și efecte actualizate pentru patch-ul %version%."
+    overview: "Prezentare generală"
+    keystone: "Rună principală"
+    minor: "Runi minore"
+    slot_n: "Slot %n%"
   slot: "Loc"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Se invocă datele"
   subtitle: "Se preiau resursele de pe Rift…"
+  preparing: "Se pregătesc datele…"
   status:
     fetching: "se preiau"
     ready: "gata"

@@ -59,6 +59,10 @@ item:
     evolutions: "التطورات الممكنة"
     stats: "الإحصائيات"
     description: "الوصف"
+    recipe: "الوصفة"
+    builds_from: "يُصنع من"
+    tier: "المستوى %depth%"
+    availability: "التوفّر"
     back: "← العودة إلى القائمة"
     setup: "تغيير الإصدار واللغة"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "نطاق الاستخدام"
       cost: "التكلفة"
       summoner_level: "مستوى المستدعي"
+    unlocked_at: "يُفتح عند المستوى %level%"
+    range_global: "عالمي"
+    no_cost: "بدون تكلفة"
     modes: "الأنماط المتوافقة"
     description: "الوصف"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "اكتشف %name% من League of Legends، مع الإحصائيات والأدوار والتفاصيل الخاصة بالتحديث %version%."
     version_locale: "التحديث %version% • %locale%"
     partype: "المورد: %partype%"
+    roles: "الأدوار"
+    abilities: "القدرات"
+    passive: "التأثير السلبي"
+    skins: "الأزياء"
+    cooldown: "زمن الاستعادة"
+    cost: "التكلفة"
+    range: "المدى"
+    tips_as: "عند اللعب بهذا البطل"
+    tips_against: "عند مواجهة هذا البطل"
     stats:
       title: "الإحصائيات الأساسية"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "الرونة: %name%"
     meta_description: "اكتشف تفاصيل الرونة %name% في League of Legends. الإحصائيات والتأثيرات محدّثة للتحديث %version%."
+    overview: "نظرة عامة"
+    keystone: "الرونة الأساسية"
+    minor: "الرونات الثانوية"
+    slot_n: "الخانة %n%"
   slot: "الخانة"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "استدعاء البيانات"
   subtitle: "جاري جلب الموارد من الريفت…"
+  preparing: "جارٍ تجهيز البيانات…"
   status:
     fetching: "جارٍ الجلب"
     ready: "جاهز"

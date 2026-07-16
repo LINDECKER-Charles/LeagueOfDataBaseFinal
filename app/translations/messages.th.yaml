@@ -59,6 +59,10 @@ item:
     evolutions: "การพัฒนาที่เป็นไปได้"
     stats: "สถิติ"
     description: "รายละเอียด"
+    recipe: "สูตร"
+    builds_from: "สร้างจาก"
+    tier: "ระดับ %depth%"
+    availability: "ความพร้อมใช้งาน"
     back: "← กลับสู่รายการ"
     setup: "เปลี่ยนเวอร์ชันและภาษา"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "ระยะการใช้งาน"
       cost: "ราคา"
       summoner_level: "เลเวลผู้อัญเชิญ"
+    unlocked_at: "ปลดล็อกที่เลเวล %level%"
+    range_global: "ทั่วแผนที่"
+    no_cost: "ไม่มีค่าใช้จ่าย"
     modes: "โหมดที่รองรับ"
     description: "รายละเอียด"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "ค้นพบ %name% จาก League of Legends พร้อมสถิติ บทบาท และรายละเอียดสำหรับแพตช์ %version%"
     version_locale: "แพตช์ %version% • %locale%"
     partype: "ทรัพยากร: %partype%"
+    roles: "บทบาท"
+    abilities: "ความสามารถ"
+    passive: "พาสซีฟ"
+    skins: "สกิน"
+    cooldown: "เวลาคูลดาวน์"
+    cost: "ค่าใช้จ่าย"
+    range: "ระยะ"
+    tips_as: "เมื่อเล่นเป็น"
+    tips_against: "เมื่อเล่นเจอ"
     stats:
       title: "สถิติพื้นฐาน"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "รูน: %name%"
     meta_description: "ค้นพบรายละเอียดของรูน %name% ใน League of Legends สถิติและเอฟเฟกต์อัปเดตสำหรับแพตช์ %version%"
+    overview: "ภาพรวม"
+    keystone: "รูนหลัก"
+    minor: "รูนรอง"
+    slot_n: "ช่อง %n%"
   slot: "ช่อง"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "กำลังอัญเชิญข้อมูล"
   subtitle: "กำลังดึงทรัพยากรจาก Rift…"
+  preparing: "กำลังเตรียมข้อมูล…"
   status:
     fetching: "กำลังดึงข้อมูล"
     ready: "พร้อมแล้ว"

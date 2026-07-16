@@ -59,6 +59,10 @@ item:
     evolutions: "Możliwe ewolucje"
     stats: "Statystyki"
     description: "Opis"
+    recipe: "Receptura"
+    builds_from: "Tworzone z"
+    tier: "Poziom %depth%"
+    availability: "Dostępność"
     back: "← Powrót do listy"
     setup: "Zmień wersję i język"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Zasięg użycia"
       cost: "Koszt"
       summoner_level: "Poziom przywoływacza"
+    unlocked_at: "Odblokowane na poziomie %level%"
+    range_global: "Globalny"
+    no_cost: "Bez kosztu"
     modes: "Kompatybilne tryby"
     description: "Opis"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Poznaj %name% z League of Legends, wraz ze statystykami, rolami i szczegółami dla wersji %version%."
     version_locale: "Wersja %version% • %locale%"
     partype: "Zasób: %partype%"
+    roles: "Role"
+    abilities: "Umiejętności"
+    passive: "Bierna"
+    skins: "Skórki"
+    cooldown: "Czas odnowienia"
+    cost: "Koszt"
+    range: "Zasięg"
+    tips_as: "Gdy grasz nim"
+    tips_against: "Gdy grasz przeciw"
     stats:
       title: "Statystyki podstawowe"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Runa: %name%"
     meta_description: "Poznaj szczegóły runy %name% w League of Legends. Statystyki i efekty zaktualizowane dla wersji %version%."
+    overview: "Przegląd"
+    keystone: "Runa kluczowa"
+    minor: "Runy pomniejsze"
+    slot_n: "Slot %n%"
   slot: "Slot"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Przywoływanie danych"
   subtitle: "Pobieranie zasobów z Rozpadliny…"
+  preparing: "Przygotowywanie danych…"
   status:
     fetching: "pobieranie"
     ready: "gotowe"

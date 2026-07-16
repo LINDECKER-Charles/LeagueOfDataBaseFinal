@@ -59,6 +59,10 @@ item:
     evolutions: "Možné evoluce"
     stats: "Statistiky"
     description: "Popis"
+    recipe: "Recept"
+    builds_from: "Vyrobeno z"
+    tier: "Úroveň %depth%"
+    availability: "Dostupnost"
     back: "← Zpět na seznam"
     setup: "Změnit verzi a jazyk"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Dosah použití"
       cost: "Cena"
       summoner_level: "Úroveň přivolávače"
+    unlocked_at: "Odemčeno na úrovni %level%"
+    range_global: "Globální"
+    no_cost: "Bez nákladů"
     modes: "Kompatibilní herní režimy"
     description: "Popis"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Objevte šampiona %name% z League of Legends se statistikami, rolemi a podrobnostmi pro patch %version%."
     version_locale: "Patch %version% • %locale%"
     partype: "Zdroj: %partype%"
+    roles: "Role"
+    abilities: "Schopnosti"
+    passive: "Pasivní schopnost"
+    skins: "Vzhledy"
+    cooldown: "Doba obnovy"
+    cost: "Cena"
+    range: "Dosah"
+    tips_as: "Když hrajete za"
+    tips_against: "Když hrajete proti"
     stats:
       title: "Základní statistiky"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Runa: %name%"
     meta_description: "Objevte podrobnosti runy %name% v League of Legends. Statistiky a efekty aktualizované pro patch %version%."
+    overview: "Přehled"
+    keystone: "Klíčová runa"
+    minor: "Vedlejší runy"
+    slot_n: "Slot %n%"
   slot: "Slot"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Přivolávání dat"
   subtitle: "Načítání zdrojů z Riftu…"
+  preparing: "Příprava dat…"
   status:
     fetching: "načítání"
     ready: "připraveno"

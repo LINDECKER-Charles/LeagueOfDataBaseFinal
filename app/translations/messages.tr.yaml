@@ -59,6 +59,10 @@ item:
     evolutions: "Olası evrimler"
     stats: "İstatistikler"
     description: "Açıklama"
+    recipe: "Tarif"
+    builds_from: "Bileşenler"
+    tier: "Kademe %depth%"
+    availability: "Kullanılabilirlik"
     back: "← Listeye dön"
     setup: "Sürüm ve dili değiştir"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Kullanım menzili"
       cost: "Maliyet"
       summoner_level: "Çağırıcı seviyesi"
+    unlocked_at: "%level%. seviyede açılır"
+    range_global: "Küresel"
+    no_cost: "Maliyetsiz"
     modes: "Uyumlu modlar"
     description: "Açıklama"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "League of Legends'tan %name%'i, %version% yaması için istatistikler, roller ve ayrıntılarla keşfedin."
     version_locale: "Yama %version% • %locale%"
     partype: "Kaynak: %partype%"
+    roles: "Roller"
+    abilities: "Yetenekler"
+    passive: "Pasif"
+    skins: "Kostümler"
+    cooldown: "Bekleme Süresi"
+    cost: "Maliyet"
+    range: "Menzil"
+    tips_as: "Oynarken"
+    tips_against: "Karşısında oynarken"
     stats:
       title: "Temel İstatistikler"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Rün: %name%"
     meta_description: "League of Legends'taki %name% rününün ayrıntılarını keşfedin. %version% yaması için güncellenmiş istatistikler ve etkiler."
+    overview: "Genel bakış"
+    keystone: "Ana Rün"
+    minor: "Küçük Rünler"
+    slot_n: "Yuva %n%"
   slot: "Yuva"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Veriler çağrılıyor"
   subtitle: "Rift'ten kaynaklar getiriliyor…"
+  preparing: "Veriler hazırlanıyor…"
   status:
     fetching: "getiriliyor"
     ready: "hazır"

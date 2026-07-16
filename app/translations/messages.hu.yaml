@@ -59,6 +59,10 @@ item:
     evolutions: "Lehetséges fejlődések"
     stats: "Statisztikák"
     description: "Leírás"
+    recipe: "Recept"
+    builds_from: "Összetevők"
+    tier: "%depth%. szint"
+    availability: "Elérhetőség"
     back: "← Vissza a listához"
     setup: "Verzió és nyelv módosítása"
   list:
@@ -87,6 +91,9 @@ summoner:
       range: "Hatótávolság"
       cost: "Költség"
       summoner_level: "Idéző szint"
+    unlocked_at: "Feloldva a(z) %level%. szinten"
+    range_global: "Globális"
+    no_cost: "Nincs költség"
     modes: "Kompatibilis módok"
     description: "Leírás"
   card:
@@ -111,6 +118,15 @@ champion:
     meta_description: "Fedezd fel %name% bajnokot a League of Legendsből, statisztikákkal, szerepkörökkel és részletekkel a(z) %version% patchhez."
     version_locale: "%version% patch • %locale%"
     partype: "Erőforrás: %partype%"
+    roles: "Szerepek"
+    abilities: "Képességek"
+    passive: "Passzív"
+    skins: "Kinézetek"
+    cooldown: "Újratöltődés"
+    cost: "Költség"
+    range: "Hatótávolság"
+    tips_as: "Amikor vele játszol"
+    tips_against: "Amikor ellene játszol"
     stats:
       title: "Alapstatisztikák"
     profile:
@@ -133,6 +149,10 @@ rune:
   detail:
     title: "Rúna: %name%"
     meta_description: "Fedezd fel a(z) %name% rúna részleteit a League of Legendsben. Statisztikák és hatások frissítve a(z) %version% patchhez."
+    overview: "Áttekintés"
+    keystone: "Fő rúna"
+    minor: "Kisebb rúnák"
+    slot_n: "%n%. hely"
   slot: "Hely"
 
 common:
@@ -182,6 +202,7 @@ loader:
   eyebrow: "Data Dragon"
   title: "Adatok idézése"
   subtitle: "Erőforrások lekérése a Riftről…"
+  preparing: "Adatok előkészítése…"
   status:
     fetching: "letöltés"
     ready: "kész"
