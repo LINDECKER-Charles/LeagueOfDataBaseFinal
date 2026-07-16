@@ -1,0 +1,86 @@
+name: edge
+
+# VPS-global public entrypoint — shared by EVERY project on this host.
+# Not tied to any app's lifecycle: brought up ONCE, then every app stack
+# (lodb-staging, lodb-prod, future projects) publishes itself by adding a
+# `caddy` label on its public container and joining the external `edge` network.
+# Onboarding a new project therefore touches ZERO file here.
+#
+# caddy-docker-proxy owns 80/443, discovers routes from container labels, and
+# manages Let's Encrypt certs automatically (single ACME store for all domains).
+# It reads the Docker API through a hardened, read-only socket proxy — the raw
+# /var/run/docker.sock is NEVER mounted into the internet-facing Caddy.
+#
+# Bootstrap (once, on the host — see README.md):
+#   docker network create edge
+#   docker compose --env-file .env up -d
+
+services:
+  # Read-only Docker API gateway. Caddy talks to this instead of the raw socket,
+  # so a compromise of the public proxy can't reach a writable Docker endpoint.
+  dockerproxy:
+    image: tecnativa/docker-socket-proxy:0.3
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1        # caddy-docker-proxy lists containers to read their labels
+      NETWORKS: 1          # …and resolves upstream IPs on the ingress network
+      SERVICES: 1          # swarm/compose service metadata
+      TASKS: 1
+      EVENTS: 1            # live reconfiguration on container up/down
+      PING: 1
+      VERSION: 1
+      POST: 0              # deny every write verb — strictly read-only
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:2375/_ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:2.9-alpine
+    restart: unless-stopped
+    depends_on:
+      dockerproxy:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"      # HTTP/3 (QUIC)
+    environment:
+      # Reach Docker only through the read-only proxy (no local socket mount here).
+      DOCKER_HOST: tcp://dockerproxy:2375
+      # Only containers attached to `edge` are eligible as ingress upstreams.
+      CADDY_INGRESS_NETWORKS: edge
+      # Base Caddyfile (global options: ACME email) merged with label-derived routes.
+      CADDY_DOCKER_CADDYFILE_PATH: /etc/caddy/Caddyfile
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required (Let's Encrypt contact)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data       # issued certs + ACME account key — MUST persist (LE rate limits)
+      - caddy_config:/config
+    networks:
+      - internal              # → dockerproxy
+      - edge                  # → every app's public container
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  # Private link between Caddy and the socket proxy — not shared with apps.
+  internal:
+    driver: bridge
+  # Shared ingress fabric. Externally managed (created once by an admin / the
+  # deploy job) so its lifecycle is decoupled from any single stack.
+  edge:
+    external: true
+    name: edge
+
+volumes:
+  caddy_data:
+  caddy_config:

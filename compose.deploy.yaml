@@ -2,38 +2,37 @@ name: lodb
 
 # Deployment overlay — applied ON TOP of compose.yaml for ANY served environment
 # (staging AND prod), explicitly and WITHOUT compose.override.yaml (dev conveniences).
-# The deploy jobs select the files via COMPOSE_FILE (see .github/workflows/ci.yml):
+# The deploy jobs select the files via COMPOSE_FILE (see .github/workflows/_deploy.yml):
 #
 #   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
 #
-# What differs between staging and prod is ONLY the host's .env (CADDY_DOMAINS, secrets,
-# IMAGE_TAG=staging|prod). Caddy is the sole public entrypoint (80/443, automatic
-# Let's Encrypt) and reverse-proxies to the internal nginx, which is not host-published.
+# This host is multi-tenant: the public TLS entrypoint is a SINGLE shared edge
+# proxy (infra/edge — caddy-docker-proxy) that owns 80/443 for every project on
+# the VPS. This stack therefore publishes NO host port; it just declares its
+# domains as labels on nginx and joins the external `edge` network. Caddy reads
+# the labels, provisions Let's Encrypt certs and reverse-proxies to nginx:80.
+#
+# staging vs prod differ ONLY by the host .env:
+#   COMPOSE_PROJECT_NAME  lodb-staging | lodb-prod  (distinct Compose projects →
+#                         no cross-env clobber even on the same host)
+#   CADDY_DOMAINS         test.league-of-data-base.com | league-of-data-base.fr, .com
+#   IMAGE_TAG             staging | prod  (+ secrets)
 
 services:
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"      # HTTP/3 (QUIC)
-    environment:
-      CADDY_DOMAINS: ${CADDY_DOMAINS:?CADDY_DOMAINS is required (e.g. "example.fr, example.com")}
-      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required (Let's Encrypt contact)}
-    volumes:
-      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data       # issued certs + ACME account key — MUST persist (LE rate limits)
-      - caddy_config:/config
-    depends_on:
-      nginx:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:2019/config/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+  nginx:
+    # Reachable by the shared edge proxy over `edge`; still on `default` for the
+    # intra-stack link to php/minio. `{{upstreams 80}}` resolves this container's
+    # IP on the edge network (CADDY_INGRESS_NETWORKS=edge in the edge stack).
+    networks:
+      - default
+      - edge
+    labels:
+      caddy: ${CADDY_DOMAINS:?CADDY_DOMAINS is required (e.g. "example.fr, example.com")}
+      caddy.reverse_proxy: "{{upstreams 80}}"
 
-volumes:
-  caddy_data:
-  caddy_config:
+networks:
+  # Shared ingress fabric, created once on the host (`docker network create edge`,
+  # also ensured idempotently by the deploy job). Owned by no single stack.
+  edge:
+    external: true
+    name: edge
