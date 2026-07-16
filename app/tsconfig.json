@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "jsx": "preserve",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "types": ["vite/client"]
+    },
+    "include": ["assets/**/*.ts", "assets/**/*.d.ts", "assets/**/*.vue", "vite.config.ts"]
+}
