@@ -14,8 +14,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * This replaces the old "*_redirect" bounce, which existed only to copy the
  * session-remembered selection into the URL via a 302 before the real page
  * could render. Links now carry version+lang directly, so every navigation is a
- * single request and each list/detail URL is a pure function of its query —
- * which is what makes those responses safe to HTTP-cache (see the cache layer).
+ * single request and each list/detail URL is a pure function of its query.
+ *
+ * The URL is a pure function of its query, but the RENDER is not: the UI locale
+ * is resolved from the session at kernel.request ({@see \App\EventSubscriber\LocaleSubscriber}),
+ * so Symfony marks these responses Cache-Control: private. There is deliberately
+ * no shared HTTP-cache layer today — enabling one would mean carrying the locale
+ * in the URL rather than the session, then adding s-maxage + ETag.
  */
 final class PageContextResolver
 {
@@ -46,14 +51,18 @@ final class PageContextResolver
     ) {}
 
     /**
-     * Resource-warming steps for a destination path, read purely from the request
-     * query (numpage/itemperpage) — never the session, so the loader SSE stream
-     * holds no session lock. Empty for pages that ingest no image batch (detail,
-     * setup, working-progress).
+     * Resource-warming steps for a destination path. Pagination is taken from the
+     * explicit $page/$perPage arguments (the caller passes the SSE query), never
+     * from the ambient request or the session — so the loader stream holds no
+     * session lock and this method has no hidden RequestStack dependency. null
+     * means "absent from the query" → the route default applies. Empty for pages
+     * that ingest no image batch (detail, setup, working-progress).
      *
+     * @param int|null $page    requested page number (null → 1)
+     * @param int|null $perPage requested page size (null/<=0 → route default; clamped to route max)
      * @return list<array{type:string, perPage:int, page:int}>
      */
-    public function loaderSteps(string $path): array
+    public function loaderSteps(string $path, ?int $page = null, ?int $perPage = null): array
     {
         $p = strtolower(rtrim($path, '/')) ?: '/';
 
@@ -69,9 +78,8 @@ final class PageContextResolver
             return [];
         }
 
-        $query   = $this->requestStack->getCurrentRequest()?->query;
-        $page    = max(1, (int) ($query?->get('numpage') ?? 1));
-        $perPage = (int) ($query?->get('itemperpage') ?? $cfg['defaultPerPage']);
+        $page    = max(1, $page ?? 1);
+        $perPage = $perPage ?? 0;
         if ($perPage <= 0) {
             $perPage = $cfg['defaultPerPage'];
         }

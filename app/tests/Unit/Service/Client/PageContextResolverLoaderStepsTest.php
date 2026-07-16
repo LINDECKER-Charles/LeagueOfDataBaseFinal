@@ -18,8 +18,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * loaderSteps() maps a destination path to the resource-warming plan the
- * streaming loader runs — purely from the query (no session), mirroring each
- * list controller's pagination.
+ * streaming loader runs — from explicit page/perPage arguments (no session, no
+ * ambient request), mirroring each list controller's pagination.
  */
 final class PageContextResolverLoaderStepsTest extends TestCase
 {
@@ -60,12 +60,12 @@ final class PageContextResolverLoaderStepsTest extends TestCase
         );
     }
 
-    public function testListReadsQueryPaginationAndClamps(): void
+    public function testListReadsPaginationArgumentsAndClamps(): void
     {
         self::assertSame(
             [['type' => 'champion', 'perPage' => 20, 'page' => 3]],
-            $this->resolver(['numpage' => '3', 'itemperpage' => '50'])->loaderSteps('/champions'),
-            'itemperpage is clamped to the route maximum',
+            $this->resolver()->loaderSteps('/champions', 3, 50),
+            'perPage is clamped to the route maximum',
         );
     }
 
@@ -73,7 +73,7 @@ final class PageContextResolverLoaderStepsTest extends TestCase
     {
         self::assertSame(
             [['type' => 'summoner', 'perPage' => 500, 'page' => 1]],
-            $this->resolver(['itemperpage' => '500'])->loaderSteps('/summoners'),
+            $this->resolver()->loaderSteps('/summoners', null, 500),
         );
     }
 

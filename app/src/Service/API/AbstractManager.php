@@ -25,6 +25,15 @@ use Symfony\Contracts\Cache\ItemInterface;
  */
 abstract class AbstractManager implements WarmableManagerInterface
 {
+    /**
+     * Ingest images in small batches rather than one blocking call. Two reasons:
+     *  - the SSE loader gets a stored-name event per batch as it lands, instead of
+     *    silence until the whole set is fetched (otherwise the bar sits at 0%);
+     *  - each batch is merged into the manifest against fresh storage state, which
+     *    bounds the read-modify-write race window to a single batch.
+     */
+    private const INGEST_CHUNK_SIZE = 12;
+
     /** @var array<string,array<mixed>> in-request decoded-data memo, keyed by storage key */
     private array $dataCache = [];
 
@@ -172,30 +181,38 @@ abstract class AbstractManager implements WarmableManagerInterface
      * Fetch the missing images through the gateway, store them content-addressed
      * (dedup + WebP sibling) and record them in the manifest.
      *
+     * Processed in {@see self::INGEST_CHUNK_SIZE}-sized batches: without $onStored
+     * (page render, CLI warmup) the outcome is identical to a single pass; with it,
+     * each batch reports its stored names as it lands so the loader progresses
+     * throughout the network phase instead of only at the end.
+     *
      * @param array<string,string> $missing    ddragon url => name
      * @param (callable(string):void)|null $onStored invoked with each image name as it lands
      * @return array<string,string> name => cdn path (only the ones fetched)
      */
     private function ingestMissing(string $version, array $missing, ?callable $onStored = null): array
     {
-        $manifest = $this->loadManifest($version);
         $resolved = [];
 
-        $bytesByUrl = $this->goFetcher->fetchMany(array_keys($missing));
-        foreach ($missing as $url => $name) {
-            if (!isset($bytesByUrl[$url])) {
-                continue;
+        foreach (array_chunk($missing, self::INGEST_CHUNK_SIZE, true) as $chunk) {
+            $stored     = [];
+            $bytesByUrl = $this->goFetcher->fetchMany(array_keys($chunk));
+            foreach ($chunk as $url => $name) {
+                if (!isset($bytesByUrl[$url])) {
+                    continue;
+                }
+                $stored[$name]   = $this->blobStore->store($bytesByUrl[$url], $name);
+                $resolved[$name] = $stored[$name];
+                if ($onStored !== null) {
+                    $onStored($name);
+                }
             }
-            $cdn = $this->blobStore->store($bytesByUrl[$url], $name);
-            $manifest[$name] = $cdn;
-            $resolved[$name] = $cdn;
-            if ($onStored !== null) {
-                $onStored($name);
-            }
-        }
 
-        if ($resolved !== []) {
-            $this->saveManifest($version, $manifest);
+            // Persist per batch so progress is durable and the manifest merge
+            // (see saveManifest) happens against the freshest storage state.
+            if ($stored !== []) {
+                $this->saveManifest($version, $stored);
+            }
         }
 
         return $resolved;
@@ -324,13 +341,24 @@ abstract class AbstractManager implements WarmableManagerInterface
     }
 
     /**
-     * @param array<string,string> $manifest
+     * Merge freshly stored entries into the manifest.
+     *
+     * Re-reads the manifest straight from object storage — bypassing both the
+     * in-request memo and the cross-request pool, either of which would serve a
+     * snapshot taken before a concurrent writer's PUT — then writes fresh+additions.
+     * This turns the former blind full-file overwrite (where the SSE loader and the
+     * kernel.terminate flush raced last-write-wins and silently dropped each other's
+     * entries) into a read-merge-write. The window isn't fully closed — read-modify-
+     * write stays non-atomic on S3 — but entries no longer vanish between ingests.
+     *
+     * @param array<string,string> $additions name => cdn path just stored
      */
-    private function saveManifest(string $version, array $manifest): void
+    private function saveManifest(string $version, array $additions): void
     {
-        $key = sprintf('manifest/%s/%s.json', $version, static::TYPE);
-        $this->manifestCache[$key] = $manifest;
-        $this->ddragonStorage->write($key, json_encode($manifest));
+        $key    = sprintf('manifest/%s/%s.json', $version, static::TYPE);
+        $merged = $additions + $this->readManifest($key);
+        $this->manifestCache[$key] = $merged;
+        $this->ddragonStorage->write($key, json_encode($merged));
         // Write-through: drop the stale cross-request copy so other workers
         // repopulate from the freshly written manifest on their next read.
         $this->ddragonCache->delete($this->cacheKey($key));

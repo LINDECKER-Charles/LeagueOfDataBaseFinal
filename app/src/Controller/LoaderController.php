@@ -51,13 +51,17 @@ final class LoaderController extends AbstractController
         $path    = (string) $request->query->get('path', '');
         $version = trim((string) $request->query->get('version', ''));
         $lang    = trim((string) $request->query->get('lang', ''));
+        // Pagination comes straight off this SSE request's query and is passed
+        // explicitly, so loaderSteps() stays a pure function of its arguments.
+        $page    = $request->query->has('numpage') ? (int) $request->query->get('numpage') : null;
+        $perPage = $request->query->has('itemperpage') ? (int) $request->query->get('itemperpage') : null;
 
         // Query-only validation (cache-backed, no session) → decide the plan up
         // front; an unknown version/lang simply warms nothing and lets the real
         // visit handle the redirect-to-setup.
         $valid = $this->versionManager->versionExists($version)
             && $this->versionManager->languageExists($lang);
-        $steps = $valid ? $this->pageContext->loaderSteps($path) : [];
+        $steps = $valid ? $this->pageContext->loaderSteps($path, $page, $perPage) : [];
 
         $response = new StreamedResponse(function () use ($steps, $version, $lang): void {
             // Release the session lock LocaleSubscriber acquired at kernel.request,

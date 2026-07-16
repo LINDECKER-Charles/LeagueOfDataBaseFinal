@@ -99,6 +99,34 @@ final class RuneManagerWarmTest extends TestCase
         self::assertSame([self::TREE_ICON, self::PTA_ICON, self::LT_ICON], array_keys($manifest));
     }
 
+    public function testConcurrentIngestsMergeInsteadOfOverwritingManifest(): void
+    {
+        // Two managers over the SAME object storage but SEPARATE caches/memos —
+        // i.e. two FPM workers warming the same version concurrently.
+        $fs      = $this->seedData();
+        $worker1 = $this->manager($fs, $this->gatewayReturningBytes());
+        $worker2 = $this->manager($fs, $this->gatewayReturningBytes());
+
+        // Worker 2 reads (and memoises) the still-empty manifest first — exactly
+        // what the deferred render path does before kernel.terminate flushes.
+        $worker2->collectPlan(self::VERSION, self::LANG, 0, 1);
+
+        // Worker 1 then ingests and commits its entry to storage…
+        $worker1->ingest(self::VERSION, [self::PTA_ICON => 'Press the Attack'], static function (): void {});
+        // …and only afterwards worker 2 ingests, from its stale empty snapshot.
+        $worker2->ingest(self::VERSION, [self::LT_ICON => 'Lethal Tempo'], static function (): void {});
+
+        $manifest = json_decode(
+            $fs->read(sprintf('manifest/%s/runesReforged.json', self::VERSION)),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+
+        // The old blind overwrite dropped worker 1's entry; the merge keeps both.
+        self::assertArrayHasKey(self::PTA_ICON, $manifest, "worker 1's entry must survive worker 2's concurrent ingest");
+        self::assertArrayHasKey(self::LT_ICON, $manifest);
+    }
+
     private function seedData(): Filesystem
     {
         $fs = new Filesystem(new LocalFilesystemAdapter($this->dir));

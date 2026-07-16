@@ -33,9 +33,11 @@ final class BlobStore
     {
         $key = $this->keyFor($bytes, $sourceName);
 
-        if (!$this->ddragonStorage->fileExists($key)) {
-            $this->ddragonStorage->write($key, $bytes);
-        }
+        // No existence check: the key IS the SHA-256 of the bytes, so the PUT is
+        // idempotent — a HeadObject before it would only cost a round-trip per
+        // image to skip re-writing identical content. (ensureWebp keeps its check:
+        // it guards a costly GD transcode, not just a write.)
+        $this->ddragonStorage->write($key, $bytes);
         $this->ensureWebp($key, $bytes);
 
         return 'cdn/'.$key;
