@@ -1,26 +1,39 @@
 # Local development overrides (auto-merged by `docker compose`).
-# - php/nginx run against the live ./app source (no image rebuild needed to see edits)
+# - php runs against the live ./app source; vendor/ and var/ are named volumes on
+#   the Linux VM (off the ./app 9p bind-mount) so file I/O isn't slow — see docs/docker.md
 # - nginx uses the stock image + bind-mounted public/ and config
 # - MinIO console, Mailpit UI and the Go service ports are published for convenience
 #
-# Prerequisite for a fresh clone (once): `cd app && composer install && npm run build`.
+# Prerequisite for a fresh clone (once):
+#   docker compose up -d
+#   docker compose exec php composer install   # populates the vendor volume
+#   cd app && npm run build                     # builds public/build (bind-mounted)
 
 services:
   php:
     build:
-      target: php_base   # dev: fast base image; source/vendor/build come from the bind-mount
+      target: php_dev   # dev: php_base + composer (deps install in-container)
     environment:
       APP_ENV: dev
       APP_DEBUG: "1"
+    # vendor/ (9k files) and var/ (3k files) live in named volumes on the Linux VM
+    # instead of the ./app 9p bind-mount — the A1 fix (docs/docker.md). They start
+    # empty & root-owned, so run as root and hand the mount points to the www-data
+    # FPM pool before starting. Populate vendor once (as www-data so it can write):
+    #   docker compose exec -u www-data php composer install
+    user: root
+    command: sh -c "mkdir -p var/cache var/log && chown www-data:www-data var vendor var/cache var/log && exec php-fpm"
     volumes:
       - ./app:/var/www/html
+      - app_vendor:/var/www/html/vendor
+      - app_var:/var/www/html/var
       - ./docker/php/php-dev.ini:/usr/local/etc/php/conf.d/zz-dev.ini:ro
 
   nginx:
     build: !reset null
     image: nginx:1.27-alpine
     ports:
-      - "${HTTP_PORT:-8080}:80"   # dev only: hit nginx directly (prod entry is Caddy)
+      - "${HTTP_PORT:-8080}:80"   # dev only: hit nginx directly (deployed entry is Caddy)
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
@@ -39,3 +52,9 @@ services:
     ports:
       - "${MAILPIT_UI_PORT:-8025}:8025"
       - "1025:1025"
+
+# Dev-only named volumes keeping vendor/ and var/ on the Linux VM filesystem,
+# out of the slow ./app bind-mount (A1). Reset them with `docker compose down -v`.
+volumes:
+  app_vendor:
+  app_var:

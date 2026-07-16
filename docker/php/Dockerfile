@@ -9,8 +9,10 @@ FROM php:8.4-fpm-alpine AS php_base
 
 # Reliable multi-extension installer (intl/icu, opcache, zip, ...).
 # gd (with libwebp) powers WebP transcoding of DDragon images at ingestion.
+# apcu backs the dev cache pool (config/packages/cache.yaml -> when@dev); it is
+# harmless in prod, where ddragon.cache stays on the filesystem/Redis.
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions intl opcache zip gd
+RUN install-php-extensions intl opcache zip gd apcu
 
 # Application PHP configuration
 COPY docker/php/php.ini      /usr/local/etc/php/conf.d/zz-app.ini
@@ -18,6 +20,15 @@ COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/zz-app.conf
 
 WORKDIR /var/www/html
 ENV COMPOSER_ALLOW_SUPERUSER=1
+
+########################################################################
+# Stage 1b — Dev image: php_base + composer. Source is bind-mounted and
+# vendor/ + var/ are named volumes (compose.override.yaml), so composer must run
+# in-container to populate the vendor volume. composer lives ONLY here — the prod
+# `app` image builds from php_base and never ships it. See docs/docker.md.
+########################################################################
+FROM php_base AS php_dev
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 ########################################################################
 # Stage 2 — Composer dependencies (production, no dev)
