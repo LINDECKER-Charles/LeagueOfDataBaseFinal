@@ -1,0 +1,220 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Chào mừng đến với League of Data Base. Khám phá trang bị và phép bổ trợ của League of Legends với chỉ số và chi tiết cho phiên bản %version%."
+  hero:
+    browse: "Xem thông tin chi tiết về <strong>Phép Bổ Trợ</strong> và <strong>Trang Bị</strong> của League of Legends. Cập nhật cho phiên bản %version%."
+    explore_summoners: "Khám phá Phép Bổ Trợ"
+    explore_items: "Khám phá Trang Bị"
+    explore_champions: "Khám phá Tướng"
+    explore_runes: "Khám phá Ngọc Bổ Trợ"
+  summoners:
+    title: "Phép Bổ Trợ"
+    see_all: "Xem tất cả phép bổ trợ"
+  items:
+    title: "Trang Bị"
+    see_all: "Xem tất cả trang bị"
+  champions:
+    title: "Tướng"
+    see_all: "Xem tất cả tướng"
+    no_data: "Không có tướng nào khả dụng cho phiên bản này."
+    wip: "Mục này đang được xây dựng. Bạn sẽ sớm có thể xem tất cả tướng."
+  runes:
+    title: "Ngọc Bổ Trợ"
+    wip: "Mục này đang được xây dựng. Bạn sẽ sớm có thể khám phá ngọc bổ trợ."
+    see_all: "Xem tất cả ngọc bổ trợ"
+
+
+setup:
+  title: "Thiết Lập"
+  meta: "Chọn phiên bản trò chơi và ngôn ngữ ưa thích để tùy chỉnh trải nghiệm League of Data Base của bạn. Mọi chỉ số và dữ liệu sẽ thích ứng theo cài đặt của bạn."
+  form:
+    version: "Phiên bản"
+    language: "Ngôn ngữ"
+    note_latest: "*Phiên bản mới nhất được tự động chọn."
+    remember: "Ghi nhớ lựa chọn của tôi"
+    submit: "Gửi"
+
+system:
+  under_construction:
+    title: "Đang Xây Dựng"
+    meta_description: "League of Data Base hiện đang được xây dựng. Chúng tôi đang nỗ lực mang đến cho bạn các chỉ số chi tiết, thông tin chuyên sâu và công cụ cho League of Legends. Hãy đón chờ các cập nhật."
+    heading: "Trang này đang được xây dựng"
+    subheading: "Chúng tôi đang rèn giũa tính năng này tại Rift. Hãy quay lại sớm để trải nghiệm điều gì đó hoành tráng."
+    info: "Nếu bạn đến được trang này, nghĩa là nội dung chưa được phát hành. Chúng tôi đang hoàn thiện hiệu năng, độ chính xác dữ liệu và trải nghiệm người dùng mượt mà, đồng bộ với phần còn lại của League Of Data Base."
+    progress_label: "Tiến độ xây dựng"
+    back: "← Quay lại"
+    summoners: "Xem Phép Bổ Trợ"
+    setup: "Chọn phiên bản & ngôn ngữ"
+    footer: "Cần gấp tính năng này? Hãy liên hệ với chúng tôi hoặc xem lộ trình phát triển. Nhiều cập nhật sắp ra mắt."
+    meanwhile: "Trong khi chờ đợi, bạn có thể:"
+
+item:
+  detail:
+    meta_description: "Khám phá mọi thông tin về trang bị %name% trong League of Legends. Chỉ số, hiệu ứng và thông tin lên đồ được cập nhật cho phiên bản %version%."
+    version_locale: "Phiên bản: %version% — Ngôn ngữ: %locale%"
+    price_total: "Tổng chi phí"
+    price_base: "Giá mua"
+    price_sell: "Giá bán"
+    categories: "Danh mục"
+    evolutions: "Các dạng tiến hóa có thể"
+    stats: "Chỉ số"
+    description: "Mô tả"
+    recipe: "Công thức"
+    builds_from: "Ghép từ"
+    tier: "Bậc %depth%"
+    availability: "Khả dụng"
+    back: "← Quay lại danh sách"
+    setup: "Thay đổi phiên bản & ngôn ngữ"
+  list:
+      title: "Trang Bị"
+      meta_description: "Xem tất cả trang bị của League of Legends có sẵn trong phiên bản %version%. Tìm chỉ số chi tiết, chi phí và hiệu ứng được cập nhật cho phiên bản mới nhất."
+      header: "Trang Bị"
+      subtitle: "Danh mục trang bị"
+      results_per_page: "Kết quả mỗi trang:"
+      max: "TỐI ĐA"
+      ok: "OK"
+      search_placeholder: "Tìm kiếm trang bị…"
+      change_version: "Đổi phiên bản/ngôn ngữ"
+      cost_total: "Tổng chi phí"
+      cost_sell: "Giá bán"
+      categories: "Danh mục"
+      evolutions: "Các dạng tiến hóa có thể"
+      description: "Mô tả"
+
+summoner:
+  detail:
+    meta_description: "Khám phá chi tiết về phép bổ trợ %name% trong League of Legends. Chỉ số và hiệu ứng được cập nhật cho phiên bản %version%."
+    version_locale: "Phiên bản: %version% — Ngôn ngữ: %locale%"
+    fields:
+      cooldown: "Thời gian hồi chiêu"
+      maxammo: "Số lần sử dụng"
+      range: "Tầm sử dụng"
+      cost: "Chi phí"
+      summoner_level: "Cấp độ người triệu hồi"
+    unlocked_at: "Mở khóa ở cấp %level%"
+    range_global: "Toàn cầu"
+    no_cost: "Không tốn chi phí"
+    modes: "Chế độ tương thích"
+    description: "Mô tả"
+  card:
+    cooldown: "Thời gian hồi chiêu"
+    level: "Cấp độ người triệu hồi"
+    modes: "Chế độ tương thích"
+    description: "Mô tả"
+  list:
+    title: "Phép Bổ Trợ"
+    subtitle: "Danh mục Phép Bổ Trợ"
+    count: "count phép bổ trợ"
+
+champion:
+  list:
+    title: "Tướng"
+    meta_description: "Xem tất cả tướng của League of Legends. Tìm chỉ số chi tiết, kỹ năng và cốt truyện của từng tướng trong trò chơi."
+    header: "Tướng"
+    subtitle: "Danh mục tướng"
+    search_placeholder: "Tìm kiếm tướng…"
+    change_version: "Đổi phiên bản/ngôn ngữ"
+  detail:
+    meta_description: "Khám phá %name% của League of Legends, cùng chỉ số, vai trò và chi tiết cho phiên bản %version%."
+    version_locale: "Phiên bản %version% • %locale%"
+    partype: "Tài nguyên: %partype%"
+    roles: "Vai trò"
+    abilities: "Kỹ năng"
+    passive: "Nội tại"
+    skins: "Trang phục"
+    cooldown: "Hồi chiêu"
+    cost: "Chi phí"
+    range: "Tầm xa"
+    tips_as: "Khi chơi với"
+    tips_against: "Khi đối đầu"
+    stats:
+      title: "Chỉ Số Cơ Bản"
+    profile:
+      title: "Hồ Sơ Tướng"
+      attack: "Tấn công"
+      defense: "Phòng thủ"
+      magic: "Phép thuật"
+      difficulty: "Độ khó"
+    lore:
+      title: "Cốt Truyện"
+
+rune:
+  list:
+    title: "Ngọc Bổ Trợ"
+    meta_description: "Xem tất cả ngọc bổ trợ của League of Legends. Tìm chỉ số chi tiết và hiệu ứng của từng ngọc trong trò chơi."
+    header: "Ngọc Bổ Trợ"
+    subtitle: "Danh mục ngọc bổ trợ"
+    search_placeholder: "Tìm kiếm ngọc bổ trợ…"
+    change_version: "Đổi phiên bản/ngôn ngữ"
+  detail:
+    title: "Ngọc Bổ Trợ: %name%"
+    meta_description: "Khám phá chi tiết ngọc bổ trợ %name% trong League of Legends. Chỉ số và hiệu ứng được cập nhật cho phiên bản %version%."
+    overview: "Tổng quan"
+    keystone: "Ngọc Chính"
+    minor: "Ngọc phụ"
+    slot_n: "Ô %n%"
+  slot: "Ô ngọc"
+
+common:
+  back: "Quay lại"
+  search: "Tìm kiếm…"
+  no_result:
+    text: "Không tìm thấy kết quả nào cho tìm kiếm của bạn."
+    back: "← Quay lại"
+    setup: "Chọn phiên bản & ngôn ngữ"
+  detail : "Xem chi tiết →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base là nền tảng do cộng đồng xây dựng, cung cấp thông tin chi tiết, chỉ số và thông tin chuyên sâu về League of Legends. Nhanh chóng, đáng tin cậy và luôn được cập nhật."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Thông Báo Pháp Lý"
+
+  navigation:
+    title: "Điều Hướng"
+    home: "Trang chủ"
+    champion: "Tướng"
+    item: "Trang bị"
+    runes: "Ngọc bổ trợ"
+    summoner: "Phép bổ trợ"
+
+  links:
+    title: "Liên Kết Hữu Ích"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Dự Án"
+    version: "Phiên bản: Beta 2.0"
+    updated: "Cập nhật: 03/08/2025"
+
+  contact:
+    title: "Liên Hệ"
+    email: "Email"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Đang triệu hồi dữ liệu"
+  subtitle: "Đang tải tài nguyên từ Rift…"
+  preparing: "Đang chuẩn bị dữ liệu…"
+  status:
+    fetching: "đang tải"
+    ready: "sẵn sàng"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Trang chủ"
+    champion: "Tướng"
+    item: "Trang bị"
+    runes: "Ngọc bổ trợ"
+    summoner: "Phép bổ trợ"

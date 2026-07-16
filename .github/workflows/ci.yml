@@ -1,109 +1,95 @@
-name: CI Symfony
+name: CI/CD
 
+# Orchestrator only — wiring + branch guards. All real work lives in reusable
+# workflows (_tests, _build, _deploy, _promote), each with a single responsibility.
+# No sensitive value here: hosts, paths, domains and app secrets are passed as
+# repository secrets / live inside the per-host ENV_FILE.
+#
+# Two-stage promotion (build once, promote the same artifact):
+#   push dev  ─▶ _tests ─▶ merge dev→test ─▶ _build (:sha + :staging) ─▶ _deploy STAGING
+#   push main ─▶ _promote (:staging → :prod) ─▶ _deploy PROD
+#
+# `test` never triggers this workflow. `main` is reached only by a manual test→main
+# merge — that human gate promotes to production (prod never rebuilds).
 on:
   push:
-    branches: [ dev ]
+    branches: [dev, main]
 
 permissions:
-  contents: write
+  contents: write   # merge-to-test pushes to the test branch
+  packages: write   # _build / _promote push & retag on GHCR
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: app
+  # ───────────────────────────────── dev path ────────────────────────────────
+  tests:
+    if: github.ref == 'refs/heads/dev'
+    uses: ./.github/workflows/_tests.yml
+    secrets:
+      ENV_TEST: ${{ secrets.ENV_TEST }}
 
+  merge-to-test:
+    needs: tests
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v3
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 🐘 Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          coverage: none
-          extensions: sqlite3, pdo_sqlite   # 👈 nécessaire pour SQLite
-
-      - name: 🧩 Prepare .env files for test
-        run: |
-          mkdir -p var
-          {
-            echo "APP_ENV=test"
-            echo "APP_DEBUG=1"
-            echo "APP_SECRET=dev-secret"
-            echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db"
-          } > .env
-          cp .env .env.test
-
-      - name: 💾 Cache Composer
-        uses: actions/cache@v3
-        with:
-          path: ~/.composer/cache
-          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-php-
-
-      - name: 📦 Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: 🔍 Lint YAML, Twig and Container
-        run: |
-          php bin/console lint:yaml config
-          php bin/console lint:twig templates
-          php bin/console lint:container
-
-      - name: ✅ Run Tests
-        run: php bin/phpunit
-
-      - name: ⬆️ Merge the tested commit into main (if tests passed)
-        if: success() && github.ref == 'refs/heads/dev'
-        working-directory: .
+      - name: ⬆️ Merge dev → test (create from main if missing)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
           git fetch --all --prune
-
-          # Se placer sur main à jour
-          git checkout main
-          git reset --hard origin/main
-
-          # Merger le COMMIT EXACT testé par cette exécution
+          if git show-ref --verify --quiet refs/remotes/origin/test; then
+            git checkout -B test origin/test
+          else
+            git checkout -B test origin/main
+          fi
           git merge --no-ff --no-edit "${GITHUB_SHA}"
+          git push origin HEAD:test
 
-          # Pousser vers main
-          git push origin HEAD:main 
+  build:
+    needs: merge-to-test
+    if: github.ref == 'refs/heads/dev'
+    uses: ./.github/workflows/_build.yml
+    with:
+      ref: test
+      moving_tag: staging
 
-  deploy:
-    needs: test
-    if: success()
-    runs-on: ubuntu-latest
+  deploy-staging:
+    needs: build
+    if: github.ref == 'refs/heads/dev'
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      branch: test
+    secrets:
+      SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+      SSH_HOST: ${{ secrets.STAGING_HOST }}
+      DEPLOY_PATH: ${{ secrets.STAGING_PATH }}
+      SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      ENV_FILE: ${{ secrets.ENV_STAGING }}
 
-    steps:
-      - name: 🛡️ Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.PROD_SSH_KEY }}
+  # ──────────────────────────────── main path ────────────────────────────────
+  promote:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/_promote.yml
+    with:
+      source_tag: staging
+      target_tags: prod latest
 
-      - name: 🔐 Add known_hosts
-        run: |
-          ssh-keyscan -H league-of-data-base.fr >> ~/.ssh/known_hosts
-
-      - name: 🚀 Deploy to production server
-        run: |
-          ssh root@league-of-data-base.fr <<'EOSSH'
-            set -e
-            cd ${{ secrets.PATH_PROD }}
-            git pull origin main && \
-            export APP_ENV=prod APP_DEBUG=0 COMPOSER_ALLOW_SUPERUSER=1
-            composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
-            npm ci
-            npm run build
-          EOSSH
-
-
-
+  deploy-prod:
+    needs: promote
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      branch: main
+    secrets:
+      SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+      SSH_HOST: ${{ secrets.PROD_HOST }}
+      DEPLOY_PATH: ${{ secrets.PROD_PATH }}
+      SSH_USER: ${{ secrets.PROD_SSH_USER }}
+      ENV_FILE: ${{ secrets.ENV_PROD }}

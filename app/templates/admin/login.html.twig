@@ -1,0 +1,29 @@
+{% extends 'admin/_base.html.twig' %}
+
+{% block title %}Connexion · Admin · LODB{% endblock %}
+
+{% block admin_body %}
+    <section class="card card--auth">
+        <div class="card__head">
+            <h1>Panneau d'administration</h1>
+            <p class="muted">Accès réservé.</p>
+        </div>
+
+        {% if error %}
+            <p class="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</p>
+        {% endif %}
+
+        <form method="post" action="{{ path('admin_login') }}" class="form">
+            <label>
+                Identifiant
+                <input type="text" name="username" value="{{ last_username }}" required autofocus autocomplete="username">
+            </label>
+            <label>
+                Mot de passe
+                <input type="password" name="password" required autocomplete="current-password">
+            </label>
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+            <button type="submit">Se connecter</button>
+        </form>
+    </section>
+{% endblock %}

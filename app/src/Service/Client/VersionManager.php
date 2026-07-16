@@ -2,21 +2,23 @@
 
 namespace App\Service\Client;
 
-use App\Service\Tools\APICaller;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
+use App\Service\Tools\GoFetcherClient;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 class VersionManager
 {
-    private const RIOT_VERSIONS_URL = 'https://ddragon.leagueoflegends.com/api/versions.json';
+    /** @var string[]|null in-request memo (getVersions is called several times per request) */
+    private ?array $versionsMemo = null;
+
+    /** @var string[]|null in-request memo */
+    private ?array $languagesMemo = null;
 
     public function __construct(
-        private readonly HttpClientInterface $httpClient,
+        private readonly GoFetcherClient $goFetcher,
         private readonly CacheInterface $cache,
         private readonly LoggerInterface $logger,
-        private readonly APICaller $aPICaller,
     ) {}
 
     /* Partie API */
@@ -28,13 +30,15 @@ class VersionManager
      */
     public function getVersions(): array
     {
-        //$this->cache->delete('riot_versions'); //pour les tests d'optimisation
-        return $this->cache->get('riot_versions', function (ItemInterface $item) {
-            $item->expiresAfter(600); //Expire dans 10min
+        // Called 3+ times per request (param validation, ClientData, redirects).
+        // Memoize in-request so the cross-request pool is hit at most once, and
+        // keep a 1h TTL: patches ship ~biweekly, so 10min just multiplied the
+        // DDragon round-trips with no freshness benefit.
+        return $this->versionsMemo ??= $this->cache->get('riot_versions', function (ItemInterface $item) {
+            $item->expiresAfter(3600); // 1h
             try {
-                $response = $this->httpClient->request('GET', self::RIOT_VERSIONS_URL);
                 $versions = array_values(array_filter(
-                    $response->toArray(),
+                    $this->goFetcher->versions(),
                     fn($v) => !(is_string($v) && preg_match('/^lol/', $v))
                 ));
                 return $versions;
@@ -57,15 +61,11 @@ class VersionManager
      */
     public function getLanguages(): array
     {
-        return $this->cache->get('riot_languages', function (ItemInterface $item) {
+        return $this->languagesMemo ??= $this->cache->get('riot_languages', function (ItemInterface $item) {
             // Expiration dans 1 mois
             $item->expiresAfter(2592000);
             try {
-                $response = $this->httpClient->request(
-                    'GET',
-                    'https://ddragon.leagueoflegends.com/cdn/languages.json'
-                );
-                return $response->toArray();
+                return $this->goFetcher->languages();
             } catch (\Throwable $e) {
                 $this->logger->error('Erreur lors de la récupération des langues Riot', [
                     'message' => $e->getMessage(),

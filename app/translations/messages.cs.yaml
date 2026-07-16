@@ -1,0 +1,220 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Vítejte na League of Data Base. Prozkoumejte předměty a přivolávací kouzla League of Legends se statistikami a podrobnostmi pro patch %version%."
+  hero:
+    browse: "Procházejte podrobné informace o <strong>Přivolávacích kouzlech</strong> a <strong>Předmětech</strong> z League of Legends. Aktualizováno pro patch %version%."
+    explore_summoners: "Prozkoumat přivolávací kouzla"
+    explore_items: "Prozkoumat předměty"
+    explore_champions: "Prozkoumat šampiony"
+    explore_runes: "Prozkoumat runy"
+  summoners:
+    title: "Přivolávací kouzla"
+    see_all: "Zobrazit všechna kouzla"
+  items:
+    title: "Předměty"
+    see_all: "Zobrazit všechny předměty"
+  champions:
+    title: "Šampioni"
+    see_all: "Zobrazit všechny šampiony"
+    no_data: "Pro tuto verzi nejsou k dispozici žádní šampioni."
+    wip: "Tato sekce se připravuje. Brzy budete moci procházet všechny šampiony."
+  runes:
+    title: "Runy"
+    wip: "Tato sekce se připravuje. Brzy budete moci prozkoumat runy."
+    see_all: "Zobrazit všechny runy"
+
+
+setup:
+  title: "Nastavení"
+  meta: "Vyberte si preferovanou verzi hry a jazyk a přizpůsobte si tak svůj zážitek z League of Data Base. Všechny statistiky a data se přizpůsobí vašemu nastavení."
+  form:
+    version: "Verze"
+    language: "Jazyk"
+    note_latest: "*Nejnovější verze je vybrána automaticky."
+    remember: "Zapamatovat si mě"
+    submit: "Odeslat"
+
+system:
+  under_construction:
+    title: "Ve výstavbě"
+    meta_description: "League of Data Base se momentálně buduje. Usilovně pracujeme na tom, abychom vám přinesli podrobné statistiky, přehledy a nástroje pro League of Legends. Sledujte aktualizace."
+    heading: "Tato stránka se připravuje"
+    subheading: "Kujeme tuto funkci na Riftu. Vraťte se brzy pro něco epického."
+    info: "Pokud jste se dostali na tuto stránku, obsah ještě není nasazen. Pracujeme na výkonu, přesnosti dat a plynulém UX, které odpovídá zbytku League Of Data Base."
+    progress_label: "Průběh vývoje"
+    back: "← Zpět"
+    summoners: "Zobrazit přivolávací kouzla"
+    setup: "Vybrat verzi a jazyk"
+    footer: "Potřebujete to brzy? Napište nám nebo se podívejte na plán vývoje. Další aktualizace se blíží."
+    meanwhile: "Mezitím můžete:"
+
+item:
+  detail:
+    meta_description: "Zjistěte vše o předmětu %name% v League of Legends. Statistiky, efekty a informace o buildu aktualizované pro patch %version%."
+    version_locale: "Verze: %version% — Jazyk: %locale%"
+    price_total: "Celková cena"
+    price_base: "Nákupní cena"
+    price_sell: "Prodejní cena"
+    categories: "Kategorie"
+    evolutions: "Možné evoluce"
+    stats: "Statistiky"
+    description: "Popis"
+    recipe: "Recept"
+    builds_from: "Vyrobeno z"
+    tier: "Úroveň %depth%"
+    availability: "Dostupnost"
+    back: "← Zpět na seznam"
+    setup: "Změnit verzi a jazyk"
+  list:
+      title: "Předměty"
+      meta_description: "Procházejte všechny předměty League of Legends dostupné v patchi %version%. Najděte podrobné statistiky, ceny a efekty aktualizované pro nejnovější verzi."
+      header: "Předměty"
+      subtitle: "Katalog předmětů"
+      results_per_page: "Výsledků na stránku:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "Hledat předmět…"
+      change_version: "Změnit verzi/jazyk"
+      cost_total: "Celková cena"
+      cost_sell: "Prodejní cena"
+      categories: "Kategorie"
+      evolutions: "Možné evoluce"
+      description: "Popis"
+
+summoner:
+  detail:
+    meta_description: "Prozkoumejte podrobnosti přivolávacího kouzla %name% v League of Legends. Statistiky a efekty aktualizované pro patch %version%."
+    version_locale: "Verze: %version% — Jazyk: %locale%"
+    fields:
+      cooldown: "Doba obnovení"
+      maxammo: "Počet nábojů"
+      range: "Dosah použití"
+      cost: "Cena"
+      summoner_level: "Úroveň přivolávače"
+    unlocked_at: "Odemčeno na úrovni %level%"
+    range_global: "Globální"
+    no_cost: "Bez nákladů"
+    modes: "Kompatibilní herní režimy"
+    description: "Popis"
+  card:
+    cooldown: "Doba obnovení"
+    level: "Úroveň přivolávače"
+    modes: "Kompatibilní herní režimy"
+    description: "Popis"
+  list:
+    title: "Přivolávací kouzla"
+    subtitle: "Katalog přivolávacích kouzel"
+    count: "count kouzel"
+
+champion:
+  list:
+    title: "Šampioni"
+    meta_description: "Procházejte všechny šampiony League of Legends. Najděte podrobné statistiky, schopnosti a příběh pro každého šampiona ve hře."
+    header: "Šampioni"
+    subtitle: "Katalog šampionů"
+    search_placeholder: "Hledat šampiona…"
+    change_version: "Změnit verzi/jazyk"
+  detail:
+    meta_description: "Objevte šampiona %name% z League of Legends se statistikami, rolemi a podrobnostmi pro patch %version%."
+    version_locale: "Patch %version% • %locale%"
+    partype: "Zdroj: %partype%"
+    roles: "Role"
+    abilities: "Schopnosti"
+    passive: "Pasivní schopnost"
+    skins: "Vzhledy"
+    cooldown: "Doba obnovy"
+    cost: "Cena"
+    range: "Dosah"
+    tips_as: "Když hrajete za"
+    tips_against: "Když hrajete proti"
+    stats:
+      title: "Základní statistiky"
+    profile:
+      title: "Profil šampiona"
+      attack: "Útok"
+      defense: "Obrana"
+      magic: "Magie"
+      difficulty: "Obtížnost"
+    lore:
+      title: "Příběh"
+
+rune:
+  list:
+    title: "Runy"
+    meta_description: "Procházejte všechny runy League of Legends. Najděte podrobné statistiky a efekty pro každou runu ve hře."
+    header: "Runy"
+    subtitle: "Katalog run"
+    search_placeholder: "Hledat runu…"
+    change_version: "Změnit verzi/jazyk"
+  detail:
+    title: "Runa: %name%"
+    meta_description: "Objevte podrobnosti runy %name% v League of Legends. Statistiky a efekty aktualizované pro patch %version%."
+    overview: "Přehled"
+    keystone: "Klíčová runa"
+    minor: "Vedlejší runy"
+    slot_n: "Slot %n%"
+  slot: "Slot"
+
+common:
+  back: "Zpět"
+  search: "Hledat…"
+  no_result:
+    text: "Pro vaše hledání nebyly nalezeny žádné výsledky."
+    back: "← Zpět"
+    setup: "Vybrat verzi a jazyk"
+  detail : "Zobrazit podrobnosti →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base je komunitní platforma, která poskytuje podrobné informace, statistiky a přehledy o League of Legends. Rychlá, spolehlivá a vždy aktuální."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Právní upozornění"
+
+  navigation:
+    title: "Navigace"
+    home: "Domů"
+    champion: "Šampion"
+    item: "Předmět"
+    runes: "Runy"
+    summoner: "Přivolávač"
+
+  links:
+    title: "Užitečné odkazy"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Projekt"
+    version: "Verze: Beta 2.0"
+    updated: "Aktualizováno: 03/08/2025"
+
+  contact:
+    title: "Kontakt"
+    email: "E-mail"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Přivolávání dat"
+  subtitle: "Načítání zdrojů z Riftu…"
+  preparing: "Příprava dat…"
+  status:
+    fetching: "načítání"
+    ready: "připraveno"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Domů"
+    champion: "Šampioni"
+    item: "Předměty"
+    runes: "Runy"
+    summoner: "Přivolávací kouzla"

@@ -1,0 +1,5 @@
+{# Detail footer actions. Params: back_href, back_label #}
+<div class="mt-12 flex flex-wrap gap-3">
+  <a href="{{ back_href }}" class="hx-btn-ghost">{{ back_label|default('item.detail.back'|trans) }}</a>
+  <a href="{{ path('app_setup') }}" class="hx-btn">{{ 'item.detail.setup'|trans }}</a>
+</div>

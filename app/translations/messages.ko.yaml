@@ -1,0 +1,220 @@
+homepage:
+  title: "League of Data Base"
+  meta: "League of Data Base에 오신 것을 환영합니다. 패치 %version%의 League of Legends 아이템과 소환사 주문 정보를 스탯과 세부 사항과 함께 확인해보세요."
+  hero:
+    browse: "League of Legends의 <strong>소환사 주문</strong>과 <strong>아이템</strong>에 대한 상세 정보를 확인해보세요. 패치 %version% 기준으로 업데이트되었습니다."
+    explore_summoners: "소환사 주문 둘러보기"
+    explore_items: "아이템 둘러보기"
+    explore_champions: "챔피언 둘러보기"
+    explore_runes: "룬 둘러보기"
+  summoners:
+    title: "소환사 주문"
+    see_all: "모든 주문 보기"
+  items:
+    title: "아이템"
+    see_all: "모든 아이템 보기"
+  champions:
+    title: "챔피언"
+    see_all: "모든 챔피언 보기"
+    no_data: "이 버전에서는 사용 가능한 챔피언이 없습니다."
+    wip: "이 섹션은 준비 중입니다. 곧 모든 챔피언을 둘러볼 수 있습니다."
+  runes:
+    title: "룬"
+    wip: "이 섹션은 준비 중입니다. 곧 룬을 둘러볼 수 있습니다."
+    see_all: "모든 룬 보기"
+
+
+setup:
+  title: "설정"
+  meta: "League of Data Base 경험을 원하는 대로 맞추기 위해 게임 버전과 언어를 선택하세요. 모든 스탯과 데이터가 설정에 맞게 조정됩니다."
+  form:
+    version: "버전"
+    language: "언어"
+    note_latest: "*최신 버전이 자동으로 선택됩니다."
+    remember: "로그인 상태 유지"
+    submit: "제출"
+
+system:
+  under_construction:
+    title: "준비 중인 페이지"
+    meta_description: "League of Data Base는 현재 준비 중입니다. League of Legends에 대한 상세한 통계, 인사이트, 도구를 제공하기 위해 열심히 작업하고 있습니다. 업데이트를 기대해주세요."
+    heading: "이 페이지는 준비 중입니다"
+    subheading: "협곡에서 이 기능을 벼려내고 있습니다. 곧 놀라운 것을 가지고 다시 찾아오겠습니다."
+    info: "이 페이지에 도달했다면, 아직 콘텐츠가 출시되지 않은 것입니다. League Of Data Base의 나머지 부분과 어울리는 성능, 데이터 정확성, 매끄러운 UX를 위해 작업 중입니다."
+    progress_label: "빌드 진행률"
+    back: "← 뒤로 가기"
+    summoners: "소환사 주문 보기"
+    setup: "버전 및 언어 선택"
+    footer: "빨리 필요하신가요? 문의하시거나 로드맵을 확인해보세요. 더 많은 업데이트가 준비되어 있습니다."
+    meanwhile: "그 동안 다음을 이용해보세요:"
+
+item:
+  detail:
+    meta_description: "League of Legends의 아이템 %name%에 대한 모든 것을 알아보세요. 패치 %version% 기준으로 업데이트된 스탯, 효과, 빌드 정보를 제공합니다."
+    version_locale: "버전: %version% — 언어: %locale%"
+    price_total: "총 가격"
+    price_base: "구매 가격"
+    price_sell: "판매 가격"
+    categories: "카테고리"
+    evolutions: "가능한 진화"
+    stats: "능력치"
+    description: "설명"
+    recipe: "조합법"
+    builds_from: "하위 아이템"
+    tier: "%depth% 단계"
+    availability: "사용 가능 여부"
+    back: "← 목록으로 돌아가기"
+    setup: "버전 및 언어 변경"
+  list:
+      title: "아이템"
+      meta_description: "패치 %version%에서 사용 가능한 모든 League of Legends 아이템을 둘러보세요. 최신 버전 기준으로 업데이트된 상세 스탯, 가격, 효과를 확인할 수 있습니다."
+      header: "아이템"
+      subtitle: "아이템 카탈로그"
+      results_per_page: "페이지당 결과 수:"
+      max: "MAX"
+      ok: "확인"
+      search_placeholder: "아이템 검색…"
+      change_version: "버전/언어 변경"
+      cost_total: "총 가격"
+      cost_sell: "판매 가격"
+      categories: "카테고리"
+      evolutions: "가능한 진화"
+      description: "설명"
+
+summoner:
+  detail:
+    meta_description: "League of Legends의 소환사 주문 %name%에 대한 세부 정보를 확인해보세요. 패치 %version% 기준으로 업데이트된 스탯과 효과를 제공합니다."
+    version_locale: "버전: %version% — 언어: %locale%"
+    fields:
+      cooldown: "재사용 대기시간"
+      maxammo: "충전 횟수"
+      range: "사용 범위"
+      cost: "소모값"
+      summoner_level: "소환사 레벨"
+    unlocked_at: "%level% 레벨에 해제"
+    range_global: "글로벌"
+    no_cost: "소모값 없음"
+    modes: "사용 가능한 모드"
+    description: "설명"
+  card:
+    cooldown: "재사용 대기시간"
+    level: "소환사 레벨"
+    modes: "사용 가능한 모드"
+    description: "설명"
+  list:
+    title: "소환사 주문"
+    subtitle: "소환사 주문 카탈로그"
+    count: "count개 주문"
+
+champion:
+  list:
+    title: "챔피언"
+    meta_description: "모든 League of Legends 챔피언을 둘러보세요. 게임 내 각 챔피언의 상세 스탯, 스킬, 배경 이야기를 확인할 수 있습니다."
+    header: "챔피언"
+    subtitle: "챔피언 카탈로그"
+    search_placeholder: "챔피언 검색…"
+    change_version: "버전/언어 변경"
+  detail:
+    meta_description: "League of Legends의 %name%에 대해 알아보세요. 패치 %version% 기준의 스탯, 역할, 세부 정보를 제공합니다."
+    version_locale: "패치 %version% • %locale%"
+    partype: "자원: %partype%"
+    roles: "역할"
+    abilities: "스킬"
+    passive: "지속 효과"
+    skins: "스킨"
+    cooldown: "재사용 대기시간"
+    cost: "소모값"
+    range: "사거리"
+    tips_as: "플레이할 때"
+    tips_against: "상대할 때"
+    stats:
+      title: "기본 능력치"
+    profile:
+      title: "챔피언 프로필"
+      attack: "공격"
+      defense: "방어"
+      magic: "마법"
+      difficulty: "난이도"
+    lore:
+      title: "배경 이야기"
+
+rune:
+  list:
+    title: "룬"
+    meta_description: "모든 League of Legends 룬을 둘러보세요. 게임 내 각 룬의 상세 스탯과 효과를 확인할 수 있습니다."
+    header: "룬"
+    subtitle: "룬 카탈로그"
+    search_placeholder: "룬 검색…"
+    change_version: "버전/언어 변경"
+  detail:
+    title: "룬: %name%"
+    meta_description: "League of Legends의 룬 %name%에 대한 세부 정보를 확인해보세요. 패치 %version% 기준으로 업데이트된 스탯과 효과를 제공합니다."
+    overview: "개요"
+    keystone: "핵심 룬"
+    minor: "하위 룬"
+    slot_n: "%n% 슬롯"
+  slot: "슬롯"
+
+common:
+  back: "뒤로"
+  search: "검색…"
+  no_result:
+    text: "검색 결과가 없습니다."
+    back: "← 뒤로"
+    setup: "버전 및 언어 선택"
+  detail : "자세히 보기 →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base는 League of Legends에 대한 상세 정보, 스탯, 인사이트를 제공하는 커뮤니티 기반 플랫폼입니다. 빠르고 신뢰할 수 있으며 항상 최신 상태를 유지합니다."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "법적 고지"
+
+  navigation:
+    title: "탐색"
+    home: "홈"
+    champion: "챔피언"
+    item: "아이템"
+    runes: "룬"
+    summoner: "소환사 주문"
+
+  links:
+    title: "유용한 링크"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "프로젝트"
+    version: "버전: Beta 2.0"
+    updated: "업데이트: 03/08/2025"
+
+  contact:
+    title: "연락처"
+    email: "이메일"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "데이터 소환 중"
+  subtitle: "협곡에서 리소스를 가져오는 중…"
+  preparing: "데이터 준비 중…"
+  status:
+    fetching: "가져오는 중"
+    ready: "완료"
+
+pagination:
+  ok: "확인"
+  more: "…"
+
+header:
+  navigation:
+    home: "홈"
+    champion: "챔피언"
+    item: "아이템"
+    runes: "룬"
+    summoner: "소환사 주문"

@@ -1,0 +1,69 @@
+name: _deploy
+
+# Reusable: deploy the stack to ONE host over SSH. Same logic for staging and prod —
+# the environment is fully parameterized by inputs + secrets (DRY / open-closed).
+# No environment-specific value is hardcoded here; everything sensitive comes from
+# the caller's secrets, and the host config (domains, tags, app secrets) lives in
+# ENV_FILE, pushed to the host as .env.
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: Branch the target host tracks and pulls (test | main).
+        required: true
+        type: string
+    secrets:
+      SSH_KEY:
+        description: SSH private key (PEM) for the target host.
+        required: true
+      SSH_HOST:
+        description: Target host (IP or FQDN).
+        required: true
+      DEPLOY_PATH:
+        description: Absolute project path on the host (dir holding compose.*.yaml).
+        required: true
+      SSH_USER:
+        description: SSH user (defaults to root when unset).
+        required: false
+      ENV_FILE:
+        description: Full dotenv for this host, written to ${DEPLOY_PATH}/.env.
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛡️ Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: 🔐 Known hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: 🔑 Push env to host (from ENV_FILE secret)
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          printf '%s\n' "$ENV_FILE" \
+            | ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} "cat > ${{ secrets.DEPLOY_PATH }}/.env"
+
+      - name: 🚀 Deploy (compose pull + up)
+        run: |
+          ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} <<'EOSSH'
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            # Deploy overlay (Caddy/TLS), WITHOUT compose.override.yaml (dev conveniences).
+            export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
+            git pull origin ${{ inputs.branch }}
+            docker compose pull
+            docker compose up -d --remove-orphans
+            # Pré-chauffe (détaché → hors chemin critique) : JSON + images des 3 dernières
+            # versions dans MinIO, puis backfill WebP. Idempotent + best-effort.
+            docker compose exec -d php php bin/console app:ddragon:warmup --limit=3
+            docker compose exec -d php php bin/console app:ddragon:webp
+            docker image prune -f
+          EOSSH

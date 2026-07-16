@@ -1,0 +1,39 @@
+name: lodb
+
+# Deployment overlay — applied ON TOP of compose.yaml for ANY served environment
+# (staging AND prod), explicitly and WITHOUT compose.override.yaml (dev conveniences).
+# The deploy jobs select the files via COMPOSE_FILE (see .github/workflows/ci.yml):
+#
+#   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
+#
+# What differs between staging and prod is ONLY the host's .env (CADDY_DOMAINS, secrets,
+# IMAGE_TAG=staging|prod). Caddy is the sole public entrypoint (80/443, automatic
+# Let's Encrypt) and reverse-proxies to the internal nginx, which is not host-published.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"      # HTTP/3 (QUIC)
+    environment:
+      CADDY_DOMAINS: ${CADDY_DOMAINS:?CADDY_DOMAINS is required (e.g. "example.fr, example.com")}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required (Let's Encrypt contact)}
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data       # issued certs + ACME account key — MUST persist (LE rate limits)
+      - caddy_config:/config
+    depends_on:
+      nginx:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  caddy_data:
+  caddy_config:

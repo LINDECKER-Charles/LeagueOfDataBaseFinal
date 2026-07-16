@@ -1,0 +1,220 @@
+homepage:
+  title: "League of Data Base"
+  meta: "ยินดีต้อนรับสู่ League of Data Base สำรวจไอเท็มและสเปลล์อัญเชิญของ League of Legends พร้อมสถิติและรายละเอียดสำหรับแพตช์ %version%"
+  hero:
+    browse: "เรียกดูข้อมูลโดยละเอียดเกี่ยวกับ <strong>สเปลล์อัญเชิญ</strong> และ <strong>ไอเท็ม</strong> จาก League of Legends อัปเดตสำหรับแพตช์ %version%"
+    explore_summoners: "สำรวจสเปลล์อัญเชิญ"
+    explore_items: "สำรวจไอเท็ม"
+    explore_champions: "สำรวจแชมเปี้ยน"
+    explore_runes: "สำรวจรูน"
+  summoners:
+    title: "สเปลล์อัญเชิญ"
+    see_all: "ดูสเปลล์ทั้งหมด"
+  items:
+    title: "ไอเท็ม"
+    see_all: "ดูไอเท็มทั้งหมด"
+  champions:
+    title: "แชมเปี้ยน"
+    see_all: "ดูแชมเปี้ยนทั้งหมด"
+    no_data: "ไม่มีข้อมูลแชมเปี้ยนสำหรับเวอร์ชันนี้"
+    wip: "ส่วนนี้กำลังอยู่ระหว่างการพัฒนา เร็ว ๆ นี้คุณจะสามารถเรียกดูแชมเปี้ยนทั้งหมดได้"
+  runes:
+    title: "รูน"
+    wip: "ส่วนนี้กำลังอยู่ระหว่างการพัฒนา เร็ว ๆ นี้คุณจะสามารถสำรวจรูนได้"
+    see_all: "ดูรูนทั้งหมด"
+
+
+setup:
+  title: "การตั้งค่า"
+  meta: "เลือกเวอร์ชันเกมและภาษาที่คุณต้องการ เพื่อปรับแต่งประสบการณ์การใช้งาน League of Data Base ของคุณ สถิติและข้อมูลทั้งหมดจะปรับเปลี่ยนตามการตั้งค่าของคุณ"
+  form:
+    version: "เวอร์ชัน"
+    language: "ภาษา"
+    note_latest: "*เวอร์ชันล่าสุดจะถูกเลือกให้โดยอัตโนมัติ"
+    remember: "จดจำฉันไว้"
+    submit: "ยืนยัน"
+
+system:
+  under_construction:
+    title: "กำลังอยู่ระหว่างการพัฒนา"
+    meta_description: "League of Data Base กำลังอยู่ระหว่างการพัฒนา เรากำลังทำงานอย่างหนักเพื่อนำเสนอสถิติ ข้อมูลเชิงลึก และเครื่องมือสำหรับ League of Legends โปรดติดตามการอัปเดตต่อไป"
+    heading: "หน้านี้กำลังอยู่ระหว่างการพัฒนา"
+    subheading: "เรากำลังตีเหล็กหลอมฟีเจอร์นี้อยู่ใน Rift แวะมาดูใหม่เร็ว ๆ นี้สำหรับสิ่งที่ยิ่งใหญ่"
+    info: "หากคุณมาถึงหน้านี้ แสดงว่าเนื้อหายังไม่พร้อมใช้งาน เรากำลังพัฒนาประสิทธิภาพ ความแม่นยำของข้อมูล และประสบการณ์การใช้งานที่ราบรื่นให้สอดคล้องกับส่วนอื่น ๆ ของ League Of Data Base"
+    progress_label: "ความคืบหน้าการพัฒนา"
+    back: "← ย้อนกลับ"
+    summoners: "ดูสเปลล์อัญเชิญ"
+    setup: "เลือกเวอร์ชันและภาษา"
+    footer: "ต้องการฟีเจอร์นี้เร็ว ๆ นี้ใช่ไหม? ติดต่อเราหรือดูแผนงาน (roadmap) มีการอัปเดตเพิ่มเติมกำลังจะมาถึงเร็ว ๆ นี้"
+    meanwhile: "ในระหว่างนี้ คุณสามารถ:"
+
+item:
+  detail:
+    meta_description: "ค้นพบทุกอย่างเกี่ยวกับไอเท็ม %name% ใน League of Legends สถิติ เอฟเฟกต์ และข้อมูลการต่อไอเท็มที่อัปเดตสำหรับแพตช์ %version%"
+    version_locale: "เวอร์ชัน: %version% — ภาษา: %locale%"
+    price_total: "ราคารวม"
+    price_base: "ราคาซื้อ"
+    price_sell: "มูลค่าขาย"
+    categories: "หมวดหมู่"
+    evolutions: "การพัฒนาที่เป็นไปได้"
+    stats: "สถิติ"
+    description: "รายละเอียด"
+    recipe: "สูตร"
+    builds_from: "สร้างจาก"
+    tier: "ระดับ %depth%"
+    availability: "ความพร้อมใช้งาน"
+    back: "← กลับสู่รายการ"
+    setup: "เปลี่ยนเวอร์ชันและภาษา"
+  list:
+      title: "ไอเท็ม"
+      meta_description: "เรียกดูไอเท็มทั้งหมดของ League of Legends ที่มีในแพตช์ %version% ค้นหาสถิติ ราคา และเอฟเฟกต์โดยละเอียดที่อัปเดตสำหรับเวอร์ชันล่าสุด"
+      header: "ไอเท็ม"
+      subtitle: "แคตตาล็อกไอเท็ม"
+      results_per_page: "ผลลัพธ์ต่อหน้า:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "ค้นหาไอเท็ม…"
+      change_version: "เปลี่ยนเวอร์ชัน/ภาษา"
+      cost_total: "ราคารวม"
+      cost_sell: "มูลค่าขาย"
+      categories: "หมวดหมู่"
+      evolutions: "การพัฒนาที่เป็นไปได้"
+      description: "รายละเอียด"
+
+summoner:
+  detail:
+    meta_description: "สำรวจรายละเอียดของสเปลล์อัญเชิญ %name% ใน League of Legends สถิติและเอฟเฟกต์อัปเดตสำหรับแพตช์ %version%"
+    version_locale: "เวอร์ชัน: %version% — ภาษา: %locale%"
+    fields:
+      cooldown: "คูลดาวน์"
+      maxammo: "จำนวนประจุ"
+      range: "ระยะการใช้งาน"
+      cost: "ราคา"
+      summoner_level: "เลเวลผู้อัญเชิญ"
+    unlocked_at: "ปลดล็อกที่เลเวล %level%"
+    range_global: "ทั่วแผนที่"
+    no_cost: "ไม่มีค่าใช้จ่าย"
+    modes: "โหมดที่รองรับ"
+    description: "รายละเอียด"
+  card:
+    cooldown: "คูลดาวน์"
+    level: "เลเวลผู้อัญเชิญ"
+    modes: "โหมดที่รองรับ"
+    description: "รายละเอียด"
+  list:
+    title: "สเปลล์อัญเชิญ"
+    subtitle: "แคตตาล็อกสเปลล์อัญเชิญ"
+    count: "count สเปลล์"
+
+champion:
+  list:
+    title: "แชมเปี้ยน"
+    meta_description: "เรียกดูแชมเปี้ยนทั้งหมดของ League of Legends ค้นหาสถิติ สกิล และเรื่องราวโดยละเอียดของแชมเปี้ยนแต่ละตัวในเกม"
+    header: "แชมเปี้ยน"
+    subtitle: "แคตตาล็อกแชมเปี้ยน"
+    search_placeholder: "ค้นหาแชมเปี้ยน…"
+    change_version: "เปลี่ยนเวอร์ชัน/ภาษา"
+  detail:
+    meta_description: "ค้นพบ %name% จาก League of Legends พร้อมสถิติ บทบาท และรายละเอียดสำหรับแพตช์ %version%"
+    version_locale: "แพตช์ %version% • %locale%"
+    partype: "ทรัพยากร: %partype%"
+    roles: "บทบาท"
+    abilities: "ความสามารถ"
+    passive: "พาสซีฟ"
+    skins: "สกิน"
+    cooldown: "เวลาคูลดาวน์"
+    cost: "ค่าใช้จ่าย"
+    range: "ระยะ"
+    tips_as: "เมื่อเล่นเป็น"
+    tips_against: "เมื่อเล่นเจอ"
+    stats:
+      title: "สถิติพื้นฐาน"
+    profile:
+      title: "โปรไฟล์แชมเปี้ยน"
+      attack: "โจมตี"
+      defense: "ป้องกัน"
+      magic: "เวทมนตร์"
+      difficulty: "ความยาก"
+    lore:
+      title: "เรื่องราว"
+
+rune:
+  list:
+    title: "รูน"
+    meta_description: "เรียกดูรูนทั้งหมดของ League of Legends ค้นหาสถิติและเอฟเฟกต์โดยละเอียดของรูนแต่ละอันในเกม"
+    header: "รูน"
+    subtitle: "แคตตาล็อกรูน"
+    search_placeholder: "ค้นหารูน…"
+    change_version: "เปลี่ยนเวอร์ชัน/ภาษา"
+  detail:
+    title: "รูน: %name%"
+    meta_description: "ค้นพบรายละเอียดของรูน %name% ใน League of Legends สถิติและเอฟเฟกต์อัปเดตสำหรับแพตช์ %version%"
+    overview: "ภาพรวม"
+    keystone: "รูนหลัก"
+    minor: "รูนรอง"
+    slot_n: "ช่อง %n%"
+  slot: "ช่อง"
+
+common:
+  back: "ย้อนกลับ"
+  search: "ค้นหา…"
+  no_result:
+    text: "ไม่พบผลลัพธ์สำหรับการค้นหาของคุณ"
+    back: "← ย้อนกลับ"
+    setup: "เลือกเวอร์ชันและภาษา"
+  detail : "ดูรายละเอียด →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base เป็นแพลตฟอร์มที่ขับเคลื่อนโดยชุมชน ให้ข้อมูลโดยละเอียด สถิติ และข้อมูลเชิงลึกเกี่ยวกับ League of Legends รวดเร็ว เชื่อถือได้ และอัปเดตอยู่เสมอ"
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "ประกาศทางกฎหมาย"
+
+  navigation:
+    title: "เมนูนำทาง"
+    home: "หน้าแรก"
+    champion: "แชมเปี้ยน"
+    item: "ไอเท็ม"
+    runes: "รูน"
+    summoner: "สเปลล์อัญเชิญ"
+
+  links:
+    title: "ลิงก์ที่เป็นประโยชน์"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "โปรเจกต์"
+    version: "เวอร์ชัน: Beta 2.0"
+    updated: "อัปเดตเมื่อ: 03/08/2025"
+
+  contact:
+    title: "ติดต่อ"
+    email: "อีเมล"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "กำลังอัญเชิญข้อมูล"
+  subtitle: "กำลังดึงทรัพยากรจาก Rift…"
+  preparing: "กำลังเตรียมข้อมูล…"
+  status:
+    fetching: "กำลังดึงข้อมูล"
+    ready: "พร้อมแล้ว"
+
+pagination:
+  ok: "ตกลง"
+  more: "…"
+
+header:
+  navigation:
+    home: "หน้าแรก"
+    champion: "แชมเปี้ยน"
+    item: "ไอเท็ม"
+    runes: "รูน"
+    summoner: "สเปลล์อัญเชิญ"

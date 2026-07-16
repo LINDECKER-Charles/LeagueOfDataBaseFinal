@@ -73,45 +73,50 @@ module.exports = Encore.getWebpackConfig();
 
 ### 🌐 Configuration multilingue
 
-#### Support des langues
+Deux niveaux de langue cohabitent :
+
+- **Contenu Data Dragon** (`fr_FR`, `en_US`, `es_ES`…) : la locale des données Riot,
+  choisie par l'utilisateur dans le setup, persistée en session + cookie signé `lod_prefs`.
+- **Interface (traductions Symfony)** : le texte du site (`trans`). Elle **suit désormais
+  la langue Data Dragon sélectionnée** ; le TLD (`.fr` → `fr`, sinon `en`) ne sert plus que
+  de défaut tant qu'aucune langue n'a été choisie.
+
+#### Résolution de la locale d'interface
+
+`LocaleSubscriber` (priorité 20, avant le `LocaleListener` de Symfony) lit la locale DDragon
+choisie via `ClientManager::getSelectedLocale()` (session, sinon cookie `lod_prefs` — sans
+démarrer de session), puis `UiLocaleResolver` la mappe vers une locale d'UI :
+
+- collapse vers la base 2 lettres (`fr_FR` → `fr`, `en_AU` → `en`, `es_MX` → `es`, `pt_BR` → `pt`) ;
+- le chinois conserve la distinction d'écriture (`zh_CN`/`zh_MY` → `zh_Hans`, `zh_TW` → `zh_Hant`) ;
+- fallback vers le défaut de domaine si la langue n'a pas de catalogue.
+
+Les catalogues embarqués sont déclarés dans `framework.enabled_locales` et couvrent toutes les
+langues de l'API : `ar cs de el en es fr hu id it ja ko pl pt ro ru th tr vi zh_Hans zh_Hant`.
 
 ```yaml
-# config/packages/translation.yaml
+# config/packages/framework.yaml (extrait)
 framework:
-    default_locale: fr
+    default_locale: en
+    enabled_locales: [ar, cs, de, el, en, es, fr, hu, id, it, ja, ko, pl, pt, ro, ru, th, tr, vi, zh_Hans, zh_Hant]
     translator:
         default_path: '%kernel.project_dir%/translations'
-        fallbacks:
-            - fr
-            - en
+        fallbacks: [en]
 ```
 
 #### Fichiers de traduction
 
-```yaml
-# translations/messages.fr.yaml
-app:
-    title: "League of Database"
-    description: "Base de données League of Legends"
-    champions:
-        title: "Champions"
-        search: "Rechercher un champion"
-    items:
-        title: "Objets"
-        search: "Rechercher un objet"
-```
+Un catalogue `translations/messages.<locale>.yaml` par langue, de structure identique (mêmes clés,
+placeholders `%version%`/`%name%`/`%locale%` et balises HTML préservés) :
 
 ```yaml
-# translations/messages.en.yaml
-app:
-    title: "League of Database"
-    description: "League of Legends database"
-    champions:
-        title: "Champions"
-        search: "Search for a champion"
-    items:
-        title: "Items"
-        search: "Search for an item"
+# translations/messages.en.yaml (extrait)
+homepage:
+    title: "League of Data Base"
+item:
+    list:
+        header: "Items"
+        search_placeholder: "Search for an item…"
 ```
 
 #### Configuration des permissions

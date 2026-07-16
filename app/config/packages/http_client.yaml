@@ -1,0 +1,8 @@
+framework:
+    http_client:
+        scoped_clients:
+            # All Data Dragon egress goes through the Go fetch gateway.
+            go_fetcher.client:
+                base_uri: '%env(GO_FETCHER_URL)%'
+                timeout: 30
+                max_duration: 60

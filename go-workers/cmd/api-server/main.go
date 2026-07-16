@@ -1,48 +1,49 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"log"
 	"net/http"
-	"go-workers/internal/fetcher"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"go-workers/internal/api"
+	"go-workers/internal/config"
+	"go-workers/internal/fetcher"
 )
 
-
-/* https://ddragon.leagueoflegends.com/api/versions.json */
-
-
 func main() {
-	// Route simple qui renvoie du texte
-	http.HandleFunc("/process", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "✅ Hello depuis ton serveur Go !")
-	})
+	cfg := config.Load()
 
-	http.HandleFunc("/versions", func(w http.ResponseWriter, r *http.Request) {
-		data, err := fetcher.Fetch("https://ddragon.leagueoflegends.com/api/versions.json")
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Erreur fetch: %v", err), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(data))
-	})
-
-
-	http.HandleFunc("/multi-fetch", func(w http.ResponseWriter, r *http.Request) {
-		// n'accepte que POST
-		if r.Method != http.MethodPost {
-			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
-			return
-		}
-		// appelle ton Handler
-		api.Handler(w, r)
-	})
-
-	port := "127.0.0.1:8085"
-	fmt.Println("🚀 API Server listening on", port)
-	if err := http.ListenAndServe(port, nil); err != nil {
-		log.Fatal(err)
+	// Idle pool sized to the batch concurrency: DDragon is HTTP/1.1, so each
+	// concurrent fetch needs its own reusable keep-alive connection.
+	f := fetcher.New(cfg.AllowedHosts, cfg.RequestTimeout, cfg.MaxConcurrency)
+	srv := &http.Server{
+		Addr:              cfg.Addr(),
+		Handler:           api.NewServer(f, cfg.MaxConcurrency, cfg.MaxURLsPerRequest),
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       90 * time.Second,
 	}
+
+	go func() {
+		log.Printf("go-fetcher listening on %s (allowed hosts: %v)", cfg.Addr(), cfg.AllowedHosts)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("server error: %v", err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	<-stop
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("graceful shutdown failed: %v", err)
+	}
+	log.Println("go-fetcher stopped")
 }

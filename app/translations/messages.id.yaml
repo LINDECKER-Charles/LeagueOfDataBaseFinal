@@ -1,0 +1,220 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Selamat datang di League of Data Base. Jelajahi item dan summoner spell League of Legends beserta statistik dan detailnya untuk patch %version%."
+  hero:
+    browse: "Jelajahi informasi detail tentang <strong>Summoner Spell</strong> dan <strong>Item</strong> dari League of Legends. Diperbarui untuk patch %version%."
+    explore_summoners: "Jelajahi Summoner"
+    explore_items: "Jelajahi Item"
+    explore_champions: "Jelajahi Champion"
+    explore_runes: "Jelajahi Rune"
+  summoners:
+    title: "Summoner Spell"
+    see_all: "Lihat semua spell"
+  items:
+    title: "Item"
+    see_all: "Lihat semua item"
+  champions:
+    title: "Champion"
+    see_all: "Lihat semua champion"
+    no_data: "Tidak ada champion yang tersedia untuk versi ini."
+    wip: "Bagian ini sedang dalam pengembangan. Segera Anda akan dapat menjelajahi semua champion."
+  runes:
+    title: "Rune"
+    wip: "Bagian ini sedang dalam pengembangan. Segera Anda akan dapat menjelajahi rune."
+    see_all: "Lihat semua rune"
+
+
+setup:
+  title: "Pengaturan"
+  meta: "Pilih versi permainan dan bahasa yang Anda inginkan untuk menyesuaikan pengalaman League of Data Base Anda. Semua statistik dan data akan menyesuaikan dengan pengaturan Anda."
+  form:
+    version: "Versi"
+    language: "Bahasa"
+    note_latest: "*Versi terbaru dipilih secara otomatis."
+    remember: "Ingat saya"
+    submit: "Kirim"
+
+system:
+  under_construction:
+    title: "Sedang Dalam Pengembangan"
+    meta_description: "League of Data Base saat ini sedang dalam pengembangan. Kami bekerja keras untuk menghadirkan statistik, wawasan, dan alat terperinci untuk League of Legends. Nantikan pembaruannya."
+    heading: "Halaman ini sedang dalam pengembangan"
+    subheading: "Kami sedang menempa fitur ini di Rift. Kembali lagi nanti untuk sesuatu yang epik."
+    info: "Jika Anda sampai di halaman ini, konten belum dirilis. Kami sedang mengerjakan performa, akurasi data, dan UX yang mulus agar selaras dengan bagian lain dari League Of Data Base."
+    progress_label: "Progres pembangunan"
+    back: "← Kembali"
+    summoners: "Lihat Summoner Spell"
+    setup: "Pilih versi & bahasa"
+    footer: "Butuh ini segera? Hubungi kami atau lihat roadmap. Pembaruan lainnya akan segera hadir."
+    meanwhile: "Sementara itu, Anda dapat:"
+
+item:
+  detail:
+    meta_description: "Temukan semua hal tentang item %name% di League of Legends. Statistik, efek, dan informasi build diperbarui untuk patch %version%."
+    version_locale: "Versi: %version% — Bahasa: %locale%"
+    price_total: "Total biaya"
+    price_base: "Biaya pembelian"
+    price_sell: "Nilai jual"
+    categories: "Kategori"
+    evolutions: "Kemungkinan evolusi"
+    stats: "Statistik"
+    description: "Deskripsi"
+    recipe: "Resep"
+    builds_from: "Dibuat dari"
+    tier: "Tingkat %depth%"
+    availability: "Ketersediaan"
+    back: "← Kembali ke daftar"
+    setup: "Ubah versi & bahasa"
+  list:
+      title: "Item"
+      meta_description: "Jelajahi semua item League of Legends yang tersedia di patch %version%. Temukan statistik, biaya, dan efek terperinci yang diperbarui untuk versi terbaru."
+      header: "Item"
+      subtitle: "Katalog item"
+      results_per_page: "Hasil per halaman:"
+      max: "MAKS"
+      ok: "OK"
+      search_placeholder: "Cari item…"
+      change_version: "Ubah versi/bahasa"
+      cost_total: "Total biaya"
+      cost_sell: "Nilai jual"
+      categories: "Kategori"
+      evolutions: "Kemungkinan evolusi"
+      description: "Deskripsi"
+
+summoner:
+  detail:
+    meta_description: "Jelajahi detail summoner spell %name% di League of Legends. Statistik dan efek diperbarui untuk patch %version%."
+    version_locale: "Versi: %version% — Bahasa: %locale%"
+    fields:
+      cooldown: "Cooldown"
+      maxammo: "Jumlah muatan"
+      range: "Jarak penggunaan"
+      cost: "Biaya"
+      summoner_level: "Level summoner"
+    unlocked_at: "Terbuka di level %level%"
+    range_global: "Global"
+    no_cost: "Tanpa biaya"
+    modes: "Mode yang kompatibel"
+    description: "Deskripsi"
+  card:
+    cooldown: "Cooldown"
+    level: "Level summoner"
+    modes: "Mode yang kompatibel"
+    description: "Deskripsi"
+  list:
+    title: "Summoner Spell"
+    subtitle: "Katalog Summoner Spell"
+    count: "count spell"
+
+champion:
+  list:
+    title: "Champion"
+    meta_description: "Jelajahi semua champion League of Legends. Temukan statistik, kemampuan, dan lore terperinci untuk setiap champion dalam permainan."
+    header: "Champion"
+    subtitle: "Katalog champion"
+    search_placeholder: "Cari champion…"
+    change_version: "Ubah versi/bahasa"
+  detail:
+    meta_description: "Temukan %name% dari League of Legends, beserta statistik, peran, dan detail untuk patch %version%."
+    version_locale: "Patch %version% • %locale%"
+    partype: "Resource: %partype%"
+    roles: "Peran"
+    abilities: "Kemampuan"
+    passive: "Pasif"
+    skins: "Skin"
+    cooldown: "Waktu Jeda"
+    cost: "Biaya"
+    range: "Jangkauan"
+    tips_as: "Saat memainkan"
+    tips_against: "Saat melawan"
+    stats:
+      title: "Statistik Dasar"
+    profile:
+      title: "Profil Champion"
+      attack: "Serangan"
+      defense: "Pertahanan"
+      magic: "Sihir"
+      difficulty: "Kesulitan"
+    lore:
+      title: "Lore"
+
+rune:
+  list:
+    title: "Rune"
+    meta_description: "Jelajahi semua rune League of Legends. Temukan statistik dan efek terperinci untuk setiap rune dalam permainan."
+    header: "Rune"
+    subtitle: "Katalog rune"
+    search_placeholder: "Cari rune…"
+    change_version: "Ubah versi/bahasa"
+  detail:
+    title: "Rune: %name%"
+    meta_description: "Temukan detail rune %name% di League of Legends. Statistik dan efek diperbarui untuk patch %version%."
+    overview: "Ikhtisar"
+    keystone: "Rune Utama"
+    minor: "Rune Minor"
+    slot_n: "Slot %n%"
+  slot: "Slot"
+
+common:
+  back: "Kembali"
+  search: "Cari…"
+  no_result:
+    text: "Tidak ada hasil yang ditemukan untuk pencarian Anda."
+    back: "← Kembali"
+    setup: "Pilih versi & bahasa"
+  detail : "Lihat detail →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base adalah platform berbasis komunitas yang menyediakan informasi, statistik, dan wawasan terperinci tentang League of Legends. Cepat, andal, dan selalu up to date."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Pemberitahuan Hukum"
+
+  navigation:
+    title: "Navigasi"
+    home: "Beranda"
+    champion: "Champion"
+    item: "Item"
+    runes: "Rune"
+    summoner: "Summoner"
+
+  links:
+    title: "Tautan Berguna"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Proyek"
+    version: "Versi: Beta 2.0"
+    updated: "Diperbarui: 03/08/2025"
+
+  contact:
+    title: "Kontak"
+    email: "Email"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Memanggil data"
+  subtitle: "Mengambil sumber daya dari Rift…"
+  preparing: "Menyiapkan data…"
+  status:
+    fetching: "mengambil"
+    ready: "siap"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Beranda"
+    champion: "Champion"
+    item: "Item"
+    runes: "Rune"
+    summoner: "Summoner Spell"

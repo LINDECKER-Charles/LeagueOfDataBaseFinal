@@ -1,0 +1,4 @@
+pentatrion_vite:
+    # Reads public/build/entrypoints.json produced by vite-plugin-symfony.
+    build_directory: build
+    public_directory: public

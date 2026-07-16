@@ -1,0 +1,12 @@
+{
+  "name": "lodb-screenshots",
+  "private": true,
+  "type": "module",
+  "description": "Playwright capture of the LoDB UI into /screenshot (Étape 3).",
+  "scripts": {
+    "shots": "node capture.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.61.1"
+  }
+}

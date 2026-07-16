@@ -11,103 +11,218 @@
 {% block img %}/preview/champions.png{% endblock %}
 
 {% block body %}
-<main class="relative min-h-[70vh] bg-blue-950 overflow-hidden py-10 w-full">
-  {% include 'partials/main/gradient.html.twig' %}
+{% set selectedVersion = version|default(client.session.version ?? (client.versions|default([])|first)) %}
+{% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
+{% set champId = champion.id ?? champion.key %}
+{% set splashBase = 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash' %}
 
-  {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
-  {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
+<main class="relative">
+  {# ---- Hero : cinematic splash ------------------------------------------- #}
+  <section class="relative h-[60vh] min-h-[360px] max-h-[560px] w-full overflow-hidden">
+    {% if champId %}
+      <img src="{{ splashBase }}/{{ champId }}_0.jpg" alt="{{ champion.name ?? 'Champion' }}"
+           loading="eager" class="absolute inset-0 h-full w-full object-cover object-top">
+    {% endif %}
+    <div class="splash-scrim absolute inset-0"></div>
 
-  <div class="relative mx-auto max-w-5xl px-4">
-    {# === En-tête === #}
-    <article class="mb-10 flex items-center gap-6">
-      {% if image %}
-        <div class="relative shrink-0 h-28 w-28 rounded-2xl bg-blue-950 border border-grey-700 overflow-hidden">
-          <img src="{{ asset(image) }}" alt="{{ champion.name }}" class="absolute inset-0 w-full h-full object-cover">
+    <div class="absolute inset-x-0 bottom-0">
+      <div class="mx-auto flex max-w-6xl items-end gap-5 px-6 pb-8 sm:gap-6">
+        {% if image %}
+          <div class="hextech-frame relative hidden h-24 w-24 shrink-0 overflow-hidden sm:block sm:h-28 sm:w-28">
+            <img src="/{{ image }}" alt="{{ champion.name ?? 'Champion' }}"
+                 class="absolute inset-0 h-full w-full object-cover">
+          </div>
+        {% endif %}
+
+        <div class="min-w-0">
+          <p class="eyebrow mb-2">{{ 'champion.detail.roles'|trans }}</p>
+          <h1 class="font-beaufort text-5xl uppercase leading-none tracking-wide text-gold-bright sm:text-7xl">
+            {{ champion.name ?? 'Champion' }}
+          </h1>
+          {% if champion.title %}
+            <p class="mt-2 font-spiegel text-lg text-text-muted">{{ champion.title|capitalize }}</p>
+          {% endif %}
+
+          <div class="mt-4 flex flex-wrap items-center gap-2">
+            {% for tag in champion.tags|default([]) %}<span class="hx-chip">{{ tag }}</span>{% endfor %}
+            {% if champion.partype %}
+              <span class="hx-chip font-mono text-xs text-text-dim">
+                {{ 'champion.detail.partype'|trans({'%partype%': champion.partype}) }}
+              </span>
+            {% endif %}
+          </div>
+
+          <p class="mt-3 font-mono text-xs text-text-dim">
+            {{ 'champion.detail.version_locale'|trans({ '%version%': selectedVersion, '%locale%': selectedLocale }) }}
+          </p>
         </div>
-      {% else %}
-        <div class="h-24 w-24 rounded-2xl grid place-items-center bg-blue-950 border border-grey-700 text-blue-200/70 text-lg">
-          {{ champion.name|slice(0,2)|upper }}
-        </div>
-      {% endif %}
-
-      <section>
-        <h1 class="font-beaufort text-4xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100">
-          {{ champion.name ?? 'Champion' }}
-        </h1>
-        <p class="font-spiegel text-blue-200/80 mt-1">{{ champion.title | capitalize }}</p>
-        <p class="mt-1 text-sm text-blue-200/60">
-          {{ 'champion.detail.version_locale'|trans({
-            '%version%': selectedVersion,
-            '%locale%': selectedLocale
-          }) }}
-        </p>
-      </section>
-    </article>
-
-    {# === Rôles + Énergie === #}
-    <section class="mb-8">
-      <div class="flex flex-wrap gap-2 mb-3">
-        {% for tag in champion.tags %}
-          <span class="rounded-full bg-blue-950/70 px-3 py-1 text-sm border border-grey-700 text-blue-200/90">{{ tag }}</span>
-        {% endfor %}
       </div>
-      {% if champion.partype %}
-        <p class="text-blue-200/70 text-sm italic">
-          {{ 'champion.detail.partype'|trans({'%partype%': champion.partype}) }}
-        </p>
+    </div>
+  </section>
+
+  {# ---- Content ------------------------------------------------------------ #}
+  <div class="relative px-6 py-12">
+    {% include 'partials/main/gradient.html.twig' %}
+
+    <div class="relative mx-auto max-w-6xl">
+      {# Base stats #}
+      {% if champion.stats is defined %}
+        <section class="mb-10">
+          <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'champion.detail.stats.title'|trans }}</h2>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {% for key, val in champion.stats %}
+              <div class="stat-cell">
+                <div class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ key|replace({'perlevel': ' / lvl'}) }}</div>
+                <div class="mt-0.5 font-beaufort text-text">{{ val }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
       {% endif %}
-    </section>
 
-    {# === Statistiques de base === #}
-    {% if champion.stats is defined %}
-      <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">{{ 'champion.detail.stats.title'|trans }}</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {% for key, val in champion.stats %}
-            <div class="rounded-lg bg-blue-950/80 p-3 border border-grey-700">
-              <dt class="text-blue-200/70 text-sm">{{ key|replace({'perlevel': ' /niveau'})|capitalize }}</dt>
-              <dd class="font-medium text-white/90">{{ val }}</dd>
+      {# Profile ratings #}
+      {% if champion.info is defined %}
+        <section class="mb-10">
+          <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'champion.detail.profile.title'|trans }}</h2>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {% set ratings = {
+              (('champion.detail.profile.attack')|trans): champion.info.attack,
+              (('champion.detail.profile.defense')|trans): champion.info.defense,
+              (('champion.detail.profile.magic')|trans): champion.info.magic,
+              (('champion.detail.profile.difficulty')|trans): champion.info.difficulty
+            } %}
+            {% for label, val in ratings %}
+              <div class="stat-cell">
+                <div class="flex items-baseline justify-between">
+                  <span class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ label }}</span>
+                  <span class="font-beaufort text-gold">{{ val }}</span>
+                </div>
+                <div class="mt-2 h-1 bg-void">
+                  <div class="h-full bg-gradient-to-r from-gold-deep to-gold" style="width: {{ (val|default(0)) * 10 }}%;"></div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      {# Abilities — passive + P/Q/W/E/R rail #}
+      {% if champion.passive is defined or champion.spells is defined %}
+        <hr class="hx-rule my-10">
+        <section class="mb-10">
+          <h2 class="mb-5 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'champion.detail.abilities'|trans }}</h2>
+          <div class="space-y-4">
+            {% if champion.passive is defined %}
+              {% set pImg = abilityImages[champion.passive.image.full ?? '']|default(null) %}
+              <article class="hextech-frame-hover flex gap-4 p-4">
+                <div class="hextech-frame relative h-14 w-14 shrink-0 overflow-hidden sm:h-16 sm:w-16">
+                  {% if pImg %}<img src="/{{ pImg }}" alt="{{ champion.passive.name }}" class="absolute inset-0 h-full w-full object-cover">{% endif %}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="mb-1.5 flex flex-wrap items-center gap-2">
+                    <span class="ability-key" data-key="P">P</span>
+                    <h3 class="font-beaufort uppercase tracking-wide text-gold-bright">{{ champion.passive.name }}</h3>
+                    <span class="font-mono text-[10px] uppercase tracking-wider text-text-dim">{{ 'champion.detail.passive'|trans }}</span>
+                  </div>
+                  <div class="ddragon-rich text-sm text-text-muted">{{ champion.passive.description|raw }}</div>
+                </div>
+              </article>
+            {% endif %}
+
+            {% set keys = ['Q', 'W', 'E', 'R'] %}
+            {% for spell in champion.spells|default([]) %}
+              {% set sImg = abilityImages[spell.image.full ?? '']|default(null) %}
+              {% set key = keys[loop.index0]|default('') %}
+              <article class="hextech-frame-hover flex gap-4 p-4">
+                <div class="hextech-frame relative h-14 w-14 shrink-0 overflow-hidden sm:h-16 sm:w-16">
+                  {% if sImg %}<img src="/{{ sImg }}" alt="{{ spell.name }}" class="absolute inset-0 h-full w-full object-cover">{% endif %}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="mb-1.5 flex flex-wrap items-center gap-2">
+                    {% if key %}<span class="ability-key" data-key="{{ key }}">{{ key }}</span>{% endif %}
+                    <h3 class="font-beaufort uppercase tracking-wide text-gold-bright">{{ spell.name }}</h3>
+                  </div>
+                  {% if spell.cooldownBurn or spell.costBurn or spell.rangeBurn %}
+                    <div class="mb-2 flex flex-wrap gap-1.5">
+                      {% if spell.cooldownBurn %}<span class="hx-chip font-mono text-[10px]">{{ 'champion.detail.cooldown'|trans }}: {{ spell.cooldownBurn }}</span>{% endif %}
+                      {% if spell.costBurn %}<span class="hx-chip font-mono text-[10px]">{{ 'champion.detail.cost'|trans }}: {{ spell.costBurn }}</span>{% endif %}
+                      {% if spell.rangeBurn %}<span class="hx-chip font-mono text-[10px]">{{ 'champion.detail.range'|trans }}: {{ spell.rangeBurn }}</span>{% endif %}
+                    </div>
+                  {% endif %}
+                  <div class="ddragon-rich text-sm text-text-muted">{{ spell.description|raw }}</div>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      {# Skins #}
+      {% if champId and champion.skins is defined and champion.skins|length > 1 %}
+        <hr class="hx-rule my-10">
+        <section class="mb-10">
+          <h2 class="mb-5 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'champion.detail.skins'|trans }}</h2>
+          <div class="-mx-6 flex gap-4 overflow-x-auto px-6 pb-2">
+            {% for skin in champion.skins %}
+              {% if skin.num != 0 %}
+                <figure class="w-64 shrink-0">
+                  <div class="hextech-frame overflow-hidden">
+                    <img src="{{ splashBase }}/{{ champId }}_{{ skin.num }}.jpg" loading="lazy"
+                         alt="{{ skin.name }}" class="h-36 w-full object-cover object-top">
+                  </div>
+                  <figcaption class="mt-2 font-mono text-xs text-text-muted">
+                    {{ skin.name == 'default' ? champion.name : skin.name }}
+                  </figcaption>
+                </figure>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      {# Lore #}
+      {% set lore = champion.lore|default(champion.blurb) %}
+      {% if lore %}
+        <hr class="hx-rule my-10">
+        <section class="mb-10">
+          <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'champion.detail.lore.title'|trans }}</h2>
+          <div class="hextech-frame p-6">
+            <div class="ddragon-rich leading-relaxed text-text">{{ lore|raw }}</div>
+          </div>
+        </section>
+      {% endif %}
+
+      {# Tips #}
+      {% set ally = champion.allytips|default([])|filter(t => t is not empty) %}
+      {% set enemy = champion.enemytips|default([])|filter(t => t is not empty) %}
+      {% if ally is not empty or enemy is not empty %}
+        <hr class="hx-rule my-10">
+        <section class="mb-10 grid gap-6 md:grid-cols-2">
+          {% if ally is not empty %}
+            <div class="hextech-frame p-6">
+              <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'champion.detail.tips_as'|trans }}</h2>
+              <ul class="space-y-2 text-sm text-text-muted">
+                {% for tip in ally %}
+                  <li class="border-l-2 border-gold-deep pl-3">{{ tip }}</li>
+                {% endfor %}
+              </ul>
             </div>
-          {% endfor %}
-        </div>
-      </section>
-    {% endif %}
+          {% endif %}
+          {% if enemy is not empty %}
+            <div class="hextech-frame p-6">
+              <h2 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'champion.detail.tips_against'|trans }}</h2>
+              <ul class="space-y-2 text-sm text-text-muted">
+                {% for tip in enemy %}
+                  <li class="border-l-2 border-hex-deep pl-3">{{ tip }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </section>
+      {% endif %}
 
-    {# === Informations complémentaires === #}
-    {% if champion.info is defined %}
-      <section class="mb-8">
-        <h2 class="text-lg font-semibold text-white mb-3">{{ 'champion.detail.profile.title'|trans }}</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div class="rounded-lg bg-blue-950/80 p-3 border border-grey-700">
-            <dt class="text-blue-200/70 text-sm">{{ 'champion.detail.profile.attack'|trans }}</dt>
-            <dd class="font-medium text-white/90">{{ champion.info.attack }}</dd>
-          </div>
-          <div class="rounded-lg bg-blue-950/80 p-3 border border-grey-700">
-            <dt class="text-blue-200/70 text-sm">{{ 'champion.detail.profile.defense'|trans }}</dt>
-            <dd class="font-medium text-white/90">{{ champion.info.defense }}</dd>
-          </div>
-          <div class="rounded-lg bg-blue-950/80 p-3 border border-grey-700">
-            <dt class="text-blue-200/70 text-sm">{{ 'champion.detail.profile.magic'|trans }}</dt>
-            <dd class="font-medium text-white/90">{{ champion.info.magic }}</dd>
-          </div>
-          <div class="rounded-lg bg-blue-950/80 p-3 border border-grey-700">
-            <dt class="text-blue-200/70 text-sm">{{ 'champion.detail.profile.difficulty'|trans }}</dt>
-            <dd class="font-medium text-white/90">{{ champion.info.difficulty }}</dd>
-          </div>
-        </div>
-      </section>
-    {% endif %}
-
-    {# === Description === #}
-    {% if champion.blurb %}
-      <section class="mb-10">
-        <h2 class="text-lg font-semibold text-white mb-3">{{ 'champion.detail.lore.title'|trans }}</h2>
-        <p class="text-blue-100/90 leading-relaxed">{{ champion.blurb }}</p>
-      </section>
-    {% endif %}
-
-    {# === Actions === #}
-    {% include 'partials/main/elem/change.html.twig' %}
+      {% include 'components/detail_actions.html.twig' with { back_href: path('app_champions') } %}
+    </div>
   </div>
 </main>
 {% endblock %}

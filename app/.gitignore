@@ -20,5 +20,6 @@ npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
 
-.env
+# app/.env & app/.env.test are committed non-secret defaults (see repo-root .gitignore).
+# Real secrets live in app/.env.local / app/.env.*.local (ignored above) or repo-root .env*.
 .php-version

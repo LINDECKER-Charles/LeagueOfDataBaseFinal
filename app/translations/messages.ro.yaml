@@ -1,0 +1,220 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Bine ai venit pe League of Data Base. Explorează obiectele și vrăjile de invocator din League of Legends, cu statistici și detalii pentru patch-ul %version%."
+  hero:
+    browse: "Răsfoiește informații detaliate despre <strong>Vrăjile de Invocator</strong> și <strong>Obiectele</strong> din League of Legends. Actualizat pentru patch-ul %version%."
+    explore_summoners: "Explorează Vrăjile de Invocator"
+    explore_items: "Explorează Obiectele"
+    explore_champions: "Explorează Campionii"
+    explore_runes: "Explorează Runele"
+  summoners:
+    title: "Vrăji de Invocator"
+    see_all: "Vezi toate vrăjile"
+  items:
+    title: "Obiecte"
+    see_all: "Vezi toate obiectele"
+  champions:
+    title: "Campioni"
+    see_all: "Vezi toți campionii"
+    no_data: "Niciun campion disponibil pentru această versiune."
+    wip: "Această secțiune este în construcție. În curând vei putea răsfoi toți campionii."
+  runes:
+    title: "Rune"
+    wip: "Această secțiune este în construcție. În curând vei putea explora runele."
+    see_all: "Vezi toate runele"
+
+
+setup:
+  title: "Configurare"
+  meta: "Alege versiunea jocului și limba preferate pentru a personaliza experiența ta pe League of Data Base. Toate statisticile și datele se vor adapta setărilor tale."
+  form:
+    version: "Versiune"
+    language: "Limbă"
+    note_latest: "*Cea mai recentă versiune este selectată automat."
+    remember: "Ține-mă minte"
+    submit: "Trimite"
+
+system:
+  under_construction:
+    title: "În construcție"
+    meta_description: "League of Data Base este în prezent în construcție. Lucrăm din greu pentru a-ți aduce statistici detaliate, informații și instrumente pentru League of Legends. Rămâi pe fază pentru actualizări."
+    heading: "Această pagină este în construcție"
+    subheading: "Forjăm această funcționalitate pe Rift. Revino în curând pentru ceva epic."
+    info: "Dacă ai ajuns pe această pagină, conținutul nu a fost încă lansat. Lucrăm la performanță, acuratețea datelor și o experiență fluidă care se potrivește cu restul League Of Data Base."
+    progress_label: "Progresul construcției"
+    back: "← Înapoi"
+    summoners: "Vezi Vrăjile de Invocator"
+    setup: "Alege versiunea și limba"
+    footer: "Ai nevoie de asta în curând? Contactează-ne sau verifică planul de dezvoltare. Mai vin actualizări."
+    meanwhile: "Între timp, poți:"
+
+item:
+  detail:
+    meta_description: "Descoperă totul despre obiectul %name% din League of Legends. Statistici, efecte și informații despre build actualizate pentru patch-ul %version%."
+    version_locale: "Versiune: %version% — Limbă: %locale%"
+    price_total: "Cost total"
+    price_base: "Cost de achiziție"
+    price_sell: "Valoare de vânzare"
+    categories: "Categorii"
+    evolutions: "Evoluții posibile"
+    stats: "Statistici"
+    description: "Descriere"
+    recipe: "Rețetă"
+    builds_from: "Compus din"
+    tier: "Nivel %depth%"
+    availability: "Disponibilitate"
+    back: "← Înapoi la listă"
+    setup: "Schimbă versiunea și limba"
+  list:
+      title: "Obiecte"
+      meta_description: "Răsfoiește toate obiectele din League of Legends disponibile în patch-ul %version%. Găsește statistici, costuri și efecte detaliate, actualizate pentru cea mai recentă versiune."
+      header: "Obiecte"
+      subtitle: "Catalog de obiecte"
+      results_per_page: "Rezultate pe pagină:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "Caută un obiect…"
+      change_version: "Schimbă versiunea/limba"
+      cost_total: "Cost total"
+      cost_sell: "Valoare de vânzare"
+      categories: "Categorii"
+      evolutions: "Evoluții posibile"
+      description: "Descriere"
+
+summoner:
+  detail:
+    meta_description: "Explorează detaliile vrăjii de invocator %name% din League of Legends. Statistici și efecte actualizate pentru patch-ul %version%."
+    version_locale: "Versiune: %version% — Limbă: %locale%"
+    fields:
+      cooldown: "Timp de reîncărcare"
+      maxammo: "Număr de încărcări"
+      range: "Rază de utilizare"
+      cost: "Cost"
+      summoner_level: "Nivel de invocator"
+    unlocked_at: "Deblocat la nivelul %level%"
+    range_global: "Global"
+    no_cost: "Fără cost"
+    modes: "Moduri compatibile"
+    description: "Descriere"
+  card:
+    cooldown: "Timp de reîncărcare"
+    level: "Nivel de invocator"
+    modes: "Moduri compatibile"
+    description: "Descriere"
+  list:
+    title: "Vrăji de Invocator"
+    subtitle: "Catalog de Vrăji de Invocator"
+    count: "count vrăji"
+
+champion:
+  list:
+    title: "Campioni"
+    meta_description: "Răsfoiește toți campionii din League of Legends. Găsește statistici detaliate, abilități și povestea fiecărui campion din joc."
+    header: "Campioni"
+    subtitle: "Catalog de campioni"
+    search_placeholder: "Caută un campion…"
+    change_version: "Schimbă versiunea/limba"
+  detail:
+    meta_description: "Descoperă %name% din League of Legends, cu statistici, roluri și detalii pentru patch-ul %version%."
+    version_locale: "Patch %version% • %locale%"
+    partype: "Resursă: %partype%"
+    roles: "Roluri"
+    abilities: "Abilități"
+    passive: "Pasivă"
+    skins: "Skinuri"
+    cooldown: "Timp de reîncărcare"
+    cost: "Cost"
+    range: "Rază de acțiune"
+    tips_as: "Când joci cu"
+    tips_against: "Când joci împotriva"
+    stats:
+      title: "Statistici de bază"
+    profile:
+      title: "Profilul campionului"
+      attack: "Atac"
+      defense: "Apărare"
+      magic: "Magie"
+      difficulty: "Dificultate"
+    lore:
+      title: "Poveste"
+
+rune:
+  list:
+    title: "Rune"
+    meta_description: "Răsfoiește toate runele din League of Legends. Găsește statistici și efecte detaliate pentru fiecare rună din joc."
+    header: "Rune"
+    subtitle: "Catalog de rune"
+    search_placeholder: "Caută o rună…"
+    change_version: "Schimbă versiunea/limba"
+  detail:
+    title: "Rună: %name%"
+    meta_description: "Descoperă detaliile runei %name% din League of Legends. Statistici și efecte actualizate pentru patch-ul %version%."
+    overview: "Prezentare generală"
+    keystone: "Rună principală"
+    minor: "Runi minore"
+    slot_n: "Slot %n%"
+  slot: "Loc"
+
+common:
+  back: "Înapoi"
+  search: "Caută…"
+  no_result:
+    text: "Nu s-au găsit rezultate pentru căutarea ta."
+    back: "← Înapoi"
+    setup: "Alege versiunea și limba"
+  detail : "Vezi detalii →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base este o platformă susținută de comunitate, care oferă informații detaliate, statistici și analize despre League of Legends. Rapidă, fiabilă și mereu la zi."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Notă legală"
+
+  navigation:
+    title: "Navigare"
+    home: "Acasă"
+    champion: "Campion"
+    item: "Obiect"
+    runes: "Rune"
+    summoner: "Invocator"
+
+  links:
+    title: "Linkuri utile"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Proiect"
+    version: "Versiune: Beta 2.0"
+    updated: "Actualizat: 03/08/2025"
+
+  contact:
+    title: "Contact"
+    email: "Email"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Se invocă datele"
+  subtitle: "Se preiau resursele de pe Rift…"
+  preparing: "Se pregătesc datele…"
+  status:
+    fetching: "se preiau"
+    ready: "gata"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Acasă"
+    champion: "Campioni"
+    item: "Obiecte"
+    runes: "Rune"
+    summoner: "Vrăji de Invocator"

@@ -2,8 +2,11 @@
 
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 [![Symfony](https://img.shields.io/badge/Symfony-7.3-blue.svg)](https://symfony.com/)
-[![PHP](https://img.shields.io/badge/PHP-8.2+-purple.svg)](https://php.net/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1-38B2AC.svg)](https://tailwindcss.com/)
+[![PHP](https://img.shields.io/badge/PHP-8.4-purple.svg)](https://php.net/)
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8.svg)](https://go.dev/)
+[![Vue](https://img.shields.io/badge/Vue-3_+_TS-42b883.svg)](https://vuejs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC.svg)](https://tailwindcss.com/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](https://www.docker.com/)
 
 > **A modern web application for accessing League of Legends data across all versions and languages**
 
@@ -28,36 +31,51 @@
 - 🔍 **Consultation complète** : Champions, Items, Sorts d'invocateur, Runes
 - 🌐 **Multilingue** : Support de toutes les langues disponibles dans League of Legends
 - 📱 **Interface responsive** : Design moderne avec Tailwind CSS
-- ⚡ **Performance optimisée** : Cache intelligent et téléchargement local des images
+- ⚡ **Performance optimisée** : Passerelle Go + stockage MinIO adressé par contenu (déduplication SHA-256)
 - 🔄 **Mise à jour automatique** : Synchronisation avec les données officielles de Riot Games
 - 🎯 **Recherche avancée** : API de recherche en temps réel
 - 📊 **Pagination intelligente** : Navigation fluide dans les grandes listes
 
 ### 🛠️ Stack technique
 
-- **Backend** : Symfony 7.3 (PHP 8.2+)
-- **Frontend** : Twig, Tailwind CSS 4.1, Stimulus
-- **Cache** : Système de cache personnalisé avec hard links
-- **API** : Intégration Data Dragon de Riot Games
-- **DevOps** : Docker, GitHub Actions
-- **Tests** : PHPUnit
+- **Backend** : Symfony 7.3 (PHP 8.4), sans base de données (proxy sur le CDN Data Dragon)
+- **Microservice** : passerelle de *fetch* en **Go 1.25** (accès sortant vers Data Dragon, allowlist SSRF, batch parallèle)
+- **Frontend** : Twig + **Vue 3 (TypeScript)** + **Vite** + **PrimeVue**, Tailwind CSS 4 (îlots Vue montés dans les coques Twig)
+- **Stockage** : **MinIO** (compatible S3) — images adressées par contenu, déduplication SHA-256
+- **API** : intégration Data Dragon de Riot Games
+- **DevOps** : Docker Compose, GitHub Actions → images GHCR
+- **Tests** : PHPUnit, `go test`, Playwright (captures)
 
-### 🚀 Démarrage rapide
+### 🚀 Démarrage rapide (Docker)
+
+> Prérequis : **Docker** + **Docker Compose**. Node/PHP ne sont nécessaires sur l'hôte que pour la préparation du bind-mount de dev (vendor + build des assets).
 
 ```bash
-# Cloner le projet
+# 1. Cloner le projet
 git clone https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
-cd LeagueOfDataBaseFinal/app
+cd LeagueOfDataBaseFinal
 
-# Installer les dépendances
-composer install
-npm install && npm run build
+# 2. Configurer l'environnement (secrets CI : docs/github-actions-secrets.md)
+cp .env.example .env
 
-# Lancer le serveur
-symfony serve -d
+# 3. Pré-requis dev (le conteneur php monte ./app en bind-mount)
+cd app && composer install && npm ci && npm run build && cd ..
+
+# 4. Lancer toute la stack (php-fpm, nginx, Go, MinIO, Mailpit)
+docker compose up -d --build
 ```
 
-Visitez `http://127.0.0.1:8000` pour commencer !
+Services exposés en dev :
+
+| Service | URL |
+| --- | --- |
+| Application | http://localhost:8080 |
+| Console MinIO | http://localhost:9001 |
+| Mailpit (mails) | http://localhost:8025 |
+| Passerelle Go | http://localhost:8085/healthz |
+
+Développement du front avec HMR (optionnel) : `cd app && npm run dev`.
+Captures d'écran Playwright : `node tools/screenshots/capture.mjs` → dossier [`screenshot/`](screenshot/).
 
 ### 📚 Documentation
 
@@ -83,36 +101,51 @@ Visitez `http://127.0.0.1:8000` pour commencer !
 - 🔍 **Complete Data Access** : Champions, Items, Summoner Spells, Runes
 - 🌐 **Multilingual** : Support for all League of Legends available languages
 - 📱 **Responsive Interface** : Modern design with Tailwind CSS
-- ⚡ **Optimized Performance** : Local storage and hard links optimization
+- ⚡ **Optimized Performance** : Go fetch gateway + content-addressed MinIO storage (SHA-256 dedup)
 - 🔄 **Auto Updates** : Synchronization with official Riot Games data
 - 🎯 **Advanced Search** : Real-time search API
 - 📊 **Smart Pagination** : Smooth navigation through large lists
 
 ### 🛠️ Tech Stack
 
-- **Backend** : Symfony 7.3 (PHP 8.2+)
-- **Frontend** : Twig, Tailwind CSS 4.1, Stimulus
-- **Cache** : Custom caching system with hard links
+- **Backend** : Symfony 7.3 (PHP 8.4), database-less (proxy over the Data Dragon CDN)
+- **Microservice** : **Go 1.25** fetch gateway (outbound Data Dragon access, SSRF allowlist, parallel batching)
+- **Frontend** : Twig + **Vue 3 (TypeScript)** + **Vite** + **PrimeVue**, Tailwind CSS 4 (Vue islands mounted into Twig shells)
+- **Storage** : **MinIO** (S3-compatible) — content-addressed images, SHA-256 deduplication
 - **API** : Riot Games Data Dragon integration
-- **DevOps** : Docker, GitHub Actions
-- **Tests** : PHPUnit
+- **DevOps** : Docker Compose, GitHub Actions → GHCR images
+- **Tests** : PHPUnit, `go test`, Playwright (screenshots)
 
-### 🚀 Quick Start
+### 🚀 Quick Start (Docker)
+
+> Requirements: **Docker** + **Docker Compose**. Node/PHP on the host are only needed to prepare the dev bind-mount (vendor + asset build).
 
 ```bash
-# Clone the project
+# 1. Clone the project
 git clone https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
-cd LeagueOfDataBaseFinal/app
+cd LeagueOfDataBaseFinal
 
-# Install dependencies
-composer install
-npm install && npm run build
+# 2. Configure the environment (CI secrets: docs/github-actions-secrets.md)
+cp .env.example .env
 
-# Start server
-symfony serve -d
+# 3. Dev prerequisite (the php container bind-mounts ./app)
+cd app && composer install && npm ci && npm run build && cd ..
+
+# 4. Start the whole stack (php-fpm, nginx, Go, MinIO, Mailpit)
+docker compose up -d --build
 ```
 
-Visit `http://127.0.0.1:8000` to get started!
+Services exposed in dev:
+
+| Service | URL |
+| --- | --- |
+| Application | http://localhost:8080 |
+| MinIO console | http://localhost:9001 |
+| Mailpit (emails) | http://localhost:8025 |
+| Go gateway | http://localhost:8085/healthz |
+
+Frontend dev with HMR (optional): `cd app && npm run dev`.
+Playwright screenshots: `node tools/screenshots/capture.mjs` → [`screenshot/`](screenshot/) folder.
 
 ### 📚 Documentation
 
@@ -138,36 +171,51 @@ Visit `http://127.0.0.1:8000` to get started!
 - 🔍 **Acceso completo a datos** : Campeones, Objetos, Hechizos de invocador, Runas
 - 🌐 **Multilingüe** : Soporte para todos los idiomas disponibles en League of Legends
 - 📱 **Interfaz responsiva** : Diseño moderno con Tailwind CSS
-- ⚡ **Rendimiento optimizado** : Almacenamiento local y optimización con hard links
+- ⚡ **Rendimiento optimizado** : Pasarela Go + almacenamiento MinIO direccionado por contenido (dedup SHA-256)
 - 🔄 **Actualizaciones automáticas** : Sincronización con datos oficiales de Riot Games
 - 🎯 **Búsqueda avanzada** : API de búsqueda en tiempo real
 - 📊 **Paginación inteligente** : Navegación fluida en listas grandes
 
 ### 🛠️ Stack técnico
 
-- **Backend** : Symfony 7.3 (PHP 8.2+)
-- **Frontend** : Twig, Tailwind CSS 4.1, Stimulus
-- **Cache** : Sistema de caché personalizado con hard links
-- **API** : Integración con Data Dragon de Riot Games
-- **DevOps** : Docker, GitHub Actions
-- **Tests** : PHPUnit
+- **Backend** : Symfony 7.3 (PHP 8.4), sin base de datos (proxy sobre el CDN Data Dragon)
+- **Microservicio** : pasarela de *fetch* en **Go 1.25** (acceso saliente a Data Dragon, allowlist SSRF, batch paralelo)
+- **Frontend** : Twig + **Vue 3 (TypeScript)** + **Vite** + **PrimeVue**, Tailwind CSS 4 (islas Vue montadas en las carcasas Twig)
+- **Almacenamiento** : **MinIO** (compatible S3) — imágenes direccionadas por contenido, deduplicación SHA-256
+- **API** : integración con Data Dragon de Riot Games
+- **DevOps** : Docker Compose, GitHub Actions → imágenes GHCR
+- **Tests** : PHPUnit, `go test`, Playwright (capturas)
 
-### 🚀 Inicio rápido
+### 🚀 Inicio rápido (Docker)
+
+> Requisitos: **Docker** + **Docker Compose**. Node/PHP en el host solo se necesitan para preparar el bind-mount de desarrollo (vendor + build de assets).
 
 ```bash
-# Clonar el proyecto
+# 1. Clonar el proyecto
 git clone https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
-cd LeagueOfDataBaseFinal/app
+cd LeagueOfDataBaseFinal
 
-# Instalar dependencias
-composer install
-npm install && npm run build
+# 2. Configurar el entorno (secretos CI: docs/github-actions-secrets.md)
+cp .env.example .env
 
-# Iniciar servidor
-symfony serve -d
+# 3. Requisito de desarrollo (el contenedor php monta ./app)
+cd app && composer install && npm ci && npm run build && cd ..
+
+# 4. Iniciar toda la stack (php-fpm, nginx, Go, MinIO, Mailpit)
+docker compose up -d --build
 ```
 
-¡Visita `http://127.0.0.1:8000` para comenzar!
+Servicios expuestos en desarrollo:
+
+| Servicio | URL |
+| --- | --- |
+| Aplicación | http://localhost:8080 |
+| Consola MinIO | http://localhost:9001 |
+| Mailpit (correos) | http://localhost:8025 |
+| Pasarela Go | http://localhost:8085/healthz |
+
+Desarrollo del frontend con HMR (opcional): `cd app && npm run dev`.
+Capturas Playwright: `node tools/screenshots/capture.mjs` → carpeta [`screenshot/`](screenshot/).
 
 ### 📚 Documentación
 
