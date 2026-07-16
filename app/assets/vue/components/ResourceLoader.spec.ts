@@ -86,7 +86,8 @@ describe('ResourceLoader', () => {
 
         expect(w.vm.progress).toBe(1)
         expect(w.vm.entries.map((x: { name: string }) => x.name)).toEqual(['Aatrox', 'Ahri'])
-        expect(w.text()).toContain('Aatrox')
+        // The live line surfaces only the resource landing right now (the latest).
+        expect(w.text()).toContain('Ahri')
 
         es.emit('done', { stored: 2, total: 2 })
         expect(w.vm.finishing).toBe(true)
