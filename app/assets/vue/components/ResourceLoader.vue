@@ -56,7 +56,7 @@ function resourcesFor(pathname: string): ResourceKey[] {
 const SHOW_DELAY = 280 // warm visits resolve first and never flash the overlay
 const READY_HOLD = 450 // once shown, hold 100%/"ready" long enough to read
 const WATCHDOG_IDLE = 15000 // no stream activity for this long → assume it's dead and visit anyway
-const LOG_LIMIT = 6 // live rows kept on screen
+const LOG_LIMIT = 6 // entries retained in the live buffer (only the latest is surfaced)
 
 const visible = ref(false)
 const finishing = ref(false)
@@ -66,7 +66,7 @@ const active = ref<ResourceKey[]>([])
 const readyKeys = ref<ResourceKey[]>([])
 const entries = ref<{ id: number; name: string; key: ResourceKey }[]>([])
 
-const recentEntries = computed(() => entries.value.slice(-LOG_LIMIT))
+const current = computed(() => entries.value.at(-1) ?? null)
 const pct = computed(() => Math.min(100, Math.round(progress.value * 100)))
 
 // Per-run mutable state (not reactive — plain module-scoped closures).
@@ -391,14 +391,17 @@ defineExpose({ visible, finishing, active, phase, progress, entries })
                 </li>
             </ul>
 
-            <!-- Live manifest: names streamed from the server as each image lands.
+            <!-- Live feed: the single resource landing right now. Names stream far
+                 too fast to read as a scrolling log — one prominent, always-legible
+                 line (name + its category) reads at any speed and never crushes.
                  Visual only — aria-hidden so screen readers aren't flooded. -->
-            <ul class="hx-log" aria-hidden="true">
-                <li v-for="entry in recentEntries" :key="entry.id" class="hx-log__row">
-                    <span class="hx-log__dot" :class="'hx-log__dot--' + entry.key"></span>
-                    <span class="hx-log__name">{{ entry.name }}</span>
-                </li>
-            </ul>
+            <div class="hx-now" aria-hidden="true">
+                <span class="hx-now__dot" :class="current ? 'hx-now__dot--' + current.key : 'hx-now__dot--idle'"></span>
+                <span :key="current?.id ?? 'idle'" class="hx-now__name" :class="{ 'is-idle': !current }">
+                    {{ current ? current.name : '' }}
+                </span>
+                <span v-if="current" class="hx-now__cat">{{ labels[current.key] }}</span>
+            </div>
 
             <!-- Determinate progress bar -->
             <div class="hx-bar" :class="{ 'hx-bar--indeterminate': phase === 'preparing' }">
@@ -588,53 +591,54 @@ defineExpose({ visible, finishing, active, phase, progress, entries })
     height: 0.85rem;
 }
 
-/* ---- Live streamed names ---- */
-.hx-log {
-    list-style: none;
-    margin: 0 0 1.1rem;
-    padding: 0.55rem 0.7rem;
-    min-height: 3.4rem;
-    max-height: 3.4rem;
-    overflow: hidden;
+/* ---- Live streamed name ----
+   One resource at a time, on a single fixed line. Names arrive far faster than
+   anyone can read a scrolling list, so a lone prominent line stays legible at
+   any stream speed and can never clip or crush. */
+.hx-now {
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: 0.15rem;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 2.9rem;
+    margin: 0 0 1.2rem;
+    padding: 0.7rem 0.9rem;
     text-align: left;
     border: 1px solid rgba(120, 90, 40, 0.28);
     background: rgba(4, 12, 24, 0.55);
 }
-.hx-log__row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--color-text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    animation: hx-log-in 0.32s var(--ease-hextech);
-}
-.hx-log__row:last-child {
-    color: var(--color-text);
-}
-.hx-log__name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.hx-log__dot {
-    width: 0.4rem;
-    height: 0.4rem;
+.hx-now__dot {
+    width: 0.5rem;
+    height: 0.5rem;
     flex: none;
     border-radius: 1px;
     transform: rotate(45deg);
     background: var(--color-hex);
-    box-shadow: 0 0 6px -1px var(--color-hex);
+    box-shadow: 0 0 8px 0 var(--color-hex);
+    transition: background 0.25s var(--ease-hextech), box-shadow 0.25s var(--ease-hextech);
 }
-.hx-log__dot--items { background: var(--color-gold); box-shadow: 0 0 6px -1px var(--color-gold); }
-.hx-log__dot--runes { background: var(--color-hex-bright); box-shadow: 0 0 6px -1px var(--color-hex-bright); }
-.hx-log__dot--summoners { background: var(--color-gold-bright); box-shadow: 0 0 6px -1px var(--color-gold-bright); }
+.hx-now__dot--idle { background: var(--color-gold-deep); box-shadow: none; }
+.hx-now__dot--items { background: var(--color-gold); box-shadow: 0 0 8px 0 var(--color-gold); }
+.hx-now__dot--runes { background: var(--color-hex-bright); box-shadow: 0 0 8px 0 var(--color-hex-bright); }
+.hx-now__dot--summoners { background: var(--color-gold-bright); box-shadow: 0 0 8px 0 var(--color-gold-bright); }
+.hx-now__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-spiegel);
+    font-size: 1rem;
+    color: var(--color-gold-bright);
+    animation: hx-now-swap 0.28s var(--ease-hextech);
+}
+.hx-now__cat {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-hex);
+}
 
 /* ---- Determinate energy bar ---- */
 .hx-bar {
@@ -690,8 +694,8 @@ defineExpose({ visible, finishing, active, phase, progress, entries })
     0% { transform: translateX(-120%); }
     100% { transform: translateX(320%); }
 }
-@keyframes hx-log-in {
-    from { opacity: 0; transform: translateY(4px); }
+@keyframes hx-now-swap {
+    from { opacity: 0.25; transform: translateY(3px); }
     to { opacity: 1; transform: none; }
 }
 
@@ -702,7 +706,7 @@ defineExpose({ visible, finishing, active, phase, progress, entries })
     .hx-core__gem,
     .hx-core__glow,
     .hx-row__icon,
-    .hx-log__row,
+    .hx-now__name,
     .hx-bar--indeterminate .hx-bar__fill { animation: none !important; }
     .hx-loader,
     .hx-loader.is-open { transition: opacity 0.15s linear, visibility 0s; }

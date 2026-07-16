@@ -78,10 +78,22 @@ final class ChampionController extends AbstractController
             // Degrade silently to the summary — the page must not break.
         }
 
+        // Chroma metadata (CommunityDragon) — purely cosmetic, keyed by skin id.
+        // Isolated so an upstream hiccup never costs the rest of the page.
+        $chromas = [];
+        try {
+            if (($key = (string) ($champion['key'] ?? '')) !== '') {
+                $chromas = $this->championManager->getChromas($key, $sel['version']);
+            }
+        } catch (\Throwable) {
+            // No chromas rendered — the skins still show.
+        }
+
         return $this->render('champion/detail.html.twig', [
             'champion'      => $champion,
             'image'         => $image,
             'abilityImages' => $abilityImages,
+            'chromas'       => $chromas,
             'version'       => $sel['version'],
             'client'        => ClientData::fromServices($this->versionManager, $this->clientManager),
         ]);

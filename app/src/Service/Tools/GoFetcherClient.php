@@ -26,7 +26,8 @@ final class GoFetcherClient
     /**
      * Fetch a single DDragon URL and return the raw body bytes.
      *
-     * @throws \RuntimeException on transport error, upstream non-2xx or invalid payload.
+     * @throws UpstreamNotFoundException when the resource is definitively absent (403/404).
+     * @throws \RuntimeException on transport error, other upstream non-2xx or invalid payload.
      */
     public function fetch(string $url): string
     {
@@ -126,6 +127,11 @@ final class GoFetcherClient
             throw new \RuntimeException('go-fetcher: '.$item['error']);
         }
         $status = (int) ($item['status'] ?? 0);
+        // 403/404 = ressource définitivement absente (repli/dégradation possible) ;
+        // tout autre non-2xx = panne transitoire à propager telle quelle.
+        if ($status === 403 || $status === 404) {
+            throw new UpstreamNotFoundException(sprintf('go-fetcher: upstream %d for %s', $status, $url));
+        }
         if ($status < 200 || $status >= 300) {
             throw new \RuntimeException(sprintf('go-fetcher: upstream status %d for %s', $status, $url));
         }

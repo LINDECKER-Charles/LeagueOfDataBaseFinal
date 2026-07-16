@@ -30,6 +30,7 @@ const registry: Record<string, Island> = {
     'toaster': { load: () => import('./components/Toaster.vue') },
     'number-nav': { load: () => import('./components/NumberNav.vue') },
     'resource-loader': { load: () => import('./components/ResourceLoader.vue') },
+    'chroma-strip': { load: () => import('./components/ChromaStrip.vue') },
 }
 
 function mountIslands(root: ParentNode = document): void {

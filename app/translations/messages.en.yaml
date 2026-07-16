@@ -122,6 +122,7 @@ champion:
     abilities: "Abilities"
     passive: "Passive"
     skins: "Skins"
+    chromas_available: "%count% chromas available"
     cooldown: "Cooldown"
     cost: "Cost"
     range: "Range"

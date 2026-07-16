@@ -28,6 +28,9 @@ on:
       ENV_FILE:
         description: Full dotenv for this host, written to ${DEPLOY_PATH}/.env.
         required: true
+      ACME_EMAIL:
+        description: Let's Encrypt contact for the VPS-global edge proxy (infra/edge).
+        required: true
 
 permissions:
   contents: read
@@ -65,11 +68,23 @@ jobs:
               git init -q
               git remote add origin ${{ secrets.REPO_URL || 'https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git' }}
             fi
-            # Deploy overlay (Caddy/TLS), WITHOUT compose.override.yaml (dev conveniences).
+            # Deploy overlay (edge labels + external network), WITHOUT
+            # compose.override.yaml (dev conveniences).
             export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
             git fetch origin ${{ inputs.branch }}
             git checkout -B ${{ inputs.branch }} origin/${{ inputs.branch }}
             git reset --hard origin/${{ inputs.branch }}
+            # ── Edge proxy (VPS-global, idempotent self-heal) ────────────────────
+            # Single public TLS entrypoint shared by every project on the host.
+            # Ensured on each deploy so a fresh/rebuilt box needs zero manual step:
+            # the network, the stack files (from the repo, pinned to a stable path
+            # so the bind-mount source never flaps between staging/prod deploys) and
+            # the proxy itself are (re)converged before the app comes up.
+            docker network inspect edge >/dev/null 2>&1 || docker network create edge
+            mkdir -p /opt/edge
+            cp infra/edge/compose.yaml infra/edge/Caddyfile /opt/edge/
+            printf 'ACME_EMAIL=%s\n' '${{ secrets.ACME_EMAIL }}' > /opt/edge/.env
+            docker compose -f /opt/edge/compose.yaml --env-file /opt/edge/.env up -d
             # Pull résilient : le registry casse parfois un layer en cours de copie
             # (connection reset by peer). Retry avec backoff avant d'abandonner, sinon
             # `up` retomberait sur un build local lourd des services à `build:`.
