@@ -1,0 +1,199 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Bienvenido a League of Data Base. Explora objetos y hechizos de invocador de League of Legends con estadísticas y detalles del parche %version%."
+  hero:
+    browse: "Consulta información detallada sobre <strong>Hechizos de Invocador</strong> y <strong>Objetos</strong> de League of Legends. Actualizado para el parche %version%."
+    explore_summoners: "Explorar Hechizos de Invocador"
+    explore_items: "Explorar Objetos"
+    explore_champions: "Explorar Campeones"
+    explore_runes: "Explorar Runas"
+  summoners:
+    title: "Hechizos de Invocador"
+    see_all: "Ver todos los hechizos"
+  items:
+    title: "Objetos"
+    see_all: "Ver todos los objetos"
+  champions:
+    title: "Campeones"
+    see_all: "Ver todos los campeones"
+    no_data: "No hay campeones disponibles para esta versión."
+    wip: "Esta sección está en construcción. Pronto podrás explorar todos los campeones."
+  runes:
+    title: "Runas"
+    wip: "Esta sección está en construcción. Pronto podrás explorar las runas."
+    see_all: "Ver todas las runas"
+
+
+setup:
+  title: "Configuración"
+  meta: "Elige tu versión y idioma preferidos para personalizar tu experiencia en League of Data Base. Todas las estadísticas y datos se adaptarán a tu configuración."
+  form:
+    version: "Versión"
+    language: "Idioma"
+    note_latest: "*La última versión se selecciona automáticamente."
+    remember: "Recordarme"
+    submit: "Enviar"
+
+system:
+  under_construction:
+    title: "En Construcción"
+    meta_description: "League of Data Base está actualmente en construcción. Estamos trabajando duro para ofrecerte estadísticas detalladas, análisis y herramientas para League of Legends. Mantente atento a las novedades."
+    heading: "Esta página está en construcción"
+    subheading: "Estamos forjando esta función en la Grieta. Vuelve pronto para descubrir algo épico."
+    info: "Si has llegado a esta página, el contenido aún no está disponible. Estamos trabajando en el rendimiento, la precisión de los datos y una experiencia fluida acorde con el resto de League Of Data Base."
+    progress_label: "Progreso de desarrollo"
+    back: "← Volver"
+    summoners: "Ver Hechizos de Invocador"
+    setup: "Elegir versión e idioma"
+    footer: "¿Lo necesitas pronto? Contáctanos o consulta la hoja de ruta. Habrá más novedades próximamente."
+    meanwhile: "Mientras tanto, puedes:"
+
+item:
+  detail:
+    meta_description: "Descubre todo sobre el objeto %name% en League of Legends. Estadísticas, efectos e información de construcción actualizados para el parche %version%."
+    version_locale: "Versión: %version% — Idioma: %locale%"
+    price_total: "Coste total"
+    price_base: "Coste de compra"
+    price_sell: "Valor de venta"
+    categories: "Categorías"
+    evolutions: "Posibles evoluciones"
+    stats: "Estadísticas"
+    description: "Descripción"
+    back: "← Volver a la lista"
+    setup: "Cambiar versión e idioma"
+  list:
+      title: "Objetos"
+      meta_description: "Explora todos los objetos de League of Legends disponibles en el parche %version%. Encuentra estadísticas, costes y efectos detallados actualizados para la última versión."
+      header: "Objetos"
+      subtitle: "Catálogo de objetos"
+      results_per_page: "Resultados por página:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "Buscar un objeto…"
+      change_version: "Cambiar versión/idioma"
+      cost_total: "Coste total"
+      cost_sell: "Valor de venta"
+      categories: "Categorías"
+      evolutions: "Posibles evoluciones"
+      description: "Descripción"
+
+summoner:
+  detail:
+    meta_description: "Descubre los detalles del hechizo de invocador %name% en League of Legends. Estadísticas y efectos actualizados para el parche %version%."
+    version_locale: "Versión: %version% — Idioma: %locale%"
+    fields:
+      cooldown: "Reutilización"
+      maxammo: "Número de cargas"
+      range: "Alcance de uso"
+      cost: "Coste"
+      summoner_level: "Nivel de invocador"
+    modes: "Modos compatibles"
+    description: "Descripción"
+  card:
+    cooldown: "Reutilización"
+    level: "Nivel de invocador"
+    modes: "Modos compatibles"
+    description: "Descripción"
+  list:
+    title: "Hechizos de Invocador"
+    subtitle: "Catálogo de Hechizos de Invocador"
+    count: "count hechizos"
+
+champion:
+  list:
+    title: "Campeones"
+    meta_description: "Explora todos los campeones de League of Legends. Encuentra estadísticas, habilidades e historia detalladas de cada campeón del juego."
+    header: "Campeones"
+    subtitle: "Catálogo de campeones"
+    search_placeholder: "Buscar un campeón…"
+    change_version: "Cambiar versión/idioma"
+  detail:
+    meta_description: "Descubre a %name% de League of Legends, con estadísticas, roles y detalles para el parche %version%."
+    version_locale: "Parche %version% • %locale%"
+    partype: "Recurso: %partype%"
+    stats:
+      title: "Estadísticas Base"
+    profile:
+      title: "Perfil del Campeón"
+      attack: "Ataque"
+      defense: "Defensa"
+      magic: "Magia"
+      difficulty: "Dificultad"
+    lore:
+      title: "Historia"
+
+rune:
+  list:
+    title: "Runas"
+    meta_description: "Explora todas las runas de League of Legends. Encuentra estadísticas y efectos detallados de cada runa del juego."
+    header: "Runas"
+    subtitle: "Catálogo de runas"
+    search_placeholder: "Buscar una runa…"
+    change_version: "Cambiar versión/idioma"
+  detail:
+    title: "Runa: %name%"
+    meta_description: "Descubre los detalles de la runa %name% en League of Legends. Estadísticas y efectos actualizados para el parche %version%."
+  slot: "Ranura"
+
+common:
+  back: "Volver"
+  search: "Buscar…"
+  no_result:
+    text: "No se encontraron resultados para tu búsqueda."
+    back: "← Volver"
+    setup: "Elegir versión e idioma"
+  detail : "Ver detalles →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base es una plataforma impulsada por la comunidad que ofrece información detallada, estadísticas y análisis sobre League of Legends. Rápida, fiable y siempre actualizada."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Aviso Legal"
+
+  navigation:
+    title: "Navegación"
+    home: "Inicio"
+    champion: "Campeón"
+    item: "Objeto"
+    runes: "Runas"
+    summoner: "Invocador"
+
+  links:
+    title: "Enlaces Útiles"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Proyecto"
+    version: "Versión: Beta 2.0"
+    updated: "Actualizado: 03/08/2025"
+
+  contact:
+    title: "Contacto"
+    email: "Correo electrónico"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Invocando datos"
+  subtitle: "Obteniendo recursos de la Grieta…"
+  status:
+    fetching: "obteniendo"
+    ready: "listo"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Inicio"
+    champion: "Campeones"
+    item: "Objetos"
+    runes: "Runas"
+    summoner: "Hechizos de Invocador"

@@ -1,0 +1,199 @@
+homepage:
+  title: "League of Data Base"
+  meta: "مرحبًا بك في League of Data Base. استكشف عناصر League of Legends وتعويذات المستدعي مع الإحصائيات والتفاصيل الخاصة بالتحديث %version%."
+  hero:
+    browse: "تصفح معلومات مفصّلة عن <strong>تعويذات المستدعي</strong> و<strong>العناصر</strong> من League of Legends. محدَّث للتحديث %version%."
+    explore_summoners: "استكشف تعويذات المستدعي"
+    explore_items: "استكشف العناصر"
+    explore_champions: "استكشف الأبطال"
+    explore_runes: "استكشف الرونات"
+  summoners:
+    title: "تعويذات المستدعي"
+    see_all: "عرض جميع التعويذات"
+  items:
+    title: "العناصر"
+    see_all: "عرض جميع العناصر"
+  champions:
+    title: "الأبطال"
+    see_all: "عرض جميع الأبطال"
+    no_data: "لا توجد أبطال متاحون لهذا الإصدار."
+    wip: "هذا القسم قيد الإنشاء. قريبًا ستتمكن من تصفح جميع الأبطال."
+  runes:
+    title: "الرونات"
+    wip: "هذا القسم قيد الإنشاء. قريبًا ستتمكن من استكشاف الرونات."
+    see_all: "عرض جميع الرونات"
+
+
+setup:
+  title: "الإعداد"
+  meta: "اختر إصدار اللعبة واللغة المفضّلين لديك لتخصيص تجربتك في League of Data Base. ستتكيف جميع الإحصائيات والبيانات مع إعداداتك."
+  form:
+    version: "الإصدار"
+    language: "اللغة"
+    note_latest: "*يتم اختيار أحدث إصدار تلقائيًا."
+    remember: "تذكرني"
+    submit: "إرسال"
+
+system:
+  under_construction:
+    title: "قيد الإنشاء"
+    meta_description: "League of Data Base قيد الإنشاء حاليًا. نعمل بجد لنقدّم لك إحصائيات ورؤى وأدوات مفصّلة خاصة بـ League of Legends. ترقّبوا التحديثات."
+    heading: "هذه الصفحة قيد الإنشاء"
+    subheading: "نحن نصقل هذه الميزة في الريفت. عد قريبًا لشيء ملحمي."
+    info: "إذا وصلت إلى هذه الصفحة، فإن المحتوى لم يُطرح بعد. نحن نعمل على الأداء ودقة البيانات وتجربة مستخدم سلسة تتماشى مع بقية League Of Data Base."
+    progress_label: "تقدّم البناء"
+    back: "← رجوع"
+    summoners: "عرض تعويذات المستدعي"
+    setup: "اختر الإصدار واللغة"
+    footer: "تحتاج هذا قريبًا؟ راسلنا أو تحقق من خارطة الطريق. المزيد من التحديثات قادمة."
+    meanwhile: "في هذه الأثناء، يمكنك:"
+
+item:
+  detail:
+    meta_description: "اكتشف كل شيء عن العنصر %name% في League of Legends. الإحصائيات والتأثيرات ومعلومات البناء محدّثة للتحديث %version%."
+    version_locale: "الإصدار: %version% — اللغة: %locale%"
+    price_total: "التكلفة الإجمالية"
+    price_base: "تكلفة الشراء"
+    price_sell: "قيمة البيع"
+    categories: "الفئات"
+    evolutions: "التطورات الممكنة"
+    stats: "الإحصائيات"
+    description: "الوصف"
+    back: "← العودة إلى القائمة"
+    setup: "تغيير الإصدار واللغة"
+  list:
+      title: "العناصر"
+      meta_description: "تصفح جميع عناصر League of Legends المتاحة في التحديث %version%. اعثر على إحصائيات وتكاليف وتأثيرات مفصّلة محدّثة لأحدث إصدار."
+      header: "العناصر"
+      subtitle: "كتالوج العناصر"
+      results_per_page: "النتائج لكل صفحة:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "ابحث عن عنصر…"
+      change_version: "تغيير الإصدار/اللغة"
+      cost_total: "التكلفة الإجمالية"
+      cost_sell: "قيمة البيع"
+      categories: "الفئات"
+      evolutions: "التطورات الممكنة"
+      description: "الوصف"
+
+summoner:
+  detail:
+    meta_description: "استكشف تفاصيل تعويذة المستدعي %name% في League of Legends. الإحصائيات والتأثيرات محدّثة للتحديث %version%."
+    version_locale: "الإصدار: %version% — اللغة: %locale%"
+    fields:
+      cooldown: "زمن الاستعادة"
+      maxammo: "عدد الشحنات"
+      range: "نطاق الاستخدام"
+      cost: "التكلفة"
+      summoner_level: "مستوى المستدعي"
+    modes: "الأنماط المتوافقة"
+    description: "الوصف"
+  card:
+    cooldown: "زمن الاستعادة"
+    level: "مستوى المستدعي"
+    modes: "الأنماط المتوافقة"
+    description: "الوصف"
+  list:
+    title: "تعويذات المستدعي"
+    subtitle: "كتالوج تعويذات المستدعي"
+    count: "count تعويذات"
+
+champion:
+  list:
+    title: "الأبطال"
+    meta_description: "تصفح جميع أبطال League of Legends. اعثر على إحصائيات وقدرات وقصص خلفية مفصّلة لكل بطل في اللعبة."
+    header: "الأبطال"
+    subtitle: "كتالوج الأبطال"
+    search_placeholder: "ابحث عن بطل…"
+    change_version: "تغيير الإصدار/اللغة"
+  detail:
+    meta_description: "اكتشف %name% من League of Legends، مع الإحصائيات والأدوار والتفاصيل الخاصة بالتحديث %version%."
+    version_locale: "التحديث %version% • %locale%"
+    partype: "المورد: %partype%"
+    stats:
+      title: "الإحصائيات الأساسية"
+    profile:
+      title: "ملف البطل"
+      attack: "الهجوم"
+      defense: "الدفاع"
+      magic: "السحر"
+      difficulty: "الصعوبة"
+    lore:
+      title: "القصة الخلفية"
+
+rune:
+  list:
+    title: "الرونات"
+    meta_description: "تصفح جميع رونات League of Legends. اعثر على إحصائيات وتأثيرات مفصّلة لكل رونة في اللعبة."
+    header: "الرونات"
+    subtitle: "كتالوج الرونات"
+    search_placeholder: "ابحث عن رونة…"
+    change_version: "تغيير الإصدار/اللغة"
+  detail:
+    title: "الرونة: %name%"
+    meta_description: "اكتشف تفاصيل الرونة %name% في League of Legends. الإحصائيات والتأثيرات محدّثة للتحديث %version%."
+  slot: "الخانة"
+
+common:
+  back: "رجوع"
+  search: "بحث…"
+  no_result:
+    text: "لم يتم العثور على نتائج لبحثك."
+    back: "← رجوع"
+    setup: "اختر الإصدار واللغة"
+  detail : "عرض التفاصيل →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base هي منصة يقودها المجتمع توفّر معلومات وإحصائيات ورؤى مفصّلة حول League of Legends. سريعة وموثوقة ومحدّثة دائمًا."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "إشعار قانوني"
+
+  navigation:
+    title: "التنقل"
+    home: "الرئيسية"
+    champion: "الأبطال"
+    item: "العناصر"
+    runes: "الرونات"
+    summoner: "المستدعي"
+
+  links:
+    title: "روابط مفيدة"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "المشروع"
+    version: "الإصدار: Beta 2.0"
+    updated: "تحديث: 03/08/2025"
+
+  contact:
+    title: "تواصل"
+    email: "البريد الإلكتروني"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "استدعاء البيانات"
+  subtitle: "جاري جلب الموارد من الريفت…"
+  status:
+    fetching: "جارٍ الجلب"
+    ready: "جاهز"
+
+pagination:
+  ok: "موافق"
+  more: "…"
+
+header:
+  navigation:
+    home: "الرئيسية"
+    champion: "الأبطال"
+    item: "العناصر"
+    runes: "الرونات"
+    summoner: "تعويذات المستدعي"

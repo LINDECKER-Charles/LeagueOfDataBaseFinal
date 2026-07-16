@@ -6,6 +6,30 @@ framework:
     session: true
 
     default_locale: en
+    # UI catalogs shipped under translations/. Derived from the selected Data Dragon
+    # language by LocaleSubscriber + UiLocaleResolver (2-letter base, zh split by script).
+    enabled_locales:
+        - ar
+        - cs
+        - de
+        - el
+        - en
+        - es
+        - fr
+        - hu
+        - id
+        - it
+        - ja
+        - ko
+        - pl
+        - pt
+        - ro
+        - ru
+        - th
+        - tr
+        - vi
+        - zh_Hans
+        - zh_Hant
     translator:
         default_path: '%kernel.project_dir%/translations'
         fallbacks: [en]

@@ -1,0 +1,199 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Willkommen bei League of Data Base. Entdecke League of Legends Items und Beschwörerzauber mit Statistiken und Details für Patch %version%."
+  hero:
+    browse: "Entdecke detaillierte Informationen zu <strong>Beschwörerzaubern</strong> und <strong>Items</strong> aus League of Legends. Aktualisiert für Patch %version%."
+    explore_summoners: "Beschwörerzauber entdecken"
+    explore_items: "Items entdecken"
+    explore_champions: "Champions entdecken"
+    explore_runes: "Runen entdecken"
+  summoners:
+    title: "Beschwörerzauber"
+    see_all: "Alle Zauber ansehen"
+  items:
+    title: "Items"
+    see_all: "Alle Items ansehen"
+  champions:
+    title: "Champions"
+    see_all: "Alle Champions ansehen"
+    no_data: "Für diese Version sind keine Champions verfügbar."
+    wip: "Dieser Bereich befindet sich im Aufbau. Bald kannst du alle Champions durchstöbern."
+  runes:
+    title: "Runen"
+    wip: "Dieser Bereich befindet sich im Aufbau. Bald kannst du Runen entdecken."
+    see_all: "Alle Runen ansehen"
+
+
+setup:
+  title: "Setup"
+  meta: "Wähle deine bevorzugte Spielversion und Sprache, um dein League of Data Base-Erlebnis anzupassen. Alle Statistiken und Daten passen sich deinen Einstellungen an."
+  form:
+    version: "Version"
+    language: "Sprache"
+    note_latest: "*Die neueste Version wird automatisch ausgewählt."
+    remember: "Angemeldet bleiben"
+    submit: "Absenden"
+
+system:
+  under_construction:
+    title: "Im Aufbau"
+    meta_description: "League of Data Base befindet sich derzeit im Aufbau. Wir arbeiten mit Hochdruck daran, dir detaillierte Statistiken, Einblicke und Tools für League of Legends zu bieten. Bleib gespannt auf Updates."
+    heading: "Diese Seite befindet sich im Aufbau"
+    subheading: "Wir schmieden dieses Feature auf der Kluft. Schau bald wieder vorbei für etwas Episches."
+    info: "Wenn du diese Seite erreicht hast, ist der Inhalt noch nicht verfügbar. Wir arbeiten an Performance, Datengenauigkeit und einer reibungslosen UX, die zum Rest von League Of Data Base passt."
+    progress_label: "Baufortschritt"
+    back: "← Zurück"
+    summoners: "Beschwörerzauber ansehen"
+    setup: "Version & Sprache wählen"
+    footer: "Brauchst du das bald? Schreib uns oder schau in die Roadmap. Weitere Updates folgen."
+    meanwhile: "In der Zwischenzeit kannst du:"
+
+item:
+  detail:
+    meta_description: "Entdecke alles über das Item %name% in League of Legends. Statistiken, Effekte und Build-Informationen aktualisiert für Patch %version%."
+    version_locale: "Version: %version% — Sprache: %locale%"
+    price_total: "Gesamtkosten"
+    price_base: "Kaufpreis"
+    price_sell: "Verkaufswert"
+    categories: "Kategorien"
+    evolutions: "Mögliche Weiterentwicklungen"
+    stats: "Statistiken"
+    description: "Beschreibung"
+    back: "← Zurück zur Liste"
+    setup: "Version & Sprache ändern"
+  list:
+      title: "Items"
+      meta_description: "Durchstöbere alle League of Legends Items, die in Patch %version% verfügbar sind. Finde detaillierte Statistiken, Kosten und Effekte, aktualisiert für die neueste Version."
+      header: "Items"
+      subtitle: "Item-Katalog"
+      results_per_page: "Ergebnisse pro Seite:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "Nach einem Item suchen…"
+      change_version: "Version/Sprache ändern"
+      cost_total: "Gesamtkosten"
+      cost_sell: "Verkaufswert"
+      categories: "Kategorien"
+      evolutions: "Mögliche Weiterentwicklungen"
+      description: "Beschreibung"
+
+summoner:
+  detail:
+    meta_description: "Entdecke die Details des Beschwörerzaubers %name% in League of Legends. Statistiken und Effekte aktualisiert für Patch %version%."
+    version_locale: "Version: %version% — Sprache: %locale%"
+    fields:
+      cooldown: "Abklingzeit"
+      maxammo: "Anzahl der Ladungen"
+      range: "Nutzungsreichweite"
+      cost: "Kosten"
+      summoner_level: "Beschwörerstufe"
+    modes: "Kompatible Modi"
+    description: "Beschreibung"
+  card:
+    cooldown: "Abklingzeit"
+    level: "Beschwörerstufe"
+    modes: "Kompatible Modi"
+    description: "Beschreibung"
+  list:
+    title: "Beschwörerzauber"
+    subtitle: "Beschwörerzauber-Katalog"
+    count: "count Zauber"
+
+champion:
+  list:
+    title: "Champions"
+    meta_description: "Durchstöbere alle League of Legends Champions. Finde detaillierte Statistiken, Fähigkeiten und Hintergrundgeschichten zu jedem Champion im Spiel."
+    header: "Champions"
+    subtitle: "Champion-Katalog"
+    search_placeholder: "Nach einem Champion suchen…"
+    change_version: "Version/Sprache ändern"
+  detail:
+    meta_description: "Entdecke %name% aus League of Legends mit Statistiken, Rollen und Details für Patch %version%."
+    version_locale: "Patch %version% • %locale%"
+    partype: "Ressource: %partype%"
+    stats:
+      title: "Basisstatistiken"
+    profile:
+      title: "Champion-Profil"
+      attack: "Angriff"
+      defense: "Verteidigung"
+      magic: "Magie"
+      difficulty: "Schwierigkeit"
+    lore:
+      title: "Hintergrundgeschichte"
+
+rune:
+  list:
+    title: "Runen"
+    meta_description: "Durchstöbere alle League of Legends Runen. Finde detaillierte Statistiken und Effekte zu jeder Rune im Spiel."
+    header: "Runen"
+    subtitle: "Runen-Katalog"
+    search_placeholder: "Nach einer Rune suchen…"
+    change_version: "Version/Sprache ändern"
+  detail:
+    title: "Rune: %name%"
+    meta_description: "Entdecke die Details der Rune %name% in League of Legends. Statistiken und Effekte aktualisiert für Patch %version%."
+  slot: "Slot"
+
+common:
+  back: "Zurück"
+  search: "Suchen…"
+  no_result:
+    text: "Keine Ergebnisse für deine Suche gefunden."
+    back: "← Zurück"
+    setup: "Version & Sprache wählen"
+  detail : "Details ansehen →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base ist eine von der Community getragene Plattform, die detaillierte Informationen, Statistiken und Einblicke zu League of Legends bietet. Schnell, zuverlässig und immer aktuell."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Impressum"
+
+  navigation:
+    title: "Navigation"
+    home: "Startseite"
+    champion: "Champion"
+    item: "Item"
+    runes: "Runen"
+    summoner: "Beschwörer"
+
+  links:
+    title: "Nützliche Links"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Projekt"
+    version: "Version: Beta 2.0"
+    updated: "Aktualisiert: 03/08/2025"
+
+  contact:
+    title: "Kontakt"
+    email: "E-Mail"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Daten werden beschworen"
+  subtitle: "Ressourcen werden aus der Kluft geladen…"
+  status:
+    fetching: "lädt"
+    ready: "bereit"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Startseite"
+    champion: "Champions"
+    item: "Items"
+    runes: "Runen"
+    summoner: "Beschwörerzauber"

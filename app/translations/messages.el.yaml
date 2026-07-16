@@ -1,0 +1,199 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Καλώς ήρθατε στο League of Data Base. Εξερευνήστε αντικείμενα και ξόρκια επικαλεστή του League of Legends με στατιστικά και λεπτομέρειες για την έκδοση %version%."
+  hero:
+    browse: "Περιηγηθείτε σε λεπτομερείς πληροφορίες για <strong>Ξόρκια Επικαλεστή</strong> και <strong>Αντικείμενα</strong> από το League of Legends. Ενημερωμένο για την έκδοση %version%."
+    explore_summoners: "Εξερευνήστε τα Ξόρκια Επικαλεστή"
+    explore_items: "Εξερευνήστε τα Αντικείμενα"
+    explore_champions: "Εξερευνήστε τους Πρωταθλητές"
+    explore_runes: "Εξερευνήστε τους Ρούνους"
+  summoners:
+    title: "Ξόρκια Επικαλεστή"
+    see_all: "Δείτε όλα τα ξόρκια"
+  items:
+    title: "Αντικείμενα"
+    see_all: "Δείτε όλα τα αντικείμενα"
+  champions:
+    title: "Πρωταθλητές"
+    see_all: "Δείτε όλους τους πρωταθλητές"
+    no_data: "Δεν υπάρχουν διαθέσιμοι πρωταθλητές για αυτή την έκδοση."
+    wip: "Αυτή η ενότητα βρίσκεται υπό κατασκευή. Σύντομα θα μπορείτε να περιηγηθείτε σε όλους τους πρωταθλητές."
+  runes:
+    title: "Ρούνοι"
+    wip: "Αυτή η ενότητα βρίσκεται υπό κατασκευή. Σύντομα θα μπορείτε να εξερευνήσετε τους ρούνους."
+    see_all: "Δείτε όλους τους ρούνους"
+
+
+setup:
+  title: "Ρύθμιση"
+  meta: "Επιλέξτε την προτιμώμενη έκδοση παιχνιδιού και γλώσσα σας για να προσαρμόσετε την εμπειρία σας στο League of Data Base. Όλα τα στατιστικά και τα δεδομένα θα προσαρμοστούν στις ρυθμίσεις σας."
+  form:
+    version: "Έκδοση"
+    language: "Γλώσσα"
+    note_latest: "*Η πιο πρόσφατη έκδοση επιλέγεται αυτόματα."
+    remember: "Να με θυμάσαι"
+    submit: "Υποβολή"
+
+system:
+  under_construction:
+    title: "Υπό Κατασκευή"
+    meta_description: "Το League of Data Base βρίσκεται αυτή τη στιγμή υπό κατασκευή. Δουλεύουμε σκληρά για να σας φέρουμε λεπτομερή στατιστικά, πληροφορίες και εργαλεία για το League of Legends. Μείνετε συντονισμένοι για ενημερώσεις."
+    heading: "Αυτή η σελίδα βρίσκεται υπό κατασκευή"
+    subheading: "Σφυρηλατούμε αυτό το χαρακτηριστικό στο Rift. Ελέγξτε ξανά σύντομα για κάτι επικό."
+    info: "Αν φτάσατε σε αυτή τη σελίδα, το περιεχόμενο δεν έχει κυκλοφορήσει ακόμα. Δουλεύουμε πάνω στην απόδοση, την ακρίβεια των δεδομένων και μια ομαλή εμπειρία χρήστη που ταιριάζει με την υπόλοιπη League Of Data Base."
+    progress_label: "Πρόοδος κατασκευής"
+    back: "← Πίσω"
+    summoners: "Δείτε τα Ξόρκια Επικαλεστή"
+    setup: "Επιλέξτε έκδοση & γλώσσα"
+    footer: "Το χρειάζεστε σύντομα; Επικοινωνήστε μαζί μας ή δείτε τον οδικό χάρτη. Έρχονται περισσότερες ενημερώσεις."
+    meanwhile: "Στο μεταξύ, μπορείτε να:"
+
+item:
+  detail:
+    meta_description: "Ανακαλύψτε τα πάντα για το αντικείμενο %name% στο League of Legends. Στατιστικά, εφέ και πληροφορίες κατασκευής ενημερωμένες για την έκδοση %version%."
+    version_locale: "Έκδοση: %version% — Γλώσσα: %locale%"
+    price_total: "Συνολικό κόστος"
+    price_base: "Κόστος αγοράς"
+    price_sell: "Αξία πώλησης"
+    categories: "Κατηγορίες"
+    evolutions: "Πιθανές εξελίξεις"
+    stats: "Στατιστικά"
+    description: "Περιγραφή"
+    back: "← Επιστροφή στη λίστα"
+    setup: "Αλλαγή έκδοσης & γλώσσας"
+  list:
+      title: "Αντικείμενα"
+      meta_description: "Περιηγηθείτε σε όλα τα αντικείμενα του League of Legends διαθέσιμα στην έκδοση %version%. Βρείτε λεπτομερή στατιστικά, κόστη και εφέ ενημερωμένα για την τελευταία έκδοση."
+      header: "Αντικείμενα"
+      subtitle: "Κατάλογος αντικειμένων"
+      results_per_page: "Αποτελέσματα ανά σελίδα:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "Αναζητήστε ένα αντικείμενο…"
+      change_version: "Αλλαγή έκδοσης/γλώσσας"
+      cost_total: "Συνολικό κόστος"
+      cost_sell: "Αξία πώλησης"
+      categories: "Κατηγορίες"
+      evolutions: "Πιθανές εξελίξεις"
+      description: "Περιγραφή"
+
+summoner:
+  detail:
+    meta_description: "Εξερευνήστε τις λεπτομέρειες του ξορκιού επικαλεστή %name% στο League of Legends. Στατιστικά και εφέ ενημερωμένα για την έκδοση %version%."
+    version_locale: "Έκδοση: %version% — Γλώσσα: %locale%"
+    fields:
+      cooldown: "Χρόνος επαναφοράς"
+      maxammo: "Αριθμός φορτίσεων"
+      range: "Εμβέλεια χρήσης"
+      cost: "Κόστος"
+      summoner_level: "Επίπεδο επικαλεστή"
+    modes: "Συμβατοί τρόποι παιχνιδιού"
+    description: "Περιγραφή"
+  card:
+    cooldown: "Χρόνος επαναφοράς"
+    level: "Επίπεδο επικαλεστή"
+    modes: "Συμβατοί τρόποι παιχνιδιού"
+    description: "Περιγραφή"
+  list:
+    title: "Ξόρκια Επικαλεστή"
+    subtitle: "Κατάλογος Ξορκιών Επικαλεστή"
+    count: "count ξόρκια"
+
+champion:
+  list:
+    title: "Πρωταθλητές"
+    meta_description: "Περιηγηθείτε σε όλους τους πρωταθλητές του League of Legends. Βρείτε λεπτομερή στατιστικά, ικανότητες και ιστορία για κάθε πρωταθλητή στο παιχνίδι."
+    header: "Πρωταθλητές"
+    subtitle: "Κατάλογος πρωταθλητών"
+    search_placeholder: "Αναζητήστε έναν πρωταθλητή…"
+    change_version: "Αλλαγή έκδοσης/γλώσσας"
+  detail:
+    meta_description: "Ανακαλύψτε τον/την %name% από το League of Legends, με στατιστικά, ρόλους και λεπτομέρειες για την έκδοση %version%."
+    version_locale: "Έκδοση %version% • %locale%"
+    partype: "Πόρος: %partype%"
+    stats:
+      title: "Βασικά Στατιστικά"
+    profile:
+      title: "Προφίλ Πρωταθλητή"
+      attack: "Επίθεση"
+      defense: "Άμυνα"
+      magic: "Μαγεία"
+      difficulty: "Δυσκολία"
+    lore:
+      title: "Ιστορία"
+
+rune:
+  list:
+    title: "Ρούνοι"
+    meta_description: "Περιηγηθείτε σε όλους τους ρούνους του League of Legends. Βρείτε λεπτομερή στατιστικά και εφέ για κάθε ρούνο στο παιχνίδι."
+    header: "Ρούνοι"
+    subtitle: "Κατάλογος ρούνων"
+    search_placeholder: "Αναζητήστε έναν ρούνο…"
+    change_version: "Αλλαγή έκδοσης/γλώσσας"
+  detail:
+    title: "Ρούνος: %name%"
+    meta_description: "Ανακαλύψτε τις λεπτομέρειες του ρούνου %name% στο League of Legends. Στατιστικά και εφέ ενημερωμένα για την έκδοση %version%."
+  slot: "Θέση"
+
+common:
+  back: "Πίσω"
+  search: "Αναζήτηση…"
+  no_result:
+    text: "Δεν βρέθηκαν αποτελέσματα για την αναζήτησή σας."
+    back: "← Πίσω"
+    setup: "Επιλέξτε έκδοση & γλώσσα"
+  detail : "Δείτε λεπτομέρειες →"
+base:
+  title: "League of Data Base"
+  description: "Το League of Data Base είναι μια πλατφόρμα βασισμένη στην κοινότητα που παρέχει λεπτομερείς πληροφορίες, στατιστικά και πληροφορίες για το League of Legends. Γρήγορη, αξιόπιστη και πάντα ενημερωμένη."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Νομική Σημείωση"
+
+  navigation:
+    title: "Πλοήγηση"
+    home: "Αρχική"
+    champion: "Πρωταθλητής"
+    item: "Αντικείμενο"
+    runes: "Ρούνοι"
+    summoner: "Επικαλεστής"
+
+  links:
+    title: "Χρήσιμοι Σύνδεσμοι"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Έργο"
+    version: "Έκδοση: Beta 2.0"
+    updated: "Ενημερώθηκε: 03/08/2025"
+
+  contact:
+    title: "Επικοινωνία"
+    email: "Email"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Φόρτωση δεδομένων"
+  subtitle: "Ανάκτηση πόρων από το Rift…"
+  status:
+    fetching: "ανάκτηση"
+    ready: "έτοιμο"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Αρχική"
+    champion: "Πρωταθλητές"
+    item: "Αντικείμενα"
+    runes: "Ρούνοι"
+    summoner: "Ξόρκια Επικαλεστή"

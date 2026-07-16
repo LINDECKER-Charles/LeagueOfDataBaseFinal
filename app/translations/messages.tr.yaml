@@ -1,0 +1,199 @@
+homepage:
+  title: "League of Data Base"
+  meta: "League of Data Base'e hoş geldiniz. %version% yaması için League of Legends eşyalarını ve çağırıcı büyülerini istatistikleri ve detaylarıyla keşfedin."
+  hero:
+    browse: "League of Legends'tan <strong>Çağırıcı Büyüleri</strong> ve <strong>Eşyalar</strong> hakkında ayrıntılı bilgilere göz atın. %version% yaması için güncellendi."
+    explore_summoners: "Çağırıcı Büyülerini Keşfet"
+    explore_items: "Eşyaları Keşfet"
+    explore_champions: "Şampiyonları Keşfet"
+    explore_runes: "Rünleri Keşfet"
+  summoners:
+    title: "Çağırıcı Büyüleri"
+    see_all: "Tüm büyüleri gör"
+  items:
+    title: "Eşyalar"
+    see_all: "Tüm eşyaları gör"
+  champions:
+    title: "Şampiyonlar"
+    see_all: "Tüm şampiyonları gör"
+    no_data: "Bu sürüm için kullanılabilir şampiyon yok."
+    wip: "Bu bölüm yapım aşamasındadır. Yakında tüm şampiyonlara göz atabileceksiniz."
+  runes:
+    title: "Rünler"
+    wip: "Bu bölüm yapım aşamasındadır. Yakında rünleri keşfedebileceksiniz."
+    see_all: "Tüm rünleri gör"
+
+
+setup:
+  title: "Kurulum"
+  meta: "League of Data Base deneyiminizi özelleştirmek için tercih ettiğiniz oyun sürümünü ve dili seçin. Tüm istatistikler ve veriler ayarlarınıza göre uyarlanacaktır."
+  form:
+    version: "Sürüm"
+    language: "Dil"
+    note_latest: "*En son sürüm otomatik olarak seçilir."
+    remember: "Beni hatırla"
+    submit: "Gönder"
+
+system:
+  under_construction:
+    title: "Yapım Aşamasında"
+    meta_description: "League of Data Base şu anda yapım aşamasındadır. Size League of Legends için ayrıntılı istatistikler, içgörüler ve araçlar sunmak için yoğun çalışıyoruz. Güncellemeler için bizi takip edin."
+    heading: "Bu sayfa yapım aşamasındadır"
+    subheading: "Bu özelliği Rift'te dövüyoruz. Epik bir şey için yakında tekrar kontrol edin."
+    info: "Bu sayfaya ulaştıysanız, içerik henüz yayınlanmamıştır. Performans, veri doğruluğu ve League Of Data Base'in geri kalanıyla uyumlu, akıcı bir kullanıcı deneyimi üzerinde çalışıyoruz."
+    progress_label: "Yapım ilerlemesi"
+    back: "← Geri dön"
+    summoners: "Çağırıcı Büyülerini Gör"
+    setup: "Sürüm ve dil seç"
+    footer: "Buna yakında ihtiyacınız mı var? Bize ulaşın veya yol haritasını inceleyin. Daha fazla güncelleme geliyor."
+    meanwhile: "Bu arada şunları yapabilirsiniz:"
+
+item:
+  detail:
+    meta_description: "League of Legends'taki %name% eşyası hakkında her şeyi keşfedin. %version% yaması için güncellenmiş istatistikler, etkiler ve build bilgileri."
+    version_locale: "Sürüm: %version% — Dil: %locale%"
+    price_total: "Toplam maliyet"
+    price_base: "Satın alma maliyeti"
+    price_sell: "Satış değeri"
+    categories: "Kategoriler"
+    evolutions: "Olası evrimler"
+    stats: "İstatistikler"
+    description: "Açıklama"
+    back: "← Listeye dön"
+    setup: "Sürüm ve dili değiştir"
+  list:
+      title: "Eşyalar"
+      meta_description: "%version% yamasında bulunan tüm League of Legends eşyalarına göz atın. En son sürüm için güncellenmiş ayrıntılı istatistikleri, maliyetleri ve etkileri bulun."
+      header: "Eşyalar"
+      subtitle: "Eşya kataloğu"
+      results_per_page: "Sayfa başına sonuç:"
+      max: "MAKS"
+      ok: "TAMAM"
+      search_placeholder: "Bir eşya ara…"
+      change_version: "Sürüm/dil değiştir"
+      cost_total: "Toplam maliyet"
+      cost_sell: "Satış değeri"
+      categories: "Kategoriler"
+      evolutions: "Olası evrimler"
+      description: "Açıklama"
+
+summoner:
+  detail:
+    meta_description: "League of Legends'taki %name% çağırıcı büyüsünün ayrıntılarını keşfedin. %version% yaması için güncellenmiş istatistikler ve etkiler."
+    version_locale: "Sürüm: %version% — Dil: %locale%"
+    fields:
+      cooldown: "Bekleme süresi"
+      maxammo: "Kullanım sayısı"
+      range: "Kullanım menzili"
+      cost: "Maliyet"
+      summoner_level: "Çağırıcı seviyesi"
+    modes: "Uyumlu modlar"
+    description: "Açıklama"
+  card:
+    cooldown: "Bekleme süresi"
+    level: "Çağırıcı seviyesi"
+    modes: "Uyumlu modlar"
+    description: "Açıklama"
+  list:
+    title: "Çağırıcı Büyüleri"
+    subtitle: "Çağırıcı Büyüleri Kataloğu"
+    count: "count büyü"
+
+champion:
+  list:
+    title: "Şampiyonlar"
+    meta_description: "Tüm League of Legends şampiyonlarına göz atın. Oyundaki her şampiyon için ayrıntılı istatistikleri, yetenekleri ve hikayeyi bulun."
+    header: "Şampiyonlar"
+    subtitle: "Şampiyon kataloğu"
+    search_placeholder: "Bir şampiyon ara…"
+    change_version: "Sürüm/dil değiştir"
+  detail:
+    meta_description: "League of Legends'tan %name%'i, %version% yaması için istatistikler, roller ve ayrıntılarla keşfedin."
+    version_locale: "Yama %version% • %locale%"
+    partype: "Kaynak: %partype%"
+    stats:
+      title: "Temel İstatistikler"
+    profile:
+      title: "Şampiyon Profili"
+      attack: "Saldırı"
+      defense: "Savunma"
+      magic: "Büyü"
+      difficulty: "Zorluk"
+    lore:
+      title: "Hikaye"
+
+rune:
+  list:
+    title: "Rünler"
+    meta_description: "Tüm League of Legends rünlerine göz atın. Oyundaki her rün için ayrıntılı istatistikleri ve etkileri bulun."
+    header: "Rünler"
+    subtitle: "Rün kataloğu"
+    search_placeholder: "Bir rün ara…"
+    change_version: "Sürüm/dil değiştir"
+  detail:
+    title: "Rün: %name%"
+    meta_description: "League of Legends'taki %name% rününün ayrıntılarını keşfedin. %version% yaması için güncellenmiş istatistikler ve etkiler."
+  slot: "Yuva"
+
+common:
+  back: "Geri"
+  search: "Ara…"
+  no_result:
+    text: "Aramanız için sonuç bulunamadı."
+    back: "← Geri"
+    setup: "Sürüm ve dil seç"
+  detail : "Ayrıntıları gör →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base, League of Legends hakkında ayrıntılı bilgiler, istatistikler ve içgörüler sunan topluluk odaklı bir platformdur. Hızlı, güvenilir ve her zaman güncel."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Yasal Uyarı"
+
+  navigation:
+    title: "Navigasyon"
+    home: "Ana Sayfa"
+    champion: "Şampiyon"
+    item: "Eşya"
+    runes: "Rünler"
+    summoner: "Çağırıcı"
+
+  links:
+    title: "Yararlı Bağlantılar"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Proje"
+    version: "Sürüm: Beta 2.0"
+    updated: "Güncellendi: 03/08/2025"
+
+  contact:
+    title: "İletişim"
+    email: "E-posta"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Veriler çağrılıyor"
+  subtitle: "Rift'ten kaynaklar getiriliyor…"
+  status:
+    fetching: "getiriliyor"
+    ready: "hazır"
+
+pagination:
+  ok: "TAMAM"
+  more: "…"
+
+header:
+  navigation:
+    home: "Ana Sayfa"
+    champion: "Şampiyonlar"
+    item: "Eşyalar"
+    runes: "Rünler"
+    summoner: "Çağırıcı Büyüleri"

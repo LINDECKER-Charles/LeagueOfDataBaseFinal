@@ -1,0 +1,199 @@
+homepage:
+  title: "League of Data Base"
+  meta: "Witamy w League of Data Base. Odkryj przedmioty i zaklęcia przywoływacza z League of Legends wraz ze statystykami i szczegółami dla wersji %version%."
+  hero:
+    browse: "Przeglądaj szczegółowe informacje o <strong>Zaklęciach Przywoływacza</strong> i <strong>Przedmiotach</strong> z League of Legends. Zaktualizowane dla wersji %version%."
+    explore_summoners: "Odkryj zaklęcia przywoływacza"
+    explore_items: "Odkryj przedmioty"
+    explore_champions: "Odkryj czempionów"
+    explore_runes: "Odkryj runy"
+  summoners:
+    title: "Zaklęcia Przywoływacza"
+    see_all: "Zobacz wszystkie zaklęcia"
+  items:
+    title: "Przedmioty"
+    see_all: "Zobacz wszystkie przedmioty"
+  champions:
+    title: "Czempioni"
+    see_all: "Zobacz wszystkich czempionów"
+    no_data: "Brak dostępnych czempionów dla tej wersji."
+    wip: "Ta sekcja jest w budowie. Wkrótce będziesz mógł przeglądać wszystkich czempionów."
+  runes:
+    title: "Runy"
+    wip: "Ta sekcja jest w budowie. Wkrótce będziesz mógł odkrywać runy."
+    see_all: "Zobacz wszystkie runy"
+
+
+setup:
+  title: "Konfiguracja"
+  meta: "Wybierz preferowaną wersję gry i język, aby dostosować swoje doświadczenie z League of Data Base. Wszystkie statystyki i dane dostosują się do Twoich ustawień."
+  form:
+    version: "Wersja"
+    language: "Język"
+    note_latest: "*Najnowsza wersja jest wybierana automatycznie."
+    remember: "Zapamiętaj mnie"
+    submit: "Zatwierdź"
+
+system:
+  under_construction:
+    title: "W budowie"
+    meta_description: "League of Data Base jest obecnie w budowie. Ciężko pracujemy, aby dostarczyć Ci szczegółowe statystyki, analizy i narzędzia dla League of Legends. Bądź na bieżąco z aktualizacjami."
+    heading: "Ta strona jest w budowie"
+    subheading: "Kujemy tę funkcję w Rozpadlinie. Zajrzyj tu wkrótce po coś epickiego."
+    info: "Jeśli trafiłeś na tę stronę, oznacza to, że treść nie została jeszcze udostępniona. Pracujemy nad wydajnością, dokładnością danych i płynnym UX dopasowanym do reszty League Of Data Base."
+    progress_label: "Postęp budowy"
+    back: "← Wróć"
+    summoners: "Zobacz zaklęcia przywoływacza"
+    setup: "Wybierz wersję i język"
+    footer: "Potrzebujesz tego szybciej? Napisz do nas lub sprawdź plan rozwoju. Nadchodzą kolejne aktualizacje."
+    meanwhile: "W międzyczasie możesz:"
+
+item:
+  detail:
+    meta_description: "Poznaj wszystko o przedmiocie %name% w League of Legends. Statystyki, efekty i informacje o buildach zaktualizowane dla wersji %version%."
+    version_locale: "Wersja: %version% — Język: %locale%"
+    price_total: "Całkowity koszt"
+    price_base: "Koszt zakupu"
+    price_sell: "Wartość sprzedaży"
+    categories: "Kategorie"
+    evolutions: "Możliwe ewolucje"
+    stats: "Statystyki"
+    description: "Opis"
+    back: "← Powrót do listy"
+    setup: "Zmień wersję i język"
+  list:
+      title: "Przedmioty"
+      meta_description: "Przeglądaj wszystkie przedmioty League of Legends dostępne w wersji %version%. Znajdź szczegółowe statystyki, koszty i efekty zaktualizowane dla najnowszej wersji."
+      header: "Przedmioty"
+      subtitle: "Katalog przedmiotów"
+      results_per_page: "Wyników na stronę:"
+      max: "MAX"
+      ok: "OK"
+      search_placeholder: "Szukaj przedmiotu…"
+      change_version: "Zmień wersję/język"
+      cost_total: "Całkowity koszt"
+      cost_sell: "Wartość sprzedaży"
+      categories: "Kategorie"
+      evolutions: "Możliwe ewolucje"
+      description: "Opis"
+
+summoner:
+  detail:
+    meta_description: "Poznaj szczegóły zaklęcia przywoływacza %name% w League of Legends. Statystyki i efekty zaktualizowane dla wersji %version%."
+    version_locale: "Wersja: %version% — Język: %locale%"
+    fields:
+      cooldown: "Czas odnowienia"
+      maxammo: "Liczba ładunków"
+      range: "Zasięg użycia"
+      cost: "Koszt"
+      summoner_level: "Poziom przywoływacza"
+    modes: "Kompatybilne tryby"
+    description: "Opis"
+  card:
+    cooldown: "Czas odnowienia"
+    level: "Poziom przywoływacza"
+    modes: "Kompatybilne tryby"
+    description: "Opis"
+  list:
+    title: "Zaklęcia Przywoływacza"
+    subtitle: "Katalog zaklęć przywoływacza"
+    count: "count zaklęć"
+
+champion:
+  list:
+    title: "Czempioni"
+    meta_description: "Przeglądaj wszystkich czempionów League of Legends. Znajdź szczegółowe statystyki, umiejętności i historie dla każdego czempiona w grze."
+    header: "Czempioni"
+    subtitle: "Katalog czempionów"
+    search_placeholder: "Szukaj czempiona…"
+    change_version: "Zmień wersję/język"
+  detail:
+    meta_description: "Poznaj %name% z League of Legends, wraz ze statystykami, rolami i szczegółami dla wersji %version%."
+    version_locale: "Wersja %version% • %locale%"
+    partype: "Zasób: %partype%"
+    stats:
+      title: "Statystyki podstawowe"
+    profile:
+      title: "Profil czempiona"
+      attack: "Atak"
+      defense: "Obrona"
+      magic: "Magia"
+      difficulty: "Trudność"
+    lore:
+      title: "Historia"
+
+rune:
+  list:
+    title: "Runy"
+    meta_description: "Przeglądaj wszystkie runy League of Legends. Znajdź szczegółowe statystyki i efekty dla każdej runy w grze."
+    header: "Runy"
+    subtitle: "Katalog run"
+    search_placeholder: "Szukaj runy…"
+    change_version: "Zmień wersję/język"
+  detail:
+    title: "Runa: %name%"
+    meta_description: "Poznaj szczegóły runy %name% w League of Legends. Statystyki i efekty zaktualizowane dla wersji %version%."
+  slot: "Slot"
+
+common:
+  back: "Wstecz"
+  search: "Szukaj…"
+  no_result:
+    text: "Nie znaleziono wyników dla Twojego wyszukiwania."
+    back: "← Wstecz"
+    setup: "Wybierz wersję i język"
+  detail : "Zobacz szczegóły →"
+base:
+  title: "League of Data Base"
+  description: "League of Data Base to platforma tworzona przez społeczność, która dostarcza szczegółowych informacji, statystyk i analiz dotyczących League of Legends. Szybka, niezawodna i zawsze aktualna."
+
+footer:
+  copyright: "© 2025 LINDECKER Charles / Hexanti"
+  legal: "Nota prawna"
+
+  navigation:
+    title: "Nawigacja"
+    home: "Strona główna"
+    champion: "Czempion"
+    item: "Przedmiot"
+    runes: "Runy"
+    summoner: "Przywoływacz"
+
+  links:
+    title: "Przydatne linki"
+    lol: "League of Legends"
+    riotapi: "Riot API"
+    ddragon: "CDN Data Dragon"
+    support: "Riot Support"
+    opgg: "OP.GG"
+
+  project:
+    title: "Projekt"
+    version: "Wersja: Beta 2.0"
+    updated: "Zaktualizowano: 03/08/2025"
+
+  contact:
+    title: "Kontakt"
+    email: "E-mail"
+    github: "GitHub"
+    linkedin: "LinkedIn"
+
+loader:
+  eyebrow: "Data Dragon"
+  title: "Przywoływanie danych"
+  subtitle: "Pobieranie zasobów z Rozpadliny…"
+  status:
+    fetching: "pobieranie"
+    ready: "gotowe"
+
+pagination:
+  ok: "OK"
+  more: "…"
+
+header:
+  navigation:
+    home: "Strona główna"
+    champion: "Czempioni"
+    item: "Przedmioty"
+    runes: "Runy"
+    summoner: "Zaklęcia Przywoływacza"
