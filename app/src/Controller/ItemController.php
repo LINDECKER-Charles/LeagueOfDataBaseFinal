@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Dto\ClientData;
 use App\Service\API\ItemManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
@@ -12,17 +11,18 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-final class ItemController extends AbstractController
+final class ItemController extends AbstractResourceController
 {
     public function __construct(
-        private readonly VersionManager $versionManager,
-        private readonly ClientManager $clientManager,
-        private readonly PageContextResolver $pageContext,
-        private readonly RequestStack $requestStack,
+        VersionManager $versionManager,
+        ClientManager $clientManager,
+        PageContextResolver $pageContext,
+        RequestStack $requestStack,
         private readonly ItemManager $itemManager,
-    ) {}
+    ) {
+        parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
+    }
 
     /**
      * Liste paginée des objets. Version/langue viennent de la query (URL
@@ -46,7 +46,7 @@ final class ItemController extends AbstractController
             'items'  => $data['items'],
             'images' => $data['images'],
             'meta'   => $data['meta'],
-            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'client' => $this->clientData(),
         ]);
     }
 
@@ -78,7 +78,7 @@ final class ItemController extends AbstractController
             'components' => $components,
             'version'    => $sel['version'],
             'lang'       => $sel['lang'],
-            'client'  => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'client'  => $this->clientData(),
         ]);
     }
 
@@ -111,29 +111,5 @@ final class ItemController extends AbstractController
         }, $items);
 
         return $this->json($final);
-    }
-
-    /**
-     * @param array{version?:string, lang?:string} $ctx
-     */
-    private function redirectToSetupWithError(array $ctx, \Throwable $e): Response
-    {
-        $this->requestStack->getSession()->getFlashBag()->clear();
-        $this->addFlash('error', $this->dataError($ctx, $e));
-
-        return $this->redirectToRoute('app_setup');
-    }
-
-    /**
-     * @param array{version?:string, lang?:string} $ctx
-     */
-    private function dataError(array $ctx, \Throwable $e): string
-    {
-        return sprintf(
-            'Donnés absente sur la version %s et la langue %s Message --> %s',
-            $ctx['version'] ?? 'n/a',
-            $ctx['lang'] ?? 'n/a',
-            $e->getMessage()
-        );
     }
 }

@@ -278,35 +278,4 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
         return $this->resolveImage($version, $name, $force);
     }
 
-    public function paginate(string $version, string $langue, int $nb = 1, int $numPage = 1): array
-    {
-        $json = $this->getData($version, $langue)['data'] ?? [];
-
-        $ttSum = count($json);
-        if ($nb === 0 || $nb > $ttSum) {
-            $nb = $ttSum > 20 ? 20 : $ttSum;
-        }
-        $ttPage = (int) ceil($ttSum / max(1, $nb));
-        if ($numPage > $ttPage) {
-            $numPage = 1;
-        }
-
-        $json = $numPage <= 1
-            ? $this->splitJson($nb, 0, $json)
-            : $this->splitJson($nb, $nb * ($numPage - 1), $json);
-
-        $images = $this->getImages($version, $langue, false, $json);
-
-        return [
-            static::TYPE.'s' => $json,
-            'images' => $images,
-            'meta' => [
-                'currentPage' => $numPage,
-                'nombrePage' => $ttPage,
-                'itemPerPage' => $nb,
-                'totalItem' => $ttSum,
-                'type' => static::TYPE,
-            ],
-        ];
-    }
 }

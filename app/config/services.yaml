@@ -4,8 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    upload_manager.base_dir: '%kernel.project_dir%/public'
-    
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -31,10 +30,6 @@ services:
                 accessKeySecret: '%env(MINIO_SECRET_KEY)%'
                 region: '%env(MINIO_REGION)%'
                 pathStyleEndpoint: true
-
-    App\Service\Tools\Utils:
-        arguments:
-            $baseDir: '%upload_manager.base_dir%'
 
     # All Data Dragon egress flows through the Go fetch gateway (scoped HTTP client).
     App\Service\Tools\GoFetcherClient:

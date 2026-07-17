@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Controller;
 
@@ -104,9 +105,9 @@ class HomeController extends AbstractController
     public function save(Request $request): RedirectResponse
     {
         // On recupere les donnees
-        (string) $language = (string) $request->request->get('langue', '');
-        (string) $version  = (string) $request->request->get('version', '');
-        (bool) $remember = (bool) $request->request->getBoolean('remember');
+        $language = (string) $request->request->get('langue', '');
+        $version  = (string) $request->request->get('version', '');
+        $remember = $request->request->getBoolean('remember');
 
         //On les valides
         $report = $this->versionManager->validateSelection($version, $language);

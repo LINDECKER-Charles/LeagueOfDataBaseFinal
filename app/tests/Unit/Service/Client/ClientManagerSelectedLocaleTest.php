@@ -6,9 +6,7 @@ namespace App\Tests\Unit\Service\Client;
 
 use App\Service\Client\ClientManager;
 use App\Service\Client\VersionManager;
-use App\Service\Tools\Utils;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -54,7 +52,6 @@ final class ClientManagerSelectedLocaleTest extends TestCase
         return new ClientManager(
             $stack,
             $versionManager,
-            new Utils(new Filesystem(), $versionManager, sys_get_temp_dir()),
             self::SECRET,
             'en_US',
         );

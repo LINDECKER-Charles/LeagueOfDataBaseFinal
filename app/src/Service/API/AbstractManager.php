@@ -265,6 +265,66 @@ abstract class AbstractManager implements WarmableManagerInterface
     }
 
     /**
+     * Pagination générique (tranche de liste + images + méta) partagée par les
+     * quatre ressources. Seuls varient la racine paginée ({@see paginationCollection} :
+     * map `['data']` pour champion/item/summoner, liste top-level pour les runes) et
+     * le plafond par page ({@see perPageCap}). La tranche préserve les clés d'origine
+     * (id de ressource) — {@see splitJson} slice en mode préservation de clés.
+     *
+     * @return array<string,mixed> {<type>s, images, meta}
+     */
+    public function paginate(string $version, string $lang, int $nb = 1, int $numPage = 1): array
+    {
+        $json = $this->paginationCollection($this->getData($version, $lang));
+
+        $ttSum = count($json);
+        if ($nb === 0 || $nb > $ttSum) {
+            $nb = min($this->perPageCap(), $ttSum);
+        }
+        $ttPage = (int) ceil($ttSum / max(1, $nb));
+        if ($numPage > $ttPage) {
+            $numPage = 1;
+        }
+
+        $json = $numPage <= 1
+            ? $this->splitJson($nb, 0, $json)
+            : $this->splitJson($nb, $nb * ($numPage - 1), $json);
+
+        $images = $this->getImages($version, $lang, false, $json);
+
+        return [
+            static::TYPE.'s' => $json,
+            'images' => $images,
+            'meta' => [
+                'currentPage' => $numPage,
+                'nombrePage' => $ttPage,
+                'itemPerPage' => $nb,
+                'totalItem' => $ttSum,
+                'type' => static::TYPE,
+            ],
+        ];
+    }
+
+    /**
+     * Racine du dataset à paginer. Par défaut la map `['data']` (clé = id de
+     * ressource) ; surchargée par les ressources dont le JSON est une liste
+     * top-level (runes).
+     *
+     * @param array<mixed> $raw
+     * @return array<mixed>
+     */
+    protected function paginationCollection(array $raw): array
+    {
+        return $raw['data'] ?? [];
+    }
+
+    /** Plafond d'entrées par page quand l'appelant ne borne pas explicitement. */
+    protected function perPageCap(): int
+    {
+        return 20;
+    }
+
+    /**
      * Synchronously fetch + store the still-missing images of a pre-computed
      * entry map, reporting each stored entry's display name via $onStored. Used
      * by the streaming loader ({@see \App\Controller\LoaderController}) to warm a
