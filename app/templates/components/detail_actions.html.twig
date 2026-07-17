@@ -1,9 +1,3 @@
-{# Detail footer — discreet version/language escape hatch (primary back-nav is
-   the pager + bottom bar). #}
-<div class="mt-8 flex justify-center">
-  <a href="{{ path('app_setup') }}" class="hx-btn-ghost text-xs">{{ 'item.detail.setup'|trans }}</a>
-</div>
-
 {# Load-time marker: flags this render as a detail page and carries the server
    generation time (ms). The persistent LoadTimeBadge island reads it to display
    the load-time chip; it is absent on list/home pages, so the chip self-hides. #}

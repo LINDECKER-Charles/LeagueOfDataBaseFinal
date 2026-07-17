@@ -6,7 +6,7 @@
 {% set currentRoute = app.request.get('_route') %}
 
 <nav class="bottom-nav" aria-label="{{ 'footer.navigation.title'|trans }}">
-  <a href="{{ path('app_home') }}" {% if currentRoute in ['app_home', 'app_setup'] %}aria-current="page"{% endif %}>
+  <a href="{{ path('app_home') }}" {% if currentRoute == 'app_home' %}aria-current="page"{% endif %}>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
       <path d="M12 2.5 20 7v10l-8 4.5L4 17V7z"/><path d="M12 8.5 15.5 12 12 15.5 8.5 12z"/>
     </svg>

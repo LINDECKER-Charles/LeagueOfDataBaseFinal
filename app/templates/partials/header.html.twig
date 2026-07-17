@@ -1,8 +1,7 @@
 {# Global header — slim Hextech bar. Desktop carries the primary nav inline;
    on mobile the primary nav lives in the fixed bottom bar (partials/bottom_nav)
    and the header keeps only brand + the patch/language switcher. The switcher
-   is a disclosure popover on every page except the setup page (which IS the
-   full-size version/language form). #}
+   disclosure popover is the single version/language entry point of the app. #}
 {% set currentRoute = app.request.get('_route') %}
 {% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
 {% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
@@ -12,7 +11,7 @@
 
   <div class="mx-auto flex h-16 max-w-[110rem] items-center justify-between gap-4 px-4 sm:px-6">
     {# Brand #}
-    <a href="{{ url('app_setup') }}" class="brand-link group flex min-w-0 items-center gap-3">
+    <a href="{{ path('app_home') }}" class="brand-link group flex min-w-0 items-center gap-3">
       <span class="brand-logo shrink-0 text-gold">{% include 'components/logo.html.twig' with { class: 'h-8 w-8 sm:h-9 sm:w-9' } %}</span>
       <span class="brand-title truncate font-beaufort text-base uppercase tracking-[0.18em] text-gold-bright sm:text-lg">
         <span class="hidden min-[460px]:inline">League Of Data Base</span>
@@ -32,41 +31,39 @@
     </nav>
 
     {# Patch & language switcher — compact chip opening the real form #}
-    {% if currentRoute != 'app_setup' %}
-      <details class="switcher shrink-0">
-        <summary aria-label="{{ 'header.switcher.label'|trans }}">
-          <span>{{ navVersion }}</span>
-          <span class="text-gold-deep" aria-hidden="true">·</span>
-          <span>{{ navLang|split('_')|first|upper }}</span>
-          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
-        </summary>
-        <form action="{{ path('app_setup_save') }}" method="post" class="switcher__panel">
-          <p class="eyebrow mb-3">{{ 'header.switcher.label'|trans }}</p>
-          <div class="flex flex-col gap-2.5">
-            <label for="header-version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
-            <select id="header-version" name="version" class="hx-select w-full">
-              {% for v in client.versions %}
-                <option value="{{ v }}" {{ v == navVersion ? 'selected' : '' }}>{{ v }}</option>
-              {% endfor %}
-            </select>
+    <details class="switcher shrink-0">
+      <summary aria-label="{{ 'header.switcher.label'|trans }}">
+        <span>{{ navVersion }}</span>
+        <span class="text-gold-deep" aria-hidden="true">·</span>
+        <span>{{ navLang|split('_')|first|upper }}</span>
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
+      </summary>
+      <form action="{{ path('app_setup_save') }}" method="post" class="switcher__panel">
+        <p class="eyebrow mb-3">{{ 'header.switcher.label'|trans }}</p>
+        <div class="flex flex-col gap-2.5">
+          <label for="header-version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
+          <select id="header-version" name="version" class="hx-select w-full">
+            {% for v in client.versions %}
+              <option value="{{ v }}" {{ v == navVersion ? 'selected' : '' }}>{{ v }}</option>
+            {% endfor %}
+          </select>
 
-            <label for="header-langue" class="sr-only">{{ 'setup.form.language'|trans }}</label>
-            <select id="header-langue" name="langue" class="hx-select w-full">
-              {% for l in client.languages %}
-                <option value="{{ l }}" {{ l == navLang ? 'selected' : '' }}>{{ client.languageLabels[l] ?? l }}</option>
-              {% endfor %}
-            </select>
+          <label for="header-langue" class="sr-only">{{ 'setup.form.language'|trans }}</label>
+          <select id="header-langue" name="langue" class="hx-select w-full">
+            {% for l in client.languages %}
+              <option value="{{ l }}" {{ l == navLang ? 'selected' : '' }}>{{ client.languageLabels[l] ?? l }}</option>
+            {% endfor %}
+          </select>
 
-            <div class="mt-1 flex items-center gap-3">
-              <label for="header-remember" class="flex cursor-pointer select-none items-center gap-2 text-xs text-text-muted">
-                <input type="checkbox" id="header-remember" name="remember" class="hx-check">
-                <span>{{ 'setup.form.remember'|trans }}</span>
-              </label>
-              <button type="submit" class="hx-btn ml-auto py-2">{{ 'setup.form.submit'|trans }}</button>
-            </div>
+          <div class="mt-1 flex items-center gap-3">
+            <label for="header-remember" class="flex cursor-pointer select-none items-center gap-2 text-xs text-text-muted">
+              <input type="checkbox" id="header-remember" name="remember" class="hx-check">
+              <span>{{ 'setup.form.remember'|trans }}</span>
+            </label>
+            <button type="submit" class="hx-btn ml-auto py-2">{{ 'setup.form.submit'|trans }}</button>
           </div>
-        </form>
-      </details>
-    {% endif %}
+        </div>
+      </form>
+    </details>
   </div>
 </header>

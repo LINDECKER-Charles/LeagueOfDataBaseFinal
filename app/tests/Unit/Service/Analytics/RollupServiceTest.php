@@ -50,7 +50,7 @@ final class RollupServiceTest extends TestCase
     {
         $this->events->append(new RequestEvent(
             at: new \DateTimeImmutable($date . 'T10:00:00', new \DateTimeZone('UTC')),
-            route: 'app_home', path: '/home', type: 'home', kind: 'home', entity: null,
+            route: 'app_home', path: '/', type: 'home', kind: 'home', entity: null,
             status: 200, version: null, lang: null, locale: 'fr', ip: '203.0.113.1',
             visitorId: $visitor, userAgent: 'UA', browser: 'Chrome', os: 'Windows',
             device: 'desktop', isBot: false, refererHost: null, refererSource: 'direct',

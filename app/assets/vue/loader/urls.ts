@@ -25,7 +25,7 @@ export const TYPE_TO_KEY: Record<string, ResourceKey> = {
 /** Only the home + list routes ingest an image batch worth streaming. */
 export function resourcesFor(pathname: string): ResourceKey[] {
     const p = (pathname.replace(/\/+$/, '') || '/').toLowerCase()
-    if (p === '/home') return ['champions', 'items', 'runes', 'summoners']
+    if (p === '/') return ['champions', 'items', 'runes', 'summoners']
     if (p === '/champions') return ['champions']
     if (p === '/objects') return ['items']
     if (p === '/runes') return ['runes']

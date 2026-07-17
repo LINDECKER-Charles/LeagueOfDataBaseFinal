@@ -38,7 +38,7 @@ final class ItemController extends AbstractResourceController
         try {
             $data = $this->itemManager->paginate($sel['version'], $sel['lang'], 0, 1);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($sel, $e);
+            return $this->redirectToHomeWithError($sel, $e);
         }
 
         $data['meta']['version'] = $sel['version'];
@@ -77,7 +77,7 @@ final class ItemController extends AbstractResourceController
             // qu'un seul niveau — le vrai « arbre de craft » de l'objet.
             $recipe  = $this->itemManager->recipeTree($name, $sel['version'], $sel['lang']);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($sel, $e);
+            return $this->redirectToHomeWithError($sel, $e);
         }
 
         return $this->render('item/detail.html.twig', [

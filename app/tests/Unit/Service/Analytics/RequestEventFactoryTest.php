@@ -46,7 +46,7 @@ final class RequestEventFactoryTest extends TestCase
 
     public function testNonWhitelistedRouteIsIgnored(): void
     {
-        $request = $this->request('app_setup');
+        $request = $this->request('app_home_legacy');
 
         self::assertNull($this->factory->fromRequestResponse($request, new Response()));
         self::assertNull($this->factory->fromRequestResponse($this->request('admin_dashboard'), new Response()));

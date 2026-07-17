@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "Configurare"
-  meta: "Alege versiunea jocului și limba preferate pentru a personaliza experiența ta pe League of Data Base. Toate statisticile și datele se vor adapta setărilor tale."
   form:
     version: "Versiune"
     language: "Limbă"
-    note_latest: "*Cea mai recentă versiune este selectată automat."
     remember: "Ține-mă minte"
     submit: "Trimite"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Progresul construcției"
     back: "← Înapoi"
     summoners: "Vezi Vrăjile de Invocator"
-    setup: "Alege versiunea și limba"
     footer: "Ai nevoie de asta în curând? Contactează-ne sau verifică planul de dezvoltare. Mai vin actualizări."
     meanwhile: "Între timp, poți:"
 
@@ -64,7 +60,6 @@ item:
     tier: "Nivel %depth%"
     availability: "Disponibilitate"
     back: "← Înapoi la listă"
-    setup: "Schimbă versiunea și limba"
   list:
       title: "Obiecte"
       meta_description: "Răsfoiește toate obiectele din League of Legends disponibile în patch-ul %version%. Găsește statistici, costuri și efecte detaliate, actualizate pentru cea mai recentă versiune."
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "Caută un obiect…"
-      change_version: "Schimbă versiunea/limba"
       cost_total: "Cost total"
       cost_sell: "Valoare de vânzare"
       categories: "Categorii"
@@ -113,7 +107,6 @@ champion:
     header: "Campioni"
     subtitle: "Catalog de campioni"
     search_placeholder: "Caută un campion…"
-    change_version: "Schimbă versiunea/limba"
   detail:
     meta_description: "Descoperă %name% din League of Legends, cu statistici, roluri și detalii pentru patch-ul %version%."
     version_locale: "Patch %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "Timp de reîncărcare"
     cost: "Cost"
     range: "Rază de acțiune"
+    video_play: "Redă videoclipul"
+    video_pause: "Întrerupe videoclipul"
     tips_as: "Când joci cu"
     tips_against: "Când joci împotriva"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "Rune"
     subtitle: "Catalog de rune"
     search_placeholder: "Caută o rună…"
-    change_version: "Schimbă versiunea/limba"
   detail:
     title: "Rună: %name%"
     meta_description: "Descoperă detaliile runei %name% din League of Legends. Statistici și efecte actualizate pentru patch-ul %version%."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "Nu s-au găsit rezultate pentru căutarea ta."
     back: "← Înapoi"
-    setup: "Alege versiunea și limba"
   detail : "Vezi detalii →"
 base:
   title: "League of Data Base"

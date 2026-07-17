@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "Настройка"
-  meta: "Выберите предпочитаемую версию игры и язык, чтобы настроить свой опыт использования League of Data Base. Вся статистика и данные будут адаптированы под ваши настройки."
   form:
     version: "Версия"
     language: "Язык"
-    note_latest: "*Последняя версия выбирается автоматически."
     remember: "Запомнить меня"
     submit: "Отправить"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Прогресс разработки"
     back: "← Назад"
     summoners: "Смотреть заклинания призывателя"
-    setup: "Выбрать версию и язык"
     footer: "Нужно срочно? Напишите нам или ознакомьтесь с планами развития. Скоро появятся новые обновления."
     meanwhile: "А пока вы можете:"
 
@@ -64,7 +60,6 @@ item:
     tier: "Уровень %depth%"
     availability: "Доступность"
     back: "← Назад к списку"
-    setup: "Изменить версию и язык"
   list:
       title: "Предметы"
       meta_description: "Просмотрите все предметы League of Legends, доступные в патче %version%. Найдите подробную статистику, стоимость и эффекты, обновлённые для последней версии."
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "Поиск предмета…"
-      change_version: "Изменить версию/язык"
       cost_total: "Итоговая стоимость"
       cost_sell: "Стоимость продажи"
       categories: "Категории"
@@ -113,7 +107,6 @@ champion:
     header: "Чемпионы"
     subtitle: "Каталог чемпионов"
     search_placeholder: "Поиск чемпиона…"
-    change_version: "Изменить версию/язык"
   detail:
     meta_description: "Узнайте о %name% из League of Legends: статистика, роли и подробности для патча %version%."
     version_locale: "Патч %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "Перезарядка"
     cost: "Стоимость"
     range: "Дальность"
+    video_play: "Воспроизвести видео"
+    video_pause: "Приостановить видео"
     tips_as: "Играя за"
     tips_against: "Играя против"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "Руны"
     subtitle: "Каталог рун"
     search_placeholder: "Поиск руны…"
-    change_version: "Изменить версию/язык"
   detail:
     title: "Руна: %name%"
     meta_description: "Узнайте подробности о руне %name% в League of Legends. Статистика и эффекты обновлены для патча %version%."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "По вашему запросу ничего не найдено."
     back: "← Назад"
-    setup: "Выбрать версию и язык"
   detail : "Подробнее →"
 base:
   title: "League of Data Base"

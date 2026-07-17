@@ -38,7 +38,7 @@ final class SummonerController extends AbstractResourceController
         try {
             $data = $this->summoners->paginate($sel['version'], $sel['lang'], 0, 1);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($sel, $e);
+            return $this->redirectToHomeWithError($sel, $e);
         }
 
         $data['meta']['version'] = $sel['version'];
@@ -64,7 +64,7 @@ final class SummonerController extends AbstractResourceController
             $image    = $this->summoners->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
             $summoner = $this->summoners->getByName($name, $sel['version'], $sel['lang']);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($sel, $e);
+            return $this->redirectToHomeWithError($sel, $e);
         }
 
         return $this->render('summoner/detail.html.twig', [

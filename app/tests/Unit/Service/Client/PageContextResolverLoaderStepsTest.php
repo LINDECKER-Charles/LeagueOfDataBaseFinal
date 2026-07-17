@@ -43,7 +43,7 @@ final class PageContextResolverLoaderStepsTest extends TestCase
             ['type' => 'item', 'perPage' => 4, 'page' => 1],
             ['type' => 'summoner', 'perPage' => 4, 'page' => 1],
             ['type' => 'runesReforged', 'perPage' => 4, 'page' => 1],
-        ], $this->resolver()->loaderSteps('/home'));
+        ], $this->resolver()->loaderSteps('/'));
     }
 
     public function testListUsesRouteDefaults(): void
@@ -78,13 +78,15 @@ final class PageContextResolverLoaderStepsTest extends TestCase
 
     public function testTrailingSlashIsNormalised(): void
     {
-        self::assertCount(4, $this->resolver()->loaderSteps('/home/'));
+        self::assertCount(1, $this->resolver()->loaderSteps('/champions/'));
     }
 
     public function testDetailAndUnknownPathsWarmNothing(): void
     {
+        // '/home' is the legacy home URL: it 301s to '/' before rendering, so the
+        // loader never warms it.
         $resolver = $this->resolver();
-        foreach (['/champion/Ahri', '/object/1001', '/rune/8000', '/', '/working-progress'] as $path) {
+        foreach (['/champion/Ahri', '/object/1001', '/rune/8000', '/home', '/working-progress'] as $path) {
             self::assertSame([], $resolver->loaderSteps($path), $path);
         }
     }

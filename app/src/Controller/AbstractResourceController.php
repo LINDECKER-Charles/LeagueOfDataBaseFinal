@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Centralise les dépendances transverses et la gestion d'erreur « données absentes »
  * qui étaient dupliquées à l'identique dans chaque contrôleur (view-model client,
- * redirection vers le setup avec flash, formatage du message d'erreur).
+ * redirection vers la home avec flash, formatage du message d'erreur).
  */
 abstract class AbstractResourceController extends AbstractController
 {
@@ -35,17 +35,18 @@ abstract class AbstractResourceController extends AbstractController
     }
 
     /**
-     * Redirige vers la configuration en signalant l'absence de données (version/langue
-     * invalide ou panne upstream) via un flash d'erreur.
+     * Redirige vers la home en signalant l'absence de données (version/langue
+     * invalide ou panne upstream) via un flash d'erreur — le switcher du header
+     * y permet de corriger la sélection.
      *
      * @param array{version?:string, lang?:string} $ctx
      */
-    protected function redirectToSetupWithError(array $ctx, \Throwable $e): Response
+    protected function redirectToHomeWithError(array $ctx, \Throwable $e): Response
     {
         $this->requestStack->getSession()->getFlashBag()->clear();
         $this->addFlash('error', $this->dataError($ctx, $e));
 
-        return $this->redirectToRoute('app_setup');
+        return $this->redirectToRoute('app_home');
     }
 
     /**

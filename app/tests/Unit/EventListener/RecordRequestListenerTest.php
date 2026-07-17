@@ -73,7 +73,7 @@ final class RecordRequestListenerTest extends TestCase
     public function testNonResourceRouteIsNotRecorded(): void
     {
         ($this->listener)($this->terminate('admin_dashboard'));
-        ($this->listener)($this->terminate('app_setup'));
+        ($this->listener)($this->terminate('app_home_legacy'));
 
         self::assertFalse($this->store->hasDay(gmdate('Y-m-d')));
     }

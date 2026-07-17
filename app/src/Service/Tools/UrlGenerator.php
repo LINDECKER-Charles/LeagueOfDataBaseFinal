@@ -21,23 +21,21 @@ class UrlGenerator {
      * 2. Si aucun "referer" n'est présent dans les en-têtes → retourne la route de fallback.
      * 3. Si l'option $sameHostOnly est activée, vérifie que le referer partage le même host :
      *    - si ce n'est pas le cas → retourne la route de fallback.
-     * 4. Si le referer pointe vers la racine `/` → redirige automatiquement vers la route `app_home`.
-     * 5. Dans tous les autres cas → retourne l'URL du referer tel quel.
+     * 4. Dans tous les autres cas → retourne l'URL du referer tel quel.
      *
      * @param string $fallbackRoute   Nom de la route Symfony à utiliser comme URL de secours
-     *                                si aucune URL valide ne peut être générée (par défaut "app_setup").
+     *                                si aucune URL valide ne peut être générée (par défaut "app_home").
      * @param array  $fallbackParams  Paramètres éventuels à passer à la route de fallback.
      * @param bool   $sameHostOnly    Si `true`, n'autorise que des referers provenant du même host
      *                                que la requête courante (sécurité contre redirection externe).
      *
-     * @return string L'URL de retour (soit le referer, soit `/home` si referer == `/`,
-     *                soit l'URL générée de fallback).
+     * @return string L'URL de retour (soit le referer, soit l'URL générée de fallback).
      *
      * @see \Symfony\Component\HttpFoundation\Request::headers
      * @see \Symfony\Component\Routing\RouterInterface::generate()
      */
     public function generateBackurl(
-        string $fallbackRoute = 'app_setup',
+        string $fallbackRoute = 'app_home',
         array $fallbackParams = [],
         bool $sameHostOnly = true
     ) {
@@ -63,12 +61,6 @@ class UrlGenerator {
             }
         }
 
-        // Vérifie si l'URL précédente correspond à la racine `/`
-        $path = parse_url($referer, PHP_URL_PATH);
-        if ($path === '/' || $path === '') {
-            return $this->router->generate('app_home');
-        }
-
         return $referer;
     }
 
@@ -80,13 +72,13 @@ class UrlGenerator {
      * @param string $url          URL initiale
      * @param array  $overrides    ['version' => '15.1.1', 'lang' => 'fr_FR'] (valeur null => suppression)
      * @param array  $removeKeys   ['foo','bar'] : clés à supprimer avant overrides
-     * @param array  $skipPaths    ['/','/working-progress'] : ne rien toucher si path ∈ liste
+     * @param array  $skipPaths    ['/working-progress'] : ne rien toucher si path ∈ liste
      */
     public function rewriteQueryParams(
         string $url,
         array $overrides = [],
         array $removeKeys = [],
-        array $skipPaths = ['/', '/working-progress']
+        array $skipPaths = ['/working-progress']
     ): string {
         // Décompose (compat: query & fragment)
         $path   = parse_url($url, PHP_URL_PATH)   ?? '/';

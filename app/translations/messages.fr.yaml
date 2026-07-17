@@ -25,12 +25,9 @@ homepage:
     see_all: "Voir toutes les runes"
 
 setup:
-  title: "Configuration"
-  meta: "Choisissez votre version du jeu et votre langue préférées pour personnaliser votre expérience League of Data Base. Toutes les statistiques et données s’adapteront à vos paramètres."
   form:
     version: "Version"
     language: "Langue"
-    note_latest: "*La dernière version est automatiquement sélectionnée."
     remember: "Se souvenir de moi"
     submit: "Valider"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Progression du build"
     back: "← Retour"
     summoners: "Voir les sorts d’invocateur"
-    setup: "Choisir la version et la langue"
     footer: "Vous en avez besoin rapidement ? Contactez-nous ou consultez la roadmap. D’autres mises à jour arrivent."
     meanwhile: "En attendant, vous pouvez :"
 
@@ -66,7 +62,6 @@ item:
     tier: "Palier %depth%"
     availability: "Disponibilité"
     back: "← Retour à la liste"
-    setup: "Changer version & langue"
   list:
     title: "Objets"
     meta_description: "Parcourez tous les objets de League of Legends disponibles au patch %version%. Retrouvez statistiques détaillées, coûts et effets à jour pour la dernière version."
@@ -76,7 +71,6 @@ item:
     max: "MAX"
     ok: "OK"
     search_placeholder: "Rechercher un objet…"
-    change_version: "Changer version/langue"
     cost_total: "Coût total"
     cost_sell: "Revente"
     categories: "Catégories"
@@ -90,7 +84,6 @@ rune:
     header: "Runes"
     subtitle: "Catalogue des runes"
     search_placeholder: "Rechercher une rune…"
-    change_version: "Changer version/langue"
   detail:
     meta_description: "Découvrez tout sur la rune %name% dans League of Legends. Statistiques et effets mis à jour pour le patch %version%."
     title: "Rune : %name%"
@@ -133,7 +126,6 @@ champion:
     header: "Champions"
     subtitle: "Catalogue des champions"
     search_placeholder: "Rechercher un champion…"
-    change_version: "Changer version/langue"
   detail:
     meta_description: "Découvrez %name% de League of Legends avec statistiques, rôles et détails pour le patch %version%."
     version_locale: "Patch %version% • %locale%"
@@ -146,6 +138,8 @@ champion:
     cooldown: "Recharge"
     cost: "Coût"
     range: "Portée"
+    video_play: "Lire la vidéo"
+    video_pause: "Mettre la vidéo en pause"
     charges: "Charges"
     ranks: "Rangs"
     tips: "Conseils"
@@ -186,7 +180,6 @@ common:
   no_result:
     text: "Aucun résultat trouvé pour votre recherche."
     back: "← Retour"
-    setup: "Choisir la version et la langue"
   detail : "Voir le détail →"
 
 filter:

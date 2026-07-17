@@ -68,7 +68,7 @@ final class PageContextResolver
      * from the ambient request or the session — so the loader stream holds no
      * session lock and this method has no hidden RequestStack dependency. null
      * means "absent from the query" → the route default applies. Empty for pages
-     * that ingest no image batch (detail, setup, working-progress).
+     * that ingest no image batch (detail, working-progress).
      *
      * @param int|null $page    requested page number (null → 1)
      * @param int|null $perPage requested page size (null/<=0 → route default; clamped to route max)
@@ -78,7 +78,7 @@ final class PageContextResolver
     {
         $p = strtolower(rtrim($path, '/')) ?: '/';
 
-        if ($p === '/home') {
+        if ($p === '/') {
             return array_map(
                 static fn (string $type): array => ['type' => $type, 'perPage' => self::HOME_PER_PAGE, 'page' => 1],
                 self::HOME_TYPES,

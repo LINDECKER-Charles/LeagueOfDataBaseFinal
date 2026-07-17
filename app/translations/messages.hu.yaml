@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "Beállítás"
-  meta: "Válaszd ki a preferált játékverziót és nyelvet a League of Data Base élményed testreszabásához. Minden statisztika és adat a beállításaidhoz igazodik."
   form:
     version: "Verzió"
     language: "Nyelv"
-    note_latest: "*A legújabb verzió automatikusan ki van választva."
     remember: "Emlékezz rám"
     submit: "Küldés"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Fejlesztés állapota"
     back: "← Vissza"
     summoners: "Idéző varázslatok megtekintése"
-    setup: "Verzió és nyelv kiválasztása"
     footer: "Sürgősen szükséged van rá? Írj nekünk, vagy nézd meg a fejlesztési tervet. Több frissítés is érkezik."
     meanwhile: "Addig is megteheted a következőket:"
 
@@ -64,7 +60,6 @@ item:
     tier: "%depth%. szint"
     availability: "Elérhetőség"
     back: "← Vissza a listához"
-    setup: "Verzió és nyelv módosítása"
   list:
       title: "Tárgyak"
       meta_description: "Böngéssz az összes League of Legends tárgy között, amely elérhető a(z) %version% patchben. Találj részletes statisztikákat, árakat és hatásokat, frissítve a legújabb verzióhoz."
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "Tárgy keresése…"
-      change_version: "Verzió/nyelv módosítása"
       cost_total: "Teljes ár"
       cost_sell: "Eladási érték"
       categories: "Kategóriák"
@@ -113,7 +107,6 @@ champion:
     header: "Bajnokok"
     subtitle: "Bajnokkatalógus"
     search_placeholder: "Bajnok keresése…"
-    change_version: "Verzió/nyelv módosítása"
   detail:
     meta_description: "Fedezd fel %name% bajnokot a League of Legendsből, statisztikákkal, szerepkörökkel és részletekkel a(z) %version% patchhez."
     version_locale: "%version% patch • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "Újratöltődés"
     cost: "Költség"
     range: "Hatótávolság"
+    video_play: "Videó lejátszása"
+    video_pause: "Videó szüneteltetése"
     tips_as: "Amikor vele játszol"
     tips_against: "Amikor ellene játszol"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "Rúnák"
     subtitle: "Rúnakatalógus"
     search_placeholder: "Rúna keresése…"
-    change_version: "Verzió/nyelv módosítása"
   detail:
     title: "Rúna: %name%"
     meta_description: "Fedezd fel a(z) %name% rúna részleteit a League of Legendsben. Statisztikák és hatások frissítve a(z) %version% patchhez."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "Nincs találat a keresésedre."
     back: "← Vissza"
-    setup: "Verzió és nyelv kiválasztása"
   detail : "Részletek megtekintése →"
 base:
   title: "League of Data Base"

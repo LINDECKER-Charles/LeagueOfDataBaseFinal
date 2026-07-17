@@ -25,12 +25,9 @@ homepage:
   
 
 setup:
-  title: "Setup"
-  meta: "Choose your preferred game version and language to customize your League of Data Base experience. All stats and data will adapt to your settings."
   form:
     version: "Version"
     language: "Language"
-    note_latest: "*The latest version is automatically selected."
     remember: "Remember me"
     submit: "Submit"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Build progress"
     back: "← Go back"
     summoners: "See Summoner Spells"
-    setup: "Choose version & language"
     footer: "Need this soon? Ping us or check the roadmap. More updates are coming."
     meanwhile: "Meanwhile, you can:"
 
@@ -66,7 +62,6 @@ item:
     tier: "Tier %depth%"
     availability: "Availability"
     back: "← Back to list"
-    setup: "Change version & language"
   list:
       title: "Items"
       meta_description: "Browse all League of Legends items available in patch %version%. Find detailed stats, costs, and effects updated for the latest version."
@@ -76,7 +71,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "Search for an item…"
-      change_version: "Change version/language"
       cost_total: "Total cost"
       cost_sell: "Sell value"
       categories: "Categories"
@@ -115,7 +109,6 @@ champion:
     header: "Champions"
     subtitle: "Champion catalog"
     search_placeholder: "Search for a champion…"
-    change_version: "Change version/language"
   detail:
     meta_description: "Discover %name% from League of Legends, with stats, roles and details for patch %version%."
     version_locale: "Patch %version% • %locale%"
@@ -128,6 +121,8 @@ champion:
     cooldown: "Cooldown"
     cost: "Cost"
     range: "Range"
+    video_play: "Play video"
+    video_pause: "Pause video"
     charges: "Charges"
     ranks: "Ranks"
     tips: "Tips"
@@ -161,7 +156,6 @@ rune:
     header: "Runes"
     subtitle: "Rune catalog"
     search_placeholder: "Search for a rune…"
-    change_version: "Change version/language"
   detail:
     title: "Rune: %name%"
     meta_description: "Discover the details of the rune %name% in League of Legends. Stats and effects updated for patch %version%."
@@ -186,7 +180,6 @@ common:
   no_result:
     text: "No results found for your search."
     back: "← Back"
-    setup: "Choose version & language"
   detail : "See details →"
 
 filter:

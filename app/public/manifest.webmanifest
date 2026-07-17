@@ -3,7 +3,7 @@
   "name": "League Of Data Base",
   "short_name": "LoDB",
   "description": "Encyclopédie League of Legends : champions, objets, runes et sorts d'invocateur, patch par patch.",
-  "start_url": "/home",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0a1428",

@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "Setup"
-  meta: "Wähle deine bevorzugte Spielversion und Sprache, um dein League of Data Base-Erlebnis anzupassen. Alle Statistiken und Daten passen sich deinen Einstellungen an."
   form:
     version: "Version"
     language: "Sprache"
-    note_latest: "*Die neueste Version wird automatisch ausgewählt."
     remember: "Angemeldet bleiben"
     submit: "Absenden"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Baufortschritt"
     back: "← Zurück"
     summoners: "Beschwörerzauber ansehen"
-    setup: "Version & Sprache wählen"
     footer: "Brauchst du das bald? Schreib uns oder schau in die Roadmap. Weitere Updates folgen."
     meanwhile: "In der Zwischenzeit kannst du:"
 
@@ -64,7 +60,6 @@ item:
     tier: "Stufe %depth%"
     availability: "Verfügbarkeit"
     back: "← Zurück zur Liste"
-    setup: "Version & Sprache ändern"
   list:
       title: "Items"
       meta_description: "Durchstöbere alle League of Legends Items, die in Patch %version% verfügbar sind. Finde detaillierte Statistiken, Kosten und Effekte, aktualisiert für die neueste Version."
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "Nach einem Item suchen…"
-      change_version: "Version/Sprache ändern"
       cost_total: "Gesamtkosten"
       cost_sell: "Verkaufswert"
       categories: "Kategorien"
@@ -113,7 +107,6 @@ champion:
     header: "Champions"
     subtitle: "Champion-Katalog"
     search_placeholder: "Nach einem Champion suchen…"
-    change_version: "Version/Sprache ändern"
   detail:
     meta_description: "Entdecke %name% aus League of Legends mit Statistiken, Rollen und Details für Patch %version%."
     version_locale: "Patch %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "Abklingzeit"
     cost: "Kosten"
     range: "Reichweite"
+    video_play: "Video abspielen"
+    video_pause: "Video pausieren"
     tips_as: "Beim Spielen"
     tips_against: "Gegen diesen Champion"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "Runen"
     subtitle: "Runen-Katalog"
     search_placeholder: "Nach einer Rune suchen…"
-    change_version: "Version/Sprache ändern"
   detail:
     title: "Rune: %name%"
     meta_description: "Entdecke die Details der Rune %name% in League of Legends. Statistiken und Effekte aktualisiert für Patch %version%."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "Keine Ergebnisse für deine Suche gefunden."
     back: "← Zurück"
-    setup: "Version & Sprache wählen"
   detail : "Details ansehen →"
 base:
   title: "League of Data Base"

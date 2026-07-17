@@ -38,7 +38,7 @@ final class ChampionController extends AbstractResourceController
         try {
             $data = $this->championManager->paginate($sel['version'], $sel['lang'], 0, 1);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($sel, $e);
+            return $this->redirectToHomeWithError($sel, $e);
         }
 
         $data['meta']['version'] = $sel['version'];
@@ -64,7 +64,7 @@ final class ChampionController extends AbstractResourceController
             $image    = $this->championManager->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
             $champion = $this->championManager->getByName($name, $sel['version'], $sel['lang']);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($sel, $e);
+            return $this->redirectToHomeWithError($sel, $e);
         }
 
         // The full detail (spells, skins, lore, tips) is best-effort: if the

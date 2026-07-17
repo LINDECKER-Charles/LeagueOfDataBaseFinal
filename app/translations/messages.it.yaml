@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "Configurazione"
-  meta: "Scegli la versione di gioco e la lingua preferite per personalizzare la tua esperienza su League of Data Base. Tutte le statistiche e i dati si adatteranno alle tue impostazioni."
   form:
     version: "Versione"
     language: "Lingua"
-    note_latest: "*L'ultima versione viene selezionata automaticamente."
     remember: "Ricordami"
     submit: "Invia"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Avanzamento della build"
     back: "← Torna indietro"
     summoners: "Vedi gli Incantesimi da Evocatore"
-    setup: "Scegli versione e lingua"
     footer: "Ti serve presto? Contattaci o consulta la roadmap. Altri aggiornamenti in arrivo."
     meanwhile: "Nel frattempo, puoi:"
 
@@ -64,7 +60,6 @@ item:
     tier: "Livello %depth%"
     availability: "Disponibilità"
     back: "← Torna all'elenco"
-    setup: "Cambia versione e lingua"
   list:
       title: "Oggetti"
       meta_description: "Sfoglia tutti gli oggetti di League of Legends disponibili nella patch %version%. Trova statistiche dettagliate, costi ed effetti aggiornati all'ultima versione."
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "Cerca un oggetto…"
-      change_version: "Cambia versione/lingua"
       cost_total: "Costo totale"
       cost_sell: "Valore di vendita"
       categories: "Categorie"
@@ -113,7 +107,6 @@ champion:
     header: "Campioni"
     subtitle: "Catalogo campioni"
     search_placeholder: "Cerca un campione…"
-    change_version: "Cambia versione/lingua"
   detail:
     meta_description: "Scopri %name% di League of Legends, con statistiche, ruoli e dettagli per la patch %version%."
     version_locale: "Patch %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "Tempo di recupero"
     cost: "Costo"
     range: "Gittata"
+    video_play: "Riproduci il video"
+    video_pause: "Metti in pausa il video"
     tips_as: "Giocando come"
     tips_against: "Giocando contro"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "Rune"
     subtitle: "Catalogo rune"
     search_placeholder: "Cerca una runa…"
-    change_version: "Cambia versione/lingua"
   detail:
     title: "Runa: %name%"
     meta_description: "Scopri i dettagli della runa %name% in League of Legends. Statistiche ed effetti aggiornati per la patch %version%."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "Nessun risultato trovato per la tua ricerca."
     back: "← Indietro"
-    setup: "Scegli versione e lingua"
   detail : "Vedi dettagli →"
 base:
   title: "League of Data Base"

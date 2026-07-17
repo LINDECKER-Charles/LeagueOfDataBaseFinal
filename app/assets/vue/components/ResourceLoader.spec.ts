@@ -145,7 +145,7 @@ describe('ResourceLoader', () => {
 
     it('names the four home resources and marks each ready as its group completes', async () => {
         const w = mountLoader()
-        beforeVisit('/home?version=15.1.1&lang=en_US')
+        beforeVisit('/?version=15.1.1&lang=en_US')
         vi.advanceTimersByTime(300)
         await w.vm.$nextTick()
         expect(w.vm.active).toEqual(['champions', 'items', 'runes', 'summoners'])
@@ -160,7 +160,7 @@ describe('ResourceLoader', () => {
 
         es.emit('done', { stored: 4, total: 4 })
         vi.advanceTimersByTime(500)
-        expect(visit).toHaveBeenCalledWith('/home?version=15.1.1&lang=en_US')
+        expect(visit).toHaveBeenCalledWith('/?version=15.1.1&lang=en_US')
         w.unmount()
     })
 

@@ -52,54 +52,28 @@ class HomeController extends AbstractController
     }
 
     /**
-     * Page de configuration initiale (version/langue).
-     *
-     * Construit un view-model minimal via {@see App\Dto\ClientData::fromServices()}
-     * et l’injecte dans le template `home/setupPage.html.twig` sous la clé `client`.
-     *
-     * Variables Twig exposées :
-     *  - client.versions        (string[])
-     *  - client.languages       (string[])
-     *  - client.languageLabels  (array<string,string>)
-     *  - client.currentLocale   (string)
-     *  - client.session         (array{locale:?string, version:?string})
-     *
-     * @route  /setup  name=app_setup
-     *
-     * @return \Symfony\Component\HttpFoundation\Response Réponse HTML de la page setup.
-     */
-    #[Route('/', name: 'app_setup')]
-    public function setup(): Response
-    {
-        return $this->render('home/setupPage.html.twig', [
-            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
-            'typeV' => 'LOL',
-        ]);
-    }
-
-    /**
      * Traitement du formulaire de sélection version/langue.
      *
      * Étapes :
      *  1) Valide le token CSRF (`_token` avec l'ID 'setup_form').
      *  2) Récupère les champs POST : `langue` (string), `version` (string), `remember` (bool).
      *  3) Valide le couple (version, langue) via {@see App\Service\VersionManager::validateSelection()}.
-     *     - En cas d’erreurs : clear du FlashBag, ajout des messages d’erreur, redirection vers la page d’origine (Referer) avec fallback `/setup`.
+     *     - En cas d’erreurs : clear du FlashBag, ajout des messages d’erreur, redirection vers la page d’origine (Referer) avec fallback la home.
      *  4) En cas de succès :
      *     - Si `remember` = true : crée un cookie signé via {@see App\Service\ClientManager::makeRememberCookie()}.
      *       Sinon : envoie un cookie d’effacement via {@see App\Service\ClientManager::makeForgetCookie()}.
      *     - Écrit les préférences en session via {@see App\Service\ClientManager::setLocaleInSession()} et {@see App\Service\ClientManager::setVersionInSession()}.
      *     - Clear du FlashBag puis ajout d’un flash 'success'.
-     *     - Redirection vers la page d’origine (Referer) avec fallback `/setup`.
+     *     - Redirection vers la page d’origine (Referer) avec fallback la home.
      *
      * Notes sécurité :
-     *  - Le Referer est contrôlé pour rester sur le même host ; sinon fallback `/setup`.
+     *  - Le Referer est contrôlé pour rester sur le même host ; sinon fallback la home.
      *  - Le cookie “remember” assure l’intégrité via HMAC mais pas la confidentialité.
      *
      * @route   /setup-submit  name=app_setup_save  methods=POST
      *
      * @param  \Symfony\Component\HttpFoundation\Request $request Requête HTTP contenant le formulaire.
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse  Redirection vers la page d’origine ou `/setup`.
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse  Redirection vers la page d’origine ou la home.
      */
     #[Route('/setup-submit', name: 'app_setup_save', methods: ['POST'])]
     public function save(Request $request): RedirectResponse
@@ -122,7 +96,7 @@ class HomeController extends AbstractController
             return $this->redirect($backUrl);
         }
 
-        // 2) Réécrit la query (sauf sur / et /working-progress), en nettoyant l’existant
+        // 2) Réécrit la query (sauf sur /working-progress), en nettoyant l’existant
         $backUrl = $this->urlGenerator->rewriteQueryParams(
             $backUrl,
             overrides: ['version' => $version, 'lang' => $language],
@@ -176,7 +150,7 @@ class HomeController extends AbstractController
      *
      * @return Response Page HTML de la home affichant les aperçus de Summoners et Items.
      */
-    #[Route('/home', name: 'app_home')]
+    #[Route('/', name: 'app_home')]
     public function home(): Response{
         $session = $this->clientManager->getSession();
         $version = $session['version'];
@@ -189,6 +163,17 @@ class HomeController extends AbstractController
             'summoners' => $this->preview('summoner',      fn () => $this->summonerManager->paginate($version, $lang, 4, 1)),
             'runes'     => $this->preview('runesReforged', fn () => $this->runeManager->paginate($version, $lang, 4, 1)),
         ]);
+    }
+
+    /**
+     * Ancienne URL de la home. Redirection permanente : des PWA installées ont
+     * `/home` en start_url (manifest mis en cache) et des liens externes la
+     * référencent encore.
+     */
+    #[Route('/home', name: 'app_home_legacy')]
+    public function homeLegacy(): RedirectResponse
+    {
+        return $this->redirectToRoute('app_home', status: Response::HTTP_MOVED_PERMANENTLY);
     }
 
     /**

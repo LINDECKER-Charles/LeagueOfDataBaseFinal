@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "Nastavení"
-  meta: "Vyberte si preferovanou verzi hry a jazyk a přizpůsobte si tak svůj zážitek z League of Data Base. Všechny statistiky a data se přizpůsobí vašemu nastavení."
   form:
     version: "Verze"
     language: "Jazyk"
-    note_latest: "*Nejnovější verze je vybrána automaticky."
     remember: "Zapamatovat si mě"
     submit: "Odeslat"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Průběh vývoje"
     back: "← Zpět"
     summoners: "Zobrazit přivolávací kouzla"
-    setup: "Vybrat verzi a jazyk"
     footer: "Potřebujete to brzy? Napište nám nebo se podívejte na plán vývoje. Další aktualizace se blíží."
     meanwhile: "Mezitím můžete:"
 
@@ -64,7 +60,6 @@ item:
     tier: "Úroveň %depth%"
     availability: "Dostupnost"
     back: "← Zpět na seznam"
-    setup: "Změnit verzi a jazyk"
   list:
       title: "Předměty"
       meta_description: "Procházejte všechny předměty League of Legends dostupné v patchi %version%. Najděte podrobné statistiky, ceny a efekty aktualizované pro nejnovější verzi."
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "Hledat předmět…"
-      change_version: "Změnit verzi/jazyk"
       cost_total: "Celková cena"
       cost_sell: "Prodejní cena"
       categories: "Kategorie"
@@ -113,7 +107,6 @@ champion:
     header: "Šampioni"
     subtitle: "Katalog šampionů"
     search_placeholder: "Hledat šampiona…"
-    change_version: "Změnit verzi/jazyk"
   detail:
     meta_description: "Objevte šampiona %name% z League of Legends se statistikami, rolemi a podrobnostmi pro patch %version%."
     version_locale: "Patch %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "Doba obnovy"
     cost: "Cena"
     range: "Dosah"
+    video_play: "Přehrát video"
+    video_pause: "Pozastavit video"
     tips_as: "Když hrajete za"
     tips_against: "Když hrajete proti"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "Runy"
     subtitle: "Katalog run"
     search_placeholder: "Hledat runu…"
-    change_version: "Změnit verzi/jazyk"
   detail:
     title: "Runa: %name%"
     meta_description: "Objevte podrobnosti runy %name% v League of Legends. Statistiky a efekty aktualizované pro patch %version%."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "Pro vaše hledání nebyly nalezeny žádné výsledky."
     back: "← Zpět"
-    setup: "Vybrat verzi a jazyk"
   detail : "Zobrazit podrobnosti →"
 base:
   title: "League of Data Base"
