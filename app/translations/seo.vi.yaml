@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — bách khoa toàn thư Liên Minh Huyền Thoại"
+  description: "Tướng, trang bị, ngọc bổ trợ và phép bổ trợ Liên Minh Huyền Thoại cho phiên bản %version% — chỉ số, kỹ năng và chi tiết bằng 21 ngôn ngữ."
+champion:
+  list:
+    title: "Danh sách tướng Liên Minh Huyền Thoại"
+    description: "Toàn bộ %count% tướng Liên Minh Huyền Thoại với vai trò, kỹ năng và cốt truyện — dữ liệu phiên bản %version%."
+  detail:
+    title: "%name%, tướng LMHT"
+    description: "%name% trong Liên Minh Huyền Thoại: kỹ năng, trang phục, cốt truyện và mẹo chơi, cập nhật cho phiên bản %version%."
+item:
+  list:
+    title: "Danh sách trang bị Liên Minh Huyền Thoại"
+    description: "Toàn bộ %count% trang bị Liên Minh Huyền Thoại với giá, chỉ số và công thức ghép — dữ liệu phiên bản %version%."
+  detail:
+    title: "%name%, trang bị LMHT"
+    description: "%name% trong Liên Minh Huyền Thoại: chỉ số, giá, công thức ghép và nâng cấp, cập nhật cho phiên bản %version%."
+rune:
+  list:
+    title: "Danh sách ngọc bổ trợ Liên Minh Huyền Thoại"
+    description: "%count% nhánh ngọc bổ trợ Liên Minh Huyền Thoại với đầy đủ ngọc siêu cấp và ngọc phụ — dữ liệu phiên bản %version%."
+  detail:
+    title: "%name%, nhánh ngọc LMHT"
+    description: "Nhánh ngọc %name% trong Liên Minh Huyền Thoại: ngọc siêu cấp, ô ngọc và hiệu ứng, cập nhật cho phiên bản %version%."
+summoner:
+  list:
+    title: "Danh sách phép bổ trợ Liên Minh Huyền Thoại"
+    description: "Toàn bộ %count% phép bổ trợ Liên Minh Huyền Thoại với thời gian hồi và hiệu ứng — dữ liệu phiên bản %version%."
+  detail:
+    title: "%name%, phép bổ trợ LMHT"
+    description: "Phép bổ trợ %name% trong Liên Minh Huyền Thoại: thời gian hồi và hiệu ứng, cập nhật cho phiên bản %version%."
+donate:
+  title: "Ủng hộ dự án"
+  description: "Giúp League Of Data Base luôn miễn phí và nhanh chóng — ủng hộ dự án bằng một khoản quyên góp."
+legal:
+  notice:
+    description: "Thông tin pháp lý của League Of Data Base: đơn vị phát hành, lưu trữ và liên hệ."
+  privacy:
+    description: "Chính sách quyền riêng tư của League Of Data Base: dữ liệu xử lý, mục đích và quyền của bạn."
+  terms:
+    description: "Điều khoản sử dụng của League Of Data Base."
+  cookies:
+    description: "Chính sách cookie của League Of Data Base: cookie nào được dùng và cách quản lý."
+error:
+  "404":
+    title: "Không tìm thấy trang"
+    eyebrow: "Lạc trong Khe Nứt"
+    body: "Trang này không tồn tại — tài nguyên có thể đã bị gỡ khỏi phiên bản hiện tại."
+    back_home: "Về trang chủ"
+  generic:
+    title: "Đã xảy ra lỗi"
+    body: "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau giây lát."
+
+developers:
+  title: "API cho lập trình viên"
+  description: "API REST JSON trả phí trên dữ liệu cộng đồng League of Legends: hồ sơ công khai, build chia sẻ và xu hướng lượt xem. Bậc miễn phí, gói tín dụng và thuê bao."
+
+trends:
+  title: "Build LoL thịnh hành"
+  description: "Các build công khai của League of Legends xếp hạng theo bình chọn của cộng đồng — lọc theo tướng và chế độ chơi."

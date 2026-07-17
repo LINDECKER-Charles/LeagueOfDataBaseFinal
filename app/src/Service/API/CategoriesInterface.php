@@ -24,7 +24,7 @@ interface CategoriesInterface{
      *
      * @return array Tableau associatif représentant l'entrée trouvée.
      *
-     * @throws \RuntimeException Si aucun élément correspondant à l'identifiant n'est trouvé.
+     * @throws ResourceNotFoundException Si aucun élément ne correspond à l'identifiant (absence définitive → 404).
      */
     public function getByName(string $name, string $version, string $lang): array;
     /**

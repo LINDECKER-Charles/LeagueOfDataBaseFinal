@@ -1,0 +1,61 @@
+{# Active key at a glance: identity plates, month-to-date quota meter, credits,
+   rate limit — then the lifecycle actions (regenerate / revoke). #}
+{% set quota = apiKey.monthlyQuota %}
+{% set remaining = quota - usedThisMonth > 0 ? quota - usedThisMonth : 0 %}
+{% set usedPct = quota > 0 ? ((usedThisMonth / quota) * 100)|round : 100 %}
+<section class="profile-panel" aria-labelledby="api-key-title">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="api-key-title" class="profile-panel__title">{{ 'portal.key.title'|trans({}, 'api') }}</h2>
+        <span class="hx-chip">{{ ('plan.' ~ apiKey.plan.value)|trans({}, 'api') }}</span>
+    </div>
+
+    <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="hx-plate">
+            <span class="hx-plate__label">{{ 'portal.key.label_key'|trans({}, 'api') }}</span>
+            <span class="hx-plate__value font-mono">{{ apiKey.keyPrefix }}…</span>
+        </div>
+        <div class="hx-plate">
+            <span class="hx-plate__label">{{ 'portal.key.label_name'|trans({}, 'api') }}</span>
+            <span class="hx-plate__value">{{ apiKey.name }}</span>
+        </div>
+        <div class="hx-plate">
+            <span class="hx-plate__label">{{ 'portal.key.label_created'|trans({}, 'api') }}</span>
+            <span class="hx-plate__value">{{ apiKey.createdAt|date('d/m/Y') }}</span>
+        </div>
+        <div class="hx-plate">
+            <span class="hx-plate__label">{{ 'portal.key.label_quota'|trans({}, 'api') }}</span>
+            <span class="hx-plate__value">
+                {{ 'portal.key.quota_used'|trans({
+                    '%used%': usedThisMonth|number_format(0, '.', ' '),
+                    '%quota%': quota|number_format(0, '.', ' '),
+                }, 'api') }}
+            </span>
+            <span class="api-meter" aria-hidden="true"><span class="api-meter__fill" style="width: {{ usedPct > 100 ? 100 : usedPct }}%"></span></span>
+            <span class="mt-1.5 text-xs text-text-dim">{{ 'portal.key.quota_remaining'|trans({'%remaining%': remaining|number_format(0, '.', ' ')}, 'api') }}</span>
+        </div>
+        <div class="hx-plate">
+            <span class="hx-plate__label">{{ 'portal.key.label_credits'|trans({}, 'api') }}</span>
+            <span class="hx-plate__value font-mono">{{ apiKey.creditsBalance|number_format(0, '.', ' ') }}</span>
+        </div>
+        <div class="hx-plate">
+            <span class="hx-plate__label">{{ 'portal.key.label_rate'|trans({}, 'api') }}</span>
+            <span class="hx-plate__value">{{ 'portal.key.rate_unit'|trans({'%rate%': apiKey.rateLimitPerMin}, 'api') }}</span>
+            {% if apiKey.hasSubscription %}
+                <span class="mt-1.5 text-xs text-text-dim">{{ 'portal.key.subscription_active'|trans({}, 'api') }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <form method="post" action="{{ path('app_api_key_regenerate') }}" data-turbo="false">
+            <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+            <button type="submit" class="hx-btn-ghost">{{ 'portal.actions.regenerate'|trans({}, 'api') }}</button>
+            <p class="mt-2 max-w-2xl text-xs text-text-dim">{{ 'portal.actions.regenerate_help'|trans({}, 'api') }}</p>
+        </form>
+        <form method="post" action="{{ path('app_api_key_revoke') }}" data-turbo="false" class="text-right">
+            <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+            <button type="submit" class="profile-danger__btn">{{ 'portal.actions.revoke'|trans({}, 'api') }}</button>
+            <p class="mt-2 text-xs text-text-dim">{{ 'portal.actions.revoke_help'|trans({}, 'api') }}</p>
+        </form>
+    </div>
+</section>

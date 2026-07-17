@@ -1,0 +1,12 @@
+{# Supporter seal — a small bevelled heart-gem in gold, shown right after the
+   display name of accounts that donated. Pure inline SVG (no defs/ids, safe to
+   repeat many times per page); label/tooltip are translated. #}
+<span class="supporter-badge" role="img"
+      aria-label="{{ 'community.supporter.badge'|trans }}"
+      title="{{ 'community.supporter.badge'|trans }}">
+  <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+    <path fill="currentColor" d="M12 21 4.8 13.6a4.8 4.8 0 0 1 0-6.7 4.5 4.5 0 0 1 6.4 0l.8.8.8-.8a4.5 4.5 0 0 1 6.4 0 4.8 4.8 0 0 1 0 6.7z"/>
+    <path fill="#010a13" opacity="0.30" d="M12 8.6 8.2 12l3.8 4 3.8-4z"/>
+    <path fill="#f0e6d2" opacity="0.35" d="M12 8.6 8.2 12h7.6z"/>
+  </svg>
+</span>

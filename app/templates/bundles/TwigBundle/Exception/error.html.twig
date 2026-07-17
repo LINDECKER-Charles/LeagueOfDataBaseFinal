@@ -1,0 +1,24 @@
+{# Prod-only generic error page (any status without a dedicated template).
+   Same constraints as error404: no controller, no `client` view-model. #}
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ seo_title('error.generic.title'|trans({}, 'seo')) }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block canonical_link %}{% endblock %}
+
+{% block body %}
+<main class="relative flex flex-1 items-center justify-center px-6 py-20">
+  <div class="hextech-frame relative mx-auto w-full max-w-xl p-10 text-center">
+    <h1 class="font-beaufort text-7xl uppercase tracking-wide text-gold-bright">{{ status_code|default(500) }}</h1>
+    <p class="mt-3 font-beaufort text-xl uppercase tracking-wide text-text">
+      {{ 'error.generic.title'|trans({}, 'seo') }}
+    </p>
+    <p class="mx-auto mt-4 max-w-md font-spiegel text-text-muted">
+      {{ 'error.generic.body'|trans({}, 'seo') }}
+    </p>
+    <div class="mt-8">
+      <a href="{{ path('app_home') }}" class="hx-btn inline-block">{{ 'error.404.back_home'|trans({}, 'seo') }}</a>
+    </div>
+  </div>
+</main>
+{% endblock %}

@@ -6,6 +6,8 @@ namespace App\Controller\Admin;
 use App\Service\Analytics\AnalyticsReportService;
 use App\Service\Analytics\GeoLocator;
 use App\Service\Analytics\RollupService;
+use App\Service\Audit\AuditAction;
+use App\Service\Audit\AuditLogger;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,7 +37,7 @@ final class AnalyticsController extends AbstractController
     }
 
     #[Route('/analytics/rollup', name: 'admin_analytics_rollup', methods: ['POST'])]
-    public function rollup(Request $request, RollupService $rollup): Response
+    public function rollup(Request $request, RollupService $rollup, AuditLogger $audit): Response
     {
         if (!$this->isCsrfTokenValid('analytics_rollup', (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Jeton CSRF invalide.');
@@ -44,6 +46,7 @@ final class AnalyticsController extends AbstractController
         }
 
         $result = $rollup->rollup(includeToday: true);
+        $audit->log(AuditAction::AdminAnalyticsRollup, metadata: ['rolled' => count($result['rolled'])]);
         $this->addFlash('success', sprintf(
             'Consolidation terminée : %d journée(s) écrite(s) dans MinIO.',
             count($result['rolled']),

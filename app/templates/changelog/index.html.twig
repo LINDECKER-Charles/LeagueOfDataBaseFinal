@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ seo_title('changelog.meta.title'|trans) }}{% endblock %}
+{% block meta_description %}{{ 'changelog.meta.description'|trans }}{% endblock %}
+
+{% block body %}
+<main class="changelog-page">
+    <header class="codex-header">
+        <p class="codex-header__title">{{ 'changelog.eyebrow'|trans }}</p>
+        <span class="codex-header__meta">v{{ app_version }}</span>
+    </header>
+
+    <section class="changelog-hero hextech-frame hx-corners">
+        <p class="eyebrow">{{ 'changelog.eyebrow'|trans }}</p>
+        <h1 class="changelog-hero__title text-gold-grad">{{ 'changelog.title'|trans }}</h1>
+        <p class="changelog-hero__lede">{{ 'changelog.lede'|trans }}</p>
+        <p class="changelog-hero__current">
+            <span>{{ 'changelog.current'|trans }}</span>
+            <span class="cl-version-chip cl-version-chip--lg">v{{ app_version }}</span>
+        </p>
+    </section>
+
+    {% if releases is empty %}
+        <p class="changelog-empty" role="status">{{ 'changelog.empty'|trans }}</p>
+    {% else %}
+        <ol class="cl-timeline" role="list">
+            {% for release in releases %}
+                {{ include('changelog/_release.html.twig', { release: release, open: loop.first }) }}
+            {% endfor %}
+        </ol>
+    {% endif %}
+</main>
+{% endblock %}

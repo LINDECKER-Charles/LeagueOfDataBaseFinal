@@ -1,0 +1,49 @@
+{% extends 'admin/_base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Activité · {{ subject.displayName }} · Admin · LODB{% endblock %}
+
+{% set actorTypeLabels = { user: 'utilisateur', admin: 'admin', anonymous: 'anonyme' } %}
+{% set outcomeTones = { success: 'good', failure: 'bad', denied: 'warn' } %}
+{% set params = filters|merge({ id: subject.id }) %}
+
+{% block admin_body %}
+    {{ ui.page_head('Modération', 'Activité — ' ~ subject.displayName, subject.email ~ ' · actions effectuées par ce compte ou le ciblant. Horodatage en UTC.') }}
+
+    <form method="get" action="{{ path('admin_user_activity', { id: subject.id }) }}" class="toolbar">
+        <a class="chip" href="{{ path('admin_users') }}">← Utilisateurs</a>
+        <select name="category" class="input-slim" aria-label="Catégorie d'action">
+            <option value="">Toutes catégories</option>
+            {% for c in categories %}
+                <option value="{{ c.value }}" {{ filters.category == c.value ? 'selected' }}>{{ c.label }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="from" value="{{ filters.from }}" class="input-slim" aria-label="Du">
+        <input type="date" name="to" value="{{ filters.to }}" class="input-slim" aria-label="Au">
+        <button type="submit" class="btn ghost small">Filtrer</button>
+        {% if filters.category or filters.from or filters.to %}<a class="chip" href="{{ path('admin_user_activity', { id: subject.id }) }}">Réinitialiser</a>{% endif %}
+    </form>
+
+    <section class="card">
+        {% set tableRows = [] %}
+        {% for e in rows %}
+            {% set metaBits = [] %}
+            {% for k, v in e.metadata %}{% if v is not null %}{% set metaBits = metaBits|merge([k ~ '=' ~ v]) %}{% endif %}{% endfor %}
+            {% set tableRows = tableRows|merge([[
+                { text: e.at|date('d/m/Y H:i:s', 'UTC') },
+                { text: e.action.label, sub: e.action.category.label ~ (metaBits ? ' · ' ~ metaBits|join(', ') : '') },
+                { text: e.targetLabel ?? '—', sub: e.targetType },
+                { text: e.ip ?? '—' },
+                { text: actorTypeLabels[e.actorType]|default(e.actorType) },
+                { badge: e.outcome.label, tone: outcomeTones[e.outcome.value]|default('') },
+            ]]) %}
+        {% endfor %}
+        {{ ui.table(
+            ['Horodatage (UTC)', 'Action', 'Cible', 'IP', 'Acteur', 'Résultat'],
+            tableRows,
+            'Aucune action journalisée pour ce compte sur cette période.'
+        ) }}
+    </section>
+
+    {{ ui.cursor_pager('admin_user_activity', page, hasMore, params) }}
+{% endblock %}

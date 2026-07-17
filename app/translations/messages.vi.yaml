@@ -183,7 +183,7 @@ footer:
   project:
     title: "Dự Án"
     version: "Phiên bản: Beta 2.0"
-    updated: "Cập nhật: 03/08/2025"
+    updated: "Cập nhật: 17/07/2026"
 
   contact:
     title: "Liên Hệ"
@@ -211,3 +211,103 @@ header:
     item: "Trang bị"
     runes: "Ngọc bổ trợ"
     summoner: "Phép bổ trợ"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "hoặc"
+  google:
+    cta: "Tiếp tục với Google"
+    unavailable: "Đăng nhập Google chưa được cấu hình trên máy chủ này."
+    failed: "Đăng nhập Google thất bại. Vui lòng thử lại."
+  register:
+    password: "Mật khẩu"
+    password_confirm: "Xác nhận mật khẩu"
+    password_mismatch: "Hai mật khẩu không khớp."
+    password_help: "Ít nhất 12 ký tự, gồm chữ thường, chữ hoa, chữ số và ký tự đặc biệt."
+  password:
+    rule_length: "Ít nhất 12 ký tự"
+    rule_lowercase: "Ít nhất một chữ thường"
+    rule_uppercase: "Ít nhất một chữ hoa"
+    rule_digit: "Ít nhất một chữ số"
+    rule_special: "Ít nhất một ký tự đặc biệt"
+    rule_match: "Hai mật khẩu khớp nhau"
+    too_common: "Mật khẩu này quá phổ biến. Hãy chọn mật khẩu riêng hơn."
+  flash:
+    banned: "Tài khoản này đã bị đình chỉ bởi đội ngũ kiểm duyệt."
+
+profile:
+  identity:
+    title: "Danh tính triệu hồi sư"
+    username: "Tên triệu hồi sư"
+    tag: "Thẻ Riot"
+    tag_help: "Tùy chọn: phần sau dấu # trong Riot ID của bạn — với GG#EUW, hãy nhập EUW."
+    url_warning: "Đổi tên triệu hồi sư cũng thay đổi địa chỉ hồ sơ công khai của bạn."
+    submit: "Cập nhật danh tính"
+    username_taken: "Tên triệu hồi sư này đã được sử dụng."
+    username_invalid: "Tên triệu hồi sư không hợp lệ: 3–24 ký tự (chữ cái, chữ số, dấu chấm, gạch ngang, gạch dưới), bắt đầu bằng chữ cái hoặc chữ số."
+    tag_invalid: "Thẻ Riot không hợp lệ: 3–5 chữ cái hoặc chữ số."
+  password:
+    title: "Đặt mật khẩu"
+    help: "Tài khoản của bạn hiện chỉ đăng nhập bằng Google. Đặt mật khẩu để có thể đăng nhập bằng email nữa."
+    submit: "Đặt mật khẩu"
+  danger:
+    help_no_password: "Xóa tài khoản là vĩnh viễn: mục yêu thích và các bản build sẽ bị xóa."
+  flash:
+    identity_saved: "Đã cập nhật danh tính triệu hồi sư."
+    password_set: "Đã đặt mật khẩu — giờ bạn cũng có thể đăng nhập bằng email."
+    password_exists: "Tài khoản này đã có mật khẩu."
+
+build:
+  mode:
+    sr: "Summoner's Rift"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Arena"
+  editor:
+    ghost_mode: "Không khả dụng trong chế độ chơi này"
+    context:
+      title: "Bối cảnh trận đấu"
+      version: "Phiên bản"
+      mode: "Chế độ chơi"
+      mode_hint: "Trang bị khả dụng phụ thuộc vào chế độ đã chọn. Trang bị đã đặt không bao giờ bị xóa — chỉ được đánh dấu."
+    dnd:
+      handle: "Kéo để sắp xếp lại"
+      moved_step: "Đã chuyển bước sang vị trí %position%"
+      moved_item: "Đã chuyển trang bị sang vị trí %position%"
+      transferred: "Đã chuyển trang bị sang bước %step%"
+      added: "Đã thêm trang bị vào bước %step%"
+      cancelled: "Đã hủy di chuyển"
+  show:
+    mode: "Chế độ chơi"
+    patch_current: "Tạo trên phiên bản %version% — hiện tại: %current%"
+  error:
+    version:
+      unknown: "Phiên bản trò chơi không xác định."
+    mode:
+      unknown: "Chế độ chơi không xác định."
+    steps:
+      item_mode: "Không khả dụng trong chế độ chơi đã chọn: %items%."
+
+community:
+  nav:
+    trends: "Xu hướng"
+  trends:
+    eyebrow: "Nhịp đập cộng đồng"
+    title: "Build thịnh hành"
+    filter:
+      champion: "Tướng"
+      mode: "Chế độ chơi"
+      all_champions: "Tất cả tướng"
+      all_modes: "Tất cả chế độ"
+      apply: "Lọc"
+    empty: "Không có build công khai nào khớp với bộ lọc này — hãy rèn build của riêng bạn."
+    empty_cta: "Rèn build của tôi"
+  vote:
+    up: "Bình chọn ủng hộ build này"
+    down: "Bình chọn phản đối build này"
+    score_label: "Điểm cộng đồng"
+    login: "Đăng nhập để bình chọn"
+    invalid: "Lượt bình chọn không hợp lệ."
+  supporter:
+    badge: "Người ủng hộ"

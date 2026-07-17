@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "Entwickler-API"
+  title: "API-Schlüssel"
+  back_profile: "Zurück zum Profil"
+  docs_link: "Dokumentation & Preise"
+  profile_link:
+    label: "Entwickler-API"
+    manage: "Meinen API-Schlüssel verwalten"
+  create:
+    title: "Noch kein API-Schlüssel"
+    body: "Erzeuge deinen persönlichen Schlüssel und rufe die öffentliche API auf — Gratis-Tarif: 500 Anfragen pro Monat, 10 pro Minute."
+    name_label: "Name des Schlüssels (optional)"
+    name_placeholder: "meine-app"
+    submit: "Schlüssel erstellen"
+  raw:
+    title: "Dein neuer API-Schlüssel"
+    warning: "Kopiere ihn jetzt — er wird nur dieses eine Mal angezeigt. Gespeichert wird nur ein Fingerabdruck: ein verlorener Schlüssel kann nur neu erzeugt werden."
+    label: "Geheimer Schlüssel"
+    copy: "Schlüssel kopieren"
+    copied: "Kopiert!"
+    copy_error: "Manuell aus dem Feld kopieren"
+  key:
+    title: "Aktiver Schlüssel"
+    label_key: "Schlüssel"
+    label_name: "Name"
+    label_created: "Erstellt am"
+    label_quota: "Monatsverbrauch"
+    quota_used: "%used% / %quota% Anfragen"
+    quota_remaining: "%remaining% übrig in diesem Monat"
+    label_credits: "Vorausbezahlte Credits"
+    label_rate: "Ratenlimit"
+    rate_unit: "%rate% Anfr./Min"
+    subscription_active: "Aktives Abonnement"
+  actions:
+    regenerate: "Schlüssel neu erzeugen"
+    regenerate_help: "Widerruft diesen Schlüssel und stellt ein neues Geheimnis aus — Tarif, Kontingent und Credits bleiben erhalten."
+    revoke: "Widerrufen"
+    revoke_help: "Deaktiviert den Schlüssel sofort (die API kann ihn bis zu einer Cache-Minute noch akzeptieren)."
+  billing:
+    title: "Schlüssel aufwerten"
+    unavailable: "Zahlungen sind auf diesem Server nicht aktiviert."
+    packs_title: "Credit-Pakete"
+    packs_help: "Einmalzahlung — 1 € je 1 000 Anfragen, verbraucht nach dem Monatskontingent, 12 Monate gültig. Jedes Paket hebt dein Ratenlimit auf mindestens 60 Anfr./Min."
+    plans_title: "Abonnements"
+    plans_help: "Erhöhen Monatskontingent und Ratenlimit. Ein aktives Abonnement pro Konto."
+    buy: "Kaufen"
+    subscribe: "Abonnieren"
+    current: "Aktuell"
+    per_month: "/Monat"
+    per_year: "/Jahr"
+    requests_month: "%count% Anfr./Monat"
+    requests_once: "%count% Anfragen"
+    already_subscribed: "Dein Schlüssel trägt bereits ein Abonnement. Zum Tarifwechsel zuerst das laufende Abo kündigen (die Rückstufung greift, sobald Stripe sie bestätigt), dann neu abonnieren."
+  usage:
+    title: "Letzte 30 Tage"
+    total_month: "Diesen Monat verbraucht"
+    day: "Tag"
+    requests: "Anfragen"
+    empty: "Noch kein Verbrauch gemessen — deine ersten API-Aufrufe erscheinen hier innerhalb einer Minute."
+  status:
+    pack_success: "Zahlung bestätigt — deine Credits werden gutgeschrieben (wenige Sekunden)."
+    plan_success: "Abonnement bestätigt — dein Schlüssel wird hochgestuft (wenige Sekunden)."
+    cancelled: "Zahlung abgebrochen — nichts wurde belastet."
+  flash:
+    csrf: "Sitzung abgelaufen, bitte erneut versuchen."
+    created: "API-Schlüssel erstellt."
+    regenerated: "Schlüssel neu erzeugt — das alte Geheimnis funktioniert nicht mehr."
+    revoked: "Schlüssel widerrufen."
+    key_exists: "Du hast bereits einen aktiven Schlüssel."
+    no_key: "Du hast keinen aktiven Schlüssel."
+    invalid_offer: "Unbekanntes Angebot."
+    already_subscribed: "Auf deinem Schlüssel läuft bereits ein Abonnement — kündige es, bevor du erneut abonnierst."
+    need_key: "Erstelle zuerst deinen API-Schlüssel, bevor du kaufst."
+    stripe_unavailable: "Zahlungen sind derzeit nicht verfügbar."
+    gateway: "Der Zahlungsdienst ist nicht erreichbar, bitte später erneut versuchen."
+
+plan:
+  free: "Gratis"
+  credits: "Credits"
+  monthly: "Monatlich"
+  monthly_plus: "Monatlich+"
+  annual: "Jährlich"
+  annual_plus: "Jährlich+"
+
+pack:
+  small: "Paket S"
+  medium: "Paket M"
+  large: "Paket L"
+
+product:
+  pack: "LoDB-API — %requests% Anfragen als Credits"
+  plan: "LoDB-API — Tarif %plan%"
+
+pricing:
+  offer: "Angebot"
+  price: "Preis"
+  volume: "Volumen"
+  rate: "Ratenlimit"
+  validity_note: "Credit-Pakete: 1 € je 1 000 Anfragen, verbraucht nach dem Monatskontingent des aktiven Tarifs, 12 Monate gültig. Jahres-Tarife führen ihr Volumen als Monatskontingent, jährlich abgerechnet."
+
+developers:
+  eyebrow: "Entwickler"
+  title: "Die LeagueOfDataBase-API"
+  intro: "Eine REST-JSON-API über die Community-Daten der Seite: öffentliche Beschwörerprofile, geteilte Builds und Konsultations-Trends. Gratis zum Ausprobieren, tarifiert für echte Lasten."
+  cta: "Schlüssel erstellen"
+  cta_hint: "Anmelden, Gratis-Schlüssel erzeugen, API aufrufen — unter einer Minute."
+  docs_pricing: "Preise"
+  auth:
+    title: "Authentifizierung"
+    body: "Jede /v1-Anfrage trägt deinen Schlüssel — Format %prefix% gefolgt von 40 Hexadezimalzeichen — in einem von zwei Headern. Serverseitig wird nur der SHA-256-Fingerabdruck gespeichert: ein verlorener Schlüssel wird neu erzeugt, nie wiederhergestellt."
+    base_url: "Basis-URL (v1, Entwicklung): %url% — der Produktionszugang wird über die Domain der Seite (TLS-Edge) bereitgestellt."
+  endpoints:
+    title: "Endpunkte"
+    healthz: "Dienststatus — die einzige Route ohne Authentifizierung."
+    profiles: "Öffentliches Profil eines Mitglieds: Favoriten und Anzahl öffentlicher Builds (404 bei privatem Profil)."
+    builds: "Öffentliche Builds eines Champions (Data-Dragon-Id), neueste zuerst — paginiert über page und per_page (max. 50)."
+    trends: "Meistbesuchte Entitäten der Seite: Champions, Items, Runen oder Beschwörerzauber — range=7d (Standard) oder 30d, Top 25."
+    usage: "Live-Verbrauch des aufrufenden Schlüssels — authentifiziert und ratenlimitiert, aber nie vom Kontingent abgezogen."
+  quotas:
+    title: "Kontingente & Ratenlimit"
+    quota: "Jede Anfrage wird zuerst dem Monatskontingent deines Tarifs, dann den vorausbezahlten Credits belastet; sind beide erschöpft, antwortet die API mit 429 quota_exceeded."
+    rate: "Token-Bucket pro Schlüssel: jede /v1-Antwort trägt X-RateLimit-Limit, X-RateLimit-Remaining und X-RateLimit-Reset; darüber hinaus 429 rate_limited."
+    month: "Kontingente setzen sich mit dem Kalendermonat zurück. Jahres-Tarife führen ihr Volumen als Monatskontingent (20 000 bzw. 60 000 Anfragen pro Monat)."
+  errors:
+    title: "Fehler"
+    body: "Einheitliche Hülle für alle Fehler. Codes: unauthorized (401), forbidden (403, widerrufener Schlüssel), not_found (404), rate_limited und quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Abrechnung & Schlüsselverwaltung"
+    body: "Schlüssel werden im Profil erstellt und verwaltet; Pakete und Abonnements laufen über Stripe Checkout — die API selbst berührt niemals Zahlungsdaten."

@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — η εγκυκλοπαίδεια του League of Legends"
+  description: "Ήρωες, αντικείμενα, ρούνοι και ξόρκια επικαλεστή του League of Legends για το patch %version% — στατιστικά, ικανότητες και λεπτομέρειες σε 21 γλώσσες."
+champion:
+  list:
+    title: "Ήρωες του League of Legends"
+    description: "Και οι %count% ήρωες του League of Legends με ρόλους, ικανότητες και ιστορία — δεδομένα του patch %version%."
+  detail:
+    title: "%name%, ήρωας του LoL"
+    description: "Ο/Η %name% στο League of Legends: ικανότητες, skins, ιστορία και συμβουλές, ενημερωμένα για το patch %version%."
+item:
+  list:
+    title: "Αντικείμενα του League of Legends"
+    description: "Και τα %count% αντικείμενα του League of Legends με κόστος, στατιστικά και συνταγές — δεδομένα του patch %version%."
+  detail:
+    title: "%name%, αντικείμενο του LoL"
+    description: "Το %name% στο League of Legends: στατιστικά, κόστος, συνταγή και αναβαθμίσεις, ενημερωμένα για το patch %version%."
+rune:
+  list:
+    title: "Ρούνοι του League of Legends"
+    description: "Τα %count% μονοπάτια ρούνων του League of Legends με όλους τους βασικούς και δευτερεύοντες ρούνους — δεδομένα του patch %version%."
+  detail:
+    title: "%name%, μονοπάτι ρούνων του LoL"
+    description: "Το μονοπάτι ρούνων %name% στο League of Legends: βασικοί ρούνοι, θέσεις και εφέ, ενημερωμένα για το patch %version%."
+summoner:
+  list:
+    title: "Ξόρκια επικαλεστή του League of Legends"
+    description: "Και τα %count% ξόρκια επικαλεστή του League of Legends με χρόνους επαναφόρτισης και εφέ — δεδομένα του patch %version%."
+  detail:
+    title: "%name%, ξόρκι επικαλεστή του LoL"
+    description: "Το ξόρκι επικαλεστή %name% στο League of Legends: επαναφόρτιση και εφέ, ενημερωμένα για το patch %version%."
+donate:
+  title: "Στηρίξτε το έργο"
+  description: "Βοηθήστε το League Of Data Base να παραμείνει δωρεάν και γρήγορο — στηρίξτε το έργο με μια δωρεά."
+legal:
+  notice:
+    description: "Νομική σημείωση του League Of Data Base: εκδότης, φιλοξενία και επικοινωνία."
+  privacy:
+    description: "Πολιτική απορρήτου του League Of Data Base: δεδομένα, σκοποί και τα δικαιώματά σας."
+  terms:
+    description: "Όροι χρήσης του League Of Data Base."
+  cookies:
+    description: "Πολιτική cookies του League Of Data Base: ποια cookies χρησιμοποιούνται και πώς να τα ελέγξετε."
+error:
+  "404":
+    title: "Η σελίδα δεν βρέθηκε"
+    eyebrow: "Χαμένος στο Rift"
+    body: "Αυτή η σελίδα δεν υπάρχει — ο πόρος ίσως αφαιρέθηκε από το τρέχον patch."
+    back_home: "Επιστροφή στην αρχική"
+  generic:
+    title: "Κάτι πήγε στραβά"
+    body: "Παρουσιάστηκε ένα απρόσμενο σφάλμα. Δοκιμάστε ξανά σε λίγο."
+
+developers:
+  title: "API για προγραμματιστές"
+  description: "Επί πληρωμή REST JSON API πάνω στα κοινοτικά δεδομένα του League of Legends: δημόσια προφίλ, κοινόχρηστα builds και τάσεις. Δωρεάν βαθμίδα, πακέτα μονάδων και συνδρομές."
+
+trends:
+  title: "Δημοφιλή builds του LoL"
+  description: "Δημόσια builds του League of Legends ταξινομημένα με βάση τις ψήφους της κοινότητας — φιλτράρετε ανά ήρωα και λειτουργία παιχνιδιού."

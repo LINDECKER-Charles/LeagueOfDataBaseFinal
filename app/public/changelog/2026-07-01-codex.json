@@ -1,0 +1,40 @@
+{
+  "id": "2026-07-01-codex",
+  "version": "1.0.0",
+  "codename": "Codex",
+  "date": "2026-07-01",
+  "type": "major",
+  "title": "LeagueOfDataBase 1.0.0 — Codex",
+  "summary": "La version fondatrice : l'encyclopédie League of Legends — champions, objets, runes et sorts d'invocateur — servie depuis les données officielles, en 21 langues.",
+  "intro": "Avant tout le reste, il y a le Codex. LeagueOfDataBase démarre comme une encyclopédie complète des données du jeu, alimentée par les données officielles Data Dragon et rafraîchie à chaque patch. Champions, objets, runes et sorts d'invocateur y sont consultables, illustrés et traduits dans 21 langues. C'est la version « historique » du projet, la base sur laquelle toute la plateforme communautaire est venue se greffer.",
+  "stats": { "fixes": 0, "cards": 3 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❖",
+      "tag": "Encyclopédie",
+      "title": "Champions, objets, runes & sorts",
+      "description": "Parcourez l'intégralité des champions, objets, runes et sorts d'invocateur du jeu, avec fiches détaillées, images et descriptions officielles."
+    },
+    {
+      "kind": "feature",
+      "glyph": "▦",
+      "tag": "Données",
+      "title": "Toujours à jour",
+      "description": "Le contenu suit les données officielles du jeu et se met à jour à chaque nouveau patch, avec le choix libre de la version consultée."
+    },
+    {
+      "kind": "mana",
+      "glyph": "✦",
+      "tag": "Langues",
+      "title": "21 langues",
+      "description": "L'encyclopédie s'affiche dans 21 langues, la langue des données du jeu suivant celle de l'interface."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "Le Codex, c'est là où tout a commencé : une envie simple de consulter les données de League of Legends proprement, vite, et dans sa langue. Cette version 1.0.0 marque la base historique du projet, juste avant le grand chantier qui l'a transformée en plateforme communautaire. On la garde dans l'histoire des versions par respect pour le chemin parcouru.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

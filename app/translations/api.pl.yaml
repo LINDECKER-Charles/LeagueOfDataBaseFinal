@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "API dla deweloperów"
+  title: "Klucze API"
+  back_profile: "Powrót do profilu"
+  docs_link: "Dokumentacja i cennik"
+  profile_link:
+    label: "API dla deweloperów"
+    manage: "Zarządzaj moim kluczem API"
+  create:
+    title: "Brak klucza API"
+    body: "Wygeneruj swój osobisty klucz i wywołuj publiczne API — plan darmowy: 500 zapytań miesięcznie, 10 na minutę."
+    name_label: "Nazwa klucza (opcjonalnie)"
+    name_placeholder: "moja-aplikacja"
+    submit: "Utwórz mój klucz"
+  raw:
+    title: "Twój nowy klucz API"
+    warning: "Skopiuj go teraz — jest wyświetlany tylko ten jeden raz. Przechowujemy jedynie odcisk: zgubiony klucz można tylko wygenerować ponownie."
+    label: "Tajny klucz"
+    copy: "Skopiuj klucz"
+    copied: "Skopiowano!"
+    copy_error: "Skopiuj ręcznie z pola"
+  key:
+    title: "Aktywny klucz"
+    label_key: "Klucz"
+    label_name: "Nazwa"
+    label_created: "Utworzony"
+    label_quota: "Zużycie miesięczne"
+    quota_used: "%used% / %quota% zapytań"
+    quota_remaining: "%remaining% pozostało w tym miesiącu"
+    label_credits: "Przedpłacone kredyty"
+    label_rate: "Limit tempa"
+    rate_unit: "%rate% zap./min"
+    subscription_active: "Aktywna subskrypcja"
+  actions:
+    regenerate: "Wygeneruj klucz ponownie"
+    regenerate_help: "Unieważnia ten klucz i wydaje nowy sekret — plan, limit i kredyty zostają zachowane."
+    revoke: "Unieważnij"
+    revoke_help: "Natychmiast wyłącza klucz (API może go akceptować jeszcze do minuty pamięci podręcznej)."
+  billing:
+    title: "Wzmocnij swój klucz"
+    unavailable: "Płatności nie są włączone na tym serwerze."
+    packs_title: "Pakiety kredytów"
+    packs_help: "Płatność jednorazowa — 1 € za 1 000 zapytań, zużywane po miesięcznym limicie, ważne 12 miesięcy. Każdy pakiet podnosi tempo do co najmniej 60 zap./min."
+    plans_title: "Subskrypcje"
+    plans_help: "Zwiększają miesięczny limit i tempo zapytań. Jedna aktywna subskrypcja na konto."
+    buy: "Kup"
+    subscribe: "Subskrybuj"
+    current: "Obecny"
+    per_month: "/mies."
+    per_year: "/rok"
+    requests_month: "%count% zap./mies."
+    requests_once: "%count% zapytań"
+    already_subscribed: "Twój klucz ma już subskrypcję. Aby zmienić plan, najpierw anuluj obecną (powrót do planu darmowego następuje po potwierdzeniu przez Stripe), a potem subskrybuj ponownie."
+  usage:
+    title: "Ostatnie 30 dni"
+    total_month: "Zużyte w tym miesiącu"
+    day: "Dzień"
+    requests: "Zapytania"
+    empty: "Brak zmierzonego zużycia — pierwsze wywołania pojawią się tutaj w ciągu minuty."
+  status:
+    pack_success: "Płatność potwierdzona — kredyty są dodawane (kilka sekund)."
+    plan_success: "Subskrypcja potwierdzona — klucz jest podnoszony (kilka sekund)."
+    cancelled: "Płatność anulowana — nic nie zostało pobrane."
+  flash:
+    csrf: "Sesja wygasła, spróbuj ponownie."
+    created: "Klucz API utworzony."
+    regenerated: "Klucz wygenerowany ponownie — poprzedni sekret już nie działa."
+    revoked: "Klucz unieważniony."
+    key_exists: "Masz już aktywny klucz."
+    no_key: "Nie masz aktywnego klucza."
+    invalid_offer: "Nieznana oferta."
+    already_subscribed: "Na twoim kluczu istnieje już aktywna subskrypcja — anuluj ją przed ponowną subskrypcją."
+    need_key: "Utwórz klucz API przed zakupem."
+    stripe_unavailable: "Płatności są chwilowo niedostępne."
+    gateway: "Serwis płatności nie odpowiada, spróbuj później."
+
+plan:
+  free: "Darmowy"
+  credits: "Kredyty"
+  monthly: "Miesięczny"
+  monthly_plus: "Miesięczny+"
+  annual: "Roczny"
+  annual_plus: "Roczny+"
+
+pack:
+  small: "Pakiet S"
+  medium: "Pakiet M"
+  large: "Pakiet L"
+
+product:
+  pack: "API LoDB — %requests% zapytań w kredytach"
+  plan: "API LoDB — plan %plan%"
+
+pricing:
+  offer: "Oferta"
+  price: "Cena"
+  volume: "Wolumen"
+  rate: "Limit tempa"
+  validity_note: "Pakiety kredytów: 1 € za 1 000 zapytań, zużywane po miesięcznym limicie aktywnego planu, ważne 12 miesięcy. Plany roczne niosą swój wolumen jako limit miesięczny, rozliczany rocznie."
+
+developers:
+  eyebrow: "Deweloperzy"
+  title: "API LeagueOfDataBase"
+  intro: "API REST JSON nad danymi społeczności serwisu: publiczne profile przywoływaczy, udostępnione buildy i trendy odwiedzin. Darmowe na start, wyceniane pod realne obciążenia."
+  cta: "Utwórz mój klucz"
+  cta_hint: "Zaloguj się, wygeneruj darmowy klucz, wywołaj API — w niecałą minutę."
+  docs_pricing: "Cennik"
+  auth:
+    title: "Uwierzytelnianie"
+    body: "Każde zapytanie /v1 niesie twój klucz — format %prefix% i 40 znaków szesnastkowych — w jednym z dwóch nagłówków. Po stronie serwera trzymany jest tylko odcisk SHA-256: zgubiony klucz generuje się ponownie, nie odzyskuje."
+    base_url: "Bazowy URL (v1, środowisko deweloperskie): %url% — dostęp produkcyjny będzie wystawiony przez domenę serwisu (edge TLS)."
+  endpoints:
+    title: "Endpointy"
+    healthz: "Stan usługi — jedyna trasa bez uwierzytelniania."
+    profiles: "Publiczny profil członka: ulubione i liczba publicznych buildów (404, gdy profil jest prywatny)."
+    builds: "Publiczne buildy bohatera (id Data Dragon), od najnowszych — stronicowane przez page i per_page (maks. 50)."
+    trends: "Najczęściej oglądane byty serwisu: bohaterowie, przedmioty, runy lub czary przywoływacza — range=7d (domyślnie) lub 30d, top 25."
+    usage: "Bieżące zużycie wywołującego klucza — uwierzytelnione i limitowane, ale nigdy nie liczone do limitu."
+  quotas:
+    title: "Limity i tempo zapytań"
+    quota: "Każde zapytanie obciąża najpierw miesięczny limit planu, potem przedpłacone kredyty; po wyczerpaniu obu API odpowiada 429 quota_exceeded."
+    rate: "Token bucket na klucz: każda odpowiedź /v1 niesie X-RateLimit-Limit, X-RateLimit-Remaining i X-RateLimit-Reset; powyżej limitu 429 rate_limited."
+    month: "Limity zerują się z miesiącem kalendarzowym. Plany roczne niosą swój wolumen jako limit miesięczny (20 000 lub 60 000 zapytań miesięcznie)."
+  errors:
+    title: "Błędy"
+    body: "Jednolita koperta dla wszystkich błędów. Kody: unauthorized (401), forbidden (403, klucz unieważniony), not_found (404), rate_limited i quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Rozliczenia i zarządzanie kluczami"
+    body: "Klucze tworzy się i zarządza nimi z profilu; pakiety i subskrypcje opłacane są przez Stripe Checkout — samo API nigdy nie dotyka danych płatniczych."

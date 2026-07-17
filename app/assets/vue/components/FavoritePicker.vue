@@ -53,6 +53,7 @@ const displays = ref<(CurrentEntity | null)[]>(props.slots.map((slot) => slot.cu
 
 const activeIndex = ref<number | null>(null)
 const query = ref('')
+const root = ref<HTMLElement | null>(null)
 const sheet = ref<HTMLDialogElement | null>(null)
 const searchField = ref<HTMLInputElement | null>(null)
 
@@ -114,6 +115,7 @@ function select(entry: PickerEntry): void {
     }
     values.value[index] = entry.id
     displays.value[index] = { id: entry.id, name: entry.name, image: entry.image }
+    notifyChange()
     close()
 }
 
@@ -124,7 +126,13 @@ function removeCurrent(): void {
     }
     values.value[index] = ''
     displays.value[index] = null
+    notifyChange()
     close()
+}
+
+/* Bubble to the host <form> so its auto-save enhancement can persist the pick. */
+function notifyChange(): void {
+    root.value?.dispatchEvent(new CustomEvent('profile:changed', { bubbles: true }))
 }
 
 function retry(): void {
@@ -144,7 +152,7 @@ function initials(name: string): string {
 </script>
 
 <template>
-    <div>
+    <div ref="root">
         <div class="socket-grid">
             <button
                 v-for="s in sockets"

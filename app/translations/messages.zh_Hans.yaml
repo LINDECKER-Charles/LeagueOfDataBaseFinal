@@ -183,7 +183,7 @@ footer:
   project:
     title: "项目"
     version: "版本：Beta 2.0"
-    updated: "更新于：03/08/2025"
+    updated: "更新于：17/07/2026"
 
   contact:
     title: "联系方式"
@@ -211,3 +211,103 @@ header:
     item: "装备"
     runes: "符文"
     summoner: "召唤师技能"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "或"
+  google:
+    cta: "使用 Google 继续"
+    unavailable: "此服务器未配置 Google 登录。"
+    failed: "Google 登录失败，请重试。"
+  register:
+    password: "密码"
+    password_confirm: "确认密码"
+    password_mismatch: "两次输入的密码不一致。"
+    password_help: "至少 12 个字符，包含小写字母、大写字母、数字和特殊字符。"
+  password:
+    rule_length: "至少 12 个字符"
+    rule_lowercase: "至少一个小写字母"
+    rule_uppercase: "至少一个大写字母"
+    rule_digit: "至少一个数字"
+    rule_special: "至少一个特殊字符"
+    rule_match: "两次密码一致"
+    too_common: "该密码过于常见，请选择更独特的密码。"
+  flash:
+    banned: "该账号已被管理团队停用。"
+
+profile:
+  identity:
+    title: "召唤师身份"
+    username: "召唤师名称"
+    tag: "Riot 标签"
+    tag_help: "可选：Riot ID 中 # 之后的部分 — 如 GG#EUW，填写 EUW。"
+    url_warning: "更改召唤师名称也会更改公开资料页的网址。"
+    submit: "更新身份"
+    username_taken: "该召唤师名称已被使用。"
+    username_invalid: "召唤师名称无效：3-24 个字符（字母、数字、点、连字符、下划线），需以字母或数字开头。"
+    tag_invalid: "Riot 标签无效：3-5 个字母或数字。"
+  password:
+    title: "设置密码"
+    help: "该账户目前仅使用 Google 登录。设置密码后也可以用邮箱登录。"
+    submit: "设置密码"
+  danger:
+    help_no_password: "删除账户不可恢复：收藏和出装将被清除。"
+  flash:
+    identity_saved: "召唤师身份已更新。"
+    password_set: "密码已设置 — 现在也可以用邮箱登录了。"
+    password_exists: "该账户已设置密码。"
+
+build:
+  mode:
+    sr: "召唤师峡谷"
+    aram: "极地大乱斗"
+    nexus_blitz: "极限闪击"
+    arena: "斗魂竞技场"
+  editor:
+    ghost_mode: "在此游戏模式中不可用"
+    context:
+      title: "游戏环境"
+      version: "版本"
+      mode: "游戏模式"
+      mode_hint: "装备的可用性取决于所选模式。已放置的装备不会被移除，只会被标记。"
+    dnd:
+      handle: "拖拽以重新排序"
+      moved_step: "步骤已移至第 %position% 位"
+      moved_item: "装备已移至第 %position% 位"
+      transferred: "装备已移至步骤 %step%"
+      added: "装备已添加到步骤 %step%"
+      cancelled: "已取消移动"
+  show:
+    mode: "游戏模式"
+    patch_current: "铸造于版本 %version%（当前 %current%）"
+  error:
+    version:
+      unknown: "未知的游戏版本。"
+    mode:
+      unknown: "未知的游戏模式。"
+    steps:
+      item_mode: "在所选游戏模式中不可用：%items%"
+
+community:
+  nav:
+    trends: "热门"
+  trends:
+    eyebrow: "社区脉动"
+    title: "热门出装"
+    filter:
+      champion: "英雄"
+      mode: "游戏模式"
+      all_champions: "全部英雄"
+      all_modes: "全部模式"
+      apply: "筛选"
+    empty: "没有符合此筛选条件的公开出装 — 铸造你自己的吧。"
+    empty_cta: "铸造我的出装"
+  vote:
+    up: "投票支持这套出装"
+    down: "投票反对这套出装"
+    score_label: "社区评分"
+    login: "登录后投票"
+    invalid: "无效的投票。"
+  supporter:
+    badge: "支持者"

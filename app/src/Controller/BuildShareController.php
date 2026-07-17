@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\Build;
+use App\Entity\User;
 use App\Repository\BuildRepository;
+use App\Repository\BuildVoteRepository;
 use App\Service\Build\BuildViewAssembler;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
@@ -35,6 +38,7 @@ final class BuildShareController extends AbstractResourceController
         PageContextResolver $pageContext,
         RequestStack $requestStack,
         private readonly BuildRepository $builds,
+        private readonly BuildVoteRepository $votes,
         private readonly BuildViewAssembler $assembler,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
@@ -49,13 +53,41 @@ final class BuildShareController extends AbstractResourceController
         }
 
         $sel = $this->pageContext->selection();
+        // Names and images resolve on the build's OWN patch, not the visitor's:
+        // a shared build must render what its author saw. Language stays the
+        // visitor's; the current version only feeds the informative patch chip.
+        $version = BuildViewAssembler::renderVersion($build, $sel['version']);
 
         return $this->render('build/show.html.twig', [
             'client' => $this->clientData(),
             'build' => $build,
-            'vm' => $this->assembler->assemble($build, $sel['version'], $sel['lang']),
-            'version' => $sel['version'],
+            'vm' => $this->assembler->assemble($build, $version, $sel['version'], $sel['lang']),
+            'version' => $version,
+            'currentVersion' => $sel['version'],
             'lang' => $sel['lang'],
-        ]);
+        ] + $this->voteContext($build));
+    }
+
+    /**
+     * Vote widget context — only PUBLIC builds are votable (an unlisted link
+     * must not become a scoring surface), so private pages get no widget.
+     *
+     * @return array{voteScore: ?int, myVote: int}
+     */
+    private function voteContext(Build $build): array
+    {
+        if (!$build->isPublic()) {
+            return ['voteScore' => null, 'myVote' => 0];
+        }
+
+        $id = (int) $build->getId();
+        $user = $this->getUser();
+
+        return [
+            'voteScore' => $this->votes->scoreFor([$id])[$id] ?? 0,
+            'myVote' => $user instanceof User
+                ? ($this->votes->findOneByBuildAndVoter($build, $user)?->getValue() ?? 0)
+                : 0,
+        ];
     }
 }

@@ -183,7 +183,7 @@ footer:
   project:
     title: "โปรเจกต์"
     version: "เวอร์ชัน: Beta 2.0"
-    updated: "อัปเดตเมื่อ: 03/08/2025"
+    updated: "อัปเดตเมื่อ: 17/07/2026"
 
   contact:
     title: "ติดต่อ"
@@ -211,3 +211,103 @@ header:
     item: "ไอเท็ม"
     runes: "รูน"
     summoner: "สเปลล์อัญเชิญ"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "หรือ"
+  google:
+    cta: "ดำเนินการต่อด้วย Google"
+    unavailable: "เซิร์ฟเวอร์นี้ยังไม่ได้ตั้งค่าการเข้าสู่ระบบด้วย Google"
+    failed: "เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+  register:
+    password: "รหัสผ่าน"
+    password_confirm: "ยืนยันรหัสผ่าน"
+    password_mismatch: "รหัสผ่านทั้งสองไม่ตรงกัน"
+    password_help: "อย่างน้อย 12 ตัวอักษร ประกอบด้วยตัวพิมพ์เล็ก ตัวพิมพ์ใหญ่ ตัวเลข และอักขระพิเศษ"
+  password:
+    rule_length: "อย่างน้อย 12 ตัวอักษร"
+    rule_lowercase: "ตัวพิมพ์เล็กอย่างน้อยหนึ่งตัว"
+    rule_uppercase: "ตัวพิมพ์ใหญ่อย่างน้อยหนึ่งตัว"
+    rule_digit: "ตัวเลขอย่างน้อยหนึ่งตัว"
+    rule_special: "อักขระพิเศษอย่างน้อยหนึ่งตัว"
+    rule_match: "รหัสผ่านทั้งสองตรงกัน"
+    too_common: "รหัสผ่านนี้ใช้กันทั่วไปเกินไป กรุณาเลือกรหัสที่เป็นส่วนตัวมากขึ้น"
+  flash:
+    banned: "บัญชีนี้ถูกระงับโดยทีมผู้ดูแล"
+
+profile:
+  identity:
+    title: "ตัวตนผู้เรียก"
+    username: "ชื่อผู้เรียก"
+    tag: "แท็ก Riot"
+    tag_help: "ไม่บังคับ: ส่วนหลัง # ใน Riot ID ของคุณ — เช่น GG#EUW ให้กรอก EUW"
+    url_warning: "การเปลี่ยนชื่อผู้เรียกจะเปลี่ยนที่อยู่ของโปรไฟล์สาธารณะของคุณด้วย"
+    submit: "อัปเดตตัวตน"
+    username_taken: "ชื่อผู้เรียกนี้ถูกใช้แล้ว"
+    username_invalid: "ชื่อผู้เรียกไม่ถูกต้อง: 3–24 ตัวอักษร (ตัวอักษร ตัวเลข จุด ขีดกลาง ขีดล่าง) และต้องขึ้นต้นด้วยตัวอักษรหรือตัวเลข"
+    tag_invalid: "แท็ก Riot ไม่ถูกต้อง: ตัวอักษรหรือตัวเลข 3–5 ตัว"
+  password:
+    title: "ตั้งรหัสผ่าน"
+    help: "บัญชีของคุณเข้าสู่ระบบด้วย Google เท่านั้น ตั้งรหัสผ่านเพื่อให้เข้าสู่ระบบด้วยอีเมลได้ด้วย"
+    submit: "ตั้งรหัสผ่าน"
+  danger:
+    help_no_password: "การลบบัญชีเป็นการถาวร: รายการโปรดและบิลด์จะถูกลบ"
+  flash:
+    identity_saved: "อัปเดตตัวตนผู้เรียกแล้ว"
+    password_set: "ตั้งรหัสผ่านแล้ว — ตอนนี้คุณเข้าสู่ระบบด้วยอีเมลได้ด้วย"
+    password_exists: "บัญชีนี้มีรหัสผ่านอยู่แล้ว"
+
+build:
+  mode:
+    sr: "ซัมมอนเนอร์ริฟต์"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "อารีน่า"
+  editor:
+    ghost_mode: "ไม่พร้อมใช้งานในโหมดเกมนี้"
+    context:
+      title: "บริบทของเกม"
+      version: "แพตช์"
+      mode: "โหมดเกม"
+      mode_hint: "ไอเทมที่ใช้ได้ขึ้นอยู่กับโหมดที่เลือก ไอเทมที่วางไว้แล้วจะไม่ถูกลบ แต่จะถูกทำเครื่องหมายแทน"
+    dnd:
+      handle: "ลากเพื่อจัดลำดับใหม่"
+      moved_step: "ย้ายขั้นตอนไปที่ตำแหน่ง %position% แล้ว"
+      moved_item: "ย้ายไอเทมไปที่ตำแหน่ง %position% แล้ว"
+      transferred: "ย้ายไอเทมไปที่ขั้นตอน %step% แล้ว"
+      added: "เพิ่มไอเทมในขั้นตอน %step% แล้ว"
+      cancelled: "ยกเลิกการย้ายแล้ว"
+  show:
+    mode: "โหมดเกม"
+    patch_current: "สร้างบนแพตช์ %version% — ปัจจุบัน: %current%"
+  error:
+    version:
+      unknown: "ไม่รู้จักเวอร์ชันเกมนี้"
+    mode:
+      unknown: "ไม่รู้จักโหมดเกมนี้"
+    steps:
+      item_mode: "ไม่พร้อมใช้งานในโหมดเกมที่เลือก: %items%"
+
+community:
+  nav:
+    trends: "เทรนด์"
+  trends:
+    eyebrow: "ชีพจรของคอมมูนิตี้"
+    title: "บิลด์ยอดนิยม"
+    filter:
+      champion: "แชมเปี้ยน"
+      mode: "โหมดเกม"
+      all_champions: "แชมเปี้ยนทั้งหมด"
+      all_modes: "ทุกโหมด"
+      apply: "กรอง"
+    empty: "ไม่มีบิลด์สาธารณะที่ตรงกับตัวกรองนี้ — สร้างบิลด์ของคุณเอง"
+    empty_cta: "สร้างบิลด์ของฉัน"
+  vote:
+    up: "โหวตให้บิลด์นี้"
+    down: "โหวตคัดค้านบิลด์นี้"
+    score_label: "คะแนนจากคอมมูนิตี้"
+    login: "เข้าสู่ระบบเพื่อโหวต"
+    invalid: "โหวตไม่ถูกต้อง"
+  supporter:
+    badge: "ผู้สนับสนุน"

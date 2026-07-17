@@ -183,7 +183,7 @@ footer:
   project:
     title: "Projekt"
     version: "Version: Beta 2.0"
-    updated: "Aktualisiert: 03/08/2025"
+    updated: "Aktualisiert: 17/07/2026"
 
   contact:
     title: "Kontakt"
@@ -211,3 +211,103 @@ header:
     item: "Items"
     runes: "Runen"
     summoner: "Beschwörerzauber"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "oder"
+  google:
+    cta: "Mit Google fortfahren"
+    unavailable: "Die Google-Anmeldung ist auf diesem Server nicht eingerichtet."
+    failed: "Die Google-Anmeldung ist fehlgeschlagen. Bitte versuche es erneut."
+  register:
+    password: "Passwort"
+    password_confirm: "Passwort bestätigen"
+    password_mismatch: "Die beiden Passwörter stimmen nicht überein."
+    password_help: "Mindestens 12 Zeichen, mit Kleinbuchstabe, Großbuchstabe, Ziffer und Sonderzeichen."
+  password:
+    rule_length: "Mindestens 12 Zeichen"
+    rule_lowercase: "Mindestens ein Kleinbuchstabe"
+    rule_uppercase: "Mindestens ein Großbuchstabe"
+    rule_digit: "Mindestens eine Ziffer"
+    rule_special: "Mindestens ein Sonderzeichen"
+    rule_match: "Beide Passwörter stimmen überein"
+    too_common: "Dieses Passwort ist zu verbreitet. Wähle ein persönlicheres."
+  flash:
+    banned: "Dieses Konto wurde vom Moderationsteam gesperrt."
+
+profile:
+  identity:
+    title: "Beschwörer-Identität"
+    username: "Beschwörername"
+    tag: "Riot-Tag"
+    tag_help: "Optional: der Teil nach dem # deiner Riot ID — für GG#EUW gib EUW ein."
+    url_warning: "Wenn du deinen Beschwörernamen änderst, ändert sich auch die Adresse deines öffentlichen Profils."
+    submit: "Identität aktualisieren"
+    username_taken: "Dieser Beschwörername ist bereits vergeben."
+    username_invalid: "Ungültiger Beschwörername: 3–24 Zeichen (Buchstaben, Ziffern, Punkt, Bindestrich, Unterstrich), beginnend mit Buchstabe oder Ziffer."
+    tag_invalid: "Ungültiger Riot-Tag: 3 bis 5 Buchstaben oder Ziffern."
+  password:
+    title: "Passwort festlegen"
+    help: "Dein Konto meldet sich derzeit nur über Google an. Lege ein Passwort fest, um dich auch mit deiner E-Mail anzumelden."
+    submit: "Passwort festlegen"
+  danger:
+    help_no_password: "Das Löschen deines Kontos ist endgültig: Favoriten und Builds werden gelöscht."
+  flash:
+    identity_saved: "Beschwörer-Identität aktualisiert."
+    password_set: "Passwort festgelegt — du kannst dich jetzt auch mit deiner E-Mail anmelden."
+    password_exists: "Für dieses Konto ist bereits ein Passwort festgelegt."
+
+build:
+  mode:
+    sr: "Kluft der Beschwörer"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Arena"
+  editor:
+    ghost_mode: "In diesem Spielmodus nicht verfügbar"
+    context:
+      title: "Spielkontext"
+      version: "Patch"
+      mode: "Spielmodus"
+      mode_hint: "Die Verfügbarkeit der Gegenstände richtet sich nach dem gewählten Modus. Bereits platzierte Gegenstände werden nie entfernt, sondern markiert."
+    dnd:
+      handle: "Ziehen zum Neuordnen"
+      moved_step: "Schritt an Position %position% verschoben"
+      moved_item: "Gegenstand an Position %position% verschoben"
+      transferred: "Gegenstand zu Schritt %step% verschoben"
+      added: "Gegenstand zu Schritt %step% hinzugefügt"
+      cancelled: "Verschieben abgebrochen"
+  show:
+    mode: "Spielmodus"
+    patch_current: "Geschmiedet auf Patch %version% — aktuell: %current%"
+  error:
+    version:
+      unknown: "Unbekannte Spielversion."
+    mode:
+      unknown: "Unbekannter Spielmodus."
+    steps:
+      item_mode: "Im gewählten Spielmodus nicht verfügbar: %items%."
+
+community:
+  nav:
+    trends: "Trends"
+  trends:
+    eyebrow: "Der Puls der Kluft"
+    title: "Angesagte Builds"
+    filter:
+      champion: "Champion"
+      mode: "Spielmodus"
+      all_champions: "Alle Champions"
+      all_modes: "Alle Modi"
+      apply: "Filtern"
+    empty: "Kein öffentliches Build entspricht diesem Filter — schmiede dein eigenes."
+    empty_cta: "Mein Build schmieden"
+  vote:
+    up: "Für dieses Build stimmen"
+    down: "Gegen dieses Build stimmen"
+    score_label: "Community-Wertung"
+    login: "Zum Abstimmen anmelden"
+    invalid: "Ungültige Stimme."
+  supporter:
+    badge: "Unterstützer"

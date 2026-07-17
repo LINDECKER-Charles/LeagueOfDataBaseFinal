@@ -11,11 +11,25 @@
   'Inspiration': 'path-inspiration'
 }[rune.key]|default('path-precision') %}
 
-{% block title %}{{ 'rune.detail.title'|trans({'%name%': rune.name}) }}{% endblock %}
-{% block meta_description %}
-  {{ 'rune.detail.meta_description'|trans({'%name%': rune.name, '%version%': version|default(client.session.version ?? (client.versions|first))}) }}.
-{% endblock %}
+{% block title %}{{ seo_title('rune.detail.title'|trans({'%name%': rune.name}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'rune.detail.description'|trans({
+  '%name%': rune.name,
+  '%version%': version|default(client.session.version ?? (client.versions|first))
+}, 'seo') }}{% endblock %}
 {% block img %}/{{ images[rune.key].icon ?? '' }}{% endblock %}
+
+{% block structured_data %}
+  {{ seo_jsonld(seo_breadcrumbs([
+    { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+    { name: 'header.navigation.runes'|trans, url: seo_absolute(path('app_runes')) },
+    { name: rune.name ?? '', url: seo_canonical() }
+  ])) }}
+  {{ seo_jsonld(seo_game_item(
+    rune.name ?? '',
+    images[rune.key].icon is defined and images[rune.key].icon ? seo_absolute('/' ~ images[rune.key].icon) : null,
+    null
+  )) }}
+{% endblock %}
 
 {% block body %}
 {% set selectedVersion = version|default(client.session.version ?? (client.versions|default([])|first)) %}

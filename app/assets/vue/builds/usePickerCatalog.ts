@@ -3,7 +3,9 @@ import { ref, type Ref } from 'vue'
 /**
  * Lazy fetch of one picker catalog with a module-scoped memory cache (shared
  * across editor mounts of the session — Turbo keeps the page alive) and
- * loading / error / retry states for the UI.
+ * loading / error / retry states for the UI. `reload()` re-resolves against the
+ * CURRENT url() — the editor calls it when its version/mode context changes;
+ * already-seen URLs answer from cache, so switching back is instant.
  */
 
 interface PickerCatalog<T> {
@@ -12,9 +14,10 @@ interface PickerCatalog<T> {
     hasError: Ref<boolean>
     load: () => Promise<void>
     retry: () => Promise<void>
+    reload: () => Promise<void>
 }
 
-/** Resolved payloads by full URL — one fetch per (endpoint, version, lang). */
+/** Resolved payloads by full URL — one fetch per (endpoint, version, lang, mode). */
 const payloadCache = new Map<string, unknown>()
 
 /** Test hook: the cache is module-scoped, specs need a clean slate. */
@@ -26,9 +29,11 @@ export function usePickerCatalog<T>(url: () => string, extract: (payload: unknow
     const data = ref<T | null>(null) as Ref<T | null>
     const isLoading = ref(false)
     const hasError = ref(false)
+    // Monotonic fetch token: a reload during an in-flight fetch must win — the
+    // stale response is dropped instead of clobbering the newer context.
+    let fetchSeq = 0
 
-    async function load(): Promise<void> {
-        if (data.value !== null || isLoading.value) return
+    async function fetchInto(seq: number): Promise<void> {
         const target = url()
         const cached = payloadCache.get(target)
         if (cached !== undefined) {
@@ -43,12 +48,23 @@ export function usePickerCatalog<T>(url: () => string, extract: (payload: unknow
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
             const payload: unknown = await response.json()
             payloadCache.set(target, payload)
-            data.value = extract(payload)
+            if (seq === fetchSeq) data.value = extract(payload)
         } catch {
-            hasError.value = true
+            if (seq === fetchSeq) hasError.value = true
         } finally {
-            isLoading.value = false
+            if (seq === fetchSeq) isLoading.value = false
         }
+    }
+
+    async function load(): Promise<void> {
+        if (data.value !== null || isLoading.value) return
+        await fetchInto(++fetchSeq)
+    }
+
+    async function reload(): Promise<void> {
+        data.value = null
+        hasError.value = false
+        await fetchInto(++fetchSeq)
     }
 
     async function retry(): Promise<void> {
@@ -56,5 +72,5 @@ export function usePickerCatalog<T>(url: () => string, extract: (payload: unknow
         await load()
     }
 
-    return { data, isLoading, hasError, load, retry }
+    return { data, isLoading, hasError, load, retry, reload }
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use App\Service\Admin\MonitoringReportService;
 use App\Service\Analytics\AnalyticsReportService;
 use App\Service\Analytics\GeoLocator;
 use App\Service\Analytics\StorageAnalyticsService;
@@ -45,12 +46,14 @@ final class AdminController extends AbstractController
         AnalyticsReportService $analytics,
         StorageAnalyticsService $storage,
         GeoLocator $geo,
+        MonitoringReportService $monitoring,
     ): Response {
         $range = $analytics->normalizeRange((string) $request->query->get('range', '30d'));
 
         return $this->render('admin/overview.html.twig', [
             'report' => $analytics->report($range),
             'storage' => $storage->report(),
+            'app_report' => $monitoring->report(),
             'range' => $range,
             'ranges' => $analytics->ranges(),
             'geo_available' => $geo->isAvailable(),

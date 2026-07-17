@@ -183,7 +183,7 @@ footer:
   project:
     title: "프로젝트"
     version: "버전: Beta 2.0"
-    updated: "업데이트: 03/08/2025"
+    updated: "업데이트: 17/07/2026"
 
   contact:
     title: "연락처"
@@ -211,3 +211,103 @@ header:
     item: "아이템"
     runes: "룬"
     summoner: "소환사 주문"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "또는"
+  google:
+    cta: "Google로 계속하기"
+    unavailable: "이 서버에는 Google 로그인이 설정되어 있지 않습니다."
+    failed: "Google 로그인에 실패했습니다. 다시 시도해 주세요."
+  register:
+    password: "비밀번호"
+    password_confirm: "비밀번호 확인"
+    password_mismatch: "두 비밀번호가 일치하지 않습니다."
+    password_help: "12자 이상, 소문자·대문자·숫자·특수문자를 각각 포함해야 합니다."
+  password:
+    rule_length: "12자 이상"
+    rule_lowercase: "소문자 1자 이상"
+    rule_uppercase: "대문자 1자 이상"
+    rule_digit: "숫자 1자 이상"
+    rule_special: "특수문자 1자 이상"
+    rule_match: "두 비밀번호 일치"
+    too_common: "너무 흔한 비밀번호입니다. 더 고유한 비밀번호를 선택하세요."
+  flash:
+    banned: "이 계정은 운영진에 의해 정지되었습니다."
+
+profile:
+  identity:
+    title: "소환사 정보"
+    username: "소환사명"
+    tag: "Riot 태그"
+    tag_help: "선택 사항: Riot ID에서 # 뒤 부분 — GG#EUW라면 EUW를 입력하세요."
+    url_warning: "소환사명을 변경하면 공개 프로필 주소도 변경됩니다."
+    submit: "정보 업데이트"
+    username_taken: "이미 사용 중인 소환사명입니다."
+    username_invalid: "잘못된 소환사명: 3~24자(영문, 숫자, 마침표, 하이픈, 밑줄), 첫 글자는 영문 또는 숫자."
+    tag_invalid: "잘못된 Riot 태그: 3~5자의 영문 또는 숫자."
+  password:
+    title: "비밀번호 설정"
+    help: "이 계정은 현재 Google 로그인만 사용합니다. 비밀번호를 설정하면 이메일로도 로그인할 수 있습니다."
+    submit: "비밀번호 설정"
+  danger:
+    help_no_password: "계정 삭제는 되돌릴 수 없습니다. 즐겨찾기와 빌드가 삭제됩니다."
+  flash:
+    identity_saved: "소환사 정보가 업데이트되었습니다."
+    password_set: "비밀번호가 설정되었습니다 — 이제 이메일로도 로그인할 수 있습니다."
+    password_exists: "이 계정에는 이미 비밀번호가 설정되어 있습니다."
+
+build:
+  mode:
+    sr: "소환사의 협곡"
+    aram: "칼바람 나락"
+    nexus_blitz: "돌격! 넥서스"
+    arena: "아레나"
+  editor:
+    ghost_mode: "이 게임 모드에서는 사용할 수 없습니다"
+    context:
+      title: "게임 설정"
+      version: "패치"
+      mode: "게임 모드"
+      mode_hint: "아이템 사용 가능 여부는 선택한 모드를 따릅니다. 이미 배치된 아이템은 제거되지 않고 표시만 됩니다."
+    dnd:
+      handle: "드래그하여 순서 변경"
+      moved_step: "단계를 %position%번 위치로 이동했습니다"
+      moved_item: "아이템을 %position%번 위치로 이동했습니다"
+      transferred: "아이템을 %step%단계로 이동했습니다"
+      added: "아이템을 %step%단계에 추가했습니다"
+      cancelled: "이동이 취소되었습니다"
+  show:
+    mode: "게임 모드"
+    patch_current: "패치 %version%에서 제작 — 현재: %current%"
+  error:
+    version:
+      unknown: "알 수 없는 게임 버전입니다."
+    mode:
+      unknown: "알 수 없는 게임 모드입니다."
+    steps:
+      item_mode: "선택한 게임 모드에서 사용할 수 없습니다: %items%"
+
+community:
+  nav:
+    trends: "트렌드"
+  trends:
+    eyebrow: "커뮤니티의 맥박"
+    title: "인기 빌드"
+    filter:
+      champion: "챔피언"
+      mode: "게임 모드"
+      all_champions: "모든 챔피언"
+      all_modes: "모든 모드"
+      apply: "필터"
+    empty: "이 필터에 맞는 공개 빌드가 없습니다 — 나만의 빌드를 만들어 보세요."
+    empty_cta: "내 빌드 만들기"
+  vote:
+    up: "이 빌드에 추천 투표"
+    down: "이 빌드에 비추천 투표"
+    score_label: "커뮤니티 점수"
+    login: "투표하려면 로그인"
+    invalid: "잘못된 투표입니다."
+  supporter:
+    badge: "후원자"

@@ -5,15 +5,20 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\RegistrationFormType;
+use App\Service\Audit\AuditAction;
+use App\Service\Audit\AuditLogger;
+use App\Service\Audit\AuditTarget;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
+use App\Service\Mail\AuthMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -32,6 +37,8 @@ final class RegistrationController extends AbstractResourceController
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly Security $security,
         private readonly TranslatorInterface $translator,
+        private readonly AuthMailer $authMailer,
+        private readonly AuditLogger $audit,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -67,9 +74,25 @@ final class RegistrationController extends AbstractResourceController
         $this->entityManager->flush();
 
         $this->security->login($user, self::AUTHENTICATOR, self::FIREWALL_NAME);
+        $this->audit->log(AuditAction::UserRegister, target: AuditTarget::user($user));
 
         $this->addFlash('success', $this->translator->trans('auth.flash.registered'));
+        $this->sendConfirmation($user);
 
         return $this->redirectToRoute('app_profile');
+    }
+
+    /**
+     * Fire-and-forget: a failed send must not fail the sign-up — the account
+     * exists and the persistent banner offers a one-click resend.
+     */
+    private function sendConfirmation(User $user): void
+    {
+        try {
+            $this->authMailer->sendEmailConfirmation($user);
+            $this->addFlash('info', $this->translator->trans('auth.flash.verify_sent'));
+        } catch (TransportExceptionInterface) {
+            // Swallowed on purpose (see docblock); recoverable from the banner.
+        }
     }
 }

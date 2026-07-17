@@ -1,4 +1,4 @@
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch, type Ref } from 'vue'
 import {
     championOptions,
     itemOptions,
@@ -7,6 +7,7 @@ import {
     type ItemOption,
     type RuneTree,
 } from './catalogTypes'
+import { formatTemplate, type BuildEditorLabels } from './editorLabels'
 import {
     draftFromRunes,
     draftRunes,
@@ -25,89 +26,103 @@ import {
     canAddItem,
     canAddStep,
     createStep,
+    insertItem,
+    MAX_ITEMS_PER_STEP,
     moveItem,
     moveStep,
+    moveItemToIndex,
+    moveStepToIndex,
     removeItem,
     removeStep,
     totalItems,
+    transferItem,
     updateStep,
+    type ItemLocation,
 } from './stepList'
 import { parseStructure, serializeStructure, type BuildStep } from './structure'
 import { usePickerCatalog } from './usePickerCatalog'
 
-/** Shared catalog-state wording (loading / error / retry) + ghost + counters. */
-export interface UiLabels {
-    loading: string
-    error: string
-    retry: string
-    ghost: string
-    counter: string
-}
-
-export interface ChampionLabels {
-    title: string
-    search: string
-    empty: string
-    selected: string
-}
-
-export interface RunesLabels {
-    title: string
-    primary: string
-    secondary: string
-    keystone: string
-    slot: string
-    secondaryHint: string
-}
-
-export interface StepsLabels {
-    title: string
-    add: string
-    remove: string
-    moveUp: string
-    moveDown: string
+export interface GameModeOption {
+    value: string
     label: string
-    note: string
-    searchItem: string
-    itemEmpty: string
-    removeItem: string
-    gold: string
-    presets: string[]
-}
-
-/** Labels contract of the build-editor island (translated server-side). */
-export interface BuildEditorLabels extends UiLabels {
-    champion: ChampionLabels
-    runes: RunesLabels
-    steps: StepsLabels
 }
 
 export interface BuildEditorProps {
     mode: 'create' | 'edit'
     initial: unknown
     endpoints: { champions: string; items: string; runes: string }
+    /** Initially selected patch (build's own on edit, site selection on create). */
     version: string
+    /** Patches offered by the version select, latest first. */
+    versions: string[]
     lang: string
+    /** Initially selected game mode value (GameMode enum wire values). */
+    gameMode: string
+    gameModes: GameModeOption[]
     labels: BuildEditorLabels
 }
 
-/** "%count% / %max%" template substitution for the limit counters. */
-export function formatCounter(template: string, count: number, max: number): string {
-    return template.replace('%count%', String(count)).replace('%max%', String(max))
+/** Why a placed item renders ghosted; null when it is fine (or unknown yet). */
+export type GhostReason = 'patch' | 'mode' | null
+
+/**
+ * Catalog trio bound to the LIVE (version, mode) context. Version switches
+ * reload all three; mode switches only reload items (the sole mode-scoped
+ * dataset). `knownItems` accumulates every item option seen this session so a
+ * medallion keeps its identity (name/icon/gold) after the context that knew it
+ * is switched away.
+ */
+function useEditorCatalogs(props: BuildEditorProps, gameVersion: Ref<string>, gameMode: Ref<string>) {
+    const query = (endpoint: string, extra = ''): string =>
+        `${endpoint}?version=${encodeURIComponent(gameVersion.value)}&lang=${encodeURIComponent(props.lang)}${extra}`
+
+    const champions = usePickerCatalog(() => query(props.endpoints.champions), championOptions)
+    const items = usePickerCatalog(
+        () => query(props.endpoints.items, `&mode=${encodeURIComponent(gameMode.value)}`),
+        itemOptions,
+    )
+    const runes = usePickerCatalog(() => query(props.endpoints.runes), runeTrees)
+
+    watch(gameVersion, () => void Promise.all([champions.reload(), items.reload(), runes.reload()]))
+    watch(gameMode, () => void items.reload())
+
+    const knownItems = ref<Record<string, ItemOption>>({})
+    watch(items.data, (options) => {
+        if (!options) return
+        const merged = { ...knownItems.value }
+        for (const option of options) merged[option.id] = option
+        knownItems.value = merged
+    })
+
+    return { champions, items, runes, knownItems }
+}
+
+/** Polite screen-reader announcements; clearing first re-fires identical texts. */
+function useAnnouncer() {
+    const announcement = ref('')
+    const announce = (message: string): void => {
+        announcement.value = ''
+        void nextTick(() => {
+            announcement.value = message
+        })
+    }
+
+    return { announcement, announce }
 }
 
 /**
  * Orchestrates the editor island: parses the initial structure, wires the pure
- * rune/step rules to reactive state, lazily loads the three picker catalogs and
- * keeps the serialized `structure` JSON in sync for the hidden form input.
+ * rune/step rules to reactive state, loads the picker catalogs for the LIVE
+ * (version, mode) context and keeps the serialized `structure` JSON in sync
+ * for the hidden form input. Every move (buttons and drag-and-drop) funnels
+ * through the pure stepList helpers and announces politely.
  */
 export function useBuildEditor(props: BuildEditorProps) {
-    const withContext = (endpoint: string): string =>
-        `${endpoint}?version=${encodeURIComponent(props.version)}&lang=${encodeURIComponent(props.lang)}`
-
-    const champions = usePickerCatalog(() => withContext(props.endpoints.champions), championOptions)
-    const items = usePickerCatalog(() => withContext(props.endpoints.items), itemOptions)
-    const runes = usePickerCatalog(() => withContext(props.endpoints.runes), runeTrees)
+    const gameVersion = ref(props.version)
+    const gameMode = ref(props.gameMode)
+    const { champions, items, runes, knownItems } = useEditorCatalogs(props, gameVersion, gameMode)
+    const { announcement, announce } = useAnnouncer()
+    const dnd = props.labels.dnd
 
     const initial = parseStructure(props.initial)
     const championId = ref(initial?.championId ?? '')
@@ -144,7 +159,25 @@ export function useBuildEditor(props: BuildEditorProps) {
         for (const option of items.data.value ?? []) index.set(option.id, option)
         return index
     })
-    const goldOf = (itemId: string): number | null => itemsById.value.get(itemId)?.gold ?? null
+
+    /** Display identity of a placed item: current catalog first, then any seen. */
+    const resolveItem = (itemId: string): ItemOption | undefined =>
+        itemsById.value.get(itemId) ?? knownItems.value[itemId]
+
+    const goldOf = (itemId: string): number | null => resolveItem(itemId)?.gold ?? null
+
+    /** Ghost verdict once the ACTIVE catalog answered; never judges while loading. */
+    const ghostOf = (itemId: string): GhostReason => {
+        if (items.data.value === null || itemsById.value.has(itemId)) return null
+        return knownItems.value[itemId] ? 'mode' : 'patch'
+    }
+
+    /** Commits a step-list change and announces it; identity results stay silent. */
+    function commitSteps(next: BuildStep[], message: string, params: Record<string, number>): void {
+        if (next === steps.value) return
+        steps.value = next
+        announce(formatTemplate(message, params))
+    }
 
     const structureJson = computed(() =>
         serializeStructure({
@@ -154,21 +187,24 @@ export function useBuildEditor(props: BuildEditorProps) {
         }),
     )
 
-    const isRunesComplete = computed(() => isRuneDraftComplete(runeDraft.value))
-    const itemsUsed = computed(() => totalItems(steps.value))
-
     return {
         champions,
         items,
         runes,
+        gameVersion,
+        gameMode,
         championId,
         runeDraft,
         steps,
         itemsById,
+        resolveItem,
         goldOf,
+        ghostOf,
         structureJson,
-        isRunesComplete,
-        itemsUsed,
+        announcement,
+        announce,
+        isRunesComplete: computed(() => isRuneDraftComplete(runeDraft.value)),
+        itemsUsed: computed(() => totalItems(steps.value)),
         loadCatalogs: () => Promise.all([champions.load(), items.load(), runes.load()]),
         setChampion: (id: string) => void (championId.value = id),
         setPrimaryStyle: (styleId: number) => void (runeDraft.value = selectPrimaryStyle(runeDraft.value, styleId)),
@@ -180,7 +216,8 @@ export function useBuildEditor(props: BuildEditorProps) {
             void (runeDraft.value = selectSecondaryPerk(runeDraft.value, slot, perkId)),
         appendStep: (label = '') => void (steps.value = addStep(steps.value, label)),
         deleteStep: (index: number) => void (steps.value = removeStep(steps.value, index)),
-        shiftStep: (index: number, delta: number) => void (steps.value = moveStep(steps.value, index, delta)),
+        shiftStep: (index: number, delta: number) =>
+            commitSteps(moveStep(steps.value, index, delta), dnd.movedStep, { position: index + delta + 1 }),
         editStep: (index: number, patch: Partial<Pick<BuildStep, 'label' | 'note'>>) =>
             void (steps.value = updateStep(steps.value, index, patch)),
         appendItem: (stepIndex: number, itemId: string) =>
@@ -188,8 +225,28 @@ export function useBuildEditor(props: BuildEditorProps) {
         deleteItem: (stepIndex: number, itemIndex: number) =>
             void (steps.value = removeItem(steps.value, stepIndex, itemIndex)),
         shiftItem: (stepIndex: number, itemIndex: number, delta: number) =>
-            void (steps.value = moveItem(steps.value, stepIndex, itemIndex, delta)),
+            commitSteps(moveItem(steps.value, stepIndex, itemIndex, delta), dnd.movedItem, {
+                position: itemIndex + delta + 1,
+            }),
+        dropStep: (from: number, insert: number) =>
+            commitSteps(moveStepToIndex(steps.value, from, insert), dnd.movedStep, {
+                position: (insert > from ? insert - 1 : insert) + 1,
+            }),
+        dropItem: (from: ItemLocation, to: ItemLocation) =>
+            from.step === to.step
+                ? commitSteps(moveItemToIndex(steps.value, from.step, from.index, to.index), dnd.movedItem, {
+                      position: (to.index > from.index ? to.index - 1 : to.index) + 1,
+                  })
+                : commitSteps(transferItem(steps.value, from, to), dnd.transferred, { step: to.step + 1 }),
+        dropNewItem: (to: ItemLocation, itemId: string) =>
+            commitSteps(insertItem(steps.value, to.step, to.index, itemId), dnd.added, { step: to.step + 1 }),
+        announceDragCancelled: () => announce(dnd.cancelled),
         canAddStep: computed(() => canAddStep(steps.value)),
         canAddItemTo: (stepIndex: number) => canAddItem(steps.value, stepIndex),
+        // A same-step move never changes counts; a cross-step one only fights
+        // the target's per-step cap (the build total is untouched).
+        canReceiveItem: (stepIndex: number, from: ItemLocation): boolean =>
+            from.step === stepIndex
+            || (steps.value[stepIndex]?.items.length ?? MAX_ITEMS_PER_STEP) < MAX_ITEMS_PER_STEP,
     }
 }

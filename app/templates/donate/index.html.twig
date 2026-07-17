@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ 'donate.title'|trans }} · {{ 'base.title'|trans }}{% endblock %}
-{% block meta_description %}{{ 'donate.intro'|trans }}{% endblock %}
+{% block title %}{{ seo_title('donate.title'|trans({}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'donate.description'|trans({}, 'seo') }}{% endblock %}
 
 {% block body %}
 <main class="donate-page">

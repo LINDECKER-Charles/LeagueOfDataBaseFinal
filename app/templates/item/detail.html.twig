@@ -67,14 +67,25 @@
 
 {% import _self as recipe %}
 
-{% block title %}{{ item.name ?? 'Item' }} - {{ version|default(client.session.version ?? (client.versions|first)) }}{% endblock %}
-{% block meta_description %}
-  {{ 'item.detail.meta_description'|trans({
-    '%name%': item.name ?? 'Item',
-    '%version%': version|default(client.session.version ?? (client.versions|first))
-  }) }}
-{% endblock %}
+{% block title %}{{ seo_title('item.detail.title'|trans({'%name%': item.name ?? 'Item'}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'item.detail.description'|trans({
+  '%name%': item.name ?? 'Item',
+  '%version%': version|default(client.session.version ?? (client.versions|first))
+}, 'seo') }}{% endblock %}
 {% block img %}/preview/objects.png{% endblock %}
+
+{% block structured_data %}
+  {{ seo_jsonld(seo_breadcrumbs([
+    { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+    { name: 'header.navigation.item'|trans, url: seo_absolute(path('app_items')) },
+    { name: item.name ?? '', url: seo_canonical() }
+  ])) }}
+  {{ seo_jsonld(seo_game_item(
+    item.name ?? '',
+    image is defined and image ? seo_absolute('/' ~ image) : null,
+    item.plaintext|default(item.description|default('')|striptags)
+  )) }}
+{% endblock %}
 
 {% block body %}
 {% set selectedVersion = version|default(client.session.version ?? (client.versions|default([])|first)) %}

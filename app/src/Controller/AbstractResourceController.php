@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Dto\ClientData;
 use App\Service\API\AbstractManager;
+use App\Service\API\ResourceNotFoundException;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
@@ -47,6 +48,24 @@ abstract class AbstractResourceController extends AbstractController
         $this->addFlash('error', $this->dataError($ctx, $e));
 
         return $this->redirectToRoute('app_home');
+    }
+
+    /**
+     * Maps a detail-page data failure to its HTTP outcome. A slug unknown to the
+     * requested dataset is a definitive absence → real 404 (crawlers must never
+     * see a soft-404 redirect to the home). Anything else (upstream 5xx,
+     * timeout, corrupt payload) keeps the historical redirect-with-flash so the
+     * visitor can fix the version/lang selection.
+     *
+     * @param array{version?:string, lang?:string} $ctx
+     */
+    protected function detailFailure(array $ctx, \Throwable $e): Response
+    {
+        if ($e instanceof ResourceNotFoundException) {
+            throw $this->createNotFoundException($e->getMessage(), $e);
+        }
+
+        return $this->redirectToHomeWithError($ctx, $e);
     }
 
     /**

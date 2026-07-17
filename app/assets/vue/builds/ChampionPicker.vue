@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { ChampionOption } from './catalogTypes'
-import type { ChampionLabels, UiLabels } from './useBuildEditor'
+import type { ChampionLabels, UiLabels } from './editorLabels'
 
 /**
  * Champion section: live search over the picker catalog + portrait grid.

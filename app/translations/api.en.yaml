@@ -1,0 +1,134 @@
+# Dedicated domain of the paid public API: portal (/profile/api), public
+# /developers page, Stripe product labels and flashes. Usage: |trans({}, 'api').
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "Developer API"
+  title: "API keys"
+  back_profile: "Back to profile"
+  docs_link: "Documentation & pricing"
+  profile_link:
+    label: "Developer API"
+    manage: "Manage my API key"
+  create:
+    title: "No API key yet"
+    body: "Generate your personal key and call the public API — free plan: 500 requests per month, 10 per minute."
+    name_label: "Key name (optional)"
+    name_placeholder: "my-app"
+    submit: "Create my key"
+  raw:
+    title: "Your new API key"
+    warning: "Copy it now — it is shown only this once. Only a fingerprint is stored: a lost key can only be regenerated."
+    label: "Secret key"
+    copy: "Copy the key"
+    copied: "Copied!"
+    copy_error: "Copy manually from the field"
+  key:
+    title: "Active key"
+    label_key: "Key"
+    label_name: "Name"
+    label_created: "Created"
+    label_quota: "Monthly usage"
+    quota_used: "%used% / %quota% requests"
+    quota_remaining: "%remaining% remaining this month"
+    label_credits: "Prepaid credits"
+    label_rate: "Rate limit"
+    rate_unit: "%rate% req/min"
+    subscription_active: "Active subscription"
+  actions:
+    regenerate: "Regenerate the key"
+    regenerate_help: "Revokes this key and issues a new secret — plan, quota and credits carry over."
+    revoke: "Revoke"
+    revoke_help: "Disables the key immediately (the API may accept it for up to a minute of cache)."
+  billing:
+    title: "Boost your key"
+    unavailable: "Payments are not enabled on this server."
+    packs_title: "Credit packs"
+    packs_help: "One-time payment — 1 € per 1,000 requests, spent after your monthly quota, valid 12 months. Any pack raises your rate to at least 60 req/min."
+    plans_title: "Subscriptions"
+    plans_help: "Raise the monthly quota and the rate limit. One active subscription per account."
+    buy: "Buy"
+    subscribe: "Subscribe"
+    current: "Current"
+    per_month: "/month"
+    per_year: "/year"
+    requests_month: "%count% req/month"
+    requests_once: "%count% requests"
+    already_subscribed: "Your key already carries a subscription. To change plan, cancel the current one first (the downgrade applies as soon as Stripe confirms it), then subscribe again."
+  usage:
+    title: "Last 30 days"
+    total_month: "Used this month"
+    day: "Day"
+    requests: "Requests"
+    empty: "No usage metered yet — your first API calls will show up here within a minute."
+  status:
+    pack_success: "Payment confirmed — your credits are being added (a few seconds)."
+    plan_success: "Subscription confirmed — your key is being upgraded (a few seconds)."
+    cancelled: "Payment cancelled — nothing was charged."
+  flash:
+    csrf: "Session expired, please try again."
+    created: "API key created."
+    regenerated: "Key regenerated — the previous secret no longer works."
+    revoked: "Key revoked."
+    key_exists: "You already have an active key."
+    no_key: "You have no active key."
+    invalid_offer: "Unknown offer."
+    already_subscribed: "An active subscription already exists on your key — cancel it before subscribing again."
+    need_key: "Create your API key before purchasing."
+    stripe_unavailable: "Payments are not available right now."
+    gateway: "The payment service is unreachable, please try again later."
+
+plan:
+  free: "Free"
+  credits: "Credits"
+  monthly: "Monthly"
+  monthly_plus: "Monthly+"
+  annual: "Annual"
+  annual_plus: "Annual+"
+
+pack:
+  small: "Pack S"
+  medium: "Pack M"
+  large: "Pack L"
+
+product:
+  pack: "LoDB API — %requests% request credits"
+  plan: "LoDB API — %plan% plan"
+
+pricing:
+  offer: "Offer"
+  price: "Price"
+  volume: "Volume"
+  rate: "Rate limit"
+  validity_note: "Credit packs: 1 € per 1,000 requests, spent after the monthly quota of the active plan, valid 12 months. Annual plans carry their volume as a monthly quota, billed yearly."
+
+developers:
+  eyebrow: "Developers"
+  title: "The LeagueOfDataBase API"
+  intro: "A REST JSON API over the site's community data: public summoner profiles, shared builds and consultation trends. Free to try, priced for real workloads."
+  cta: "Create my key"
+  cta_hint: "Sign in, generate the free key, call the API — under a minute."
+  docs_pricing: "Pricing"
+  auth:
+    title: "Authentication"
+    body: "Every /v1 request carries your key — format %prefix% followed by 40 hexadecimal characters — in one of two headers. Only its SHA-256 fingerprint is stored server-side: a lost key is regenerated, never recovered."
+    base_url: "Base URL (v1, development): %url% — production access will be exposed through the site's own domain via the TLS edge."
+  endpoints:
+    title: "Endpoints"
+    healthz: "Service health — the only route without authentication."
+    profiles: "Public profile of a member: favorites and number of public builds (404 if the profile is private)."
+    builds: "Public builds for a champion (Data Dragon id), newest first — paginated with page and per_page (max 50)."
+    trends: "Most-viewed entities on the site: champions, items, runes or summoners — range=7d (default) or 30d, top 25."
+    usage: "Live consumption of the calling key — authenticated and rate-limited, but never counted against the quota."
+  quotas:
+    title: "Quotas & rate limiting"
+    quota: "Each request is charged to the monthly quota of your plan, then to prepaid credits; when both are exhausted the API answers 429 quota_exceeded."
+    rate: "Token bucket per key: every /v1 response carries X-RateLimit-Limit, X-RateLimit-Remaining and X-RateLimit-Reset; beyond the limit, 429 rate_limited."
+    month: "Quotas reset with the calendar month. Annual plans carry their volume as a monthly quota (20 000 or 60 000 requests per month)."
+  errors:
+    title: "Errors"
+    body: "Uniform envelope on every error. Codes: unauthorized (401), forbidden (403, revoked key), not_found (404), rate_limited and quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Billing & key management"
+    body: "Keys are created and managed from your profile; credit packs and subscriptions are paid through Stripe Checkout — the API itself never touches payment data."

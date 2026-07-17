@@ -46,9 +46,10 @@
         </div>
       </section>
 
-      {# The island owns champion/runes/steps and maintains the hidden `structure`
-         input. Until it mounts (or without JS), the fallback input below keeps the
-         current structure round-tripping through a submit. #}
+      {# The island owns the game context (version/mode selects), champion/runes/
+         steps, and maintains the hidden `structure` input. Until it mounts (or
+         without JS), the fallback inputs below keep the current structure AND the
+         build's pinned version/mode round-tripping through a submit. #}
       <div data-vue="build-editor" data-props="{{ {
             mode: mode,
             initial: values.structure,
@@ -58,13 +59,31 @@
               runes: '/api/picker/runes'
             },
             version: version,
+            versions: versionChoices,
             lang: lang,
+            gameMode: gameMode,
+            gameModes: gameModes|map(m => { value: m.value, label: m.labelKey|trans }),
             labels: {
               loading: 'build.editor.loading'|trans,
               error: 'build.editor.error'|trans,
               retry: 'build.editor.retry'|trans,
               ghost: 'build.editor.ghost'|trans,
+              ghostMode: 'build.editor.ghost_mode'|trans,
               counter: 'build.editor.counter'|trans,
+              context: {
+                title: 'build.editor.context.title'|trans,
+                version: 'build.editor.context.version'|trans,
+                mode: 'build.editor.context.mode'|trans,
+                modeHint: 'build.editor.context.mode_hint'|trans
+              },
+              dnd: {
+                handle: 'build.editor.dnd.handle'|trans,
+                movedStep: 'build.editor.dnd.moved_step'|trans,
+                movedItem: 'build.editor.dnd.moved_item'|trans,
+                transferred: 'build.editor.dnd.transferred'|trans,
+                added: 'build.editor.dnd.added'|trans,
+                cancelled: 'build.editor.dnd.cancelled'|trans
+              },
               champion: {
                 title: 'build.editor.champion.title'|trans,
                 search: 'build.editor.champion.search'|trans,
@@ -103,6 +122,8 @@
           }|json_encode|e('html_attr') }}">
         <noscript><p class="hx-chip">{{ 'build.editor.nojs'|trans }}</p></noscript>
         <input type="hidden" name="structure" value="{{ values.structure ? values.structure|json_encode : '' }}">
+        <input type="hidden" name="game_version" value="{{ version }}">
+        <input type="hidden" name="game_mode" value="{{ gameMode }}">
       </div>
 
       <div class="flex flex-wrap items-center justify-end gap-3">

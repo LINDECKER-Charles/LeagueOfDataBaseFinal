@@ -35,11 +35,18 @@ final class AdminChartExtension extends AbstractExtension
             new TwigFilter('bytes', $this->charts->bytes(...)),
             new TwigFilter('compact', $this->charts->compact(...)),
             new TwigFilter('pct', $this->percent(...)),
+            new TwigFilter('euros', $this->euros(...)),
         ];
     }
 
     public function percent(int|float $value, int $decimals = 1): string
     {
         return number_format((float) $value, $decimals) . ' %';
+    }
+
+    /** Cent-stored amounts (donations, plans) rendered as French-format euros. */
+    public function euros(int|float $cents): string
+    {
+        return number_format($cents / 100, 2, ',', ' ') . ' €';
     }
 }

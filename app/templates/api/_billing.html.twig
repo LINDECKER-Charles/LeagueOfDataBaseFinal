@@ -1,0 +1,55 @@
+{# Purchase panels: one-time credit packs (mode payment) and subscription
+   plans (mode subscription). Entitlements land via the Stripe webhook, so the
+   copy warns about the short delay. External 303 to Stripe: keep Turbo out. #}
+<section class="profile-panel mt-14" aria-labelledby="api-billing-title">
+    <h2 id="api-billing-title" class="profile-panel__title">{{ 'portal.billing.title'|trans({}, 'api') }}</h2>
+
+    {% if not billingConfigured %}
+        <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'portal.billing.unavailable'|trans({}, 'api') }}</p>
+    {% else %}
+        <h3 class="eyebrow mt-6">{{ 'portal.billing.packs_title'|trans({}, 'api') }}</h3>
+        <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'portal.billing.packs_help'|trans({}, 'api') }}</p>
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% for pack in packs %}
+                <form method="post" action="{{ path('app_api_checkout_pack') }}" data-turbo="false"
+                      class="hextech-frame hextech-frame-hover api-offer">
+                    <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+                    <input type="hidden" name="pack" value="{{ pack.value }}">
+                    <p class="api-offer__name">{{ ('pack.' ~ pack.value)|trans({}, 'api') }}</p>
+                    <p class="api-offer__price">{{ pack.priceCents // 100 }} €</p>
+                    <p class="api-offer__detail">{{ 'portal.billing.requests_once'|trans({'%count%': pack.requests|number_format(0, '.', ' ')}, 'api') }}</p>
+                    <button type="submit" class="hx-btn mt-4 w-full">{{ 'portal.billing.buy'|trans({}, 'api') }}</button>
+                </form>
+            {% endfor %}
+        </div>
+
+        <h3 class="eyebrow mt-8">{{ 'portal.billing.plans_title'|trans({}, 'api') }}</h3>
+        <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'portal.billing.plans_help'|trans({}, 'api') }}</p>
+        {% if apiKey.hasSubscription %}
+            <p class="api-banner api-banner--muted mt-4">{{ 'portal.billing.already_subscribed'|trans({}, 'api') }}</p>
+        {% endif %}
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {% for plan in plans %}
+                <form method="post" action="{{ path('app_api_checkout_plan') }}" data-turbo="false"
+                      class="hextech-frame hextech-frame-hover api-offer">
+                    <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+                    <input type="hidden" name="plan" value="{{ plan.value }}">
+                    <p class="api-offer__name">
+                        {{ ('plan.' ~ plan.value)|trans({}, 'api') }}
+                        {% if apiKey.plan.value == plan.value %}
+                            <span class="hx-chip">{{ 'portal.billing.current'|trans({}, 'api') }}</span>
+                        {% endif %}
+                    </p>
+                    <p class="api-offer__price">
+                        {{ plan.priceCents // 100 }} €<small>{{ (plan.stripeInterval == 'year' ? 'portal.billing.per_year' : 'portal.billing.per_month')|trans({}, 'api') }}</small>
+                    </p>
+                    <p class="api-offer__detail">{{ 'portal.billing.requests_month'|trans({'%count%': plan.monthlyQuota|number_format(0, '.', ' ')}, 'api') }}</p>
+                    <p class="api-offer__detail">{{ 'portal.key.rate_unit'|trans({'%rate%': plan.rateLimitPerMin}, 'api') }}</p>
+                    <button type="submit" class="hx-btn mt-4 w-full"{{ apiKey.hasSubscription ? ' disabled' }}>
+                        {{ 'portal.billing.subscribe'|trans({}, 'api') }}
+                    </button>
+                </form>
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>

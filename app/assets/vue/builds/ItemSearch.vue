@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { ItemOption } from './catalogTypes'
-import type { StepsLabels, UiLabels } from './useBuildEditor'
+import type { StepsLabels, UiLabels } from './editorLabels'
 
 /**
  * Per-step item finder: type-ahead over the picker catalog, one click adds the
- * item to the owning step. Results only appear once a query is typed (keeps
- * ten steps' worth of DOM light).
+ * item to the owning step; results can also be DRAGGED into any step (the
+ * parent owns the drag state — this component only relays start/end). Results
+ * only appear once a query is typed (keeps ten steps' worth of DOM light).
  */
 const MAX_RESULTS = 24
 
@@ -19,7 +20,12 @@ const props = defineProps<{
     ui: UiLabels
 }>()
 
-const emit = defineEmits<{ add: [itemId: string]; retry: [] }>()
+const emit = defineEmits<{
+    add: [itemId: string]
+    dragStart: [itemId: string, event: DragEvent]
+    dragEnd: []
+    retry: []
+}>()
 
 const query = ref('')
 
@@ -52,10 +58,13 @@ const results = computed<ItemOption[]>(() => {
                     v-for="item in results"
                     :key="item.id"
                     type="button"
-                    class="forge-result"
+                    class="forge-result forge-grab"
                     :disabled="!canAdd"
                     :title="item.name"
+                    :draggable="canAdd"
                     @click="emit('add', item.id)"
+                    @dragstart="emit('dragStart', item.id, $event)"
+                    @dragend="emit('dragEnd')"
                 >
                     <img v-if="item.image" :src="item.image" alt="" loading="lazy" decoding="async" />
                     <span>{{ item.name }}</span>

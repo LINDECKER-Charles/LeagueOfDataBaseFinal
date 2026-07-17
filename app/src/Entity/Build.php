@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\BuildRepository;
+use App\Service\Picker\GameMode;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -43,6 +44,10 @@ final class Build
     /** Patch the build was written for (e.g. "15.14.1"). */
     #[ORM\Column(length: 24)]
     private string $gameVersion = '';
+
+    /** Game mode the build targets ({@see GameMode} values); drives item availability. */
+    #[ORM\Column(length: 16, enumType: GameMode::class, options: ['default' => 'sr'])]
+    private GameMode $gameMode = GameMode::DEFAULT;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
@@ -123,6 +128,18 @@ final class Build
     public function setGameVersion(string $gameVersion): static
     {
         $this->gameVersion = $gameVersion;
+
+        return $this;
+    }
+
+    public function getGameMode(): GameMode
+    {
+        return $this->gameMode;
+    }
+
+    public function setGameMode(GameMode $gameMode): static
+    {
+        $this->gameMode = $gameMode;
 
         return $this;
     }

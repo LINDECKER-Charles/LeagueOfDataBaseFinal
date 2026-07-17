@@ -66,8 +66,10 @@ final class ItemController extends AbstractResourceController
         $sel = $this->pageContext->selection();
 
         try {
-            $image = $this->itemManager->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
+            // Lookup first: an unknown slug must 404 from the dataset alone,
+            // without ever asking the CDN for an image that cannot exist.
             $item  = $this->itemManager->getByName($name, $sel['version'], $sel['lang']);
+            $image = $this->itemManager->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
             // Les IDs de item.into / item.from ne parlent pas au joueur : on les
             // résout en objets réels (nom + image + prix) liables vers leur page
             // détail. `components` (from) + cet objet + `related` (into) forment
@@ -77,7 +79,7 @@ final class ItemController extends AbstractResourceController
             // qu'un seul niveau — le vrai « arbre de craft » de l'objet.
             $recipe  = $this->itemManager->recipeTree($name, $sel['version'], $sel['lang']);
         } catch (\Throwable $e) {
-            return $this->redirectToHomeWithError($sel, $e);
+            return $this->detailFailure($sel, $e);
         }
 
         return $this->render('item/detail.html.twig', [

@@ -1,14 +1,25 @@
 {# templates/summoner/detail.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ summoner.name ?? 'Summoner' }} - {{ version|default(client.session.version ?? (client.versions|first)) }}{% endblock %}
-{% block meta_description %}
-  {{ 'summoner.detail.meta_description'|trans({
-    '%name%': summoner.name ?? 'Summoner Spell',
-    '%version%': version|default(client.session.version ?? (client.versions|first))
-  }) }}
-{% endblock %}
+{% block title %}{{ seo_title('summoner.detail.title'|trans({'%name%': summoner.name ?? 'Summoner Spell'}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'summoner.detail.description'|trans({
+  '%name%': summoner.name ?? 'Summoner Spell',
+  '%version%': version|default(client.session.version ?? (client.versions|first))
+}, 'seo') }}{% endblock %}
 {% block img %}/preview/summoners.png{% endblock %}
+
+{% block structured_data %}
+  {{ seo_jsonld(seo_breadcrumbs([
+    { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+    { name: 'header.navigation.summoner'|trans, url: seo_absolute(path('app_summoners')) },
+    { name: summoner.name ?? '', url: seo_canonical() }
+  ])) }}
+  {{ seo_jsonld(seo_game_item(
+    summoner.name ?? '',
+    image is defined and image ? seo_absolute('/' ~ image) : null,
+    summoner.description|default('')|striptags
+  )) }}
+{% endblock %}
 
 {% block body %}
 {% set selectedVersion = version|default(client.session.version ?? (client.versions|default([])|first)) %}

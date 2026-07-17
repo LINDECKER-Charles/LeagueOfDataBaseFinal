@@ -1,0 +1,334 @@
+/* ---------------------------------------------------------------------------
+   Changelog — the released version history as a vertical Hextech timeline.
+   Each release is a native <details> node threaded on a single gold rail with a
+   hex-diamond marker; the latest sits open. The version chip (.cl-version-chip)
+   also lives in the navbar next to the brand, linking here. Reuses the shared
+   grammar (hextech-frame, eyebrow, text-gold-grad); only the timeline + release
+   structure is bespoke.
+--------------------------------------------------------------------------- */
+@layer components {
+  .changelog-page {
+    width: 100%;
+    max-width: 52rem;
+    margin-inline: auto;
+    padding: 2.5rem 1rem 4rem;
+  }
+
+  /* --- Version chip (navbar + hero) -------------------------------------- */
+  .cl-version-chip {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    background: color-mix(in srgb, var(--color-void) 85%, transparent);
+    padding: 0.1rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    color: var(--color-gold);
+    transition: color 0.25s var(--ease-hextech), border-color 0.25s var(--ease-hextech);
+  }
+  a.cl-version-chip:hover,
+  a.cl-version-chip:focus-visible {
+    color: var(--color-gold-bright);
+    border-color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+    outline: none;
+  }
+  a.cl-version-chip.is-active {
+    color: var(--color-gold-bright);
+    border-color: color-mix(in srgb, var(--color-gold) 60%, transparent);
+  }
+  .cl-version-chip--lg {
+    padding: 0.2rem 0.65rem;
+    font-size: 0.85rem;
+  }
+
+  /* --- Hero -------------------------------------------------------------- */
+  .changelog-hero {
+    margin-top: 1.5rem;
+    padding: 1.75rem 1.5rem;
+  }
+  .changelog-hero__title {
+    margin-top: 0.5rem;
+    font-family: var(--font-beaufort);
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.05;
+  }
+  .changelog-hero__lede {
+    margin-top: 1rem;
+    max-width: 42rem;
+    color: var(--color-text-muted);
+  }
+  .changelog-hero__current {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    color: var(--color-text-dim);
+  }
+
+  /* --- Timeline rail ----------------------------------------------------- */
+  .cl-timeline {
+    position: relative;
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0 0 0 2rem;
+  }
+  .cl-timeline::before {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--color-gold-deep) 90%, transparent) 6%,
+      color-mix(in srgb, var(--color-gold-deep) 90%, transparent) 94%,
+      transparent
+    );
+  }
+  .cl-node {
+    position: relative;
+  }
+  .cl-node + .cl-node {
+    margin-top: 1.1rem;
+  }
+  /* Hex-diamond marker, centred on the rail and aligned with the summary line. */
+  .cl-node::before {
+    content: "";
+    position: absolute;
+    left: -1.63rem;
+    top: 1.35rem;
+    width: 11px;
+    height: 11px;
+    transform: rotate(45deg);
+    background: var(--color-gold);
+    box-shadow: 0 0 10px -1px color-mix(in srgb, var(--color-gold) 70%, transparent);
+    z-index: 1;
+  }
+  .cl-node:first-child::before {
+    background: var(--color-hex);
+    box-shadow: 0 0 12px -1px color-mix(in srgb, var(--color-hex) 70%, transparent);
+  }
+
+  /* --- Release block ----------------------------------------------------- */
+  .cl-release {
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+    background: color-mix(in srgb, var(--color-panel) 80%, transparent);
+  }
+  .cl-release[open] {
+    border-color: color-mix(in srgb, var(--color-gold-deep) 70%, transparent);
+    box-shadow: inset 0 1px 0 0 rgba(200, 170, 110, 0.18);
+  }
+  .cl-release__summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1rem 1.15rem;
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.25s var(--ease-hextech);
+  }
+  .cl-release__summary::-webkit-details-marker { display: none; }
+  .cl-release__summary:hover { background: color-mix(in srgb, var(--color-panel-2) 55%, transparent); }
+  .cl-release__summary:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-hex) 45%, transparent);
+    outline-offset: -2px;
+  }
+  .cl-release__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+  .cl-release__version {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    color: var(--color-gold-bright);
+    letter-spacing: 0.02em;
+  }
+  .cl-release__codename {
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.95rem;
+    color: var(--color-gold);
+  }
+  .cl-release__date {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-dim);
+  }
+  .cl-release__chevron {
+    width: 0.85rem;
+    height: 0.85rem;
+    color: var(--color-text-muted);
+    transition: transform 0.3s var(--ease-hextech);
+  }
+  .cl-release[open] .cl-release__chevron { transform: rotate(180deg); }
+  .cl-release__lede {
+    color: var(--color-text-muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
+  /* --- Type badge -------------------------------------------------------- */
+  .cl-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.05rem 0.45rem;
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.6rem;
+    border: 1px solid transparent;
+  }
+  .cl-badge--major {
+    color: var(--color-hex-bright);
+    border-color: color-mix(in srgb, var(--color-hex) 55%, transparent);
+    background: color-mix(in srgb, var(--color-hex) 12%, transparent);
+  }
+  .cl-badge--minor {
+    color: var(--color-gold-bright);
+    border-color: color-mix(in srgb, var(--color-gold-deep) 70%, transparent);
+    background: color-mix(in srgb, var(--color-gold) 10%, transparent);
+  }
+  .cl-badge--hotfix {
+    color: var(--color-text);
+    border-color: color-mix(in srgb, var(--color-text-muted) 45%, transparent);
+    background: color-mix(in srgb, var(--color-text-muted) 8%, transparent);
+  }
+
+  /* --- Release body ------------------------------------------------------ */
+  .cl-release__body {
+    padding: 0.25rem 1.15rem 1.35rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-gold-deep) 30%, transparent);
+  }
+  .cl-release__intro {
+    margin: 1rem 0 0.25rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  .cl-features {
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+  }
+  .cl-feature {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 30%, transparent);
+    background: color-mix(in srgb, var(--color-void) 55%, transparent);
+  }
+  .cl-feature__glyph {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.05rem;
+    color: var(--color-gold);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    background: color-mix(in srgb, var(--color-hextech-black) 60%, transparent);
+  }
+  .cl-feature--mana .cl-feature__glyph {
+    color: var(--color-hex);
+    border-color: color-mix(in srgb, var(--color-hex-deep) 55%, transparent);
+  }
+  .cl-feature__title {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.98rem;
+    color: var(--color-gold-bright);
+  }
+  .cl-feature__tag {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.6rem;
+    color: var(--color-text-dim);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+    padding: 0.03rem 0.35rem;
+  }
+  .cl-feature__desc {
+    margin-top: 0.3rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  /* --- Bugfixes (future releases) ---------------------------------------- */
+  .cl-block { margin-top: 1.5rem; }
+  .cl-block__label { margin-bottom: 0.6rem; }
+  .cl-fixes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+  .cl-fix {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+  }
+  .cl-fix__id { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-hex); }
+  .cl-fix__area {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-dim);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 40%, transparent);
+    padding: 0.02rem 0.3rem;
+  }
+
+  /* --- Dev note ---------------------------------------------------------- */
+  .cl-devnote {
+    margin: 1.5rem 0 0;
+    padding: 1rem 1.15rem;
+    border-left: 2px solid color-mix(in srgb, var(--color-gold) 55%, transparent);
+    background: color-mix(in srgb, var(--color-void) 45%, transparent);
+  }
+  .cl-devnote__body {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-style: italic;
+    line-height: 1.6;
+  }
+  .cl-devnote__sign {
+    margin-top: 0.6rem;
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.68rem;
+    color: var(--color-gold);
+  }
+
+  .changelog-empty {
+    margin-top: 2.5rem;
+    text-align: center;
+    color: var(--color-text-dim);
+  }
+
+  @media (max-width: 480px) {
+    .cl-timeline { padding-left: 1.5rem; }
+    .cl-node::before { left: -1.13rem; }
+    .cl-release__date { margin-left: 0; width: 100%; }
+  }
+}

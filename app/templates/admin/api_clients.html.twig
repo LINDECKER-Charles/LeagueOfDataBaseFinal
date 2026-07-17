@@ -1,0 +1,84 @@
+{% extends 'admin/_base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Clients API · Admin · LODB{% endblock %}
+
+{% set planMeta = {
+    free:         { label: 'Free',      color: 'var(--series-1)' },
+    credits:      { label: 'Crédits',   color: 'var(--series-5)' },
+    monthly:      { label: 'Mensuel',   color: 'var(--series-2)' },
+    monthly_plus: { label: 'Mensuel+',  color: 'var(--series-3)' },
+    annual:       { label: 'Annuel',    color: 'var(--series-4)' },
+    annual_plus:  { label: 'Annuel+',   color: 'var(--gold-deep)' }
+} %}
+
+{% block admin_body %}
+    {{ ui.page_head('Gestion', 'Clients API', "Clés de l'API publique payante : consommation, révocation et crédits manuels.") }}
+
+    <div class="kpi-grid">
+        {{ ui.kpi('Clés actives', kpis.active|number_format(0, '.', ' '), null, 'var(--gold)', null) }}
+        {{ ui.kpi('Requêtes ce mois', kpis.monthRequests|compact, 'toutes clés confondues', 'var(--hex)', null) }}
+        {{ ui.kpi('Crédits en circulation', kpis.credits|compact, 'requêtes prépayées (clés actives)', 'var(--series-3)', null) }}
+    </div>
+
+    <div class="grid cols-2" style="margin-top: 1.15rem;">
+        <section class="card">
+            <div class="card__head"><h2>Répartition par plan</h2><span class="chip">clés actives</span></div>
+            {% set slices = [] %}
+            {% for plan, n in kpis.byPlan %}
+                {% set m = planMeta[plan]|default({ label: plan, color: 'var(--text-muted)' }) %}
+                {% set slices = slices|merge([{ name: m.label, value: n, color: m.color }]) %}
+            {% endfor %}
+            {{ chart_donut(slices, kpis.active|compact, 'clés', 'Clés actives par plan') }}
+            {{ ui.legend(slices|map((s) => { label: s.name, color: s.color, value: s.value })) }}
+        </section>
+        <section class="card">
+            <div class="card__head"><h2>Top consommateurs</h2><span class="chip">30 jours</span></div>
+            {{ ui.rank(topConsumers, 'compact', 'cyan', 'Aucun trafic sur 30 jours.') }}
+        </section>
+    </div>
+
+    <div class="rule" data-label="Clés"></div>
+
+    <section class="card">
+        {% set listContext = { page: page } %}
+        {% set tableRows = [] %}
+        {% for row in rows %}
+            {% set k = row.key %}
+            {% set actions %}
+                {% if k.isActive %}
+                    <form method="post" action="{{ path('admin_api_client_credit', { id: k.id } + listContext) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('admin_api_client_credit') }}">
+                        <input type="number" name="requests" class="input-slim" min="1" max="1000000" step="1" placeholder="Requêtes" required aria-label="Requêtes à créditer">
+                        <button type="submit" class="btn small">Créditer</button>
+                    </form>
+                    <form method="post" action="{{ path('admin_api_client_revoke', { id: k.id } + listContext) }}"
+                          onsubmit="return confirm('Révoquer la clé {{ k.keyPrefix|e('js') }}… ? Elle cessera d\'authentifier sous ~60 s.');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('admin_api_client_revoke') }}">
+                        <button type="submit" class="btn danger small">Révoquer</button>
+                    </form>
+                {% else %}
+                    <span class="dim">—</span>
+                {% endif %}
+            {% endset %}
+            {% set tableRows = tableRows|merge([[
+                { text: k.user.username, sub: k.name },
+                { text: k.keyPrefix ~ '…' },
+                { chips: [(planMeta[k.plan.value]|default({ label: k.plan.value })).label] },
+                { num: row.used|number_format(0, '.', ' ') ~ ' / ' ~ k.monthlyQuota|number_format(0, '.', ' ') },
+                { num: k.creditsBalance|number_format(0, '.', ' ') },
+                { num: k.rateLimitPerMin },
+                { badge: k.isActive ? 'active' : 'révoquée', tone: k.isActive ? 'good' : 'bad' },
+                { text: k.createdAt|date('d/m/Y') },
+                { html: actions, class: 'actions-cell' },
+            ]]) %}
+        {% endfor %}
+        {{ ui.table(
+            ['Compte', 'Clé', 'Plan', { label: 'Conso mois', num: true }, { label: 'Crédits', num: true }, { label: 'Req/min', num: true }, 'Statut', 'Créée le', { label: 'Actions', num: true }],
+            tableRows,
+            'Aucune clé API émise.'
+        ) }}
+    </section>
+
+    {{ ui.pager('admin_api_clients', page, pages, {}) }}
+{% endblock %}

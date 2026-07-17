@@ -30,6 +30,9 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            # Banned accounts are rejected pre-auth (form login, Google and
+            # remember-me alike) with a player-facing translated message.
+            user_checker: App\Security\UserChecker
             form_login:
                 login_path: app_login
                 check_path: app_login
@@ -37,6 +40,11 @@ security:
                 default_target_path: app_profile
                 username_parameter: _username
                 password_parameter: _password
+            custom_authenticators:
+                - App\Security\GoogleAuthenticator
+            # Two authenticators on the firewall: anonymous hits on protected
+            # pages must still land on the login form, not the OAuth callback.
+            entry_point: form_login
             logout:
                 path: app_logout
                 target: app_home

@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "開發者 API"
+  title: "API 金鑰"
+  back_profile: "返回個人檔案"
+  docs_link: "文件與價格"
+  profile_link:
+    label: "開發者 API"
+    manage: "管理我的 API 金鑰"
+  create:
+    title: "還沒有 API 金鑰"
+    body: "產生你的個人金鑰並呼叫公開 API — 免費方案:每月 500 次請求,每分鐘 10 次。"
+    name_label: "金鑰名稱(選填)"
+    name_placeholder: "my-app"
+    submit: "建立我的金鑰"
+  raw:
+    title: "你的新 API 金鑰"
+    warning: "請立即複製 — 它只會顯示這一次。伺服器僅保存指紋:金鑰遺失後只能重新產生。"
+    label: "祕密金鑰"
+    copy: "複製金鑰"
+    copied: "已複製!"
+    copy_error: "請從欄位手動複製"
+  key:
+    title: "使用中的金鑰"
+    label_key: "金鑰"
+    label_name: "名稱"
+    label_created: "建立於"
+    label_quota: "本月用量"
+    quota_used: "%used% / %quota% 次請求"
+    quota_remaining: "本月剩餘 %remaining%"
+    label_credits: "預付點數"
+    label_rate: "速率限制"
+    rate_unit: "每分鐘 %rate% 次"
+    subscription_active: "訂閱生效中"
+  actions:
+    regenerate: "重新產生金鑰"
+    regenerate_help: "撤銷目前金鑰並簽發新的祕密 — 方案、配額與點數保持不變。"
+    revoke: "撤銷"
+    revoke_help: "立即停用金鑰(因快取關係,API 最多仍會接受它一分鐘)。"
+  billing:
+    title: "升級你的金鑰"
+    unavailable: "此伺服器未啟用付款。"
+    packs_title: "點數包"
+    packs_help: "一次性付款 — 每 1,000 次請求 1 €,於月配額用盡後扣抵,效期 12 個月。任何點數包都會把速率提升到至少每分鐘 60 次。"
+    plans_title: "訂閱"
+    plans_help: "提升月配額與速率限制。每個帳號僅限一個生效訂閱。"
+    buy: "購買"
+    subscribe: "訂閱"
+    current: "目前"
+    per_month: "/月"
+    per_year: "/年"
+    requests_month: "每月 %count% 次"
+    requests_once: "%count% 次請求"
+    already_subscribed: "你的金鑰已有訂閱。若要更換方案,請先取消目前訂閱(Stripe 確認後立即回到免費方案),再重新訂閱。"
+  usage:
+    title: "最近 30 天"
+    total_month: "本月已用"
+    day: "日期"
+    requests: "請求數"
+    empty: "尚無計量資料 — 你的第一批 API 呼叫將在一分鐘內出現在這裡。"
+  status:
+    pack_success: "付款已確認 — 點數正在入帳(幾秒鐘)。"
+    plan_success: "訂閱已確認 — 金鑰正在升級(幾秒鐘)。"
+    cancelled: "付款已取消 — 未產生任何扣款。"
+  flash:
+    csrf: "工作階段已逾期,請再試一次。"
+    created: "API 金鑰已建立。"
+    regenerated: "金鑰已重新產生 — 舊的祕密不再有效。"
+    revoked: "金鑰已撤銷。"
+    key_exists: "你已經有一把生效的金鑰。"
+    no_key: "你沒有生效的金鑰。"
+    invalid_offer: "未知的方案。"
+    already_subscribed: "你的金鑰已有生效訂閱 — 請先取消再重新訂閱。"
+    need_key: "購買前請先建立 API 金鑰。"
+    stripe_unavailable: "付款暫時無法使用。"
+    gateway: "付款服務無法連線,請稍後再試。"
+
+plan:
+  free: "免費"
+  credits: "點數"
+  monthly: "月繳"
+  monthly_plus: "月繳+"
+  annual: "年繳"
+  annual_plus: "年繳+"
+
+pack:
+  small: "點數包 S"
+  medium: "點數包 M"
+  large: "點數包 L"
+
+product:
+  pack: "LoDB API — %requests% 次請求點數"
+  plan: "LoDB API — %plan% 方案"
+
+pricing:
+  offer: "方案"
+  price: "價格"
+  volume: "額度"
+  rate: "速率限制"
+  validity_note: "點數包:每 1,000 次請求 1 €,於目前方案的月配額用盡後扣抵,效期 12 個月。年繳方案以月配額承載額度,按年計費。"
+
+developers:
+  eyebrow: "開發者"
+  title: "LeagueOfDataBase API"
+  intro: "一個建立在網站社群資料上的 REST JSON API:公開召喚師檔案、共享出裝與瀏覽趨勢。免費試用,為真實負載提供付費方案。"
+  cta: "建立我的金鑰"
+  cta_hint: "登入、產生免費金鑰、呼叫 API — 不到一分鐘。"
+  docs_pricing: "價格"
+  auth:
+    title: "身分驗證"
+    body: "每個 /v1 請求都需在兩種標頭之一攜帶你的金鑰 — 格式為 %prefix% 加上 40 個十六進位字元。伺服器端只保存其 SHA-256 指紋:遺失的金鑰只能重新產生,無法找回。"
+    base_url: "基礎 URL(v1,開發環境): %url% — 正式環境將透過網站網域(TLS 邊緣)開放。"
+  endpoints:
+    title: "端點"
+    healthz: "服務健康狀態 — 唯一不需驗證的路由。"
+    profiles: "成員的公開檔案:最愛與公開出裝數量(檔案未公開時回傳 404)。"
+    builds: "某英雄(Data Dragon id)的公開出裝,由新到舊 — 以 page 與 per_page 分頁(最多 50)。"
+    trends: "網站瀏覽量最高的項目:英雄、裝備、符文或召喚師技能 — range=7d(預設)或 30d,前 25 名。"
+    usage: "呼叫金鑰的即時用量 — 需要驗證並受速率限制,但絕不計入配額。"
+  quotas:
+    title: "配額與速率限制"
+    quota: "每次請求先記入方案的月配額,再記入預付點數;兩者用盡後,API 回傳 429 quota_exceeded。"
+    rate: "以金鑰為單位的令牌桶:每個 /v1 回應都帶有 X-RateLimit-Limit、X-RateLimit-Remaining 與 X-RateLimit-Reset;超過限制回傳 429 rate_limited。"
+    month: "配額隨日曆月重置。年繳方案以月配額承載額度(每月 20,000 或 60,000 次)。"
+  errors:
+    title: "錯誤"
+    body: "所有錯誤統一封裝。代碼:unauthorized(401)、forbidden(403,金鑰已撤銷)、not_found(404)、rate_limited 與 quota_exceeded(429)、invalid_request(400)、internal(500/503)。"
+  manage:
+    title: "計費與金鑰管理"
+    body: "金鑰於個人檔案中建立與管理;點數包與訂閱透過 Stripe Checkout 付款 — API 本身絕不接觸付款資料。"

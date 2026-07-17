@@ -183,7 +183,7 @@ footer:
   project:
     title: "プロジェクト"
     version: "バージョン: Beta 2.0"
-    updated: "更新日: 03/08/2025"
+    updated: "更新日: 17/07/2026"
 
   contact:
     title: "お問い合わせ"
@@ -211,3 +211,103 @@ header:
     item: "アイテム"
     runes: "ルーン"
     summoner: "サモナースペル"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "または"
+  google:
+    cta: "Google で続行"
+    unavailable: "このサーバーでは Google ログインが設定されていません。"
+    failed: "Google ログインに失敗しました。もう一度お試しください。"
+  register:
+    password: "パスワード"
+    password_confirm: "パスワード（確認）"
+    password_mismatch: "パスワードが一致しません。"
+    password_help: "12文字以上で、小文字・大文字・数字・特殊文字をそれぞれ含めてください。"
+  password:
+    rule_length: "12文字以上"
+    rule_lowercase: "小文字を1文字以上"
+    rule_uppercase: "大文字を1文字以上"
+    rule_digit: "数字を1文字以上"
+    rule_special: "特殊文字を1文字以上"
+    rule_match: "2つのパスワードが一致"
+    too_common: "このパスワードは一般的すぎます。より独自のものを選んでください。"
+  flash:
+    banned: "このアカウントはモデレーションチームにより停止されています。"
+
+profile:
+  identity:
+    title: "サモナーのアイデンティティ"
+    username: "サモナーネーム"
+    tag: "Riot タグ"
+    tag_help: "任意：Riot ID の # 以降の部分 — GG#EUW なら EUW を入力します。"
+    url_warning: "サモナーネームを変更すると、公開プロフィールのURLも変わります。"
+    submit: "アイデンティティを更新"
+    username_taken: "このサモナーネームは既に使われています。"
+    username_invalid: "無効なサモナーネーム：3〜24文字（英数字、ピリオド、ハイフン、アンダースコア）で、先頭は英数字。"
+    tag_invalid: "無効な Riot タグ：3〜5文字の英数字。"
+  password:
+    title: "パスワードを設定"
+    help: "このアカウントは現在 Google ログインのみです。パスワードを設定すると、メールでもログインできます。"
+    submit: "パスワードを設定"
+  danger:
+    help_no_password: "アカウントの削除は取り消せません。お気に入りとビルドは消去されます。"
+  flash:
+    identity_saved: "サモナーのアイデンティティを更新しました。"
+    password_set: "パスワードを設定しました — メールでもログインできます。"
+    password_exists: "このアカウントには既にパスワードが設定されています。"
+
+build:
+  mode:
+    sr: "サモナーズリフト"
+    aram: "ARAM"
+    nexus_blitz: "ネクサスブリッツ"
+    arena: "アリーナ"
+  editor:
+    ghost_mode: "このゲームモードでは使用できません"
+    context:
+      title: "ゲームコンテキスト"
+      version: "パッチ"
+      mode: "ゲームモード"
+      mode_hint: "アイテムの入手可否は選択したモードに従います。配置済みのアイテムは削除されず、マークが付くだけです。"
+    dnd:
+      handle: "ドラッグで並べ替え"
+      moved_step: "ステップを%position%番目に移動しました"
+      moved_item: "アイテムを%position%番目に移動しました"
+      transferred: "アイテムをステップ%step%に移動しました"
+      added: "アイテムをステップ%step%に追加しました"
+      cancelled: "移動をキャンセルしました"
+  show:
+    mode: "ゲームモード"
+    patch_current: "パッチ%version%で作成 — 現在: %current%"
+  error:
+    version:
+      unknown: "不明なゲームバージョンです。"
+    mode:
+      unknown: "不明なゲームモードです。"
+    steps:
+      item_mode: "選択したゲームモードでは使用できません: %items%"
+
+community:
+  nav:
+    trends: "トレンド"
+  trends:
+    eyebrow: "コミュニティの鼓動"
+    title: "トレンドビルド"
+    filter:
+      champion: "チャンピオン"
+      mode: "ゲームモード"
+      all_champions: "すべてのチャンピオン"
+      all_modes: "すべてのモード"
+      apply: "絞り込む"
+    empty: "このフィルターに一致する公開ビルドはありません — 自分のビルドを鍛えましょう。"
+    empty_cta: "ビルドを鍛える"
+  vote:
+    up: "このビルドに賛成票を投じる"
+    down: "このビルドに反対票を投じる"
+    score_label: "コミュニティスコア"
+    login: "投票するにはログイン"
+    invalid: "無効な投票です。"
+  supporter:
+    badge: "サポーター"

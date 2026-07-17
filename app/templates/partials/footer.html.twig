@@ -24,6 +24,7 @@
         <li><a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.runes'|trans }}</a></li>
         <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.summoner'|trans }}</a></li>
         <li><a href="{{ path('app_donate') }}" class="nav-link">{{ 'nav.donate'|trans }}</a></li>
+        <li><a href="{{ path('app_developers') }}" class="nav-link">{{ 'nav.developers'|trans({}, 'api') }}</a></li>
         {% if app.user %}
           <li><a href="{{ path('app_profile') }}" class="nav-link">{{ 'nav.profile'|trans }}</a></li>
         {% endif %}

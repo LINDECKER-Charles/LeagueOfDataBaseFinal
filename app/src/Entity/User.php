@@ -6,6 +6,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -27,6 +28,9 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     public const ROLE_DEFAULT = 'ROLE_USER';
     public const USERNAME_PATTERN = '/^[a-zA-Z0-9][a-zA-Z0-9_.-]{2,23}$/';
+    // Riot ID tagline (the part after the #): 3-5 alphanumerics, per Riot's format.
+    public const RIOT_TAGLINE_PATTERN = '/^[A-Za-z0-9]{3,5}$/';
+    public const BAN_REASON_MAX_LENGTH = 255;
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -48,12 +52,44 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private array $roles = [];
 
-    /** Hashed password (never plaintext). */
-    #[ORM\Column]
-    private string $password = '';
+    /** Hashed password (never plaintext); null for OAuth-only accounts until they set one. */
+    #[ORM\Column(nullable: true)]
+    private ?string $password = null;
+
+    /** Stable Google OpenID `sub` claim — opaque id, case-sensitive equality is correct. */
+    #[ORM\Column(length: 30, unique: true, nullable: true)]
+    private ?string $googleId = null;
+
+    /** Display-only Riot ID suffix (username#TAG); not unique, `#` keeps it out of URLs. */
+    #[ORM\Column(length: 5, nullable: true)]
+    #[Assert\Regex(pattern: self::RIOT_TAGLINE_PATTERN)]
+    private ?string $riotTagline = null;
 
     #[ORM\Column(options: ['default' => false])]
     private bool $isPublicProfile = false;
+
+    /** Set once by the Stripe webhook when a donation is linked to the account; never unset. */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isSupporter = false;
+
+    /**
+     * Email ownership proven via the signed confirmation link. Google accounts
+     * start verified (Google asserts email_verified); local sign-ups start false
+     * and flip once — never back — when the confirmation link is followed.
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isVerified = false;
+
+    /** Moderation ban: blocks login (UserChecker) and hides the public surfaces. */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isBanned = false;
+
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $bannedAt = null;
+
+    /** Operator-facing note, never shown to the banned player. */
+    #[ORM\Column(length: self::BAN_REASON_MAX_LENGTH, nullable: true)]
+    private ?string $banReason = null;
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $favoriteChampionId = null;
@@ -66,6 +102,10 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $favoriteSummonerId = null;
+
+    /** Favorite skin as the profile banner. Stored as "{championId}_{skinNum}" (e.g. "Ahri_7") — the DDragon splash filename stem, so the banner URL derives without any data-layer lookup. */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $favoriteSkinId = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -138,16 +178,58 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /** @see PasswordAuthenticatedUserInterface */
-    public function getPassword(): string
+    public function getPassword(): ?string
     {
         return $this->password;
     }
 
-    public function setPassword(string $password): static
+    public function setPassword(?string $password): static
     {
         $this->password = $password;
 
         return $this;
+    }
+
+    /** OAuth-only accounts have none until they set one (profile "set a password"). */
+    public function hasPassword(): bool
+    {
+        return $this->password !== null;
+    }
+
+    /** True once linked to a Google identity — its `sub` claim, not a password, is the credential of record. */
+    public function isGoogleAccount(): bool
+    {
+        return $this->googleId !== null;
+    }
+
+    public function getGoogleId(): ?string
+    {
+        return $this->googleId;
+    }
+
+    public function setGoogleId(?string $googleId): static
+    {
+        $this->googleId = $googleId;
+
+        return $this;
+    }
+
+    public function getRiotTagline(): ?string
+    {
+        return $this->riotTagline;
+    }
+
+    public function setRiotTagline(?string $riotTagline): static
+    {
+        $this->riotTagline = $riotTagline;
+
+        return $this;
+    }
+
+    /** Public-facing name: `username` or `username#TAG` when the Riot tagline is set. */
+    public function displayName(): string
+    {
+        return $this->riotTagline === null ? $this->username : $this->username.'#'.$this->riotTagline;
     }
 
     public function isPublicProfile(): bool
@@ -158,6 +240,30 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsPublicProfile(bool $isPublicProfile): static
     {
         $this->isPublicProfile = $isPublicProfile;
+
+        return $this;
+    }
+
+    public function isSupporter(): bool
+    {
+        return $this->isSupporter;
+    }
+
+    public function setIsSupporter(bool $isSupporter): static
+    {
+        $this->isSupporter = $isSupporter;
+
+        return $this;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
 
         return $this;
     }
@@ -208,6 +314,47 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->favoriteSummonerId = $favoriteSummonerId;
 
         return $this;
+    }
+
+    public function getFavoriteSkinId(): ?string
+    {
+        return $this->favoriteSkinId;
+    }
+
+    public function setFavoriteSkinId(?string $favoriteSkinId): static
+    {
+        $this->favoriteSkinId = $favoriteSkinId;
+
+        return $this;
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->isBanned;
+    }
+
+    public function getBannedAt(): ?\DateTimeImmutable
+    {
+        return $this->bannedAt;
+    }
+
+    public function getBanReason(): ?string
+    {
+        return $this->banReason;
+    }
+
+    public function ban(?string $reason = null): void
+    {
+        $this->isBanned = true;
+        $this->bannedAt = new \DateTimeImmutable();
+        $this->banReason = $reason === null ? null : mb_substr($reason, 0, self::BAN_REASON_MAX_LENGTH);
+    }
+
+    public function unban(): void
+    {
+        $this->isBanned = false;
+        $this->bannedAt = null;
+        $this->banReason = null;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

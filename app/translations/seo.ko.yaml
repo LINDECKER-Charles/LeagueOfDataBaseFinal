@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — 리그 오브 레전드 백과사전"
+  description: "패치 %version%의 리그 오브 레전드 챔피언, 아이템, 룬, 소환사 주문 — 21개 언어로 스탯, 스킬, 상세 정보 제공."
+champion:
+  list:
+    title: "리그 오브 레전드 챔피언 목록"
+    description: "역할, 스킬, 스토리를 담은 %count%명의 LoL 챔피언 전체 — 패치 %version% 데이터."
+  detail:
+    title: "%name% (LoL 챔피언)"
+    description: "리그 오브 레전드의 %name%: 스킬, 스킨, 스토리, 공략 팁. 패치 %version% 기준 최신 정보."
+item:
+  list:
+    title: "리그 오브 레전드 아이템 목록"
+    description: "가격, 스탯, 조합식을 담은 %count%개의 LoL 아이템 전체 — 패치 %version% 데이터."
+  detail:
+    title: "%name% (LoL 아이템)"
+    description: "리그 오브 레전드의 %name%: 스탯, 가격, 조합식, 상위 아이템. 패치 %version% 기준 최신 정보."
+rune:
+  list:
+    title: "리그 오브 레전드 룬 목록"
+    description: "핵심 룬과 보조 룬을 모두 담은 %count%개의 LoL 룬 계열 — 패치 %version% 데이터."
+  detail:
+    title: "%name% (LoL 룬 계열)"
+    description: "리그 오브 레전드의 %name% 룬 계열: 핵심 룬, 슬롯, 효과. 패치 %version% 기준 최신 정보."
+summoner:
+  list:
+    title: "리그 오브 레전드 소환사 주문 목록"
+    description: "재사용 대기시간과 효과를 담은 %count%개의 LoL 소환사 주문 전체 — 패치 %version% 데이터."
+  detail:
+    title: "%name% (LoL 소환사 주문)"
+    description: "리그 오브 레전드의 소환사 주문 %name%: 재사용 대기시간과 효과. 패치 %version% 기준 최신 정보."
+donate:
+  title: "프로젝트 후원하기"
+  description: "League Of Data Base가 무료로 빠르게 유지되도록 후원으로 프로젝트를 도와주세요."
+legal:
+  notice:
+    description: "League Of Data Base 법적 고지: 운영자, 호스팅, 연락처."
+  privacy:
+    description: "League Of Data Base 개인정보 처리방침: 처리 데이터, 목적, 사용자의 권리."
+  terms:
+    description: "League Of Data Base 이용약관."
+  cookies:
+    description: "League Of Data Base 쿠키 정책: 사용되는 쿠키와 관리 방법."
+error:
+  "404":
+    title: "페이지를 찾을 수 없습니다"
+    eyebrow: "협곡에서 길을 잃었습니다"
+    body: "존재하지 않는 페이지입니다. 현재 패치에서 제거된 리소스일 수 있습니다."
+    back_home: "홈으로 돌아가기"
+  generic:
+    title: "문제가 발생했습니다"
+    body: "예기치 않은 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+
+developers:
+  title: "개발자용 API"
+  description: "리그 오브 레전드 커뮤니티 데이터를 다루는 유료 REST JSON API: 공개 프로필, 공유 빌드, 조회 트렌드. 무료 등급, 크레딧 팩, 구독 제공."
+
+trends:
+  title: "인기 LoL 빌드"
+  description: "커뮤니티 투표로 순위가 매겨진 League of Legends 공개 빌드 — 챔피언과 게임 모드로 필터링하세요."

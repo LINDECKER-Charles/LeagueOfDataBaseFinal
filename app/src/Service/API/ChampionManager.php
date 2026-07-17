@@ -241,7 +241,7 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
             return $data[$name];
         }
 
-        throw new \RuntimeException(sprintf('Aucun champion trouvé avec l\'ID "%s".', $name));
+        throw ResourceNotFoundException::forEntry(static::TYPE, $name);
     }
 
     public function searchByName(string $name, string $version, string $lang, int $max = 0): array

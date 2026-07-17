@@ -19,7 +19,7 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
             return $data[$name];
         }
 
-        throw new \RuntimeException(sprintf('Aucun objet trouvé avec l\'ID "%s".', $name));
+        throw ResourceNotFoundException::forEntry(static::TYPE, $name);
     }
 
     /**

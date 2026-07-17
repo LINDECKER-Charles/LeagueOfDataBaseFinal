@@ -63,7 +63,7 @@ final class RuneController extends AbstractResourceController
             $rune   = $this->runeManager->getByName($name, $sel['version'], $sel['lang']);
             $images = $this->runeManager->getImages($sel['version'], $sel['lang'], false, [$rune]);
         } catch (\Throwable $e) {
-            return $this->redirectToHomeWithError($sel, $e);
+            return $this->detailFailure($sel, $e);
         }
 
         return $this->render('rune/detail.html.twig', [

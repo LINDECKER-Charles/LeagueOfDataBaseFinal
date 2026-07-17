@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "API développeur"
+  title: "Clés API"
+  back_profile: "Retour au profil"
+  docs_link: "Documentation & tarifs"
+  profile_link:
+    label: "API développeur"
+    manage: "Gérer ma clé API"
+  create:
+    title: "Aucune clé API"
+    body: "Générez votre clé personnelle et appelez l'API publique — offre gratuite : 500 requêtes par mois, 10 par minute."
+    name_label: "Nom de la clé (optionnel)"
+    name_placeholder: "mon-app"
+    submit: "Créer ma clé"
+  raw:
+    title: "Votre nouvelle clé API"
+    warning: "Copiez-la maintenant — elle n'est affichée qu'une seule fois. Seule une empreinte est conservée : une clé perdue ne peut être que régénérée."
+    label: "Clé secrète"
+    copy: "Copier la clé"
+    copied: "Copiée !"
+    copy_error: "Copiez manuellement depuis le champ"
+  key:
+    title: "Clé active"
+    label_key: "Clé"
+    label_name: "Nom"
+    label_created: "Créée le"
+    label_quota: "Consommation mensuelle"
+    quota_used: "%used% / %quota% requêtes"
+    quota_remaining: "%remaining% restantes ce mois-ci"
+    label_credits: "Crédits prépayés"
+    label_rate: "Limite de débit"
+    rate_unit: "%rate% req/min"
+    subscription_active: "Abonnement actif"
+  actions:
+    regenerate: "Régénérer la clé"
+    regenerate_help: "Révoque cette clé et émet un nouveau secret — offre, quota et crédits sont conservés."
+    revoke: "Révoquer"
+    revoke_help: "Désactive la clé immédiatement (l'API peut encore l'accepter jusqu'à une minute de cache)."
+  billing:
+    title: "Booster votre clé"
+    unavailable: "Les paiements ne sont pas activés sur ce serveur."
+    packs_title: "Packs de crédits"
+    packs_help: "Paiement unique — 1 € les 1 000 requêtes, consommées après votre quota mensuel, valables 12 mois. Tout pack porte votre débit à 60 req/min minimum."
+    plans_title: "Abonnements"
+    plans_help: "Augmentent le quota mensuel et la limite de débit. Un seul abonnement actif par compte."
+    buy: "Acheter"
+    subscribe: "S'abonner"
+    current: "Actuel"
+    per_month: "/mois"
+    per_year: "/an"
+    requests_month: "%count% req/mois"
+    requests_once: "%count% requêtes"
+    already_subscribed: "Votre clé porte déjà un abonnement. Pour changer d'offre, résiliez d'abord l'abonnement en cours (le retour à l'offre gratuite s'applique dès la confirmation Stripe), puis souscrivez à nouveau."
+  usage:
+    title: "30 derniers jours"
+    total_month: "Consommé ce mois-ci"
+    day: "Jour"
+    requests: "Requêtes"
+    empty: "Aucune consommation mesurée pour l'instant — vos premiers appels apparaîtront ici en moins d'une minute."
+  status:
+    pack_success: "Paiement confirmé — vos crédits arrivent (quelques secondes)."
+    plan_success: "Abonnement confirmé — votre clé est en cours de mise à niveau (quelques secondes)."
+    cancelled: "Paiement annulé — rien n'a été débité."
+  flash:
+    csrf: "Session expirée, veuillez réessayer."
+    created: "Clé API créée."
+    regenerated: "Clé régénérée — l'ancien secret ne fonctionne plus."
+    revoked: "Clé révoquée."
+    key_exists: "Vous avez déjà une clé active."
+    no_key: "Vous n'avez aucune clé active."
+    invalid_offer: "Offre inconnue."
+    already_subscribed: "Un abonnement actif existe déjà sur votre clé — résiliez-le avant de souscrire à nouveau."
+    need_key: "Créez votre clé API avant tout achat."
+    stripe_unavailable: "Les paiements sont indisponibles pour le moment."
+    gateway: "Le service de paiement est injoignable, veuillez réessayer plus tard."
+
+plan:
+  free: "Gratuit"
+  credits: "Crédits"
+  monthly: "Mensuel"
+  monthly_plus: "Mensuel+"
+  annual: "Annuel"
+  annual_plus: "Annuel+"
+
+pack:
+  small: "Pack S"
+  medium: "Pack M"
+  large: "Pack L"
+
+product:
+  pack: "API LoDB — %requests% requêtes en crédits"
+  plan: "API LoDB — offre %plan%"
+
+pricing:
+  offer: "Offre"
+  price: "Prix"
+  volume: "Volume"
+  rate: "Limite de débit"
+  validity_note: "Packs de crédits : 1 € les 1 000 requêtes, consommées après le quota mensuel de l'offre active, valables 12 mois. Les offres annuelles portent leur volume en quota mensuel, facturé à l'année."
+
+developers:
+  eyebrow: "Développeurs"
+  title: "L'API LeagueOfDataBase"
+  intro: "Une API REST JSON sur les données communautaires du site : profils publics d'invocateurs, builds partagés et tendances de consultation. Gratuite pour essayer, tarifée pour les vrais usages."
+  cta: "Créer ma clé"
+  cta_hint: "Connectez-vous, générez la clé gratuite, appelez l'API — moins d'une minute."
+  docs_pricing: "Tarifs"
+  auth:
+    title: "Authentification"
+    body: "Chaque requête /v1 porte votre clé — format %prefix% suivi de 40 caractères hexadécimaux — dans l'un des deux en-têtes. Seule son empreinte SHA-256 est stockée côté serveur : une clé perdue se régénère, elle ne se récupère pas."
+    base_url: "URL de base (v1, développement) : %url% — l'accès en production sera exposé via le domaine du site (edge TLS)."
+  endpoints:
+    title: "Endpoints"
+    healthz: "État du service — la seule route sans authentification."
+    profiles: "Profil public d'un membre : favoris et nombre de builds publics (404 si le profil est privé)."
+    builds: "Builds publics d'un champion (id Data Dragon), du plus récent au plus ancien — paginé via page et per_page (max 50)."
+    trends: "Entités les plus consultées du site : champions, objets, runes ou sorts d'invocateur — range=7d (défaut) ou 30d, top 25."
+    usage: "Consommation en direct de la clé appelante — authentifiée et soumise au débit, mais jamais décomptée du quota."
+  quotas:
+    title: "Quotas & limitation de débit"
+    quota: "Chaque requête est imputée au quota mensuel de votre offre, puis aux crédits prépayés ; les deux épuisés, l'API répond 429 quota_exceeded."
+    rate: "Token bucket par clé : chaque réponse /v1 porte X-RateLimit-Limit, X-RateLimit-Remaining et X-RateLimit-Reset ; au-delà, 429 rate_limited."
+    month: "Les quotas se réinitialisent au mois calendaire. Les offres annuelles portent leur volume en quota mensuel (20 000 ou 60 000 requêtes par mois)."
+  errors:
+    title: "Erreurs"
+    body: "Enveloppe uniforme sur toutes les erreurs. Codes : unauthorized (401), forbidden (403, clé révoquée), not_found (404), rate_limited et quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Facturation & gestion des clés"
+    body: "Les clés se créent et se gèrent depuis votre profil ; packs et abonnements se règlent via Stripe Checkout — l'API elle-même ne manipule jamais de données de paiement."

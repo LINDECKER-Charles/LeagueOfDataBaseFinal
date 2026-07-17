@@ -6,15 +6,19 @@ import {
     canAddItem,
     canAddStep,
     createStep,
+    insertItem,
     MAX_ITEMS_PER_STEP,
     MAX_STEPS,
     MAX_TOTAL_ITEMS,
     moveItem,
+    moveItemToIndex,
     moveStep,
+    moveStepToIndex,
     removeItem,
     removeStep,
     stepGold,
     totalItems,
+    transferItem,
     updateStep,
 } from './stepList'
 import type { BuildStep } from './structure'
@@ -88,6 +92,64 @@ describe('item bounds', () => {
         expect(moveItem(list, 0, 2, -1)[0]?.items).toEqual(['a', 'c', 'b'])
         expect(moveItem(list, 0, 0, -1)).toBe(list)
         expect(moveItem(list, 1, 0, 1)).toBe(list) // unknown step
+    })
+})
+
+describe('drop semantics (insertion indexes)', () => {
+    it('moves a step to an insertion point, adjusting for its own removal', () => {
+        const list = steps(['a'], ['b'], ['c'])
+        expect(moveStepToIndex(list, 0, 3).map((s) => s.items[0])).toEqual(['b', 'c', 'a'])
+        expect(moveStepToIndex(list, 2, 0).map((s) => s.items[0])).toEqual(['c', 'a', 'b'])
+        // Dropping right before or right after itself changes nothing.
+        expect(moveStepToIndex(list, 1, 1)).toBe(list)
+        expect(moveStepToIndex(list, 1, 2)).toBe(list)
+        expect(moveStepToIndex(list, 9, 0)).toBe(list)
+    })
+
+    it('reorders items inside a step to an insertion point', () => {
+        const list = steps(['a', 'b', 'c'])
+        expect(moveItemToIndex(list, 0, 0, 3)[0]?.items).toEqual(['b', 'c', 'a'])
+        expect(moveItemToIndex(list, 0, 2, 0)[0]?.items).toEqual(['c', 'a', 'b'])
+        expect(moveItemToIndex(list, 0, 1, 99)[0]?.items).toEqual(['a', 'c', 'b'])
+        expect(moveItemToIndex(list, 0, 1, 1)).toBe(list)
+        expect(moveItemToIndex(list, 5, 0, 1)).toBe(list)
+    })
+
+    it('inserts an item at an exact clamped position, capacity-checked', () => {
+        const list = steps(['a', 'c'])
+        expect(insertItem(list, 0, 1, 'b')[0]?.items).toEqual(['a', 'b', 'c'])
+        expect(insertItem(list, 0, -5, 'z')[0]?.items).toEqual(['z', 'a', 'c'])
+        expect(insertItem(list, 0, 99, 'z')[0]?.items).toEqual(['a', 'c', 'z'])
+
+        let full = steps([])
+        for (let i = 0; i < MAX_ITEMS_PER_STEP; i++) full = insertItem(full, 0, 0, 'x')
+        expect(insertItem(full, 0, 0, 'x')).toBe(full)
+    })
+
+    it('transfers an item across steps at the target insertion point', () => {
+        const list = steps(['a', 'b'], ['c'])
+        const next = transferItem(list, { step: 0, index: 1 }, { step: 1, index: 0 })
+        expect(next[0]?.items).toEqual(['a'])
+        expect(next[1]?.items).toEqual(['b', 'c'])
+    })
+
+    it('same-step transfers degrade to a reorder', () => {
+        const list = steps(['a', 'b', 'c'])
+        expect(transferItem(list, { step: 0, index: 0 }, { step: 0, index: 3 })[0]?.items).toEqual(['b', 'c', 'a'])
+    })
+
+    it('refuses a transfer into a full step and nonsense locations', () => {
+        const full = steps(Array.from({ length: MAX_ITEMS_PER_STEP }, () => 'x'), ['y'])
+        expect(transferItem(full, { step: 1, index: 0 }, { step: 0, index: 0 })).toBe(full)
+        expect(transferItem(full, { step: 5, index: 0 }, { step: 0, index: 0 })).toBe(full)
+        expect(transferItem(full, { step: 1, index: 9 }, { step: 0, index: 0 })).toBe(full)
+    })
+
+    it('may empty the source step (the server enforces the 1-item minimum at submit)', () => {
+        const list = steps(['a'], ['b'])
+        const next = transferItem(list, { step: 0, index: 0 }, { step: 1, index: 1 })
+        expect(next[0]?.items).toEqual([])
+        expect(next[1]?.items).toEqual(['b', 'a'])
     })
 })
 

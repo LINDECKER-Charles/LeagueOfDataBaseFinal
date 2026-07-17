@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — League of Legends enciklopédia"
+  description: "League of Legends hősök, tárgyak, rúnák és idézői varázslatok a(z) %version% patch-hez — statisztikák, képességek és részletek 21 nyelven."
+champion:
+  list:
+    title: "League of Legends hősök"
+    description: "Mind a(z) %count% League of Legends hős szerepkörökkel, képességekkel és történettel — a(z) %version% patch adatai."
+  detail:
+    title: "%name%, LoL hős"
+    description: "%name% a League of Legendsben: képességek, kinézetek, történet és tippek, a(z) %version% patch-hez frissítve."
+item:
+  list:
+    title: "League of Legends tárgyak"
+    description: "Mind a(z) %count% League of Legends tárgy árral, statisztikákkal és receptekkel — a(z) %version% patch adatai."
+  detail:
+    title: "%name%, LoL tárgy"
+    description: "%name% a League of Legendsben: statisztikák, ár, recept és fejlesztések, a(z) %version% patch-hez frissítve."
+rune:
+  list:
+    title: "League of Legends rúnák"
+    description: "A(z) %count% League of Legends rúnaág az összes kulcs- és mellékrúnával — a(z) %version% patch adatai."
+  detail:
+    title: "%name%, LoL rúnaág"
+    description: "A(z) %name% rúnaág a League of Legendsben: kulcsrúnák, helyek és hatások, a(z) %version% patch-hez frissítve."
+summoner:
+  list:
+    title: "League of Legends idézői varázslatok"
+    description: "Mind a(z) %count% League of Legends idézői varázslat visszatöltődéssel és hatásokkal — a(z) %version% patch adatai."
+  detail:
+    title: "%name%, LoL idézői varázslat"
+    description: "A(z) %name% idézői varázslat a League of Legendsben: visszatöltődés és hatások, a(z) %version% patch-hez frissítve."
+donate:
+  title: "Támogasd a projektet"
+  description: "Segíts, hogy a League Of Data Base ingyenes és gyors maradjon — támogasd a projektet adománnyal."
+legal:
+  notice:
+    description: "A League Of Data Base jogi közleménye: kiadó, tárhely és kapcsolat."
+  privacy:
+    description: "A League Of Data Base adatvédelmi tájékoztatója: kezelt adatok, célok és jogaid."
+  terms:
+    description: "A League Of Data Base felhasználási feltételei."
+  cookies:
+    description: "A League Of Data Base süti-szabályzata: használt sütik és kezelésük."
+error:
+  "404":
+    title: "Az oldal nem található"
+    eyebrow: "Eltévedtél a Riftben"
+    body: "Ez az oldal nem létezik — az erőforrást talán eltávolították a jelenlegi patch-ből."
+    back_home: "Vissza a főoldalra"
+  generic:
+    title: "Valami hiba történt"
+    body: "Váratlan hiba lépett fel. Próbáld újra egy pillanat múlva."
+
+developers:
+  title: "API fejlesztőknek"
+  description: "Fizetős REST JSON API a League of Legends közösségi adatai felett: nyilvános profilok, megosztott buildek és trendek. Ingyenes szint, kreditcsomagok és előfizetések."
+
+trends:
+  title: "Felkapott LoL buildek"
+  description: "Nyilvános League of Legends buildek a közösség szavazatai szerint rangsorolva — szűrhető hős és játékmód szerint."

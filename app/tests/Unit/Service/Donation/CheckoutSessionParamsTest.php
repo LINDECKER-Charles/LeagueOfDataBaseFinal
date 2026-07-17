@@ -29,8 +29,26 @@ final class CheckoutSessionParamsTest extends TestCase
             ]],
             'success_url' => self::SUCCESS_URL . '?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => self::CANCEL_URL,
-            'metadata' => ['source' => 'lodb-donate'],
+            'metadata' => ['source' => 'lodb-donate', 'kind' => 'donation'],
         ], $params);
+    }
+
+    public function testForDonorAttachesTheClientReferenceWithoutTouchingTheRest(): void
+    {
+        $base = CheckoutSessionParams::build(1000, 'Donation', self::SUCCESS_URL, self::CANCEL_URL);
+        $params = CheckoutSessionParams::forDonor($base, 42);
+
+        self::assertSame('42', $params['client_reference_id']);
+        unset($params['client_reference_id']);
+        self::assertSame($base, $params);
+    }
+
+    public function testAnonymousBuildCarriesNoClientReferenceButAlwaysTheDonationKind(): void
+    {
+        $params = CheckoutSessionParams::build(300, 'Donation', self::SUCCESS_URL, self::CANCEL_URL);
+
+        self::assertArrayNotHasKey('client_reference_id', $params);
+        self::assertSame(CheckoutSessionParams::KIND_DONATION, $params['metadata']['kind']);
     }
 
     public function testSessionIdPlaceholderIsAppendedVerbatimNotUrlencoded(): void
