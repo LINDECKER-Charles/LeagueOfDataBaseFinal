@@ -34,6 +34,9 @@ services:
       # Stripe (donations) — implemented by a later feature; variables centralised here.
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      # Google OAuth (Sign in with Google) — empty disables the feature gracefully.
+      OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}
+      OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET:-}
     depends_on:
       go-fetcher:
         condition: service_healthy
@@ -80,6 +83,36 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8085/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  go-api:
+    image: ${REGISTRY:-lodb}/go-api:${IMAGE_TAG:-latest}
+    build:
+      context: ./go-api
+      dockerfile: Dockerfile
+    # Public paid API — exposed directly on its own port (separate from the site edge).
+    ports:
+      - "8090:8090"
+    environment:
+      PORT: "8090"
+      # pgx needs a plain connection URL: same credentials/database as php, but
+      # without Doctrine's serverVersion/charset query params.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-lodb}:${POSTGRES_PASSWORD:-lodb}@postgres:5432/${POSTGRES_DB:-lodb}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_REGION: us-east-1
+      MINIO_BUCKET: ${MINIO_BUCKET:-ddragon}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-lodb}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8090/healthz"]
       interval: 15s
       timeout: 5s
       retries: 5

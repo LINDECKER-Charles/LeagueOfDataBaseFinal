@@ -1,0 +1,13 @@
+{
+  "date": "2026-07-17",
+  "views": 120,
+  "botViews": 4,
+  "entities": {
+    "champion:Aatrox": 40,
+    "champion:Ahri": 25,
+    "champion:Zed": 10,
+    "item:1001": 7,
+    "runesReforged:Domination": 3,
+    "summoner:SummonerFlash": 5
+  }
+}
