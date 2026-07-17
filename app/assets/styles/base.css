@@ -1,0 +1,62 @@
+/* ---------------------------------------------------------------------------
+   Base layer — canvas, typography defaults, form chrome, motion foundation.
+--------------------------------------------------------------------------- */
+@layer base {
+  body {
+    background-color: var(--color-void);
+    color: var(--color-text);
+    font-family: var(--font-spiegel);
+    background-image:
+      radial-gradient(1200px 600px at 50% -10%, rgba(3, 151, 171, 0.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(200, 170, 110, 0.06), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, .display {
+    font-family: var(--font-beaufort);
+    letter-spacing: 0.06em;
+  }
+
+  ::selection { background: rgba(10, 200, 185, 0.30); color: var(--color-gold-bright); }
+
+  /* Hextech scrollbar */
+  * { scrollbar-width: thin; scrollbar-color: var(--color-gold-deep) transparent; }
+
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+
+  select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    background-position: right 1rem center; background-repeat: no-repeat; background-size: 1rem;
+  }
+
+  /* iOS Safari zooms the page when a focused field computes under 16px —
+     touch devices get 16px form text so focusing search never zooms. */
+  @media (pointer: coarse) {
+    input, select, textarea { font-size: 1rem; }
+  }
+
+  /* Anchored sections stop below the sticky in-page section nav. */
+  [id] { scroll-margin-top: 5.5rem; }
+}
+
+/* ---------------------------------------------------------------------------
+   Scroll reveal — sections fade/rise as they enter the viewport.
+   Armed only once `reveal.ts` stamps `.js-reveal` on <html>, so content is
+   never hidden without JavaScript. Reduced motion renders everything static.
+--------------------------------------------------------------------------- */
+.js-reveal [data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.js-reveal [data-reveal].reveal-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.65s var(--ease-hextech),
+    transform 0.65s var(--ease-hextech);
+}
+@media (prefers-reduced-motion: reduce) {
+  .js-reveal [data-reveal] { opacity: 1; transform: none; transition: none; }
+}

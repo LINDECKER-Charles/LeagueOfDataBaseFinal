@@ -1,0 +1,137 @@
+/* ---------------------------------------------------------------------------
+   App chrome — header switcher, mobile bottom navigation, list-grid helpers.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- Patch & language switcher (header) — disclosure popover ------------- */
+  .switcher { position: relative; }
+  .switcher > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid rgba(200, 170, 110, 0.45);
+    background: rgba(1, 10, 19, 0.6);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--color-gold-light);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition: border-color 0.25s var(--ease-hextech), color 0.25s var(--ease-hextech);
+  }
+  .switcher > summary::-webkit-details-marker { display: none; }
+  .switcher > summary:hover { border-color: var(--color-gold); color: var(--color-gold-bright); }
+  .switcher > summary:focus-visible { outline: none; border-color: var(--color-hex); }
+  .switcher > summary svg { width: 0.65rem; height: 0.65rem; transition: rotate 0.25s var(--ease-hextech); }
+  .switcher[open] > summary svg { rotate: 180deg; }
+  .switcher__panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    z-index: 40;
+    width: min(20rem, calc(100vw - 2rem));
+    padding: 1rem;
+    border: 1px solid rgba(200, 170, 110, 0.45);
+    background: linear-gradient(180deg, rgba(15, 27, 45, 0.98), rgba(1, 10, 19, 0.98));
+    box-shadow: 0 22px 60px -18px rgba(1, 10, 19, 0.95);
+  }
+
+  /* ---- Bottom navigation (mobile) — thumb-first primary nav ---------------- */
+  .bottom-nav {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border-top: 1px solid rgba(200, 170, 110, 0.4);
+    background: color-mix(in srgb, var(--color-hextech-black) 92%, transparent);
+    backdrop-filter: blur(14px);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bottom-nav::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(200, 170, 110, 0.7), transparent);
+  }
+  .bottom-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    min-height: 3.9rem;
+    padding: 0.45rem 0.25rem;
+    color: var(--color-text-muted);
+    transition: color 0.25s var(--ease-hextech);
+  }
+  .bottom-nav a:focus-visible { outline: none; color: var(--color-hex); }
+  .bottom-nav svg { width: 1.35rem; height: 1.35rem; }
+  .bottom-nav span {
+    font-family: var(--font-beaufort);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+  }
+  .bottom-nav a[aria-current] { color: var(--color-gold-bright); }
+  .bottom-nav a[aria-current] svg {
+    color: var(--color-gold);
+    filter: drop-shadow(0 0 8px rgba(200, 170, 110, 0.8));
+  }
+
+  /* The fixed bar needs breathing room at the end of every page. */
+  @media (width < 48rem) {
+    body { padding-bottom: calc(3.9rem + env(safe-area-inset-bottom)); }
+  }
+  @media (width >= 48rem) {
+    .bottom-nav { display: none; }
+  }
+
+  /* ---- Filter bottom sheet (mobile) — native <dialog> ---------------------- */
+  .filter-sheet {
+    margin: auto auto 0;
+    width: 100%;
+    max-width: none;
+    max-height: 82dvh;
+    border: 0;
+    border-top: 1px solid var(--color-gold-deep);
+    background: linear-gradient(180deg, var(--color-panel), var(--color-hextech-black));
+    color: var(--color-text);
+    padding: 0.75rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
+  }
+  .filter-sheet::backdrop { background: rgba(1, 10, 19, 0.6); backdrop-filter: blur(3px); }
+  .filter-sheet__handle {
+    width: 2.5rem;
+    height: 4px;
+    margin: 0 auto 0.9rem;
+    background: rgba(200, 170, 110, 0.5);
+  }
+  @starting-style {
+    .filter-sheet[open] { translate: 0 100%; }
+  }
+  .filter-sheet[open] { translate: 0 0; transition: translate 0.35s var(--ease-hextech); }
+  @media (prefers-reduced-motion: reduce) {
+    .filter-sheet[open] { transition: none; }
+  }
+
+  /* ---- Resource grid pre-hide — before the ResourceFilter island marks the grid
+     [data-ready], render only the first page (12). Bounds initial paint on large
+     lists (e.g. ~700 items) and removes the flash of every card collapsing to one
+     page once JS applies. From data-ready on, inline display styles drive it. ---- */
+  .resource-grid:not([data-ready]) > :nth-child(n + 13) {
+    display: none;
+  }
+
+  /* ---- Touch ergonomics — thumb-sized controls on coarse pointers ---------- */
+  @media (pointer: coarse) {
+    .hx-btn, .hx-btn-ghost { min-height: 2.75rem; }
+    .filter-chip, .filter-clear, .pp-btn, .filter-nav { min-height: 2.5rem; min-width: 2.5rem; }
+  }
+}

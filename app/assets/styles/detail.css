@@ -1,0 +1,249 @@
+/* ---------------------------------------------------------------------------
+   Detail toolkit — shared layout primitives of the champion / item / rune /
+   summoner detail pages. Single-authored here so the four pages read as one
+   codex; templates compose these + Tailwind, they never re-declare them.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- Identity hero band (item / rune / summoner) ------------------------ */
+  .detail-hero { position: relative; }
+  .detail-hero__echo {
+    position: absolute;
+    top: 50%;
+    right: -6rem;
+    width: 30rem;
+    max-width: 70vw;
+    aspect-ratio: 1;
+    translate: 0 -50%;
+    object-fit: contain;
+    opacity: 0.12;
+    filter: blur(34px) saturate(1.5);
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-name {
+    font-family: var(--font-beaufort);
+    font-size: clamp(2.4rem, 6vw, 4.5rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-wrap: balance;
+  }
+  .hero-name--epic { font-size: clamp(3rem, 9vw, 7rem); }
+
+  /* ---- Rating gauge — the champion profile as ten hex diamonds ------------ */
+  .gauge { display: flex; gap: 4px; }
+  .gauge i {
+    width: 9px; height: 9px;
+    rotate: 45deg;
+    border: 1px solid rgba(200, 170, 110, 0.35);
+    background: rgba(1, 10, 19, 0.55);
+  }
+  .gauge i.on {
+    background: var(--gauge, var(--color-gold));
+    border-color: var(--gauge, var(--color-gold));
+    box-shadow: 0 0 8px -1px var(--gauge, var(--color-gold));
+  }
+  .gauge--attack { --gauge: #f0a868; }
+  .gauge--defense { --gauge: #3fb96f; }
+  .gauge--magic { --gauge: var(--color-hex); }
+  .gauge--difficulty { --gauge: #c99bff; }
+
+  /* ---- Sticky in-page section nav (scrollspy chips) ------------------------ */
+  .section-nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    gap: 0.35rem;
+    overflow-x: auto;
+    padding: 0.55rem 1.5rem;
+    background: color-mix(in srgb, var(--color-hextech-black) 82%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(200, 170, 110, 0.25);
+    scrollbar-width: none;
+  }
+  .section-nav::-webkit-scrollbar { display: none; }
+  .section-nav a {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.3rem 0.95rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--color-text-muted);
+    border: 1px solid transparent;
+    transition: color 0.25s var(--ease-hextech), border-color 0.25s var(--ease-hextech);
+  }
+  .section-nav a:hover { color: var(--color-hex); }
+  .section-nav a:focus-visible { outline: none; border-color: var(--color-hex); }
+  .section-nav a[aria-current] {
+    color: var(--color-gold-bright);
+    border-color: rgba(200, 170, 110, 0.5);
+    background: rgba(200, 170, 110, 0.08);
+  }
+
+  /* ---- Stat board — the aside's engraved statistics + level scaling ------- */
+  .stat-board__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.15rem;
+    border-bottom: 1px solid rgba(200, 170, 110, 0.14);
+  }
+  .stat-board__row:last-child { border-bottom: 0; }
+  .stat-board__label {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+  }
+  .stat-board__value {
+    font-family: var(--font-beaufort);
+    font-size: 1rem;
+    color: var(--color-hex-bright);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-board__growth {
+    margin-left: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--color-text-dim);
+  }
+
+  /* Level slider — gold rail, diamond thumb (the accent shape does the work). */
+  .lvl-slider input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 20px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .lvl-slider input[type="range"]::-webkit-slider-runnable-track {
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-gold-deep), var(--color-gold));
+  }
+  .lvl-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    margin-top: -7px;
+    background: var(--color-gold);
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    box-shadow: 0 0 10px rgba(200, 170, 110, 0.7);
+  }
+  .lvl-slider input[type="range"]::-moz-range-track {
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-gold-deep), var(--color-gold));
+  }
+  .lvl-slider input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border: 0; border-radius: 0;
+    background: var(--color-gold);
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+  .lvl-slider input[type="range"]:focus-visible { outline: 1px solid var(--color-hex); outline-offset: 4px; }
+
+  /* ---- Ability key badge (P / Q / W / E / R) — a real cast sequence -------- */
+  .ability-key {
+    display: grid; place-items: center;
+    width: 1.5rem; height: 1.5rem;
+    border: 1px solid var(--color-gold-deep);
+    background: var(--color-void);
+    font-family: var(--font-beaufort); font-weight: 700; font-size: 0.75rem;
+    color: var(--color-gold-bright);
+    clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  }
+  .ability-key[data-key="P"] { color: var(--color-hex-bright); border-color: var(--color-hex-deep); }
+
+  /* ---- Rune path theming — colour deduced from the tree key (game's own) --- */
+  .path-precision   { --path: #c8aa6e; }
+  .path-domination  { --path: #d44242; }
+  .path-sorcery     { --path: #9faafc; }
+  .path-resolve     { --path: #a1d586; }
+  .path-inspiration { --path: #49aab9; }
+  .path-text  { color: var(--path, var(--color-gold)); }
+  .path-border{ border-color: color-mix(in srgb, var(--path, var(--color-gold)) 55%, transparent); }
+  .path-glow  { box-shadow: 0 0 26px -8px var(--path, var(--color-gold)); }
+  .path-bar   { background: linear-gradient(90deg, var(--path, var(--color-gold)), transparent); }
+  /* Page-level tint: the whole rune page bathes in its path's light. */
+  .path-ambient {
+    background:
+      radial-gradient(70rem 32rem at 50% -6rem, color-mix(in srgb, var(--path, var(--color-gold)) 13%, transparent), transparent 70%);
+  }
+
+  /* ---- Stat delta row — leading + value emphasis for item/champion stats --- */
+  .stat-row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem;
+    border-left: 2px solid var(--color-gold-deep);
+    padding: 0.5rem 0.75rem; background: rgba(10, 20, 40, 0.5);
+  }
+  .stat-row .v { font-family: var(--font-beaufort); color: var(--color-hex-bright); }
+
+  /* ---- Prev / next entity pager — the codex turns its own pages ----------- */
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  .pager__link {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: 4.25rem;
+    padding: 0.85rem 1.15rem;
+    border: 1px solid rgba(200, 170, 110, 0.3);
+    background: linear-gradient(180deg, rgba(15, 27, 45, 0.7), rgba(9, 16, 22, 0.85));
+    transition: border-color 0.3s var(--ease-hextech), transform 0.3s var(--ease-hextech);
+  }
+  .pager__link:hover,
+  .pager__link:focus-visible {
+    border-color: var(--color-gold);
+    transform: translateY(-2px);
+    outline: none;
+  }
+  .pager__link--next { align-items: flex-end; text-align: right; }
+  .pager__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-text-dim);
+  }
+  .pager__name {
+    font-family: var(--font-beaufort);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-gold-bright);
+  }
+  .pager__hub {
+    display: grid;
+    place-items: center;
+    min-width: 4.25rem;
+    min-height: 4.25rem;
+    border: 1px solid rgba(200, 170, 110, 0.4);
+    color: var(--color-gold);
+    background: rgba(1, 10, 19, 0.6);
+    transition: border-color 0.3s var(--ease-hextech), color 0.3s var(--ease-hextech), box-shadow 0.3s var(--ease-hextech);
+  }
+  .pager__hub:hover,
+  .pager__hub:focus-visible {
+    border-color: var(--color-hex);
+    color: var(--color-hex-bright);
+    box-shadow: 0 0 22px -6px rgba(10, 200, 185, 0.5);
+    outline: none;
+  }
+  .pager__hub svg { width: 1.15rem; height: 1.15rem; rotate: 45deg; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pager__link, .pager__hub, .section-nav a { transition: none; }
+    .pager__link:hover { transform: none; }
+  }
+}
