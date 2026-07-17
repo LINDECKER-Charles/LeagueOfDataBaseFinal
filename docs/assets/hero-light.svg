@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 340" width="1280" height="340" role="img" aria-label="League of Database">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6EEDB"/>
+      <stop offset="1" stop-color="#ECE0C6"/>
+    </linearGradient>
+    <linearGradient id="wm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5C4515"/>
+      <stop offset="0.55" stop-color="#8A6A22"/>
+      <stop offset="1" stop-color="#8A6A22"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.42" r="0.6">
+      <stop offset="0" stop-color="#EAD9A8" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#EAD9A8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="340" fill="url(#bg)"/>
+  <rect width="1280" height="340" fill="url(#halo)"/>
+
+  <!-- corner hextech lattice -->
+  <g stroke="#C2A45C" fill="none" opacity="0.5">
+    <g transform="translate(96 96)"><rect x="-26" y="-26" width="52" height="52" transform="rotate(45)" stroke-width="1"/><rect x="-15" y="-15" width="30" height="30" transform="rotate(45)" stroke-width="1"/></g>
+    <g transform="translate(1184 96)"><rect x="-26" y="-26" width="52" height="52" transform="rotate(45)" stroke-width="1"/><rect x="-15" y="-15" width="30" height="30" transform="rotate(45)" stroke-width="1"/></g>
+    <g transform="translate(96 244)"><rect x="-15" y="-15" width="30" height="30" transform="rotate(45)" stroke-width="1"/></g>
+    <g transform="translate(1184 244)"><rect x="-15" y="-15" width="30" height="30" transform="rotate(45)" stroke-width="1"/></g>
+  </g>
+
+  <!-- kicker -->
+  <text x="640" y="86" text-anchor="middle" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" letter-spacing="6" font-weight="600" fill="#0A7E76">RIOT&#160;DATA&#160;DRAGON&#160;&#160;&#8226;&#160;&#160;MULTI-VERSION&#160;&#160;&#8226;&#160;&#160;MULTI-LANGUE</text>
+
+  <!-- wordmark -->
+  <text x="640" y="176" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="74" font-weight="700" letter-spacing="2" fill="url(#wm)">LEAGUE OF DATABASE</text>
+
+  <!-- ornamental rule with center diamond -->
+  <g stroke="#C2A45C" stroke-width="1.4">
+    <line x1="360" y1="214" x2="596" y2="214"/>
+    <line x1="684" y1="214" x2="920" y2="214"/>
+  </g>
+  <g transform="translate(640 214)"><rect x="-8" y="-8" width="16" height="16" transform="rotate(45)" fill="none" stroke="#8A6A22" stroke-width="1.6"/><rect x="-3.5" y="-3.5" width="7" height="7" transform="rotate(45)" fill="#0A7E76"/></g>
+
+  <!-- subtitle -->
+  <text x="640" y="252" text-anchor="middle" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#5F5236">Explorateur de donn&#233;es League of Legends &#8212; backend sans base, stockage adress&#233; par contenu</text>
+
+  <!-- tech line -->
+  <text x="640" y="300" text-anchor="middle" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" letter-spacing="1.5" font-weight="600" fill="#8A6A22">Symfony&#160;7.3&#160;&#160;&#9670;&#160;&#160;PHP&#160;8.4&#160;&#160;&#9670;&#160;&#160;Go&#160;1.25&#160;&#160;&#9670;&#160;&#160;Vue&#160;3&#160;&#160;&#9670;&#160;&#160;MinIO&#160;&#160;&#9670;&#160;&#160;Docker</text>
+</svg>
