@@ -1,6 +1,6 @@
 {
     "type": "project",
-    "license": "proprietary",
+    "license": "CC-BY-NC-4.0",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {

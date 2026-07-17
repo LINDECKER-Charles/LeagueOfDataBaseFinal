@@ -1,5 +1,8 @@
 # 🤝 Guide de contribution
 
+> 📌 **Guide court & canonique :** [`CONTRIBUTING.md`](../CONTRIBUTING.md) · **Conventions de code complètes :** [`CLAUDE.md`](../CLAUDE.md).
+> Ce document en est la version détaillée et multilingue (onboarding, templates d'issue et de PR). En cas de divergence, `CONTRIBUTING.md` et `CLAUDE.md` font foi.
+
 ## 🌍 Languages / Langues
 
 - [🇫🇷 Français](#français) (Default)
@@ -16,49 +19,46 @@ Nous sommes ravis que vous souhaitiez contribuer à **League of Database** ! Ce 
 
 ### 📋 Prérequis
 
-- **PHP 8.2+** installé
-- **Composer** pour la gestion des dépendances PHP
-- **Node.js 18+** et **npm** pour les assets frontend
-- **Git** pour le contrôle de version
-- Connaissance de base de **Symfony 7** et **Twig**
+- **Docker** + **Docker Compose** — la stack complète (PHP 8.4 / Symfony 7.4, micro-service Go, MinIO) tourne en conteneurs. Rien à installer en local côté backend.
+- **Node.js 20+** et **npm** — pour le développement front et les garde-fous (hors conteneur, depuis `app/`).
+- **Git** pour le contrôle de version.
+- Connaissance de base de **Symfony 7 / Twig** et des îlots **Vue 3 / TypeScript**.
 
 ### 🚀 Configuration initiale
 
-1. **Fork du projet**
+1. **Fork du projet**, puis clonez votre fork :
    ```bash
-   # Fork le projet sur GitHub, puis clonez votre fork
    git clone https://github.com/VOTRE_USERNAME/LeagueOfDataBaseFinal.git
-   cd LeagueOfDataBaseFinal/app
-   ```
+   cd LeagueOfDataBaseFinal
 
-2. **Configuration de l'environnement**
-   ```bash
    # Ajouter le repository upstream
    git remote add upstream https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
-   
-   # Installer les dépendances
-   composer install
-   npm install
    ```
 
+2. **Lancer la stack**
+   ```bash
+   docker compose up -d --build
+   # app :8080 · MinIO console :9001 · Mailpit :8025 · go-fetcher :8085/healthz
+   ```
+   Détails : [`docker.md`](docker.md), [`configuration.md`](configuration.md).
+
+3. **Dev front (optionnel, depuis `app/`)**
+   ```bash
+   cd app && npm install
+   ```
 
 ### 🌿 Workflow Git
 
 #### ⚠️ IMPORTANT : Branche de développement
 
-**Toutes les Pull Requests doivent être créées sur la branche `dev`, PAS sur `main` !**
+**Toutes les Pull Requests doivent cibler la branche `dev`, PAS `main` !**
 
 ```bash
-# Toujours partir de la branche dev
 git checkout dev
 git pull upstream dev
 
-# Créer votre branche de fonctionnalité
-git checkout -b feature/votre-fonctionnalite
-# ou
-git checkout -b fix/correction-bug
-# ou
-git checkout -b docs/amelioration-documentation
+# Créer votre branche
+git checkout -b feature/votre-fonctionnalite   # ou fix/… docs/… refactor/… test/…
 ```
 
 #### Convention de nommage des branches
@@ -71,185 +71,78 @@ git checkout -b docs/amelioration-documentation
 
 ### 📝 Processus de contribution
 
-#### 1. Développement
+#### 1. Développement & commits
+
+Nous utilisons le format **Conventional Commits** : `type(scope): description`.
+
+**Types :** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`. Le scope reflète la zone touchée (`front`, `back`, `i18n`, `champion`, `docker`…).
 
 ```bash
-# Travailler sur votre branche
-git checkout feature/votre-fonctionnalite
-
-# Faire vos modifications
-# ... code ...
-
-# Commiter régulièrement
-git add .
-git commit -m "feat: ajout de la fonctionnalité X"
-```
-
-#### 2. Convention des commits
-
-Nous utilisons le format **Conventional Commits** :
-
-```
-<type>(<scope>): <description>
-
-[body optionnel]
-
-[footer optionnel]
-```
-
-**Types acceptés :**
-- `feat` : Nouvelle fonctionnalité
-- `fix` : Correction de bug
-- `docs` : Documentation
-- `style` : Formatage, point-virgules manquants, etc.
-- `refactor` : Refactoring de code
-- `test` : Ajout ou modification de tests
-- `chore` : Tâches de maintenance
-
-**Exemples :**
-```bash
-git commit -m "feat(champion): ajout de la recherche par rôle"
-git commit -m "fix(cache): correction du problème de hard links"
+git commit -m "feat(champion): recherche par rôle"
+git commit -m "fix(loader): course manifeste read-merge-write"
 git commit -m "docs(api): mise à jour de la documentation des endpoints"
 ```
 
-#### 3. Tests et validation
+#### 2. Garde-fous (obligatoires avant PR)
+
+À faire passer **au vert** avant toute PR (identique à la CI) :
 
 ```bash
-# Lancer tous les tests
-./bin/phpunit
+# Backend — dans le conteneur
+docker compose exec -T php php vendor/bin/phpunit tests/Unit
 
-# Tests spécifiques
-./bin/phpunit tests/Unit/Service/ChampionManagerTest.php
-
-# Vérifier le code
-composer run-script phpstan
-composer run-script cs-fix
+# Front — depuis app/
+npm test          # vitest
+npm run typecheck # vue-tsc --noEmit
+npm run build     # vite build
 ```
 
-#### 4. Push et Pull Request
+> `tests/Functional/AdminAccessTest` échoue en conteneur `APP_ENV=dev` (`framework.test` inactif) — **pré-existant**, vert en CI. La baseline backend est `tests/Unit`.
+
+#### 3. Push et Pull Request
 
 ```bash
-# Pousser votre branche
 git push origin feature/votre-fonctionnalite
 ```
 
 **Créer une Pull Request :**
-1. Aller sur GitHub
-2. Cliquer sur "Compare & pull request"
-3. **IMPORTANT** : Sélectionner `dev` comme branche de base (pas `main`)
-4. Remplir le template de PR
+1. Aller sur GitHub → "Compare & pull request".
+2. **IMPORTANT** : sélectionner `dev` comme branche de base (pas `main`).
+3. Remplir le template de PR ci-dessous.
 
 ### 📋 Template de Pull Request
 
-```markdown
-## 📝 Description
-Décrivez brièvement les changements apportés.
-
-## 🔗 Type de changement
-- [ ] Bug fix (changement non-breaking qui corrige un problème)
-- [ ] Nouvelle fonctionnalité (changement non-breaking qui ajoute une fonctionnalité)
-- [ ] Breaking change (fix ou fonctionnalité qui causerait un changement de comportement existant)
-- [ ] Documentation (changement uniquement dans la documentation)
-
-## 🧪 Tests
-- [ ] Mes changements nécessitent des tests
-- [ ] J'ai ajouté des tests qui prouvent que mes changements fonctionnent
-- [ ] Tous les tests passent localement
-
-## 📸 Captures d'écran (si applicable)
-Ajoutez des captures d'écran pour expliquer vos changements.
-
-## ✅ Checklist
-- [ ] Mon code suit les conventions de style du projet
-- [ ] J'ai effectué une auto-review de mon code
-- [ ] J'ai commenté mon code, particulièrement dans les zones difficiles à comprendre
-- [ ] J'ai mis à jour la documentation correspondante
-- [ ] Mes changements ne génèrent pas de nouveaux warnings
-- [ ] J'ai ajouté des tests qui prouvent que mes changements fonctionnent
-- [ ] Les tests passent avec mes changements
-- [ ] Les changements sont compatibles avec les versions existantes
-```
+Rien à copier : ouvrir une PR pré-remplit automatiquement le [template natif](../.github/PULL_REQUEST_TEMPLATE.md).
 
 ### 🎨 Standards de code
 
+> Les règles complètes vivent dans [`../CLAUDE.md`](../CLAUDE.md) (source unique). Résumé de ce qui bloque une revue :
+
 #### PHP (Symfony)
-- Respecter les standards PSR-12
-- Utiliser le typage strict (`declare(strict_types=1);`)
-- Documenter toutes les méthodes publiques avec PHPDoc
-- Utiliser des noms de variables et méthodes explicites
+- `declare(strict_types=1);` en tête de chaque fichier ; classes `final` par défaut (sauf base abstraite).
+- Typage strict partout (propriétés, params, retours), `readonly` pour l'injection ; enums/DTO plutôt que tableaux associatifs ; exceptions typées.
+
+#### TypeScript / Vue
+- `<script setup lang="ts">`, pas de `any` — `vue-tsc --noEmit` doit passer.
+- Orchestration en composables (`useXxx`) + helpers purs ; le SFC reste présentation.
+- Réutiliser le design system (`app.css`, variables `--color-*`, `--font-*`) — pas de couleurs/typo en dur.
 
 #### Twig
-- Utiliser l'indentation de 4 espaces
-- Préférer les filtres Twig aux fonctions PHP dans les templates
-- Séparer la logique métier des templates
+- Logique métier hors des templates.
 
-#### JavaScript/CSS
-- Utiliser ESLint et Prettier pour le JavaScript
-- Suivre les conventions Tailwind CSS
-- Préférer les composants Stimulus réutilisables
+#### Limites (plafonds)
+- Fichier ≤ 300 lignes (500 max) · fonction ≤ 30 lignes · ≤ 4 paramètres · imbrication ≤ 3 · complexité ≤ 10 · ligne ≤ 120.
+- Un seul élément public par fichier, nommé comme le fichier. Pas de nombres/chaînes magiques.
+- Commentaires **en anglais**, expliquant le **pourquoi** (pas le *quoi*).
 
-### 🐛 Signaler un bug
+### 🐛 Signaler un bug · 💡 Proposer une fonctionnalité
 
-Utilisez le template d'issue pour les bugs :
-
-```markdown
-## 🐛 Description du bug
-Une description claire et concise du problème.
-
-## 🔄 Étapes pour reproduire
-1. Aller à '...'
-2. Cliquer sur '...'
-3. Voir l'erreur
-
-## ✅ Comportement attendu
-Ce qui devrait se passer.
-
-## 📸 Captures d'écran
-Si applicable, ajoutez des captures d'écran.
-
-## 🖥️ Environnement
-- OS: [ex. Windows 10]
-- PHP: [ex. 8.2.0]
-- Symfony: [ex. 7.4.0]
-- Navigateur: [ex. Chrome 120]
-
-## 📋 Informations supplémentaires
-Toute autre information pertinente.
-```
-
-### 💡 Proposer une fonctionnalité
-
-```markdown
-## 💡 Description de la fonctionnalité
-Une description claire et concise de la fonctionnalité souhaitée.
-
-## 🎯 Problème résolu
-Quel problème cette fonctionnalité résout-elle ?
-
-## 💭 Solution proposée
-Décrivez la solution que vous aimeriez voir implémentée.
-
-## 🔄 Alternatives considérées
-Décrivez les solutions alternatives que vous avez considérées.
-
-## 📋 Informations supplémentaires
-Toute autre information pertinente.
-```
+Le tracker propose des **formulaires guidés** (bug / fonctionnalité) : voir [`.github/ISSUE_TEMPLATE`](../.github/ISSUE_TEMPLATE). Rien à copier-coller.
 
 ### 🔍 Review process
 
-#### Pour les contributeurs
-1. **Auto-review** : Relisez votre code avant de soumettre
-2. **Tests** : Assurez-vous que tous les tests passent
-3. **Documentation** : Mettez à jour la documentation si nécessaire
-4. **Performance** : Vérifiez l'impact sur les performances
-
-#### Pour les reviewers
-1. **Code review** : Vérifier la qualité et la conformité
-2. **Tests** : S'assurer que les tests couvrent les changements
-3. **Documentation** : Vérifier la mise à jour de la documentation
-4. **Performance** : Évaluer l'impact sur les performances
+- **Contributeurs** : auto-review, garde-fous verts, documentation à jour, impact perf vérifié.
+- **Reviewers** : qualité & conformité aux conventions, couverture de tests, préservation des invariants et du comportement, impact perf.
 
 ---
 
@@ -261,57 +154,46 @@ We're excited that you want to contribute to **League of Database**! This guide 
 
 ### 📋 Prerequisites
 
-- **PHP 8.2+** installed
-- **Composer** for PHP dependency management
-- **Node.js 18+** and **npm** for frontend assets
-- **Git** for version control
-- Basic knowledge of **Symfony 7** and **Twig**
+- **Docker** + **Docker Compose** — the full stack (PHP 8.4 / Symfony 7.4, Go micro-service, MinIO) runs in containers. Nothing to install locally for the backend.
+- **Node.js 20+** and **npm** — for frontend development and guardrails (outside the container, from `app/`).
+- **Git** for version control.
+- Basic knowledge of **Symfony 7 / Twig** and **Vue 3 / TypeScript** islands.
 
 ### 🚀 Initial Setup
 
-1. **Fork the project**
+1. **Fork the project**, then clone your fork:
    ```bash
-   # Fork the project on GitHub, then clone your fork
-   git clone https://github.com/VOTRE_USERNAME/LeagueOfDataBaseFinal.git
-   cd LeagueOfDataBaseFinal/app
-   ```
+   git clone https://github.com/YOUR_USERNAME/LeagueOfDataBaseFinal.git
+   cd LeagueOfDataBaseFinal
 
-2. **Environment configuration**
-   ```bash
    # Add upstream repository
    git remote add upstream https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
-   
-   # Install dependencies
-   composer install
-   npm install
    ```
 
-3. **Verify setup**
+2. **Start the stack**
    ```bash
-   # Run tests
-   ./bin/phpunit
-   
-   # Check linting
-   composer run-script phpstan
+   docker compose up -d --build
+   # app :8080 · MinIO console :9001 · Mailpit :8025 · go-fetcher :8085/healthz
+   ```
+   Details: [`docker.md`](docker.md), [`configuration.md`](configuration.md).
+
+3. **Frontend dev (optional, from `app/`)**
+   ```bash
+   cd app && npm install
    ```
 
 ### 🌿 Git Workflow
 
 #### ⚠️ IMPORTANT: Development Branch
 
-**All Pull Requests must be created against the `dev` branch, NOT `main`!**
+**All Pull Requests must target the `dev` branch, NOT `main`!**
 
 ```bash
-# Always start from dev branch
 git checkout dev
 git pull upstream dev
 
-# Create your feature branch
-git checkout -b feature/your-feature
-# or
-git checkout -b fix/bug-description
-# or
-git checkout -b docs/documentation-improvement
+# Create your branch
+git checkout -b feature/your-feature   # or fix/… docs/… refactor/… test/…
 ```
 
 #### Branch naming convention
@@ -324,192 +206,78 @@ git checkout -b docs/documentation-improvement
 
 ### 📝 Contribution Process
 
-#### 1. Development
+#### 1. Development & commits
 
-```bash
-# Work on your branch
-git checkout feature/your-feature
+We use the **Conventional Commits** format: `type(scope): description`.
 
-# Make your changes
-# ... code ...
+**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`. The scope reflects the touched area (`front`, `back`, `i18n`, `champion`, `docker`…).
 
-# Commit regularly
-git add .
-git commit -m "feat: add feature X"
-```
-
-#### 2. Commit Convention
-
-We use **Conventional Commits** format:
-
-```
-<type>(<scope>): <description>
-
-[optional body]
-
-[optional footer]
-```
-
-**Accepted types:**
-- `feat` : New feature
-- `fix` : Bug fix
-- `docs` : Documentation
-- `style` : Formatting, missing semicolons, etc.
-- `refactor` : Code refactoring
-- `test` : Adding or modifying tests
-- `chore` : Maintenance tasks
-
-**Examples:**
 ```bash
 git commit -m "feat(champion): add role-based search"
-git commit -m "fix(cache): fix hard links issue"
+git commit -m "fix(loader): manifest read-merge-write race"
 git commit -m "docs(api): update endpoints documentation"
 ```
 
-#### 3. Tests and Validation
+#### 2. Guardrails (required before PR)
+
+Must be **green** before any PR (same as CI):
 
 ```bash
-# Run all tests
-./bin/phpunit
+# Backend — inside the container
+docker compose exec -T php php vendor/bin/phpunit tests/Unit
 
-# Specific tests
-./bin/phpunit tests/Unit/Service/ChampionManagerTest.php
-
-# Check code
-composer run-script phpstan
-composer run-script cs-fix
+# Frontend — from app/
+npm test          # vitest
+npm run typecheck # vue-tsc --noEmit
+npm run build     # vite build
 ```
 
-#### 4. Push and Pull Request
+> `tests/Functional/AdminAccessTest` fails in the `APP_ENV=dev` container (`framework.test` inactive) — **pre-existing**, green in CI. The backend baseline is `tests/Unit`.
+
+#### 3. Push and Pull Request
 
 ```bash
-# Push your branch
 git push origin feature/your-feature
 ```
 
 **Create a Pull Request:**
-1. Go to GitHub
-2. Click "Compare & pull request"
-3. **IMPORTANT**: Select `dev` as base branch (not `main`)
-4. Fill the PR template
+1. Go to GitHub → "Compare & pull request".
+2. **IMPORTANT**: select `dev` as the base branch (not `main`).
+3. Fill in the PR template below.
 
 ### 📋 Pull Request Template
 
-```markdown
-## 📝 Description
-Briefly describe the changes made.
-
-## 🔗 Type of change
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation (changes only in documentation)
-
-## 🧪 Tests
-- [ ] My changes require tests
-- [ ] I have added tests that prove my changes work
-- [ ] All tests pass locally
-
-## 📸 Screenshots (if applicable)
-Add screenshots to explain your changes.
-
-## ✅ Checklist
-- [ ] My code follows the project's style conventions
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have updated the corresponding documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my changes work
-- [ ] Tests pass with my changes
-- [ ] Changes are compatible with existing versions
-```
+Nothing to copy: opening a PR automatically pre-fills the [native template](../.github/PULL_REQUEST_TEMPLATE.md).
 
 ### 🎨 Code Standards
 
+> The full rules live in [`../CLAUDE.md`](../CLAUDE.md) (single source). Summary of what blocks a review:
+
 #### PHP (Symfony)
-- Follow PSR-12 standards
-- Use strict typing (`declare(strict_types=1);`)
-- Document all public methods with PHPDoc
-- Use explicit variable and method names
+- `declare(strict_types=1);` at the top of every file; classes `final` by default (except abstract bases).
+- Strict typing everywhere (properties, params, returns), `readonly` for injection; enums/DTOs over associative arrays; typed exceptions.
+
+#### TypeScript / Vue
+- `<script setup lang="ts">`, no `any` — `vue-tsc --noEmit` must pass.
+- Orchestration in composables (`useXxx`) + pure helpers; the SFC stays presentation.
+- Reuse the design system (`app.css`, `--color-*`, `--font-*` variables) — no hard-coded colors/typography.
 
 #### Twig
-- Use 4-space indentation
-- Prefer Twig filters over PHP functions in templates
-- Separate business logic from templates
+- Keep business logic out of templates.
 
-#### JavaScript/CSS
-- Use ESLint and Prettier for JavaScript
-- Follow Tailwind CSS conventions
-- Prefer reusable Stimulus components
+#### Limits (ceilings)
+- File ≤ 300 lines (500 max) · function ≤ 30 lines · ≤ 4 parameters · nesting ≤ 3 · complexity ≤ 10 · line ≤ 120.
+- One public element per file, named after the file. No magic numbers/strings.
+- Comments **in English**, explaining the **why** (not the *what*).
 
-### 🐛 Reporting Bugs
+### 🐛 Reporting Bugs · 💡 Proposing Features
 
-Use the bug issue template:
-
-```markdown
-## 🐛 Bug Description
-A clear and concise description of the problem.
-
-## 🔄 Steps to Reproduce
-1. Go to '...'
-2. Click on '...'
-3. See error
-
-## ✅ Expected Behavior
-What should happen.
-
-## 📸 Screenshots
-If applicable, add screenshots.
-
-## 🖥️ Environment
-- OS: [e.g. Windows 10]
-- PHP: [e.g. 8.2.0]
-- Symfony: [e.g. 7.4.0]
-- Browser: [e.g. Chrome 120]
-
-## 📋 Additional Information
-Any other relevant information.
-```
-
-### 💡 Proposing Features
-
-```markdown
-## 💡 Feature Description
-A clear and concise description of the desired feature.
-
-## 🎯 Problem Solved
-What problem does this feature solve?
-
-## 💭 Proposed Solution
-Describe the solution you'd like to see implemented.
-
-## 🔄 Alternatives Considered
-Describe alternative solutions you've considered.
-
-## 📋 Additional Information
-Any other relevant information.
-```
+The tracker provides **guided forms** (bug / feature): see [`.github/ISSUE_TEMPLATE`](../.github/ISSUE_TEMPLATE). Nothing to copy-paste.
 
 ### 🔍 Review Process
 
-#### For Contributors
-1. **Self-review** : Review your code before submitting
-2. **Tests** : Ensure all tests pass
-3. **Documentation** : Update documentation if necessary
-4. **Performance** : Check performance impact
-
-#### For Reviewers
-1. **Code review** : Check quality and compliance
-2. **Tests** : Ensure tests cover changes
-3. **Documentation** : Verify documentation updates
-4. **Performance** : Evaluate performance impact
-
-### 🏆 Recognition
-
-All contributors are recognized in:
-- The `CONTRIBUTORS.md` file
-- Release notes
-- Project documentation
+- **Contributors:** self-review, green guardrails, updated documentation, verified performance impact.
+- **Reviewers:** quality & conformance to conventions, test coverage, preservation of invariants and behavior, performance impact.
 
 ---
 
@@ -521,57 +289,46 @@ All contributors are recognized in:
 
 ### 📋 Prerrequisitos
 
-- **PHP 8.2+** instalado
-- **Composer** para gestión de dependencias PHP
-- **Node.js 18+** y **npm** para assets frontend
-- **Git** para control de versiones
-- Conocimiento básico de **Symfony 7** y **Twig**
+- **Docker** + **Docker Compose** — el stack completo (PHP 8.4 / Symfony 7.4, micro-servicio Go, MinIO) corre en contenedores. Nada que instalar localmente para el backend.
+- **Node.js 20+** y **npm** — para el desarrollo frontend y los controles (fuera del contenedor, desde `app/`).
+- **Git** para control de versiones.
+- Conocimiento básico de **Symfony 7 / Twig** y de los islands **Vue 3 / TypeScript**.
 
 ### 🚀 Configuración Inicial
 
-1. **Fork del proyecto**
+1. **Fork del proyecto**, luego clona tu fork:
    ```bash
-   # Fork el proyecto en GitHub, luego clona tu fork
-   git clone https://github.com/VOTRE_USERNAME/LeagueOfDataBaseFinal.git
-   cd LeagueOfDataBaseFinal/app
-   ```
+   git clone https://github.com/TU_USUARIO/LeagueOfDataBaseFinal.git
+   cd LeagueOfDataBaseFinal
 
-2. **Configuración del entorno**
-   ```bash
    # Agregar repositorio upstream
    git remote add upstream https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
-   
-   # Instalar dependencias
-   composer install
-   npm install
    ```
 
-3. **Verificar configuración**
+2. **Levantar el stack**
    ```bash
-   # Ejecutar tests
-   ./bin/phpunit
-   
-   # Verificar linting
-   composer run-script phpstan
+   docker compose up -d --build
+   # app :8080 · MinIO console :9001 · Mailpit :8025 · go-fetcher :8085/healthz
+   ```
+   Detalles: [`docker.md`](docker.md), [`configuration.md`](configuration.md).
+
+3. **Dev frontend (opcional, desde `app/`)**
+   ```bash
+   cd app && npm install
    ```
 
 ### 🌿 Flujo de Trabajo Git
 
 #### ⚠️ IMPORTANTE: Rama de Desarrollo
 
-**¡Todas las Pull Requests deben crearse contra la rama `dev`, NO `main`!**
+**¡Todas las Pull Requests deben apuntar a la rama `dev`, NO `main`!**
 
 ```bash
-# Siempre empezar desde la rama dev
 git checkout dev
 git pull upstream dev
 
-# Crear tu rama de funcionalidad
-git checkout -b feature/tu-funcionalidad
-# o
-git checkout -b fix/descripcion-bug
-# o
-git checkout -b docs/mejora-documentacion
+# Crear tu rama
+git checkout -b feature/tu-funcionalidad   # o fix/… docs/… refactor/… test/…
 ```
 
 #### Convención de nombres de ramas
@@ -584,189 +341,75 @@ git checkout -b docs/mejora-documentacion
 
 ### 📝 Proceso de Contribución
 
-#### 1. Desarrollo
+#### 1. Desarrollo y commits
 
-```bash
-# Trabajar en tu rama
-git checkout feature/tu-funcionalidad
+Usamos el formato **Conventional Commits**: `type(scope): description`.
 
-# Hacer tus cambios
-# ... código ...
+**Tipos:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`. El scope refleja la zona tocada (`front`, `back`, `i18n`, `champion`, `docker`…).
 
-# Commitear regularmente
-git add .
-git commit -m "feat: agregar funcionalidad X"
-```
-
-#### 2. Convención de Commits
-
-Usamos el formato **Conventional Commits**:
-
-```
-<type>(<scope>): <description>
-
-[cuerpo opcional]
-
-[pie opcional]
-```
-
-**Tipos aceptados:**
-- `feat` : Nueva funcionalidad
-- `fix` : Corrección de bug
-- `docs` : Documentación
-- `style` : Formateo, punto y coma faltante, etc.
-- `refactor` : Refactoring de código
-- `test` : Agregar o modificar tests
-- `chore` : Tareas de mantenimiento
-
-**Ejemplos:**
 ```bash
 git commit -m "feat(champion): agregar búsqueda por rol"
-git commit -m "fix(cache): corregir problema de hard links"
+git commit -m "fix(loader): carrera read-merge-write del manifiesto"
 git commit -m "docs(api): actualizar documentación de endpoints"
 ```
 
-#### 3. Tests y Validación
+#### 2. Controles (obligatorios antes de la PR)
+
+Deben estar en **verde** antes de cualquier PR (igual que la CI):
 
 ```bash
-# Ejecutar todos los tests
-./bin/phpunit
+# Backend — dentro del contenedor
+docker compose exec -T php php vendor/bin/phpunit tests/Unit
 
-# Tests específicos
-./bin/phpunit tests/Unit/Service/ChampionManagerTest.php
-
-# Verificar código
-composer run-script phpstan
-composer run-script cs-fix
+# Frontend — desde app/
+npm test          # vitest
+npm run typecheck # vue-tsc --noEmit
+npm run build     # vite build
 ```
 
-#### 4. Push y Pull Request
+> `tests/Functional/AdminAccessTest` falla en el contenedor `APP_ENV=dev` (`framework.test` inactivo) — **pre-existente**, verde en CI. La baseline del backend es `tests/Unit`.
+
+#### 3. Push y Pull Request
 
 ```bash
-# Pushear tu rama
 git push origin feature/tu-funcionalidad
 ```
 
 **Crear una Pull Request:**
-1. Ir a GitHub
-2. Hacer clic en "Compare & pull request"
-3. **IMPORTANTE**: Seleccionar `dev` como rama base (no `main`)
-4. Llenar el template de PR
+1. Ir a GitHub → "Compare & pull request".
+2. **IMPORTANTE**: seleccionar `dev` como rama base (no `main`).
+3. Rellenar el template de PR de abajo.
 
 ### 📋 Template de Pull Request
 
-```markdown
-## 📝 Descripción
-Describe brevemente los cambios realizados.
-
-## 🔗 Tipo de cambio
-- [ ] Corrección de bug (cambio no-breaking que corrige un problema)
-- [ ] Nueva funcionalidad (cambio no-breaking que agrega funcionalidad)
-- [ ] Cambio breaking (fix o funcionalidad que causaría cambio de comportamiento existente)
-- [ ] Documentación (cambios solo en documentación)
-
-## 🧪 Tests
-- [ ] Mis cambios requieren tests
-- [ ] He agregado tests que prueban que mis cambios funcionan
-- [ ] Todos los tests pasan localmente
-
-## 📸 Capturas de pantalla (si aplica)
-Agrega capturas de pantalla para explicar tus cambios.
-
-## ✅ Checklist
-- [ ] Mi código sigue las convenciones de estilo del proyecto
-- [ ] He realizado una auto-revisión de mi código
-- [ ] He comentado mi código, especialmente en áreas difíciles de entender
-- [ ] He actualizado la documentación correspondiente
-- [ ] Mis cambios no generan nuevas advertencias
-- [ ] He agregado tests que prueban que mis cambios funcionan
-- [ ] Los tests pasan con mis cambios
-- [ ] Los cambios son compatibles con versiones existantes
-```
+Nada que copiar: abrir una PR pre-rellena automáticamente el [template nativo](../.github/PULL_REQUEST_TEMPLATE.md).
 
 ### 🎨 Estándares de Código
 
+> Las reglas completas viven en [`../CLAUDE.md`](../CLAUDE.md) (fuente única). Resumen de lo que bloquea una revisión:
+
 #### PHP (Symfony)
-- Seguir estándares PSR-12
-- Usar tipado estricto (`declare(strict_types=1);`)
-- Documentar todos los métodos públicos con PHPDoc
-- Usar nombres de variables y métodos explícitos
+- `declare(strict_types=1);` al inicio de cada archivo; clases `final` por defecto (salvo bases abstractas).
+- Tipado estricto en todas partes (propiedades, params, retornos), `readonly` para la inyección; enums/DTOs en vez de arrays asociativos; excepciones tipadas.
+
+#### TypeScript / Vue
+- `<script setup lang="ts">`, sin `any` — `vue-tsc --noEmit` debe pasar.
+- Orquestación en composables (`useXxx`) + helpers puros; el SFC se queda en presentación.
+- Reutilizar el design system (`app.css`, variables `--color-*`, `--font-*`) — sin colores/tipografía hardcodeados.
 
 #### Twig
-- Usar indentación de 4 espacios
-- Preferir filtros Twig sobre funciones PHP en templates
-- Separar lógica de negocio de templates
+- Mantener la lógica de negocio fuera de los templates.
 
-#### JavaScript/CSS
-- Usar ESLint y Prettier para JavaScript
-- Seguir convenciones Tailwind CSS
-- Preferir componentes Stimulus reutilizables
+#### Límites (topes)
+- Archivo ≤ 300 líneas (500 máx) · función ≤ 30 líneas · ≤ 4 parámetros · anidamiento ≤ 3 · complejidad ≤ 10 · línea ≤ 120.
+- Un solo elemento público por archivo, nombrado como el archivo. Sin números/cadenas mágicas.
+- Comentarios **en inglés**, explicando el **porqué** (no el *qué*).
 
-### 🐛 Reportar Bugs
+### 🐛 Reportar Bugs · 💡 Proponer Funcionalidades
 
-Usar el template de issue para bugs:
-
-```markdown
-## 🐛 Descripción del Bug
-Una descripción clara y concisa del problema.
-
-## 🔄 Pasos para Reproducir
-1. Ir a '...'
-2. Hacer clic en '...'
-3. Ver el error
-
-## ✅ Comportamiento Esperado
-Lo que debería pasar.
-
-## 📸 Capturas de Pantalla
-Si aplica, agregar capturas de pantalla.
-
-## 🖥️ Entorno
-- OS: [ej. Windows 10]
-- PHP: [ej. 8.2.0]
-- Symfony: [ej. 7.4.0]
-- Navegador: [ej. Chrome 120]
-
-## 📋 Información Adicional
-Cualquier otra información relevante.
-```
-
-### 💡 Proponer Funcionalidades
-
-```markdown
-## 💡 Descripción de la Funcionalidad
-Una descripción clara y concisa de la funcionalidad deseada.
-
-## 🎯 Problema Resuelto
-¿Qué problema resuelve esta funcionalidad?
-
-## 💭 Solución Propuesta
-Describe la solución que te gustaría ver implementada.
-
-## 🔄 Alternativas Consideradas
-Describe soluciones alternativas que has considerado.
-
-## 📋 Información Adicional
-Cualquier otra información relevante.
-```
+El tracker ofrece **formularios guiados** (bug / funcionalidad): ver [`.github/ISSUE_TEMPLATE`](../.github/ISSUE_TEMPLATE). Nada que copiar y pegar.
 
 ### 🔍 Proceso de Revisión
 
-#### Para Contribuidores
-1. **Auto-revisión** : Revisa tu código antes de enviar
-2. **Tests** : Asegúrate de que todos los tests pasen
-3. **Documentación** : Actualiza la documentación si es necesario
-4. **Rendimiento** : Verifica el impacto en el rendimiento
-
-#### Para Revisores
-1. **Revisión de código** : Verificar calidad y cumplimiento
-2. **Tests** : Asegurar que los tests cubran los cambios
-3. **Documentación** : Verificar actualizaciones de documentación
-4. **Rendimiento** : Evaluar impacto en el rendimiento
-
-### 🏆 Reconocimiento
-
-Todos los contribuidores son reconocidos en:
-- El archivo `CONTRIBUTORS.md`
-- Notas de release
-- Documentación del proyecto
+- **Contribuidores:** auto-revisión, controles en verde, documentación actualizada, impacto de rendimiento verificado.
+- **Revisores:** calidad y conformidad con las convenciones, cobertura de tests, preservación de invariantes y comportamiento, impacto de rendimiento.

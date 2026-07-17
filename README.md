@@ -48,7 +48,7 @@ Ce README est organisé en **deux parties** indépendantes :
 <a id="partie-1--design"></a>
 ## <img src="docs/assets/icons/palette.svg" width="26" align="top" alt=""> Partie 1 — Design
 
-Interface responsive sur **Tailwind CSS 4**, îlots interactifs **Vue 3 + PrimeVue**, typographie officielle (*Beaufort for LoL* + *Spiegel*). Les visuels vivent dans [`screenshot/`](screenshot/) et sont régénérables via Playwright (`node tools/screenshots/capture.mjs`).
+Interface responsive sur **Tailwind CSS 4**, îlots interactifs **Vue 3**, typographie officielle (*Beaufort for LoL* + *Spiegel*). Les visuels vivent dans [`screenshot/`](screenshot/) et sont régénérables via Playwright (`node tools/screenshots/capture.mjs`).
 
 > <img src="docs/assets/icons/camera.svg" width="15" align="top" alt=""> *Les captures sont des instantanés de l'état actuel — remplaçables librement, les chemins restent stables.*
 
@@ -67,7 +67,7 @@ Interface responsive sur **Tailwind CSS 4**, îlots interactifs **Vue 3 + PrimeV
 <a id="ecran-1"></a>
 ### <img src="docs/assets/badges/n1.svg" width="30" align="top" alt="1."> Sélection version / langue
 
-> Point d'entrée : l'utilisateur choisit le patch et la locale. La sélection est mémorisée en session **et** portée dans l'URL (liens partageables).
+> Sélecteur de patch et de langue logé dans l'en-tête (popover), accessible depuis n'importe quelle page. La sélection est mémorisée en session **et** portée dans l'URL (liens partageables).
 
 <p align="center">
   <img src="screenshot/01-setup.png" alt="Page de sélection version et langue" width="820">
@@ -497,14 +497,14 @@ Captures Playwright : `node tools/screenshots/capture.mjs` → [`screenshot/`](s
 | [Docker](docs/docker.md) | Référence complète des commandes de la stack |
 | [Configuration](docs/configuration.md) | Variables d'environnement |
 | [Secrets CI](docs/github-actions-secrets.md) | Secrets GitHub Actions / GHCR |
-| [Contribution](docs/contribution.md) | Guide de contribution |
+| [Contribution](CONTRIBUTING.md) | Démarrage contributeur — [version détaillée FR/EN/ES](docs/contribution.md) |
 
 ---
 
 <a id="contribuer"></a>
 ## <img src="docs/assets/icons/handshake.svg" width="24" align="top" alt=""> Contribuer
 
-Les contributions sont les bienvenues — voir le [guide de contribution](docs/contribution.md).
+Les contributions sont les bienvenues — commencez par [`CONTRIBUTING.md`](CONTRIBUTING.md) (guide court et à jour), puis le [guide détaillé multilingue](docs/contribution.md) (FR / EN / ES). Toute contribution est distribuée sous [CC BY-NC 4.0](LICENSE).
 
 <a id="support"></a>
 ## <img src="docs/assets/icons/life-buoy.svg" width="24" align="top" alt=""> Support

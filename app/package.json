@@ -2,7 +2,7 @@
     "name": "lodb-frontend",
     "private": true,
     "type": "module",
-    "license": "UNLICENSED",
+    "license": "CC-BY-NC-4.0",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
