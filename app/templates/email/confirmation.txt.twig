@@ -1,0 +1,16 @@
+{{ 'email.wordmark_subtitle'|trans }}
+LEAGUE OF DATABASE
+========================================
+
+{{ 'email.confirm.heading'|trans({ '%name%': user.username }) }}
+
+{{ 'email.confirm.lede'|trans }}
+
+{{ 'email.confirm.cta'|trans }} :
+{{ actionUrl }}
+
+{{ 'email.confirm.expiry'|trans({ '%duration%': expiresAtMessageKey|trans(expiresAtMessageData, 'VerifyEmailBundle') }) }}
+
+--
+{{ 'email.confirm.footer_reason'|trans }}
+{{ 'email.footer.rights'|trans }}

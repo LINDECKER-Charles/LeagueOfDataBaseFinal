@@ -4,6 +4,11 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Application release version — single source of truth. Surfaced in the navbar
+    # (Twig global `app_version`) and used as the "current" marker of the changelog
+    # history. Bump on release; keep in sync with the newest public/changelog entry.
+    app.version: '2.0.0'
+
     # Docker-internal health endpoints probed by the admin monitoring page
     # (ServiceHealthProbe). Internal mesh only — never an external URL.
     admin.go_fetcher_health_url: '%env(GO_FETCHER_URL)%/healthz'
@@ -47,6 +52,11 @@ services:
     App\Service\I18n\UiLocaleResolver:
         arguments:
             $enabledLocales: '%kernel.enabled_locales%'
+
+    # Account-lifecycle emails. Sender identity is env-driven ("Name <addr>").
+    App\Service\Mail\AuthMailer:
+        arguments:
+            $sender: '%env(MAILER_FROM)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

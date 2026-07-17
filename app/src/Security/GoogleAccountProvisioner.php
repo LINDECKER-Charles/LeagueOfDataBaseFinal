@@ -40,6 +40,9 @@ final class GoogleAccountProvisioner
         }
 
         $user = $this->attachByVerifiedEmail($googleUser, $googleId) ?? $this->createAccount($googleUser, $googleId);
+        // Both paths require a Google-verified email, so the address is proven:
+        // skip our own confirmation step for accounts arriving through Google.
+        $user->setIsVerified(true);
         $this->entityManager->flush();
 
         return $user;

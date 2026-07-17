@@ -72,6 +72,14 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => false])]
     private bool $isSupporter = false;
 
+    /**
+     * Email ownership proven via the signed confirmation link. Google accounts
+     * start verified (Google asserts email_verified); local sign-ups start false
+     * and flip once — never back — when the confirmation link is followed.
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isVerified = false;
+
     /** Moderation ban: blocks login (UserChecker) and hides the public surfaces. */
     #[ORM\Column(options: ['default' => false])]
     private bool $isBanned = false;
@@ -94,6 +102,10 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $favoriteSummonerId = null;
+
+    /** Favorite skin as the profile banner. Stored as "{championId}_{skinNum}" (e.g. "Ahri_7") — the DDragon splash filename stem, so the banner URL derives without any data-layer lookup. */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $favoriteSkinId = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -184,6 +196,12 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->password !== null;
     }
 
+    /** True once linked to a Google identity — its `sub` claim, not a password, is the credential of record. */
+    public function isGoogleAccount(): bool
+    {
+        return $this->googleId !== null;
+    }
+
     public function getGoogleId(): ?string
     {
         return $this->googleId;
@@ -238,6 +256,18 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
     public function getFavoriteChampionId(): ?string
     {
         return $this->favoriteChampionId;
@@ -282,6 +312,18 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setFavoriteSummonerId(?string $favoriteSummonerId): static
     {
         $this->favoriteSummonerId = $favoriteSummonerId;
+
+        return $this;
+    }
+
+    public function getFavoriteSkinId(): ?string
+    {
+        return $this->favoriteSkinId;
+    }
+
+    public function setFavoriteSkinId(?string $favoriteSkinId): static
+    {
+        $this->favoriteSkinId = $favoriteSkinId;
 
         return $this;
     }

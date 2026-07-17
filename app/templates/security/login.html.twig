@@ -42,6 +42,11 @@
                     autocomplete="current-password"
                     class="hx-input mt-1.5"
                 >
+                <p class="mt-1.5 text-right">
+                    <a href="{{ path('app_forgot_password_request') }}" class="nav-link text-xs text-text-muted">
+                        {{ 'auth.login.forgot'|trans }}
+                    </a>
+                </p>
             </div>
             <label class="flex items-center gap-2.5 text-sm text-text-muted">
                 <input type="checkbox" name="_remember_me" class="hx-check">
