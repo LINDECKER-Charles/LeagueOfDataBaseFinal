@@ -12,22 +12,22 @@
     },
     "dependencies": {
         "@hotwired/turbo": "^8.0.0",
-        "@primevue/themes": "^4.2.5",
-        "primeicons": "^7.0.0",
-        "primevue": "^4.2.5",
         "vue": "^3.5.13"
     },
     "devDependencies": {
+        "@hotwired/stimulus": "^3.0.0",
+        "@symfony/stimulus-bridge": "^3.2.0 || ^4.0.0",
+        "@symfony/ux-turbo": "file:vendor/symfony/ux-turbo/assets",
         "@tailwindcss/vite": "^4.1.11",
         "@types/node": "^22.10.0",
         "@vitejs/plugin-vue": "^5.2.1",
         "@vue/test-utils": "^2.4.6",
         "jsdom": "^25.0.1",
         "tailwindcss": "^4.1.11",
-        "vitest": "^2.1.8",
         "typescript": "^5.7.2",
         "vite": "^6.0.5",
         "vite-plugin-symfony": "^8.2.4",
+        "vitest": "^2.1.8",
         "vue-tsc": "^2.1.10"
     }
 }
