@@ -137,7 +137,15 @@ onBeforeUnmount(() => {
                        class="w-full border border-gold-deep/50 bg-void/70 py-2 pl-9 pr-3 font-mono text-sm text-text transition-colors placeholder:text-text-muted/70 focus:border-gold focus:outline-none" />
             </label>
 
-            <div class="flex items-center justify-between gap-3 sm:justify-end">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 sm:justify-end">
+                <div class="flex items-center gap-2">
+                    <span class="hidden font-mono text-[11px] uppercase tracking-wider text-text-muted lg:inline">{{ labels.perPage }}</span>
+                    <div class="flex items-center gap-1">
+                        <button v-for="opt in sizeOptions" :key="opt.value" type="button"
+                                class="pp-btn" :class="{ 'pp-btn--on': size === opt.value }"
+                                :aria-pressed="size === opt.value" @click="setSize(opt.value)">{{ opt.label }}</button>
+                    </div>
+                </div>
                 <span class="font-mono text-xs text-text-muted">{{ resultLabel }}</span>
                 <div v-if="totalPages > 1" class="flex items-center gap-1">
                     <button type="button" class="filter-nav" :aria-label="labels.prev" :disabled="page === 1" @click="go(-1)">
@@ -190,6 +198,24 @@ onBeforeUnmount(() => {
     text-underline-offset: 2px;
 }
 .filter-clear:hover { color: var(--color-gold-bright); }
+.pp-btn {
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    background: color-mix(in srgb, var(--color-void) 60%, transparent);
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+.pp-btn:hover { color: var(--color-hex); border-color: color-mix(in srgb, var(--color-hex) 60%, transparent); }
+.pp-btn--on {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+    background: rgba(200, 170, 110, 0.16);
+}
+
 .filter-nav {
     display: grid;
     place-items: center;
