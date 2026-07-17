@@ -59,14 +59,17 @@ final class AdminAccessTest extends WebTestCase
         self::assertResponseRedirects('/admin/login');
     }
 
-    public function testDashboardRedirectsToStorageOnceAuthenticated(): void
+    public function testDashboardRendersForAdmin(): void
     {
         $client = static::createClient();
         $client->loginUser($this->admin(), self::FIREWALL);
 
         $client->request('GET', '/admin');
 
-        self::assertResponseRedirects('/admin/storage');
+        // Like the storage panel, the overview degrades gracefully when MinIO is
+        // unreachable (inline alert) and still answers 200.
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', "Vue d'ensemble");
     }
 
     public function testStoragePanelRendersForAdmin(): void
