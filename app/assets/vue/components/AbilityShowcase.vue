@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useAbilityMedia, type AbilitySlot } from '../kit/useAbilityMedia'
+import { useVideoPlayback } from '../kit/useVideoPlayback'
 
 /**
  * Champion ability showcase — the P/Q/W/E/R rail drives a panel that plays the
@@ -29,6 +30,8 @@ interface Labels {
     range: string
     charges: string
     ranks: string
+    play: string
+    pause: string
 }
 
 const props = defineProps<{
@@ -39,6 +42,7 @@ const props = defineProps<{
 }>()
 
 const media = useAbilityMedia(props.championKey)
+const { videoEl, isPaused, progress, toggle, onPlay, onPause } = useVideoPlayback()
 const selected = ref(0)
 const current = computed(() => props.abilities[selected.value] ?? props.abilities[0])
 
@@ -89,8 +93,9 @@ function onRailKeydown(event: KeyboardEvent): void {
         </div>
 
         <article class="kit__panel mt-5">
-            <div v-if="showVideo" class="kit__media">
+            <div v-if="showVideo" class="kit__media kit__media--playable" :class="{ 'is-paused': isPaused }">
                 <video
+                    ref="videoEl"
                     :key="current.key"
                     :poster="media.poster(current.key)"
                     autoplay
@@ -99,6 +104,8 @@ function onRailKeydown(event: KeyboardEvent): void {
                     playsinline
                     preload="metadata"
                     aria-hidden="true"
+                    @play="onPlay"
+                    @pause="onPause"
                 >
                     <source :src="media.webm(current.key)" type="video/webm" />
                     <source
@@ -107,6 +114,20 @@ function onRailKeydown(event: KeyboardEvent): void {
                         @error="media.markUnavailable(current.key)"
                     />
                 </video>
+                <button
+                    type="button"
+                    class="kit__media-toggle"
+                    :aria-label="isPaused ? labels.play : labels.pause"
+                    @click="toggle"
+                >
+                    <svg class="kit__media-glyph" viewBox="0 0 24 24" aria-hidden="true">
+                        <path v-if="isPaused" d="M8 5.5v13l11-6.5z" />
+                        <path v-else d="M7 5h4v14H7zM13 5h4v14h-4z" />
+                    </svg>
+                </button>
+                <div class="kit__progress" aria-hidden="true">
+                    <i class="kit__progress-fill" :style="{ transform: `scaleX(${progress})` }"></i>
+                </div>
             </div>
             <div v-else-if="showPoster" class="kit__media">
                 <img

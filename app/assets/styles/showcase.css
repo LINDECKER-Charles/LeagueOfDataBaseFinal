@@ -65,6 +65,57 @@
     height: 100%;
     object-fit: cover;
   }
+  /* Click-to-pause: an invisible full-surface button keeps the <video> itself
+     chrome-less (it stays aria-hidden); the glyph only surfaces on intent
+     (hover/focus) or while paused, so the loop stays clean by default. */
+  .kit__media-toggle {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.25s var(--ease-hextech);
+  }
+  .kit__media-glyph {
+    width: 3.2rem;
+    height: 3.2rem;
+    padding: 0.85rem;
+    fill: var(--color-hex-bright);
+    border: 1px solid rgba(10, 200, 185, 0.55);
+    border-radius: 50%;
+    background: rgba(9, 16, 22, 0.72);
+    box-shadow: 0 0 32px -6px rgba(10, 200, 185, 0.7);
+    opacity: 0;
+    scale: 0.9;
+    transition: opacity 0.25s var(--ease-hextech), scale 0.25s var(--ease-hextech);
+  }
+  .kit__media-toggle:hover .kit__media-glyph,
+  .kit__media-toggle:focus-visible .kit__media-glyph,
+  .kit__media.is-paused .kit__media-glyph {
+    opacity: 1;
+    scale: 1;
+  }
+  .kit__media-toggle:focus-visible { outline: none; }
+  .kit__media.is-paused .kit__media-toggle { background: rgba(1, 10, 19, 0.35); }
+  /* Loop progress — pinned under the frame, driven by scaleX (no layout work). */
+  .kit__progress {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 3px;
+    background: rgba(200, 170, 110, 0.18);
+  }
+  .kit__progress-fill {
+    display: block;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    background: linear-gradient(90deg, var(--color-hex), var(--color-hex-bright));
+    box-shadow: 0 0 10px rgba(10, 200, 185, 0.55);
+    will-change: transform;
+  }
   /* No-video fallback: the spell icon held in a quiet arcane glow. */
   .kit__media--idle {
     display: grid;
