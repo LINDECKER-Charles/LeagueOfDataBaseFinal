@@ -22,3 +22,6 @@ node_modules/
 
 # Pitch Discord (local, non versionné)
 /docs/presentation-discord.md
+
+# graphify (cache/rapport knowledge-graph généré)
+/graphify-out/
