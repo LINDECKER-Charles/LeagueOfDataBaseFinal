@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "Pengaturan"
-  meta: "Pilih versi permainan dan bahasa yang Anda inginkan untuk menyesuaikan pengalaman League of Data Base Anda. Semua statistik dan data akan menyesuaikan dengan pengaturan Anda."
   form:
     version: "Versi"
     language: "Bahasa"
-    note_latest: "*Versi terbaru dipilih secara otomatis."
     remember: "Ingat saya"
     submit: "Kirim"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Progres pembangunan"
     back: "← Kembali"
     summoners: "Lihat Summoner Spell"
-    setup: "Pilih versi & bahasa"
     footer: "Butuh ini segera? Hubungi kami atau lihat roadmap. Pembaruan lainnya akan segera hadir."
     meanwhile: "Sementara itu, Anda dapat:"
 
@@ -64,7 +60,6 @@ item:
     tier: "Tingkat %depth%"
     availability: "Ketersediaan"
     back: "← Kembali ke daftar"
-    setup: "Ubah versi & bahasa"
   list:
       title: "Item"
       meta_description: "Jelajahi semua item League of Legends yang tersedia di patch %version%. Temukan statistik, biaya, dan efek terperinci yang diperbarui untuk versi terbaru."
@@ -74,7 +69,6 @@ item:
       max: "MAKS"
       ok: "OK"
       search_placeholder: "Cari item…"
-      change_version: "Ubah versi/bahasa"
       cost_total: "Total biaya"
       cost_sell: "Nilai jual"
       categories: "Kategori"
@@ -113,7 +107,6 @@ champion:
     header: "Champion"
     subtitle: "Katalog champion"
     search_placeholder: "Cari champion…"
-    change_version: "Ubah versi/bahasa"
   detail:
     meta_description: "Temukan %name% dari League of Legends, beserta statistik, peran, dan detail untuk patch %version%."
     version_locale: "Patch %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "Waktu Jeda"
     cost: "Biaya"
     range: "Jangkauan"
+    video_play: "Putar video"
+    video_pause: "Jeda video"
     tips_as: "Saat memainkan"
     tips_against: "Saat melawan"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "Rune"
     subtitle: "Katalog rune"
     search_placeholder: "Cari rune…"
-    change_version: "Ubah versi/bahasa"
   detail:
     title: "Rune: %name%"
     meta_description: "Temukan detail rune %name% di League of Legends. Statistik dan efek diperbarui untuk patch %version%."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "Tidak ada hasil yang ditemukan untuk pencarian Anda."
     back: "← Kembali"
-    setup: "Pilih versi & bahasa"
   detail : "Lihat detail →"
 base:
   title: "League of Data Base"

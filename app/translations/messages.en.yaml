@@ -25,12 +25,9 @@ homepage:
   
 
 setup:
-  title: "Setup"
-  meta: "Choose your preferred game version and language to customize your League of Data Base experience. All stats and data will adapt to your settings."
   form:
     version: "Version"
     language: "Language"
-    note_latest: "*The latest version is automatically selected."
     remember: "Remember me"
     submit: "Submit"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Build progress"
     back: "← Go back"
     summoners: "See Summoner Spells"
-    setup: "Choose version & language"
     footer: "Need this soon? Ping us or check the roadmap. More updates are coming."
     meanwhile: "Meanwhile, you can:"
 
@@ -55,6 +51,8 @@ item:
     price_total: "Total cost"
     price_base: "Purchase cost"
     price_sell: "Sell value"
+    gold_ledger: "Gold ledger"
+    not_purchasable: "Not sold in shop"
     categories: "Categories"
     evolutions: "Possible evolutions"
     stats: "Statistics"
@@ -64,7 +62,6 @@ item:
     tier: "Tier %depth%"
     availability: "Availability"
     back: "← Back to list"
-    setup: "Change version & language"
   list:
       title: "Items"
       meta_description: "Browse all League of Legends items available in patch %version%. Find detailed stats, costs, and effects updated for the latest version."
@@ -74,7 +71,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "Search for an item…"
-      change_version: "Change version/language"
       cost_total: "Total cost"
       cost_sell: "Sell value"
       categories: "Categories"
@@ -113,7 +109,6 @@ champion:
     header: "Champions"
     subtitle: "Champion catalog"
     search_placeholder: "Search for a champion…"
-    change_version: "Change version/language"
   detail:
     meta_description: "Discover %name% from League of Legends, with stats, roles and details for patch %version%."
     version_locale: "Patch %version% • %locale%"
@@ -126,10 +121,25 @@ champion:
     cooldown: "Cooldown"
     cost: "Cost"
     range: "Range"
+    video_play: "Play video"
+    video_pause: "Pause video"
+    charges: "Charges"
+    ranks: "Ranks"
+    tips: "Tips"
     tips_as: "Playing as"
     tips_against: "Playing against"
+    level: "Level %level%"
     stats:
       title: "Base Statistics"
+      attack_damage: "Attack damage"
+      attack_speed: "Attack speed"
+      hp: "Health"
+      hp_regen: "Health regen"
+      resource_regen: "Resource regen"
+      armor: "Armor"
+      magic_resist: "Magic resist"
+      move_speed: "Move speed"
+      attack_range: "Attack range"
     profile:
       title: "Champion Profile"
       attack: "Attack"
@@ -146,7 +156,6 @@ rune:
     header: "Runes"
     subtitle: "Rune catalog"
     search_placeholder: "Search for a rune…"
-    change_version: "Change version/language"
   detail:
     title: "Rune: %name%"
     meta_description: "Discover the details of the rune %name% in League of Legends. Stats and effects updated for patch %version%."
@@ -154,7 +163,16 @@ rune:
     keystone: "Keystone"
     minor: "Minor runes"
     slot_n: "Slot %n%"
+    full_description: "Full description"
   slot: "Slot"
+
+detail:
+  nav:
+    label: "Entity navigation"
+    sections: "Page sections"
+    previous: "Previous"
+    next: "Next"
+    back_to_list: "Back to list"
 
 common:
   back: "Back"
@@ -162,8 +180,18 @@ common:
   no_result:
     text: "No results found for your search."
     back: "← Back"
-    setup: "Choose version & language"
   detail : "See details →"
+
+filter:
+  results: "%count% results"
+  empty: "No results match your filters."
+  clear: "Clear"
+  prev: "Previous"
+  next: "Next"
+  per_page: "Per page"
+  all: "All"
+  filters: "Filters"
+  close: "Close"
 base:
   title: "League of Data Base"
   description: "League of Data Base is a community-driven platform that provides detailed information, stats, and insights about League of Legends. Fast, reliable, and always up to date."
@@ -197,6 +225,7 @@ footer:
     title: "Contact"
     email: "Email"
     github: "GitHub"
+    repo: "Source code"
     linkedin: "LinkedIn"
 
 loader:
@@ -207,6 +236,11 @@ loader:
   status:
     fetching: "fetching"
     ready: "ready"
+
+perf:
+  title: "Load time"
+  server: "Server"
+  client: "Client"
 
 pagination:
   ok: "OK"
@@ -219,3 +253,13 @@ header:
     item: "Items"
     runes: "Runes"
     summoner: "Summoner Spells"
+  switcher:
+    label: "Patch & language"
+
+nav:
+  short:
+    home: "Home"
+    champions: "Champions"
+    items: "Items"
+    runes: "Runes"
+    summoners: "Spells"

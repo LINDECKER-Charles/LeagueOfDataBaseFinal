@@ -76,6 +76,104 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
         return $result;
     }
 
+    /**
+     * Index (id → entrée résolue) de toutes les évolutions (`into`) référencées
+     * par les objets fournis, résolues en une passe. Permet à la liste d'afficher
+     * nom/icône/lien réels pour chaque id d'évolution sans une résolution par carte.
+     *
+     * @param iterable<array<string, mixed>> $items
+     * @return array<string, array{id: string, name: string, image: ?string, gold: ?int}>
+     */
+    public function relatedIndex(iterable $items, string $version, string $lang): array
+    {
+        $ids = [];
+        foreach ($items as $item) {
+            foreach ($item['into'] ?? [] as $id) {
+                $ids[(string) $id] = true;
+            }
+        }
+        if ($ids === []) {
+            return [];
+        }
+
+        $index = [];
+        foreach ($this->resolveRelated(array_keys($ids), $version, $lang) as $entry) {
+            $index[$entry['id']] = $entry;
+        }
+
+        return $index;
+    }
+
+    /**
+     * Arbre de recette descendant : cet objet en racine, chaque composant (`from`)
+     * développé récursivement jusqu'aux objets de base. Construit depuis le jeu de
+     * données en cache (aucune sortie réseau pour les données) ; toutes les icônes
+     * sont résolues en une seule passe. La garde `seen` (par chemin) coupe les
+     * cycles tout en autorisant un même composant dans des branches sœurs (ex. deux
+     * épées longues), et `maxDepth` borne les recettes pathologiques.
+     *
+     * @return array{id:string,name:string,image:?string,gold:?int,combine:?int,children:list<mixed>}|array{}
+     */
+    public function recipeTree(string $id, string $version, string $lang, int $maxDepth = 6): array
+    {
+        $data = $this->getData($version, $lang)['data'] ?? [];
+
+        $files = [];
+        $build = static function (string $nid, array $seen, int $depth) use (&$build, $data, $maxDepth, &$files): ?array {
+            if (!isset($data[$nid]) || isset($seen[$nid]) || $depth > $maxDepth) {
+                return null;
+            }
+            $seen[$nid] = true;
+            $entry = $data[$nid];
+            $file = $entry['image']['full'] ?? null;
+            if ($file !== null) {
+                $files[$file] = true;
+            }
+
+            $children = [];
+            foreach ($entry['from'] ?? [] as $childId) {
+                $node = $build((string) $childId, $seen, $depth + 1);
+                if ($node !== null) {
+                    $children[] = $node;
+                }
+            }
+
+            return [
+                'id'       => $nid,
+                'name'     => (string) ($entry['name'] ?? ''),
+                'file'     => $file,
+                'gold'     => isset($entry['gold']['total']) ? (int) $entry['gold']['total'] : null,
+                'combine'  => isset($entry['gold']['base']) ? (int) $entry['gold']['base'] : null,
+                'children' => $children,
+            ];
+        };
+
+        $tree = $build($id, [], 0);
+        if ($tree === null) {
+            return [];
+        }
+
+        $paths = $files === [] ? [] : $this->resolveImages($version, array_keys($files));
+
+        return $this->attachRecipeImages($tree, $paths);
+    }
+
+    /**
+     * Remplace le fichier d'icône brut par son URL résolue sur tout l'arbre.
+     *
+     * @param array<string, mixed> $node
+     * @param array<string, ?string> $paths
+     * @return array<string, mixed>
+     */
+    private function attachRecipeImages(array $node, array $paths): array
+    {
+        $node['image'] = $node['file'] !== null ? ($paths[$node['file']] ?? null) : null;
+        unset($node['file']);
+        $node['children'] = array_map(fn (array $child): array => $this->attachRecipeImages($child, $paths), $node['children']);
+
+        return $node;
+    }
+
     public function searchByName(string $name, string $version, string $lang, int $max = 0): array
     {
         if (mb_strlen($name) < 2 || mb_strlen($name) > 50) {
@@ -143,35 +241,9 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
         return $this->resolveImage($version, $name, $force);
     }
 
-    public function paginate(string $version, string $langue, int $nb = 1, int $numPage = 1): array
+    /** Liste rendue en entier (filtrage/pagination côté client) — pas de plafond serveur. */
+    protected function perPageCap(): int
     {
-        $json = $this->getData($version, $langue)['data'] ?? [];
-
-        $ttSum = count($json);
-        if ($nb === 0 || $nb > $ttSum) {
-            $nb = $ttSum > 20 ? 20 : $ttSum;
-        }
-        $ttPage = (int) ceil($ttSum / max(1, $nb));
-        if ($numPage > $ttPage) {
-            $numPage = 1;
-        }
-
-        $json = $numPage <= 1
-            ? $this->splitJson($nb, 0, $json)
-            : $this->splitJson($nb, $nb * ($numPage - 1), $json);
-
-        $images = $this->getImages($version, $langue, false, $json);
-
-        return [
-            static::TYPE.'s' => $json,
-            'images' => $images,
-            'meta' => [
-                'currentPage' => $numPage,
-                'nombrePage' => $ttPage,
-                'itemPerPage' => $nb,
-                'totalItem' => $ttSum,
-                'type' => static::TYPE,
-            ],
-        ];
+        return PHP_INT_MAX;
     }
 }

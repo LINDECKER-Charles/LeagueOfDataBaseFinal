@@ -1,0 +1,73 @@
+name: 🐛 Bug report
+description: Report a reproducible problem in League of Database
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug report. Please fill in the fields below so we can reproduce and fix it quickly.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      description: A clear and concise description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See the error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Champion
+        - Item
+        - Rune
+        - Summoner
+        - Loader / ingestion
+        - Admin / analytics
+        - Other
+    validations:
+      required: false
+  - type: input
+    id: ddragon
+    attributes:
+      label: Data Dragon version
+      placeholder: "e.g. 15.13.1"
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Browser / OS
+      placeholder: "e.g. Chrome 120 on Windows 11"
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context / screenshots
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I searched existing issues and this is not a duplicate
+          required: true

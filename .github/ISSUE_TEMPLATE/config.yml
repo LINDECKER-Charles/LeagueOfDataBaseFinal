@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Contribution guide
+    url: https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal/blob/main/CONTRIBUTING.md
+    about: Read the contributing guide before opening an issue or a pull request.
+  - name: 💬 Support / questions
+    url: https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal/issues
+    about: For general questions, browse existing issues or contact the maintainer.

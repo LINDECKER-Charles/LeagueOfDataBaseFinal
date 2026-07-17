@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "설정"
-  meta: "League of Data Base 경험을 원하는 대로 맞추기 위해 게임 버전과 언어를 선택하세요. 모든 스탯과 데이터가 설정에 맞게 조정됩니다."
   form:
     version: "버전"
     language: "언어"
-    note_latest: "*최신 버전이 자동으로 선택됩니다."
     remember: "로그인 상태 유지"
     submit: "제출"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "빌드 진행률"
     back: "← 뒤로 가기"
     summoners: "소환사 주문 보기"
-    setup: "버전 및 언어 선택"
     footer: "빨리 필요하신가요? 문의하시거나 로드맵을 확인해보세요. 더 많은 업데이트가 준비되어 있습니다."
     meanwhile: "그 동안 다음을 이용해보세요:"
 
@@ -64,7 +60,6 @@ item:
     tier: "%depth% 단계"
     availability: "사용 가능 여부"
     back: "← 목록으로 돌아가기"
-    setup: "버전 및 언어 변경"
   list:
       title: "아이템"
       meta_description: "패치 %version%에서 사용 가능한 모든 League of Legends 아이템을 둘러보세요. 최신 버전 기준으로 업데이트된 상세 스탯, 가격, 효과를 확인할 수 있습니다."
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "확인"
       search_placeholder: "아이템 검색…"
-      change_version: "버전/언어 변경"
       cost_total: "총 가격"
       cost_sell: "판매 가격"
       categories: "카테고리"
@@ -113,7 +107,6 @@ champion:
     header: "챔피언"
     subtitle: "챔피언 카탈로그"
     search_placeholder: "챔피언 검색…"
-    change_version: "버전/언어 변경"
   detail:
     meta_description: "League of Legends의 %name%에 대해 알아보세요. 패치 %version% 기준의 스탯, 역할, 세부 정보를 제공합니다."
     version_locale: "패치 %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "재사용 대기시간"
     cost: "소모값"
     range: "사거리"
+    video_play: "동영상 재생"
+    video_pause: "동영상 일시 정지"
     tips_as: "플레이할 때"
     tips_against: "상대할 때"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "룬"
     subtitle: "룬 카탈로그"
     search_placeholder: "룬 검색…"
-    change_version: "버전/언어 변경"
   detail:
     title: "룬: %name%"
     meta_description: "League of Legends의 룬 %name%에 대한 세부 정보를 확인해보세요. 패치 %version% 기준으로 업데이트된 스탯과 효과를 제공합니다."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "검색 결과가 없습니다."
     back: "← 뒤로"
-    setup: "버전 및 언어 선택"
   detail : "자세히 보기 →"
 base:
   title: "League of Data Base"

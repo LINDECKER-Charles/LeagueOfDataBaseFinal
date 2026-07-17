@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "การตั้งค่า"
-  meta: "เลือกเวอร์ชันเกมและภาษาที่คุณต้องการ เพื่อปรับแต่งประสบการณ์การใช้งาน League of Data Base ของคุณ สถิติและข้อมูลทั้งหมดจะปรับเปลี่ยนตามการตั้งค่าของคุณ"
   form:
     version: "เวอร์ชัน"
     language: "ภาษา"
-    note_latest: "*เวอร์ชันล่าสุดจะถูกเลือกให้โดยอัตโนมัติ"
     remember: "จดจำฉันไว้"
     submit: "ยืนยัน"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "ความคืบหน้าการพัฒนา"
     back: "← ย้อนกลับ"
     summoners: "ดูสเปลล์อัญเชิญ"
-    setup: "เลือกเวอร์ชันและภาษา"
     footer: "ต้องการฟีเจอร์นี้เร็ว ๆ นี้ใช่ไหม? ติดต่อเราหรือดูแผนงาน (roadmap) มีการอัปเดตเพิ่มเติมกำลังจะมาถึงเร็ว ๆ นี้"
     meanwhile: "ในระหว่างนี้ คุณสามารถ:"
 
@@ -64,7 +60,6 @@ item:
     tier: "ระดับ %depth%"
     availability: "ความพร้อมใช้งาน"
     back: "← กลับสู่รายการ"
-    setup: "เปลี่ยนเวอร์ชันและภาษา"
   list:
       title: "ไอเท็ม"
       meta_description: "เรียกดูไอเท็มทั้งหมดของ League of Legends ที่มีในแพตช์ %version% ค้นหาสถิติ ราคา และเอฟเฟกต์โดยละเอียดที่อัปเดตสำหรับเวอร์ชันล่าสุด"
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "ค้นหาไอเท็ม…"
-      change_version: "เปลี่ยนเวอร์ชัน/ภาษา"
       cost_total: "ราคารวม"
       cost_sell: "มูลค่าขาย"
       categories: "หมวดหมู่"
@@ -113,7 +107,6 @@ champion:
     header: "แชมเปี้ยน"
     subtitle: "แคตตาล็อกแชมเปี้ยน"
     search_placeholder: "ค้นหาแชมเปี้ยน…"
-    change_version: "เปลี่ยนเวอร์ชัน/ภาษา"
   detail:
     meta_description: "ค้นพบ %name% จาก League of Legends พร้อมสถิติ บทบาท และรายละเอียดสำหรับแพตช์ %version%"
     version_locale: "แพตช์ %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "เวลาคูลดาวน์"
     cost: "ค่าใช้จ่าย"
     range: "ระยะ"
+    video_play: "เล่นวิดีโอ"
+    video_pause: "หยุดวิดีโอชั่วคราว"
     tips_as: "เมื่อเล่นเป็น"
     tips_against: "เมื่อเล่นเจอ"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "รูน"
     subtitle: "แคตตาล็อกรูน"
     search_placeholder: "ค้นหารูน…"
-    change_version: "เปลี่ยนเวอร์ชัน/ภาษา"
   detail:
     title: "รูน: %name%"
     meta_description: "ค้นพบรายละเอียดของรูน %name% ใน League of Legends สถิติและเอฟเฟกต์อัปเดตสำหรับแพตช์ %version%"
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "ไม่พบผลลัพธ์สำหรับการค้นหาของคุณ"
     back: "← ย้อนกลับ"
-    setup: "เลือกเวอร์ชันและภาษา"
   detail : "ดูรายละเอียด →"
 base:
   title: "League of Data Base"

@@ -6,8 +6,8 @@ namespace App\Service\Client;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Resolves the (version, lang[, page, perPage]) a list/detail page renders with,
- * from the request query — falling back to the session-remembered selection
+ * Resolves the (version, lang) a list/detail page renders with, from the request
+ * query — falling back to the session-remembered selection
  * ({@see ClientManager::getSession()}) when the query omits or invalidates them.
  * It never redirects.
  *
@@ -27,21 +27,33 @@ final class PageContextResolver
     /** Home preview count per resource (mirrors {@see \App\Controller\HomeController::home()}). */
     public const HOME_PER_PAGE = 4;
 
+    /**
+     * Images the streaming loader pre-warms for a list page = the first client
+     * page the visitor sees on arrival. List pages render the whole set in one
+     * pass and the ResourceFilter island paginates it client-side (mirrors the
+     * `pageSize` default in components/list_filter.html.twig); warming that first
+     * visible page keeps every above-the-fold card off a placeholder, while the
+     * rest lazy-load and warm through the deferred ingestor as the user scrolls
+     * or paginates. Full-warming the whole set would only swap this cheap gate
+     * for a multi-second one.
+     */
+    public const LIST_INITIAL_PAGE_SIZE = 12;
+
     /** Resource types the home page previews, in display order. */
     private const HOME_TYPES = ['champion', 'item', 'summoner', 'runesReforged'];
 
     /**
-     * List route (path) => the resource type it renders and its pagination
-     * defaults. Kept in sync with each list controller's listContext() call;
-     * the streaming loader reads it to warm exactly what the destination shows.
-     * Drift only under-/over-warms a few images — the deferred ingestor and the
-     * next visit reconcile it — so it never breaks a render.
+     * List route (path) => the resource type it renders, the images the loader
+     * pre-warms ({@see self::LIST_INITIAL_PAGE_SIZE}) and the cap on a
+     * caller-supplied page size. Read only by the streaming loader
+     * ({@see loaderSteps}); drift only under-/over-warms a few images — the
+     * deferred ingestor and the next visit reconcile it — so it never breaks a render.
      */
     public const LIST_PAGES = [
-        '/champions' => ['type' => 'champion',      'defaultPerPage' => 20, 'maxPerPage' => 20],
-        '/objects'   => ['type' => 'item',          'defaultPerPage' => 8,  'maxPerPage' => 20],
-        '/runes'     => ['type' => 'runesReforged', 'defaultPerPage' => 8,  'maxPerPage' => 20],
-        '/summoners' => ['type' => 'summoner',      'defaultPerPage' => 8,  'maxPerPage' => 0],
+        '/champions' => ['type' => 'champion',      'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE, 'maxPerPage' => 20],
+        '/objects'   => ['type' => 'item',          'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE, 'maxPerPage' => 20],
+        '/runes'     => ['type' => 'runesReforged', 'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE, 'maxPerPage' => 20],
+        '/summoners' => ['type' => 'summoner',      'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE, 'maxPerPage' => 0],
     ];
 
     public function __construct(
@@ -56,7 +68,7 @@ final class PageContextResolver
      * from the ambient request or the session — so the loader stream holds no
      * session lock and this method has no hidden RequestStack dependency. null
      * means "absent from the query" → the route default applies. Empty for pages
-     * that ingest no image batch (detail, setup, working-progress).
+     * that ingest no image batch (detail, working-progress).
      *
      * @param int|null $page    requested page number (null → 1)
      * @param int|null $perPage requested page size (null/<=0 → route default; clamped to route max)
@@ -66,7 +78,7 @@ final class PageContextResolver
     {
         $p = strtolower(rtrim($path, '/')) ?: '/';
 
-        if ($p === '/home') {
+        if ($p === '/') {
             return array_map(
                 static fn (string $type): array => ['type' => $type, 'perPage' => self::HOME_PER_PAGE, 'page' => 1],
                 self::HOME_TYPES,
@@ -111,27 +123,5 @@ final class PageContextResolver
 
         // Already defaulted to latest version + default locale when unset.
         return $this->clientManager->getSession();
-    }
-
-    /**
-     * Selection plus pagination, both taken from the query with safe defaults.
-     *
-     * @param int $maxPerPage 0 = unlimited (summoner spells show the whole set)
-     * @return array{version:string, lang:string, numPage:int, itemPerPage:int}
-     */
-    public function listContext(int $defaultPerPage = 8, int $maxPerPage = 20): array
-    {
-        $query   = $this->requestStack->getCurrentRequest()?->query;
-        $numPage = max(1, (int) ($query?->get('numpage') ?? 1));
-
-        $perPage = (int) ($query?->get('itemperpage') ?? $defaultPerPage);
-        if ($perPage <= 0) {
-            $perPage = $defaultPerPage;
-        }
-        if ($maxPerPage > 0) {
-            $perPage = min($perPage, $maxPerPage);
-        }
-
-        return $this->selection() + ['numPage' => $numPage, 'itemPerPage' => $perPage];
     }
 }

@@ -90,35 +90,15 @@ final class RuneManager extends AbstractManager
         return $this->resolveImage($version, $name, $force);
     }
 
-    public function paginate(string $version, string $langue, int $nb = 1, int $numPage = 1): array
+    /** Les runes paginent la liste top-level des arbres, pas une map `['data']`. */
+    protected function paginationCollection(array $raw): array
     {
-        $json = $this->getData($version, $langue);
+        return $raw;
+    }
 
-        $ttSum = count($json);
-        if ($nb === 0 || $nb > $ttSum) {
-            $nb = $ttSum > 20 ? 20 : $ttSum;
-        }
-        $ttPage = (int) ceil($ttSum / max(1, $nb));
-        if ($numPage > $ttPage) {
-            $numPage = 1;
-        }
-
-        $json = $numPage <= 1
-            ? $this->splitJson($nb, 0, $json)
-            : $this->splitJson($nb, $nb * ($numPage - 1), $json);
-
-        $images = $this->getImages($version, $langue, false, $json);
-
-        return [
-            static::TYPE.'s' => $json,
-            'images' => $images,
-            'meta' => [
-                'currentPage' => $numPage,
-                'nombrePage' => $ttPage,
-                'itemPerPage' => $nb,
-                'totalItem' => $ttSum,
-                'type' => static::TYPE,
-            ],
-        ];
+    /** La route détail des runes est indexée par la KEY d'arbre, pas par l'id numérique. */
+    protected function entryRouteId(array $entry, string $storageKey): string
+    {
+        return (string) ($entry['key'] ?? $storageKey);
     }
 }

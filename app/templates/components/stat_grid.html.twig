@@ -1,9 +1,0 @@
-{# Compact stat grid. Param: stats = [{label, val}] — auto-flows 2/3 columns. #}
-<dl class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-  {% for s in stats %}
-    <div class="stat-cell">
-      <dt class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ s.label }}</dt>
-      <dd class="mt-0.5 font-beaufort text-text">{{ s.val }}</dd>
-    </div>
-  {% endfor %}
-</dl>

@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "設定"
-  meta: "選擇您偏好的遊戲版本與語言，自訂您的 League of Data Base 體驗。所有數值與資料都會依您的設定調整。"
   form:
     version: "版本"
     language: "語言"
-    note_latest: "*系統會自動選擇最新版本。"
     remember: "記住我的選擇"
     submit: "送出"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "建置進度"
     back: "← 返回"
     summoners: "查看召喚師技能"
-    setup: "選擇版本與語言"
     footer: "急需這項功能嗎？歡迎與我們聯繫，或查看開發藍圖，更多更新即將推出。"
     meanwhile: "在此期間，您可以："
 
@@ -64,7 +60,6 @@ item:
     tier: "第 %depth% 層"
     availability: "可用性"
     back: "← 返回列表"
-    setup: "變更版本與語言"
   list:
       title: "物品"
       meta_description: "瀏覽 %version% 版本中所有 League of Legends 物品。查看已更新至最新版本的詳細數值、價格與效果。"
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "搜尋物品…"
-      change_version: "變更版本/語言"
       cost_total: "總價"
       cost_sell: "出售價值"
       categories: "分類"
@@ -113,7 +107,6 @@ champion:
     header: "英雄"
     subtitle: "英雄目錄"
     search_placeholder: "搜尋英雄…"
-    change_version: "變更版本/語言"
   detail:
     meta_description: "探索 League of Legends 中的 %name%，查看 %version% 版本的數值、定位與詳細資料。"
     version_locale: "%version% 版本 • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "冷卻時間"
     cost: "消耗"
     range: "射程"
+    video_play: "播放影片"
+    video_pause: "暫停影片"
     tips_as: "使用技巧"
     tips_against: "對抗技巧"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "符文"
     subtitle: "符文目錄"
     search_placeholder: "搜尋符文…"
-    change_version: "變更版本/語言"
   detail:
     title: "符文：%name%"
     meta_description: "探索 League of Legends 中符文 %name% 的詳細資訊。數值與效果已更新至 %version% 版本。"
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "找不到符合您搜尋條件的結果。"
     back: "← 返回"
-    setup: "選擇版本與語言"
   detail : "查看詳情 →"
 base:
   title: "League of Data Base"

@@ -3,26 +3,26 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Dto\ClientData;
 use App\Service\API\ChampionManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-final class ChampionController extends AbstractController
+final class ChampionController extends AbstractResourceController
 {
     public function __construct(
-        private readonly VersionManager $versionManager,
-        private readonly ClientManager $clientManager,
-        private readonly PageContextResolver $pageContext,
-        private readonly RequestStack $requestStack,
+        VersionManager $versionManager,
+        ClientManager $clientManager,
+        PageContextResolver $pageContext,
+        RequestStack $requestStack,
         private readonly ChampionManager $championManager,
-    ) {}
+    ) {
+        parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
+    }
 
     /**
      * Liste paginée des champions. Version/langue depuis la query (URL cacheable),
@@ -31,22 +31,24 @@ final class ChampionController extends AbstractController
     #[Route('/champions', name: 'app_champions', methods: ['GET'])]
     public function champions(): Response
     {
-        $ctx = $this->pageContext->listContext(defaultPerPage: 20, maxPerPage: 20);
+        // Full list in one render — the ResourceFilter island owns search, tag
+        // facets and pagination client-side; only version/lang matter server-side.
+        $sel = $this->pageContext->selection();
 
         try {
-            $data = $this->championManager->paginate($ctx['version'], $ctx['lang'], $ctx['itemPerPage'], $ctx['numPage']);
+            $data = $this->championManager->paginate($sel['version'], $sel['lang'], 0, 1);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($ctx, $e);
+            return $this->redirectToHomeWithError($sel, $e);
         }
 
-        $data['meta']['version'] = $ctx['version'];
-        $data['meta']['lang']    = $ctx['lang'];
+        $data['meta']['version'] = $sel['version'];
+        $data['meta']['lang']    = $sel['lang'];
 
         return $this->render('champion/liste.html.twig', [
             'champions' => $data['champions'],
             'images'    => $data['images'],
             'meta'      => $data['meta'],
-            'client'    => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'client'    => $this->clientData(),
         ]);
     }
 
@@ -62,7 +64,7 @@ final class ChampionController extends AbstractController
             $image    = $this->championManager->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
             $champion = $this->championManager->getByName($name, $sel['version'], $sel['lang']);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($sel, $e);
+            return $this->redirectToHomeWithError($sel, $e);
         }
 
         // The full detail (spells, skins, lore, tips) is best-effort: if the
@@ -89,13 +91,21 @@ final class ChampionController extends AbstractController
             // No chromas rendered — the skins still show.
         }
 
+        // Data Dragon inlines chromas as standalone skins (no splash) — surface
+        // them only through the ChromaStrip, never as skin tiles.
+        if (isset($champion['skins']) && is_array($champion['skins'])) {
+            $champion['skins'] = $this->championManager->withoutChromaSkins($champion['skins'], $chromas);
+        }
+
         return $this->render('champion/detail.html.twig', [
             'champion'      => $champion,
             'image'         => $image,
             'abilityImages' => $abilityImages,
             'chromas'       => $chromas,
             'version'       => $sel['version'],
-            'client'        => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'lang'          => $sel['lang'],
+            'nav'           => $this->neighbors($this->championManager, $sel['version'], $sel['lang'], $name),
+            'client'        => $this->clientData(),
         ]);
     }
 
@@ -125,29 +135,5 @@ final class ChampionController extends AbstractController
         ], $champions, $images);
 
         return $this->json($final);
-    }
-
-    /**
-     * @param array{version?:string, lang?:string} $ctx
-     */
-    private function redirectToSetupWithError(array $ctx, \Throwable $e): Response
-    {
-        $this->requestStack->getSession()->getFlashBag()->clear();
-        $this->addFlash('error', $this->dataError($ctx, $e));
-
-        return $this->redirectToRoute('app_setup');
-    }
-
-    /**
-     * @param array{version?:string, lang?:string} $ctx
-     */
-    private function dataError(array $ctx, \Throwable $e): string
-    {
-        return sprintf(
-            'Donnés absente sur la version %s et la langue %s Message --> %s',
-            $ctx['version'] ?? 'n/a',
-            $ctx['lang'] ?? 'n/a',
-            $e->getMessage()
-        );
     }
 }

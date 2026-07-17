@@ -1,57 +1,69 @@
-{# Global header — Hextech bar. The version/language form shows only on the setup
-   context (typeV undefined); inner pages carry their own switcher in the action bar. #}
+{# Global header — slim Hextech bar. Desktop carries the primary nav inline;
+   on mobile the primary nav lives in the fixed bottom bar (partials/bottom_nav)
+   and the header keeps only brand + the patch/language switcher. The switcher
+   disclosure popover is the single version/language entry point of the app. #}
+{% set currentRoute = app.request.get('_route') %}
+{% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
+{% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
+
 <header class="relative z-30 border-b border-gold-deep/40 bg-hextech-black/95 backdrop-blur">
   <div class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
 
-  <div class="mx-auto flex max-w-[110rem] flex-col items-center gap-6 px-6 py-5 lg:flex-row lg:gap-10">
+  <div class="mx-auto flex h-16 max-w-[110rem] items-center justify-between gap-4 px-4 sm:px-6">
     {# Brand #}
-    <a href="{{ url('app_setup') }}" class="brand-link group flex items-center gap-3">
-      <span class="brand-logo text-gold">{% include 'components/logo.html.twig' with { class: 'h-9 w-9' } %}</span>
-      <span class="brand-title font-beaufort text-lg uppercase tracking-[0.18em] text-gold-bright sm:text-xl">League Of Data Base</span>
+    <a href="{{ path('app_home') }}" class="brand-link group flex min-w-0 items-center gap-3">
+      <span class="brand-logo shrink-0 text-gold">{% include 'components/logo.html.twig' with { class: 'h-8 w-8 sm:h-9 sm:w-9' } %}</span>
+      <span class="brand-title truncate font-beaufort text-base uppercase tracking-[0.18em] text-gold-bright sm:text-lg">
+        <span class="hidden min-[460px]:inline">League Of Data Base</span>
+        <span class="min-[460px]:hidden">LoDB</span>
+      </span>
     </a>
 
-    {# Navigation #}
-    <nav class="flex flex-1 justify-center {% if typeV is defined %}lg:justify-end{% else %}lg:justify-center{% endif %}">
-      {% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
-      {% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
-      <ul class="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 font-beaufort text-sm uppercase tracking-[0.15em] text-text-muted">
-        <li><a href="{{ path('app_home') }}" class="nav-link">{{ 'header.navigation.home'|trans }}</a></li>
-        <li><a href="{{ path('app_champions', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'header.navigation.champion'|trans }}</a></li>
-        <li><a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'header.navigation.item'|trans }}</a></li>
-        <li><a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'header.navigation.runes'|trans }}</a></li>
-        <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'header.navigation.summoner'|trans }}</a></li>
+    {# Primary navigation — desktop only (mobile: bottom bar) #}
+    <nav class="hidden flex-1 justify-center md:flex" aria-label="{{ 'footer.navigation.title'|trans }}">
+      <ul class="flex items-center gap-x-7 font-beaufort text-sm uppercase tracking-[0.15em] text-text-muted">
+        <li><a href="{{ path('app_home') }}" class="nav-link {{ currentRoute == 'app_home' ? 'text-gold-bright' }}">{{ 'header.navigation.home'|trans }}</a></li>
+        <li><a href="{{ path('app_champions', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_champion' ? 'text-gold-bright' }}">{{ 'header.navigation.champion'|trans }}</a></li>
+        <li><a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_item' ? 'text-gold-bright' }}">{{ 'header.navigation.item'|trans }}</a></li>
+        <li><a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_rune' ? 'text-gold-bright' }}">{{ 'header.navigation.runes'|trans }}</a></li>
+        <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_summoner' ? 'text-gold-bright' }}">{{ 'header.navigation.summoner'|trans }}</a></li>
       </ul>
     </nav>
 
-    {% if typeV is not defined %}
-      {% set selectedLocale  = client.session.locale  ?? client.currentLocale ?? 'en_US' %}
-      {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
-
-      <form action="{{ path('app_setup_save') }}" method="post" class="flex w-full max-w-md flex-col gap-2 lg:w-auto lg:min-w-[22rem]">
-        <div class="flex items-center gap-2">
-          <label for="version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
-          <select id="version" name="version" class="hx-select flex-1">
+    {# Patch & language switcher — compact chip opening the real form #}
+    <details class="switcher shrink-0">
+      <summary aria-label="{{ 'header.switcher.label'|trans }}">
+        <span>{{ navVersion }}</span>
+        <span class="text-gold-deep" aria-hidden="true">·</span>
+        <span>{{ navLang|split('_')|first|upper }}</span>
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
+      </summary>
+      <form action="{{ path('app_setup_save') }}" method="post" class="switcher__panel">
+        <p class="eyebrow mb-3">{{ 'header.switcher.label'|trans }}</p>
+        <div class="flex flex-col gap-2.5">
+          <label for="header-version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
+          <select id="header-version" name="version" class="hx-select w-full">
             {% for v in client.versions %}
-              <option value="{{ v }}" {{ v == selectedVersion ? 'selected' : '' }}>{{ v }}</option>
+              <option value="{{ v }}" {{ v == navVersion ? 'selected' : '' }}>{{ v }}</option>
             {% endfor %}
           </select>
 
-          <label for="langue" class="sr-only">{{ 'setup.form.language'|trans }}</label>
-          <select id="langue" name="langue" class="hx-select flex-1">
-            {% for lang in client.languages %}
-              <option value="{{ lang }}" {{ lang == selectedLocale ? 'selected' : '' }}>{{ client.languageLabels[lang] ?? lang }}</option>
+          <label for="header-langue" class="sr-only">{{ 'setup.form.language'|trans }}</label>
+          <select id="header-langue" name="langue" class="hx-select w-full">
+            {% for l in client.languages %}
+              <option value="{{ l }}" {{ l == navLang ? 'selected' : '' }}>{{ client.languageLabels[l] ?? l }}</option>
             {% endfor %}
           </select>
-        </div>
 
-        <div class="flex items-center gap-3">
-          <label for="remember" class="flex cursor-pointer select-none items-center gap-2 text-xs text-text-muted">
-            <input type="checkbox" id="remember" name="remember" class="hx-check">
-            <span>{{ 'setup.form.remember'|trans }}</span>
-          </label>
-          <button type="submit" class="hx-btn ml-auto py-2">{{ 'setup.form.submit'|trans }}</button>
+          <div class="mt-1 flex items-center gap-3">
+            <label for="header-remember" class="flex cursor-pointer select-none items-center gap-2 text-xs text-text-muted">
+              <input type="checkbox" id="header-remember" name="remember" class="hx-check">
+              <span>{{ 'setup.form.remember'|trans }}</span>
+            </label>
+            <button type="submit" class="hx-btn ml-auto py-2">{{ 'setup.form.submit'|trans }}</button>
+          </div>
         </div>
       </form>
-    {% endif %}
+    </details>
   </div>
 </header>

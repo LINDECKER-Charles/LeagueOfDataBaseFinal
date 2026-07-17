@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Service\Client;
 
 use App\Service\Client\VersionManager;
-use App\Service\Tools\Utils;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -18,7 +17,6 @@ final class ClientManager
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly VersionManager $versionManager,
-        private readonly Utils $utils,
         private readonly string $appSecret = '', // injecté via services.yaml (%kernel.secret%) pour signer les cookies
         private readonly string $defaultLocale = 'en_US', // fallback si pas d'en-tête
     ) {}
@@ -28,10 +26,8 @@ final class ClientManager
      */
     public function getLangue(): string
     {
-        return $this->defaultLocale; 
+        return $this->defaultLocale;
     }
-
-
 
     /** --- SET --- */
 
@@ -114,7 +110,6 @@ final class ClientManager
         ];
     }
 
-    
     /**
      * Crée un cookie "remember" signé qui persiste la locale (et optionnellement la version)
      * pendant $days jours. Le JSON est base64-encodé puis concaténé avec une signature HMAC
@@ -194,8 +189,6 @@ final class ClientManager
      * - Garantit l’intégrité (HMAC) mais pas la confidentialité (contenu en clair).
      * - Ne valide pas la valeur fonctionnellement (à faire via VersionManager si nécessaire).
      * - À appeler tôt dans le cycle requête (ex: subscriber sur KernelEvents::REQUEST).
-     *
-     * @return void
      */
     public function hydrateSessionFromRememberCookie(): void
     {
@@ -285,7 +278,7 @@ final class ClientManager
 
         $loc = $sess->get(self::K_LOCALE);
         $ver = $sess->get(self::K_VERSION);
-        
+
         $hasLoc = is_string($loc) && $loc !== '';
         $hasVer = is_string($ver) && $ver !== '';
 
@@ -306,109 +299,21 @@ final class ClientManager
         ];
     }
 
-
-    /**
-     * Récupère et valide les paramètres GET en fonction des besoins.
-     *
-     * @param array $needs Liste des paramètres à récupérer : 'version', 'lang', 'numpage', 'itemperpage' ou 'full'
-     * @return array Tableau contenant ['param' => bool, ...] avec les valeurs récupérées ou un message d'erreur
-     */
-    public function getParams(array $needs = ['full']): array
-    {
-        $result = ['param' => true];
-
-        if (in_array('full', $needs, true)) {
-            $needs = ['version', 'lang', 'numpage', 'itemperpage'];
-        }
-
-        foreach ($needs as $need) {
-            $method = 'handle' . ucfirst($need);
-            if (method_exists($this, $method)) {
-                $res = $this->$method();
-                if (isset($res['param'])) {
-                    return $res; // Erreur → on stoppe tout
-                }
-                $result = array_merge($result, $res);
-            } else {
-                return ['param' => false, 'message' => "Paramètre inconnu : {$need}"];
-            }
-        }
-        return $result;
-    }
-
-    /**
-     * Récupère et valide le paramètre "version" depuis la requête GET.
-     *
-     * @return array ['version' => string] si valide, ou ['param' => false, 'message' => string] en cas d'erreur.
-     */
-    private function handleVersion(): array
-    {
-        $version = (string) $this->requestStack->getCurrentRequest()->query->get('version');
-        if (!$this->versionManager->versionExists($version)) {
-            return ['param' => false, 'message' => 'Version inexistante'];
-        }
-        return ['version' => $version];
-    }
-
-    /**
-     * Récupère et valide le paramètre "lang" depuis la requête GET.
-     *
-     * @return array ['lang' => string] si valide, ou ['param' => false, 'message' => string] en cas d'erreur.
-     */
-    private function handleLang(): array
-    {
-        $lang = (string) $this->requestStack->getCurrentRequest()->query->get('lang');
-        if (!$this->versionManager->languageExists($lang)) {
-            return ['param' => false, 'message' => 'Langue inexistante'];
-        }
-        return ['lang' => $lang];
-    }
-
-    /**
-     * Récupère et valide le paramètre "numpage" depuis la requête GET.
-     *
-     * @return array ['numPage' => int] si valide, ou ['param' => false, 'message' => string] en cas d'erreur.
-     */
-    private function handleNumpage(): array
-    {
-        $numPage = (int) $this->requestStack->getCurrentRequest()->query->get('numpage');
-        if ($numPage <= 0) {
-            return ['param' => false, 'message' => 'Numéro de page impossible'];
-        }
-        return ['numPage' => $numPage];
-    }
-
-    /**
-     * Récupère et valide le paramètre "itemperpage" depuis la requête GET.
-     *
-     * @return array ['itemPerPage' => int] si valide, ou ['param' => false, 'message' => string] en cas d'erreur.
-     */
-    private function handleItemperpage(): array
-    {
-        $itemPerPage = (int) $this->requestStack->getCurrentRequest()->query->get('itemperpage');
-        if ($itemPerPage <= 0) {
-            return ['param' => false, 'message' => 'Nombre objet par page impossible'];
-        }
-        return ['itemPerPage' => $itemPerPage];
-    }
-
     /**
      * Récupère la version et la langue stockées dans la session de l’utilisateur.
      *
      * Si aucune préférence n’est trouvée dans la session, utilise la langue
      * détectée par défaut et la dernière version disponible depuis le VersionManager.
      *
-     * @return array{
-     *     version: string,
-     *     lang: string
-     * }
+     * @return array{version: string, lang: string}
      */
-    public function getSession(): array{
+    public function getSession(): array
+    {
         $val = $this->getOrHydratePreferences();
-        if(!$this->versionManager->languageExists($val['locale']) || !$this->versionManager->versionExists($val['version'])){
+        if (!$this->versionManager->languageExists($val['locale']) || !$this->versionManager->versionExists($val['version'])) {
             $val['version'] = $this->versionManager->getVersions()[0];
             $val['locale'] = $this->getLangue();
         }
-        return ['version' => $val['version'], 'lang' => $val['locale']];     
+        return ['version' => $val['version'], 'lang' => $val['locale']];
     }
 }

@@ -1,0 +1,101 @@
+{# Reusable Hextech admin widgets. Presentation only — all numbers are computed
+   server-side; charts come from the AdminChartExtension (chart_* functions). #}
+
+{% macro page_head(eyebrow, title, subtitle) %}
+    <div class="page-head">
+        <div class="eyebrow">{{ eyebrow }}</div>
+        <h1>{{ title }}</h1>
+        {% if subtitle %}<p>{{ subtitle }}</p>{% endif %}
+    </div>
+{% endmacro %}
+
+{% macro kpi(label, value, sub, accent, spark) %}
+    <div class="kpi" style="--accent: {{ accent|default('var(--gold)') }}">
+        <span class="k-label">{{ label }}</span>
+        <span class="k-val">{{ value }}</span>
+        {% if sub %}<span class="k-sub">{{ sub }}</span>{% endif %}
+        {% if spark %}<span class="k-spark">{{ spark|raw }}</span>{% endif %}
+    </div>
+{% endmacro %}
+
+{# rows: list of maps. `field` is the value key (count for analytics, bytes/objects
+   for storage). Bars are sized relative to the max in the set. fmt: compact|bytes|int|pct. #}
+{% macro rank(rows, fmt, color, empty, field) %}
+    {% set fmt = fmt|default('compact') %}
+    {% set field = field|default('count') %}
+    {% set max = 0 %}
+    {% for r in rows %}{% set max = max(max, r[field]) %}{% endfor %}
+    <div class="rank">
+        {% for r in rows %}
+            {% set val = r[field] %}
+            <div class="rank-row">
+                <span class="r-name" title="{{ r.name }}">{{ r.name }}</span>
+                <span class="r-val">
+                    {%- if fmt == 'bytes' -%}{{ val|bytes }}
+                    {%- elseif fmt == 'int' -%}{{ val|number_format(0, '.', ' ') }}
+                    {%- elseif fmt == 'pct' -%}{{ val|pct }}
+                    {%- else -%}{{ val|compact }}{%- endif -%}
+                </span>
+                <div class="r-track"><div class="r-fill {{ color|default('') }}" style="width: {{ (max > 0 ? val / max * 100 : 0)|round(1) }}%"></div></div>
+            </div>
+        {% else %}
+            <p class="dim">{{ empty|default('Aucune donnée.') }}</p>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{# items: [{label, value, color}] — legend beside a donut. #}
+{% macro legend(items) %}
+    <div class="legend">
+        {% for it in items %}
+            <span class="legend-item">
+                <span class="sw" style="background: {{ it.color }}"></span>
+                {{ it.label }}{% if it.value is defined %} <b>{{ it.value }}</b>{% endif %}
+            </span>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{# grid: 7 rows (Mon..Sun) × 24 hours of ints. #}
+{% macro heatmap(grid) %}
+    {% set days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'] %}
+    {% set max = 0 %}
+    {% for row in grid %}{% for v in row %}{% set max = max(max, v) %}{% endfor %}{% endfor %}
+    <div class="heat" role="img" aria-label="Fréquentation par heure et jour de la semaine">
+        <span class="h-corner"></span>
+        {% for h in 0..23 %}<span class="h-col">{{ h % 6 == 0 ? h : '' }}</span>{% endfor %}
+        {% for d in 0..6 %}
+            <span class="h-row">{{ days[d] }}</span>
+            {% for h in 0..23 %}
+                {% set v = grid[d][h]|default(0) %}
+                <span class="cell" style="background: {{ heat_color(v, max) }}" title="{{ days[d] }} {{ h }}h — {{ v }} vue(s)"></span>
+            {% endfor %}
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{# Time-range pills linking to the same route with ?range=. #}
+{% macro range_bar(current, ranges, route) %}
+    {% set labels = { '7d': '7 j', '30d': '30 j', '90d': '90 j', 'all': 'Tout' } %}
+    <div class="rangebar">
+        {% for r in ranges %}
+            <a href="{{ path(route, { range: r }) }}" class="{{ current == r ? 'is-active' }}">{{ labels[r]|default(r) }}</a>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{# rows: [{version, langs, types, objects}] storage completeness. #}
+{% macro matrix(rows) %}
+    <div class="matrix">
+        {% for r in rows %}
+            <div class="matrix-row">
+                <span class="m-ver">{{ r.version }}</span>
+                <div class="m-langs">
+                    {% for l in r.langs %}<span class="lang">{{ l }}</span>{% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <p class="dim">Aucune version stockée.</p>
+        {% endfor %}
+    </div>
+{% endmacro %}

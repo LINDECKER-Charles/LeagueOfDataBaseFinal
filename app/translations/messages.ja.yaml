@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "設定"
-  meta: "希望のゲームバージョンと言語を選択して、League of Data Baseの表示をカスタマイズしましょう。すべてのステータスとデータは設定に応じて変わります。"
   form:
     version: "バージョン"
     language: "言語"
-    note_latest: "※最新バージョンが自動的に選択されます。"
     remember: "ログイン状態を保持する"
     submit: "送信"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "開発進捗"
     back: "← 戻る"
     summoners: "サモナースペルを見る"
-    setup: "バージョンと言語を選択"
     footer: "お急ぎですか?お問い合わせいただくか、ロードマップをご確認ください。今後も更新を予定しています。"
     meanwhile: "その間、以下をご利用いただけます:"
 
@@ -64,7 +60,6 @@ item:
     tier: "ティア %depth%"
     availability: "入手可否"
     back: "← リストに戻る"
-    setup: "バージョンと言語を変更"
   list:
       title: "アイテム"
       meta_description: "パッチ%version%で利用可能なLeague of Legendsのすべてのアイテムをご覧いただけます。最新バージョンに対応した詳細なステータス、コスト、効果を確認できます。"
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "アイテムを検索…"
-      change_version: "バージョン/言語を変更"
       cost_total: "合計コスト"
       cost_sell: "売却額"
       categories: "カテゴリー"
@@ -113,7 +107,6 @@ champion:
     header: "チャンピオン"
     subtitle: "チャンピオンカタログ"
     search_placeholder: "チャンピオンを検索…"
-    change_version: "バージョン/言語を変更"
   detail:
     meta_description: "League of Legendsの%name%について、パッチ%version%のステータス、ロール、詳細情報をご覧ください。"
     version_locale: "パッチ%version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "クールダウン"
     cost: "コスト"
     range: "射程"
+    video_play: "動画を再生"
+    video_pause: "動画を一時停止"
     tips_as: "使用時のコツ"
     tips_against: "対策のコツ"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "ルーン"
     subtitle: "ルーンカタログ"
     search_placeholder: "ルーンを検索…"
-    change_version: "バージョン/言語を変更"
   detail:
     title: "ルーン: %name%"
     meta_description: "League of Legendsのルーン「%name%」の詳細をご覧ください。ステータスと効果はパッチ%version%に対応しています。"
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "検索結果が見つかりませんでした。"
     back: "← 戻る"
-    setup: "バージョンと言語を選択"
   detail : "詳細を見る →"
 base:
   title: "League of Data Base"

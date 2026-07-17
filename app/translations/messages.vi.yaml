@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "Thiết Lập"
-  meta: "Chọn phiên bản trò chơi và ngôn ngữ ưa thích để tùy chỉnh trải nghiệm League of Data Base của bạn. Mọi chỉ số và dữ liệu sẽ thích ứng theo cài đặt của bạn."
   form:
     version: "Phiên bản"
     language: "Ngôn ngữ"
-    note_latest: "*Phiên bản mới nhất được tự động chọn."
     remember: "Ghi nhớ lựa chọn của tôi"
     submit: "Gửi"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Tiến độ xây dựng"
     back: "← Quay lại"
     summoners: "Xem Phép Bổ Trợ"
-    setup: "Chọn phiên bản & ngôn ngữ"
     footer: "Cần gấp tính năng này? Hãy liên hệ với chúng tôi hoặc xem lộ trình phát triển. Nhiều cập nhật sắp ra mắt."
     meanwhile: "Trong khi chờ đợi, bạn có thể:"
 
@@ -64,7 +60,6 @@ item:
     tier: "Bậc %depth%"
     availability: "Khả dụng"
     back: "← Quay lại danh sách"
-    setup: "Thay đổi phiên bản & ngôn ngữ"
   list:
       title: "Trang Bị"
       meta_description: "Xem tất cả trang bị của League of Legends có sẵn trong phiên bản %version%. Tìm chỉ số chi tiết, chi phí và hiệu ứng được cập nhật cho phiên bản mới nhất."
@@ -74,7 +69,6 @@ item:
       max: "TỐI ĐA"
       ok: "OK"
       search_placeholder: "Tìm kiếm trang bị…"
-      change_version: "Đổi phiên bản/ngôn ngữ"
       cost_total: "Tổng chi phí"
       cost_sell: "Giá bán"
       categories: "Danh mục"
@@ -113,7 +107,6 @@ champion:
     header: "Tướng"
     subtitle: "Danh mục tướng"
     search_placeholder: "Tìm kiếm tướng…"
-    change_version: "Đổi phiên bản/ngôn ngữ"
   detail:
     meta_description: "Khám phá %name% của League of Legends, cùng chỉ số, vai trò và chi tiết cho phiên bản %version%."
     version_locale: "Phiên bản %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "Hồi chiêu"
     cost: "Chi phí"
     range: "Tầm xa"
+    video_play: "Phát video"
+    video_pause: "Tạm dừng video"
     tips_as: "Khi chơi với"
     tips_against: "Khi đối đầu"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "Ngọc Bổ Trợ"
     subtitle: "Danh mục ngọc bổ trợ"
     search_placeholder: "Tìm kiếm ngọc bổ trợ…"
-    change_version: "Đổi phiên bản/ngôn ngữ"
   detail:
     title: "Ngọc Bổ Trợ: %name%"
     meta_description: "Khám phá chi tiết ngọc bổ trợ %name% trong League of Legends. Chỉ số và hiệu ứng được cập nhật cho phiên bản %version%."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "Không tìm thấy kết quả nào cho tìm kiếm của bạn."
     back: "← Quay lại"
-    setup: "Chọn phiên bản & ngôn ngữ"
   detail : "Xem chi tiết →"
 base:
   title: "League of Data Base"

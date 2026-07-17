@@ -176,6 +176,39 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
         return $out;
     }
 
+    /**
+     * Data Dragon inlines every chroma as a standalone skin entry (e.g.
+     * "Popstar Ahri (Amethyst)") — dozens per modern champion, none with a
+     * dedicated splash, so they render as broken figures. Each carries the same
+     * id as the CommunityDragon chroma we already surface through the ChromaStrip,
+     * so drop any skin whose id is a known chroma; their parent skins stay.
+     *
+     * No-op when chroma data is unavailable (returns the list untouched) rather
+     * than guessing from names.
+     *
+     * @param list<array<string, mixed>> $skins   DDragon skin nodes
+     * @param array<string, list<array{id:int, name:string, colors:list<string>, image:string}>> $chromas {@see getChromas()}
+     * @return list<array<string, mixed>>
+     */
+    public function withoutChromaSkins(array $skins, array $chromas): array
+    {
+        $chromaIds = [];
+        foreach ($chromas as $variants) {
+            foreach ($variants as $chroma) {
+                $chromaIds[(int) $chroma['id']] = true;
+            }
+        }
+
+        if ($chromaIds === []) {
+            return array_values($skins);
+        }
+
+        return array_values(array_filter(
+            $skins,
+            static fn (array $skin): bool => !isset($chromaIds[(int) ($skin['id'] ?? 0)]),
+        ));
+    }
+
     /** "15.13.1" → "15.13" (CommunityDragon patch granularity). */
     private function cdragonPatch(string $version): string
     {
@@ -278,35 +311,9 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
         return $this->resolveImage($version, $name, $force);
     }
 
-    public function paginate(string $version, string $langue, int $nb = 1, int $numPage = 1): array
+    /** Liste rendue en entier (filtrage/pagination côté client) — pas de plafond serveur. */
+    protected function perPageCap(): int
     {
-        $json = $this->getData($version, $langue)['data'] ?? [];
-
-        $ttSum = count($json);
-        if ($nb === 0 || $nb > $ttSum) {
-            $nb = $ttSum > 20 ? 20 : $ttSum;
-        }
-        $ttPage = (int) ceil($ttSum / max(1, $nb));
-        if ($numPage > $ttPage) {
-            $numPage = 1;
-        }
-
-        $json = $numPage <= 1
-            ? $this->splitJson($nb, 0, $json)
-            : $this->splitJson($nb, $nb * ($numPage - 1), $json);
-
-        $images = $this->getImages($version, $langue, false, $json);
-
-        return [
-            static::TYPE.'s' => $json,
-            'images' => $images,
-            'meta' => [
-                'currentPage' => $numPage,
-                'nombrePage' => $ttPage,
-                'itemPerPage' => $nb,
-                'totalItem' => $ttSum,
-                'type' => static::TYPE,
-            ],
-        ];
+        return PHP_INT_MAX;
     }
 }

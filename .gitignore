@@ -19,3 +19,6 @@ node_modules/
 
 # JetBrains IDE
 .idea/
+
+# Pitch Discord (local, non versionné)
+/docs/presentation-discord.md

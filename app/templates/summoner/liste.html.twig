@@ -13,34 +13,32 @@
   {% include 'partials/main/gradient.html.twig' %}
 
   <div class="relative mx-auto max-w-[110rem]">
-    <header class="mb-10 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+    <header class="mb-8">
       {% include 'components/section_header.html.twig' with {
         eyebrow: 'Data Dragon · ' ~ (client.session.version ?? (client.versions|first)),
         title: 'summoner.list.title'|trans,
         count: meta.totalItem,
         count_label: 'summoner.list.title'|trans|lower
       } %}
-      {% include 'components/list_controls.html.twig' with {
-        meta: meta,
-        search_base: '/api/summoners/search',
-        detail_base: '/summoner',
-        search_placeholder: 'common.search'|trans,
-        version: client.session.version ?? (client.versions|first),
-        lang: client.session.locale ?? client.currentLocale ?? 'en_US'
-      } %}
     </header>
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    {% include 'components/list_filter.html.twig' with { grid_id: 'summoner-grid' } %}
+
+    <div id="summoner-grid" class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for s in summoners %}
         {% set cd = s.cooldownBurn is defined and s.cooldownBurn ? s.cooldownBurn : (s.cooldown|default([])|join('/')) %}
         {% set modes = s.modes is defined and s.modes is iterable ? s.modes : [] %}
         {% set desc = s.description is defined ? s.description : (s.tooltip|default('')) %}
+        {# Facet on real game modes only — drop Data Dragon's dev/tutorial/WIP ids. #}
+        {% set filterModes = modes|filter(m => m matches '/^(CLASSIC|ARAM|URF|SNOWURF|ARSR|ONEFORALL|NEXUSBLITZ|ASSASSINATE|KINGPORO|ULTBOOK|SWIFTPLAY|BRAWL|CHERRY)$/') %}
         {% embed 'components/entity_card.html.twig' with {
           href: path('app_summoner', { name: s.id|default(''), version: meta.version, lang: meta.lang }),
           img: images[s.id|default('')]|default(null),
           name: s.name|default(''),
           sub: s.id|default(''),
-          img_fit: 'contain'
+          img_fit: 'contain',
+          filter_text: (s.name|default('') ~ ' ' ~ s.id|default(''))|lower,
+          filter_tags: filterModes
         } %}
           {% block card_body %}
             <div class="px-4 pb-3">
@@ -86,8 +84,6 @@
         {% include 'components/empty_state.html.twig' %}
       {% endfor %}
     </div>
-
-    {% include 'partials/pagination.html.twig' %}
   </div>
 </main>
 {% endblock %}

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Dto\ClientData;
 use App\Service\API\ItemManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
@@ -12,17 +11,18 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-final class ItemController extends AbstractController
+final class ItemController extends AbstractResourceController
 {
     public function __construct(
-        private readonly VersionManager $versionManager,
-        private readonly ClientManager $clientManager,
-        private readonly PageContextResolver $pageContext,
-        private readonly RequestStack $requestStack,
+        VersionManager $versionManager,
+        ClientManager $clientManager,
+        PageContextResolver $pageContext,
+        RequestStack $requestStack,
         private readonly ItemManager $itemManager,
-    ) {}
+    ) {
+        parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
+    }
 
     /**
      * Liste paginée des objets. Version/langue viennent de la query (URL
@@ -31,22 +31,29 @@ final class ItemController extends AbstractController
     #[Route('/objects', name: 'app_items', methods: ['GET'])]
     public function objects(): Response
     {
-        $ctx = $this->pageContext->listContext(defaultPerPage: 8, maxPerPage: 20);
+        // Full list in one render — the ResourceFilter island owns search, tag
+        // facets and pagination client-side; only version/lang matter server-side.
+        $sel = $this->pageContext->selection();
 
         try {
-            $data = $this->itemManager->paginate($ctx['version'], $ctx['lang'], $ctx['itemPerPage'], $ctx['numPage']);
+            $data = $this->itemManager->paginate($sel['version'], $sel['lang'], 0, 1);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($ctx, $e);
+            return $this->redirectToHomeWithError($sel, $e);
         }
 
-        $data['meta']['version'] = $ctx['version'];
-        $data['meta']['lang']    = $ctx['lang'];
+        $data['meta']['version'] = $sel['version'];
+        $data['meta']['lang']    = $sel['lang'];
+
+        // Résout les ids d'évolution (item.into) en objets liables (nom + icône +
+        // prix) pour l'accordéon « Évolutions » — une passe pour toute la page.
+        $related = $this->itemManager->relatedIndex($data['items'], $sel['version'], $sel['lang']);
 
         return $this->render('item/liste.html.twig', [
-            'items'  => $data['items'],
-            'images' => $data['images'],
-            'meta'   => $data['meta'],
-            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'items'   => $data['items'],
+            'images'  => $data['images'],
+            'related' => $related,
+            'meta'    => $data['meta'],
+            'client'  => $this->clientData(),
         ]);
     }
 
@@ -65,20 +72,23 @@ final class ItemController extends AbstractController
             // résout en objets réels (nom + image + prix) liables vers leur page
             // détail. `components` (from) + cet objet + `related` (into) forment
             // l'arbre de recette affiché par le template.
-            $related    = $this->itemManager->resolveRelated($item['into'] ?? [], $sel['version'], $sel['lang']);
-            $components = $this->itemManager->resolveRelated($item['from'] ?? [], $sel['version'], $sel['lang']);
+            $related = $this->itemManager->resolveRelated($item['into'] ?? [], $sel['version'], $sel['lang']);
+            // Arbre de recette descendant complet (composants récursifs) plutôt
+            // qu'un seul niveau — le vrai « arbre de craft » de l'objet.
+            $recipe  = $this->itemManager->recipeTree($name, $sel['version'], $sel['lang']);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($sel, $e);
+            return $this->redirectToHomeWithError($sel, $e);
         }
 
         return $this->render('item/detail.html.twig', [
             'item'       => $item,
             'image'      => $image,
             'related'    => $related,
-            'components' => $components,
+            'recipeTree' => $recipe,
             'version'    => $sel['version'],
             'lang'       => $sel['lang'],
-            'client'  => ClientData::fromServices($this->versionManager, $this->clientManager),
+            'nav'        => $this->neighbors($this->itemManager, $sel['version'], $sel['lang'], $name),
+            'client'     => $this->clientData(),
         ]);
     }
 
@@ -111,29 +121,5 @@ final class ItemController extends AbstractController
         }, $items);
 
         return $this->json($final);
-    }
-
-    /**
-     * @param array{version?:string, lang?:string} $ctx
-     */
-    private function redirectToSetupWithError(array $ctx, \Throwable $e): Response
-    {
-        $this->requestStack->getSession()->getFlashBag()->clear();
-        $this->addFlash('error', $this->dataError($ctx, $e));
-
-        return $this->redirectToRoute('app_setup');
-    }
-
-    /**
-     * @param array{version?:string, lang?:string} $ctx
-     */
-    private function dataError(array $ctx, \Throwable $e): string
-    {
-        return sprintf(
-            'Donnés absente sur la version %s et la langue %s Message --> %s',
-            $ctx['version'] ?? 'n/a',
-            $ctx['lang'] ?? 'n/a',
-            $e->getMessage()
-        );
     }
 }
