@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "API pro vývojáře"
+  title: "API klíče"
+  back_profile: "Zpět na profil"
+  docs_link: "Dokumentace a ceník"
+  profile_link:
+    label: "API pro vývojáře"
+    manage: "Spravovat můj API klíč"
+  create:
+    title: "Zatím žádný API klíč"
+    body: "Vygenerujte si osobní klíč a volejte veřejné API — bezplatný plán: 500 požadavků měsíčně, 10 za minutu."
+    name_label: "Název klíče (volitelné)"
+    name_placeholder: "moje-aplikace"
+    submit: "Vytvořit klíč"
+  raw:
+    title: "Váš nový API klíč"
+    warning: "Zkopírujte jej hned — zobrazí se jen tentokrát. Ukládá se pouze otisk: ztracený klíč lze jen vygenerovat znovu."
+    label: "Tajný klíč"
+    copy: "Zkopírovat klíč"
+    copied: "Zkopírováno!"
+    copy_error: "Zkopírujte ručně z pole"
+  key:
+    title: "Aktivní klíč"
+    label_key: "Klíč"
+    label_name: "Název"
+    label_created: "Vytvořen"
+    label_quota: "Měsíční spotřeba"
+    quota_used: "%used% / %quota% požadavků"
+    quota_remaining: "Tento měsíc zbývá %remaining%"
+    label_credits: "Předplacené kredity"
+    label_rate: "Limit frekvence"
+    rate_unit: "%rate% pož./min"
+    subscription_active: "Aktivní předplatné"
+  actions:
+    regenerate: "Vygenerovat klíč znovu"
+    regenerate_help: "Zneplatní tento klíč a vydá nové tajemství — plán, kvóta i kredity zůstávají."
+    revoke: "Zneplatnit"
+    revoke_help: "Okamžitě klíč vypne (API jej může kvůli cache přijímat ještě až minutu)."
+  billing:
+    title: "Posilte svůj klíč"
+    unavailable: "Platby nejsou na tomto serveru zapnuté."
+    packs_title: "Kreditové balíčky"
+    packs_help: "Jednorázová platba — 1 € za 1 000 požadavků, čerpají se po měsíční kvótě, platnost 12 měsíců. Každý balíček zvedne frekvenci nejméně na 60 pož./min."
+    plans_title: "Předplatná"
+    plans_help: "Zvyšují měsíční kvótu a limit frekvence. Jedno aktivní předplatné na účet."
+    buy: "Koupit"
+    subscribe: "Předplatit"
+    current: "Aktuální"
+    per_month: "/měsíc"
+    per_year: "/rok"
+    requests_month: "%count% pož./měsíc"
+    requests_once: "%count% požadavků"
+    already_subscribed: "Váš klíč už předplatné má. Chcete-li změnit plán, nejprve stávající předplatné zrušte (návrat na bezplatný plán platí hned po potvrzení Stripe) a poté se předplaťte znovu."
+  usage:
+    title: "Posledních 30 dní"
+    total_month: "Spotřebováno tento měsíc"
+    day: "Den"
+    requests: "Požadavky"
+    empty: "Zatím žádná změřená spotřeba — první volání API se tu objeví do minuty."
+  status:
+    pack_success: "Platba potvrzena — kredity se připisují (pár sekund)."
+    plan_success: "Předplatné potvrzeno — klíč se povyšuje (pár sekund)."
+    cancelled: "Platba zrušena — nic nebylo strženo."
+  flash:
+    csrf: "Relace vypršela, zkuste to znovu."
+    created: "API klíč vytvořen."
+    regenerated: "Klíč vygenerován znovu — předchozí tajemství už nefunguje."
+    revoked: "Klíč zneplatněn."
+    key_exists: "Aktivní klíč už máte."
+    no_key: "Nemáte žádný aktivní klíč."
+    invalid_offer: "Neznámá nabídka."
+    already_subscribed: "Na vašem klíči už běží aktivní předplatné — před novým předplacením je zrušte."
+    need_key: "Před nákupem si vytvořte API klíč."
+    stripe_unavailable: "Platby jsou momentálně nedostupné."
+    gateway: "Platební služba neodpovídá, zkuste to později."
+
+plan:
+  free: "Zdarma"
+  credits: "Kredity"
+  monthly: "Měsíční"
+  monthly_plus: "Měsíční+"
+  annual: "Roční"
+  annual_plus: "Roční+"
+
+pack:
+  small: "Balíček S"
+  medium: "Balíček M"
+  large: "Balíček L"
+
+product:
+  pack: "LoDB API — %requests% požadavků v kreditech"
+  plan: "LoDB API — plán %plan%"
+
+pricing:
+  offer: "Nabídka"
+  price: "Cena"
+  volume: "Objem"
+  rate: "Limit frekvence"
+  validity_note: "Kreditové balíčky: 1 € za 1 000 požadavků, čerpají se po měsíční kvótě aktivního plánu, platnost 12 měsíců. Roční plány nesou objem jako měsíční kvótu účtovanou ročně."
+
+developers:
+  eyebrow: "Vývojáři"
+  title: "API LeagueOfDataBase"
+  intro: "REST JSON API nad komunitními daty webu: veřejné profily vyvolávačů, sdílené buildy a trendy návštěvnosti. Zdarma na vyzkoušení, s ceníkem pro reálné zatížení."
+  cta: "Vytvořit klíč"
+  cta_hint: "Přihlaste se, vygenerujte bezplatný klíč, zavolejte API — do minuty."
+  docs_pricing: "Ceník"
+  auth:
+    title: "Autentizace"
+    body: "Každý požadavek /v1 nese váš klíč — formát %prefix% následovaný 40 šestnáctkovými znaky — v jedné ze dvou hlaviček. Na serveru se ukládá jen otisk SHA-256: ztracený klíč se generuje znovu, nikdy neobnovuje."
+    base_url: "Základní URL (v1, vývoj): %url% — produkční přístup bude vystaven přes doménu webu (TLS edge)."
+  endpoints:
+    title: "Endpointy"
+    healthz: "Stav služby — jediná trasa bez autentizace."
+    profiles: "Veřejný profil člena: oblíbené a počet veřejných buildů (404 u soukromého profilu)."
+    builds: "Veřejné buildy šampiona (id Data Dragon), od nejnovějších — stránkované přes page a per_page (max. 50)."
+    trends: "Nejprohlíženější entity webu: šampioni, předměty, runy nebo kouzla vyvolávače — range=7d (výchozí) nebo 30d, top 25."
+    usage: "Živá spotřeba volajícího klíče — autentizovaná a limitovaná, ale nikdy se nepočítá do kvóty."
+  quotas:
+    title: "Kvóty a limit frekvence"
+    quota: "Každý požadavek se účtuje nejprve měsíční kvótě plánu, poté předplaceným kreditům; po vyčerpání obojího API odpoví 429 quota_exceeded."
+    rate: "Token bucket na klíč: každá odpověď /v1 nese X-RateLimit-Limit, X-RateLimit-Remaining a X-RateLimit-Reset; nad limit 429 rate_limited."
+    month: "Kvóty se nulují s kalendářním měsícem. Roční plány nesou objem jako měsíční kvótu (20 000 nebo 60 000 požadavků měsíčně)."
+  errors:
+    title: "Chyby"
+    body: "Jednotná obálka u všech chyb. Kódy: unauthorized (401), forbidden (403, zneplatněný klíč), not_found (404), rate_limited a quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Fakturace a správa klíčů"
+    body: "Klíče se vytvářejí a spravují z profilu; balíčky a předplatná se platí přes Stripe Checkout — samotné API se platebních dat nikdy nedotkne."

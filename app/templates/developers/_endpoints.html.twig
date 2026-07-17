@@ -1,0 +1,36 @@
+{# Endpoint summary of the v1 API — the page IS the doc (no repo link):
+   method + path + one-line purpose, then two copy-paste curl examples. #}
+{% set endpoints = [
+    { path: '/healthz', desc: 'developers.endpoints.healthz' },
+    { path: '/v1/profiles/{username}', desc: 'developers.endpoints.profiles' },
+    { path: '/v1/champions/{championId}/builds', desc: 'developers.endpoints.builds' },
+    { path: '/v1/trends/{type}', desc: 'developers.endpoints.trends' },
+    { path: '/v1/usage', desc: 'developers.endpoints.usage' },
+] %}
+<section class="dev-section" aria-labelledby="dev-endpoints-title">
+    <h2 id="dev-endpoints-title">{{ 'developers.endpoints.title'|trans({}, 'api') }}</h2>
+    <div class="mt-4">
+        {% for endpoint in endpoints %}
+            <div class="dev-endpoint">
+                <span class="hx-chip">GET</span>
+                <code>{{ endpoint.path }}</code>
+                <p>{{ endpoint.desc|trans({}, 'api') }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <pre class="dev-code">curl -H "Authorization: Bearer lodb_votrecle…" \
+  "{{ apiBaseUrl }}/v1/trends/champions?range=30d"
+
+curl -H "X-Api-Key: lodb_votrecle…" \
+  "{{ apiBaseUrl }}/v1/usage"</pre>
+
+    <pre class="dev-code">{
+  "plan": "free",
+  "monthly_quota": 500,
+  "used_this_month": 137,
+  "remaining_this_month": 363,
+  "credits_balance": 0,
+  "rate_limit_per_min": 10
+}</pre>
+</section>

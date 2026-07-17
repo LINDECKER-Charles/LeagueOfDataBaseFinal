@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "API pentru dezvoltatori"
+  title: "Chei API"
+  back_profile: "Înapoi la profil"
+  docs_link: "Documentație și prețuri"
+  profile_link:
+    label: "API pentru dezvoltatori"
+    manage: "Gestionează cheia mea API"
+  create:
+    title: "Încă nicio cheie API"
+    body: "Generează-ți cheia personală și apelează API-ul public — plan gratuit: 500 de cereri pe lună, 10 pe minut."
+    name_label: "Numele cheii (opțional)"
+    name_placeholder: "aplicatia-mea"
+    submit: "Creează-mi cheia"
+  raw:
+    title: "Noua ta cheie API"
+    warning: "Copiaz-o acum — se afișează doar de data aceasta. Stocăm doar o amprentă: o cheie pierdută poate fi doar regenerată."
+    label: "Cheie secretă"
+    copy: "Copiază cheia"
+    copied: "Copiată!"
+    copy_error: "Copiază manual din câmp"
+  key:
+    title: "Cheie activă"
+    label_key: "Cheie"
+    label_name: "Nume"
+    label_created: "Creată la"
+    label_quota: "Consum lunar"
+    quota_used: "%used% / %quota% cereri"
+    quota_remaining: "%remaining% rămase luna aceasta"
+    label_credits: "Credite preplătite"
+    label_rate: "Limită de ritm"
+    rate_unit: "%rate% cereri/min"
+    subscription_active: "Abonament activ"
+  actions:
+    regenerate: "Regenerează cheia"
+    regenerate_help: "Revocă această cheie și emite un secret nou — planul, cota și creditele se păstrează."
+    revoke: "Revocă"
+    revoke_help: "Dezactivează cheia imediat (API-ul o mai poate accepta până la un minut din cauza cache-ului)."
+  billing:
+    title: "Întărește-ți cheia"
+    unavailable: "Plățile nu sunt activate pe acest server."
+    packs_title: "Pachete de credite"
+    packs_help: "Plată unică — 1 € la 1 000 de cereri, consumate după cota lunară, valabile 12 luni. Orice pachet ridică ritmul la minimum 60 cereri/min."
+    plans_title: "Abonamente"
+    plans_help: "Cresc cota lunară și limita de ritm. Un singur abonament activ pe cont."
+    buy: "Cumpără"
+    subscribe: "Abonează-te"
+    current: "Curent"
+    per_month: "/lună"
+    per_year: "/an"
+    requests_month: "%count% cereri/lună"
+    requests_once: "%count% cereri"
+    already_subscribed: "Cheia ta are deja un abonament. Pentru a schimba planul, anulează-l mai întâi pe cel curent (revenirea la planul gratuit se aplică imediat ce Stripe confirmă), apoi abonează-te din nou."
+  usage:
+    title: "Ultimele 30 de zile"
+    total_month: "Consumat luna aceasta"
+    day: "Zi"
+    requests: "Cereri"
+    empty: "Niciun consum măsurat încă — primele tale apeluri API vor apărea aici într-un minut."
+  status:
+    pack_success: "Plată confirmată — creditele tale se adaugă (câteva secunde)."
+    plan_success: "Abonament confirmat — cheia ta se actualizează (câteva secunde)."
+    cancelled: "Plată anulată — nu s-a debitat nimic."
+  flash:
+    csrf: "Sesiunea a expirat, încearcă din nou."
+    created: "Cheie API creată."
+    regenerated: "Cheie regenerată — secretul anterior nu mai funcționează."
+    revoked: "Cheie revocată."
+    key_exists: "Ai deja o cheie activă."
+    no_key: "Nu ai nicio cheie activă."
+    invalid_offer: "Ofertă necunoscută."
+    already_subscribed: "Există deja un abonament activ pe cheia ta — anulează-l înainte de a te abona din nou."
+    need_key: "Creează-ți cheia API înainte de a cumpăra."
+    stripe_unavailable: "Plățile nu sunt disponibile momentan."
+    gateway: "Serviciul de plată nu răspunde, încearcă mai târziu."
+
+plan:
+  free: "Gratuit"
+  credits: "Credite"
+  monthly: "Lunar"
+  monthly_plus: "Lunar+"
+  annual: "Anual"
+  annual_plus: "Anual+"
+
+pack:
+  small: "Pachet S"
+  medium: "Pachet M"
+  large: "Pachet L"
+
+product:
+  pack: "API LoDB — %requests% cereri în credite"
+  plan: "API LoDB — plan %plan%"
+
+pricing:
+  offer: "Ofertă"
+  price: "Preț"
+  volume: "Volum"
+  rate: "Limită de ritm"
+  validity_note: "Pachete de credite: 1 € la 1 000 de cereri, consumate după cota lunară a planului activ, valabile 12 luni. Planurile anuale poartă volumul drept cotă lunară, facturată anual."
+
+developers:
+  eyebrow: "Dezvoltatori"
+  title: "API-ul LeagueOfDataBase"
+  intro: "Un API REST JSON peste datele comunitare ale site-ului: profiluri publice de invocatori, builduri partajate și tendințe de vizualizare. Gratuit de încercat, tarifat pentru sarcini reale."
+  cta: "Creează-mi cheia"
+  cta_hint: "Autentifică-te, generează cheia gratuită, apelează API-ul — în mai puțin de un minut."
+  docs_pricing: "Prețuri"
+  auth:
+    title: "Autentificare"
+    body: "Fiecare cerere /v1 poartă cheia ta — format %prefix% urmat de 40 de caractere hexazecimale — într-unul din două anteturi. Pe server se păstrează doar amprenta SHA-256: o cheie pierdută se regenerează, nu se recuperează."
+    base_url: "URL de bază (v1, dezvoltare): %url% — accesul de producție va fi expus prin domeniul site-ului (edge TLS)."
+  endpoints:
+    title: "Endpointuri"
+    healthz: "Starea serviciului — singura rută fără autentificare."
+    profiles: "Profilul public al unui membru: favorite și numărul de builduri publice (404 dacă profilul e privat)."
+    builds: "Buildurile publice ale unui campion (id Data Dragon), de la cel mai recent — paginat cu page și per_page (max. 50)."
+    trends: "Cele mai vizualizate entități ale site-ului: campioni, obiecte, rune sau vrăji de invocator — range=7d (implicit) sau 30d, top 25."
+    usage: "Consumul în timp real al cheii apelante — autentificat și limitat în ritm, dar niciodată scăzut din cotă."
+  quotas:
+    title: "Cote și limitare de ritm"
+    quota: "Fiecare cerere se impută întâi cotei lunare a planului, apoi creditelor preplătite; epuizate amândouă, API-ul răspunde 429 quota_exceeded."
+    rate: "Token bucket per cheie: fiecare răspuns /v1 poartă X-RateLimit-Limit, X-RateLimit-Remaining și X-RateLimit-Reset; peste limită, 429 rate_limited."
+    month: "Cotele se resetează cu luna calendaristică. Planurile anuale poartă volumul drept cotă lunară (20 000 sau 60 000 de cereri pe lună)."
+  errors:
+    title: "Erori"
+    body: "Plic uniform la toate erorile. Coduri: unauthorized (401), forbidden (403, cheie revocată), not_found (404), rate_limited și quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Facturare și gestiunea cheilor"
+    body: "Cheile se creează și se gestionează din profilul tău; pachetele și abonamentele se plătesc prin Stripe Checkout — API-ul în sine nu atinge niciodată date de plată."

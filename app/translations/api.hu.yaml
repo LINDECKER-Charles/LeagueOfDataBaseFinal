@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "Fejlesztői API"
+  title: "API-kulcsok"
+  back_profile: "Vissza a profilhoz"
+  docs_link: "Dokumentáció és árak"
+  profile_link:
+    label: "Fejlesztői API"
+    manage: "API-kulcsom kezelése"
+  create:
+    title: "Még nincs API-kulcs"
+    body: "Hozd létre személyes kulcsodat és hívd a nyilvános API-t — ingyenes csomag: havi 500 kérés, percenként 10."
+    name_label: "Kulcs neve (nem kötelező)"
+    name_placeholder: "sajat-app"
+    submit: "Kulcs létrehozása"
+  raw:
+    title: "Az új API-kulcsod"
+    warning: "Másold ki most — csak ez egyszer jelenik meg. Csak egy ujjlenyomatot tárolunk: az elveszett kulcs csak újragenerálható."
+    label: "Titkos kulcs"
+    copy: "Kulcs másolása"
+    copied: "Kimásolva!"
+    copy_error: "Másold ki kézzel a mezőből"
+  key:
+    title: "Aktív kulcs"
+    label_key: "Kulcs"
+    label_name: "Név"
+    label_created: "Létrehozva"
+    label_quota: "Havi fogyasztás"
+    quota_used: "%used% / %quota% kérés"
+    quota_remaining: "Ebben a hónapban %remaining% maradt"
+    label_credits: "Előre fizetett kreditek"
+    label_rate: "Sebességkorlát"
+    rate_unit: "%rate% kérés/perc"
+    subscription_active: "Aktív előfizetés"
+  actions:
+    regenerate: "Kulcs újragenerálása"
+    regenerate_help: "Visszavonja ezt a kulcsot és új titkot ad ki — a csomag, a keret és a kreditek megmaradnak."
+    revoke: "Visszavonás"
+    revoke_help: "Azonnal letiltja a kulcsot (a gyorsítótár miatt az API még legfeljebb egy percig elfogadhatja)."
+  billing:
+    title: "Erősítsd a kulcsodat"
+    unavailable: "A fizetés nincs engedélyezve ezen a szerveren."
+    packs_title: "Kreditcsomagok"
+    packs_help: "Egyszeri fizetés — 1 000 kérésenként 1 €, a havi keret után fogy, 12 hónapig érvényes. Bármely csomag legalább 60 kérés/percre emeli a sebességet."
+    plans_title: "Előfizetések"
+    plans_help: "Növelik a havi keretet és a sebességkorlátot. Fiókonként egy aktív előfizetés."
+    buy: "Vásárlás"
+    subscribe: "Előfizetés"
+    current: "Jelenlegi"
+    per_month: "/hó"
+    per_year: "/év"
+    requests_month: "%count% kérés/hó"
+    requests_once: "%count% kérés"
+    already_subscribed: "A kulcsodon már van előfizetés. Csomagváltáshoz először mondd le a jelenlegit (az ingyenes csomagra visszaállás a Stripe megerősítésekor azonnal érvényes), majd fizess elő újra."
+  usage:
+    title: "Utolsó 30 nap"
+    total_month: "Ebben a hónapban felhasznált"
+    day: "Nap"
+    requests: "Kérések"
+    empty: "Még nincs mért fogyasztás — az első API-hívásaid egy percen belül itt jelennek meg."
+  status:
+    pack_success: "Fizetés megerősítve — a kreditjeid érkeznek (néhány másodperc)."
+    plan_success: "Előfizetés megerősítve — a kulcsod frissítés alatt (néhány másodperc)."
+    cancelled: "Fizetés megszakítva — semmit sem terheltünk."
+  flash:
+    csrf: "A munkamenet lejárt, próbáld újra."
+    created: "API-kulcs létrehozva."
+    regenerated: "Kulcs újragenerálva — a korábbi titok már nem működik."
+    revoked: "Kulcs visszavonva."
+    key_exists: "Már van aktív kulcsod."
+    no_key: "Nincs aktív kulcsod."
+    invalid_offer: "Ismeretlen ajánlat."
+    already_subscribed: "A kulcsodon már fut aktív előfizetés — mondd le, mielőtt újra előfizetsz."
+    need_key: "Vásárlás előtt hozd létre az API-kulcsodat."
+    stripe_unavailable: "A fizetés jelenleg nem érhető el."
+    gateway: "A fizetési szolgáltatás nem elérhető, próbáld később."
+
+plan:
+  free: "Ingyenes"
+  credits: "Kreditek"
+  monthly: "Havi"
+  monthly_plus: "Havi+"
+  annual: "Éves"
+  annual_plus: "Éves+"
+
+pack:
+  small: "S csomag"
+  medium: "M csomag"
+  large: "L csomag"
+
+product:
+  pack: "LoDB API — %requests% kérésnyi kredit"
+  plan: "LoDB API — %plan% csomag"
+
+pricing:
+  offer: "Ajánlat"
+  price: "Ár"
+  volume: "Mennyiség"
+  rate: "Sebességkorlát"
+  validity_note: "Kreditcsomagok: 1 000 kérésenként 1 €, az aktív csomag havi kerete után fogynak, 12 hónapig érvényesek. Az éves csomagok a mennyiséget havi keretként hordozzák, évente számlázva."
+
+developers:
+  eyebrow: "Fejlesztők"
+  title: "A LeagueOfDataBase API"
+  intro: "REST JSON API az oldal közösségi adatai felett: nyilvános idézőprofilok, megosztott buildek és megtekintési trendek. Ingyen kipróbálható, valós terhelésre árazva."
+  cta: "Kulcs létrehozása"
+  cta_hint: "Jelentkezz be, generáld az ingyenes kulcsot, hívd az API-t — egy percen belül."
+  docs_pricing: "Árak"
+  auth:
+    title: "Hitelesítés"
+    body: "Minden /v1 kérés a kulcsodat viszi — formátum: %prefix% és 40 hexadecimális karakter — a két fejléc egyikében. A szerveren csak az SHA-256 ujjlenyomat tárolódik: az elveszett kulcsot újrageneráljuk, sosem állítjuk vissza."
+    base_url: "Alap URL (v1, fejlesztés): %url% — az éles hozzáférés az oldal domainjén (TLS edge) keresztül lesz elérhető."
+  endpoints:
+    title: "Végpontok"
+    healthz: "Szolgáltatás állapota — az egyetlen hitelesítés nélküli útvonal."
+    profiles: "Egy tag nyilvános profilja: kedvencek és nyilvános buildek száma (privát profilnál 404)."
+    builds: "Egy hős (Data Dragon id) nyilvános buildjei, a legújabbtól — lapozás page és per_page paraméterrel (max. 50)."
+    trends: "Az oldal legnézettebb entitásai: hősök, tárgyak, rúnák vagy idézőikonok varázslatai — range=7d (alapértelmezett) vagy 30d, top 25."
+    usage: "A hívó kulcs élő fogyasztása — hitelesített és sebességkorlátos, de sosem számít bele a keretbe."
+  quotas:
+    title: "Keretek és sebességkorlát"
+    quota: "Minden kérés először a csomag havi keretét, majd az előre fizetett krediteket terheli; ha mindkettő elfogyott, az API 429 quota_exceeded választ ad."
+    rate: "Kulcsonkénti token bucket: minden /v1 válasz tartalmazza az X-RateLimit-Limit, X-RateLimit-Remaining és X-RateLimit-Reset fejléceket; a korlát felett 429 rate_limited."
+    month: "A keretek a naptári hónappal nullázódnak. Az éves csomagok a mennyiséget havi keretként hordozzák (havi 20 000 vagy 60 000 kérés)."
+  errors:
+    title: "Hibák"
+    body: "Egységes boríték minden hibán. Kódok: unauthorized (401), forbidden (403, visszavont kulcs), not_found (404), rate_limited és quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Számlázás és kulcskezelés"
+    body: "A kulcsokat a profilodból hozod létre és kezeled; a csomagokat és előfizetéseket a Stripe Checkout kezeli — maga az API sosem ér fizetési adatokhoz."

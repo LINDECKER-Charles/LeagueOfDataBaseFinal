@@ -3,13 +3,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\Stripe\StripeEventHandlerInterface;
 use Psr\Log\LoggerInterface;
-use Stripe\Checkout\Session;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,15 +18,18 @@ use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * Stripe webhook endpoint — signature-verified, JSON only (no HTML layout, so
- * plain AbstractController). Donations are not persisted: completed checkouts
- * are only logged, the Stripe dashboard remains the source of truth.
+ * plain AbstractController). Business reactions live in tagged
+ * StripeEventHandlerInterface services (API billing today, persisted donations
+ * tomorrow); event types nobody handles are acknowledged silently.
  */
 final class StripeWebhookController extends AbstractController
 {
-    private const EVENT_CHECKOUT_COMPLETED = 'checkout.session.completed';
-
+    /**
+     * @param iterable<StripeEventHandlerInterface> $handlers
+     */
     public function __construct(
         #[Autowire(env: 'STRIPE_WEBHOOK_SECRET')] #[\SensitiveParameter] private readonly string $webhookSecret,
+        #[AutowireIterator(StripeEventHandlerInterface::TAG)] private readonly iterable $handlers,
         private readonly LoggerInterface $logger,
     ) {}
 
@@ -46,23 +50,28 @@ final class StripeWebhookController extends AbstractController
             return new JsonResponse(['error' => 'invalid payload or signature'], Response::HTTP_BAD_REQUEST);
         }
 
-        if ($event->type === self::EVENT_CHECKOUT_COMPLETED) {
-            $this->logCompletedCheckout($event);
+        try {
+            $this->dispatch($event);
+        } catch (\Throwable $e) {
+            // Infrastructure failure: non-2xx so Stripe redelivers the event.
+            $this->logger->error('stripe.webhook.handler_failed', [
+                'event' => $event->id,
+                'type' => $event->type,
+                'error' => $e->getMessage(),
+            ]);
+
+            return new JsonResponse(['error' => 'handler failure'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new JsonResponse(['received' => true]);
     }
 
-    private function logCompletedCheckout(Event $event): void
+    private function dispatch(Event $event): void
     {
-        /** @var Session $session */
-        $session = $event->data->object;
-
-        // Amount and currency only — never the donor's email or name.
-        $this->logger->info('stripe.donation.completed', [
-            'session' => $session->id,
-            'amount_total' => $session->amount_total,
-            'currency' => $session->currency,
-        ]);
+        foreach ($this->handlers as $handler) {
+            if ($handler->eventType() === $event->type) {
+                $handler->handle($event);
+            }
+        }
     }
 }

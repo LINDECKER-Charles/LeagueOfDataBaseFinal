@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "开发者 API"
+  title: "API 密钥"
+  back_profile: "返回个人资料"
+  docs_link: "文档与价格"
+  profile_link:
+    label: "开发者 API"
+    manage: "管理我的 API 密钥"
+  create:
+    title: "还没有 API 密钥"
+    body: "生成你的个人密钥并调用公共 API — 免费方案:每月 500 次请求,每分钟 10 次。"
+    name_label: "密钥名称(可选)"
+    name_placeholder: "my-app"
+    submit: "创建我的密钥"
+  raw:
+    title: "你的新 API 密钥"
+    warning: "请立即复制 — 它只显示这一次。服务器只保存指纹:密钥丢失后只能重新生成。"
+    label: "秘密密钥"
+    copy: "复制密钥"
+    copied: "已复制!"
+    copy_error: "请从输入框手动复制"
+  key:
+    title: "当前密钥"
+    label_key: "密钥"
+    label_name: "名称"
+    label_created: "创建于"
+    label_quota: "本月用量"
+    quota_used: "%used% / %quota% 次请求"
+    quota_remaining: "本月剩余 %remaining%"
+    label_credits: "预付积分"
+    label_rate: "速率限制"
+    rate_unit: "每分钟 %rate% 次"
+    subscription_active: "订阅生效中"
+  actions:
+    regenerate: "重新生成密钥"
+    regenerate_help: "吊销当前密钥并签发新的秘密 — 方案、配额与积分保持不变。"
+    revoke: "吊销"
+    revoke_help: "立即停用密钥(由于缓存,API 最多还会接受它一分钟)。"
+  billing:
+    title: "升级你的密钥"
+    unavailable: "此服务器未启用支付。"
+    packs_title: "积分包"
+    packs_help: "一次性付款 — 每 1,000 次请求 1 €,在月度配额用尽后消耗,有效期 12 个月。任意积分包都会把速率提升到至少每分钟 60 次。"
+    plans_title: "订阅"
+    plans_help: "提升月度配额与速率限制。每个账户仅限一个生效订阅。"
+    buy: "购买"
+    subscribe: "订阅"
+    current: "当前"
+    per_month: "/月"
+    per_year: "/年"
+    requests_month: "每月 %count% 次"
+    requests_once: "%count% 次请求"
+    already_subscribed: "你的密钥已有订阅。要更换方案,请先取消当前订阅(Stripe 确认后立即回到免费方案),再重新订阅。"
+  usage:
+    title: "最近 30 天"
+    total_month: "本月已用"
+    day: "日期"
+    requests: "请求数"
+    empty: "尚无计量数据 — 你的首批 API 调用将在一分钟内出现在这里。"
+  status:
+    pack_success: "支付已确认 — 积分正在到账(几秒钟)。"
+    plan_success: "订阅已确认 — 密钥正在升级(几秒钟)。"
+    cancelled: "支付已取消 — 未产生任何扣款。"
+  flash:
+    csrf: "会话已过期,请重试。"
+    created: "API 密钥已创建。"
+    regenerated: "密钥已重新生成 — 旧的秘密不再有效。"
+    revoked: "密钥已吊销。"
+    key_exists: "你已经有一个生效的密钥。"
+    no_key: "你没有生效的密钥。"
+    invalid_offer: "未知的方案。"
+    already_subscribed: "你的密钥已有生效订阅 — 请先取消再重新订阅。"
+    need_key: "购买前请先创建 API 密钥。"
+    stripe_unavailable: "支付暂时不可用。"
+    gateway: "支付服务无法连接,请稍后再试。"
+
+plan:
+  free: "免费"
+  credits: "积分"
+  monthly: "月付"
+  monthly_plus: "月付+"
+  annual: "年付"
+  annual_plus: "年付+"
+
+pack:
+  small: "积分包 S"
+  medium: "积分包 M"
+  large: "积分包 L"
+
+product:
+  pack: "LoDB API — %requests% 次请求积分"
+  plan: "LoDB API — %plan% 方案"
+
+pricing:
+  offer: "方案"
+  price: "价格"
+  volume: "额度"
+  rate: "速率限制"
+  validity_note: "积分包:每 1,000 次请求 1 €,在当前方案的月度配额用尽后消耗,有效期 12 个月。年付方案按月度配额承载额度,按年计费。"
+
+developers:
+  eyebrow: "开发者"
+  title: "LeagueOfDataBase API"
+  intro: "一个基于站点社区数据的 REST JSON API:公开召唤师资料、共享出装与浏览趋势。免费试用,为真实负载提供付费方案。"
+  cta: "创建我的密钥"
+  cta_hint: "登录、生成免费密钥、调用 API — 不到一分钟。"
+  docs_pricing: "价格"
+  auth:
+    title: "身份验证"
+    body: "每个 /v1 请求都需在两种请求头之一中携带你的密钥 — 格式为 %prefix% 加 40 个十六进制字符。服务器端只保存其 SHA-256 指纹:丢失的密钥只能重新生成,无法找回。"
+    base_url: "基础 URL(v1,开发环境): %url% — 生产环境将通过站点域名(TLS 边缘)开放。"
+  endpoints:
+    title: "接口"
+    healthz: "服务健康状态 — 唯一无需认证的路由。"
+    profiles: "成员的公开资料:收藏与公开出装数量(资料未公开时返回 404)。"
+    builds: "某英雄(Data Dragon id)的公开出装,按最新排序 — 通过 page 与 per_page 分页(最多 50)。"
+    trends: "站点浏览量最高的条目:英雄、装备、符文或召唤师技能 — range=7d(默认)或 30d,前 25 名。"
+    usage: "调用密钥的实时用量 — 需要认证并受速率限制,但绝不计入配额。"
+  quotas:
+    title: "配额与速率限制"
+    quota: "每次请求先记入方案的月度配额,再记入预付积分;两者耗尽后,API 返回 429 quota_exceeded。"
+    rate: "按密钥的令牌桶:每个 /v1 响应都带有 X-RateLimit-Limit、X-RateLimit-Remaining 与 X-RateLimit-Reset;超限返回 429 rate_limited。"
+    month: "配额随日历月重置。年付方案将额度按月度配额承载(每月 20,000 或 60,000 次)。"
+  errors:
+    title: "错误"
+    body: "所有错误统一封装。代码:unauthorized(401)、forbidden(403,密钥已吊销)、not_found(404)、rate_limited 与 quota_exceeded(429)、invalid_request(400)、internal(500/503)。"
+  manage:
+    title: "计费与密钥管理"
+    body: "密钥在个人资料中创建与管理;积分包与订阅通过 Stripe Checkout 支付 — API 本身绝不接触支付数据。"

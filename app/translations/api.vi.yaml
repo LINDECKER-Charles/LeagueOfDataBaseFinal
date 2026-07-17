@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "API cho lập trình viên"
+  title: "Khóa API"
+  back_profile: "Về trang cá nhân"
+  docs_link: "Tài liệu & bảng giá"
+  profile_link:
+    label: "API cho lập trình viên"
+    manage: "Quản lý khóa API của tôi"
+  create:
+    title: "Chưa có khóa API"
+    body: "Tạo khóa cá nhân và gọi API công khai — gói miễn phí: 500 yêu cầu mỗi tháng, 10 mỗi phút."
+    name_label: "Tên khóa (tùy chọn)"
+    name_placeholder: "ung-dung-cua-toi"
+    submit: "Tạo khóa của tôi"
+  raw:
+    title: "Khóa API mới của bạn"
+    warning: "Hãy sao chép ngay — khóa chỉ hiển thị một lần này. Máy chủ chỉ lưu dấu vân tay: khóa bị mất chỉ có thể tạo lại."
+    label: "Khóa bí mật"
+    copy: "Sao chép khóa"
+    copied: "Đã sao chép!"
+    copy_error: "Sao chép thủ công từ ô nhập"
+  key:
+    title: "Khóa đang hoạt động"
+    label_key: "Khóa"
+    label_name: "Tên"
+    label_created: "Tạo ngày"
+    label_quota: "Mức dùng trong tháng"
+    quota_used: "%used% / %quota% yêu cầu"
+    quota_remaining: "Còn %remaining% trong tháng này"
+    label_credits: "Tín dụng trả trước"
+    label_rate: "Giới hạn tốc độ"
+    rate_unit: "%rate% yêu cầu/phút"
+    subscription_active: "Gói thuê bao đang hoạt động"
+  actions:
+    regenerate: "Tạo lại khóa"
+    regenerate_help: "Thu hồi khóa này và cấp bí mật mới — gói, hạn mức và tín dụng được giữ nguyên."
+    revoke: "Thu hồi"
+    revoke_help: "Vô hiệu hóa khóa ngay lập tức (API có thể còn chấp nhận tối đa một phút do bộ nhớ đệm)."
+  billing:
+    title: "Nâng cấp khóa của bạn"
+    unavailable: "Thanh toán chưa được bật trên máy chủ này."
+    packs_title: "Gói tín dụng"
+    packs_help: "Thanh toán một lần — 1 € cho mỗi 1.000 yêu cầu, dùng sau hạn mức tháng, hiệu lực 12 tháng. Bất kỳ gói nào cũng nâng tốc độ lên tối thiểu 60 yêu cầu/phút."
+    plans_title: "Thuê bao"
+    plans_help: "Tăng hạn mức tháng và giới hạn tốc độ. Mỗi tài khoản chỉ một thuê bao hoạt động."
+    buy: "Mua"
+    subscribe: "Đăng ký"
+    current: "Hiện tại"
+    per_month: "/tháng"
+    per_year: "/năm"
+    requests_month: "%count% yêu cầu/tháng"
+    requests_once: "%count% yêu cầu"
+    already_subscribed: "Khóa của bạn đã có thuê bao. Để đổi gói, hãy hủy gói hiện tại trước (việc trở về gói miễn phí áp dụng ngay khi Stripe xác nhận), rồi đăng ký lại."
+  usage:
+    title: "30 ngày gần nhất"
+    total_month: "Đã dùng trong tháng"
+    day: "Ngày"
+    requests: "Yêu cầu"
+    empty: "Chưa có mức dùng nào được ghi nhận — các lần gọi API đầu tiên sẽ hiện ở đây trong vòng một phút."
+  status:
+    pack_success: "Thanh toán được xác nhận — tín dụng đang được cộng (vài giây)."
+    plan_success: "Thuê bao được xác nhận — khóa của bạn đang được nâng cấp (vài giây)."
+    cancelled: "Thanh toán đã hủy — chưa trừ khoản nào."
+  flash:
+    csrf: "Phiên đã hết hạn, vui lòng thử lại."
+    created: "Đã tạo khóa API."
+    regenerated: "Đã tạo lại khóa — bí mật cũ không còn hoạt động."
+    revoked: "Đã thu hồi khóa."
+    key_exists: "Bạn đã có một khóa đang hoạt động."
+    no_key: "Bạn không có khóa nào đang hoạt động."
+    invalid_offer: "Gói không xác định."
+    already_subscribed: "Khóa của bạn đã có thuê bao hoạt động — hãy hủy trước khi đăng ký lại."
+    need_key: "Hãy tạo khóa API trước khi mua."
+    stripe_unavailable: "Thanh toán hiện không khả dụng."
+    gateway: "Không liên lạc được dịch vụ thanh toán, vui lòng thử lại sau."
+
+plan:
+  free: "Miễn phí"
+  credits: "Tín dụng"
+  monthly: "Hàng tháng"
+  monthly_plus: "Hàng tháng+"
+  annual: "Hàng năm"
+  annual_plus: "Hàng năm+"
+
+pack:
+  small: "Gói S"
+  medium: "Gói M"
+  large: "Gói L"
+
+product:
+  pack: "LoDB API — tín dụng %requests% yêu cầu"
+  plan: "LoDB API — gói %plan%"
+
+pricing:
+  offer: "Gói"
+  price: "Giá"
+  volume: "Dung lượng"
+  rate: "Giới hạn tốc độ"
+  validity_note: "Gói tín dụng: 1 € cho mỗi 1.000 yêu cầu, dùng sau hạn mức tháng của gói đang hoạt động, hiệu lực 12 tháng. Gói năm mang dung lượng dưới dạng hạn mức tháng, tính phí theo năm."
+
+developers:
+  eyebrow: "Lập trình viên"
+  title: "API của LeagueOfDataBase"
+  intro: "API REST JSON trên dữ liệu cộng đồng của trang: hồ sơ triệu hồi sư công khai, các build được chia sẻ và xu hướng lượt xem. Dùng thử miễn phí, có giá cho tải thực tế."
+  cta: "Tạo khóa của tôi"
+  cta_hint: "Đăng nhập, tạo khóa miễn phí, gọi API — chưa đến một phút."
+  docs_pricing: "Bảng giá"
+  auth:
+    title: "Xác thực"
+    body: "Mỗi yêu cầu /v1 mang khóa của bạn — định dạng %prefix% theo sau là 40 ký tự thập lục phân — trong một trong hai header. Máy chủ chỉ lưu dấu vân tay SHA-256: khóa mất chỉ được tạo lại, không bao giờ khôi phục."
+    base_url: "URL gốc (v1, môi trường phát triển): %url% — truy cập production sẽ mở qua tên miền của trang (TLS edge)."
+  endpoints:
+    title: "Endpoint"
+    healthz: "Tình trạng dịch vụ — tuyến duy nhất không cần xác thực."
+    profiles: "Hồ sơ công khai của một thành viên: mục yêu thích và số build công khai (404 nếu hồ sơ riêng tư)."
+    builds: "Các build công khai của một tướng (id Data Dragon), mới nhất trước — phân trang bằng page và per_page (tối đa 50)."
+    trends: "Các mục được xem nhiều nhất trên trang: tướng, trang bị, ngọc bổ trợ hoặc phép triệu hồi — range=7d (mặc định) hoặc 30d, top 25."
+    usage: "Mức dùng trực tiếp của khóa gọi — có xác thực và giới hạn tốc độ, nhưng không bao giờ tính vào hạn mức."
+  quotas:
+    title: "Hạn mức & giới hạn tốc độ"
+    quota: "Mỗi yêu cầu được tính trước vào hạn mức tháng của gói, rồi đến tín dụng trả trước; hết cả hai, API trả về 429 quota_exceeded."
+    rate: "Token bucket theo khóa: mỗi phản hồi /v1 mang X-RateLimit-Limit, X-RateLimit-Remaining và X-RateLimit-Reset; vượt giới hạn, 429 rate_limited."
+    month: "Hạn mức đặt lại theo tháng dương lịch. Gói năm mang dung lượng dưới dạng hạn mức tháng (20.000 hoặc 60.000 yêu cầu mỗi tháng)."
+  errors:
+    title: "Lỗi"
+    body: "Phong bì thống nhất cho mọi lỗi. Mã: unauthorized (401), forbidden (403, khóa bị thu hồi), not_found (404), rate_limited và quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Thanh toán & quản lý khóa"
+    body: "Khóa được tạo và quản lý từ trang cá nhân; gói và thuê bao thanh toán qua Stripe Checkout — bản thân API không bao giờ chạm vào dữ liệu thanh toán."
