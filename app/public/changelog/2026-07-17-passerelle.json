@@ -1,0 +1,33 @@
+{
+  "id": "2026-07-17-passerelle",
+  "version": "1.9.0",
+  "codename": "Passerelle",
+  "date": "2026-07-17",
+  "type": "minor",
+  "title": "LeagueOfDataBase 1.9.0 — Passerelle",
+  "summary": "Une API publique ouvre profils, builds et tendances aux développeurs : clé gratuite depuis le profil, page /developers, et montée en puissance via Stripe.",
+  "intro": "Les données de la communauté — profils publics, builds partagés, tendances de consultation — n'étaient visibles que sur le site. Passerelle les ouvre aux créateurs d'outils, d'overlays et de bots via une API REST authentifiée par clé. Chacun crée sa clé gratuite depuis son profil, suit sa consommation, et peut monter en puissance quand il en a besoin. Une page /developers documente le tout, exemples prêts à copier inclus.",
+  "stats": { "fixes": 0, "cards": 2 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "▦",
+      "tag": "Développeurs",
+      "title": "API publique v1",
+      "description": "Interrogez le profil public d'un membre, les builds publics d'un champion et le classement des entités les plus consultées, via une API REST authentifiée par clé — avec quota mensuel, crédits et limite de requêtes par minute."
+    },
+    {
+      "kind": "feature",
+      "glyph": "§",
+      "tag": "Développeurs",
+      "title": "Portail de clés & offres",
+      "description": "Créez et suivez votre clé depuis votre profil (500 requêtes/mois offertes, jauge de quota, historique 30 jours). Montez via packs de crédits ou abonnements payés par Stripe — le site ne touche jamais une donnée bancaire."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "Ouvrir nos données, c'était aussi se donner un moyen de financer le projet sans publicité ni traceurs : les offres payantes de l'API servent exactement ça. La clé claire ne s'affiche qu'une fois, la consommation ne se remet jamais à zéro en changeant de secret, et tout est documenté sur /developers. Si vous construisez quelque chose avec, on adorerait le voir.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

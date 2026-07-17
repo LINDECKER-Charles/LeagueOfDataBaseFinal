@@ -1,0 +1,160 @@
+{
+  "patches": [
+    {
+      "id": "2026-07-17-ralliement",
+      "version": "2.0.0",
+      "codename": "Ralliement",
+      "date": "2026-07-17",
+      "type": "major",
+      "title": "LeagueOfDataBase 2.0.0 — Ralliement",
+      "summary": "L'aboutissement : navigation repensée, pages légales complètes, référencement en 21 langues, modération de la communauté et HTTPS auto-réparé. La plateforme est prête.",
+      "tags": [
+        { "kind": "feature", "label": "Barre de navigation repensée" },
+        { "kind": "feature", "label": "Pages légales & référencement" },
+        { "kind": "feature", "label": "Modération & HTTPS auto-réparé" }
+      ],
+      "stats": { "fixes": 0 }
+    },
+    {
+      "id": "2026-07-17-passerelle",
+      "version": "1.9.0",
+      "codename": "Passerelle",
+      "date": "2026-07-17",
+      "type": "minor",
+      "title": "LeagueOfDataBase 1.9.0 — Passerelle",
+      "summary": "Une API publique ouvre profils, builds et tendances aux développeurs : clé gratuite depuis le profil, page /developers, et montée en puissance via Stripe.",
+      "tags": [
+        { "kind": "feature", "label": "API publique v1" },
+        { "kind": "feature", "label": "Portail de clés & offres" }
+      ],
+      "stats": { "fixes": 0 }
+    },
+    {
+      "id": "2026-07-17-offrande",
+      "version": "1.8.0",
+      "codename": "Offrande",
+      "date": "2026-07-17",
+      "type": "minor",
+      "title": "LeagueOfDataBase 1.8.0 — Offrande",
+      "summary": "Soutenez l'hébergement du site par un don Stripe sans compte, et arborez un sceau doré « Supporter » lorsque vous donnez en étant connecté.",
+      "tags": [
+        { "kind": "feature", "label": "Faire un don" },
+        { "kind": "feature", "label": "Sceau Supporter" }
+      ],
+      "stats": { "fixes": 0 }
+    },
+    {
+      "id": "2026-07-17-arene",
+      "version": "1.7.0",
+      "codename": "Arène",
+      "date": "2026-07-17",
+      "type": "minor",
+      "title": "LeagueOfDataBase 1.7.0 — Arène",
+      "summary": "La page Tendances classe tous les builds publics par le score net des votes de la communauté, filtrable par champion et mode de jeu.",
+      "tags": [
+        { "kind": "feature", "label": "Page Tendances" },
+        { "kind": "feature", "label": "Votes de la communauté" }
+      ],
+      "stats": { "fixes": 0 }
+    },
+    {
+      "id": "2026-07-17-arsenal",
+      "version": "1.6.0",
+      "codename": "Arsenal",
+      "date": "2026-07-17",
+      "type": "minor",
+      "title": "LeagueOfDataBase 1.6.0 — Arsenal",
+      "summary": "Chaque build cible désormais un mode de jeu (Faille, ARAM, Nexus Blitz, Arène) et un patch précis — objets filtrés par mode, rendu figé sur la version d'origine.",
+      "tags": [
+        { "kind": "feature", "label": "Builds par mode de jeu" },
+        { "kind": "feature", "label": "Patch épinglé" }
+      ],
+      "stats": { "fixes": 0 }
+    },
+    {
+      "id": "2026-07-17-forge",
+      "version": "1.5.0",
+      "codename": "Forge",
+      "date": "2026-07-17",
+      "type": "minor",
+      "title": "LeagueOfDataBase 1.5.0 — Forge",
+      "summary": "Forgez vos builds — runes façon client, ordre d'achat étape par étape, glisser-déposer — et partagez-les par lien, même privés.",
+      "tags": [
+        { "kind": "feature", "label": "Éditeur de builds & partage" },
+        { "kind": "feature", "label": "Glisser-déposer" }
+      ],
+      "stats": { "fixes": 0 }
+    },
+    {
+      "id": "2026-07-17-vitrine",
+      "version": "1.4.0",
+      "codename": "Vitrine",
+      "date": "2026-07-17",
+      "type": "minor",
+      "title": "LeagueOfDataBase 1.4.0 — Vitrine",
+      "summary": "Habillez votre profil du splash art d'un skin et mettez vos favoris en vitrine, avec un aperçu de votre carte publique.",
+      "tags": [
+        { "kind": "feature", "label": "Bannière de skin" },
+        { "kind": "feature", "label": "Favoris en emblèmes" }
+      ],
+      "stats": { "fixes": 0 }
+    },
+    {
+      "id": "2026-07-17-chambre",
+      "version": "1.3.0",
+      "codename": "Chambre",
+      "date": "2026-07-17",
+      "type": "minor",
+      "title": "LeagueOfDataBase 1.3.0 — Chambre",
+      "summary": "Votre profil prend vie : quatre favoris à sertir, une carte publique partageable, et votre pseudo modifiable avec tag Riot.",
+      "tags": [
+        { "kind": "feature", "label": "Profil & favoris" },
+        { "kind": "feature", "label": "Pseudo & tag Riot" },
+        { "kind": "bugfix", "label": "1 correctif" }
+      ],
+      "stats": { "fixes": 1 }
+    },
+    {
+      "id": "2026-07-17-passeport",
+      "version": "1.2.0",
+      "codename": "Passeport",
+      "date": "2026-07-17",
+      "type": "minor",
+      "title": "LeagueOfDataBase 1.2.0 — Passeport",
+      "summary": "Confirmez votre e-mail, réinitialisez un mot de passe oublié, ou connectez-vous en un clic avec Google.",
+      "tags": [
+        { "kind": "feature", "label": "Confirmation e-mail & reset" },
+        { "kind": "feature", "label": "Connexion Google" }
+      ],
+      "stats": { "fixes": 0 }
+    },
+    {
+      "id": "2026-07-17-fondations",
+      "version": "1.1.0",
+      "codename": "Fondations",
+      "date": "2026-07-17",
+      "type": "minor",
+      "title": "LeagueOfDataBase 1.1.0 — Fondations",
+      "summary": "Créez votre compte d'invocateur : inscription, connexion et un mot de passe vraiment solide, dans l'écrin Hextech.",
+      "tags": [
+        { "kind": "feature", "label": "Compte d'invocateur" },
+        { "kind": "feature", "label": "Mot de passe renforcé" }
+      ],
+      "stats": { "fixes": 0 }
+    },
+    {
+      "id": "2026-07-01-codex",
+      "version": "1.0.0",
+      "codename": "Codex",
+      "date": "2026-07-01",
+      "type": "major",
+      "title": "LeagueOfDataBase 1.0.0 — Codex",
+      "summary": "La version fondatrice : l'encyclopédie League of Legends — champions, objets, runes et sorts d'invocateur — servie depuis les données officielles, en 21 langues.",
+      "tags": [
+        { "kind": "feature", "label": "Encyclopédie complète" },
+        { "kind": "feature", "label": "21 langues" }
+      ],
+      "stats": { "fixes": 0 }
+    }
+  ]
+}

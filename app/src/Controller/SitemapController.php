@@ -43,6 +43,7 @@ final class SitemapController extends AbstractController
         '/donate',
         '/developers',
         '/trends',
+        '/changelog',
     ];
 
     public function __construct(

@@ -1,0 +1,67 @@
+{# One release in the changelog timeline.
+   `release` = decoded public/changelog/<id>.json, `open` expands the <details>
+   (the latest release). The whole body lives inside <details> so it stays in the
+   DOM — crawlable and no-JS friendly — while collapsing keeps the page scannable. #}
+{% set type = release.type|default('minor') %}
+<li class="cl-node" id="v{{ release.version|replace({'.': '-'}) }}">
+    <details class="cl-release"{{ open ? ' open' }}>
+        <summary class="cl-release__summary">
+            <span class="cl-release__head">
+                <span class="cl-release__version">{{ release.version }}</span>
+                <span class="cl-release__codename">{{ release.codename }}</span>
+                <span class="cl-badge cl-badge--{{ type }}">{{ ('changelog.type.' ~ type)|trans }}</span>
+                <time class="cl-release__date" datetime="{{ release.date }}">{{ release.date|date('d/m/Y') }}</time>
+                <svg class="cl-release__chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor"
+                     stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
+            </span>
+            <span class="cl-release__lede">{{ release.summary }}</span>
+        </summary>
+
+        <div class="cl-release__body">
+            {% if release.intro is defined and release.intro %}
+                <p class="cl-release__intro">{{ release.intro }}</p>
+            {% endif %}
+
+            {% if release.features is defined and release.features is not empty %}
+                <ul class="cl-features" role="list">
+                    {% for f in release.features %}
+                        <li class="cl-feature cl-feature--{{ f.kind|default('feature') }}">
+                            <span class="cl-feature__glyph" aria-hidden="true">{{ f.glyph|default('◆') }}</span>
+                            <div class="cl-feature__text">
+                                <p class="cl-feature__title">
+                                    {{ f.title }}
+                                    {% if f.tag is defined and f.tag %}<span class="cl-feature__tag">{{ f.tag }}</span>{% endif %}
+                                </p>
+                                <p class="cl-feature__desc">{{ f.description }}</p>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if release.bugfixes is defined and release.bugfixes is not empty %}
+                <div class="cl-block">
+                    <p class="eyebrow cl-block__label">{{ 'changelog.section.fixes'|trans }}</p>
+                    <ul class="cl-fixes" role="list">
+                        {% for fix in release.bugfixes %}
+                            <li class="cl-fix">
+                                {% if fix.id is defined %}<span class="cl-fix__id">{{ fix.id }}</span>{% endif %}
+                                {% if fix.area is defined %}<span class="cl-fix__area">{{ fix.area }}</span>{% endif %}
+                                <span class="cl-fix__text">{{ fix.text }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {% if release.devNote is defined and release.devNote.body is defined %}
+                <figure class="cl-devnote">
+                    <blockquote class="cl-devnote__body">{{ release.devNote.body }}</blockquote>
+                    {% if release.devNote.signature is defined %}
+                        <figcaption class="cl-devnote__sign">— {{ release.devNote.signature }}</figcaption>
+                    {% endif %}
+                </figure>
+            {% endif %}
+        </div>
+    </details>
+</li>

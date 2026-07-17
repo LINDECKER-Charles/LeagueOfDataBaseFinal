@@ -1,0 +1,33 @@
+{
+  "id": "2026-07-17-arsenal",
+  "version": "1.6.0",
+  "codename": "Arsenal",
+  "date": "2026-07-17",
+  "type": "minor",
+  "title": "LeagueOfDataBase 1.6.0 — Arsenal",
+  "summary": "Chaque build cible désormais un mode de jeu (Faille, ARAM, Nexus Blitz, Arène) et un patch précis — objets filtrés par mode, rendu figé sur la version d'origine.",
+  "intro": "Un build ARAM n'a rien à faire avec des objets réservés à la Faille, et un build soigné sur un patch ne devrait pas être re-daté en douce à chaque retouche. Arsenal règle les deux : vos builds ciblent un mode de jeu et un patch précis, choisis en tête de l'éditeur. Les objets proposés collent au mode, et la page de partage s'affiche figée sur son patch d'origine.",
+  "stats": { "fixes": 0, "cards": 2 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❖",
+      "tag": "Atelier",
+      "title": "Builds par mode de jeu",
+      "description": "Choisissez le mode (Faille de l'invocateur, ARAM, Nexus Blitz, Arène) : la recherche ne propose que les objets réellement disponibles. Changer de mode signale visuellement les objets absents, sans jamais les supprimer à votre place."
+    },
+    {
+      "kind": "mana",
+      "glyph": "⧗",
+      "tag": "Atelier",
+      "title": "Épinglé sur son patch",
+      "description": "Sélectionnez le patch du build parmi les 30 dernières versions. La page de partage s'affiche avec les noms et icônes de l'époque, plus une pastille « Forgé sur le patch X ». Les builds existants restent valides sans rien changer."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "Ce patch est surtout une affaire de respect : respect de votre travail (un build n'est plus silencieusement re-daté) et respect de la vérité du jeu (un objet qui n'existe pas dans un mode n'a pas à s'y afficher). On a fait attention à ne jamais rien supprimer à votre place — l'éditeur signale, vous décidez.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

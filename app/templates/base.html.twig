@@ -105,6 +105,19 @@
 
     <body class="flex min-h-screen flex-col overflow-x-hidden">
         {% include 'partials/header.html.twig' %}
+        {# Unverified site accounts only (guarded so the admin identity, which has
+           no isVerified(), never trips the getter). #}
+        {% if app.user and app.user.isVerified is defined and not app.user.isVerified %}
+            <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 border-b border-gold-deep bg-panel px-4 py-2.5 text-center text-sm text-gold-bright" role="alert">
+                <span>{{ 'auth.verify.banner'|trans }}</span>
+                <form method="post" action="{{ path('app_verify_resend') }}" data-turbo="false" class="inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('verify-resend') }}">
+                    <button type="submit" class="font-semibold text-gold underline decoration-gold-deep underline-offset-4 transition-colors hover:text-gold-bright">
+                        {{ 'auth.verify.banner_cta'|trans }}
+                    </button>
+                </form>
+            </div>
+        {% endif %}
         <div class="flex flex-1 flex-col [&>main]:flex-1">
             {% block body %}{% endblock %}
         </div>

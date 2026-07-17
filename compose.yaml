@@ -37,6 +37,10 @@ services:
       # Google OAuth (Sign in with Google) — empty disables the feature gracefully.
       OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}
       OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET:-}
+      # Account emails (confirmation, password reset). Dev defaults to the bundled
+      # Mailpit SMTP; served environments MUST inject a real relay DSN.
+      MAILER_DSN: ${MAILER_DSN:-smtp://mailer:1025}
+      MAILER_FROM: "${MAILER_FROM:-LeagueOfDataBase <no-reply@leagueofdatabase.gg>}"
     depends_on:
       go-fetcher:
         condition: service_healthy

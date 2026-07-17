@@ -2,3 +2,8 @@ framework:
     default_locale: en
     translator:
         default_path: '%kernel.project_dir%/translations'
+        # Any key missing from a locale catalogue falls back to the English
+        # reference rather than surfacing the raw key. Lets editorial chrome
+        # (e.g. the changelog page) ship in en+fr while the 19 other locales
+        # degrade cleanly instead of showing `changelog.title`.
+        fallbacks: ['en']

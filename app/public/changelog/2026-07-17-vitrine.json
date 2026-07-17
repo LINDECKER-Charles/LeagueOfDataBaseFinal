@@ -1,0 +1,33 @@
+{
+  "id": "2026-07-17-vitrine",
+  "version": "1.4.0",
+  "codename": "Vitrine",
+  "date": "2026-07-17",
+  "type": "minor",
+  "title": "LeagueOfDataBase 1.4.0 — Vitrine",
+  "summary": "Habillez votre profil du splash art d'un skin et mettez vos favoris en vitrine, avec un aperçu de votre carte publique.",
+  "intro": "Le profil affichait déjà vos favoris, mais de façon utilitaire. Vitrine en fait un espace d'expression : choisissez le skin de n'importe quel champion comme bannière de fond, et vos favoris viennent s'y poser en emblèmes décoratifs. Un bouton d'aperçu vous montre exactement la carte que les autres verront — même si votre profil est encore privé.",
+  "stats": { "fixes": 0, "cards": 2 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "✶",
+      "tag": "Personnalisation",
+      "title": "Bannière de skin",
+      "description": "Sélectionnez un champion puis l'un de ses skins : son splash art habille tout le haut de votre profil. N'importe quel skin de n'importe quel champion est disponible."
+    },
+    {
+      "kind": "mana",
+      "glyph": "◐",
+      "tag": "Profil",
+      "title": "Favoris en emblèmes & aperçu",
+      "description": "Vos favoris champion, objet, rune et sort s'affichent en emblèmes posés sur la bannière. Le bouton « Aperçu du profil public » montre votre carte telle que les autres la voient, exactement au même rendu que la page publique."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "On voulait que l'aperçu soit la vraie page, pas une approximation : ce que vous voyez en privé est au pixel près ce que verront les autres. La bannière est hotlinkée depuis le CDN officiel, donc légère et rapide. Montrez-nous vos vitrines — les plus belles combinaisons skin + favoris nous inspireront pour la suite.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}
