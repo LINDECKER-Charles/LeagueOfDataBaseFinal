@@ -167,7 +167,7 @@ Interface responsive sur **Tailwind CSS 4**, îlots interactifs **Vue 3**, typog
 | <img src="docs/assets/icons/server.svg" width="18" alt=""> | **Reverse proxy** | nginx | Front HTTP ; sert `/cdn` (MinIO), `/build`, `/fonts`, streaming SSE |
 | <img src="docs/assets/icons/layout-template.svg" width="18" alt=""> | **Backend** | Symfony 7.3 · PHP 8.4 (FPM) | Application, **sans base de données** — proxy sur Data Dragon |
 | <img src="docs/assets/icons/git-branch.svg" width="18" alt=""> | **Microservice** | Go 1.25 | Passerelle de *fetch* : egress DDragon, garde SSRF, batch parallèle |
-| <img src="docs/assets/icons/palette.svg" width="18" alt=""> | **Frontend** | Twig + Vue 3 (TS) + Vite + PrimeVue · Tailwind 4 | Coques Twig + îlots Vue montés dynamiquement |
+| <img src="docs/assets/icons/palette.svg" width="18" alt=""> | **Frontend** | Twig + Vue 3 (TS) + Vite · Tailwind 4 | Coques Twig + îlots Vue montés dynamiquement |
 | <img src="docs/assets/icons/database.svg" width="18" alt=""> | **Stockage** | MinIO (S3) | Images adressées par contenu (SHA-256), déduplication native |
 | <img src="docs/assets/icons/life-buoy.svg" width="18" alt=""> | **Mail (dev)** | Mailpit | SMTP + UI de test |
 | <img src="docs/assets/icons/refresh-cw.svg" width="18" alt=""> | **DevOps** | Docker Compose · GitHub Actions → GHCR | Build, CI, images publiées |
@@ -419,15 +419,15 @@ Symfony garde le routage, le SEO et l'i18n ; seules les pièces interactives pas
 ```mermaid
 flowchart LR
     T[Twig : data-vue + data-props] --> R{registry main.ts}
-    R -->|search-autocomplete| A[SearchAutocomplete<br/>+ PrimeVue lazy]
+    R -->|resource-filter| A[ResourceFilter]
     R -->|resource-loader| B[ResourceLoader<br/>SSE]
-    R -->|chroma-strip| C[ChromaStrip]
-    R -->|number-nav| D[NumberNav]
-    R -->|toaster| E[Toaster]
+    R -->|ability-showcase| C[AbilityShowcase]
+    R -->|skin-gallery · chroma-strip| D[SkinGallery<br/>ChromaStrip]
+    R -->|stat-scaler · toaster · load-time| E[…]
     T -. turbo:load .-> R
 ```
 
-- **Code-splitting** : PrimeVue (config + thème Aura, lourd) n'est chargé que par les îlots déclarant `setup: usePrimeVue` → les pages sans widget PrimeVue ne le téléchargent jamais.
+- **Code-splitting** : chaque îlot est un `import()` dynamique du registry (`main.ts`) — une page ne télécharge que le JS des îlots qu'elle monte réellement.
 - **Turbo Drive** : `main.ts` re-scanne les îlots après chaque navigation (`turbo:load`), pour un rechargement partiel sans full reload.
 
 ---
