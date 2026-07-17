@@ -43,6 +43,10 @@ services:
     ports:
       - "8085:8085"
 
+  go-api:
+    ports:
+      - "8090:8090"   # dev only: hit the paid API directly (deployed entry is the edge subdomain)
+
   minio:
     ports:
       - "${MINIO_API_PORT:-9000}:9000"
