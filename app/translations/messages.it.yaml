@@ -183,7 +183,7 @@ footer:
   project:
     title: "Progetto"
     version: "Versione: Beta 2.0"
-    updated: "Aggiornato: 03/08/2025"
+    updated: "Aggiornato: 17/07/2026"
 
   contact:
     title: "Contatti"
@@ -211,3 +211,103 @@ header:
     item: "Oggetti"
     runes: "Rune"
     summoner: "Incantesimi da Evocatore"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "oppure"
+  google:
+    cta: "Continua con Google"
+    unavailable: "L'accesso con Google non è configurato su questo server."
+    failed: "Accesso con Google non riuscito. Riprova."
+  register:
+    password: "Password"
+    password_confirm: "Conferma la password"
+    password_mismatch: "Le due password non coincidono."
+    password_help: "Almeno 12 caratteri, con una minuscola, una maiuscola, una cifra e un carattere speciale."
+  password:
+    rule_length: "Almeno 12 caratteri"
+    rule_lowercase: "Almeno una minuscola"
+    rule_uppercase: "Almeno una maiuscola"
+    rule_digit: "Almeno una cifra"
+    rule_special: "Almeno un carattere speciale"
+    rule_match: "Le due password coincidono"
+    too_common: "Questa password è troppo comune. Scegline una più personale."
+  flash:
+    banned: "Questo account è stato sospeso dal team di moderazione."
+
+profile:
+  identity:
+    title: "Identità dell'evocatore"
+    username: "Nome evocatore"
+    tag: "Tag Riot"
+    tag_help: "Facoltativo: la parte dopo il # del tuo Riot ID — per GG#EUW, inserisci EUW."
+    url_warning: "Cambiare il nome evocatore cambia anche l'indirizzo del tuo profilo pubblico."
+    submit: "Aggiorna identità"
+    username_taken: "Questo nome evocatore è già in uso."
+    username_invalid: "Nome evocatore non valido: da 3 a 24 caratteri (lettere, cifre, punto, trattino, underscore), che inizi con lettera o cifra."
+    tag_invalid: "Tag Riot non valido: da 3 a 5 lettere o cifre."
+  password:
+    title: "Imposta una password"
+    help: "Il tuo account accede solo con Google. Imposta una password per entrare anche con la tua email."
+    submit: "Imposta la password"
+  danger:
+    help_no_password: "L'eliminazione dell'account è definitiva: preferiti e build vengono cancellati."
+  flash:
+    identity_saved: "Identità dell'evocatore aggiornata."
+    password_set: "Password impostata — ora puoi accedere anche con la tua email."
+    password_exists: "Questo account ha già una password."
+
+build:
+  mode:
+    sr: "Landa degli evocatori"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Arena"
+  editor:
+    ghost_mode: "Non disponibile in questa modalità di gioco"
+    context:
+      title: "Contesto di gioco"
+      version: "Patch"
+      mode: "Modalità di gioco"
+      mode_hint: "La disponibilità degli oggetti segue la modalità scelta. Gli oggetti già inseriti non vengono mai rimossi: vengono segnalati."
+    dnd:
+      handle: "Trascina per riordinare"
+      moved_step: "Fase spostata in posizione %position%"
+      moved_item: "Oggetto spostato in posizione %position%"
+      transferred: "Oggetto spostato nella fase %step%"
+      added: "Oggetto aggiunto alla fase %step%"
+      cancelled: "Spostamento annullato"
+  show:
+    mode: "Modalità di gioco"
+    patch_current: "Forgiata sulla patch %version% — attuale: %current%"
+  error:
+    version:
+      unknown: "Versione di gioco sconosciuta."
+    mode:
+      unknown: "Modalità di gioco sconosciuta."
+    steps:
+      item_mode: "Non disponibile nella modalità di gioco scelta: %items%."
+
+community:
+  nav:
+    trends: "Tendenze"
+  trends:
+    eyebrow: "Il battito della Landa"
+    title: "Build di tendenza"
+    filter:
+      champion: "Campione"
+      mode: "Modalità di gioco"
+      all_champions: "Tutti i campioni"
+      all_modes: "Tutte le modalità"
+      apply: "Filtra"
+    empty: "Nessuna build pubblica corrisponde a questo filtro: forgia la tua."
+    empty_cta: "Forgia la mia build"
+  vote:
+    up: "Vota a favore di questa build"
+    down: "Vota contro questa build"
+    score_label: "Punteggio della community"
+    login: "Accedi per votare"
+    invalid: "Voto non valido."
+  supporter:
+    badge: "Sostenitore"

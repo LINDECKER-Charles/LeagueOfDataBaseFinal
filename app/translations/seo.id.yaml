@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — ensiklopedia League of Legends"
+  description: "Champion, item, rune, dan summoner spell League of Legends untuk patch %version% — statistik, kemampuan, dan detail dalam 21 bahasa."
+champion:
+  list:
+    title: "Champion League of Legends"
+    description: "Semua %count% champion League of Legends dengan peran, kemampuan, dan kisahnya — data patch %version%."
+  detail:
+    title: "%name%, champion LoL"
+    description: "%name% di League of Legends: kemampuan, skin, kisah, dan tips, diperbarui untuk patch %version%."
+item:
+  list:
+    title: "Item League of Legends"
+    description: "Semua %count% item League of Legends dengan harga, statistik, dan resep — data patch %version%."
+  detail:
+    title: "%name%, item LoL"
+    description: "%name% di League of Legends: statistik, harga, resep, dan peningkatan, diperbarui untuk patch %version%."
+rune:
+  list:
+    title: "Rune League of Legends"
+    description: "%count% jalur rune League of Legends dengan semua keystone dan rune minor — data patch %version%."
+  detail:
+    title: "%name%, jalur rune LoL"
+    description: "Jalur rune %name% di League of Legends: keystone, slot, dan efek, diperbarui untuk patch %version%."
+summoner:
+  list:
+    title: "Summoner spell League of Legends"
+    description: "Semua %count% summoner spell League of Legends dengan cooldown dan efeknya — data patch %version%."
+  detail:
+    title: "%name%, summoner spell LoL"
+    description: "Summoner spell %name% di League of Legends: cooldown dan efek, diperbarui untuk patch %version%."
+donate:
+  title: "Dukung proyek ini"
+  description: "Bantu League Of Data Base tetap gratis dan cepat — dukung proyek ini dengan donasi."
+legal:
+  notice:
+    description: "Pemberitahuan hukum League Of Data Base: penerbit, hosting, dan kontak."
+  privacy:
+    description: "Kebijakan privasi League Of Data Base: data yang diproses, tujuan, dan hak Anda."
+  terms:
+    description: "Ketentuan penggunaan League Of Data Base."
+  cookies:
+    description: "Kebijakan cookie League Of Data Base: cookie yang digunakan dan cara mengelolanya."
+error:
+  "404":
+    title: "Halaman tidak ditemukan"
+    eyebrow: "Tersesat di Rift"
+    body: "Halaman ini tidak ada — sumber daya mungkin telah dihapus dari patch saat ini."
+    back_home: "Kembali ke beranda"
+  generic:
+    title: "Terjadi kesalahan"
+    body: "Terjadi kesalahan tak terduga. Silakan coba lagi sebentar lagi."
+
+developers:
+  title: "API untuk developer"
+  description: "API REST JSON berbayar di atas data komunitas League of Legends: profil publik, build yang dibagikan, dan tren kunjungan. Tingkat gratis, paket kredit, dan langganan."
+
+trends:
+  title: "Build LoL yang sedang tren"
+  description: "Build publik League of Legends yang diperingkat berdasarkan suara komunitas — filter berdasarkan champion dan mode permainan."

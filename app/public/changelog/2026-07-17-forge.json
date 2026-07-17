@@ -1,0 +1,33 @@
+{
+  "id": "2026-07-17-forge",
+  "version": "1.5.0",
+  "codename": "Forge",
+  "date": "2026-07-17",
+  "type": "minor",
+  "title": "LeagueOfDataBase 1.5.0 — Forge",
+  "summary": "Forgez vos builds — runes façon client, ordre d'achat étape par étape, glisser-déposer — et partagez-les par lien, même privés.",
+  "intro": "La Forge donne à votre compte le pouvoir de créer. Composez votre page de runes comme dans le client, décrivez votre ordre d'achat étape par étape avec le coût en or calculé à chaque palier, puis réordonnez le tout au glisser-déposer ou au clavier. Chaque build possède un lien de partage qui s'ouvre sans compte — même quand le build est privé.",
+  "stats": { "fixes": 0, "cards": 2 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❒",
+      "tag": "Atelier",
+      "title": "Forgez vos builds",
+      "description": "Choisissez un champion, composez runes principale et secondaire selon les règles du client, et détaillez votre ordre d'achat étape par étape avec coût en or. Builds privés ou publics, chacun avec sa page de partage « parchemin de stratégie »."
+    },
+    {
+      "kind": "mana",
+      "glyph": "⚡",
+      "tag": "Atelier",
+      "title": "Glisser-déposer",
+      "description": "Réordonnez étapes et objets à la souris, d'une étape à l'autre ou directement depuis la recherche, avec un emplacement en pointillé or comme repère. Les boutons de déplacement restent le chemin clavier et tactile, tout est annoncé aux lecteurs d'écran."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "La Forge, c'est le cœur de ce que le site voulait devenir : un endroit où l'on ne fait pas que consulter, mais où l'on crée et partage. On a soigné le glisser-déposer sans jamais sacrifier l'accessibilité — clavier, tactile et lecteurs d'écran ont tous un chemin complet. Un build rédigé sur un vieux patch reste lisible : les objets disparus s'affichent en fantôme plutôt que de casser la page.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

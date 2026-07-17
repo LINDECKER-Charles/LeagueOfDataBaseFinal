@@ -21,7 +21,7 @@ final class SummonerManager extends AbstractManager implements CategoriesInterfa
             }
         }
 
-        throw new \RuntimeException(sprintf('Aucun invocateur trouvé avec l\'ID "%s".', $name));
+        throw ResourceNotFoundException::forEntry(static::TYPE, $name);
     }
 
     public function searchByName(string $name, string $version, string $lang, int $max = 0): array

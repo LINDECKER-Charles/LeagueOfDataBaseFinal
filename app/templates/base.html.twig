@@ -18,13 +18,19 @@
         <meta property="og:description" content="{% block og_description %}{{ block('meta_description')|default(default_description) }}{% endblock %}">
         <meta name="twitter:description" content="{% block twitter_description %}{{ block('meta_description')|default(default_description) }}{% endblock %}">
 
-        {# SiteMap si utilisé #}
-        {# <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ path('app_sitemap') }}"> #}
-                
+        {# Canonical: current path without its query — the ?version&lang variants
+           are alternate renders of the same document. Pages that must not carry
+           a canonical (error pages) empty this block. #}
+        {% block canonical_link %}<link rel="canonical" href="{{ seo_canonical() }}">{% endblock %}
+
+        <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ path('app_sitemap') }}">
+
         {# --- Open Graph --- #}
 
-        {# Url affiché par Open Graph, vous êtes libre de la redéfinir mais ici c'est l'url par défaut qui est indiqué #}
-        <meta property="og:url" content="{% block og_url %}{{ app.request.uri }}{% endblock %}">
+        {# og:url suit la canonical (URL propre sans query) ; redéfinissable par page. #}
+        <meta property="og:url" content="{% block og_url %}{{ seo_canonical() }}{% endblock %}">
+        <meta property="og:site_name" content="{{ seo_site_name() }}">
+        <meta property="og:locale" content="{{ seo_og_locale() }}">
 
         {# Plusieur valeurs possible
             website --> contenu générique, type site ou page classique (par défaut).
@@ -54,8 +60,9 @@
             {% set img = default_image %}
         {% endif %}
         
-        <meta property="og:image" content="{% block og_image %}{{ img }}{% endblock %}">
-        <meta name="twitter:image" content="{% block twitter_image %}{{ img }}{% endblock %}">
+        {# Social crawlers ignorent les chemins relatifs → URL absolue systématique. #}
+        <meta property="og:image" content="{% block og_image %}{{ seo_absolute(img) }}{% endblock %}">
+        <meta name="twitter:image" content="{% block twitter_image %}{{ seo_absolute(img) }}{% endblock %}">
 
         {# Défini si un robot est autorisier à index la page dans un moteur de rechercher et a suivre les liens présents dans la page. Valeur possible :
             --> index, noindex
@@ -88,11 +95,29 @@
             {{ vite_entry_script_tags('app') }}
         {% endblock %}
 
+        {# Structured data — sitewide WebSite/Organization graph, plus per-page
+           nodes (breadcrumbs, item lists, game entities) via structured_data. #}
+        {{ seo_jsonld_global() }}
+        {% block structured_data %}{% endblock %}
+
         {% include 'partials/favicon.html.twig' %}
     </head>
 
     <body class="flex min-h-screen flex-col overflow-x-hidden">
         {% include 'partials/header.html.twig' %}
+        {# Unverified site accounts only (guarded so the admin identity, which has
+           no isVerified(), never trips the getter). #}
+        {% if app.user and app.user.isVerified is defined and not app.user.isVerified %}
+            <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 border-b border-gold-deep bg-panel px-4 py-2.5 text-center text-sm text-gold-bright" role="alert">
+                <span>{{ 'auth.verify.banner'|trans }}</span>
+                <form method="post" action="{{ path('app_verify_resend') }}" data-turbo="false" class="inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('verify-resend') }}">
+                    <button type="submit" class="font-semibold text-gold underline decoration-gold-deep underline-offset-4 transition-colors hover:text-gold-bright">
+                        {{ 'auth.verify.banner_cta'|trans }}
+                    </button>
+                </form>
+            </div>
+        {% endif %}
         <div class="flex flex-1 flex-col [&>main]:flex-1">
             {% block body %}{% endblock %}
         </div>

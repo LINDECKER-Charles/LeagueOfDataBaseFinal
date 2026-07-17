@@ -183,7 +183,7 @@ footer:
   project:
     title: "Projekt"
     version: "Verze: Beta 2.0"
-    updated: "Aktualizováno: 03/08/2025"
+    updated: "Aktualizováno: 17/07/2026"
 
   contact:
     title: "Kontakt"
@@ -211,3 +211,103 @@ header:
     item: "Předměty"
     runes: "Runy"
     summoner: "Přivolávací kouzla"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "nebo"
+  google:
+    cta: "Pokračovat přes Google"
+    unavailable: "Přihlášení přes Google není na tomto serveru nastaveno."
+    failed: "Přihlášení přes Google se nezdařilo. Zkuste to znovu."
+  register:
+    password: "Heslo"
+    password_confirm: "Potvrďte heslo"
+    password_mismatch: "Hesla se neshodují."
+    password_help: "Alespoň 12 znaků, s malým písmenem, velkým písmenem, číslicí a speciálním znakem."
+  password:
+    rule_length: "Alespoň 12 znaků"
+    rule_lowercase: "Alespoň jedno malé písmeno"
+    rule_uppercase: "Alespoň jedno velké písmeno"
+    rule_digit: "Alespoň jedna číslice"
+    rule_special: "Alespoň jeden speciální znak"
+    rule_match: "Obě hesla se shodují"
+    too_common: "Toto heslo je příliš běžné. Zvolte osobitější."
+  flash:
+    banned: "Tento účet byl pozastaven týmem moderátorů."
+
+profile:
+  identity:
+    title: "Identita vyvolávače"
+    username: "Jméno vyvolávače"
+    tag: "Riot tag"
+    tag_help: "Volitelné: část za # ve vašem Riot ID — pro GG#EUW zadejte EUW."
+    url_warning: "Změna jména vyvolávače změní i adresu vašeho veřejného profilu."
+    submit: "Aktualizovat identitu"
+    username_taken: "Toto jméno vyvolávače je již obsazené."
+    username_invalid: "Neplatné jméno vyvolávače: 3–24 znaků (písmena, číslice, tečka, pomlčka, podtržítko), začíná písmenem nebo číslicí."
+    tag_invalid: "Neplatný Riot tag: 3 až 5 písmen nebo číslic."
+  password:
+    title: "Nastavit heslo"
+    help: "Váš účet se přihlašuje pouze přes Google. Nastavte si heslo, abyste se mohli přihlásit i e-mailem."
+    submit: "Nastavit heslo"
+  danger:
+    help_no_password: "Smazání účtu je nevratné: oblíbené položky a buildy budou vymazány."
+  flash:
+    identity_saved: "Identita vyvolávače aktualizována."
+    password_set: "Heslo nastaveno — nyní se můžete přihlásit i e-mailem."
+    password_exists: "Tento účet už heslo má."
+
+build:
+  mode:
+    sr: "Summoner's Rift"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Aréna"
+  editor:
+    ghost_mode: "V tomto herním režimu není dostupné"
+    context:
+      title: "Herní kontext"
+      version: "Patch"
+      mode: "Herní režim"
+      mode_hint: "Dostupnost předmětů se řídí zvoleným režimem. Už umístěné předměty se nikdy neodstraní — pouze se označí."
+    dnd:
+      handle: "Přetažením změníte pořadí"
+      moved_step: "Krok přesunut na pozici %position%"
+      moved_item: "Předmět přesunut na pozici %position%"
+      transferred: "Předmět přesunut do kroku %step%"
+      added: "Předmět přidán do kroku %step%"
+      cancelled: "Přesun zrušen"
+  show:
+    mode: "Herní režim"
+    patch_current: "Vytvořeno na patchi %version% — aktuální: %current%"
+  error:
+    version:
+      unknown: "Neznámá verze hry."
+    mode:
+      unknown: "Neznámý herní režim."
+    steps:
+      item_mode: "Nedostupné ve zvoleném herním režimu: %items%."
+
+community:
+  nav:
+    trends: "Trendy"
+  trends:
+    eyebrow: "Tep komunity"
+    title: "Populární buildy"
+    filter:
+      champion: "Šampion"
+      mode: "Herní režim"
+      all_champions: "Všichni šampioni"
+      all_modes: "Všechny režimy"
+      apply: "Filtrovat"
+    empty: "Žádný veřejný build neodpovídá tomuto filtru — vytvořte si vlastní."
+    empty_cta: "Vytvořit můj build"
+  vote:
+    up: "Hlasovat pro tento build"
+    down: "Hlasovat proti tomuto buildu"
+    score_label: "Hodnocení komunity"
+    login: "Pro hlasování se přihlaste"
+    invalid: "Neplatný hlas."
+  supporter:
+    badge: "Podporovatel"

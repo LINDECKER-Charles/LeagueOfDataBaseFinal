@@ -1,0 +1,33 @@
+{
+  "id": "2026-07-17-offrande",
+  "version": "1.8.0",
+  "codename": "Offrande",
+  "date": "2026-07-17",
+  "type": "minor",
+  "title": "LeagueOfDataBase 1.8.0 — Offrande",
+  "summary": "Soutenez l'hébergement du site par un don Stripe sans compte, et arborez un sceau doré « Supporter » lorsque vous donnez en étant connecté.",
+  "intro": "Le site reste gratuit, rapide et sans publicité — et pour que ça dure, Offrande ouvre la porte au soutien libre. Une page de don sécurisée par Stripe permet de contribuer à l'hébergement, sans compte et sans qu'aucune donnée bancaire ne transite par le site. Et pour dire merci, un don effectué en étant connecté marque discrètement votre compte d'un sceau doré.",
+  "stats": { "fixes": 0, "cards": 2 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "✦",
+      "tag": "Soutien",
+      "title": "Faire un don",
+      "description": "Une page « Offrande à la forge » : choisissez un palier (3, 5, 10 ou 25 €) ou un montant libre (1 à 500 €), réglé sur la page sécurisée de Stripe. Aucun compte requis, aucun avantage à la clé — juste l'hébergement couvert."
+    },
+    {
+      "kind": "mana",
+      "glyph": "❖",
+      "tag": "Soutien",
+      "title": "Sceau Supporter",
+      "description": "Un don effectué en étant connecté fait apparaître un petit sceau doré à côté de votre nom, sur votre profil, votre carte publique, vos builds et les tendances. Marque de gratitude, sans aucun avantage de jeu."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "On tient à ce que le badge Supporter ne donne jamais le moindre avantage : c'est un merci, pas un privilège. Le don anonyme reste strictement identique à avant, et supprimer son compte ne falsifie pas la comptabilité. Merci à celles et ceux qui gardent l'encyclopédie libre d'accès — vous savez qui vous êtes maintenant, il y a une gemme à côté de votre nom.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

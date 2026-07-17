@@ -183,7 +183,7 @@ footer:
   project:
     title: "Projeto"
     version: "Versão: Beta 2.0"
-    updated: "Atualizado: 03/08/2025"
+    updated: "Atualizado: 17/07/2026"
 
   contact:
     title: "Contato"
@@ -211,3 +211,103 @@ header:
     item: "Itens"
     runes: "Runas"
     summoner: "Feitiços de Invocador"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "ou"
+  google:
+    cta: "Continuar com o Google"
+    unavailable: "O login com o Google não está configurado neste servidor."
+    failed: "Falha no login com o Google. Tente novamente."
+  register:
+    password: "Senha"
+    password_confirm: "Confirme a senha"
+    password_mismatch: "As duas senhas não coincidem."
+    password_help: "Pelo menos 12 caracteres, com uma minúscula, uma maiúscula, um dígito e um caractere especial."
+  password:
+    rule_length: "Pelo menos 12 caracteres"
+    rule_lowercase: "Pelo menos uma letra minúscula"
+    rule_uppercase: "Pelo menos uma letra maiúscula"
+    rule_digit: "Pelo menos um dígito"
+    rule_special: "Pelo menos um caractere especial"
+    rule_match: "As duas senhas coincidem"
+    too_common: "Esta senha é muito comum. Escolha uma mais pessoal."
+  flash:
+    banned: "Esta conta foi suspensa pela equipe de moderação."
+
+profile:
+  identity:
+    title: "Identidade de invocador"
+    username: "Nome de invocador"
+    tag: "Tag Riot"
+    tag_help: "Opcional: a parte depois do # do seu Riot ID — para GG#EUW, digite EUW."
+    url_warning: "Mudar seu nome de invocador também muda o endereço do seu perfil público."
+    submit: "Atualizar identidade"
+    username_taken: "Este nome de invocador já está em uso."
+    username_invalid: "Nome de invocador inválido: de 3 a 24 caracteres (letras, dígitos, ponto, hífen, sublinhado), começando com letra ou dígito."
+    tag_invalid: "Tag Riot inválida: de 3 a 5 letras ou dígitos."
+  password:
+    title: "Definir uma senha"
+    help: "Sua conta entra apenas com o Google. Defina uma senha para entrar também com seu e-mail."
+    submit: "Definir a senha"
+  danger:
+    help_no_password: "A exclusão da conta é definitiva: favoritos e builds são apagados."
+  flash:
+    identity_saved: "Identidade de invocador atualizada."
+    password_set: "Senha definida — agora você também pode entrar com seu e-mail."
+    password_exists: "Esta conta já tem uma senha definida."
+
+build:
+  mode:
+    sr: "Summoner's Rift"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Arena"
+  editor:
+    ghost_mode: "Indisponível neste modo de jogo"
+    context:
+      title: "Contexto de jogo"
+      version: "Patch"
+      mode: "Modo de jogo"
+      mode_hint: "A disponibilidade dos itens segue o modo escolhido. Itens já colocados nunca são removidos: eles são sinalizados."
+    dnd:
+      handle: "Arraste para reordenar"
+      moved_step: "Etapa movida para a posição %position%"
+      moved_item: "Item movido para a posição %position%"
+      transferred: "Item movido para a etapa %step%"
+      added: "Item adicionado à etapa %step%"
+      cancelled: "Movimento cancelado"
+  show:
+    mode: "Modo de jogo"
+    patch_current: "Forjada no patch %version% — atual: %current%"
+  error:
+    version:
+      unknown: "Versão de jogo desconhecida."
+    mode:
+      unknown: "Modo de jogo desconhecido."
+    steps:
+      item_mode: "Indisponível no modo de jogo escolhido: %items%."
+
+community:
+  nav:
+    trends: "Tendências"
+  trends:
+    eyebrow: "O pulso do Rift"
+    title: "Builds em alta"
+    filter:
+      champion: "Campeão"
+      mode: "Modo de jogo"
+      all_champions: "Todos os campeões"
+      all_modes: "Todos os modos"
+      apply: "Filtrar"
+    empty: "Nenhuma build pública corresponde a este filtro — forje a sua."
+    empty_cta: "Forjar minha build"
+  vote:
+    up: "Votar a favor desta build"
+    down: "Votar contra esta build"
+    score_label: "Pontuação da comunidade"
+    login: "Entre para votar"
+    invalid: "Voto inválido."
+  supporter:
+    badge: "Apoiador"

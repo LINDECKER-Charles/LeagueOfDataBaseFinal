@@ -7,6 +7,10 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}{% block page_title %}{% endblock %} — {{ legal.siteName }}{% endblock %}
+{# Meta description from the dedicated `seo` domain, keyed by the page id the
+   controller passes (notice/privacy/terms/cookies) — 21 locales, unlike the
+   fr/en-only body. #}
+{% block meta_description %}{{ ('legal.' ~ seoPage ~ '.description')|trans({}, 'seo') }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}

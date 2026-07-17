@@ -183,7 +183,7 @@ footer:
   project:
     title: "專案"
     version: "版本：Beta 2.0"
-    updated: "更新日期：03/08/2025"
+    updated: "更新日期：17/07/2026"
 
   contact:
     title: "聯絡方式"
@@ -211,3 +211,103 @@ header:
     item: "物品"
     runes: "符文"
     summoner: "召喚師技能"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "或"
+  google:
+    cta: "使用 Google 繼續"
+    unavailable: "此伺服器未設定 Google 登入。"
+    failed: "Google 登入失敗，請再試一次。"
+  register:
+    password: "密碼"
+    password_confirm: "確認密碼"
+    password_mismatch: "兩次輸入的密碼不一致。"
+    password_help: "至少 12 個字元，包含小寫字母、大寫字母、數字與特殊字元。"
+  password:
+    rule_length: "至少 12 個字元"
+    rule_lowercase: "至少一個小寫字母"
+    rule_uppercase: "至少一個大寫字母"
+    rule_digit: "至少一個數字"
+    rule_special: "至少一個特殊字元"
+    rule_match: "兩次密碼一致"
+    too_common: "此密碼太常見，請選擇更獨特的密碼。"
+  flash:
+    banned: "此帳號已被管理團隊停權。"
+
+profile:
+  identity:
+    title: "召喚師身分"
+    username: "召喚師名稱"
+    tag: "Riot 標籤"
+    tag_help: "選填：Riot ID 中 # 之後的部分 — 如 GG#EUW，請填 EUW。"
+    url_warning: "變更召喚師名稱也會變更公開個人頁的網址。"
+    submit: "更新身分"
+    username_taken: "此召喚師名稱已被使用。"
+    username_invalid: "召喚師名稱無效：3-24 個字元（字母、數字、點、連字號、底線），需以字母或數字開頭。"
+    tag_invalid: "Riot 標籤無效：3-5 個字母或數字。"
+  password:
+    title: "設定密碼"
+    help: "此帳號目前僅使用 Google 登入。設定密碼後也可以用電子郵件登入。"
+    submit: "設定密碼"
+  danger:
+    help_no_password: "刪除帳號無法復原：收藏與配裝將被清除。"
+  flash:
+    identity_saved: "召喚師身分已更新。"
+    password_set: "密碼已設定 — 現在也可以用電子郵件登入了。"
+    password_exists: "此帳號已設定密碼。"
+
+build:
+  mode:
+    sr: "召喚峽谷"
+    aram: "隨機單中 (ARAM)"
+    nexus_blitz: "Nexus Blitz"
+    arena: "鬥魂競技場"
+  editor:
+    ghost_mode: "在此遊戲模式中無法使用"
+    context:
+      title: "遊戲環境"
+      version: "版本"
+      mode: "遊戲模式"
+      mode_hint: "裝備的可用性取決於所選模式。已放置的裝備不會被移除，只會被標記。"
+    dnd:
+      handle: "拖曳以重新排序"
+      moved_step: "步驟已移至第 %position% 位"
+      moved_item: "裝備已移至第 %position% 位"
+      transferred: "裝備已移至步驟 %step%"
+      added: "裝備已加入步驟 %step%"
+      cancelled: "已取消移動"
+  show:
+    mode: "遊戲模式"
+    patch_current: "鑄造於版本 %version%（目前 %current%）"
+  error:
+    version:
+      unknown: "未知的遊戲版本。"
+    mode:
+      unknown: "未知的遊戲模式。"
+    steps:
+      item_mode: "在所選遊戲模式中無法使用：%items%"
+
+community:
+  nav:
+    trends: "熱門"
+  trends:
+    eyebrow: "社群脈動"
+    title: "熱門配裝"
+    filter:
+      champion: "英雄"
+      mode: "遊戲模式"
+      all_champions: "全部英雄"
+      all_modes: "全部模式"
+      apply: "篩選"
+    empty: "沒有符合此篩選條件的公開配裝 — 鍛造你自己的吧。"
+    empty_cta: "鍛造我的配裝"
+  vote:
+    up: "投票支持這套配裝"
+    down: "投票反對這套配裝"
+    score_label: "社群評分"
+    login: "登入後投票"
+    invalid: "無效的投票。"
+  supporter:
+    badge: "支持者"

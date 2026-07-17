@@ -1,0 +1,145 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ seo_title('developers.title'|trans({}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'developers.description'|trans({}, 'seo') }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Page-scoped sheet (design tokens only) — same pattern as legal/layout. #}
+    <style>
+        .dev-section { margin-top: 3.5rem; }
+        .dev-section h2 {
+            font-family: var(--font-beaufort);
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--color-gold-bright);
+        }
+        .dev-section p { margin-top: 0.75rem; color: var(--color-text-muted); line-height: 1.7; }
+        .dev-code {
+            margin-top: 1rem;
+            overflow-x: auto;
+            border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+            background: color-mix(in srgb, var(--color-void) 80%, transparent);
+            padding: 1rem 1.15rem;
+            font-family: var(--font-mono, monospace);
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: var(--color-text);
+        }
+        .dev-endpoint { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: baseline; }
+        .dev-endpoint + .dev-endpoint { margin-top: 1rem; }
+        .dev-endpoint code { font-family: var(--font-mono, monospace); font-size: 0.85rem; color: var(--color-gold-bright); }
+        .dev-endpoint p { margin: 0.15rem 0 0; flex-basis: 100%; font-size: 0.875rem; }
+        .dev-table-scroll { margin-top: 1.25rem; overflow-x: auto; }
+        .dev-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .dev-table th, .dev-table td {
+            border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+        }
+        .dev-table th {
+            font-family: var(--font-beaufort);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--color-gold);
+            background: color-mix(in srgb, var(--color-void) 70%, transparent);
+        }
+        .dev-table td { color: var(--color-text-muted); }
+        .dev-table td:first-child { color: var(--color-text); }
+    </style>
+{% endblock %}
+
+{% block body %}
+<main class="relative px-6 py-12">
+    {% include 'partials/main/gradient.html.twig' %}
+
+    <div class="relative mx-auto max-w-4xl">
+        <header>
+            <p class="eyebrow">{{ 'developers.eyebrow'|trans({}, 'api') }}</p>
+            <h1 class="mt-2 font-beaufort text-4xl font-bold uppercase tracking-wide text-gold-grad">
+                {{ 'developers.title'|trans({}, 'api') }}
+            </h1>
+            <p class="mt-4 max-w-2xl text-text-muted">{{ 'developers.intro'|trans({}, 'api') }}</p>
+            <div class="mt-6 flex flex-wrap items-center gap-3">
+                <a href="{{ path('app_api_portal') }}" class="hx-btn">{{ 'developers.cta'|trans({}, 'api') }}</a>
+                <a href="#pricing" class="hx-btn-ghost">{{ 'developers.docs_pricing'|trans({}, 'api') }}</a>
+            </div>
+            <p class="mt-3 text-xs text-text-dim">{{ 'developers.cta_hint'|trans({}, 'api') }}</p>
+        </header>
+
+        <section class="dev-section" aria-labelledby="dev-auth-title">
+            <h2 id="dev-auth-title">{{ 'developers.auth.title'|trans({}, 'api') }}</h2>
+            <p>{{ 'developers.auth.body'|trans({'%prefix%': keyPrefix}, 'api') }}</p>
+            <pre class="dev-code">Authorization: Bearer {{ keyPrefix }}…
+X-Api-Key: {{ keyPrefix }}…</pre>
+            <p class="text-sm">{{ 'developers.auth.base_url'|trans({'%url%': apiBaseUrl}, 'api') }}</p>
+        </section>
+
+        {% include 'developers/_endpoints.html.twig' with { apiBaseUrl: apiBaseUrl } only %}
+
+        <section class="dev-section" aria-labelledby="dev-quota-title">
+            <h2 id="dev-quota-title">{{ 'developers.quotas.title'|trans({}, 'api') }}</h2>
+            <p>{{ 'developers.quotas.quota'|trans({}, 'api') }}</p>
+            <p>{{ 'developers.quotas.rate'|trans({}, 'api') }}</p>
+            <p>{{ 'developers.quotas.month'|trans({}, 'api') }}</p>
+        </section>
+
+        <section class="dev-section" aria-labelledby="dev-errors-title">
+            <h2 id="dev-errors-title">{{ 'developers.errors.title'|trans({}, 'api') }}</h2>
+            <p>{{ 'developers.errors.body'|trans({}, 'api') }}</p>
+            <pre class="dev-code">{ "error": { "code": "rate_limited", "message": "rate limit exceeded, retry after X-RateLimit-Reset" } }</pre>
+        </section>
+
+        <section class="dev-section" id="pricing" aria-labelledby="dev-pricing-title">
+            <h2 id="dev-pricing-title">{{ 'developers.docs_pricing'|trans({}, 'api') }}</h2>
+            <div class="dev-table-scroll">
+                <table class="dev-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">{{ 'pricing.offer'|trans({}, 'api') }}</th>
+                            <th scope="col">{{ 'pricing.price'|trans({}, 'api') }}</th>
+                            <th scope="col">{{ 'pricing.volume'|trans({}, 'api') }}</th>
+                            <th scope="col">{{ 'pricing.rate'|trans({}, 'api') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ 'plan.free'|trans({}, 'api') }}</td>
+                            <td>0 €</td>
+                            <td>{{ 'portal.billing.requests_month'|trans({'%count%': freePlan.monthlyQuota|number_format(0, '.', ' ')}, 'api') }}</td>
+                            <td>{{ 'portal.key.rate_unit'|trans({'%rate%': freePlan.rateLimitPerMin}, 'api') }}</td>
+                        </tr>
+                        {% for pack in packs %}
+                            <tr>
+                                <td>{{ ('pack.' ~ pack.value)|trans({}, 'api') }}</td>
+                                <td>{{ pack.priceCents // 100 }} €</td>
+                                <td>{{ 'portal.billing.requests_once'|trans({'%count%': pack.requests|number_format(0, '.', ' ')}, 'api') }}</td>
+                                <td>{{ 'portal.key.rate_unit'|trans({'%rate%': creditRate}, 'api') }}</td>
+                            </tr>
+                        {% endfor %}
+                        {% for plan in subscriptions %}
+                            <tr>
+                                <td>{{ ('plan.' ~ plan.value)|trans({}, 'api') }}</td>
+                                <td>{{ plan.priceCents // 100 }} €{{ (plan.stripeInterval == 'year' ? 'portal.billing.per_year' : 'portal.billing.per_month')|trans({}, 'api') }}</td>
+                                <td>{{ 'portal.billing.requests_month'|trans({'%count%': plan.monthlyQuota|number_format(0, '.', ' ')}, 'api') }}</td>
+                                <td>{{ 'portal.key.rate_unit'|trans({'%rate%': plan.rateLimitPerMin}, 'api') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-sm">{{ 'pricing.validity_note'|trans({}, 'api') }}</p>
+        </section>
+
+        <section class="dev-section" aria-labelledby="dev-manage-title">
+            <h2 id="dev-manage-title">{{ 'developers.manage.title'|trans({}, 'api') }}</h2>
+            <p>{{ 'developers.manage.body'|trans({}, 'api') }}</p>
+            <div class="mt-6">
+                <a href="{{ path('app_api_portal') }}" class="hx-btn">{{ 'developers.cta'|trans({}, 'api') }}</a>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}

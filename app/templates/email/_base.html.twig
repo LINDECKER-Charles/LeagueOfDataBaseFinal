@@ -1,0 +1,137 @@
+{#
+  Shared Hextech shell for account-lifecycle emails. Standalone HTML document
+  (NOT the web base layout): table-based, fully inline-styled and self-contained
+  so it survives Gmail/Outlook/Apple Mail. Self-hosted fonts don't load in mail,
+  so the display face degrades to a serif stack that echoes Beaufort. Children
+  fill: preheader, heading, lede, cta_url, cta_label, note, footer_reason.
+#}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="{{ app.request.locale }}" xmlns="https://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="color-scheme" content="dark">
+    <meta name="supported-color-schemes" content="dark">
+    <title>{% block title %}{{ 'base.title'|trans }}{% endblock %}</title>
+    <!--[if mso]><style>body,table,td,a{font-family:Georgia,'Times New Roman',serif !important;}</style><![endif]-->
+</head>
+<body style="margin:0;padding:0;width:100%;background-color:#010a13;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+    {# Inbox preview text — kept off-screen so it doesn't render in the body. #}
+    <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;color:#010a13;font-size:1px;line-height:1px;">
+        {% block preheader %}{% endblock %}
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background-color:#010a13;background-image:radial-gradient(circle at 50% 0,#0a1a2e 0,#010a13 60%);">
+        <tr>
+            <td align="center" style="padding:36px 16px;">
+
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
+                       style="width:600px;max-width:600px;background-color:#0a1428;border:1px solid #785a28;border-radius:4px;overflow:hidden;">
+
+                    {# Gold crown bar #}
+                    <tr><td style="height:3px;line-height:3px;font-size:0;background-color:#c8aa6e;background-image:linear-gradient(90deg,#785a28 0,#c8aa6e 25%,#f0e6d2 50%,#c8aa6e 75%,#785a28 100%);">&nbsp;</td></tr>
+
+                    {# Wordmark header #}
+                    <tr>
+                        <td align="center" style="padding:34px 40px 8px;">
+                            <div style="font-family:'Times New Roman',Georgia,serif;font-size:25px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#f0e6d2;">
+                                League&nbsp;of&nbsp;<span style="color:#c8aa6e;">Database</span>
+                            </div>
+                            <div style="margin-top:8px;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:.34em;text-transform:uppercase;color:#8f8d82;">
+                                {{ 'email.wordmark_subtitle'|trans }}
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Diamond divider — Hextech signature #}
+                    <tr>
+                        <td align="center" style="padding:16px 40px 0;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                                <tr>
+                                    <td style="width:120px;border-top:1px solid #785a28;font-size:0;line-height:0;">&nbsp;</td>
+                                    <td style="padding:0 12px;color:#c8aa6e;font-size:12px;line-height:12px;">&#9670;</td>
+                                    <td style="width:120px;border-top:1px solid #785a28;font-size:0;line-height:0;">&nbsp;</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    {# Body #}
+                    <tr>
+                        <td style="padding:22px 44px 8px;">
+                            <h1 style="margin:0;font-family:'Times New Roman',Georgia,serif;font-size:26px;font-weight:700;line-height:1.25;color:#f0e6d2;text-align:center;">
+                                {% block heading %}{% endblock %}
+                            </h1>
+                            <p style="margin:18px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#a09b8c;text-align:center;">
+                                {% block lede %}{% endblock %}
+                            </p>
+                        </td>
+                    </tr>
+
+                    {# CTA #}
+                    <tr>
+                        <td align="center" style="padding:30px 44px 8px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                                <tr>
+                                    <td align="center" bgcolor="#c8aa6e"
+                                        style="border-radius:3px;background-color:#c8aa6e;background-image:linear-gradient(180deg,#f0e6d2 0,#c8aa6e 55%,#a17b3f 100%);">
+                                        <a href="{{ block('cta_url') }}" target="_blank"
+                                           style="display:inline-block;padding:15px 44px;font-family:'Times New Roman',Georgia,serif;font-size:15px;font-weight:700;line-height:1;letter-spacing:.14em;text-transform:uppercase;color:#010a13;text-decoration:none;border-radius:3px;">
+                                            {% block cta_label %}{% endblock %}
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    {# Raw-link fallback #}
+                    <tr>
+                        <td style="padding:26px 44px 6px;">
+                            <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#8f8d82;text-align:center;">
+                                {{ 'email.fallback'|trans }}
+                            </p>
+                            <div style="padding:12px 14px;background-color:#0f1b2d;border:1px solid #1e3a5f;border-radius:3px;">
+                                <a href="{{ block('cta_url') }}" target="_blank"
+                                   style="font-family:'Courier New',monospace;font-size:12px;line-height:1.5;color:#0ac8b9;text-decoration:none;word-break:break-all;">
+                                    {{ block('cta_url') }}
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Security / expiry note #}
+                    <tr>
+                        <td style="padding:22px 44px 34px;">
+                            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#6b7280;text-align:center;">
+                                {% block note %}{% endblock %}
+                            </p>
+                        </td>
+                    </tr>
+
+                    {# Footer #}
+                    <tr>
+                        <td style="padding:0;background-color:#060f1a;border-top:1px solid #16233a;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="padding:24px 44px;">
+                                        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#6b7280;text-align:center;">
+                                            {% block footer_reason %}{% endblock %}
+                                        </p>
+                                        <p style="margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#4b5563;text-align:center;">
+                                            {{ 'email.footer.rights'|trans }}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

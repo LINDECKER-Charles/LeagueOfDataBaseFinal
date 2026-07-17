@@ -1,4 +1,4 @@
-{# Mobile primary navigation — fixed thumb-zone bar, 5 destinations, labels
+{# Mobile primary navigation — fixed thumb-zone bar, 6 destinations, labels
    always visible (Material/HIG guidance), safe-area aware. Hidden ≥ md where
    the header nav takes over. #}
 {% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
@@ -35,5 +35,11 @@
       <path d="M13 2.5 5.5 13.5H11L10 21.5 18.5 10H13z"/>
     </svg>
     <span>{{ 'nav.short.summoners'|trans }}</span>
+  </a>
+  <a href="{{ path('app_trends') }}" {% if currentRoute == 'app_trends' %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 17l5.5-5.5 3.5 3.5L21 6"/><path d="M15 6h6v6"/>
+    </svg>
+    <span>{{ 'community.nav.trends'|trans }}</span>
   </a>
 </nav>

@@ -1,0 +1,33 @@
+{
+  "id": "2026-07-17-arene",
+  "version": "1.7.0",
+  "codename": "Arène",
+  "date": "2026-07-17",
+  "type": "minor",
+  "title": "LeagueOfDataBase 1.7.0 — Arène",
+  "summary": "La page Tendances classe tous les builds publics par le score net des votes de la communauté, filtrable par champion et mode de jeu.",
+  "intro": "Les builds partagés avaient besoin d'une place pour se mesurer : c'est l'Arène. Une nouvelle page Tendances rassemble tous les builds publics de la communauté et les classe par leur score net de votes. Connecté, vous votez pour ou contre d'un clic, depuis la liste comme depuis la page d'un build. Filtres par champion et par mode inclus.",
+  "stats": { "fixes": 0, "cards": 2 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "◉",
+      "tag": "Communauté",
+      "title": "Page Tendances",
+      "description": "Tous les builds publics classés par score net de votes, filtrables par champion et mode de jeu. Chaque ligne montre le sceau du champion, sa rune clé, le créateur, le patch d'origine et un aperçu des premiers objets."
+    },
+    {
+      "kind": "mana",
+      "glyph": "⚡",
+      "tag": "Communauté",
+      "title": "Votez pour ou contre",
+      "description": "Votez ▲ ou ▼ directement depuis la liste ou la page d'un build ; revoter la même flèche retire votre vote, l'autre change votre avis. Seul le score net est affiché — jamais le détail des pour et des contre."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "On a fait le choix de n'afficher que le score net : pas de compteur de pouces rouges à collectionner, juste un classement lisible qui met en avant les bons builds. Sans JavaScript, les flèches restent de vrais boutons qui fonctionnent. Forgez, partagez, votez — et si un filtre vous manque sur les Tendances, dites-le nous.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

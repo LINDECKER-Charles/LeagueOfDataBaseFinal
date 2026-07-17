@@ -10,9 +10,13 @@ use App\Service\Build\BuildCatalogGate;
 use App\Service\Build\BuildStructureNormalizer;
 use App\Service\Build\BuildSubmission;
 use App\Service\Build\BuildViewAssembler;
+use App\Service\Audit\AuditAction;
+use App\Service\Audit\AuditLogger;
+use App\Service\Audit\AuditTarget;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
+use App\Service\Picker\GameMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -30,6 +34,9 @@ final class BuildController extends AbstractResourceController
 {
     private const CSRF_SUBMIT = 'submit';
     private const CSRF_DELETE_PREFIX = 'delete-build-';
+    private const ERROR_VERSION_UNKNOWN = 'build.error.version.unknown';
+    /** Patches offered by the editor's version select (latest first); the build's own patch is always kept. */
+    private const VERSION_CHOICES_MAX = 30;
 
     public function __construct(
         VersionManager $versionManager,
@@ -42,6 +49,7 @@ final class BuildController extends AbstractResourceController
         private readonly BuildViewAssembler $assembler,
         private readonly EntityManagerInterface $entityManager,
         private readonly TranslatorInterface $translator,
+        private readonly AuditLogger $audit,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -65,7 +73,7 @@ final class BuildController extends AbstractResourceController
     #[Route('/builds/new', name: 'app_build_new', methods: ['GET'])]
     public function new(): Response
     {
-        return $this->editorResponse(null, self::emptyValues());
+        return $this->requireVerifiedEmail() ?? $this->editorResponse(null, self::emptyValues());
     }
 
     #[Route('/builds', name: 'app_build_create', methods: ['POST'])]
@@ -88,6 +96,10 @@ final class BuildController extends AbstractResourceController
                 'runes' => $build->getRunes(),
                 'steps' => $build->getSteps(),
             ],
+            // Editing is PINNED on the build's own patch and mode; the version
+            // select still allows moving the build to another patch explicitly.
+            'gameVersion' => $build->getGameVersion(),
+            'gameMode' => $build->getGameMode()->value,
         ]);
     }
 
@@ -108,26 +120,34 @@ final class BuildController extends AbstractResourceController
             return $this->redirectToRoute('app_builds', status: Response::HTTP_SEE_OTHER);
         }
 
+        $target = AuditTarget::of(AuditTarget::TYPE_BUILD, $build->getId(), $build->getName());
         $this->entityManager->remove($build);
         $this->entityManager->flush();
+        $this->audit->log(AuditAction::BuildDelete, target: $target);
         $this->addFlash('success', $this->translator->trans('build.flash.deleted'));
 
         return $this->redirectToRoute('app_builds', status: Response::HTTP_SEE_OTHER);
     }
 
-    /** Shared create/update pipeline: CSRF → field errors → catalog validation → persist. */
+    /** Shared create/update pipeline: verified email → CSRF → field errors → catalog validation → persist. */
     private function handleSubmit(Request $request, ?Build $build): Response
     {
-        $submission = BuildSubmission::fromRequest($request);
+        if ($guard = $this->requireVerifiedEmail()) {
+            return $guard;
+        }
+
+        $submission = BuildSubmission::fromRequest($request, $this->pageContext->selection()['version']);
         $values = [
             'name' => $submission->name,
             'description' => $submission->description,
             'isPublic' => $submission->isPublic,
             'structure' => $submission->structure,
+            'gameVersion' => $submission->gameVersion,
+            'gameMode' => ($submission->gameMode ?? GameMode::DEFAULT)->value,
         ];
 
         if (!$this->isCsrfTokenValid(self::CSRF_SUBMIT, (string) $request->request->get('_token'))) {
-            return $this->editorErrorResponse(['build.error.csrf'], $build, $values);
+            return $this->editorErrorResponse([['build.error.csrf', []]], $build, $values);
         }
 
         $errors = $this->collectErrors($submission);
@@ -137,6 +157,10 @@ final class BuildController extends AbstractResourceController
 
         $isNew = $build === null;
         $build = $this->persistSubmission($build, $submission);
+        $this->audit->log(
+            $isNew ? AuditAction::BuildCreate : AuditAction::BuildUpdate,
+            target: AuditTarget::of(AuditTarget::TYPE_BUILD, $build->getId(), $build->getName()),
+        );
         $this->addFlash('success', $this->translator->trans($isNew ? 'build.flash.created' : 'build.flash.updated'));
 
         return $this->redirectToRoute(
@@ -146,21 +170,31 @@ final class BuildController extends AbstractResourceController
         );
     }
 
-    /** @return list<string> */
+    /** @return list<array{0: string, 1: array<string, string>}> translator-ready (code, params) tuples */
     private function collectErrors(BuildSubmission $submission): array
     {
-        $errors = $submission->formErrors();
-        if ($submission->structure === null) {
+        $errors = array_map(static fn (string $code): array => [$code, []], $submission->formErrors());
+        $isVersionKnown = $this->versionManager->versionExists($submission->gameVersion);
+        if (!$isVersionKnown) {
+            $errors[] = [self::ERROR_VERSION_UNKNOWN, []];
+        }
+        // No structure / unknown mode / unknown version: the catalogs to check
+        // against are undefined — report what we already know.
+        if ($submission->structure === null || $submission->gameMode === null || !$isVersionKnown) {
             return $errors;
         }
 
-        $sel = $this->pageContext->selection();
         try {
-            return [...$errors, ...$this->catalogGate->validate($submission->structure, $sel['version'], $sel['lang'])];
+            return [...$errors, ...$this->catalogGate->validate(
+                $submission->structure,
+                $submission->gameVersion,
+                $this->pageContext->selection()['lang'],
+                $submission->gameMode,
+            )];
         } catch (\Throwable) {
             // Transient catalog outage: refuse the write honestly rather than
             // accepting an unverified structure or 500ing away the user's input.
-            return [...$errors, 'build.error.catalog_unavailable'];
+            return [...$errors, ['build.error.catalog_unavailable', []]];
         }
     }
 
@@ -178,39 +212,61 @@ final class BuildController extends AbstractResourceController
             ->setChampionId($structure['championId'])
             ->setRunes($structure['runes'])
             ->setSteps($structure['steps'])
-            // The structure was just re-validated against the CURRENT catalogs,
-            // so the build is now written on the current patch — update included.
-            ->setGameVersion($this->pageContext->selection()['version']);
+            // The structure was validated against the SUBMITTED (version, mode):
+            // persist exactly that pair — the build stays pinned to its patch.
+            ->setGameVersion($submission->gameVersion)
+            ->setGameMode($submission->gameMode ?? GameMode::DEFAULT);
         $this->entityManager->flush();
 
         return $build;
     }
 
-    /** @param list<string> $codes */
-    private function editorErrorResponse(array $codes, ?Build $build, array $values): Response
+    /** @param list<array{0: string, 1: array<string, string>}> $errors */
+    private function editorErrorResponse(array $errors, ?Build $build, array $values): Response
     {
-        foreach ($codes as $code) {
-            $this->addFlash('error', $this->translator->trans($code));
+        foreach ($errors as [$code, $params]) {
+            $this->addFlash('error', $this->translator->trans($code, $params));
         }
 
         return $this->editorResponse($build, $values, Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     /**
-     * @param array{name: string, description: ?string, isPublic: bool, structure: ?array<mixed>} $values
+     * @param array{name: string, description: ?string, isPublic: bool, structure: ?array<mixed>,
+     *               gameVersion: ?string, gameMode: string} $values
      */
     private function editorResponse(?Build $build, array $values, int $status = Response::HTTP_OK): Response
     {
         $sel = $this->pageContext->selection();
+        $selectedVersion = ($values['gameVersion'] ?? '') !== '' ? (string) $values['gameVersion'] : $sel['version'];
 
         return $this->render('build/editor.html.twig', [
             'client' => $this->clientData(),
             'mode' => $build === null ? 'create' : 'edit',
             'build' => $build,
             'values' => $values,
-            'version' => $sel['version'],
+            'version' => $selectedVersion,
+            'gameMode' => $values['gameMode'],
+            'gameModes' => GameMode::cases(),
+            'versionChoices' => $this->versionChoices($selectedVersion),
             'lang' => $sel['lang'],
         ], new Response(status: $status));
+    }
+
+    /**
+     * Latest patches for the version select, capped to keep the list usable —
+     * plus the currently selected one, so an old build stays editable pinned.
+     *
+     * @return list<string>
+     */
+    private function versionChoices(string $selected): array
+    {
+        $choices = array_slice($this->versionManager->getVersions(), 0, self::VERSION_CHOICES_MAX);
+        if ($selected !== '' && !in_array($selected, $choices, true)) {
+            $choices[] = $selected;
+        }
+
+        return $choices;
     }
 
     /** 404 (never 403) when the build does not exist OR belongs to someone else. */
@@ -235,9 +291,32 @@ final class BuildController extends AbstractResourceController
         return $user;
     }
 
-    /** @return array{name: string, description: ?string, isPublic: bool, structure: null} */
+    /**
+     * Build creation is the one write reserved to confirmed accounts (anti-spam
+     * of public content). Returns a redirect to bounce unverified users, or null
+     * to let the caller proceed.
+     */
+    private function requireVerifiedEmail(): ?Response
+    {
+        if ($this->currentUser()->isVerified()) {
+            return null;
+        }
+
+        $this->addFlash('warning', $this->translator->trans('auth.verify.gate_build'));
+
+        return $this->redirectToRoute('app_builds', status: Response::HTTP_SEE_OTHER);
+    }
+
+    /** @return array{name: string, description: ?string, isPublic: bool, structure: null, gameVersion: null, gameMode: string} */
     private static function emptyValues(): array
     {
-        return ['name' => '', 'description' => null, 'isPublic' => false, 'structure' => null];
+        return [
+            'name' => '',
+            'description' => null,
+            'isPublic' => false,
+            'structure' => null,
+            'gameVersion' => null,
+            'gameMode' => GameMode::DEFAULT->value,
+        ];
     }
 }

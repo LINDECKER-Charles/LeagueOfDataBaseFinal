@@ -39,11 +39,11 @@ final class PickerCatalog
     }
 
     /** @return list<array<string, mixed>> */
-    public function itemOptions(string $version, string $lang): array
+    public function itemOptions(string $version, string $lang, GameMode $mode = GameMode::DEFAULT): array
     {
         [$data, $images] = $this->itemSet($version, $lang);
 
-        return $this->itemProjector->project($data, $images);
+        return $this->itemProjector->project($data, $images, $mode);
     }
 
     /** @return list<array<string, mixed>> */

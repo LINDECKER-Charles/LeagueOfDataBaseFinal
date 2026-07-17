@@ -1,11 +1,19 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Runes - {{ meta.currentPage }}/{{ meta.nombrePage }}{% endblock %}
-{% block meta_description %}
-  Découvrez la liste complète des runes de League of Legends ({{ meta.totalItem }} au total),
-  organisées par arbre pour le patch {{ client.session.version ?? (client.versions|first) }}.
-{% endblock %}
+{% block title %}{{ seo_title('rune.list.title'|trans({}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'rune.list.description'|trans({'%count%': meta.totalItem, '%version%': meta.version}, 'seo') }}{% endblock %}
 {% block img %}/preview/runes.png{% endblock %}
+
+{% block structured_data %}
+  {% set seoItems = [] %}
+  {% for runeTree in runesReforgeds|slice(0, 20) %}
+    {% set seoItems = seoItems|merge([{
+      name: runeTree.name|default(runeTree.key),
+      url: seo_absolute(path('app_rune', { name: runeTree.key }))
+    }]) %}
+  {% endfor %}
+  {{ seo_jsonld(seo_item_list(seoItems)) }}
+{% endblock %}
 
 {% block body %}
 <main class="relative px-6 py-12">

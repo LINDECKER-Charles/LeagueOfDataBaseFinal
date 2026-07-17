@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "開発者向けAPI"
+  title: "APIキー"
+  back_profile: "プロフィールに戻る"
+  docs_link: "ドキュメントと料金"
+  profile_link:
+    label: "開発者向けAPI"
+    manage: "APIキーを管理"
+  create:
+    title: "APIキーはまだありません"
+    body: "個人キーを生成して公開APIを呼び出しましょう — 無料プラン:月500リクエスト、毎分10。"
+    name_label: "キー名(任意)"
+    name_placeholder: "my-app"
+    submit: "キーを作成"
+  raw:
+    title: "新しいAPIキー"
+    warning: "今すぐコピーしてください — 表示されるのはこの一度だけです。保存されるのはフィンガープリントのみ:紛失したキーは再生成しかできません。"
+    label: "シークレットキー"
+    copy: "キーをコピー"
+    copied: "コピーしました!"
+    copy_error: "フィールドから手動でコピーしてください"
+  key:
+    title: "有効なキー"
+    label_key: "キー"
+    label_name: "名前"
+    label_created: "作成日"
+    label_quota: "月間使用量"
+    quota_used: "%used% / %quota% リクエスト"
+    quota_remaining: "今月の残り %remaining%"
+    label_credits: "プリペイドクレジット"
+    label_rate: "レート制限"
+    rate_unit: "毎分 %rate% リクエスト"
+    subscription_active: "サブスクリプション有効"
+  actions:
+    regenerate: "キーを再生成"
+    regenerate_help: "このキーを失効させ、新しいシークレットを発行します — プラン・クォータ・クレジットは引き継がれます。"
+    revoke: "失効させる"
+    revoke_help: "キーを即座に無効化します(キャッシュにより最大1分間はAPIが受け付ける場合があります)。"
+  billing:
+    title: "キーを強化"
+    unavailable: "このサーバーでは決済が有効化されていません。"
+    packs_title: "クレジットパック"
+    packs_help: "一回払い — 1,000リクエストにつき1 €、月間クォータの消化後に使用、有効期間12か月。どのパックでもレートは最低毎分60リクエストに上がります。"
+    plans_title: "サブスクリプション"
+    plans_help: "月間クォータとレート制限を引き上げます。アカウントごとに有効なサブスクリプションは1つです。"
+    buy: "購入"
+    subscribe: "登録する"
+    current: "現在"
+    per_month: "/月"
+    per_year: "/年"
+    requests_month: "月 %count% リクエスト"
+    requests_once: "%count% リクエスト"
+    already_subscribed: "このキーには既にサブスクリプションがあります。プラン変更は現在の契約を解約してから(Stripeの確認後すぐ無料プランに戻ります)、改めて登録してください。"
+  usage:
+    title: "直近30日"
+    total_month: "今月の使用量"
+    day: "日"
+    requests: "リクエスト"
+    empty: "まだ計測された使用量はありません — 最初のAPI呼び出しは1分以内にここに表示されます。"
+  status:
+    pack_success: "支払いが確認されました — クレジットを追加しています(数秒)。"
+    plan_success: "サブスクリプションが確認されました — キーをアップグレードしています(数秒)。"
+    cancelled: "支払いはキャンセルされました — 請求は発生していません。"
+  flash:
+    csrf: "セッションの有効期限が切れました。もう一度お試しください。"
+    created: "APIキーを作成しました。"
+    regenerated: "キーを再生成しました — 以前のシークレットは使えません。"
+    revoked: "キーを失効させました。"
+    key_exists: "有効なキーが既にあります。"
+    no_key: "有効なキーがありません。"
+    invalid_offer: "不明なプランです。"
+    already_subscribed: "キーには既に有効なサブスクリプションがあります — 再登録の前に解約してください。"
+    need_key: "購入の前にAPIキーを作成してください。"
+    stripe_unavailable: "決済は現在利用できません。"
+    gateway: "決済サービスに接続できません。後でもう一度お試しください。"
+
+plan:
+  free: "無料"
+  credits: "クレジット"
+  monthly: "月額"
+  monthly_plus: "月額+"
+  annual: "年額"
+  annual_plus: "年額+"
+
+pack:
+  small: "パックS"
+  medium: "パックM"
+  large: "パックL"
+
+product:
+  pack: "LoDB API — クレジット %requests% リクエスト"
+  plan: "LoDB API — %plan% プラン"
+
+pricing:
+  offer: "プラン"
+  price: "価格"
+  volume: "ボリューム"
+  rate: "レート制限"
+  validity_note: "クレジットパック:1,000リクエストにつき1 €。有効プランの月間クォータ消化後に使用、有効期間12か月。年額プランはボリュームを月間クォータとして持ち、年単位で請求されます。"
+
+developers:
+  eyebrow: "開発者向け"
+  title: "LeagueOfDataBase API"
+  intro: "サイトのコミュニティデータを扱うREST JSON API:公開サモナープロフィール、共有ビルド、閲覧トレンド。試用は無料、実運用には有料プランを用意。"
+  cta: "キーを作成"
+  cta_hint: "ログインして無料キーを生成し、APIを呼び出すまで1分以内。"
+  docs_pricing: "料金"
+  auth:
+    title: "認証"
+    body: "すべての /v1 リクエストは、%prefix% に16進数40文字が続く形式のキーを、2つのヘッダーのいずれかで送ります。サーバー側にはSHA-256のフィンガープリントのみ保存:紛失したキーは再生成するしかありません。"
+    base_url: "ベースURL(v1、開発環境): %url% — 本番アクセスはサイトのドメイン(TLSエッジ)経由で公開予定です。"
+  endpoints:
+    title: "エンドポイント"
+    healthz: "サービスの状態 — 認証不要の唯一のルート。"
+    profiles: "メンバーの公開プロフィール:お気に入りと公開ビルド数(非公開プロフィールは404)。"
+    builds: "チャンピオン(Data Dragon id)の公開ビルド、新しい順 — page と per_page でページネーション(最大50)。"
+    trends: "サイトで最も閲覧されたエンティティ:チャンピオン、アイテム、ルーン、サモナースペル — range=7d(既定)または 30d、上位25。"
+    usage: "呼び出し元キーのリアルタイム使用量 — 認証とレート制限の対象ですが、クォータには一切カウントされません。"
+  quotas:
+    title: "クォータとレート制限"
+    quota: "各リクエストはまずプランの月間クォータ、次にプリペイドクレジットに課金されます。両方尽きるとAPIは 429 quota_exceeded を返します。"
+    rate: "キーごとのトークンバケット:すべての /v1 レスポンスに X-RateLimit-Limit、X-RateLimit-Remaining、X-RateLimit-Reset が付きます。超過時は 429 rate_limited。"
+    month: "クォータは暦月でリセットされます。年額プランはボリュームを月間クォータとして持ちます(月20,000または60,000リクエスト)。"
+  errors:
+    title: "エラー"
+    body: "全エラーで統一エンベロープ。コード:unauthorized(401)、forbidden(403、失効キー)、not_found(404)、rate_limited と quota_exceeded(429)、invalid_request(400)、internal(500/503)。"
+  manage:
+    title: "課金とキー管理"
+    body: "キーの作成・管理はプロフィールから。パックとサブスクリプションはStripe Checkoutで決済 — API自体が決済データに触れることはありません。"

@@ -1,0 +1,37 @@
+{% extends 'admin/_base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Dons · Admin · LODB{% endblock %}
+
+{% block admin_body %}
+    {{ ui.page_head('Gestion', 'Dons', 'Soutiens Stripe enregistrés par le webhook — lignes comptables immuables.') }}
+
+    <div class="kpi-grid">
+        {{ ui.kpi('Total collecté', kpis.totalCents|euros, kpis.count|number_format(0, '.', ' ') ~ ' don(s)', 'var(--gold)', null) }}
+        {{ ui.kpi('30 derniers jours', dailySumCents|euros, null, 'var(--hex)', chart_sparkline(daily, 'var(--hex)')) }}
+        {{ ui.kpi('Donateurs identifiés', kpis.identifiedDonors|number_format(0, '.', ' '), kpis.anonymous|number_format(0, '.', ' ') ~ ' don(s) anonyme(s)', 'var(--series-3)', null) }}
+        {{ ui.kpi('Supporters actifs', kpis.supporters|number_format(0, '.', ' '), 'comptes marqués supporter', 'var(--series-2)', null) }}
+    </div>
+
+    <div class="rule" data-label="Historique"></div>
+
+    <section class="card">
+        {% set tableRows = [] %}
+        {% for d in rows %}
+            {% set tableRows = tableRows|merge([[
+                { text: d.createdAt|date('d/m/Y H:i') },
+                { num: (d.amountCents / 100)|number_format(2, ',', ' ') ~ ' ' ~ d.currency|upper },
+                d.user
+                    ? { badges: [{ label: d.user.username, tone: d.user.isSupporter ? 'good' : '' }] }
+                    : { text: 'anonyme' },
+            ]]) %}
+        {% endfor %}
+        {{ ui.table(
+            ['Date', { label: 'Montant', num: true }, 'Compte lié'],
+            tableRows,
+            'Aucun don enregistré.'
+        ) }}
+    </section>
+
+    {{ ui.pager('admin_donations', page, pages, {}) }}
+{% endblock %}

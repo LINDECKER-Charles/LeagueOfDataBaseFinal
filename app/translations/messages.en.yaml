@@ -220,7 +220,7 @@ footer:
   project:
     title: "Project"
     version: "Version: Beta 2.0"
-    updated: "Updated: 03/08/2025"
+    updated: "Updated: 17/07/2026"
 
   contact:
     title: "Contact"
@@ -271,9 +271,31 @@ nav:
   profile: "My profile"
   builds: "My builds"
   donate: "Donate"
+  changelog: "What's new"
+
+changelog:
+  eyebrow: "Changelog"
+  title: "Release history"
+  lede: "Every version of LeagueOfDataBase, from the original encyclopedia to today — new features, improvements and fixes, newest first."
+  current: "Current version"
+  empty: "No release published yet."
+  meta:
+    title: "Changelog"
+    description: "The full version history of LeagueOfDataBase — new features, improvements and fixes, release by release."
+  type:
+    major: "Major"
+    minor: "Update"
+    hotfix: "Hotfix"
+  section:
+    fixes: "Fixes"
 
 auth:
   eyebrow: "Summoner gate"
+  or: "or"
+  google:
+    cta: "Continue with Google"
+    unavailable: "Google sign-in is not set up on this server."
+    failed: "Google sign-in failed. Please try again."
   login:
     title: "Sign in"
     identifier: "Email or summoner name"
@@ -281,17 +303,54 @@ auth:
     remember: "Keep me signed in"
     submit: "Enter the archive"
     no_account: "No account yet?"
+    forgot: "Forgot your password?"
   register:
     title: "Create account"
     email: "Email"
     username: "Summoner name"
     username_help: "3-24 characters: letters, digits, dot, dash, underscore; starts with a letter or digit."
-    password: "Password (min. 8 characters)"
+    password: "Password"
+    password_confirm: "Confirm password"
+    password_mismatch: "The two passwords do not match."
+    password_help: "At least 12 characters, with a lowercase letter, an uppercase letter, a digit and a special character."
     terms: "I accept the terms of use"
     submit: "Forge my account"
     have_account: "Already enrolled?"
+  password:
+    rule_length: "At least 12 characters"
+    rule_lowercase: "At least one lowercase letter"
+    rule_uppercase: "At least one uppercase letter"
+    rule_digit: "At least one digit"
+    rule_special: "At least one special character"
+    rule_match: "Both passwords match"
+    too_common: "This password is too common. Choose a more personal one."
   flash:
     registered: "Welcome, summoner — your account is ready."
+    verify_sent: "A confirmation email is on its way. Check your inbox."
+    verify_success: "Your email address is confirmed. Have fun, summoner."
+    verify_error: "This confirmation link is invalid or has expired."
+    verify_already: "Your email address is already confirmed."
+    reset_sent: "If an account matches that address, a reset email has just been sent."
+    reset_success: "Your password has been reset. You can now sign in."
+    reset_error: "This reset link is invalid or has expired. Please request a new one."
+    banned: "This account has been suspended by the moderation team."
+  verify:
+    banner: "Confirm your email address to unlock build creation."
+    banner_cta: "Resend the email"
+    resend_done: "Confirmation email resent."
+    resend_throttled: "An email was already sent recently — wait a few minutes before trying again."
+    gate_build: "Confirm your email address before creating a build."
+  reset:
+    request_title: "Forgot password"
+    request_lede: "Enter your account email: if it exists, we'll send you a reset link."
+    email: "Email"
+    submit_request: "Send the link"
+    back_to_login: "Back to sign in"
+    check_email_title: "Check your inbox"
+    check_email_lede: "If an account matches that address, a reset email has just been sent. Remember to check your spam folder."
+    reset_title: "New password"
+    submit_reset: "Reset password"
+    invalid_token: "This reset link is invalid or has expired."
   logout: "Sign out"
   profile_stub:
     placeholder: "Your summoner profile is being forged — favourites and builds arrive soon."
@@ -314,10 +373,25 @@ profile:
   identity:
     email: "Email"
     member_since: "Member since"
+    title: "Summoner identity"
+    username: "Summoner name"
+    tag: "Riot tag"
+    tag_help: "Optional: the part after the # of your Riot ID — for GG#EUW, enter EUW."
+    url_warning: "Changing your summoner name also changes the address of your public profile."
+    submit: "Update identity"
+    username_taken: "This summoner name is already taken."
+    username_invalid: "Invalid summoner name: 3-24 characters (letters, digits, dot, dash, underscore), starting with a letter or digit."
+    tag_invalid: "Invalid Riot tag: 3 to 5 letters or digits."
+  password:
+    title: "Set a password"
+    help: "Your account currently signs in with Google only. Set a password to also sign in with your email."
+    submit: "Set the password"
   visibility:
     label: "Profile visibility"
     help: "Make your profile public — anyone with the link sees your favorites and public builds. Private by default."
     view_public: "View my public page"
+    state_public: "Public"
+    state_private: "Private"
   builds:
     label: "Builds"
     manage: "Manage my builds"
@@ -330,22 +404,48 @@ profile:
     item: "Item"
     rune: "Rune"
     summoner: "Summoner spell"
+    skin: "Skin banner"
   save: "Save changes"
+  autosave:
+    saving: "Saving…"
+    saved: "Saved"
+    error: "Save failed — retry"
+    dropped: "Saved — a favorite was unavailable"
   picker:
     search: "Search…"
     remove: "Remove this favorite"
     loading: "Loading…"
     error: "Couldn't load the list."
     retry: "Retry"
+  skin:
+    change: "Change skin"
+    empty: "Choose a banner skin"
+    choose_champion: "Choose a champion"
+    choose_skin: "Choose a skin"
+    back: "Back"
+  preview:
+    button: "Preview public profile"
+    badge: "Preview"
+    note_public: "This is exactly how your public profile appears to others."
+    note_private: "Preview only — your profile is private, so no one else can see it yet."
+    back: "Back to editor"
   danger:
     title: "Danger zone"
     help: "Deleting your account is permanent: favorites and builds are erased. Confirm with your password."
+    help_no_password: "Deleting your account is permanent: favorites and builds are erased."
     password: "Current password"
+    confirm_phrase: "DELETE MY ACCOUNT"
+    confirm_label: "To confirm, type %phrase%"
     delete: "Delete my account"
   flash:
     saved: "Profile updated."
+    identity_saved: "Summoner identity updated."
+    password_set: "Password set — you can now sign in with your email too."
+    password_exists: "A password is already set on this account."
     favorite_unavailable: "The %slot% favorite doesn't exist on this patch — it was removed."
+    skin_unavailable: "The skin banner couldn't be set and was cleared."
     wrong_password: "Incorrect password — the account was not deleted."
+    wrong_phrase: "The confirmation phrase doesn't match — the account was not deleted."
     deleted: "Your account has been deleted. Farewell, summoner."
     csrf: "Session expired, please try again."
   public:
@@ -400,6 +500,11 @@ donate:
     back: "Back to home"
 
 build:
+  mode:
+    sr: "Summoner's Rift"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Arena"
   list:
     eyebrow: "The armory"
     title: "My builds"
@@ -429,7 +534,20 @@ build:
     error: "Catalog unavailable."
     retry: "Retry"
     ghost: "Unavailable on this patch"
+    ghost_mode: "Not available in this game mode"
     counter: "%count% / %max%"
+    context:
+      title: "Game context"
+      version: "Patch"
+      mode: "Game mode"
+      mode_hint: "Item availability follows the selected mode. Items already placed are never removed — they are flagged instead."
+    dnd:
+      handle: "Drag to reorder"
+      moved_step: "Step moved to position %position%"
+      moved_item: "Item moved to position %position%"
+      transferred: "Item moved to step %step%"
+      added: "Item added to step %step%"
+      cancelled: "Move cancelled"
     champion:
       title: "Champion"
       search: "Search a champion…"
@@ -463,6 +581,8 @@ build:
   show:
     by: "By %name%"
     patch: "Forged on patch %version%"
+    patch_current: "Forged on patch %version% — current: %current%"
+    mode: "Game mode"
     runes: "Runes"
     keystone: "Keystone"
     order: "Purchase order"
@@ -488,6 +608,10 @@ build:
     champion:
       unknown: "Unknown champion on this patch."
     catalog_unavailable: "Catalogs unavailable, try again shortly."
+    version:
+      unknown: "Unknown game version."
+    mode:
+      unknown: "Unknown game mode."
     runes:
       primary_style: "Invalid primary rune path."
       primary_selection_count: "Pick exactly 4 primary runes."
@@ -503,4 +627,50 @@ build:
       note: "Step notes are limited to 300 characters."
       items_count: "Each step holds 1 to 8 items."
       item_unknown: "An item is unknown on this patch."
+      item_mode: "Not available in the selected game mode: %items%."
       total_items: "40 items maximum across all steps."
+
+community:
+  nav:
+    trends: "Trends"
+  trends:
+    eyebrow: "The Rift's pulse"
+    title: "Trending builds"
+    filter:
+      champion: "Champion"
+      mode: "Game mode"
+      all_champions: "All champions"
+      all_modes: "All modes"
+      apply: "Filter"
+    empty: "No public build matches this filter — forge yours."
+    empty_cta: "Forge my build"
+  vote:
+    up: "Upvote this build"
+    down: "Downvote this build"
+    score_label: "Community score"
+    login: "Sign in to vote"
+    invalid: "Invalid vote."
+  supporter:
+    badge: "Supporter"
+
+email:
+  wordmark_subtitle: "League of Legends codex"
+  fallback: "If the button doesn't work, paste this link into your browser:"
+  footer:
+    rights: "© LeagueOfDataBase — an independent project, not affiliated with Riot Games."
+  confirm:
+    subject: "Confirm your email address · LeagueOfDataBase"
+    preheader: "One last step to activate your summoner account."
+    heading: "Welcome, %name%"
+    lede: "Confirm your email address to fully activate your account and unlock build creation."
+    cta: "Confirm my address"
+    expiry: "This link expires in %duration%. If you didn't create this account, just ignore this email."
+    footer_reason: "You're receiving this email because an account was created with this address on LeagueOfDataBase."
+  reset:
+    subject: "Reset your password · LeagueOfDataBase"
+    preheader: "Reset the password for your summoner account."
+    heading: "Password reset"
+    lede: "A password reset was requested for your account. Choose a new one below."
+    cta: "Choose a new password"
+    expiry: "This link expires in %duration%. If you didn't request this, ignore this email: your password stays unchanged."
+    footer_reason: "You're receiving this email because a password reset was requested for this account."

@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — موسوعة League of Legends"
+  description: "أبطال League of Legends وعناصرها وروناتها وتعاويذ المستدعي للتحديث %version% — إحصائيات ومهارات وتفاصيل بـ21 لغة."
+champion:
+  list:
+    title: "أبطال League of Legends"
+    description: "جميع أبطال League of Legends البالغ عددهم %count% مع الأدوار والمهارات والقصص — بيانات التحديث %version%."
+  detail:
+    title: "%name%، بطل LoL"
+    description: "%name% في League of Legends: المهارات والأشكال والقصة والنصائح، محدثة للتحديث %version%."
+item:
+  list:
+    title: "عناصر League of Legends"
+    description: "جميع عناصر League of Legends البالغ عددها %count% مع التكلفة والإحصائيات والوصفات — بيانات التحديث %version%."
+  detail:
+    title: "%name%، عنصر LoL"
+    description: "%name% في League of Legends: الإحصائيات والتكلفة والوصفة والترقيات، محدثة للتحديث %version%."
+rune:
+  list:
+    title: "رونات League of Legends"
+    description: "مسارات الرونات في League of Legends وعددها %count% مع كل الرونات الأساسية والثانوية — بيانات التحديث %version%."
+  detail:
+    title: "%name%، مسار رونات LoL"
+    description: "مسار الرونات %name% في League of Legends: الرونات الأساسية والخانات والتأثيرات، محدثة للتحديث %version%."
+summoner:
+  list:
+    title: "تعاويذ المستدعي في League of Legends"
+    description: "جميع تعاويذ المستدعي في League of Legends وعددها %count% مع أوقات الانتظار والتأثيرات — بيانات التحديث %version%."
+  detail:
+    title: "%name%، تعويذة مستدعٍ في LoL"
+    description: "تعويذة المستدعي %name% في League of Legends: وقت الانتظار والتأثيرات، محدثة للتحديث %version%."
+donate:
+  title: "ادعم المشروع"
+  description: "ساعد League Of Data Base على البقاء مجانيًا وسريعًا — ادعم المشروع بتبرع."
+legal:
+  notice:
+    description: "الإشعار القانوني لـLeague Of Data Base: الناشر والاستضافة وجهة الاتصال."
+  privacy:
+    description: "سياسة الخصوصية لـLeague Of Data Base: البيانات المعالجة والأغراض وحقوقك."
+  terms:
+    description: "شروط استخدام League Of Data Base."
+  cookies:
+    description: "سياسة ملفات تعريف الارتباط لـLeague Of Data Base: الملفات المستخدمة وكيفية التحكم بها."
+error:
+  "404":
+    title: "الصفحة غير موجودة"
+    eyebrow: "تائه في الشق"
+    body: "هذه الصفحة غير موجودة — ربما أُزيل المورد من التحديث الحالي."
+    back_home: "العودة إلى الرئيسية"
+  generic:
+    title: "حدث خطأ ما"
+    body: "حدث خطأ غير متوقع. حاول مرة أخرى بعد لحظات."
+
+developers:
+  title: "واجهة API للمطوّرين"
+  description: "واجهة REST JSON مدفوعة فوق بيانات مجتمع ليج أوف ليجندز: ملفات عامة، بناءات مشتركة واتجاهات التصفح. مستوى مجاني وحزم أرصدة واشتراكات."
+
+trends:
+  title: "بيلدات LoL الرائجة"
+  description: "بيلدات League of Legends العامة مرتبة حسب أصوات المجتمع — صفِّها حسب البطل ووضع اللعب."

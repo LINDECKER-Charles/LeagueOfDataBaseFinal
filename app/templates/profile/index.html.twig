@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ user.username }} · {{ 'base.title'|trans }}{% endblock %}
+{% block title %}{{ user.displayName }} · {{ 'base.title'|trans }}{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
 {% block body %}
@@ -22,22 +22,58 @@
         emptyLabel: 'profile.favorites.empty'|trans,
     }]) %}
 {% endfor %}
-<main class="relative px-6 py-12">
-    {% include 'partials/main/gradient.html.twig' %}
+{# Favorites set on the account, decorated discreetly over the cover. #}
+{% set orbSlots = [] %}
+{% for slot in ['champion', 'item', 'rune', 'summoner'] %}
+    {% if favorites[slot].current %}{% set orbSlots = orbSlots|merge([slot]) %}{% endif %}
+{% endfor %}
+<main class="profile-perso relative px-6 py-12">
+    {% if personalBackground %}
+        {# Favorite champion, dimmed behind the whole edit page. #}
+        <div class="profile-perso__backdrop" aria-hidden="true">
+            <img src="{{ personalBackground.image }}" alt=""
+                 onerror="this.onerror=null;this.src='{{ personalBackground.fallback }}'"
+                 loading="eager" decoding="async">
+        </div>
+    {% else %}
+        {% include 'partials/main/gradient.html.twig' %}
+    {% endif %}
 
-    <div class="relative mx-auto max-w-6xl">
-        <header class="mb-10 flex flex-wrap items-end justify-between gap-4">
-            <div>
-                <p class="eyebrow">{{ 'profile.eyebrow'|trans }}</p>
-                <h1 class="mt-2 font-beaufort text-4xl font-bold uppercase tracking-wide text-gold-grad">{{ user.username }}</h1>
+    <div class="relative z-10 mx-auto max-w-6xl">
+        <header class="profile-cover mb-10">
+            {% if orbSlots is not empty %}
+                <div class="profile-orbits profile-orbits--cover" aria-hidden="true">
+                    {% for slot in orbSlots %}
+                        {% include 'profile/_favorite_orb.html.twig' with {
+                            favorite: favorites[slot],
+                            pos_class: '',
+                            primary: slot == 'champion',
+                            type_label: ('profile.slot.' ~ slot)|trans,
+                        } only %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div class="profile-cover__body">
+                <div>
+                    <p class="eyebrow">{{ 'profile.eyebrow'|trans }}</p>
+                    <h1 class="mt-2 flex items-center gap-2.5 font-beaufort text-4xl font-bold uppercase tracking-wide text-gold-grad">
+                        {{ user.displayName }}
+                        {% if user.isSupporter %}{% include 'components/_supporter_badge.html.twig' %}{% endif %}
+                    </h1>
+                </div>
+                <div class="profile-cover__actions">
+                    <a href="{{ path('app_profile_preview') }}" class="hx-btn-ghost">
+                        {{ 'profile.preview.button'|trans }}
+                    </a>
+                    <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                        <button type="submit" class="hx-btn-ghost">{{ 'auth.logout'|trans }}</button>
+                    </form>
+                </div>
             </div>
-            <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
-                <button type="submit" class="hx-btn-ghost">{{ 'auth.logout'|trans }}</button>
-            </form>
         </header>
 
-        <form method="post" action="{{ path('app_profile_save') }}" data-turbo="false" class="profile-layout">
+        <form method="post" action="{{ path('app_profile_save') }}" data-turbo="false" data-autosave class="profile-layout">
             <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
 
             <aside class="profile-identity">
@@ -49,24 +85,47 @@
                     <span class="hx-plate__label">{{ 'profile.identity.member_since'|trans }}</span>
                     <span class="hx-plate__value">{{ memberSince }}</span>
                 </div>
-                <div class="hx-plate">
-                    <span class="hx-plate__label">{{ 'profile.visibility.label'|trans }}</span>
-                    <label class="mt-1 flex items-start gap-2.5">
-                        <input type="checkbox" name="isPublicProfile" value="1" class="hx-check mt-0.5"
-                               {{ user.isPublicProfile ? 'checked' }}>
-                        <span class="text-sm text-text-muted">{{ 'profile.visibility.help'|trans }}</span>
-                    </label>
-                    {% if user.isPublicProfile %}
-                        <a href="{{ path('app_profile_public', { username: user.username }) }}"
-                           class="nav-link mt-2 inline-block text-sm text-gold">
-                            {{ 'profile.visibility.view_public'|trans }} →
+                <div class="visibility-card {{ user.isPublicProfile ? 'visibility-card--public' : 'visibility-card--private' }}"
+                     data-visibility
+                     data-state-public="{{ 'profile.visibility.state_public'|trans }}"
+                     data-state-private="{{ 'profile.visibility.state_private'|trans }}">
+                    <div class="visibility-card__head">
+                        <span class="visibility-card__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </span>
+                        <span class="visibility-card__text">
+                            <span class="visibility-card__label">{{ 'profile.visibility.label'|trans }}</span>
+                            <span class="visibility-card__state" data-visibility-state>
+                                {{ (user.isPublicProfile ? 'profile.visibility.state_public' : 'profile.visibility.state_private')|trans }}
+                            </span>
+                        </span>
+                        <label class="hx-switch">
+                            <input type="checkbox" name="isPublicProfile" value="1" class="hx-switch__input"
+                                   aria-label="{{ 'profile.visibility.label'|trans }}" {{ user.isPublicProfile ? 'checked' }}>
+                            <span class="hx-switch__track"><span class="hx-switch__thumb"></span></span>
+                        </label>
+                    </div>
+                    <p class="visibility-card__help">{{ 'profile.visibility.help'|trans }}</p>
+                    <div class="visibility-card__public" data-visibility-public-only {{ user.isPublicProfile ? '' : 'hidden' }}>
+                        <a href="{{ path('app_profile_public', { username: user.username }) }}" class="visibility-card__link">
+                            <span class="visibility-card__url">/u/{{ user.username }}</span>
+                            <span aria-hidden="true">→</span>
                         </a>
-                    {% endif %}
+                    </div>
                 </div>
                 <div class="hx-plate">
                     <span class="hx-plate__label">{{ 'profile.builds.label'|trans }}</span>
                     <a href="{{ path('app_builds') }}" class="nav-link mt-1 inline-block font-beaufort text-sm uppercase tracking-[0.15em] text-gold">
                         {{ 'profile.builds.manage'|trans }} →
+                    </a>
+                </div>
+                <div class="hx-plate">
+                    <span class="hx-plate__label">{{ 'portal.profile_link.label'|trans({}, 'api') }}</span>
+                    <a href="{{ path('app_api_portal') }}" class="nav-link mt-1 inline-block font-beaufort text-sm uppercase tracking-[0.15em] text-gold">
+                        {{ 'portal.profile_link.manage'|trans({}, 'api') }} →
                     </a>
                 </div>
             </aside>
@@ -75,6 +134,36 @@
                 <div class="codex-header mb-6">
                     <h2>{{ 'profile.favorites.title'|trans }}</h2>
                     <span class="codex-header__meta">{{ version }}</span>
+                </div>
+
+                <div class="skin-field mb-6">
+                    <span class="skin-field__label">{{ 'profile.slot.skin'|trans }}</span>
+                    <div data-vue="skin-banner-picker" data-props="{{ {
+                        fieldName: 'favoriteSkinId',
+                        current: skinBanner ? { id: skinBanner.id, name: skinBanner.name, banner: skinBanner.banner } : null,
+                        championsEndpoint: path('api_picker_champions'),
+                        skinsEndpoint: path('api_picker_skins'),
+                        version: version,
+                        lang: lang,
+                        labels: {
+                            pick: 'profile.slot.skin'|trans,
+                            change: 'profile.skin.change'|trans,
+                            remove: 'profile.picker.remove'|trans,
+                            empty: 'profile.skin.empty'|trans,
+                            chooseChampion: 'profile.skin.choose_champion'|trans,
+                            chooseSkin: 'profile.skin.choose_skin'|trans,
+                            back: 'profile.skin.back'|trans,
+                            close: 'filter.close'|trans,
+                            search: 'profile.picker.search'|trans,
+                            loading: 'profile.picker.loading'|trans,
+                            error: 'profile.picker.error'|trans,
+                            retry: 'profile.picker.retry'|trans,
+                            noResults: 'filter.empty'|trans,
+                        },
+                    }|json_encode|e('html_attr') }}">
+                        {# No-JS / pre-mount fallback: the stored id round-trips on a plain submit. #}
+                        <input type="hidden" name="favoriteSkinId" value="{{ user.favoriteSkinId ?? '' }}">
+                    </div>
                 </div>
 
                 <div data-vue="favorite-picker" data-props="{{ {
@@ -113,22 +202,75 @@
                     {% endfor %}
                 </div>
 
-                <div class="mt-6 flex justify-end">
-                    <button type="submit" class="hx-btn">{{ 'profile.save'|trans }}</button>
+                <div class="mt-6 flex items-center justify-end gap-4">
+                    <span class="autosave-status" data-autosave-status hidden aria-live="polite"
+                          data-label-saving="{{ 'profile.autosave.saving'|trans }}"
+                          data-label-saved="{{ 'profile.autosave.saved'|trans }}"
+                          data-label-error="{{ 'profile.autosave.error'|trans }}"
+                          data-label-dropped="{{ 'profile.autosave.dropped'|trans }}"></span>
+                    <button type="submit" class="hx-btn" data-autosave-hide>{{ 'profile.save'|trans }}</button>
                 </div>
             </section>
         </form>
 
-        <section class="profile-danger mt-14" aria-labelledby="profile-danger-title">
-            <h2 id="profile-danger-title" class="profile-danger__title">{{ 'profile.danger.title'|trans }}</h2>
-            <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'profile.danger.help'|trans }}</p>
-            <form method="post" action="{{ path('app_profile_delete') }}" data-turbo="false"
+        <section class="profile-panel mt-14" aria-labelledby="profile-identity-title">
+            <h2 id="profile-identity-title" class="profile-panel__title">{{ 'profile.identity.title'|trans }}</h2>
+            <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'profile.identity.url_warning'|trans }}</p>
+            <form method="post" action="{{ path('app_profile_identity') }}" data-turbo="false"
                   class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
                 <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
                 <label class="flex-1 sm:max-w-xs">
-                    <span class="auth-label">{{ 'profile.danger.password'|trans }}</span>
-                    <input type="password" name="password" required autocomplete="current-password" class="hx-input mt-1.5">
+                    <span class="auth-label">{{ 'profile.identity.username'|trans }}</span>
+                    <input type="text" name="username" value="{{ user.username }}" required
+                           minlength="3" maxlength="24" autocomplete="username" class="hx-input mt-1.5">
                 </label>
+                <label class="sm:w-40">
+                    <span class="auth-label">{{ 'profile.identity.tag'|trans }}</span>
+                    <span class="riot-tag mt-1.5">
+                        <span class="riot-tag__prefix" aria-hidden="true">#</span>
+                        <input type="text" name="riotTagline" value="{{ user.riotTagline ?? '' }}"
+                               minlength="3" maxlength="5" pattern="[A-Za-z0-9]{3,5}"
+                               placeholder="EUW" autocapitalize="characters" autocomplete="off"
+                               class="hx-input riot-tag__input">
+                    </span>
+                </label>
+                <button type="submit" class="hx-btn">{{ 'profile.identity.submit'|trans }}</button>
+            </form>
+            <p class="auth-help">{{ 'profile.identity.tag_help'|trans }}</p>
+        </section>
+
+        {% if passwordForm %}
+            <section class="profile-panel mt-14" aria-labelledby="profile-password-title">
+                <h2 id="profile-password-title" class="profile-panel__title">{{ 'profile.password.title'|trans }}</h2>
+                <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'profile.password.help'|trans }}</p>
+                {{ form_start(passwordForm, {action: path('app_profile_password'), attr: {'data-turbo': 'false', class: 'mt-5 max-w-md space-y-5'}}) }}
+                    {% include 'security/_password_pair.html.twig' with { field: passwordForm.plainPassword } only %}
+                    <button type="submit" class="hx-btn">{{ 'profile.password.submit'|trans }}</button>
+                {{ form_end(passwordForm) }}
+            </section>
+        {% endif %}
+
+        <section class="profile-danger mt-14" aria-labelledby="profile-danger-title">
+            <h2 id="profile-danger-title" class="profile-danger__title">{{ 'profile.danger.title'|trans }}</h2>
+            <p class="mt-2 max-w-2xl text-sm text-text-muted">
+                {{ (user.isGoogleAccount or not user.hasPassword ? 'profile.danger.help_no_password' : 'profile.danger.help')|trans }}
+            </p>
+            <form method="post" action="{{ path('app_profile_delete') }}" data-turbo="false"
+                  class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+                <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+                {% if user.isGoogleAccount %}
+                    {% set confirmPhrase = 'profile.danger.confirm_phrase'|trans %}
+                    <label class="flex-1 sm:max-w-xs">
+                        <span class="auth-label">{{ 'profile.danger.confirm_label'|trans({ '%phrase%': confirmPhrase }) }}</span>
+                        <input type="text" name="confirmation" required autocomplete="off" autocapitalize="none"
+                               autocorrect="off" spellcheck="false" placeholder="{{ confirmPhrase }}" class="hx-input mt-1.5">
+                    </label>
+                {% elseif user.hasPassword %}
+                    <label class="flex-1 sm:max-w-xs">
+                        <span class="auth-label">{{ 'profile.danger.password'|trans }}</span>
+                        <input type="password" name="password" required autocomplete="current-password" class="hx-input mt-1.5">
+                    </label>
+                {% endif %}
                 <button type="submit" class="profile-danger__btn">{{ 'profile.danger.delete'|trans }}</button>
             </form>
         </section>

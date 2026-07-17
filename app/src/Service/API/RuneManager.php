@@ -22,7 +22,7 @@ final class RuneManager extends AbstractManager
             }
         }
 
-        throw new \RuntimeException(sprintf('Aucune rune trouvée avec le nom "%s".', $name));
+        throw ResourceNotFoundException::forEntry(static::TYPE, $name);
     }
 
     protected function dataList(array $raw): array

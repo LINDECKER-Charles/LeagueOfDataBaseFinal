@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — encyklopedie League of Legends"
+  description: "Šampioni, předměty, runy a kouzla vyvolávače League of Legends pro patch %version% — statistiky, schopnosti a detaily ve 21 jazycích."
+champion:
+  list:
+    title: "Šampioni League of Legends"
+    description: "Všech %count% šampionů League of Legends s rolemi, schopnostmi a příběhem — data z patche %version%."
+  detail:
+    title: "%name%, šampion LoL"
+    description: "%name% v League of Legends: schopnosti, skiny, příběh a tipy, aktuální pro patch %version%."
+item:
+  list:
+    title: "Předměty League of Legends"
+    description: "Všech %count% předmětů League of Legends s cenou, statistikami a recepty — data z patche %version%."
+  detail:
+    title: "%name%, předmět LoL"
+    description: "%name% v League of Legends: statistiky, cena, recept a vylepšení, aktuální pro patch %version%."
+rune:
+  list:
+    title: "Runy League of Legends"
+    description: "Všech %count% runových větví League of Legends s klíčovými i vedlejšími runami — data z patche %version%."
+  detail:
+    title: "%name%, runová větev LoL"
+    description: "Runová větev %name% v League of Legends: klíčové runy, sloty a efekty, aktuální pro patch %version%."
+summoner:
+  list:
+    title: "Kouzla vyvolávače League of Legends"
+    description: "Všech %count% kouzel vyvolávače League of Legends s přebíjením a efekty — data z patche %version%."
+  detail:
+    title: "%name%, kouzlo vyvolávače LoL"
+    description: "Kouzlo vyvolávače %name% v League of Legends: přebíjení a efekty, aktuální pro patch %version%."
+donate:
+  title: "Podpořte projekt"
+  description: "Pomozte udržet League Of Data Base zdarma a rychlý — podpořte projekt darem."
+legal:
+  notice:
+    description: "Právní informace League Of Data Base: vydavatel, hosting a kontakt."
+  privacy:
+    description: "Zásady ochrany soukromí League Of Data Base: zpracovávaná data, účely a vaše práva."
+  terms:
+    description: "Podmínky použití League Of Data Base."
+  cookies:
+    description: "Zásady cookies League Of Data Base: jaké cookies používáme a jak je ovládat."
+error:
+  "404":
+    title: "Stránka nenalezena"
+    eyebrow: "Ztracen v Riftu"
+    body: "Tato stránka neexistuje — zdroj mohl být z aktuálního patche odstraněn."
+    back_home: "Zpět na úvod"
+  generic:
+    title: "Něco se pokazilo"
+    body: "Došlo k neočekávané chybě. Zkuste to za okamžik znovu."
+
+developers:
+  title: "API pro vývojáře"
+  description: "Placené REST JSON API nad komunitními daty League of Legends: veřejné profily, sdílené buildy a trendy návštěvnosti. Bezplatná úroveň, kreditové balíčky a předplatná."
+
+trends:
+  title: "Populární buildy LoL"
+  description: "Veřejné buildy League of Legends seřazené podle hlasů komunity — filtrujte podle šampiona a herního režimu."

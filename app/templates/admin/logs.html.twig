@@ -1,0 +1,72 @@
+{% extends 'admin/_base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Journal · Admin · LODB{% endblock %}
+
+{% set actorTypeLabels = { user: 'utilisateur', admin: 'admin', anonymous: 'anonyme' } %}
+{% set outcomeTones = { success: 'good', failure: 'bad', denied: 'warn' } %}
+
+{% block admin_body %}
+    {{ ui.page_head('Surveillance', 'Journal d\'audit', 'Actions sensibles et événements de sécurité. Horodatage en UTC. Conservation ' ~ 6 ~ ' mois (recommandation CNIL).') }}
+
+    <div class="kpi-grid">
+        {{ ui.kpi('Journées locales', volume.local.days|number_format(0, '.', ' '), volume.local.bytes|bytes, 'var(--hex)', null) }}
+        {{ ui.kpi('Archivées (MinIO)', volume.archived.days|number_format(0, '.', ' '), volume.archived.bytes|bytes, 'var(--series-3)', null) }}
+        {{ ui.kpi('Espace total', volume.totalBytes|bytes, volume.oldest ? 'depuis le ' ~ volume.oldest : null, 'var(--gold)', null) }}
+        {{ ui.kpi('Rétention', '6 mois', retentionCutoff ? 'purge auto avant le ' ~ retentionCutoff|date('d/m/Y') : null, 'var(--good)', null) }}
+    </div>
+
+    <div class="rule" data-label="Filtrer"></div>
+
+    <form method="get" action="{{ path('admin_logs') }}" class="toolbar">
+        <select name="category" class="input-slim" aria-label="Catégorie d'action">
+            <option value="">Toutes catégories</option>
+            {% for c in categories %}
+                <option value="{{ c.value }}" {{ filters.category == c.value ? 'selected' }}>{{ c.label }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="from" value="{{ filters.from }}" class="input-slim" aria-label="Du">
+        <input type="date" name="to" value="{{ filters.to }}" class="input-slim" aria-label="Au">
+        <button type="submit" class="btn ghost small">Filtrer</button>
+        {% if filters.category or filters.from or filters.to %}<a class="chip" href="{{ path('admin_logs') }}">Réinitialiser</a>{% endif %}
+    </form>
+
+    <section class="card">
+        {% set tableRows = [] %}
+        {% for e in rows %}
+            {% set metaBits = [] %}
+            {% for k, v in e.metadata %}{% if v is not null %}{% set metaBits = metaBits|merge([k ~ '=' ~ v]) %}{% endif %}{% endfor %}
+            {% set tableRows = tableRows|merge([[
+                { text: e.at|date('d/m/Y H:i:s', 'UTC') },
+                { text: e.actorLabel, sub: actorTypeLabels[e.actorType]|default(e.actorType) },
+                { text: e.action.label, sub: e.action.category.label ~ (metaBits ? ' · ' ~ metaBits|join(', ') : '') },
+                { text: e.targetLabel ?? '—', sub: e.targetType },
+                { text: e.ip ?? '—' },
+                { badge: e.outcome.label, tone: outcomeTones[e.outcome.value]|default('') },
+            ]]) %}
+        {% endfor %}
+        {{ ui.table(
+            ['Horodatage (UTC)', 'Acteur', 'Action', 'Cible', 'IP', 'Résultat'],
+            tableRows,
+            'Aucune action journalisée sur cette période.'
+        ) }}
+    </section>
+
+    {{ ui.cursor_pager('admin_logs', page, hasMore, filters) }}
+
+    <div class="rule" data-label="Maintenance"></div>
+
+    <section class="card purge-card">
+        <h2 class="card-title">Purger les journaux</h2>
+        <p class="dim">La rétention légale (6 mois) est appliquée automatiquement. Cette purge manuelle libère de l'espace immédiatement — locale <b>et</b> archive MinIO. Action irréversible.</p>
+        <form method="post" action="{{ path('admin_logs_purge') }}"
+              onsubmit="return confirm('Purger définitivement les journaux sélectionnés ? Cette action est irréversible.');"
+              class="purge-form">
+            <input type="hidden" name="_token" value="{{ csrf_token('admin_logs_purge') }}">
+            <label class="radio"><input type="radio" name="scope" value="retention" checked> Au-delà de la rétention (&gt; 6 mois)</label>
+            <label class="radio"><input type="radio" name="scope" value="before"> Avant le <input type="date" name="before" class="input-slim"></label>
+            <label class="radio"><input type="radio" name="scope" value="all"> Tout supprimer</label>
+            <button type="submit" class="btn danger small">Purger</button>
+        </form>
+    </section>
+{% endblock %}

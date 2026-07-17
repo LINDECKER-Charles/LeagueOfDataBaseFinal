@@ -1,0 +1,39 @@
+{
+  "id": "2026-07-17-chambre",
+  "version": "1.3.0",
+  "codename": "Chambre",
+  "date": "2026-07-17",
+  "type": "minor",
+  "title": "LeagueOfDataBase 1.3.0 — Chambre",
+  "summary": "Votre profil prend vie : quatre favoris à sertir, une carte publique partageable, et votre pseudo modifiable avec tag Riot.",
+  "intro": "La Chambre de l'invocateur ouvre ses portes. Votre profil devient un vrai espace : identité à gauche, et quatre emplacements à sertir de vos favoris — champion, objet, rune et sort. Rendez-le public pour partager votre carte à l'adresse /u/votre-pseudo, changez de nom quand vous voulez, et affichez votre tag Riot partout où votre nom apparaît.",
+  "stats": { "fixes": 1, "cards": 2 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❖",
+      "tag": "Profil",
+      "title": "Favoris & carte publique",
+      "description": "Sertissez vos quatre favoris via un sélecteur à recherche instantanée, et rendez votre profil public à l'adresse /u/votre-pseudo. Votre e-mail n'y apparaît jamais, et une zone dangereuse permet de supprimer définitivement votre compte."
+    },
+    {
+      "kind": "mana",
+      "glyph": "✦",
+      "tag": "Identité",
+      "title": "Pseudo & tag Riot",
+      "description": "Renommez votre invocateur (l'adresse de votre page publique suit) et ajoutez, si vous le souhaitez, votre tag Riot — la partie après le # de votre Riot ID. Votre nom s'affiche alors pseudo#TAG sur le profil, la carte publique et les builds."
+    }
+  ],
+  "bugfixes": [
+    {
+      "id": "LDB-001",
+      "area": "Compte",
+      "text": "La suppression d'un compte Google se confirme désormais en recopiant une phrase de sécurité, au lieu d'exiger un mot de passe que ces comptes n'ont pas toujours — le droit à l'effacement reste toujours atteignable."
+    }
+  ],
+  "balances": [],
+  "devNote": {
+    "body": "On a soigné les détails qui rassurent : un profil introuvable et un profil privé renvoient exactement la même page, impossible de deviner qui possède un compte. Un favori choisi sur un vieux patch qui n'existe plus s'indique sobrement au lieu de casser la page. Votre chambre, vos règles — et votre e-mail reste masqué, même pour vous.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

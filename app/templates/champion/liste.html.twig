@@ -1,12 +1,22 @@
 {# templates/champion/liste.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Champions - {{ meta.currentPage }}/{{ meta.nombrePage }}{% endblock %}
-{% block meta_description %}
-  Découvrez la liste complète des champions de League of Legends ({{ meta.totalItem }} au total),
-  avec rôles et descriptions pour le patch {{ client.session.version ?? (client.versions|first) }}.
-{% endblock %}
+{% block title %}{{ seo_title('champion.list.title'|trans({}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'champion.list.description'|trans({'%count%': meta.totalItem, '%version%': meta.version}, 'seo') }}{% endblock %}
 {% block img %}/preview/champions.png{% endblock %}
+
+{% block structured_data %}
+  {# First page of entries only — mirrors JsonLdBuilder::ITEM_LIST_MAX; slicing
+     here skips building hundreds of throwaway Twig array merges. #}
+  {% set seoItems = [] %}
+  {% for c in champions|slice(0, 20) %}
+    {% set seoItems = seoItems|merge([{
+      name: c.name|default(''),
+      url: seo_absolute(path('app_champion', { name: c.id|default(c.name) }))
+    }]) %}
+  {% endfor %}
+  {{ seo_jsonld(seo_item_list(seoItems)) }}
+{% endblock %}
 
 {% block body %}
 <main class="relative px-6 py-12">

@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — enciclopedia League of Legends"
+  description: "Campioni, obiecte, rune și vrăji de invocator din League of Legends pentru patch-ul %version% — statistici, abilități și detalii în 21 de limbi."
+champion:
+  list:
+    title: "Campionii din League of Legends"
+    description: "Toți cei %count% campioni din League of Legends cu roluri, abilități și poveste — date din patch-ul %version%."
+  detail:
+    title: "%name%, campion LoL"
+    description: "%name% în League of Legends: abilități, skinuri, poveste și sfaturi, actualizat pentru patch-ul %version%."
+item:
+  list:
+    title: "Obiectele din League of Legends"
+    description: "Toate cele %count% obiecte din League of Legends cu cost, statistici și rețete — date din patch-ul %version%."
+  detail:
+    title: "%name%, obiect LoL"
+    description: "%name% în League of Legends: statistici, cost, rețetă și îmbunătățiri, actualizat pentru patch-ul %version%."
+rune:
+  list:
+    title: "Runele din League of Legends"
+    description: "Cele %count% ramuri de rune din League of Legends cu toate runele-cheie și minore — date din patch-ul %version%."
+  detail:
+    title: "%name%, ramură de rune LoL"
+    description: "Ramura de rune %name% din League of Legends: rune-cheie, sloturi și efecte, actualizat pentru patch-ul %version%."
+summoner:
+  list:
+    title: "Vrăjile de invocator din League of Legends"
+    description: "Toate cele %count% vrăji de invocator din League of Legends cu timpi de reîncărcare și efecte — date din patch-ul %version%."
+  detail:
+    title: "%name%, vrajă de invocator LoL"
+    description: "Vraja de invocator %name% din League of Legends: reîncărcare și efecte, actualizat pentru patch-ul %version%."
+donate:
+  title: "Susține proiectul"
+  description: "Ajută League Of Data Base să rămână gratuit și rapid — susține proiectul cu o donație."
+legal:
+  notice:
+    description: "Mențiuni legale League Of Data Base: editor, găzduire și contact."
+  privacy:
+    description: "Politica de confidențialitate League Of Data Base: date prelucrate, scopuri și drepturile tale."
+  terms:
+    description: "Condițiile de utilizare League Of Data Base."
+  cookies:
+    description: "Politica de cookie-uri League Of Data Base: ce cookie-uri sunt folosite și cum le controlezi."
+error:
+  "404":
+    title: "Pagina nu a fost găsită"
+    eyebrow: "Pierdut în Rift"
+    body: "Această pagină nu există — resursa a fost poate eliminată din patch-ul curent."
+    back_home: "Înapoi la pagina principală"
+  generic:
+    title: "Ceva nu a mers bine"
+    body: "A apărut o eroare neașteptată. Încearcă din nou în câteva momente."
+
+developers:
+  title: "API pentru dezvoltatori"
+  description: "API REST JSON cu plată peste datele comunitare League of Legends: profiluri publice, builduri partajate și tendințe. Nivel gratuit, pachete de credite și abonamente."
+
+trends:
+  title: "Builduri LoL în tendințe"
+  description: "Builduri publice League of Legends clasate după voturile comunității — filtrează după campion și mod de joc."

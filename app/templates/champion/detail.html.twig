@@ -1,14 +1,25 @@
 {# templates/champion/detail.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ champion.name ?? 'Champion' }} - {{ version|default(client.session.version ?? (client.versions|first)) }}{% endblock %}
-{% block meta_description %}
-  {{ 'champion.detail.meta_description'|trans({
-    '%name%': champion.name ?? 'Champion',
-    '%version%': version|default(client.session.version ?? (client.versions|first))
-  }) }}
-{% endblock %}
+{% block title %}{{ seo_title('champion.detail.title'|trans({'%name%': champion.name ?? 'Champion'}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'champion.detail.description'|trans({
+  '%name%': champion.name ?? 'Champion',
+  '%version%': version|default(client.session.version ?? (client.versions|first))
+}, 'seo') }}{% endblock %}
 {% block img %}/preview/champions.png{% endblock %}
+
+{% block structured_data %}
+  {{ seo_jsonld(seo_breadcrumbs([
+    { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+    { name: 'header.navigation.champion'|trans, url: seo_absolute(path('app_champions')) },
+    { name: champion.name ?? '', url: seo_canonical() }
+  ])) }}
+  {{ seo_jsonld(seo_game_character(
+    champion.name ?? '',
+    image is defined and image ? seo_absolute('/' ~ image) : null,
+    champion.blurb|default(null)
+  )) }}
+{% endblock %}
 
 {% block body %}
 {% set selectedVersion = version|default(client.session.version ?? (client.versions|default([])|first)) %}

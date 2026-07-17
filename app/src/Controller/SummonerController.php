@@ -61,10 +61,12 @@ final class SummonerController extends AbstractResourceController
         $sel = $this->pageContext->selection();
 
         try {
-            $image    = $this->summoners->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
+            // Lookup first: an unknown slug must 404 from the dataset alone,
+            // without ever asking the CDN for an image that cannot exist.
             $summoner = $this->summoners->getByName($name, $sel['version'], $sel['lang']);
+            $image    = $this->summoners->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
         } catch (\Throwable $e) {
-            return $this->redirectToHomeWithError($sel, $e);
+            return $this->detailFailure($sel, $e);
         }
 
         return $this->render('summoner/detail.html.twig', [

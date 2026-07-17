@@ -3,13 +3,12 @@
    markup once mounted, so both share the .socket-* styles in profile.css).
    Params:
    - type_label: translated slot label ("Champion", "Objet", …)
-   - favorite:   {storedId: ?string, current: ?{id, name, image}}
-   - compact:    optional — medallion variant for the public card row #}
+   - favorite:   {storedId: ?string, current: ?{id, name, image}} #}
 {% set current = favorite.current %}
 {% set state_class = current
     ? 'hextech-frame hx-corners socket--filled'
     : (favorite.storedId ? 'socket--unavailable' : 'socket--empty') %}
-<div class="socket {{ compact|default(false) ? 'socket--compact ' }}{{ state_class }}">
+<div class="socket {{ state_class }}">
     <span class="socket__type">{{ type_label }}</span>
     {% if current %}
         {% if current.image %}

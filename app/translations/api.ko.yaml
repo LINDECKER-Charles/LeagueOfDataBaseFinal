@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "개발자 API"
+  title: "API 키"
+  back_profile: "프로필로 돌아가기"
+  docs_link: "문서 및 요금"
+  profile_link:
+    label: "개발자 API"
+    manage: "내 API 키 관리"
+  create:
+    title: "아직 API 키가 없습니다"
+    body: "개인 키를 생성하고 공개 API를 호출하세요 — 무료 플랜: 월 500회 요청, 분당 10회."
+    name_label: "키 이름(선택)"
+    name_placeholder: "my-app"
+    submit: "키 만들기"
+  raw:
+    title: "새 API 키"
+    warning: "지금 복사하세요 — 이번 한 번만 표시됩니다. 서버에는 지문만 저장되므로 잃어버린 키는 재발급만 가능합니다."
+    label: "비밀 키"
+    copy: "키 복사"
+    copied: "복사됨!"
+    copy_error: "입력란에서 직접 복사하세요"
+  key:
+    title: "활성 키"
+    label_key: "키"
+    label_name: "이름"
+    label_created: "생성일"
+    label_quota: "월간 사용량"
+    quota_used: "%used% / %quota% 요청"
+    quota_remaining: "이번 달 %remaining% 남음"
+    label_credits: "선불 크레딧"
+    label_rate: "속도 제한"
+    rate_unit: "분당 %rate%회"
+    subscription_active: "구독 활성"
+  actions:
+    regenerate: "키 재발급"
+    regenerate_help: "이 키를 폐기하고 새 비밀 키를 발급합니다 — 플랜, 할당량, 크레딧은 그대로 유지됩니다."
+    revoke: "폐기"
+    revoke_help: "키를 즉시 비활성화합니다(캐시 때문에 API가 최대 1분간 더 받아들일 수 있음)."
+  billing:
+    title: "키 업그레이드"
+    unavailable: "이 서버에서는 결제가 활성화되어 있지 않습니다."
+    packs_title: "크레딧 팩"
+    packs_help: "일회성 결제 — 요청 1,000회당 1 €, 월 할당량 소진 후 사용, 유효기간 12개월. 어떤 팩이든 속도가 최소 분당 60회로 올라갑니다."
+    plans_title: "구독"
+    plans_help: "월 할당량과 속도 제한을 높입니다. 계정당 활성 구독은 1개입니다."
+    buy: "구매"
+    subscribe: "구독"
+    current: "현재"
+    per_month: "/월"
+    per_year: "/년"
+    requests_month: "월 %count%회"
+    requests_once: "%count%회 요청"
+    already_subscribed: "이 키에는 이미 구독이 있습니다. 플랜을 바꾸려면 먼저 현재 구독을 해지한 뒤(Stripe 확인 즉시 무료 플랜으로 전환) 다시 구독하세요."
+  usage:
+    title: "최근 30일"
+    total_month: "이번 달 사용량"
+    day: "일자"
+    requests: "요청"
+    empty: "아직 측정된 사용량이 없습니다 — 첫 API 호출이 1분 이내에 여기에 표시됩니다."
+  status:
+    pack_success: "결제 확인 — 크레딧을 추가하는 중입니다(몇 초)."
+    plan_success: "구독 확인 — 키를 업그레이드하는 중입니다(몇 초)."
+    cancelled: "결제가 취소되었습니다 — 청구된 금액은 없습니다."
+  flash:
+    csrf: "세션이 만료되었습니다. 다시 시도하세요."
+    created: "API 키가 생성되었습니다."
+    regenerated: "키가 재발급되었습니다 — 이전 비밀 키는 더 이상 작동하지 않습니다."
+    revoked: "키가 폐기되었습니다."
+    key_exists: "이미 활성 키가 있습니다."
+    no_key: "활성 키가 없습니다."
+    invalid_offer: "알 수 없는 상품입니다."
+    already_subscribed: "키에 이미 활성 구독이 있습니다 — 다시 구독하기 전에 해지하세요."
+    need_key: "구매 전에 API 키를 먼저 만드세요."
+    stripe_unavailable: "현재 결제를 이용할 수 없습니다."
+    gateway: "결제 서비스에 연결할 수 없습니다. 나중에 다시 시도하세요."
+
+plan:
+  free: "무료"
+  credits: "크레딧"
+  monthly: "월간"
+  monthly_plus: "월간+"
+  annual: "연간"
+  annual_plus: "연간+"
+
+pack:
+  small: "팩 S"
+  medium: "팩 M"
+  large: "팩 L"
+
+product:
+  pack: "LoDB API — 크레딧 %requests%회 요청"
+  plan: "LoDB API — %plan% 플랜"
+
+pricing:
+  offer: "상품"
+  price: "가격"
+  volume: "물량"
+  rate: "속도 제한"
+  validity_note: "크레딧 팩: 요청 1,000회당 1 €, 활성 플랜의 월 할당량 소진 후 사용, 유효기간 12개월. 연간 플랜은 물량을 월 할당량으로 적용하며 연 단위로 청구됩니다."
+
+developers:
+  eyebrow: "개발자"
+  title: "LeagueOfDataBase API"
+  intro: "사이트 커뮤니티 데이터를 다루는 REST JSON API: 공개 소환사 프로필, 공유 빌드, 조회 트렌드. 무료로 시작하고 실제 워크로드에는 유료 플랜을 제공합니다."
+  cta: "키 만들기"
+  cta_hint: "로그인 후 무료 키를 생성하고 API를 호출하기까지 1분이면 충분합니다."
+  docs_pricing: "요금"
+  auth:
+    title: "인증"
+    body: "모든 /v1 요청은 %prefix% 뒤에 16진수 40자가 이어지는 형식의 키를 두 헤더 중 하나로 전달합니다. 서버에는 SHA-256 지문만 저장됩니다: 잃어버린 키는 복구가 아니라 재발급 대상입니다."
+    base_url: "기본 URL(v1, 개발): %url% — 프로덕션 접근은 사이트 도메인(TLS 에지)을 통해 제공될 예정입니다."
+  endpoints:
+    title: "엔드포인트"
+    healthz: "서비스 상태 — 인증이 필요 없는 유일한 경로."
+    profiles: "회원의 공개 프로필: 즐겨찾기와 공개 빌드 수(비공개 프로필은 404)."
+    builds: "챔피언(Data Dragon id)의 공개 빌드, 최신순 — page와 per_page로 페이지네이션(최대 50)."
+    trends: "사이트에서 가장 많이 조회된 항목: 챔피언, 아이템, 룬, 소환사 주문 — range=7d(기본) 또는 30d, 상위 25."
+    usage: "호출 키의 실시간 사용량 — 인증과 속도 제한은 적용되지만 할당량에서는 차감되지 않습니다."
+  quotas:
+    title: "할당량과 속도 제한"
+    quota: "각 요청은 먼저 플랜의 월 할당량에, 그다음 선불 크레딧에 청구됩니다. 둘 다 소진되면 API는 429 quota_exceeded를 반환합니다."
+    rate: "키별 토큰 버킷: 모든 /v1 응답에 X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset이 포함됩니다. 초과 시 429 rate_limited."
+    month: "할당량은 달력 기준 월로 초기화됩니다. 연간 플랜은 물량을 월 할당량으로 적용합니다(월 20,000 또는 60,000회)."
+  errors:
+    title: "오류"
+    body: "모든 오류에 동일한 형식의 응답. 코드: unauthorized(401), forbidden(403, 폐기된 키), not_found(404), rate_limited·quota_exceeded(429), invalid_request(400), internal(500/503)."
+  manage:
+    title: "결제 및 키 관리"
+    body: "키는 프로필에서 생성·관리합니다. 팩과 구독은 Stripe Checkout으로 결제하며 API 자체는 결제 데이터를 다루지 않습니다."

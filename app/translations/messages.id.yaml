@@ -183,7 +183,7 @@ footer:
   project:
     title: "Proyek"
     version: "Versi: Beta 2.0"
-    updated: "Diperbarui: 03/08/2025"
+    updated: "Diperbarui: 17/07/2026"
 
   contact:
     title: "Kontak"
@@ -211,3 +211,103 @@ header:
     item: "Item"
     runes: "Rune"
     summoner: "Summoner Spell"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "atau"
+  google:
+    cta: "Lanjutkan dengan Google"
+    unavailable: "Login Google belum dikonfigurasi di server ini."
+    failed: "Login Google gagal. Silakan coba lagi."
+  register:
+    password: "Kata sandi"
+    password_confirm: "Konfirmasi kata sandi"
+    password_mismatch: "Kedua kata sandi tidak cocok."
+    password_help: "Minimal 12 karakter, dengan huruf kecil, huruf besar, angka, dan karakter khusus."
+  password:
+    rule_length: "Minimal 12 karakter"
+    rule_lowercase: "Minimal satu huruf kecil"
+    rule_uppercase: "Minimal satu huruf besar"
+    rule_digit: "Minimal satu angka"
+    rule_special: "Minimal satu karakter khusus"
+    rule_match: "Kedua kata sandi cocok"
+    too_common: "Kata sandi ini terlalu umum. Pilih yang lebih unik."
+  flash:
+    banned: "Akun ini telah ditangguhkan oleh tim moderasi."
+
+profile:
+  identity:
+    title: "Identitas summoner"
+    username: "Nama summoner"
+    tag: "Tag Riot"
+    tag_help: "Opsional: bagian setelah # pada Riot ID kamu — untuk GG#EUW, masukkan EUW."
+    url_warning: "Mengubah nama summoner juga mengubah alamat profil publikmu."
+    submit: "Perbarui identitas"
+    username_taken: "Nama summoner ini sudah dipakai."
+    username_invalid: "Nama summoner tidak valid: 3–24 karakter (huruf, angka, titik, tanda hubung, garis bawah), diawali huruf atau angka."
+    tag_invalid: "Tag Riot tidak valid: 3–5 huruf atau angka."
+  password:
+    title: "Atur kata sandi"
+    help: "Akunmu saat ini hanya masuk lewat Google. Atur kata sandi agar bisa masuk juga dengan email."
+    submit: "Atur kata sandi"
+  danger:
+    help_no_password: "Menghapus akun bersifat permanen: favorit dan build akan dihapus."
+  flash:
+    identity_saved: "Identitas summoner diperbarui."
+    password_set: "Kata sandi diatur — sekarang kamu juga bisa masuk dengan email."
+    password_exists: "Akun ini sudah memiliki kata sandi."
+
+build:
+  mode:
+    sr: "Summoner's Rift"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Arena"
+  editor:
+    ghost_mode: "Tidak tersedia di mode permainan ini"
+    context:
+      title: "Konteks permainan"
+      version: "Patch"
+      mode: "Mode permainan"
+      mode_hint: "Ketersediaan item mengikuti mode yang dipilih. Item yang sudah dipasang tidak pernah dihapus — hanya ditandai."
+    dnd:
+      handle: "Seret untuk mengurutkan ulang"
+      moved_step: "Langkah dipindahkan ke posisi %position%"
+      moved_item: "Item dipindahkan ke posisi %position%"
+      transferred: "Item dipindahkan ke langkah %step%"
+      added: "Item ditambahkan ke langkah %step%"
+      cancelled: "Pemindahan dibatalkan"
+  show:
+    mode: "Mode permainan"
+    patch_current: "Ditempa pada patch %version% — saat ini: %current%"
+  error:
+    version:
+      unknown: "Versi permainan tidak dikenal."
+    mode:
+      unknown: "Mode permainan tidak dikenal."
+    steps:
+      item_mode: "Tidak tersedia di mode permainan yang dipilih: %items%."
+
+community:
+  nav:
+    trends: "Tren"
+  trends:
+    eyebrow: "Denyut komunitas"
+    title: "Build yang sedang tren"
+    filter:
+      champion: "Champion"
+      mode: "Mode permainan"
+      all_champions: "Semua champion"
+      all_modes: "Semua mode"
+      apply: "Filter"
+    empty: "Tidak ada build publik yang cocok dengan filter ini — tempa build-mu sendiri."
+    empty_cta: "Tempa build-ku"
+  vote:
+    up: "Dukung build ini"
+    down: "Tolak build ini"
+    score_label: "Skor komunitas"
+    login: "Masuk untuk memberi suara"
+    invalid: "Suara tidak valid."
+  supporter:
+    badge: "Pendukung"

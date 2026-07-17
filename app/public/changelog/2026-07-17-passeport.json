@@ -1,0 +1,33 @@
+{
+  "id": "2026-07-17-passeport",
+  "version": "1.2.0",
+  "codename": "Passeport",
+  "date": "2026-07-17",
+  "type": "minor",
+  "title": "LeagueOfDataBase 1.2.0 — Passeport",
+  "summary": "Confirmez votre e-mail, réinitialisez un mot de passe oublié, ou connectez-vous en un clic avec Google.",
+  "intro": "Passeport lisse l'entrée dans le site. À l'inscription, un e-mail confirme votre adresse ; en cas d'oubli, un vrai parcours de réinitialisation vous rend la main. Et pour aller au plus vite, un bouton « Continuer avec Google » crée ou rattache votre compte en un clic. Les e-mails du site adoptent au passage l'identité visuelle Hextech.",
+  "stats": { "fixes": 0, "cards": 2 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "✉",
+      "tag": "Compte",
+      "title": "E-mail confirmé, mot de passe récupérable",
+      "description": "Un e-mail de confirmation à l'inscription (lien valable 1 h) et un vrai parcours « mot de passe oublié » à usage unique. Les deux e-mails adoptent l'identité Hextech, soignés sur mobile comme sur ordinateur."
+    },
+    {
+      "kind": "feature",
+      "glyph": "◉",
+      "tag": "Connexion",
+      "title": "Continuer avec Google",
+      "description": "Un bouton sobre crée votre compte instantanément ou le rattache à un compte existant au même e-mail vérifié. Les comptes Google peuvent définir un mot de passe pour se connecter aussi de façon classique."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "Prouver la propriété d'une adresse limite les comptes jetables et le spam de contenu public, sans jamais vous barrer la route : tant que l'e-mail n'est pas confirmé, seule la création de builds attend. Le rattachement Google n'opère que si l'adresse est certifiée vérifiée — une petite précaution anti-usurpation qui compte.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

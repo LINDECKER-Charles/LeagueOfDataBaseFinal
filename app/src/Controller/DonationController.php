@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
@@ -20,9 +21,10 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Donation flow backed by Stripe Checkout — no account, no local persistence:
- * the Stripe dashboard is the source of truth. Extends the resource base so
- * pages provide the `client` view-model base.html.twig relies on.
+ * Donation flow backed by Stripe Checkout — works without an account; when the
+ * donor IS signed in, the session carries their user id so the webhook can
+ * record the donation and grant the supporter badge. Extends the resource base
+ * so pages provide the `client` view-model base.html.twig relies on.
  */
 final class DonationController extends AbstractResourceController
 {
@@ -110,12 +112,18 @@ final class DonationController extends AbstractResourceController
     /** @return array<string, mixed> */
     private function buildParams(int $amountCents): array
     {
-        return CheckoutSessionParams::build(
+        $params = CheckoutSessionParams::build(
             $amountCents,
             $this->translator->trans('donate.product_name'),
             $this->generateUrl('app_donate_success', [], UrlGeneratorInterface::ABSOLUTE_URL),
             $this->generateUrl('app_donate_cancel', [], UrlGeneratorInterface::ABSOLUTE_URL),
         );
+
+        $user = $this->getUser();
+
+        return $user instanceof User && $user->getId() !== null
+            ? CheckoutSessionParams::forDonor($params, $user->getId())
+            : $params;
     }
 
     private function rejectToDonate(string $messageKey): RedirectResponse

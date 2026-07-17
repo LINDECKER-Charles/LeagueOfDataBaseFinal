@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { RunePerk, RuneTree } from './catalogTypes'
 import { GHOST_SLOT, KEYSTONE_SLOT, type RuneDraft } from './runeRules'
-import type { RunesLabels, UiLabels } from './useBuildEditor'
+import type { RunesLabels, UiLabels } from './editorLabels'
 
 /**
  * Rune section: primary tree tabs -> 4 perk rows (keystone highlighted), then

@@ -1,0 +1,23 @@
+{# A single suspended favorite orb of the profile hero — decorative, animated
+   idle. Rendered only for a set favorite (the caller filters).
+   Params:
+   - favorite:   {current: {name, image}}
+   - pos_class:  scatter-position modifier (profile-orb--p1..p4)
+   - primary:    optional — larger orb for the headline favorite (champion)
+   - type_label: translated slot label (tooltip only) #}
+{% set current = favorite.current %}
+<div class="profile-orb {{ pos_class }} {{ primary|default(false) ? 'profile-orb--primary' }}"
+     title="{{ type_label }} · {{ current.name }}">
+    <span class="profile-orb__disc">
+        {% if current.image %}
+            <picture>
+                {% if current.image ends with '.png' %}
+                    <source srcset="{{ current.image|replace({'.png': '.webp'}) }}" type="image/webp">
+                {% endif %}
+                <img src="{{ current.image }}" alt="{{ current.name }}" loading="lazy" decoding="async">
+            </picture>
+        {% else %}
+            <span class="profile-orb__initials" aria-hidden="true">{{ current.name|slice(0, 2)|upper }}</span>
+        {% endif %}
+    </span>
+</div>

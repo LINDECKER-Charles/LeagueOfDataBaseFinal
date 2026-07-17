@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "API developer"
+  title: "Kunci API"
+  back_profile: "Kembali ke profil"
+  docs_link: "Dokumentasi & harga"
+  profile_link:
+    label: "API developer"
+    manage: "Kelola kunci API saya"
+  create:
+    title: "Belum ada kunci API"
+    body: "Buat kunci pribadimu dan panggil API publik — paket gratis: 500 permintaan per bulan, 10 per menit."
+    name_label: "Nama kunci (opsional)"
+    name_placeholder: "aplikasiku"
+    submit: "Buat kunci saya"
+  raw:
+    title: "Kunci API barumu"
+    warning: "Salin sekarang — hanya ditampilkan sekali ini. Kami hanya menyimpan sidik jarinya: kunci yang hilang hanya bisa dibuat ulang."
+    label: "Kunci rahasia"
+    copy: "Salin kunci"
+    copied: "Tersalin!"
+    copy_error: "Salin manual dari kolom"
+  key:
+    title: "Kunci aktif"
+    label_key: "Kunci"
+    label_name: "Nama"
+    label_created: "Dibuat"
+    label_quota: "Pemakaian bulanan"
+    quota_used: "%used% / %quota% permintaan"
+    quota_remaining: "%remaining% tersisa bulan ini"
+    label_credits: "Kredit prabayar"
+    label_rate: "Batas laju"
+    rate_unit: "%rate% req/menit"
+    subscription_active: "Langganan aktif"
+  actions:
+    regenerate: "Buat ulang kunci"
+    regenerate_help: "Mencabut kunci ini dan menerbitkan rahasia baru — paket, kuota, dan kredit tetap dibawa."
+    revoke: "Cabut"
+    revoke_help: "Menonaktifkan kunci seketika (API mungkin masih menerimanya hingga satu menit karena cache)."
+  billing:
+    title: "Tingkatkan kuncimu"
+    unavailable: "Pembayaran tidak diaktifkan di server ini."
+    packs_title: "Paket kredit"
+    packs_help: "Pembayaran sekali — 1 € per 1.000 permintaan, dipakai setelah kuota bulanan, berlaku 12 bulan. Paket apa pun menaikkan laju minimal ke 60 req/menit."
+    plans_title: "Langganan"
+    plans_help: "Menaikkan kuota bulanan dan batas laju. Satu langganan aktif per akun."
+    buy: "Beli"
+    subscribe: "Berlangganan"
+    current: "Saat ini"
+    per_month: "/bulan"
+    per_year: "/tahun"
+    requests_month: "%count% req/bulan"
+    requests_once: "%count% permintaan"
+    already_subscribed: "Kuncimu sudah punya langganan. Untuk ganti paket, batalkan dulu yang sekarang (kembali ke paket gratis berlaku begitu Stripe mengonfirmasi), lalu berlangganan lagi."
+  usage:
+    title: "30 hari terakhir"
+    total_month: "Dipakai bulan ini"
+    day: "Hari"
+    requests: "Permintaan"
+    empty: "Belum ada pemakaian terukur — panggilan API pertamamu akan muncul di sini dalam semenit."
+  status:
+    pack_success: "Pembayaran dikonfirmasi — kreditmu sedang ditambahkan (beberapa detik)."
+    plan_success: "Langganan dikonfirmasi — kuncimu sedang ditingkatkan (beberapa detik)."
+    cancelled: "Pembayaran dibatalkan — tidak ada yang ditagih."
+  flash:
+    csrf: "Sesi kedaluwarsa, silakan coba lagi."
+    created: "Kunci API dibuat."
+    regenerated: "Kunci dibuat ulang — rahasia sebelumnya tidak berlaku lagi."
+    revoked: "Kunci dicabut."
+    key_exists: "Kamu sudah punya kunci aktif."
+    no_key: "Kamu tidak punya kunci aktif."
+    invalid_offer: "Penawaran tidak dikenal."
+    already_subscribed: "Sudah ada langganan aktif di kuncimu — batalkan sebelum berlangganan lagi."
+    need_key: "Buat kunci API sebelum membeli."
+    stripe_unavailable: "Pembayaran sedang tidak tersedia."
+    gateway: "Layanan pembayaran tidak dapat dihubungi, coba lagi nanti."
+
+plan:
+  free: "Gratis"
+  credits: "Kredit"
+  monthly: "Bulanan"
+  monthly_plus: "Bulanan+"
+  annual: "Tahunan"
+  annual_plus: "Tahunan+"
+
+pack:
+  small: "Paket S"
+  medium: "Paket M"
+  large: "Paket L"
+
+product:
+  pack: "LoDB API — kredit %requests% permintaan"
+  plan: "LoDB API — paket %plan%"
+
+pricing:
+  offer: "Penawaran"
+  price: "Harga"
+  volume: "Volume"
+  rate: "Batas laju"
+  validity_note: "Paket kredit: 1 € per 1.000 permintaan, dipakai setelah kuota bulanan paket aktif, berlaku 12 bulan. Paket tahunan membawa volumenya sebagai kuota bulanan, ditagih per tahun."
+
+developers:
+  eyebrow: "Developer"
+  title: "API LeagueOfDataBase"
+  intro: "API REST JSON di atas data komunitas situs: profil summoner publik, build yang dibagikan, dan tren kunjungan. Gratis untuk dicoba, dihargai untuk beban nyata."
+  cta: "Buat kunci saya"
+  cta_hint: "Masuk, buat kunci gratis, panggil API — kurang dari satu menit."
+  docs_pricing: "Harga"
+  auth:
+    title: "Autentikasi"
+    body: "Setiap permintaan /v1 membawa kuncimu — format %prefix% diikuti 40 karakter heksadesimal — di salah satu dari dua header. Server hanya menyimpan sidik jari SHA-256-nya: kunci yang hilang dibuat ulang, tidak pernah dipulihkan."
+    base_url: "URL dasar (v1, pengembangan): %url% — akses produksi akan dibuka lewat domain situs (TLS edge)."
+  endpoints:
+    title: "Endpoint"
+    healthz: "Status layanan — satu-satunya rute tanpa autentikasi."
+    profiles: "Profil publik seorang anggota: favorit dan jumlah build publik (404 jika profil privat)."
+    builds: "Build publik sebuah champion (id Data Dragon), dari terbaru — dipaginasi lewat page dan per_page (maks. 50)."
+    trends: "Entitas paling banyak dilihat di situs: champion, item, rune, atau summoner spell — range=7d (bawaan) atau 30d, 25 teratas."
+    usage: "Pemakaian langsung kunci pemanggil — terautentikasi dan dibatasi laju, tapi tidak pernah dihitung ke kuota."
+  quotas:
+    title: "Kuota & batas laju"
+    quota: "Tiap permintaan dibebankan dulu ke kuota bulanan paketmu, lalu ke kredit prabayar; jika keduanya habis, API menjawab 429 quota_exceeded."
+    rate: "Token bucket per kunci: tiap respons /v1 membawa X-RateLimit-Limit, X-RateLimit-Remaining, dan X-RateLimit-Reset; melebihi batas, 429 rate_limited."
+    month: "Kuota direset mengikuti bulan kalender. Paket tahunan membawa volumenya sebagai kuota bulanan (20.000 atau 60.000 permintaan per bulan)."
+  errors:
+    title: "Kesalahan"
+    body: "Amplop seragam di semua kesalahan. Kode: unauthorized (401), forbidden (403, kunci dicabut), not_found (404), rate_limited dan quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Penagihan & pengelolaan kunci"
+    body: "Kunci dibuat dan dikelola dari profilmu; paket dan langganan dibayar lewat Stripe Checkout — API-nya sendiri tidak pernah menyentuh data pembayaran."

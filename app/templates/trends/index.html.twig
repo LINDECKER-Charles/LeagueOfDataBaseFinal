@@ -1,0 +1,159 @@
+{% extends 'base.html.twig' %}
+
+{# Community trends — every PUBLIC build ranked by net vote score. Fully
+   server-rendered (indexable); only the vote widget hydrates as an island.
+   Filter/pagination state lives in the query string. #}
+
+{% block title %}{{ seo_title('trends.title'|trans({}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'trends.description'|trans({}, 'seo') }}{% endblock %}
+
+{% set baseQuery = {} %}
+{% if filters.champion %}{% set baseQuery = baseQuery|merge({ champion: filters.champion }) %}{% endif %}
+{% if filters.mode %}{% set baseQuery = baseQuery|merge({ mode: filters.mode }) %}{% endif %}
+
+{% block body %}
+<main class="relative px-6 py-12">
+  {% include 'partials/main/gradient.html.twig' %}
+
+  <div class="relative mx-auto max-w-5xl">
+    <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="eyebrow">{{ 'community.trends.eyebrow'|trans }}</p>
+        <h1 class="mt-2 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad sm:text-4xl">
+          {{ 'community.trends.title'|trans }}
+        </h1>
+      </div>
+      <span class="hx-chip">{{ 'filter.results'|trans({'%count%': total}) }}</span>
+    </header>
+    <hr class="hx-rule mb-8">
+
+    {# ---- Filters — plain GET form, no JS required ---------------------- #}
+    <form method="get" action="{{ path('app_trends') }}" class="trend-filters">
+      <label class="trend-filters__field">
+        <span class="trend-filters__label">{{ 'community.trends.filter.champion'|trans }}</span>
+        <select name="champion" class="hx-select">
+          <option value="">{{ 'community.trends.filter.all_champions'|trans }}</option>
+          {% for option in championOptions %}
+            <option value="{{ option.id }}" {{ filters.champion == option.id ? 'selected' }}>{{ option.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="trend-filters__field">
+        <span class="trend-filters__label">{{ 'community.trends.filter.mode'|trans }}</span>
+        <select name="mode" class="hx-select">
+          <option value="">{{ 'community.trends.filter.all_modes'|trans }}</option>
+          {% for gameMode in gameModes %}
+            <option value="{{ gameMode.value }}" {{ filters.mode == gameMode.value ? 'selected' }}>{{ gameMode.labelKey|trans }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit" class="hx-btn-ghost trend-filters__submit">{{ 'community.trends.filter.apply'|trans }}</button>
+    </form>
+
+    {% if rows is empty %}
+      {# Inviting empty state: no result for this filter → forge yours. #}
+      <div class="hextech-frame mt-8 p-10 text-center">
+        <p class="eyebrow mb-3">{{ 'community.trends.title'|trans }}</p>
+        <p class="mx-auto max-w-md text-sm text-text-muted">{{ 'community.trends.empty'|trans }}</p>
+        <div class="mt-6">
+          <a href="{{ path('app_build_new') }}" class="hx-btn">{{ 'community.trends.empty_cta'|trans }}</a>
+        </div>
+      </div>
+    {% else %}
+      <ol class="trend-list mt-8">
+        {% for row in rows %}
+          {% set build = row.build %}
+          <li class="hextech-frame hextech-frame-hover trend-row">
+            {% include 'components/_vote_score.html.twig' with {
+              build: build, score: row.score, myVote: row.myVote
+            } only %}
+
+            <a href="{{ path('app_build_show', { token: build.shareToken }) }}" class="trend-row__id">
+              <span class="forge-row__portrait {{ row.champion.missing ? 'forge-ghost' }}">
+                {% if row.champion.image %}
+                  <picture>
+                    {% if row.champion.image ends with '.png' %}
+                      <source srcset="/{{ row.champion.image|replace({'.png': '.webp'}) }}" type="image/webp">
+                    {% endif %}
+                    <img src="/{{ row.champion.image }}" alt="{{ row.champion.name }}" width="56" height="56" loading="lazy" decoding="async">
+                  </picture>
+                {% else %}
+                  <span class="forge-row__initials">{{ row.champion.name|slice(0, 2)|upper }}</span>
+                {% endif %}
+                {% if row.keystone.icon %}
+                  <img class="forge-row__keystone" src="/{{ row.keystone.icon }}" alt="{{ row.keystone.name }}" width="26" height="26" loading="lazy" decoding="async">
+                {% endif %}
+              </span>
+              <span class="min-w-0">
+                <span class="block truncate font-beaufort text-lg tracking-wide text-gold-bright">{{ build.name }}</span>
+                <span class="block truncate font-mono text-xs text-text-muted">{{ row.champion.name }}</span>
+              </span>
+            </a>
+
+            <div class="trend-row__meta">
+              <p class="trend-row__author">
+                {% if build.owner.publicProfile %}
+                  <a class="nav-link text-gold" href="{{ path('app_profile_public', { username: build.owner.username }) }}">
+                    {{ 'build.show.by'|trans({'%name%': build.owner.displayName}) }}
+                  </a>
+                {% else %}
+                  <span>{{ 'build.show.by'|trans({'%name%': build.owner.displayName}) }}</span>
+                {% endif %}
+                {% if build.owner.isSupporter %}{% include 'components/_supporter_badge.html.twig' %}{% endif %}
+              </p>
+              <p class="trend-row__chips">
+                <span class="hx-chip">{{ ('build.mode.' ~ build.gameMode.value)|trans }}</span>
+                {% if build.gameVersion %}<span class="hx-chip">{{ build.gameVersion }}</span>{% endif %}
+              </p>
+            </div>
+
+            {% if row.items is not empty %}
+              <ul class="trend-row__items" aria-hidden="true">
+                {% for item in row.items %}
+                  <li class="bshare-item trend-row__item {{ item.missing ? 'forge-ghost' }}" title="{{ item.missing ? 'build.show.missing'|trans : item.name }}">
+                    {% if item.image %}
+                      <picture>
+                        {% if item.image ends with '.png' %}
+                          <source srcset="/{{ item.image|replace({'.png': '.webp'}) }}" type="image/webp">
+                        {% endif %}
+                        <img src="/{{ item.image }}" alt="" width="32" height="32" loading="lazy" decoding="async">
+                      </picture>
+                    {% else %}
+                      <span class="bshare-item__fallback">{{ item.name|slice(0, 2) }}</span>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+
+      {# ---- Pagination — mirrors the list-filter prev/next grammar -------- #}
+      {% if pages > 1 %}
+        <nav class="trend-pager" aria-label="{{ 'community.trends.title'|trans }}">
+          {% if page > 1 %}
+            <a class="trend-pager__nav" href="{{ path('app_trends', baseQuery|merge({ page: page - 1 })) }}" rel="prev" aria-label="{{ 'filter.prev'|trans }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+            </a>
+          {% else %}
+            <span class="trend-pager__nav trend-pager__nav--off" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+            </span>
+          {% endif %}
+          <span class="font-mono text-xs text-text-muted">{{ page }} / {{ pages }}</span>
+          {% if page < pages %}
+            <a class="trend-pager__nav" href="{{ path('app_trends', baseQuery|merge({ page: page + 1 })) }}" rel="next" aria-label="{{ 'filter.next'|trans }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </a>
+          {% else %}
+            <span class="trend-pager__nav trend-pager__nav--off" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </span>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

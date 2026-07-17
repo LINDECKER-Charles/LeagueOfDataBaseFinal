@@ -183,7 +183,7 @@ footer:
   project:
     title: "Projekt"
     version: "Verzió: Beta 2.0"
-    updated: "Frissítve: 03/08/2025"
+    updated: "Frissítve: 17/07/2026"
 
   contact:
     title: "Kapcsolat"
@@ -211,3 +211,103 @@ header:
     item: "Tárgyak"
     runes: "Rúnák"
     summoner: "Idéző varázslatok"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "vagy"
+  google:
+    cta: "Folytatás Google-fiókkal"
+    unavailable: "A Google-bejelentkezés nincs beállítva ezen a szerveren."
+    failed: "A Google-bejelentkezés nem sikerült. Próbáld újra."
+  register:
+    password: "Jelszó"
+    password_confirm: "Jelszó megerősítése"
+    password_mismatch: "A két jelszó nem egyezik."
+    password_help: "Legalább 12 karakter, kisbetűvel, nagybetűvel, számjeggyel és speciális karakterrel."
+  password:
+    rule_length: "Legalább 12 karakter"
+    rule_lowercase: "Legalább egy kisbetű"
+    rule_uppercase: "Legalább egy nagybetű"
+    rule_digit: "Legalább egy számjegy"
+    rule_special: "Legalább egy speciális karakter"
+    rule_match: "A két jelszó egyezik"
+    too_common: "Ez a jelszó túl gyakori. Válassz egyedibbet."
+  flash:
+    banned: "Ezt a fiókot a moderátorcsapat felfüggesztette."
+
+profile:
+  identity:
+    title: "Idéző-identitás"
+    username: "Idézőnév"
+    tag: "Riot-címke"
+    tag_help: "Opcionális: a Riot ID # utáni része — a GG#EUW esetén írd be: EUW."
+    url_warning: "Az idézőnév megváltoztatása a nyilvános profilod címét is megváltoztatja."
+    submit: "Identitás frissítése"
+    username_taken: "Ez az idézőnév már foglalt."
+    username_invalid: "Érvénytelen idézőnév: 3–24 karakter (betűk, számjegyek, pont, kötőjel, aláhúzás), betűvel vagy számjeggyel kezdődik."
+    tag_invalid: "Érvénytelen Riot-címke: 3–5 betű vagy számjegy."
+  password:
+    title: "Jelszó beállítása"
+    help: "A fiókod jelenleg csak Google-lal jelentkezik be. Állíts be jelszót, hogy e-maillel is bejelentkezhess."
+    submit: "Jelszó beállítása"
+  danger:
+    help_no_password: "A fiók törlése végleges: a kedvencek és buildek törlődnek."
+  flash:
+    identity_saved: "Idéző-identitás frissítve."
+    password_set: "Jelszó beállítva — mostantól e-maillel is bejelentkezhetsz."
+    password_exists: "Ehhez a fiókhoz már tartozik jelszó."
+
+build:
+  mode:
+    sr: "Idézők szurdoka"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Aréna"
+  editor:
+    ghost_mode: "Ebben a játékmódban nem érhető el"
+    context:
+      title: "Játékkörnyezet"
+      version: "Patch"
+      mode: "Játékmód"
+      mode_hint: "A tárgyak elérhetősége a kiválasztott módtól függ. A már elhelyezett tárgyak sosem törlődnek — csak megjelölést kapnak."
+    dnd:
+      handle: "Húzd az átrendezéshez"
+      moved_step: "Lépés a(z) %position%. helyre került"
+      moved_item: "Tárgy a(z) %position%. helyre került"
+      transferred: "Tárgy a(z) %step%. lépésbe került"
+      added: "Tárgy hozzáadva a(z) %step%. lépéshez"
+      cancelled: "Áthelyezés megszakítva"
+  show:
+    mode: "Játékmód"
+    patch_current: "A(z) %version% patchen készült — jelenlegi: %current%"
+  error:
+    version:
+      unknown: "Ismeretlen játékverzió."
+    mode:
+      unknown: "Ismeretlen játékmód."
+    steps:
+      item_mode: "A kiválasztott játékmódban nem érhető el: %items%."
+
+community:
+  nav:
+    trends: "Trendek"
+  trends:
+    eyebrow: "A közösség pulzusa"
+    title: "Felkapott buildek"
+    filter:
+      champion: "Hős"
+      mode: "Játékmód"
+      all_champions: "Minden hős"
+      all_modes: "Minden mód"
+      apply: "Szűrés"
+    empty: "Egy nyilvános build sem felel meg ennek a szűrőnek — kovácsold ki a sajátod."
+    empty_cta: "Saját build kovácsolása"
+  vote:
+    up: "Szavazás e build mellett"
+    down: "Szavazás e build ellen"
+    score_label: "Közösségi pontszám"
+    login: "Szavazáshoz jelentkezz be"
+    invalid: "Érvénytelen szavazat."
+  supporter:
+    badge: "Támogató"

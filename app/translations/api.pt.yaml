@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "API para desenvolvedores"
+  title: "Chaves de API"
+  back_profile: "Voltar ao perfil"
+  docs_link: "Documentação e preços"
+  profile_link:
+    label: "API para desenvolvedores"
+    manage: "Gerenciar minha chave de API"
+  create:
+    title: "Ainda sem chave de API"
+    body: "Gere sua chave pessoal e chame a API pública — plano gratuito: 500 requisições por mês, 10 por minuto."
+    name_label: "Nome da chave (opcional)"
+    name_placeholder: "meu-app"
+    submit: "Criar minha chave"
+  raw:
+    title: "Sua nova chave de API"
+    warning: "Copie agora — ela é exibida apenas desta vez. Só guardamos uma impressão digital: uma chave perdida só pode ser regenerada."
+    label: "Chave secreta"
+    copy: "Copiar a chave"
+    copied: "Copiada!"
+    copy_error: "Copie manualmente do campo"
+  key:
+    title: "Chave ativa"
+    label_key: "Chave"
+    label_name: "Nome"
+    label_created: "Criada em"
+    label_quota: "Consumo mensal"
+    quota_used: "%used% / %quota% requisições"
+    quota_remaining: "%remaining% restantes neste mês"
+    label_credits: "Créditos pré-pagos"
+    label_rate: "Limite de taxa"
+    rate_unit: "%rate% req/min"
+    subscription_active: "Assinatura ativa"
+  actions:
+    regenerate: "Regenerar a chave"
+    regenerate_help: "Revoga esta chave e emite um novo segredo — plano, cota e créditos são mantidos."
+    revoke: "Revogar"
+    revoke_help: "Desativa a chave imediatamente (a API ainda pode aceitá-la por até um minuto de cache)."
+  billing:
+    title: "Turbine sua chave"
+    unavailable: "Os pagamentos não estão habilitados neste servidor."
+    packs_title: "Pacotes de créditos"
+    packs_help: "Pagamento único — 1 € a cada 1 000 requisições, gastas após sua cota mensal, válidas por 12 meses. Qualquer pacote eleva sua taxa a no mínimo 60 req/min."
+    plans_title: "Assinaturas"
+    plans_help: "Aumentam a cota mensal e o limite de taxa. Uma única assinatura ativa por conta."
+    buy: "Comprar"
+    subscribe: "Assinar"
+    current: "Atual"
+    per_month: "/mês"
+    per_year: "/ano"
+    requests_month: "%count% req/mês"
+    requests_once: "%count% requisições"
+    already_subscribed: "Sua chave já carrega uma assinatura. Para trocar de plano, cancele primeiro a atual (a volta ao plano gratuito vale assim que a Stripe confirmar) e assine de novo."
+  usage:
+    title: "Últimos 30 dias"
+    total_month: "Consumido neste mês"
+    day: "Dia"
+    requests: "Requisições"
+    empty: "Nenhum consumo medido ainda — suas primeiras chamadas aparecerão aqui em menos de um minuto."
+  status:
+    pack_success: "Pagamento confirmado — seus créditos estão sendo adicionados (alguns segundos)."
+    plan_success: "Assinatura confirmada — sua chave está sendo atualizada (alguns segundos)."
+    cancelled: "Pagamento cancelado — nada foi cobrado."
+  flash:
+    csrf: "Sessão expirada, tente novamente."
+    created: "Chave de API criada."
+    regenerated: "Chave regenerada — o segredo anterior não funciona mais."
+    revoked: "Chave revogada."
+    key_exists: "Você já tem uma chave ativa."
+    no_key: "Você não tem nenhuma chave ativa."
+    invalid_offer: "Oferta desconhecida."
+    already_subscribed: "Já existe uma assinatura ativa na sua chave — cancele-a antes de assinar de novo."
+    need_key: "Crie sua chave de API antes de comprar."
+    stripe_unavailable: "Os pagamentos estão indisponíveis no momento."
+    gateway: "O serviço de pagamento não responde, tente mais tarde."
+
+plan:
+  free: "Gratuito"
+  credits: "Créditos"
+  monthly: "Mensal"
+  monthly_plus: "Mensal+"
+  annual: "Anual"
+  annual_plus: "Anual+"
+
+pack:
+  small: "Pacote S"
+  medium: "Pacote M"
+  large: "Pacote L"
+
+product:
+  pack: "API LoDB — %requests% requisições em créditos"
+  plan: "API LoDB — plano %plan%"
+
+pricing:
+  offer: "Oferta"
+  price: "Preço"
+  volume: "Volume"
+  rate: "Limite de taxa"
+  validity_note: "Pacotes de créditos: 1 € a cada 1 000 requisições, gastas após a cota mensal do plano ativo, válidas por 12 meses. Os planos anuais carregam seu volume como cota mensal, cobrada por ano."
+
+developers:
+  eyebrow: "Desenvolvedores"
+  title: "A API do LeagueOfDataBase"
+  intro: "Uma API REST JSON sobre os dados comunitários do site: perfis públicos de invocador, builds compartilhadas e tendências de consulta. Grátis para testar, com preços para cargas reais."
+  cta: "Criar minha chave"
+  cta_hint: "Entre, gere a chave gratuita e chame a API — em menos de um minuto."
+  docs_pricing: "Preços"
+  auth:
+    title: "Autenticação"
+    body: "Cada requisição /v1 leva sua chave — formato %prefix% seguido de 40 caracteres hexadecimais — em um de dois cabeçalhos. No servidor só é guardada sua impressão SHA-256: uma chave perdida se regenera, nunca se recupera."
+    base_url: "URL base (v1, desenvolvimento): %url% — o acesso em produção será exposto pelo domínio do site (edge TLS)."
+  endpoints:
+    title: "Endpoints"
+    healthz: "Estado do serviço — a única rota sem autenticação."
+    profiles: "Perfil público de um membro: favoritos e número de builds públicas (404 se o perfil for privado)."
+    builds: "Builds públicas de um campeão (id do Data Dragon), da mais recente — paginado com page e per_page (máx. 50)."
+    trends: "Entidades mais consultadas do site: campeões, itens, runas ou feitiços de invocador — range=7d (padrão) ou 30d, top 25."
+    usage: "Consumo ao vivo da chave chamadora — autenticado e com limite de taxa, mas nunca descontado da cota."
+  quotas:
+    title: "Cotas e limite de taxa"
+    quota: "Cada requisição é debitada da cota mensal do seu plano e depois dos créditos pré-pagos; esgotados os dois, a API responde 429 quota_exceeded."
+    rate: "Token bucket por chave: cada resposta /v1 traz X-RateLimit-Limit, X-RateLimit-Remaining e X-RateLimit-Reset; acima do limite, 429 rate_limited."
+    month: "As cotas reiniciam com o mês do calendário. Os planos anuais carregam seu volume como cota mensal (20 000 ou 60 000 requisições por mês)."
+  errors:
+    title: "Erros"
+    body: "Envelope uniforme em todos os erros. Códigos: unauthorized (401), forbidden (403, chave revogada), not_found (404), rate_limited e quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Cobrança e gestão de chaves"
+    body: "As chaves são criadas e geridas no seu perfil; pacotes e assinaturas são pagos via Stripe Checkout — a própria API nunca toca em dados de pagamento."

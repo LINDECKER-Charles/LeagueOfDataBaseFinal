@@ -3,13 +3,15 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Picker;
 
+use App\Service\Picker\GameMode;
 use App\Service\Picker\ItemOptionsProjector;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Item options are shop-filtered (purchasable, Summoner's Rift, not hidden,
- * not champion-bound), string-id'd despite PHP's int map keys, and `from`
- * deduplicated. Resolution stays presence-based (unfiltered).
+ * Item options are shop-filtered (purchasable, playable on the requested
+ * mode's map — Summoner's Rift by default —, not hidden, not champion-bound),
+ * string-id'd despite PHP's int map keys, and `from` deduplicated. Resolution
+ * stays presence-based (unfiltered).
  */
 final class ItemOptionsProjectorTest extends TestCase
 {
@@ -48,7 +50,7 @@ final class ItemOptionsProjectorTest extends TestCase
             3070 => [
                 'name' => 'Aram Only',
                 'gold' => ['total' => 400, 'purchasable' => true],
-                'maps' => [11 => false],
+                'maps' => [11 => false, 12 => true],
             ],
             7013 => [
                 'name' => 'Hidden Ornn Thing',
@@ -104,5 +106,34 @@ final class ItemOptionsProjectorTest extends TestCase
 
         self::assertSame(['id' => '2010', 'name' => 'Locked Biscuit', 'image' => null, 'type' => 'item'], $resolved);
         self::assertNull($this->projector->resolve($this->data(), [], '9999'));
+    }
+
+    public function testProjectionFollowsTheRequestedMode(): void
+    {
+        $data = $this->data();
+        // Berserker Greaves is explicitly banned from the Howling Abyss.
+        $data[3006]['maps'] = [11 => true, 12 => false];
+
+        $aram = array_column($this->projector->project($data, [], GameMode::Aram), 'id');
+
+        self::assertContains('3070', $aram, 'map-12 item becomes pickable in ARAM');
+        self::assertNotContains('3006', $aram, 'map-12=false item is excluded in ARAM');
+        // A missing maps flag never excludes (older item.json predate some maps).
+        self::assertContains('1001', $aram, 'no maps["12"] flag counts as available');
+    }
+
+    public function testUnavailableOnListsHonestNamesForTheModeErrors(): void
+    {
+        $data = $this->data();
+        $data[3006]['maps'] = [11 => true, 12 => false];
+
+        $names = $this->projector->unavailableOn(
+            $data,
+            GameMode::Aram,
+            ['3006', '3006', '1001', '9999'], // duplicate + available + unknown-to-dataset
+        );
+
+        self::assertSame(['Berserker Greaves'], $names, 'deduplicated; unknown ids are the validator\'s concern');
+        self::assertSame([], $this->projector->unavailableOn($data, GameMode::SummonersRift, ['3006', '1001']));
     }
 }

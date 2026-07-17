@@ -1,0 +1,40 @@
+{
+  "id": "2026-07-17-fondations",
+  "version": "1.1.0",
+  "codename": "Fondations",
+  "date": "2026-07-17",
+  "type": "minor",
+  "title": "LeagueOfDataBase 1.1.0 — Fondations",
+  "summary": "Créez votre compte d'invocateur : inscription, connexion et un mot de passe vraiment solide, dans l'écrin Hextech.",
+  "intro": "Jusqu'ici, le site ne retenait rien de vous. Fondations pose la première pierre de tout le reste : un compte d'invocateur, une connexion sûre, et un mot de passe à la hauteur de ce qu'il protège. Deux pages au style « portail d'invocation » accueillent l'inscription et la connexion. C'est discret, mais c'est le socle sur lequel viendront les profils, les favoris et les builds.",
+  "stats": { "fixes": 0, "cards": 3 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❖",
+      "tag": "Compte",
+      "title": "Créez votre compte",
+      "description": "Inscription et connexion arrivent sur le site : identifiez-vous par e-mail ou nom d'invocateur, sans vous soucier des majuscules, avec l'option « rester connecté » pendant 30 jours et une protection contre les tentatives répétées."
+    },
+    {
+      "kind": "feature",
+      "glyph": "✦",
+      "tag": "Sécurité",
+      "title": "Mot de passe renforcé",
+      "description": "Double saisie et checklist qui se coche en temps réel : au moins 12 caractères mêlant minuscule, majuscule, chiffre et symbole (recommandation CNIL). Les mots de passe trop courants sont refusés."
+    },
+    {
+      "kind": "mana",
+      "glyph": "§",
+      "tag": "Infra",
+      "title": "Des fondations durables",
+      "description": "En coulisses, le site se dote d'une base de données dédiée à vos données personnelles — comptes, favoris et builds à venir. L'encyclopédie, elle, reste servie aussi vite qu'avant."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "Fondations ne paie pas de mine, et c'est normal : le meilleur socle est celui qu'on ne remarque pas. On a mis un soin particulier sur le mot de passe, parce qu'un compte qui protège vos builds et vos favoris mérite mieux que « azerty ». La checklist se coche en douceur pendant la frappe, sans jamais vous crier dessus en rouge. La suite arrive vite.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

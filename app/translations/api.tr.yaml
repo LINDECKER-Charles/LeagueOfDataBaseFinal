@@ -1,0 +1,132 @@
+nav:
+  developers: "API"
+
+portal:
+  eyebrow: "Geliştirici API'si"
+  title: "API anahtarları"
+  back_profile: "Profile dön"
+  docs_link: "Dokümantasyon ve fiyatlar"
+  profile_link:
+    label: "Geliştirici API'si"
+    manage: "API anahtarımı yönet"
+  create:
+    title: "Henüz API anahtarı yok"
+    body: "Kişisel anahtarını oluştur ve herkese açık API'yi çağır — ücretsiz plan: ayda 500 istek, dakikada 10."
+    name_label: "Anahtar adı (isteğe bağlı)"
+    name_placeholder: "uygulamam"
+    submit: "Anahtarımı oluştur"
+  raw:
+    title: "Yeni API anahtarın"
+    warning: "Şimdi kopyala — yalnızca bu sefer gösterilir. Sadece bir parmak izi saklanır: kaybolan anahtar yalnızca yeniden oluşturulabilir."
+    label: "Gizli anahtar"
+    copy: "Anahtarı kopyala"
+    copied: "Kopyalandı!"
+    copy_error: "Alandan elle kopyala"
+  key:
+    title: "Etkin anahtar"
+    label_key: "Anahtar"
+    label_name: "Ad"
+    label_created: "Oluşturulma"
+    label_quota: "Aylık kullanım"
+    quota_used: "%used% / %quota% istek"
+    quota_remaining: "Bu ay %remaining% kaldı"
+    label_credits: "Ön ödemeli krediler"
+    label_rate: "Hız limiti"
+    rate_unit: "%rate% istek/dk"
+    subscription_active: "Etkin abonelik"
+  actions:
+    regenerate: "Anahtarı yeniden oluştur"
+    regenerate_help: "Bu anahtarı iptal eder ve yeni bir gizli anahtar üretir — plan, kota ve krediler korunur."
+    revoke: "İptal et"
+    revoke_help: "Anahtarı anında devre dışı bırakır (API, bir dakikalık önbellek boyunca hâlâ kabul edebilir)."
+  billing:
+    title: "Anahtarını güçlendir"
+    unavailable: "Bu sunucuda ödemeler etkin değil."
+    packs_title: "Kredi paketleri"
+    packs_help: "Tek seferlik ödeme — 1 000 istek başına 1 €, aylık kotadan sonra harcanır, 12 ay geçerli. Her paket hızını en az 60 istek/dk'ya çıkarır."
+    plans_title: "Abonelikler"
+    plans_help: "Aylık kotayı ve hız limitini yükseltir. Hesap başına tek etkin abonelik."
+    buy: "Satın al"
+    subscribe: "Abone ol"
+    current: "Mevcut"
+    per_month: "/ay"
+    per_year: "/yıl"
+    requests_month: "%count% istek/ay"
+    requests_once: "%count% istek"
+    already_subscribed: "Anahtarının zaten bir aboneliği var. Plan değiştirmek için önce mevcut aboneliği iptal et (Stripe onaylar onaylamaz ücretsiz plana dönülür), sonra yeniden abone ol."
+  usage:
+    title: "Son 30 gün"
+    total_month: "Bu ay kullanılan"
+    day: "Gün"
+    requests: "İstekler"
+    empty: "Henüz ölçülen kullanım yok — ilk API çağrıların bir dakika içinde burada görünecek."
+  status:
+    pack_success: "Ödeme onaylandı — kredilerin ekleniyor (birkaç saniye)."
+    plan_success: "Abonelik onaylandı — anahtarın yükseltiliyor (birkaç saniye)."
+    cancelled: "Ödeme iptal edildi — hiçbir şey tahsil edilmedi."
+  flash:
+    csrf: "Oturum süresi doldu, lütfen tekrar dene."
+    created: "API anahtarı oluşturuldu."
+    regenerated: "Anahtar yeniden oluşturuldu — önceki gizli anahtar artık çalışmıyor."
+    revoked: "Anahtar iptal edildi."
+    key_exists: "Zaten etkin bir anahtarın var."
+    no_key: "Etkin bir anahtarın yok."
+    invalid_offer: "Bilinmeyen teklif."
+    already_subscribed: "Anahtarında zaten etkin bir abonelik var — yeniden abone olmadan önce iptal et."
+    need_key: "Satın almadan önce API anahtarını oluştur."
+    stripe_unavailable: "Ödemeler şu anda kullanılamıyor."
+    gateway: "Ödeme servisine ulaşılamıyor, lütfen daha sonra tekrar dene."
+
+plan:
+  free: "Ücretsiz"
+  credits: "Krediler"
+  monthly: "Aylık"
+  monthly_plus: "Aylık+"
+  annual: "Yıllık"
+  annual_plus: "Yıllık+"
+
+pack:
+  small: "Paket S"
+  medium: "Paket M"
+  large: "Paket L"
+
+product:
+  pack: "LoDB API — %requests% istek kredisi"
+  plan: "LoDB API — %plan% planı"
+
+pricing:
+  offer: "Teklif"
+  price: "Fiyat"
+  volume: "Hacim"
+  rate: "Hız limiti"
+  validity_note: "Kredi paketleri: 1 000 istek başına 1 €, etkin planın aylık kotasından sonra harcanır, 12 ay geçerli. Yıllık planlar hacimlerini aylık kota olarak taşır, yıllık faturalanır."
+
+developers:
+  eyebrow: "Geliştiriciler"
+  title: "LeagueOfDataBase API'si"
+  intro: "Sitenin topluluk verileri üzerinde bir REST JSON API'si: herkese açık sihirdar profilleri, paylaşılan buildler ve görüntülenme eğilimleri. Denemesi ücretsiz, gerçek yükler için fiyatlandırılmış."
+  cta: "Anahtarımı oluştur"
+  cta_hint: "Giriş yap, ücretsiz anahtarı üret, API'yi çağır — bir dakikadan kısa."
+  docs_pricing: "Fiyatlar"
+  auth:
+    title: "Kimlik doğrulama"
+    body: "Her /v1 isteği anahtarını taşır — biçim: %prefix% ve ardından 40 onaltılık karakter — iki başlıktan birinde. Sunucuda yalnızca SHA-256 parmak izi saklanır: kaybolan anahtar yeniden oluşturulur, asla geri getirilmez."
+    base_url: "Temel URL (v1, geliştirme): %url% — üretim erişimi sitenin alan adı üzerinden (TLS edge) sunulacak."
+  endpoints:
+    title: "Uç noktalar"
+    healthz: "Servis durumu — kimlik doğrulaması gerektirmeyen tek rota."
+    profiles: "Bir üyenin herkese açık profili: favoriler ve herkese açık build sayısı (profil gizliyse 404)."
+    builds: "Bir şampiyonun herkese açık buildleri (Data Dragon id'si), en yeniden eskiye — page ve per_page ile sayfalanır (en çok 50)."
+    trends: "Sitede en çok görüntülenen varlıklar: şampiyonlar, eşyalar, rünler veya sihirdar büyüleri — range=7d (varsayılan) veya 30d, ilk 25."
+    usage: "Çağıran anahtarın canlı tüketimi — kimlik doğrulamalı ve hız limitli, ama asla kotadan düşülmez."
+  quotas:
+    title: "Kotalar ve hız limiti"
+    quota: "Her istek önce planının aylık kotasına, sonra ön ödemeli kredilere yazılır; ikisi de tükenince API 429 quota_exceeded döner."
+    rate: "Anahtar başına token bucket: her /v1 yanıtı X-RateLimit-Limit, X-RateLimit-Remaining ve X-RateLimit-Reset taşır; limitin üzerinde 429 rate_limited."
+    month: "Kotalar takvim ayıyla sıfırlanır. Yıllık planlar hacimlerini aylık kota olarak taşır (ayda 20 000 veya 60 000 istek)."
+  errors:
+    title: "Hatalar"
+    body: "Tüm hatalarda tek tip zarf. Kodlar: unauthorized (401), forbidden (403, iptal edilmiş anahtar), not_found (404), rate_limited ve quota_exceeded (429), invalid_request (400), internal (500/503)."
+  manage:
+    title: "Faturalama ve anahtar yönetimi"
+    body: "Anahtarlar profilinden oluşturulur ve yönetilir; paketler ve abonelikler Stripe Checkout ile ödenir — API'nin kendisi asla ödeme verilerine dokunmaz."

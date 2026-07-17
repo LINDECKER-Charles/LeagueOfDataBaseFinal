@@ -1,0 +1,33 @@
+{# SSR consumption table — the metered days of the trailing 30 days, straight
+   from api_usage (written by go-api, ~1 s flush lag). Quiet days have no row. #}
+<section class="profile-panel mt-14" aria-labelledby="api-usage-title">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="api-usage-title" class="profile-panel__title">{{ 'portal.usage.title'|trans({}, 'api') }}</h2>
+        <span class="codex-header__meta">
+            {{ 'portal.usage.total_month'|trans({}, 'api') }} · {{ usedThisMonth|number_format(0, '.', ' ') }}
+        </span>
+    </div>
+
+    {% if dailyUsage is empty %}
+        <p class="mt-4 max-w-2xl text-sm text-text-muted">{{ 'portal.usage.empty'|trans({}, 'api') }}</p>
+    {% else %}
+        <div class="mt-4 api-table-scroll">
+            <table class="api-table">
+                <thead>
+                    <tr>
+                        <th scope="col">{{ 'portal.usage.day'|trans({}, 'api') }}</th>
+                        <th scope="col" class="num">{{ 'portal.usage.requests'|trans({}, 'api') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dailyUsage %}
+                        <tr>
+                            <td>{{ row.day|date('d/m/Y') }}</td>
+                            <td class="num">{{ row.requests|number_format(0, '.', ' ') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</section>

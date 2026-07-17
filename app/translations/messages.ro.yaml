@@ -183,7 +183,7 @@ footer:
   project:
     title: "Proiect"
     version: "Versiune: Beta 2.0"
-    updated: "Actualizat: 03/08/2025"
+    updated: "Actualizat: 17/07/2026"
 
   contact:
     title: "Contact"
@@ -211,3 +211,103 @@ header:
     item: "Obiecte"
     runes: "Rune"
     summoner: "Vrăji de Invocator"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "sau"
+  google:
+    cta: "Continuă cu Google"
+    unavailable: "Autentificarea cu Google nu este configurată pe acest server."
+    failed: "Autentificarea cu Google a eșuat. Încearcă din nou."
+  register:
+    password: "Parolă"
+    password_confirm: "Confirmă parola"
+    password_mismatch: "Cele două parole nu coincid."
+    password_help: "Cel puțin 12 caractere, cu o literă mică, o literă mare, o cifră și un caracter special."
+  password:
+    rule_length: "Cel puțin 12 caractere"
+    rule_lowercase: "Cel puțin o literă mică"
+    rule_uppercase: "Cel puțin o literă mare"
+    rule_digit: "Cel puțin o cifră"
+    rule_special: "Cel puțin un caracter special"
+    rule_match: "Cele două parole coincid"
+    too_common: "Această parolă este prea comună. Alege una mai personală."
+  flash:
+    banned: "Acest cont a fost suspendat de echipa de moderare."
+
+profile:
+  identity:
+    title: "Identitate de invocator"
+    username: "Nume de invocator"
+    tag: "Tag Riot"
+    tag_help: "Opțional: partea de după # din Riot ID — pentru GG#EUW, introdu EUW."
+    url_warning: "Schimbarea numelui de invocator schimbă și adresa profilului tău public."
+    submit: "Actualizează identitatea"
+    username_taken: "Acest nume de invocator este deja folosit."
+    username_invalid: "Nume de invocator nevalid: 3–24 de caractere (litere, cifre, punct, cratimă, underscore), începând cu literă sau cifră."
+    tag_invalid: "Tag Riot nevalid: 3–5 litere sau cifre."
+  password:
+    title: "Setează o parolă"
+    help: "Contul tău se autentifică doar cu Google. Setează o parolă pentru a intra și cu e-mailul."
+    submit: "Setează parola"
+  danger:
+    help_no_password: "Ștergerea contului este definitivă: favoritele și buildurile sunt șterse."
+  flash:
+    identity_saved: "Identitatea de invocator a fost actualizată."
+    password_set: "Parola a fost setată — acum te poți autentifica și cu e-mailul."
+    password_exists: "Acest cont are deja o parolă."
+
+build:
+  mode:
+    sr: "Falia Invocatorilor"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Arenă"
+  editor:
+    ghost_mode: "Indisponibil în acest mod de joc"
+    context:
+      title: "Context de joc"
+      version: "Patch"
+      mode: "Mod de joc"
+      mode_hint: "Disponibilitatea obiectelor depinde de modul ales. Obiectele deja plasate nu sunt niciodată eliminate — sunt doar marcate."
+    dnd:
+      handle: "Trage pentru a reordona"
+      moved_step: "Etapa a fost mutată pe poziția %position%"
+      moved_item: "Obiectul a fost mutat pe poziția %position%"
+      transferred: "Obiectul a fost mutat în etapa %step%"
+      added: "Obiectul a fost adăugat în etapa %step%"
+      cancelled: "Mutare anulată"
+  show:
+    mode: "Mod de joc"
+    patch_current: "Făurit pe patch-ul %version% — actual: %current%"
+  error:
+    version:
+      unknown: "Versiune de joc necunoscută."
+    mode:
+      unknown: "Mod de joc necunoscut."
+    steps:
+      item_mode: "Indisponibil în modul de joc ales: %items%."
+
+community:
+  nav:
+    trends: "Tendințe"
+  trends:
+    eyebrow: "Pulsul comunității"
+    title: "Builduri în tendințe"
+    filter:
+      champion: "Campion"
+      mode: "Mod de joc"
+      all_champions: "Toți campionii"
+      all_modes: "Toate modurile"
+      apply: "Filtrează"
+    empty: "Niciun build public nu corespunde acestui filtru — făurește-l pe al tău."
+    empty_cta: "Făurește-mi buildul"
+  vote:
+    up: "Votează pentru acest build"
+    down: "Votează împotriva acestui build"
+    score_label: "Scor comunitar"
+    login: "Autentifică-te pentru a vota"
+    invalid: "Vot invalid."
+  supporter:
+    badge: "Susținător"

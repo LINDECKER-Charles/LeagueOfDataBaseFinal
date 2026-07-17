@@ -1,5 +1,8 @@
 twig:
     file_name_pattern: '*.twig'
+    globals:
+        # Current application release — rendered in the navbar and on /changelog.
+        app_version: '%app.version%'
 
 when@test:
     twig:

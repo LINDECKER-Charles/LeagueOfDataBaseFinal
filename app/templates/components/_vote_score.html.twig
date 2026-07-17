@@ -1,0 +1,56 @@
+{# Net-score vote widget for a PUBLIC build. Params: build (Build), score (int),
+   myVote (-1|0|1). Renders the `vote-score` island shell; the div's content is
+   the no-JS fallback (score + native POST forms when signed in, login links
+   otherwise) and is replaced when Vue mounts. Only the NET score ever shows —
+   never the like/dislike breakdown. #}
+{% set voteProps = {
+  endpoint: path('app_build_vote', { id: build.id }),
+  csrf: csrf_token('submit'),
+  score: score,
+  myVote: myVote,
+  loginUrl: app.user ? null : path('app_login'),
+  labels: {
+    up: 'community.vote.up'|trans,
+    down: 'community.vote.down'|trans,
+    score: 'community.vote.score_label'|trans,
+    login: 'community.vote.login'|trans
+  }
+} %}
+<div class="vote-box" data-vue="vote-score" data-props="{{ voteProps|json_encode|e('html_attr') }}">
+  {% if app.user %}
+    <form method="post" action="{{ path('app_build_vote', { id: build.id }) }}" data-turbo="false">
+      <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+      <input type="hidden" name="value" value="up">
+      <button type="submit" class="vote-arrow {{ myVote == 1 ? 'vote-arrow--on-up' }}"
+              aria-pressed="{{ myVote == 1 ? 'true' : 'false' }}" title="{{ 'community.vote.up'|trans }}"
+              aria-label="{{ 'community.vote.up'|trans }}">
+        <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 2.4 10.4 9H1.6z"/></svg>
+      </button>
+    </form>
+  {% else %}
+    <a class="vote-arrow" href="{{ path('app_login') }}" title="{{ 'community.vote.login'|trans }}"
+       aria-label="{{ 'community.vote.login'|trans }}">
+      <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 2.4 10.4 9H1.6z"/></svg>
+    </a>
+  {% endif %}
+
+  <span class="vote-score {{ score > 0 ? 'vote-score--positive' : (score < 0 ? 'vote-score--negative' : 'vote-score--zero') }}"
+        title="{{ 'community.vote.score_label'|trans }}">{{ score > 0 ? '+' ~ score : score }}</span>
+
+  {% if app.user %}
+    <form method="post" action="{{ path('app_build_vote', { id: build.id }) }}" data-turbo="false">
+      <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+      <input type="hidden" name="value" value="down">
+      <button type="submit" class="vote-arrow {{ myVote == -1 ? 'vote-arrow--on-down' }}"
+              aria-pressed="{{ myVote == -1 ? 'true' : 'false' }}" title="{{ 'community.vote.down'|trans }}"
+              aria-label="{{ 'community.vote.down'|trans }}">
+        <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 9.6 1.6 3h8.8z"/></svg>
+      </button>
+    </form>
+  {% else %}
+    <a class="vote-arrow" href="{{ path('app_login') }}" title="{{ 'community.vote.login'|trans }}"
+       aria-label="{{ 'community.vote.login'|trans }}">
+      <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 9.6 1.6 3h8.8z"/></svg>
+    </a>
+  {% endif %}
+</div>

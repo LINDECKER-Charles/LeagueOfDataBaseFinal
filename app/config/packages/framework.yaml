@@ -39,6 +39,14 @@ framework:
         default_path: '%kernel.project_dir%/translations'
         fallbacks: [en]
         cache_dir: '%kernel.cache_dir%/translations'
+
+    # Throttles the "resend confirmation email" banner action (per authenticated
+    # user). Password-reset requests are throttled by the reset-password bundle.
+    rate_limiter:
+        email_verification:
+            policy: 'sliding_window'
+            limit: 3
+            interval: '15 minutes'
     #esi: true
     #fragments: true
 

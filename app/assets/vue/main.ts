@@ -3,6 +3,7 @@ import '../styles/app.css'
 
 import { createApp, type Component } from 'vue'
 import { installEnhancements } from './fx/enhance'
+import { setupProfileForm } from './profile/profileForm'
 
 /**
  * Island registry: Twig renders a shell `<div data-vue="name" data-props="{...}">`,
@@ -23,8 +24,11 @@ const registry: Record<string, Island> = {
     'ability-showcase': { load: () => import('./components/AbilityShowcase.vue') },
     'stat-scaler': { load: () => import('./components/StatScaler.vue') },
     'favorite-picker': { load: () => import('./components/FavoritePicker.vue') },
+    'skin-banner-picker': { load: () => import('./components/SkinBannerPicker.vue') },
     'build-editor': { load: () => import('./components/BuildEditor.vue') },
     'copy-link': { load: () => import('./components/CopyLink.vue') },
+    'password-checklist': { load: () => import('./components/PasswordChecklist.vue') },
+    'vote-score': { load: () => import('./components/VoteScore.vue') },
 }
 
 function mountIslands(root: ParentNode = document): void {
@@ -48,9 +52,14 @@ function mountIslands(root: ParentNode = document): void {
     })
 }
 
-document.addEventListener('DOMContentLoaded', () => mountIslands())
+function enhancePage(root: ParentNode = document): void {
+    mountIslands(root)
+    setupProfileForm(root)
+}
+
+document.addEventListener('DOMContentLoaded', () => enhancePage())
 // The app uses Turbo Drive: re-scan for islands after each navigation.
-document.addEventListener('turbo:load', () => mountIslands())
+document.addEventListener('turbo:load', () => enhancePage())
 
 // Scroll-reveal + section-nav scrollspy (Turbo-safe, reduced-motion aware).
 installEnhancements()

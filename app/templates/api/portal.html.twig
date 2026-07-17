@@ -1,0 +1,103 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'portal.title'|trans({}, 'api') }} · {{ 'base.title'|trans }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Page-scoped sheet (design tokens only) — same pattern as legal/layout. #}
+    <style>
+        .api-banner {
+            margin-bottom: 1.5rem;
+            border: 1px solid color-mix(in srgb, var(--color-gold) 55%, transparent);
+            background: color-mix(in srgb, var(--color-void) 75%, transparent);
+            padding: 0.85rem 1.1rem;
+            font-size: 0.875rem;
+            color: var(--color-gold-bright);
+        }
+        .api-banner--muted { border-color: color-mix(in srgb, var(--color-gold-deep) 45%, transparent); color: var(--color-text-muted); }
+        .api-reveal { padding: 1.5rem; margin-bottom: 2rem; }
+        .api-reveal__warning { margin-top: 0.5rem; font-size: 0.875rem; color: var(--color-gold-bright); }
+        .api-meter { margin-top: 0.4rem; height: 6px; background: color-mix(in srgb, var(--color-gold-deep) 30%, transparent); }
+        .api-meter__fill { height: 100%; background: linear-gradient(90deg, var(--color-gold-deep), var(--color-gold)); }
+        .api-offer { display: flex; flex-direction: column; padding: 1.25rem; }
+        .api-offer__name {
+            font-family: var(--font-beaufort);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--color-gold);
+        }
+        .api-offer__price { margin-top: 0.35rem; font-family: var(--font-beaufort); font-size: 1.6rem; color: var(--color-text); }
+        .api-offer__price small { font-size: 0.8rem; color: var(--color-text-muted); }
+        .api-offer__detail { margin-top: 0.35rem; font-size: 0.8rem; color: var(--color-text-muted); }
+        .api-offer .hx-btn { margin-top: auto; }
+        .api-table-scroll { overflow-x: auto; }
+        .api-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .api-table th, .api-table td {
+            border-bottom: 1px solid color-mix(in srgb, var(--color-gold-deep) 35%, transparent);
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+        }
+        .api-table th {
+            font-family: var(--font-beaufort);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--color-gold);
+        }
+        .api-table .num { text-align: right; font-family: var(--font-mono, monospace); }
+    </style>
+{% endblock %}
+
+{% block body %}
+<main class="relative px-6 py-12">
+    {% include 'partials/main/gradient.html.twig' %}
+
+    <div class="relative mx-auto max-w-6xl">
+        <header class="mb-10 flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <p class="eyebrow">{{ 'portal.eyebrow'|trans({}, 'api') }}</p>
+                <h1 class="mt-2 font-beaufort text-4xl font-bold uppercase tracking-wide text-gold-grad">{{ 'portal.title'|trans({}, 'api') }}</h1>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="{{ path('app_developers') }}" class="nav-link text-sm text-gold">{{ 'portal.docs_link'|trans({}, 'api') }} →</a>
+                <a href="{{ path('app_profile') }}" class="hx-btn-ghost">{{ 'portal.back_profile'|trans({}, 'api') }}</a>
+            </div>
+        </header>
+
+        {% if plainKey %}
+            {% include 'api/_raw_key.html.twig' with { plainKey: plainKey } only %}
+        {% endif %}
+
+        {% if checkoutStatus %}
+            <p class="api-banner {{ checkoutStatus == 'cancelled' ? 'api-banner--muted' }}" role="status">
+                {{ ('portal.status.' ~ checkoutStatus)|trans({}, 'api') }}
+            </p>
+        {% endif %}
+
+        {% if apiKey is null %}
+            <section class="profile-panel" aria-labelledby="api-create-title">
+                <h2 id="api-create-title" class="profile-panel__title">{{ 'portal.create.title'|trans({}, 'api') }}</h2>
+                <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'portal.create.body'|trans({}, 'api') }}</p>
+                <form method="post" action="{{ path('app_api_key_create') }}" data-turbo="false"
+                      class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+                    <label class="flex-1 sm:max-w-xs">
+                        <span class="auth-label">{{ 'portal.create.name_label'|trans({}, 'api') }}</span>
+                        <input type="text" name="name" maxlength="64" autocomplete="off"
+                               placeholder="{{ 'portal.create.name_placeholder'|trans({}, 'api') }}" class="hx-input mt-1.5">
+                    </label>
+                    <button type="submit" class="hx-btn">{{ 'portal.create.submit'|trans({}, 'api') }}</button>
+                </form>
+            </section>
+        {% else %}
+            {% include 'api/_overview.html.twig' with { apiKey: apiKey, usedThisMonth: usedThisMonth } only %}
+            {% include 'api/_billing.html.twig' with {
+                apiKey: apiKey, packs: packs, plans: plans, billingConfigured: billingConfigured,
+            } only %}
+            {% include 'api/_usage.html.twig' with { dailyUsage: dailyUsage, usedThisMonth: usedThisMonth } only %}
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

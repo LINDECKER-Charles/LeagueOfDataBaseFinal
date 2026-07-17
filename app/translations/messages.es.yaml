@@ -183,7 +183,7 @@ footer:
   project:
     title: "Proyecto"
     version: "Versión: Beta 2.0"
-    updated: "Actualizado: 03/08/2025"
+    updated: "Actualizado: 17/07/2026"
 
   contact:
     title: "Contacto"
@@ -211,3 +211,103 @@ header:
     item: "Objetos"
     runes: "Runas"
     summoner: "Hechizos de Invocador"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "o"
+  google:
+    cta: "Continuar con Google"
+    unavailable: "El inicio de sesión con Google no está configurado en este servidor."
+    failed: "Error al iniciar sesión con Google. Inténtalo de nuevo."
+  register:
+    password: "Contraseña"
+    password_confirm: "Confirma la contraseña"
+    password_mismatch: "Las dos contraseñas no coinciden."
+    password_help: "Al menos 12 caracteres, con una minúscula, una mayúscula, un dígito y un carácter especial."
+  password:
+    rule_length: "Al menos 12 caracteres"
+    rule_lowercase: "Al menos una minúscula"
+    rule_uppercase: "Al menos una mayúscula"
+    rule_digit: "Al menos un dígito"
+    rule_special: "Al menos un carácter especial"
+    rule_match: "Las dos contraseñas coinciden"
+    too_common: "Esta contraseña es demasiado común. Elige una más personal."
+  flash:
+    banned: "Esta cuenta ha sido suspendida por el equipo de moderación."
+
+profile:
+  identity:
+    title: "Identidad de invocador"
+    username: "Nombre de invocador"
+    tag: "Tag de Riot"
+    tag_help: "Opcional: la parte después del # de tu Riot ID — para GG#EUW, escribe EUW."
+    url_warning: "Cambiar tu nombre de invocador también cambia la dirección de tu perfil público."
+    submit: "Actualizar identidad"
+    username_taken: "Este nombre de invocador ya está en uso."
+    username_invalid: "Nombre de invocador no válido: de 3 a 24 caracteres (letras, dígitos, punto, guion, guion bajo), empezando por letra o dígito."
+    tag_invalid: "Tag de Riot no válido: de 3 a 5 letras o dígitos."
+  password:
+    title: "Definir una contraseña"
+    help: "Tu cuenta solo inicia sesión con Google. Define una contraseña para entrar también con tu correo."
+    submit: "Definir la contraseña"
+  danger:
+    help_no_password: "Eliminar tu cuenta es definitivo: se borran favoritos y builds."
+  flash:
+    identity_saved: "Identidad de invocador actualizada."
+    password_set: "Contraseña definida — ya puedes iniciar sesión también con tu correo."
+    password_exists: "Esta cuenta ya tiene una contraseña definida."
+
+build:
+  mode:
+    sr: "Grieta del invocador"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Arena"
+  editor:
+    ghost_mode: "No disponible en este modo de juego"
+    context:
+      title: "Contexto de juego"
+      version: "Parche"
+      mode: "Modo de juego"
+      mode_hint: "La disponibilidad de los objetos depende del modo elegido. Los objetos ya colocados nunca se eliminan: se marcan."
+    dnd:
+      handle: "Arrastra para reordenar"
+      moved_step: "Etapa movida a la posición %position%"
+      moved_item: "Objeto movido a la posición %position%"
+      transferred: "Objeto movido a la etapa %step%"
+      added: "Objeto añadido a la etapa %step%"
+      cancelled: "Movimiento cancelado"
+  show:
+    mode: "Modo de juego"
+    patch_current: "Forjada en el parche %version% — actual: %current%"
+  error:
+    version:
+      unknown: "Versión de juego desconocida."
+    mode:
+      unknown: "Modo de juego desconocido."
+    steps:
+      item_mode: "No disponible en el modo de juego elegido: %items%."
+
+community:
+  nav:
+    trends: "Tendencias"
+  trends:
+    eyebrow: "El pulso de la Grieta"
+    title: "Builds en tendencia"
+    filter:
+      champion: "Campeón"
+      mode: "Modo de juego"
+      all_champions: "Todos los campeones"
+      all_modes: "Todos los modos"
+      apply: "Filtrar"
+    empty: "Ninguna build pública coincide con este filtro: forja la tuya."
+    empty_cta: "Forjar mi build"
+  vote:
+    up: "Votar a favor de esta build"
+    down: "Votar en contra de esta build"
+    score_label: "Puntuación de la comunidad"
+    login: "Inicia sesión para votar"
+    invalid: "Voto no válido."
+  supporter:
+    badge: "Mecenas"

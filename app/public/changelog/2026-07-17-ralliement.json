@@ -1,0 +1,54 @@
+{
+  "id": "2026-07-17-ralliement",
+  "version": "2.0.0",
+  "codename": "Ralliement",
+  "date": "2026-07-17",
+  "type": "major",
+  "title": "LeagueOfDataBase 2.0.0 — Ralliement",
+  "summary": "L'aboutissement : navigation repensée, pages légales complètes, référencement en 21 langues, modération de la communauté et HTTPS auto-réparé. La plateforme est prête.",
+  "intro": "Ralliement rassemble tout ce qui précède en une plateforme prête à accueillir sa communauté. La barre de navigation fait de la place, les quatre pages légales expliquent enfin qui édite le site et ce qu'il fait de vos données, et chaque fiche devient lisible par les moteurs de recherche dans les 21 langues. En coulisses, la modération protège les espaces publics et le HTTPS se vérifie et se répare à chaque mise en ligne. De l'encyclopédie brute au ralliement des invocateurs : la boucle est bouclée.",
+  "stats": { "fixes": 0, "cards": 5 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❖",
+      "tag": "Navigation",
+      "title": "Barre de navigation repensée",
+      "description": "Champions, objets, runes et sorts se rangent sous un menu « Encyclopédie », tandis que le compte et le don restent accessibles sur tous les écrans. Le pied de page gagne une colonne « Légal »."
+    },
+    {
+      "kind": "feature",
+      "glyph": "§",
+      "tag": "Légal",
+      "title": "Mentions, confidentialité, CGU & cookies",
+      "description": "Quatre pages légales complètes, en français et en anglais, avec sommaire cliquable et date de mise à jour. Aucune publicité, aucun traceur tiers — et un tableau clair des données traitées."
+    },
+    {
+      "kind": "feature",
+      "glyph": "▦",
+      "tag": "Découverte",
+      "title": "Lisible par les moteurs de recherche",
+      "description": "Vraies pages « introuvable », plan du site complet, titres et descriptions traduits dans les 21 langues, aperçus soignés sur Discord, Reddit et Twitter, et données structurées pour de meilleurs résultats Google."
+    },
+    {
+      "kind": "mana",
+      "glyph": "◉",
+      "tag": "Confiance",
+      "title": "Modération & surveillance",
+      "description": "Les comptes problématiques peuvent être suspendus — retirés du profil public et des tendances — et les builds modérés. Un journal d'audit trace les actions sensibles (conservé 6 mois), et la santé des services est surveillée en continu côté équipe."
+    },
+    {
+      "kind": "mana",
+      "glyph": "✦",
+      "tag": "Infra",
+      "title": "HTTPS vérifié à chaque mise en ligne",
+      "description": "Chaque déploiement contrôle que tous les domaines présentent un certificat valide et le réémet automatiquement si besoin. Fini les « la connexion n'est pas sécurisée » qui passaient inaperçus."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "Ralliement, c'est le patch qui transforme une encyclopédie en lieu de vie. On a passé autant de temps sur ce qui se voit (la nav, les pages légales) que sur ce qui se voit moins mais compte autant (le référencement, la modération, un HTTPS qui ne casse plus en silence). Merci d'être là depuis le Codex : dites-nous ce qui vous manque encore, c'est ce qui décidera de la suite.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

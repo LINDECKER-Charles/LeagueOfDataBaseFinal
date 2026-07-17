@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — la enciclopedia de League of Legends"
+  description: "Campeones, objetos, runas y hechizos de invocador de League of Legends para el parche %version%: estadísticas, habilidades y detalles en 21 idiomas."
+champion:
+  list:
+    title: "Campeones de League of Legends"
+    description: "Los %count% campeones de League of Legends con roles, habilidades e historia — datos del parche %version%."
+  detail:
+    title: "%name%, campeón de LoL"
+    description: "%name% en League of Legends: habilidades, aspectos, historia y consejos, actualizado para el parche %version%."
+item:
+  list:
+    title: "Objetos de League of Legends"
+    description: "Los %count% objetos de League of Legends con coste, estadísticas y recetas — datos del parche %version%."
+  detail:
+    title: "%name%, objeto de LoL"
+    description: "%name% en League of Legends: estadísticas, coste, receta y mejoras, actualizado para el parche %version%."
+rune:
+  list:
+    title: "Runas de League of Legends"
+    description: "Las %count% ramas de runas de League of Legends con todas las runas clave y menores — datos del parche %version%."
+  detail:
+    title: "%name%, rama de runas de LoL"
+    description: "La rama %name% de League of Legends: runas clave, espacios y efectos, actualizado para el parche %version%."
+summoner:
+  list:
+    title: "Hechizos de invocador de League of Legends"
+    description: "Los %count% hechizos de invocador de League of Legends con enfriamientos y efectos — datos del parche %version%."
+  detail:
+    title: "%name%, hechizo de invocador de LoL"
+    description: "El hechizo de invocador %name% en League of Legends: enfriamiento y efectos, actualizado para el parche %version%."
+donate:
+  title: "Apoyar el proyecto"
+  description: "Ayuda a que League Of Data Base siga siendo gratuito y rápido: apoya el proyecto con una donación."
+legal:
+  notice:
+    description: "Aviso legal de League Of Data Base: editor, alojamiento y contacto."
+  privacy:
+    description: "Política de privacidad de League Of Data Base: datos tratados, finalidades y tus derechos."
+  terms:
+    description: "Condiciones de uso de League Of Data Base."
+  cookies:
+    description: "Política de cookies de League Of Data Base: qué cookies se usan y cómo controlarlas."
+error:
+  "404":
+    title: "Página no encontrada"
+    eyebrow: "Perdido en la Grieta"
+    body: "Esta página no existe — puede que el recurso se haya retirado del parche actual."
+    back_home: "Volver al inicio"
+  generic:
+    title: "Algo ha salido mal"
+    body: "Se ha producido un error inesperado. Inténtalo de nuevo en un momento."
+
+developers:
+  title: "API para desarrolladores"
+  description: "API REST JSON de pago sobre los datos comunitarios de League of Legends: perfiles públicos, builds compartidas y tendencias. Nivel gratuito, packs de créditos y suscripciones."
+
+trends:
+  title: "Builds de LoL en tendencia"
+  description: "Builds públicas de League of Legends ordenadas por los votos de la comunidad: filtra por campeón y modo de juego."

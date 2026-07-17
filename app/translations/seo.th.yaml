@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — สารานุกรม League of Legends"
+  description: "แชมเปี้ยน ไอเทม รูน และเวทอัญเชิญของ League of Legends สำหรับแพตช์ %version% — ค่าสถานะ สกิล และรายละเอียดใน 21 ภาษา"
+champion:
+  list:
+    title: "แชมเปี้ยน League of Legends"
+    description: "แชมเปี้ยน League of Legends ทั้ง %count% ตัว พร้อมบทบาท สกิล และเรื่องราว — ข้อมูลจากแพตช์ %version%"
+  detail:
+    title: "%name% แชมเปี้ยน LoL"
+    description: "%name% ใน League of Legends: สกิล สกิน เรื่องราว และเคล็ดลับ อัปเดตสำหรับแพตช์ %version%"
+item:
+  list:
+    title: "ไอเทม League of Legends"
+    description: "ไอเทม League of Legends ทั้ง %count% ชิ้น พร้อมราคา ค่าสถานะ และสูตรผสม — ข้อมูลจากแพตช์ %version%"
+  detail:
+    title: "%name% ไอเทม LoL"
+    description: "%name% ใน League of Legends: ค่าสถานะ ราคา สูตรผสม และการอัปเกรด อัปเดตสำหรับแพตช์ %version%"
+rune:
+  list:
+    title: "รูน League of Legends"
+    description: "สายรูน League of Legends ทั้ง %count% สาย พร้อมรูนหลักและรูนรองครบทุกตัว — ข้อมูลจากแพตช์ %version%"
+  detail:
+    title: "%name% สายรูน LoL"
+    description: "สายรูน %name% ใน League of Legends: รูนหลัก ช่องรูน และเอฟเฟกต์ อัปเดตสำหรับแพตช์ %version%"
+summoner:
+  list:
+    title: "เวทอัญเชิญ League of Legends"
+    description: "เวทอัญเชิญ League of Legends ทั้ง %count% เวท พร้อมคูลดาวน์และเอฟเฟกต์ — ข้อมูลจากแพตช์ %version%"
+  detail:
+    title: "%name% เวทอัญเชิญ LoL"
+    description: "เวทอัญเชิญ %name% ใน League of Legends: คูลดาวน์และเอฟเฟกต์ อัปเดตสำหรับแพตช์ %version%"
+donate:
+  title: "สนับสนุนโปรเจกต์"
+  description: "ช่วยให้ League Of Data Base ฟรีและรวดเร็วต่อไป — สนับสนุนโปรเจกต์ด้วยการบริจาค"
+legal:
+  notice:
+    description: "ประกาศทางกฎหมายของ League Of Data Base: ผู้จัดทำ โฮสติ้ง และช่องทางติดต่อ"
+  privacy:
+    description: "นโยบายความเป็นส่วนตัวของ League Of Data Base: ข้อมูลที่ประมวลผล วัตถุประสงค์ และสิทธิ์ของคุณ"
+  terms:
+    description: "ข้อกำหนดการใช้งานของ League Of Data Base"
+  cookies:
+    description: "นโยบายคุกกี้ของ League Of Data Base: คุกกี้ที่ใช้และวิธีจัดการ"
+error:
+  "404":
+    title: "ไม่พบหน้านี้"
+    eyebrow: "หลงทางในเดอะริฟต์"
+    body: "หน้านี้ไม่มีอยู่ — ทรัพยากรอาจถูกนำออกจากแพตช์ปัจจุบันแล้ว"
+    back_home: "กลับหน้าแรก"
+  generic:
+    title: "เกิดข้อผิดพลาด"
+    body: "เกิดข้อผิดพลาดที่ไม่คาดคิด โปรดลองอีกครั้งในอีกสักครู่"
+
+developers:
+  title: "API สำหรับนักพัฒนา"
+  description: "REST JSON API แบบชำระเงินบนข้อมูลชุมชน League of Legends: โปรไฟล์สาธารณะ บิลด์ที่แชร์ และเทรนด์การเข้าชม มีระดับฟรี แพ็กเครดิต และการสมัครสมาชิก"
+
+trends:
+  title: "บิลด์ LoL ยอดนิยม"
+  description: "บิลด์สาธารณะของ League of Legends จัดอันดับตามโหวตของคอมมูนิตี้ — กรองตามแชมเปี้ยนและโหมดเกม"

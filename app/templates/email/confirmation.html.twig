@@ -1,0 +1,12 @@
+{% extends 'email/_base.html.twig' %}
+
+{% set duration = expiresAtMessageKey|trans(expiresAtMessageData, 'VerifyEmailBundle') %}
+
+{% block title %}{{ 'email.confirm.subject'|trans }}{% endblock %}
+{% block preheader %}{{ 'email.confirm.preheader'|trans }}{% endblock %}
+{% block heading %}{{ 'email.confirm.heading'|trans({ '%name%': user.username }) }}{% endblock %}
+{% block lede %}{{ 'email.confirm.lede'|trans }}{% endblock %}
+{% block cta_url %}{{ actionUrl }}{% endblock %}
+{% block cta_label %}{{ 'email.confirm.cta'|trans }}{% endblock %}
+{% block note %}{{ 'email.confirm.expiry'|trans({ '%duration%': duration }) }}{% endblock %}
+{% block footer_reason %}{{ 'email.confirm.footer_reason'|trans }}{% endblock %}

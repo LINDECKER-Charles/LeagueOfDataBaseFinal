@@ -1,0 +1,62 @@
+# Domaine SEO dédié : titres de page + meta descriptions uniquement.
+# Placeholders : %name% (entité), %version% (patch DDragon), %count% (taille de liste).
+home:
+  title: "League Of Data Base — l'encyclopédie League of Legends"
+  description: "Champions, objets, runes et sorts d'invocateur de League of Legends pour le patch %version% : stats, sorts et détails en 21 langues."
+champion:
+  list:
+    title: "Champions de League of Legends"
+    description: "Les %count% champions de League of Legends avec rôles, sorts et histoire — données du patch %version%."
+  detail:
+    title: "%name%, champion de LoL"
+    description: "%name% dans League of Legends : sorts, skins, histoire et astuces, à jour pour le patch %version%."
+item:
+  list:
+    title: "Objets de League of Legends"
+    description: "Les %count% objets de League of Legends avec prix, stats et recettes — données du patch %version%."
+  detail:
+    title: "%name%, objet de LoL"
+    description: "%name% dans League of Legends : stats, prix, recette et évolutions, à jour pour le patch %version%."
+rune:
+  list:
+    title: "Runes de League of Legends"
+    description: "Les %count% branches de runes de League of Legends avec toutes les runes majeures et mineures — données du patch %version%."
+  detail:
+    title: "%name%, branche de runes LoL"
+    description: "La branche %name% de League of Legends : runes majeures, emplacements et effets, à jour pour le patch %version%."
+summoner:
+  list:
+    title: "Sorts d'invocateur de League of Legends"
+    description: "Les %count% sorts d'invocateur de League of Legends avec délais de récupération et effets — données du patch %version%."
+  detail:
+    title: "%name%, sort d'invocateur LoL"
+    description: "Le sort d'invocateur %name% dans League of Legends : délai de récupération et effets, à jour pour le patch %version%."
+donate:
+  title: "Soutenir le projet"
+  description: "Aidez League Of Data Base à rester gratuit et rapide : soutenez le projet avec un don."
+legal:
+  notice:
+    description: "Mentions légales de League Of Data Base : éditeur, hébergeur et contact."
+  privacy:
+    description: "Politique de confidentialité de League Of Data Base : données traitées, finalités et vos droits."
+  terms:
+    description: "Conditions générales d'utilisation de League Of Data Base."
+  cookies:
+    description: "Politique cookies de League Of Data Base : cookies utilisés et comment les contrôler."
+error:
+  "404":
+    title: "Page introuvable"
+    eyebrow: "Perdu dans la Faille"
+    body: "Cette page n'existe pas — la ressource a peut-être été retirée du patch actuel."
+    back_home: "Retour à l'accueil"
+  generic:
+    title: "Une erreur est survenue"
+    body: "Une erreur inattendue s'est produite. Réessayez dans un instant."
+
+developers:
+  title: "API pour développeurs"
+  description: "API REST JSON payante sur les données communautaires League of Legends : profils publics, builds partagés et tendances de consultation. Offre gratuite, packs de crédits et abonnements."
+
+trends:
+  title: "Builds LoL en tendance"
+  description: "Les builds publics de League of Legends classés par les votes de la communauté — filtrez par champion et mode de jeu."

@@ -213,11 +213,68 @@
     box-shadow: 0 0 18px -4px var(--path, var(--color-gold)), inset 0 0 0 1px var(--path, var(--color-gold));
   }
 
+  /* ---- Game context (version + mode selects) ------------------------------ */
+  .forge-context {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem 1.25rem;
+  }
+  @media (min-width: 640px) {
+    .forge-context { grid-template-columns: minmax(0, 14rem) minmax(0, 18rem); }
+  }
+
   /* ---- Step editor -------------------------------------------------------- */
   .forge-step {
     border: 1px solid rgba(200, 170, 110, 0.28);
     background: linear-gradient(180deg, rgba(15, 27, 45, 0.85), rgba(9, 16, 22, 0.92));
     padding: 1rem 1.15rem;
+    transition: opacity 0.2s var(--ease-hextech), box-shadow 0.2s var(--ease-hextech);
+  }
+
+  /* ---- Drag-and-drop (progressive enhancement over the ↑↓ buttons) --------- */
+  .forge-grab { cursor: grab; }
+  .forge-grab:active { cursor: grabbing; }
+  .forge-drag-handle {
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 2rem;
+    font-size: 0.85rem;
+    line-height: 1;
+    color: var(--color-text-dim);
+    cursor: grab;
+    user-select: none;
+    transition: color 0.2s ease;
+  }
+  .forge-drag-handle:hover { color: var(--color-gold); }
+  .forge-drag-handle:active { cursor: grabbing; }
+  /* Native HTML5 drag needs a fine pointer; touch keeps the button fallback. */
+  @media (pointer: coarse) {
+    .forge-drag-handle { display: none; }
+  }
+  /* The grabbed element lifts slightly; the list keeps its footprint. */
+  .forge-dragging {
+    opacity: 0.5;
+    box-shadow: 0 10px 24px -10px rgba(1, 10, 19, 0.9);
+    transform: scale(0.985);
+  }
+  /* Hextech drop indicators: dashed rich-gold slot (items) / seam (steps). */
+  .forge-dropslot {
+    width: 3rem;
+    height: 3rem;
+    flex: none;
+    border: 1px dashed var(--color-gold-rich);
+    background: color-mix(in srgb, var(--color-gold-rich) 12%, transparent);
+    pointer-events: none;
+  }
+  .forge-droprow {
+    height: 0.4rem;
+    border: 1px dashed var(--color-gold-rich);
+    background: color-mix(in srgb, var(--color-gold-rich) 12%, transparent);
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .forge-step, .forge-dragging { transition: none; transform: none; }
   }
   .forge-step__label {
     min-width: 10rem;

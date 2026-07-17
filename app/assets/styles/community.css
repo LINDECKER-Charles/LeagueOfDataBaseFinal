@@ -1,0 +1,164 @@
+/* ---------------------------------------------------------------------------
+   Community — trends rows (.trend-*), net-score vote widget (.vote-*) and the
+   supporter seal (.supporter-badge). Composes the Hextech primitives and the
+   builds vocabulary (forge-row portrait, bshare item tiles) — no new palette.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- Trends filters — inline GET form --------------------------------- */
+  .trend-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.9rem 1.25rem;
+  }
+  .trend-filters__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1 1 12rem;
+    max-width: 18rem;
+  }
+  .trend-filters__label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-dim);
+  }
+  .trend-filters__submit { padding-block: 0.55rem; }
+
+  /* ---- Ranked rows ------------------------------------------------------- */
+  .trend-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .trend-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9rem 1.25rem;
+    padding: 1rem 1.25rem;
+  }
+  .trend-row__id {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+    flex: 1 1 14rem;
+  }
+  .trend-row__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+  .trend-row__author {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+  .trend-row__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .trend-row__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-left: auto;
+  }
+  /* Smaller than the share-page tiles: an excerpt, not the build itself. */
+  .trend-row__item { width: 2rem; height: 2rem; }
+
+  @media (width < 40rem) {
+    .trend-row__items { margin-left: 0; }
+  }
+
+  /* ---- Pagination (server-side twin of the list-filter arrows) ----------- */
+  .trend-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .trend-pager__nav {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--color-gold-deep);
+    color: var(--color-text-muted);
+    background: color-mix(in srgb, var(--color-void) 60%, transparent);
+    transition: color 0.2s var(--ease-hextech), border-color 0.2s var(--ease-hextech);
+  }
+  .trend-pager__nav svg { width: 1rem; height: 1rem; }
+  .trend-pager__nav:hover,
+  .trend-pager__nav:focus-visible {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+  }
+  .trend-pager__nav--off { opacity: 0.35; pointer-events: none; }
+
+  /* ---- Net-score vote widget --------------------------------------------- */
+  .vote-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    flex: none;
+  }
+  .vote-arrow {
+    display: grid;
+    place-items: center;
+    width: 1.9rem;
+    height: 1.5rem;
+    color: var(--color-text-dim);
+    transition: color 0.2s var(--ease-hextech), filter 0.2s var(--ease-hextech);
+  }
+  .vote-arrow svg { width: 0.85rem; height: 0.85rem; }
+  .vote-arrow:hover,
+  .vote-arrow:focus-visible { color: var(--color-gold-bright); }
+  .vote-arrow--on-up {
+    color: var(--color-hex);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-hex) 70%, transparent));
+  }
+  .vote-arrow--on-up:hover,
+  .vote-arrow--on-up:focus-visible { color: var(--color-hex); }
+  .vote-arrow--on-down {
+    color: var(--color-danger);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-danger) 70%, transparent));
+  }
+  .vote-arrow--on-down:hover,
+  .vote-arrow--on-down:focus-visible { color: var(--color-danger); }
+  .vote-arrow[disabled] { opacity: 0.5; cursor: wait; }
+
+  /* The single NET number — never a like/dislike breakdown. */
+  .vote-score {
+    min-width: 2.2rem;
+    font-family: var(--font-beaufort);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+  .vote-score--positive { color: var(--color-gold); }
+  .vote-score--negative { color: var(--color-text-muted); }
+  .vote-score--zero { color: var(--color-text-dim); }
+
+  /* ---- Supporter seal ----------------------------------------------------- */
+  .supporter-badge {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    vertical-align: baseline;
+    color: var(--color-gold-rich);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--color-gold) 55%, transparent));
+  }
+}

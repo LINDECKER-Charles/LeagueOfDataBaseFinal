@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — League of Legends ansiklopedisi"
+  description: "%version% yaması için League of Legends şampiyonları, eşyaları, rünleri ve sihirdar büyüleri — 21 dilde istatistikler, yetenekler ve ayrıntılar."
+champion:
+  list:
+    title: "League of Legends şampiyonları"
+    description: "Rolleri, yetenekleri ve hikâyeleriyle tüm %count% League of Legends şampiyonu — %version% yaması verileri."
+  detail:
+    title: "%name%, LoL şampiyonu"
+    description: "League of Legends'ta %name%: yetenekler, kostümler, hikâye ve ipuçları, %version% yaması için güncel."
+item:
+  list:
+    title: "League of Legends eşyaları"
+    description: "Maliyet, istatistik ve tarifleriyle tüm %count% League of Legends eşyası — %version% yaması verileri."
+  detail:
+    title: "%name%, LoL eşyası"
+    description: "League of Legends'ta %name%: istatistikler, maliyet, tarif ve geliştirmeler, %version% yaması için güncel."
+rune:
+  list:
+    title: "League of Legends rünleri"
+    description: "Tüm anahtar taşları ve küçük rünleriyle %count% League of Legends rün yolu — %version% yaması verileri."
+  detail:
+    title: "%name%, LoL rün yolu"
+    description: "League of Legends'ta %name% rün yolu: anahtar taşları, yuvalar ve etkiler, %version% yaması için güncel."
+summoner:
+  list:
+    title: "League of Legends sihirdar büyüleri"
+    description: "Bekleme süreleri ve etkileriyle tüm %count% League of Legends sihirdar büyüsü — %version% yaması verileri."
+  detail:
+    title: "%name%, LoL sihirdar büyüsü"
+    description: "League of Legends'ta %name% sihirdar büyüsü: bekleme süresi ve etkiler, %version% yaması için güncel."
+donate:
+  title: "Projeyi destekle"
+  description: "League Of Data Base'in ücretsiz ve hızlı kalmasına yardım et — projeyi bir bağışla destekle."
+legal:
+  notice:
+    description: "League Of Data Base yasal bildirimi: yayıncı, barındırma ve iletişim."
+  privacy:
+    description: "League Of Data Base gizlilik politikası: işlenen veriler, amaçlar ve haklarınız."
+  terms:
+    description: "League Of Data Base kullanım koşulları."
+  cookies:
+    description: "League Of Data Base çerez politikası: kullanılan çerezler ve nasıl yönetileceği."
+error:
+  "404":
+    title: "Sayfa bulunamadı"
+    eyebrow: "Vadi'de kayboldun"
+    body: "Bu sayfa mevcut değil — kaynak mevcut yamadan kaldırılmış olabilir."
+    back_home: "Ana sayfaya dön"
+  generic:
+    title: "Bir şeyler ters gitti"
+    body: "Beklenmedik bir hata oluştu. Lütfen az sonra tekrar deneyin."
+
+developers:
+  title: "Geliştiriciler için API"
+  description: "League of Legends topluluk verileri üzerinde ücretli REST JSON API: herkese açık profiller, paylaşılan buildler ve eğilimler. Ücretsiz katman, kredi paketleri ve abonelikler."
+
+trends:
+  title: "Trend LoL buildleri"
+  description: "Topluluk oylarına göre sıralanan herkese açık League of Legends buildleri — şampiyona ve oyun moduna göre filtreleyin."

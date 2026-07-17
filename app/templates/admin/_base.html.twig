@@ -17,11 +17,20 @@
         <span class="brand"><b>LODB</b><span>Admin</span></span>
         {% if app.user %}
             {% set route = app.request.attributes.get('_route') %}
-            <nav>
+            <nav aria-label="Navigation admin">
+                <span class="nav-label">Analytics</span>
                 <a href="{{ path('admin_dashboard') }}" class="{{ route == 'admin_dashboard' ? 'is-active' }}">Vue d'ensemble</a>
                 <a href="{{ path('admin_traffic') }}" class="{{ route == 'admin_traffic' ? 'is-active' }}">Trafic</a>
                 <a href="{{ path('admin_audience') }}" class="{{ route == 'admin_audience' ? 'is-active' }}">Audience</a>
                 <a href="{{ path('admin_storage') }}" class="{{ route == 'admin_storage' ? 'is-active' }}">Stockage</a>
+                <span class="nav-sep" aria-hidden="true"></span>
+                <span class="nav-label">Gestion</span>
+                <a href="{{ path('admin_users') }}" class="{{ route == 'admin_users' ? 'is-active' }}">Utilisateurs</a>
+                <a href="{{ path('admin_builds') }}" class="{{ route == 'admin_builds' ? 'is-active' }}">Builds</a>
+                <a href="{{ path('admin_donations') }}" class="{{ route == 'admin_donations' ? 'is-active' }}">Dons</a>
+                <a href="{{ path('admin_api_clients') }}" class="{{ route == 'admin_api_clients' ? 'is-active' }}">Clients API</a>
+                <a href="{{ path('admin_monitoring') }}" class="{{ route == 'admin_monitoring' ? 'is-active' }}">Surveillance</a>
+                <a href="{{ path('admin_logs') }}" class="{{ route in ['admin_logs', 'admin_user_activity'] ? 'is-active' }}">Journal</a>
             </nav>
         {% endif %}
         <span class="spacer"></span>
