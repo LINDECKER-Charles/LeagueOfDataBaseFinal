@@ -1,7 +1,7 @@
 <footer class="relative border-t border-gold-deep/40 bg-hextech-black/95 text-text-muted">
   <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent"></div>
 
-  <div class="mx-auto grid max-w-[110rem] grid-cols-2 gap-x-6 gap-y-10 px-6 py-12 sm:px-8 sm:py-14 lg:grid-cols-5">
+  <div class="mx-auto grid max-w-[110rem] grid-cols-2 gap-x-6 gap-y-10 px-6 py-12 sm:px-8 sm:py-14 lg:grid-cols-6">
     {# Brand + copyright #}
     <div class="col-span-2 flex flex-col gap-3 lg:col-span-1">
       <div class="flex items-center gap-2 text-gold">
@@ -9,7 +9,7 @@
         <span class="font-beaufort text-sm uppercase tracking-[0.16em] text-gold-bright">Data Base</span>
       </div>
       <p class="text-sm">{{ 'footer.copyright'|trans }}</p>
-      <p><a href="#" class="nav-link underline-offset-4 hover:underline">{{ 'footer.legal'|trans }}</a></p>
+      <p><a href="{{ path('app_legal_notice') }}" class="nav-link underline-offset-4 hover:underline">{{ 'footer.legal'|trans }}</a></p>
     </div>
 
     {# Navigation #}
@@ -23,6 +23,10 @@
         <li><a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.item'|trans }}</a></li>
         <li><a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.runes'|trans }}</a></li>
         <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.summoner'|trans }}</a></li>
+        <li><a href="{{ path('app_donate') }}" class="nav-link">{{ 'nav.donate'|trans }}</a></li>
+        {% if app.user %}
+          <li><a href="{{ path('app_profile') }}" class="nav-link">{{ 'nav.profile'|trans }}</a></li>
+        {% endif %}
       </ul>
     </div>
 
@@ -47,9 +51,20 @@
       </ul>
     </div>
 
-    {# Contact #}
+    {# Legal #}
     <div>
-      <h3 class="eyebrow mb-3">Contact</h3>
+      <h3 class="eyebrow mb-3">{{ 'footer.legal_title'|trans }}</h3>
+      <ul class="flex flex-col gap-1.5 text-sm">
+        <li><a href="{{ path('app_legal_notice') }}" class="nav-link">{{ 'legal.notice.title'|trans }}</a></li>
+        <li><a href="{{ path('app_legal_privacy') }}" class="nav-link">{{ 'legal.privacy.title'|trans }}</a></li>
+        <li><a href="{{ path('app_legal_terms') }}" class="nav-link">{{ 'legal.terms.title'|trans }}</a></li>
+        <li><a href="{{ path('app_legal_cookies') }}" class="nav-link">{{ 'legal.cookies.title'|trans }}</a></li>
+      </ul>
+    </div>
+
+    {# Contact #}
+    <div class="col-span-2 lg:col-span-1">
+      <h3 class="eyebrow mb-3">{{ 'footer.contact.title'|trans }}</h3>
       <ul class="flex flex-col gap-2.5 text-sm">
         <li>
           <a href="mailto:charles.lindecker@outlook.fr" class="nav-link inline-flex items-center gap-2">
@@ -85,5 +100,14 @@
         </li>
       </ul>
     </div>
+  </div>
+
+  {# Riot Games boilerplate disclaimer — standard wording, kept in English #}
+  <div class="mx-auto max-w-[110rem] px-6 pb-8 sm:px-8">
+    <p class="border-t border-gold-deep/25 pt-5 text-xs leading-relaxed text-text-dim">
+      League Of Data Base isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games
+      or anyone officially involved in producing or managing Riot Games properties. Riot Games and all associated
+      properties are trademarks or registered trademarks of Riot Games, Inc.
+    </p>
   </div>
 </footer>

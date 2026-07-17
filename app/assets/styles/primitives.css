@@ -100,6 +100,11 @@
   background-position: right 0.65rem center;
   background-size: 0.7rem;
 }
+@utility hx-input {
+  @apply w-full appearance-none border border-gold-deep/50 bg-void/70 px-3 py-2.5 font-spiegel text-sm text-text
+         placeholder:text-text-dim transition-colors hover:border-gold/60
+         focus:border-hex focus:outline-none focus:ring-1 focus:ring-hex/40;
+}
 @utility hx-check {
   @apply h-4 w-4 appearance-none border border-gold-deep/60 bg-void transition-colors
          checked:border-hex focus:outline-none focus:ring-1 focus:ring-hex/40;

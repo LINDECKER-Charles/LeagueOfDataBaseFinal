@@ -200,6 +200,7 @@ base:
 footer:
   copyright: "© 2025 LINDECKER Charles / Hexanti"
   legal: "Mentions légales"
+  legal_title: "Légal"
 
   navigation:
     title: "Navigation"
@@ -264,3 +265,243 @@ nav:
     items: "Objets"
     runes: "Runes"
     summoners: "Sorts"
+  codex: "Encyclopédie"
+  account: "Compte"
+  login: "Connexion"
+  register: "Créer un compte"
+  profile: "Mon profil"
+  builds: "Mes builds"
+  donate: "Faire un don"
+
+auth:
+  eyebrow: "Portail d'invocation"
+  login:
+    title: "Connexion"
+    identifier: "E-mail ou nom d'invocateur"
+    password: "Mot de passe"
+    remember: "Rester connecté"
+    submit: "Entrer dans l'archive"
+    no_account: "Pas encore de compte ?"
+  register:
+    title: "Créer un compte"
+    email: "E-mail"
+    username: "Nom d'invocateur"
+    username_help: "3 à 24 caractères : lettres, chiffres, point, tiret, underscore ; commence par une lettre ou un chiffre."
+    password: "Mot de passe (8 caractères min.)"
+    terms: "J'accepte les conditions d'utilisation"
+    submit: "Forger mon compte"
+    have_account: "Déjà inscrit ?"
+  flash:
+    registered: "Bienvenue, invocateur — votre compte est prêt."
+  logout: "Déconnexion"
+  profile_stub:
+    placeholder: "Votre profil d'invocateur est en cours de forge — favoris et builds arrivent bientôt."
+
+legal:
+  eyebrow: "Légal"
+  updated: "Dernière mise à jour"
+  toc: "Sommaire"
+  notice:
+    title: "Mentions légales"
+  privacy:
+    title: "Politique de confidentialité"
+  terms:
+    title: "Conditions générales d'utilisation"
+  cookies:
+    title: "Politique de cookies"
+
+profile:
+  eyebrow: "Profil d'invocateur"
+  identity:
+    email: "E-mail"
+    member_since: "Membre depuis"
+  visibility:
+    label: "Visibilité du profil"
+    help: "Rendre votre profil public — quiconque a le lien voit vos favoris et builds publics. Privé par défaut."
+    view_public: "Voir ma page publique"
+  builds:
+    label: "Builds"
+    manage: "Gérer mes builds"
+  favorites:
+    title: "Favoris"
+    empty: "Choisir"
+    unavailable: "Indisponible sur ce patch"
+  slot:
+    champion: "Champion"
+    item: "Objet"
+    rune: "Rune"
+    summoner: "Sort d'invocateur"
+  save: "Enregistrer"
+  picker:
+    search: "Rechercher…"
+    remove: "Retirer ce favori"
+    loading: "Chargement…"
+    error: "Impossible de charger la liste."
+    retry: "Réessayer"
+  danger:
+    title: "Zone dangereuse"
+    help: "La suppression du compte est définitive : favoris et builds sont effacés. Confirmez avec votre mot de passe."
+    password: "Mot de passe actuel"
+    delete: "Supprimer mon compte"
+  flash:
+    saved: "Profil mis à jour."
+    favorite_unavailable: "Le favori %slot% n'existe pas sur ce patch — il a été retiré."
+    wrong_password: "Mot de passe incorrect — le compte n'a pas été supprimé."
+    deleted: "Votre compte a été supprimé. Adieu, invocateur."
+    csrf: "Session expirée, veuillez réessayer."
+  public:
+    eyebrow: "Carte d'invocateur"
+    description: "Carte d'invocateur de %username% — favoris et builds publics sur League Of Data Base."
+    builds_count: "Builds publics"
+    builds_title: "Builds publics"
+    no_builds: "Aucun build public pour l'instant."
+
+donate:
+  eyebrow: "Offrande à la forge"
+  title: "Soutenir League Of Data Base"
+  intro: "Votre don couvre les frais d'hébergement et garde l'encyclopédie rapide, gratuite et sans publicité."
+  pledge: "Aucun avantage en jeu, aucun privilège — seulement notre gratitude."
+  tiers:
+    legend: "Choisir une offrande"
+  tier:
+    spark: "Étincelle"
+    gem: "Gemme"
+    crest: "Blason"
+    relic: "Relique"
+  custom:
+    label: "Montant libre"
+    placeholder: "ex. 7,50"
+    hint: "Entre %min% € et %max% € — le montant libre remplace le palier sélectionné."
+  submit: "Faire un don via Stripe"
+  product_name: "Don — League Of Data Base"
+  unavailable:
+    title: "Dons bientôt disponibles"
+    body: "La passerelle de paiement n'est pas encore activée. Revenez bientôt — l'encyclopédie reste gratuite quoi qu'il arrive."
+  legal:
+    secure: "Paiement sécurisé par Stripe — aucune donnée bancaire ne transite par ce site"
+    secure_short: "paiement sécurisé"
+    privacy: "Politique de confidentialité"
+    terms: "Conditions d'utilisation"
+  error:
+    csrf: "Session expirée, merci de réessayer."
+    unavailable: "Les dons ne sont pas disponibles pour le moment."
+    invalid_amount: "Montant invalide — saisissez entre 1 € et 500 €."
+    gateway: "Le service de paiement est injoignable, merci de réessayer plus tard."
+  success:
+    eyebrow: "Offrande reçue"
+    title: "Merci, invocateur"
+    body: "Votre soutien maintient la forge allumée — chaque don sert l'hébergement et garde l'encyclopédie gratuite pour tous."
+    receipt: "Stripe vous envoie votre reçu par e-mail."
+    back: "Retour à l'encyclopédie"
+  cancel:
+    eyebrow: "Offrande retirée"
+    title: "Don annulé"
+    body: "Rien n'a été débité. L'encyclopédie reste gratuite et ouverte, avec ou sans don."
+    retry: "Réessayer"
+    back: "Retour à l'accueil"
+
+build:
+  list:
+    eyebrow: "L'armurerie"
+    title: "Mes builds"
+    empty: "Vous n'avez encore forgé aucun build."
+    new: "Nouveau build"
+    cta_first: "Forger mon premier build"
+    edit: "Modifier"
+    delete: "Supprimer"
+    delete_confirm: "Supprimer définitivement ce build ?"
+    public: "Public"
+    private: "Privé"
+    updated: "Modifié le %date%"
+  editor:
+    eyebrow: "La forge"
+    title_create: "Forger un build"
+    title_edit: "Modifier le build"
+    identity: "Identité"
+    name: "Nom du build"
+    name_placeholder: "ex. Carry létalité"
+    description: "Description"
+    public: "Build public — visible sur votre profil public"
+    submit_create: "Forger le build"
+    submit_update: "Enregistrer les modifications"
+    back: "Retour à mes builds"
+    nojs: "L'éditeur interactif nécessite JavaScript."
+    loading: "Chargement du catalogue…"
+    error: "Catalogue indisponible."
+    retry: "Réessayer"
+    ghost: "Indisponible sur ce patch"
+    counter: "%count% / %max%"
+    champion:
+      title: "Champion"
+      search: "Rechercher un champion…"
+      empty: "Aucun champion ne correspond."
+      selected: "Champion choisi"
+    runes:
+      title: "Runes"
+      primary: "Voie principale"
+      secondary: "Voie secondaire"
+      keystone: "Clé de voûte"
+      slot: "Rangée %n%"
+      secondary_hint: "Choisissez 2 runes de 2 rangées différentes."
+    steps:
+      title: "Ordre d'achat"
+      add: "Ajouter une étape"
+      remove: "Supprimer l'étape"
+      move_up: "Monter"
+      move_down: "Descendre"
+      label: "Intitulé de l'étape"
+      note: "Note (optionnelle)"
+      search_item: "Rechercher un objet…"
+      item_empty: "Aucun objet ne correspond."
+      remove_item: "Retirer l'objet"
+      gold: "Coût de l'étape"
+      preset:
+        start: "Départ"
+        first_back: "Premier retour"
+        core: "Cœur"
+        situational: "Situationnel"
+        final: "Finale"
+  show:
+    by: "Par %name%"
+    patch: "Forgé sur le patch %version%"
+    runes: "Runes"
+    keystone: "Clé de voûte"
+    order: "Ordre d'achat"
+    step_cost: "Coût de l'étape"
+    total: "Coût total"
+    missing: "Indisponible sur ce patch"
+    meta_fallback: "Runes et ordre d'achat pour %champion%."
+    copy: "Copier le lien"
+    copied: "Copié !"
+    copy_error: "Copiez manuellement :"
+  flash:
+    created: "Build forgé !"
+    updated: "Build mis à jour."
+    deleted: "Build supprimé."
+  error:
+    csrf: "Formulaire expiré, réessayez."
+    name:
+      length: "Le nom du build doit faire entre 3 et 80 caractères."
+    description:
+      length: "La description est limitée à 2000 caractères."
+    structure:
+      invalid: "Structure du build invalide."
+    champion:
+      unknown: "Champion inconnu sur ce patch."
+    catalog_unavailable: "Catalogues indisponibles, réessayez dans un instant."
+    runes:
+      primary_style: "Voie principale invalide."
+      primary_selection_count: "Choisissez exactement 4 runes principales."
+      primary_selection_slot: "Chaque rune principale doit venir de sa propre rangée."
+      secondary_style: "Voie secondaire invalide."
+      secondary_same_style: "La voie secondaire doit différer de la principale."
+      secondary_selection_count: "Choisissez exactement 2 runes secondaires."
+      secondary_selection_slot: "Les runes secondaires doivent être des runes mineures de la voie secondaire."
+      secondary_same_slot: "Les 2 runes secondaires doivent venir de rangées différentes."
+    steps:
+      count: "Entre 1 et 10 étapes."
+      label: "Chaque étape doit avoir un intitulé (40 caractères max)."
+      note: "Les notes d'étape sont limitées à 300 caractères."
+      items_count: "Chaque étape contient de 1 à 8 objets."
+      item_unknown: "Un objet est inconnu sur ce patch."
+      total_items: "40 objets maximum au total."

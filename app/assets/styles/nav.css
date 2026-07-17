@@ -24,8 +24,10 @@
   .switcher > summary::-webkit-details-marker { display: none; }
   .switcher > summary:hover { border-color: var(--color-gold); color: var(--color-gold-bright); }
   .switcher > summary:focus-visible { outline: none; border-color: var(--color-hex); }
-  .switcher > summary svg { width: 0.65rem; height: 0.65rem; transition: rotate 0.25s var(--ease-hextech); }
-  .switcher[open] > summary svg { rotate: 180deg; }
+  /* Trailing svg = the disclosure chevron (menu summaries may carry a leading
+     icon that must neither be resized nor flipped). */
+  .switcher > summary svg:last-child { width: 0.65rem; height: 0.65rem; transition: rotate 0.25s var(--ease-hextech); }
+  .switcher[open] > summary svg:last-child { rotate: 180deg; }
   .switcher__panel {
     position: absolute;
     right: 0;
@@ -36,6 +38,45 @@
     border: 1px solid rgba(200, 170, 110, 0.45);
     background: linear-gradient(180deg, rgba(15, 27, 45, 0.98), rgba(1, 10, 19, 0.98));
     box-shadow: 0 22px 60px -18px rgba(1, 10, 19, 0.95);
+  }
+
+  /* ---- Disclosure menus (Encyclopedia, account) — same <details> grammar ----
+     `--nav` blends the summary into the primary-nav typography (no chip chrome);
+     `__panel--menu` turns the panel into a plain link column. Active/hover/focus
+     states come from the nav-link utility + text-gold-bright on the elements. */
+  .switcher--nav > summary {
+    min-height: 0;
+    padding: 0.25rem 0.1rem;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+  }
+  .switcher--nav .switcher__panel { right: auto; left: 0; }
+  .switcher__panel--menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    width: max-content;
+    min-width: 12rem;
+    padding: 0.5rem;
+  }
+  .switcher__panel--menu a,
+  .switcher__panel--menu button {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    font-family: var(--font-beaufort);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-muted);
+    cursor: pointer;
   }
 
   /* ---- Bottom navigation (mobile) — thumb-first primary nav ---------------- */
