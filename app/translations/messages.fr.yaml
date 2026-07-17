@@ -221,7 +221,7 @@ footer:
   project:
     title: "Projet"
     version: "Version : Beta 2.0"
-    updated: "Mis à jour : 03/08/2025"
+    updated: "Mis à jour : 17/07/2026"
 
   contact:
     title: "Contact"
@@ -272,6 +272,23 @@ nav:
   profile: "Mon profil"
   builds: "Mes builds"
   donate: "Faire un don"
+  changelog: "Nouveautés"
+
+changelog:
+  eyebrow: "Journal"
+  title: "Journal des versions"
+  lede: "Toutes les versions de LeagueOfDataBase, de l'encyclopédie d'origine à aujourd'hui — nouveautés, améliorations et correctifs, les plus récentes en premier."
+  current: "Version actuelle"
+  empty: "Aucune version publiée pour le moment."
+  meta:
+    title: "Journal des versions"
+    description: "L'histoire complète des versions de LeagueOfDataBase — nouvelles fonctionnalités, améliorations et correctifs, version par version."
+  type:
+    major: "Majeure"
+    minor: "Mise à jour"
+    hotfix: "Correctif"
+  section:
+    fixes: "Corrections"
 
 auth:
   eyebrow: "Portail d'invocation"
@@ -287,6 +304,7 @@ auth:
     remember: "Rester connecté"
     submit: "Entrer dans l'archive"
     no_account: "Pas encore de compte ?"
+    forgot: "Mot de passe oublié ?"
   register:
     title: "Créer un compte"
     email: "E-mail"
@@ -309,7 +327,31 @@ auth:
     too_common: "Ce mot de passe est trop courant. Choisissez-en un plus personnel."
   flash:
     registered: "Bienvenue, invocateur — votre compte est prêt."
+    verify_sent: "Un e-mail de confirmation vient de vous être envoyé. Vérifiez votre boîte de réception."
+    verify_success: "Votre adresse e-mail est confirmée. Bon jeu, invocateur."
+    verify_error: "Ce lien de confirmation est invalide ou a expiré."
+    verify_already: "Votre adresse e-mail est déjà confirmée."
+    reset_sent: "Si un compte correspond à cette adresse, un e-mail de réinitialisation vient de partir."
+    reset_success: "Votre mot de passe a été réinitialisé. Vous pouvez vous connecter."
+    reset_error: "Ce lien de réinitialisation est invalide ou a expiré. Merci de refaire une demande."
     banned: "Ce compte a été suspendu par l'équipe de modération."
+  verify:
+    banner: "Confirmez votre adresse e-mail pour débloquer la création de builds."
+    banner_cta: "Renvoyer l'e-mail"
+    resend_done: "E-mail de confirmation renvoyé."
+    resend_throttled: "Un e-mail a déjà été envoyé récemment — patientez quelques minutes avant de réessayer."
+    gate_build: "Confirmez votre adresse e-mail avant de créer un build."
+  reset:
+    request_title: "Mot de passe oublié"
+    request_lede: "Saisissez l'adresse e-mail de votre compte : si elle existe, un lien de réinitialisation vous sera envoyé."
+    email: "E-mail"
+    submit_request: "Envoyer le lien"
+    back_to_login: "Retour à la connexion"
+    check_email_title: "Vérifiez votre boîte mail"
+    check_email_lede: "Si un compte correspond à cette adresse, un e-mail de réinitialisation vient d'être envoyé. Pensez à vérifier vos courriers indésirables."
+    reset_title: "Nouveau mot de passe"
+    submit_reset: "Réinitialiser le mot de passe"
+    invalid_token: "Ce lien de réinitialisation est invalide ou a expiré."
   logout: "Déconnexion"
   profile_stub:
     placeholder: "Votre profil d'invocateur est en cours de forge — favoris et builds arrivent bientôt."
@@ -349,6 +391,8 @@ profile:
     label: "Visibilité du profil"
     help: "Rendre votre profil public — quiconque a le lien voit vos favoris et builds publics. Privé par défaut."
     view_public: "Voir ma page publique"
+    state_public: "Public"
+    state_private: "Privé"
   builds:
     label: "Builds"
     manage: "Gérer mes builds"
@@ -361,18 +405,38 @@ profile:
     item: "Objet"
     rune: "Rune"
     summoner: "Sort d'invocateur"
+    skin: "Bannière de skin"
   save: "Enregistrer"
+  autosave:
+    saving: "Enregistrement…"
+    saved: "Enregistré"
+    error: "Échec — réessayer"
+    dropped: "Enregistré — un favori était indisponible"
   picker:
     search: "Rechercher…"
     remove: "Retirer ce favori"
     loading: "Chargement…"
     error: "Impossible de charger la liste."
     retry: "Réessayer"
+  skin:
+    change: "Changer de skin"
+    empty: "Choisir un skin de bannière"
+    choose_champion: "Choisir un champion"
+    choose_skin: "Choisir un skin"
+    back: "Retour"
+  preview:
+    button: "Aperçu du profil public"
+    badge: "Aperçu"
+    note_public: "Voici exactement comment les autres voient votre profil public."
+    note_private: "Aperçu uniquement — votre profil est privé, personne d'autre ne peut encore le voir."
+    back: "Retour à l'édition"
   danger:
     title: "Zone dangereuse"
     help: "La suppression du compte est définitive : favoris et builds sont effacés. Confirmez avec votre mot de passe."
     help_no_password: "La suppression du compte est définitive : favoris et builds sont effacés."
     password: "Mot de passe actuel"
+    confirm_phrase: "SUPPRIMER MON COMPTE"
+    confirm_label: "Pour confirmer, saisissez %phrase%"
     delete: "Supprimer mon compte"
   flash:
     saved: "Profil mis à jour."
@@ -380,7 +444,9 @@ profile:
     password_set: "Mot de passe défini — vous pouvez désormais aussi vous connecter avec votre e-mail."
     password_exists: "Un mot de passe est déjà défini sur ce compte."
     favorite_unavailable: "Le favori %slot% n'existe pas sur ce patch — il a été retiré."
+    skin_unavailable: "La bannière de skin n'a pas pu être définie et a été retirée."
     wrong_password: "Mot de passe incorrect — le compte n'a pas été supprimé."
+    wrong_phrase: "La phrase de confirmation ne correspond pas — le compte n'a pas été supprimé."
     deleted: "Votre compte a été supprimé. Adieu, invocateur."
     csrf: "Session expirée, veuillez réessayer."
   public:
@@ -587,3 +653,25 @@ community:
     invalid: "Vote invalide."
   supporter:
     badge: "Soutien"
+
+email:
+  wordmark_subtitle: "Encyclopédie League of Legends"
+  fallback: "Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :"
+  footer:
+    rights: "© LeagueOfDataBase — projet indépendant, non affilié à Riot Games."
+  confirm:
+    subject: "Confirmez votre adresse e-mail · LeagueOfDataBase"
+    preheader: "Un dernier pas pour activer votre compte d'invocateur."
+    heading: "Bienvenue, %name%"
+    lede: "Confirmez votre adresse e-mail pour activer pleinement votre compte et débloquer la création de builds."
+    cta: "Confirmer mon adresse"
+    expiry: "Ce lien expire dans %duration%. Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail."
+    footer_reason: "Vous recevez cet e-mail car un compte a été créé avec cette adresse sur LeagueOfDataBase."
+  reset:
+    subject: "Réinitialisation de votre mot de passe · LeagueOfDataBase"
+    preheader: "Réinitialisez le mot de passe de votre compte d'invocateur."
+    heading: "Réinitialisation du mot de passe"
+    lede: "Une réinitialisation de mot de passe a été demandée pour votre compte. Choisissez-en un nouveau ci-dessous."
+    cta: "Choisir un nouveau mot de passe"
+    expiry: "Ce lien expire dans %duration%. Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre mot de passe reste inchangé."
+    footer_reason: "Vous recevez cet e-mail car une réinitialisation de mot de passe a été demandée pour ce compte."
