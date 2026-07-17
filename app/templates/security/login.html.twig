@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'auth.login.title'|trans }} · {{ 'base.title'|trans }}{% endblock %}
+
+{% block body %}
+<main class="auth-portal">
+    <section class="auth-card hextech-frame hx-corners relative w-full max-w-md p-8 sm:p-10">
+        <p class="eyebrow">{{ 'auth.eyebrow'|trans }}</p>
+        <h1 class="mt-2 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad">
+            {{ 'auth.login.title'|trans }}
+        </h1>
+        <hr class="hx-rule mt-5">
+
+        {% if error %}
+            <p class="auth-error mt-6" role="alert">
+                {{ error.messageKey|trans(error.messageData, 'security') }}
+            </p>
+        {% endif %}
+
+        {# Full reload after auth (session/remember-me cookies): keep Turbo out. #}
+        <form method="post" action="{{ path('app_login') }}" data-turbo="false" class="mt-6 space-y-5">
+            <div>
+                <label for="login-identifier" class="auth-label">{{ 'auth.login.identifier'|trans }}</label>
+                <input
+                    type="text"
+                    id="login-identifier"
+                    name="_username"
+                    value="{{ last_username }}"
+                    required
+                    autofocus
+                    autocomplete="username"
+                    class="hx-input mt-1.5"
+                >
+            </div>
+            <div>
+                <label for="login-password" class="auth-label">{{ 'auth.login.password'|trans }}</label>
+                <input
+                    type="password"
+                    id="login-password"
+                    name="_password"
+                    required
+                    autocomplete="current-password"
+                    class="hx-input mt-1.5"
+                >
+            </div>
+            <label class="flex items-center gap-2.5 text-sm text-text-muted">
+                <input type="checkbox" name="_remember_me" class="hx-check">
+                {{ 'auth.login.remember'|trans }}
+            </label>
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+            <button type="submit" class="hx-btn w-full">{{ 'auth.login.submit'|trans }}</button>
+        </form>
+
+        <div class="gold-hairline mt-8 pt-5 text-center text-sm text-text-muted">
+            {{ 'auth.login.no_account'|trans }}
+            <a href="{{ path('app_register') }}" class="nav-link text-gold">{{ 'auth.register.title'|trans }}</a>
+        </div>
+    </section>
+</main>
+{% endblock %}
