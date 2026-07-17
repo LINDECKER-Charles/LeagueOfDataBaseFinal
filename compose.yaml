@@ -96,9 +96,10 @@ services:
     build:
       context: ./go-api
       dockerfile: Dockerfile
-    # Public paid API — exposed directly on its own port (separate from the site edge).
-    ports:
-      - "8090:8090"
+    # Public paid API. In dev the host port is published via compose.override.yaml;
+    # in staging/prod it is reached through the shared edge proxy on its own
+    # subdomain (compose.deploy.yaml). No host port is bound here: a fixed :8090
+    # bind would collide between the co-located lodb-staging / lodb-prod stacks.
     environment:
       PORT: "8090"
       # pgx needs a plain connection URL: same credentials/database as php, but

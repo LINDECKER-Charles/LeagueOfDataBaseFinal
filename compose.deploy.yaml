@@ -30,6 +30,18 @@ services:
       caddy: ${CADDY_DOMAINS:?CADDY_DOMAINS is required (e.g. "example.fr, example.com")}
       caddy.reverse_proxy: "{{upstreams 80}}"
 
+  go-api:
+    # Public paid API — reached through the SAME shared edge proxy as the site, but
+    # on its OWN subdomain (API_CADDY_DOMAINS, e.g. api.example.fr). No host port is
+    # published: a fixed :8090 bind would collide between the co-located lodb-staging
+    # / lodb-prod stacks. `{{upstreams 8090}}` resolves this container's IP on `edge`.
+    networks:
+      - default
+      - edge
+    labels:
+      caddy: ${API_CADDY_DOMAINS:?API_CADDY_DOMAINS is required (e.g. "api.example.fr")}
+      caddy.reverse_proxy: "{{upstreams 8090}}"
+
 networks:
   # Shared ingress fabric, created once on the host (`docker network create edge`,
   # also ensured idempotently by the deploy job). Owned by no single stack.
