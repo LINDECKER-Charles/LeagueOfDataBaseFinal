@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ profileUser.username }} · {{ 'base.title'|trans }}{% endblock %}
-{% block meta_description %}{{ 'profile.public.description'|trans({'%username%': profileUser.username}) }}{% endblock %}
+{% block title %}{{ profileUser.displayName }} · {{ 'base.title'|trans }}{% endblock %}
+{% block meta_description %}{{ 'profile.public.description'|trans({'%username%': profileUser.displayName}) }}{% endblock %}
 {% block og_type %}profile{% endblock %}
 
 {% block body %}
@@ -12,8 +12,9 @@
         <article class="profile-card hextech-frame hx-corners">
             <header class="profile-card__banner">
                 <p class="eyebrow">{{ 'profile.public.eyebrow'|trans }}</p>
-                <h1 class="mt-2 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad sm:text-4xl">
-                    {{ profileUser.username }}
+                <h1 class="mt-2 flex flex-wrap items-center justify-center gap-2.5 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad sm:text-4xl">
+                    {{ profileUser.displayName }}
+                    {% if profileUser.isSupporter %}{% include 'components/_supporter_badge.html.twig' %}{% endif %}
                 </h1>
                 <hr class="hx-rule mt-6">
             </header>

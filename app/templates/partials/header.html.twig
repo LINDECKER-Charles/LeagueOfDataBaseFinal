@@ -41,6 +41,8 @@
             </ul>
           </details>
         </li>
+        <li><a href="{{ path('app_trends') }}" class="nav-link {{ currentRoute == 'app_trends' ? 'text-gold-bright' }}">{{ 'community.nav.trends'|trans }}</a></li>
+        <li><a href="{{ path('app_developers') }}" class="nav-link {{ currentRoute == 'app_developers' ? 'text-gold-bright' }}">{{ 'nav.developers'|trans({}, 'api') }}</a></li>
       </ul>
     </nav>
 
