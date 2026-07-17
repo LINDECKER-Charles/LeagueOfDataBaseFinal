@@ -104,4 +104,38 @@ jobs:
             docker compose exec -d php php bin/console app:ddragon:warmup --limit=3
             docker compose exec -d php php bin/console app:ddragon:webp
             docker image prune -f
+            # ── Public TLS smoke test + edge cert self-heal ──────────────────────
+            # The shared edge (caddy-docker-proxy) issues Let's Encrypt certs from
+            # this stack's labels. If issuance failed earlier (e.g. DNS not yet
+            # pointing here on the first attempt), the cert stays stuck in back-off
+            # and a plain `up -d` never retries it. So once the app is live on the
+            # `edge` network, assert every public domain serves a trusted cert; if
+            # one doesn't, force a single edge reload to re-attempt issuance, then
+            # re-check. Fail the deploy if TLS is still broken — a prod domain must
+            # never be silently certless again.
+            assert_tls() {
+              for domain in $(grep -E '^CADDY_DOMAINS=' .env | cut -d= -f2- | tr -d '"' | tr ',' ' '); do
+                # No -f/-k: success means the TLS handshake + cert verification passed,
+                # regardless of the HTTP status the app returns behind it.
+                curl -sS --max-time 10 -o /dev/null "https://${domain}/" || return 1
+              done
+            }
+            if assert_tls; then
+              echo "TLS OK for all public domains."
+            else
+              echo "TLS check failed — forcing edge to re-attempt certificate issuance…" >&2
+              docker compose -f /opt/edge/compose.yaml --env-file /opt/edge/.env restart caddy
+              recovered=0
+              for _ in $(seq 1 18); do   # up to ~90s: challenge solve is usually a few seconds
+                sleep 5
+                if assert_tls; then recovered=1; break; fi
+              done
+              if [ "$recovered" != 1 ]; then
+                echo "TLS still failing after edge reload. Check DNS (A -> this host), CAA, LE rate-limits:" >&2
+                docker compose -f /opt/edge/compose.yaml --env-file /opt/edge/.env logs --since 3m caddy 2>&1 \
+                  | grep -iE 'challenge failed|could not get certificate|rateLimited|unauthorized' >&2 || true
+                exit 1
+              fi
+              echo "TLS recovered after edge reload."
+            fi
           EOSSH
