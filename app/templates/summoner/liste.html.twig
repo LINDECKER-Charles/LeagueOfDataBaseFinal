@@ -1,12 +1,20 @@
 {# templates/summoner/liste.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Summoners - {{ client.session.version ?? (client.versions|first) }}{% endblock %}
-{% block meta_description %}
-  Browse all League of Legends summoner spells for patch {{ client.session.version ?? (client.versions|first) }}.
-  Find detailed cooldowns, effects, and stats updated.
-{% endblock %}
+{% block title %}{{ seo_title('summoner.list.title'|trans({}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'summoner.list.description'|trans({'%count%': meta.totalItem, '%version%': meta.version}, 'seo') }}{% endblock %}
 {% block img %}/preview/summoners.png{% endblock %}
+
+{% block structured_data %}
+  {% set seoItems = [] %}
+  {% for s in summoners|slice(0, 20) %}
+    {% set seoItems = seoItems|merge([{
+      name: s.name|default(''),
+      url: seo_absolute(path('app_summoner', { name: s.id|default('') }))
+    }]) %}
+  {% endfor %}
+  {{ seo_jsonld(seo_item_list(seoItems)) }}
+{% endblock %}
 
 {% block body %}
 <main class="relative px-6 py-12">

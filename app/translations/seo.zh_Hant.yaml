@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — 英雄聯盟百科全書"
+  description: "版本 %version% 的英雄聯盟英雄、裝備、符文與召喚師技能 — 21 種語言的屬性、技能與詳細資料。"
+champion:
+  list:
+    title: "英雄聯盟英雄大全"
+    description: "全部 %count% 位英雄聯盟英雄的定位、技能與背景故事 — 版本 %version% 資料。"
+  detail:
+    title: "%name%（LoL 英雄）"
+    description: "英雄聯盟的 %name%：技能、造型、背景故事與實用技巧，已更新至版本 %version%。"
+item:
+  list:
+    title: "英雄聯盟裝備大全"
+    description: "全部 %count% 件英雄聯盟裝備的價格、屬性與合成配方 — 版本 %version% 資料。"
+  detail:
+    title: "%name%（LoL 裝備）"
+    description: "英雄聯盟的 %name%：屬性、價格、合成配方與升級路線，已更新至版本 %version%。"
+rune:
+  list:
+    title: "英雄聯盟符文大全"
+    description: "全部 %count% 系英雄聯盟符文及所有基石符文與次級符文 — 版本 %version% 資料。"
+  detail:
+    title: "%name%（LoL 符文系）"
+    description: "英雄聯盟的 %name% 符文系：基石符文、符文欄位與效果，已更新至版本 %version%。"
+summoner:
+  list:
+    title: "英雄聯盟召喚師技能大全"
+    description: "全部 %count% 個英雄聯盟召喚師技能的冷卻時間與效果 — 版本 %version% 資料。"
+  detail:
+    title: "%name%（LoL 召喚師技能）"
+    description: "英雄聯盟的召喚師技能 %name%：冷卻時間與效果，已更新至版本 %version%。"
+donate:
+  title: "支持本專案"
+  description: "幫助 League Of Data Base 保持免費與快速 — 透過捐款支持這個專案。"
+legal:
+  notice:
+    description: "League Of Data Base 法律聲明：發布者、主機代管與聯絡方式。"
+  privacy:
+    description: "League Of Data Base 隱私權政策：處理的資料、目的與您的權利。"
+  terms:
+    description: "League Of Data Base 使用條款。"
+  cookies:
+    description: "League Of Data Base Cookie 政策：使用哪些 Cookie 以及如何管理。"
+error:
+  "404":
+    title: "找不到頁面"
+    eyebrow: "在峽谷中迷路了"
+    body: "此頁面不存在 — 這項資源可能已從目前版本中移除。"
+    back_home: "回到首頁"
+  generic:
+    title: "發生錯誤"
+    body: "發生未預期的錯誤，請稍後再試。"
+
+developers:
+  title: "開發者 API"
+  description: "基於英雄聯盟社群資料的付費 REST JSON API:公開檔案、共享出裝與瀏覽趨勢。提供免費額度、點數包與訂閱。"
+
+trends:
+  title: "LoL 熱門配裝"
+  description: "依社群投票排序的 League of Legends 公開配裝 — 可依英雄與遊戲模式篩選。"

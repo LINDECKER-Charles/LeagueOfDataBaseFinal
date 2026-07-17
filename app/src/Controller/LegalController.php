@@ -67,6 +67,9 @@ final class LegalController extends AbstractResourceController
             'client'      => $this->clientData(),
             'legal'       => $this->legalInfo,
             'lastUpdated' => $this->legalInfo->effectiveDate,
+            // Page id consumed by legal/layout.html.twig to pick the localized
+            // meta description from the `seo` translation domain.
+            'seoPage'     => $page,
         ]);
     }
 }

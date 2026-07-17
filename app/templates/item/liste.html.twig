@@ -1,11 +1,22 @@
 {# templates/item/liste.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Objects - {{ client.session.version ?? (client.versions|first) }}{% endblock %}
-{% block meta_description %}
-  {{ 'item.list.meta_description'|trans({ '%version%': client.session.version ?? (client.versions|first) }) }}
-{% endblock %}
+{% block title %}{{ seo_title('item.list.title'|trans({}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'item.list.description'|trans({'%count%': meta.totalItem, '%version%': meta.version}, 'seo') }}{% endblock %}
 {% block img %}/preview/objects.png{% endblock %}
+
+{% block structured_data %}
+  {# First page of entries only — mirrors JsonLdBuilder::ITEM_LIST_MAX; slicing
+     here skips building hundreds of throwaway Twig array merges. #}
+  {% set seoItems = [] %}
+  {% for id, item in items|slice(0, 20) %}
+    {% set seoItems = seoItems|merge([{
+      name: item.name|default(''),
+      url: seo_absolute(path('app_item', { name: id }))
+    }]) %}
+  {% endfor %}
+  {{ seo_jsonld(seo_item_list(seoItems)) }}
+{% endblock %}
 
 {% block body %}
 <main class="relative px-6 py-12">

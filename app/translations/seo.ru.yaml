@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — энциклопедия League of Legends"
+  description: "Чемпионы, предметы, руны и заклинания призывателя League of Legends для патча %version% — характеристики, умения и подробности на 21 языке."
+champion:
+  list:
+    title: "Чемпионы League of Legends"
+    description: "Все %count% чемпионов League of Legends с ролями, умениями и историей — данные патча %version%."
+  detail:
+    title: "%name% — чемпион LoL"
+    description: "%name% в League of Legends: умения, образы, история и советы, актуально для патча %version%."
+item:
+  list:
+    title: "Предметы League of Legends"
+    description: "Все %count% предметов League of Legends со стоимостью, характеристиками и рецептами — данные патча %version%."
+  detail:
+    title: "%name% — предмет LoL"
+    description: "%name% в League of Legends: характеристики, стоимость, рецепт и улучшения, актуально для патча %version%."
+rune:
+  list:
+    title: "Руны League of Legends"
+    description: "Все %count% ветвей рун League of Legends с ключевыми и малыми рунами — данные патча %version%."
+  detail:
+    title: "%name% — ветвь рун LoL"
+    description: "Ветвь рун %name% в League of Legends: ключевые руны, ячейки и эффекты, актуально для патча %version%."
+summoner:
+  list:
+    title: "Заклинания призывателя League of Legends"
+    description: "Все %count% заклинаний призывателя League of Legends с перезарядками и эффектами — данные патча %version%."
+  detail:
+    title: "%name% — заклинание призывателя LoL"
+    description: "Заклинание призывателя %name% в League of Legends: перезарядка и эффекты, актуально для патча %version%."
+donate:
+  title: "Поддержать проект"
+  description: "Помогите League Of Data Base оставаться бесплатным и быстрым — поддержите проект пожертвованием."
+legal:
+  notice:
+    description: "Правовая информация League Of Data Base: издатель, хостинг и контакты."
+  privacy:
+    description: "Политика конфиденциальности League Of Data Base: обрабатываемые данные, цели и ваши права."
+  terms:
+    description: "Условия использования League Of Data Base."
+  cookies:
+    description: "Политика cookie League Of Data Base: какие cookie используются и как ими управлять."
+error:
+  "404":
+    title: "Страница не найдена"
+    eyebrow: "Потерялся в Ущелье"
+    body: "Такой страницы нет — возможно, ресурс был удалён из текущего патча."
+    back_home: "Вернуться на главную"
+  generic:
+    title: "Что-то пошло не так"
+    body: "Произошла непредвиденная ошибка. Попробуйте ещё раз через мгновение."
+
+developers:
+  title: "API для разработчиков"
+  description: "Платное REST JSON API над данными сообщества League of Legends: публичные профили, общие сборки и тренды просмотров. Бесплатный уровень, пакеты кредитов и подписки."
+
+trends:
+  title: "Популярные сборки LoL"
+  description: "Публичные сборки League of Legends, отсортированные по голосам сообщества — фильтруйте по чемпиону и игровому режиму."

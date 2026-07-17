@@ -1,0 +1,60 @@
+home:
+  title: "League Of Data Base — リーグ・オブ・レジェンド百科事典"
+  description: "パッチ%version%のリーグ・オブ・レジェンドのチャンピオン、アイテム、ルーン、サモナースペルを網羅。ステータス、スキル、詳細を21言語で。"
+champion:
+  list:
+    title: "リーグ・オブ・レジェンドのチャンピオン一覧"
+    description: "全%count%体のLoLチャンピオンのロール、スキル、ストーリーを掲載 — パッチ%version%のデータ。"
+  detail:
+    title: "%name%（LoLチャンピオン）"
+    description: "リーグ・オブ・レジェンドの%name%：スキル、スキン、ストーリー、攻略のヒント。パッチ%version%対応。"
+item:
+  list:
+    title: "リーグ・オブ・レジェンドのアイテム一覧"
+    description: "全%count%個のLoLアイテムの価格、ステータス、レシピを掲載 — パッチ%version%のデータ。"
+  detail:
+    title: "%name%（LoLアイテム）"
+    description: "リーグ・オブ・レジェンドの%name%：ステータス、価格、レシピ、派生アイテム。パッチ%version%対応。"
+rune:
+  list:
+    title: "リーグ・オブ・レジェンドのルーン一覧"
+    description: "全%count%系統のLoLルーンパスとキーストーン・サブルーンを掲載 — パッチ%version%のデータ。"
+  detail:
+    title: "%name%（LoLルーンパス）"
+    description: "リーグ・オブ・レジェンドのルーンパス「%name%」：キーストーン、スロット、効果。パッチ%version%対応。"
+summoner:
+  list:
+    title: "リーグ・オブ・レジェンドのサモナースペル一覧"
+    description: "全%count%種のLoLサモナースペルのクールダウンと効果を掲載 — パッチ%version%のデータ。"
+  detail:
+    title: "%name%（LoLサモナースペル）"
+    description: "リーグ・オブ・レジェンドのサモナースペル「%name%」：クールダウンと効果。パッチ%version%対応。"
+donate:
+  title: "プロジェクトを支援する"
+  description: "League Of Data Baseを無料で高速なまま維持するために、寄付でプロジェクトを支援してください。"
+legal:
+  notice:
+    description: "League Of Data Baseの法的表記：運営者、ホスティング、連絡先。"
+  privacy:
+    description: "League Of Data Baseのプライバシーポリシー：取り扱うデータ、目的、あなたの権利。"
+  terms:
+    description: "League Of Data Baseの利用規約。"
+  cookies:
+    description: "League Of Data BaseのCookieポリシー：使用するCookieと管理方法。"
+error:
+  "404":
+    title: "ページが見つかりません"
+    eyebrow: "リフトで迷子に"
+    body: "このページは存在しません。リソースが現在のパッチから削除された可能性があります。"
+    back_home: "ホームに戻る"
+  generic:
+    title: "エラーが発生しました"
+    body: "予期しないエラーが発生しました。しばらくしてからもう一度お試しください。"
+
+developers:
+  title: "開発者向けAPI"
+  description: "League of Legendsのコミュニティデータを扱う有料REST JSON API:公開プロフィール、共有ビルド、閲覧トレンド。無料枠、クレジットパック、サブスクリプション。"
+
+trends:
+  title: "LoLのトレンドビルド"
+  description: "コミュニティの投票でランク付けされたLeague of Legendsの公開ビルド。チャンピオンやゲームモードで絞り込めます。"
