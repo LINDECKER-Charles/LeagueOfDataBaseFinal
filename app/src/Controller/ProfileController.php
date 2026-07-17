@@ -77,7 +77,10 @@ final class ProfileController extends AbstractResourceController
             'memberSince' => $this->presenter->memberSince($user->getCreatedAt(), $request->getLocale()),
             'favorites' => $this->favoriteSlots->resolveAll($user, $version, $lang),
             'skinBanner' => $skinBanner,
-            'heroBackground' => $this->skins->heroBackground($skinBanner, $user->getFavoriteChampionId()),
+            // Personal-page backdrop is the favorite CHAMPION, never the skin (the
+            // skin is the public showcase). heroBackground(null, …) yields exactly
+            // the champion art, or null when no champion favorite is set.
+            'personalBackground' => $this->skins->heroBackground(null, $user->getFavoriteChampionId()),
             'version' => $version,
             'lang' => $lang,
             // OAuth-only accounts get the "set a password" panel.

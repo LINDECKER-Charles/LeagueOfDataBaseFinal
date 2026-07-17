@@ -35,8 +35,11 @@ manuelle. Cette refonte en fait un espace d'expression fluide : on personnalise,
 
 - Bannière de skin indépendante (n'importe quel skin de n'importe quel champion),
   chromas exclus de la sélection.
-- Champion favori en fond quand aucun skin n'est choisi.
-- Favoris en orbes flottants animés (idle), respectant « animations réduites ».
+- **Profil perso** : le champion favori habille discrètement le fond de la page,
+  et les favoris flottent en petite constellation dans l'en-tête.
+- **Carte publique** : skin favori en fond (champion en secours), favoris en
+  orbes flottants animés (idle), respectant « animations réduites ».
+- Zone de sélection des favoris resserrée (skin + 4 emplacements plus compacts).
 - Sauvegarde automatique des favoris, du skin et de la visibilité.
 - Carte de visibilité repensée : interrupteur, état, URL publique.
 - Aperçu de la carte publique, accessible même en profil privé.

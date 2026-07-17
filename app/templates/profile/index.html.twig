@@ -22,16 +22,36 @@
         emptyLabel: 'profile.favorites.empty'|trans,
     }]) %}
 {% endfor %}
-<main class="relative px-6 py-12">
-    {% include 'partials/main/gradient.html.twig' %}
+{# Favorites set on the account, decorated discreetly over the cover. #}
+{% set orbSlots = [] %}
+{% for slot in ['champion', 'item', 'rune', 'summoner'] %}
+    {% if favorites[slot].current %}{% set orbSlots = orbSlots|merge([slot]) %}{% endif %}
+{% endfor %}
+<main class="profile-perso relative px-6 py-12">
+    {% if personalBackground %}
+        {# Favorite champion, dimmed behind the whole edit page. #}
+        <div class="profile-perso__backdrop" aria-hidden="true">
+            <img src="{{ personalBackground.image }}" alt=""
+                 onerror="this.onerror=null;this.src='{{ personalBackground.fallback }}'"
+                 loading="eager" decoding="async">
+        </div>
+    {% else %}
+        {% include 'partials/main/gradient.html.twig' %}
+    {% endif %}
 
-    <div class="relative mx-auto max-w-6xl">
-        <header class="profile-cover {{ heroBackground ? 'profile-cover--art hextech-frame hx-corners' : '' }} mb-10">
-            {% if heroBackground %}
-                <img class="profile-cover__art" src="{{ heroBackground.image }}" alt=""
-                     onerror="this.onerror=null;this.src='{{ heroBackground.fallback }}'"
-                     loading="eager" decoding="async">
-                <span class="profile-cover__scrim" aria-hidden="true"></span>
+    <div class="relative z-10 mx-auto max-w-6xl">
+        <header class="profile-cover mb-10">
+            {% if orbSlots is not empty %}
+                <div class="profile-orbits profile-orbits--cover" aria-hidden="true">
+                    {% for slot in orbSlots %}
+                        {% include 'profile/_favorite_orb.html.twig' with {
+                            favorite: favorites[slot],
+                            pos_class: '',
+                            primary: slot == 'champion',
+                            type_label: ('profile.slot.' ~ slot)|trans,
+                        } only %}
+                    {% endfor %}
+                </div>
             {% endif %}
             <div class="profile-cover__body">
                 <div>
