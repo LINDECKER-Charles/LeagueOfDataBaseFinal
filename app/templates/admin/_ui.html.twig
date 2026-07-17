@@ -84,6 +84,69 @@
     </div>
 {% endmacro %}
 
+{# Generic data table. headers: list of strings or {label, num: true}.
+   rows: list of rows; a row is a list of cells rendered by cell() below. #}
+{% macro table(headers, rows, empty) %}
+    {% import _self as ui %}
+    <div class="tbl-wrap">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    {% for h in headers %}
+                        {% if h is iterable %}<th class="{{ h.num|default(false) ? 'num' }}">{{ h.label }}</th>
+                        {% else %}<th>{{ h }}</th>{% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>{% for c in row %}{{ ui.cell(c) }}{% endfor %}</tr>
+                {% else %}
+                    <tr><td class="t-empty" colspan="{{ headers|length }}">{{ empty|default('Aucune donnée.') }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endmacro %}
+
+{# Cell variants: scalar, {text, sub?}, {num}, {badge, tone?}, {badges: [{label, tone?}]},
+   {chips: []}, {link: {href, label, external?}, sub?}, {html, class?} (pre-captured markup,
+   e.g. action forms). #}
+{% macro cell(c) %}
+    {%- if c is not iterable -%}<td>{{ c }}</td>
+    {%- elseif c.num is defined -%}<td class="num">{{ c.num }}</td>
+    {%- elseif c.badge is defined -%}<td><span class="badge {{ c.tone|default('') }}">{{ c.badge }}</span></td>
+    {%- elseif c.badges is defined -%}
+        <td>{% if c.badges|length > 0 %}<span class="badges">{% for b in c.badges %}<span class="badge {{ b.tone|default('') }}">{{ b.label }}</span>{% endfor %}</span>{% else %}<span class="dim">—</span>{% endif %}</td>
+    {%- elseif c.chips is defined -%}
+        <td><span class="badges">{% for chip in c.chips %}<span class="chip">{{ chip }}</span>{% endfor %}</span></td>
+    {%- elseif c.link is defined -%}
+        <td><a href="{{ c.link.href }}"{% if c.link.external|default(false) %} target="_blank" rel="noopener"{% endif %}>{{ c.link.label }}</a>{% if c.sub|default(null) %}<span class="cell-sub">{{ c.sub }}</span>{% endif %}</td>
+    {%- elseif c.html is defined -%}<td class="{{ c.class|default('') }}">{{ c.html|raw }}</td>
+    {%- else -%}<td>{{ c.text|default('—') }}{% if c.sub|default(null) %}<span class="cell-sub">{{ c.sub }}</span>{% endif %}</td>
+    {%- endif -%}
+{% endmacro %}
+
+{# Prev/next pagination over the same route; params carry the filter context. #}
+{% macro pager(route, page, pages, params) %}
+    {% if pages > 1 %}
+        <nav class="pager" aria-label="Pagination">
+            {% if page > 1 %}<a class="btn ghost small" href="{{ path(route, (params|default({}))|merge({ page: page - 1 })) }}">← Précédent</a>
+            {% else %}<span class="btn ghost small is-disabled">← Précédent</span>{% endif %}
+            <span class="pager-state num">{{ page }} / {{ pages }}</span>
+            {% if page < pages %}<a class="btn ghost small" href="{{ path(route, (params|default({}))|merge({ page: page + 1 })) }}">Suivant →</a>
+            {% else %}<span class="btn ghost small is-disabled">Suivant →</span>{% endif %}
+        </nav>
+    {% endif %}
+{% endmacro %}
+
+{# Service health badge: ok|degraded|down → good|warn|bad. #}
+{% macro health_badge(status) %}
+    {%- set map = { ok: { tone: 'good', label: 'opérationnel' }, degraded: { tone: 'warn', label: 'dégradé' }, down: { tone: 'bad', label: 'hors ligne' } } -%}
+    {%- set m = map[status]|default({ tone: 'bad', label: status }) -%}
+    <span class="badge {{ m.tone }}">{{ m.label }}</span>
+{% endmacro %}
+
 {# rows: [{version, langs, types, objects}] storage completeness. #}
 {% macro matrix(rows) %}
     <div class="matrix">

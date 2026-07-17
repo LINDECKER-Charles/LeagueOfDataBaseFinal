@@ -1,0 +1,82 @@
+{% extends 'admin/_base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Surveillance · Admin · LODB{% endblock %}
+
+{% set serviceLabels = {
+    'postgres': 'PostgreSQL',
+    'minio': 'MinIO',
+    'go-fetcher': 'Go Fetcher',
+    'go-api': 'Go API'
+} %}
+
+{% block admin_body %}
+    <div class="flex between wrap" style="margin-bottom: 1.5rem;">
+        {{ ui.page_head('Gestion', 'Surveillance', 'Santé des services internes, compteurs applicatifs et volumes — instantané mémorisé 30 s.') }}
+        <div class="flex wrap" style="gap: 0.75rem;">
+            <span class="chip" title="Heure de génération du rapport">{{ report.generatedAt }}</span>
+            <a class="btn ghost" href="{{ path('admin_monitoring', { refresh: 1 }) }}">Rafraîchir</a>
+        </div>
+    </div>
+
+    {# ---- Santé services ---- #}
+    <div class="grid cols-2">
+        {% for name, probe in report.services %}
+            <section class="panel">
+                <div class="flex between wrap">
+                    <h2 style="font-size: 0.95rem;">{{ serviceLabels[name]|default(name) }}</h2>
+                    {{ ui.health_badge(probe.status) }}
+                </div>
+                <div class="flex wrap" style="margin-top: 0.7rem; gap: 0.45rem;">
+                    <span class="chip">{{ probe.latencyMs }} ms</span>
+                    {% if probe.meta.version|default(null) %}<span class="chip">{{ probe.meta.version }}</span>{% endif %}
+                    {% if probe.meta.databaseBytes|default(null) %}<span class="chip">base {{ probe.meta.databaseBytes|bytes }}</span>{% endif %}
+                    {% if probe.meta.objects|default(null) %}<span class="chip">{{ probe.meta.objects|number_format(0, '.', ' ') }} objets · {{ probe.meta.bytes|bytes }}</span>{% endif %}
+                </div>
+                {% if probe.detail %}<p class="dim" style="margin: 0.6rem 0 0; font-size: 0.8rem;">{{ probe.detail }}</p>{% endif %}
+            </section>
+        {% endfor %}
+    </div>
+
+    {# ---- Compteurs applicatifs ---- #}
+    <div class="rule" data-label="Application"></div>
+    {% if report.counters.ok %}
+        <div class="kpi-grid">
+            {{ ui.kpi('Comptes', report.counters.users.total|number_format(0, '.', ' '),
+                '+' ~ report.counters.users.newWeek ~ ' sur 7 j · ' ~ report.counters.users.banned ~ ' banni(s)', 'var(--gold)', null) }}
+            {{ ui.kpi('Builds', report.counters.builds.total|number_format(0, '.', ' '),
+                report.counters.builds.public ~ ' public(s)', 'var(--hex)', null) }}
+            {{ ui.kpi('Votes', report.counters.votes|number_format(0, '.', ' '), null, 'var(--series-2)', null) }}
+            {{ ui.kpi('Dons', report.counters.donations.totalCents|euros,
+                report.counters.donations.count ~ ' don(s)', 'var(--series-3)', null) }}
+            {{ ui.kpi('Clés API actives', report.counters.apiKeysActive|number_format(0, '.', ' '), null, 'var(--series-4)', null) }}
+            {{ ui.kpi('Requêtes API', report.counters.apiRequests.today|compact,
+                report.counters.apiRequests.month|compact ~ ' ce mois', 'var(--series-5)', null) }}
+        </div>
+    {% else %}
+        <p class="alert">Compteurs indisponibles : {{ report.counters.error }}</p>
+    {% endif %}
+
+    {# ---- Volumes ---- #}
+    <div class="rule" data-label="Volumes"></div>
+    <div class="grid cols-2">
+        <section class="card">
+            <div class="card__head"><h2>Tables principales</h2><span class="chip">pg_total_relation_size</span></div>
+            {% set tableRows = [] %}
+            {% for t in report.volumes.tables %}
+                {% set tableRows = tableRows|merge([[ { text: t.name }, { num: t.bytes|bytes } ]]) %}
+            {% endfor %}
+            {{ ui.table(['Table', { label: 'Poids total', num: true }], tableRows, 'Tailles indisponibles (Postgres requis).') }}
+        </section>
+        <section class="card">
+            <div class="card__head"><h2>File Messenger</h2><span class="chip">messenger_messages</span></div>
+            <div class="stack">
+                <div>
+                    <span class="k-label">Messages en attente</span>
+                    <span class="k-val" style="font-size: 1.5rem;">{{ report.volumes.messengerPending|number_format(0, '.', ' ') }}</span>
+                </div>
+                <p class="dim" style="margin: 0; font-size: 0.82rem;">E-mails et tâches asynchrones non consommés. Un backlog durable signale un worker arrêté.</p>
+            </div>
+        </section>
+    </div>
+{% endblock %}

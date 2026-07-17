@@ -23,6 +23,30 @@
         </div>
     </div>
 
+    {# ---- Application (comptes, builds, dons, API, services) ---- #}
+    {% if app_report.counters.ok %}
+        <div class="kpi-grid" style="margin-bottom: 1.15rem;">
+            {{ ui.kpi('Comptes', app_report.counters.users.total|number_format(0, '.', ' '),
+                '+' ~ app_report.counters.users.newWeek ~ ' sur 7 j · ' ~ app_report.counters.users.banned ~ ' banni(s)', 'var(--gold)', null) }}
+            {{ ui.kpi('Builds', app_report.counters.builds.total|number_format(0, '.', ' '),
+                app_report.counters.builds.public ~ ' public(s)', 'var(--hex)', null) }}
+            {{ ui.kpi('Dons', app_report.counters.donations.totalCents|euros,
+                app_report.counters.donations.count ~ ' don(s)', 'var(--series-3)', null) }}
+            {{ ui.kpi('Clés API actives', app_report.counters.apiKeysActive|number_format(0, '.', ' '),
+                app_report.counters.apiRequests.month|compact ~ ' req. ce mois', 'var(--series-2)', null) }}
+            <a class="kpi kpi--link" style="--accent: var(--series-5)" href="{{ path('admin_monitoring') }}">
+                <span class="k-label">Services</span>
+                <span class="badges" style="margin-top: 0.55rem;">
+                    {% for name, probe in app_report.services %}
+                        {% set tone = probe.status == 'ok' ? 'good' : (probe.status == 'degraded' ? 'warn' : 'bad') %}
+                        <span class="badge {{ tone }}">{{ name }}</span>
+                    {% endfor %}
+                </span>
+                <span class="k-sub">Surveillance →</span>
+            </a>
+        </div>
+    {% endif %}
+
     {# ---- KPIs cross-subsystème ---- #}
     <div class="kpi-grid">
         {{ ui.kpi('Vues', report.totals.views|compact, report.totals.botViews|compact ~ ' bots exclus', 'var(--gold)',

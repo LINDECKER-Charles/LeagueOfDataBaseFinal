@@ -1,0 +1,73 @@
+{% extends 'admin/_base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Builds · Admin · LODB{% endblock %}
+
+{% set modeLabels = { sr: 'Faille', aram: 'ARAM', nexus_blitz: 'Nexus Blitz', arena: 'Arène' } %}
+
+{% block admin_body %}
+    {{ ui.page_head('Modération', 'Builds', 'Builds de la communauté : dépublication et suppression.') }}
+
+    <div class="kpi-grid">
+        {{ ui.kpi('Builds', stats.total|number_format(0, '.', ' '), null, 'var(--gold)', null) }}
+        {{ ui.kpi('Publics', stats.public|number_format(0, '.', ' '), null, 'var(--hex)', null) }}
+    </div>
+
+    <div class="rule" data-label="Builds"></div>
+
+    <form method="get" action="{{ path('admin_builds') }}" class="toolbar">
+        <input type="search" name="q" value="{{ q }}" placeholder="Nom du build ou champion…" class="input-slim wide" aria-label="Recherche de build">
+        <select name="visibility" class="input-slim" aria-label="Filtre de visibilité">
+            <option value="">Toutes visibilités</option>
+            <option value="public" {{ visibility == 'public' ? 'selected' }}>Publics</option>
+            <option value="private" {{ visibility == 'private' ? 'selected' }}>Privés</option>
+        </select>
+        <button type="submit" class="btn ghost small">Filtrer</button>
+        {% if q != '' or visibility != '' %}<a class="chip" href="{{ path('admin_builds') }}">Réinitialiser</a>{% endif %}
+        <span class="toolbar-count dim">{{ total|number_format(0, '.', ' ') }} build(s)</span>
+    </form>
+
+    <section class="card">
+        {% set listContext = { q: q, visibility: visibility, page: page } %}
+        {% set tableRows = [] %}
+        {% for row in rows %}
+            {% set b = row.build %}
+            {% set owner = b.owner %}
+            {% set actions %}
+                <a class="btn ghost small" href="{{ path('app_build_show', { token: b.shareToken }) }}" target="_blank" rel="noopener">Voir</a>
+                {% if b.isPublic %}
+                    <form method="post" action="{{ path('admin_build_unpublish', { id: b.id } + listContext) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('admin_build_unpublish') }}">
+                        <button type="submit" class="btn ghost small">Dépublier</button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{{ path('admin_build_delete', { id: b.id } + listContext) }}"
+                      onsubmit="return confirm('Supprimer définitivement le build {{ b.name|e('js') }} ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('admin_build_delete') }}">
+                    <button type="submit" class="btn danger small">Supprimer</button>
+                </form>
+            {% endset %}
+            {% set ownerBadges = [{ label: owner ? owner.username : 'compte supprimé' }] %}
+            {% if owner and owner.isBanned %}{% set ownerBadges = ownerBadges|merge([{ label: 'banni', tone: 'bad' }]) %}{% endif %}
+            {% set tableRows = tableRows|merge([[
+                { text: b.name, sub: b.championId },
+                { chips: [modeLabels[b.gameMode.value]|default(b.gameMode.value), b.gameVersion] },
+                { badges: ownerBadges },
+                { num: (row.score > 0 ? '+' : '') ~ row.score },
+                { badge: b.isPublic ? 'public' : 'privé', tone: b.isPublic ? 'good' : '' },
+                { text: b.createdAt|date('d/m/Y') },
+                { html: actions, class: 'actions-cell' },
+            ]]) %}
+        {% endfor %}
+        {{ ui.table(
+            ['Build', 'Mode · Patch', 'Auteur', { label: 'Score', num: true }, 'Visibilité', 'Créé le', { label: 'Actions', num: true }],
+            tableRows,
+            q != '' or visibility != '' ? 'Aucun build ne correspond aux filtres.' : 'Aucun build enregistré.'
+        ) }}
+    </section>
+
+    {% set pagerParams = {} %}
+    {% if q != '' %}{% set pagerParams = pagerParams|merge({ q: q }) %}{% endif %}
+    {% if visibility != '' %}{% set pagerParams = pagerParams|merge({ visibility: visibility }) %}{% endif %}
+    {{ ui.pager('admin_builds', page, pages, pagerParams) }}
+{% endblock %}

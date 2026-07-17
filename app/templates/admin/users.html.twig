@@ -1,0 +1,71 @@
+{% extends 'admin/_base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Utilisateurs · Admin · LODB{% endblock %}
+
+{% block admin_body %}
+    {{ ui.page_head('Modération', 'Utilisateurs', 'Comptes invocateurs : recherche, bannissement et suppression définitive.') }}
+
+    <div class="kpi-grid">
+        {{ ui.kpi('Comptes', stats.total|number_format(0, '.', ' '), null, 'var(--gold)', null) }}
+        {{ ui.kpi('Nouveaux (7 j)', stats.newWeek|number_format(0, '.', ' '), null, 'var(--hex)', null) }}
+        {{ ui.kpi('Bannis', stats.banned|number_format(0, '.', ' '), null, stats.banned > 0 ? 'var(--bad)' : 'var(--good)', null) }}
+        {{ ui.kpi('Supporters', stats.supporters|number_format(0, '.', ' '), null, 'var(--series-3)', null) }}
+    </div>
+
+    <div class="rule" data-label="Comptes"></div>
+
+    <form method="get" action="{{ path('admin_users') }}" class="toolbar">
+        <input type="search" name="q" value="{{ q }}" placeholder="Nom d'invocateur ou e-mail…" class="input-slim wide" aria-label="Recherche de compte">
+        <button type="submit" class="btn ghost small">Rechercher</button>
+        {% if q != '' %}<a class="chip" href="{{ path('admin_users') }}">Réinitialiser</a>{% endif %}
+        <span class="toolbar-count dim">{{ total|number_format(0, '.', ' ') }} compte(s)</span>
+    </form>
+
+    <section class="card">
+        {% set tableRows = [] %}
+        {% for row in rows %}
+            {% set u = row.user %}
+            {% set badges = [] %}
+            {% if u.isBanned %}{% set badges = badges|merge([{ label: 'banni', tone: 'bad' }]) %}{% endif %}
+            {% if u.isSupporter %}{% set badges = badges|merge([{ label: 'supporter', tone: 'good' }]) %}{% endif %}
+            {% if u.googleId %}{% set badges = badges|merge([{ label: 'google' }]) %}{% endif %}
+            {% if u.isPublicProfile %}{% set badges = badges|merge([{ label: 'profil public', tone: 'warn' }]) %}{% endif %}
+            {% set listContext = { q: q, page: page } %}
+            {% set actions %}
+                {% if u.isBanned %}
+                    <form method="post" action="{{ path('admin_user_unban', { id: u.id } + listContext) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('admin_user_unban') }}">
+                        <button type="submit" class="btn ghost small">Débannir</button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{{ path('admin_user_ban', { id: u.id } + listContext) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('admin_user_ban') }}">
+                        <input type="text" name="reason" class="input-slim" maxlength="255" placeholder="Raison (optionnel)" aria-label="Raison du bannissement">
+                        <button type="submit" class="btn small">Bannir</button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{{ path('admin_user_delete', { id: u.id } + listContext) }}"
+                      onsubmit="return confirm('Supprimer définitivement le compte {{ u.username|e('js') }} ? Builds, votes et clés API seront effacés.');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('admin_user_delete') }}">
+                    <button type="submit" class="btn danger small">Supprimer</button>
+                </form>
+            {% endset %}
+            {% set tableRows = tableRows|merge([[
+                { text: u.displayName, sub: u.isBanned and u.banReason ? 'Motif : ' ~ u.banReason : null },
+                { badges: badges },
+                { text: u.email },
+                { num: row.buildCount },
+                { text: u.createdAt|date('d/m/Y') },
+                { html: actions, class: 'actions-cell' },
+            ]]) %}
+        {% endfor %}
+        {{ ui.table(
+            ['Invocateur', 'Statuts', 'E-mail', { label: 'Builds', num: true }, 'Inscrit le', { label: 'Actions', num: true }],
+            tableRows,
+            q != '' ? 'Aucun compte ne correspond à la recherche.' : 'Aucun compte enregistré.'
+        ) }}
+    </section>
+
+    {{ ui.pager('admin_users', page, pages, q != '' ? { q: q } : {}) }}
+{% endblock %}

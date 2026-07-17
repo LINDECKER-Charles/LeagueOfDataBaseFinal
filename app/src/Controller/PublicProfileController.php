@@ -47,7 +47,9 @@ final class PublicProfileController extends AbstractResourceController
     public function show(string $username, Request $request): Response
     {
         $user = $this->users->findOneByUsernameInsensitive($username);
-        if ($user === null || !$user->isPublicProfile()) {
+        // A banned owner answers the same 404 as a private/unknown profile —
+        // no oracle distinguishing "banned" from "does not exist".
+        if ($user === null || !$user->isPublicProfile() || $user->isBanned()) {
             throw $this->createNotFoundException('Profile not found.');
         }
 
