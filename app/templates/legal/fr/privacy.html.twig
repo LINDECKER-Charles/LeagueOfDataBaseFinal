@@ -1,0 +1,199 @@
+{% extends 'legal/layout.html.twig' %}
+
+{% block page_title %}{{ 'legal.privacy.title'|trans }}{% endblock %}
+
+{% block toc %}
+    <li><a class="nav-link" href="#responsable">1. Responsable du traitement</a></li>
+    <li><a class="nav-link" href="#traitements">2. Traitements mis en œuvre</a></li>
+    <li><a class="nav-link" href="#audience">3. Mesure d'audience en détail</a></li>
+    <li><a class="nav-link" href="#droits">4. Vos droits</a></li>
+    <li><a class="nav-link" href="#destinataires">5. Destinataires et sous-traitants</a></li>
+    <li><a class="nav-link" href="#transferts">6. Transferts hors Union européenne</a></li>
+    <li><a class="nav-link" href="#securite">7. Sécurité</a></li>
+    <li><a class="nav-link" href="#evolution">8. Évolution de la politique</a></li>
+{% endblock %}
+
+{% block legal_body %}
+    <section id="responsable">
+        <h2>1. Responsable du traitement</h2>
+        <p>
+            Le responsable des traitements décrits ci-dessous est <strong>{{ legal.publisherName }}</strong>,
+            éditeur du site {{ legal.siteName }} (voir les
+            <a href="{{ path('app_legal_notice') }}">mentions légales</a>).
+            Contact pour toute question relative aux données personnelles :
+            <a href="mailto:{{ legal.dpoEmail }}">{{ legal.dpoEmail }}</a>
+            ou <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a>.
+        </p>
+        <p>
+            {{ legal.siteName }} est une encyclopédie consultable sans compte. Les données
+            collectées se limitent au strict nécessaire : aucun profilage, aucune revente de
+            données, aucune publicité, aucun traceur tiers. Le service ne cible pas les mineurs
+            et ne collecte aucune donnée dite « sensible ».
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="traitements">
+        <h2>2. Traitements mis en œuvre</h2>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Traitement</th>
+                        <th scope="col">Données</th>
+                        <th scope="col">Base légale</th>
+                        <th scope="col">Durée de conservation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Compte utilisateur</strong><br>création et gestion du compte</td>
+                        <td>Adresse email, nom d'invocateur (pseudonyme), mot de passe (stocké exclusivement sous forme hachée), favoris, préférence de profil public/privé</td>
+                        <td>Exécution du contrat (art. 6.1.b RGPD)</td>
+                        <td>Jusqu'à la suppression du compte (bouton « Supprimer mon compte » sur la page profil)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Contenus créés</strong><br>builds et configurations de champion</td>
+                        <td>Contenu du build, nom, visibilité choisie (privé, public ou partage par lien), rattachement au compte auteur</td>
+                        <td>Exécution du contrat (art. 6.1.b RGPD)</td>
+                        <td>Jusqu'à la suppression du build par son auteur, ou du compte (qui emporte celle des builds)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mesure d'audience</strong><br>statistiques de fréquentation first-party</td>
+                        <td>Voir le détail en <a href="#audience">section 3</a> (adresse IP, User-Agent, pages consultées, référent, pays optionnel…)</td>
+                        <td>Intérêt légitime (art. 6.1.f RGPD) : connaître et améliorer l'usage du site</td>
+                        <td>Journaux bruts : conservés jusqu'à leur consolidation puis suppression, opérées manuellement par l'éditeur (sans durée fixe garantie). Agrégats statistiques sans IP ni User-Agent : conservés sans limite de durée</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dons</strong><br>soutien volontaire via Stripe</td>
+                        <td>Le paiement est traité intégralement par Stripe : nous ne recevons ni ne stockons aucune donnée de carte bancaire. Nous ne conservons que la confirmation technique du don (statut, montant)</td>
+                        <td>Exécution du contrat de don (art. 6.1.b) et intérêt légitime pour le suivi comptable</td>
+                        <td>Confirmations conservées le temps des obligations comptables applicables ; justificatifs et reçus gérés par Stripe</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Session et préférences</strong><br>cookies first-party</td>
+                        <td>Cookie de session, préférence de langue/version mémorisée sur demande, cookie « rester connecté »</td>
+                        <td>Intérêt légitime / consentement selon le cookie</td>
+                        <td>Détail complet dans la <a href="{{ path('app_legal_cookies') }}">politique de cookies</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="audience">
+        <h2>3. Mesure d'audience en détail</h2>
+        <p>
+            La fréquentation est mesurée par un dispositif <strong>first-party, côté serveur et
+            sans cookie</strong>, développé pour ce site. Aucun outil tiers (Google Analytics ou
+            équivalent) n'est utilisé, aucune donnée n'est transmise à un tiers. Seules les
+            consultations des pages publiques (accueil, listes et fiches champions, objets,
+            runes, sorts d'invocateur) sont enregistrées.
+        </p>
+        <p>Pour chaque page vue, un événement contient :</p>
+        <ul>
+            <li>l'horodatage (UTC), la page consultée (route et chemin), la ressource et l'entité affichées (ex. la fiche d'un champion), le code de statut HTTP ;</li>
+            <li>la version et la langue Data Dragon demandées, ainsi que la langue d'interface ;</li>
+            <li>votre <strong>adresse IP</strong> et la chaîne <strong>User-Agent</strong> de votre navigateur, dont sont dérivés le navigateur, le système d'exploitation, le type d'appareil et un marquage « robot » ;</li>
+            <li>le site référent (hôte d'origine et classification : accès direct, navigation interne, moteur de recherche, réseau social, autre) ;</li>
+            <li>un <strong>identifiant visiteur pseudonyme</strong> : une empreinte HMAC-SHA256 tronquée, calculée à partir de l'IP et du User-Agent avec une clé secrète connue du seul serveur — elle permet de compter les visiteurs uniques sans les identifier ;</li>
+            <li>optionnellement, le <strong>pays</strong> (code ISO et nom) : uniquement si une base de géolocalisation GeoLite2 est installée sur le serveur, l'IP est alors résolue <em>localement</em>, sans aucune requête vers un service externe. En son absence, aucune donnée de localisation n'est produite.</li>
+        </ul>
+        <p>
+            Ces événements sont écrits dans des journaux quotidiens stockés sur notre serveur,
+            puis consolidés en agrégats statistiques quotidiens (compteurs par page, navigateur,
+            pays, etc.) conservés sur notre stockage interne. <strong>Les agrégats ne contiennent
+            ni adresse IP ni User-Agent.</strong> La consolidation et la suppression des
+            journaux bruts sont opérées manuellement par l'éditeur, sans durée fixe garantie ;
+            les agrégats, dépourvus de données directement identifiantes, sont conservés sans
+            limite de durée. L'accès à ces données est réservé à l'éditeur du site.
+        </p>
+        <p>
+            Vous pouvez vous opposer à ce traitement fondé sur l'intérêt légitime dans les
+            conditions décrites en <a href="#droits">section 4</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="droits">
+        <h2>4. Vos droits</h2>
+        <p>Conformément au RGPD et à la loi Informatique et Libertés, vous disposez des droits suivants :</p>
+        <ul>
+            <li><strong>Accès</strong> — obtenir la copie des données vous concernant ;</li>
+            <li><strong>Rectification</strong> — corriger des données inexactes (email, nom d'invocateur…) ;</li>
+            <li><strong>Effacement</strong> — le bouton <strong>« Supprimer mon compte »</strong> de la page profil supprime immédiatement votre compte et l'ensemble de vos builds ; vous pouvez aussi en faire la demande par email ;</li>
+            <li><strong>Portabilité</strong> — recevoir les données que vous avez fournies dans un format structuré et lisible par machine ;</li>
+            <li><strong>Opposition</strong> — vous opposer aux traitements fondés sur l'intérêt légitime, dont la mesure d'audience ;</li>
+            <li><strong>Limitation</strong> — demander le gel temporaire d'un traitement.</li>
+        </ul>
+        <p>
+            Pour exercer ces droits : <a href="mailto:{{ legal.dpoEmail }}">{{ legal.dpoEmail }}</a>
+            ou <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a>.
+            Une réponse vous sera apportée dans un délai d'un mois. Si vous estimez que vos droits
+            ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL :
+            <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">www.cnil.fr</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="destinataires">
+        <h2>5. Destinataires et sous-traitants</h2>
+        <p>
+            Les données ne sont ni vendues, ni louées, ni partagées à des fins publicitaires.
+            Elles ne sont accessibles qu'à l'éditeur du site et aux sous-traitants techniques
+            strictement nécessaires :
+        </p>
+        <ul>
+            <li><strong>{{ legal.hostName }}</strong> — hébergement du site et de ses données ;</li>
+            <li><strong>Stripe</strong> — traitement des dons (voir la
+                <a href="https://stripe.com/fr/privacy" target="_blank" rel="noopener noreferrer">politique de confidentialité de Stripe</a>).</li>
+        </ul>
+        <p>
+            Aucun profilage ni aucune décision entièrement automatisée produisant des effets
+            juridiques n'est mis en œuvre.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="transferts">
+        <h2>6. Transferts hors Union européenne</h2>
+        <p>
+            Les données du site sont hébergées par {{ legal.hostName }}. Le seul transfert
+            susceptible d'avoir lieu hors de l'Union européenne concerne les <strong>dons</strong> :
+            Stripe (Stripe Payments Europe Ltd, et Stripe, Inc. aux États-Unis) peut traiter des
+            données de paiement hors UE. Ces transferts sont encadrés par les
+            <strong>clauses contractuelles types</strong> de la Commission européenne et les
+            mécanismes de conformité de Stripe.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="securite">
+        <h2>7. Sécurité</h2>
+        <ul>
+            <li>chiffrement TLS (HTTPS) de toutes les communications ;</li>
+            <li>mots de passe stockés exclusivement sous forme hachée avec un algorithme moderne — jamais en clair ;</li>
+            <li>cookies signés, HttpOnly et Secure (voir la <a href="{{ path('app_legal_cookies') }}">politique de cookies</a>) ;</li>
+            <li>accès aux journaux et à l'interface d'administration restreint à l'éditeur.</li>
+        </ul>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="evolution">
+        <h2>8. Évolution de la politique</h2>
+        <p>
+            Cette politique peut évoluer avec les fonctionnalités du site. La date d'entrée en
+            vigueur affichée en haut de page est mise à jour à chaque modification substantielle ;
+            en cas de changement majeur affectant vos droits, une information visible sera
+            affichée sur le site.
+        </p>
+    </section>
+{% endblock %}

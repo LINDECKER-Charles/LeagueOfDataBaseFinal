@@ -1,0 +1,202 @@
+{% extends 'legal/layout.html.twig' %}
+
+{% block page_title %}{{ 'legal.terms.title'|trans }}{% endblock %}
+
+{% block toc %}
+    <li><a class="nav-link" href="#purpose">1. Purpose and acceptance</a></li>
+    <li><a class="nav-link" href="#access">2. Access to the service</a></li>
+    <li><a class="nav-link" href="#account">3. User account</a></li>
+    <li><a class="nav-link" href="#content">4. User-generated content</a></li>
+    <li><a class="nav-link" href="#visibility">5. Build visibility</a></li>
+    <li><a class="nav-link" href="#donations">6. Donations</a></li>
+    <li><a class="nav-link" href="#ip">7. Intellectual property</a></li>
+    <li><a class="nav-link" href="#liability">8. Availability and liability</a></li>
+    <li><a class="nav-link" href="#termination">9. Termination</a></li>
+    <li><a class="nav-link" href="#law">10. Governing law</a></li>
+    <li><a class="nav-link" href="#changes">11. Changes to these terms</a></li>
+{% endblock %}
+
+{% block legal_body %}
+    <section id="purpose">
+        <h2>1. Purpose and acceptance</h2>
+        <p>
+            These terms of use govern access to and use of <strong>{{ legal.siteName }}</strong>,
+            an unofficial community encyclopedia dedicated to <em>League of Legends</em>:
+            browsing champions, items, runes and summoner spells, creating builds, and the
+            related features (account, favorites, sharing).
+        </p>
+        <p>
+            Using the site implies full acceptance of these terms. If you do not agree with
+            them, please do not use the service.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="access">
+        <h2>2. Access to the service</h2>
+        <p>
+            Browsing the encyclopedia is free and requires no account. An account is only
+            needed for personal features: builds, favorites and profile.
+        </p>
+        <p>
+            The publisher strives to keep the service available at all times but does not
+            guarantee uninterrupted availability (see <a href="#liability">section 8</a>).
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="account">
+        <h2>3. User account</h2>
+        <p>By creating an account, you agree to:</p>
+        <ul>
+            <li>provide <strong>accurate</strong> information and keep it up to date (in particular your email address);</li>
+            <li>create only <strong>one account per person</strong>;</li>
+            <li>choose a strong password and keep it <strong>confidential</strong> — actions performed from your account are deemed to be yours;</li>
+            <li>notify the publisher without delay of any unauthorized use of your account.</li>
+        </ul>
+        <p>
+            Your profile is <strong>private by default</strong>; you can make it public from its
+            settings. The processing of your data is described in the
+            <a href="{{ path('app_legal_privacy') }}">privacy policy</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="content">
+        <h2>4. User-generated content</h2>
+        <p>
+            The builds and configurations you create remain yours. By publishing them on the
+            site (public visibility or link sharing), you grant the publisher a
+            <strong>non-exclusive, royalty-free, worldwide license</strong> to reproduce and
+            display that content, strictly limited to its distribution on {{ legal.siteName }}
+            and valid for as long as it remains published there.
+        </p>
+        <p>You are solely responsible for the content you publish. The following are prohibited:</p>
+        <ul>
+            <li>unlawful, defamatory, hateful, discriminatory or obscene content;</li>
+            <li>spam, disguised advertising and malicious links;</li>
+            <li>misleading or offensive build names, or names impersonating someone else;</li>
+            <li>any content infringing third-party rights (including Riot Games' rights).</li>
+        </ul>
+        <p>
+            The publisher may <strong>remove content</strong> that breaches these terms without
+            prior notice and, in the event of a serious or repeated breach,
+            <strong>suspend or delete the account</strong> concerned. Unlawful content can be
+            reported to <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="visibility">
+        <h2>5. Build visibility</h2>
+        <p>Every build has a visibility setting under your control:</p>
+        <ul>
+            <li><strong>Private</strong> (default) — visible to you only;</li>
+            <li><strong>Public</strong> — visible to every visitor of the site, signed in or not;</li>
+            <li><strong>Link sharing</strong> — accessible to <strong>anyone who has the link</strong>, without an account: only share the link with people you trust.</li>
+        </ul>
+        <p>
+            You can change a build's visibility or delete it at any time. Deletion removes the
+            build from the site, including for people holding the link.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="donations">
+        <h2>6. Donations</h2>
+        <p>
+            The site offers a donation button processed by <strong>Stripe</strong> (redirection
+            to a payment page hosted by Stripe; no card data ever passes through our servers).
+            Donations are:
+        </p>
+        <ul>
+            <li><strong>voluntary and without consideration</strong> — they grant no service, perk or additional content;</li>
+            <li>meant to cover the site's <strong>hosting and running costs</strong>;</li>
+            <li><strong>non-refundable</strong>, except in the case of an obvious error (double payment, wrong amount) reported to
+                <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a> within a reasonable time.</li>
+        </ul>
+        <p>
+            Payment receipts are issued and managed by Stripe. See also the
+            <a href="{{ path('app_legal_privacy') }}">privacy policy</a> for the processing of
+            the related data.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="ip">
+        <h2>7. Intellectual property</h2>
+        <p>
+            Game data and artwork belong to <strong>Riot Games, Inc.</strong>; the site's code
+            is released under the
+            <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC 4.0</a>
+            license; builds belong to their authors (see <a href="#content">section 4</a>).
+            Full details, including the Riot Games disclaimer, are in the
+            <a href="{{ path('app_legal_notice') }}">legal notice</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="liability">
+        <h2>8. Availability and liability</h2>
+        <p>
+            The service is provided "as is", on a <strong>best-effort</strong> basis and
+            without any availability guarantee, in particular during maintenance, outages, or
+            unavailability of the Riot Games services the displayed data depends on.
+        </p>
+        <p>
+            Game data comes from Riot Games' public services (Data Dragon, CommunityDragon)
+            and is provided without any guarantee of accuracy or completeness; it may differ
+            from the live state of the game. External links are provided for information only;
+            the publisher is not responsible for their content.
+        </p>
+        <p>
+            To the extent permitted by law, the publisher shall not be liable for indirect
+            damages resulting from the use of, or inability to use, the service. Nothing in
+            these terms excludes liability that cannot lawfully be excluded.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="termination">
+        <h2>9. Termination</h2>
+        <p>
+            You may delete your account at any time using the
+            <strong>"Delete my account"</strong> button on the profile page: the account and
+            all your builds are then deleted. The publisher may suspend or terminate an account
+            in case of breach of these terms, with prior notice except in urgent cases
+            (manifestly unlawful content).
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="law">
+        <h2>10. Governing law</h2>
+        <p>
+            These terms are governed by the law of the following country:
+            <strong>{{ legal.jurisdictionCountry }}</strong>. Any dispute relating to their
+            interpretation or performance falls under the jurisdiction of that country's
+            competent courts, without prejudice to the mandatory protective provisions
+            benefiting consumers residing in the European Union.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="changes">
+        <h2>11. Changes to these terms</h2>
+        <p>
+            The publisher may amend these terms as the service evolves. Any change is signalled
+            by updating the <strong>effective date</strong> shown at the top of the page;
+            using the service after that date implies acceptance of the amended terms.
+        </p>
+    </section>
+{% endblock %}

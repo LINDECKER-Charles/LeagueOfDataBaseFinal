@@ -1,0 +1,130 @@
+{% extends 'legal/layout.html.twig' %}
+
+{% block page_title %}{{ 'legal.cookies.title'|trans }}{% endblock %}
+
+{% block toc %}
+    <li><a class="nav-link" href="#approach">1. Our approach</a></li>
+    <li><a class="nav-link" href="#cookies">2. Cookies we use</a></li>
+    <li><a class="nav-link" href="#consent">3. Consent</a></li>
+    <li><a class="nav-link" href="#stripe">4. Stripe checkout</a></li>
+    <li><a class="nav-link" href="#pwa">5. Installable app (PWA)</a></li>
+    <li><a class="nav-link" href="#manage">6. Managing or deleting</a></li>
+{% endblock %}
+
+{% block legal_body %}
+    <section id="approach">
+        <h2>1. Our approach</h2>
+        <p>
+            {{ legal.siteName }} uses <strong>no advertising cookies, no third-party tracking
+            cookies and no external analytics tool</strong>. The only cookies set are
+            first-party cookies (issued by the site itself), strictly necessary for the service
+            or used to remember a preference you explicitly asked for. Audience measurement is
+            performed server-side, <strong>without cookies</strong> (see the
+            <a href="{{ path('app_legal_privacy') }}">privacy policy</a>).
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="cookies">
+        <h2>2. Cookies we use</h2>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Purpose</th>
+                        <th scope="col">Lifetime</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>PHPSESSID</strong></td>
+                        <td>Essential</td>
+                        <td>Session cookie: keeps your browsing state (current version and language preferences, site messages, anti-CSRF security tokens, signed-in state)</td>
+                        <td>Session — deleted when the browser closes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>lod_prefs</strong></td>
+                        <td>Preference (set only if you tick "remember" in the version/language selector)</td>
+                        <td>Remembers your chosen Data Dragon language and version between visits. Signed content (integrity) — Secure, HttpOnly, SameSite=Lax</td>
+                        <td>7 days</td>
+                    </tr>
+                    <tr>
+                        <td><strong>REMEMBERME</strong></td>
+                        <td>Authentication (set only if you tick "stay signed in")</td>
+                        <td>Keeps you signed in to your account across browsing sessions</td>
+                        <td>30 days</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            No other cookie is set by the site. The site does not use the browser's local
+            storage (localStorage) for tracking purposes either.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="consent">
+        <h2>3. Consent</h2>
+        <p>
+            Under the ePrivacy rules as interpreted by the French CNIL (article 82 of the
+            French Data Protection Act), cookies that are <strong>strictly necessary</strong>
+            for the service, or whose sole purpose is to store a preference explicitly
+            requested by the user, are <strong>exempt from consent</strong>. Every cookie in
+            the table above falls into that category — which is why the site shows no consent
+            banner. Should non-essential cookies ever be introduced, prior consent collection
+            would be put in place.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="stripe">
+        <h2>4. Stripe checkout</h2>
+        <p>
+            When you make a donation, you are redirected to a payment page hosted by
+            <strong>Stripe</strong> (stripe.com domain). Stripe then sets its own cookies
+            <strong>on its own domain</strong>, in particular for security and fraud
+            prevention; those cookies are neither controlled nor readable by
+            {{ legal.siteName }}. See the
+            <a href="https://stripe.com/legal/cookies-policy" target="_blank" rel="noopener noreferrer">Stripe cookie policy</a>
+            for details.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="pwa">
+        <h2>5. Installable app (PWA)</h2>
+        <p>
+            The site can be installed as an app (PWA). In that context, a
+            <em>service worker</em> keeps local copies of site resources (pages, styles,
+            images) in your browser's cache to speed up navigation and allow degraded offline
+            browsing. These caches are <strong>purely technical</strong>: they contain no
+            tracking identifier and never leave your device. You can clear them at any time
+            from your browser settings ("clear site data").
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="manage">
+        <h2>6. Managing or deleting</h2>
+        <p>
+            You can delete existing cookies and configure your browser to refuse them at any
+            time ("Privacy" or "Cookies and site data" settings). Possible consequences:
+        </p>
+        <ul>
+            <li>without the session cookie, browsing still works but your version/language preferences are no longer kept from page to page and signing in to an account becomes impossible;</li>
+            <li>deleting <strong>lod_prefs</strong> resets the remembered language and version;</li>
+            <li>deleting <strong>REMEMBERME</strong> signs you out at the end of the current session.</li>
+        </ul>
+        <p>
+            Questions: <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a>.
+        </p>
+    </section>
+{% endblock %}

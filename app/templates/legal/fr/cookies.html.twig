@@ -1,0 +1,132 @@
+{% extends 'legal/layout.html.twig' %}
+
+{% block page_title %}{{ 'legal.cookies.title'|trans }}{% endblock %}
+
+{% block toc %}
+    <li><a class="nav-link" href="#approche">1. Notre approche</a></li>
+    <li><a class="nav-link" href="#cookies">2. Cookies utilisés</a></li>
+    <li><a class="nav-link" href="#consentement">3. Consentement</a></li>
+    <li><a class="nav-link" href="#stripe">4. Paiement Stripe</a></li>
+    <li><a class="nav-link" href="#pwa">5. Application installable (PWA)</a></li>
+    <li><a class="nav-link" href="#gestion">6. Gérer ou supprimer</a></li>
+{% endblock %}
+
+{% block legal_body %}
+    <section id="approche">
+        <h2>1. Notre approche</h2>
+        <p>
+            {{ legal.siteName }} n'utilise <strong>aucun cookie publicitaire, aucun cookie de
+            traceur tiers et aucun outil d'analyse externe</strong>. Les seuls cookies déposés
+            sont des cookies first-party (émis par le site lui-même), strictement nécessaires au
+            fonctionnement ou à la mémorisation d'une préférence que vous avez demandée. La
+            mesure d'audience est réalisée côté serveur, <strong>sans cookie</strong> (voir la
+            <a href="{{ path('app_legal_privacy') }}">politique de confidentialité</a>).
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="cookies">
+        <h2>2. Cookies utilisés</h2>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Nom</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Finalité</th>
+                        <th scope="col">Durée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>PHPSESSID</strong></td>
+                        <td>Essentiel</td>
+                        <td>Cookie de session : maintient votre navigation (préférences de version et de langue en cours, messages du site, jetons de sécurité anti-CSRF, état de connexion)</td>
+                        <td>Session — supprimé à la fermeture du navigateur</td>
+                    </tr>
+                    <tr>
+                        <td><strong>lod_prefs</strong></td>
+                        <td>Préférence (déposé uniquement si vous cochez « se souvenir » dans le sélecteur de version/langue)</td>
+                        <td>Mémorise la langue et la version Data Dragon choisies entre deux visites. Contenu signé (intégrité) — Secure, HttpOnly, SameSite=Lax</td>
+                        <td>7 jours</td>
+                    </tr>
+                    <tr>
+                        <td><strong>REMEMBERME</strong></td>
+                        <td>Authentification (déposé uniquement si vous cochez « rester connecté »)</td>
+                        <td>Vous maintient connecté à votre compte entre deux sessions de navigation</td>
+                        <td>30 jours</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            Aucun autre cookie n'est déposé par le site. Le site n'utilise pas non plus le
+            stockage local du navigateur (localStorage) à des fins de suivi.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="consentement">
+        <h2>3. Consentement</h2>
+        <p>
+            Conformément à la doctrine de la CNIL (article 82 de la loi Informatique et
+            Libertés), les cookies <strong>strictement nécessaires</strong> au service ou ayant
+            pour seule finalité de mémoriser une préférence expressément demandée par
+            l'utilisateur sont <strong>exemptés de consentement</strong>. Tous les cookies du
+            tableau ci-dessus relèvent de cette catégorie : c'est pourquoi le site n'affiche pas
+            de bannière de consentement. Si des cookies non essentiels devaient être introduits
+            un jour, un recueil de consentement préalable serait mis en place.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="stripe">
+        <h2>4. Paiement Stripe</h2>
+        <p>
+            Lorsque vous effectuez un don, vous êtes redirigé vers une page de paiement hébergée
+            par <strong>Stripe</strong> (domaine stripe.com). Stripe dépose alors ses propres
+            cookies <strong>sur son domaine</strong>, notamment à des fins de sécurité et de
+            prévention de la fraude ; ces cookies ne sont ni contrôlés ni lisibles par
+            {{ legal.siteName }}. Consultez la
+            <a href="https://stripe.com/fr/legal/cookies-policy" target="_blank" rel="noopener noreferrer">politique de cookies de Stripe</a>
+            pour en savoir plus.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="pwa">
+        <h2>5. Application installable (PWA)</h2>
+        <p>
+            Le site peut être installé comme application (PWA). Dans ce cadre, un
+            <em>service worker</em> conserve dans le cache de votre navigateur des copies
+            locales de ressources du site (pages, styles, images) afin d'accélérer la navigation
+            et de permettre une consultation dégradée hors ligne. Ces caches sont
+            <strong>purement techniques</strong> : ils ne contiennent aucun identifiant de suivi
+            et restent sur votre appareil. Vous pouvez les vider à tout moment via les réglages
+            de votre navigateur (« effacer les données de site »).
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="gestion">
+        <h2>6. Gérer ou supprimer</h2>
+        <p>
+            Vous pouvez à tout moment supprimer les cookies existants et configurer votre
+            navigateur pour les refuser (réglages « Confidentialité » ou « Cookies et données de
+            site »). Conséquences possibles :
+        </p>
+        <ul>
+            <li>sans cookie de session, la navigation reste possible mais vos préférences de version/langue ne sont plus retenues d'une page à l'autre et la connexion à un compte devient impossible ;</li>
+            <li>supprimer <strong>lod_prefs</strong> réinitialise la langue et la version mémorisées ;</li>
+            <li>supprimer <strong>REMEMBERME</strong> vous déconnecte à la fin de la session en cours.</li>
+        </ul>
+        <p>
+            Pour toute question : <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a>.
+        </p>
+    </section>
+{% endblock %}
