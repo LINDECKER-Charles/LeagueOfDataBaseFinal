@@ -51,6 +51,8 @@
             <button type="submit" class="hx-btn w-full">{{ 'auth.login.submit'|trans }}</button>
         </form>
 
+        {% include 'security/_google_button.html.twig' %}
+
         <div class="gold-hairline mt-8 pt-5 text-center text-sm text-text-muted">
             {{ 'auth.login.no_account'|trans }}
             <a href="{{ path('app_register') }}" class="nav-link text-gold">{{ 'auth.register.title'|trans }}</a>

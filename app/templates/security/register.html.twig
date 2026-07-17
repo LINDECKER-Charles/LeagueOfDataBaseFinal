@@ -41,15 +41,7 @@
                     <p class="auth-field-error">{{ err.message }}</p>
                 {% endfor %}
             </div>
-            <div>
-                <label for="{{ registrationForm.plainPassword.vars.id }}" class="auth-label">
-                    {{ 'auth.register.password'|trans }}
-                </label>
-                {{ form_widget(registrationForm.plainPassword, {attr: {class: 'hx-input mt-1.5'}}) }}
-                {% for err in registrationForm.plainPassword.vars.errors %}
-                    <p class="auth-field-error">{{ err.message }}</p>
-                {% endfor %}
-            </div>
+            {% include 'security/_password_pair.html.twig' with { field: registrationForm.plainPassword } only %}
             <div>
                 <label class="flex items-start gap-2.5 text-sm text-text-muted">
                     {{ form_widget(registrationForm.agreeTerms, {attr: {class: 'hx-check mt-0.5'}}) }}
@@ -61,6 +53,8 @@
             </div>
             <button type="submit" class="hx-btn w-full">{{ 'auth.register.submit'|trans }}</button>
         {{ form_end(registrationForm) }}
+
+        {% include 'security/_google_button.html.twig' %}
 
         <div class="gold-hairline mt-8 pt-5 text-center text-sm text-text-muted">
             {{ 'auth.register.have_account'|trans }}

@@ -409,4 +409,41 @@
     font-size: 0.72rem;
     color: var(--color-text-muted);
   }
+
+  /* ---- Secondary profile panels (identity, set-password) ------------------ */
+  /* Same surface grammar as .profile-danger, gold-tinted instead of danger. */
+  .profile-panel {
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    background: color-mix(in srgb, var(--color-gold-deep) 6%, transparent);
+    padding: 1.5rem;
+  }
+  .profile-panel__title {
+    font-family: var(--font-beaufort);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-gold-light);
+  }
+
+  /* Riot tag input group: the # lives outside the value, as a visual prefix. */
+  .riot-tag {
+    display: flex;
+    align-items: stretch;
+  }
+  .riot-tag__prefix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+    border-right: none;
+    background: color-mix(in srgb, var(--color-gold-deep) 14%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-gold);
+  }
+  .riot-tag__input {
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 }

@@ -25,6 +25,8 @@ const registry: Record<string, Island> = {
     'favorite-picker': { load: () => import('./components/FavoritePicker.vue') },
     'build-editor': { load: () => import('./components/BuildEditor.vue') },
     'copy-link': { load: () => import('./components/CopyLink.vue') },
+    'password-checklist': { load: () => import('./components/PasswordChecklist.vue') },
+    'vote-score': { load: () => import('./components/VoteScore.vue') },
 }
 
 function mountIslands(root: ParentNode = document): void {

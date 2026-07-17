@@ -15,4 +15,6 @@ return [
     League\FlysystemBundle\FlysystemBundle::class => ['all' => true],
     Doctrine\Bundle\DoctrineBundle\DoctrineBundle::class => ['all' => true],
     Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle::class => ['all' => true],
+    // Registered by hand: the project refuses contrib recipes (allow-contrib: false).
+    KnpU\OAuth2ClientBundle\KnpUOAuth2ClientBundle::class => ['all' => true],
 ];

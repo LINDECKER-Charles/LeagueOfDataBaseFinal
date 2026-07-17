@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ user.username }} · {{ 'base.title'|trans }}{% endblock %}
+{% block title %}{{ user.displayName }} · {{ 'base.title'|trans }}{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
 {% block body %}
@@ -29,7 +29,10 @@
         <header class="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
                 <p class="eyebrow">{{ 'profile.eyebrow'|trans }}</p>
-                <h1 class="mt-2 font-beaufort text-4xl font-bold uppercase tracking-wide text-gold-grad">{{ user.username }}</h1>
+                <h1 class="mt-2 flex items-center gap-2.5 font-beaufort text-4xl font-bold uppercase tracking-wide text-gold-grad">
+                    {{ user.displayName }}
+                    {% if user.isSupporter %}{% include 'components/_supporter_badge.html.twig' %}{% endif %}
+                </h1>
             </div>
             <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
@@ -67,6 +70,12 @@
                     <span class="hx-plate__label">{{ 'profile.builds.label'|trans }}</span>
                     <a href="{{ path('app_builds') }}" class="nav-link mt-1 inline-block font-beaufort text-sm uppercase tracking-[0.15em] text-gold">
                         {{ 'profile.builds.manage'|trans }} →
+                    </a>
+                </div>
+                <div class="hx-plate">
+                    <span class="hx-plate__label">{{ 'portal.profile_link.label'|trans({}, 'api') }}</span>
+                    <a href="{{ path('app_api_portal') }}" class="nav-link mt-1 inline-block font-beaufort text-sm uppercase tracking-[0.15em] text-gold">
+                        {{ 'portal.profile_link.manage'|trans({}, 'api') }} →
                     </a>
                 </div>
             </aside>
@@ -119,16 +128,57 @@
             </section>
         </form>
 
-        <section class="profile-danger mt-14" aria-labelledby="profile-danger-title">
-            <h2 id="profile-danger-title" class="profile-danger__title">{{ 'profile.danger.title'|trans }}</h2>
-            <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'profile.danger.help'|trans }}</p>
-            <form method="post" action="{{ path('app_profile_delete') }}" data-turbo="false"
+        <section class="profile-panel mt-14" aria-labelledby="profile-identity-title">
+            <h2 id="profile-identity-title" class="profile-panel__title">{{ 'profile.identity.title'|trans }}</h2>
+            <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'profile.identity.url_warning'|trans }}</p>
+            <form method="post" action="{{ path('app_profile_identity') }}" data-turbo="false"
                   class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
                 <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
                 <label class="flex-1 sm:max-w-xs">
-                    <span class="auth-label">{{ 'profile.danger.password'|trans }}</span>
-                    <input type="password" name="password" required autocomplete="current-password" class="hx-input mt-1.5">
+                    <span class="auth-label">{{ 'profile.identity.username'|trans }}</span>
+                    <input type="text" name="username" value="{{ user.username }}" required
+                           minlength="3" maxlength="24" autocomplete="username" class="hx-input mt-1.5">
                 </label>
+                <label class="sm:w-40">
+                    <span class="auth-label">{{ 'profile.identity.tag'|trans }}</span>
+                    <span class="riot-tag mt-1.5">
+                        <span class="riot-tag__prefix" aria-hidden="true">#</span>
+                        <input type="text" name="riotTagline" value="{{ user.riotTagline ?? '' }}"
+                               minlength="3" maxlength="5" pattern="[A-Za-z0-9]{3,5}"
+                               placeholder="EUW" autocapitalize="characters" autocomplete="off"
+                               class="hx-input riot-tag__input">
+                    </span>
+                </label>
+                <button type="submit" class="hx-btn">{{ 'profile.identity.submit'|trans }}</button>
+            </form>
+            <p class="auth-help">{{ 'profile.identity.tag_help'|trans }}</p>
+        </section>
+
+        {% if passwordForm %}
+            <section class="profile-panel mt-14" aria-labelledby="profile-password-title">
+                <h2 id="profile-password-title" class="profile-panel__title">{{ 'profile.password.title'|trans }}</h2>
+                <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'profile.password.help'|trans }}</p>
+                {{ form_start(passwordForm, {action: path('app_profile_password'), attr: {'data-turbo': 'false', class: 'mt-5 max-w-md space-y-5'}}) }}
+                    {% include 'security/_password_pair.html.twig' with { field: passwordForm.plainPassword } only %}
+                    <button type="submit" class="hx-btn">{{ 'profile.password.submit'|trans }}</button>
+                {{ form_end(passwordForm) }}
+            </section>
+        {% endif %}
+
+        <section class="profile-danger mt-14" aria-labelledby="profile-danger-title">
+            <h2 id="profile-danger-title" class="profile-danger__title">{{ 'profile.danger.title'|trans }}</h2>
+            <p class="mt-2 max-w-2xl text-sm text-text-muted">
+                {{ (user.hasPassword ? 'profile.danger.help' : 'profile.danger.help_no_password')|trans }}
+            </p>
+            <form method="post" action="{{ path('app_profile_delete') }}" data-turbo="false"
+                  class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+                <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+                {% if user.hasPassword %}
+                    <label class="flex-1 sm:max-w-xs">
+                        <span class="auth-label">{{ 'profile.danger.password'|trans }}</span>
+                        <input type="password" name="password" required autocomplete="current-password" class="hx-input mt-1.5">
+                    </label>
+                {% endif %}
                 <button type="submit" class="profile-danger__btn">{{ 'profile.danger.delete'|trans }}</button>
             </form>
         </section>

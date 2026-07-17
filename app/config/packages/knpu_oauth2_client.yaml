@@ -1,0 +1,11 @@
+knpu_oauth2_client:
+    clients:
+        # "Sign in with Google". Credentials come from the environment (empty in
+        # dev by default -> the /connect/google route degrades to the login page).
+        # Google Cloud Console side + where to put the secrets: docs/oauth-google-setup.md
+        google:
+            type: google
+            client_id: '%env(OAUTH_GOOGLE_CLIENT_ID)%'
+            client_secret: '%env(OAUTH_GOOGLE_CLIENT_SECRET)%'
+            redirect_route: connect_google_check
+            redirect_params: {}

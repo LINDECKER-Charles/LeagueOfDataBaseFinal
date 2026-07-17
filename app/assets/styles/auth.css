@@ -68,4 +68,52 @@
     font-size: 0.75rem;
     color: var(--color-text-dim);
   }
+
+  /* "or" hairline between the credential form and the OAuth button. */
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin: 1.5rem 0 1.25rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: var(--color-text-dim);
+  }
+  .auth-divider::before,
+  .auth-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+  }
+
+  /* CNIL password checklist island. Two calm states — met criteria glow arcane
+     (--color-hex), the rest stay muted; after first blur the misses warm up
+     slightly, never a shouting red. */
+  .pwd-checklist {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+  }
+  .pwd-checklist__item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.78rem;
+    color: var(--color-text-dim);
+    transition: color 0.25s var(--ease-hextech, ease);
+  }
+  .pwd-checklist__item svg { flex: none; }
+  .pwd-checklist--touched .pwd-checklist__item {
+    color: color-mix(in srgb, var(--color-danger) 45%, var(--color-text-muted));
+  }
+  .pwd-checklist__item--ok,
+  .pwd-checklist--touched .pwd-checklist__item--ok {
+    color: var(--color-hex);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pwd-checklist__item { transition: none; }
+  }
 }

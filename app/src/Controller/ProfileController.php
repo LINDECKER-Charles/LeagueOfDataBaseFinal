@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Form\SetPasswordFormType;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
@@ -12,6 +13,8 @@ use App\Service\Profile\FavoriteSlot;
 use App\Service\Profile\FavoriteSlots;
 use App\Service\Profile\ProfilePresenter;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -19,11 +22,15 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * The summoner's chamber: profile edition (visibility toggle + four favorite
- * slots) and account deletion (the GDPR erasure right the legal pages announce).
+ * slots), summoner identity (username + Riot tagline), password bootstrap for
+ * OAuth-only accounts, and account deletion (the GDPR erasure right the legal
+ * pages announce).
  */
 final class ProfileController extends AbstractResourceController
 {
@@ -41,6 +48,7 @@ final class ProfileController extends AbstractResourceController
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TokenStorageInterface $tokenStorage,
         private readonly TranslatorInterface $translator,
+        private readonly ValidatorInterface $validator,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -59,6 +67,8 @@ final class ProfileController extends AbstractResourceController
             'favorites' => $this->favoriteSlots->resolveAll($user, $version, $lang),
             'version' => $version,
             'lang' => $lang,
+            // OAuth-only accounts get the "set a password" panel.
+            'passwordForm' => $user->hasPassword() ? null : $this->createForm(SetPasswordFormType::class),
         ]);
     }
 
@@ -92,6 +102,55 @@ final class ProfileController extends AbstractResourceController
         return $this->redirectToRoute('app_profile', status: Response::HTTP_SEE_OTHER);
     }
 
+    #[Route('/profile/identity', name: 'app_profile_identity', methods: ['POST'])]
+    public function identity(Request $request): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
+            return $this->backToProfileWithError('profile.flash.csrf');
+        }
+
+        $user = $this->currentUser();
+        $tagline = trim((string) $request->request->get('riotTagline'));
+        $user->setUsername(trim((string) $request->request->get('username')));
+        $user->setRiotTagline($tagline === '' ? null : $tagline);
+
+        $violations = $this->validator->validate($user);
+        if (\count($violations) > 0) {
+            // Discard the invalid mutation so a later flush can never persist it.
+            $this->entityManager->refresh($user);
+
+            return $this->backToProfileWithError($this->identityErrorKey($violations));
+        }
+
+        $this->entityManager->flush();
+        $this->addFlash('success', $this->translator->trans('profile.flash.identity_saved'));
+
+        return $this->redirectToRoute('app_profile', status: Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/profile/password', name: 'app_profile_password', methods: ['POST'])]
+    public function setPassword(Request $request): RedirectResponse
+    {
+        $user = $this->currentUser();
+        if ($user->hasPassword()) {
+            // Replacing an existing password would need current-password re-auth — out of scope.
+            return $this->backToProfileWithError('profile.flash.password_exists');
+        }
+
+        $form = $this->createForm(SetPasswordFormType::class);
+        $form->handleRequest($request);
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            return $this->backToProfileWithFormErrors($form);
+        }
+
+        $plainPassword = (string) $form->get('plainPassword')->getData();
+        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
+        $this->entityManager->flush();
+        $this->addFlash('success', $this->translator->trans('profile.flash.password_set'));
+
+        return $this->redirectToRoute('app_profile', status: Response::HTTP_SEE_OTHER);
+    }
+
     #[Route('/profile/delete', name: 'app_profile_delete', methods: ['POST'])]
     public function delete(Request $request): RedirectResponse
     {
@@ -99,8 +158,10 @@ final class ProfileController extends AbstractResourceController
             return $this->backToProfileWithError('profile.flash.csrf');
         }
 
+        // OAuth-only accounts have no password to confirm with: CSRF alone guards
+        // them, because the GDPR erasure right must stay reachable.
         $user = $this->currentUser();
-        if (!$this->passwordHasher->isPasswordValid($user, (string) $request->request->get('password'))) {
+        if ($user->hasPassword() && !$this->passwordHasher->isPasswordValid($user, (string) $request->request->get('password'))) {
             return $this->backToProfileWithError('profile.flash.wrong_password');
         }
 
@@ -151,9 +212,37 @@ final class ProfileController extends AbstractResourceController
         $this->addFlash('success', $this->translator->trans('profile.flash.saved'));
     }
 
+    /** Map the first identity violation to a player-facing message key. */
+    private function identityErrorKey(ConstraintViolationListInterface $violations): string
+    {
+        $violation = $violations->get(0);
+        if ($violation->getPropertyPath() === 'riotTagline') {
+            return 'profile.identity.tag_invalid';
+        }
+
+        return $violation->getConstraint() instanceof UniqueEntity
+            ? 'profile.identity.username_taken'
+            : 'profile.identity.username_invalid';
+    }
+
     private function backToProfileWithError(string $messageKey): RedirectResponse
     {
         $this->addFlash('error', $this->translator->trans($messageKey));
+
+        return $this->redirectToRoute('app_profile', status: Response::HTTP_SEE_OTHER);
+    }
+
+    /** Form errors are already translated (messages domain, see PasswordFieldOptions). */
+    private function backToProfileWithFormErrors(FormInterface $form): RedirectResponse
+    {
+        $hasFlashed = false;
+        foreach ($form->getErrors(true) as $error) {
+            $this->addFlash('error', $error->getMessage());
+            $hasFlashed = true;
+        }
+        if (!$hasFlashed) {
+            $this->addFlash('error', $this->translator->trans('profile.flash.csrf'));
+        }
 
         return $this->redirectToRoute('app_profile', status: Response::HTTP_SEE_OTHER);
     }
