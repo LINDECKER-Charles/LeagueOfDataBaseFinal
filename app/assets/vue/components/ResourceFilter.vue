@@ -16,6 +16,8 @@ interface Labels {
     next: string
     perPage: string
     all: string
+    filters: string
+    close: string
 }
 
 const props = withDefaults(
@@ -96,6 +98,23 @@ function pretty(tag: string): string {
     return tag.replace(/([a-z])([A-Z])/g, '$1 $2')
 }
 
+/* Mobile facet sheet — native <dialog> (top layer, inert background, Escape
+   and Android-back dismissal for free). Filtering stays live; "close" is the
+   only commit action. */
+const sheet = ref<HTMLDialogElement | null>(null)
+
+function openSheet(): void {
+    sheet.value?.showModal()
+}
+function closeSheet(): void {
+    sheet.value?.close()
+}
+function onSheetClick(event: MouseEvent): void {
+    if (event.target === sheet.value) {
+        closeSheet() // backdrop click
+    }
+}
+
 const gridEl = ref<HTMLElement | null>(null)
 
 onMounted(() => {
@@ -159,12 +178,41 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
-        <div v-if="tagUniverse.length" class="flex flex-wrap items-center gap-1.5">
+        <!-- Facets: inline chips from md up; a thumb-friendly bottom sheet below. -->
+        <div v-if="tagUniverse.length" class="hidden flex-wrap items-center gap-1.5 md:flex">
             <button v-for="tag in tagUniverse" :key="tag" type="button"
                     class="filter-chip" :class="{ 'filter-chip--on': selected.has(tag) }"
                     :aria-pressed="selected.has(tag)" @click="toggleTag(tag)">{{ pretty(tag) }}</button>
             <button v-if="query || selected.size" type="button" class="filter-clear" @click="clearAll">{{ labels.clear }}</button>
         </div>
+
+        <div v-if="tagUniverse.length" class="flex items-center gap-2 md:hidden">
+            <button type="button" class="filter-trigger" @click="openSheet">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+                    <path d="M3 5h14M6 10h8M8.5 15h3" />
+                </svg>
+                {{ labels.filters }}
+                <b v-if="selected.size">{{ selected.size }}</b>
+            </button>
+            <button v-if="query || selected.size" type="button" class="filter-clear" @click="clearAll">{{ labels.clear }}</button>
+        </div>
+
+        <dialog ref="sheet" class="filter-sheet" :aria-label="labels.filters" @click="onSheetClick">
+            <div class="filter-sheet__handle" aria-hidden="true"></div>
+            <p class="eyebrow mb-4">{{ labels.filters }}</p>
+            <div class="flex flex-wrap gap-2 overflow-y-auto">
+                <button v-for="tag in tagUniverse" :key="tag" type="button"
+                        class="filter-chip" :class="{ 'filter-chip--on': selected.has(tag) }"
+                        :aria-pressed="selected.has(tag)" @click="toggleTag(tag)">{{ pretty(tag) }}</button>
+            </div>
+            <div class="mt-5 flex items-center justify-between gap-3">
+                <button type="button" class="filter-clear" :disabled="!query && !selected.size" @click="clearAll">
+                    {{ labels.clear }}
+                </button>
+                <span class="font-mono text-xs text-text-muted">{{ resultLabel }}</span>
+                <button type="button" class="filter-done" @click="closeSheet">{{ labels.close }}</button>
+            </div>
+        </dialog>
 
         <p v-if="filtered.length === 0" class="py-6 text-center font-mono text-sm text-text-muted">{{ labels.empty }}</p>
     </div>
@@ -198,6 +246,46 @@ onBeforeUnmount(() => {
     text-underline-offset: 2px;
 }
 .filter-clear:hover { color: var(--color-gold-bright); }
+.filter-clear:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.filter-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.4rem 1rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-gold-bright);
+    border: 1px solid rgba(200, 170, 110, 0.55);
+    background: rgba(200, 170, 110, 0.1);
+}
+.filter-trigger svg { width: 1rem; height: 1rem; }
+.filter-trigger b {
+    display: grid;
+    place-items: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.25rem;
+    font-family: ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--color-hextech-black);
+    background: var(--color-gold);
+}
+
+.filter-done {
+    min-height: 2.75rem;
+    padding: 0.4rem 1.4rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-gold-bright);
+    border: 1px solid var(--color-gold);
+    background: rgba(200, 170, 110, 0.18);
+}
 .pp-btn {
     min-width: 2rem;
     height: 2rem;

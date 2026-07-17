@@ -54,8 +54,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-    <div class="-mx-6 flex gap-4 overflow-x-auto px-6 pb-2">
-        <figure v-for="(skin, i) in skins" :key="skin.num" class="w-64 shrink-0">
+    <div class="-mx-6 flex snap-x snap-proximity gap-4 overflow-x-auto px-6 pb-2">
+        <figure v-for="(skin, i) in skins" :key="skin.num" class="w-72 shrink-0 snap-start scroll-ml-6">
             <button
                 type="button"
                 class="skin-tile hextech-frame relative block w-full overflow-hidden"
