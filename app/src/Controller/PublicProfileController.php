@@ -3,15 +3,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Build;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
-use App\Repository\BuildRepository;
 use App\Repository\UserRepository;
-use App\Service\Picker\PickerCatalog;
-use App\Service\Profile\FavoriteSlots;
-use App\Service\Profile\ProfilePresenter;
+use App\Service\Profile\PublicProfileView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,7 +16,8 @@ use Symfony\Component\Routing\Attribute\Route;
 /**
  * Public "summoner card" — /u/{username}. Opt-in only: a private or unknown
  * profile answers the exact same 404, so the route is no account-existence
- * oracle.
+ * oracle. The render model is built by {@see PublicProfileView}, shared with the
+ * owner's /profile/preview so both surfaces stay byte-for-byte identical.
  */
 final class PublicProfileController extends AbstractResourceController
 {
@@ -30,10 +27,7 @@ final class PublicProfileController extends AbstractResourceController
         PageContextResolver $pageContext,
         RequestStack $requestStack,
         private readonly UserRepository $users,
-        private readonly BuildRepository $builds,
-        private readonly FavoriteSlots $favoriteSlots,
-        private readonly PickerCatalog $catalog,
-        private readonly ProfilePresenter $presenter,
+        private readonly PublicProfileView $view,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -57,43 +51,6 @@ final class PublicProfileController extends AbstractResourceController
 
         return $this->render('profile/public.html.twig', [
             'client' => $this->clientData(),
-            'profileUser' => $user,
-            'memberSince' => $this->presenter->memberSince($user->getCreatedAt(), $request->getLocale()),
-            'favorites' => $this->favoriteSlots->resolveAll($user, $version, $lang),
-            'builds' => $this->buildCards($this->builds->findPublicByOwner($user), $version, $lang),
-        ]);
-    }
-
-    /**
-     * @param list<Build> $builds
-     * @return list<array<string, mixed>>
-     */
-    private function buildCards(array $builds, string $version, string $lang): array
-    {
-        $cards = [];
-        foreach ($builds as $build) {
-            $champion = $this->tryResolveChampion($build->getChampionId(), $version, $lang);
-            $cards[] = [
-                'name' => $build->getName(),
-                'championId' => $build->getChampionId(),
-                'championName' => $champion['name'] ?? null,
-                'championImage' => $champion['image'] ?? null,
-                'gameVersion' => $build->getGameVersion(),
-                'shareToken' => $build->getShareToken(),
-                'updatedAt' => $build->getUpdatedAt(),
-            ];
-        }
-
-        return $cards;
-    }
-
-    /** @return ?array{id: string, name: string, image: ?string, type: string} */
-    private function tryResolveChampion(string $championId, string $version, string $lang): ?array
-    {
-        try {
-            return $this->catalog->resolveChampion($championId, $version, $lang);
-        } catch (\Throwable) {
-            return null; // the portrait is decorative — the card degrades to initials
-        }
+        ] + $this->view->build($user, $version, $lang, $request->getLocale()));
     }
 }

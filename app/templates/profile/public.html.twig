@@ -1,92 +1,107 @@
 {% extends 'base.html.twig' %}
 
+{% set isPreview = preview|default(false) %}
+
 {% block title %}{{ profileUser.displayName }} · {{ 'base.title'|trans }}{% endblock %}
 {% block meta_description %}{{ 'profile.public.description'|trans({'%username%': profileUser.displayName}) }}{% endblock %}
+{% block meta_robots %}{{ isPreview ? 'noindex, nofollow' : 'index, follow' }}{% endblock %}
 {% block og_type %}profile{% endblock %}
+{# Favorite skin splash makes the richest share card (og + twitter); empty here lets base fall back to the site default. #}
+{% block img %}{{ skinBanner ? skinBanner.splash }}{% endblock %}
 
 {% block body %}
-<main class="relative px-6 py-12">
-    {% include 'partials/main/gradient.html.twig' %}
-
-    <div class="relative mx-auto w-full max-w-2xl">
-        <article class="profile-card hextech-frame hx-corners">
-            <header class="profile-card__banner">
-                <p class="eyebrow">{{ 'profile.public.eyebrow'|trans }}</p>
-                <h1 class="mt-2 flex flex-wrap items-center justify-center gap-2.5 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad sm:text-4xl">
-                    {{ profileUser.displayName }}
-                    {% if profileUser.isSupporter %}{% include 'components/_supporter_badge.html.twig' %}{% endif %}
-                </h1>
-                <hr class="hx-rule mt-6">
-            </header>
-
-            <div class="profile-card__plates">
-                <div class="hx-plate">
-                    <span class="hx-plate__label">{{ 'profile.identity.member_since'|trans }}</span>
-                    <span class="hx-plate__value">{{ memberSince }}</span>
-                </div>
-                <div class="hx-plate">
-                    <span class="hx-plate__label">{{ 'profile.public.builds_count'|trans }}</span>
-                    <span class="hx-plate__value">{{ builds|length }}</span>
-                </div>
+<main class="profile-public">
+    {% if isPreview %}
+        <div class="preview-ribbon">
+            <div class="preview-ribbon__text">
+                <span class="preview-ribbon__badge">{{ 'profile.preview.badge'|trans }}</span>
+                <span>{{ (profileUser.isPublicProfile ? 'profile.preview.note_public' : 'profile.preview.note_private')|trans }}</span>
             </div>
+            <a href="{{ path('app_profile') }}" class="hx-btn-ghost preview-ribbon__back">{{ 'profile.preview.back'|trans }}</a>
+        </div>
+    {% endif %}
 
-            <section aria-label="{{ 'profile.favorites.title'|trans }}">
-                <div class="codex-header mb-4">
-                    <h2>{{ 'profile.favorites.title'|trans }}</h2>
-                </div>
-                <div class="profile-card__medallions">
-                    {% for def in [
-                        { type: 'champion', label: 'profile.slot.champion'|trans },
-                        { type: 'item', label: 'profile.slot.item'|trans },
-                        { type: 'rune', label: 'profile.slot.rune'|trans },
-                        { type: 'summoner', label: 'profile.slot.summoner'|trans },
-                    ] %}
-                        {% include 'profile/_favorite_socket.html.twig' with {
-                            type_label: def.label,
-                            favorite: favorites[def.type],
-                            compact: true,
-                        } only %}
-                    {% endfor %}
-                </div>
-            </section>
+    {# Orbs float over the hero; the champion is skipped when it IS the backdrop. #}
+    {% set orbSlots = [] %}
+    {% for slot in ['champion', 'item', 'rune', 'summoner'] %}
+        {% if favorites[slot].current and not (slot == 'champion' and heroBackground and heroBackground.kind == 'champion') %}
+            {% set orbSlots = orbSlots|merge([slot]) %}
+        {% endif %}
+    {% endfor %}
 
-            <section aria-label="{{ 'profile.public.builds_title'|trans }}">
-                <div class="codex-header mb-4 mt-8">
-                    <h2>{{ 'profile.public.builds_title'|trans }}</h2>
-                </div>
-                {% if builds is empty %}
-                    <p class="py-4 text-center font-mono text-sm text-text-muted">{{ 'profile.public.no_builds'|trans }}</p>
-                {% else %}
-                    <ul class="profile-card__builds">
-                        {% for build in builds %}
-                            <li>
-                                <a class="profile-build" href="{{ path('app_build_show', { token: build.shareToken }) }}">
-                                    {% if build.championImage %}
-                                        <picture class="profile-build__portrait">
-                                            {% if build.championImage ends with '.png' %}
-                                                <source srcset="{{ build.championImage|replace({'.png': '.webp'}) }}" type="image/webp">
-                                            {% endif %}
-                                            <img src="{{ build.championImage }}" alt="{{ build.championName ?? build.championId }}"
-                                                 width="48" height="48" loading="lazy" decoding="async">
-                                        </picture>
-                                    {% else %}
-                                        <span class="profile-build__portrait profile-build__portrait--initials" aria-hidden="true">
-                                            {{ (build.championName ?? build.championId)|slice(0, 2)|upper }}
-                                        </span>
+    <section class="profile-hero {{ heroBackground ? 'profile-hero--art' : 'profile-hero--plain' }}">
+        {% if heroBackground %}
+            {# Centered crop frames the champion; onerror falls back to the classic splash. #}
+            <img class="profile-hero__art" src="{{ heroBackground.image }}" alt=""
+                 onerror="this.onerror=null;this.src='{{ heroBackground.fallback }}'"
+                 loading="eager" fetchpriority="high" decoding="async">
+        {% else %}
+            {% include 'partials/main/gradient.html.twig' %}
+        {% endif %}
+        <div class="profile-hero__scrim" aria-hidden="true"></div>
+
+        {% if orbSlots is not empty %}
+            <div class="profile-orbits" aria-hidden="true">
+                {% for slot in orbSlots %}
+                    {% include 'profile/_favorite_orb.html.twig' with {
+                        favorite: favorites[slot],
+                        pos_class: 'profile-orb--p' ~ loop.index,
+                        primary: slot == 'champion',
+                        type_label: ('profile.slot.' ~ slot)|trans,
+                    } only %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="profile-hero__body">
+            <p class="eyebrow">{{ 'profile.public.eyebrow'|trans }}</p>
+            <h1 class="profile-hero__name text-gold-grad">
+                {{ profileUser.displayName }}
+                {% if profileUser.isSupporter %}{% include 'components/_supporter_badge.html.twig' %}{% endif %}
+            </h1>
+            <p class="profile-hero__meta">
+                <span>{{ 'profile.identity.member_since'|trans }} · {{ memberSince }}</span>
+                {% if skinBanner %}<span class="profile-hero__skin">{{ skinBanner.name }}</span>{% endif %}
+            </p>
+        </div>
+    </section>
+
+    <section class="profile-public__builds">
+        <div class="codex-header mb-4">
+            <h2>{{ 'profile.public.builds_title'|trans }}</h2>
+            <span class="codex-header__meta">{{ builds|length }}</span>
+        </div>
+        {% if builds is empty %}
+            <p class="py-4 text-center font-mono text-sm text-text-muted">{{ 'profile.public.no_builds'|trans }}</p>
+        {% else %}
+            <ul class="profile-card__builds">
+                {% for build in builds %}
+                    <li>
+                        <a class="profile-build" href="{{ path('app_build_show', { token: build.shareToken }) }}">
+                            {% if build.championImage %}
+                                <picture class="profile-build__portrait">
+                                    {% if build.championImage ends with '.png' %}
+                                        <source srcset="{{ build.championImage|replace({'.png': '.webp'}) }}" type="image/webp">
                                     {% endif %}
-                                    <span class="min-w-0">
-                                        <span class="profile-build__name">{{ build.name }}</span>
-                                        <span class="profile-build__meta">
-                                            {{ build.championName ?? build.championId }} · {{ build.gameVersion }}
-                                        </span>
-                                    </span>
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </section>
-        </article>
-    </div>
+                                    <img src="{{ build.championImage }}" alt="{{ build.championName ?? build.championId }}"
+                                         width="48" height="48" loading="lazy" decoding="async">
+                                </picture>
+                            {% else %}
+                                <span class="profile-build__portrait profile-build__portrait--initials" aria-hidden="true">
+                                    {{ (build.championName ?? build.championId)|slice(0, 2)|upper }}
+                                </span>
+                            {% endif %}
+                            <span class="min-w-0">
+                                <span class="profile-build__name">{{ build.name }}</span>
+                                <span class="profile-build__meta">
+                                    {{ build.championName ?? build.championId }} · {{ build.gameVersion }}
+                                </span>
+                            </span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
 </main>
 {% endblock %}

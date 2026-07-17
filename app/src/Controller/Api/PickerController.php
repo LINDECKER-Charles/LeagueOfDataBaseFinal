@@ -6,6 +6,7 @@ namespace App\Controller\Api;
 use App\Service\Client\PageContextResolver;
 use App\Service\Picker\GameMode;
 use App\Service\Picker\PickerCatalog;
+use App\Service\Profile\ChampionSkins;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,9 +23,13 @@ final class PickerController extends AbstractController
 {
     private const PUBLIC_TTL_SECONDS = 3600;
 
+    /** Champion id shape gate — mirrors the alphanumeric DDragon id used in the skin URL. */
+    private const CHAMPION_ID_PATTERN = '/^[A-Za-z0-9]+$/';
+
     public function __construct(
         private readonly PickerCatalog $catalog,
         private readonly PageContextResolver $pageContext,
+        private readonly ChampionSkins $skins,
     ) {}
 
     #[Route('/api/picker/champions', name: 'api_picker_champions', methods: ['GET'])]
@@ -58,6 +63,24 @@ final class PickerController extends AbstractController
     public function summoners(Request $request): JsonResponse
     {
         return $this->catalogResponse($request, 'options', $this->catalog->summonerOptions(...));
+    }
+
+    #[Route('/api/picker/skins', name: 'api_picker_skins', methods: ['GET'])]
+    public function skins(Request $request): JsonResponse
+    {
+        // Malformed / missing champion → an empty catalogue, not an error: the
+        // banner picker degrades to "no skins" rather than a broken dialog.
+        $championId = trim((string) $request->query->get('champion', ''));
+        if ($championId === '' || preg_match(self::CHAMPION_ID_PATTERN, $championId) !== 1) {
+            return new JsonResponse(['skins' => []]);
+        }
+
+        return $this->catalogResponse(
+            $request,
+            'skins',
+            fn (string $version, string $lang): array => $this->skins->options($championId, $version, $lang),
+            ['champion' => $championId],
+        );
     }
 
     /**
