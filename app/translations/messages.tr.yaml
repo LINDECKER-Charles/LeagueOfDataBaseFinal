@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "Kurulum"
-  meta: "League of Data Base deneyiminizi özelleştirmek için tercih ettiğiniz oyun sürümünü ve dili seçin. Tüm istatistikler ve veriler ayarlarınıza göre uyarlanacaktır."
   form:
     version: "Sürüm"
     language: "Dil"
-    note_latest: "*En son sürüm otomatik olarak seçilir."
     remember: "Beni hatırla"
     submit: "Gönder"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "Yapım ilerlemesi"
     back: "← Geri dön"
     summoners: "Çağırıcı Büyülerini Gör"
-    setup: "Sürüm ve dil seç"
     footer: "Buna yakında ihtiyacınız mı var? Bize ulaşın veya yol haritasını inceleyin. Daha fazla güncelleme geliyor."
     meanwhile: "Bu arada şunları yapabilirsiniz:"
 
@@ -64,7 +60,6 @@ item:
     tier: "Kademe %depth%"
     availability: "Kullanılabilirlik"
     back: "← Listeye dön"
-    setup: "Sürüm ve dili değiştir"
   list:
       title: "Eşyalar"
       meta_description: "%version% yamasında bulunan tüm League of Legends eşyalarına göz atın. En son sürüm için güncellenmiş ayrıntılı istatistikleri, maliyetleri ve etkileri bulun."
@@ -74,7 +69,6 @@ item:
       max: "MAKS"
       ok: "TAMAM"
       search_placeholder: "Bir eşya ara…"
-      change_version: "Sürüm/dil değiştir"
       cost_total: "Toplam maliyet"
       cost_sell: "Satış değeri"
       categories: "Kategoriler"
@@ -113,7 +107,6 @@ champion:
     header: "Şampiyonlar"
     subtitle: "Şampiyon kataloğu"
     search_placeholder: "Bir şampiyon ara…"
-    change_version: "Sürüm/dil değiştir"
   detail:
     meta_description: "League of Legends'tan %name%'i, %version% yaması için istatistikler, roller ve ayrıntılarla keşfedin."
     version_locale: "Yama %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "Bekleme Süresi"
     cost: "Maliyet"
     range: "Menzil"
+    video_play: "Videoyu oynat"
+    video_pause: "Videoyu duraklat"
     tips_as: "Oynarken"
     tips_against: "Karşısında oynarken"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "Rünler"
     subtitle: "Rün kataloğu"
     search_placeholder: "Bir rün ara…"
-    change_version: "Sürüm/dil değiştir"
   detail:
     title: "Rün: %name%"
     meta_description: "League of Legends'taki %name% rününün ayrıntılarını keşfedin. %version% yaması için güncellenmiş istatistikler ve etkiler."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "Aramanız için sonuç bulunamadı."
     back: "← Geri"
-    setup: "Sürüm ve dil seç"
   detail : "Ayrıntıları gör →"
 base:
   title: "League of Data Base"

@@ -1,0 +1,85 @@
+/* ---------------------------------------------------------------------------
+   Fonts — League of Legends' own faces: Beaufort (display) + Spiegel (body)
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/BeaufortforLOL-Regular.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/BeaufortforLOL-Bold.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Spiegel';
+  src: url('/fonts/Spiegel_TT_Regular.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
+/* ---------------------------------------------------------------------------
+   Hextech design tokens — hexes follow Riot's LoL style guide (gold 1-7,
+   "hextech magic" blues, greys). Legacy class names (blue-950/850/200, gold,
+   grey-700, white…) are kept and tuned to the palette so old markup upgrades
+   for free; the newer tokens (void, panel, gold-*, hex-*, text-*) drive the UI.
+--------------------------------------------------------------------------- */
+@theme {
+  /* Surfaces */
+  --color-hextech-black: #010a13;
+  --color-void: #0a1428;
+  --color-abyss: #091016;
+  --color-panel: #0f1b2d;
+  --color-panel-2: #162033;
+
+  /* Gold (style-guide gold-1 → gold-6) */
+  --color-gold: #c8aa6e;
+  --color-gold-bright: #f0e6d2;
+  --color-gold-light: #cdbe91;
+  --color-gold-rich: #c89b3c;
+  --color-gold-deep: #785a28;
+  --color-gold-dark: #463714;
+
+  /* Hextech cyan (blue-3/4/1) + structural deep blues (blue-5/6) */
+  --color-hex: #0ac8b9;
+  --color-hex-deep: #0397ab;
+  --color-hex-bright: #cdfafa;
+  --color-blue-steel: #005a82;
+  --color-blue-abyssal: #0a323c;
+
+  /* Text */
+  --color-text: #f0e6d2;
+  --color-text-muted: #a09b8c;
+  /* Bumped from #5b5a56 (≈2.5:1 on the dark canvas) to meet WCAG AA 4.5:1 for the
+     small eyebrow/label text it drives on detail pages, while staying dimmer than
+     --color-text-muted so the type hierarchy holds. */
+  --color-text-dim: #8f8d82;
+
+  /* Legacy aliases (tuned to Hextech) — keep existing templates working */
+  --color-test-500: #c8aa6e;
+  --color-black: #010a13;
+  --color-blue-200: #0ac8b9;
+  --color-blue-850: #162033;
+  --color-blue-950: #0a1428;
+  --color-white: #f0e6d2;
+  --color-grey: #1e2328;
+  --color-grey-700: #3c3c41;
+
+  /* Fonts */
+  --font-beaufort: "Beaufort", "Times New Roman", serif;
+  --font-spiegel: "Spiegel", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", monospace;
+
+  /* Motion */
+  --ease-hextech: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes hx-breathe {
+  0%, 100% { opacity: 0.18; transform: translate(-50%, 0) scale(1); }
+  50%      { opacity: 0.36; transform: translate(-50%, 0) scale(1.06); }
+}
+@utility hx-breathe {
+  animation: hx-breathe 7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hx-breathe { animation: none; }
+}

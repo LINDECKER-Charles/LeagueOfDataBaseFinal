@@ -47,7 +47,7 @@
 
         {# Les Images #}
 
-        {% set default_image = '/preview/setup.png' %}
+        {% set default_image = '/preview/home.png' %}
         {% if block('img') is defined %}
             {% set img = block('img')|default(default_image) %}
         {% else %}
@@ -63,8 +63,8 @@
         #}
         <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
         {# Défini la couleur de fond de certain navigateur moderne #}
-        <meta name="theme-color" content="{% block theme_color %}#0a1428{% endblock %}">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="{% block theme_color %}#010a13{% endblock %}">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
         {# Effective DDragon selection, re-rendered every Turbo visit (NOT permanent
            like the loader island) so ResourceLoader reads a fresh version/lang when
@@ -93,10 +93,11 @@
 
     <body class="flex min-h-screen flex-col overflow-x-hidden">
         {% include 'partials/header.html.twig' %}
-        <div class="flex-1">
+        <div class="flex flex-1 flex-col [&>main]:flex-1">
             {% block body %}{% endblock %}
         </div>
         {% include 'partials/footer.html.twig' %}
+        {% if client is defined %}{% include 'partials/bottom_nav.html.twig' %}{% endif %}
 
         {# Flash messages — mounted as a Vue island (replaces the legacy inline toaster script). #}
         {% set flashMessages = [] %}
@@ -124,6 +125,22 @@
                     items: 'header.navigation.item'|trans,
                     runes: 'header.navigation.runes'|trans,
                     summoners: 'header.navigation.summoner'|trans
+                }
+            }|json_encode|e('html_attr') }}"
+        ></div>
+
+        {# Load-time badge — persistent across Turbo visits (data-turbo-permanent).
+           Shows a discreet server/client timing chip on detail pages only (they
+           render a [data-load-timing] marker); self-hides everywhere else. #}
+        <div
+            id="load-time-badge"
+            data-turbo-permanent
+            data-vue="load-time"
+            data-props="{{ {
+                labels: {
+                    title: 'perf.title'|trans,
+                    server: 'perf.server'|trans,
+                    client: 'perf.client'|trans
                 }
             }|json_encode|e('html_attr') }}"
         ></div>

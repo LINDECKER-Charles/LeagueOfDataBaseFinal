@@ -13,31 +13,27 @@
   {% include 'partials/main/gradient.html.twig' %}
 
   <div class="relative mx-auto max-w-[110rem]">
-    <header class="mb-10 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+    <header class="mb-8">
       {% include 'components/section_header.html.twig' with {
         eyebrow: 'Data Dragon · ' ~ (client.session.version ?? (client.versions|first)),
         title: 'champion.list.title'|trans,
         count: meta.totalItem,
         count_label: 'champion.list.title'|trans|lower
       } %}
-      {% include 'components/list_controls.html.twig' with {
-        meta: meta,
-        search_base: '/api/champions/search',
-        detail_base: '/champion',
-        search_placeholder: 'common.search'|trans,
-        version: client.session.version ?? (client.versions|first),
-        lang: client.session.locale ?? client.currentLocale ?? 'en_US'
-      } %}
     </header>
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    {% include 'components/list_filter.html.twig' with { grid_id: 'champion-grid' } %}
+
+    <div id="champion-grid" class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for c in champions %}
         {% embed 'components/entity_card.html.twig' with {
           href: path('app_champion', { name: c.id|default(c.name), version: meta.version, lang: meta.lang }),
           img: images[loop.index0]|default(null),
           name: c.name|default(''),
           sub: c.title|default('')|capitalize,
-          footer_label: 'common.detail'|trans
+          footer_label: 'common.detail'|trans,
+          filter_text: (c.name|default('') ~ ' ' ~ c.id|default(''))|lower,
+          filter_tags: c.tags|default([])
         } %}
           {% block card_body %}
             <div class="px-4 pb-4">
@@ -56,8 +52,6 @@
         {% include 'components/empty_state.html.twig' %}
       {% endfor %}
     </div>
-
-    {% include 'partials/pagination.html.twig' %}
   </div>
 </main>
 {% endblock %}

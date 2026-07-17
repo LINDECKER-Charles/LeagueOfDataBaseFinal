@@ -26,6 +26,9 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
       ADMIN_LOGIN: ${ADMIN_LOGIN:?ADMIN_LOGIN is required}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      # Optional GeoLite2-Country .mmdb for audience geo (empty -> var/geoip/ fallback,
+      # absent -> geo degrades to "unknown"). Mount the DB and point this at it.
+      GEOIP_DB_PATH: ${GEOIP_DB_PATH:-}
     depends_on:
       go-fetcher:
         condition: service_healthy

@@ -1,11 +1,14 @@
-{# Favicon #} 
+{# Favicon + PWA identity #}
 <link rel="icon" type="image/png" href="{{ asset('favicon/favicon-96x96.png') }}" sizes="96x96">
 <link rel="icon" type="image/svg+xml" href="{{ asset('favicon/favicon.svg') }}">
 <link rel="shortcut icon" href="{{ asset('favicon/favicon.ico') }}">
+
+{# Installable web app — manifest carries name/icons/shortcuts/display. #}
+<link rel="manifest" href="/manifest.webmanifest">
+
+{# iOS still ignores manifest icons for Add-to-Home-Screen: keep the touch icon
+   (180×180, opaque) + legacy metas for the manifest-less path. #}
 <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon/apple-touch-icon.png') }}">
-<link rel="manifest" href="{{ asset('favicon/site.webmanifest') }}"crossorigin="use-credentials">
-<meta name="apple-mobile-web-app-title" content="League of Data Base" />
-
-{# Tips : Penser à générer le mod sombre du favicon, en fonction des thèmes du navigateur et surtout des différents navigateurs
-Automatiser ici : https://realfavicongenerator.net/ #}
-
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LoDB">

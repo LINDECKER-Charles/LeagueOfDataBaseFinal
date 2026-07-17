@@ -7,11 +7,9 @@ use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
 use App\Service\Tools\GoFetcherClient;
-use App\Service\Tools\Utils;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -33,7 +31,7 @@ final class PageContextResolverLoaderStepsTest extends TestCase
             throw new \RuntimeException('loaderSteps must not touch the gateway/session');
         }));
         $version = new VersionManager($noEgress, new ArrayAdapter(), new NullLogger());
-        $client = new ClientManager($stack, $version, new Utils(new Filesystem(), $version, sys_get_temp_dir()), 'secret', 'en_US');
+        $client = new ClientManager($stack, $version, 'secret', 'en_US');
 
         return new PageContextResolver($stack, $client, $version);
     }
@@ -45,17 +43,18 @@ final class PageContextResolverLoaderStepsTest extends TestCase
             ['type' => 'item', 'perPage' => 4, 'page' => 1],
             ['type' => 'summoner', 'perPage' => 4, 'page' => 1],
             ['type' => 'runesReforged', 'perPage' => 4, 'page' => 1],
-        ], $this->resolver()->loaderSteps('/home'));
+        ], $this->resolver()->loaderSteps('/'));
     }
 
     public function testListUsesRouteDefaults(): void
     {
+        // Route default = the first client page pre-warmed (LIST_INITIAL_PAGE_SIZE).
         self::assertSame(
-            [['type' => 'champion', 'perPage' => 20, 'page' => 1]],
+            [['type' => 'champion', 'perPage' => 12, 'page' => 1]],
             $this->resolver()->loaderSteps('/champions'),
         );
         self::assertSame(
-            [['type' => 'item', 'perPage' => 8, 'page' => 1]],
+            [['type' => 'item', 'perPage' => 12, 'page' => 1]],
             $this->resolver()->loaderSteps('/objects'),
         );
     }
@@ -79,13 +78,15 @@ final class PageContextResolverLoaderStepsTest extends TestCase
 
     public function testTrailingSlashIsNormalised(): void
     {
-        self::assertCount(4, $this->resolver()->loaderSteps('/home/'));
+        self::assertCount(1, $this->resolver()->loaderSteps('/champions/'));
     }
 
     public function testDetailAndUnknownPathsWarmNothing(): void
     {
+        // '/home' is the legacy home URL: it 301s to '/' before rendering, so the
+        // loader never warms it.
         $resolver = $this->resolver();
-        foreach (['/champion/Ahri', '/object/1001', '/rune/8000', '/', '/working-progress'] as $path) {
+        foreach (['/champion/Ahri', '/object/1001', '/rune/8000', '/home', '/working-progress'] as $path) {
             self::assertSame([], $resolver->loaderSteps($path), $path);
         }
     }

@@ -1,0 +1,7 @@
+{# Codex section header — diamond marker + small-caps title + trailing hairline.
+   Params: title (required), meta (optional trailing annotation). The anchor id
+   belongs on the enclosing <section>, not here. #}
+<div class="codex-header mb-6">
+  <h2>{{ title }}</h2>
+  {% if meta is defined and meta is not empty %}<span class="codex-header__meta">{{ meta }}</span>{% endif %}
+</div>

@@ -39,7 +39,7 @@ final class StorageUsageServiceTest extends TestCase
 
     public function testPrefixesAreSortedByWeightDescending(): void
     {
-        $operator = $this->createMock(FilesystemOperator::class);
+        $operator = $this->createStub(FilesystemOperator::class);
         $operator->method('listContents')->willReturn(new DirectoryListing([
             new FileAttributes('manifest/m.json', 10),
             new FileAttributes('blobs/a.png', 1000),
@@ -53,7 +53,7 @@ final class StorageUsageServiceTest extends TestCase
 
     public function testTreatsNullFileSizeAsZero(): void
     {
-        $operator = $this->createMock(FilesystemOperator::class);
+        $operator = $this->createStub(FilesystemOperator::class);
         $operator->method('listContents')->willReturn(new DirectoryListing([
             new FileAttributes('blobs/x.png', null),
         ]));
@@ -66,7 +66,7 @@ final class StorageUsageServiceTest extends TestCase
 
     public function testDegradesGracefullyWhenStorageUnavailable(): void
     {
-        $operator = $this->createMock(FilesystemOperator::class);
+        $operator = $this->createStub(FilesystemOperator::class);
         $operator->method('listContents')->willThrowException(new \RuntimeException('connection refused'));
 
         $report = (new StorageUsageService($operator))->report();

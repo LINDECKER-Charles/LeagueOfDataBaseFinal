@@ -116,6 +116,39 @@ final class ChampionManagerChromasTest extends TestCase
         self::assertSame([], $manager->getChromas('Ambessa', self::VERSION));
     }
 
+    public function testWithoutChromaSkinsDropsDataDragonInlinedChromaEntries(): void
+    {
+        $manager = $this->manager(new Filesystem(new LocalFilesystemAdapter($this->dir)), $this->noEgress());
+
+        // Data Dragon inlines each chroma as a standalone skin carrying the same id
+        // as the CommunityDragon chroma — here 799002/799003 under parent 799001.
+        $skins = [
+            ['id' => '799000', 'num' => 0, 'name' => 'default'],
+            ['id' => '799001', 'num' => 1, 'name' => 'Chosen of the Wolf Ambessa'],
+            ['id' => '799002', 'num' => 2, 'name' => 'Chosen of the Wolf Ambessa (Ruby)'],
+            ['id' => '799003', 'num' => 3, 'name' => 'Chosen of the Wolf Ambessa (Emerald)'],
+        ];
+        $chromas = [
+            '799001' => [
+                ['id' => 799002, 'name' => 'x', 'colors' => [], 'image' => 'a'],
+                ['id' => 799003, 'name' => 'y', 'colors' => [], 'image' => 'b'],
+            ],
+        ];
+
+        self::assertSame(['799000', '799001'], array_column($manager->withoutChromaSkins($skins, $chromas), 'id'));
+    }
+
+    public function testWithoutChromaSkinsIsNoOpWhenChromaDataUnavailable(): void
+    {
+        $manager = $this->manager(new Filesystem(new LocalFilesystemAdapter($this->dir)), $this->noEgress());
+        $skins = [
+            ['id' => '799000', 'num' => 0, 'name' => 'default'],
+            ['id' => '799001', 'num' => 1, 'name' => 'Chosen of the Wolf Ambessa'],
+        ];
+
+        self::assertSame($skins, $manager->withoutChromaSkins($skins, []));
+    }
+
     /**
      * CommunityDragon champion node: a base skin (no chromas → skipped), a skin with
      * two chromas, and a skin whose only chroma lacks a path (→ whole skin dropped).

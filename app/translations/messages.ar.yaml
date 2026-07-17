@@ -25,12 +25,9 @@ homepage:
 
 
 setup:
-  title: "الإعداد"
-  meta: "اختر إصدار اللعبة واللغة المفضّلين لديك لتخصيص تجربتك في League of Data Base. ستتكيف جميع الإحصائيات والبيانات مع إعداداتك."
   form:
     version: "الإصدار"
     language: "اللغة"
-    note_latest: "*يتم اختيار أحدث إصدار تلقائيًا."
     remember: "تذكرني"
     submit: "إرسال"
 
@@ -44,7 +41,6 @@ system:
     progress_label: "تقدّم البناء"
     back: "← رجوع"
     summoners: "عرض تعويذات المستدعي"
-    setup: "اختر الإصدار واللغة"
     footer: "تحتاج هذا قريبًا؟ راسلنا أو تحقق من خارطة الطريق. المزيد من التحديثات قادمة."
     meanwhile: "في هذه الأثناء، يمكنك:"
 
@@ -64,7 +60,6 @@ item:
     tier: "المستوى %depth%"
     availability: "التوفّر"
     back: "← العودة إلى القائمة"
-    setup: "تغيير الإصدار واللغة"
   list:
       title: "العناصر"
       meta_description: "تصفح جميع عناصر League of Legends المتاحة في التحديث %version%. اعثر على إحصائيات وتكاليف وتأثيرات مفصّلة محدّثة لأحدث إصدار."
@@ -74,7 +69,6 @@ item:
       max: "MAX"
       ok: "OK"
       search_placeholder: "ابحث عن عنصر…"
-      change_version: "تغيير الإصدار/اللغة"
       cost_total: "التكلفة الإجمالية"
       cost_sell: "قيمة البيع"
       categories: "الفئات"
@@ -113,7 +107,6 @@ champion:
     header: "الأبطال"
     subtitle: "كتالوج الأبطال"
     search_placeholder: "ابحث عن بطل…"
-    change_version: "تغيير الإصدار/اللغة"
   detail:
     meta_description: "اكتشف %name% من League of Legends، مع الإحصائيات والأدوار والتفاصيل الخاصة بالتحديث %version%."
     version_locale: "التحديث %version% • %locale%"
@@ -125,6 +118,8 @@ champion:
     cooldown: "زمن الاستعادة"
     cost: "التكلفة"
     range: "المدى"
+    video_play: "تشغيل الفيديو"
+    video_pause: "إيقاف الفيديو مؤقتًا"
     tips_as: "عند اللعب بهذا البطل"
     tips_against: "عند مواجهة هذا البطل"
     stats:
@@ -145,7 +140,6 @@ rune:
     header: "الرونات"
     subtitle: "كتالوج الرونات"
     search_placeholder: "ابحث عن رونة…"
-    change_version: "تغيير الإصدار/اللغة"
   detail:
     title: "الرونة: %name%"
     meta_description: "اكتشف تفاصيل الرونة %name% في League of Legends. الإحصائيات والتأثيرات محدّثة للتحديث %version%."
@@ -161,7 +155,6 @@ common:
   no_result:
     text: "لم يتم العثور على نتائج لبحثك."
     back: "← رجوع"
-    setup: "اختر الإصدار واللغة"
   detail : "عرض التفاصيل →"
 base:
   title: "League of Data Base"

@@ -1,0 +1,87 @@
+/* ---------------------------------------------------------------------------
+   DDragon rich text — spell/rune/item copy ships Data Dragon's own markup:
+   <br>, <b>, deprecated <font color>, and semantic damage/keyword tags rendered
+   as unknown inline elements (the HTML parser lowercases them, so `<OnHit>`
+   matches `onhit`). We colour the vocabulary to the Hextech palette and give
+   the block structure. Always paired with |ddragon_text|raw in templates.
+--------------------------------------------------------------------------- */
+@layer components {
+  .ddragon-rich { line-height: 1.65; color: var(--color-text); }
+  .ddragon-rich b, .ddragon-rich strong { color: var(--color-gold-bright); font-weight: 700; }
+  .ddragon-rich i, .ddragon-rich em { color: var(--color-text-muted); }
+  .ddragon-rich br { content: ""; display: block; margin-top: 0.35rem; }
+  .ddragon-rich a { color: var(--color-hex); text-decoration: underline; text-underline-offset: 2px; }
+  .ddragon-rich hr {
+    height: 1px; border: 0; margin: 0.85rem 0;
+    background: linear-gradient(90deg, rgba(200, 170, 110, 0.4), transparent);
+  }
+  .ddragon-rich li { display: list-item; list-style: none; margin-top: 0.3rem; padding-left: 1rem; position: relative; }
+  .ddragon-rich li::before {
+    content: ""; position: absolute; left: 0; top: 0.55em;
+    width: 5px; height: 5px; transform: rotate(45deg); background: var(--color-gold-deep);
+  }
+
+  /* Damage / resource vocabulary */
+  .ddragon-rich physicaldamage, .ddragon-rich scalead, .ddragon-rich ornnbonus,
+  .ddragon-rich buffedstat { color: #f0a868; font-weight: 600; }
+  .ddragon-rich magicdamage, .ddragon-rich scaleap, .ddragon-rich scalemana { color: var(--color-hex); font-weight: 600; }
+  .ddragon-rich truedamage { color: #f5e9c8; font-weight: 600; }
+  .ddragon-rich healing, .ddragon-rich lifesteal, .ddragon-rich omnivamp,
+  .ddragon-rich health, .ddragon-rich scalehealth, .ddragon-rich statgood { color: #3fb96f; font-weight: 600; }
+  .ddragon-rich shield { color: #d6c38a; font-weight: 600; }
+  .ddragon-rich speed, .ddragon-rich haste, .ddragon-rich ms { color: #63d8e0; font-weight: 600; }
+  .ddragon-rich status, .ddragon-rich onhit { color: #c99bff; font-weight: 600; }
+  .ddragon-rich scalearmor, .ddragon-rich scalemr, .ddragon-rich scalelevel,
+  .ddragon-rich scalelethality, .ddragon-rich attackspeed { color: var(--color-gold-light); font-weight: 600; }
+  .ddragon-rich gold { color: var(--color-gold-rich); font-weight: 600; }
+
+  /* Keywords & emphasis */
+  .ddragon-rich attention, .ddragon-rich keywordmajor, .ddragon-rich keywordstealth,
+  .ddragon-rich rarementionable { color: var(--color-gold); font-weight: 600; }
+  .ddragon-rich active, .ddragon-rich recast { color: var(--color-gold-bright); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .ddragon-rich passive, .ddragon-rich spellpassive { color: var(--color-hex); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .ddragon-rich spellname { color: var(--color-gold-bright); font-style: italic; }
+  .ddragon-rich unique { color: var(--color-text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .ddragon-rich keyword, .ddragon-rich lol-uikit-tooltipped-keyword {
+    color: var(--color-gold-light); border-bottom: 1px dotted rgba(200, 170, 110, 0.5);
+  }
+
+  /* Item rarity headers */
+  .ddragon-rich raritylegendary { color: var(--color-gold-rich); font-weight: 700; }
+  .ddragon-rich raritymythic, .ddragon-rich prismatic { color: #c99bff; font-weight: 700; }
+  .ddragon-rich raritygeneric { color: var(--color-text-muted); font-weight: 700; }
+
+  /* Item description structure */
+  .ddragon-rich maintext { display: block; }
+  .ddragon-rich stats {
+    display: block;
+    margin-bottom: 0.9rem;
+    padding: 0.75rem 1rem;
+    border-left: 2px solid var(--color-gold-deep);
+    background: rgba(1, 10, 19, 0.45);
+    color: var(--color-text-muted);
+  }
+  .ddragon-rich stats attention { color: var(--color-gold-bright); }
+  .ddragon-rich rules {
+    display: block; margin-top: 0.75rem; padding-top: 0.6rem;
+    border-top: 1px solid rgba(200, 170, 110, 0.18);
+    font-size: 0.8125rem; color: var(--color-text-muted);
+  }
+  .ddragon-rich flavortext {
+    display: block; margin-top: 0.75rem;
+    font-style: italic; font-size: 0.85rem; color: var(--color-text-dim);
+  }
+
+  /* Lore treatment — codex plate with an illuminated initial. */
+  .ddragon-rich--lore { font-size: 1.02rem; line-height: 1.8; color: var(--color-text); }
+  .ddragon-rich--lore::first-letter {
+    font-family: var(--font-beaufort);
+    font-size: 3.9em;
+    line-height: 0.8;
+    float: inline-start;
+    padding-inline-end: 0.14em;
+    padding-top: 0.05em;
+    color: var(--color-gold);
+    text-shadow: 0 0 18px rgba(200, 170, 110, 0.45);
+  }
+}

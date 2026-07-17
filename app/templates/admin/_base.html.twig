@@ -6,82 +6,24 @@
     <meta name="robots" content="noindex, nofollow">
     <meta name="theme-color" content="#0a1428">
     <title>{% block title %}Admin · LODB{% endblock %}</title>
-    {# Self-contained styling: the ops panel must stay reachable even if the public
-       Vite build is broken, so it does not depend on the app asset pipeline. #}
-    <style>
-        :root {
-            --bg: #0a1428; --panel: #0f2036; --panel-2: #12263f;
-            --gold: #c8aa6e; --gold-bright: #f0e6d2; --line: rgba(200,170,110,.28);
-            --text: #cdd8e6; --muted: #7a8ba3; --danger: #e0526b; --track: rgba(255,255,255,.06);
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5;
-        }
-        a { color: var(--gold); text-decoration: none; }
-        a:hover { color: var(--gold-bright); }
-        code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; color: var(--gold-bright); }
-        .admin-bar {
-            display: flex; align-items: center; gap: 1.5rem; padding: 1rem 1.75rem;
-            border-bottom: 1px solid var(--line); background: rgba(15,32,54,.95);
-        }
-        .admin-bar .brand {
-            font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
-            font-size: .85rem; color: var(--gold-bright);
-        }
-        .admin-bar nav { display: flex; gap: 1.25rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; }
-        .admin-bar nav a.is-active { color: var(--gold-bright); }
-        .admin-bar .spacer { margin-left: auto; }
-        .admin-bar .logout {
-            font-size: .78rem; text-transform: uppercase; letter-spacing: .1em;
-            border: 1px solid var(--line); border-radius: 6px; padding: .4rem .8rem;
-        }
-        .admin-main { max-width: 72rem; margin: 0 auto; padding: 2.5rem 1.75rem; }
-        h1 { font-size: 1.4rem; color: var(--gold-bright); margin: 0 0 .35rem; letter-spacing: .04em; }
-        .muted { color: var(--muted); margin: 0; }
-        .card {
-            background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-            padding: 1.75rem; box-shadow: 0 12px 40px rgba(0,0,0,.35);
-        }
-        .card--auth { max-width: 26rem; margin: 6vh auto 0; }
-        .card__head { margin-bottom: 1.5rem; }
-        .alert {
-            border: 1px solid rgba(224,82,107,.4); background: rgba(224,82,107,.1);
-            color: #f5b8c3; border-radius: 8px; padding: .7rem .9rem; margin: 0 0 1.2rem; font-size: .9rem;
-        }
-        form.form { display: flex; flex-direction: column; gap: 1rem; }
-        form.form label { display: flex; flex-direction: column; gap: .35rem; font-size: .82rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
-        form.form input {
-            background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
-            padding: .65rem .75rem; color: var(--gold-bright); font-size: 1rem;
-        }
-        form.form input:focus { outline: none; border-color: var(--gold); }
-        button[type="submit"] {
-            margin-top: .5rem; cursor: pointer; border: 1px solid var(--gold);
-            background: linear-gradient(180deg, rgba(200,170,110,.25), rgba(200,170,110,.08));
-            color: var(--gold-bright); text-transform: uppercase; letter-spacing: .12em;
-            font-size: .85rem; padding: .7rem 1rem; border-radius: 8px;
-        }
-        button[type="submit"]:hover { background: rgba(200,170,110,.3); }
-        .totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1rem; margin-bottom: 1.75rem; }
-        .stat { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.15rem; }
-        .stat__val { display: block; font-size: 1.6rem; color: var(--gold-bright); font-weight: 700; }
-        .stat__lbl { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-top: .2rem; }
-        table.tbl { width: 100%; border-collapse: collapse; font-size: .92rem; }
-        table.tbl th, table.tbl td { text-align: left; padding: .65rem .6rem; border-bottom: 1px solid rgba(255,255,255,.06); }
-        table.tbl th { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
-        table.tbl td.num, table.tbl th.num { text-align: right; font-variant-numeric: tabular-nums; }
-        .bar { position: relative; height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; margin-bottom: .25rem; }
-        .bar > span { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); border-radius: 4px; }
-        .share { display: flex; flex-direction: column; gap: .1rem; min-width: 7rem; }
-        .share em { font-style: normal; font-size: .78rem; color: var(--muted); }
-    </style>
+    {# Self-contained: a committed static stylesheet (nginx-served, NOT the Vite
+       build) so the ops panel keeps its styling even if the front build breaks. #}
+    <link rel="preload" href="/fonts/BeaufortforLOL-Bold.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/Spiegel_TT_Regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/admin/admin.css">
 </head>
 <body>
     <header class="admin-bar">
-        <span class="brand">LODB · Admin</span>
-        {% block nav %}{% endblock %}
+        <span class="brand"><b>LODB</b><span>Admin</span></span>
+        {% if app.user %}
+            {% set route = app.request.attributes.get('_route') %}
+            <nav>
+                <a href="{{ path('admin_dashboard') }}" class="{{ route == 'admin_dashboard' ? 'is-active' }}">Vue d'ensemble</a>
+                <a href="{{ path('admin_traffic') }}" class="{{ route == 'admin_traffic' ? 'is-active' }}">Trafic</a>
+                <a href="{{ path('admin_audience') }}" class="{{ route == 'admin_audience' ? 'is-active' }}">Audience</a>
+                <a href="{{ path('admin_storage') }}" class="{{ route == 'admin_storage' ? 'is-active' }}">Stockage</a>
+            </nav>
+        {% endif %}
         <span class="spacer"></span>
         {% if app.user %}
             <a class="logout" href="{{ path('admin_logout') }}">Déconnexion</a>
@@ -89,6 +31,11 @@
     </header>
 
     <main class="admin-main">
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="{{ label == 'success' ? 'notice' : 'alert' }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
         {% block admin_body %}{% endblock %}
     </main>
 </body>

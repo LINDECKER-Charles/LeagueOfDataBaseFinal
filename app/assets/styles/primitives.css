@@ -1,0 +1,245 @@
+/* ---------------------------------------------------------------------------
+   Signature — the Hextech frame (gold hairline + beveled corners + cyan glow)
+   and the reusable primitives every page composes. Riot's own grammar drives
+   the shapes: square linework frames information, the diamond is the accent
+   that guides the eye, the circle is reserved for moments of focus.
+--------------------------------------------------------------------------- */
+@utility hextech-frame {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(26, 38, 60, 0.94), rgba(10, 20, 40, 0.94));
+  border: 1px solid rgba(200, 170, 110, 0.42);
+  clip-path: polygon(
+    14px 0, 100% 0, 100% calc(100% - 14px),
+    calc(100% - 14px) 100%, 0 100%, 0 14px
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(240, 230, 210, 0.06),
+    0 12px 44px -14px rgba(1, 10, 19, 0.85);
+  transition: border-color 0.4s var(--ease-hextech), box-shadow 0.4s var(--ease-hextech);
+}
+
+@utility hextech-frame-hover {
+  &:hover {
+    border-color: var(--color-gold);
+    box-shadow:
+      inset 0 0 0 1px rgba(10, 200, 185, 0.25),
+      0 0 24px -6px rgba(10, 200, 185, 0.35);
+  }
+}
+
+/* Etched gold corner brackets — quiet ornament for panels that deserve weight. */
+@utility hx-corners {
+  position: relative;
+  &::before, &::after {
+    content: "";
+    position: absolute;
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 1px solid rgba(200, 170, 110, 0.75);
+    pointer-events: none;
+  }
+  &::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+  &::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+}
+
+@utility gold-rule {
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(90deg, transparent, var(--color-gold), transparent) 1;
+}
+
+@utility gold-hairline {
+  box-shadow: inset 0 1px 0 0 rgba(200, 170, 110, 0.35);
+}
+
+@utility hex-glow {
+  box-shadow: 0 0 20px -4px rgba(10, 200, 185, 0.35);
+}
+
+@utility eyebrow {
+  font-family: var(--font-beaufort);
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  font-size: 0.7rem;
+  color: var(--color-gold);
+}
+
+/* Display-name treatment — parchment-to-gold gradient over Beaufort caps. */
+@utility text-gold-grad {
+  background: linear-gradient(180deg, #f5ecd8 8%, var(--color-gold) 60%, var(--color-gold-rich) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Reusable Hextech primitives */
+@utility hx-btn {
+  @apply inline-flex items-center justify-center gap-2 border border-gold/70 bg-gold/15 px-4 py-2.5
+         font-beaufort text-sm uppercase tracking-[0.15em] text-gold-bright transition-all duration-300
+         hover:border-gold hover:bg-gold/25 hover:shadow-[0_0_28px_-6px_rgba(200,170,110,0.65)]
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 motion-reduce:transition-none;
+}
+@utility hx-btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 border border-gold-deep/40 bg-transparent px-4 py-2.5
+         font-beaufort text-sm uppercase tracking-[0.15em] text-text-muted transition-all duration-300
+         hover:border-hex/60 hover:text-hex
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex/40 motion-reduce:transition-none;
+}
+@utility hx-chip {
+  @apply inline-flex items-center border border-gold-deep/50 bg-void/90 px-2.5 py-1
+         font-mono text-[11px] uppercase tracking-wider text-text-muted;
+}
+@utility stat-cell {
+  @apply border border-gold-deep/40 bg-void/70 px-3 py-2;
+}
+@utility hx-select {
+  @apply appearance-none border border-gold-deep/60 bg-void py-2 pl-3 pr-8 font-spiegel text-sm text-text
+         transition-colors hover:border-gold/70 focus:border-hex focus:outline-none focus:ring-1 focus:ring-hex/40;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%23c8aa6e' stroke-width='1.5' stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 0.7rem;
+}
+@utility hx-check {
+  @apply h-4 w-4 appearance-none border border-gold-deep/60 bg-void transition-colors
+         checked:border-hex focus:outline-none focus:ring-1 focus:ring-hex/40;
+  &:checked {
+    background-color: var(--color-hex);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M4 8l3 3 5-6' fill='none' stroke='%230a1428' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 0.7rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Interactive utilities (brand + nav)
+--------------------------------------------------------------------------- */
+@utility nav-link {
+  @apply transition-colors duration-300 hover:text-hex
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-hex/40
+         motion-reduce:transition-none;
+}
+
+@utility brand-logo {
+  @apply transition-all duration-300 transform-gpu group-hover:scale-110;
+}
+
+@utility brand-title {
+  @apply transition-all duration-300;
+}
+
+.group:hover .brand-logo,
+.group:hover .brand-title {
+  filter: drop-shadow(0 0 14px rgba(200, 170, 110, 0.45));
+}
+
+/* Section divider — gold hairline with a centered hex diamond node.
+   Encodes a genuine break between content blocks (the page's connective tissue). */
+@utility hx-rule {
+  position: relative;
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgba(200, 170, 110, 0.55), transparent);
+}
+.hx-rule::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--color-gold);
+  box-shadow: 0 0 10px -1px rgba(200, 170, 110, 0.7);
+}
+
+/* Full-bleed splash hero scrim — lifts white display type off cinematic art. */
+@utility splash-scrim {
+  background:
+    linear-gradient(180deg, rgba(1, 10, 19, 0.15) 0%, rgba(1, 10, 19, 0.55) 55%, rgba(10, 20, 40, 0.97) 100%),
+    linear-gradient(90deg, rgba(1, 10, 19, 0.75) 0%, transparent 45%);
+}
+
+/* Skin card corner badge — server-rendered marker that a skin has chromas
+   (count + diamond glyph). The interactive swatches/zoom are the chroma-strip
+   island; this stays visible without JS. */
+@utility chroma-badge {
+  @apply absolute right-1.5 top-1.5 inline-flex items-center gap-1 border border-gold-deep/70
+         bg-hextech-black/80 px-1.5 py-0.5 font-mono text-[11px] leading-none text-gold-bright;
+  backdrop-filter: blur(2px);
+}
+.chroma-badge svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+@layer components {
+  .brand-link {
+    @apply inline-block relative cursor-pointer select-none
+           transition-transform duration-300 hover:-translate-y-0.5
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex/40;
+  }
+
+  /* Codex section header — diamond marker, small-caps Beaufort, trailing
+     hairline that visually binds the header to its content column. */
+  .codex-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+  .codex-header::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    flex: none;
+    transform: rotate(45deg);
+    background: var(--color-gold);
+    box-shadow: 0 0 12px -2px rgba(200, 170, 110, 0.9);
+  }
+  .codex-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(200, 170, 110, 0.45), transparent);
+  }
+  .codex-header h2,
+  .codex-header .codex-header__title {
+    font-family: var(--font-beaufort);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: var(--color-gold);
+    white-space: nowrap;
+  }
+  .codex-header .codex-header__meta {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--color-text-dim);
+    white-space: nowrap;
+  }
+
+  /* Engraved fact plaque — the quick-facts unit of the detail asides. */
+  .hx-plate {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid rgba(200, 170, 110, 0.28);
+    background: linear-gradient(180deg, rgba(15, 27, 45, 0.85), rgba(9, 16, 22, 0.92));
+    box-shadow: inset 0 1px 0 rgba(240, 230, 210, 0.05);
+  }
+  .hx-plate__label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-dim);
+  }
+  .hx-plate__value {
+    font-family: var(--font-beaufort);
+    font-size: 1.05rem;
+    color: var(--color-gold-bright);
+  }
+}

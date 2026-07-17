@@ -1,0 +1,94 @@
+{#
+  Legacy-domain retirement interstitial. Served by RetiredDomainSubscriber for
+  every hit on the .fr host, then self-redirects to the same path on .com.
+
+  Standalone (does NOT extend base.html.twig): it must stay lean and must not
+  boot the header/footer/Vue islands of a site the visitor is leaving. It reuses
+  the Hextech design system through the Vite stylesheet + shared partials only.
+
+  target_url     absolute .com destination (same path/query) — attribute-escaped.
+  redirect_delay seconds before the automatic redirect fires.
+#}
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, follow">
+  <meta http-equiv="refresh" content="{{ redirect_delay }};url={{ target_url }}">
+  <link rel="canonical" href="{{ target_url }}">
+  <meta name="theme-color" content="#0a1428">
+  <title>League of Data Base — nouvelle adresse .com</title>
+
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/BeaufortforLOL-Bold.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/Spiegel_TT_Regular.woff2" crossorigin>
+  {{ vite_entry_link_tags('app') }}
+  {% include 'partials/favicon.html.twig' %}
+</head>
+
+<body class="bg-void text-text">
+  <main class="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-16">
+    {% include 'partials/main/gradient.html.twig' %}
+
+    <section
+      class="relative mx-auto w-full max-w-xl text-center"
+      data-target-url="{{ target_url }}"
+      data-redirect-delay="{{ redirect_delay }}"
+    >
+      <div class="hextech-frame relative mx-auto mb-8 grid h-16 w-16 place-items-center text-gold">
+        <div class="absolute inset-0 opacity-40 blur-lg" style="background: radial-gradient(closest-side, rgba(10,200,185,0.35), transparent);"></div>
+        {% include 'components/logo.html.twig' with { class: 'relative z-10 h-8 w-8' } %}
+      </div>
+
+      <p class="eyebrow mb-3">League of Data Base</p>
+      <h1 class="font-beaufort text-3xl uppercase tracking-wide text-gold-bright sm:text-4xl">Le site déménage</h1>
+
+      <p class="mx-auto mt-4 max-w-md leading-relaxed text-text-muted">
+        Le domaine <strong class="text-text">.fr</strong> ne sera bientôt plus desservi.
+        League of Data Base est désormais accessible sur
+        <strong class="text-gold">league-of-data-base.com</strong>.
+      </p>
+
+      <p class="mt-4 font-mono text-sm text-text-muted">
+        Redirection automatique vers la même page dans
+        <span data-countdown class="text-hex">{{ redirect_delay }}</span> s.
+      </p>
+
+      <a href="{{ target_url }}" class="hx-btn mt-8 inline-block">Continuer vers le .com</a>
+
+      <p class="mx-auto mt-10 max-w-md border-t border-gold-deep/25 pt-6 font-spiegel text-xs leading-relaxed text-text-dim">
+        This site has moved. The <span class="text-text-muted">.fr</span> domain is being retired —
+        League of Data Base now lives on <span class="text-gold-light">.com</span> and you’ll be
+        redirected to the same page automatically.
+      </p>
+    </section>
+  </main>
+
+  {#
+    Progressive enhancement over the <meta refresh> above: location.replace() so
+    the retired .fr URL is not kept in the back/forward history, plus a live
+    countdown. The destination is read from the data attribute (attribute-escaped
+    by Twig) and never inlined into JS, so a crafted path/query can't inject code.
+  #}
+  <script>
+    (function () {
+      var root = document.querySelector('[data-target-url]');
+      if (!root) return;
+
+      var url = root.getAttribute('data-target-url');
+      var remaining = parseInt(root.getAttribute('data-redirect-delay'), 10) || 0;
+      var out = root.querySelector('[data-countdown]');
+
+      if (remaining > 0) {
+        var tick = setInterval(function () {
+          remaining -= 1;
+          if (out) out.textContent = remaining < 0 ? 0 : remaining;
+          if (remaining <= 0) clearInterval(tick);
+        }, 1000);
+      }
+
+      window.setTimeout(function () { window.location.replace(url); }, remaining * 1000);
+    })();
+  </script>
+</body>
+</html>

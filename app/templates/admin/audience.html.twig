@@ -1,0 +1,80 @@
+{% extends 'admin/_base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Audience · Admin · LODB{% endblock %}
+
+{% set deviceMeta = {
+    desktop: { label: 'Ordinateur', color: 'var(--series-1)' },
+    mobile:  { label: 'Mobile',     color: 'var(--series-2)' },
+    tablet:  { label: 'Tablette',   color: 'var(--series-3)' },
+    other:   { label: 'Autre',      color: 'var(--text-muted)' }
+} %}
+{% set sourceMeta = {
+    direct:   { label: 'Direct',   color: 'var(--series-1)' },
+    search:   { label: 'Recherche', color: 'var(--series-5)' },
+    social:   { label: 'Réseaux',  color: 'var(--series-2)' },
+    external: { label: 'Externe',  color: 'var(--series-4)' },
+    internal: { label: 'Interne',  color: 'var(--series-3)' }
+} %}
+
+{% block admin_body %}
+    <div class="flex between wrap" style="margin-bottom: 1.5rem;">
+        {{ ui.page_head('Analytics', 'Audience', 'Qui consulte le site — sur ' ~ report.days ~ ' jours.') }}
+        {{ ui.range_bar(range, ranges, 'admin_audience') }}
+    </div>
+
+    <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+        {{ ui.kpi('Visiteurs uniques', report.totals.uniqueVisitors|compact, report.range, 'var(--hex)', chart_sparkline(report.series|map((s) => s.visitors), 'var(--hex)')) }}
+        {{ ui.kpi('Récurrents', report.totals.returningVisitors|compact, '≥ 2 jours distincts', 'var(--series-3)', null) }}
+        {{ ui.kpi('Nouveaux', (report.totals.uniqueVisitors - report.totals.returningVisitors)|compact, 'vus un seul jour', 'var(--series-1)', null) }}
+        {{ ui.kpi('Vues robots', report.totals.botViews|compact, 'exclues des métriques', 'var(--series-4)', null) }}
+    </div>
+
+    {# ---- Géographie ---- #}
+    <div class="grid cols-3">
+        <section class="card span-2">
+            <div class="card__head"><h2>Pays</h2>{% if not geo_available %}<span class="badge warn">base géo absente</span>{% endif %}</div>
+            {% if geo_available or report.country|length %}
+                {{ ui.rank(report.country, 'compact', 'cyan', 'Aucune donnée géographique.') }}
+            {% else %}
+                <p class="dim">Résolution IP→pays inactive : aucune base GeoLite2 provisionnée (voir <code>docs/analytics.md</code>). Les IP brutes sont bien collectées et la carte se remplira dès qu'une base <code>.mmdb</code> est déposée.</p>
+            {% endif %}
+        </section>
+        <section class="card">
+            <div class="card__head"><h2>Appareils</h2></div>
+            {% set devSlices = report.device|map((r) => { name: deviceMeta[r.name].label|default(r.name), value: r.count, color: deviceMeta[r.name].color|default('var(--text-muted)') }) %}
+            {{ chart_donut(devSlices, report.totals.views|compact, 'vues', 'Répartition par appareil') }}
+            {{ ui.legend(devSlices|map((s) => { label: s.name, color: s.color, value: s.value|compact })) }}
+        </section>
+    </div>
+
+    {# ---- Navigateurs / OS / Langues ---- #}
+    <div class="grid cols-3" style="margin-top: 1.15rem;">
+        <section class="card">
+            <div class="card__head"><h2>Navigateurs</h2></div>
+            {{ ui.rank(report.browser, 'compact', '', 'Aucune donnée.') }}
+        </section>
+        <section class="card">
+            <div class="card__head"><h2>Systèmes</h2></div>
+            {{ ui.rank(report.os, 'compact', 'cyan', 'Aucune donnée.') }}
+        </section>
+        <section class="card">
+            <div class="card__head"><h2>Langue d'interface</h2></div>
+            {{ ui.rank(report.locale, 'compact', '', 'Aucune donnée.') }}
+        </section>
+    </div>
+
+    {# ---- Sources ---- #}
+    <div class="grid cols-3" style="margin-top: 1.15rem;">
+        <section class="card">
+            <div class="card__head"><h2>Sources de trafic</h2></div>
+            {% set srcSlices = report.refSource|map((r) => { name: sourceMeta[r.name].label|default(r.name), value: r.count, color: sourceMeta[r.name].color|default('var(--text-muted)') }) %}
+            {{ chart_donut(srcSlices, report.totals.views|compact, 'vues', 'Sources de trafic') }}
+            {{ ui.legend(srcSlices|map((s) => { label: s.name, color: s.color, value: s.value|compact })) }}
+        </section>
+        <section class="card span-2">
+            <div class="card__head"><h2>Sites référents</h2></div>
+            {{ ui.rank(report.topReferers, 'compact', 'cyan', 'Aucun référent externe (trafic direct).') }}
+        </section>
+    </div>
+{% endblock %}

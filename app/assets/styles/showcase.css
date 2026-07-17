@@ -1,0 +1,272 @@
+/* ---------------------------------------------------------------------------
+   Page signatures — one hero piece per detail page, everything else stays
+   quiet. Champion: the ability showcase (official spell videos). Summoner:
+   the invocation seal (circle = focus). Rune: the path constellation.
+   Classes are global because the showcase island and its server-rendered
+   no-JS fallback share the same markup vocabulary.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- Champion ability showcase ------------------------------------------ */
+  .kit__rail {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding-bottom: 0.9rem;
+  }
+  .kit__tab {
+    position: relative;
+    flex: none;
+    width: 3.6rem;
+    height: 3.6rem;
+    padding: 0;
+    border: 1px solid rgba(200, 170, 110, 0.4);
+    background: var(--color-void);
+    cursor: pointer;
+    transition: border-color 0.25s var(--ease-hextech), box-shadow 0.25s var(--ease-hextech);
+  }
+  .kit__tab img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: saturate(0.4) brightness(0.62);
+    transition: filter 0.25s var(--ease-hextech);
+  }
+  .kit__tab:hover img, .kit__tab:focus-visible img { filter: none; }
+  .kit__tab:focus-visible { outline: none; border-color: var(--color-hex); }
+  /* Selected cast: the page's single brightest teal moment. */
+  .kit__tab.is-active {
+    border-color: var(--color-hex);
+    box-shadow: 0 0 24px -6px rgba(10, 200, 185, 0.8);
+  }
+  .kit__tab.is-active img { filter: none; }
+  .kit__tab .ability-key {
+    position: absolute;
+    bottom: -0.7rem;
+    left: 50%;
+    translate: -50% 0;
+  }
+
+  .kit__panel {
+    border: 1px solid rgba(200, 170, 110, 0.32);
+    background: linear-gradient(180deg, rgba(15, 27, 45, 0.92), rgba(9, 16, 22, 0.96));
+    box-shadow: 0 18px 60px -24px rgba(1, 10, 19, 0.9);
+  }
+  .kit__media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--color-hextech-black);
+    border-bottom: 1px solid rgba(200, 170, 110, 0.25);
+  }
+  .kit__media video,
+  .kit__media .kit__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Click-to-pause: an invisible full-surface button keeps the <video> itself
+     chrome-less (it stays aria-hidden); the glyph only surfaces on intent
+     (hover/focus) or while paused, so the loop stays clean by default. */
+  .kit__media-toggle {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.25s var(--ease-hextech);
+  }
+  .kit__media-glyph {
+    width: 3.2rem;
+    height: 3.2rem;
+    padding: 0.85rem;
+    fill: var(--color-hex-bright);
+    border: 1px solid rgba(10, 200, 185, 0.55);
+    border-radius: 50%;
+    background: rgba(9, 16, 22, 0.72);
+    box-shadow: 0 0 32px -6px rgba(10, 200, 185, 0.7);
+    opacity: 0;
+    scale: 0.9;
+    transition: opacity 0.25s var(--ease-hextech), scale 0.25s var(--ease-hextech);
+  }
+  .kit__media-toggle:hover .kit__media-glyph,
+  .kit__media-toggle:focus-visible .kit__media-glyph,
+  .kit__media.is-paused .kit__media-glyph {
+    opacity: 1;
+    scale: 1;
+  }
+  .kit__media-toggle:focus-visible { outline: none; }
+  .kit__media.is-paused .kit__media-toggle { background: rgba(1, 10, 19, 0.35); }
+  /* Loop progress — pinned under the frame, driven by scaleX (no layout work). */
+  .kit__progress {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 3px;
+    background: rgba(200, 170, 110, 0.18);
+  }
+  .kit__progress-fill {
+    display: block;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    background: linear-gradient(90deg, var(--color-hex), var(--color-hex-bright));
+    box-shadow: 0 0 10px rgba(10, 200, 185, 0.55);
+    will-change: transform;
+  }
+  /* No-video fallback: the spell icon held in a quiet arcane glow. */
+  .kit__media--idle {
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(24rem 14rem at 50% 60%, rgba(10, 200, 185, 0.14), transparent 70%),
+      var(--color-hextech-black);
+  }
+  .kit__media--idle img {
+    position: static;
+    width: 7rem;
+    height: 7rem;
+    object-fit: cover;
+    border: 1px solid rgba(200, 170, 110, 0.5);
+    box-shadow: 0 0 44px -8px rgba(10, 200, 185, 0.55);
+  }
+  .kit__stat {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+  .kit__stat b {
+    font-weight: 600;
+    color: var(--color-hex-bright);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- Summoner invocation seal -------------------------------------------- */
+  .seal {
+    position: relative;
+    width: min(15rem, 62vw);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+  }
+  /* Conic gold/arcane ring, hollowed by mask so only a 2px band remains. */
+  .seal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    padding: 2px;
+    background: conic-gradient(
+      var(--color-hex), var(--color-hex-deep) 25%,
+      var(--color-gold-deep) 50%, var(--color-gold) 75%, var(--color-hex)
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: seal-turn 48s linear infinite;
+  }
+  /* Graduation ticks — the seal reads as an instrument, not a badge. */
+  .seal::after {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(
+      rgba(240, 230, 210, 0.4) 0deg 0.7deg,
+      transparent 0.7deg 30deg
+    );
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+  }
+  .seal__icon {
+    position: relative;
+    width: 64%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid rgba(200, 170, 110, 0.55);
+    box-shadow:
+      0 0 44px -8px rgba(10, 200, 185, 0.5),
+      inset 0 0 24px rgba(1, 10, 19, 0.8);
+  }
+  .seal__icon img { width: 100%; height: 100%; object-fit: cover; }
+  @keyframes seal-turn { to { rotate: 360deg; } }
+  @media (prefers-reduced-motion: reduce) {
+    .seal::before { animation: none; }
+  }
+
+  /* ---- Rune constellation — keystones + slots strung on a light spine ------ */
+  .constellation { position: relative; }
+  .constellation::before {
+    content: "";
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent),
+      color-mix(in srgb, var(--path, var(--color-gold)) 22%, transparent) 70%,
+      transparent
+    );
+  }
+  .slot-node {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    padding: 2.25rem 0 1.5rem;
+  }
+  .slot-node span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 45%, transparent);
+    background: var(--color-hextech-black);
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--path, var(--color-gold));
+  }
+  .slot-node i {
+    width: 7px; height: 7px;
+    rotate: 45deg;
+    background: var(--path, var(--color-gold));
+    box-shadow: 0 0 10px var(--path, var(--color-gold));
+  }
+
+  .keystone__icon {
+    position: relative;
+    flex: none;
+    align-self: flex-start; /* keep the circle round inside stretch-aligned flex rows */
+    width: 5.75rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent);
+    background:
+      radial-gradient(closest-side, color-mix(in srgb, var(--path, var(--color-gold)) 24%, transparent), transparent 80%),
+      var(--color-hextech-black);
+    box-shadow: 0 0 34px -8px var(--path, var(--color-gold));
+  }
+  .keystone__icon img { width: 100%; height: 100%; object-fit: cover; }
+  .rune-medallion {
+    flex: none;
+    width: 3rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid rgba(200, 170, 110, 0.4);
+    background: var(--color-hextech-black);
+  }
+  .rune-medallion img { width: 100%; height: 100%; object-fit: cover; }
+}
