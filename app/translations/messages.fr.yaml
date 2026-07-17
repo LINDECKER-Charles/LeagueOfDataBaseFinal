@@ -165,6 +165,13 @@ common:
     setup: "Choisir la version et la langue"
   detail : "Voir le détail →"
 
+filter:
+  results: "%count% résultats"
+  empty: "Aucun résultat ne correspond à vos filtres."
+  clear: "Effacer"
+  prev: "Précédent"
+  next: "Suivant"
+
 base:
   title: "League of Data Base"
   description: "League of Data Base est une plateforme communautaire qui fournit des informations détaillées, statistiques et analyses sur League of Legends. Rapide, fiable et toujours à jour."
@@ -198,6 +205,7 @@ footer:
     title: "Contact"
     email: "Email"
     github: "GitHub"
+    repo: "Code source"
     linkedin: "LinkedIn"
 
 loader:

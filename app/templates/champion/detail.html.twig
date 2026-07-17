@@ -162,39 +162,24 @@
         <hr class="hx-rule my-10">
         <section class="mb-10">
           <h2 class="mb-5 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'champion.detail.skins'|trans }}</h2>
-          <div class="-mx-6 flex gap-4 overflow-x-auto px-6 pb-2">
-            {% for skin in champion.skins %}
-              {# Vieilles données (< ~3.13) : pas de `num`, les skins sont
-                 positionnels → l'index reproduit la numérotation des splashs. #}
-              {% set skinNum = skin.num ?? loop.index0 %}
-              {% if skinNum != 0 %}
-                {% set skinName = skin.name == 'default' ? champion.name : skin.name %}
-                {# Chromas : absents de DDragon, joints par id de skin (source CommunityDragon). #}
-                {% set skinId = skin.id ?? null %}
-                {% set skinChromas = skinId ? (chromas[skinId] ?? []) : [] %}
-                <figure class="w-64 shrink-0">
-                  <div class="hextech-frame relative overflow-hidden">
-                    <img src="{{ splashBase }}/{{ champId }}_{{ skinNum }}.jpg" loading="lazy"
-                         alt="{{ skin.name }}" class="h-36 w-full object-cover object-top">
-                    {% if skinChromas|length %}
-                      <span class="chroma-badge"
-                            title="{{ 'champion.detail.chromas_available'|trans({'%count%': skinChromas|length}) }}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-                          <path d="M12 3 21 12 12 21 3 12z" /><path d="M7.5 12 12 7.5 16.5 12 12 16.5z" />
-                        </svg>
-                        {{ skinChromas|length }}
-                      </span>
-                    {% endif %}
-                  </div>
-                  <figcaption class="mt-2 font-mono text-xs text-text-muted">{{ skinName }}</figcaption>
-                  {% if skinChromas|length %}
-                    <div data-vue="chroma-strip"
-                         data-props="{{ { skinName: skinName, chromas: skinChromas }|json_encode|e('html_attr') }}"></div>
-                  {% endif %}
-                </figure>
-              {% endif %}
-            {% endfor %}
-          </div>
+          {# Vieilles données (< ~3.13) : pas de `num`, les skins sont positionnels
+             → l'index reproduit la numérotation des splashs. Les chromas sont retirés
+             en amont (contrôleur) ; ils restent exposés via le ChromaStrip embarqué. #}
+          {% set skinData = [] %}
+          {% for skin in champion.skins %}
+            {% set skinNum = skin.num ?? loop.index0 %}
+            {% if skinNum != 0 %}
+              {% set skinId = skin.id ?? null %}
+              {% set skinData = skinData|merge([{
+                num: skinNum,
+                name: skin.name == 'default' ? champion.name : skin.name,
+                splash: splashBase ~ '/' ~ champId ~ '_' ~ skinNum ~ '.jpg',
+                chromas: skinId ? (chromas[skinId] ?? []) : []
+              }]) %}
+            {% endif %}
+          {% endfor %}
+          <div data-vue="skin-gallery"
+               data-props="{{ { championName: champion.name, skins: skinData }|json_encode|e('html_attr') }}"></div>
         </section>
       {% endif %}
 

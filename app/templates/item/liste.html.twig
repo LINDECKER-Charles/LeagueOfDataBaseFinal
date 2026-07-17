@@ -12,24 +12,18 @@
   {% include 'partials/main/gradient.html.twig' %}
 
   <div class="relative mx-auto max-w-[110rem]">
-    <header class="mb-10 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+    <header class="mb-8">
       {% include 'components/section_header.html.twig' with {
         eyebrow: 'Data Dragon · ' ~ (client.session.version ?? (client.versions|first)),
         title: 'item.list.header'|trans,
         count: meta.totalItem,
         count_label: 'item.list.title'|trans|lower
       } %}
-      {% include 'components/list_controls.html.twig' with {
-        meta: meta,
-        search_base: '/api/objects/search',
-        detail_base: '/object',
-        search_placeholder: 'common.search'|trans,
-        version: client.session.version ?? (client.versions|first),
-        lang: client.session.locale ?? client.currentLocale ?? 'en_US'
-      } %}
     </header>
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    {% include 'components/list_filter.html.twig' with { grid_id: 'item-grid' } %}
+
+    <div id="item-grid" class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for id, item in items %}
         {% set desc = item.plaintext is not empty ? item.plaintext : (item.description|default('')) %}
         {% embed 'components/entity_card.html.twig' with {
@@ -37,7 +31,9 @@
           img: images[item.name]|default(null),
           name: item.name|default(''),
           sub: id,
-          img_fit: 'contain'
+          img_fit: 'contain',
+          filter_text: (item.name|default('') ~ ' ' ~ id)|lower,
+          filter_tags: item.tags is defined and item.tags is iterable ? item.tags : []
         } %}
           {% block card_body %}
             <div class="px-4 pb-3">
@@ -76,11 +72,13 @@
                     </summary>
                     <div class="flex flex-wrap gap-2 px-4 pb-4">
                       {% for iid in intoItems %}
-                        {% set imgChild = images[iid]|default(null) %}
-                        <div class="flex items-center gap-1.5">
-                          {% if imgChild %}<img src="/{{ imgChild }}" alt="{{ iid }}" width="24" height="24" loading="lazy" decoding="async" class="h-6 w-6 border border-gold-deep/40 object-contain">{% endif %}
-                          <span class="font-mono text-xs text-text-muted">{{ iid }}</span>
-                        </div>
+                        {% set child = related[iid]|default(null) %}
+                        <a href="{{ path('app_item', { name: iid, version: meta.version, lang: meta.lang }) }}"
+                           class="group/evo flex items-center gap-1.5 rounded border border-gold-deep/40 bg-void/60 px-1.5 py-1 transition-colors hover:border-gold hover:bg-void/90"
+                           title="{{ child.name|default(iid) }}">
+                          {% if child and child.image %}<img src="/{{ child.image }}" alt="{{ child.name }}" width="24" height="24" loading="lazy" decoding="async" class="h-6 w-6 object-contain">{% endif %}
+                          <span class="font-mono text-xs text-text-muted group-hover/evo:text-hex">{{ child.name|default(iid) }}</span>
+                        </a>
                       {% endfor %}
                     </div>
                   </details>
@@ -102,8 +100,6 @@
         {% include 'components/empty_state.html.twig' %}
       {% endfor %}
     </div>
-
-    {% include 'partials/pagination.html.twig' %}
   </div>
 </main>
 {% endblock %}

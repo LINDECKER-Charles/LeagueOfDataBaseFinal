@@ -34,7 +34,9 @@ final class ChampionController extends AbstractResourceController
         $ctx = $this->pageContext->listContext(defaultPerPage: 20, maxPerPage: 20);
 
         try {
-            $data = $this->championManager->paginate($ctx['version'], $ctx['lang'], $ctx['itemPerPage'], $ctx['numPage']);
+            // Full list in one render — the ResourceFilter island owns search,
+            // tag facets and pagination client-side.
+            $data = $this->championManager->paginate($ctx['version'], $ctx['lang'], 0, 1);
         } catch (\Throwable $e) {
             return $this->redirectToSetupWithError($ctx, $e);
         }
@@ -87,6 +89,12 @@ final class ChampionController extends AbstractResourceController
             }
         } catch (\Throwable) {
             // No chromas rendered — the skins still show.
+        }
+
+        // Data Dragon inlines chromas as standalone skins (no splash) — surface
+        // them only through the ChromaStrip, never as skin tiles.
+        if (isset($champion['skins']) && is_array($champion['skins'])) {
+            $champion['skins'] = $this->championManager->withoutChromaSkins($champion['skins'], $chromas);
         }
 
         return $this->render('champion/detail.html.twig', [

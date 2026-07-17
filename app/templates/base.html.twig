@@ -93,7 +93,7 @@
 
     <body class="flex min-h-screen flex-col overflow-x-hidden">
         {% include 'partials/header.html.twig' %}
-        <div class="flex-1">
+        <div class="flex flex-1 flex-col [&>main]:flex-1">
             {% block body %}{% endblock %}
         </div>
         {% include 'partials/footer.html.twig' %}

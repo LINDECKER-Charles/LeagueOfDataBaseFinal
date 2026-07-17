@@ -34,7 +34,9 @@ final class ItemController extends AbstractResourceController
         $ctx = $this->pageContext->listContext(defaultPerPage: 8, maxPerPage: 20);
 
         try {
-            $data = $this->itemManager->paginate($ctx['version'], $ctx['lang'], $ctx['itemPerPage'], $ctx['numPage']);
+            // Full list in one render — the ResourceFilter island owns search,
+            // tag facets and pagination client-side.
+            $data = $this->itemManager->paginate($ctx['version'], $ctx['lang'], 0, 1);
         } catch (\Throwable $e) {
             return $this->redirectToSetupWithError($ctx, $e);
         }
@@ -42,11 +44,16 @@ final class ItemController extends AbstractResourceController
         $data['meta']['version'] = $ctx['version'];
         $data['meta']['lang']    = $ctx['lang'];
 
+        // Résout les ids d'évolution (item.into) en objets liables (nom + icône +
+        // prix) pour l'accordéon « Évolutions » — une passe pour toute la page.
+        $related = $this->itemManager->relatedIndex($data['items'], $ctx['version'], $ctx['lang']);
+
         return $this->render('item/liste.html.twig', [
-            'items'  => $data['items'],
-            'images' => $data['images'],
-            'meta'   => $data['meta'],
-            'client' => $this->clientData(),
+            'items'   => $data['items'],
+            'images'  => $data['images'],
+            'related' => $related,
+            'meta'    => $data['meta'],
+            'client'  => $this->clientData(),
         ]);
     }
 
@@ -65,19 +72,21 @@ final class ItemController extends AbstractResourceController
             // résout en objets réels (nom + image + prix) liables vers leur page
             // détail. `components` (from) + cet objet + `related` (into) forment
             // l'arbre de recette affiché par le template.
-            $related    = $this->itemManager->resolveRelated($item['into'] ?? [], $sel['version'], $sel['lang']);
-            $components = $this->itemManager->resolveRelated($item['from'] ?? [], $sel['version'], $sel['lang']);
+            $related = $this->itemManager->resolveRelated($item['into'] ?? [], $sel['version'], $sel['lang']);
+            // Arbre de recette descendant complet (composants récursifs) plutôt
+            // qu'un seul niveau — le vrai « arbre de craft » de l'objet.
+            $recipe  = $this->itemManager->recipeTree($name, $sel['version'], $sel['lang']);
         } catch (\Throwable $e) {
             return $this->redirectToSetupWithError($sel, $e);
         }
 
         return $this->render('item/detail.html.twig', [
-            'item'       => $item,
-            'image'      => $image,
+            'item'    => $item,
+            'image'   => $image,
             'related'    => $related,
-            'components' => $components,
-            'version'    => $sel['version'],
-            'lang'       => $sel['lang'],
+            'recipeTree' => $recipe,
+            'version' => $sel['version'],
+            'lang'    => $sel['lang'],
             'client'  => $this->clientData(),
         ]);
     }

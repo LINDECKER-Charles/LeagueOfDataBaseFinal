@@ -34,7 +34,9 @@ final class SummonerController extends AbstractResourceController
         $ctx = $this->pageContext->listContext(defaultPerPage: 8, maxPerPage: 0);
 
         try {
-            $data = $this->summoners->paginate($ctx['version'], $ctx['lang'], $ctx['itemPerPage'], $ctx['numPage']);
+            // Full list in one render — the ResourceFilter island owns search,
+            // tag facets and pagination client-side.
+            $data = $this->summoners->paginate($ctx['version'], $ctx['lang'], 0, 1);
         } catch (\Throwable $e) {
             return $this->redirectToSetupWithError($ctx, $e);
         }

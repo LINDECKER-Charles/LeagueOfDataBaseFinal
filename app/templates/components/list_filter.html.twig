@@ -1,0 +1,19 @@
+{# Client-side grid filter bar: live search + multi-select tag facet + pagination.
+   The ResourceFilter island drives the sibling grid `#{{ grid_id }}` (its cards carry
+   data-search / data-tags). Replaces the former server pagination + autocomplete on
+   list pages. Params: grid_id (required), page_size (optional). #}
+<div class="mb-8 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+  <div class="min-w-0 flex-1" data-vue="resource-filter" data-props="{{ {
+        gridId: grid_id,
+        placeholder: 'common.search'|trans,
+        pageSize: page_size|default(12),
+        labels: {
+          results: 'filter.results'|trans,
+          empty: 'filter.empty'|trans,
+          clear: 'filter.clear'|trans,
+          prev: 'filter.prev'|trans,
+          next: 'filter.next'|trans
+        }
+      }|json_encode|e('html_attr') }}"></div>
+  <a href="{{ path('app_setup') }}" class="hx-btn shrink-0 whitespace-nowrap py-2">{{ 'item.list.change_version'|trans }}</a>
+</div>

@@ -105,4 +105,52 @@ final class ItemManagerResolveRelatedTest extends TestCase
     {
         self::assertSame([], $this->makeManager()->resolveRelated([], self::VERSION, self::LANG));
     }
+
+    public function testRecipeTreeExpandsComponentsRecursivelyKeepingRepeatsAcrossBranches(): void
+    {
+        $fs = new Filesystem(new LocalFilesystemAdapter($this->dir));
+        $fs->write(
+            sprintf('data/%s/%s/item.json', self::VERSION, self::LANG),
+            json_encode(['type' => 'item', 'data' => [
+                '3078' => ['name' => 'Trinity Force', 'image' => ['full' => '3078.png'], 'gold' => ['total' => 3333, 'base' => 333], 'from' => ['3057', '3044']],
+                '3057' => ['name' => 'Sheen', 'image' => ['full' => '3057.png'], 'gold' => ['total' => 700, 'base' => 350], 'from' => ['1036', '1027']],
+                '3044' => ['name' => 'Phage', 'image' => ['full' => '3044.png'], 'gold' => ['total' => 1100, 'base' => 350], 'from' => ['1036', '1028']],
+                '1036' => ['name' => 'Long Sword', 'image' => ['full' => '1036.png'], 'gold' => ['total' => 350]],
+                '1027' => ['name' => 'Sapphire Crystal', 'image' => ['full' => '1027.png'], 'gold' => ['total' => 350]],
+                '1028' => ['name' => 'Ruby Crystal', 'image' => ['full' => '1028.png'], 'gold' => ['total' => 400]],
+            ]], JSON_THROW_ON_ERROR)
+        );
+        $fs->write(
+            sprintf('manifest/%s/item.json', self::VERSION),
+            json_encode([
+                '3078.png' => 'cdn/blobs/tf.png', '3057.png' => 'cdn/blobs/sheen.png',
+                '3044.png' => 'cdn/blobs/phage.png', '1036.png' => 'cdn/blobs/ls.png',
+                '1027.png' => 'cdn/blobs/sap.png', '1028.png' => 'cdn/blobs/rub.png',
+            ], JSON_THROW_ON_ERROR)
+        );
+
+        $noEgress = new GoFetcherClient(new MockHttpClient(static function (): void {
+            throw new \RuntimeException('unexpected DDragon egress');
+        }));
+        $manager = new ItemManager(
+            $noEgress,
+            $fs,
+            new BlobStore($fs, new ImageTranscoder()),
+            new ArrayAdapter(),
+            new DeferredImageIngestor(new RequestStack()),
+        );
+
+        $tree = $manager->recipeTree('3078', self::VERSION, self::LANG);
+
+        self::assertSame('Trinity Force', $tree['name']);
+        self::assertSame('cdn/blobs/tf.png', $tree['image']);
+        self::assertSame(333, $tree['combine']); // gold.base surfaced as the combine cost
+        self::assertSame(['Sheen', 'Phage'], array_column($tree['children'], 'name'), 'from-order preserved');
+
+        [$sheen, $phage] = $tree['children'];
+        self::assertSame(['Long Sword', 'Sapphire Crystal'], array_column($sheen['children'], 'name'));
+        // Long Sword (1036) is a component of BOTH Sheen and Phage — repeats across sibling branches are kept.
+        self::assertSame(['Long Sword', 'Ruby Crystal'], array_column($phage['children'], 'name'));
+        self::assertSame([], $sheen['children'][0]['children'], 'a base item is a leaf');
+    }
 }

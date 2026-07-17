@@ -47,7 +47,7 @@ final class ClientManagerSelectedLocaleTest extends TestCase
         $stack = new RequestStack();
         $stack->push($request);
 
-        $versionManager = $this->createMock(VersionManager::class);
+        $versionManager = $this->createStub(VersionManager::class);
 
         return new ClientManager(
             $stack,

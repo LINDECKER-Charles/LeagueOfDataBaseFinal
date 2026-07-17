@@ -26,6 +26,45 @@
   </a>
 {% endmacro %}
 
+{# ---------------------------------------------------------------------------
+   Recipe tree node — recursive. Renders one item card, then its components as a
+   nested list; the CSS (.recipe-tree) draws the connector lines. The root is the
+   current item (gold-lit, not a link); every descendant links to its own page.
+--------------------------------------------------------------------------- #}
+{% macro tree_node(node, version, lang, is_root) %}
+  {% import _self as recipe %}
+  <li>
+    <{{ is_root ? 'div' : 'a' }}
+       {% if not is_root %}href="{{ path('app_item', { name: node.id, version: version, lang: lang }) }}"{% endif %}
+       title="{{ node.name ?: node.id }}"
+       class="recipe-node group/node {{ is_root ? 'recipe-node--root' : '' }} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40">
+      <span class="recipe-node__icon">
+        {% if node.image %}
+          <picture>
+            {% if node.image ends with '.png' %}<source srcset="/{{ node.image|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
+            <img src="/{{ node.image }}" alt="{{ node.name ?: node.id }}" width="44" height="44" loading="lazy" decoding="async"
+                 class="h-full w-full object-contain transition-transform duration-500 group-hover/node:scale-110">
+          </picture>
+        {% else %}
+          <span class="grid h-full w-full place-items-center font-mono text-[10px] text-gold/50">{{ node.id }}</span>
+        {% endif %}
+      </span>
+      <span class="recipe-node__name {{ is_root ? 'text-gold-bright' : 'group-hover/node:text-gold-bright' }}">{{ node.name ?: node.id }}</span>
+      {% if node.gold is not null %}
+        <span class="recipe-node__gold">
+          {{ node.gold }}
+          {% if node.children is not empty and node.combine %}<em class="recipe-node__combine">+{{ node.combine }}</em>{% endif %}
+        </span>
+      {% endif %}
+    </{{ is_root ? 'div' : 'a' }}>
+    {% if node.children is not empty %}
+      <ul>
+        {% for c in node.children %}{{ recipe.tree_node(c, version, lang, false) }}{% endfor %}
+      </ul>
+    {% endif %}
+  </li>
+{% endmacro %}
+
 {% import _self as recipe %}
 
 {% block title %}{{ item.name ?? 'Item' }} - {{ client.session.version ?? (client.versions|first) }}{% endblock %}
@@ -107,42 +146,29 @@
        Recipe tree — the real build dependency: from → THIS → into.
        Skipped entirely when the item is neither built from nor into anything.
     --------------------------------------------------------------------- #}
-    {% if (components is defined and components is not empty) or (related is defined and related is not empty) %}
+    {% set hasTree = recipeTree is defined and recipeTree.children is defined and recipeTree.children is not empty %}
+    {% if hasTree or (related is defined and related is not empty) %}
       <hr class="hx-rule my-10">
       <section class="mb-10">
         <h2 class="mb-6 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'item.detail.recipe'|trans }}</h2>
 
-        <div class="flex flex-col items-center gap-4">
-          {% if components is defined and components is not empty %}
-            <p class="eyebrow">{{ 'item.detail.builds_from'|trans }}</p>
-            <div class="flex flex-wrap items-start justify-center gap-3">
-              {% for c in components %}{{ recipe.recipe_node(c, version, lang) }}{% endfor %}
-            </div>
-            <div class="h-6 w-px recipe-link" aria-hidden="true"></div>
-          {% endif %}
-
-          {# Central node = this item. Not a link (you are here), gold-lit. #}
-          <div class="hextech-frame hx-glow flex w-32 flex-col items-center gap-2 border-gold p-3 text-center sm:w-36">
-            <span class="relative h-14 w-14 shrink-0 overflow-hidden border border-gold/60 bg-void">
-              {% if image %}
-                <img src="/{{ image }}" alt="{{ item.name ?? 'Item' }}" width="56" height="56" loading="lazy" decoding="async"
-                     class="absolute inset-0 h-full w-full object-contain">
-              {% endif %}
-            </span>
-            <span class="font-beaufort text-sm leading-tight tracking-wide text-gold-bright">{{ item.name ?? 'Item' }}</span>
-            {% if item.gold.total is defined %}
-              <span class="font-mono text-[11px] text-gold">{{ item.gold.total }}</span>
-            {% endif %}
+        {% if hasTree %}
+          <p class="eyebrow mb-5 text-center">{{ 'item.detail.builds_from'|trans }}</p>
+          <div class="overflow-x-auto pb-2">
+            <ul class="recipe-tree">
+              {{ recipe.tree_node(recipeTree, version, lang, true) }}
+            </ul>
           </div>
+        {% endif %}
 
-          {% if related is defined and related is not empty %}
-            <div class="h-6 w-px recipe-link" aria-hidden="true"></div>
+        {% if related is defined and related is not empty %}
+          <div class="flex flex-col items-center gap-4 {{ hasTree ? 'mt-10 border-t border-gold-deep/30 pt-8' : '' }}">
             <p class="eyebrow">{{ 'item.detail.evolutions'|trans }}</p>
             <div class="flex flex-wrap items-start justify-center gap-3">
               {% for child in related %}{{ recipe.recipe_node(child, version, lang) }}{% endfor %}
             </div>
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
       </section>
     {% endif %}
 

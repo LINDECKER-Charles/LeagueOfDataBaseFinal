@@ -33,7 +33,9 @@ final class RuneController extends AbstractResourceController
         $ctx = $this->pageContext->listContext(defaultPerPage: 8, maxPerPage: 20);
 
         try {
-            $data = $this->runeManager->paginate($ctx['version'], $ctx['lang'], $ctx['itemPerPage'], $ctx['numPage']);
+            // Full list in one render — the ResourceFilter island owns search
+            // and pagination client-side (rune trees are only a handful).
+            $data = $this->runeManager->paginate($ctx['version'], $ctx['lang'], 0, 1);
         } catch (\Throwable $e) {
             return $this->redirectToSetupWithError($ctx, $e);
         }
