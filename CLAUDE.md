@@ -6,7 +6,7 @@ Encyclopédie League of Legends servie depuis les données **Data Dragon** (+ Co
 
 | Couche | Techno |
 |---|---|
-| Backend | Symfony 7.3 / PHP 8.4 (`app/`) |
+| Backend | Symfony 7.4 LTS / PHP 8.4 (`app/`) |
 | Fetch upstream | micro-service Go `go-workers/` (passerelle thin, allowlist SSRF) |
 | Stockage assets | MinIO S3 content-addressed (Flysystem + async-aws) |
 | Front | Twig + îlots Vite / Vue 3 / TS / PrimeVue, navigation Turbo Drive |

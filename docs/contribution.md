@@ -211,7 +211,7 @@ Si applicable, ajoutez des captures d'écran.
 ## 🖥️ Environnement
 - OS: [ex. Windows 10]
 - PHP: [ex. 8.2.0]
-- Symfony: [ex. 7.3.0]
+- Symfony: [ex. 7.4.0]
 - Navigateur: [ex. Chrome 120]
 
 ## 📋 Informations supplémentaires
@@ -464,7 +464,7 @@ If applicable, add screenshots.
 ## 🖥️ Environment
 - OS: [e.g. Windows 10]
 - PHP: [e.g. 8.2.0]
-- Symfony: [e.g. 7.3.0]
+- Symfony: [e.g. 7.4.0]
 - Browser: [e.g. Chrome 120]
 
 ## 📋 Additional Information
@@ -724,7 +724,7 @@ Si aplica, agregar capturas de pantalla.
 ## 🖥️ Entorno
 - OS: [ej. Windows 10]
 - PHP: [ej. 8.2.0]
-- Symfony: [ej. 7.3.0]
+- Symfony: [ej. 7.4.0]
 - Navegador: [ej. Chrome 120]
 
 ## 📋 Información Adicional
