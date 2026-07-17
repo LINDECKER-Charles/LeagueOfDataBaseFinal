@@ -7,11 +7,9 @@ use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
 use App\Service\Tools\GoFetcherClient;
-use App\Service\Tools\Utils;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -33,7 +31,7 @@ final class PageContextResolverLoaderStepsTest extends TestCase
             throw new \RuntimeException('loaderSteps must not touch the gateway/session');
         }));
         $version = new VersionManager($noEgress, new ArrayAdapter(), new NullLogger());
-        $client = new ClientManager($stack, $version, new Utils(new Filesystem(), $version, sys_get_temp_dir()), 'secret', 'en_US');
+        $client = new ClientManager($stack, $version, 'secret', 'en_US');
 
         return new PageContextResolver($stack, $client, $version);
     }
