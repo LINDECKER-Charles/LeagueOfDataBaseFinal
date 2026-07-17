@@ -171,6 +171,8 @@ filter:
   clear: "Clear"
   prev: "Previous"
   next: "Next"
+  per_page: "Per page"
+  all: "All"
 base:
   title: "League of Data Base"
   description: "League of Data Base is a community-driven platform that provides detailed information, stats, and insights about League of Legends. Fast, reliable, and always up to date."
