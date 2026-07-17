@@ -1,0 +1,32 @@
+{# One favorite slot, server-rendered — used by the public summoner card and as
+   the /profile no-JS fallback (the FavoritePicker island re-renders the same
+   markup once mounted, so both share the .socket-* styles in profile.css).
+   Params:
+   - type_label: translated slot label ("Champion", "Objet", …)
+   - favorite:   {storedId: ?string, current: ?{id, name, image}}
+   - compact:    optional — medallion variant for the public card row #}
+{% set current = favorite.current %}
+{% set state_class = current
+    ? 'hextech-frame hx-corners socket--filled'
+    : (favorite.storedId ? 'socket--unavailable' : 'socket--empty') %}
+<div class="socket {{ compact|default(false) ? 'socket--compact ' }}{{ state_class }}">
+    <span class="socket__type">{{ type_label }}</span>
+    {% if current %}
+        {% if current.image %}
+            <picture class="socket__portrait">
+                {% if current.image ends with '.png' %}
+                    <source srcset="{{ current.image|replace({'.png': '.webp'}) }}" type="image/webp">
+                {% endif %}
+                <img src="{{ current.image }}" alt="{{ current.name }}" width="72" height="72" loading="lazy" decoding="async">
+            </picture>
+        {% else %}
+            <span class="socket__portrait socket__portrait--initials" aria-hidden="true">{{ current.name|slice(0, 2)|upper }}</span>
+        {% endif %}
+        <span class="socket__name">{{ current.name }}</span>
+    {% else %}
+        <span class="socket__hex" aria-hidden="true"></span>
+        <span class="socket__name socket__name--muted">
+            {{ (favorite.storedId ? 'profile.favorites.unavailable' : 'profile.favorites.empty')|trans }}
+        </span>
+    {% endif %}
+</div>
