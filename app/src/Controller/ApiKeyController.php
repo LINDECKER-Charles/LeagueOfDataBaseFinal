@@ -7,6 +7,9 @@ use App\Entity\ApiKey;
 use App\Entity\ApiPlan;
 use App\Entity\User;
 use App\Repository\ApiKeyRepository;
+use App\Service\Audit\AuditAction;
+use App\Service\Audit\AuditLogger;
+use App\Service\Audit\AuditTarget;
 use App\Service\PublicApi\ApiCheckout;
 use App\Service\PublicApi\ApiCreditPack;
 use App\Service\PublicApi\ApiKeyIssuer;
@@ -49,6 +52,7 @@ final class ApiKeyController extends AbstractResourceController
         private readonly ApiCheckout $checkout,
         private readonly EntityManagerInterface $entityManager,
         private readonly TranslatorInterface $translator,
+        private readonly AuditLogger $audit,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -86,6 +90,7 @@ final class ApiKeyController extends AbstractResourceController
         $issued = $this->issuer->issue($user, (string) $request->request->get('name', ''));
         $this->entityManager->persist($issued->key);
         $this->entityManager->flush();
+        $this->audit->log(AuditAction::ApiKeyCreate, target: AuditTarget::of(AuditTarget::TYPE_API_KEY, $issued->key->getId(), $issued->key->getKeyPrefix() . '…'));
 
         return $this->backToPortalWithRawKey($issued->rawKey, 'portal.flash.created');
     }
@@ -109,6 +114,7 @@ final class ApiKeyController extends AbstractResourceController
         $this->entityManager->persist($issued->key);
         $this->entityManager->flush();
         $this->apiKeys->transferUsage($key, $issued->key);
+        $this->audit->log(AuditAction::ApiKeyRegenerate, target: AuditTarget::of(AuditTarget::TYPE_API_KEY, $issued->key->getId(), $issued->key->getKeyPrefix() . '…'));
 
         return $this->backToPortalWithRawKey($issued->rawKey, 'portal.flash.regenerated');
     }
@@ -127,6 +133,7 @@ final class ApiKeyController extends AbstractResourceController
 
         $key->revoke();
         $this->entityManager->flush();
+        $this->audit->log(AuditAction::ApiKeyRevoke, target: AuditTarget::of(AuditTarget::TYPE_API_KEY, $key->getId(), $key->getKeyPrefix() . '…'));
         $this->addFlash('success', $this->translator->trans('portal.flash.revoked', [], 'api'));
 
         return $this->redirectToRoute('app_api_portal', status: Response::HTTP_SEE_OTHER);

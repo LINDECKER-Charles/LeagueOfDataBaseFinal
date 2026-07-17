@@ -10,6 +10,9 @@ use App\Service\Build\BuildCatalogGate;
 use App\Service\Build\BuildStructureNormalizer;
 use App\Service\Build\BuildSubmission;
 use App\Service\Build\BuildViewAssembler;
+use App\Service\Audit\AuditAction;
+use App\Service\Audit\AuditLogger;
+use App\Service\Audit\AuditTarget;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
@@ -46,6 +49,7 @@ final class BuildController extends AbstractResourceController
         private readonly BuildViewAssembler $assembler,
         private readonly EntityManagerInterface $entityManager,
         private readonly TranslatorInterface $translator,
+        private readonly AuditLogger $audit,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -69,7 +73,7 @@ final class BuildController extends AbstractResourceController
     #[Route('/builds/new', name: 'app_build_new', methods: ['GET'])]
     public function new(): Response
     {
-        return $this->editorResponse(null, self::emptyValues());
+        return $this->requireVerifiedEmail() ?? $this->editorResponse(null, self::emptyValues());
     }
 
     #[Route('/builds', name: 'app_build_create', methods: ['POST'])]
@@ -116,16 +120,22 @@ final class BuildController extends AbstractResourceController
             return $this->redirectToRoute('app_builds', status: Response::HTTP_SEE_OTHER);
         }
 
+        $target = AuditTarget::of(AuditTarget::TYPE_BUILD, $build->getId(), $build->getName());
         $this->entityManager->remove($build);
         $this->entityManager->flush();
+        $this->audit->log(AuditAction::BuildDelete, target: $target);
         $this->addFlash('success', $this->translator->trans('build.flash.deleted'));
 
         return $this->redirectToRoute('app_builds', status: Response::HTTP_SEE_OTHER);
     }
 
-    /** Shared create/update pipeline: CSRF → field errors → catalog validation → persist. */
+    /** Shared create/update pipeline: verified email → CSRF → field errors → catalog validation → persist. */
     private function handleSubmit(Request $request, ?Build $build): Response
     {
+        if ($guard = $this->requireVerifiedEmail()) {
+            return $guard;
+        }
+
         $submission = BuildSubmission::fromRequest($request, $this->pageContext->selection()['version']);
         $values = [
             'name' => $submission->name,
@@ -147,6 +157,10 @@ final class BuildController extends AbstractResourceController
 
         $isNew = $build === null;
         $build = $this->persistSubmission($build, $submission);
+        $this->audit->log(
+            $isNew ? AuditAction::BuildCreate : AuditAction::BuildUpdate,
+            target: AuditTarget::of(AuditTarget::TYPE_BUILD, $build->getId(), $build->getName()),
+        );
         $this->addFlash('success', $this->translator->trans($isNew ? 'build.flash.created' : 'build.flash.updated'));
 
         return $this->redirectToRoute(
@@ -275,6 +289,22 @@ final class BuildController extends AbstractResourceController
         }
 
         return $user;
+    }
+
+    /**
+     * Build creation is the one write reserved to confirmed accounts (anti-spam
+     * of public content). Returns a redirect to bounce unverified users, or null
+     * to let the caller proceed.
+     */
+    private function requireVerifiedEmail(): ?Response
+    {
+        if ($this->currentUser()->isVerified()) {
+            return null;
+        }
+
+        $this->addFlash('warning', $this->translator->trans('auth.verify.gate_build'));
+
+        return $this->redirectToRoute('app_builds', status: Response::HTTP_SEE_OTHER);
     }
 
     /** @return array{name: string, description: ?string, isPublic: bool, structure: null, gameVersion: null, gameMode: string} */

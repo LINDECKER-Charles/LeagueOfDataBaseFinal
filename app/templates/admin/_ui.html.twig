@@ -140,6 +140,20 @@
     {% endif %}
 {% endmacro %}
 
+{# Cursor pagination for scanned feeds where the total is unknown: prev is
+   page-based, next appears only while the query reported more rows (hasMore). #}
+{% macro cursor_pager(route, page, hasMore, params) %}
+    {% if page > 1 or hasMore %}
+        <nav class="pager" aria-label="Pagination">
+            {% if page > 1 %}<a class="btn ghost small" href="{{ path(route, (params|default({}))|merge({ page: page - 1 })) }}">← Précédent</a>
+            {% else %}<span class="btn ghost small is-disabled">← Précédent</span>{% endif %}
+            <span class="pager-state num">Page {{ page }}</span>
+            {% if hasMore %}<a class="btn ghost small" href="{{ path(route, (params|default({}))|merge({ page: page + 1 })) }}">Suivant →</a>
+            {% else %}<span class="btn ghost small is-disabled">Suivant →</span>{% endif %}
+        </nav>
+    {% endif %}
+{% endmacro %}
+
 {# Service health badge: ok|degraded|down → good|warn|bad. #}
 {% macro health_badge(status) %}
     {%- set map = { ok: { tone: 'good', label: 'opérationnel' }, degraded: { tone: 'warn', label: 'dégradé' }, down: { tone: 'bad', label: 'hors ligne' } } -%}

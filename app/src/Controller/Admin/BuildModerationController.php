@@ -6,6 +6,9 @@ namespace App\Controller\Admin;
 use App\Entity\Build;
 use App\Repository\BuildRepository;
 use App\Repository\BuildVoteRepository;
+use App\Service\Audit\AuditAction;
+use App\Service\Audit\AuditLogger;
+use App\Service\Audit\AuditTarget;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +27,7 @@ final class BuildModerationController extends AbstractAdminController
         private readonly BuildRepository $builds,
         private readonly BuildVoteRepository $votes,
         private readonly EntityManagerInterface $entityManager,
+        private readonly AuditLogger $audit,
     ) {}
 
     #[Route('/builds', name: 'admin_builds', methods: ['GET'])]
@@ -57,6 +61,7 @@ final class BuildModerationController extends AbstractAdminController
 
         $build->setIsPublic(false);
         $this->entityManager->flush();
+        $this->audit->log(AuditAction::AdminBuildHide, target: AuditTarget::of(AuditTarget::TYPE_BUILD, $build->getId(), $build->getName()));
         $this->addFlash('success', sprintf('Build « %s » dépublié — il reste visible par son auteur et via son lien de partage.', $build->getName()));
 
         return $this->backToList($request, 'admin_builds');
@@ -70,8 +75,10 @@ final class BuildModerationController extends AbstractAdminController
         }
 
         $name = $build->getName();
+        $target = AuditTarget::of(AuditTarget::TYPE_BUILD, $build->getId(), $name);
         $this->entityManager->remove($build); // votes follow via DB CASCADE
         $this->entityManager->flush();
+        $this->audit->log(AuditAction::AdminBuildDelete, target: $target);
         $this->addFlash('success', sprintf('Build « %s » supprimé.', $name));
 
         return $this->backToList($request, 'admin_builds');

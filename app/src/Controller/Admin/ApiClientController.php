@@ -6,6 +6,9 @@ namespace App\Controller\Admin;
 use App\Entity\ApiKey;
 use App\Entity\ApiPlan;
 use App\Repository\ApiKeyRepository;
+use App\Service\Audit\AuditAction;
+use App\Service\Audit\AuditLogger;
+use App\Service\Audit\AuditTarget;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,6 +34,7 @@ final class ApiClientController extends AbstractAdminController
         private readonly ApiKeyRepository $apiKeys,
         private readonly EntityManagerInterface $entityManager,
         private readonly LoggerInterface $logger,
+        private readonly AuditLogger $audit,
     ) {}
 
     #[Route('/api-clients', name: 'admin_api_clients', methods: ['GET'])]
@@ -75,6 +79,7 @@ final class ApiClientController extends AbstractAdminController
 
         $key->revoke();
         $this->entityManager->flush();
+        $this->audit->log(AuditAction::AdminApiClientRevoke, target: AuditTarget::of(AuditTarget::TYPE_API_CLIENT, $key->getId(), $key->getKeyPrefix() . '…'));
         $this->addFlash('success', sprintf('Clé %s… révoquée (effective sous ~60 s côté API).', $key->getKeyPrefix()));
 
         return $this->backToList($request, 'admin_api_clients');
@@ -97,6 +102,7 @@ final class ApiClientController extends AbstractAdminController
         // Same atomic path as the Stripe credit packs (rate floor included).
         $this->apiKeys->addCredits($key, $requests, ApiPlan::RATE_CREDITS);
         $this->logger->info(self::LOG_CREDIT_GRANTED, ['api_key_id' => $key->getId(), 'requests' => $requests]);
+        $this->audit->log(AuditAction::AdminApiClientCredit, target: AuditTarget::of(AuditTarget::TYPE_API_CLIENT, $key->getId(), $key->getKeyPrefix() . '…'), metadata: ['requests' => $requests]);
         $this->addFlash('success', sprintf('%s requêtes créditées sur la clé %s….', number_format($requests, 0, '.', ' '), $key->getKeyPrefix()));
 
         return $this->backToList($request, 'admin_api_clients');

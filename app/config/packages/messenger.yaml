@@ -21,7 +21,10 @@ framework:
             messenger.bus.default: []
 
         routing:
-            Symfony\Component\Mailer\Messenger\SendEmailMessage: async
+            # Auth emails (confirmation, password reset) are transactional and the
+            # user is actively waiting for them; no messenger worker is deployed, so
+            # they are sent synchronously in-request. This also renders the template
+            # in the request locale instead of the worker's default.
             Symfony\Component\Notifier\Message\ChatMessage: async
             Symfony\Component\Notifier\Message\SmsMessage: async
 

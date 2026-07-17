@@ -8,6 +8,9 @@ use App\Entity\BuildVote;
 use App\Entity\User;
 use App\Repository\BuildRepository;
 use App\Repository\BuildVoteRepository;
+use App\Service\Audit\AuditAction;
+use App\Service\Audit\AuditLogger;
+use App\Service\Audit\AuditTarget;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -35,6 +38,7 @@ final class BuildVoteController extends AbstractController
         private readonly BuildRepository $builds,
         private readonly BuildVoteRepository $votes,
         private readonly TranslatorInterface $translator,
+        private readonly AuditLogger $audit,
     ) {}
 
     #[Route('/builds/{id}/vote', name: 'app_build_vote', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -57,6 +61,11 @@ final class BuildVoteController extends AbstractController
 
         $voter = $this->currentUser();
         $this->votes->applyVote($build, $voter, $value);
+        $this->audit->log(
+            AuditAction::BuildVote,
+            target: AuditTarget::of(AuditTarget::TYPE_BUILD, $build->getId(), $build->getName()),
+            metadata: ['value' => $value],
+        );
 
         return $wantsJson ? new JsonResponse($this->voteState($build, $voter)) : $this->redirectBack($request);
     }

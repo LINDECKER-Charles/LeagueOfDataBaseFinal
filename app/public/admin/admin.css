@@ -240,12 +240,21 @@ select.input-slim { width: auto; }
 .between { justify-content: space-between; }
 .donut-wrap { display: grid; grid-template-columns: minmax(180px, 240px) 1fr; gap: 1rem; align-items: center; }
 
+/* Audit journal — purge panel */
+.card-title { font-size: 0.95rem; margin-bottom: 0.4rem; }
+.purge-card { margin-top: 1.15rem; }
+.purge-form { display: flex; flex-wrap: wrap; gap: 0.9rem; align-items: center; margin-top: 1rem; }
+.purge-form .radio { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--text-muted); }
+.purge-form .radio input[type='radio'] { accent-color: var(--hex); }
+.purge-form .btn.danger { margin-left: auto; }
+
 @media (max-width: 860px) {
   .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; }
   .span-2 { grid-column: auto; }
   .donut-wrap { grid-template-columns: 1fr; }
   .heat { grid-template-columns: 2rem repeat(24, 1fr); }
   .admin-main { padding: 1.5rem 1rem 3rem; }
+  .purge-form .btn.danger { margin-left: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

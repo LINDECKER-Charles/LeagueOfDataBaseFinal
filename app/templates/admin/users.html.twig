@@ -33,6 +33,7 @@
             {% if u.isPublicProfile %}{% set badges = badges|merge([{ label: 'profil public', tone: 'warn' }]) %}{% endif %}
             {% set listContext = { q: q, page: page } %}
             {% set actions %}
+                <a class="btn ghost small" href="{{ path('admin_user_activity', { id: u.id }) }}">Activité</a>
                 {% if u.isBanned %}
                     <form method="post" action="{{ path('admin_user_unban', { id: u.id } + listContext) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('admin_user_unban') }}">

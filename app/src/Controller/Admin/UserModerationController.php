@@ -5,6 +5,9 @@ namespace App\Controller\Admin;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\Audit\AuditAction;
+use App\Service\Audit\AuditLogger;
+use App\Service\Audit\AuditTarget;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +24,7 @@ final class UserModerationController extends AbstractAdminController
     public function __construct(
         private readonly UserRepository $users,
         private readonly EntityManagerInterface $entityManager,
+        private readonly AuditLogger $audit,
     ) {}
 
     #[Route('/users', name: 'admin_users', methods: ['GET'])]
@@ -55,6 +59,7 @@ final class UserModerationController extends AbstractAdminController
         $reason = trim((string) $request->request->get('reason', ''));
         $user->ban($reason === '' ? null : $reason);
         $this->entityManager->flush();
+        $this->audit->log(AuditAction::AdminUserBan, target: AuditTarget::user($user), metadata: ['reason' => $reason === '' ? null : $reason]);
         $this->addFlash('success', sprintf('Compte « %s » banni : connexion bloquée, profil et builds retirés du site public.', $user->getUsername()));
 
         return $this->backToList($request, 'admin_users');
@@ -69,6 +74,7 @@ final class UserModerationController extends AbstractAdminController
 
         $user->unban();
         $this->entityManager->flush();
+        $this->audit->log(AuditAction::AdminUserUnban, target: AuditTarget::user($user));
         $this->addFlash('success', sprintf('Compte « %s » rétabli.', $user->getUsername()));
 
         return $this->backToList($request, 'admin_users');
@@ -82,10 +88,13 @@ final class UserModerationController extends AbstractAdminController
         }
 
         $username = $user->getUsername();
+        // Capture the audit target before removal — the id is needed after flush.
+        $target = AuditTarget::user($user);
         // DB-level cascades do the fan-out: builds/votes/api_keys CASCADE,
         // donations SET NULL (accounting lines survive account deletion).
         $this->entityManager->remove($user);
         $this->entityManager->flush();
+        $this->audit->log(AuditAction::AdminUserDelete, target: $target);
         $this->addFlash('success', sprintf('Compte « %s » supprimé définitivement.', $username));
 
         return $this->backToList($request, 'admin_users');
