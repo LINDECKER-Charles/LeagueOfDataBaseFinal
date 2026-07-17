@@ -28,16 +28,16 @@
       {% set selectedVersion = client.session.version ?? (client.versions|default([])|first) %}
 
       <form action="{{ path('app_setup_save') }}" method="post" class="flex w-full max-w-md flex-col gap-2 lg:w-auto lg:min-w-[22rem]">
-        <div class="flex items-center gap-2">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
           <label for="version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
-          <select id="version" name="version" class="hx-select flex-1">
+          <select id="version" name="version" class="hx-select w-full min-w-0 sm:flex-1">
             {% for v in client.versions %}
               <option value="{{ v }}" {{ v == selectedVersion ? 'selected' : '' }}>{{ v }}</option>
             {% endfor %}
           </select>
 
           <label for="langue" class="sr-only">{{ 'setup.form.language'|trans }}</label>
-          <select id="langue" name="langue" class="hx-select flex-1">
+          <select id="langue" name="langue" class="hx-select w-full min-w-0 sm:flex-1">
             {% for lang in client.languages %}
               <option value="{{ lang }}" {{ lang == selectedLocale ? 'selected' : '' }}>{{ client.languageLabels[lang] ?? lang }}</option>
             {% endfor %}
