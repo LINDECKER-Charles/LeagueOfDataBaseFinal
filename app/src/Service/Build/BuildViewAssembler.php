@@ -27,11 +27,14 @@ final class BuildViewAssembler
     ) {}
 
     /**
-     * Full view-model of the share page.
+     * Full view-model of the share page, resolved on $version — the build's own
+     * pinned patch ({@see renderVersion}). `patchMismatch` is informative only
+     * ("written on X, current is Y"): it compares against $currentVersion, the
+     * visitor's site-wide selection.
      *
      * @return array<string, mixed>
      */
-    public function assemble(Build $build, string $version, string $lang): array
+    public function assemble(Build $build, string $version, string $currentVersion, string $lang): array
     {
         $steps = $this->stepsVm($build->getSteps(), $version, $lang);
 
@@ -40,8 +43,14 @@ final class BuildViewAssembler
             'runes' => $this->runesVm($build->getRunes(), $version, $lang),
             'steps' => $steps,
             'totalGold' => array_sum(array_column($steps, 'gold')),
-            'patchMismatch' => $build->getGameVersion() !== '' && $build->getGameVersion() !== $version,
+            'patchMismatch' => $build->getGameVersion() !== '' && $build->getGameVersion() !== $currentVersion,
         ];
+    }
+
+    /** Version a build renders with: its own pinned patch, else the caller's fallback (legacy rows). */
+    public static function renderVersion(Build $build, string $fallback): string
+    {
+        return $build->getGameVersion() !== '' ? $build->getGameVersion() : $fallback;
     }
 
     /**

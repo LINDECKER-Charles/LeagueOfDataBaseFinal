@@ -275,6 +275,11 @@ nav:
 
 auth:
   eyebrow: "Portail d'invocation"
+  or: "ou"
+  google:
+    cta: "Continuer avec Google"
+    unavailable: "La connexion Google n'est pas configurée sur ce serveur."
+    failed: "La connexion avec Google a échoué. Veuillez réessayer."
   login:
     title: "Connexion"
     identifier: "E-mail ou nom d'invocateur"
@@ -287,12 +292,24 @@ auth:
     email: "E-mail"
     username: "Nom d'invocateur"
     username_help: "3 à 24 caractères : lettres, chiffres, point, tiret, underscore ; commence par une lettre ou un chiffre."
-    password: "Mot de passe (8 caractères min.)"
+    password: "Mot de passe"
+    password_confirm: "Confirmez le mot de passe"
+    password_mismatch: "Les deux mots de passe ne correspondent pas."
+    password_help: "Au moins 12 caractères, avec une minuscule, une majuscule, un chiffre et un caractère spécial."
     terms: "J'accepte les conditions d'utilisation"
     submit: "Forger mon compte"
     have_account: "Déjà inscrit ?"
+  password:
+    rule_length: "Au moins 12 caractères"
+    rule_lowercase: "Au moins une minuscule"
+    rule_uppercase: "Au moins une majuscule"
+    rule_digit: "Au moins un chiffre"
+    rule_special: "Au moins un caractère spécial"
+    rule_match: "Les deux mots de passe correspondent"
+    too_common: "Ce mot de passe est trop courant. Choisissez-en un plus personnel."
   flash:
     registered: "Bienvenue, invocateur — votre compte est prêt."
+    banned: "Ce compte a été suspendu par l'équipe de modération."
   logout: "Déconnexion"
   profile_stub:
     placeholder: "Votre profil d'invocateur est en cours de forge — favoris et builds arrivent bientôt."
@@ -315,6 +332,19 @@ profile:
   identity:
     email: "E-mail"
     member_since: "Membre depuis"
+    title: "Identité d'invocateur"
+    username: "Nom d'invocateur"
+    tag: "Tag Riot"
+    tag_help: "Facultatif : la partie après le # de votre Riot ID — pour GG#EUW, saisissez EUW."
+    url_warning: "Changer votre nom d'invocateur change aussi l'adresse de votre profil public."
+    submit: "Mettre à jour l'identité"
+    username_taken: "Ce nom d'invocateur est déjà pris."
+    username_invalid: "Nom d'invocateur invalide : 3 à 24 caractères (lettres, chiffres, point, tiret, underscore), commençant par une lettre ou un chiffre."
+    tag_invalid: "Tag Riot invalide : 3 à 5 lettres ou chiffres."
+  password:
+    title: "Définir un mot de passe"
+    help: "Votre compte se connecte uniquement avec Google. Définissez un mot de passe pour vous connecter aussi avec votre e-mail."
+    submit: "Définir le mot de passe"
   visibility:
     label: "Visibilité du profil"
     help: "Rendre votre profil public — quiconque a le lien voit vos favoris et builds publics. Privé par défaut."
@@ -341,10 +371,14 @@ profile:
   danger:
     title: "Zone dangereuse"
     help: "La suppression du compte est définitive : favoris et builds sont effacés. Confirmez avec votre mot de passe."
+    help_no_password: "La suppression du compte est définitive : favoris et builds sont effacés."
     password: "Mot de passe actuel"
     delete: "Supprimer mon compte"
   flash:
     saved: "Profil mis à jour."
+    identity_saved: "Identité d'invocateur mise à jour."
+    password_set: "Mot de passe défini — vous pouvez désormais aussi vous connecter avec votre e-mail."
+    password_exists: "Un mot de passe est déjà défini sur ce compte."
     favorite_unavailable: "Le favori %slot% n'existe pas sur ce patch — il a été retiré."
     wrong_password: "Mot de passe incorrect — le compte n'a pas été supprimé."
     deleted: "Votre compte a été supprimé. Adieu, invocateur."
@@ -401,6 +435,11 @@ donate:
     back: "Retour à l'accueil"
 
 build:
+  mode:
+    sr: "Faille de l'invocateur"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Arène"
   list:
     eyebrow: "L'armurerie"
     title: "Mes builds"
@@ -430,7 +469,20 @@ build:
     error: "Catalogue indisponible."
     retry: "Réessayer"
     ghost: "Indisponible sur ce patch"
+    ghost_mode: "Indisponible dans ce mode de jeu"
     counter: "%count% / %max%"
+    context:
+      title: "Contexte de jeu"
+      version: "Patch"
+      mode: "Mode de jeu"
+      mode_hint: "La disponibilité des objets suit le mode choisi. Les objets déjà posés ne sont jamais retirés : ils sont signalés."
+    dnd:
+      handle: "Glisser pour réordonner"
+      moved_step: "Étape déplacée en position %position%"
+      moved_item: "Objet déplacé en position %position%"
+      transferred: "Objet déplacé vers l'étape %step%"
+      added: "Objet ajouté à l'étape %step%"
+      cancelled: "Déplacement annulé"
     champion:
       title: "Champion"
       search: "Rechercher un champion…"
@@ -464,6 +516,8 @@ build:
   show:
     by: "Par %name%"
     patch: "Forgé sur le patch %version%"
+    patch_current: "Forgé sur le patch %version% — actuel : %current%"
+    mode: "Mode de jeu"
     runes: "Runes"
     keystone: "Clé de voûte"
     order: "Ordre d'achat"
@@ -489,6 +543,10 @@ build:
     champion:
       unknown: "Champion inconnu sur ce patch."
     catalog_unavailable: "Catalogues indisponibles, réessayez dans un instant."
+    version:
+      unknown: "Version de jeu inconnue."
+    mode:
+      unknown: "Mode de jeu inconnu."
     runes:
       primary_style: "Voie principale invalide."
       primary_selection_count: "Choisissez exactement 4 runes principales."
@@ -504,4 +562,28 @@ build:
       note: "Les notes d'étape sont limitées à 300 caractères."
       items_count: "Chaque étape contient de 1 à 8 objets."
       item_unknown: "Un objet est inconnu sur ce patch."
+      item_mode: "Indisponible dans le mode de jeu choisi : %items%."
       total_items: "40 objets maximum au total."
+
+community:
+  nav:
+    trends: "Tendances"
+  trends:
+    eyebrow: "Le pouls de la Faille"
+    title: "Builds en tendance"
+    filter:
+      champion: "Champion"
+      mode: "Mode de jeu"
+      all_champions: "Tous les champions"
+      all_modes: "Tous les modes"
+      apply: "Filtrer"
+    empty: "Aucun build public pour ce filtre — forgez le vôtre."
+    empty_cta: "Forger mon build"
+  vote:
+    up: "Voter pour ce build"
+    down: "Voter contre ce build"
+    score_label: "Score communautaire"
+    login: "Connectez-vous pour voter"
+    invalid: "Vote invalide."
+  supporter:
+    badge: "Soutien"

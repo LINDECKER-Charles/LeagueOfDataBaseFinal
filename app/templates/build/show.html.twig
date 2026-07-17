@@ -51,28 +51,44 @@
         </h1>
         <p class="mt-3 flex flex-wrap items-center gap-2 font-mono text-xs text-text-muted">
           {% if build.owner.publicProfile %}
+            {# URL keeps the raw username (the tag's # cannot live in a path). #}
             <a class="nav-link text-gold" href="{{ path('app_profile_public', { username: build.owner.username }) }}">
-              {{ 'build.show.by'|trans({'%name%': build.owner.username}) }}
+              {{ 'build.show.by'|trans({'%name%': build.owner.displayName}) }}
             </a>
           {% else %}
-            <span>{{ 'build.show.by'|trans({'%name%': build.owner.username}) }}</span>
+            <span>{{ 'build.show.by'|trans({'%name%': build.owner.displayName}) }}</span>
           {% endif %}
+          {% if build.owner.isSupporter %}{% include 'components/_supporter_badge.html.twig' %}{% endif %}
           <span aria-hidden="true" class="opacity-50">◆</span>
           <span>{{ build.updatedAt|date('d/m/Y') }}</span>
-          {% if vm.patchMismatch %}
-            <span class="hx-chip">{{ 'build.show.patch'|trans({'%version%': build.gameVersion}) }}</span>
+          <span class="hx-chip" title="{{ 'build.show.mode'|trans }}">{{ ('build.mode.' ~ build.gameMode.value)|trans }}</span>
+          {% if build.gameVersion %}
+            {# The page renders PINNED on the build's patch; the chip is informative. #}
+            {% if vm.patchMismatch %}
+              <span class="hx-chip">{{ 'build.show.patch_current'|trans({'%version%': build.gameVersion, '%current%': currentVersion}) }}</span>
+            {% else %}
+              <span class="hx-chip">{{ 'build.show.patch'|trans({'%version%': build.gameVersion}) }}</span>
+            {% endif %}
           {% endif %}
         </p>
       </div>
 
-      <div data-vue="copy-link" data-props="{{ {
-            url: url('app_build_show', { token: build.shareToken }),
-            labels: {
-              copy: 'build.show.copy'|trans,
-              copied: 'build.show.copied'|trans,
-              error: 'build.show.copy_error'|trans
-            }
-          }|json_encode|e('html_attr') }}"></div>
+      <div class="flex flex-col items-end gap-3">
+        {% if voteScore is defined and voteScore is not null %}
+          {# Community verdict — public builds only (an unlisted link must not score). #}
+          {% include 'components/_vote_score.html.twig' with {
+            build: build, score: voteScore, myVote: myVote
+          } only %}
+        {% endif %}
+        <div data-vue="copy-link" data-props="{{ {
+              url: url('app_build_show', { token: build.shareToken }),
+              labels: {
+                copy: 'build.show.copy'|trans,
+                copied: 'build.show.copied'|trans,
+                error: 'build.show.copy_error'|trans
+              }
+            }|json_encode|e('html_attr') }}"></div>
+      </div>
     </header>
 
     {% if build.description %}

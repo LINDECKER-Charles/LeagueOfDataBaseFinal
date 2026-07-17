@@ -6,28 +6,26 @@ namespace App\Service\Picker;
 /**
  * Pure projection of the item dataset into picker options.
  *
- * Only "pickable" items are offered: purchasable, playable on Summoner's Rift,
- * not hidden from the shop, not champion-bound. Numeric JSON map keys ("3006")
- * arrive as PHP ints — every id is recast to string at the boundary. Image
- * resolution is name-keyed upstream, so a name collision degrades to null
- * (placeholder) rather than showing the wrong icon deterministically failing.
+ * Only "pickable" items are offered: purchasable, playable on the requested
+ * game mode's map, not hidden from the shop, not champion-bound. Numeric JSON
+ * map keys ("3006") arrive as PHP ints — every id is recast to string at the
+ * boundary. Image resolution is name-keyed upstream, so a name collision
+ * degrades to null (placeholder) rather than showing the wrong icon.
  */
 final class ItemOptionsProjector
 {
     public const TYPE = 'item';
-
-    private const SUMMONERS_RIFT_MAP_ID = '11';
 
     /**
      * @param array<int|string, array<string, mixed>> $data   raw item.json "data" map (key = item id)
      * @param array<string, ?string>                  $images name-keyed ItemManager::getImages() result
      * @return list<array<string, mixed>>
      */
-    public function project(array $data, array $images): array
+    public function project(array $data, array $images, GameMode $mode = GameMode::DEFAULT): array
     {
         $options = [];
         foreach ($data as $id => $entry) {
-            if (!\is_array($entry) || !$this->isPickable($entry)) {
+            if (!\is_array($entry) || !$this->isPickable($entry, $mode)) {
                 continue;
             }
             $options[] = $this->option((string) $id, $entry, $images);
@@ -60,13 +58,49 @@ final class ItemOptionsProjector
         ];
     }
 
+    /**
+     * Names of the given item ids that exist in the dataset but are NOT playable
+     * on the mode's map — the readable payload of a mode-availability error.
+     * Ids unknown to the dataset are skipped: their absence is a patch problem,
+     * reported separately by the structure validator.
+     *
+     * @param array<int|string, array<string, mixed>> $data raw item.json "data" map
+     * @param list<string>                            $itemIds
+     * @return list<string> unavailable item names, deduplicated, dataset order
+     */
+    public function unavailableOn(array $data, GameMode $mode, array $itemIds): array
+    {
+        $wanted = array_fill_keys(array_map(strval(...), $itemIds), true);
+
+        $names = [];
+        foreach ($data as $id => $entry) {
+            if (!isset($wanted[(string) $id]) || !\is_array($entry) || $this->isOnMap($entry, $mode)) {
+                continue;
+            }
+            $names[(string) ($entry['name'] ?? $id)] = true;
+        }
+
+        return array_keys($names);
+    }
+
     /** @param array<string, mixed> $entry */
-    private function isPickable(array $entry): bool
+    private function isPickable(array $entry, GameMode $mode): bool
     {
         return ($entry['gold']['purchasable'] ?? false) === true
-            && ($entry['maps'][self::SUMMONERS_RIFT_MAP_ID] ?? true) !== false
+            && $this->isOnMap($entry, $mode)
             && ($entry['hideFromAll'] ?? false) !== true
             && (string) ($entry['requiredChampion'] ?? '') === '';
+    }
+
+    /**
+     * A missing "maps" flag means "not excluded" — older item.json versions
+     * predate some maps and must not blank the whole catalog.
+     *
+     * @param array<string, mixed> $entry
+     */
+    private function isOnMap(array $entry, GameMode $mode): bool
+    {
+        return ($entry['maps'][$mode->mapId()] ?? true) !== false;
     }
 
     /**

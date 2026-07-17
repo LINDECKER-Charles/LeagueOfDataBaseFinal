@@ -211,3 +211,102 @@ header:
     item: "Предметы"
     runes: "Руны"
     summoner: "Заклинания призывателя"
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "или"
+  google:
+    cta: "Продолжить с Google"
+    unavailable: "Вход через Google не настроен на этом сервере."
+    failed: "Не удалось войти через Google. Попробуйте ещё раз."
+  register:
+    password: "Пароль"
+    password_confirm: "Подтвердите пароль"
+    password_mismatch: "Пароли не совпадают."
+    password_help: "Не менее 12 символов: строчная и заглавная буквы, цифра и специальный символ."
+  password:
+    rule_length: "Не менее 12 символов"
+    rule_lowercase: "Хотя бы одна строчная буква"
+    rule_uppercase: "Хотя бы одна заглавная буква"
+    rule_digit: "Хотя бы одна цифра"
+    rule_special: "Хотя бы один специальный символ"
+    rule_match: "Пароли совпадают"
+    too_common: "Этот пароль слишком распространён. Выберите более уникальный."
+  flash:
+    banned: "Этот аккаунт заблокирован командой модерации."
+
+profile:
+  identity:
+    title: "Личность призывателя"
+    username: "Имя призывателя"
+    tag: "Тег Riot"
+    tag_help: "Необязательно: часть после # в вашем Riot ID — для GG#EUW введите EUW."
+    url_warning: "Смена имени призывателя также меняет адрес вашего публичного профиля."
+    submit: "Обновить личность"
+    username_taken: "Это имя призывателя уже занято."
+    username_invalid: "Недопустимое имя призывателя: от 3 до 24 символов (буквы, цифры, точка, дефис, подчёркивание), начиная с буквы или цифры."
+    tag_invalid: "Недопустимый тег Riot: от 3 до 5 букв или цифр."
+  password:
+    title: "Задать пароль"
+    help: "Ваш аккаунт входит только через Google. Задайте пароль, чтобы входить и по электронной почте."
+    submit: "Задать пароль"
+  danger:
+    help_no_password: "Удаление аккаунта необратимо: избранное и сборки будут стёрты."
+  flash:
+    identity_saved: "Личность призывателя обновлена."
+    password_set: "Пароль задан — теперь вы можете входить и по электронной почте."
+    password_exists: "Для этого аккаунта пароль уже задан."
+
+build:
+  mode:
+    sr: "Ущелье призывателей"
+    aram: "ARAM"
+    nexus_blitz: "Штурм Нексуса"
+    arena: "Арена"
+  editor:
+    ghost_mode: "Недоступно в этом игровом режиме"
+    context:
+      title: "Игровой контекст"
+      version: "Патч"
+      mode: "Игровой режим"
+      mode_hint: "Доступность предметов зависит от выбранного режима. Уже добавленные предметы не удаляются — они помечаются."
+    dnd:
+      handle: "Перетащите, чтобы изменить порядок"
+      moved_step: "Этап перемещён на позицию %position%"
+      moved_item: "Предмет перемещён на позицию %position%"
+      transferred: "Предмет перемещён в этап %step%"
+      added: "Предмет добавлен в этап %step%"
+      cancelled: "Перемещение отменено"
+  show:
+    mode: "Игровой режим"
+    patch_current: "Создан на патче %version% — текущий: %current%"
+  error:
+    version:
+      unknown: "Неизвестная версия игры."
+    mode:
+      unknown: "Неизвестный игровой режим."
+    steps:
+      item_mode: "Недоступно в выбранном игровом режиме: %items%."
+
+community:
+  nav:
+    trends: "Тренды"
+  trends:
+    eyebrow: "Пульс Ущелья"
+    title: "Популярные сборки"
+    filter:
+      champion: "Чемпион"
+      mode: "Игровой режим"
+      all_champions: "Все чемпионы"
+      all_modes: "Все режимы"
+      apply: "Фильтровать"
+    empty: "Ни одна публичная сборка не подходит под этот фильтр — создайте свою."
+    empty_cta: "Создать свою сборку"
+  vote:
+    up: "Голосовать за эту сборку"
+    down: "Голосовать против этой сборки"
+    score_label: "Оценка сообщества"
+    login: "Войдите, чтобы голосовать"
+    invalid: "Недопустимый голос."
+  supporter:
+    badge: "Меценат"

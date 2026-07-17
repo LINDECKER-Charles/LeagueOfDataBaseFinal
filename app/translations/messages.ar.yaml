@@ -211,3 +211,103 @@ header:
     item: "العناصر"
     runes: "الرونات"
     summoner: "تعويذات المستدعي"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "أو"
+  google:
+    cta: "المتابعة عبر Google"
+    unavailable: "تسجيل الدخول عبر Google غير مُفعّل على هذا الخادم."
+    failed: "فشل تسجيل الدخول عبر Google. حاول مرة أخرى."
+  register:
+    password: "كلمة المرور"
+    password_confirm: "تأكيد كلمة المرور"
+    password_mismatch: "كلمتا المرور غير متطابقتين."
+    password_help: "12 حرفًا على الأقل، مع حرف صغير وحرف كبير ورقم ورمز خاص."
+  password:
+    rule_length: "12 حرفًا على الأقل"
+    rule_lowercase: "حرف صغير واحد على الأقل"
+    rule_uppercase: "حرف كبير واحد على الأقل"
+    rule_digit: "رقم واحد على الأقل"
+    rule_special: "رمز خاص واحد على الأقل"
+    rule_match: "كلمتا المرور متطابقتان"
+    too_common: "كلمة المرور هذه شائعة جدًا. اختر كلمة أكثر تميزًا."
+  flash:
+    banned: "تم تعليق هذا الحساب من قبل فريق الإشراف."
+
+profile:
+  identity:
+    title: "هوية المستدعي"
+    username: "اسم المستدعي"
+    tag: "وسم Riot"
+    tag_help: "اختياري: الجزء بعد # في مُعرّف Riot الخاص بك — لـ GG#EUW أدخل EUW."
+    url_warning: "تغيير اسم المستدعي يغيّر أيضًا عنوان ملفك الشخصي العام."
+    submit: "تحديث الهوية"
+    username_taken: "اسم المستدعي هذا مستخدم بالفعل."
+    username_invalid: "اسم مستدعٍ غير صالح: من 3 إلى 24 حرفًا (أحرف لاتينية وأرقام ونقطة وشرطة وشرطة سفلية)، ويبدأ بحرف أو رقم."
+    tag_invalid: "وسم Riot غير صالح: من 3 إلى 5 أحرف أو أرقام."
+  password:
+    title: "تعيين كلمة مرور"
+    help: "حسابك يسجّل الدخول عبر Google فقط. عيّن كلمة مرور لتسجيل الدخول بالبريد الإلكتروني أيضًا."
+    submit: "تعيين كلمة المرور"
+  danger:
+    help_no_password: "حذف حسابك نهائي: تُمحى المفضلة والتجهيزات."
+  flash:
+    identity_saved: "تم تحديث هوية المستدعي."
+    password_set: "تم تعيين كلمة المرور — يمكنك الآن تسجيل الدخول بالبريد الإلكتروني أيضًا."
+    password_exists: "لهذا الحساب كلمة مرور بالفعل."
+
+build:
+  mode:
+    sr: "شقّ المستدعي"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "الحلبة"
+  editor:
+    ghost_mode: "غير متوفر في وضع اللعب هذا"
+    context:
+      title: "سياق اللعبة"
+      version: "التحديث"
+      mode: "وضع اللعب"
+      mode_hint: "يعتمد توفر العناصر على الوضع المختار. العناصر الموضوعة مسبقًا لا تُحذف أبدًا، بل يتم تمييزها."
+    dnd:
+      handle: "اسحب لإعادة الترتيب"
+      moved_step: "تم نقل الخطوة إلى الموضع %position%"
+      moved_item: "تم نقل العنصر إلى الموضع %position%"
+      transferred: "تم نقل العنصر إلى الخطوة %step%"
+      added: "تمت إضافة العنصر إلى الخطوة %step%"
+      cancelled: "تم إلغاء النقل"
+  show:
+    mode: "وضع اللعب"
+    patch_current: "أُنشئ على التحديث %version% — الحالي: %current%"
+  error:
+    version:
+      unknown: "إصدار لعبة غير معروف."
+    mode:
+      unknown: "وضع لعب غير معروف."
+    steps:
+      item_mode: "غير متوفر في وضع اللعب المختار: %items%"
+
+community:
+  nav:
+    trends: "الرائج"
+  trends:
+    eyebrow: "نبض المجتمع"
+    title: "البيلدات الرائجة"
+    filter:
+      champion: "البطل"
+      mode: "وضع اللعب"
+      all_champions: "كل الأبطال"
+      all_modes: "كل الأوضاع"
+      apply: "تصفية"
+    empty: "لا يوجد بيلد عام يطابق هذا الفلتر — اصنع بيلدك الخاص."
+    empty_cta: "اصنع بيلدي"
+  vote:
+    up: "التصويت مع هذا البيلد"
+    down: "التصويت ضد هذا البيلد"
+    score_label: "تقييم المجتمع"
+    login: "سجّل الدخول للتصويت"
+    invalid: "تصويت غير صالح."
+  supporter:
+    badge: "داعم"

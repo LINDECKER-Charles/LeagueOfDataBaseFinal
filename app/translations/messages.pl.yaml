@@ -211,3 +211,103 @@ header:
     item: "Przedmioty"
     runes: "Runy"
     summoner: "Zaklęcia Przywoływacza"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "lub"
+  google:
+    cta: "Kontynuuj z Google"
+    unavailable: "Logowanie przez Google nie jest skonfigurowane na tym serwerze."
+    failed: "Logowanie przez Google nie powiodło się. Spróbuj ponownie."
+  register:
+    password: "Hasło"
+    password_confirm: "Potwierdź hasło"
+    password_mismatch: "Hasła nie są identyczne."
+    password_help: "Co najmniej 12 znaków, w tym mała litera, wielka litera, cyfra i znak specjalny."
+  password:
+    rule_length: "Co najmniej 12 znaków"
+    rule_lowercase: "Co najmniej jedna mała litera"
+    rule_uppercase: "Co najmniej jedna wielka litera"
+    rule_digit: "Co najmniej jedna cyfra"
+    rule_special: "Co najmniej jeden znak specjalny"
+    rule_match: "Hasła są identyczne"
+    too_common: "To hasło jest zbyt popularne. Wybierz bardziej osobiste."
+  flash:
+    banned: "To konto zostało zawieszone przez zespół moderacji."
+
+profile:
+  identity:
+    title: "Tożsamość przywoływacza"
+    username: "Nazwa przywoływacza"
+    tag: "Tag Riot"
+    tag_help: "Opcjonalnie: część po # w Twoim Riot ID — dla GG#EUW wpisz EUW."
+    url_warning: "Zmiana nazwy przywoływacza zmienia też adres Twojego publicznego profilu."
+    submit: "Zaktualizuj tożsamość"
+    username_taken: "Ta nazwa przywoływacza jest już zajęta."
+    username_invalid: "Nieprawidłowa nazwa przywoływacza: 3–24 znaki (litery, cyfry, kropka, myślnik, podkreślenie), zaczynając od litery lub cyfry."
+    tag_invalid: "Nieprawidłowy tag Riot: od 3 do 5 liter lub cyfr."
+  password:
+    title: "Ustaw hasło"
+    help: "Twoje konto loguje się tylko przez Google. Ustaw hasło, aby logować się także e-mailem."
+    submit: "Ustaw hasło"
+  danger:
+    help_no_password: "Usunięcie konta jest nieodwracalne: ulubione i buildy zostaną skasowane."
+  flash:
+    identity_saved: "Tożsamość przywoływacza zaktualizowana."
+    password_set: "Hasło ustawione — możesz teraz logować się także e-mailem."
+    password_exists: "To konto ma już ustawione hasło."
+
+build:
+  mode:
+    sr: "Summoner's Rift"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Blitz"
+    arena: "Arena"
+  editor:
+    ghost_mode: "Niedostępny w tym trybie gry"
+    context:
+      title: "Kontekst gry"
+      version: "Patch"
+      mode: "Tryb gry"
+      mode_hint: "Dostępność przedmiotów zależy od wybranego trybu. Umieszczone już przedmioty nigdy nie są usuwane — są oznaczane."
+    dnd:
+      handle: "Przeciągnij, aby zmienić kolejność"
+      moved_step: "Etap przeniesiony na pozycję %position%"
+      moved_item: "Przedmiot przeniesiony na pozycję %position%"
+      transferred: "Przedmiot przeniesiony do etapu %step%"
+      added: "Przedmiot dodany do etapu %step%"
+      cancelled: "Przenoszenie anulowane"
+  show:
+    mode: "Tryb gry"
+    patch_current: "Wykuty na patchu %version% — aktualny: %current%"
+  error:
+    version:
+      unknown: "Nieznana wersja gry."
+    mode:
+      unknown: "Nieznany tryb gry."
+    steps:
+      item_mode: "Niedostępne w wybranym trybie gry: %items%."
+
+community:
+  nav:
+    trends: "Trendy"
+  trends:
+    eyebrow: "Puls społeczności"
+    title: "Popularne buildy"
+    filter:
+      champion: "Bohater"
+      mode: "Tryb gry"
+      all_champions: "Wszyscy bohaterowie"
+      all_modes: "Wszystkie tryby"
+      apply: "Filtruj"
+    empty: "Żaden publiczny build nie pasuje do tego filtra — wykuj własny."
+    empty_cta: "Wykuj mój build"
+  vote:
+    up: "Zagłosuj za tym buildem"
+    down: "Zagłosuj przeciw temu buildowi"
+    score_label: "Ocena społeczności"
+    login: "Zaloguj się, aby głosować"
+    invalid: "Nieprawidłowy głos."
+  supporter:
+    badge: "Wspierający"

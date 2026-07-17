@@ -211,3 +211,103 @@ header:
     item: "Eşyalar"
     runes: "Rünler"
     summoner: "Çağırıcı Büyüleri"
+
+# Auth & profile: only the password-policy / summoner-identity / Google OAuth
+# keys are localised so far; other account strings fall back to English.
+auth:
+  or: "veya"
+  google:
+    cta: "Google ile devam et"
+    unavailable: "Google ile giriş bu sunucuda yapılandırılmamış."
+    failed: "Google ile giriş başarısız oldu. Lütfen tekrar deneyin."
+  register:
+    password: "Şifre"
+    password_confirm: "Şifreyi onayla"
+    password_mismatch: "İki şifre eşleşmiyor."
+    password_help: "En az 12 karakter; küçük harf, büyük harf, rakam ve özel karakter içermeli."
+  password:
+    rule_length: "En az 12 karakter"
+    rule_lowercase: "En az bir küçük harf"
+    rule_uppercase: "En az bir büyük harf"
+    rule_digit: "En az bir rakam"
+    rule_special: "En az bir özel karakter"
+    rule_match: "İki şifre eşleşiyor"
+    too_common: "Bu şifre çok yaygın. Daha özgün bir şifre seçin."
+  flash:
+    banned: "Bu hesap moderasyon ekibi tarafından askıya alındı."
+
+profile:
+  identity:
+    title: "Sihirdar kimliği"
+    username: "Sihirdar adı"
+    tag: "Riot etiketi"
+    tag_help: "İsteğe bağlı: Riot ID'nizde # işaretinden sonraki kısım — GG#EUW için EUW yazın."
+    url_warning: "Sihirdar adınızı değiştirmek herkese açık profilinizin adresini de değiştirir."
+    submit: "Kimliği güncelle"
+    username_taken: "Bu sihirdar adı zaten alınmış."
+    username_invalid: "Geçersiz sihirdar adı: 3–24 karakter (harf, rakam, nokta, tire, alt çizgi), harf veya rakamla başlamalı."
+    tag_invalid: "Geçersiz Riot etiketi: 3–5 harf veya rakam."
+  password:
+    title: "Şifre belirle"
+    help: "Hesabınız şu anda yalnızca Google ile giriş yapıyor. E-postanızla da giriş yapmak için bir şifre belirleyin."
+    submit: "Şifreyi belirle"
+  danger:
+    help_no_password: "Hesabınızı silmek kalıcıdır: favoriler ve buildler silinir."
+  flash:
+    identity_saved: "Sihirdar kimliği güncellendi."
+    password_set: "Şifre belirlendi — artık e-postanızla da giriş yapabilirsiniz."
+    password_exists: "Bu hesapta zaten bir şifre var."
+
+build:
+  mode:
+    sr: "Sihirdar Vadisi"
+    aram: "ARAM"
+    nexus_blitz: "Nexus Baskını"
+    arena: "Arena"
+  editor:
+    ghost_mode: "Bu oyun modunda mevcut değil"
+    context:
+      title: "Oyun bağlamı"
+      version: "Yama"
+      mode: "Oyun modu"
+      mode_hint: "Eşya kullanılabilirliği seçilen moda göre belirlenir. Eklenmiş eşyalar asla kaldırılmaz, yalnızca işaretlenir."
+    dnd:
+      handle: "Yeniden sıralamak için sürükle"
+      moved_step: "Adım %position%. konuma taşındı"
+      moved_item: "Eşya %position%. konuma taşındı"
+      transferred: "Eşya %step%. adıma taşındı"
+      added: "Eşya %step%. adıma eklendi"
+      cancelled: "Taşıma iptal edildi"
+  show:
+    mode: "Oyun modu"
+    patch_current: "%version% yamasında oluşturuldu — güncel: %current%"
+  error:
+    version:
+      unknown: "Bilinmeyen oyun sürümü."
+    mode:
+      unknown: "Bilinmeyen oyun modu."
+    steps:
+      item_mode: "Seçilen oyun modunda mevcut değil: %items%."
+
+community:
+  nav:
+    trends: "Trendler"
+  trends:
+    eyebrow: "Sihirdar Vadisi'nin nabzı"
+    title: "Trend buildler"
+    filter:
+      champion: "Şampiyon"
+      mode: "Oyun modu"
+      all_champions: "Tüm şampiyonlar"
+      all_modes: "Tüm modlar"
+      apply: "Filtrele"
+    empty: "Bu filtreye uyan herkese açık build yok — kendi buildini oluştur."
+    empty_cta: "Buildimi oluştur"
+  vote:
+    up: "Bu builde artı oy ver"
+    down: "Bu builde eksi oy ver"
+    score_label: "Topluluk puanı"
+    login: "Oy vermek için giriş yap"
+    invalid: "Geçersiz oy."
+  supporter:
+    badge: "Destekçi"
