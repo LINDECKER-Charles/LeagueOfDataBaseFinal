@@ -1,9 +1,9 @@
 <footer class="relative border-t border-gold-deep/40 bg-hextech-black/95 text-text-muted">
   <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent"></div>
 
-  <div class="mx-auto grid max-w-[110rem] grid-cols-1 gap-10 px-8 py-14 sm:grid-cols-2 lg:grid-cols-5">
+  <div class="mx-auto grid max-w-[110rem] grid-cols-2 gap-x-6 gap-y-10 px-6 py-12 sm:px-8 sm:py-14 lg:grid-cols-5">
     {# Brand + copyright #}
-    <div class="flex flex-col gap-3">
+    <div class="col-span-2 flex flex-col gap-3 lg:col-span-1">
       <div class="flex items-center gap-2 text-gold">
         {% include 'components/logo.html.twig' with { class: 'h-7 w-7' } %}
         <span class="font-beaufort text-sm uppercase tracking-[0.16em] text-gold-bright">Data Base</span>
@@ -19,9 +19,9 @@
       {% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
       <ul class="flex flex-col gap-1.5 text-sm">
         <li><a href="{{ path('app_home') }}" class="nav-link">{{ 'footer.navigation.home'|trans }}</a></li>
-        <li><a href="{{ url('app_working') }}" class="nav-link">{{ 'footer.navigation.champion'|trans }}</a></li>
+        <li><a href="{{ path('app_champions', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.champion'|trans }}</a></li>
         <li><a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.item'|trans }}</a></li>
-        <li><a href="{{ url('app_working') }}" class="nav-link">{{ 'footer.navigation.runes'|trans }}</a></li>
+        <li><a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.runes'|trans }}</a></li>
         <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.summoner'|trans }}</a></li>
       </ul>
     </div>

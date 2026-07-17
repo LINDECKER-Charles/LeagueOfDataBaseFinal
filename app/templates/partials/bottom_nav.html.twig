@@ -1,0 +1,39 @@
+{# Mobile primary navigation — fixed thumb-zone bar, 5 destinations, labels
+   always visible (Material/HIG guidance), safe-area aware. Hidden ≥ md where
+   the header nav takes over. #}
+{% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
+{% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
+{% set currentRoute = app.request.get('_route') %}
+
+<nav class="bottom-nav" aria-label="{{ 'footer.navigation.title'|trans }}">
+  <a href="{{ path('app_home') }}" {% if currentRoute in ['app_home', 'app_setup'] %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 2.5 20 7v10l-8 4.5L4 17V7z"/><path d="M12 8.5 15.5 12 12 15.5 8.5 12z"/>
+    </svg>
+    <span>{{ 'nav.short.home'|trans }}</span>
+  </a>
+  <a href="{{ path('app_champions', {version: navVersion, lang: navLang}) }}" {% if currentRoute starts with 'app_champion' %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="7.5" r="3.5"/><path d="M5 20.5c1.2-4 3.8-6 7-6s5.8 2 7 6"/>
+    </svg>
+    <span>{{ 'nav.short.champions'|trans }}</span>
+  </a>
+  <a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" {% if currentRoute starts with 'app_item' %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9.5 3h5M10.5 3v4.5L5.6 16a3 3 0 0 0 2.6 4.5h7.6a3 3 0 0 0 2.6-4.5l-4.9-8.5V3"/><path d="M7.5 14h9"/>
+    </svg>
+    <span>{{ 'nav.short.items'|trans }}</span>
+  </a>
+  <a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" {% if currentRoute starts with 'app_rune' %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 2.5 19.5 12 12 21.5 4.5 12z"/><circle cx="12" cy="12" r="2.2"/>
+    </svg>
+    <span>{{ 'nav.short.runes'|trans }}</span>
+  </a>
+  <a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" {% if currentRoute starts with 'app_summoner' %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+      <path d="M13 2.5 5.5 13.5H11L10 21.5 18.5 10H13z"/>
+    </svg>
+    <span>{{ 'nav.short.summoners'|trans }}</span>
+  </a>
+</nav>
