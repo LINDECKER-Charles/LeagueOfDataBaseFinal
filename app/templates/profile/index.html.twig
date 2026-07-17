@@ -1,0 +1,137 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ user.username }} · {{ 'base.title'|trans }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block body %}
+{% set slotDefs = [
+    { type: 'champion', field: 'favoriteChampionId', label: 'profile.slot.champion'|trans },
+    { type: 'item', field: 'favoriteItemId', label: 'profile.slot.item'|trans },
+    { type: 'rune', field: 'favoriteRuneId', label: 'profile.slot.rune'|trans },
+    { type: 'summoner', field: 'favoriteSummonerId', label: 'profile.slot.summoner'|trans },
+] %}
+{% set pickerSlots = [] %}
+{% for def in slotDefs %}
+    {% set fav = favorites[def.type] %}
+    {% set pickerSlots = pickerSlots|merge([{
+        type: def.type,
+        fieldName: def.field,
+        typeLabel: def.label,
+        current: fav.current ? { id: fav.current.id, name: fav.current.name, image: fav.current.image } : null,
+        storedId: fav.storedId,
+        emptyLabel: 'profile.favorites.empty'|trans,
+    }]) %}
+{% endfor %}
+<main class="relative px-6 py-12">
+    {% include 'partials/main/gradient.html.twig' %}
+
+    <div class="relative mx-auto max-w-6xl">
+        <header class="mb-10 flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <p class="eyebrow">{{ 'profile.eyebrow'|trans }}</p>
+                <h1 class="mt-2 font-beaufort text-4xl font-bold uppercase tracking-wide text-gold-grad">{{ user.username }}</h1>
+            </div>
+            <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                <button type="submit" class="hx-btn-ghost">{{ 'auth.logout'|trans }}</button>
+            </form>
+        </header>
+
+        <form method="post" action="{{ path('app_profile_save') }}" data-turbo="false" class="profile-layout">
+            <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+
+            <aside class="profile-identity">
+                <div class="hx-plate">
+                    <span class="hx-plate__label">{{ 'profile.identity.email'|trans }}</span>
+                    <span class="hx-plate__value profile-identity__mono">{{ maskedEmail }}</span>
+                </div>
+                <div class="hx-plate">
+                    <span class="hx-plate__label">{{ 'profile.identity.member_since'|trans }}</span>
+                    <span class="hx-plate__value">{{ memberSince }}</span>
+                </div>
+                <div class="hx-plate">
+                    <span class="hx-plate__label">{{ 'profile.visibility.label'|trans }}</span>
+                    <label class="mt-1 flex items-start gap-2.5">
+                        <input type="checkbox" name="isPublicProfile" value="1" class="hx-check mt-0.5"
+                               {{ user.isPublicProfile ? 'checked' }}>
+                        <span class="text-sm text-text-muted">{{ 'profile.visibility.help'|trans }}</span>
+                    </label>
+                    {% if user.isPublicProfile %}
+                        <a href="{{ path('app_profile_public', { username: user.username }) }}"
+                           class="nav-link mt-2 inline-block text-sm text-gold">
+                            {{ 'profile.visibility.view_public'|trans }} →
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hx-plate">
+                    <span class="hx-plate__label">{{ 'profile.builds.label'|trans }}</span>
+                    <a href="{{ path('app_builds') }}" class="nav-link mt-1 inline-block font-beaufort text-sm uppercase tracking-[0.15em] text-gold">
+                        {{ 'profile.builds.manage'|trans }} →
+                    </a>
+                </div>
+            </aside>
+
+            <section class="profile-favorites">
+                <div class="codex-header mb-6">
+                    <h2>{{ 'profile.favorites.title'|trans }}</h2>
+                    <span class="codex-header__meta">{{ version }}</span>
+                </div>
+
+                <div data-vue="favorite-picker" data-props="{{ {
+                    slots: pickerSlots,
+                    endpoints: {
+                        champion: path('api_picker_champions'),
+                        item: path('api_picker_items'),
+                        rune: path('api_picker_runes'),
+                        summoner: path('api_picker_summoners'),
+                    },
+                    version: version,
+                    lang: lang,
+                    labels: {
+                        search: 'profile.picker.search'|trans,
+                        remove: 'profile.picker.remove'|trans,
+                        close: 'filter.close'|trans,
+                        loading: 'profile.picker.loading'|trans,
+                        error: 'profile.picker.error'|trans,
+                        retry: 'profile.picker.retry'|trans,
+                        noResults: 'filter.empty'|trans,
+                        unavailable: 'profile.favorites.unavailable'|trans,
+                    },
+                }|json_encode|e('html_attr') }}">
+                    {# No-JS / pre-mount fallback: static sockets + hidden inputs so a plain
+                       submit round-trips the stored favorites. Replaced when the island mounts. #}
+                    <div class="socket-grid">
+                        {% for def in slotDefs %}
+                            {% include 'profile/_favorite_socket.html.twig' with {
+                                type_label: def.label,
+                                favorite: favorites[def.type],
+                            } only %}
+                        {% endfor %}
+                    </div>
+                    {% for def in slotDefs %}
+                        <input type="hidden" name="{{ def.field }}" value="{{ favorites[def.type].storedId ?? '' }}">
+                    {% endfor %}
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="hx-btn">{{ 'profile.save'|trans }}</button>
+                </div>
+            </section>
+        </form>
+
+        <section class="profile-danger mt-14" aria-labelledby="profile-danger-title">
+            <h2 id="profile-danger-title" class="profile-danger__title">{{ 'profile.danger.title'|trans }}</h2>
+            <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'profile.danger.help'|trans }}</p>
+            <form method="post" action="{{ path('app_profile_delete') }}" data-turbo="false"
+                  class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+                <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+                <label class="flex-1 sm:max-w-xs">
+                    <span class="auth-label">{{ 'profile.danger.password'|trans }}</span>
+                    <input type="password" name="password" required autocomplete="current-password" class="hx-input mt-1.5">
+                </label>
+                <button type="submit" class="profile-danger__btn">{{ 'profile.danger.delete'|trans }}</button>
+            </form>
+        </section>
+    </div>
+</main>
+{% endblock %}

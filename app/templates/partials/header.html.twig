@@ -1,15 +1,19 @@
-{# Global header — slim Hextech bar. Desktop carries the primary nav inline;
-   on mobile the primary nav lives in the fixed bottom bar (partials/bottom_nav)
-   and the header keeps only brand + the patch/language switcher. The switcher
-   disclosure popover is the single version/language entry point of the app. #}
+{# Global header — slim Hextech bar. Desktop nav = Home + one "Encyclopedia"
+   disclosure grouping the four data sections; on mobile the primary nav lives
+   in the fixed bottom bar (partials/bottom_nav). The right cluster (donate,
+   account, patch/language switcher) stays reachable on every viewport. Every
+   popover is a native <details class="switcher"> — no JS menus; enhance.ts
+   closes any open switcher on outside interaction. #}
 {% set currentRoute = app.request.get('_route') %}
 {% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
 {% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
+{% set isCodexRoute = currentRoute starts with 'app_champion' or currentRoute starts with 'app_item'
+  or currentRoute starts with 'app_rune' or currentRoute starts with 'app_summoner' %}
 
 <header class="relative z-30 border-b border-gold-deep/40 bg-hextech-black/95 backdrop-blur">
   <div class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
 
-  <div class="mx-auto flex h-16 max-w-[110rem] items-center justify-between gap-4 px-4 sm:px-6">
+  <div class="mx-auto flex h-16 max-w-[110rem] items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6">
     {# Brand #}
     <a href="{{ path('app_home') }}" class="brand-link group flex min-w-0 items-center gap-3">
       <span class="brand-logo shrink-0 text-gold">{% include 'components/logo.html.twig' with { class: 'h-8 w-8 sm:h-9 sm:w-9' } %}</span>
@@ -23,47 +27,101 @@
     <nav class="hidden flex-1 justify-center md:flex" aria-label="{{ 'footer.navigation.title'|trans }}">
       <ul class="flex items-center gap-x-7 font-beaufort text-sm uppercase tracking-[0.15em] text-text-muted">
         <li><a href="{{ path('app_home') }}" class="nav-link {{ currentRoute == 'app_home' ? 'text-gold-bright' }}">{{ 'header.navigation.home'|trans }}</a></li>
-        <li><a href="{{ path('app_champions', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_champion' ? 'text-gold-bright' }}">{{ 'header.navigation.champion'|trans }}</a></li>
-        <li><a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_item' ? 'text-gold-bright' }}">{{ 'header.navigation.item'|trans }}</a></li>
-        <li><a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_rune' ? 'text-gold-bright' }}">{{ 'header.navigation.runes'|trans }}</a></li>
-        <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_summoner' ? 'text-gold-bright' }}">{{ 'header.navigation.summoner'|trans }}</a></li>
+        <li>
+          <details class="switcher switcher--nav">
+            <summary class="nav-link {{ isCodexRoute ? 'text-gold-bright' }}">
+              <span>{{ 'nav.codex'|trans }}</span>
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
+            </summary>
+            <ul class="switcher__panel switcher__panel--menu">
+              <li><a href="{{ path('app_champions', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_champion' ? 'text-gold-bright' }}">{{ 'header.navigation.champion'|trans }}</a></li>
+              <li><a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_item' ? 'text-gold-bright' }}">{{ 'header.navigation.item'|trans }}</a></li>
+              <li><a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_rune' ? 'text-gold-bright' }}">{{ 'header.navigation.runes'|trans }}</a></li>
+              <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_summoner' ? 'text-gold-bright' }}">{{ 'header.navigation.summoner'|trans }}</a></li>
+            </ul>
+          </details>
+        </li>
       </ul>
     </nav>
 
-    {# Patch & language switcher — compact chip opening the real form #}
-    <details class="switcher shrink-0">
-      <summary aria-label="{{ 'header.switcher.label'|trans }}">
-        <span>{{ navVersion }}</span>
-        <span class="text-gold-deep" aria-hidden="true">·</span>
-        <span>{{ navLang|split('_')|first|upper }}</span>
-        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
-      </summary>
-      <form action="{{ path('app_setup_save') }}" method="post" class="switcher__panel">
-        <p class="eyebrow mb-3">{{ 'header.switcher.label'|trans }}</p>
-        <div class="flex flex-col gap-2.5">
-          <label for="header-version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
-          <select id="header-version" name="version" class="hx-select w-full">
-            {% for v in client.versions %}
-              <option value="{{ v }}" {{ v == navVersion ? 'selected' : '' }}>{{ v }}</option>
-            {% endfor %}
-          </select>
+    {# Right cluster — donate, account, patch/language. Stays usable < md:
+       icon-only donate/account with aria-labels, text labels from md up. #}
+    <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+      <a href="{{ path('app_donate') }}"
+         class="hx-btn-ghost shrink-0 px-2.5 py-2 md:px-3.5 {{ currentRoute starts with 'app_donate' ? 'border-gold/60 text-gold-bright' }}"
+         aria-label="{{ 'nav.donate'|trans }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+          <path d="M12 20.5 4.7 13.1a4.6 4.6 0 0 1 0-6.5 4.3 4.3 0 0 1 6.2 0l1.1 1.1 1.1-1.1a4.3 4.3 0 0 1 6.2 0 4.6 4.6 0 0 1 0 6.5z"/>
+          <path stroke-width="1.1" d="M7.7 10.6h8.6M12 10.6v9.6"/>
+        </svg>
+        <span class="hidden md:inline">{{ 'nav.donate'|trans }}</span>
+      </a>
 
-          <label for="header-langue" class="sr-only">{{ 'setup.form.language'|trans }}</label>
-          <select id="header-langue" name="langue" class="hx-select w-full">
-            {% for l in client.languages %}
-              <option value="{{ l }}" {{ l == navLang ? 'selected' : '' }}>{{ client.languageLabels[l] ?? l }}</option>
-            {% endfor %}
-          </select>
-
-          <div class="mt-1 flex items-center gap-3">
-            <label for="header-remember" class="flex cursor-pointer select-none items-center gap-2 text-xs text-text-muted">
-              <input type="checkbox" id="header-remember" name="remember" class="hx-check">
-              <span>{{ 'setup.form.remember'|trans }}</span>
-            </label>
-            <button type="submit" class="hx-btn ml-auto py-2">{{ 'setup.form.submit'|trans }}</button>
-          </div>
+      {# Account menu — profile/builds/logout when signed in, login/register otherwise #}
+      {% if app.user %}
+        {% set accountLabel = app.user.username|length > 14 ? app.user.username|slice(0, 13) ~ '…' : app.user.username %}
+      {% else %}
+        {% set accountLabel = 'nav.account'|trans %}
+      {% endif %}
+      <details class="switcher shrink-0">
+        <summary class="px-2.5 md:px-3.5" aria-label="{{ app.user ? app.user.username : 'nav.account'|trans }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+            <circle cx="12" cy="7.5" r="3.5"/><path d="M5 20.5c1.2-4 3.8-6 7-6s5.8 2 7 6"/>
+          </svg>
+          <span class="hidden md:inline">{{ accountLabel }}</span>
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
+        </summary>
+        <div class="switcher__panel switcher__panel--menu">
+          {% if app.user %}
+            <a href="{{ path('app_profile') }}" class="nav-link {{ currentRoute starts with 'app_profile' ? 'text-gold-bright' }}">{{ 'nav.profile'|trans }}</a>
+            <a href="{{ path('app_builds') }}" class="nav-link {{ currentRoute starts with 'app_build' ? 'text-gold-bright' }}">{{ 'nav.builds'|trans }}</a>
+            <hr class="gold-hairline my-1 h-px border-0">
+            <form action="{{ path('app_logout') }}" method="post" data-turbo="false">
+              <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+              <button type="submit" class="nav-link">{{ 'auth.logout'|trans }}</button>
+            </form>
+          {% else %}
+            <a href="{{ path('app_login') }}" class="nav-link {{ currentRoute == 'app_login' ? 'text-gold-bright' }}">{{ 'nav.login'|trans }}</a>
+            <a href="{{ path('app_register') }}" class="nav-link {{ currentRoute == 'app_register' ? 'text-gold-bright' }}">{{ 'nav.register'|trans }}</a>
+          {% endif %}
         </div>
-      </form>
-    </details>
+      </details>
+
+      {# Patch & language switcher — compact chip opening the real form #}
+      <details class="switcher shrink-0">
+        <summary aria-label="{{ 'header.switcher.label'|trans }}">
+          <span>{{ navVersion }}</span>
+          <span class="text-gold-deep" aria-hidden="true">·</span>
+          <span>{{ navLang|split('_')|first|upper }}</span>
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
+        </summary>
+        <form action="{{ path('app_setup_save') }}" method="post" class="switcher__panel">
+          <p class="eyebrow mb-3">{{ 'header.switcher.label'|trans }}</p>
+          <div class="flex flex-col gap-2.5">
+            <label for="header-version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
+            <select id="header-version" name="version" class="hx-select w-full">
+              {% for v in client.versions %}
+                <option value="{{ v }}" {{ v == navVersion ? 'selected' : '' }}>{{ v }}</option>
+              {% endfor %}
+            </select>
+
+            <label for="header-langue" class="sr-only">{{ 'setup.form.language'|trans }}</label>
+            <select id="header-langue" name="langue" class="hx-select w-full">
+              {% for l in client.languages %}
+                <option value="{{ l }}" {{ l == navLang ? 'selected' : '' }}>{{ client.languageLabels[l] ?? l }}</option>
+              {% endfor %}
+            </select>
+
+            <div class="mt-1 flex items-center gap-3">
+              <label for="header-remember" class="flex cursor-pointer select-none items-center gap-2 text-xs text-text-muted">
+                <input type="checkbox" id="header-remember" name="remember" class="hx-check">
+                <span>{{ 'setup.form.remember'|trans }}</span>
+              </label>
+              <button type="submit" class="hx-btn ml-auto py-2">{{ 'setup.form.submit'|trans }}</button>
+            </div>
+          </div>
+        </form>
+      </details>
+    </div>
   </div>
 </header>

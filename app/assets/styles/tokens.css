@@ -46,6 +46,10 @@
   --color-blue-steel: #005a82;
   --color-blue-abyssal: #0a323c;
 
+  /* Feedback — sober red for error surfaces (forms, alerts). Deliberately muted
+     so it sits inside the gold/cyan palette instead of shouting over it. */
+  --color-danger: #c24b4b;
+
   /* Text */
   --color-text: #f0e6d2;
   --color-text-muted: #a09b8c;

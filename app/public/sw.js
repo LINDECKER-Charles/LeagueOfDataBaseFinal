@@ -11,14 +11,26 @@
  *  - Data Dragon art (splash/centered): CORS re-fetch so responses are not
  *    opaque (opaque entries are quota-padded to ~7 MB each), small FIFO cap.
  *  - Bypassed entirely: non-GET, Range requests, SSE (text/event-stream — the
- *    loader stream must never cross a SW), /api, /admin, profiler, and the
- *    ability-video CDN (range streaming).
+ *    loader stream must never cross a SW), /api, /admin, profiler, the
+ *    private/transactional surfaces (auth, profile, builds, donation, Stripe
+ *    webhooks), and the ability-video CDN (range streaming).
  */
-const VERSION = 'lodb-v1';
+const VERSION = 'lodb-v2';
 const PAGES = `${VERSION}-pages`;
 const ASSETS = `${VERSION}-assets`;
 const BLOBS = `${VERSION}-blobs`;
 const ART = `${VERSION}-art`;
+
+/** Same-origin prefixes never touched by the SW: APIs, admin, profiler, and the
+    private/transactional pages (auth, profile, public profiles, builds, build
+    shares, donation, webhooks). NB: '/b/' does not match '/build/' — the Vite
+    assets stay on the cache-first path below. */
+const BYPASS_PATH_PREFIXES = [
+  '/api/', '/admin', '/_',
+  '/login', '/register', '/logout',
+  '/profile', '/u/', '/builds', '/b/',
+  '/donate', '/webhooks',
+];
 
 const OFFLINE_URL = '/offline.html';
 const PAGE_TIMEOUT_MS = 4000;
@@ -60,11 +72,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   const sameOrigin = url.origin === self.location.origin;
 
-  if (sameOrigin && (
-    url.pathname.startsWith('/api/')
-    || url.pathname.startsWith('/admin')
-    || url.pathname.startsWith('/_')
-  )) return;
+  if (sameOrigin && BYPASS_PATH_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) return;
 
   // Turbo Drive visits are plain fetches for text/html — treat them as pages.
   const isPage = request.mode === 'navigate' || (sameOrigin && accept.includes('text/html'));

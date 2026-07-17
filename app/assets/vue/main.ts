@@ -22,6 +22,9 @@ const registry: Record<string, Island> = {
     'load-time': { load: () => import('./components/LoadTimeBadge.vue') },
     'ability-showcase': { load: () => import('./components/AbilityShowcase.vue') },
     'stat-scaler': { load: () => import('./components/StatScaler.vue') },
+    'favorite-picker': { load: () => import('./components/FavoritePicker.vue') },
+    'build-editor': { load: () => import('./components/BuildEditor.vue') },
+    'copy-link': { load: () => import('./components/CopyLink.vue') },
 }
 
 function mountIslands(root: ParentNode = document): void {

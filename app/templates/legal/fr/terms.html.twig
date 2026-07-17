@@ -1,0 +1,208 @@
+{% extends 'legal/layout.html.twig' %}
+
+{% block page_title %}{{ 'legal.terms.title'|trans }}{% endblock %}
+
+{% block toc %}
+    <li><a class="nav-link" href="#objet">1. Objet et acceptation</a></li>
+    <li><a class="nav-link" href="#acces">2. Accès au service</a></li>
+    <li><a class="nav-link" href="#compte">3. Compte utilisateur</a></li>
+    <li><a class="nav-link" href="#contenus">4. Contenus créés par les utilisateurs</a></li>
+    <li><a class="nav-link" href="#visibilite">5. Visibilité des builds</a></li>
+    <li><a class="nav-link" href="#dons">6. Dons</a></li>
+    <li><a class="nav-link" href="#propriete">7. Propriété intellectuelle</a></li>
+    <li><a class="nav-link" href="#responsabilite">8. Disponibilité et responsabilité</a></li>
+    <li><a class="nav-link" href="#resiliation">9. Résiliation</a></li>
+    <li><a class="nav-link" href="#droit">10. Droit applicable</a></li>
+    <li><a class="nav-link" href="#modification">11. Modification des CGU</a></li>
+{% endblock %}
+
+{% block legal_body %}
+    <section id="objet">
+        <h2>1. Objet et acceptation</h2>
+        <p>
+            Les présentes conditions générales d'utilisation (CGU) encadrent l'accès et
+            l'utilisation de <strong>{{ legal.siteName }}</strong>, encyclopédie communautaire
+            non officielle dédiée à <em>League of Legends</em> : consultation des champions,
+            objets, runes et sorts d'invocateur, création de builds, et fonctionnalités
+            associées (compte, favoris, partage).
+        </p>
+        <p>
+            L'utilisation du site vaut acceptation pleine et entière des présentes CGU. Si vous
+            n'acceptez pas ces conditions, il vous appartient de ne pas utiliser le service.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="acces">
+        <h2>2. Accès au service</h2>
+        <p>
+            La consultation de l'encyclopédie est libre, gratuite et sans compte. La création
+            d'un compte est requise uniquement pour les fonctionnalités personnelles : builds,
+            favoris et profil.
+        </p>
+        <p>
+            L'éditeur s'efforce de maintenir le service accessible en continu, sans toutefois
+            garantir une disponibilité ininterrompue (voir <a href="#responsabilite">section 8</a>).
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="compte">
+        <h2>3. Compte utilisateur</h2>
+        <p>En créant un compte, vous vous engagez à :</p>
+        <ul>
+            <li>fournir des informations <strong>exactes</strong> et les maintenir à jour (notamment votre adresse email) ;</li>
+            <li>ne créer qu'<strong>un seul compte par personne</strong> ;</li>
+            <li>choisir un mot de passe robuste et en préserver la <strong>confidentialité</strong> — les actions effectuées depuis votre compte sont réputées être les vôtres ;</li>
+            <li>signaler sans délai à l'éditeur toute utilisation non autorisée de votre compte.</li>
+        </ul>
+        <p>
+            Votre profil est <strong>privé par défaut</strong> ; vous pouvez le rendre public
+            depuis ses réglages. Le traitement de vos données est décrit dans la
+            <a href="{{ path('app_legal_privacy') }}">politique de confidentialité</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="contenus">
+        <h2>4. Contenus créés par les utilisateurs</h2>
+        <p>
+            Les builds et configurations que vous créez restent votre propriété. En les publiant
+            sur le site (en visibilité publique ou par lien), vous accordez à l'éditeur une
+            <strong>licence non exclusive, gratuite et mondiale</strong> de reproduction et
+            d'affichage de ces contenus, strictement limitée à leur diffusion sur
+            {{ legal.siteName }} et valable tant qu'ils y sont publiés.
+        </p>
+        <p>
+            Vous êtes seul responsable des contenus que vous publiez. Sont notamment interdits :
+        </p>
+        <ul>
+            <li>les contenus illicites, diffamatoires, haineux, discriminatoires ou obscènes ;</li>
+            <li>le spam, la publicité déguisée et les liens malveillants ;</li>
+            <li>les noms de build trompeurs, offensants ou usurpant l'identité d'autrui ;</li>
+            <li>tout contenu portant atteinte aux droits de tiers (dont ceux de Riot Games).</li>
+        </ul>
+        <p>
+            L'éditeur peut, sans préavis, <strong>retirer un contenu</strong> contraire aux
+            présentes CGU et, en cas de manquement grave ou répété, <strong>suspendre ou
+            supprimer le compte</strong> concerné. Tout contenu illicite peut être signalé à
+            l'adresse <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="visibilite">
+        <h2>5. Visibilité des builds</h2>
+        <p>Chaque build dispose d'un réglage de visibilité que vous contrôlez :</p>
+        <ul>
+            <li><strong>Privé</strong> (par défaut) — visible de vous seul ;</li>
+            <li><strong>Public</strong> — visible de tous les visiteurs du site, connectés ou non ;</li>
+            <li><strong>Partage par lien</strong> — accessible à <strong>quiconque possède le lien</strong>, sans compte : ne partagez le lien qu'avec les personnes de votre choix.</li>
+        </ul>
+        <p>
+            Vous pouvez changer la visibilité d'un build ou le supprimer à tout moment. La
+            suppression retire le build du site, y compris pour les personnes disposant du lien.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="dons">
+        <h2>6. Dons</h2>
+        <p>
+            Le site propose un bouton de don, traité par <strong>Stripe</strong> (redirection
+            vers une page de paiement hébergée par Stripe ; aucune donnée bancaire ne transite
+            par nos serveurs). Les dons sont :
+        </p>
+        <ul>
+            <li><strong>volontaires et sans contrepartie</strong> — ils n'ouvrent droit à aucun service, avantage ou contenu supplémentaire ;</li>
+            <li>destinés à couvrir les <strong>coûts d'hébergement et de fonctionnement</strong> du site ;</li>
+            <li><strong>non remboursables</strong>, sauf erreur manifeste (double paiement, montant erroné) signalée à
+                <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a> dans un délai raisonnable.</li>
+        </ul>
+        <p>
+            Les reçus de paiement sont émis et gérés par Stripe. Voir aussi la
+            <a href="{{ path('app_legal_privacy') }}">politique de confidentialité</a> pour le
+            traitement des données associées.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="propriete">
+        <h2>7. Propriété intellectuelle</h2>
+        <p>
+            Les données et visuels du jeu appartiennent à <strong>Riot Games, Inc.</strong> ;
+            le code du site est publié sous licence
+            <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" target="_blank" rel="noopener noreferrer">CC BY-NC 4.0</a> ;
+            les builds appartiennent à leurs auteurs (voir <a href="#contenus">section 4</a>).
+            Le détail, ainsi que l'avertissement Riot Games, figurent dans les
+            <a href="{{ path('app_legal_notice') }}">mentions légales</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="responsabilite">
+        <h2>8. Disponibilité et responsabilité</h2>
+        <p>
+            Le service est fourni « en l'état », en <strong>meilleur effort</strong> et sans
+            garantie de disponibilité, notamment en cas de maintenance, de panne ou
+            d'indisponibilité des services de Riot Games dont dépendent les données affichées.
+        </p>
+        <p>
+            Les données de jeu proviennent des services publics de Riot Games (Data Dragon,
+            CommunityDragon) et sont fournies sans garantie d'exactitude ni d'exhaustivité ;
+            elles peuvent différer de l'état réel du jeu. Les liens externes sont fournis à
+            titre informatif ; l'éditeur n'est pas responsable de leur contenu.
+        </p>
+        <p>
+            L'éditeur ne saurait être tenu responsable des dommages indirects résultant de
+            l'utilisation ou de l'impossibilité d'utiliser le service, dans les limites permises
+            par la loi. Rien dans les présentes n'exclut la responsabilité qui ne peut être
+            légalement exclue.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="resiliation">
+        <h2>9. Résiliation</h2>
+        <p>
+            Vous pouvez supprimer votre compte à tout moment via le bouton
+            <strong>« Supprimer mon compte »</strong> de la page profil : le compte et l'ensemble
+            de vos builds sont alors supprimés. L'éditeur peut résilier ou suspendre un compte en
+            cas de violation des présentes CGU, après notification sauf urgence (contenu
+            manifestement illicite).
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="droit">
+        <h2>10. Droit applicable</h2>
+        <p>
+            Les présentes CGU sont soumises au droit du pays suivant :
+            <strong>{{ legal.jurisdictionCountry }}</strong>. Tout litige relatif à leur
+            interprétation ou exécution relève des tribunaux compétents de ce pays, sous réserve
+            des dispositions impératives protectrices dont bénéficient les consommateurs
+            résidant dans l'Union européenne.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="modification">
+        <h2>11. Modification des CGU</h2>
+        <p>
+            L'éditeur peut modifier les présentes CGU pour accompagner l'évolution du service.
+            Toute modification est signalée par la mise à jour de la <strong>date d'entrée en
+            vigueur</strong> affichée en haut de page ; l'utilisation du service après cette date
+            vaut acceptation des CGU modifiées.
+        </p>
+    </section>
+{% endblock %}

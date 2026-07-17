@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'build.list.title'|trans }} · {{ 'base.title'|trans }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block body %}
+<main class="relative px-6 py-12">
+  {% include 'partials/main/gradient.html.twig' %}
+
+  <div class="relative mx-auto max-w-5xl">
+    <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="eyebrow">{{ 'build.list.eyebrow'|trans }}</p>
+        <h1 class="mt-2 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad sm:text-4xl">
+          {{ 'build.list.title'|trans }}
+        </h1>
+      </div>
+      {% if rows is not empty %}
+        <a href="{{ path('app_build_new') }}" class="hx-btn">{{ 'build.list.new'|trans }}</a>
+      {% endif %}
+    </header>
+    <hr class="hx-rule mb-8">
+
+    {% if rows is empty %}
+      <div class="grid grid-cols-1">
+        {% include 'components/empty_state.html.twig' with { text: 'build.list.empty'|trans } %}
+      </div>
+      <div class="mt-6 text-center">
+        <a href="{{ path('app_build_new') }}" class="hx-btn">{{ 'build.list.cta_first'|trans }}</a>
+      </div>
+    {% else %}
+      <ul class="space-y-4">
+        {% for row in rows %}
+          {% set build = row.build %}
+          <li class="hextech-frame hextech-frame-hover forge-row">
+            <a href="{{ path('app_build_show', { token: build.shareToken }) }}" class="forge-row__id">
+              <span class="forge-row__portrait {{ row.champion.missing ? 'forge-ghost' }}">
+                {% if row.champion.image %}
+                  <picture>
+                    {% if row.champion.image ends with '.png' %}
+                      <source srcset="/{{ row.champion.image|replace({'.png': '.webp'}) }}" type="image/webp">
+                    {% endif %}
+                    <img src="/{{ row.champion.image }}" alt="{{ row.champion.name }}" width="56" height="56" loading="lazy" decoding="async">
+                  </picture>
+                {% else %}
+                  <span class="forge-row__initials">{{ row.champion.name|slice(0, 2)|upper }}</span>
+                {% endif %}
+                {% if row.keystone.icon %}
+                  <img class="forge-row__keystone" src="/{{ row.keystone.icon }}" alt="{{ row.keystone.name }}" width="26" height="26" loading="lazy" decoding="async">
+                {% endif %}
+              </span>
+              <span class="min-w-0">
+                <span class="block truncate font-beaufort text-lg tracking-wide text-gold-bright">{{ build.name }}</span>
+                <span class="block truncate font-mono text-xs text-text-muted {{ row.champion.missing ? 'forge-ghost' }}"
+                      {% if row.champion.missing %}title="{{ 'build.show.missing'|trans }}"{% endif %}>
+                  {{ row.champion.name }} · {{ 'build.list.updated'|trans({'%date%': build.updatedAt|date('d/m/Y')}) }}
+                </span>
+              </span>
+            </a>
+
+            <div class="forge-row__meta">
+              <span class="hx-chip {{ build.public ? 'forge-chip--public' }}">
+                {{ (build.public ? 'build.list.public' : 'build.list.private')|trans }}
+              </span>
+              <div class="forge-row__actions">
+                <a href="{{ path('app_build_edit', { id: build.id }) }}" class="hx-btn-ghost forge-btn-sm">{{ 'build.list.edit'|trans }}</a>
+                <form method="post" action="{{ path('app_build_delete', { id: build.id }) }}"
+                      data-turbo-confirm="{{ 'build.list.delete_confirm'|trans }}">
+                  <input type="hidden" name="_token" value="{{ csrf_token('delete-build-' ~ build.id) }}">
+                  <button type="submit" class="hx-btn-ghost forge-btn-sm forge-btn-danger">{{ 'build.list.delete'|trans }}</button>
+                </form>
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

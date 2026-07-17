@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'donate.title'|trans }} · {{ 'base.title'|trans }}{% endblock %}
+{% block meta_description %}{{ 'donate.intro'|trans }}{% endblock %}
+
+{% block body %}
+<main class="donate-page">
+    <header class="codex-header">
+        <p class="codex-header__title">{{ 'donate.eyebrow'|trans }}</p>
+        <span class="codex-header__meta">stripe · {{ 'donate.legal.secure_short'|trans }}</span>
+    </header>
+
+    <section class="hextech-frame hx-corners donate-panel">
+        <p class="eyebrow">{{ 'donate.eyebrow'|trans }}</p>
+        <h1 class="mt-2 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad">
+            {{ 'donate.title'|trans }}
+        </h1>
+        <p class="mt-4 text-text-muted">{{ 'donate.intro'|trans }}</p>
+        <p class="mt-2 text-sm text-text-dim">{{ 'donate.pledge'|trans }}</p>
+        <hr class="hx-rule mt-6">
+
+        {% if not configured %}
+            <div class="donate-unavailable" role="status">
+                <p class="donate-unavailable__title">{{ 'donate.unavailable.title'|trans }}</p>
+                <p class="donate-unavailable__body">{{ 'donate.unavailable.body'|trans }}</p>
+                <button type="button" class="hx-btn mt-5 w-full" disabled aria-disabled="true">
+                    {{ 'donate.submit'|trans }}
+                </button>
+            </div>
+        {% else %}
+            {# External 303 redirect to Stripe's hosted page: keep Turbo out. #}
+            <form method="post" action="{{ path('app_donate_checkout') }}" data-turbo="false" class="donate-form mt-6">
+                {% set tierLabels = {
+                    300: 'donate.tier.spark',
+                    500: 'donate.tier.gem',
+                    1000: 'donate.tier.crest',
+                    2500: 'donate.tier.relic'
+                } %}
+                {% set defaultPreset = presets[1]|default(presets|first) %}
+
+                <fieldset class="donate-tiers-fieldset">
+                    <legend class="donate-legend">{{ 'donate.tiers.legend'|trans }}</legend>
+                    <div class="donate-tiers">
+                        {% for cents in presets %}
+                            <label class="donate-tier hextech-frame hextech-frame-hover">
+                                <input
+                                    type="radio"
+                                    name="preset"
+                                    value="{{ cents }}"
+                                    class="donate-tier__input"
+                                    {{ cents == defaultPreset ? 'checked' }}
+                                >
+                                <span class="donate-tier__gem" aria-hidden="true"></span>
+                                <span class="donate-tier__amount">{{ cents // 100 }}<span class="donate-tier__currency">€</span></span>
+                                {% if tierLabels[cents] is defined %}
+                                    <span class="donate-tier__label">{{ tierLabels[cents]|trans }}</span>
+                                {% endif %}
+                            </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+
+                <div class="donate-custom">
+                    <label for="donate-amount" class="donate-legend">{{ 'donate.custom.label'|trans }}</label>
+                    <div class="donate-custom__field">
+                        <input
+                            type="text"
+                            id="donate-amount"
+                            name="amount"
+                            class="hx-input donate-custom__input"
+                            inputmode="decimal"
+                            autocomplete="off"
+                            maxlength="6"
+                            pattern="\d{1,3}([.,]\d{1,2})?"
+                            placeholder="{{ 'donate.custom.placeholder'|trans }}"
+                        >
+                        <span class="donate-custom__unit" aria-hidden="true">€</span>
+                    </div>
+                    <p class="donate-custom__hint">
+                        {{ 'donate.custom.hint'|trans({'%min%': minEuros, '%max%': maxEuros}) }}
+                    </p>
+                </div>
+
+                <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+                <button type="submit" class="hx-btn mt-6 w-full">{{ 'donate.submit'|trans }}</button>
+            </form>
+        {% endif %}
+
+        <p class="donate-legal gold-hairline">
+            {{ 'donate.legal.secure'|trans }} —
+            <a href="{{ path('app_legal_privacy') }}" class="nav-link text-gold">{{ 'donate.legal.privacy'|trans }}</a>
+            ·
+            <a href="{{ path('app_legal_terms') }}" class="nav-link text-gold">{{ 'donate.legal.terms'|trans }}</a>
+        </p>
+    </section>
+</main>
+{% endblock %}

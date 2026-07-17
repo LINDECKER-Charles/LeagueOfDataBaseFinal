@@ -1,0 +1,24 @@
+# Site-identity facts surfaced verbatim on the /legal/* pages (notice, privacy,
+# terms, cookies). Fully filled on 2026-07-17 — remaining pre-prod checks live
+# in docs/legal-info.md (§5).
+# Consumed through the App\Dto\LegalInfo value object (autowired constructor).
+#
+# publisher_address is intentionally EMPTY: non-professional publisher regime
+# (LCEN art. 6, III-2) — the notice templates render a localized explanation
+# instead of a postal address. Host facts source: hostinger.com/legal (ToS §2 +
+# registrar information), checked 2026-07-17.
+parameters:
+    legal.site_name: 'League Of Data Base'
+    legal.site_url: 'https://www.league-of-data-base.com'
+    legal.publisher_name: 'Charles LINDECKER'
+    legal.publisher_status: 'Particulier (private individual)'
+    legal.publisher_address: ''
+    legal.publisher_email: 'charles.lindecker@outlook.fr'
+    legal.publication_director: 'Charles LINDECKER'
+    legal.host_name: 'Hostinger — HOSTINGER operations, UAB'
+    legal.host_address: 'Švitrigailos str. 34, 03230 Vilnius, Lituanie'
+    legal.host_phone: '+370 645 03378'
+    legal.siret: 'N/A'
+    legal.dpo_email: 'charles.lindecker@outlook.fr'
+    legal.jurisdiction_country: 'France'
+    legal.effective_date: '2026-07-17'

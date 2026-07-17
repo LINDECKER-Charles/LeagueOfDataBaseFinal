@@ -1,0 +1,71 @@
+/* ---------------------------------------------------------------------------
+   Auth pages — the "summoning portal" signature. One quiet statement: a thin
+   conic gold/arcane ring turning very slowly behind the centred card
+   (borrowed from the champion seal grammar), everything else stays sober.
+--------------------------------------------------------------------------- */
+@layer components {
+  .auth-portal {
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: clamp(3rem, 9vh, 6.5rem) 1.5rem;
+    overflow: hidden;
+  }
+  /* Conic ring hollowed by mask so only a 1px band remains; kept faint on
+     purpose — ambience, not ornament. */
+  .auth-portal::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(38rem, 105vw);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    padding: 1px;
+    background: conic-gradient(
+      var(--color-gold-deep), var(--color-gold) 30%,
+      var(--color-hex-deep) 55%, var(--color-gold-deep) 80%, var(--color-gold-deep)
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.16;
+    animation: auth-portal-turn 60s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes auth-portal-turn { to { rotate: 360deg; } }
+  @media (prefers-reduced-motion: reduce) {
+    .auth-portal::before { animation: none; }
+  }
+
+  /* Field label — the eyebrow voice, one size down. */
+  .auth-label {
+    display: block;
+    font-family: var(--font-beaufort);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--color-gold-light);
+  }
+
+  /* Error surfaces — bordered, discreet, on the shared danger token. */
+  .auth-error {
+    border: 1px solid color-mix(in srgb, var(--color-danger) 55%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+    color: var(--color-text);
+  }
+  .auth-field-error {
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+    color: var(--color-danger);
+  }
+  .auth-help {
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+  }
+}

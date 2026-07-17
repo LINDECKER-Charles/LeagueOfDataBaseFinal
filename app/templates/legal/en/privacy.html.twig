@@ -1,0 +1,196 @@
+{% extends 'legal/layout.html.twig' %}
+
+{% block page_title %}{{ 'legal.privacy.title'|trans }}{% endblock %}
+
+{% block toc %}
+    <li><a class="nav-link" href="#controller">1. Data controller</a></li>
+    <li><a class="nav-link" href="#processing">2. Processing activities</a></li>
+    <li><a class="nav-link" href="#audience">3. Audience measurement in detail</a></li>
+    <li><a class="nav-link" href="#rights">4. Your rights</a></li>
+    <li><a class="nav-link" href="#recipients">5. Recipients and processors</a></li>
+    <li><a class="nav-link" href="#transfers">6. Transfers outside the EU</a></li>
+    <li><a class="nav-link" href="#security">7. Security</a></li>
+    <li><a class="nav-link" href="#changes">8. Changes to this policy</a></li>
+{% endblock %}
+
+{% block legal_body %}
+    <section id="controller">
+        <h2>1. Data controller</h2>
+        <p>
+            The controller for the processing described below is
+            <strong>{{ legal.publisherName }}</strong>, publisher of {{ legal.siteName }}
+            (see the <a href="{{ path('app_legal_notice') }}">legal notice</a>).
+            Contact for any personal-data matter:
+            <a href="mailto:{{ legal.dpoEmail }}">{{ legal.dpoEmail }}</a>
+            or <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a>.
+        </p>
+        <p>
+            {{ legal.siteName }} is an encyclopedia you can browse without an account. Data
+            collection is kept to the strict minimum: no profiling, no sale of data, no
+            advertising, no third-party trackers. The service does not target minors and
+            collects no special-category ("sensitive") data.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="processing">
+        <h2>2. Processing activities</h2>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Processing</th>
+                        <th scope="col">Data</th>
+                        <th scope="col">Legal basis</th>
+                        <th scope="col">Retention</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>User account</strong><br>account creation and management</td>
+                        <td>Email address, summoner name (pseudonym), password (stored only as a hash), favorites, public/private profile preference</td>
+                        <td>Performance of a contract (art. 6(1)(b) GDPR)</td>
+                        <td>Until account deletion (the "Delete my account" button on the profile page)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>User content</strong><br>champion builds and configurations</td>
+                        <td>Build content, name, chosen visibility (private, public or link sharing), link to the author's account</td>
+                        <td>Performance of a contract (art. 6(1)(b) GDPR)</td>
+                        <td>Until deleted by the author, or until account deletion (which also deletes the builds)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Audience measurement</strong><br>first-party traffic statistics</td>
+                        <td>See <a href="#audience">section 3</a> for the full field list (IP address, User-Agent, pages viewed, referrer, optional country…)</td>
+                        <td>Legitimate interest (art. 6(1)(f) GDPR): understanding and improving how the site is used</td>
+                        <td>Raw logs: kept until their consolidation and deletion, both carried out manually by the publisher (no fixed retention period is guaranteed). Statistical aggregates without IP or User-Agent: kept without a time limit</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Donations</strong><br>voluntary support via Stripe</td>
+                        <td>Payment is handled entirely by Stripe: we never receive or store any card data. We only keep the technical confirmation of the donation (status, amount)</td>
+                        <td>Performance of the donation contract (art. 6(1)(b)) and legitimate interest for bookkeeping</td>
+                        <td>Confirmations kept for the duration of applicable accounting obligations; receipts are issued and kept by Stripe</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Session and preferences</strong><br>first-party cookies</td>
+                        <td>Session cookie, opt-in language/version preference, "stay signed in" cookie</td>
+                        <td>Legitimate interest / consent depending on the cookie</td>
+                        <td>Full details in the <a href="{{ path('app_legal_cookies') }}">cookie policy</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="audience">
+        <h2>3. Audience measurement in detail</h2>
+        <p>
+            Traffic is measured by a <strong>first-party, server-side, cookieless</strong>
+            system built for this site. No third-party tool (Google Analytics or similar) is
+            used and no data is shared with anyone. Only views of the public pages (home page,
+            lists and detail pages for champions, items, runes and summoner spells) are
+            recorded.
+        </p>
+        <p>Each page view produces an event containing:</p>
+        <ul>
+            <li>the timestamp (UTC), the page viewed (route and path), the resource and entity displayed (e.g. a champion's page), and the HTTP status code;</li>
+            <li>the requested Data Dragon version and language, and the interface language;</li>
+            <li>your <strong>IP address</strong> and your browser's <strong>User-Agent</strong> string, from which the browser, operating system, device type and a "bot" flag are derived;</li>
+            <li>the referring site (origin host plus a classification: direct, internal, search engine, social network, other);</li>
+            <li>a <strong>pseudonymous visitor identifier</strong>: a truncated HMAC-SHA256 fingerprint computed from the IP and User-Agent with a secret key known only to the server — it lets us count unique visitors without identifying them;</li>
+            <li>optionally, the <strong>country</strong> (ISO code and name): only when a local GeoLite2 geolocation database is installed on the server; the IP is then resolved <em>locally</em>, with no request to any external service. Without that database, no location data is produced.</li>
+        </ul>
+        <p>
+            These events are written to daily log files stored on our server, then consolidated
+            into daily statistical aggregates (counters per page, browser, country, and so on)
+            kept on our internal storage. <strong>The aggregates contain neither IP addresses
+            nor User-Agent strings.</strong> Consolidation and deletion of the raw logs are
+            carried out manually by the publisher, with no fixed retention period guaranteed;
+            the aggregates, which contain no directly identifying data, are kept without a
+            time limit. Access to this data is restricted to the site publisher.
+        </p>
+        <p>
+            You may object to this legitimate-interest processing as described in
+            <a href="#rights">section 4</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="rights">
+        <h2>4. Your rights</h2>
+        <p>Under the GDPR you have the following rights:</p>
+        <ul>
+            <li><strong>Access</strong> — obtain a copy of the data held about you;</li>
+            <li><strong>Rectification</strong> — correct inaccurate data (email, summoner name…);</li>
+            <li><strong>Erasure</strong> — the <strong>"Delete my account"</strong> button on the profile page immediately deletes your account and all your builds; you may also request erasure by email;</li>
+            <li><strong>Portability</strong> — receive the data you provided in a structured, machine-readable format;</li>
+            <li><strong>Objection</strong> — object to processing based on legitimate interest, including audience measurement;</li>
+            <li><strong>Restriction</strong> — request the temporary freezing of a processing activity.</li>
+        </ul>
+        <p>
+            To exercise these rights: <a href="mailto:{{ legal.dpoEmail }}">{{ legal.dpoEmail }}</a>
+            or <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a>.
+            You will receive an answer within one month. If you believe your rights are not
+            respected, you may lodge a complaint with your supervisory authority — in France,
+            the CNIL: <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">www.cnil.fr</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="recipients">
+        <h2>5. Recipients and processors</h2>
+        <p>
+            Data is never sold, rented or shared for advertising purposes. It is accessible
+            only to the site publisher and to the strictly necessary technical processors:
+        </p>
+        <ul>
+            <li><strong>{{ legal.hostName }}</strong> — hosting of the site and its data;</li>
+            <li><strong>Stripe</strong> — donation processing (see the
+                <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer">Stripe privacy policy</a>).</li>
+        </ul>
+        <p>
+            No profiling and no fully automated decision producing legal effects is carried
+            out.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="transfers">
+        <h2>6. Transfers outside the EU</h2>
+        <p>
+            The site's data is hosted by {{ legal.hostName }}. The only transfer that may occur
+            outside the European Union concerns <strong>donations</strong>: Stripe (Stripe
+            Payments Europe Ltd, and Stripe, Inc. in the United States) may process payment
+            data outside the EU. Those transfers are governed by the European Commission's
+            <strong>Standard Contractual Clauses</strong> and Stripe's compliance mechanisms.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="security">
+        <h2>7. Security</h2>
+        <ul>
+            <li>TLS (HTTPS) encryption of all communications;</li>
+            <li>passwords stored only as hashes produced by a modern algorithm — never in clear text;</li>
+            <li>signed, HttpOnly and Secure cookies (see the <a href="{{ path('app_legal_cookies') }}">cookie policy</a>);</li>
+            <li>access to logs and to the administration interface restricted to the publisher.</li>
+        </ul>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="changes">
+        <h2>8. Changes to this policy</h2>
+        <p>
+            This policy may evolve together with the site's features. The effective date shown
+            at the top of the page is updated on every substantial change; for any major change
+            affecting your rights, a visible notice will be displayed on the site.
+        </p>
+    </section>
+{% endblock %}
