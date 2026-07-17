@@ -4,9 +4,9 @@
 
 {% block admin_body %}
     <section class="card card--auth">
-        <div class="card__head">
-            <h1>Panneau d'administration</h1>
-            <p class="muted">Accès réservé.</p>
+        <div class="card__head" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+            <div class="eyebrow">Accès réservé</div>
+            <h1 style="font-size: 1.4rem;">Panneau d'administration</h1>
         </div>
 
         {% if error %}
@@ -23,7 +23,7 @@
                 <input type="password" name="password" required autocomplete="current-password">
             </label>
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-            <button type="submit">Se connecter</button>
+            <button type="submit" class="btn" style="margin-top: 0.5rem; justify-content: center;">Se connecter</button>
         </form>
     </section>
 {% endblock %}

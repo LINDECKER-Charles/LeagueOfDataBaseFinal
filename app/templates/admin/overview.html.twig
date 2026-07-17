@@ -1,0 +1,105 @@
+{% extends 'admin/_base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Vue d'ensemble · Admin · LODB{% endblock %}
+
+{% set typeMeta = {
+    champion:      { label: 'Champions', color: 'var(--series-1)' },
+    item:          { label: 'Objets',    color: 'var(--series-2)' },
+    runesReforged: { label: 'Runes',     color: 'var(--series-3)' },
+    summoner:      { label: 'Sorts',     color: 'var(--series-4)' },
+    home:          { label: 'Accueil',   color: 'var(--series-5)' }
+} %}
+
+{% block admin_body %}
+    <div class="flex between wrap" style="margin-bottom: 1.5rem;">
+        {{ ui.page_head('Console', "Vue d'ensemble", 'Trafic, audience et stockage — ' ~ report.days ~ ' jours (' ~ (report.from ?? '—') ~ ' → ' ~ (report.to ?? '—') ~ ').') }}
+        <div class="flex wrap" style="gap: 0.75rem;">
+            {{ ui.range_bar(range, ranges, 'admin_dashboard') }}
+            <form method="post" action="{{ path('admin_analytics_rollup') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('analytics_rollup') }}">
+                <button type="submit" class="btn ghost" title="Consolider les journées locales en agrégats MinIO durables">Consolider</button>
+            </form>
+        </div>
+    </div>
+
+    {# ---- KPIs cross-subsystème ---- #}
+    <div class="kpi-grid">
+        {{ ui.kpi('Vues', report.totals.views|compact, report.totals.botViews|compact ~ ' bots exclus', 'var(--gold)',
+            chart_sparkline(report.series|map((s) => s.views), 'var(--gold)')) }}
+        {{ ui.kpi('Visiteurs uniques', report.totals.uniqueVisitors|compact, report.totals.returningVisitors|compact ~ ' récurrents', 'var(--hex)',
+            chart_sparkline(report.series|map((s) => s.visitors), 'var(--hex)')) }}
+        {{ ui.kpi('Page la plus vue', report.topPages|first ? (report.topPages|first).count|compact : '0',
+            report.topPages|first ? (report.topPages|first).name : '—', 'var(--series-3)', null) }}
+        {% if storage.ok %}
+            {{ ui.kpi('Stockage', storage.total.bytes|bytes, storage.total.objects|number_format(0, '.', ' ') ~ ' objets', 'var(--series-2)', null) }}
+            {{ ui.kpi('Versions', storage.coverage|length, 'jeux de données ingérés', 'var(--series-4)', null) }}
+            {{ ui.kpi('Couverture WebP', (storage.blobs.webpCoverage * 100)|round ~ ' %', storage.blobs.webpSiblings ~ ' / ' ~ storage.blobs.sources ~ ' images', 'var(--series-5)', null) }}
+        {% endif %}
+    </div>
+
+    {# ---- Trafic ---- #}
+    <div class="rule" data-label="Trafic"></div>
+    <div class="grid cols-3">
+        <section class="card span-2">
+            <div class="card__head"><h2>Fréquentation</h2><span class="chip">vues · visiteurs</span></div>
+            {{ chart_timeseries(report.series, [
+                { key: 'views',    label: 'Vues',       color: 'var(--gold)' },
+                { key: 'visitors', label: 'Visiteurs',  color: 'var(--hex)' }
+            ], 'Fréquentation dans le temps') }}
+            {{ ui.legend([
+                { label: 'Vues', color: 'var(--gold)' },
+                { label: 'Visiteurs', color: 'var(--hex)' }
+            ]) }}
+        </section>
+        <section class="card">
+            <div class="card__head"><h2>Par ressource</h2></div>
+            {% set slices = [] %}
+            {% for row in report.byType %}
+                {% set m = typeMeta[row.name]|default({ label: row.name, color: 'var(--text-muted)' }) %}
+                {% set slices = slices|merge([{ name: m.label, value: row.count, color: m.color }]) %}
+            {% endfor %}
+            {{ chart_donut(slices, report.totals.views|compact, 'vues', 'Vues par ressource') }}
+            {{ ui.legend(slices|map((s) => { label: s.name, color: s.color, value: s.value|compact })) }}
+        </section>
+    </div>
+
+    <div class="grid cols-2" style="margin-top: 1.15rem;">
+        <section class="card">
+            <div class="card__head"><h2>Pages les plus consultées</h2><a class="chip" href="{{ path('admin_traffic', { range: range }) }}">Détail →</a></div>
+            {{ ui.rank(report.topPages|slice(0, 8), 'compact', '', 'Aucune vue enregistrée.') }}
+        </section>
+        <section class="card">
+            <div class="card__head"><h2>Sources de trafic</h2><a class="chip" href="{{ path('admin_audience', { range: range }) }}">Audience →</a></div>
+            {{ ui.rank(report.refSource, 'compact', 'cyan', 'Aucune source.') }}
+        </section>
+    </div>
+
+    {# ---- Stockage ---- #}
+    <div class="rule" data-label="Stockage"></div>
+    {% if storage.ok %}
+        <div class="grid cols-3">
+            <section class="card">
+                <div class="card__head"><h2>Familles d'objets</h2><a class="chip" href="{{ path('admin_storage') }}">Détail →</a></div>
+                {{ ui.rank(storage.families, 'bytes', '', 'Stockage vide.', 'bytes') }}
+            </section>
+            <section class="card">
+                <div class="card__head"><h2>Déduplication</h2></div>
+                <div class="stack">
+                    <div><span class="k-label">Ratio réfs / blobs</span><span class="k-val" style="font-size:1.5rem;">{{ storage.dedup.ratio|round(2) }}×</span></div>
+                    <p class="dim" style="margin:0;font-size:0.82rem;">{{ storage.dedup.logicalRefs|number_format(0,'.',' ') }} références logiques → {{ storage.dedup.physicalBlobs|number_format(0,'.',' ') }} blobs physiques. Économie estimée ≈ {{ storage.dedup.savedBytesApprox|bytes }}.</p>
+                </div>
+            </section>
+            <section class="card">
+                <div class="card__head"><h2>Santé</h2></div>
+                <div class="stack">
+                    <span class="badge {{ storage.blobs.webpCoverage >= 0.95 ? 'good' : (storage.blobs.webpCoverage >= 0.6 ? 'warn' : 'bad') }}">WebP {{ (storage.blobs.webpCoverage * 100)|round }} %</span>
+                    <span class="badge good">{{ storage.coverage|length }} version(s)</span>
+                    <span class="badge warn">{{ report.totals.pagesTracked|number_format(0,'.',' ') }} pages suivies</span>
+                </div>
+            </section>
+        </div>
+    {% else %}
+        <p class="alert">Stockage indisponible : {{ storage.error }}</p>
+    {% endif %}
+{% endblock %}

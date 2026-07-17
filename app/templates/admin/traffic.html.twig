@@ -1,0 +1,70 @@
+{% extends 'admin/_base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Trafic · Admin · LODB{% endblock %}
+
+{% set typeLabels = { champion: 'Champions', item: 'Objets', runesReforged: 'Runes', summoner: 'Sorts', home: 'Accueil' } %}
+{% set kindLabels = { home: 'Accueil', list: 'Listes', detail: 'Détails' } %}
+
+{% block admin_body %}
+    <div class="flex between wrap" style="margin-bottom: 1.5rem;">
+        {{ ui.page_head('Analytics', 'Trafic', 'Pages les plus consultées et rythme de fréquentation sur ' ~ report.days ~ ' jours.') }}
+        {{ ui.range_bar(range, ranges, 'admin_traffic') }}
+    </div>
+
+    <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+        {{ ui.kpi('Vues totales', report.totals.views|compact, report.range, 'var(--gold)', chart_sparkline(report.series|map((s) => s.views), 'var(--gold)')) }}
+        {{ ui.kpi('Visiteurs uniques', report.totals.uniqueVisitors|compact, report.totals.returningVisitors ~ ' récurrents', 'var(--hex)', chart_sparkline(report.series|map((s) => s.visitors), 'var(--hex)')) }}
+        {{ ui.kpi('Pages distinctes', report.totals.pagesTracked|compact, 'URL suivies', 'var(--series-3)', null) }}
+        {{ ui.kpi('Vues / jour', (report.totals.views / max(report.days, 1))|round, 'moyenne', 'var(--series-2)', null) }}
+    </div>
+
+    <section class="card">
+        <div class="card__head"><h2>Fréquentation dans le temps</h2><span class="chip">vues · visiteurs</span></div>
+        {{ chart_timeseries(report.series, [
+            { key: 'views',    label: 'Vues',      color: 'var(--gold)' },
+            { key: 'visitors', label: 'Visiteurs', color: 'var(--hex)' }
+        ], 'Fréquentation dans le temps') }}
+        {{ ui.legend([{ label: 'Vues', color: 'var(--gold)' }, { label: 'Visiteurs', color: 'var(--hex)' }]) }}
+    </section>
+
+    <div class="grid cols-2" style="margin-top: 1.15rem;">
+        <section class="card">
+            <div class="card__head"><h2>Pages les plus consultées</h2></div>
+            {{ ui.rank(report.topPages, 'compact', '', 'Aucune vue enregistrée.') }}
+        </section>
+        <section class="card">
+            <div class="card__head"><h2>Entités les plus vues</h2></div>
+            {{ ui.rank(report.topEntities|map((r) => { name: r.name|split(':')|last, count: r.count, pct: r.pct }), 'compact', 'cyan', 'Aucune page de détail vue.') }}
+        </section>
+    </div>
+
+    <div class="grid cols-3" style="margin-top: 1.15rem;">
+        <section class="card">
+            <div class="card__head"><h2>Par ressource</h2></div>
+            {{ ui.rank(report.byType|map((r) => { name: typeLabels[r.name]|default(r.name), count: r.count, pct: r.pct }), 'compact', '', 'Aucune donnée.') }}
+        </section>
+        <section class="card">
+            <div class="card__head"><h2>Par type de page</h2></div>
+            {{ ui.rank(report.byKind|map((r) => { name: kindLabels[r.name]|default(r.name), count: r.count, pct: r.pct }), 'compact', 'cyan', 'Aucune donnée.') }}
+        </section>
+        <section class="card">
+            <div class="card__head"><h2>Codes de réponse</h2></div>
+            <table class="tbl">
+                <thead><tr><th>Statut</th><th class="num">Vues</th><th class="num">Part</th></tr></thead>
+                <tbody>
+                    {% for row in report.status %}
+                        <tr><td><span class="chip">{{ row.name }}</span></td><td class="num">{{ row.count|number_format(0, '.', ' ') }}</td><td class="num">{{ row.pct|pct }}</td></tr>
+                    {% else %}
+                        <tr><td colspan="3" class="t-empty">Aucune donnée.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <section class="card" style="margin-top: 1.15rem;">
+        <div class="card__head"><h2>Rythme horaire</h2><span class="chip">heure × jour · vues</span></div>
+        {{ ui.heatmap(report.heatmap) }}
+    </section>
+{% endblock %}
