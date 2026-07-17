@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#010a13">
+  <meta name="turbo-visit-control" content="reload">
+  <title>Hors ligne — League Of Data Base</title>
+  <style>
+    /* Self-contained: this page must render with zero network. */
+    @font-face {
+      font-family: 'Beaufort';
+      src: url('/fonts/BeaufortforLOL-Bold.woff2') format('woff2');
+      font-weight: 700; font-display: swap;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: grid; place-items: center;
+      padding: 2rem;
+      background: radial-gradient(60rem 30rem at 50% -10%, rgba(3,151,171,.12), transparent 60%), #0a1428;
+      color: #f0e6d2;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      text-align: center;
+    }
+    main { max-width: 26rem; }
+    svg { width: 4.5rem; height: 4.5rem; color: #c8aa6e; filter: drop-shadow(0 0 18px rgba(200,170,110,.5)); }
+    h1 {
+      margin: 1.2rem 0 0.4rem;
+      font-family: 'Beaufort', serif;
+      font-size: 1.6rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: #f0e6d2;
+    }
+    p { margin: 0.4rem 0; line-height: 1.6; color: #a09b8c; font-size: .95rem; }
+    p.en { font-size: .8rem; color: #8f8d82; }
+    a.retry {
+      display: inline-block; margin-top: 1.6rem;
+      padding: .8rem 1.6rem;
+      border: 1px solid rgba(200,170,110,.7);
+      background: rgba(200,170,110,.14);
+      color: #f0e6d2; text-decoration: none;
+      font-family: 'Beaufort', serif; font-size: .85rem;
+      letter-spacing: .15em; text-transform: uppercase;
+    }
+    a.retry:hover { background: rgba(200,170,110,.25); }
+  </style>
+</head>
+<body>
+  <main>
+    <svg viewBox="0 0 800 800" fill="currentColor" aria-hidden="true">
+      <path d="M438.14,168A235.31,235.31,0,0,1,580.08,552.7h79.45a299,299,0,0,0,41.4-152.25c0-153.18-114.63-279.58-262.79-298.11Z"/>
+      <path d="M208.88,631.86V537.33a235.17,235.17,0,0,1,0-273.77V169a300.44,300.44,0,0,0,0,462.83Z"/>
+      <polygon points="393.14 75 220.98 75 253.88 142.3 253.88 658.33 221.32 724.89 611.49 724.89 647.14 597.7 393.14 597.7 393.14 75"/>
+    </svg>
+    <h1>Connexion à la Faille perdue</h1>
+    <p>Vous êtes hors ligne. Les pages déjà visitées restent consultables ; celle-ci n'est pas encore dans le grimoire.</p>
+    <p class="en">You are offline — previously visited pages remain available.</p>
+    <a class="retry" href="" data-turbo="false" onclick="location.reload(); return false;">Réessayer</a>
+  </main>
+</body>
+</html>

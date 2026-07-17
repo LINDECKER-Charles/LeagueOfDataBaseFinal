@@ -1,0 +1,43 @@
+{
+  "id": "/",
+  "name": "League Of Data Base",
+  "short_name": "LoDB",
+  "description": "Encyclopédie League of Legends : champions, objets, runes et sorts d'invocateur, patch par patch.",
+  "start_url": "/home",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a1428",
+  "theme_color": "#010a13",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["games", "reference"],
+  "icons": [
+    { "src": "/favicon/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    {
+      "src": "/pwa/screen-narrow.png",
+      "sizes": "786x1704",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Fiche champion sur mobile"
+    },
+    {
+      "src": "/pwa/screen-wide.png",
+      "sizes": "1440x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Fiche champion sur bureau"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Champions", "url": "/champions", "icons": [{ "src": "/favicon/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Objets", "url": "/objects", "icons": [{ "src": "/favicon/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Runes", "url": "/runes", "icons": [{ "src": "/favicon/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Sorts d'invocateur", "url": "/summoners", "icons": [{ "src": "/favicon/icon-192.png", "sizes": "192x192" }] }
+  ],
+  "prefer_related_applications": false
+}
