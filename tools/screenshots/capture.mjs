@@ -11,7 +11,7 @@ const L = process.env.LODB_LANG ?? 'en_US'
 const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'screenshot')
 
 const q = (pp) => `?version=${V}&lang=${L}&numpage=1&itemperpage=${pp}`
-const d = `?version=${V}&lang=${L}` // detail routes fall back to setup without a version
+const d = `?version=${V}&lang=${L}` // detail routes need an explicit version (fresh capture context has no session)
 
 // Third tuple element = per-shot options:
 //   full: false        → viewport shot instead of full page
@@ -36,14 +36,27 @@ const TARGETS = [
 // affordance that overlaps content) so captures show product UI only.
 const HIDE_CHROME = '.sf-toolbar,.sf-minitoolbar,#load-time-badge,.hx-perf{display:none!important}'
 
-// [data-reveal] sections and loading="lazy" images only activate on scroll.
-// Reduced-motion (context option) force-reveals the sections at mount; flipping
-// every lazy <img> to eager loads them all — including off-screen ones like the
-// horizontal skins carousel — without a scroll pass that would drift the
-// scrollspy nav off the top section.
-async function eagerLoadImages(page) {
-  await page.evaluate(() => {
-    document.querySelectorAll('img[loading="lazy"]').forEach((img) => { img.loading = 'eager' })
+// [data-reveal] sections and loading="lazy" images activate on scroll. Reduced-
+// motion (context option) reveals the sections at mount; a full-height scroll
+// pass loads the lazy images that will be visible in the shot at natural
+// priority — force-loading every off-screen image instead saturates the (slow,
+// HTTP/1.1) splash CDN and some never finish in time. The pass advances the
+// scrollspy nav, so reset it to its top-of-page state (first chip current, which
+// is exactly what the app shows before any section crosses the reading band).
+async function primeLazyContent(page) {
+  await page.evaluate(async () => {
+    const step = Math.max(320, Math.floor(window.innerHeight * 0.85))
+    for (let y = 0; y < document.body.scrollHeight; y += step) {
+      window.scrollTo(0, y)
+      await new Promise((r) => setTimeout(r, 150))
+    }
+    window.scrollTo(0, 0)
+    document.querySelectorAll('[data-scrollspy]').forEach((nav) => {
+      nav.querySelectorAll('a[href^="#"]').forEach((link, i) => {
+        if (i === 0) link.setAttribute('aria-current', 'true')
+        else link.removeAttribute('aria-current')
+      })
+    })
   })
 }
 
@@ -68,10 +81,9 @@ async function waitForImages(page, timeout = 6000) {
 
 async function settle(page) {
   await page.addStyleTag({ content: HIDE_CHROME }).catch(() => {})
-  try { await page.waitForLoadState('networkidle', { timeout: 5000 }) } catch {}
-  await eagerLoadImages(page) // after islands mount, so their imgs are caught too
-  try { await page.waitForLoadState('networkidle', { timeout: 5000 }) } catch {}
-  await waitForImages(page)
+  await primeLazyContent(page)
+  try { await page.waitForLoadState('networkidle', { timeout: 6000 }) } catch {}
+  await waitForImages(page, 8000)
   try { await page.evaluate(() => document.fonts?.ready) } catch {}
   await page.waitForTimeout(400)
 }
