@@ -1,5 +1,10 @@
-{# Detail footer actions. Params: back_href, back_label #}
-<div class="mt-12 flex flex-wrap gap-3">
-  <a href="{{ back_href }}" class="hx-btn-ghost">{{ back_label|default('item.detail.back'|trans) }}</a>
-  <a href="{{ path('app_setup') }}" class="hx-btn">{{ 'item.detail.setup'|trans }}</a>
+{# Detail footer — discreet version/language escape hatch (primary back-nav is
+   the pager + bottom bar). #}
+<div class="mt-8 flex justify-center">
+  <a href="{{ path('app_setup') }}" class="hx-btn-ghost text-xs">{{ 'item.detail.setup'|trans }}</a>
 </div>
+
+{# Load-time marker: flags this render as a detail page and carries the server
+   generation time (ms). The persistent LoadTimeBadge island reads it to display
+   the load-time chip; it is absent on list/home pages, so the chip self-hides. #}
+<div data-load-timing data-server-ms="{{ page_render_ms() }}" hidden></div>

@@ -2,6 +2,7 @@ import '@hotwired/turbo'
 import '../styles/app.css'
 
 import { createApp, type Component } from 'vue'
+import { installEnhancements } from './fx/enhance'
 
 /**
  * Island registry: Twig renders a shell `<div data-vue="name" data-props="{...}">`,
@@ -18,6 +19,9 @@ const registry: Record<string, Island> = {
     'chroma-strip': { load: () => import('./components/ChromaStrip.vue') },
     'skin-gallery': { load: () => import('./components/SkinGallery.vue') },
     'resource-filter': { load: () => import('./components/ResourceFilter.vue') },
+    'load-time': { load: () => import('./components/LoadTimeBadge.vue') },
+    'ability-showcase': { load: () => import('./components/AbilityShowcase.vue') },
+    'stat-scaler': { load: () => import('./components/StatScaler.vue') },
 }
 
 function mountIslands(root: ParentNode = document): void {
@@ -44,3 +48,16 @@ function mountIslands(root: ParentNode = document): void {
 document.addEventListener('DOMContentLoaded', () => mountIslands())
 // The app uses Turbo Drive: re-scan for islands after each navigation.
 document.addEventListener('turbo:load', () => mountIslands())
+
+// Scroll-reveal + section-nav scrollspy (Turbo-safe, reduced-motion aware).
+installEnhancements()
+
+// PWA: offline resilience + installability. Production builds only — the Vite
+// dev server has no /sw.js and a dev-registered worker would shadow it.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+            // Registration is progressive enhancement; the site works without it.
+        })
+    })
+}

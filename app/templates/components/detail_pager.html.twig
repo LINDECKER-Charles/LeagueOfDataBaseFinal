@@ -1,0 +1,31 @@
+{# The codex turns its own pages — previous / next entity in collection order,
+   with the diamond hub linking back to the list. Params: nav {prev,next},
+   route (detail route name), list_href, version, lang. #}
+<nav class="pager mt-14" aria-label="{{ 'detail.nav.label'|trans }}">
+  {% if nav.prev|default(null) %}
+    <a class="pager__link" rel="prev"
+       href="{{ path(route, { name: nav.prev.id, version: version, lang: lang }) }}">
+      <span class="pager__eyebrow">‹ {{ 'detail.nav.previous'|trans }}</span>
+      <span class="pager__name">{{ nav.prev.name }}</span>
+    </a>
+  {% else %}
+    <span aria-hidden="true"></span>
+  {% endif %}
+
+  <a class="pager__hub" href="{{ list_href }}" title="{{ 'detail.nav.back_to_list'|trans }}">
+    <span class="sr-only">{{ 'detail.nav.back_to_list'|trans }}</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <rect x="5" y="5" width="14" height="14"/><rect x="9.5" y="9.5" width="5" height="5"/>
+    </svg>
+  </a>
+
+  {% if nav.next|default(null) %}
+    <a class="pager__link pager__link--next" rel="next"
+       href="{{ path(route, { name: nav.next.id, version: version, lang: lang }) }}">
+      <span class="pager__eyebrow">{{ 'detail.nav.next'|trans }} ›</span>
+      <span class="pager__name">{{ nav.next.name }}</span>
+    </a>
+  {% else %}
+    <span aria-hidden="true"></span>
+  {% endif %}
+</nav>
