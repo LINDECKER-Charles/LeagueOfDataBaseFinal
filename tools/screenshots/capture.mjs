@@ -13,9 +13,14 @@ const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..
 const q = (pp) => `?version=${V}&lang=${L}&numpage=1&itemperpage=${pp}`
 const d = `?version=${V}&lang=${L}` // detail routes fall back to setup without a version
 
+// Third tuple element = per-shot options:
+//   full: false        → viewport shot instead of full page
+//   openSwitcher: true → open the header patch/language popover before shooting
+// The version/language picker is no longer a standalone page: it lives in the
+// header disclosure, so "01-setup" is the home with that popover open.
 const TARGETS = [
-  ['01-setup', '/'],
-  ['02-home', '/home'],
+  ['01-setup', '/', { full: false, openSwitcher: true }],
+  ['02-home', '/'],
   ['03-champions', `/champions${q(20)}`],
   ['04-objects', `/objects${q(8)}`],
   ['05-runes', `/runes${q(8)}`],
@@ -27,24 +32,66 @@ const TARGETS = [
   ['11-working', '/working-progress'],
 ]
 
-const HIDE_TOOLBAR = '.sf-toolbar,.sf-minitoolbar{display:none!important}'
+// Hide the Symfony web-debug toolbar and the floating perf badge (a dev-only
+// affordance that overlaps content) so captures show product UI only.
+const HIDE_CHROME = '.sf-toolbar,.sf-minitoolbar,#load-time-badge,.hx-perf{display:none!important}'
 
-async function settle(page) {
-  try { await page.waitForLoadState('networkidle', { timeout: 8000 }) } catch {}
-  try { await page.evaluate(() => document.fonts?.ready) } catch {}
-  await page.addStyleTag({ content: HIDE_TOOLBAR }).catch(() => {})
-  await page.waitForTimeout(450)
+// [data-reveal] sections and loading="lazy" images only activate on scroll.
+// Reduced-motion (context option) force-reveals the sections at mount; flipping
+// every lazy <img> to eager loads them all — including off-screen ones like the
+// horizontal skins carousel — without a scroll pass that would drift the
+// scrollspy nav off the top section.
+async function eagerLoadImages(page) {
+  await page.evaluate(() => {
+    document.querySelectorAll('img[loading="lazy"]').forEach((img) => { img.loading = 'eager' })
+  })
 }
 
-async function shoot(ctx, name, url, full = true) {
+// Bounded: a lazy <img> parked off-screen may never fire load/error, so race
+// the "all decoded" promise against a hard cap to guarantee the shot proceeds.
+async function waitForImages(page, timeout = 6000) {
+  await page
+    .evaluate(
+      (t) =>
+        Promise.race([
+          Promise.all(
+            Array.from(document.images).map((img) =>
+              img.complete ? Promise.resolve() : new Promise((res) => { img.onload = img.onerror = () => res() }),
+            ),
+          ),
+          new Promise((res) => setTimeout(res, t)),
+        ]),
+      timeout,
+    )
+    .catch(() => {})
+}
+
+async function settle(page) {
+  await page.addStyleTag({ content: HIDE_CHROME }).catch(() => {})
+  try { await page.waitForLoadState('networkidle', { timeout: 5000 }) } catch {}
+  await eagerLoadImages(page) // after islands mount, so their imgs are caught too
+  try { await page.waitForLoadState('networkidle', { timeout: 5000 }) } catch {}
+  await waitForImages(page)
+  try { await page.evaluate(() => document.fonts?.ready) } catch {}
+  await page.waitForTimeout(400)
+}
+
+async function shoot(ctx, name, url, opts = {}) {
   const page = await ctx.newPage()
   const results = []
   try {
     const resp = await page.goto(BASE + url, { waitUntil: 'domcontentloaded', timeout: 45000 })
     const status = resp?.status() ?? 0
     await settle(page)
+    if (opts.openSwitcher) {
+      await page.evaluate(() => {
+        const el = document.querySelector('details.switcher')
+        if (el) el.open = true
+      })
+      await page.waitForTimeout(350)
+    }
     const file = path.join(OUT, `${name}.png`)
-    await page.screenshot({ path: file, fullPage: full })
+    await page.screenshot({ path: file, fullPage: opts.full !== false })
     results.push(`  ✓ ${name.padEnd(20)} ${String(status).padStart(3)}  ${url}`)
   } catch (e) {
     results.push(`  ✗ ${name.padEnd(20)} ERR  ${url}  (${e.message.split('\n')[0]})`)
@@ -75,16 +122,24 @@ async function run() {
   await warmer.close()
 
   // Desktop
-  const desktop = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 })
+  const desktop = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    deviceScaleFactor: 1,
+    reducedMotion: 'reduce',
+  })
   console.log(`\nDesktop 1440 → ${OUT}`)
-  for (const [name, url] of TARGETS) console.log(await shoot(desktop, name, url))
+  for (const [name, url, opts] of TARGETS) console.log(await shoot(desktop, name, url, opts))
   await desktop.close()
 
   // Mobile (a representative subset)
-  const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })
+  const mobile = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+    reducedMotion: 'reduce',
+  })
   console.log(`\nMobile 390`)
-  for (const [name, url] of [TARGETS[0], TARGETS[1], TARGETS[2], TARGETS[6]]) {
-    console.log(await shoot(mobile, `${name}-mobile`, url))
+  for (const [name, url, opts] of [TARGETS[0], TARGETS[1], TARGETS[2], TARGETS[6]]) {
+    console.log(await shoot(mobile, `${name}-mobile`, url, opts))
   }
   await mobile.close()
 
