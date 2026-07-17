@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'donate.cancel.title'|trans }} · {{ 'base.title'|trans }}{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block body %}
+<main class="donate-page donate-page--outcome">
+    <section class="hextech-frame hx-corners donate-panel donate-outcome">
+        <span class="donate-seal" aria-hidden="true"></span>
+        <p class="eyebrow mt-6">{{ 'donate.cancel.eyebrow'|trans }}</p>
+        <h1 class="mt-2 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad">
+            {{ 'donate.cancel.title'|trans }}
+        </h1>
+        <hr class="hx-rule mx-auto mt-5 max-w-xs">
+        <p class="mt-6 text-text-muted">{{ 'donate.cancel.body'|trans }}</p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a href="{{ path('app_donate') }}" class="hx-btn flex-1">{{ 'donate.cancel.retry'|trans }}</a>
+            <a href="{{ path('app_home') }}" class="hx-btn-ghost flex-1">{{ 'donate.cancel.back'|trans }}</a>
+        </div>
+    </section>
+</main>
+{% endblock %}
