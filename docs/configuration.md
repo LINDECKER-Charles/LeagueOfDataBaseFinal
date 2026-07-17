@@ -12,6 +12,32 @@ APP_SECRET=your-secret-key     # Clé secrète pour les sessions
 
 ```
 
+### 🗄️ Base de données & nouvelles variables
+
+PostgreSQL 17 porte **uniquement les données utilisateur** (comptes, favoris, builds) ;
+les données et images Data Dragon restent sur MinIO. Défauts du compose de dev :
+
+```env
+# PostgreSQL — service `postgres` du compose (défauts dev, à surcharger hors dev)
+POSTGRES_USER=lodb
+POSTGRES_PASSWORD=lodb
+POSTGRES_DB=lodb
+DATABASE_URL="postgresql://lodb:lodb@postgres:5432/lodb?serverVersion=17&charset=utf8"
+
+# Stripe — page de don /donate + webhook /webhooks/stripe
+# Placeholders : renseigner depuis le dashboard Stripe (cf. docs/legal-info.md).
+# Vides ⇒ la page de don annonce proprement que la passerelle est désactivée.
+STRIPE_SECRET_KEY=             # sk_test_… en dev, sk_live_… en production
+STRIPE_WEBHOOK_SECRET=         # whsec_… (signature des webhooks Stripe)
+```
+
+Le conteneur `php` reçoit `DATABASE_URL` assemblée depuis `POSTGRES_*` (voir `compose.yaml`) ;
+ne surcharger `DATABASE_URL` que pour pointer une base externe. Migrations :
+`docker compose exec -T php php bin/console doctrine:migrations:migrate`.
+
+En production/staging, ces valeurs vivent dans les secrets GitHub Actions
+(`ENV_PROD` / `ENV_STAGING`) — voir `docs/github-actions-secrets.md`.
+
 ### 🎨 Configuration frontend
 
 #### Tailwind CSS

@@ -29,11 +29,18 @@ services:
       # Optional GeoLite2-Country .mmdb for audience geo (empty -> var/geoip/ fallback,
       # absent -> geo degrades to "unknown"). Mount the DB and point this at it.
       GEOIP_DB_PATH: ${GEOIP_DB_PATH:-}
+      # User data (accounts, favourites, builds) lives in Postgres; DDragon storage stays on MinIO.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-lodb}:${POSTGRES_PASSWORD:-lodb}@postgres:5432/${POSTGRES_DB:-lodb}?serverVersion=17&charset=utf8
+      # Stripe (donations) — implemented by a later feature; variables centralised here.
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
     depends_on:
       go-fetcher:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "php", "-r", "exit(0);"]
@@ -110,5 +117,21 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: "1"
       MP_SMTP_AUTH_ALLOW_INSECURE: "1"
 
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lodb}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lodb}
+      POSTGRES_DB: ${POSTGRES_DB:-lodb}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
 volumes:
   minio_data:
+  pgdata:

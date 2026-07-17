@@ -53,7 +53,7 @@ et le TLS d'un **edge proxy partagé** (cf. `infra/edge`, section TLS ci-dessous
 | `STAGING_HOST` | ✅ | Hôte staging (IP ou FQDN). `ssh-keyscan` + connexions SSH. |
 | `STAGING_PATH` | ✅ | Chemin absolu du projet sur le serveur (dossier des `compose.*.yaml`). Cible du `git pull origin test` et du `docker compose`. |
 | `STAGING_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
-| `ENV_STAGING` | ✅ | Dotenv staging **complet**. Poussé dans `${STAGING_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-staging`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=staging`, les secrets applicatifs (`APP_SECRET`, `MINIO_*`, `ADMIN_*`) **et** `CADDY_DOMAINS=test.league-of-data-base.com`. `ACME_EMAIL` n'est **plus** ici (il vit dans le stack edge). |
+| `ENV_STAGING` | ✅ | Dotenv staging **complet**. Poussé dans `${STAGING_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-staging`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=staging`, les secrets applicatifs (`APP_SECRET`, `MINIO_*`, `ADMIN_*`, `POSTGRES_PASSWORD`, `STRIPE_*` — cf. section base de données & Stripe) **et** `CADDY_DOMAINS=test.league-of-data-base.com`. `ACME_EMAIL` n'est **plus** ici (il vit dans le stack edge). |
 
 ---
 
@@ -68,7 +68,24 @@ Peut cohabiter avec staging sur le même VPS (projets Compose distincts + edge p
 | `PROD_HOST` | ✅ | Hôte prod (IP ou FQDN). `ssh-keyscan` + connexions SSH. |
 | `PROD_PATH` | ✅ | Chemin absolu du projet sur le serveur. Cible du `git pull origin main` et du `docker compose`. |
 | `PROD_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
-| `ENV_PROD` | ✅ | Dotenv prod **complet**. Poussé dans `${PROD_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-prod`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=prod`, les secrets applicatifs **et** `CADDY_DOMAINS=league-of-data-base.fr, league-of-data-base.com`. `ACME_EMAIL` n'est **plus** ici (il vit dans le stack edge). |
+| `ENV_PROD` | ✅ | Dotenv prod **complet**. Poussé dans `${PROD_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-prod`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=prod`, les secrets applicatifs (dont `POSTGRES_PASSWORD` et `STRIPE_*` — cf. section suivante) **et** `CADDY_DOMAINS=league-of-data-base.fr, league-of-data-base.com`. `ACME_EMAIL` n'est **plus** ici (il vit dans le stack edge). |
+
+---
+
+## 🗄️ Base de données & Stripe — lignes à porter dans `ENV_STAGING` / `ENV_PROD` / `ENV_TEST`
+
+Ces variables sont des **lignes des dotenv** ci-dessus (pas des secrets GitHub distincts).
+
+| Variable | Où | Description |
+|---|---|---|
+| `POSTGRES_PASSWORD` | `ENV_STAGING`, `ENV_PROD` | Mot de passe du service Postgres du stack. **Fort et unique par environnement** — le défaut compose (`lodb`) n'est acceptable qu'en dev local. |
+| `DATABASE_URL` | optionnel | Assemblée par le compose depuis `POSTGRES_*` ; ne la définir explicitement que pour pointer une base **externe** au stack (format `postgresql://user:pass@host:5432/db?serverVersion=17&charset=utf8`). |
+| `STRIPE_SECRET_KEY` | `ENV_PROD` (`sk_live_…`), `ENV_STAGING`/`ENV_TEST` (`sk_test_…`) | Clé API secrète Stripe de la page de don ; vide ⇒ passerelle désactivée proprement. |
+| `STRIPE_WEBHOOK_SECRET` | `ENV_STAGING`, `ENV_PROD` | Secret de signature `whsec_…` de l'endpoint `POST /webhooks/stripe` (un endpoint Stripe distinct par environnement). |
+
+> ℹ️ Les tests CI actuels (`ENV_TEST` → PHPUnit `tests/Unit`) ne touchent pas la base.
+> Si des tests fonctionnels DB apparaissent un jour, `ENV_TEST` (côté CI) devra porter
+> un `DATABASE_URL` pointant un service Postgres du job.
 
 ---
 

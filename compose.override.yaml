@@ -53,6 +53,10 @@ services:
       - "${MAILPIT_UI_PORT:-8025}:8025"
       - "1025:1025"
 
+  postgres:
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
 # Dev-only named volumes keeping vendor/ and var/ on the Linux VM filesystem,
 # out of the slow ./app bind-mount (A1). Reset them with `docker compose down -v`.
 volumes:

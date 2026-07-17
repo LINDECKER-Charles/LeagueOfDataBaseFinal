@@ -223,6 +223,24 @@ $data = $this->aPICaller->call(
 - **Runes** : `/cdn/{version}/data/{lang}/runesReforged.json`
 - **Images** : `/cdn/{version}/img/{type}/{name}.png`
 
+## 👤 Comptes & contenus utilisateur
+
+Les contenus créés par les joueurs vivent dans **PostgreSQL 17** via **Doctrine ORM** —
+séparation stricte avec les données Data Dragon, qui restent hors base (MinIO).
+
+- **Entités** : `users` (identité, favoris par type de ressource) et `builds`
+  (builds de champion ; colonnes **JSONB** pour les runes et les étapes d'objets).
+- **Authentification** : `form_login` Symfony (CSRF stateless), *remember-me* cookie
+  et *login throttling* natif contre le brute-force.
+- **Pickers** `/api/picker/*` : endpoints JSON qui projettent côté serveur les données
+  Data Dragon (id, nom, image) pour la recherche de favoris/builds — le client ne
+  télécharge jamais les datasets complets.
+- **Partage de build** : URL capacité `/b/{token}` (token opaque non devinable) —
+  le préfixe `/build/` étant réservé aux assets Vite par nginx.
+- **Dons** : Stripe Checkout héberge tout le parcours de paiement ; aucune donnée
+  bancaire ni transaction persistée localement (le dashboard Stripe fait foi),
+  webhook signé `POST /webhooks/stripe` pour la traçabilité.
+
 ## 🚀 Déploiement
 
 ### Environnements

@@ -95,6 +95,10 @@ jobs:
               sleep $((attempt * 10))
             done
             docker compose up -d --remove-orphans
+            # Schema migrations: synchronous and fail-fast — a deploy must not serve
+            # code whose schema didn't apply. Waits on postgres via the php service's
+            # depends_on (service_healthy); no-op when nothing is pending.
+            docker compose exec -T php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
             # Pré-chauffe (détaché → hors chemin critique) : JSON + images des 3 dernières
             # versions dans MinIO, puis backfill WebP. Idempotent + best-effort.
             docker compose exec -d php php bin/console app:ddragon:warmup --limit=3

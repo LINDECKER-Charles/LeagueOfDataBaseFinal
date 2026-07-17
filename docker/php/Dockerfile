@@ -12,7 +12,7 @@ FROM php:8.4-fpm-alpine AS php_base
 # apcu backs the dev cache pool (config/packages/cache.yaml -> when@dev); it is
 # harmless in prod, where ddragon.cache stays on the filesystem/Redis.
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions intl opcache zip gd apcu
+RUN install-php-extensions intl opcache zip gd apcu pdo_pgsql
 
 # Application PHP configuration
 COPY docker/php/php.ini      /usr/local/etc/php/conf.d/zz-app.ini
