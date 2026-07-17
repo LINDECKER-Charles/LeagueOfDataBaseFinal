@@ -55,6 +55,8 @@ item:
     price_total: "Prix total"
     price_base: "Prix d'achat"
     price_sell: "Revente"
+    gold_ledger: "Registre d'or"
+    not_purchasable: "Indisponible en boutique"
     categories: "Catégories"
     evolutions: "Évolutions possibles"
     stats: "Statistiques"
@@ -96,6 +98,7 @@ rune:
     keystone: "Pierre angulaire"
     minor: "Runes mineures"
     slot_n: "Emplacement %n%"
+    full_description: "Description complète"
   slot: "Emplacement"
 
 summoner:
@@ -143,10 +146,23 @@ champion:
     cooldown: "Recharge"
     cost: "Coût"
     range: "Portée"
+    charges: "Charges"
+    ranks: "Rangs"
+    tips: "Conseils"
     tips_as: "En jouant"
     tips_against: "Face à"
+    level: "Niveau %level%"
     stats:
       title: "Statistiques de base"
+      attack_damage: "Dégâts d'attaque"
+      attack_speed: "Vitesse d'attaque"
+      hp: "Points de vie"
+      hp_regen: "Régén. de vie"
+      resource_regen: "Régén. de ressource"
+      armor: "Armure"
+      magic_resist: "Résistance magique"
+      move_speed: "Vitesse de déplacement"
+      attack_range: "Portée d'attaque"
     profile:
       title: "Profil du champion"
       attack: "Attaque"
@@ -155,6 +171,14 @@ champion:
       difficulty: "Difficulté"
     lore:
       title: "Lore"
+
+detail:
+  nav:
+    label: "Navigation entre entités"
+    sections: "Sections de la page"
+    previous: "Précédent"
+    next: "Suivant"
+    back_to_list: "Retour à la liste"
 
 common:
   back: "Retour"
@@ -173,6 +197,8 @@ filter:
   next: "Suivant"
   per_page: "Par page"
   all: "Tout"
+  filters: "Filtres"
+  close: "Fermer"
 
 base:
   title: "League of Data Base"
@@ -219,6 +245,11 @@ loader:
     fetching: "récupération"
     ready: "prêt"
 
+perf:
+  title: "Temps de chargement"
+  server: "Serveur"
+  client: "Client"
+
 pagination:
   ok: "Valider"
   more: "…"
@@ -230,3 +261,13 @@ header:
     item: "Objets"
     runes: "Runes"
     summoner: "Sorts d’invocateur"
+  switcher:
+    label: "Patch & langue"
+
+nav:
+  short:
+    home: "Accueil"
+    champions: "Champions"
+    items: "Objets"
+    runes: "Runes"
+    summoners: "Sorts"

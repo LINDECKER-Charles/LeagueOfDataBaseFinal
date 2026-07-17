@@ -23,6 +23,7 @@
         "@vitejs/plugin-vue": "^5.2.1",
         "@vue/test-utils": "^2.4.6",
         "jsdom": "^25.0.1",
+        "playwright": "^1.61.1",
         "tailwindcss": "^4.1.11",
         "typescript": "^5.7.2",
         "vite": "^6.0.5",
