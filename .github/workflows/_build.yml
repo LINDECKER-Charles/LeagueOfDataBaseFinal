@@ -77,3 +77,15 @@ jobs:
           tags: |
             ${{ env.IMG }}/go-fetcher:${{ github.sha }}
             ${{ env.IMG }}/go-fetcher:${{ inputs.moving_tag }}
+
+      - name: Build & push go-api
+        uses: docker/build-push-action@v6
+        with:
+          context: go-api
+          file: go-api/Dockerfile
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ${{ env.IMG }}/go-api:${{ github.sha }}
+            ${{ env.IMG }}/go-api:${{ inputs.moving_tag }}
