@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Shell scripts are executed inside Linux containers (bind-mounted): a CRLF
+# checkout on Windows breaks them at runtime, so force LF in the working tree.
+*.sh text eol=lf

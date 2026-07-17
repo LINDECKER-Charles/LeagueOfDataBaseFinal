@@ -15,6 +15,9 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        exclude:
+            # Doctrine entities are managed objects, never container services.
+            - '../src/Entity/'
     App\Service\Client\ClientManager:
         arguments:
             $defaultLocale: 'en_US'

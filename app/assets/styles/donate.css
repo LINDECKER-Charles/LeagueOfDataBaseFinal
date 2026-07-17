@@ -1,0 +1,241 @@
+/* ---------------------------------------------------------------------------
+   Donation page — the "offering to the forge" signature. One quiet statement:
+   each tier card carries a small hex gem (rotated facet) that ignites cyan on
+   the selected offering. Everything else reuses the shared Hextech grammar.
+--------------------------------------------------------------------------- */
+@layer components {
+  .donate-page {
+    width: 100%;
+    max-width: 44rem;
+    margin-inline: auto;
+    padding: 2.5rem 1rem 4rem;
+  }
+  .donate-page--outcome {
+    display: grid;
+    place-items: center;
+    max-width: 34rem;
+    padding-block: clamp(3rem, 9vh, 6.5rem);
+  }
+
+  .donate-panel {
+    margin-top: 1.5rem;
+    padding: 1.75rem 1.5rem;
+  }
+  .donate-outcome {
+    width: 100%;
+    margin-top: 0;
+    text-align: center;
+  }
+
+  /* Shared small-caps label voice (fieldset legend + free-amount label). */
+  .donate-legend {
+    display: block;
+    font-family: var(--font-beaufort);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--color-gold-light);
+  }
+
+  /* --- Tier cards -------------------------------------------------------- */
+  .donate-tiers-fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .donate-tiers {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-top: 0.85rem;
+  }
+
+  .donate-tier {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 1.1rem 0.5rem 0.9rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  /* Native radio kept in the tree (keyboard + AT) but visually silent. */
+  .donate-tier__input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .donate-tier__amount {
+    font-family: var(--font-beaufort);
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-gold-bright);
+  }
+  .donate-tier__currency {
+    margin-left: 0.15rem;
+    font-size: 0.9rem;
+    color: var(--color-gold);
+  }
+  .donate-tier__label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-text-dim);
+  }
+
+  /* Signature gem — a rotated facet above the amount; dormant by default. */
+  .donate-tier__gem {
+    position: relative;
+    width: 12px;
+    height: 12px;
+    margin-bottom: 0.15rem;
+  }
+  .donate-tier__gem::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: rotate(45deg);
+    border: 1px solid rgba(10, 200, 185, 0.35);
+    background: transparent;
+    transition:
+      background-color 0.3s var(--ease-hextech),
+      border-color 0.3s var(--ease-hextech),
+      box-shadow 0.3s var(--ease-hextech);
+  }
+
+  .donate-tier:has(.donate-tier__input:checked) {
+    border-color: var(--color-gold);
+    box-shadow:
+      inset 0 0 0 1px rgba(10, 200, 185, 0.25),
+      0 0 24px -6px rgba(10, 200, 185, 0.45);
+  }
+  .donate-tier:has(.donate-tier__input:checked) .donate-tier__gem::before {
+    border-color: var(--color-hex);
+    background: var(--color-hex);
+    box-shadow: 0 0 12px -1px rgba(10, 200, 185, 0.85);
+  }
+  .donate-tier:has(.donate-tier__input:focus-visible) {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 2px;
+  }
+
+  /* Free amount overrides the tier server-side; mirror it visually — a filled
+     field sends the selected card dormant so the priority is legible. */
+  .donate-form:has(.donate-custom__input:not(:placeholder-shown)) .donate-tier {
+    opacity: 0.55;
+    border-color: rgba(200, 170, 110, 0.42);
+    box-shadow: none;
+  }
+  .donate-form:has(.donate-custom__input:not(:placeholder-shown)) .donate-tier .donate-tier__gem::before {
+    border-color: rgba(10, 200, 185, 0.35);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* --- Free amount ------------------------------------------------------- */
+  .donate-custom {
+    margin-top: 1.6rem;
+  }
+  .donate-custom__field {
+    position: relative;
+    margin-top: 0.6rem;
+  }
+  .donate-custom__input {
+    padding-right: 2.4rem;
+  }
+  .donate-custom__unit {
+    position: absolute;
+    top: 50%;
+    right: 0.9rem;
+    transform: translateY(-50%);
+    font-family: var(--font-beaufort);
+    color: var(--color-gold);
+    pointer-events: none;
+  }
+  .donate-custom__hint {
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+    color: var(--color-text-dim);
+  }
+
+  /* --- Gateway not configured -------------------------------------------- */
+  .donate-unavailable {
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.4rem;
+    border: 1px dashed rgba(200, 170, 110, 0.35);
+    background: rgba(10, 20, 40, 0.5);
+  }
+  .donate-unavailable__title {
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-gold);
+  }
+  .donate-unavailable__body {
+    margin-top: 0.4rem;
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+  }
+  .donate-unavailable [disabled] {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  /* --- Legal line -------------------------------------------------------- */
+  .donate-legal {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    font-size: 0.8rem;
+    color: var(--color-text-dim);
+  }
+
+  /* --- Outcome seal (success lit / cancel dormant) ------------------------ */
+  .donate-seal {
+    position: relative;
+    display: inline-block;
+    width: 3.25rem;
+    height: 3.25rem;
+    margin-top: 0.5rem;
+  }
+  .donate-seal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: rotate(45deg);
+    border: 1px solid rgba(200, 170, 110, 0.75);
+    background: linear-gradient(180deg, rgba(26, 38, 60, 0.95), rgba(10, 20, 40, 0.95));
+  }
+  .donate-seal::after {
+    content: "";
+    position: absolute;
+    inset: 30%;
+    transform: rotate(45deg);
+    border: 1px solid rgba(10, 200, 185, 0.4);
+    background: rgba(10, 200, 185, 0.18);
+  }
+  .donate-seal--lit::after {
+    background: var(--color-hex);
+    box-shadow: 0 0 24px -2px rgba(10, 200, 185, 0.8);
+    animation: donate-seal-breathe 5s ease-in-out infinite;
+  }
+  @keyframes donate-seal-breathe {
+    0%, 100% { box-shadow: 0 0 16px -4px rgba(10, 200, 185, 0.55); }
+    50% { box-shadow: 0 0 30px -2px rgba(10, 200, 185, 0.95); }
+  }
+
+  @media (min-width: 640px) {
+    .donate-page { padding-inline: 1.5rem; }
+    .donate-panel { padding: 2.5rem; }
+    .donate-tiers { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .donate-seal--lit::after { animation: none; }
+    .donate-tier__gem::before { transition: none; }
+  }
+}

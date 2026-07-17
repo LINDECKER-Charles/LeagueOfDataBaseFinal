@@ -199,6 +199,7 @@ base:
 footer:
   copyright: "© 2025 LINDECKER Charles / Hexanti"
   legal: "Legal Notice"
+  legal_title: "Legal"
 
   navigation:
     title: "Navigation"
@@ -263,3 +264,243 @@ nav:
     items: "Items"
     runes: "Runes"
     summoners: "Spells"
+  codex: "Encyclopedia"
+  account: "Account"
+  login: "Sign in"
+  register: "Create account"
+  profile: "My profile"
+  builds: "My builds"
+  donate: "Donate"
+
+auth:
+  eyebrow: "Summoner gate"
+  login:
+    title: "Sign in"
+    identifier: "Email or summoner name"
+    password: "Password"
+    remember: "Keep me signed in"
+    submit: "Enter the archive"
+    no_account: "No account yet?"
+  register:
+    title: "Create account"
+    email: "Email"
+    username: "Summoner name"
+    username_help: "3-24 characters: letters, digits, dot, dash, underscore; starts with a letter or digit."
+    password: "Password (min. 8 characters)"
+    terms: "I accept the terms of use"
+    submit: "Forge my account"
+    have_account: "Already enrolled?"
+  flash:
+    registered: "Welcome, summoner — your account is ready."
+  logout: "Sign out"
+  profile_stub:
+    placeholder: "Your summoner profile is being forged — favourites and builds arrive soon."
+
+legal:
+  eyebrow: "Legal"
+  updated: "Last updated"
+  toc: "Contents"
+  notice:
+    title: "Legal Notice"
+  privacy:
+    title: "Privacy Policy"
+  terms:
+    title: "Terms of Use"
+  cookies:
+    title: "Cookie Policy"
+
+profile:
+  eyebrow: "Summoner profile"
+  identity:
+    email: "Email"
+    member_since: "Member since"
+  visibility:
+    label: "Profile visibility"
+    help: "Make your profile public — anyone with the link sees your favorites and public builds. Private by default."
+    view_public: "View my public page"
+  builds:
+    label: "Builds"
+    manage: "Manage my builds"
+  favorites:
+    title: "Favorites"
+    empty: "Choose"
+    unavailable: "Unavailable on this patch"
+  slot:
+    champion: "Champion"
+    item: "Item"
+    rune: "Rune"
+    summoner: "Summoner spell"
+  save: "Save changes"
+  picker:
+    search: "Search…"
+    remove: "Remove this favorite"
+    loading: "Loading…"
+    error: "Couldn't load the list."
+    retry: "Retry"
+  danger:
+    title: "Danger zone"
+    help: "Deleting your account is permanent: favorites and builds are erased. Confirm with your password."
+    password: "Current password"
+    delete: "Delete my account"
+  flash:
+    saved: "Profile updated."
+    favorite_unavailable: "The %slot% favorite doesn't exist on this patch — it was removed."
+    wrong_password: "Incorrect password — the account was not deleted."
+    deleted: "Your account has been deleted. Farewell, summoner."
+    csrf: "Session expired, please try again."
+  public:
+    eyebrow: "Summoner card"
+    description: "%username%'s summoner card — favorites and public builds on League Of Data Base."
+    builds_count: "Public builds"
+    builds_title: "Public builds"
+    no_builds: "No public builds yet."
+
+donate:
+  eyebrow: "Offering to the Forge"
+  title: "Support League Of Data Base"
+  intro: "Your donation covers hosting costs and keeps the encyclopedia fast, free and ad-free."
+  pledge: "No in-game advantage, no perks — only our gratitude."
+  tiers:
+    legend: "Choose an offering"
+  tier:
+    spark: "Spark"
+    gem: "Gemstone"
+    crest: "Crest"
+    relic: "Relic"
+  custom:
+    label: "Free amount"
+    placeholder: "e.g. 7.50"
+    hint: "Between %min% € and %max% € — a free amount overrides the selected tier."
+  submit: "Donate with Stripe"
+  product_name: "Donation — League Of Data Base"
+  unavailable:
+    title: "Donations coming soon"
+    body: "The payment gateway is not enabled yet. Come back soon — the encyclopedia stays free either way."
+  legal:
+    secure: "Secure payment by Stripe — no card data ever reaches this site"
+    secure_short: "secure payment"
+    privacy: "Privacy policy"
+    terms: "Terms of use"
+  error:
+    csrf: "Your session expired, please try again."
+    unavailable: "Donations are not available right now."
+    invalid_amount: "Invalid amount — enter between 1 € and 500 €."
+    gateway: "The payment service is unreachable, please try again later."
+  success:
+    eyebrow: "Offering received"
+    title: "Thank you, Summoner"
+    body: "Your support keeps the forge lit — every donation goes to hosting and keeps the encyclopedia free for everyone."
+    receipt: "Stripe sends your receipt by email."
+    back: "Back to the encyclopedia"
+  cancel:
+    eyebrow: "Offering withdrawn"
+    title: "Donation cancelled"
+    body: "Nothing was charged. The encyclopedia stays free and open, with or without a donation."
+    retry: "Try again"
+    back: "Back to home"
+
+build:
+  list:
+    eyebrow: "The armory"
+    title: "My builds"
+    empty: "You haven't forged any build yet."
+    new: "New build"
+    cta_first: "Forge my first build"
+    edit: "Edit"
+    delete: "Delete"
+    delete_confirm: "Delete this build permanently?"
+    public: "Public"
+    private: "Private"
+    updated: "Updated on %date%"
+  editor:
+    eyebrow: "The forge"
+    title_create: "Forge a build"
+    title_edit: "Edit build"
+    identity: "Identity"
+    name: "Build name"
+    name_placeholder: "e.g. Lethality carry"
+    description: "Description"
+    public: "Public build — listed on your public profile"
+    submit_create: "Forge the build"
+    submit_update: "Save changes"
+    back: "Back to my builds"
+    nojs: "The interactive editor requires JavaScript."
+    loading: "Loading catalog…"
+    error: "Catalog unavailable."
+    retry: "Retry"
+    ghost: "Unavailable on this patch"
+    counter: "%count% / %max%"
+    champion:
+      title: "Champion"
+      search: "Search a champion…"
+      empty: "No champion matches."
+      selected: "Chosen champion"
+    runes:
+      title: "Runes"
+      primary: "Primary path"
+      secondary: "Secondary path"
+      keystone: "Keystone"
+      slot: "Row %n%"
+      secondary_hint: "Pick 2 runes from 2 different rows."
+    steps:
+      title: "Purchase order"
+      add: "Add a step"
+      remove: "Remove step"
+      move_up: "Move up"
+      move_down: "Move down"
+      label: "Step label"
+      note: "Note (optional)"
+      search_item: "Search an item…"
+      item_empty: "No item matches."
+      remove_item: "Remove item"
+      gold: "Step cost"
+      preset:
+        start: "Start"
+        first_back: "First back"
+        core: "Core"
+        situational: "Situational"
+        final: "Final"
+  show:
+    by: "By %name%"
+    patch: "Forged on patch %version%"
+    runes: "Runes"
+    keystone: "Keystone"
+    order: "Purchase order"
+    step_cost: "Step cost"
+    total: "Total cost"
+    missing: "Unavailable on this patch"
+    meta_fallback: "Runes and item order for %champion%."
+    copy: "Copy link"
+    copied: "Copied!"
+    copy_error: "Copy manually:"
+  flash:
+    created: "Build forged!"
+    updated: "Build updated."
+    deleted: "Build deleted."
+  error:
+    csrf: "Expired form, try again."
+    name:
+      length: "Build name must be 3–80 characters."
+    description:
+      length: "Description is limited to 2000 characters."
+    structure:
+      invalid: "Invalid build structure."
+    champion:
+      unknown: "Unknown champion on this patch."
+    catalog_unavailable: "Catalogs unavailable, try again shortly."
+    runes:
+      primary_style: "Invalid primary rune path."
+      primary_selection_count: "Pick exactly 4 primary runes."
+      primary_selection_slot: "Each primary rune must come from its own row."
+      secondary_style: "Invalid secondary rune path."
+      secondary_same_style: "Secondary path must differ from the primary."
+      secondary_selection_count: "Pick exactly 2 secondary runes."
+      secondary_selection_slot: "Secondary runes must be minor runes of the secondary path."
+      secondary_same_slot: "The 2 secondary runes must come from different rows."
+    steps:
+      count: "Between 1 and 10 steps."
+      label: "Each step needs a label (40 characters max)."
+      note: "Step notes are limited to 300 characters."
+      items_count: "Each step holds 1 to 8 items."
+      item_unknown: "An item is unknown on this patch."
+      total_items: "40 items maximum across all steps."

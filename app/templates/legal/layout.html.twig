@@ -1,0 +1,88 @@
+{# Shared shell of the /legal/* pages: codex banner (eyebrow + page title +
+   effective-date plate), anchored table of contents, then the prose column.
+   Children fill three blocks: page_title, toc (li items) and legal_body
+   (sections separated by <hr class="hx-rule">). The legal body is deliberately
+   hardcoded per locale (legal/fr/*, legal/en/*) — only chrome goes through
+   |trans (keys legal.*). #}
+{% extends 'base.html.twig' %}
+
+{% block title %}{% block page_title %}{% endblock %} — {{ legal.siteName }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Prose typography for long-form legal HTML — a page-scoped sheet beats
+       repeating utility classes on every paragraph of a 300-line text. Design
+       tokens only, no hardcoded colors. #}
+    <style>
+        .legal-prose { font-family: var(--font-spiegel); }
+        .legal-prose section { scroll-margin-top: 6.5rem; }
+        .legal-prose h2 {
+            margin-bottom: 1rem;
+            font-family: var(--font-beaufort);
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--color-gold-bright);
+        }
+        .legal-prose h3 {
+            margin: 1.25rem 0 0.5rem;
+            font-family: var(--font-beaufort);
+            font-size: 1rem;
+            letter-spacing: 0.06em;
+            color: var(--color-gold);
+        }
+        .legal-prose p,
+        .legal-prose li,
+        .legal-prose blockquote { color: var(--color-text-muted); line-height: 1.75; }
+        .legal-prose p + p { margin-top: 0.75rem; }
+        .legal-prose a { color: var(--color-hex); text-underline-offset: 4px; }
+        .legal-prose a:hover { text-decoration: underline; }
+        .legal-prose ul, .legal-prose ol { margin: 0.75rem 0; padding-left: 1.4rem; }
+        .legal-prose ul { list-style: square; }
+        .legal-prose ol { list-style: decimal; }
+        .legal-prose li + li { margin-top: 0.4rem; }
+        .legal-prose strong { color: var(--color-text); font-weight: 600; }
+        .legal-prose .table-scroll { overflow-x: auto; }
+        .legal-prose table { width: 100%; margin: 1rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .legal-prose th, .legal-prose td {
+            border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        .legal-prose th {
+            font-family: var(--font-beaufort);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--color-gold);
+            background: color-mix(in srgb, var(--color-void) 70%, transparent);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<main class="mx-auto w-full max-w-3xl px-6 pb-20 pt-10 sm:px-8 lg:pt-14">
+    <header class="mb-10">
+        <div class="codex-header mb-6">
+            <span class="codex-header__title">{{ 'legal.eyebrow'|trans }}</span>
+        </div>
+        <h1 class="mb-6 font-beaufort text-3xl uppercase tracking-[0.06em] text-gold-grad sm:text-4xl">{{ block('page_title') }}</h1>
+        <div class="hx-plate max-w-max">
+            <span class="hx-plate__label">{{ 'legal.updated'|trans }}</span>
+            <span class="hx-plate__value">{{ lastUpdated }}</span>
+        </div>
+    </header>
+
+    <nav aria-label="{{ 'legal.toc'|trans }}" class="mb-12 border border-gold-deep/40 bg-void/60 p-5">
+        <p class="eyebrow mb-3">{{ 'legal.toc'|trans }}</p>
+        <ol class="grid gap-1.5 text-sm text-text-muted sm:grid-cols-2">
+            {% block toc %}{% endblock %}
+        </ol>
+    </nav>
+
+    <div class="legal-prose flex flex-col gap-10">
+        {% block legal_body %}{% endblock %}
+    </div>
+</main>
+{% endblock %}

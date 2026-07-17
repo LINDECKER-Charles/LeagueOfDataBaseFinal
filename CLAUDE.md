@@ -2,6 +2,44 @@
 
 Encyclopédie League of Legends servie depuis les données **Data Dragon** (+ CommunityDragon pour les chromas). Ce fichier fixe l'architecture et les **règles de code** du dépôt. Il complète les préférences globales `~/.claude/CLAUDE.md` (senior, concis, production-grade) — ne pas les redupliquer.
 
+## 🔁 Règle critique : versionner chaque feature / fix dans `docs/changelog/`
+
+**À chaque feature implémentée ou bug corrigé, créer une entrée dédiée dans `docs/changelog/`.**
+
+Ce répertoire est le **journal technique interne** : source de vérité de tout ce qui a été
+touché, jamais filtré. Aucune entrée = changement invisible.
+
+### Quand créer une entrée
+
+- ✅ Nouvelle feature (UI, API, devops visible côté joueur)
+- ✅ Bug fix impactant le comportement joueur
+- ✅ Amélioration perf ou UX perceptible
+- ❌ Refacto interne sans impact externe
+- ❌ Tests, lint, formatage
+- ❌ Mise à jour deps sans changement fonctionnel
+
+En cas de doute : créer l'entrée. Le filtre éditorial se fera à la release.
+
+### Où et comment
+
+Un fichier par changement notable : `docs/changelog/YYYY/YYYY-MM-DD-slug-court.md`
+(slug kebab-case ; date = livraison, pas début des travaux).
+Format : voir `docs/changelog/TEMPLATE.md` — frontmatter YAML strict
+(`date`, `type`, `scope`, `title`, `summary`, `tags`), scope ∈ front | back | fetcher | infra | full-stack.
+Corps orienté joueur ; contexte technique en fin sous `## Technique`.
+
+### Workflow
+
+1. Implémenter la feature / le fix.
+2. **Avant de commit**, créer le fichier `docs/changelog/YYYY/YYYY-MM-DD-slug.md`.
+3. L'inclure dans le commit principal (un seul commit avec code + changelog).
+4. Plusieurs changements distincts dans la même session → plusieurs fichiers changelog.
+
+Toute génération de commit ou de PR doit vérifier la présence de l'entrée correspondante.
+La synthèse vers un changelog public est manuelle, avant chaque release : trier, agréger,
+publier, puis **archiver** les entrées traitées dans `docs/changelog/archived/YYYY/`
+(cf. `docs/changelog/README.md`).
+
 ## Stack
 
 | Couche | Techno |
@@ -9,6 +47,7 @@ Encyclopédie League of Legends servie depuis les données **Data Dragon** (+ Co
 | Backend | Symfony 7.4 LTS / PHP 8.4 (`app/`) |
 | Fetch upstream | micro-service Go `go-workers/` (passerelle thin, allowlist SSRF) |
 | Stockage assets | MinIO S3 content-addressed (Flysystem + async-aws) |
+| Données utilisateur | PostgreSQL 17 + Doctrine ORM (comptes, favoris, builds) |
 | Front | Twig + îlots Vite / Vue 3 / TS / PrimeVue, navigation Turbo Drive |
 | Design system | « Hextech » dans `app/assets/styles/app.css` |
 | i18n | 21 locales, catalogues `messages.<loc>.yaml`, locale UI = langue Data Dragon |
@@ -17,6 +56,7 @@ Encyclopédie League of Legends servie depuis les données **Data Dragon** (+ Co
 
 - **Tout l'egress Data Dragon / CommunityDragon passe par le Go gateway** (`GoFetcherClient` → service `go_fetcher.client`). Ne jamais fetch une URL externe directement depuis PHP. Toute nouvelle source d'asset doit être ajoutée à l'`ALLOWED_HOSTS` du go-fetcher (`compose.yaml`) — **recréer le conteneur** pour prise en compte.
 - **Stockage sans base de données** : images en `blobs/{sha256}.{ext}` (dédup O(1) + sibling WebP), données en `data/{version}/{lang}/{type}.json`, manifeste `manifest/{version}/{type}.json`. Le manifeste se met à jour en **read-merge-write** (`AbstractManager::saveManifest`) — ne jamais réintroduire un overwrite aveugle (course concurrente loader SSE ↔ flush kernel.terminate).
+- **Postgres = données utilisateur uniquement** (comptes/favoris/builds). Les données et images Data Dragon restent hors DB (MinIO) — ne jamais y introduire de dépendance DB. Migrations : `docker compose exec -T php php bin/console doctrine:migrations:migrate`.
 - **Managers de ressource** (champion/item/rune/summoner) : dérivent `AbstractManager`. La logique partagée (data, images, manifeste, **pagination**) vit dans la base ; un manager concret ne surcharge que ses points de divergence réels (ex. `paginationCollection`, `perPageCap`, `imageUrl`, `imageEntries`).
 - **Contrôleurs de ressource** : dérivent `AbstractResourceController` (dépendances transverses + `dataError`/`redirectToSetupWithError`/`clientData` mutualisés). Résolution version/langue via `PageContextResolver` (query → session, **sans redirect**), jamais de « redirect dance ».
 - **Îlots Vue** : logique d'orchestration hors du SFC (composables + modules purs, ex. `assets/vue/loader/`). Un SFC reste présentation + câblage mince. Code-split par îlot.
@@ -112,6 +152,8 @@ npm run build     # vite build
 - **Loader** : ne PAS réintroduire `<Transition>` + `v-show` pour l'overlay — la transition de sortie ne se complète pas de façon fiable en vrai navigateur. Visibilité = toggle de classe CSS déterministe.
 - **Splash / skins champion** : servis **directement** depuis le CDN DDragon (hotlink assumé), PAS ingérés MinIO — choix perf sur le TTFB.
 - **Chromas** : seule source = CommunityDragon (booléen `chromas` seul côté DDragon). Label couleur dérivé de la teinte (honnête), pas un nom produit Riot.
+- **`/build/` est réservé aux assets Vite (nginx)** — la vue de partage des builds vit sur `/b/{token}` ; ne pas « corriger ».
+- **CSRF stateless** : token ids `submit`/`authenticate`/`logout` — les POST curl de test exigent un header `Origin`.
 - **Préservation du comportement** en refacto : conserver les contrats publics et la sortie ; prouver l'équivalence (tests + diff de rendu avant/après) avant de commit.
 
 ## Références

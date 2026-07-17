@@ -1,0 +1,390 @@
+/* ---------------------------------------------------------------------------
+   Champion builds — forge editor (.forge-*), purchase-order timeline (.bsteps-*)
+   and share parchment (.bshare-*). Composes the Hextech primitives; the rune
+   path tint reuses the .path-* variables from detail.css.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- Shared: honest degraded rendering of version-scoped ids ----------- */
+  .forge-ghost {
+    opacity: 0.45;
+    filter: saturate(0.2);
+  }
+
+  /* ---- My builds rows ----------------------------------------------------- */
+  .forge-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9rem 1.25rem;
+    padding: 1rem 1.25rem;
+  }
+  .forge-row__id {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+    flex: 1 1 16rem;
+  }
+  .forge-row__portrait {
+    position: relative;
+    flex: none;
+    width: 3.5rem;
+    height: 3.5rem;
+    border: 1px solid rgba(200, 170, 110, 0.5);
+    background: var(--color-void);
+  }
+  .forge-row__portrait img:not(.forge-row__keystone) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .forge-row__initials {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-beaufort);
+    font-size: 0.85rem;
+    color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  /* Keystone medallion pinned on the portrait corner — the row's rune signature. */
+  .forge-row__keystone {
+    position: absolute;
+    right: -0.55rem;
+    bottom: -0.55rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    border: 1px solid var(--color-gold-deep);
+    background: var(--color-hextech-black);
+  }
+  .forge-row__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+  }
+  .forge-row__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .forge-chip--public {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+  }
+  .forge-btn-sm {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.7rem;
+  }
+  .forge-btn-danger:hover {
+    color: var(--color-danger, #d44242);
+    border-color: color-mix(in srgb, var(--color-danger, #d44242) 60%, transparent);
+  }
+
+  /* ---- Forge editor island ------------------------------------------------ */
+  .forge-section {
+    padding: 1.5rem;
+  }
+  @media (min-width: 640px) {
+    .forge-section { padding: 2rem; }
+  }
+  .forge-hint {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--color-text-dim);
+  }
+  .forge-error {
+    border: 1px solid color-mix(in srgb, var(--color-danger, #d44242) 55%, transparent);
+    background: color-mix(in srgb, var(--color-danger, #d44242) 12%, transparent);
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+    color: var(--color-text);
+  }
+
+  /* Champion portrait grid — square cells, gold ring on the chosen one. */
+  .forge-champs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(4.25rem, 1fr));
+    gap: 0.6rem;
+    max-height: 21rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+  .forge-champ {
+    position: relative;
+    aspect-ratio: 1;
+    border: 1px solid rgba(200, 170, 110, 0.3);
+    background: var(--color-void);
+    cursor: pointer;
+    transition: border-color 0.25s var(--ease-hextech), transform 0.25s var(--ease-hextech);
+  }
+  .forge-champ:hover { border-color: var(--color-gold); transform: translateY(-2px); }
+  .forge-champ:focus-visible { outline: 2px solid var(--color-hex); outline-offset: 1px; }
+  .forge-champ img { width: 100%; height: 100%; object-fit: cover; }
+  .forge-champ__name {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    overflow: hidden;
+    padding: 0.1rem 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text-muted);
+    background: rgba(1, 10, 19, 0.82);
+  }
+  .forge-champ--on {
+    border-color: var(--color-gold);
+    box-shadow: 0 0 18px -4px rgba(200, 170, 110, 0.8), inset 0 0 0 1px var(--color-gold);
+  }
+
+  /* Rune board — tree tabs + perk rows. Selected perk = gold ring + glow,
+     unselected siblings desaturate (the LoL client's own grammar). */
+  .forge-trees {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .forge-tree {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid rgba(200, 170, 110, 0.35);
+    background: color-mix(in srgb, var(--color-void) 70%, transparent);
+    font-family: var(--font-beaufort);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color 0.25s var(--ease-hextech), border-color 0.25s var(--ease-hextech);
+  }
+  .forge-tree img { width: 1.35rem; height: 1.35rem; }
+  .forge-tree:hover { color: var(--color-hex); border-color: color-mix(in srgb, var(--color-hex) 55%, transparent); }
+  .forge-tree:focus-visible { outline: 2px solid var(--color-hex); outline-offset: 1px; }
+  .forge-tree--on {
+    color: var(--path, var(--color-gold-bright));
+    border-color: var(--path, var(--color-gold));
+    box-shadow: 0 0 16px -6px var(--path, var(--color-gold));
+  }
+  .forge-slot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(200, 170, 110, 0.14);
+  }
+  .forge-slot:last-child { border-bottom: 0; }
+  .forge-slot__name {
+    flex: 0 0 6.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-dim);
+  }
+  .forge-perk {
+    position: relative;
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(200, 170, 110, 0.4);
+    background: var(--color-hextech-black);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.25s var(--ease-hextech), filter 0.25s var(--ease-hextech), box-shadow 0.25s var(--ease-hextech);
+  }
+  .forge-perk img { width: 100%; height: 100%; object-fit: cover; }
+  .forge-perk--big { width: 3.9rem; height: 3.9rem; }
+  .forge-perk:focus-visible { outline: 2px solid var(--color-hex); outline-offset: 2px; }
+  /* A row with a pick dims its non-picked siblings; the pick glows. */
+  .forge-slot--picked .forge-perk:not(.forge-perk--on) { filter: grayscale(0.85) brightness(0.75); }
+  .forge-perk--on {
+    border-color: var(--path, var(--color-gold));
+    box-shadow: 0 0 18px -4px var(--path, var(--color-gold)), inset 0 0 0 1px var(--path, var(--color-gold));
+  }
+
+  /* ---- Step editor -------------------------------------------------------- */
+  .forge-step {
+    border: 1px solid rgba(200, 170, 110, 0.28);
+    background: linear-gradient(180deg, rgba(15, 27, 45, 0.85), rgba(9, 16, 22, 0.92));
+    padding: 1rem 1.15rem;
+  }
+  .forge-step__label {
+    min-width: 10rem;
+    max-width: 18rem;
+  }
+  .forge-icon-btn {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--color-gold-deep);
+    background: var(--color-void);
+    color: var(--color-gold);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .forge-icon-btn:hover:not(:disabled) { color: var(--color-gold-bright); border-color: var(--color-gold); }
+  .forge-icon-btn:focus-visible { outline: 2px solid var(--color-hex); outline-offset: 1px; }
+  .forge-icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .forge-item {
+    position: relative;
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid rgba(200, 170, 110, 0.4);
+    background: var(--color-void);
+  }
+  .forge-item img { width: 100%; height: 100%; object-fit: cover; }
+  .forge-item__fallback {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-text-dim);
+  }
+  .forge-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: 0.5rem;
+    max-height: 13rem;
+    overflow-y: auto;
+    margin-top: 0.6rem;
+  }
+  .forge-result {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid rgba(200, 170, 110, 0.25);
+    background: color-mix(in srgb, var(--color-void) 65%, transparent);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+  }
+  .forge-result:hover:not(:disabled) { border-color: var(--color-gold); }
+  .forge-result:focus-visible { outline: 2px solid var(--color-hex); outline-offset: 1px; }
+  .forge-result:disabled { opacity: 0.4; cursor: not-allowed; }
+  .forge-result img { width: 2rem; height: 2rem; flex: none; object-fit: cover; }
+  .forge-result span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.78rem;
+    color: var(--color-text);
+  }
+  .forge-result b {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: var(--color-gold-light);
+  }
+
+  /* ---- Share parchment ---------------------------------------------------- */
+  .bshare-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+  }
+  .bshare-portrait {
+    position: relative;
+    flex: none;
+    width: 6rem;
+    height: 6rem;
+    border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent);
+    background: var(--color-void);
+    /* Hex-clipped seal — the focus shape of the codex. */
+    clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  }
+  .bshare-portrait img { width: 100%; height: 100%; object-fit: cover; }
+  .bshare-portrait__initials {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-beaufort);
+    font-size: 1.4rem;
+    color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  .bshare-desc {
+    margin-top: 1.5rem;
+    max-width: 60ch;
+    font-family: var(--font-spiegel);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+  }
+  .bshare-tree {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--color-gold);
+  }
+  .bshare-medallion { width: 2.4rem; }
+  .bshare-item {
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid rgba(200, 170, 110, 0.4);
+    background: var(--color-void);
+  }
+  .bshare-item img { width: 100%; height: 100%; object-fit: cover; }
+  .bshare-item__fallback {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-text-dim);
+  }
+
+  /* ---- Purchase-order timeline — diamond nodes on a gold spine ------------ */
+  .bsteps {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-left: 1.6rem;
+  }
+  .bsteps::before {
+    content: "";
+    position: absolute;
+    top: 0.4rem;
+    bottom: 0.4rem;
+    left: 0.32rem;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(200, 170, 110, 0.55) 8%, rgba(200, 170, 110, 0.55) 92%, transparent);
+  }
+  .bsteps-node { position: relative; }
+  .bsteps-marker {
+    position: absolute;
+    top: 1.35rem;
+    left: -1.6rem;
+    width: 0.65rem;
+    height: 0.65rem;
+    transform: rotate(45deg);
+    background: var(--path, var(--color-gold));
+    box-shadow: 0 0 10px -1px var(--path, var(--color-gold));
+  }
+}

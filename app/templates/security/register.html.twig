@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'auth.register.title'|trans }} · {{ 'base.title'|trans }}{% endblock %}
+
+{% block body %}
+<main class="auth-portal">
+    <section class="auth-card hextech-frame hx-corners relative w-full max-w-md p-8 sm:p-10">
+        <p class="eyebrow">{{ 'auth.eyebrow'|trans }}</p>
+        <h1 class="mt-2 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad">
+            {{ 'auth.register.title'|trans }}
+        </h1>
+        <hr class="hx-rule mt-5">
+
+        {% if registrationForm.vars.errors|length > 0 %}
+            <div class="auth-error mt-6" role="alert">
+                {% for err in registrationForm.vars.errors %}
+                    <p>{{ err.message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {# Fields are rendered by hand (no default form theme) to keep full
+           control of the Hextech markup. Full reload after auth: no Turbo. #}
+        {{ form_start(registrationForm, {attr: {'data-turbo': 'false', class: 'mt-6 space-y-5'}}) }}
+            <div>
+                <label for="{{ registrationForm.email.vars.id }}" class="auth-label">
+                    {{ 'auth.register.email'|trans }}
+                </label>
+                {{ form_widget(registrationForm.email, {attr: {class: 'hx-input mt-1.5', autocomplete: 'email'}}) }}
+                {% for err in registrationForm.email.vars.errors %}
+                    <p class="auth-field-error">{{ err.message }}</p>
+                {% endfor %}
+            </div>
+            <div>
+                <label for="{{ registrationForm.username.vars.id }}" class="auth-label">
+                    {{ 'auth.register.username'|trans }}
+                </label>
+                {{ form_widget(registrationForm.username, {attr: {class: 'hx-input mt-1.5', autocomplete: 'username'}}) }}
+                <p class="auth-help">{{ 'auth.register.username_help'|trans }}</p>
+                {% for err in registrationForm.username.vars.errors %}
+                    <p class="auth-field-error">{{ err.message }}</p>
+                {% endfor %}
+            </div>
+            <div>
+                <label for="{{ registrationForm.plainPassword.vars.id }}" class="auth-label">
+                    {{ 'auth.register.password'|trans }}
+                </label>
+                {{ form_widget(registrationForm.plainPassword, {attr: {class: 'hx-input mt-1.5'}}) }}
+                {% for err in registrationForm.plainPassword.vars.errors %}
+                    <p class="auth-field-error">{{ err.message }}</p>
+                {% endfor %}
+            </div>
+            <div>
+                <label class="flex items-start gap-2.5 text-sm text-text-muted">
+                    {{ form_widget(registrationForm.agreeTerms, {attr: {class: 'hx-check mt-0.5'}}) }}
+                    <span>{{ 'auth.register.terms'|trans }}</span>
+                </label>
+                {% for err in registrationForm.agreeTerms.vars.errors %}
+                    <p class="auth-field-error">{{ err.message }}</p>
+                {% endfor %}
+            </div>
+            <button type="submit" class="hx-btn w-full">{{ 'auth.register.submit'|trans }}</button>
+        {{ form_end(registrationForm) }}
+
+        <div class="gold-hairline mt-8 pt-5 text-center text-sm text-text-muted">
+            {{ 'auth.register.have_account'|trans }}
+            <a href="{{ path('app_login') }}" class="nav-link text-gold">{{ 'auth.login.title'|trans }}</a>
+        </div>
+    </section>
+</main>
+{% endblock %}

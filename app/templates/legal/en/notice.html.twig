@@ -1,0 +1,122 @@
+{% extends 'legal/layout.html.twig' %}
+
+{% block page_title %}{{ 'legal.notice.title'|trans }}{% endblock %}
+
+{% block toc %}
+    <li><a class="nav-link" href="#publisher">1. Site publisher</a></li>
+    <li><a class="nav-link" href="#hosting">2. Hosting</a></li>
+    <li><a class="nav-link" href="#intellectual-property">3. Intellectual property</a></li>
+    <li><a class="nav-link" href="#riot">4. Riot Games disclaimer</a></li>
+    <li><a class="nav-link" href="#data">5. Personal data and cookies</a></li>
+    <li><a class="nav-link" href="#contact">6. Contact</a></li>
+{% endblock %}
+
+{% block legal_body %}
+    <section id="publisher">
+        <h2>1. Site publisher</h2>
+        <p>
+            The website <strong>{{ legal.siteName }}</strong>, available at
+            <a href="{{ legal.siteUrl }}">{{ legal.siteUrl }}</a>, is published by:
+        </p>
+        <ul>
+            <li><strong>Name:</strong> {{ legal.publisherName }}</li>
+            <li><strong>Status:</strong> {{ legal.publisherStatus }}</li>
+            {% if legal.publisherAddress %}
+                <li><strong>Address:</strong> {{ legal.publisherAddress }}</li>
+            {% else %}
+                <li>
+                    <strong>Address:</strong> not published — non-professional publisher
+                    (article 6, III-2 of the French LCEN act). The publisher's identity and
+                    contact details are held by the hosting provider.
+                </li>
+            {% endif %}
+            <li><strong>Email:</strong> <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a></li>
+            <li><strong>Company registration (SIRET):</strong> {{ legal.siret }}</li>
+        </ul>
+        <p>
+            <strong>Publication director:</strong> {{ legal.publicationDirector }}.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="hosting">
+        <h2>2. Hosting</h2>
+        <p>The website is hosted by:</p>
+        <ul>
+            <li><strong>Host:</strong> {{ legal.hostName }}</li>
+            <li><strong>Address:</strong> {{ legal.hostAddress }}</li>
+            <li><strong>Phone:</strong> {{ legal.hostPhone }}</li>
+        </ul>
+        <p>
+            Per Hostinger's terms of service, the contracting entity for its services is
+            Hostinger International Ltd, 61 Lordou Vironos str., 6023 Larnaca, Cyprus.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="intellectual-property">
+        <h2>3. Intellectual property</h2>
+        <p>
+            The source code of {{ legal.siteName }} is released under the
+            <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons BY-NC 4.0</a>
+            license (attribution, non-commercial use). It is available on
+            <a href="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal" target="_blank" rel="noopener noreferrer">GitHub</a>.
+        </p>
+        <p>
+            Game data, names, artwork, icons and other content related to
+            <em>League of Legends</em> come from Riot Games' public services (Data Dragon,
+            CommunityDragon) and remain the exclusive property of
+            <strong>Riot Games, Inc.</strong> Their presence on this site grants no right of
+            reuse: any exploitation of that content remains subject to Riot Games' own terms.
+        </p>
+        <p>
+            The site's structure, original texts and visual identity are protected by
+            copyright. Any unauthorized reproduction outside the scope of the CC BY-NC 4.0
+            license applicable to the code is prohibited.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="riot">
+        <h2>4. Riot Games disclaimer</h2>
+        <p>
+            {{ legal.siteName }} is a free, non-commercial fan project with no legal affiliation
+            to Riot Games. In accordance with Riot Games' "Legal Jibber Jabber" policy:
+        </p>
+        <blockquote class="hx-corners border border-gold-deep/50 bg-void/70 p-5">
+            <p>
+                {{ legal.siteName }} isn't endorsed by Riot Games and doesn't reflect the views
+                or opinions of Riot Games or anyone officially involved in producing or managing
+                Riot Games properties. Riot Games, and all associated properties are trademarks
+                or registered trademarks of Riot Games, Inc.
+            </p>
+        </blockquote>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="data">
+        <h2>5. Personal data and cookies</h2>
+        <p>
+            The personal-data processing carried out by this site is described in the
+            <a href="{{ path('app_legal_privacy') }}">privacy policy</a>. The cookies and local
+            storage used are detailed in the
+            <a href="{{ path('app_legal_cookies') }}">cookie policy</a>. The rules governing the
+            use of the service are set out in the
+            <a href="{{ path('app_legal_terms') }}">terms of use</a>.
+        </p>
+    </section>
+
+    <hr class="hx-rule">
+
+    <section id="contact">
+        <h2>6. Contact</h2>
+        <p>
+            For any question about the site or its content, or to report unlawful content:
+            <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a>.
+        </p>
+    </section>
+{% endblock %}

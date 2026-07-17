@@ -1,0 +1,117 @@
+{% extends 'base.html.twig' %}
+
+{% set isEdit = mode == 'edit' %}
+
+{% block title %}{{ (isEdit ? 'build.editor.title_edit' : 'build.editor.title_create')|trans }} · {{ 'base.title'|trans }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block body %}
+<main class="relative px-6 py-12">
+  {% include 'partials/main/gradient.html.twig' %}
+
+  <div class="relative mx-auto max-w-5xl">
+    <header class="mb-8">
+      <p class="eyebrow">{{ 'build.editor.eyebrow'|trans }}</p>
+      <h1 class="mt-2 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad sm:text-4xl">
+        {{ (isEdit ? 'build.editor.title_edit' : 'build.editor.title_create')|trans }}
+      </h1>
+      <hr class="hx-rule mt-5">
+    </header>
+
+    <form method="post"
+          action="{{ isEdit ? path('app_build_update', { id: build.id }) : path('app_build_create') }}"
+          class="space-y-8">
+      <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+
+      <section class="hextech-frame hx-corners p-6 sm:p-8">
+        {% include 'components/codex_header.html.twig' with { title: 'build.editor.identity'|trans } %}
+        <div class="space-y-5">
+          <div>
+            <label for="build-name" class="auth-label">{{ 'build.editor.name'|trans }}</label>
+            <input id="build-name" name="name" type="text" required
+                   minlength="3" maxlength="80"
+                   value="{{ values.name }}"
+                   placeholder="{{ 'build.editor.name_placeholder'|trans }}"
+                   class="hx-input mt-1.5">
+          </div>
+          <div>
+            <label for="build-description" class="auth-label">{{ 'build.editor.description'|trans }}</label>
+            <textarea id="build-description" name="description" rows="3" maxlength="2000"
+                      class="hx-input mt-1.5">{{ values.description }}</textarea>
+          </div>
+          <label class="flex items-start gap-2.5 text-sm text-text-muted">
+            <input type="checkbox" name="isPublic" class="hx-check mt-0.5" {{ values.isPublic ? 'checked' }}>
+            <span>{{ 'build.editor.public'|trans }}</span>
+          </label>
+        </div>
+      </section>
+
+      {# The island owns champion/runes/steps and maintains the hidden `structure`
+         input. Until it mounts (or without JS), the fallback input below keeps the
+         current structure round-tripping through a submit. #}
+      <div data-vue="build-editor" data-props="{{ {
+            mode: mode,
+            initial: values.structure,
+            endpoints: {
+              champions: '/api/picker/champions',
+              items: '/api/picker/items',
+              runes: '/api/picker/runes'
+            },
+            version: version,
+            lang: lang,
+            labels: {
+              loading: 'build.editor.loading'|trans,
+              error: 'build.editor.error'|trans,
+              retry: 'build.editor.retry'|trans,
+              ghost: 'build.editor.ghost'|trans,
+              counter: 'build.editor.counter'|trans,
+              champion: {
+                title: 'build.editor.champion.title'|trans,
+                search: 'build.editor.champion.search'|trans,
+                empty: 'build.editor.champion.empty'|trans,
+                selected: 'build.editor.champion.selected'|trans
+              },
+              runes: {
+                title: 'build.editor.runes.title'|trans,
+                primary: 'build.editor.runes.primary'|trans,
+                secondary: 'build.editor.runes.secondary'|trans,
+                keystone: 'build.editor.runes.keystone'|trans,
+                slot: 'build.editor.runes.slot'|trans,
+                secondaryHint: 'build.editor.runes.secondary_hint'|trans
+              },
+              steps: {
+                title: 'build.editor.steps.title'|trans,
+                add: 'build.editor.steps.add'|trans,
+                remove: 'build.editor.steps.remove'|trans,
+                moveUp: 'build.editor.steps.move_up'|trans,
+                moveDown: 'build.editor.steps.move_down'|trans,
+                label: 'build.editor.steps.label'|trans,
+                note: 'build.editor.steps.note'|trans,
+                searchItem: 'build.editor.steps.search_item'|trans,
+                itemEmpty: 'build.editor.steps.item_empty'|trans,
+                removeItem: 'build.editor.steps.remove_item'|trans,
+                gold: 'build.editor.steps.gold'|trans,
+                presets: [
+                  'build.editor.steps.preset.start'|trans,
+                  'build.editor.steps.preset.first_back'|trans,
+                  'build.editor.steps.preset.core'|trans,
+                  'build.editor.steps.preset.situational'|trans,
+                  'build.editor.steps.preset.final'|trans
+                ]
+              }
+            }
+          }|json_encode|e('html_attr') }}">
+        <noscript><p class="hx-chip">{{ 'build.editor.nojs'|trans }}</p></noscript>
+        <input type="hidden" name="structure" value="{{ values.structure ? values.structure|json_encode : '' }}">
+      </div>
+
+      <div class="flex flex-wrap items-center justify-end gap-3">
+        <a href="{{ path('app_builds') }}" class="hx-btn-ghost">{{ 'build.editor.back'|trans }}</a>
+        <button type="submit" class="hx-btn">
+          {{ (isEdit ? 'build.editor.submit_update' : 'build.editor.submit_create')|trans }}
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+{% endblock %}
