@@ -12,7 +12,9 @@
           empty: 'filter.empty'|trans,
           clear: 'filter.clear'|trans,
           prev: 'filter.prev'|trans,
-          next: 'filter.next'|trans
+          next: 'filter.next'|trans,
+          perPage: 'filter.per_page'|trans,
+          all: 'filter.all'|trans
         }
       }|json_encode|e('html_attr') }}"></div>
   <a href="{{ path('app_setup') }}" class="hx-btn shrink-0 whitespace-nowrap py-2">{{ 'item.list.change_version'|trans }}</a>
