@@ -171,6 +171,8 @@ filter:
   clear: "Effacer"
   prev: "Précédent"
   next: "Suivant"
+  per_page: "Par page"
+  all: "Tout"
 
 base:
   title: "League of Data Base"
