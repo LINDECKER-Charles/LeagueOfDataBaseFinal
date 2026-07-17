@@ -30,18 +30,18 @@ final class RuneController extends AbstractResourceController
     #[Route('/runes', name: 'app_runes', methods: ['GET'])]
     public function runes(): Response
     {
-        $ctx = $this->pageContext->listContext(defaultPerPage: 8, maxPerPage: 20);
+        // Full list in one render — the ResourceFilter island owns search and
+        // pagination client-side (rune trees are only a handful).
+        $sel = $this->pageContext->selection();
 
         try {
-            // Full list in one render — the ResourceFilter island owns search
-            // and pagination client-side (rune trees are only a handful).
-            $data = $this->runeManager->paginate($ctx['version'], $ctx['lang'], 0, 1);
+            $data = $this->runeManager->paginate($sel['version'], $sel['lang'], 0, 1);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($ctx, $e);
+            return $this->redirectToSetupWithError($sel, $e);
         }
 
-        $data['meta']['version'] = $ctx['version'];
-        $data['meta']['lang']    = $ctx['lang'];
+        $data['meta']['version'] = $sel['version'];
+        $data['meta']['lang']    = $sel['lang'];
 
         return $this->render('rune/liste.html.twig', [
             'runesReforgeds' => $data['runesReforgeds'],
@@ -67,9 +67,12 @@ final class RuneController extends AbstractResourceController
         }
 
         return $this->render('rune/detail.html.twig', [
-            'rune'   => $rune,
-            'images' => $images,
-            'client' => $this->clientData(),
+            'rune'    => $rune,
+            'images'  => $images,
+            'version' => $sel['version'],
+            'lang'    => $sel['lang'],
+            'nav'     => $this->neighbors($this->runeManager, $sel['version'], $sel['lang'], $name),
+            'client'  => $this->clientData(),
         ]);
     }
 }

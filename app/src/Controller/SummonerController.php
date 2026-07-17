@@ -31,18 +31,18 @@ final class SummonerController extends AbstractResourceController
     #[Route('/summoners', name: 'app_summoners', methods: ['GET'])]
     public function summoners(): Response
     {
-        $ctx = $this->pageContext->listContext(defaultPerPage: 8, maxPerPage: 0);
+        // Full list in one render — the ResourceFilter island owns search, tag
+        // facets and pagination client-side; only version/lang matter server-side.
+        $sel = $this->pageContext->selection();
 
         try {
-            // Full list in one render — the ResourceFilter island owns search,
-            // tag facets and pagination client-side.
-            $data = $this->summoners->paginate($ctx['version'], $ctx['lang'], 0, 1);
+            $data = $this->summoners->paginate($sel['version'], $sel['lang'], 0, 1);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($ctx, $e);
+            return $this->redirectToSetupWithError($sel, $e);
         }
 
-        $data['meta']['version'] = $ctx['version'];
-        $data['meta']['lang']    = $ctx['lang'];
+        $data['meta']['version'] = $sel['version'];
+        $data['meta']['lang']    = $sel['lang'];
 
         return $this->render('summoner/liste.html.twig', [
             'summoners' => $data['summoners'],
@@ -70,6 +70,9 @@ final class SummonerController extends AbstractResourceController
         return $this->render('summoner/detail.html.twig', [
             'summoner' => $summoner,
             'image'    => $image,
+            'version'  => $sel['version'],
+            'lang'     => $sel['lang'],
+            'nav'      => $this->neighbors($this->summoners, $sel['version'], $sel['lang'], $name),
             'client'   => $this->clientData(),
         ]);
     }

@@ -48,12 +48,13 @@ final class PageContextResolverLoaderStepsTest extends TestCase
 
     public function testListUsesRouteDefaults(): void
     {
+        // Route default = the first client page pre-warmed (LIST_INITIAL_PAGE_SIZE).
         self::assertSame(
-            [['type' => 'champion', 'perPage' => 20, 'page' => 1]],
+            [['type' => 'champion', 'perPage' => 12, 'page' => 1]],
             $this->resolver()->loaderSteps('/champions'),
         );
         self::assertSame(
-            [['type' => 'item', 'perPage' => 8, 'page' => 1]],
+            [['type' => 'item', 'perPage' => 12, 'page' => 1]],
             $this->resolver()->loaderSteps('/objects'),
         );
     }

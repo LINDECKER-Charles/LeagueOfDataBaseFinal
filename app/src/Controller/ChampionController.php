@@ -31,18 +31,18 @@ final class ChampionController extends AbstractResourceController
     #[Route('/champions', name: 'app_champions', methods: ['GET'])]
     public function champions(): Response
     {
-        $ctx = $this->pageContext->listContext(defaultPerPage: 20, maxPerPage: 20);
+        // Full list in one render — the ResourceFilter island owns search, tag
+        // facets and pagination client-side; only version/lang matter server-side.
+        $sel = $this->pageContext->selection();
 
         try {
-            // Full list in one render — the ResourceFilter island owns search,
-            // tag facets and pagination client-side.
-            $data = $this->championManager->paginate($ctx['version'], $ctx['lang'], 0, 1);
+            $data = $this->championManager->paginate($sel['version'], $sel['lang'], 0, 1);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($ctx, $e);
+            return $this->redirectToSetupWithError($sel, $e);
         }
 
-        $data['meta']['version'] = $ctx['version'];
-        $data['meta']['lang']    = $ctx['lang'];
+        $data['meta']['version'] = $sel['version'];
+        $data['meta']['lang']    = $sel['lang'];
 
         return $this->render('champion/liste.html.twig', [
             'champions' => $data['champions'],
@@ -103,6 +103,8 @@ final class ChampionController extends AbstractResourceController
             'abilityImages' => $abilityImages,
             'chromas'       => $chromas,
             'version'       => $sel['version'],
+            'lang'          => $sel['lang'],
+            'nav'           => $this->neighbors($this->championManager, $sel['version'], $sel['lang'], $name),
             'client'        => $this->clientData(),
         ]);
     }

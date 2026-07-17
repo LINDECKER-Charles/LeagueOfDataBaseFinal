@@ -95,4 +95,10 @@ final class RuneManager extends AbstractManager
     {
         return $raw;
     }
+
+    /** La route détail des runes est indexée par la KEY d'arbre, pas par l'id numérique. */
+    protected function entryRouteId(array $entry, string $storageKey): string
+    {
+        return (string) ($entry['key'] ?? $storageKey);
+    }
 }

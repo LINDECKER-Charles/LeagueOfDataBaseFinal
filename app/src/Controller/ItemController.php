@@ -31,22 +31,22 @@ final class ItemController extends AbstractResourceController
     #[Route('/objects', name: 'app_items', methods: ['GET'])]
     public function objects(): Response
     {
-        $ctx = $this->pageContext->listContext(defaultPerPage: 8, maxPerPage: 20);
+        // Full list in one render — the ResourceFilter island owns search, tag
+        // facets and pagination client-side; only version/lang matter server-side.
+        $sel = $this->pageContext->selection();
 
         try {
-            // Full list in one render — the ResourceFilter island owns search,
-            // tag facets and pagination client-side.
-            $data = $this->itemManager->paginate($ctx['version'], $ctx['lang'], 0, 1);
+            $data = $this->itemManager->paginate($sel['version'], $sel['lang'], 0, 1);
         } catch (\Throwable $e) {
-            return $this->redirectToSetupWithError($ctx, $e);
+            return $this->redirectToSetupWithError($sel, $e);
         }
 
-        $data['meta']['version'] = $ctx['version'];
-        $data['meta']['lang']    = $ctx['lang'];
+        $data['meta']['version'] = $sel['version'];
+        $data['meta']['lang']    = $sel['lang'];
 
         // Résout les ids d'évolution (item.into) en objets liables (nom + icône +
         // prix) pour l'accordéon « Évolutions » — une passe pour toute la page.
-        $related = $this->itemManager->relatedIndex($data['items'], $ctx['version'], $ctx['lang']);
+        $related = $this->itemManager->relatedIndex($data['items'], $sel['version'], $sel['lang']);
 
         return $this->render('item/liste.html.twig', [
             'items'   => $data['items'],
@@ -81,13 +81,14 @@ final class ItemController extends AbstractResourceController
         }
 
         return $this->render('item/detail.html.twig', [
-            'item'    => $item,
-            'image'   => $image,
+            'item'       => $item,
+            'image'      => $image,
             'related'    => $related,
             'recipeTree' => $recipe,
-            'version' => $sel['version'],
-            'lang'    => $sel['lang'],
-            'client'  => $this->clientData(),
+            'version'    => $sel['version'],
+            'lang'       => $sel['lang'],
+            'nav'        => $this->neighbors($this->itemManager, $sel['version'], $sel['lang'], $name),
+            'client'     => $this->clientData(),
         ]);
     }
 

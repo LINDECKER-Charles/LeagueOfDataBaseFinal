@@ -318,6 +318,31 @@ abstract class AbstractManager implements WarmableManagerInterface
         return $raw['data'] ?? [];
     }
 
+    /**
+     * Ordered route-id => display-name index of the whole collection — backs the
+     * previous/next navigation on detail pages without resolving any image.
+     * Order is the collection's own (the same one the list pages render).
+     *
+     * @return array<string,string>
+     */
+    public function listIndex(string $version, string $lang): array
+    {
+        $index = [];
+        foreach ($this->paginationCollection($this->getData($version, $lang)) as $key => $entry) {
+            if (\is_array($entry)) {
+                $index[$this->entryRouteId($entry, (string) $key)] = (string) ($entry['name'] ?? $key);
+            }
+        }
+
+        return $index;
+    }
+
+    /** Identifier used by the detail route for one collection entry (map key by default). */
+    protected function entryRouteId(array $entry, string $storageKey): string
+    {
+        return (string) ($entry['id'] ?? $storageKey);
+    }
+
     /** Plafond d'entrées par page quand l'appelant ne borne pas explicitement. */
     protected function perPageCap(): int
     {
