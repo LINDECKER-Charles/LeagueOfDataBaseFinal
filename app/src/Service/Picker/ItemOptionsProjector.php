@@ -83,6 +83,20 @@ final class ItemOptionsProjector
         return array_keys($names);
     }
 
+    /**
+     * Whether an item id exists in the dataset AND is playable on the mode's map —
+     * i.e. an old build may carry it to this (version, mode). Both "removed from
+     * the patch" and "not on this mode's map" answer false.
+     *
+     * @param array<int|string, array<string, mixed>> $data raw item.json "data" map
+     */
+    public function isPlayable(array $data, GameMode $mode, string $id): bool
+    {
+        $entry = $data[$id] ?? null;
+
+        return \is_array($entry) && $this->isOnMap($entry, $mode);
+    }
+
     /** @param array<string, mixed> $entry */
     private function isPickable(array $entry, GameMode $mode): bool
     {

@@ -513,6 +513,14 @@ build:
     public: "Public"
     private: "Private"
     updated: "Updated on %date%"
+  import:
+    to: "Import to patch"
+    action: "Import"
+    hint: "Copy this build onto another patch, keeping what still exists there"
+    done: "Build imported to patch %version% — review it and save."
+    champion_missing: "This champion doesn't exist on the chosen patch — pick one before saving."
+    runes_reset: "The runes couldn't be carried to this patch — reconfigure them."
+    items_dropped: "Items unavailable on this patch were dropped: %items%."
   editor:
     eyebrow: "The forge"
     title_create: "Forge a build"
