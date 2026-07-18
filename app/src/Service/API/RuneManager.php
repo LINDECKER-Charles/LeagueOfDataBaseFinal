@@ -25,11 +25,6 @@ final class RuneManager extends AbstractManager
         throw ResourceNotFoundException::forEntry(static::TYPE, $name);
     }
 
-    protected function dataList(array $raw): array
-    {
-        return array_values($raw);
-    }
-
     /**
      * Rune trees are nested: the tree icon plus every keystone/minor rune icon,
      * each mapped to its display name.
@@ -83,11 +78,6 @@ final class RuneManager extends AbstractManager
         }
 
         return $result;
-    }
-
-    public function getImage(string $name, string $version, array $dir = [], bool $force = false, string $lang = ''): string
-    {
-        return $this->resolveImage($version, $name, $force);
     }
 
     /** Les runes paginent la liste top-level des arbres, pas une map `['data']`. */

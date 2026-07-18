@@ -26,6 +26,8 @@ use Symfony\Contracts\Cache\ItemInterface;
  */
 abstract class AbstractManager implements WarmableManagerInterface
 {
+    use PaginatesResources;
+
     /**
      * Ingest images in small batches rather than one blocking call. Two reasons:
      *  - the SSE loader gets a stored-name event per batch as it lands, instead of
@@ -37,6 +39,10 @@ abstract class AbstractManager implements WarmableManagerInterface
 
     /** Locale served on the 397 versions — used as the fallback when a requested language is absent. */
     private const FALLBACK_LANG = 'en_US';
+
+    /** Bounds of a free-text {@see searchByName} query (guards against 1-char floods / abuse). */
+    private const NAME_MIN = 2;
+    private const NAME_MAX = 50;
 
     /** @var array<string,array<mixed>> in-request decoded-data memo, keyed by storage key */
     private array $dataCache = [];
@@ -57,24 +63,24 @@ abstract class AbstractManager implements WarmableManagerInterface
     abstract protected function imageUrl(string $version, string $name): string;
 
     /**
-     * Flatten a raw getData() payload into the list of entries to iterate.
-     * Shape differs per resource (champion/item/summoner nest under 'data',
-     * runes are a top-level list).
-     *
-     * @param array<mixed> $raw
-     * @return array<mixed>
-     */
-    abstract protected function dataList(array $raw): array;
-
-    /**
-     * Map every image of a data slice to a human-readable display name — the
-     * single source of "which images this slice needs", shared by getImages,
-     * collectPlan and ingest.
+     * Map every image of a data slice to its display name — the single source of
+     * "which images this slice needs" (getImages, collectPlan, ingest). Default:
+     * `image.full` file keyed by `name` (champion/item); summoner/runes override.
      *
      * @param array<mixed> $data
      * @return array<string,string> imageFileName => display name
      */
-    abstract protected function imageEntries(array $data): array;
+    protected function imageEntries(array $data): array
+    {
+        $entries = [];
+        foreach ($data as $d) {
+            if (($name = $d['name'] ?? null) && ($img = $d['image']['full'] ?? null)) {
+                $entries[$img] = $name;
+            }
+        }
+
+        return $entries;
+    }
 
     /**
      * Resolve every image of the resource for a version/language.
@@ -264,89 +270,18 @@ abstract class AbstractManager implements WarmableManagerInterface
         return ['entries' => $entries, 'missing' => $missing];
     }
 
-    /**
-     * Pagination générique (tranche de liste + images + méta) partagée par les
-     * quatre ressources. Seuls varient la racine paginée ({@see paginationCollection} :
-     * map `['data']` pour champion/item/summoner, liste top-level pour les runes) et
-     * le plafond par page ({@see perPageCap}). La tranche préserve les clés d'origine
-     * (id de ressource) — {@see splitJson} slice en mode préservation de clés.
-     *
-     * @return array<string,mixed> {<type>s, images, meta}
-     */
-    public function paginate(string $version, string $lang, int $nb = 1, int $numPage = 1): array
+    /** Id-keyed `data` map shared by {@see getByName}/{@see searchByName} (never runes' top-level list). @return array<mixed> */
+    protected function dataMap(string $version, string $lang): array
     {
-        $json = $this->paginationCollection($this->getData($version, $lang));
+        return $this->getData($version, $lang)['data'] ?? [];
+    }
 
-        $ttSum = count($json);
-        if ($nb === 0 || $nb > $ttSum) {
-            $nb = min($this->perPageCap(), $ttSum);
+    /** @throws \InvalidArgumentException when a free-text query is too short or over-long */
+    protected function assertSearchable(string $name): void
+    {
+        if (mb_strlen($name) < self::NAME_MIN || mb_strlen($name) > self::NAME_MAX) {
+            throw new \InvalidArgumentException('Nom invalide.');
         }
-        $ttPage = (int) ceil($ttSum / max(1, $nb));
-        if ($numPage > $ttPage) {
-            $numPage = 1;
-        }
-
-        $json = $numPage <= 1
-            ? $this->splitJson($nb, 0, $json)
-            : $this->splitJson($nb, $nb * ($numPage - 1), $json);
-
-        $images = $this->getImages($version, $lang, false, $json);
-
-        return [
-            static::TYPE.'s' => $json,
-            'images' => $images,
-            'meta' => [
-                'currentPage' => $numPage,
-                'nombrePage' => $ttPage,
-                'itemPerPage' => $nb,
-                'totalItem' => $ttSum,
-                'type' => static::TYPE,
-            ],
-        ];
-    }
-
-    /**
-     * Racine du dataset à paginer. Par défaut la map `['data']` (clé = id de
-     * ressource) ; surchargée par les ressources dont le JSON est une liste
-     * top-level (runes).
-     *
-     * @param array<mixed> $raw
-     * @return array<mixed>
-     */
-    protected function paginationCollection(array $raw): array
-    {
-        return $raw['data'] ?? [];
-    }
-
-    /**
-     * Ordered route-id => display-name index of the whole collection — backs the
-     * previous/next navigation on detail pages without resolving any image.
-     * Order is the collection's own (the same one the list pages render).
-     *
-     * @return array<string,string>
-     */
-    public function listIndex(string $version, string $lang): array
-    {
-        $index = [];
-        foreach ($this->paginationCollection($this->getData($version, $lang)) as $key => $entry) {
-            if (\is_array($entry)) {
-                $index[$this->entryRouteId($entry, (string) $key)] = (string) ($entry['name'] ?? $key);
-            }
-        }
-
-        return $index;
-    }
-
-    /** Identifier used by the detail route for one collection entry (map key by default). */
-    protected function entryRouteId(array $entry, string $storageKey): string
-    {
-        return (string) ($entry['id'] ?? $storageKey);
-    }
-
-    /** Plafond d'entrées par page quand l'appelant ne borne pas explicitement. */
-    protected function perPageCap(): int
-    {
-        return 20;
     }
 
     /**
@@ -407,6 +342,17 @@ abstract class AbstractManager implements WarmableManagerInterface
         }
 
         return $result + $this->ingestMissing($version, $missing);
+    }
+
+    /**
+     * Public single-image entrypoint for detail pages (champion/item/summoner):
+     * resolve one image file name to its CDN path, synchronously. Thin wrapper
+     * over {@see resolveImage} so controllers reach it without exposing the
+     * internal resolver.
+     */
+    public function getImage(string $version, string $name, bool $force = false): string
+    {
+        return $this->resolveImage($version, $name, $force);
     }
 
     /** Resolve a single image (detail pages) — always synchronous. */
@@ -473,14 +419,5 @@ abstract class AbstractManager implements WarmableManagerInterface
     private function cacheKey(string $storageKey): string
     {
         return str_replace('/', '.', $storageKey);
-    }
-
-    /**
-     * @param array<mixed> $json
-     * @return array<mixed>
-     */
-    protected final function splitJson(int $nb, int $start, array $json): array
-    {
-        return array_slice($json, $start, $nb, true);
     }
 }

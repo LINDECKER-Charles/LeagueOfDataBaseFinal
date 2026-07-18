@@ -66,7 +66,7 @@ final class ChampionController extends AbstractResourceController
             // Lookup first: an unknown slug must 404 from the dataset alone,
             // without ever asking the CDN for an image that cannot exist.
             $champion = $this->championManager->getByName($name, $sel['version'], $sel['lang']);
-            $image    = $this->championManager->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
+            $image    = $this->championManager->getImage($sel['version'], $name . '.png');
         } catch (\Throwable $e) {
             return $this->detailFailure($sel, $e);
         }

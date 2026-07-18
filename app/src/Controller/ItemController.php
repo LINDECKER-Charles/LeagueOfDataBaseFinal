@@ -71,7 +71,7 @@ final class ItemController extends AbstractResourceController
             // Lookup first: an unknown slug must 404 from the dataset alone,
             // without ever asking the CDN for an image that cannot exist.
             $item  = $this->itemManager->getByName($name, $sel['version'], $sel['lang']);
-            $image = $this->itemManager->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
+            $image = $this->itemManager->getImage($sel['version'], $name . '.png');
             // Les IDs de item.into / item.from ne parlent pas au joueur : on les
             // résout en objets réels (nom + image + prix) liables vers leur page
             // détail. `components` (from) + cet objet + `related` (into) forment
