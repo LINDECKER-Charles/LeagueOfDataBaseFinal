@@ -74,12 +74,12 @@ describe('ResourceLoader', () => {
         expect(e.defaultPrevented).toBe(true)
         expect(FakeEventSource.last).not.toBeNull()
 
-        vi.advanceTimersByTime(300)
+        const es = FakeEventSource.last!
+        // The overlay surfaces only once `start` reports images to warm (total > 0).
+        es.emit('start', { total: 2, categories: { champion: 2 } })
         await w.vm.$nextTick()
         expect(w.vm.visible).toBe(true)
 
-        const es = FakeEventSource.last!
-        es.emit('start', { total: 2, categories: { champion: 2 } })
         es.emit('item', { name: 'Aatrox', category: 'champion', index: 1, total: 2 })
         es.emit('item', { name: 'Ahri', category: 'champion', index: 2, total: 2 })
         await w.vm.$nextTick()
@@ -101,18 +101,22 @@ describe('ResourceLoader', () => {
         w.unmount()
     })
 
-    it('never flashes on a warm destination (total 0) and visits immediately', async () => {
+    it('never surfaces the overlay on a warm destination (total 0), whatever the latency', async () => {
         const w = mountLoader()
         beforeVisit('/objects?version=15.1.1&lang=en_US')
         const es = FakeEventSource.last!
         es.emit('start', { total: 0, categories: { item: 0 } })
-        es.emit('done', { stored: 0, total: 0 }) // resolves before the 280ms show delay
         await w.vm.$nextTick()
 
+        // A slow round-trip between start and done (dev boot / slow network) must NOT
+        // surface the overlay: warmth is decided by total, never by elapsed time.
+        vi.advanceTimersByTime(3000)
+        expect(w.vm.visible).toBe(false)
+
+        es.emit('done', { stored: 0, total: 0 })
+        await w.vm.$nextTick()
         expect(w.vm.visible).toBe(false)
         expect(visit).toHaveBeenCalledWith('/objects?version=15.1.1&lang=en_US')
-        vi.advanceTimersByTime(400)
-        expect(w.vm.visible).toBe(false)
         w.unmount()
     })
 

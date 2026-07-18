@@ -13,7 +13,6 @@ import {
     type ResourceKey,
 } from './urls'
 
-const SHOW_DELAY = 280 // warm visits resolve first and never flash the overlay
 const READY_HOLD = 450 // once shown, hold 100%/"ready" long enough to read
 const WATCHDOG_IDLE = 15000 // no stream activity for this long → assume it's dead and visit anyway
 const LOG_LIMIT = 6 // entries retained in the live buffer (only the latest is surfaced)
@@ -41,7 +40,6 @@ export function useLoaderStream() {
     let es: EventSource | null = null
     let generation = 0
     let entrySeq = 0
-    let showTimer: ReturnType<typeof setTimeout> | undefined
     let holdTimer: ReturnType<typeof setTimeout> | undefined
     let watchdog: ReturnType<typeof setTimeout> | undefined
     let bypassUrl: string | null = null
@@ -51,7 +49,6 @@ export function useLoaderStream() {
     const catCount = new Map<ResourceKey, number>()
 
     function clearTimers(): void {
-        if (showTimer) { clearTimeout(showTimer); showTimer = undefined }
         if (holdTimer) { clearTimeout(holdTimer); holdTimer = undefined }
         if (watchdog) { clearTimeout(watchdog); watchdog = undefined }
     }
@@ -95,10 +92,9 @@ export function useLoaderStream() {
         const path = new URL(destUrl, window.location.origin).pathname
         resetRun(path)
 
-        showTimer = setTimeout(() => {
-            showTimer = undefined
-            if (gen === generation && !finished) visible.value = true
-        }, SHOW_DELAY)
+        // The overlay is NOT shown on a timer: it surfaces only once `start` reports
+        // real image work to do (total > 0). A warm destination therefore never
+        // flashes it, whatever the SSE round-trip latency (dev boot, slow network).
 
         // Inactivity watchdog: a cold page legitimately outlasts any fixed budget, so
         // we don't cap the total — we only bail if the stream falls silent (no start/
@@ -130,7 +126,10 @@ export function useLoaderStream() {
                 if (n === 0) markReady(key)
             }
             phase.value = 'loading'
-            if (!d.total) progress.value = 1
+            // Surface the overlay only when there is genuine Riot image warming to
+            // show; a warm destination (total 0) resolves straight to the visit.
+            if (d.total) visible.value = true
+            else progress.value = 1
         })
 
         // Dataset phase (cold JSON fetch) emits `phase` before `start`; keep the
@@ -178,7 +177,6 @@ export function useLoaderStream() {
         warmed.add(warmKey(destUrl, version, lang))
 
         if (!visible.value) {
-            if (showTimer) { clearTimeout(showTimer); showTimer = undefined }
             navigateWarm(destUrl)
         } else {
             holdTimer = setTimeout(() => { holdTimer = undefined; navigateWarm(destUrl) }, READY_HOLD)
