@@ -3,6 +3,13 @@
 {% block title %}{{ seo_title('donate.title'|trans({}, 'seo')) }}{% endblock %}
 {% block meta_description %}{{ 'donate.description'|trans({}, 'seo') }}{% endblock %}
 
+{% block structured_data %}
+  {{ seo_jsonld(seo_breadcrumbs([
+    { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+    { name: 'donate.title'|trans, url: seo_canonical() }
+  ])) }}
+{% endblock %}
+
 {% block body %}
 <main class="donate-page">
     <header class="codex-header">

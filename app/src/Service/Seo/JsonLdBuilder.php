@@ -101,6 +101,81 @@ final class JsonLdBuilder
     }
 
     /**
+     * schema.org Person node — the subject of a {@see profilePage} or the author
+     * of an {@see article}. Optional url/image/description are pruned when absent.
+     *
+     * @return array<string,mixed>
+     */
+    public function person(string $name, ?string $url = null, ?string $imageUrl = null, ?string $description = null): array
+    {
+        return $this->prune([
+            '@type'       => 'Person',
+            'name'        => $name,
+            'url'         => $url,
+            'image'       => $imageUrl,
+            'description' => $description !== null ? trim($description) : null,
+        ]);
+    }
+
+    /**
+     * schema.org ProfilePage for a public summoner card. mainEntity is the
+     * Person the page is about; the owner's builds ride along as a separate
+     * ItemList node (see {@see itemList}), never nested here.
+     *
+     * @param array{name:string, url:string, image?:?string, description?:?string} $profile
+     * @return array<string,mixed>
+     */
+    public function profilePage(array $profile): array
+    {
+        return [
+            '@context'   => self::SCHEMA_CONTEXT,
+            '@type'      => 'ProfilePage',
+            'mainEntity' => $this->person(
+                (string) $profile['name'],
+                $profile['url'] ?? null,
+                $profile['image'] ?? null,
+                $profile['description'] ?? null,
+            ),
+        ];
+    }
+
+    /**
+     * schema.org Article for a shared build. Every optional identity field is
+     * pruned when absent, so a caller may withhold author/dates (e.g. a private,
+     * noindex build renders no Article at all). author/about are nested nodes
+     * built on demand.
+     *
+     * @param array{
+     *   name:string, url:string, description?:?string, inLanguage?:?string,
+     *   datePublished?:?string, dateModified?:?string,
+     *   authorName?:?string, authorUrl?:?string, about?:?string
+     * } $fields
+     * @return array<string,mixed>
+     */
+    public function article(array $fields): array
+    {
+        $author = ($fields['authorName'] ?? '') !== ''
+            ? $this->person((string) $fields['authorName'], $fields['authorUrl'] ?? null)
+            : null;
+        $about = ($fields['about'] ?? '') !== ''
+            ? ['@type' => 'Thing', 'name' => (string) $fields['about']]
+            : null;
+
+        return $this->prune([
+            '@context'      => self::SCHEMA_CONTEXT,
+            '@type'         => 'Article',
+            'headline'      => (string) $fields['name'],
+            'url'           => (string) $fields['url'],
+            'description'   => isset($fields['description']) ? trim((string) $fields['description']) : null,
+            'inLanguage'    => $fields['inLanguage'] ?? null,
+            'datePublished' => $fields['datePublished'] ?? null,
+            'dateModified'  => $fields['dateModified'] ?? null,
+            'author'        => $author,
+            'about'         => $about,
+        ]);
+    }
+
+    /**
      * VideoGame node exposing a champion as a playable character (Person).
      *
      * @return array<string,mixed>
@@ -151,5 +226,19 @@ final class JsonLdBuilder
         }
 
         return $node;
+    }
+
+    /**
+     * Drops null / empty-string / empty-array values so optional fields are
+     * absent rather than emitted empty — an empty schema.org value is invalid,
+     * absence is not. Shallow by design: nested nodes are pruned by their own
+     * builder before being passed in.
+     *
+     * @param array<string,mixed> $node
+     * @return array<string,mixed>
+     */
+    private function prune(array $node): array
+    {
+        return array_filter($node, static fn (mixed $value): bool => $value !== null && $value !== '' && $value !== []);
     }
 }

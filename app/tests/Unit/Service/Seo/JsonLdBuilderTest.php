@@ -84,6 +84,75 @@ final class JsonLdBuilderTest extends TestCase
         self::assertSame(['@type' => 'Thing', 'name' => 'Flash'], $graph['gameItem']);
     }
 
+    public function testPersonPrunesEmptyOptionalFields(): void
+    {
+        $node = $this->builder->person('Faker#KR1', null, '', '  ');
+
+        self::assertSame(['@type' => 'Person', 'name' => 'Faker#KR1'], $node);
+    }
+
+    public function testProfilePageWrapsThePersonAsMainEntity(): void
+    {
+        $graph = $this->builder->profilePage([
+            'name'        => 'Faker#KR1',
+            'url'         => 'https://example.com/u/Faker',
+            'image'       => 'https://cdn/splash.jpg',
+            'description' => 'Public summoner card of Faker#KR1.',
+        ]);
+
+        self::assertSame(JsonLdBuilder::SCHEMA_CONTEXT, $graph['@context']);
+        self::assertSame('ProfilePage', $graph['@type']);
+        self::assertSame([
+            '@type'       => 'Person',
+            'name'        => 'Faker#KR1',
+            'url'         => 'https://example.com/u/Faker',
+            'image'       => 'https://cdn/splash.jpg',
+            'description' => 'Public summoner card of Faker#KR1.',
+        ], $graph['mainEntity']);
+    }
+
+    public function testArticleNestsAuthorAndAboutNodes(): void
+    {
+        $graph = $this->builder->article([
+            'name'          => 'Full Lethality Aatrox',
+            'url'           => 'https://example.com/b/abc',
+            'description'   => '  Snowball early.  ',
+            'inLanguage'    => 'fr',
+            'datePublished' => '2026-07-01T10:00:00+00:00',
+            'dateModified'  => '2026-07-18T09:30:00+00:00',
+            'authorName'    => 'Faker#KR1',
+            'authorUrl'     => 'https://example.com/u/Faker',
+            'about'         => 'Aatrox',
+        ]);
+
+        self::assertSame('Article', $graph['@type']);
+        self::assertSame('Full Lethality Aatrox', $graph['headline']);
+        self::assertSame('Snowball early.', $graph['description']);
+        self::assertSame('2026-07-18T09:30:00+00:00', $graph['dateModified']);
+        self::assertSame(
+            ['@type' => 'Person', 'name' => 'Faker#KR1', 'url' => 'https://example.com/u/Faker'],
+            $graph['author'],
+        );
+        self::assertSame(['@type' => 'Thing', 'name' => 'Aatrox'], $graph['about']);
+    }
+
+    public function testArticleOmitsWithheldIdentityFields(): void
+    {
+        // A private (noindex) build withholds author/dates/about — the node must
+        // stay a valid Article carrying only what was supplied.
+        $graph = $this->builder->article([
+            'name'       => 'Secret build',
+            'url'        => 'https://example.com/b/xyz',
+            'authorName' => '',
+            'about'      => null,
+        ]);
+
+        self::assertArrayNotHasKey('author', $graph);
+        self::assertArrayNotHasKey('about', $graph);
+        self::assertArrayNotHasKey('datePublished', $graph);
+        self::assertSame(['@context', '@type', 'headline', 'url'], array_keys($graph));
+    }
+
     public function testWebSiteAndOrganizationCarryTheirOwnContext(): void
     {
         $site = $this->builder->webSite('LODB', 'https://example.com/');

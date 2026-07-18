@@ -49,6 +49,8 @@ final class SeoExtension extends AbstractExtension
             new TwigFunction('seo_item_list', $this->jsonLd->itemList(...)),
             new TwigFunction('seo_game_character', $this->jsonLd->gameCharacter(...)),
             new TwigFunction('seo_game_item', $this->jsonLd->gameItem(...)),
+            new TwigFunction('seo_profile_page', $this->jsonLd->profilePage(...)),
+            new TwigFunction('seo_article', $this->jsonLd->article(...)),
         ];
     }
 
