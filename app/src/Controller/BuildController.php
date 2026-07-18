@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Concern\ResolvesCurrentUser;
 use App\Entity\Build;
-use App\Entity\User;
 use App\Repository\BuildRepository;
 use App\Service\Build\BuildCatalogGate;
 use App\Service\Build\BuildStructureNormalizer;
@@ -33,6 +33,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class BuildController extends AbstractResourceController
 {
+    use ResolvesCurrentUser;
+
     private const CSRF_SUBMIT = 'submit';
     private const CSRF_DELETE_PREFIX = 'delete-build-';
     private const ERROR_VERSION_UNKNOWN = 'build.error.version.unknown';
@@ -349,17 +351,6 @@ final class BuildController extends AbstractResourceController
         }
 
         return $build;
-    }
-
-    private function currentUser(): User
-    {
-        $user = $this->getUser();
-        if (!$user instanceof User) {
-            // access_control guarantees ROLE_USER here; guard against misconfig.
-            throw $this->createAccessDeniedException();
-        }
-
-        return $user;
     }
 
     /**

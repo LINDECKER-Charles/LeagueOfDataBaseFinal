@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Concern\ResolvesCurrentUser;
 use App\Entity\User;
 use App\Form\SetPasswordFormType;
 use App\Service\Audit\AuditAction;
@@ -40,6 +41,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class ProfileController extends AbstractResourceController
 {
+    use ResolvesCurrentUser;
+
     private const CSRF_TOKEN_ID = 'submit';
     private const SKIN_ID_MAX_LENGTH = 64;
 
@@ -253,17 +256,6 @@ final class ProfileController extends AbstractResourceController
 
         return !$user->hasPassword()
             || $this->passwordHasher->isPasswordValid($user, (string) $request->request->get('password'));
-    }
-
-    private function currentUser(): User
-    {
-        $user = $this->getUser();
-        if (!$user instanceof User) {
-            // access_control guarantees ROLE_USER; this guards the admin firewall identity.
-            throw $this->createAccessDeniedException();
-        }
-
-        return $user;
     }
 
     /** @return array<string, ?string> raw submitted id keyed by slot value */

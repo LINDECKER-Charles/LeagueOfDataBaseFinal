@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Concern\ResolvesCurrentUser;
 use App\Entity\ApiKey;
 use App\Entity\ApiPlan;
-use App\Entity\User;
 use App\Repository\ApiKeyRepository;
 use App\Service\Audit\AuditAction;
 use App\Service\Audit\AuditLogger;
@@ -33,6 +33,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class ApiKeyController extends AbstractResourceController
 {
+    use ResolvesCurrentUser;
+
     private const CSRF_TOKEN_ID = 'submit';
     private const RAW_KEY_FLASH = 'api_key_plain';
     private const USAGE_WINDOW_DAYS = 30;
@@ -141,17 +143,6 @@ final class ApiKeyController extends AbstractResourceController
         $this->addFlash('success', $this->translator->trans('portal.flash.revoked', [], 'api'));
 
         return $this->redirectToRoute('app_api_portal', status: Response::HTTP_SEE_OTHER);
-    }
-
-    private function currentUser(): User
-    {
-        $user = $this->getUser();
-        if (!$user instanceof User) {
-            // access_control guarantees ROLE_USER; this guards the admin firewall identity.
-            throw $this->createAccessDeniedException();
-        }
-
-        return $user;
     }
 
     /**
