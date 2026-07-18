@@ -100,6 +100,38 @@
   }
   .kit__media-toggle:focus-visible { outline: none; }
   .kit__media.is-paused .kit__media-toggle { background: rgba(1, 10, 19, 0.35); }
+  /* Sound toggle — pinned above the full-surface pause button so it stays
+     clickable; muted by default, so it reads as a quiet opt-in until sound is on. */
+  .kit__media-sound {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.7rem;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.55rem;
+    border: 1px solid rgba(10, 200, 185, 0.45);
+    border-radius: 50%;
+    background: rgba(9, 16, 22, 0.72);
+    color: var(--color-hex-bright);
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.25s var(--ease-hextech), border-color 0.25s var(--ease-hextech),
+      box-shadow 0.25s var(--ease-hextech);
+  }
+  .kit__media-sound:hover,
+  .kit__media-sound:focus-visible {
+    opacity: 1;
+    outline: none;
+    border-color: rgba(10, 200, 185, 0.85);
+  }
+  .kit__media-sound.is-active {
+    opacity: 1;
+    border-color: rgba(10, 200, 185, 0.85);
+    box-shadow: 0 0 22px -6px rgba(10, 200, 185, 0.7);
+  }
+  .kit__media-sound svg { width: 100%; height: 100%; fill: currentColor; }
   /* Loop progress — pinned under the frame, driven by scaleX (no layout work). */
   .kit__progress {
     position: absolute;
