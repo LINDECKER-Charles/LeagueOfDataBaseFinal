@@ -120,6 +120,8 @@ champion:
     range: "المدى"
     video_play: "تشغيل الفيديو"
     video_pause: "إيقاف الفيديو مؤقتًا"
+    video_mute: "كتم الصوت"
+    video_unmute: "تشغيل الصوت"
     tips_as: "عند اللعب بهذا البطل"
     tips_against: "عند مواجهة هذا البطل"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "العناصر"
     runes: "الرونات"
     summoner: "المستدعي"
+    sitemap: "خريطة الموقع"
 
   links:
     title: "روابط مفيدة"
@@ -311,3 +314,17 @@ community:
     invalid: "تصويت غير صالح."
   supporter:
     badge: "داعم"
+
+stat:
+  attack_damage: "الضرر الهجومي"
+  ability_power: "قوة القدرات"
+  attack_speed: "سرعة الهجوم"
+  crit_chance: "فرصة الضربة الحرجة"
+  life_steal: "سرقة الصحة"
+  health: "الصحة"
+  health_regen: "تجديد الصحة"
+  armor: "الدرع"
+  magic_resist: "المقاومة السحرية"
+  mana: "المانا"
+  move_speed: "سرعة الحركة"
+  attack_range: "مدى الهجوم"

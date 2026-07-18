@@ -120,6 +120,8 @@ champion:
     range: "Menzil"
     video_play: "Videoyu oynat"
     video_pause: "Videoyu duraklat"
+    video_mute: "Sesi kapat"
+    video_unmute: "Sesi aç"
     tips_as: "Oynarken"
     tips_against: "Karşısında oynarken"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Eşya"
     runes: "Rünler"
     summoner: "Çağırıcı"
+    sitemap: "Site haritası"
 
   links:
     title: "Yararlı Bağlantılar"
@@ -311,3 +314,17 @@ community:
     invalid: "Geçersiz oy."
   supporter:
     badge: "Destekçi"
+
+stat:
+  attack_damage: "Saldırı Gücü"
+  ability_power: "Yetenek Gücü"
+  attack_speed: "Saldırı Hızı"
+  crit_chance: "Kritik Şansı"
+  life_steal: "Can Çalma"
+  health: "Can"
+  health_regen: "Can Yenilenmesi"
+  armor: "Zırh"
+  magic_resist: "Büyü Direnci"
+  mana: "Mana"
+  move_speed: "Hareket Hızı"
+  attack_range: "Saldırı Menzili"

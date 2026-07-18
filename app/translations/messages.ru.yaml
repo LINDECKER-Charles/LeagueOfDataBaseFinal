@@ -120,6 +120,8 @@ champion:
     range: "Дальность"
     video_play: "Воспроизвести видео"
     video_pause: "Приостановить видео"
+    video_mute: "Выключить звук"
+    video_unmute: "Включить звук"
     tips_as: "Играя за"
     tips_against: "Играя против"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Предмет"
     runes: "Руны"
     summoner: "Призыватель"
+    sitemap: "Карта сайта"
 
   links:
     title: "Полезные ссылки"
@@ -310,3 +313,17 @@ community:
     invalid: "Недопустимый голос."
   supporter:
     badge: "Меценат"
+
+stat:
+  attack_damage: "Сила атаки"
+  ability_power: "Сила умений"
+  attack_speed: "Скорость атаки"
+  crit_chance: "Шанс крит. удара"
+  life_steal: "Вампиризм"
+  health: "Здоровье"
+  health_regen: "Реген. здоровья"
+  armor: "Броня"
+  magic_resist: "Сопр. магии"
+  mana: "Мана"
+  move_speed: "Скорость передв."
+  attack_range: "Дальность атаки"

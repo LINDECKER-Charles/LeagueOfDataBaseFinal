@@ -120,6 +120,8 @@ champion:
     range: "Hatótávolság"
     video_play: "Videó lejátszása"
     video_pause: "Videó szüneteltetése"
+    video_mute: "Hang némítása"
+    video_unmute: "Hang bekapcsolása"
     tips_as: "Amikor vele játszol"
     tips_against: "Amikor ellene játszol"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Tárgy"
     runes: "Rúnák"
     summoner: "Idéző"
+    sitemap: "Oldaltérkép"
 
   links:
     title: "Hasznos linkek"
@@ -311,3 +314,17 @@ community:
     invalid: "Érvénytelen szavazat."
   supporter:
     badge: "Támogató"
+
+stat:
+  attack_damage: "Támadóerő"
+  ability_power: "Képességerő"
+  attack_speed: "Támadási sebesség"
+  crit_chance: "Kritikus esély"
+  life_steal: "Életlopás"
+  health: "Életerő"
+  health_regen: "Életregen."
+  armor: "Páncél"
+  magic_resist: "Varázsellenállás"
+  mana: "Manna"
+  move_speed: "Mozgási sebesség"
+  attack_range: "Támadási táv"

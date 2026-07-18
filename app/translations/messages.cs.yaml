@@ -120,6 +120,8 @@ champion:
     range: "Dosah"
     video_play: "Přehrát video"
     video_pause: "Pozastavit video"
+    video_mute: "Ztlumit zvuk"
+    video_unmute: "Zapnout zvuk"
     tips_as: "Když hrajete za"
     tips_against: "Když hrajete proti"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Předmět"
     runes: "Runy"
     summoner: "Přivolávač"
+    sitemap: "Mapa webu"
 
   links:
     title: "Užitečné odkazy"
@@ -311,3 +314,17 @@ community:
     invalid: "Neplatný hlas."
   supporter:
     badge: "Podporovatel"
+
+stat:
+  attack_damage: "Poškození útokem"
+  ability_power: "Síla schopností"
+  attack_speed: "Rychlost útoku"
+  crit_chance: "Šance na krit. zásah"
+  life_steal: "Vysávání života"
+  health: "Zdraví"
+  health_regen: "Regen. zdraví"
+  armor: "Brnění"
+  magic_resist: "Magická odolnost"
+  mana: "Mana"
+  move_speed: "Rychlost pohybu"
+  attack_range: "Dosah útoku"

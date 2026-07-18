@@ -120,6 +120,8 @@ champion:
     range: "Alcance"
     video_play: "Reproduzir o vídeo"
     video_pause: "Pausar o vídeo"
+    video_mute: "Silenciar som"
+    video_unmute: "Ativar som"
     tips_as: "Ao jogar como"
     tips_against: "Ao enfrentar"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Item"
     runes: "Runas"
     summoner: "Invocador"
+    sitemap: "Mapa do site"
 
   links:
     title: "Links Úteis"
@@ -311,3 +314,17 @@ community:
     invalid: "Voto inválido."
   supporter:
     badge: "Apoiador"
+
+stat:
+  attack_damage: "Dano de ataque"
+  ability_power: "Poder de habilidade"
+  attack_speed: "Vel. de ataque"
+  crit_chance: "Chance de crítico"
+  life_steal: "Roubo de vida"
+  health: "Vida"
+  health_regen: "Regen. de vida"
+  armor: "Armadura"
+  magic_resist: "Resist. mágica"
+  mana: "Mana"
+  move_speed: "Vel. de movim."
+  attack_range: "Alcance de ataque"

@@ -120,6 +120,8 @@ champion:
     range: "Reichweite"
     video_play: "Video abspielen"
     video_pause: "Video pausieren"
+    video_mute: "Ton stummschalten"
+    video_unmute: "Ton einschalten"
     tips_as: "Beim Spielen"
     tips_against: "Gegen diesen Champion"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Item"
     runes: "Runen"
     summoner: "Beschwörer"
+    sitemap: "Sitemap"
 
   links:
     title: "Nützliche Links"
@@ -311,3 +314,17 @@ community:
     invalid: "Ungültige Stimme."
   supporter:
     badge: "Unterstützer"
+
+stat:
+  attack_damage: "Angriffsschaden"
+  ability_power: "Fähigkeitsstärke"
+  attack_speed: "Angriffstempo"
+  crit_chance: "Kritische Chance"
+  life_steal: "Lebensraub"
+  health: "Leben"
+  health_regen: "Lebensregen."
+  armor: "Rüstung"
+  magic_resist: "Magieresistenz"
+  mana: "Mana"
+  move_speed: "Lauftempo"
+  attack_range: "Angriffsreichweite"
