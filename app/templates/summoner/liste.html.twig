@@ -10,7 +10,7 @@
   {% for s in summoners|slice(0, 20) %}
     {% set seoItems = seoItems|merge([{
       name: s.name|default(''),
-      url: seo_absolute(path('app_summoner', { name: s.id|default('') }))
+      url: seo_absolute(resource_path('app_summoner', { name: s.id|default('') }, meta.version, ''))
     }]) %}
   {% endfor %}
   {{ seo_jsonld(seo_item_list(seoItems)) }}
@@ -40,7 +40,7 @@
         {# Facet on real game modes only — drop Data Dragon's dev/tutorial/WIP ids. #}
         {% set filterModes = modes|filter(m => m matches '/^(CLASSIC|ARAM|URF|SNOWURF|ARSR|ONEFORALL|NEXUSBLITZ|ASSASSINATE|KINGPORO|ULTBOOK|SWIFTPLAY|BRAWL|CHERRY)$/') %}
         {% embed 'components/entity_card.html.twig' with {
-          href: path('app_summoner', { name: s.id|default(''), version: meta.version, lang: meta.lang }),
+          href: resource_path('app_summoner', { name: s.id|default('') }, meta.version, meta.lang),
           img: images[s.id|default('')]|default(null),
           name: s.name|default(''),
           sub: s.id|default(''),

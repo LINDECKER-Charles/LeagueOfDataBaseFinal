@@ -4,7 +4,7 @@
 <nav class="pager mt-14" aria-label="{{ 'detail.nav.label'|trans }}">
   {% if nav.prev|default(null) %}
     <a class="pager__link" rel="prev"
-       href="{{ path(route, { name: nav.prev.id, version: version, lang: lang }) }}">
+       href="{{ resource_path(route, { name: nav.prev.id }, version, lang) }}">
       <span class="pager__eyebrow">‹ {{ 'detail.nav.previous'|trans }}</span>
       <span class="pager__name">{{ nav.prev.name }}</span>
     </a>
@@ -21,7 +21,7 @@
 
   {% if nav.next|default(null) %}
     <a class="pager__link pager__link--next" rel="next"
-       href="{{ path(route, { name: nav.next.id, version: version, lang: lang }) }}">
+       href="{{ resource_path(route, { name: nav.next.id }, version, lang) }}">
       <span class="pager__eyebrow">{{ 'detail.nav.next'|trans }} ›</span>
       <span class="pager__name">{{ nav.next.name }}</span>
     </a>

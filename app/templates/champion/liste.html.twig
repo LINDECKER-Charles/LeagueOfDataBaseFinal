@@ -12,7 +12,7 @@
   {% for c in champions|slice(0, 20) %}
     {% set seoItems = seoItems|merge([{
       name: c.name|default(''),
-      url: seo_absolute(path('app_champion', { name: c.id|default(c.name) }))
+      url: seo_absolute(resource_path('app_champion', { name: c.id|default(c.name) }, meta.version, ''))
     }]) %}
   {% endfor %}
   {{ seo_jsonld(seo_item_list(seoItems)) }}
@@ -37,7 +37,7 @@
     <div id="champion-grid" class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for c in champions %}
         {% embed 'components/entity_card.html.twig' with {
-          href: path('app_champion', { name: c.id|default(c.name), version: meta.version, lang: meta.lang }),
+          href: resource_path('app_champion', { name: c.id|default(c.name) }, meta.version, meta.lang),
           img: images[loop.index0]|default(null),
           name: c.name|default(''),
           sub: c.title|default('')|capitalize,

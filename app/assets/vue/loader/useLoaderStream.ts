@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
     destinationForSwitch,
+    meta,
     parse,
     prepareUrl,
     resolveVL,
@@ -219,7 +220,7 @@ export function useLoaderStream() {
         const lang = String(fd.get('langue') ?? '')
         if (!version || !lang) return
 
-        const dest = destinationForSwitch(version, lang)
+        const dest = destinationForSwitch(version, lang, meta('dd-latest'))
         if (!resourcesFor(new URL(dest, window.location.origin).pathname).length) return
 
         e.preventDefault()

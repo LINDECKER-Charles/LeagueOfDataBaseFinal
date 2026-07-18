@@ -1,3 +1,4 @@
+versioned_suffix: "(patch %version%)"
 home:
   title: "League Of Data Base — encyklopedie League of Legends"
   description: "Šampioni, předměty, runy a kouzla vyvolávače League of Legends pro patch %version% — statistiky, schopnosti a detaily ve 21 jazycích."

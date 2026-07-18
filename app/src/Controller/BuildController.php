@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\BuildRepository;
 use App\Service\Build\BuildCatalogGate;
 use App\Service\Build\BuildStructureNormalizer;
+use App\Service\Build\BuildStructureProjector;
 use App\Service\Build\BuildSubmission;
 use App\Service\Build\BuildViewAssembler;
 use App\Service\Audit\AuditAction;
@@ -46,6 +47,7 @@ final class BuildController extends AbstractResourceController
         private readonly BuildRepository $builds,
         private readonly BuildCatalogGate $catalogGate,
         private readonly BuildStructureNormalizer $normalizer,
+        private readonly BuildStructureProjector $projector,
         private readonly BuildViewAssembler $assembler,
         private readonly EntityManagerInterface $entityManager,
         private readonly TranslatorInterface $translator,
@@ -107,6 +109,47 @@ final class BuildController extends AbstractResourceController
     public function update(Request $request, int $id): Response
     {
         return $this->handleSubmit($request, $this->ownedOr404($id));
+    }
+
+    /**
+     * Cross-version import: forward-/back-ports one of the owner's builds onto a
+     * target patch, keeping only the components that exist there and opening a
+     * fresh (create-mode) editor with the ported draft — the source is untouched.
+     */
+    #[Route('/builds/{id}/import', name: 'app_build_import', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function import(Request $request, int $id): Response
+    {
+        if ($guard = $this->requireVerifiedEmail()) {
+            return $guard;
+        }
+
+        $source = $this->ownedOr404($id);
+        $target = $this->importTargetVersion($request);
+        $mode   = $source->getGameMode();
+
+        try {
+            $catalogs = $this->catalogGate->catalogs($target, $this->pageContext->selection()['lang']);
+        } catch (\Throwable) {
+            $this->addFlash('error', $this->translator->trans('build.error.catalog_unavailable'));
+
+            return $this->redirectToRoute('app_build_edit', ['id' => $id], Response::HTTP_SEE_OTHER);
+        }
+
+        $result = $this->projector->project([
+            'championId' => $source->getChampionId(),
+            'runes'      => $source->getRunes(),
+            'steps'      => $source->getSteps(),
+        ], $mode, $catalogs);
+        $this->flashImportReport($result['report'], $target);
+
+        return $this->editorResponse(null, [
+            'name'        => $source->getName(),
+            'description' => $source->getDescription(),
+            'isPublic'    => false,
+            'structure'   => $result['structure'],
+            'gameVersion' => $target,
+            'gameMode'    => $mode->value,
+        ]);
     }
 
     #[Route('/builds/{id}/delete', name: 'app_build_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -267,6 +310,34 @@ final class BuildController extends AbstractResourceController
         }
 
         return $choices;
+    }
+
+    /** Import target: the explicit ?to= if a known patch, else the current browsing patch (latest by default). */
+    private function importTargetVersion(Request $request): string
+    {
+        $to = trim((string) $request->query->get('to', ''));
+        if ($to !== '' && $this->versionManager->versionExists($to)) {
+            return $to;
+        }
+
+        return $this->pageContext->selection()['version'];
+    }
+
+    /** @param array{championMissing: bool, runesReset: bool, droppedItems: list<array{step: int, id: string, name: string}>} $report */
+    private function flashImportReport(array $report, string $target): void
+    {
+        $this->addFlash('success', $this->translator->trans('build.import.done', ['%version%' => $target]));
+
+        if ($report['championMissing']) {
+            $this->addFlash('warning', $this->translator->trans('build.import.champion_missing'));
+        }
+        if ($report['runesReset']) {
+            $this->addFlash('warning', $this->translator->trans('build.import.runes_reset'));
+        }
+        if ($report['droppedItems'] !== []) {
+            $names = implode(', ', array_unique(array_map(static fn (array $d): string => $d['name'], $report['droppedItems'])));
+            $this->addFlash('warning', $this->translator->trans('build.import.items_dropped', ['%items%' => $names]));
+        }
     }
 
     /** 404 (never 403) when the build does not exist OR belongs to someone else. */

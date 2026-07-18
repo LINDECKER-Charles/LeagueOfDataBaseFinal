@@ -12,7 +12,7 @@
   {% for id, item in items|slice(0, 20) %}
     {% set seoItems = seoItems|merge([{
       name: item.name|default(''),
-      url: seo_absolute(path('app_item', { name: id }))
+      url: seo_absolute(resource_path('app_item', { name: id }, meta.version, ''))
     }]) %}
   {% endfor %}
   {{ seo_jsonld(seo_item_list(seoItems)) }}
@@ -38,7 +38,7 @@
       {% for id, item in items %}
         {% set desc = item.plaintext is not empty ? item.plaintext : (item.description|default('')) %}
         {% embed 'components/entity_card.html.twig' with {
-          href: path('app_item', { name: id, version: meta.version, lang: meta.lang }),
+          href: resource_path('app_item', { name: id }, meta.version, meta.lang),
           img: images[item.name]|default(null),
           name: item.name|default(''),
           sub: id,
@@ -84,7 +84,7 @@
                     <div class="flex flex-wrap gap-2 px-4 pb-4">
                       {% for iid in intoItems %}
                         {% set child = related[iid]|default(null) %}
-                        <a href="{{ path('app_item', { name: iid, version: meta.version, lang: meta.lang }) }}"
+                        <a href="{{ resource_path('app_item', { name: iid }, meta.version, meta.lang) }}"
                            class="group/evo flex items-center gap-1.5 rounded border border-gold-deep/40 bg-void/60 px-1.5 py-1 transition-colors hover:border-gold hover:bg-void/90"
                            title="{{ child.name|default(iid) }}">
                           {% if child and child.image %}<img src="/{{ child.image }}" alt="{{ child.name }}" width="24" height="24" loading="lazy" decoding="async" class="h-6 w-6 object-contain">{% endif %}

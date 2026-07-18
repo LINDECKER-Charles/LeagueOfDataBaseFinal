@@ -11,7 +11,7 @@
 {% block structured_data %}
   {{ seo_jsonld(seo_breadcrumbs([
     { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
-    { name: 'header.navigation.champion'|trans, url: seo_absolute(path('app_champions')) },
+    { name: 'header.navigation.champion'|trans, url: seo_absolute(resource_path('app_champions', {}, version|default(''), '')) },
     { name: champion.name ?? '', url: seo_canonical() }
   ])) }}
   {{ seo_jsonld(seo_game_character(
@@ -321,7 +321,7 @@
       {% include 'components/detail_pager.html.twig' with {
         nav: nav|default({ prev: null, next: null }),
         route: 'app_champion',
-        list_href: path('app_champions', { version: selectedVersion, lang: selectedLocale }),
+        list_href: resource_path('app_champions', {}, selectedVersion, selectedLocale),
         version: selectedVersion,
         lang: selectedLocale
       } %}

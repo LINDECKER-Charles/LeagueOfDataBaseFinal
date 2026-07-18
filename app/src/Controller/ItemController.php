@@ -29,6 +29,7 @@ final class ItemController extends AbstractResourceController
      * partageable + cacheable), sinon de la sélection en session — sans redirect.
      */
     #[Route('/objects', name: 'app_items', methods: ['GET'])]
+    #[Route('/{version}/objects', name: 'app_items_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function objects(): Response
     {
         // Full list in one render — the ResourceFilter island owns search, tag
@@ -61,6 +62,7 @@ final class ItemController extends AbstractResourceController
      * Détail d'un objet. Version/langue résolues depuis la query, sinon la session.
      */
     #[Route('/object/{name}', name: 'app_item', methods: ['GET'])]
+    #[Route('/{version}/object/{name}', name: 'app_item_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function object(string $name): Response
     {
         $sel = $this->pageContext->selection();

@@ -46,20 +46,18 @@ domaine (DNS TXT), soumettre `https://league-of-data-base.com/sitemap.xml`,
 surveiller la couverture (soft-404 résiduels, pages exclues). C'est aussi le
 seul moyen de mesurer l'effet des lots SEO.
 
-### 2. Cohérence de l'host canonique (effort : faible, impact : moyen)
+### 2. Cohérence de l'host canonique — [x] tranché : `.com` canonique
 
-Deux domaines prod (`league-of-data-base.fr`, `.com`) servent le même contenu
-avec des canonicals **auto-référentes** (host de la requête) : Google voit deux
-sites jumeaux. Trancher : `.com` = canonique (déjà l'host du `robots.txt` et de
-`legal.site_url`).
+`.com` = host canonique. Le `.fr` est **retiré** : redirect **301 par-URL
+`.fr` → `.com`** au niveau **nginx** (`docker/nginx/default.conf`), remplaçant
+l'ancien interstitiel `200` (`RetiredDomainSubscriber`, supprimé). Le TLD `.fr`
+ne pilote plus que la locale par défaut côté PHP, désormais inatteignable pour du
+trafic réel. Suivi désindexation : propriétés vérifiées en **DNS TXT** + outil
+**« Changement d'adresse »** Search Console, 301 conservé ≥ 1 an.
 
-- Option recommandée : redirect 301 `.fr` → `.com` au niveau edge Caddy (le TLD
-  ne pilote plus que la locale par défaut, perte acceptable), OU canonical
-  cross-host configurée (`seo.canonical_host` en paramètre) si l'on tient au
-  double domaine.
-- Incohérence à corriger au passage : `legal.site_url` pointe sur
-  `www.league-of-data-base.com` alors que `CADDY_DOMAINS` ne déclare que les
-  apex (pas de cert `www`).
+- Reste : `legal.site_url` pointe encore sur `www.league-of-data-base.com` alors
+  que `CADDY_DOMAINS` ne déclare que les apex (pas de cert `www`) — le `www` est
+  301'd vers l'apex, mais la source de vérité devrait être l'apex `.com`.
 
 ### 3. hreflang — bloqué par la locale en session (effort : majeur, impact : fort)
 
@@ -135,7 +133,20 @@ soit un `ErrorController` custom, soit des liens statiques (suffisant).
 
 ## Politique canonique (référence)
 
-- Une page = un document = **une URL sans query**. `?version&lang` est une
-  variante de rendu (partage/session), jamais une page distincte.
-- Le sitemap n'émet que les URLs canoniques, dernière version, ids invariants.
-- La locale UI ne participe pas à l'URL tant que le point 3 n'est pas traité.
+> Révisée le 2026-07-18 : passage aux **URLs de patch indexables** (cf. changelog
+> `2026-07-18-seo-urls-versionnees-sitemaps`).
+
+- **Dernier patch** — URL courte `/champion/Aatrox`, canonique, non versionnée :
+  la page mise en avant. `?version&lang` reste une variante de rendu de cette page
+  (query strippée du canonical, jamais indexée séparément).
+- **Patchs historiques** — URL versionnée `/{version}/champion/Aatrox`,
+  **self-canonical** et indexable : une page par (entité, patch), titre suffixé du
+  patch pour la différenciation. Le dernier patch en `/{version}/…` fait un **301**
+  vers l'URL courte — jamais de doublon.
+- **Sitemap-index** — `/sitemap.xml` → `/sitemaps/latest.xml` (principal, dernier
+  patch, URLs courtes) + une `/sitemaps/{version}.xml` par patch historique
+  (immutable). XML non traduit (standard).
+- Précédence de version : segment de chemin `/{version}/…` > query `?version=` >
+  session ; langue découplée (query `?lang=` > session).
+- La locale UI ne participe toujours pas à l'URL tant que le point 3 (hreflang)
+  n'est pas traité.

@@ -5,7 +5,7 @@
    card is an <a>, so it is reachable and activable at the keyboard.
 --------------------------------------------------------------------------- #}
 {% macro recipe_node(node, version, lang) %}
-  <a href="{{ path('app_item', { name: node.id, version: version, lang: lang }) }}"
+  <a href="{{ resource_path('app_item', { name: node.id }, version, lang) }}"
      title="{{ node.name ?: node.id }}"
      class="group/node hextech-frame hextech-frame-hover flex w-28 flex-col items-center gap-2 p-3 text-center transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 sm:w-32">
     <span class="relative h-12 w-12 shrink-0 overflow-hidden border border-gold-deep/50 bg-void">
@@ -35,7 +35,7 @@
   {% import _self as recipe %}
   <li>
     <{{ is_root ? 'div' : 'a' }}
-       {% if not is_root %}href="{{ path('app_item', { name: node.id, version: version, lang: lang }) }}"{% endif %}
+       {% if not is_root %}href="{{ resource_path('app_item', { name: node.id }, version, lang) }}"{% endif %}
        title="{{ node.name ?: node.id }}"
        class="recipe-node group/node {{ is_root ? 'recipe-node--root' : '' }} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40">
       <span class="recipe-node__icon">
@@ -77,7 +77,7 @@
 {% block structured_data %}
   {{ seo_jsonld(seo_breadcrumbs([
     { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
-    { name: 'header.navigation.item'|trans, url: seo_absolute(path('app_items')) },
+    { name: 'header.navigation.item'|trans, url: seo_absolute(resource_path('app_items', {}, version|default(''), '')) },
     { name: item.name ?? '', url: seo_canonical() }
   ])) }}
   {{ seo_jsonld(seo_game_item(
@@ -266,7 +266,7 @@
     {% include 'components/detail_pager.html.twig' with {
       nav: nav|default({ prev: null, next: null }),
       route: 'app_item',
-      list_href: path('app_items', { version: selectedVersion, lang: selectedLocale }),
+      list_href: resource_path('app_items', {}, selectedVersion, selectedLocale),
       version: selectedVersion,
       lang: selectedLocale
     } %}

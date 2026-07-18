@@ -40,11 +40,23 @@ final class BuildCatalogGate
      */
     public function validate(array $structure, string $version, string $lang, GameMode $mode): array
     {
-        return $this->evaluate($structure, $mode, [
+        return $this->evaluate($structure, $mode, $this->catalogs($version, $lang));
+    }
+
+    /**
+     * Champion/rune/item catalogs of a (version, lang) — the reference a build is
+     * validated against on write, or forward-ported against on a cross-version
+     * import. Data-layer failures bubble (transient upstream), same as validate().
+     *
+     * @return array{runeTrees: array<mixed>, championIds: list<int|string>, itemData: array<int|string, mixed>}
+     */
+    public function catalogs(string $version, string $lang): array
+    {
+        return [
             'runeTrees' => $this->runeManager->getData($version, $lang),
             'championIds' => array_keys($this->championManager->getData($version, $lang)['data'] ?? []),
             'itemData' => $this->itemManager->getData($version, $lang)['data'] ?? [],
-        ]);
+        ];
     }
 
     /**

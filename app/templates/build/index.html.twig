@@ -29,6 +29,9 @@
         <a href="{{ path('app_build_new') }}" class="hx-btn">{{ 'build.list.cta_first'|trans }}</a>
       </div>
     {% else %}
+      {# Import target choices: the latest patches, kept usable — plus each build's
+         own patch, appended per row when it falls outside the recent window. #}
+      {% set importBase = client.versions|default([])|slice(0, 30) %}
       <ul class="space-y-4">
         {% for row in rows %}
           {% set build = row.build %}
@@ -63,6 +66,14 @@
                 {{ (build.public ? 'build.list.public' : 'build.list.private')|trans }}
               </span>
               <div class="forge-row__actions">
+                {% set importVersions = build.gameVersion in importBase ? importBase : importBase|merge([build.gameVersion]) %}
+                <form method="get" action="{{ path('app_build_import', { id: build.id }) }}" class="flex items-center gap-1.5">
+                  <label class="sr-only" for="import-to-{{ build.id }}">{{ 'build.import.to'|trans }}</label>
+                  <select id="import-to-{{ build.id }}" name="to" class="hx-select w-auto py-1 text-xs">
+                    {% for v in importVersions %}<option value="{{ v }}">{{ v }}</option>{% endfor %}
+                  </select>
+                  <button type="submit" class="hx-btn-ghost forge-btn-sm" title="{{ 'build.import.hint'|trans }}">{{ 'build.import.action'|trans }}</button>
+                </form>
                 <a href="{{ path('app_build_edit', { id: build.id }) }}" class="hx-btn-ghost forge-btn-sm">{{ 'build.list.edit'|trans }}</a>
                 <form method="post" action="{{ path('app_build_delete', { id: build.id }) }}"
                       data-turbo-confirm="{{ 'build.list.delete_confirm'|trans }}">

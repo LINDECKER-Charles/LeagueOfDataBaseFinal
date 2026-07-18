@@ -81,6 +81,8 @@
         {% if client is defined %}
         <meta name="dd-version" content="{{ client.session.version ?? (client.versions|default([])|first) }}">
         <meta name="dd-lang" content="{{ client.session.locale ?? client.currentLocale ?? 'en_US' }}">
+        {# Latest patch — lets the switcher route a version change into the path (or drop it when latest). #}
+        <meta name="dd-latest" content="{{ client.versions|default([])|first }}">
         {% endif %}
 
         {# Preload the self-hosted display/body faces (above-the-fold) so the swap
