@@ -25,3 +25,4 @@ node_modules/
 
 # graphify (cache/rapport knowledge-graph généré)
 /graphify-out/
+design
