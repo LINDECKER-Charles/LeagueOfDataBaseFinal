@@ -79,17 +79,21 @@
         {% if apiKey is null %}
             <section class="profile-panel" aria-labelledby="api-create-title">
                 <h2 id="api-create-title" class="profile-panel__title">{{ 'portal.create.title'|trans({}, 'api') }}</h2>
-                <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'portal.create.body'|trans({}, 'api') }}</p>
-                <form method="post" action="{{ path('app_api_key_create') }}" data-turbo="false"
-                      class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
-                    <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
-                    <label class="flex-1 sm:max-w-xs">
-                        <span class="auth-label">{{ 'portal.create.name_label'|trans({}, 'api') }}</span>
-                        <input type="text" name="name" maxlength="64" autocomplete="off"
-                               placeholder="{{ 'portal.create.name_placeholder'|trans({}, 'api') }}" class="hx-input mt-1.5">
-                    </label>
-                    <button type="submit" class="hx-btn">{{ 'portal.create.submit'|trans({}, 'api') }}</button>
-                </form>
+                {% if app.user.isVerified %}
+                    <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'portal.create.body'|trans({}, 'api') }}</p>
+                    <form method="post" action="{{ path('app_api_key_create') }}" data-turbo="false"
+                          class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+                        <label class="flex-1 sm:max-w-xs">
+                            <span class="auth-label">{{ 'portal.create.name_label'|trans({}, 'api') }}</span>
+                            <input type="text" name="name" maxlength="64" autocomplete="off"
+                                   placeholder="{{ 'portal.create.name_placeholder'|trans({}, 'api') }}" class="hx-input mt-1.5">
+                        </label>
+                        <button type="submit" class="hx-btn">{{ 'portal.create.submit'|trans({}, 'api') }}</button>
+                    </form>
+                {% else %}
+                    <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'auth.verify.gate_api'|trans }}</p>
+                {% endif %}
             </section>
         {% else %}
             {% include 'api/_overview.html.twig' with { apiKey: apiKey, usedThisMonth: usedThisMonth } only %}

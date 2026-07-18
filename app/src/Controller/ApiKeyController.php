@@ -82,6 +82,10 @@ final class ApiKeyController extends AbstractResourceController
             return $this->backToPortalWithError('portal.flash.csrf');
         }
 
+        if (($gate = $this->requireVerifiedEmail()) !== null) {
+            return $gate;
+        }
+
         $user = $this->currentUser();
         if ($this->apiKeys->findActiveByUser($user) !== null) {
             return $this->backToPortalWithError('portal.flash.key_exists');
@@ -148,6 +152,24 @@ final class ApiKeyController extends AbstractResourceController
         }
 
         return $user;
+    }
+
+    /**
+     * Minting an API key is reserved to confirmed accounts — same anti-abuse gate
+     * as public build creation, since a key unlocks the paid public API. Returns a
+     * redirect to bounce unverified users, or null to let the caller proceed.
+     * Regeneration stays ungated on purpose: it only rotates an already-issued key
+     * (e.g. a Stripe auto-provisioned one), never mints a first key.
+     */
+    private function requireVerifiedEmail(): ?RedirectResponse
+    {
+        if ($this->currentUser()->isVerified()) {
+            return null;
+        }
+
+        $this->addFlash('warning', $this->translator->trans('auth.verify.gate_api'));
+
+        return $this->redirectToRoute('app_api_portal', status: Response::HTTP_SEE_OTHER);
     }
 
     /** One-shot read of the freshly issued raw key — never reaches app.flashes. */
