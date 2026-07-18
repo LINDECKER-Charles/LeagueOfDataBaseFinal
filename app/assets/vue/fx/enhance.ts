@@ -79,6 +79,61 @@ function enhance(): void {
     activeObservers.splice(0).forEach((io) => io.disconnect())
     initReveal()
     initScrollspy()
+    sweepFailedImages()
+}
+
+const IMG_FALLBACK_ATTR = 'data-img-fallback'
+const CONFIRM_ATTR = 'data-confirm'
+
+/**
+ * CSP-safe image fallback, replacing the former inline `onerror`. The swap runs
+ * once — the attribute is cleared first — so a broken fallback URL can't loop.
+ */
+function swapToFallback(img: HTMLImageElement): void {
+    const fallback = img.getAttribute(IMG_FALLBACK_ATTR)
+    if (fallback === null) {
+        return
+    }
+    img.removeAttribute(IMG_FALLBACK_ATTR)
+    img.src = fallback
+}
+
+/** `error` doesn't bubble, so image failures are caught at document capture. */
+function onImageError(event: Event): void {
+    const img = event.target
+    if (img instanceof HTMLImageElement && img.hasAttribute(IMG_FALLBACK_ATTR)) {
+        swapToFallback(img)
+    }
+}
+
+/**
+ * Images that failed before this deferred module ran: the old inline handler
+ * fired during parse, a document listener attaches later. Re-check once per
+ * render so the first paint's broken art still swaps to its fallback.
+ */
+function sweepFailedImages(): void {
+    for (const img of document.querySelectorAll<HTMLImageElement>(`img[${IMG_FALLBACK_ATTR}]`)) {
+        if (img.complete && img.naturalWidth === 0) {
+            swapToFallback(img)
+        }
+    }
+}
+
+/**
+ * CSP-safe submit confirmation, replacing the former inline `onsubmit`. Captured
+ * so it runs ahead of Turbo's own submit handling; a declined confirm stops the
+ * native submit AND Turbo (stopImmediatePropagation halts the bubble phase).
+ */
+function onConfirmSubmit(event: Event): void {
+    const form = event.target
+    if (!(form instanceof HTMLFormElement)) {
+        return
+    }
+    const message = form.getAttribute(CONFIRM_ATTR)
+    if (message !== null && !window.confirm(message)) {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+    }
 }
 
 /** Close any open header switcher popover when interacting elsewhere. */
@@ -121,4 +176,6 @@ export function installEnhancements(): void {
     document.addEventListener('turbo:load', enhance)
     document.addEventListener('click', closeSwitchersOutside)
     document.addEventListener('click', onSectionNavClick)
+    document.addEventListener('error', onImageError, true)
+    document.addEventListener('submit', onConfirmSubmit, true)
 }

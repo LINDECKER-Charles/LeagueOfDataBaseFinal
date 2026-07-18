@@ -87,9 +87,9 @@
   <section class="relative h-[62vh] min-h-[26rem] max-h-[46rem] w-full overflow-hidden">
     {% if champId %}
       {# The undocumented `centered/` variant frames the subject at any crop;
-         onerror falls back to the classic splash for champions missing it. #}
+         data-img-fallback falls back to the classic splash for champions missing it. #}
       <img src="{{ centeredBase }}/{{ champId }}_0.jpg" alt=""
-           onerror="this.onerror=null;this.src='{{ splashBase }}/{{ champId }}_0.jpg'"
+           data-img-fallback="{{ splashBase }}/{{ champId }}_0.jpg"
            loading="eager" fetchpriority="high" decoding="async"
            class="absolute inset-0 h-full w-full object-cover object-[50%_18%]">
     {% endif %}

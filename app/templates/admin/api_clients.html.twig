@@ -53,7 +53,7 @@
                         <button type="submit" class="btn small">Créditer</button>
                     </form>
                     <form method="post" action="{{ path('admin_api_client_revoke', { id: k.id } + listContext) }}"
-                          onsubmit="return confirm('Révoquer la clé {{ k.keyPrefix|e('js') }}… ? Elle cessera d\'authentifier sous ~60 s.');">
+                          data-confirm="Révoquer la clé {{ k.keyPrefix|e('html_attr') }}… ? Elle cessera d'authentifier sous ~60 s.">
                         <input type="hidden" name="_token" value="{{ csrf_token('admin_api_client_revoke') }}">
                         <button type="submit" class="btn danger small">Révoquer</button>
                     </form>

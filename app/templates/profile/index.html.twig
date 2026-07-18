@@ -32,7 +32,7 @@
         {# Favorite champion, dimmed behind the whole edit page. #}
         <div class="profile-perso__backdrop" aria-hidden="true">
             <img src="{{ personalBackground.image }}" alt=""
-                 onerror="this.onerror=null;this.src='{{ personalBackground.fallback }}'"
+                 data-img-fallback="{{ personalBackground.fallback }}"
                  loading="eager" decoding="async">
         </div>
     {% else %}
