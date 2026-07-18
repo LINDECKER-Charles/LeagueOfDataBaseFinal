@@ -98,17 +98,38 @@ describe('useVideoPlayback', () => {
         expect(playback.progress.value).toBe(0)
     })
 
-    it('resets state when the video element is swapped (keyed re-render)', async () => {
+    it('resets state and pauses the previous element when swapped (keyed re-render)', async () => {
         const { playback } = mountPlayback()
-        const video = fakeVideo({ paused: true, currentTime: 5 })
-        playback.videoEl.value = video
+        const prev = fakeVideo({ paused: true, currentTime: 5 })
+        playback.videoEl.value = prev
+        await nextTick() // flush so the next swap sees `prev` as the old value
         playback.onPause()
         expect(playback.progress.value).toBe(0.5)
 
         playback.videoEl.value = fakeVideo()
         await nextTick()
+        expect(prev.pause).toHaveBeenCalledOnce()
         expect(playback.progress.value).toBe(0)
         expect(playback.isPaused.value).toBe(false)
+    })
+
+    it('starts muted and enforces the sticky mute state on each swapped element', async () => {
+        const { playback } = mountPlayback()
+        expect(playback.isMuted.value).toBe(true)
+
+        const first = fakeVideo({ muted: false })
+        playback.videoEl.value = first
+        await nextTick()
+        expect(first.muted).toBe(true)
+
+        playback.toggleMute()
+        expect(playback.isMuted.value).toBe(false)
+        expect(first.muted).toBe(false)
+
+        const next = fakeVideo({ muted: true })
+        playback.videoEl.value = next
+        await nextTick()
+        expect(next.muted).toBe(false)
     })
 
     it('cancels the frame loop on unmount', () => {

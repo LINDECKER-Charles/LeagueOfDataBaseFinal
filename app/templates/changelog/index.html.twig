@@ -3,6 +3,13 @@
 {% block title %}{{ seo_title('changelog.meta.title'|trans) }}{% endblock %}
 {% block meta_description %}{{ 'changelog.meta.description'|trans }}{% endblock %}
 
+{% block structured_data %}
+  {{ seo_jsonld(seo_breadcrumbs([
+    { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+    { name: 'changelog.title'|trans, url: seo_canonical() }
+  ])) }}
+{% endblock %}
+
 {% block body %}
 <main class="changelog-page">
     <header class="codex-header">

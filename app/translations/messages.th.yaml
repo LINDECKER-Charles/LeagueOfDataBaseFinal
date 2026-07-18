@@ -120,6 +120,8 @@ champion:
     range: "ระยะ"
     video_play: "เล่นวิดีโอ"
     video_pause: "หยุดวิดีโอชั่วคราว"
+    video_mute: "ปิดเสียง"
+    video_unmute: "เปิดเสียง"
     tips_as: "เมื่อเล่นเป็น"
     tips_against: "เมื่อเล่นเจอ"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "ไอเท็ม"
     runes: "รูน"
     summoner: "สเปลล์อัญเชิญ"
+    sitemap: "แผนผังเว็บไซต์"
 
   links:
     title: "ลิงก์ที่เป็นประโยชน์"
@@ -311,3 +314,17 @@ community:
     invalid: "โหวตไม่ถูกต้อง"
   supporter:
     badge: "ผู้สนับสนุน"
+
+stat:
+  attack_damage: "พลังโจมตี"
+  ability_power: "พลังเวท"
+  attack_speed: "ความเร็วโจมตี"
+  crit_chance: "โอกาสคริติคอล"
+  life_steal: "ดูดเลือด"
+  health: "พลังชีวิต"
+  health_regen: "ฟื้นฟูพลังชีวิต"
+  armor: "เกราะ"
+  magic_resist: "ต้านทานเวท"
+  mana: "มานา"
+  move_speed: "ความเร็วเคลื่อนที่"
+  attack_range: "ระยะโจมตี"

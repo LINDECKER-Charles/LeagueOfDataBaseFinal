@@ -7,6 +7,25 @@
 {% block title %}{{ seo_title('trends.title'|trans({}, 'seo')) }}{% endblock %}
 {% block meta_description %}{{ 'trends.description'|trans({}, 'seo') }}{% endblock %}
 
+{# Dynamic ranking → dynamic ItemList: the top public builds of the current
+   page, in vote order. Capped like every list (JsonLdBuilder::ITEM_LIST_MAX). #}
+{% block structured_data %}
+  {{ seo_jsonld(seo_breadcrumbs([
+    { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+    { name: 'community.trends.title'|trans, url: seo_canonical() }
+  ])) }}
+  {% if rows is not empty %}
+    {% set trendItems = [] %}
+    {% for row in rows|slice(0, 20) %}
+      {% set trendItems = trendItems|merge([{
+        name: row.build.name,
+        url: seo_absolute(path('app_build_show', { token: row.build.shareToken }))
+      }]) %}
+    {% endfor %}
+    {{ seo_jsonld(seo_item_list(trendItems)) }}
+  {% endif %}
+{% endblock %}
+
 {% set baseQuery = {} %}
 {% if filters.champion %}{% set baseQuery = baseQuery|merge({ champion: filters.champion }) %}{% endif %}
 {% if filters.mode %}{% set baseQuery = baseQuery|merge({ mode: filters.mode }) %}{% endif %}

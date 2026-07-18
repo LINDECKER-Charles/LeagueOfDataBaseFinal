@@ -32,6 +32,8 @@ interface Labels {
     ranks: string
     play: string
     pause: string
+    mute: string
+    unmute: string
 }
 
 const props = defineProps<{
@@ -42,7 +44,7 @@ const props = defineProps<{
 }>()
 
 const media = useAbilityMedia(props.championKey)
-const { videoEl, isPaused, progress, toggle, onPlay, onPause } = useVideoPlayback()
+const { videoEl, isPaused, isMuted, progress, toggle, toggleMute, onPlay, onPause } = useVideoPlayback()
 const selected = ref(0)
 const current = computed(() => props.abilities[selected.value] ?? props.abilities[0])
 
@@ -123,6 +125,24 @@ function onRailKeydown(event: KeyboardEvent): void {
                     <svg class="kit__media-glyph" viewBox="0 0 24 24" aria-hidden="true">
                         <path v-if="isPaused" d="M8 5.5v13l11-6.5z" />
                         <path v-else d="M7 5h4v14H7zM13 5h4v14h-4z" />
+                    </svg>
+                </button>
+                <button
+                    type="button"
+                    class="kit__media-sound"
+                    :class="{ 'is-active': !isMuted }"
+                    :aria-label="isMuted ? labels.unmute : labels.mute"
+                    :aria-pressed="!isMuted"
+                    @click="toggleMute"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 9v6h4l5 4V5L8 9H4z" />
+                        <template v-if="isMuted">
+                            <path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </template>
+                        <template v-else>
+                            <path d="M16 8.5a4.5 4.5 0 0 1 0 7M18.5 6a8 8 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </template>
                     </svg>
                 </button>
                 <div class="kit__progress" aria-hidden="true">

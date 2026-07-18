@@ -140,6 +140,8 @@ champion:
     range: "Portée"
     video_play: "Lire la vidéo"
     video_pause: "Mettre la vidéo en pause"
+    video_mute: "Couper le son"
+    video_unmute: "Activer le son"
     charges: "Charges"
     ranks: "Rangs"
     tips: "Conseils"
@@ -148,15 +150,7 @@ champion:
     level: "Niveau %level%"
     stats:
       title: "Statistiques de base"
-      attack_damage: "Dégâts d'attaque"
-      attack_speed: "Vitesse d'attaque"
-      hp: "Points de vie"
-      hp_regen: "Régén. de vie"
       resource_regen: "Régén. de ressource"
-      armor: "Armure"
-      magic_resist: "Résistance magique"
-      move_speed: "Vitesse de déplacement"
-      attack_range: "Portée d'attaque"
     profile:
       title: "Profil du champion"
       attack: "Attaque"
@@ -209,6 +203,7 @@ footer:
     item: "Objets"
     runes: "Runes"
     summoner: "Sorts d’invocateur"
+    sitemap: "Plan du site"
 
   links:
     title: "Liens utiles"
@@ -341,6 +336,7 @@ auth:
     resend_done: "E-mail de confirmation renvoyé."
     resend_throttled: "Un e-mail a déjà été envoyé récemment — patientez quelques minutes avant de réessayer."
     gate_build: "Confirmez votre adresse e-mail avant de créer un build."
+    gate_api: "Confirmez votre adresse e-mail avant de générer une clé API."
   reset:
     request_title: "Mot de passe oublié"
     request_lede: "Saisissez l'adresse e-mail de votre compte : si elle existe, un lien de réinitialisation vous sera envoyé."
@@ -675,3 +671,17 @@ email:
     cta: "Choisir un nouveau mot de passe"
     expiry: "Ce lien expire dans %duration%. Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre mot de passe reste inchangé."
     footer_reason: "Vous recevez cet e-mail car une réinitialisation de mot de passe a été demandée pour ce compte."
+
+stat:
+  attack_damage: "Dégâts d'attaque"
+  ability_power: "Puissance"
+  attack_speed: "Vitesse d'attaque"
+  crit_chance: "Coup critique"
+  life_steal: "Vol de vie"
+  health: "Points de vie"
+  health_regen: "Régén. de vie"
+  armor: "Armure"
+  magic_resist: "Résistance magique"
+  mana: "Mana"
+  move_speed: "Vitesse de déplacement"
+  attack_range: "Portée d'attaque"

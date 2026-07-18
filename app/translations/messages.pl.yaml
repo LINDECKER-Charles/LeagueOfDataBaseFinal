@@ -120,6 +120,8 @@ champion:
     range: "Zasięg"
     video_play: "Odtwórz wideo"
     video_pause: "Wstrzymaj wideo"
+    video_mute: "Wycisz dźwięk"
+    video_unmute: "Włącz dźwięk"
     tips_as: "Gdy grasz nim"
     tips_against: "Gdy grasz przeciw"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Przedmiot"
     runes: "Runy"
     summoner: "Przywoływacz"
+    sitemap: "Mapa witryny"
 
   links:
     title: "Przydatne linki"
@@ -311,3 +314,17 @@ community:
     invalid: "Nieprawidłowy głos."
   supporter:
     badge: "Wspierający"
+
+stat:
+  attack_damage: "Obrażenia od ataku"
+  ability_power: "Moc umiejętności"
+  attack_speed: "Szybkość ataku"
+  crit_chance: "Szansa na kryt."
+  life_steal: "Kradzież życia"
+  health: "Zdrowie"
+  health_regen: "Regen. zdrowia"
+  armor: "Pancerz"
+  magic_resist: "Odporność na magię"
+  mana: "Mana"
+  move_speed: "Szybkość ruchu"
+  attack_range: "Zasięg ataku"

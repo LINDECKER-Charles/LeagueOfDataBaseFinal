@@ -120,6 +120,8 @@ champion:
     range: "사거리"
     video_play: "동영상 재생"
     video_pause: "동영상 일시 정지"
+    video_mute: "음소거"
+    video_unmute: "음소거 해제"
     tips_as: "플레이할 때"
     tips_against: "상대할 때"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "아이템"
     runes: "룬"
     summoner: "소환사 주문"
+    sitemap: "사이트맵"
 
   links:
     title: "유용한 링크"
@@ -311,3 +314,17 @@ community:
     invalid: "잘못된 투표입니다."
   supporter:
     badge: "후원자"
+
+stat:
+  attack_damage: "공격력"
+  ability_power: "주문력"
+  attack_speed: "공격 속도"
+  crit_chance: "치명타 확률"
+  life_steal: "생명력 흡수"
+  health: "체력"
+  health_regen: "체력 재생"
+  armor: "방어력"
+  magic_resist: "마법 저항력"
+  mana: "마나"
+  move_speed: "이동 속도"
+  attack_range: "공격 사거리"

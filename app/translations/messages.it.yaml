@@ -120,6 +120,8 @@ champion:
     range: "Gittata"
     video_play: "Riproduci il video"
     video_pause: "Metti in pausa il video"
+    video_mute: "Disattiva audio"
+    video_unmute: "Attiva audio"
     tips_as: "Giocando come"
     tips_against: "Giocando contro"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Oggetto"
     runes: "Rune"
     summoner: "Evocatore"
+    sitemap: "Mappa del sito"
 
   links:
     title: "Link Utili"
@@ -311,3 +314,17 @@ community:
     invalid: "Voto non valido."
   supporter:
     badge: "Sostenitore"
+
+stat:
+  attack_damage: "Danno d'attacco"
+  ability_power: "Potere magico"
+  attack_speed: "Velocità d'attacco"
+  crit_chance: "Colpo critico"
+  life_steal: "Rubavita"
+  health: "Salute"
+  health_regen: "Rigen. salute"
+  armor: "Armatura"
+  magic_resist: "Res. magica"
+  mana: "Mana"
+  move_speed: "Velocità movim."
+  attack_range: "Gittata d'attacco"

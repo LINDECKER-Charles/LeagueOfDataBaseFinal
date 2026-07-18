@@ -25,6 +25,8 @@
 
         <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ path('app_sitemap') }}">
 
+        <meta name="google-site-verification" content="7sycxfW68dJEaB5yfMSxjIm5MczFFNEWIvsoXL99z0w" />
+        <meta name="google-site-verification" content="rtsHuRhsWtuo3cqSsG0rwrgn9Ctz4BeFeUpjqMA0NpM" />
         {# --- Open Graph --- #}
 
         {# og:url suit la canonical (URL propre sans query) ; redéfinissable par page. #}
@@ -59,7 +61,7 @@
         {% else %}
             {% set img = default_image %}
         {% endif %}
-        
+
         {# Social crawlers ignorent les chemins relatifs → URL absolue systématique. #}
         <meta property="og:image" content="{% block og_image %}{{ seo_absolute(img) }}{% endblock %}">
         <meta name="twitter:image" content="{% block twitter_image %}{{ seo_absolute(img) }}{% endblock %}">

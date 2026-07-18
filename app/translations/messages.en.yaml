@@ -123,6 +123,8 @@ champion:
     range: "Range"
     video_play: "Play video"
     video_pause: "Pause video"
+    video_mute: "Mute sound"
+    video_unmute: "Unmute sound"
     charges: "Charges"
     ranks: "Ranks"
     tips: "Tips"
@@ -131,15 +133,7 @@ champion:
     level: "Level %level%"
     stats:
       title: "Base Statistics"
-      attack_damage: "Attack damage"
-      attack_speed: "Attack speed"
-      hp: "Health"
-      hp_regen: "Health regen"
       resource_regen: "Resource regen"
-      armor: "Armor"
-      magic_resist: "Magic resist"
-      move_speed: "Move speed"
-      attack_range: "Attack range"
     profile:
       title: "Champion Profile"
       attack: "Attack"
@@ -208,6 +202,7 @@ footer:
     item: "Item"
     runes: "Runes"
     summoner: "Summoner"
+    sitemap: "Sitemap"
 
   links:
     title: "Useful Links"
@@ -340,6 +335,7 @@ auth:
     resend_done: "Confirmation email resent."
     resend_throttled: "An email was already sent recently — wait a few minutes before trying again."
     gate_build: "Confirm your email address before creating a build."
+    gate_api: "Confirm your email address before generating an API key."
   reset:
     request_title: "Forgot password"
     request_lede: "Enter your account email: if it exists, we'll send you a reset link."
@@ -674,3 +670,17 @@ email:
     cta: "Choose a new password"
     expiry: "This link expires in %duration%. If you didn't request this, ignore this email: your password stays unchanged."
     footer_reason: "You're receiving this email because a password reset was requested for this account."
+
+stat:
+  attack_damage: "Attack damage"
+  ability_power: "Ability power"
+  attack_speed: "Attack speed"
+  crit_chance: "Critical strike"
+  life_steal: "Life steal"
+  health: "Health"
+  health_regen: "Health regen"
+  armor: "Armor"
+  magic_resist: "Magic resist"
+  mana: "Mana"
+  move_speed: "Move speed"
+  attack_range: "Attack range"

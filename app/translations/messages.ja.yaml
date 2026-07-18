@@ -120,6 +120,8 @@ champion:
     range: "射程"
     video_play: "動画を再生"
     video_pause: "動画を一時停止"
+    video_mute: "音を消す"
+    video_unmute: "音を出す"
     tips_as: "使用時のコツ"
     tips_against: "対策のコツ"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "アイテム"
     runes: "ルーン"
     summoner: "サモナー"
+    sitemap: "サイトマップ"
 
   links:
     title: "便利なリンク"
@@ -311,3 +314,17 @@ community:
     invalid: "無効な投票です。"
   supporter:
     badge: "サポーター"
+
+stat:
+  attack_damage: "攻撃力"
+  ability_power: "魔力"
+  attack_speed: "攻撃速度"
+  crit_chance: "クリティカル率"
+  life_steal: "ライフスティール"
+  health: "体力"
+  health_regen: "体力自動回復"
+  armor: "物理防御"
+  magic_resist: "魔法防御"
+  mana: "マナ"
+  move_speed: "移動速度"
+  attack_range: "射程"
