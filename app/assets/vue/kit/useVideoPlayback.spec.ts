@@ -44,7 +44,10 @@ describe('useVideoPlayback', () => {
         })
         vi.stubGlobal('cancelAnimationFrame', vi.fn((id: number) => rafQueue.delete(id)))
     })
-    afterEach(() => vi.unstubAllGlobals())
+    afterEach(() => {
+        vi.unstubAllGlobals()
+        vi.restoreAllMocks()
+    })
 
     it('toggle() plays a paused video and pauses a playing one', () => {
         const { playback } = mountPlayback()
@@ -140,5 +143,45 @@ describe('useVideoPlayback', () => {
 
         unmount()
         expect(cancelAnimationFrame).toHaveBeenCalled()
+    })
+
+    it('pauses the current video on unmount so detached audio stops', () => {
+        const { playback, unmount } = mountPlayback()
+        const video = fakeVideo()
+        playback.videoEl.value = video
+
+        unmount()
+        expect(video.pause).toHaveBeenCalled()
+    })
+
+    it('pauses a playing video when the tab hides and resumes it on return', () => {
+        const { playback } = mountPlayback()
+        const video = fakeVideo({ paused: false })
+        playback.videoEl.value = video
+        const hidden = vi.spyOn(document, 'hidden', 'get')
+
+        hidden.mockReturnValue(true)
+        document.dispatchEvent(new Event('visibilitychange'))
+        expect(video.pause).toHaveBeenCalledOnce()
+
+        ;(video as { paused: boolean }).paused = true
+        hidden.mockReturnValue(false)
+        document.dispatchEvent(new Event('visibilitychange'))
+        expect(video.play).toHaveBeenCalledOnce()
+    })
+
+    it('does not resume a video the user paused before hiding the tab', () => {
+        const { playback } = mountPlayback()
+        const video = fakeVideo({ paused: true })
+        playback.videoEl.value = video
+        const hidden = vi.spyOn(document, 'hidden', 'get')
+
+        hidden.mockReturnValue(true)
+        document.dispatchEvent(new Event('visibilitychange'))
+        expect(video.pause).not.toHaveBeenCalled()
+
+        hidden.mockReturnValue(false)
+        document.dispatchEvent(new Event('visibilitychange'))
+        expect(video.play).not.toHaveBeenCalled()
     })
 })

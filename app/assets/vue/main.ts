@@ -1,7 +1,7 @@
 import '@hotwired/turbo'
 import '../styles/app.css'
 
-import { createApp, type Component } from 'vue'
+import { createApp, type App, type Component } from 'vue'
 import { installEnhancements } from './fx/enhance'
 import { setupProfileForm } from './profile/profileForm'
 
@@ -31,6 +31,10 @@ const registry: Record<string, Island> = {
     'vote-score': { load: () => import('./components/VoteScore.vue') },
 }
 
+// Live islands, so Turbo navigations can tear them down instead of leaking a
+// detached Vue tree (a playing <video> keeps its audio alive until GC).
+const mountedIslands: { app: App; host: HTMLElement }[] = []
+
 function mountIslands(root: ParentNode = document): void {
     root.querySelectorAll<HTMLElement>('[data-vue]:not([data-vue-mounted])').forEach(async (el) => {
         const name = el.dataset.vue
@@ -48,8 +52,27 @@ function mountIslands(root: ParentNode = document): void {
         }
 
         const { default: component } = await island.load()
-        createApp(component, props).mount(el)
+        // The chunk may resolve after a Turbo visit swapped this shell away.
+        if (!el.isConnected) {
+            return
+        }
+        const app = createApp(component, props)
+        app.mount(el)
+        mountedIslands.push({ app, host: el })
     })
+}
+
+/**
+ * Unmount every live island before Turbo caches or re-renders the page. This
+ * stops in-flight media (audio bleeding across navigations) and clears the
+ * mount flag so the cached snapshot re-mounts cleanly on a back/forward visit.
+ */
+function teardownIslands(): void {
+    while (mountedIslands.length > 0) {
+        const { app, host } = mountedIslands.pop()!
+        app.unmount()
+        delete host.dataset.vueMounted
+    }
 }
 
 function enhancePage(root: ParentNode = document): void {
@@ -58,8 +81,13 @@ function enhancePage(root: ParentNode = document): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => enhancePage())
-// The app uses Turbo Drive: re-scan for islands after each navigation.
+// The app uses Turbo Drive: re-scan for islands after each navigation, and tear
+// the previous page's islands down before caching/rendering so nothing (audio
+// especially) leaks across visits. before-cache covers cacheable pages;
+// before-render is the fallback for non-cached visits.
 document.addEventListener('turbo:load', () => enhancePage())
+document.addEventListener('turbo:before-cache', teardownIslands)
+document.addEventListener('turbo:before-render', teardownIslands)
 
 // Scroll-reveal + section-nav scrollspy (Turbo-safe, reduced-motion aware).
 installEnhancements()
