@@ -60,7 +60,7 @@
         <h2 class="card-title">Purger les journaux</h2>
         <p class="dim">La rétention légale (6 mois) est appliquée automatiquement. Cette purge manuelle libère de l'espace immédiatement — locale <b>et</b> archive MinIO. Action irréversible.</p>
         <form method="post" action="{{ path('admin_logs_purge') }}"
-              onsubmit="return confirm('Purger définitivement les journaux sélectionnés ? Cette action est irréversible.');"
+              data-confirm="Purger définitivement les journaux sélectionnés ? Cette action est irréversible."
               class="purge-form">
             <input type="hidden" name="_token" value="{{ csrf_token('admin_logs_purge') }}">
             <label class="radio"><input type="radio" name="scope" value="retention" checked> Au-delà de la rétention (&gt; 6 mois)</label>

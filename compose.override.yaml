@@ -37,6 +37,9 @@ services:
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # default.conf `include`s this — the stock dev image has no /etc/nginx/snippets,
+      # so it must be bind-mounted or nginx fails to start.
+      - ./docker/nginx/snippets/security-headers.conf:/etc/nginx/snippets/security-headers.conf:ro
       - ./app/public:/var/www/html/public:ro
 
   go-fetcher:

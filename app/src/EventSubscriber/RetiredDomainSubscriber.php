@@ -59,9 +59,19 @@ final class RetiredDomainSubscriber implements EventSubscriberInterface
         // 200, not 301: the visitor must actually see the notice. `no-store` stops
         // the interstitial being cached in place of real content, and X-Robots-Tag
         // keeps the dead host out of search indexes.
+        //
+        // Own scoped CSP: this standalone page carries a trusted inline redirect
+        // script (the target comes from a data-attribute, never inlined into JS).
+        // SecurityHeadersSubscriber yields to a response that already declares a
+        // CSP, so the interstitial keeps 'unsafe-inline' here without loosening
+        // the site-wide `script-src 'self'`.
         $event->setResponse(new Response($html, Response::HTTP_OK, [
             'Cache-Control' => 'no-store',
             'X-Robots-Tag' => 'noindex',
+            'X-Frame-Options' => 'DENY',
+            'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+                . "style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; "
+                . "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
         ]));
     }
 }

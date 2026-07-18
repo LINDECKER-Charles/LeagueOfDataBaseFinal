@@ -58,9 +58,9 @@
 
     <section class="profile-hero {{ heroBackground ? 'profile-hero--art' : 'profile-hero--plain' }}">
         {% if heroBackground %}
-            {# Centered crop frames the champion; onerror falls back to the classic splash. #}
+            {# Centered crop frames the champion; data-img-fallback falls back to the classic splash. #}
             <img class="profile-hero__art" src="{{ heroBackground.image }}" alt=""
-                 onerror="this.onerror=null;this.src='{{ heroBackground.fallback }}'"
+                 data-img-fallback="{{ heroBackground.fallback }}"
                  loading="eager" fetchpriority="high" decoding="async">
         {% else %}
             {% include 'partials/main/gradient.html.twig' %}
