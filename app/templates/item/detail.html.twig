@@ -189,6 +189,26 @@
       </div>
 
       <aside class="mt-12 space-y-6 lg:mt-0 lg:sticky lg:top-6" data-reveal>
+        {# Combat statistics — Data Dragon's structured `stats` block, iconified. #}
+        {% set itemStats = item_stats(item.stats|default(null)) %}
+        {% if itemStats is not empty %}
+          <div class="hextech-frame p-5">
+            <h2 class="mb-4 font-beaufort text-xs uppercase tracking-[0.22em] text-gold">{{ 'item.detail.stats'|trans }}</h2>
+            <div class="stat-board">
+              {% for row in itemStats %}
+                <div class="stat-board__row">
+                  <span class="stat-board__label">
+                    {%- set statIcon = stat_icon_url(row.slug) -%}
+                    {%- if statIcon %}<img src="{{ statIcon }}" alt="" width="18" height="18" loading="lazy" decoding="async" class="stat-icon">{% endif -%}
+                    {{ row.label|trans }}
+                  </span>
+                  <span class="stat-board__value">{{ row.value }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
         {# Gold ledger #}
         {% if item.gold is defined %}
           <div class="hextech-frame p-5">
