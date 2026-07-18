@@ -9,6 +9,7 @@ use App\Twig\SeoExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class SeoExtensionTest extends TestCase
 {
@@ -20,10 +21,22 @@ final class SeoExtensionTest extends TestCase
     protected function setUp(): void
     {
         $this->requestStack = new RequestStack();
+
+        // Interpolates like the real translator so the versioned-title suffix is exercised.
+        $translator = $this->createStub(TranslatorInterface::class);
+        $translator->method('trans')->willReturnCallback(
+            static function (string $id, array $params = []): string {
+                $catalogue = ['versioned_suffix' => '(patch %version%)'];
+
+                return strtr($catalogue[$id] ?? $id, $params);
+            },
+        );
+
         $this->extension = new SeoExtension(
             $this->requestStack,
             new JsonLdBuilder(),
             new OgLocale(),
+            $translator,
             self::SITE_NAME,
         );
     }
@@ -60,6 +73,19 @@ final class SeoExtensionTest extends TestCase
     {
         self::assertSame('Aatrox, LoL champion — League Of Data Base', $this->extension->title('Aatrox, LoL champion'));
         self::assertSame(self::SITE_NAME, $this->extension->title('   '));
+    }
+
+    public function testTitleWeavesInThePatchOnAVersionedRoute(): void
+    {
+        $request = Request::create('http://localhost:8080/13.1.1/champion/Aatrox');
+        $request->attributes->set('_route', 'app_champion_versioned');
+        $request->attributes->set('version', '13.1.1');
+        $this->requestStack->push($request);
+
+        self::assertSame(
+            'Aatrox, LoL champion (patch 13.1.1) — League Of Data Base',
+            $this->extension->title('Aatrox, LoL champion'),
+        );
     }
 
     public function testCurrentOgLocaleReadsTheRequestLocale(): void

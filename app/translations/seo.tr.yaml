@@ -1,3 +1,4 @@
+versioned_suffix: "(yama %version%)"
 home:
   title: "League Of Data Base — League of Legends ansiklopedisi"
   description: "%version% yaması için League of Legends şampiyonları, eşyaları, rünleri ve sihirdar büyüleri — 21 dilde istatistikler, yetenekler ve ayrıntılar."

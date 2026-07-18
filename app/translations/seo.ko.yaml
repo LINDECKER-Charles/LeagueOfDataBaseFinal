@@ -1,3 +1,4 @@
+versioned_suffix: "(패치 %version%)"
 home:
   title: "League Of Data Base — 리그 오브 레전드 백과사전"
   description: "패치 %version%의 리그 오브 레전드 챔피언, 아이템, 룬, 소환사 주문 — 21개 언어로 스탯, 스킬, 상세 정보 제공."

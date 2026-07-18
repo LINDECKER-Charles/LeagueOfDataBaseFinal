@@ -1,3 +1,4 @@
+versioned_suffix: "(版本 %version%)"
 home:
   title: "League Of Data Base — 英雄联盟百科全书"
   description: "版本 %version% 的英雄联盟英雄、装备、符文与召唤师技能 — 21 种语言的属性、技能与详细资料。"

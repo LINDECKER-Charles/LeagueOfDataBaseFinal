@@ -1,3 +1,4 @@
+versioned_suffix: "(patch %version%)"
 home:
   title: "League Of Data Base — a enciclopédia de League of Legends"
   description: "Campeões, itens, runas e feitiços de invocador de League of Legends para o patch %version%: estatísticas, habilidades e detalhes em 21 idiomas."

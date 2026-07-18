@@ -1,5 +1,6 @@
 # Dedicated SEO domain: page titles + meta descriptions only.
 # Placeholders: %name% (entity), %version% (DDragon patch), %count% (list size).
+versioned_suffix: "(patch %version%)"
 home:
   title: "League Of Data Base — League of Legends encyclopedia"
   description: "Champions, items, runes and summoner spells of League of Legends for patch %version% — stats, abilities and details in 21 languages."

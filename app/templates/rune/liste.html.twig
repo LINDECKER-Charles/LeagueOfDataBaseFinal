@@ -9,7 +9,7 @@
   {% for runeTree in runesReforgeds|slice(0, 20) %}
     {% set seoItems = seoItems|merge([{
       name: runeTree.name|default(runeTree.key),
-      url: seo_absolute(path('app_rune', { name: runeTree.key }))
+      url: seo_absolute(resource_path('app_rune', { name: runeTree.key }, meta.version, ''))
     }]) %}
   {% endfor %}
   {{ seo_jsonld(seo_item_list(seoItems)) }}
@@ -34,7 +34,7 @@
     <div id="rune-grid" class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for runeTree in runesReforgeds %}
         {% embed 'components/entity_card.html.twig' with {
-          href: path('app_rune', { name: runeTree.key, version: meta.version, lang: meta.lang }),
+          href: resource_path('app_rune', { name: runeTree.key }, meta.version, meta.lang),
           img: images[runeTree.key].icon ?? null,
           name: runeTree.name,
           sub: runeTree.key,

@@ -5,7 +5,9 @@
    popover is a native <details class="switcher"> — no JS menus; enhance.ts
    closes any open switcher on outside interaction. #}
 {% set currentRoute = app.request.get('_route') %}
-{% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
+{# On a /{version}/… page the route version drives the chrome so navigation stays
+   on the viewed patch; elsewhere the session-remembered selection applies. #}
+{% set navVersion = app.request.attributes.get('version') ?: (client.session.version ?? (client.versions|default([])|first)) %}
 {% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
 {% set isCodexRoute = currentRoute starts with 'app_champion' or currentRoute starts with 'app_item'
   or currentRoute starts with 'app_rune' or currentRoute starts with 'app_summoner' %}
@@ -42,10 +44,10 @@
               <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
             </summary>
             <ul class="switcher__panel switcher__panel--menu">
-              <li><a href="{{ path('app_champions', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_champion' ? 'text-gold-bright' }}">{{ 'header.navigation.champion'|trans }}</a></li>
-              <li><a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_item' ? 'text-gold-bright' }}">{{ 'header.navigation.item'|trans }}</a></li>
-              <li><a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_rune' ? 'text-gold-bright' }}">{{ 'header.navigation.runes'|trans }}</a></li>
-              <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link {{ currentRoute starts with 'app_summoner' ? 'text-gold-bright' }}">{{ 'header.navigation.summoner'|trans }}</a></li>
+              <li><a href="{{ resource_path('app_champions', {}, navVersion, navLang) }}" class="nav-link {{ currentRoute starts with 'app_champion' ? 'text-gold-bright' }}">{{ 'header.navigation.champion'|trans }}</a></li>
+              <li><a href="{{ resource_path('app_items', {}, navVersion, navLang) }}" class="nav-link {{ currentRoute starts with 'app_item' ? 'text-gold-bright' }}">{{ 'header.navigation.item'|trans }}</a></li>
+              <li><a href="{{ resource_path('app_runes', {}, navVersion, navLang) }}" class="nav-link {{ currentRoute starts with 'app_rune' ? 'text-gold-bright' }}">{{ 'header.navigation.runes'|trans }}</a></li>
+              <li><a href="{{ resource_path('app_summoners', {}, navVersion, navLang) }}" class="nav-link {{ currentRoute starts with 'app_summoner' ? 'text-gold-bright' }}">{{ 'header.navigation.summoner'|trans }}</a></li>
             </ul>
           </details>
         </li>

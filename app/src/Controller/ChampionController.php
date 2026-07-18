@@ -29,6 +29,7 @@ final class ChampionController extends AbstractResourceController
      * sinon la sélection en session — sans redirect.
      */
     #[Route('/champions', name: 'app_champions', methods: ['GET'])]
+    #[Route('/{version}/champions', name: 'app_champions_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function champions(): Response
     {
         // Full list in one render — the ResourceFilter island owns search, tag
@@ -56,6 +57,7 @@ final class ChampionController extends AbstractResourceController
      * Détail d'un champion. Version/langue résolues depuis la query, sinon la session.
      */
     #[Route('/champion/{name}', name: 'app_champion', methods: ['GET'])]
+    #[Route('/{version}/champion/{name}', name: 'app_champion_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function champion(string $name): Response
     {
         $sel = $this->pageContext->selection();
