@@ -120,6 +120,8 @@ champion:
     range: "Εμβέλεια"
     video_play: "Αναπαραγωγή βίντεο"
     video_pause: "Παύση βίντεο"
+    video_mute: "Σίγαση ήχου"
+    video_unmute: "Ενεργοποίηση ήχου"
     tips_as: "Όταν παίζετε ως"
     tips_against: "Όταν αντιμετωπίζετε"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Αντικείμενο"
     runes: "Ρούνοι"
     summoner: "Επικαλεστής"
+    sitemap: "Χάρτης ιστότοπου"
 
   links:
     title: "Χρήσιμοι Σύνδεσμοι"
@@ -311,3 +314,17 @@ community:
     invalid: "Μη έγκυρη ψήφος."
   supporter:
     badge: "Υποστηρικτής"
+
+stat:
+  attack_damage: "Ζημιά επίθεσης"
+  ability_power: "Ισχύς ικανοτήτων"
+  attack_speed: "Ταχύτητα επίθεσης"
+  crit_chance: "Πιθανότητα κρίσιμου"
+  life_steal: "Κλοπή ζωής"
+  health: "Υγεία"
+  health_regen: "Αναγέν. υγείας"
+  armor: "Πανοπλία"
+  magic_resist: "Μαγική άμυνα"
+  mana: "Μάνα"
+  move_speed: "Ταχύτητα κίνησης"
+  attack_range: "Εμβέλεια επίθεσης"

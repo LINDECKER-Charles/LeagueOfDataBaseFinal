@@ -120,6 +120,8 @@ champion:
     range: "Rază de acțiune"
     video_play: "Redă videoclipul"
     video_pause: "Întrerupe videoclipul"
+    video_mute: "Dezactivează sunetul"
+    video_unmute: "Activează sunetul"
     tips_as: "Când joci cu"
     tips_against: "Când joci împotriva"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Obiect"
     runes: "Rune"
     summoner: "Invocator"
+    sitemap: "Harta site-ului"
 
   links:
     title: "Linkuri utile"
@@ -311,3 +314,17 @@ community:
     invalid: "Vot invalid."
   supporter:
     badge: "Susținător"
+
+stat:
+  attack_damage: "Daune de atac"
+  ability_power: "Putere de abilitate"
+  attack_speed: "Viteză de atac"
+  crit_chance: "Șansă de critic"
+  life_steal: "Furt de viață"
+  health: "Viață"
+  health_regen: "Regen. de viață"
+  armor: "Armură"
+  magic_resist: "Rezistență magică"
+  mana: "Mana"
+  move_speed: "Viteză de mișcare"
+  attack_range: "Rază de atac"

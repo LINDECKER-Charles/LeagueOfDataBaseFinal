@@ -120,6 +120,8 @@ champion:
     range: "射程"
     video_play: "播放视频"
     video_pause: "暂停视频"
+    video_mute: "静音"
+    video_unmute: "取消静音"
     tips_as: "使用技巧"
     tips_against: "对抗技巧"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "装备"
     runes: "符文"
     summoner: "召唤师"
+    sitemap: "网站地图"
 
   links:
     title: "实用链接"
@@ -311,3 +314,17 @@ community:
     invalid: "无效的投票。"
   supporter:
     badge: "支持者"
+
+stat:
+  attack_damage: "攻击力"
+  ability_power: "法术强度"
+  attack_speed: "攻击速度"
+  crit_chance: "暴击几率"
+  life_steal: "生命偷取"
+  health: "生命值"
+  health_regen: "生命回复"
+  armor: "护甲"
+  magic_resist: "魔法抗性"
+  mana: "法力值"
+  move_speed: "移动速度"
+  attack_range: "攻击距离"

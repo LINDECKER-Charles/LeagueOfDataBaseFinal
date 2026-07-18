@@ -120,6 +120,8 @@ champion:
     range: "Jangkauan"
     video_play: "Putar video"
     video_pause: "Jeda video"
+    video_mute: "Bisukan suara"
+    video_unmute: "Aktifkan suara"
     tips_as: "Saat memainkan"
     tips_against: "Saat melawan"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Item"
     runes: "Rune"
     summoner: "Summoner"
+    sitemap: "Peta situs"
 
   links:
     title: "Tautan Berguna"
@@ -311,3 +314,17 @@ community:
     invalid: "Suara tidak valid."
   supporter:
     badge: "Pendukung"
+
+stat:
+  attack_damage: "Attack Damage"
+  ability_power: "Ability Power"
+  attack_speed: "Attack Speed"
+  crit_chance: "Peluang Kritis"
+  life_steal: "Curi Nyawa"
+  health: "Health"
+  health_regen: "Regen Health"
+  armor: "Armor"
+  magic_resist: "Magic Resist"
+  mana: "Mana"
+  move_speed: "Kecepatan Gerak"
+  attack_range: "Jangkauan Serangan"

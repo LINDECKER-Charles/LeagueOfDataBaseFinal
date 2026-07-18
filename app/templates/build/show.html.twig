@@ -14,10 +14,33 @@
   'Inspiration': 'path-inspiration'
 }[primary.key]|default('path-precision') %}
 
-{% block title %}{{ build.name }} — {{ vm.champion.name }}{% endblock %}
+{% block title %}{{ seo_title(build.name ~ ' · ' ~ vm.champion.name) }}{% endblock %}
 {% block meta_description %}{{ build.description ? build.description|slice(0, 160) : 'build.show.meta_fallback'|trans({'%champion%': vm.champion.name}) }}{% endblock %}
 {% block og_type %}article{% endblock %}
 {% block meta_robots %}{{ build.public ? 'index, follow' : 'noindex, nofollow' }}{% endblock %}
+
+{# Emitted only for the indexable (public) render: a private build is an
+   unlisted capability link — no Article node, no author leak into the index. #}
+{% block structured_data %}
+  {% if build.public %}
+    {{ seo_jsonld(seo_breadcrumbs([
+      { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+      { name: 'community.trends.title'|trans, url: seo_absolute(path('app_trends')) },
+      { name: build.name, url: seo_canonical() }
+    ])) }}
+    {{ seo_jsonld(seo_article({
+      name: build.name,
+      url: seo_canonical(),
+      description: build.description ?: null,
+      inLanguage: app.request.locale,
+      datePublished: build.createdAt|date('c'),
+      dateModified: build.updatedAt|date('c'),
+      authorName: build.owner.displayName,
+      authorUrl: build.owner.publicProfile ? seo_absolute(path('app_profile_public', { username: build.owner.username })) : null,
+      about: vm.champion.name
+    })) }}
+  {% endif %}
+{% endblock %}
 
 {% block body %}
 <main class="relative px-6 py-12 {{ pathClass }}">

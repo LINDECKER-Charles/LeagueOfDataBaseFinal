@@ -3,6 +3,13 @@
 {% block title %}{{ seo_title('developers.title'|trans({}, 'seo')) }}{% endblock %}
 {% block meta_description %}{{ 'developers.description'|trans({}, 'seo') }}{% endblock %}
 
+{% block structured_data %}
+  {{ seo_jsonld(seo_breadcrumbs([
+    { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+    { name: 'nav.developers'|trans({}, 'api'), url: seo_canonical() }
+  ])) }}
+{% endblock %}
+
 {% block stylesheets %}
     {{ parent() }}
     {# Page-scoped sheet (design tokens only) — same pattern as legal/layout. #}

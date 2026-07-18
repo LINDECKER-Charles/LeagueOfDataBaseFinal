@@ -120,6 +120,8 @@ champion:
     range: "Tầm xa"
     video_play: "Phát video"
     video_pause: "Tạm dừng video"
+    video_mute: "Tắt tiếng"
+    video_unmute: "Bật tiếng"
     tips_as: "Khi chơi với"
     tips_against: "Khi đối đầu"
     stats:
@@ -171,6 +173,7 @@ footer:
     item: "Trang bị"
     runes: "Ngọc bổ trợ"
     summoner: "Phép bổ trợ"
+    sitemap: "Sơ đồ trang web"
 
   links:
     title: "Liên Kết Hữu Ích"
@@ -311,3 +314,17 @@ community:
     invalid: "Lượt bình chọn không hợp lệ."
   supporter:
     badge: "Người ủng hộ"
+
+stat:
+  attack_damage: "Sát thương công kích"
+  ability_power: "Sức mạnh phép thuật"
+  attack_speed: "Tốc độ đánh"
+  crit_chance: "Tỉ lệ chí mạng"
+  life_steal: "Hút máu"
+  health: "Máu"
+  health_regen: "Hồi máu"
+  armor: "Giáp"
+  magic_resist: "Kháng phép"
+  mana: "Năng lượng"
+  move_speed: "Tốc độ di chuyển"
+  attack_range: "Tầm đánh"

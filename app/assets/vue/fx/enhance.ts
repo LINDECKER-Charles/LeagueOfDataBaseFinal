@@ -79,6 +79,61 @@ function enhance(): void {
     activeObservers.splice(0).forEach((io) => io.disconnect())
     initReveal()
     initScrollspy()
+    sweepFailedImages()
+}
+
+const IMG_FALLBACK_ATTR = 'data-img-fallback'
+const CONFIRM_ATTR = 'data-confirm'
+
+/**
+ * CSP-safe image fallback, replacing the former inline `onerror`. The swap runs
+ * once — the attribute is cleared first — so a broken fallback URL can't loop.
+ */
+function swapToFallback(img: HTMLImageElement): void {
+    const fallback = img.getAttribute(IMG_FALLBACK_ATTR)
+    if (fallback === null) {
+        return
+    }
+    img.removeAttribute(IMG_FALLBACK_ATTR)
+    img.src = fallback
+}
+
+/** `error` doesn't bubble, so image failures are caught at document capture. */
+function onImageError(event: Event): void {
+    const img = event.target
+    if (img instanceof HTMLImageElement && img.hasAttribute(IMG_FALLBACK_ATTR)) {
+        swapToFallback(img)
+    }
+}
+
+/**
+ * Images that failed before this deferred module ran: the old inline handler
+ * fired during parse, a document listener attaches later. Re-check once per
+ * render so the first paint's broken art still swaps to its fallback.
+ */
+function sweepFailedImages(): void {
+    for (const img of document.querySelectorAll<HTMLImageElement>(`img[${IMG_FALLBACK_ATTR}]`)) {
+        if (img.complete && img.naturalWidth === 0) {
+            swapToFallback(img)
+        }
+    }
+}
+
+/**
+ * CSP-safe submit confirmation, replacing the former inline `onsubmit`. Captured
+ * so it runs ahead of Turbo's own submit handling; a declined confirm stops the
+ * native submit AND Turbo (stopImmediatePropagation halts the bubble phase).
+ */
+function onConfirmSubmit(event: Event): void {
+    const form = event.target
+    if (!(form instanceof HTMLFormElement)) {
+        return
+    }
+    const message = form.getAttribute(CONFIRM_ATTR)
+    if (message !== null && !window.confirm(message)) {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+    }
 }
 
 /** Close any open header switcher popover when interacting elsewhere. */
@@ -90,8 +145,37 @@ function closeSwitchersOutside(event: Event): void {
     }
 }
 
+/**
+ * Own the in-page scroll for the [data-scrollspy] section nav. Turbo Drive's
+ * same-page anchor shortcut compares the link's request URL against its
+ * last-rendered location; on these detail pages the URL carries a ?version&lang
+ * query, the comparison misses, and Turbo runs a full Drive *visit* — the anchor
+ * "reloads" instead of scrolling. Handling the click here makes it behave like a
+ * plain fragment link (no refetch), with a smooth, reduced-motion-aware scroll
+ * and a deep-linkable URL. Delegated at document level so it survives Turbo body
+ * swaps without per-visit rebinding.
+ */
+function onSectionNavClick(event: MouseEvent): void {
+    if (event.defaultPrevented || event.button !== 0
+        || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return
+    }
+    const link = (event.target as Element | null)
+        ?.closest<HTMLAnchorElement>('[data-scrollspy] a[href^="#"]')
+    const target = link && document.getElementById(link.hash.slice(1))
+    if (!target) {
+        return
+    }
+    event.preventDefault()
+    target.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' })
+    history.pushState(history.state, '', link.hash)
+}
+
 export function installEnhancements(): void {
     document.addEventListener('DOMContentLoaded', enhance)
     document.addEventListener('turbo:load', enhance)
     document.addEventListener('click', closeSwitchersOutside)
+    document.addEventListener('click', onSectionNavClick)
+    document.addEventListener('error', onImageError, true)
+    document.addEventListener('submit', onConfirmSubmit, true)
 }

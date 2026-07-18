@@ -42,7 +42,7 @@
                     </form>
                 {% endif %}
                 <form method="post" action="{{ path('admin_build_delete', { id: b.id } + listContext) }}"
-                      onsubmit="return confirm('Supprimer définitivement le build {{ b.name|e('js') }} ?');">
+                      data-confirm="Supprimer définitivement le build {{ b.name|e('html_attr') }} ?">
                     <input type="hidden" name="_token" value="{{ csrf_token('admin_build_delete') }}">
                     <button type="submit" class="btn danger small">Supprimer</button>
                 </form>

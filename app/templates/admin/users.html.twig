@@ -47,7 +47,7 @@
                     </form>
                 {% endif %}
                 <form method="post" action="{{ path('admin_user_delete', { id: u.id } + listContext) }}"
-                      onsubmit="return confirm('Supprimer définitivement le compte {{ u.username|e('js') }} ? Builds, votes et clés API seront effacés.');">
+                      data-confirm="Supprimer définitivement le compte {{ u.username|e('html_attr') }} ? Builds, votes et clés API seront effacés.">
                     <input type="hidden" name="_token" value="{{ csrf_token('admin_user_delete') }}">
                     <button type="submit" class="btn danger small">Supprimer</button>
                 </form>

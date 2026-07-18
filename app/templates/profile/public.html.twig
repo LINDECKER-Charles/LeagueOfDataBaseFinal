@@ -2,12 +2,39 @@
 
 {% set isPreview = preview|default(false) %}
 
-{% block title %}{{ profileUser.displayName }} · {{ 'base.title'|trans }}{% endblock %}
+{% block title %}{{ seo_title(profileUser.displayName) }}{% endblock %}
 {% block meta_description %}{{ 'profile.public.description'|trans({'%username%': profileUser.displayName}) }}{% endblock %}
 {% block meta_robots %}{{ isPreview ? 'noindex, nofollow' : 'index, follow' }}{% endblock %}
 {% block og_type %}profile{% endblock %}
 {# Favorite skin splash makes the richest share card (og + twitter); empty here lets base fall back to the site default. #}
 {% block img %}{{ skinBanner ? skinBanner.splash }}{% endblock %}
+
+{# Structured data lives only on the crawlable public render — the owner's
+   noindex preview must not seed a ProfilePage node into the index. #}
+{% block structured_data %}
+  {% if not isPreview %}
+    {{ seo_jsonld(seo_breadcrumbs([
+      { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+      { name: profileUser.displayName, url: seo_canonical() }
+    ])) }}
+    {{ seo_jsonld(seo_profile_page({
+      name: profileUser.displayName,
+      url: seo_canonical(),
+      image: skinBanner ? skinBanner.splash : null,
+      description: 'profile.public.description'|trans({'%username%': profileUser.displayName})
+    })) }}
+    {% if builds is not empty %}
+      {% set buildItems = [] %}
+      {% for build in builds|slice(0, 20) %}
+        {% set buildItems = buildItems|merge([{
+          name: build.name,
+          url: seo_absolute(path('app_build_show', { token: build.shareToken }))
+        }]) %}
+      {% endfor %}
+      {{ seo_jsonld(seo_item_list(buildItems)) }}
+    {% endif %}
+  {% endif %}
+{% endblock %}
 
 {% block body %}
 <main class="profile-public">
@@ -31,9 +58,9 @@
 
     <section class="profile-hero {{ heroBackground ? 'profile-hero--art' : 'profile-hero--plain' }}">
         {% if heroBackground %}
-            {# Centered crop frames the champion; onerror falls back to the classic splash. #}
+            {# Centered crop frames the champion; data-img-fallback falls back to the classic splash. #}
             <img class="profile-hero__art" src="{{ heroBackground.image }}" alt=""
-                 onerror="this.onerror=null;this.src='{{ heroBackground.fallback }}'"
+                 data-img-fallback="{{ heroBackground.fallback }}"
                  loading="eager" fetchpriority="high" decoding="async">
         {% else %}
             {% include 'partials/main/gradient.html.twig' %}

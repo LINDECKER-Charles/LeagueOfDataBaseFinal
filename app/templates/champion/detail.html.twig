@@ -87,9 +87,9 @@
   <section class="relative h-[62vh] min-h-[26rem] max-h-[46rem] w-full overflow-hidden">
     {% if champId %}
       {# The undocumented `centered/` variant frames the subject at any crop;
-         onerror falls back to the classic splash for champions missing it. #}
+         data-img-fallback falls back to the classic splash for champions missing it. #}
       <img src="{{ centeredBase }}/{{ champId }}_0.jpg" alt=""
-           onerror="this.onerror=null;this.src='{{ splashBase }}/{{ champId }}_0.jpg'"
+           data-img-fallback="{{ splashBase }}/{{ champId }}_0.jpg"
            loading="eager" fetchpriority="high" decoding="async"
            class="absolute inset-0 h-full w-full object-cover object-[50%_18%]">
     {% endif %}
@@ -179,7 +179,9 @@
                      charges: 'champion.detail.charges'|trans,
                      ranks: 'champion.detail.ranks'|trans,
                      play: 'champion.detail.video_play'|trans,
-                     pause: 'champion.detail.video_pause'|trans
+                     pause: 'champion.detail.video_pause'|trans,
+                     mute: 'champion.detail.video_mute'|trans,
+                     unmute: 'champion.detail.video_unmute'|trans
                    }
                  }|json_encode|e('html_attr') }}">
               {# No-JS fallback — replaced by the interactive showcase on mount. #}
@@ -263,22 +265,22 @@
         {% set s = champion.stats %}
         {% set resourceLabel = champion.partype|default('') %}
         {% set statRows = [
-          { label: 'champion.detail.stats.attack_damage'|trans, base: s.attackdamage|default(0), growth: s.attackdamageperlevel|default(0), kind: 'flat' },
-          { label: 'champion.detail.stats.attack_speed'|trans,  base: s.attackspeed|default(0),  growth: s.attackspeedperlevel|default(0),  kind: 'percent' },
-          { label: 'champion.detail.stats.hp'|trans,            base: s.hp|default(0),           growth: s.hpperlevel|default(0),           kind: 'flat' },
-          { label: 'champion.detail.stats.hp_regen'|trans,      base: s.hpregen|default(0),      growth: s.hpregenperlevel|default(0),      kind: 'flat' },
-          { label: 'champion.detail.stats.armor'|trans,         base: s.armor|default(0),        growth: s.armorperlevel|default(0),        kind: 'flat' },
-          { label: 'champion.detail.stats.magic_resist'|trans,  base: s.spellblock|default(0),   growth: s.spellblockperlevel|default(0),   kind: 'flat' }
+          { stat: 'attack_damage', label: 'stat.attack_damage'|trans, base: s.attackdamage|default(0), growth: s.attackdamageperlevel|default(0), kind: 'flat' },
+          { stat: 'attack_speed',  label: 'stat.attack_speed'|trans,  base: s.attackspeed|default(0),  growth: s.attackspeedperlevel|default(0),  kind: 'percent' },
+          { stat: 'health',        label: 'stat.health'|trans,        base: s.hp|default(0),           growth: s.hpperlevel|default(0),           kind: 'flat' },
+          { stat: 'health_regen',  label: 'stat.health_regen'|trans,  base: s.hpregen|default(0),      growth: s.hpregenperlevel|default(0),      kind: 'flat' },
+          { stat: 'armor',         label: 'stat.armor'|trans,         base: s.armor|default(0),        growth: s.armorperlevel|default(0),        kind: 'flat' },
+          { stat: 'magic_resist',  label: 'stat.magic_resist'|trans,  base: s.spellblock|default(0),   growth: s.spellblockperlevel|default(0),   kind: 'flat' }
         ] %}
         {% if resourceLabel and (s.mp|default(0)) > 0 %}
           {% set statRows = statRows|merge([
-            { label: resourceLabel,                                base: s.mp|default(0),      growth: s.mpperlevel|default(0),      kind: 'flat' },
-            { label: 'champion.detail.stats.resource_regen'|trans, base: s.mpregen|default(0), growth: s.mpregenperlevel|default(0), kind: 'flat' }
+            { stat: 'mana',       label: resourceLabel,                                base: s.mp|default(0),      growth: s.mpperlevel|default(0),      kind: 'flat' },
+            { stat: 'mana_regen', label: 'champion.detail.stats.resource_regen'|trans, base: s.mpregen|default(0), growth: s.mpregenperlevel|default(0), kind: 'flat' }
           ]) %}
         {% endif %}
         {% set statRows = statRows|merge([
-          { label: 'champion.detail.stats.move_speed'|trans,   base: s.movespeed|default(0),   growth: 0, kind: 'static' },
-          { label: 'champion.detail.stats.attack_range'|trans, base: s.attackrange|default(0), growth: 0, kind: 'static' }
+          { stat: 'move_speed',   label: 'stat.move_speed'|trans,   base: s.movespeed|default(0),   growth: 0, kind: 'static' },
+          { stat: 'attack_range', label: 'stat.attack_range'|trans, base: s.attackrange|default(0), growth: 0, kind: 'static' }
         ]) %}
 
         <aside id="stats" class="mt-16 lg:mt-0 lg:sticky lg:top-[4.25rem]" data-reveal>
@@ -294,7 +296,11 @@
               {% for row in statRows %}
                 <div class="stat-board__row" data-stat
                      data-base="{{ row.base }}" data-growth="{{ row.growth }}" data-kind="{{ row.kind }}">
-                  <span class="stat-board__label">{{ row.label }}</span>
+                  <span class="stat-board__label">
+                    {%- set statIcon = stat_icon_url(row.stat) -%}
+                    {%- if statIcon %}<img src="{{ statIcon }}" alt="" width="18" height="18" loading="lazy" decoding="async" class="stat-icon">{% endif -%}
+                    {{ row.label }}
+                  </span>
                   <span>
                     <span class="stat-board__value" data-stat-value>{{ row.base }}</span>
                     {% if row.kind == 'flat' and row.growth > 0 %}
