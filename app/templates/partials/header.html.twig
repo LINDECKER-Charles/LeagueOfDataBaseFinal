@@ -107,7 +107,13 @@
           <span>{{ navLang|split('_')|first|upper }}</span>
           <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
         </summary>
-        <form action="{{ path('app_setup_save') }}" method="post" class="switcher__panel">
+        {# data-turbo="false": this POST redirects (via Referer) to the *current*
+           page with the new ?version&lang. Turbo intercepts the submit but doesn't
+           re-render the redirected page, so the visible page stays on the old
+           version until the next navigation. A native submit follows the 302 and
+           reloads the page on the new selection — same opt-out as every other
+           redirecting POST form (login/logout/vote/profile/donate). #}
+        <form action="{{ path('app_setup_save') }}" method="post" data-turbo="false" class="switcher__panel">
           <p class="eyebrow mb-3">{{ 'header.switcher.label'|trans }}</p>
           <div class="flex flex-col gap-2.5">
             <label for="header-version" class="sr-only">{{ 'setup.form.version'|trans }}</label>
