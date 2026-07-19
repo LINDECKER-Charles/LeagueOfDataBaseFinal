@@ -291,3 +291,29 @@
     color: var(--color-gold-bright);
   }
 }
+
+/* Footer contact form modal — native <dialog> centered by showModal(). Tailwind's
+   preflight doesn't skin <dialog>, so the Hextech frame is declared here. */
+.contact-dialog {
+  width: min(34rem, calc(100vw - 2rem));
+  margin: auto;
+  padding: 0;
+  color: var(--color-text);
+  background: linear-gradient(180deg, var(--color-void), var(--color-hextech-black));
+  border: 1px solid var(--color-gold-deep);
+  box-shadow: 0 30px 90px -24px rgba(0, 0, 0, 0.85);
+}
+.contact-dialog::backdrop {
+  background: rgba(1, 10, 19, 0.78);
+  backdrop-filter: blur(2px);
+}
+.contact-dialog[open] {
+  animation: contact-dialog-in 0.2s var(--ease-hextech);
+}
+@keyframes contact-dialog-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-dialog[open] { animation: none; }
+}

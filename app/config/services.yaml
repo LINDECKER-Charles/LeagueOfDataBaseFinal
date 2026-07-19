@@ -58,5 +58,12 @@ services:
         arguments:
             $sender: '%env(MAILER_FROM)%'
 
+    # Contact-form notifications. From = authenticated sender (MAILER_FROM); the
+    # destination mailbox is env-driven (CONTACT_RECIPIENT, empty = feature off).
+    App\Service\Mail\ContactMailer:
+        arguments:
+            $sender: '%env(MAILER_FROM)%'
+            $recipient: '%env(CONTACT_RECIPIENT)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
