@@ -4,11 +4,12 @@
    account, patch/language switcher) stays reachable on every viewport. Every
    popover is a native <details class="switcher"> — no JS menus; enhance.ts
    closes any open switcher on outside interaction. #}
-{% set currentRoute = app.request.get('_route') %}
-{# On a /{version}/… page the route version drives the chrome so navigation stays
-   on the viewed patch; elsewhere the session-remembered selection applies. #}
-{% set navVersion = app.request.attributes.get('version') ?: (client.session.version ?? (client.versions|default([])|first)) %}
-{% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
+{% set currentRoute = app.request.attributes.get('_route') %}
+{# Resolved (version, lang) from the single source (PageContextResolver): the nav
+   always mirrors the patch the page rendered with — path, query or session. #}
+{% set navSelection = page_selection() %}
+{% set navVersion = navSelection.version %}
+{% set navLang = navSelection.lang %}
 {% set isCodexRoute = currentRoute starts with 'app_champion' or currentRoute starts with 'app_item'
   or currentRoute starts with 'app_rune' or currentRoute starts with 'app_summoner' %}
 

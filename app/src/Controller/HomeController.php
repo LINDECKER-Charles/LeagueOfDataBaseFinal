@@ -96,12 +96,10 @@ class HomeController extends AbstractController
             return $this->redirect($backUrl);
         }
 
-        // 2) Réécrit la query (sauf sur /working-progress), en nettoyant l’existant
-        $backUrl = $this->urlGenerator->rewriteQueryParams(
-            $backUrl,
-            overrides: ['version' => $version, 'lang' => $language],
-            removeKeys: ['version', 'lang']
-        );
+        // Applique la sélection à l'URL de retour : la version va dans le segment
+        // de chemin quand l'URL est versionnée (/{version}/…), sinon en query —
+        // sans quoi un ?version= serait masqué par l'ancien segment (path > query).
+        $backUrl = $this->urlGenerator->applySelection($backUrl, $version, $language);
 
 
         // Succès, on enregistre le cookie si l'utilisateur le demande et on save les preference dans la session
