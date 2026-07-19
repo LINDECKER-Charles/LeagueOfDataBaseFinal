@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="https://creativecommons.org/licenses/by-nc/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg" alt="License"></a>
-  <a href="https://symfony.com/"><img src="https://img.shields.io/badge/Symfony-7.3-1A171B.svg?logo=symfony" alt="Symfony"></a>
+  <a href="https://symfony.com/"><img src="https://img.shields.io/badge/Symfony-7.4-1A171B.svg?logo=symfony" alt="Symfony"></a>
   <a href="https://php.net/"><img src="https://img.shields.io/badge/PHP-8.4-777BB4.svg?logo=php&logoColor=white" alt="PHP"></a>
   <a href="https://go.dev/"><img src="https://img.shields.io/badge/Go-1.25-00ADD8.svg?logo=go&logoColor=white" alt="Go"></a>
   <a href="https://vuejs.org/"><img src="https://img.shields.io/badge/Vue-3_+_TS-42b883.svg?logo=vuedotjs&logoColor=white" alt="Vue"></a>
@@ -48,7 +48,7 @@ Ce README est organisé en **deux parties** indépendantes :
 <a id="partie-1--design"></a>
 ## <img src="docs/assets/icons/palette.svg" width="26" align="top" alt=""> Partie 1 — Design
 
-Interface responsive sur **Tailwind CSS 4**, îlots interactifs **Vue 3**, typographie officielle (*Beaufort for LoL* + *Spiegel*). Les visuels vivent dans [`screenshot/`](screenshot/) et sont régénérables via Playwright (`node tools/screenshots/capture.mjs`).
+Interface **responsive** sur **Tailwind CSS 4** (du petit mobile 320 px à l'iPad — voir [Responsive & mobile](docs/responsive-mobile.md)), **PWA installable** (manifest + service worker), îlots interactifs **Vue 3**, typographie officielle (*Beaufort for LoL* + *Spiegel*). Les visuels vivent dans [`screenshot/`](screenshot/) et sont régénérables via Playwright (`node tools/screenshots/capture.mjs`).
 
 > <img src="docs/assets/icons/camera.svg" width="15" align="top" alt=""> *Les captures sont des instantanés de l'état actuel — remplaçables librement, les chemins restent stables.*
 
@@ -113,8 +113,15 @@ Interface responsive sur **Tailwind CSS 4**, îlots interactifs **Vue 3**, typog
 </table>
 
 <details>
-<summary><img src="docs/assets/icons/smartphone.svg" width="14" align="top" alt=""> &nbsp;Liste champions — mobile</summary>
-<p align="center"><img src="screenshot/03-champions-mobile.png" alt="Liste des champions — mobile" width="320"></p>
+<summary><img src="docs/assets/icons/smartphone.svg" width="14" align="top" alt=""> &nbsp;Versions mobile — les 4 listes</summary>
+<table>
+  <tr>
+    <td align="center"><b>Champions</b><br><img src="screenshot/03-champions-mobile.png" alt="Champions — mobile" width="200"></td>
+    <td align="center"><b>Objets</b><br><img src="screenshot/04-objects-mobile.png" alt="Objets — mobile" width="200"></td>
+    <td align="center"><b>Runes</b><br><img src="screenshot/05-runes-mobile.png" alt="Runes — mobile" width="200"></td>
+    <td align="center"><b>Sorts</b><br><img src="screenshot/06-summoners-mobile.png" alt="Sorts d'invocateur — mobile" width="200"></td>
+  </tr>
+</table>
 </details>
 
 ---
@@ -136,8 +143,15 @@ Interface responsive sur **Tailwind CSS 4**, îlots interactifs **Vue 3**, typog
 </table>
 
 <details>
-<summary><img src="docs/assets/icons/smartphone.svg" width="14" align="top" alt=""> &nbsp;Détail champion — mobile</summary>
-<p align="center"><img src="screenshot/07-champion-detail-mobile.png" alt="Détail d'un champion — mobile" width="320"></p>
+<summary><img src="docs/assets/icons/smartphone.svg" width="14" align="top" alt=""> &nbsp;Versions mobile — les 4 détails</summary>
+<table>
+  <tr>
+    <td align="center"><b>Champion</b><br><img src="screenshot/07-champion-detail-mobile.png" alt="Détail champion — mobile" width="200"></td>
+    <td align="center"><b>Objet</b><br><img src="screenshot/08-object-detail-mobile.png" alt="Détail objet — mobile" width="200"></td>
+    <td align="center"><b>Rune</b><br><img src="screenshot/09-rune-detail-mobile.png" alt="Détail rune — mobile" width="200"></td>
+    <td align="center"><b>Sort</b><br><img src="screenshot/10-summoner-detail-mobile.png" alt="Détail sort — mobile" width="200"></td>
+  </tr>
+</table>
 </details>
 
 ---
@@ -150,6 +164,11 @@ Interface responsive sur **Tailwind CSS 4**, îlots interactifs **Vue 3**, typog
 <p align="center">
   <img src="screenshot/11-working.png" alt="Loader temps réel (SSE)" width="820">
 </p>
+
+<details>
+<summary><img src="docs/assets/icons/smartphone.svg" width="14" align="top" alt=""> &nbsp;Version mobile</summary>
+<p align="center"><img src="screenshot/11-working-mobile.png" alt="Loader temps réel — mobile" width="320"></p>
+</details>
 
 <p align="right"><a href="#top"><img src="docs/assets/icons/compass.svg" width="13" align="top" alt=""> retour au sommet</a></p>
 
@@ -165,7 +184,7 @@ Interface responsive sur **Tailwind CSS 4**, îlots interactifs **Vue 3**, typog
 |---|---|---|---|
 | <img src="docs/assets/icons/globe.svg" width="18" alt=""> | **Edge** | Caddy | Entrée publique, TLS automatique (déploiement) |
 | <img src="docs/assets/icons/server.svg" width="18" alt=""> | **Reverse proxy** | nginx | Front HTTP ; sert `/cdn` (MinIO), `/build`, `/fonts`, streaming SSE |
-| <img src="docs/assets/icons/layout-template.svg" width="18" alt=""> | **Backend** | Symfony 7.3 · PHP 8.4 (FPM) | Application, **sans base de données** — proxy sur Data Dragon |
+| <img src="docs/assets/icons/layout-template.svg" width="18" alt=""> | **Backend** | Symfony 7.4 · PHP 8.4 (FPM) | Application, **sans base de données** — proxy sur Data Dragon |
 | <img src="docs/assets/icons/git-branch.svg" width="18" alt=""> | **Microservice** | Go 1.25 | Passerelle de *fetch* : egress DDragon, garde SSRF, batch parallèle |
 | <img src="docs/assets/icons/palette.svg" width="18" alt=""> | **Frontend** | Twig + Vue 3 (TS) + Vite · Tailwind 4 | Coques Twig + îlots Vue montés dynamiquement |
 | <img src="docs/assets/icons/database.svg" width="18" alt=""> | **Stockage** | MinIO (S3) | Images adressées par contenu (SHA-256), déduplication native |
@@ -185,7 +204,7 @@ flowchart LR
     U([Navigateur]) -->|HTTPS| Caddy[Caddy<br/>edge · TLS]
     Caddy -->|HTTP interne| Nginx[nginx<br/>reverse proxy]
 
-    Nginx -->|FastCGI| PHP[php-fpm<br/>Symfony 7.3]
+    Nginx -->|FastCGI| PHP[php-fpm<br/>Symfony 7.4]
     Nginx -->|/cdn/ → bucket| MinIO[(MinIO<br/>stockage objet S3)]
     Nginx -->|/build /fonts| Static[Assets statiques<br/>Vite build]
 
@@ -494,6 +513,7 @@ Captures Playwright : `node tools/screenshots/capture.mjs` → [`screenshot/`](s
 |---|---|
 | [Installation](docs/setup.md) | Prérequis, installation détaillée, dépannage |
 | [Architecture](docs/architecture.md) | Détail des services et flux |
+| [Responsive &amp; mobile](docs/responsive-mobile.md) | Stratégie mobile, breakpoints, composants, méthode d'audit |
 | [Docker](docs/docker.md) | Référence complète des commandes de la stack |
 | [Configuration](docs/configuration.md) | Variables d'environnement |
 | [Secrets CI](docs/github-actions-secrets.md) | Secrets GitHub Actions / GHCR |
