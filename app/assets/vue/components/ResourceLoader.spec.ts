@@ -1,6 +1,7 @@
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import ResourceLoader from './ResourceLoader.vue'
+import { BUILD_WARM_PATH, requestWarm } from '../loader/warmBridge'
 
 const props = {
     eyebrow: 'Data Dragon',
@@ -48,6 +49,18 @@ function beforeVisit(url: string): CustomEvent {
 }
 const load = () => document.dispatchEvent(new CustomEvent('turbo:load'))
 
+/** Dispatch the header version/language switcher submit the composable listens for. */
+function switchSubmit(version: string, lang: string, action = '/setup-submit'): void {
+    const form = document.createElement('form')
+    form.setAttribute('action', action)
+    const v = document.createElement('input'); v.name = 'version'; v.value = version
+    const l = document.createElement('input'); l.name = 'langue'; l.value = lang
+    form.append(v, l)
+    document.body.appendChild(form)
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    form.remove()
+}
+
 let visit: ReturnType<typeof vi.fn>
 
 describe('ResourceLoader', () => {
@@ -62,10 +75,13 @@ describe('ResourceLoader', () => {
         visit = vi.fn((url: string) => beforeVisit(url))
         // @ts-expect-error partial Turbo
         window.Turbo = { visit }
+        // Switcher persists prefs via fetch; the response is never inspected.
+        globalThis.fetch = vi.fn().mockResolvedValue(undefined) as unknown as typeof fetch
     })
     afterEach(() => {
         vi.useRealTimers()
         vi.restoreAllMocks()
+        window.history.replaceState({}, '', '/')
     })
 
     it('intercepts a cold resource visit, streams real progress + names, then performs the warm visit', async () => {
@@ -219,5 +235,97 @@ describe('ResourceLoader', () => {
         await w.vm.$nextTick()
         expect(w.vm.visible).toBe(false)
         w.unmount()
+    })
+
+    it('gates a version/language switch from a batch-less page and covers the cold reload without streaming', async () => {
+        // On a detail page (no image batch to stream) the switch must still show the
+        // loader — raised instantly, then a straight visit under the new version.
+        window.history.replaceState({}, '', '/champion/Ahri')
+        const w = mountLoader()
+
+        switchSubmit('15.1.1', 'en_US')
+        await w.vm.$nextTick()
+        expect(w.vm.visible).toBe(true) // overlay up before the prefs round-trip resolves
+        expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+
+        await flushPromises()
+        // Batch-less destination → no SSE stream, straight to the versioned visit.
+        expect(FakeEventSource.instances).toBe(0)
+        expect(visit).toHaveBeenCalledWith('/15.1.1/champion/Ahri?lang=en_US')
+        w.unmount()
+    })
+
+    it('gates a switch that lands on a list page: streams the batch then visits', async () => {
+        window.history.replaceState({}, '', '/champions')
+        const w = mountLoader()
+
+        switchSubmit('15.1.1', 'en_US')
+        await w.vm.$nextTick()
+        expect(w.vm.visible).toBe(true) // eager overlay
+        await flushPromises() // prefs POST settles → startPrepare opens the SSE
+        expect(FakeEventSource.instances).toBe(1)
+
+        const es = FakeEventSource.last!
+        es.emit('start', { total: 1, categories: { champion: 1 } })
+        es.emit('item', { name: 'Aatrox', category: 'champion', index: 1, total: 1 })
+        es.emit('done', { stored: 1, total: 1 })
+        vi.advanceTimersByTime(500)
+        expect(visit).toHaveBeenCalledWith('/15.1.1/champions?lang=en_US')
+        w.unmount()
+    })
+
+    it('warms a cold patch in place on request, streaming real progress, then resumes WITHOUT navigating', async () => {
+        window.history.replaceState({}, '', '/builds/new')
+        const w = mountLoader()
+
+        let resolved = false
+        void requestWarm('15.1.1', 'en_US', BUILD_WARM_PATH).then(() => { resolved = true })
+        await w.vm.$nextTick()
+
+        // The stream targets the build warm token and the manifest names its three catalogs.
+        const es = FakeEventSource.last!
+        expect(FakeEventSource.instances).toBe(1)
+        expect(es.url).toContain('path=%2Fbuilds%2Feditor')
+        expect(w.vm.active).toEqual(['champions', 'items', 'runes'])
+
+        es.emit('start', { total: 2, categories: { champion: 1, item: 1 } })
+        await w.vm.$nextTick()
+        expect(w.vm.visible).toBe(true)
+        es.emit('item', { name: 'Aatrox', category: 'champion', index: 1, total: 2 })
+        es.emit('item', { name: 'Boots', category: 'item', index: 2, total: 2 })
+        es.emit('done', { stored: 2, total: 2 })
+
+        vi.advanceTimersByTime(500) // ready-hold, then hand back
+        await flushPromises()
+        expect(resolved).toBe(true)
+        expect(w.vm.visible).toBe(false)
+        expect(visit).not.toHaveBeenCalled() // in-place warm never performs a Turbo visit
+        w.unmount()
+    })
+
+    it('resumes a warm patch immediately without ever surfacing the overlay (total 0)', async () => {
+        window.history.replaceState({}, '', '/builds/new')
+        const w = mountLoader()
+
+        let resolved = false
+        void requestWarm('15.1.1', 'en_US', BUILD_WARM_PATH).then(() => { resolved = true })
+        await w.vm.$nextTick()
+
+        const es = FakeEventSource.last!
+        es.emit('start', { total: 0, categories: { champion: 0, item: 0, runesReforged: 0 } })
+        es.emit('done', { stored: 0, total: 0 })
+        await flushPromises()
+
+        expect(resolved).toBe(true)
+        expect(w.vm.visible).toBe(false)
+        expect(visit).not.toHaveBeenCalled()
+        w.unmount()
+    })
+
+    it('resolves the warm request immediately when no loader island is mounted', async () => {
+        let resolved = false
+        await requestWarm('15.1.1', 'en_US', BUILD_WARM_PATH).then(() => { resolved = true })
+        expect(resolved).toBe(true)
+        expect(FakeEventSource.instances).toBe(0)
     })
 })

@@ -81,6 +81,17 @@ final class PageContextResolverLoaderStepsTest extends TestCase
         self::assertCount(1, $this->resolver()->loaderSteps('/champions/'));
     }
 
+    public function testBuildEditorWarmsFullChampionItemRuneSet(): void
+    {
+        // The build editor loads whole catalogs (no slice → perPage 0) and no
+        // summoners; the token is warm-only, matched by the front's BUILD_WARM_PATH.
+        self::assertSame([
+            ['type' => 'champion', 'perPage' => 0, 'page' => 1],
+            ['type' => 'item', 'perPage' => 0, 'page' => 1],
+            ['type' => 'runesReforged', 'perPage' => 0, 'page' => 1],
+        ], $this->resolver()->loaderSteps(PageContextResolver::BUILD_WARM_PATH));
+    }
+
     public function testDetailAndUnknownPathsWarmNothing(): void
     {
         // '/home' is the legacy home URL: it 301s to '/' before rendering, so the
