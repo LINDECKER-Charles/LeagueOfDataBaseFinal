@@ -40,6 +40,9 @@
     <div id="champion-grid" class="resource-grid grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {% for c in champions %}
         {% set champId = c.id|default(c.name) %}
+        {# Versioned square icon (ingested per patch); overlaid on the unversioned
+           splash so the art carries a version-accurate cue. Null while cold. #}
+        {% set champIcon = images[loop.index0]|default(null) %}
         <a href="{{ resource_path('app_champion', { name: champId }, meta.version, meta.lang) }}"
            class="hextech-frame hextech-frame-hover group flex h-full flex-col overflow-hidden"
            data-search="{{ (c.name|default('') ~ ' ' ~ c.id|default(''))|lower }}"
@@ -49,6 +52,14 @@
             <span aria-hidden="true" class="absolute inset-0 grid place-items-center font-beaufort text-6xl text-gold/12">{{ c.name|default('??')|slice(0, 2)|upper }}</span>
             <img src="{{ loadingBase }}/{{ champId }}_0.jpg" alt="{{ c.name|default('') }}" loading="lazy" decoding="async"
                  class="relative h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105">
+            {% if champIcon %}
+              <span class="absolute bottom-2 left-2 h-10 w-10 overflow-hidden border border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]">
+                <picture>
+                  {% if champIcon ends with '.png' %}<source srcset="/{{ champIcon|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
+                  <img src="/{{ champIcon }}" alt="" width="40" height="40" loading="lazy" decoding="async" class="h-full w-full object-cover">
+                </picture>
+              </span>
+            {% endif %}
           </div>
           <div class="flex flex-1 flex-col p-4">
             <h3 class="truncate font-beaufort text-[15px] tracking-wide text-gold-grad" title="{{ c.name|default('') }}">{{ c.name|default('') }}</h3>

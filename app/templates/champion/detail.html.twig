@@ -181,7 +181,8 @@
                      play: 'champion.detail.video_play'|trans,
                      pause: 'champion.detail.video_pause'|trans,
                      mute: 'champion.detail.video_mute'|trans,
-                     unmute: 'champion.detail.video_unmute'|trans
+                     unmute: 'champion.detail.video_unmute'|trans,
+                     videoNotice: 'champion.detail.video_notice'|trans
                    }
                  }|json_encode|e('html_attr') }}">
               {# No-JS fallback — replaced by the interactive showcase on mount. #}
@@ -285,6 +286,24 @@
 
         <aside id="stats" class="mt-16 lg:mt-0 lg:sticky lg:top-[4.25rem]" data-reveal>
           <div class="hextech-frame hx-corners p-6">
+            {# Version-accurate champion icon: unlike the splash (unversioned CDN),
+               the square icon is resolved per selected patch, so it reflects the
+               art of the version being viewed. #}
+            {% if image %}
+              <div class="mb-5 flex items-center gap-3 border-b border-gold-deep/40 pb-4">
+                <div class="relative h-14 w-14 shrink-0 overflow-hidden border border-gold-deep/50 bg-void">
+                  <picture>
+                    {% if image ends with '.png' %}<source srcset="/{{ image|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
+                    <img src="/{{ image }}" alt="{{ champion.name ?? '' }}" width="56" height="56"
+                         loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover">
+                  </picture>
+                </div>
+                <div class="min-w-0">
+                  <p class="truncate font-beaufort text-sm uppercase tracking-wide text-gold-bright" title="{{ champion.name ?? '' }}">{{ champion.name ?? '' }}</p>
+                  <p class="font-mono text-[11px] text-text-muted">{{ 'champion.detail.icon_version'|trans({'%version%': selectedVersion}) }}</p>
+                </div>
+              </div>
+            {% endif %}
             <h2 class="mb-5 font-beaufort text-sm uppercase tracking-[0.22em] text-gold">
               {{ 'champion.detail.stats.title'|trans }}
             </h2>

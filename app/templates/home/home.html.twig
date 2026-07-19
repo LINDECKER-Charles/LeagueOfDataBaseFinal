@@ -88,12 +88,22 @@
       {% include 'home/_preview_header.html.twig' with { title: 'homepage.champions.title'|trans, href: resource_path('app_champions', {}, navVersion, navLang), link: 'homepage.champions.see_all'|trans, count: counts.champions } %}
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {% for key, c in champions.champions|slice(0, 4) %}
+          {# Versioned square icon overlaid on the unversioned splash (null while cold). #}
+          {% set champIcon = champions.images[loop.index0]|default(null) %}
           <a href="{{ resource_path('app_champion', { name: key }, navVersion, navLang) }}"
              class="hextech-frame hextech-frame-hover group flex flex-col overflow-hidden">
             <div class="relative aspect-[4/5] overflow-hidden border-b border-gold-deep/50 bg-void">
               <span aria-hidden="true" class="absolute inset-0 grid place-items-center font-beaufort text-5xl text-gold/15">{{ c.name|slice(0, 2)|upper }}</span>
               <img src="{{ loadingBase }}/{{ key }}_0.jpg" alt="{{ c.name }}" loading="lazy" decoding="async"
                    class="relative h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105">
+              {% if champIcon %}
+                <span class="absolute bottom-2 left-2 h-10 w-10 overflow-hidden border border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]">
+                  <picture>
+                    {% if champIcon ends with '.png' %}<source srcset="/{{ champIcon|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
+                    <img src="/{{ champIcon }}" alt="" width="40" height="40" loading="lazy" decoding="async" class="h-full w-full object-cover">
+                  </picture>
+                </span>
+              {% endif %}
             </div>
             <div class="p-3">
               <h3 class="truncate font-beaufort text-[15px] tracking-wide text-gold-grad" title="{{ c.name }}">{{ c.name }}</h3>
