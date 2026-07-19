@@ -44,7 +44,7 @@ const labels = {
         added: 'Item added to step %step%',
         cancelled: 'Move cancelled',
     },
-    champion: { title: 'Champion', search: 'Search…', empty: 'None.', selected: 'Chosen' },
+    champion: { title: 'Champion', search: 'Search…', empty: 'None.', selected: 'Chosen', open: 'Choose', close: 'Close' },
     runes: {
         title: 'Runes',
         primary: 'Primary',
@@ -66,6 +66,25 @@ const labels = {
         removeItem: 'Remove item',
         gold: 'Step cost',
         presets: ['Start'],
+    },
+    armory: {
+        title: 'Armory',
+        addCta: 'Add item',
+        search: 'Search an item…',
+        empty: 'None.',
+        done: 'Done',
+        close: 'Close the armory',
+        added: '%count% added',
+        inStep: '%count% in this step',
+        full: 'Step full',
+        categories: {
+            all: 'All',
+            attack: 'Attack',
+            magic: 'Magic',
+            defense: 'Defense',
+            mobility: 'Mobility',
+            utility: 'Utility',
+        },
     },
 }
 

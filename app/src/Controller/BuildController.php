@@ -38,8 +38,6 @@ final class BuildController extends AbstractResourceController
     private const CSRF_SUBMIT = 'submit';
     private const CSRF_DELETE_PREFIX = 'delete-build-';
     private const ERROR_VERSION_UNKNOWN = 'build.error.version.unknown';
-    /** Patches offered by the editor's version select (latest first); the build's own patch is always kept. */
-    private const VERSION_CHOICES_MAX = 30;
 
     public function __construct(
         VersionManager $versionManager,
@@ -299,14 +297,15 @@ final class BuildController extends AbstractResourceController
     }
 
     /**
-     * Latest patches for the version select, capped to keep the list usable —
-     * plus the currently selected one, so an old build stays editable pinned.
+     * Every Data Dragon patch for the version select (same full list as the header
+     * and profile pickers), plus the currently selected one when it's been delisted
+     * upstream, so an old build stays editable pinned to its own patch.
      *
      * @return list<string>
      */
     private function versionChoices(string $selected): array
     {
-        $choices = array_slice($this->versionManager->getVersions(), 0, self::VERSION_CHOICES_MAX);
+        $choices = $this->versionManager->getVersions();
         if ($selected !== '' && !in_array($selected, $choices, true)) {
             $choices[] = $selected;
         }

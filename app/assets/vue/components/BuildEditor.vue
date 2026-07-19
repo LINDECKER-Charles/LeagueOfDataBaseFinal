@@ -42,7 +42,6 @@ const {
     shiftItem,
     dropStep,
     dropItem,
-    dropNewItem,
     announceDragCancelled,
     canAddStep,
     canAddItemTo,
@@ -123,6 +122,7 @@ onMounted(() => void loadCatalogs())
                 :can-add-item-to="canAddItemTo"
                 :can-receive-item="canReceiveItem"
                 :labels="labels.steps"
+                :armory="labels.armory"
                 :dnd="labels.dnd"
                 :ui="labels"
                 @add-step="appendStep()"
@@ -134,7 +134,6 @@ onMounted(() => void loadCatalogs())
                 @move-item="shiftItem"
                 @reorder-step="dropStep"
                 @move-item-to="dropItem"
-                @drop-new-item="(to, itemId) => dropNewItem(to, itemId)"
                 @drag-cancelled="announceDragCancelled"
                 @retry="items.retry()"
             />
