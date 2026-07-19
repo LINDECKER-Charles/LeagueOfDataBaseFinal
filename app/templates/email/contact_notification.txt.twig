@@ -1,0 +1,19 @@
+LEAGUE OF DATABASE
+Nouveau message de contact
+========================================
+
+Catégorie : {{ message.category.label }}
+Expéditeur : {{ message.name ?? '—' }}
+E-mail     : {{ message.email }}
+{% if message.subject %}Sujet      : {{ message.subject }}
+{% endif %}Reçu le    : {{ message.createdAt|date('d/m/Y H:i') }} UTC{% if message.locale %} · {{ message.locale }}{% endif %}
+
+----------------------------------------
+{{ message.message }}
+----------------------------------------
+
+Répondre : {{ message.email }}
+
+--
+Envoyé depuis le formulaire de contact du pied de page.
+Retrouvez ce message dans l'espace d'administration.

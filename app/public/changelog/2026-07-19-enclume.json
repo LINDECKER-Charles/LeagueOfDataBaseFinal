@@ -1,0 +1,101 @@
+{
+  "id": "2026-07-19-enclume",
+  "version": "2.1.1",
+  "codename": "Enclume",
+  "date": "2026-07-19",
+  "type": "minor",
+  "title": "LeagueOfDataBase 2.1.1 — Enclume",
+  "summary": "Le grand lot de la forge : l'armurerie s'ouvre en un clic pour empiler les objets, vos builds ont une langue et se filtrent par langue dans les Tendances, un formulaire de contact rejoint le pied de page, et l'affichage mobile est nettement plus net.",
+  "intro": "Enclume, c'est le patch qui reforge l'atelier. Composer un build devient direct : l'Armurerie s'ouvre sous chaque étape pour parcourir tout le catalogue, filtrer par catégorie et empiler plusieurs objets d'un trait, tandis que votre champion s'affiche en portrait et que le changement de patch s'accompagne enfin d'un écran de chargement honnête. Vos builds gagnent une langue de rédaction — et les Tendances un filtre pour ne voir que celles que vous lisez. Autour de la forge, un formulaire de contact rejoint le pied de page, l'affichage mobile est repris de fond en comble, et une couche de protection anti-abus veille sur les actions sensibles.",
+  "stats": { "fixes": 5, "cards": 8 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❒",
+      "tag": "Atelier",
+      "title": "Armurerie : l'ajout d'objets repensé",
+      "description": "Sous chaque étape d'un build, une tuile « + Ajouter un objet » ouvre l'Armurerie : tout le catalogue, parcourable dès l'ouverture, avec une recherche et des filtres par catégorie (Attaque, Magie, Défense, Mobilité, Utilitaire). La fenêtre reste ouverte pour empiler plusieurs objets d'affilée, avec un compteur en direct et une pastille sur ceux déjà présents dans l'étape. Sur mobile, elle s'ouvre en plein écran avec de plus grandes cibles tactiles."
+    },
+    {
+      "kind": "feature",
+      "glyph": "✦",
+      "tag": "Atelier",
+      "title": "La langue de vos builds, et un filtre langue sur les Tendances",
+      "description": "En forgeant un build, vous choisissez la langue dans laquelle vous l'avez rédigé (nom et description) — la vôtre par défaut, ou une autre pour toucher plus de monde. Sur la page Tendances, un filtre Langue (« Toutes les langues » par défaut) ne montre que les builds écrits dans la langue choisie, et une pastille de langue s'affiche dans la liste comme sur la page partagée du build."
+    },
+    {
+      "kind": "feature",
+      "glyph": "✉",
+      "tag": "Support",
+      "title": "Un formulaire de contact dans le pied de page",
+      "description": "Un bouton « Nous contacter » apparaît dans le pied de page, sur toutes les pages. On choisit un motif (bug, suggestion, avis, contact commercial), on laisse son e-mail et son message ; une confirmation s'affiche aussitôt et la demande part directement vers l'équipe. Disponible en français et en anglais, avec une protection anti-spam transparente."
+    },
+    {
+      "kind": "mana",
+      "glyph": "◈",
+      "tag": "Tendances",
+      "title": "« Forger mon build » toujours à portée",
+      "description": "La page Tendances affiche en permanence un bouton d'action en haut, quel que soit le nombre de builds classés. Connecté, il ouvre directement l'éditeur de build ; sinon, il propose de créer un compte pour se lancer. Avant, cette porte d'entrée disparaissait dès qu'une tendance existait."
+    },
+    {
+      "kind": "mana",
+      "glyph": "❖",
+      "tag": "Atelier",
+      "title": "Votre champion en portrait dans la forge",
+      "description": "À la sélection d'un champion dans l'éditeur, il s'affiche par sa vignette au liseré doré plutôt que par son nom, et la liste se replie en un bandeau compact qui rappelle votre choix — rouvrez-la pour en changer, elle se referme dès la sélection. La grille est aussi resserrée pour voir plus de champions d'un coup d'œil."
+    },
+    {
+      "kind": "mana",
+      "glyph": "⚡",
+      "tag": "Atelier",
+      "title": "Chargement visible quand vous changez de patch dans l'éditeur",
+      "description": "Dans l'éditeur de build, sélectionner une version encore inconnue affiche l'écran de chargement Hextech le temps de préparer ses champions, objets et runes ; à sa disparition, les sélecteurs montrent directement les vraies icônes — fini les vignettes vides qui se remplissaient après coup. Une version déjà chargée pendant la session revient instantanément."
+    },
+    {
+      "kind": "mana",
+      "glyph": "✶",
+      "tag": "Sécurité",
+      "title": "Protection anti-abus sur les actions sensibles",
+      "description": "L'inscription, la réinitialisation de mot de passe, le don et le contact sont désormais protégés contre les envois en masse et le spam, et la connexion admin contre la force brute : un usage anormalement répété depuis une même connexion est temporairement ralenti, avec un message clair invitant à réessayer. Les usages normaux ne sont jamais impactés."
+    },
+    {
+      "kind": "mana",
+      "glyph": "◐",
+      "tag": "Mobile",
+      "title": "Affichage mobile soigné",
+      "description": "Sur téléphone, plus de pages « dézoomées » : dons, développeurs, accueil et fiches de champion tiennent pile dans la largeur de l'écran, jusqu'aux plus petits mobiles. Les champs de formulaire ne déclenchent plus le zoom automatique d'iOS au focus, la barre du haut reste entière sur iPad en portrait, et le sélecteur de runes de l'éditeur s'aligne proprement au lieu de se casser en pastilles orphelines."
+    }
+  ],
+  "bugfixes": [
+    {
+      "id": "LDB-007",
+      "area": "Atelier",
+      "text": "L'éditeur de build et l'import vers un autre patch proposent désormais toutes les versions du jeu, et plus seulement les 30 plus récentes — on peut créer ou projeter un build sur n'importe quel patch, comme partout ailleurs sur le site."
+    },
+    {
+      "id": "LDB-008",
+      "area": "Atelier",
+      "text": "Dans le choix des runes, une fois les deux runes de la voie secondaire prises, la rangée restée vide s'estompe au lieu de rester colorée — elle ne laisse plus croire qu'une troisième rune est possible."
+    },
+    {
+      "id": "LDB-009",
+      "area": "Préférences",
+      "text": "La langue choisie dans le sélecteur en haut reste mémorisée d'une visite à l'autre, même après avoir fermé le navigateur, sans devoir cocher « se souvenir » (la case sert seulement à la conserver plus longtemps)."
+    },
+    {
+      "id": "LDB-010",
+      "area": "Navigation",
+      "text": "Changer de version ou de langue depuis le sélecteur affiche l'écran de chargement quelle que soit la page — fiche de champion, d'objet, profil… — et plus seulement depuis l'accueil et les listes, où le rechargement se faisait sans aucun retour visuel."
+    },
+    {
+      "id": "LDB-011",
+      "area": "Interface",
+      "text": "La version affichée dans le pied de page correspond maintenant exactement à celle de la barre du haut, et les liens du pied de page (Champions, Objets, Runes, Invocateurs) mènent au même patch que la page en cours."
+    }
+  ],
+  "balances": [],
+  "devNote": {
+    "body": "Enclume prolonge Almanach en s'attaquant à l'endroit où vous passez le plus de temps : la forge. On voulait que composer un build cesse d'être un jeu de devinettes — d'où l'Armurerie qui s'ouvre, se parcourt et s'empile, et un champion qu'on reconnaît d'un coup d'œil. En chemin, on a ouvert une vraie porte pour nous joindre, resserré tout l'affichage mobile et posé des garde-fous anti-abus discrets mais solides. Dites-nous ce que vous forgez, et ce qui pourrait couler encore mieux sous les doigts.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

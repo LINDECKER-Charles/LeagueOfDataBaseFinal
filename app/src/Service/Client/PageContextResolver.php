@@ -44,6 +44,17 @@ final class PageContextResolver
     private const HOME_TYPES = ['champion', 'item', 'summoner', 'runesReforged'];
 
     /**
+     * Warm-only token the build editor streams to warm the patch it forges from —
+     * NOT a navigable route. Mirrors `BUILD_WARM_PATH` in the front
+     * ({@see assets/vue/loader/urls.ts}); the whole set is warmed (perPage 0) so
+     * every picker icon lands warm.
+     */
+    public const BUILD_WARM_PATH = '/builds/editor';
+
+    /** Catalogs the build editor loads for one patch (no summoners). */
+    private const BUILD_TYPES = ['champion', 'item', 'runesReforged'];
+
+    /**
      * List route (path) => the resource type it renders, the images the loader
      * pre-warms ({@see self::LIST_INITIAL_PAGE_SIZE}) and the cap on a
      * caller-supplied page size. Read only by the streaming loader
@@ -89,6 +100,15 @@ final class PageContextResolver
             return array_map(
                 static fn (string $type): array => ['type' => $type, 'perPage' => self::HOME_PER_PAGE, 'page' => 1],
                 self::HOME_TYPES,
+            );
+        }
+
+        // Build editor: warm the full champion/item/rune set (perPage 0 = no slice)
+        // so every picker icon is warm when the editor reloads its catalogs.
+        if ($p === self::BUILD_WARM_PATH) {
+            return array_map(
+                static fn (string $type): array => ['type' => $type, 'perPage' => 0, 'page' => 1],
+                self::BUILD_TYPES,
             );
         }
 

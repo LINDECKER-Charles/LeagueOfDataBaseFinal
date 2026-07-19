@@ -20,6 +20,16 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class HomeController extends AbstractController
 {
+    /**
+     * Persistence window (days) for the signed patch+language preference cookie.
+     * A chosen patch/language is a functional preference (not tracking), so the
+     * switcher always persists it — the "remember" toggle only widens the window
+     * from the default to the extended one. Version already rides the URL;
+     * language has no URL carrier and would otherwise fall back to the domain
+     * default (en on .com) on the next session without this cookie.
+     */
+    private const PREF_COOKIE_DAYS = 30;
+    private const PREF_COOKIE_DAYS_EXTENDED = 365;
 
     public function __construct(
         private readonly VersionManager $versionManager, 
@@ -60,8 +70,8 @@ class HomeController extends AbstractController
      *  3) Valide le couple (version, langue) via {@see App\Service\VersionManager::validateSelection()}.
      *     - En cas d’erreurs : clear du FlashBag, ajout des messages d’erreur, redirection vers la page d’origine (Referer) avec fallback la home.
      *  4) En cas de succès :
-     *     - Si `remember` = true : crée un cookie signé via {@see App\Service\ClientManager::makeRememberCookie()}.
-     *       Sinon : envoie un cookie d’effacement via {@see App\Service\ClientManager::makeForgetCookie()}.
+     *     - Persiste toujours la sélection dans un cookie signé via {@see App\Service\ClientManager::makeRememberCookie()} ;
+     *       `remember` = true ne fait qu’étendre la durée ({@see self::PREF_COOKIE_DAYS_EXTENDED} vs {@see self::PREF_COOKIE_DAYS}).
      *     - Écrit les préférences en session via {@see App\Service\ClientManager::setLocaleInSession()} et {@see App\Service\ClientManager::setVersionInSession()}.
      *     - Clear du FlashBag puis ajout d’un flash 'success'.
      *     - Redirection vers la page d’origine (Referer) avec fallback la home.
@@ -102,17 +112,16 @@ class HomeController extends AbstractController
         $backUrl = $this->urlGenerator->applySelection($backUrl, $version, $language);
 
 
-        // Succès, on enregistre le cookie si l'utilisateur le demande et on save les preference dans la session
+        // Succès : la sélection est une préférence fonctionnelle, on la persiste
+        // toujours dans le cookie signé (la langue n'a pas de porteur d'URL — sans
+        // ce cookie elle retomberait sur le défaut domaine à la session suivante,
+        // là où la version survit via l'URL). La case ne fait qu'étendre la durée.
         $response = $this->redirect($backUrl);
 
-        if ($remember) {
-            $response->headers->setCookie(
-                $this->clientManager->makeRememberCookie($language, $version, 7)
-            );
-        } else {
-            // s'assurer qu’un ancien cookie est supprimé
-            $response->headers->setCookie($this->clientManager->makeForgetCookie());
-        }
+        $days = $remember ? self::PREF_COOKIE_DAYS_EXTENDED : self::PREF_COOKIE_DAYS;
+        $response->headers->setCookie(
+            $this->clientManager->makeRememberCookie($language, $version, $days)
+        );
 
         $this->clientManager->setLocaleInSession($language);
         $this->clientManager->setVersionInSession($version);

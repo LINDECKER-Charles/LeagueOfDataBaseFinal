@@ -13,10 +13,15 @@ use Symfony\Component\HttpFoundation\Request;
 final class BuildSubmissionTest extends TestCase
 {
     private const FALLBACK_VERSION = '16.14.1';
+    private const FALLBACK_LANGUAGE = 'en_US';
 
     private static function submission(array $post): BuildSubmission
     {
-        return BuildSubmission::fromRequest(Request::create('/builds', 'POST', $post), self::FALLBACK_VERSION);
+        return BuildSubmission::fromRequest(
+            Request::create('/builds', 'POST', $post),
+            self::FALLBACK_VERSION,
+            self::FALLBACK_LANGUAGE,
+        );
     }
 
     public function testParsesAndTrimsFields(): void
@@ -53,6 +58,12 @@ final class BuildSubmissionTest extends TestCase
         self::assertSame(self::FALLBACK_VERSION, $submission->gameVersion);
         self::assertSame(GameMode::DEFAULT, $submission->gameMode);
         self::assertNotContains(BuildSubmission::ERROR_MODE_UNKNOWN, $submission->formErrors());
+    }
+
+    public function testLanguageIsTrimmedOrFallsBackToTheContext(): void
+    {
+        self::assertSame('fr_FR', self::submission(['name' => 'valid', 'language' => '  fr_FR  '])->language);
+        self::assertSame(self::FALLBACK_LANGUAGE, self::submission(['name' => 'valid'])->language);
     }
 
     public function testUnknownModeIsAnExplicitError(): void

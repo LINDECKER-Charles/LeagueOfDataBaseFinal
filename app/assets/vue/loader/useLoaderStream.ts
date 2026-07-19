@@ -12,6 +12,7 @@ import {
     type Phase,
     type ResourceKey,
 } from './urls'
+import { WARM_REQUEST_EVENT, type WarmRequestDetail } from './warmBridge'
 
 const READY_HOLD = 450 // once shown, hold 100%/"ready" long enough to read
 const WATCHDOG_IDLE = 15000 // no stream activity for this long → assume it's dead and visit anyway
@@ -43,6 +44,9 @@ export function useLoaderStream() {
     let holdTimer: ReturnType<typeof setTimeout> | undefined
     let watchdog: ReturnType<typeof setTimeout> | undefined
     let bypassUrl: string | null = null
+    // Set for an in-place warm (build editor): run to completion, then hand back
+    // to the caller instead of performing a Turbo visit.
+    let onComplete: (() => void) | null = null
     let finished = false
     const warmed = new Set<string>()
     const catTotal = new Map<ResourceKey, number>()
@@ -57,16 +61,25 @@ export function useLoaderStream() {
         if (es) { es.close(); es = null }
     }
 
-    function resetRun(path: string): void {
+    function resetRun(path: string, activeKeys?: ResourceKey[]): void {
         finished = false
         progress.value = 0
         phase.value = 'preparing'
         finishing.value = false
-        active.value = resourcesFor(path)
+        // A warm-in-place run names its own resources (the nav routes never render
+        // this token); everything else derives them from the destination path.
+        active.value = activeKeys ?? resourcesFor(path)
         readyKeys.value = []
         entries.value = []
         catTotal.clear()
         catCount.clear()
+    }
+
+    /** Reset the overlay to hidden/idle (in-place warm end, or once a warm visit lands). */
+    function hideOverlay(): void {
+        visible.value = false
+        finishing.value = false
+        phase.value = 'idle'
     }
 
     /** Perform the gated visit; the re-fired before-visit is recognised by URL and let through. */
@@ -81,16 +94,44 @@ export function useLoaderStream() {
         bypassUrl = null
     }
 
-    function startPrepare(destUrl: string, override?: { version: string; lang: string }): void {
+    /** End a run with no image work: an in-place warm hands back, a navigation visits. */
+    function finishNoWork(destUrl: string): void {
+        const cb = onComplete
+        onComplete = null
+        if (cb) { hideOverlay(); cb(); return }
+        navigateWarm(destUrl)
+    }
+
+    function startPrepare(
+        destUrl: string,
+        override?: { version: string; lang: string },
+        opts?: { eager?: boolean; activeKeys?: ResourceKey[]; onComplete?: () => void },
+    ): void {
         const { version, lang } = resolveVL(destUrl, override)
-        if (!version || !lang) { navigateWarm(destUrl); return }
+        // A new run supersedes any still-pending in-place warm; resolve its callback
+        // so the awaiting caller (build editor) is never left hanging.
+        const superseded = onComplete
+        onComplete = opts?.onComplete ?? null
+        if (superseded && superseded !== onComplete) superseded()
+        if (!version || !lang) { finishNoWork(destUrl); return }
 
         const gen = ++generation
         closeStream()
         clearTimers()
 
         const path = new URL(destUrl, window.location.origin).pathname
-        resetRun(path)
+        resetRun(path, opts?.activeKeys)
+
+        // A deliberate version/language switch (`eager`) always triggers a cold
+        // reload, so raise the overlay up-front instead of waiting for `start`. A
+        // batch-less destination (detail, profile…) has nothing to stream, so skip
+        // the SSE and let the overlay cover the cold server render until the
+        // destination's turbo:load hides it. Plain navigations keep the honest
+        // "surface only on real image work (total > 0)" rule below.
+        if (opts?.eager) {
+            visible.value = true
+            if (active.value.length === 0) { finishNoWork(destUrl); return }
+        }
 
         // The overlay is NOT shown on a timer: it surfaces only once `start` reports
         // real image work to do (total > 0). A warm destination therefore never
@@ -176,6 +217,23 @@ export function useLoaderStream() {
         active.value.forEach(markReady)
         warmed.add(warmKey(destUrl, version, lang))
 
+        const cb = onComplete
+        onComplete = null
+
+        // In-place warm (build editor): resume the caller instead of visiting. If
+        // the overlay surfaced, hold the "ready" beat first; a warm no-op (never
+        // shown) resumes immediately. Reload is kicked BEFORE hiding so the pickers
+        // swap to their loading state under the overlay, never flashing stale rows.
+        if (cb) {
+            if (visible.value) {
+                holdTimer = setTimeout(() => { holdTimer = undefined; cb(); hideOverlay() }, READY_HOLD)
+            } else {
+                hideOverlay()
+                cb()
+            }
+            return
+        }
+
         if (!visible.value) {
             navigateWarm(destUrl)
         } else {
@@ -201,12 +259,33 @@ export function useLoaderStream() {
         if (!visible.value && phase.value === 'idle') return
         clearTimers()
         closeStream()
-        visible.value = false
-        finishing.value = false
-        phase.value = 'idle'
+        hideOverlay()
     }
 
-    /** Version/language switcher posts to /setup-submit then reloads the current page — gate that too. */
+    /**
+     * In-place warm request from another island (build editor switching to a cold
+     * patch). Same SSE stream as navigation, but on completion we resume the caller
+     * (its picker reload lands on warm images) instead of visiting. Claim it via
+     * preventDefault so {@link requestWarm} awaits our `done()` rather than resolving
+     * itself; an unknown version/lang or a fully-warm patch simply never surfaces.
+     */
+    function onWarmRequest(e: Event): void {
+        const d = (e as CustomEvent<WarmRequestDetail>).detail
+        if (!d?.version || !d?.lang || !d?.path || typeof d.resolve !== 'function') return
+        e.preventDefault()
+        startPrepare(
+            d.path,
+            { version: d.version, lang: d.lang },
+            { activeKeys: resourcesFor(d.path), onComplete: d.resolve },
+        )
+    }
+
+    /**
+     * Version/language switcher (header, on every page) posts to /setup-submit then
+     * reloads the current page under the new selection. A switch always triggers a
+     * cold backend reload, so gate it from ANY page — not just the list/home routes
+     * — raising the loader the instant we start fetching.
+     */
     function onSubmit(e: Event): void {
         const form = e.target
         if (!(form instanceof HTMLFormElement)) return
@@ -219,25 +298,32 @@ export function useLoaderStream() {
         if (!version || !lang) return
 
         const dest = destinationForSwitch(version, lang, meta('dd-latest'))
-        if (!resourcesFor(new URL(dest, window.location.origin).pathname).length) return
-
         e.preventDefault()
-        // Persist prefs (session + remember cookie) without following the redirect,
-        // then warm the destination and visit it.
+
+        // Raise the overlay before the prefs round-trip so feedback is instant;
+        // startPrepare(eager) then streams a batch destination or covers a
+        // batch-less one. The 302 is not followed — `dest` already carries the
+        // switched selection (path segment or query).
+        closeStream()
+        clearTimers()
+        resetRun(new URL(dest, window.location.origin).pathname)
+        visible.value = true
         fetch(form.action, { method: 'POST', body: fd, redirect: 'manual', credentials: 'same-origin' })
-            .catch(() => { /* best effort: query params still drive the switched list */ })
-            .finally(() => startPrepare(dest, { version, lang }))
+            .catch(() => { /* best effort: dest path/query still drives the selection */ })
+            .finally(() => startPrepare(dest, { version, lang }, { eager: true }))
     }
 
     onMounted(() => {
         document.addEventListener('turbo:before-visit', onBeforeVisit)
         document.addEventListener('turbo:load', onLoad)
         document.addEventListener('submit', onSubmit, true)
+        document.addEventListener(WARM_REQUEST_EVENT, onWarmRequest)
     })
     onBeforeUnmount(() => {
         document.removeEventListener('turbo:before-visit', onBeforeVisit)
         document.removeEventListener('turbo:load', onLoad)
         document.removeEventListener('submit', onSubmit, true)
+        document.removeEventListener(WARM_REQUEST_EVENT, onWarmRequest)
         clearTimers()
         closeStream()
     })

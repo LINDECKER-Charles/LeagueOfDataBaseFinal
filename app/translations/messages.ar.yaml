@@ -185,7 +185,7 @@ footer:
 
   project:
     title: "المشروع"
-    version: "الإصدار: Beta 2.0"
+    version: "الإصدار: %version%"
     updated: "تحديث: 17/07/2026"
 
   contact:

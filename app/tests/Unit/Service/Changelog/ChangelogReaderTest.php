@@ -80,6 +80,26 @@ final class ChangelogReaderTest extends TestCase
         self::assertSame('1.0.0', $releases[0]['version']);
     }
 
+    public function testLatestVersionReturnsNewestManifestEntryVersion(): void
+    {
+        // Manifest is authored newest-first, so the head entry is the current release.
+        $this->writeManifest([['id' => 'b', 'version' => '2.1.1'], ['id' => 'a', 'version' => '1.0.0']]);
+
+        self::assertSame('2.1.1', $this->reader()->latestVersion());
+    }
+
+    public function testLatestVersionFallsBackWhenManifestMissing(): void
+    {
+        self::assertSame('0.0.0', $this->reader()->latestVersion());
+    }
+
+    public function testLatestVersionFallsBackWhenNewestEntryHasNoVersion(): void
+    {
+        $this->writeManifest([['id' => 'b'], ['id' => 'a', 'version' => '1.0.0']]);
+
+        self::assertSame('0.0.0', $this->reader()->latestVersion());
+    }
+
     private function reader(): ChangelogReader
     {
         return new ChangelogReader($this->projectDir);

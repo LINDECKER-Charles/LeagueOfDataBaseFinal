@@ -185,7 +185,7 @@ footer:
 
   project:
     title: "Έργο"
-    version: "Έκδοση: Beta 2.0"
+    version: "Έκδοση: %version%"
     updated: "Ενημερώθηκε: 17/07/2026"
 
   contact:

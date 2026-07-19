@@ -93,6 +93,7 @@
               <span class="hx-chip">{{ 'build.show.patch'|trans({'%version%': build.gameVersion}) }}</span>
             {% endif %}
           {% endif %}
+          {% if build.language %}<span class="hx-chip">{{ client.languageLabels[build.language]|default(build.language) }}</span>{% endif %}
         </p>
       </div>
 

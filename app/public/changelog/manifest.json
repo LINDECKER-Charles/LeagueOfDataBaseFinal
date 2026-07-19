@@ -1,6 +1,22 @@
 {
   "patches": [
     {
+      "id": "2026-07-19-enclume",
+      "version": "2.1.1",
+      "codename": "Enclume",
+      "date": "2026-07-19",
+      "type": "minor",
+      "title": "LeagueOfDataBase 2.1.1 — Enclume",
+      "summary": "Le grand lot de la forge : l'armurerie s'ouvre en un clic pour empiler les objets, vos builds ont une langue et se filtrent par langue dans les Tendances, un formulaire de contact rejoint le pied de page, et l'affichage mobile est nettement plus net.",
+      "tags": [
+        { "kind": "feature", "label": "Armurerie & langue des builds" },
+        { "kind": "feature", "label": "Formulaire de contact" },
+        { "kind": "feature", "label": "Affichage mobile soigné" },
+        { "kind": "bugfix", "label": "5 correctifs" }
+      ],
+      "stats": { "fixes": 5 }
+    },
+    {
       "id": "2026-07-19-almanach",
       "version": "2.1.0",
       "codename": "Almanach",
@@ -18,11 +34,11 @@
     },
     {
       "id": "2026-07-19-rouage",
-      "version": "2.0.1",
+      "version": "2.0.5",
       "codename": "Rouage",
       "date": "2026-07-19",
       "type": "hotfix",
-      "title": "LeagueOfDataBase 2.0.1 — Rouage",
+      "title": "LeagueOfDataBase 2.0.5 — Rouage",
       "summary": "Une vague de mise au point après Ralliement : les pages ne se figent plus, les images se chargent du premier coup, le son des sorts se contrôle vraiment, et l'écran de chargement se fait discret.",
       "tags": [
         { "kind": "feature", "label": "Navigation fiabilisée" },

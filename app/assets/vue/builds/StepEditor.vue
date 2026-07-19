@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import type { ItemOption } from './catalogTypes'
-import type { DndLabels, StepsLabels, UiLabels } from './editorLabels'
+import type { ArmoryLabels, DndLabels, StepsLabels, UiLabels } from './editorLabels'
 import { formatCounter } from './editorLabels'
-import ItemSearch from './ItemSearch.vue'
+import ItemArmory from './ItemArmory.vue'
 import { MAX_ITEMS_PER_STEP, MAX_STEPS, stepGold, type ItemLocation } from './stepList'
 import type { BuildStep } from './structure'
 import type { GhostReason } from './useBuildEditor'
@@ -10,16 +11,13 @@ import { useDragReorder } from './useDragReorder'
 
 /**
  * Purchase-order section: vertical list of steps (label + optional note + item
- * medallions). Reordering is drag-and-drop (steps, items, cross-step moves,
- * search results dropped into a step) as a PROGRESSIVE enhancement: the ↑↓/‹›
- * buttons remain the keyboard/touch path and drag handles hide on coarse
- * pointers. Ghost medallions distinguish "unknown on this patch" from
+ * medallions). Items are added through the {@see ItemArmory} modal (one "+ Add"
+ * tile per step); reordering — steps, items, cross-step moves — stays drag-and-
+ * drop as a PROGRESSIVE enhancement over the ↑↓/‹› buttons (drag handles hide on
+ * coarse pointers). Ghost medallions distinguish "unknown on this patch" from
  * "excluded by the selected game mode".
  */
-type DragSource =
-    | { kind: 'step'; index: number }
-    | { kind: 'item'; step: number; index: number }
-    | { kind: 'catalog'; itemId: string }
+type DragSource = { kind: 'step'; index: number } | { kind: 'item'; step: number; index: number }
 
 type DropTarget = { kind: 'step'; insert: number } | { kind: 'item'; step: number; insert: number }
 
@@ -34,6 +32,7 @@ const props = defineProps<{
     canAddItemTo: (stepIndex: number) => boolean
     canReceiveItem: (stepIndex: number, from: ItemLocation) => boolean
     labels: StepsLabels
+    armory: ArmoryLabels
     dnd: DndLabels
     ui: UiLabels
 }>()
@@ -48,7 +47,6 @@ const emit = defineEmits<{
     moveItem: [stepIndex: number, itemIndex: number, delta: number]
     reorderStep: [from: number, insert: number]
     moveItemTo: [from: ItemLocation, to: ItemLocation]
-    dropNewItem: [to: ItemLocation, itemId: string]
     dragCancelled: []
     retry: []
 }>()
@@ -58,21 +56,33 @@ const drag = useDragReorder<DragSource, DropTarget>({
     onCancel: () => emit('dragCancelled'),
 })
 
+// Which step the armory is composing (null = closed). A single modal instance
+// serves every step; the pure step-list rules own the actual mutations.
+const armoryStep = ref<number | null>(null)
+
+const armoryStepInfo = computed(() => {
+    const index = armoryStep.value
+    if (index === null) return null
+    const step = props.steps[index]
+    return step ? { index, label: step.label, items: step.items } : null
+})
+
+function openArmory(index: number): void {
+    armoryStep.value = index
+}
+
 function commitDrop(source: DragSource, target: DropTarget): void {
     if (source.kind === 'step' && target.kind === 'step') {
         emit('reorderStep', source.index, target.insert)
     } else if (source.kind === 'item' && target.kind === 'item') {
         emit('moveItemTo', { step: source.step, index: source.index }, { step: target.step, index: target.insert })
-    } else if (source.kind === 'catalog' && target.kind === 'item') {
-        emit('dropNewItem', { step: target.step, index: target.insert }, source.itemId)
     }
 }
 
-/** Whether the active drag may drop items into this step (capacity rules). */
+/** Whether the active item drag may drop into this step (capacity rules). */
 function acceptsItemDrop(stepIndex: number): boolean {
     const source = drag.source.value
     if (!source || source.kind === 'step') return false
-    if (source.kind === 'catalog') return props.canAddItemTo(stepIndex)
     return props.canReceiveItem(stepIndex, { step: source.step, index: source.index })
 }
 
@@ -212,7 +222,7 @@ function itemTitle(itemId: string): string {
                     @input="onNoteInput(index, $event)"
                 ></textarea>
 
-                <ul v-if="step.items.length || isItemInsertAt(index, 0)" class="mt-3 flex flex-wrap gap-3">
+                <ul class="mt-3 flex flex-wrap items-start gap-3">
                     <template v-for="(itemId, itemIndex) in step.items" :key="`${itemIndex}-${itemId}`">
                         <li v-if="isItemInsertAt(index, itemIndex)" class="forge-dropslot" aria-hidden="true"></li>
                         <li class="text-center">
@@ -247,24 +257,25 @@ function itemTitle(itemId: string): string {
                         </li>
                     </template>
                     <li v-if="isItemInsertAt(index, step.items.length)" class="forge-dropslot" aria-hidden="true"></li>
+                    <li>
+                        <button
+                            type="button"
+                            class="forge-additem"
+                            :aria-label="armory.addCta"
+                            :title="armory.addCta"
+                            @click="openArmory(index)"
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                                <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+                            </svg>
+                            <span class="forge-additem__label">{{ armory.addCta }}</span>
+                        </button>
+                    </li>
                 </ul>
 
                 <p class="forge-hint mt-3">
                     {{ formatCounter(ui.counter, step.items.length, MAX_ITEMS_PER_STEP) }}
                 </p>
-                <ItemSearch
-                    class="mt-2"
-                    :options="options"
-                    :is-loading="isLoading"
-                    :has-error="hasError"
-                    :can-add="canAddItemTo(index)"
-                    :labels="labels"
-                    :ui="ui"
-                    @add="(itemId) => emit('addItem', index, itemId)"
-                    @drag-start="(itemId, event) => drag.start({ kind: 'catalog', itemId }, event)"
-                    @drag-end="drag.end()"
-                    @retry="emit('retry')"
-                />
             </article>
         </template>
         <div v-if="isStepInsertAt(steps.length)" class="forge-droprow" aria-hidden="true"></div>
@@ -275,5 +286,20 @@ function itemTitle(itemId: string): string {
             </button>
             <span class="forge-hint">{{ formatCounter(ui.counter, steps.length, MAX_STEPS) }}</span>
         </div>
+
+        <ItemArmory
+            :open="armoryStepInfo !== null"
+            :step="armoryStepInfo"
+            :options="options"
+            :is-loading="isLoading"
+            :has-error="hasError"
+            :can-add="armoryStepInfo !== null && canAddItemTo(armoryStepInfo.index)"
+            :max-items="MAX_ITEMS_PER_STEP"
+            :labels="armory"
+            :ui="ui"
+            @add="(itemId) => armoryStepInfo && emit('addItem', armoryStepInfo.index, itemId)"
+            @close="armoryStep = null"
+            @retry="emit('retry')"
+        />
     </div>
 </template>

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Concern\ThrottlesByIp;
 use App\Entity\User;
 use App\Form\ChangePasswordFormType;
 use App\Form\ResetPasswordRequestFormType;
@@ -20,6 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use SymfonyCasts\Bundle\ResetPassword\Controller\ResetPasswordControllerTrait;
@@ -35,6 +37,7 @@ use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
 final class ResetPasswordController extends AbstractResourceController
 {
     use ResetPasswordControllerTrait;
+    use ThrottlesByIp;
 
     public function __construct(
         VersionManager $versionManager,
@@ -48,6 +51,7 @@ final class ResetPasswordController extends AbstractResourceController
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TranslatorInterface $translator,
         private readonly AuditLogger $audit,
+        private readonly RateLimiterFactoryInterface $passwordRequestLimiter,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -58,6 +62,11 @@ final class ResetPasswordController extends AbstractResourceController
         $form = $this->createForm(ResetPasswordRequestFormType::class);
         $form->handleRequest($request);
 
+        if ($form->isSubmitted() && $this->isRateLimited($this->passwordRequestLimiter, $request)) {
+            $this->addFlash('error', $this->translator->trans('auth.flash.too_many_attempts'));
+
+            return $this->redirectToRoute('app_forgot_password_request');
+        }
         if ($form->isSubmitted() && $form->isValid()) {
             return $this->sendResetEmail((string) $form->get('email')->getData());
         }

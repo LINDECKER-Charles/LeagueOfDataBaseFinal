@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Concern\ThrottlesByIp;
 use App\Entity\User;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
@@ -16,6 +17,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -28,6 +30,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class DonationController extends AbstractResourceController
 {
+    use ThrottlesByIp;
+
     private const EUROS_PER_UNIT = 100;
 
     public function __construct(
@@ -38,6 +42,7 @@ final class DonationController extends AbstractResourceController
         private readonly StripeCheckout $stripeCheckout,
         private readonly TranslatorInterface $translator,
         private readonly LoggerInterface $logger,
+        private readonly RateLimiterFactoryInterface $donationCheckoutLimiter,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -59,6 +64,9 @@ final class DonationController extends AbstractResourceController
     {
         if (!$this->isCsrfTokenValid('submit', (string) $request->request->get('_token'))) {
             return $this->rejectToDonate('donate.error.csrf');
+        }
+        if ($this->isRateLimited($this->donationCheckoutLimiter, $request)) {
+            return $this->rejectToDonate('donate.error.throttled');
         }
         if (!$this->stripeCheckout->isConfigured()) {
             return $this->rejectToDonate('donate.error.unavailable');

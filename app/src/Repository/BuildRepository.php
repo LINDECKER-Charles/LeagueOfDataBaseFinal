@@ -112,4 +112,23 @@ final class BuildRepository extends ServiceEntityRepository
 
         return array_map(strval(...), $rows);
     }
+
+    /**
+     * Authoring locales present among public builds — feeds the trends language
+     * filter, which must only offer choices that yield results.
+     *
+     * @return list<string>
+     */
+    public function distinctPublicLanguages(): array
+    {
+        $rows = $this->createQueryBuilder('b')
+            ->select('DISTINCT b.language')
+            ->andWhere('b.isPublic = :isPublic')
+            ->setParameter('isPublic', true)
+            ->orderBy('b.language', 'ASC')
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        return array_map(strval(...), $rows);
+    }
 }

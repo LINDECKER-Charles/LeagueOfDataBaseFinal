@@ -63,6 +63,8 @@
             lang: lang,
             gameMode: gameMode,
             gameModes: gameModes|map(m => { value: m.value, label: m.labelKey|trans }),
+            language: language,
+            languages: client.languages|map(code => { value: code, label: client.languageLabels[code]|default(code) }),
             labels: {
               loading: 'build.editor.loading'|trans,
               error: 'build.editor.error'|trans,
@@ -74,7 +76,8 @@
                 title: 'build.editor.context.title'|trans,
                 version: 'build.editor.context.version'|trans,
                 mode: 'build.editor.context.mode'|trans,
-                modeHint: 'build.editor.context.mode_hint'|trans
+                modeHint: 'build.editor.context.mode_hint'|trans,
+                language: 'build.editor.context.language'|trans
               },
               dnd: {
                 handle: 'build.editor.dnd.handle'|trans,
@@ -88,7 +91,9 @@
                 title: 'build.editor.champion.title'|trans,
                 search: 'build.editor.champion.search'|trans,
                 empty: 'build.editor.champion.empty'|trans,
-                selected: 'build.editor.champion.selected'|trans
+                selected: 'build.editor.champion.selected'|trans,
+                open: 'build.editor.champion.open'|trans,
+                close: 'build.editor.champion.close'|trans
               },
               runes: {
                 title: 'build.editor.runes.title'|trans,
@@ -117,6 +122,25 @@
                   'build.editor.steps.preset.situational'|trans,
                   'build.editor.steps.preset.final'|trans
                 ]
+              },
+              armory: {
+                title: 'build.editor.armory.title'|trans,
+                addCta: 'build.editor.armory.add_cta'|trans,
+                search: 'build.editor.steps.search_item'|trans,
+                empty: 'build.editor.steps.item_empty'|trans,
+                done: 'build.editor.armory.done'|trans,
+                close: 'build.editor.armory.close'|trans,
+                added: 'build.editor.armory.added'|trans,
+                inStep: 'build.editor.armory.in_step'|trans,
+                full: 'build.editor.armory.full'|trans,
+                categories: {
+                  all: 'build.editor.armory.categories.all'|trans,
+                  attack: 'build.editor.armory.categories.attack'|trans,
+                  magic: 'build.editor.armory.categories.magic'|trans,
+                  defense: 'build.editor.armory.categories.defense'|trans,
+                  mobility: 'build.editor.armory.categories.mobility'|trans,
+                  utility: 'build.editor.armory.categories.utility'|trans
+                }
               }
             }
           }|json_encode|e('html_attr') }}">
@@ -124,6 +148,7 @@
         <input type="hidden" name="structure" value="{{ values.structure ? values.structure|json_encode : '' }}">
         <input type="hidden" name="game_version" value="{{ version }}">
         <input type="hidden" name="game_mode" value="{{ gameMode }}">
+        <input type="hidden" name="language" value="{{ language }}">
       </div>
 
       <div class="flex flex-wrap items-center justify-end gap-3">

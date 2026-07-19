@@ -15,8 +15,12 @@
     {# Navigation #}
     <div>
       <h3 class="eyebrow mb-3">{{ 'footer.navigation.title'|trans }}</h3>
-      {% set navVersion = app.request.attributes.get('version') ?: (client.session.version ?? (client.versions|default([])|first)) %}
-      {% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
+      {# Same single source (PageContextResolver) as header/bottom-nav: footer links
+         must target the SAME patch the page rendered with — path > ?version= > session —
+         not a per-template re-derivation that ignores the query and could drift. #}
+      {% set navSelection = page_selection() %}
+      {% set navVersion = navSelection.version %}
+      {% set navLang = navSelection.lang %}
       <ul class="flex flex-col gap-1.5 text-sm">
         <li><a href="{{ path('app_home') }}" class="nav-link">{{ 'footer.navigation.home'|trans }}</a></li>
         <li><a href="{{ resource_path('app_champions', {}, navVersion, navLang) }}" class="nav-link">{{ 'footer.navigation.champion'|trans }}</a></li>
@@ -48,7 +52,7 @@
     <div>
       <h3 class="eyebrow mb-3">{{ 'footer.project.title'|trans }}</h3>
       <ul class="flex flex-col gap-1.5 text-sm">
-        <li>{{ 'footer.project.version'|trans }}</li>
+        <li>{{ 'footer.project.version'|trans({'%version%': app_version}) }}</li>
         <li>{{ 'footer.project.updated'|trans }}</li>
       </ul>
     </div>
@@ -101,6 +105,9 @@
           </a>
         </li>
       </ul>
+      <button type="button" class="hx-btn-gold mt-4 w-full justify-center" data-contact-open>
+        {{ 'contact.form.cta'|trans }}
+      </button>
     </div>
   </div>
 
@@ -112,4 +119,62 @@
       properties are trademarks or registered trademarks of Riot Games, Inc.
     </p>
   </div>
+
+  {# Contact form — native <dialog>, opened by [data-contact-open] (fx/enhance.ts).
+     Plain POST (data-turbo=false) that redirects back with a flash toaster. #}
+  <dialog id="contact-dialog" class="contact-dialog" aria-labelledby="contact-dialog-title">
+    <form method="post" action="{{ path('app_contact_submit') }}" data-turbo="false" class="flex flex-col gap-4 p-6 sm:p-7">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="eyebrow">{{ 'contact.form.eyebrow'|trans }}</p>
+          <h2 id="contact-dialog-title" class="font-beaufort text-lg text-gold-bright">{{ 'contact.form.title'|trans }}</h2>
+        </div>
+        <button type="button" class="nav-link text-2xl leading-none" data-contact-close aria-label="{{ 'contact.form.close'|trans }}">&times;</button>
+      </div>
+      <p class="text-sm text-text-muted">{{ 'contact.form.intro'|trans }}</p>
+
+      <input type="hidden" name="_token" value="{{ csrf_token('contact') }}">
+      <input type="hidden" name="_redirect" value="{{ app.request.requestUri }}">
+      {# Honeypot: off-screen for humans, tempting to bots. A filled value is dropped server-side. #}
+      <div class="absolute h-px w-px -left-[9999px] overflow-hidden" aria-hidden="true">
+        <label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+      </div>
+
+      <label class="flex flex-col gap-1.5 text-sm">
+        <span class="text-text-muted">{{ 'contact.form.category'|trans }}</span>
+        <select name="category" required class="hx-select w-full">
+          <option value="bug">{{ 'contact.form.category_bug'|trans }}</option>
+          <option value="feedback">{{ 'contact.form.category_feedback'|trans }}</option>
+          <option value="review">{{ 'contact.form.category_review'|trans }}</option>
+          <option value="commercial">{{ 'contact.form.category_commercial'|trans }}</option>
+        </select>
+      </label>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="flex flex-col gap-1.5 text-sm">
+          <span class="text-text-muted">{{ 'contact.form.name'|trans }}</span>
+          <input type="text" name="name" maxlength="120" autocomplete="name" class="hx-input">
+        </label>
+        <label class="flex flex-col gap-1.5 text-sm">
+          <span class="text-text-muted">{{ 'contact.form.email'|trans }} *</span>
+          <input type="email" name="email" required maxlength="255" autocomplete="email" class="hx-input">
+        </label>
+      </div>
+
+      <label class="flex flex-col gap-1.5 text-sm">
+        <span class="text-text-muted">{{ 'contact.form.subject'|trans }}</span>
+        <input type="text" name="subject" maxlength="160" class="hx-input">
+      </label>
+
+      <label class="flex flex-col gap-1.5 text-sm">
+        <span class="text-text-muted">{{ 'contact.form.message'|trans }} *</span>
+        <textarea name="message" required minlength="10" maxlength="5000" rows="5" class="hx-input resize-y"></textarea>
+      </label>
+
+      <div class="flex items-center justify-end gap-3 pt-1">
+        <button type="button" class="hx-btn-ghost" data-contact-close>{{ 'contact.form.cancel'|trans }}</button>
+        <button type="submit" class="hx-btn-gold">{{ 'contact.form.submit'|trans }}</button>
+      </div>
+    </form>
+  </dialog>
 </footer>

@@ -18,11 +18,32 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 final class ChangelogReader
 {
+    /**
+     * Displayed when the manifest is missing/corrupt or carries no version —
+     * a degraded state that never occurs with the committed artifacts, kept
+     * only so the navbar badge never renders "v" with nothing after it.
+     */
+    private const string UNKNOWN_VERSION = '0.0.0';
+
     private readonly string $dir;
 
     public function __construct(#[Autowire('%kernel.project_dir%')] string $projectDir)
     {
         $this->dir = $projectDir . '/public/changelog';
+    }
+
+    /**
+     * The current application version: the newest manifest entry's version.
+     *
+     * The published changelog is the single source of truth for the release
+     * number surfaced across the UI (navbar, footer, /changelog) — releasing a
+     * new patch bumps the app version, with no parameter to keep in sync.
+     */
+    public function latestVersion(): string
+    {
+        $version = $this->manifest()[0]['version'] ?? null;
+
+        return \is_string($version) && $version !== '' ? $version : self::UNKNOWN_VERSION;
     }
 
     /**

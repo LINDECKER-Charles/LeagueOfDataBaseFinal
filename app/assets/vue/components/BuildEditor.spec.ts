@@ -35,7 +35,7 @@ const labels = {
     ghost: 'Unavailable on this patch',
     ghostMode: 'Not available in this game mode',
     counter: '%count% / %max%',
-    context: { title: 'Game context', version: 'Patch', mode: 'Game mode', modeHint: 'Availability follows the mode.' },
+    context: { title: 'Game context', version: 'Patch', mode: 'Game mode', modeHint: 'Availability follows the mode.', language: 'Authoring language' },
     dnd: {
         handle: 'Drag to reorder',
         movedStep: 'Step moved to position %position%',
@@ -44,7 +44,7 @@ const labels = {
         added: 'Item added to step %step%',
         cancelled: 'Move cancelled',
     },
-    champion: { title: 'Champion', search: 'Search…', empty: 'None.', selected: 'Chosen' },
+    champion: { title: 'Champion', search: 'Search…', empty: 'None.', selected: 'Chosen', open: 'Choose', close: 'Close' },
     runes: {
         title: 'Runes',
         primary: 'Primary',
@@ -67,6 +67,25 @@ const labels = {
         gold: 'Step cost',
         presets: ['Start'],
     },
+    armory: {
+        title: 'Armory',
+        addCta: 'Add item',
+        search: 'Search an item…',
+        empty: 'None.',
+        done: 'Done',
+        close: 'Close the armory',
+        added: '%count% added',
+        inStep: '%count% in this step',
+        full: 'Step full',
+        categories: {
+            all: 'All',
+            attack: 'Attack',
+            magic: 'Magic',
+            defense: 'Defense',
+            mobility: 'Mobility',
+            utility: 'Utility',
+        },
+    },
 }
 
 function mountEditor() {
@@ -86,6 +105,11 @@ function mountEditor() {
             gameModes: [
                 { value: 'sr', label: "Summoner's Rift" },
                 { value: 'aram', label: 'ARAM' },
+            ],
+            language: LANG,
+            languages: [
+                { value: 'en_US', label: 'English (US)' },
+                { value: 'fr_FR', label: 'French' },
             ],
             labels,
         },
@@ -156,5 +180,21 @@ describe('BuildEditor island', () => {
         const urls = fetchedUrls(fetchMock)
         expect(urls).toHaveLength(3)
         expect(urls.every((u) => u.includes(`version=${OLD_VERSION}`))).toBe(true)
+    })
+
+    it('exposes the authoring language as a real form field that never reloads catalogs', async () => {
+        const wrapper = mountEditor()
+        await flushPromises()
+        fetchMock.mockClear()
+
+        const language = wrapper.find('select[name="language"]')
+        expect((language.element as HTMLSelectElement).value).toBe(LANG)
+
+        await language.setValue('fr_FR')
+        await flushPromises()
+
+        expect((language.element as HTMLSelectElement).value).toBe('fr_FR')
+        // Authoring language is metadata, not a catalog axis: no refetch on change.
+        expect(fetchedUrls(fetchMock)).toHaveLength(0)
     })
 })

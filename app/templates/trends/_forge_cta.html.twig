@@ -1,0 +1,10 @@
+{# Auth-aware call to action for the trends page. A signed-in visitor is nudged
+   to forge a build — the very interaction that feeds this ranking; an anonymous
+   one is sent to sign-up first, because /builds/new gates on a verified account
+   and would otherwise bounce them through the login wall. Reuses the already
+   localized labels (empty_cta / nav.register), so no new catalog keys. #}
+{% if app.user %}
+  <a href="{{ path('app_build_new') }}" class="hx-btn-gold">{{ 'community.trends.empty_cta'|trans }}</a>
+{% else %}
+  <a href="{{ path('app_register') }}" class="hx-btn-gold">{{ 'nav.register'|trans }}</a>
+{% endif %}

@@ -5,6 +5,7 @@ namespace App\Tests\Unit\Support;
 
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\UnderscoreNamingStrategy;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 
@@ -28,6 +29,10 @@ final class InMemoryOrm
             [\dirname(__DIR__, 3) . '/src/Entity'],
             isDevMode: true,
         );
+        // Mirror the app's column naming (config/packages/doctrine.yaml) so tests
+        // exercise the real column names — otherwise attribute-declared indexes on
+        // e.g. `created_at` don't resolve against the default (camelCase) schema.
+        $config->setNamingStrategy(new UnderscoreNamingStrategy());
         $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true], $config);
         $entityManager = new EntityManager($connection, $config);
 
