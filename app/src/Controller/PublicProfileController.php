@@ -7,6 +7,7 @@ use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
 use App\Repository\UserRepository;
+use App\Service\Profile\ProfileVersionResolver;
 use App\Service\Profile\PublicProfileView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -28,6 +29,7 @@ final class PublicProfileController extends AbstractResourceController
         RequestStack $requestStack,
         private readonly UserRepository $users,
         private readonly PublicProfileView $view,
+        private readonly ProfileVersionResolver $profileVersion,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -48,6 +50,9 @@ final class PublicProfileController extends AbstractResourceController
         }
 
         ['version' => $version, 'lang' => $lang] = $this->pageContext->selection();
+        // Show the owner's curated patch, so their public card is stable
+        // regardless of the visitor's own browsing version.
+        $version = $this->profileVersion->effective($user, $version);
 
         return $this->render('profile/public.html.twig', [
             'client' => $this->clientData(),
