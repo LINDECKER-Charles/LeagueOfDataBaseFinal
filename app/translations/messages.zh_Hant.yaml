@@ -157,7 +157,7 @@ common:
   no_result:
     text: "找不到符合您搜尋條件的結果。"
     back: "← 返回"
-  detail : "查看詳情 →"
+  detail : "查看詳情"
 base:
   title: "League of Data Base"
   description: "League of Data Base 是一個由社群共同打造的平台，提供 League of Legends 的詳細資訊、數值與深度分析。快速、可靠，並隨時保持最新。"

@@ -157,7 +157,7 @@ common:
   no_result:
     text: "未找到与您的搜索匹配的结果。"
     back: "← 返回"
-  detail : "查看详情 →"
+  detail : "查看详情"
 base:
   title: "League of Data Base"
   description: "League of Data Base 是一个由社区驱动的平台，提供关于《League of Legends》的详细信息、数据与洞察。快速、可靠，且始终保持最新。"

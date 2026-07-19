@@ -17,6 +17,7 @@ use App\Service\Profile\FavoriteSelectionSanitizer;
 use App\Service\Profile\FavoriteSlot;
 use App\Service\Profile\FavoriteSlots;
 use App\Service\Profile\ProfilePresenter;
+use App\Service\Profile\ProfileVersionResolver;
 use App\Service\Profile\PublicProfileView;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -54,6 +55,7 @@ final class ProfileController extends AbstractResourceController
         private readonly EntityManagerInterface $entityManager,
         private readonly FavoriteSlots $favoriteSlots,
         private readonly FavoriteSelectionSanitizer $sanitizer,
+        private readonly ProfileVersionResolver $profileVersion,
         private readonly ChampionSkins $skins,
         private readonly PublicProfileView $publicView,
         private readonly ProfilePresenter $presenter,
@@ -71,6 +73,9 @@ final class ProfileController extends AbstractResourceController
     {
         $user = $this->currentUser();
         ['version' => $version, 'lang' => $lang] = $this->pageContext->selection();
+        // Favorites resolve at the pinned patch when set, so a favorite absent
+        // from the browsing version neither disappears nor gets wiped on save.
+        $version = $this->profileVersion->effective($user, $version);
         $skinBanner = $this->skins->resolveBanner($user->getFavoriteSkinId(), $version, $lang);
 
         return $this->render('profile/index.html.twig', [
@@ -85,6 +90,8 @@ final class ProfileController extends AbstractResourceController
             // the champion art, or null when no champion favorite is set.
             'personalBackground' => $this->skins->heroBackground(null, $user->getFavoriteChampionId()),
             'version' => $version,
+            'versions' => $this->versionManager->getVersions(),
+            'preferredVersion' => $user->getPreferredVersion(),
             'lang' => $lang,
             // OAuth-only accounts get the "set a password" panel.
             'passwordForm' => $user->hasPassword() ? null : $this->createForm(SetPasswordFormType::class),
@@ -96,6 +103,7 @@ final class ProfileController extends AbstractResourceController
     {
         $user = $this->currentUser();
         ['version' => $version, 'lang' => $lang] = $this->pageContext->selection();
+        $version = $this->profileVersion->effective($user, $version);
 
         // The owner sees their own public card verbatim — even while private —
         // rendered from the same builder the /u/{username} route uses.
@@ -120,10 +128,14 @@ final class ProfileController extends AbstractResourceController
 
         $user = $this->currentUser();
         ['version' => $version, 'lang' => $lang] = $this->pageContext->selection();
+        // Validate favorites against the pinned patch, not the volatile browsing
+        // one — otherwise a save from an old version would wipe a valid favorite.
+        $version = $this->profileVersion->effective($user, $version);
 
         try {
             $result = $this->sanitizer->sanitize(
                 $this->submittedFavorites($request),
+                $this->favoriteSlots->storedIds($user),
                 fn (FavoriteSlot $slot, string $id): bool => $this->favoriteSlots->resolve($slot, $id, $version, $lang) !== null,
             );
         } catch (\Throwable $e) {
@@ -154,6 +166,26 @@ final class ProfileController extends AbstractResourceController
         }
 
         $this->flashSaveOutcome($result['invalid'], $skin['invalid']);
+
+        return $this->redirectToRoute('app_profile', status: Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/profile/version', name: 'app_profile_version', methods: ['POST'])]
+    public function preferredVersion(Request $request): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
+            return $this->backToProfileWithError('profile.flash.csrf');
+        }
+
+        $user = $this->currentUser();
+        // Empty = clear the pin (follow the browsing version). A stale/unknown
+        // version is ignored rather than persisted, keeping resolution sound.
+        $selected = trim((string) $request->request->get('preferredVersion', ''));
+        $user->setPreferredVersion(
+            $selected !== '' && $this->versionManager->versionExists($selected) ? $selected : null,
+        );
+        $this->entityManager->flush();
+        $this->audit->log(AuditAction::ProfileUpdate, metadata: ['section' => 'preferred_version']);
 
         return $this->redirectToRoute('app_profile', status: Response::HTTP_SEE_OTHER);
     }

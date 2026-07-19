@@ -18,7 +18,7 @@
                     <p class="api-offer__name">{{ ('pack.' ~ pack.value)|trans({}, 'api') }}</p>
                     <p class="api-offer__price">{{ pack.priceCents // 100 }} €</p>
                     <p class="api-offer__detail">{{ 'portal.billing.requests_once'|trans({'%count%': pack.requests|number_format(0, '.', ' ')}, 'api') }}</p>
-                    <button type="submit" class="hx-btn mt-4 w-full">{{ 'portal.billing.buy'|trans({}, 'api') }}</button>
+                    <button type="submit" class="hx-btn-gold mt-4 w-full">{{ 'portal.billing.buy'|trans({}, 'api') }}</button>
                 </form>
             {% endfor %}
         </div>
@@ -37,7 +37,7 @@
                     <p class="api-offer__name">
                         {{ ('plan.' ~ plan.value)|trans({}, 'api') }}
                         {% if apiKey.plan.value == plan.value %}
-                            <span class="hx-chip">{{ 'portal.billing.current'|trans({}, 'api') }}</span>
+                            <span class="hx-chip-hex">{{ 'portal.billing.current'|trans({}, 'api') }}</span>
                         {% endif %}
                     </p>
                     <p class="api-offer__price">
@@ -45,7 +45,7 @@
                     </p>
                     <p class="api-offer__detail">{{ 'portal.billing.requests_month'|trans({'%count%': plan.monthlyQuota|number_format(0, '.', ' ')}, 'api') }}</p>
                     <p class="api-offer__detail">{{ 'portal.key.rate_unit'|trans({'%rate%': plan.rateLimitPerMin}, 'api') }}</p>
-                    <button type="submit" class="hx-btn mt-4 w-full"{{ apiKey.hasSubscription ? ' disabled' }}>
+                    <button type="submit" class="hx-btn-gold mt-4 w-full disabled:cursor-not-allowed disabled:opacity-40"{{ apiKey.hasSubscription ? ' disabled' }}>
                         {{ 'portal.billing.subscribe'|trans({}, 'api') }}
                     </button>
                 </form>

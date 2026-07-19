@@ -107,6 +107,14 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $favoriteSkinId = null;
 
+    /**
+     * Data Dragon patch the profile pins its favorites to, so a favorite never
+     * silently disappears (nor gets wiped on save) when the browsing version
+     * lacks it. Null = follow the current browsing version.
+     */
+    #[ORM\Column(length: 24, nullable: true)]
+    private ?string $preferredVersion = null;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -324,6 +332,18 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setFavoriteSkinId(?string $favoriteSkinId): static
     {
         $this->favoriteSkinId = $favoriteSkinId;
+
+        return $this;
+    }
+
+    public function getPreferredVersion(): ?string
+    {
+        return $this->preferredVersion;
+    }
+
+    public function setPreferredVersion(?string $preferredVersion): static
+    {
+        $this->preferredVersion = $preferredVersion;
 
         return $this;
     }

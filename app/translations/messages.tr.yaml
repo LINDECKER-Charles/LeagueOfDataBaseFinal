@@ -157,7 +157,7 @@ common:
   no_result:
     text: "Aramanız için sonuç bulunamadı."
     back: "← Geri"
-  detail : "Ayrıntıları gör →"
+  detail : "Ayrıntıları gör"
 base:
   title: "League of Data Base"
   description: "League of Data Base, League of Legends hakkında ayrıntılı bilgiler, istatistikler ve içgörüler sunan topluluk odaklı bir platformdur. Hızlı, güvenilir ve her zaman güncel."

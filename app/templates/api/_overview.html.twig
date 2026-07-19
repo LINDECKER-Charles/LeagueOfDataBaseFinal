@@ -6,7 +6,7 @@
 <section class="profile-panel" aria-labelledby="api-key-title">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 id="api-key-title" class="profile-panel__title">{{ 'portal.key.title'|trans({}, 'api') }}</h2>
-        <span class="hx-chip">{{ ('plan.' ~ apiKey.plan.value)|trans({}, 'api') }}</span>
+        <span class="hx-chip-hex">{{ ('plan.' ~ apiKey.plan.value)|trans({}, 'api') }}</span>
     </div>
 
     <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

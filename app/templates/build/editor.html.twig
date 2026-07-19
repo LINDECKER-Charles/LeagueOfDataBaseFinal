@@ -39,8 +39,8 @@
             <textarea id="build-description" name="description" rows="3" maxlength="2000"
                       class="hx-input mt-1.5">{{ values.description }}</textarea>
           </div>
-          <label class="flex items-start gap-2.5 text-sm text-text-muted">
-            <input type="checkbox" name="isPublic" class="hx-check mt-0.5" {{ values.isPublic ? 'checked' }}>
+          <label class="flex items-center gap-3 text-sm text-text-muted">
+            <input type="checkbox" name="isPublic" class="hx-switch" {{ values.isPublic ? 'checked' }}>
             <span>{{ 'build.editor.public'|trans }}</span>
           </label>
         </div>
@@ -128,7 +128,7 @@
 
       <div class="flex flex-wrap items-center justify-end gap-3">
         <a href="{{ path('app_builds') }}" class="hx-btn-ghost">{{ 'build.editor.back'|trans }}</a>
-        <button type="submit" class="hx-btn">
+        <button type="submit" class="hx-btn-gold">
           {{ (isEdit ? 'build.editor.submit_update' : 'build.editor.submit_create')|trans }}
         </button>
       </div>

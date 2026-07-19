@@ -33,15 +33,17 @@
 
     <div id="rune-grid" class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for runeTree in runesReforgeds %}
+        {# No facet here: one tree per card would make each its own tag (degenerate).
+           Search stays via filter_text; the tree icon is the circular "focus" glyph. #}
         {% embed 'components/entity_card.html.twig' with {
           href: resource_path('app_rune', { name: runeTree.key }, meta.version, meta.lang),
           img: images[runeTree.key].icon ?? null,
           name: runeTree.name,
           sub: runeTree.key,
           img_scale: 0.72,
+          img_round: true,
           footer_label: 'common.detail'|trans,
-          filter_text: (runeTree.name ~ ' ' ~ runeTree.key)|lower,
-          filter_tags: [runeTree.name]
+          filter_text: (runeTree.name ~ ' ' ~ runeTree.key)|lower
         } %}
           {% block card_body %}
             {% set slot0 = runeTree.slots[0].runes ?? [] %}
