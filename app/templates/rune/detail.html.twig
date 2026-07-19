@@ -21,7 +21,7 @@
 {% block structured_data %}
   {{ seo_jsonld(seo_breadcrumbs([
     { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
-    { name: 'header.navigation.runes'|trans, url: seo_absolute(path('app_runes')) },
+    { name: 'header.navigation.runes'|trans, url: seo_absolute(resource_path('app_runes', {}, version|default(''), '')) },
     { name: rune.name ?? '', url: seo_canonical() }
   ])) }}
   {{ seo_jsonld(seo_game_item(
@@ -143,7 +143,7 @@
     {% include 'components/detail_pager.html.twig' with {
       nav: nav|default({ prev: null, next: null }),
       route: 'app_rune',
-      list_href: path('app_runes', { version: selectedVersion, lang: selectedLocale }),
+      list_href: resource_path('app_runes', {}, selectedVersion, selectedLocale),
       version: selectedVersion,
       lang: selectedLocale
     } %}

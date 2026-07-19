@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service\Client;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -56,6 +57,9 @@ final class PageContextResolver
         '/summoners' => ['type' => 'summoner',      'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE, 'maxPerPage' => 0],
     ];
 
+    /** @var array{version:string, lang:string}|null per-request memo of {@see selection} */
+    private ?array $selection = null;
+
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly ClientManager $clientManager,
@@ -76,6 +80,9 @@ final class PageContextResolver
      */
     public function loaderSteps(string $path, ?int $page = null, ?int $perPage = null): array
     {
+        // A versioned list path (/{version}/champions) warms the same image batch
+        // as its clean form — drop the leading version segment before matching.
+        $path = preg_replace('#^/' . VersionManager::VERSION_PATTERN . '(?=/)#', '', $path) ?? $path;
         $p = strtolower(rtrim($path, '/')) ?: '/';
 
         if ($p === '/') {
@@ -103,25 +110,64 @@ final class PageContextResolver
     }
 
     /**
-     * Version + language for the current request: valid query params win
-     * (shareable/cacheable URLs), otherwise the session selection.
+     * Version + language for the current request. Version and language resolve
+     * independently so a `/{version}/…` path (or a bare `?version=`) selects the
+     * patch while the language still falls back to the session — a versioned URL
+     * is language-invariant, its content lang is the visitor's own.
+     *
+     * Version precedence: route path segment (`/{version}/…`) > `?version=` query
+     * > session. Language precedence: `?lang=` query > session. Never redirects.
      *
      * @return array{version:string, lang:string}
      */
     public function selection(): array
     {
-        $query   = $this->requestStack->getCurrentRequest()?->query;
-        $version = trim((string) ($query?->get('version') ?? ''));
-        $lang    = trim((string) ($query?->get('lang') ?? ''));
+        // Memoised: controllers, the header and the bottom-nav all read the same
+        // selection within a request — resolve (and its session read) once.
+        return $this->selection ??= $this->resolveSelection();
+    }
 
-        if ($version !== '' && $lang !== ''
-            && $this->versionManager->versionExists($version)
-            && $this->versionManager->languageExists($lang)
-        ) {
+    /** @return array{version:string, lang:string} */
+    private function resolveSelection(): array
+    {
+        $request = $this->requestStack->getCurrentRequest();
+
+        $version = $this->requestVersion($request);
+        $lang    = $this->requestLang($request);
+
+        if ($version !== '' && $lang !== '') {
             return ['version' => $version, 'lang' => $lang];
         }
 
-        // Already defaulted to latest version + default locale when unset.
-        return $this->clientManager->getSession();
+        // Session already defaults to latest version + default locale when unset;
+        // only touched when the request under-specifies (keeps shareable URLs
+        // session-free).
+        $session = $this->clientManager->getSession();
+
+        return [
+            'version' => $version !== '' ? $version : $session['version'],
+            'lang'    => $lang !== '' ? $lang : $session['lang'],
+        ];
+    }
+
+    /** Valid version from the route path segment, else the query — '' when neither applies. */
+    private function requestVersion(?Request $request): string
+    {
+        foreach ([$request?->attributes->get('version'), $request?->query->get('version')] as $candidate) {
+            $candidate = trim((string) ($candidate ?? ''));
+            if ($candidate !== '' && $this->versionManager->versionExists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return '';
+    }
+
+    /** Valid language from the query — '' when absent or unknown. */
+    private function requestLang(?Request $request): string
+    {
+        $lang = trim((string) ($request?->query->get('lang') ?? ''));
+
+        return $lang !== '' && $this->versionManager->languageExists($lang) ? $lang : '';
     }
 }

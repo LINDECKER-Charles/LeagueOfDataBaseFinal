@@ -1,55 +1,42 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Service\Tools;
 
+use App\Service\Client\VersionManager;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-class UrlGenerator {
+final class UrlGenerator
+{
+    /**
+     * Paths on which a version/lang change must not rewrite the URL — there is no
+     * resource to re-render (the selection only lands in the session/cookie).
+     */
+    private const SELECTION_INERT_PATHS = ['/working-progress'];
 
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly UrlGeneratorInterface $router,
     ) {}
 
-    
     /**
-     * Génère une URL de retour (backurl) en se basant sur l'en-tête HTTP "referer".
-     *
-     * Comportement :
-     * 1. Si la requête courante est absente → retourne la route de fallback.
-     * 2. Si aucun "referer" n'est présent dans les en-têtes → retourne la route de fallback.
-     * 3. Si l'option $sameHostOnly est activée, vérifie que le referer partage le même host :
-     *    - si ce n'est pas le cas → retourne la route de fallback.
-     * 4. Dans tous les autres cas → retourne l'URL du referer tel quel.
-     *
-     * @param string $fallbackRoute   Nom de la route Symfony à utiliser comme URL de secours
-     *                                si aucune URL valide ne peut être générée (par défaut "app_home").
-     * @param array  $fallbackParams  Paramètres éventuels à passer à la route de fallback.
-     * @param bool   $sameHostOnly    Si `true`, n'autorise que des referers provenant du même host
-     *                                que la requête courante (sécurité contre redirection externe).
-     *
-     * @return string L'URL de retour (soit le referer, soit l'URL générée de fallback).
-     *
-     * @see \Symfony\Component\HttpFoundation\Request::headers
-     * @see \Symfony\Component\Routing\RouterInterface::generate()
+     * Back-URL from the HTTP "referer", falling back to a route when it is absent
+     * or (optionally) cross-host — the guard against an open redirect.
      */
     public function generateBackurl(
         string $fallbackRoute = 'app_home',
         array $fallbackParams = [],
-        bool $sameHostOnly = true
-    ) {
-        // On récupère la requête
+        bool $sameHostOnly = true,
+    ): string {
         $request = $this->requestStack->getCurrentRequest();
 
-        // On génère la route de fallback en cas d'erreur
         $fallback = $this->router->generate($fallbackRoute, $fallbackParams);
         if (!$request) {
             return $fallback;
         }
 
         $referer = (string) ($request->headers->get('referer') ?? '');
-
         if ($referer === '') {
             return $fallback;
         }
@@ -64,57 +51,46 @@ class UrlGenerator {
         return $referer;
     }
 
-
     /**
-     * 2) Réécrit l'URL en remplaçant/supprimant des query params,
-     *    sauf si le path fait partie d’une liste de "skip".
+     * Rewrite a back-URL so it renders under a new (version, lang) selection.
      *
-     * @param string $url          URL initiale
-     * @param array  $overrides    ['version' => '15.1.1', 'lang' => 'fr_FR'] (valeur null => suppression)
-     * @param array  $removeKeys   ['foo','bar'] : clés à supprimer avant overrides
-     * @param array  $skipPaths    ['/working-progress'] : ne rien toucher si path ∈ liste
+     * The version's home depends on the URL shape and MUST match
+     * {@see \App\Service\Client\PageContextResolver} precedence
+     * (path segment > ?version= > session):
+     *  - versioned path (`/{version}/champion/…`) → swap the leading segment, so the
+     *    new version actually wins. Writing it only to `?version=` would leave the
+     *    old path segment in place and shadow it — the exact bug this handles.
+     *  - any other path → the version rides the query (`?version=`).
+     * The language is never a path segment, so it always rides the query (`?lang=`).
+     * Existing unrelated query params and the fragment are preserved.
      */
-    public function rewriteQueryParams(
-        string $url,
-        array $overrides = [],
-        array $removeKeys = [],
-        array $skipPaths = ['/working-progress']
-    ): string {
-        // Décompose (compat: query & fragment)
-        $path   = parse_url($url, PHP_URL_PATH)   ?? '/';
-        $query  = parse_url($url, PHP_URL_QUERY)  ?? '';
-        $frag   = parse_url($url, PHP_URL_FRAGMENT);
+    public function applySelection(string $url, string $version, string $lang): string
+    {
+        $path     = parse_url($url, PHP_URL_PATH) ?: '/';
+        $query    = (string) (parse_url($url, PHP_URL_QUERY) ?: '');
+        $fragment = parse_url($url, PHP_URL_FRAGMENT);
 
-        // Si on est sur un path à ignorer, on ressort tel quel
-        if (in_array($path, $skipPaths, true)) {
+        if (in_array($path, self::SELECTION_INERT_PATHS, true)) {
             return $url;
         }
 
-        // Query existante -> tableau
-        $queryParams = [];
-        if ($query !== '') {
-            parse_str($query, $queryParams);
-        }
+        parse_str($query, $params);
+        unset($params['version'], $params['lang']); // re-derived below
 
-        // Supprime d'abord les clés demandées
-        foreach ($removeKeys as $k) {
-            unset($queryParams[$k]);
+        $versionedSegment = '#^/'.VersionManager::VERSION_PATTERN.'(?=/)#';
+        if (preg_match($versionedSegment, $path) === 1) {
+            $path = (string) preg_replace($versionedSegment, '/'.$version, $path, 1);
+        } else {
+            $params['version'] = $version; // no path segment to own it
         }
+        $params['lang'] = $lang;
 
-        // Applique les overrides (null => suppression)
-        foreach ($overrides as $k => $v) {
-            if ($v === null) {
-                unset($queryParams[$k]);
-            } else {
-                $queryParams[$k] = $v;
-            }
+        $newUrl = $path;
+        if ($params !== []) {
+            $newUrl .= '?'.http_build_query($params);
         }
-
-        // Reconstruit query & URL finale (préserve #fragment)
-        $newQuery = http_build_query($queryParams);
-        $newUrl   = $path . ($newQuery !== '' ? '?' . $newQuery : '');
-        if ($frag !== null && $frag !== '') {
-            $newUrl .= '#' . $frag;
+        if (is_string($fragment) && $fragment !== '') {
+            $newUrl .= '#'.$fragment;
         }
 
         return $newUrl;

@@ -1,4 +1,5 @@
-<?php 
+<?php
+declare(strict_types=1);
 
 namespace App\Service\API;
 
@@ -41,22 +42,6 @@ interface CategoriesInterface{
      */
     public function searchByName(string $name, string $version, string $lang, int $max = 0): array;
     /**
-     * Récupère l'image associée à une ressource du Data Dragon (champion, sort, objet, etc.).
-     *
-     * Cette méthode est abstraite : chaque Manager concret (ex: SummonerManager, ItemManager)
-     * doit implémenter sa propre logique pour construire le chemin et télécharger/charger l'image.
-     *
-     * @param string $name   Nom ou identifiant de la ressource (ex. "SummonerFlash", "InfinityEdge").
-     * @param string $version Version du jeu à utiliser (ex. "15.1.1").
-     * @param array  $dir     Chemin(s) de répertoires personnalisés pour stocker l'image localement.
-     *                        Si vide, un chemin par défaut sera utilisé.
-     * @param bool   $force   Si true, force le téléchargement même si l'image existe déjà en cache.
-     * @param string $lang    Langue à utiliser (ex. "fr_FR"). Peut être ignorée si non pertinente pour l'image.
-     *
-     * @return string Chemin absolu ou relatif de l'image disponible localement.
-     */
-    public function getImage(string $name, string $version, array $dir = [], bool $force = false, string $lang = ''):string;
-    /**
      * Récupère l'ensemble des images liées à une ressource (ex. les invocations).
      *
      * Chaque Manager concret doit implémenter sa propre logique pour déterminer
@@ -73,6 +58,19 @@ interface CategoriesInterface{
      *               Valeur = chemin vers l'image correspondante.
      */
     public function getImages(string $version, string $lang, bool $force = false, array $data = []): array;
+    /**
+     * Résout l'image unique d'une ressource (pages détail) vers son chemin CDN, de
+     * façon synchrone.
+     *
+     * @param string $version Version du jeu (ex. "15.1.1").
+     * @param string $name    Nom de fichier de l'image (ex. "Aatrox.png").
+     * @param bool   $force   Si true, ignore le manifeste et re-télécharge l'image.
+     *
+     * @return string Chemin CDN de l'image résolue.
+     *
+     * @throws \RuntimeException Si l'image est indisponible upstream.
+     */
+    public function getImage(string $version, string $name, bool $force = false): string;
     /**
      * Paginateur générique pour une ressource (ex. Summoner Spells, Items, Champions).
      *

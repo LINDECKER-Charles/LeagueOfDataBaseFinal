@@ -29,6 +29,7 @@ final class SummonerController extends AbstractResourceController
      * depuis la query (URL cacheable), sinon la sélection en session — sans redirect.
      */
     #[Route('/summoners', name: 'app_summoners', methods: ['GET'])]
+    #[Route('/{version}/summoners', name: 'app_summoners_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function summoners(): Response
     {
         // Full list in one render — the ResourceFilter island owns search, tag
@@ -56,6 +57,7 @@ final class SummonerController extends AbstractResourceController
      * Détail d'un sort d'invocateur. Version/langue résolues depuis la query, sinon la session.
      */
     #[Route('/summoner/{name}', name: 'app_summoner', methods: ['GET'])]
+    #[Route('/{version}/summoner/{name}', name: 'app_summoner_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function summoner(string $name): Response
     {
         $sel = $this->pageContext->selection();
@@ -64,7 +66,7 @@ final class SummonerController extends AbstractResourceController
             // Lookup first: an unknown slug must 404 from the dataset alone,
             // without ever asking the CDN for an image that cannot exist.
             $summoner = $this->summoners->getByName($name, $sel['version'], $sel['lang']);
-            $image    = $this->summoners->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
+            $image    = $this->summoners->getImage($sel['version'], $name . '.png');
         } catch (\Throwable $e) {
             return $this->detailFailure($sel, $e);
         }

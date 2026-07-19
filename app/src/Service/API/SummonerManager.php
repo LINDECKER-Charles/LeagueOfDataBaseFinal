@@ -14,7 +14,7 @@ final class SummonerManager extends AbstractManager implements CategoriesInterfa
 
     public function getByName(string $name, string $version, string $lang): array
     {
-        $data = $this->getData($version, $lang)['data'] ?? [];
+        $data = $this->dataMap($version, $lang);
         foreach ($data as $d) {
             if (isset($d['id']) && $d['id'] === $name) {
                 return $d;
@@ -26,9 +26,7 @@ final class SummonerManager extends AbstractManager implements CategoriesInterfa
 
     public function searchByName(string $name, string $version, string $lang, int $max = 0): array
     {
-        if (mb_strlen($name) < 2 || mb_strlen($name) > 50) {
-            throw new \InvalidArgumentException('Nom invalide.');
-        }
+        $this->assertSearchable($name);
 
         $data = $this->getData($version, $lang)['data'] ?? [];
         if (!is_array($data)) {
@@ -49,11 +47,6 @@ final class SummonerManager extends AbstractManager implements CategoriesInterfa
         }
 
         return $results;
-    }
-
-    protected function dataList(array $raw): array
-    {
-        return array_values($raw['data'] ?? []);
     }
 
     protected function imageEntries(array $data): array
@@ -86,16 +79,5 @@ final class SummonerManager extends AbstractManager implements CategoriesInterfa
         }
 
         return $result;
-    }
-
-    public function getImage(string $name, string $version, array $dir = [], bool $force = false, string $lang = ''): string
-    {
-        return $this->resolveImage($version, $name, $force);
-    }
-
-    /** Les sorts d'invocateur sont peu nombreux (~16) et affichés en entier — pas de plafond. */
-    protected function perPageCap(): int
-    {
-        return PHP_INT_MAX;
     }
 }

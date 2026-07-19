@@ -1,0 +1,10 @@
+# Flex recipe route that was never installed: the vite profiler collector
+# (@PentatrionVite/Collector/vite_collector.html.twig) links to `_profiler_vite`,
+# so without this route every dev web-debug-toolbar (/_wdt/{token}) render 500s.
+# Dev-only. The `/build` dev proxy route from the recipe is intentionally omitted:
+# assets are pre-built (entrypoints.json) and served statically by nginx.
+when@dev:
+    _profiler_vite:
+        path: /_profiler/vite
+        defaults:
+            _controller: Pentatrion\ViteBundle\Controller\ProfilerController::info

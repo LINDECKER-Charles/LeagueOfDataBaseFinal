@@ -64,6 +64,24 @@ export function useVideoPlayback(): VideoPlayback {
         if (videoEl.value) videoEl.value.muted = isMuted.value
     }
 
+    // A playing preview must not keep blaring from a backgrounded tab. Pause on
+    // hide; resume on return only when it was actually playing, never overriding
+    // a manual pause. play()/pause() fire the @play/@pause handlers, so isPaused
+    // and the progress loop stay consistent.
+    let resumeOnVisible = false
+    const onVisibilityChange = (): void => {
+        const video = videoEl.value
+        if (!video) return
+        if (document.hidden) {
+            resumeOnVisible = !video.paused
+            if (resumeOnVisible) video.pause()
+        } else if (resumeOnVisible) {
+            resumeOnVisible = false
+            void video.play()
+        }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
     watch(videoEl, (el, prev) => {
         // Keyed swap detaches the old element; pausing it guarantees its looping
         // audio stops immediately when moving to another spell.
@@ -76,7 +94,13 @@ export function useVideoPlayback(): VideoPlayback {
         if (el) el.muted = isMuted.value
     })
 
-    onBeforeUnmount(() => cancelAnimationFrame(rafId))
+    onBeforeUnmount(() => {
+        cancelAnimationFrame(rafId)
+        document.removeEventListener('visibilitychange', onVisibilityChange)
+        // Stop the audio on teardown (Turbo navigation unmounts the island): a
+        // detached <video> can keep playing until GC in Chrome.
+        videoEl.value?.pause()
+    })
 
     return { videoEl, isPaused, isMuted, progress, toggle, toggleMute, onPlay, onPause }
 }

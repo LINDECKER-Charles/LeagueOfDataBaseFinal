@@ -22,6 +22,12 @@ use Symfony\Component\HttpFoundation\Response;
  */
 abstract class AbstractResourceController extends AbstractController
 {
+    /**
+     * Route requirement for the `/{version}/...` resource routes so a clean first
+     * segment (`champion`, `objects`, …) never collides with the versioned form.
+     */
+    public const VERSION_ROUTE_REQUIREMENT = VersionManager::VERSION_PATTERN;
+
     public function __construct(
         protected readonly VersionManager $versionManager,
         protected readonly ClientManager $clientManager,

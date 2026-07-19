@@ -29,6 +29,7 @@ final class ItemController extends AbstractResourceController
      * partageable + cacheable), sinon de la sélection en session — sans redirect.
      */
     #[Route('/objects', name: 'app_items', methods: ['GET'])]
+    #[Route('/{version}/objects', name: 'app_items_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function objects(): Response
     {
         // Full list in one render — the ResourceFilter island owns search, tag
@@ -61,6 +62,7 @@ final class ItemController extends AbstractResourceController
      * Détail d'un objet. Version/langue résolues depuis la query, sinon la session.
      */
     #[Route('/object/{name}', name: 'app_item', methods: ['GET'])]
+    #[Route('/{version}/object/{name}', name: 'app_item_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function object(string $name): Response
     {
         $sel = $this->pageContext->selection();
@@ -69,7 +71,7 @@ final class ItemController extends AbstractResourceController
             // Lookup first: an unknown slug must 404 from the dataset alone,
             // without ever asking the CDN for an image that cannot exist.
             $item  = $this->itemManager->getByName($name, $sel['version'], $sel['lang']);
-            $image = $this->itemManager->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
+            $image = $this->itemManager->getImage($sel['version'], $name . '.png');
             // Les IDs de item.into / item.from ne parlent pas au joueur : on les
             // résout en objets réels (nom + image + prix) liables vers leur page
             // détail. `components` (from) + cet objet + `related` (into) forment

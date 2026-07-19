@@ -8,6 +8,7 @@ use App\Service\Seo\OgLocale;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -27,10 +28,14 @@ final class SeoExtension extends AbstractExtension
 
     private const TITLE_SEPARATOR = ' — ';
 
+    /** Suffix marking the `/{version}/…` variant of a resource route. */
+    private const VERSIONED_SUFFIX = '_versioned';
+
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly JsonLdBuilder $jsonLd,
         private readonly OgLocale $ogLocale,
+        private readonly TranslatorInterface $translator,
         #[Autowire('%legal.site_name%')]
         private readonly string $siteName,
     ) {}
@@ -88,12 +93,34 @@ final class SeoExtension extends AbstractExtension
         return $this->ogLocale->fromUiLocale($locale ?? '');
     }
 
-    /** "{page} — {site}" title pattern; an empty page title yields the bare site name. */
+    /**
+     * "{page} — {site}" title pattern; an empty page title yields the bare site
+     * name. On a `/{version}/…` render the patch is woven into the page title so
+     * historical snapshots never share a title with the latest page (or each
+     * other) — the differentiator that keeps them out of a duplicate cluster.
+     */
     public function title(string $pageTitle): string
     {
         $pageTitle = trim($pageTitle);
 
+        $version = $this->versionedRouteVersion();
+        if ($version !== '') {
+            $suffix    = $this->translator->trans('versioned_suffix', ['%version%' => $version], 'seo');
+            $pageTitle = $pageTitle === '' ? $suffix : $pageTitle . ' ' . $suffix;
+        }
+
         return $pageTitle === '' ? $this->siteName : $pageTitle . self::TITLE_SEPARATOR . $this->siteName;
+    }
+
+    /** Version carried by a versioned resource route, else '' (clean/non-resource page). */
+    private function versionedRouteVersion(): string
+    {
+        $request = $this->request();
+        if ($request === null || !str_ends_with((string) $request->attributes->get('_route'), self::VERSIONED_SUFFIX)) {
+            return '';
+        }
+
+        return (string) $request->attributes->get('version', '');
     }
 
     /** @param array<string,mixed> $data */

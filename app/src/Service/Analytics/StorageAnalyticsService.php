@@ -28,6 +28,11 @@ final class StorageAnalyticsService
     private const LARGEST_LIMIT = 15;
     private const SOURCE_EXTS = ['png', 'jpg', 'jpeg', 'gif'];
 
+    // Top-level storage families (first path segment of every content-addressed key).
+    private const FAMILY_BLOBS = 'blobs';
+    private const FAMILY_DATA = 'data';
+    private const FAMILY_MANIFEST = 'manifest';
+
     public function __construct(
         private readonly FilesystemOperator $ddragonStorage,
         #[Autowire(service: 'ddragon.cache')]
@@ -78,9 +83,9 @@ final class StorageAnalyticsService
         $this->trackTimeline($acc, $file, $bytes);
 
         match ($family) {
-            'blobs' => $this->consumeBlob($acc, $path, $bytes),
-            'data' => $this->consumeData($acc, $path, $bytes),
-            'manifest' => $this->consumeManifest($acc, $path, $bytes),
+            self::FAMILY_BLOBS => $this->consumeBlob($acc, $path, $bytes),
+            self::FAMILY_DATA => $this->consumeData($acc, $path, $bytes),
+            self::FAMILY_MANIFEST => $this->consumeManifest($acc, $path, $bytes),
             default => null,
         };
     }
@@ -211,8 +216,8 @@ final class StorageAnalyticsService
     private function dedupSection(array $acc): array
     {
         $logical = $acc['logicalRefs'];
-        $physical = $acc['families']['blobs']['objects'] ?? 0;
-        $avgBlob = $physical > 0 ? (int) (($acc['families']['blobs']['bytes'] ?? 0) / $physical) : 0;
+        $physical = $acc['families'][self::FAMILY_BLOBS]['objects'] ?? 0;
+        $avgBlob = $physical > 0 ? (int) (($acc['families'][self::FAMILY_BLOBS]['bytes'] ?? 0) / $physical) : 0;
 
         return [
             'logicalRefs' => $logical,

@@ -28,6 +28,7 @@ final class RuneController extends AbstractResourceController
      * cacheable), sinon la sélection en session — sans redirect.
      */
     #[Route('/runes', name: 'app_runes', methods: ['GET'])]
+    #[Route('/{version}/runes', name: 'app_runes_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function runes(): Response
     {
         // Full list in one render — the ResourceFilter island owns search and
@@ -55,12 +56,15 @@ final class RuneController extends AbstractResourceController
      * Détail d'un arbre de runes. Version/langue résolues depuis la query, sinon la session.
      */
     #[Route('/rune/{name}', name: 'app_rune', methods: ['GET'])]
+    #[Route('/{version}/rune/{name}', name: 'app_rune_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function rune(string $name): Response
     {
         $sel = $this->pageContext->selection();
 
         try {
             $rune   = $this->runeManager->getByName($name, $sel['version'], $sel['lang']);
+            // Detail render resolves images synchronously by default (only the list
+            // opts into deferral), so a cold version paints real icons, not placeholders.
             $images = $this->runeManager->getImages($sel['version'], $sel['lang'], false, [$rune]);
         } catch (\Throwable $e) {
             return $this->detailFailure($sel, $e);

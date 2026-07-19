@@ -1,3 +1,4 @@
+versioned_suffix: "(патч %version%)"
 home:
   title: "League Of Data Base — энциклопедия League of Legends"
   description: "Чемпионы, предметы, руны и заклинания призывателя League of Legends для патча %version% — характеристики, умения и подробности на 21 языке."

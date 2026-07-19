@@ -14,6 +14,11 @@ final class ClientManager
     private const K_VERSION = 'dd_version';
     private const REMEMBER_NAME  = 'lod_prefs'; // nom du cookie
 
+    // HMAC key of last resort when %kernel.secret% is empty. Signing and
+    // verification MUST use the same value — hence a single constant, never a
+    // repeated literal (a divergence would make emitted signatures unverifiable).
+    private const HMAC_FALLBACK_SECRET = 'fallback-secret';
+
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly VersionManager $versionManager,
@@ -128,7 +133,7 @@ final class ClientManager
     {
         $payload = ['l' => $locale, 'v' => $version];
         $json    = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $sig     = hash_hmac('sha256', $json, $this->appSecret ?: 'fallback-secret');
+        $sig     = hash_hmac('sha256', $json, $this->appSecret ?: self::HMAC_FALLBACK_SECRET);
         $value   = base64_encode($json).'|'.$sig;
 
         $expire = time() + ($days * 86400);
@@ -226,7 +231,7 @@ final class ClientManager
             return null;
         }
 
-        $expected = hash_hmac('sha256', $json, $this->appSecret ?: 'fallback-secret');
+        $expected = hash_hmac('sha256', $json, $this->appSecret ?: self::HMAC_FALLBACK_SECRET);
         if (!hash_equals($expected, $sig)) {
             return null; // cookie altéré → on ignore
         }

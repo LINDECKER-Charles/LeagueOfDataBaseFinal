@@ -14,7 +14,7 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
 
     public function getByName(string $name, string $version, string $lang): array
     {
-        $data = $this->getData($version, $lang)['data'] ?? [];
+        $data = $this->dataMap($version, $lang);
         if (isset($data[$name])) {
             return $data[$name];
         }
@@ -176,9 +176,7 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
 
     public function searchByName(string $name, string $version, string $lang, int $max = 0): array
     {
-        if (mb_strlen($name) < 2 || mb_strlen($name) > 50) {
-            throw new \InvalidArgumentException('Nom invalide.');
-        }
+        $this->assertSearchable($name);
 
         $data = $this->getData($version, $lang)['data'] ?? [];
         if (!is_array($data)) {
@@ -199,23 +197,6 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
         return $results;
     }
 
-    protected function dataList(array $raw): array
-    {
-        return array_values($raw['data'] ?? []);
-    }
-
-    protected function imageEntries(array $data): array
-    {
-        $entries = [];
-        foreach ($data as $d) {
-            if (($name = $d['name'] ?? null) && ($img = $d['image']['full'] ?? null)) {
-                $entries[$img] = $name;
-            }
-        }
-
-        return $entries;
-    }
-
     public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
     {
         if (!$data) {
@@ -234,16 +215,5 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
         }
 
         return $result;
-    }
-
-    public function getImage(string $name, string $version, array $dir = [], bool $force = false, string $lang = ''): string
-    {
-        return $this->resolveImage($version, $name, $force);
-    }
-
-    /** Liste rendue en entier (filtrage/pagination côté client) — pas de plafond serveur. */
-    protected function perPageCap(): int
-    {
-        return PHP_INT_MAX;
     }
 }

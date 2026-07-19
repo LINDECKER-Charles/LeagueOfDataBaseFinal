@@ -29,6 +29,7 @@ final class ChampionController extends AbstractResourceController
      * sinon la sélection en session — sans redirect.
      */
     #[Route('/champions', name: 'app_champions', methods: ['GET'])]
+    #[Route('/{version}/champions', name: 'app_champions_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function champions(): Response
     {
         // Full list in one render — the ResourceFilter island owns search, tag
@@ -56,6 +57,7 @@ final class ChampionController extends AbstractResourceController
      * Détail d'un champion. Version/langue résolues depuis la query, sinon la session.
      */
     #[Route('/champion/{name}', name: 'app_champion', methods: ['GET'])]
+    #[Route('/{version}/champion/{name}', name: 'app_champion_versioned', requirements: ['version' => AbstractResourceController::VERSION_ROUTE_REQUIREMENT], methods: ['GET'])]
     public function champion(string $name): Response
     {
         $sel = $this->pageContext->selection();
@@ -64,7 +66,7 @@ final class ChampionController extends AbstractResourceController
             // Lookup first: an unknown slug must 404 from the dataset alone,
             // without ever asking the CDN for an image that cannot exist.
             $champion = $this->championManager->getByName($name, $sel['version'], $sel['lang']);
-            $image    = $this->championManager->getImage($name . '.png', $sel['version'], [], false, $sel['lang']);
+            $image    = $this->championManager->getImage($sel['version'], $name . '.png');
         } catch (\Throwable $e) {
             return $this->detailFailure($sel, $e);
         }

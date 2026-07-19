@@ -15,14 +15,14 @@
     {# Navigation #}
     <div>
       <h3 class="eyebrow mb-3">{{ 'footer.navigation.title'|trans }}</h3>
-      {% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
+      {% set navVersion = app.request.attributes.get('version') ?: (client.session.version ?? (client.versions|default([])|first)) %}
       {% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
       <ul class="flex flex-col gap-1.5 text-sm">
         <li><a href="{{ path('app_home') }}" class="nav-link">{{ 'footer.navigation.home'|trans }}</a></li>
-        <li><a href="{{ path('app_champions', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.champion'|trans }}</a></li>
-        <li><a href="{{ path('app_items', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.item'|trans }}</a></li>
-        <li><a href="{{ path('app_runes', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.runes'|trans }}</a></li>
-        <li><a href="{{ path('app_summoners', {version: navVersion, lang: navLang}) }}" class="nav-link">{{ 'footer.navigation.summoner'|trans }}</a></li>
+        <li><a href="{{ resource_path('app_champions', {}, navVersion, navLang) }}" class="nav-link">{{ 'footer.navigation.champion'|trans }}</a></li>
+        <li><a href="{{ resource_path('app_items', {}, navVersion, navLang) }}" class="nav-link">{{ 'footer.navigation.item'|trans }}</a></li>
+        <li><a href="{{ resource_path('app_runes', {}, navVersion, navLang) }}" class="nav-link">{{ 'footer.navigation.runes'|trans }}</a></li>
+        <li><a href="{{ resource_path('app_summoners', {}, navVersion, navLang) }}" class="nav-link">{{ 'footer.navigation.summoner'|trans }}</a></li>
         <li><a href="{{ path('app_donate') }}" class="nav-link">{{ 'nav.donate'|trans }}</a></li>
         <li><a href="{{ path('app_developers') }}" class="nav-link">{{ 'nav.developers'|trans({}, 'api') }}</a></li>
         {% if app.user %}

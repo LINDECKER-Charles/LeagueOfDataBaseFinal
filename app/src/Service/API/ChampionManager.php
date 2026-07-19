@@ -151,22 +151,10 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
                 continue;
             }
 
-            $entries = [];
-            foreach ($chromas as $c) {
-                $path = $c['chromaPath'] ?? null;
-                if (!is_string($path) || $path === '') {
-                    continue;
-                }
-                $entries[] = [
-                    'id'     => (int) ($c['id'] ?? 0),
-                    'name'   => (string) ($c['name'] ?? ''),
-                    'colors' => array_values(array_filter(
-                        (array) ($c['colors'] ?? []),
-                        static fn ($v): bool => is_string($v) && $v !== '',
-                    )),
-                    'image'  => $this->cdragonAssetUrl($path, $patch),
-                ];
-            }
+            $entries = array_values(array_filter(array_map(
+                fn ($c): ?array => is_array($c) ? $this->mapChroma($c, $patch) : null,
+                $chromas,
+            )));
 
             if ($entries !== []) {
                 $out[(string) $skinId] = $entries;
@@ -174,6 +162,28 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
         }
 
         return $out;
+    }
+
+    /**
+     * @param array<mixed> $c a CommunityDragon chroma node
+     * @return ?array{id:int, name:string, colors:list<string>, image:string} null when it carries no asset path
+     */
+    private function mapChroma(array $c, string $patch): ?array
+    {
+        $path = $c['chromaPath'] ?? null;
+        if (!is_string($path) || $path === '') {
+            return null;
+        }
+
+        return [
+            'id'     => (int) ($c['id'] ?? 0),
+            'name'   => (string) ($c['name'] ?? ''),
+            'colors' => array_values(array_filter(
+                (array) ($c['colors'] ?? []),
+                static fn ($v): bool => is_string($v) && $v !== '',
+            )),
+            'image'  => $this->cdragonAssetUrl($path, $patch),
+        ];
     }
 
     /**
@@ -236,7 +246,7 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
 
     public function getByName(string $name, string $version, string $lang): array
     {
-        $data = $this->getData($version, $lang)['data'] ?? [];
+        $data = $this->dataMap($version, $lang);
         if (isset($data[$name])) {
             return $data[$name];
         }
@@ -246,9 +256,7 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
 
     public function searchByName(string $name, string $version, string $lang, int $max = 0): array
     {
-        if (mb_strlen($name) < 2 || mb_strlen($name) > 50) {
-            throw new \InvalidArgumentException('Nom invalide.');
-        }
+        $this->assertSearchable($name);
 
         $data = $this->getData($version, $lang)['data'] ?? [];
         if (!is_array($data)) {
@@ -271,23 +279,6 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
         return $results;
     }
 
-    protected function dataList(array $raw): array
-    {
-        return array_values($raw['data'] ?? []);
-    }
-
-    protected function imageEntries(array $data): array
-    {
-        $entries = [];
-        foreach ($data as $d) {
-            if (($name = $d['name'] ?? null) && ($img = $d['image']['full'] ?? null)) {
-                $entries[$img] = $name;
-            }
-        }
-
-        return $entries;
-    }
-
     public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
     {
         if (!$data) {
@@ -304,16 +295,5 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
         }
 
         return $result;
-    }
-
-    public function getImage(string $name, string $version, array $dir = [], bool $force = false, string $lang = ''): string
-    {
-        return $this->resolveImage($version, $name, $force);
-    }
-
-    /** Liste rendue en entier (filtrage/pagination côté client) — pas de plafond serveur. */
-    protected function perPageCap(): int
-    {
-        return PHP_INT_MAX;
     }
 }

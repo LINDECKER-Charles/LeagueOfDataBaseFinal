@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Service\Client;
 
@@ -9,6 +10,13 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 class VersionManager
 {
+    /**
+     * Shape of a Data Dragon version (dotted numeric, e.g. "15.14.1", "1.0.0.152").
+     * Single source for the `/{version}/…` route requirement and the loader's
+     * path-prefix strip — a clean segment ("champion", "objects") never matches.
+     */
+    public const VERSION_PATTERN = '\d+(?:\.\d+)+';
+
     /** @var string[]|null in-request memo (getVersions is called several times per request) */
     private ?array $versionsMemo = null;
 
