@@ -1,14 +1,16 @@
 {# Embeddable Hextech card shell — factors out the frame/header/footer shared by
    the champion / item / summoner / rune cards. Fill {% block card_body %} in the caller.
-   Params: href, img, name, sub, initials, img_fit ('cover'|'contain'), img_scale, footer_href, footer_label
+   Params: href, img, name, sub, initials, img_fit ('cover'|'contain'), img_scale, img_round, footer_href, footer_label
+   img_round renders the icon as a circle (rune tree marks — the "focus" glyph).
    Filtering (optional): filter_text (searchable string), filter_tags (list) — read by the
    ResourceFilter island to search/facet the grid client-side. #}
+{% set icon_shape = img_round|default(false) ? 'rounded-full shadow-[inset_0_0_0_1px_rgba(10,200,185,0.14)]' : '' %}
 <section class="hextech-frame hextech-frame-hover group flex h-full flex-col overflow-hidden"
   {% if filter_text is defined %}data-search="{{ filter_text }}"{% endif %}
   {% if filter_tags is defined %}data-tags="{{ filter_tags|join('|') }}"{% endif %}>
   <a href="{{ href|default('#') }}" class="flex items-center gap-3 px-4 pb-3 pt-4">
     {% if img %}
-      <div class="relative h-14 w-14 shrink-0 overflow-hidden border border-gold-deep/50 bg-void">
+      <div class="relative h-14 w-14 shrink-0 overflow-hidden border border-gold-deep/50 bg-void {{ icon_shape }}">
         <picture>
           {% if img ends with '.png' %}<source srcset="/{{ img|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
           <img src="/{{ img }}" alt="{{ name }}" width="56" height="56" loading="lazy" decoding="async"
@@ -17,7 +19,7 @@
         </picture>
       </div>
     {% else %}
-      <div class="grid h-14 w-14 shrink-0 place-items-center border border-gold-deep/50 bg-void font-beaufort text-sm text-gold/70">
+      <div class="grid h-14 w-14 shrink-0 place-items-center border border-gold-deep/50 bg-void font-beaufort text-sm text-gold/70 {{ icon_shape }}">
         {{ initials|default(name|slice(0, 2)|upper) }}
       </div>
     {% endif %}

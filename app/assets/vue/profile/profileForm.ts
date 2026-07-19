@@ -29,6 +29,7 @@ interface StatusLabels {
    element that is correctly absent here, so listeners are re-attached — a cached
    marker attribute would wrongly mark it bound and leave auto-save dead. */
 const bound = new WeakSet<HTMLFormElement>()
+const versionBound = new WeakSet<HTMLSelectElement>()
 
 export function setupProfileForm(root: ParentNode = document): void {
     root.querySelectorAll<HTMLFormElement>('form[data-autosave]').forEach((form) => {
@@ -37,6 +38,23 @@ export function setupProfileForm(root: ParentNode = document): void {
         }
         bound.add(form)
         enhance(form)
+    })
+    wireVersionSelect(root)
+}
+
+/* Favorites version picker: auto-submit its standalone form on change (a full
+   reload re-resolves favorites at the chosen patch) and drop the no-JS button. */
+function wireVersionSelect(root: ParentNode): void {
+    root.querySelectorAll<HTMLSelectElement>('[data-version-select]').forEach((select) => {
+        if (versionBound.has(select)) {
+            return
+        }
+        versionBound.add(select)
+        select
+            .closest('.profile-version')
+            ?.querySelectorAll<HTMLElement>('[data-version-hide]')
+            .forEach((el) => (el.hidden = true))
+        select.addEventListener('change', () => select.form?.requestSubmit())
     })
 }
 

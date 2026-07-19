@@ -142,6 +142,8 @@ champion:
     video_pause: "Mettre la vidéo en pause"
     video_mute: "Couper le son"
     video_unmute: "Activer le son"
+    video_notice: "Les vidéos de compétences montrent la dernière version des sorts ; elles peuvent différer sur les anciens patchs."
+    icon_version: "Icône du patch %version%"
     charges: "Charges"
     ranks: "Rangs"
     tips: "Conseils"
@@ -174,7 +176,7 @@ common:
   no_result:
     text: "Aucun résultat trouvé pour votre recherche."
     back: "← Retour"
-  detail : "Voir le détail →"
+  detail : "Voir le détail"
 
 filter:
   results: "%count% résultats"
@@ -396,6 +398,9 @@ profile:
     title: "Favoris"
     empty: "Choisir"
     unavailable: "Indisponible sur ce patch"
+    version_label: "Version"
+    version_auto: "Version courante"
+    version_apply: "Appliquer"
   slot:
     champion: "Champion"
     item: "Objet"

@@ -34,6 +34,7 @@ interface Labels {
     pause: string
     mute: string
     unmute: string
+    videoNotice: string
 }
 
 const props = defineProps<{
@@ -181,6 +182,19 @@ function onRailKeydown(event: KeyboardEvent): void {
                 <!-- DDragon's own localized markup, styled by .ddragon-rich -->
                 <!-- eslint-disable-next-line vue/no-v-html -->
                 <div class="ddragon-rich text-sm text-text-muted" v-html="current.description"></div>
+
+                <!-- Spell previews are hotlinked from Riot's champion pages, which
+                     only host the latest clip — flag the mismatch on older patches. -->
+                <p
+                    v-if="media.isAvailable(current.key)"
+                    class="mt-4 flex items-start gap-1.5 border-t border-gold-deep/30 pt-3 text-[11px] leading-snug text-text-dim"
+                >
+                    <svg class="mt-px h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 11v5M12 8h.01" stroke-linecap="round" />
+                    </svg>
+                    <span>{{ labels.videoNotice }}</span>
+                </p>
             </div>
         </article>
     </div>

@@ -1,0 +1,88 @@
+{
+  "id": "2026-07-19-almanach",
+  "version": "2.1.0",
+  "codename": "Almanach",
+  "date": "2026-07-19",
+  "type": "minor",
+  "title": "LeagueOfDataBase 2.1.0 — Almanach",
+  "summary": "Le grand lot « versions » : chaque patch a son adresse durable, un build s'importe d'un patch à l'autre, vos favoris s'épinglent à une version, et un journal retrace toute l'histoire du projet — le tout habillé d'une passe visuelle Hextech.",
+  "intro": "Almanach fait du temps un allié. Chaque champion, objet, rune ou sort peut désormais se consulter tel qu'il était à un patch précis, à une adresse propre et stable, et vos builds voyagent d'une version à l'autre en un clic. Votre profil, lui, devient une vraie vitrine — bannière de skin, favoris flottants, sauvegarde automatique — et vos favoris restent fidèles à la version que vous choisissez, sans jamais disparaître. Ajoutez-y un journal des versions pour suivre le rythme du projet, des fiches enrichies d'icônes de statistiques et une passe de fidélité visuelle Hextech : c'est la mise à jour la plus riche depuis Ralliement.",
+  "stats": { "fixes": 1, "cards": 9 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❒",
+      "tag": "Atelier",
+      "title": "Importer un build vers un autre patch",
+      "description": "Chaque build gagne un bouton Importer avec un choix de patch cible. On copie ainsi un vieux build vers le dernier patch (ou n'importe quel autre) : le champion, les runes et les objets encore valides sont conservés, ce qui a disparu est retiré et listé par nom, et l'éditeur s'ouvre pré-rempli avec le récapitulatif. Le build d'origine reste intact."
+    },
+    {
+      "kind": "feature",
+      "glyph": "⧗",
+      "tag": "Découverte",
+      "title": "Chaque patch a sa page",
+      "description": "Ouvrez la fiche d'un champion, d'un objet, d'une rune ou d'un sort telle qu'elle était à un patch précis, à une adresse durable du type …/16.13.1/champion/Aatrox. En naviguant depuis cette page, vous restez sur ce patch. Le dernier patch garde toujours l'adresse courte, et un plan du site par version rend tout l'historique explorable."
+    },
+    {
+      "kind": "feature",
+      "glyph": "✉",
+      "tag": "Nouveautés",
+      "title": "Journal des versions",
+      "description": "Une pastille de version s'affiche à côté du nom du site et ouvre un journal retraçant toute l'histoire du projet : nom de code, date, nouveautés et mot de l'équipe pour chaque version, les plus récentes en tête. Chaque version a son ancre partageable."
+    },
+    {
+      "kind": "feature",
+      "glyph": "❖",
+      "tag": "Profil",
+      "title": "Profil vivant",
+      "description": "Habillez votre profil du splash art d'un skin, laissez vos favoris flotter en petite constellation au-dessus du décor, et oubliez le bouton « Enregistrer » : chaque changement se sauvegarde tout seul. Un aperçu montre votre carte publique telle que les autres la voient, même en profil privé."
+    },
+    {
+      "kind": "feature",
+      "glyph": "✦",
+      "tag": "Profil",
+      "title": "Favoris épinglés à une version",
+      "description": "Un sélecteur de version fixe le patch sur lequel vos favoris sont affichés et enregistrés. Fini les favoris qui disparaissaient — ou pire, s'effaçaient — en consultant un patch où votre champion n'existait pas encore : un favori absent de la version affichée est signalé « indisponible », jamais supprimé."
+    },
+    {
+      "kind": "feature",
+      "glyph": "▦",
+      "tag": "Encyclopédie",
+      "title": "Fiches enrichies",
+      "description": "Les statistiques de jeu s'affichent avec leur icône, les objets gagnent un vrai tableau de stats lisible, et l'icône d'un champion est désormais fidèle au patch consulté — elle change selon la version, contrairement aux splash arts. Un rappel sous les vidéos de sorts précise qu'elles montrent la dernière version des compétences."
+    },
+    {
+      "kind": "feature",
+      "glyph": "◐",
+      "tag": "Interface",
+      "title": "Passe de fidélité visuelle Hextech",
+      "description": "L'accueil et plusieurs pièces maîtresses (listes, tendances, builds, portail API, don) s'alignent plus finement sur la charte Hextech : champions en portrait plutôt qu'en vignette, cartes plus lisibles, boutons d'action en or plein, interrupteurs nets. Aucune donnée ni aucun parcours ne change — c'est une mise à niveau purement visuelle."
+    },
+    {
+      "kind": "mana",
+      "glyph": "◉",
+      "tag": "Découverte",
+      "title": "Mieux référencé, une seule adresse",
+      "description": "Les pages communautaires (profils, builds, tendances) décrivent leur contenu aux moteurs de recherche pour de meilleurs aperçus, le plan du site est accessible depuis le pied de page, et les anciennes adresses (avec www., ou en .fr) renvoient directement vers l'adresse courte en .com, sans page d'attente — vos anciens liens continuent de fonctionner."
+    },
+    {
+      "kind": "mana",
+      "glyph": "✶",
+      "tag": "Sécurité",
+      "title": "Protections navigateur renforcées",
+      "description": "Chaque page est servie avec les en-têtes de sécurité que les navigateurs modernes attendent : protection contre l'injection de scripts, contre l'affichage dans un cadre piégé, et contre le retour à une connexion non chiffrée. Rien ne change visuellement — c'est une couche de protection invisible."
+    }
+  ],
+  "bugfixes": [
+    {
+      "id": "LDB-006",
+      "area": "Navigation",
+      "text": "Changer de version depuis le bandeau met à jour la page en cours immédiatement, y compris sur les adresses qui contiennent déjà la version (…/10.13.1/champion/Akali), et la version affichée dans la barre correspond toujours à celle réellement à l'écran."
+    }
+  ],
+  "balances": [],
+  "devNote": {
+    "body": "Almanach, c'est le patch qui réconcilie le site avec le temps. On voulait que rien ne se perde : ni un vieux build qu'on remet au goût du jour, ni une fiche telle qu'elle était il y a dix patchs, ni un favori choisi sur une version oubliée. En chemin, on a rhabillé l'accueil aux couleurs Hextech et soigné le référencement pour qu'on vous trouve plus facilement. Dites-nous quelle pièce vous sert le plus — c'est ce qui orientera la suite.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

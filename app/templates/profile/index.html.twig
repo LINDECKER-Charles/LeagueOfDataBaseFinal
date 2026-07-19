@@ -73,6 +73,14 @@
             </div>
         </header>
 
+        {# Standalone target for the favorites version picker: kept OUT of the
+           autosave form (no nested forms) — the <select>/<button> in the codex
+           header reach it via their HTML `form=` attribute. #}
+        <form id="profile-version-form" method="post" action="{{ path('app_profile_version') }}"
+              data-turbo="false" hidden aria-hidden="true">
+            <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+        </form>
+
         <form method="post" action="{{ path('app_profile_save') }}" data-turbo="false" data-autosave class="profile-layout">
             <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
 
@@ -102,11 +110,8 @@
                                 {{ (user.isPublicProfile ? 'profile.visibility.state_public' : 'profile.visibility.state_private')|trans }}
                             </span>
                         </span>
-                        <label class="hx-switch">
-                            <input type="checkbox" name="isPublicProfile" value="1" class="hx-switch__input"
-                                   aria-label="{{ 'profile.visibility.label'|trans }}" {{ user.isPublicProfile ? 'checked' }}>
-                            <span class="hx-switch__track"><span class="hx-switch__thumb"></span></span>
-                        </label>
+                        <input type="checkbox" name="isPublicProfile" value="1" class="hx-switch"
+                               aria-label="{{ 'profile.visibility.label'|trans }}" {{ user.isPublicProfile ? 'checked' }}>
                     </div>
                     <p class="visibility-card__help">{{ 'profile.visibility.help'|trans }}</p>
                     <div class="visibility-card__public" data-visibility-public-only {{ user.isPublicProfile ? '' : 'hidden' }}>
@@ -133,7 +138,23 @@
             <section class="profile-favorites">
                 <div class="codex-header mb-6">
                     <h2>{{ 'profile.favorites.title'|trans }}</h2>
-                    <span class="codex-header__meta">{{ version }}</span>
+                    {# Pin the patch the favorites resolve at, so one absent from the
+                       browsing version neither disappears nor gets wiped on save. #}
+                    <div class="profile-version">
+                        <label class="profile-version__label" for="profile-version">{{ 'profile.favorites.version_label'|trans }}</label>
+                        <select id="profile-version" name="preferredVersion" form="profile-version-form"
+                                class="hx-select profile-version__select" data-version-select
+                                aria-label="{{ 'profile.favorites.version_label'|trans }}">
+                            <option value="">{{ 'profile.favorites.version_auto'|trans }}</option>
+                            {% for v in versions %}
+                                <option value="{{ v }}" {{ v == preferredVersion ? 'selected' }}>{{ v }}</option>
+                            {% endfor %}
+                        </select>
+                        {# No-JS fallback: an explicit apply button submits the version form. #}
+                        <button type="submit" form="profile-version-form" class="hx-btn profile-version__apply" data-version-hide>
+                            {{ 'profile.favorites.version_apply'|trans }}
+                        </button>
+                    </div>
                 </div>
 
                 <div class="skin-field mb-6">

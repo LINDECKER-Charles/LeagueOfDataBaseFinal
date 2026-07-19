@@ -157,7 +157,7 @@ common:
   no_result:
     text: "ไม่พบผลลัพธ์สำหรับการค้นหาของคุณ"
     back: "← ย้อนกลับ"
-  detail : "ดูรายละเอียด →"
+  detail : "ดูรายละเอียด"
 base:
   title: "League of Data Base"
   description: "League of Data Base เป็นแพลตฟอร์มที่ขับเคลื่อนโดยชุมชน ให้ข้อมูลโดยละเอียด สถิติ และข้อมูลเชิงลึกเกี่ยวกับ League of Legends รวดเร็ว เชื่อถือได้ และอัปเดตอยู่เสมอ"

@@ -1,0 +1,54 @@
+{
+  "id": "2026-07-19-rouage",
+  "version": "2.0.1",
+  "codename": "Rouage",
+  "date": "2026-07-19",
+  "type": "hotfix",
+  "title": "LeagueOfDataBase 2.0.1 — Rouage",
+  "summary": "Une vague de mise au point après Ralliement : les pages ne se figent plus, les images se chargent du premier coup, le son des sorts se contrôle vraiment, et l'écran de chargement se fait discret.",
+  "intro": "Rouage, ce sont les engrenages qu'on resserre juste après la grande sortie. Les navigations qui « ne se passaient rien » aboutissent de nouveau, les icônes s'affichent dès le premier passage sur un patch fraîchement choisi, et l'aperçu sonore des sorts se coupe, se réactive et s'arrête pour de bon quand vous quittez la page. L'écran de chargement, lui, ne clignote plus sur les pages déjà prêtes. Rien de spectaculaire — juste un site qui répond au quart de tour.",
+  "stats": { "fixes": 4, "cards": 2 },
+  "features": [
+    {
+      "kind": "mana",
+      "glyph": "⚡",
+      "tag": "Navigation",
+      "title": "Navigation fiabilisée",
+      "description": "Cliquer sur un lien ou envoyer un formulaire n'aboutit plus, par intermittence, sur une page vide où « rien ne se passe ». Les navigations un peu lentes — la première visite d'une page pas encore en cache — vont désormais au bout et affichent bien la page demandée."
+    },
+    {
+      "kind": "mana",
+      "glyph": "✦",
+      "tag": "Images",
+      "title": "Images au premier chargement",
+      "description": "Sur une version que vous venez de sélectionner, les images s'affichent dès le premier chargement sur toutes les fiches (champion, objet, rune) — y compris les icônes des objets liés et de l'arbre de runes, qui pouvaient rester cassées jusqu'au rechargement suivant. Les listes continuent d'apparaître instantanément."
+    }
+  ],
+  "bugfixes": [
+    {
+      "id": "LDB-002",
+      "area": "Interface",
+      "text": "L'écran de chargement n'apparaît plus que lorsqu'il y a réellement des images à télécharger : en revenant sur une liste déjà consultée, la page s'ouvre directement, sans clignotement inutile."
+    },
+    {
+      "id": "LDB-003",
+      "area": "Champion",
+      "text": "L'aperçu sonore des sorts démarre coupé, avec un bouton pour activer le son (choix conservé d'un sort à l'autre) ; changer de sort coupe le son du précédent, et quitter l'onglet ou la page l'arrête vraiment — plus de bande-son « fantôme » qui tourne en fond."
+    },
+    {
+      "id": "LDB-004",
+      "area": "Champion",
+      "text": "Le sommaire d'une fiche champion (Sorts, Skins, Lore, Conseils, Stats) fait de nouveau défiler la page en douceur jusqu'à la section choisie, au lieu de tout recharger depuis le haut."
+    },
+    {
+      "id": "LDB-005",
+      "area": "Compte",
+      "text": "Créer une clé API depuis le portail développeur exige désormais une adresse e-mail confirmée, comme la création d'un build public — la même barrière anti-abus sur les deux parcours."
+    }
+  ],
+  "balances": [],
+  "devNote": {
+    "body": "Rouage n'ajoute rien de neuf : il répare et il polit. On a traqué les petits « ça rame » et les pages qui restaient blanches, rendu le son des sorts vraiment maîtrisable, et fait en sorte que les images soient là du premier coup. Merci à celles et ceux qui nous ont remonté ces accrocs — c'est exactement ce genre de retour qui rend le site plus sûr sous les doigts.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

@@ -125,6 +125,8 @@ champion:
     video_pause: "Pause video"
     video_mute: "Mute sound"
     video_unmute: "Unmute sound"
+    video_notice: "Ability videos show the latest version of the spells; they may differ on older patches."
+    icon_version: "Patch %version% icon"
     charges: "Charges"
     ranks: "Ranks"
     tips: "Tips"
@@ -174,7 +176,7 @@ common:
   no_result:
     text: "No results found for your search."
     back: "← Back"
-  detail : "See details →"
+  detail : "See details"
 
 filter:
   results: "%count% results"
@@ -395,6 +397,9 @@ profile:
     title: "Favorites"
     empty: "Choose"
     unavailable: "Unavailable on this patch"
+    version_label: "Version"
+    version_auto: "Current version"
+    version_apply: "Apply"
   slot:
     champion: "Champion"
     item: "Item"

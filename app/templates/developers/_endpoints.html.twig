@@ -12,7 +12,7 @@
     <div class="mt-4">
         {% for endpoint in endpoints %}
             <div class="dev-endpoint">
-                <span class="hx-chip">GET</span>
+                <span class="hx-chip-hex">GET</span>
                 <code>{{ endpoint.path }}</code>
                 <p>{{ endpoint.desc|trans({}, 'api') }}</p>
             </div>
