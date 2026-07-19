@@ -185,7 +185,7 @@ footer:
 
   project:
     title: "Dự Án"
-    version: "Phiên bản: Beta 2.0"
+    version: "Phiên bản: %version%"
     updated: "Cập nhật: 17/07/2026"
 
   contact:

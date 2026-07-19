@@ -63,6 +63,8 @@
             lang: lang,
             gameMode: gameMode,
             gameModes: gameModes|map(m => { value: m.value, label: m.labelKey|trans }),
+            language: language,
+            languages: client.languages|map(code => { value: code, label: client.languageLabels[code]|default(code) }),
             labels: {
               loading: 'build.editor.loading'|trans,
               error: 'build.editor.error'|trans,
@@ -74,7 +76,8 @@
                 title: 'build.editor.context.title'|trans,
                 version: 'build.editor.context.version'|trans,
                 mode: 'build.editor.context.mode'|trans,
-                modeHint: 'build.editor.context.mode_hint'|trans
+                modeHint: 'build.editor.context.mode_hint'|trans,
+                language: 'build.editor.context.language'|trans
               },
               dnd: {
                 handle: 'build.editor.dnd.handle'|trans,
@@ -145,6 +148,7 @@
         <input type="hidden" name="structure" value="{{ values.structure ? values.structure|json_encode : '' }}">
         <input type="hidden" name="game_version" value="{{ version }}">
         <input type="hidden" name="game_mode" value="{{ gameMode }}">
+        <input type="hidden" name="language" value="{{ language }}">
       </div>
 
       <div class="flex flex-wrap items-center justify-end gap-3">

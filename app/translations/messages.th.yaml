@@ -185,7 +185,7 @@ footer:
 
   project:
     title: "โปรเจกต์"
-    version: "เวอร์ชัน: Beta 2.0"
+    version: "เวอร์ชัน: %version%"
     updated: "อัปเดตเมื่อ: 17/07/2026"
 
   contact:

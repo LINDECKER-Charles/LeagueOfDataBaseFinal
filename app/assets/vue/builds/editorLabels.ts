@@ -21,6 +21,7 @@ export interface ContextLabels {
     version: string
     mode: string
     modeHint: string
+    language: string
 }
 
 export interface ChampionLabels {

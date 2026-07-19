@@ -6,7 +6,7 @@ namespace App\Repository;
 use App\Entity\Build;
 use App\Entity\BuildVote;
 use App\Entity\User;
-use App\Service\Picker\GameMode;
+use App\Service\Community\TrendsFilter;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -117,9 +117,9 @@ final class BuildVoteRepository extends ServiceEntityRepository
      *
      * @return array{builds: list<Build>, total: int}
      */
-    public function topPublicBuilds(?string $championId, ?GameMode $mode, int $page, int $perPage): array
+    public function topPublicBuilds(TrendsFilter $filter, int $page, int $perPage): array
     {
-        $qb = $this->publicBuildsQb($championId, $mode)
+        $qb = $this->publicBuildsQb($filter)
             ->select('b', 'COALESCE(SUM(v.value), 0) AS HIDDEN score')
             ->leftJoin(BuildVote::class, 'v', Join::WITH, 'v.build = b')
             ->groupBy('b.id')
@@ -131,20 +131,20 @@ final class BuildVoteRepository extends ServiceEntityRepository
 
         return [
             'builds' => $qb->getQuery()->getResult(),
-            'total' => $this->countPublic($championId, $mode),
+            'total' => $this->countPublic($filter),
         ];
     }
 
-    private function countPublic(?string $championId, ?GameMode $mode): int
+    private function countPublic(TrendsFilter $filter): int
     {
-        return (int) $this->publicBuildsQb($championId, $mode)
+        return (int) $this->publicBuildsQb($filter)
             ->select('COUNT(b.id)')
             ->getQuery()
             ->getSingleScalarResult();
     }
 
     /** Shared FROM/WHERE of the trends queries (list + count must always agree). */
-    private function publicBuildsQb(?string $championId, ?GameMode $mode): QueryBuilder
+    private function publicBuildsQb(TrendsFilter $filter): QueryBuilder
     {
         // Banned owners vanish from every public ranking; their capability URL
         // /b/{token} deliberately keeps working (unlisted, token = the key).
@@ -156,11 +156,14 @@ final class BuildVoteRepository extends ServiceEntityRepository
             ->setParameter('isPublic', true)
             ->setParameter('ownerBanned', false);
 
-        if ($championId !== null) {
-            $qb->andWhere('b.championId = :championId')->setParameter('championId', $championId);
+        if ($filter->championId !== null) {
+            $qb->andWhere('b.championId = :championId')->setParameter('championId', $filter->championId);
         }
-        if ($mode !== null) {
-            $qb->andWhere('b.gameMode = :mode')->setParameter('mode', $mode);
+        if ($filter->mode !== null) {
+            $qb->andWhere('b.gameMode = :mode')->setParameter('mode', $filter->mode);
+        }
+        if ($filter->language !== null) {
+            $qb->andWhere('b.language = :language')->setParameter('language', $filter->language);
         }
 
         return $qb;

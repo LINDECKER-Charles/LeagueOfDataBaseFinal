@@ -7,7 +7,8 @@ import { useBuildEditor, type BuildEditorProps } from '../builds/useBuildEditor'
 
 /**
  * Build editor island. Mounted INSIDE the Twig <form>: it owns the game
- * context (version + mode selects, real form fields), champion / runes /
+ * context (version + mode + authoring-language selects, real form fields),
+ * champion / runes /
  * purchase-order sections, and mirrors the whole selection into the hidden
  * `structure` input on every change (the server re-validates). All the
  * orchestration lives in useBuildEditor + the pure modules under builds/.
@@ -20,6 +21,7 @@ const {
     runes,
     gameVersion,
     gameMode,
+    language,
     championId,
     runeDraft,
     steps,
@@ -70,6 +72,14 @@ onMounted(() => void loadCatalogs())
                     <span class="auth-label">{{ labels.context.mode }}</span>
                     <select v-model="gameMode" name="game_mode" class="hx-select mt-1.5 w-full">
                         <option v-for="option in gameModes" :key="option.value" :value="option.value">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                </label>
+                <label class="block">
+                    <span class="auth-label">{{ labels.context.language }}</span>
+                    <select v-model="language" name="language" class="hx-select mt-1.5 w-full">
+                        <option v-for="option in languages" :key="option.value" :value="option.value">
                             {{ option.label }}
                         </option>
                     </select>

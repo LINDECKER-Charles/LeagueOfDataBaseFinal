@@ -29,6 +29,7 @@
 {% set baseQuery = {} %}
 {% if filters.champion %}{% set baseQuery = baseQuery|merge({ champion: filters.champion }) %}{% endif %}
 {% if filters.mode %}{% set baseQuery = baseQuery|merge({ mode: filters.mode }) %}{% endif %}
+{% if filters.language %}{% set baseQuery = baseQuery|merge({ language: filters.language }) %}{% endif %}
 
 {% block body %}
 <main class="relative px-6 py-12">
@@ -66,6 +67,15 @@
           <option value="">{{ 'community.trends.filter.all_modes'|trans }}</option>
           {% for gameMode in gameModes %}
             <option value="{{ gameMode.value }}" {{ filters.mode == gameMode.value ? 'selected' }}>{{ gameMode.labelKey|trans }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="trend-filters__field">
+        <span class="trend-filters__label">{{ 'community.trends.filter.language'|trans }}</span>
+        <select name="language" class="hx-select">
+          <option value="">{{ 'community.trends.filter.all_languages'|trans }}</option>
+          {% for option in languageOptions %}
+            <option value="{{ option.value }}" {{ filters.language == option.value ? 'selected' }}>{{ option.label }}</option>
           {% endfor %}
         </select>
       </label>
@@ -126,6 +136,7 @@
               <p class="trend-row__chips">
                 <span class="hx-chip">{{ ('build.mode.' ~ build.gameMode.value)|trans }}</span>
                 {% if build.gameVersion %}<span class="hx-chip">{{ build.gameVersion }}</span>{% endif %}
+                {% if build.language %}<span class="hx-chip">{{ client.languageLabels[build.language]|default(build.language) }}</span>{% endif %}
               </p>
             </div>
 

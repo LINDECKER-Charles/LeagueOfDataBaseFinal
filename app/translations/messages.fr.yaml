@@ -217,7 +217,7 @@ footer:
 
   project:
     title: "Projet"
-    version: "Version : Beta 2.0"
+    version: "Version : %version%"
     updated: "Mis à jour : 17/07/2026"
 
   contact:
@@ -581,6 +581,7 @@ build:
       title: "Contexte de jeu"
       version: "Patch"
       mode: "Mode de jeu"
+      language: "Langue de rédaction"
       mode_hint: "La disponibilité des objets suit le mode choisi. Les objets déjà posés ne sont jamais retirés : ils sont signalés."
     dnd:
       handle: "Glisser pour réordonner"
@@ -670,6 +671,8 @@ build:
       unknown: "Version de jeu inconnue."
     mode:
       unknown: "Mode de jeu inconnu."
+    language:
+      unknown: "Langue inconnue."
     runes:
       primary_style: "Voie principale invalide."
       primary_selection_count: "Choisissez exactement 4 runes principales."
@@ -697,8 +700,10 @@ community:
     filter:
       champion: "Champion"
       mode: "Mode de jeu"
+      language: "Langue"
       all_champions: "Tous les champions"
       all_modes: "Tous les modes"
+      all_languages: "Toutes les langues"
       apply: "Filtrer"
     empty: "Aucun build public pour ce filtre — forgez le vôtre."
     empty_cta: "Forger mon build"

@@ -47,6 +47,11 @@ export interface GameModeOption {
     label: string
 }
 
+export interface LanguageOption {
+    value: string
+    label: string
+}
+
 export interface BuildEditorProps {
     mode: 'create' | 'edit'
     initial: unknown
@@ -59,6 +64,10 @@ export interface BuildEditorProps {
     /** Initially selected game mode value (GameMode enum wire values). */
     gameMode: string
     gameModes: GameModeOption[]
+    /** Initially selected authoring locale (Data Dragon code, e.g. "fr_FR"). */
+    language: string
+    /** Authoring locales offered by the language select. */
+    languages: LanguageOption[]
     labels: BuildEditorLabels
 }
 
@@ -134,6 +143,9 @@ function useAnnouncer() {
 export function useBuildEditor(props: BuildEditorProps) {
     const gameVersion = ref(props.version)
     const gameMode = ref(props.gameMode)
+    // Authoring locale is pure metadata (the free text's language) — it feeds the
+    // hidden form field only and, unlike version/mode, never reloads any catalog.
+    const language = ref(props.language)
     const { champions, items, runes, knownItems } = useEditorCatalogs(props, gameVersion, gameMode)
     const { announcement, announce } = useAnnouncer()
     const dnd = props.labels.dnd
@@ -207,6 +219,7 @@ export function useBuildEditor(props: BuildEditorProps) {
         runes,
         gameVersion,
         gameMode,
+        language,
         championId,
         runeDraft,
         steps,

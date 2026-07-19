@@ -38,6 +38,7 @@ final class BuildController extends AbstractResourceController
     private const CSRF_SUBMIT = 'submit';
     private const CSRF_DELETE_PREFIX = 'delete-build-';
     private const ERROR_VERSION_UNKNOWN = 'build.error.version.unknown';
+    private const ERROR_LANGUAGE_UNKNOWN = 'build.error.language.unknown';
 
     public function __construct(
         VersionManager $versionManager,
@@ -102,6 +103,7 @@ final class BuildController extends AbstractResourceController
             // select still allows moving the build to another patch explicitly.
             'gameVersion' => $build->getGameVersion(),
             'gameMode' => $build->getGameMode()->value,
+            'language' => $build->getLanguage(),
         ]);
     }
 
@@ -149,6 +151,7 @@ final class BuildController extends AbstractResourceController
             'structure'   => $result['structure'],
             'gameVersion' => $target,
             'gameMode'    => $mode->value,
+            'language'    => $source->getLanguage(),
         ]);
     }
 
@@ -179,7 +182,8 @@ final class BuildController extends AbstractResourceController
             return $guard;
         }
 
-        $submission = BuildSubmission::fromRequest($request, $this->pageContext->selection()['version']);
+        $sel = $this->pageContext->selection();
+        $submission = BuildSubmission::fromRequest($request, $sel['version'], $sel['lang']);
         $values = [
             'name' => $submission->name,
             'description' => $submission->description,
@@ -187,6 +191,7 @@ final class BuildController extends AbstractResourceController
             'structure' => $submission->structure,
             'gameVersion' => $submission->gameVersion,
             'gameMode' => ($submission->gameMode ?? GameMode::DEFAULT)->value,
+            'language' => $submission->language,
         ];
 
         if (!$this->isCsrfTokenValid(self::CSRF_SUBMIT, (string) $request->request->get('_token'))) {
@@ -220,6 +225,11 @@ final class BuildController extends AbstractResourceController
         $isVersionKnown = $this->versionManager->versionExists($submission->gameVersion);
         if (!$isVersionKnown) {
             $errors[] = [self::ERROR_VERSION_UNKNOWN, []];
+        }
+        // Authoring language is pure metadata (never gates the catalog), but a
+        // forged/unknown value is still rejected to keep the filter facet clean.
+        if (!$this->versionManager->languageExists($submission->language)) {
+            $errors[] = [self::ERROR_LANGUAGE_UNKNOWN, []];
         }
         // No structure / unknown mode / unknown version: the catalogs to check
         // against are undefined — report what we already know.
@@ -258,7 +268,8 @@ final class BuildController extends AbstractResourceController
             // The structure was validated against the SUBMITTED (version, mode):
             // persist exactly that pair — the build stays pinned to its patch.
             ->setGameVersion($submission->gameVersion)
-            ->setGameMode($submission->gameMode ?? GameMode::DEFAULT);
+            ->setGameMode($submission->gameMode ?? GameMode::DEFAULT)
+            ->setLanguage($submission->language);
         $this->entityManager->flush();
 
         return $build;
@@ -276,12 +287,15 @@ final class BuildController extends AbstractResourceController
 
     /**
      * @param array{name: string, description: ?string, isPublic: bool, structure: ?array<mixed>,
-     *               gameVersion: ?string, gameMode: string} $values
+     *               gameVersion: ?string, gameMode: string, language?: ?string} $values
      */
     private function editorResponse(?Build $build, array $values, int $status = Response::HTTP_OK): Response
     {
         $sel = $this->pageContext->selection();
         $selectedVersion = ($values['gameVersion'] ?? '') !== '' ? (string) $values['gameVersion'] : $sel['version'];
+        // Create/import default the authoring language to the browsing locale;
+        // edit carries the build's stored one.
+        $selectedLanguage = ($values['language'] ?? '') !== '' ? (string) $values['language'] : $sel['lang'];
 
         return $this->render('build/editor.html.twig', [
             'client' => $this->clientData(),
@@ -293,6 +307,7 @@ final class BuildController extends AbstractResourceController
             'gameModes' => GameMode::cases(),
             'versionChoices' => $this->versionChoices($selectedVersion),
             'lang' => $sel['lang'],
+            'language' => $selectedLanguage,
         ], new Response(status: $status));
     }
 
@@ -368,7 +383,7 @@ final class BuildController extends AbstractResourceController
         return $this->redirectToRoute('app_builds', status: Response::HTTP_SEE_OTHER);
     }
 
-    /** @return array{name: string, description: ?string, isPublic: bool, structure: null, gameVersion: null, gameMode: string} */
+    /** @return array{name: string, description: ?string, isPublic: bool, structure: null, gameVersion: null, gameMode: string, language: null} */
     private static function emptyValues(): array
     {
         return [
@@ -378,6 +393,7 @@ final class BuildController extends AbstractResourceController
             'structure' => null,
             'gameVersion' => null,
             'gameMode' => GameMode::DEFAULT->value,
+            'language' => null,
         ];
     }
 }

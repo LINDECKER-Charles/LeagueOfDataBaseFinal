@@ -7,6 +7,7 @@ use App\Entity\Build;
 use App\Entity\BuildVote;
 use App\Entity\User;
 use App\Repository\BuildVoteRepository;
+use App\Service\Community\TrendsFilter;
 use App\Service\Picker\GameMode;
 use App\Tests\Unit\Support\InMemoryOrm;
 use Doctrine\ORM\EntityManager;
@@ -115,7 +116,7 @@ final class BuildVoteRepositoryTest extends TestCase
         $this->votes->applyVote($top, $voter, BuildVote::UP);
         $this->votes->applyVote($downvoted, $voter, BuildVote::DOWN);
 
-        $result = $this->votes->topPublicBuilds(null, null, page: 1, perPage: 24);
+        $result = $this->votes->topPublicBuilds(new TrendsFilter(), page: 1, perPage: 24);
 
         self::assertSame(4, $result['total']);
         self::assertSame(
@@ -133,14 +134,14 @@ final class BuildVoteRepositoryTest extends TestCase
         $bannedOwner->ban('spam');
         $this->entityManager->flush();
 
-        $result = $this->votes->topPublicBuilds(null, null, page: 1, perPage: 24);
+        $result = $this->votes->topPublicBuilds(new TrendsFilter(), page: 1, perPage: 24);
 
         self::assertSame(1, $result['total']);
         self::assertSame([$visible->getId()], array_map(static fn (Build $b): ?int => $b->getId(), $result['builds']));
 
         $bannedOwner->unban();
         $this->entityManager->flush();
-        self::assertSame(2, $this->votes->topPublicBuilds(null, null, 1, 24)['total']);
+        self::assertSame(2, $this->votes->topPublicBuilds(new TrendsFilter(), 1, 24)['total']);
     }
 
     public function testTopPublicBuildsFiltersByChampionAndModeAndPaginates(): void
@@ -149,16 +150,34 @@ final class BuildVoteRepositoryTest extends TestCase
         $this->givenPublicBuild('Ahri');
         $this->givenPublicBuild('Ashe');
 
-        $byChampion = $this->votes->topPublicBuilds('Ahri', null, 1, 24);
+        $byChampion = $this->votes->topPublicBuilds(new TrendsFilter('Ahri'), 1, 24);
         self::assertSame(2, $byChampion['total']);
 
-        $byMode = $this->votes->topPublicBuilds('Ahri', GameMode::Aram, 1, 24);
+        $byMode = $this->votes->topPublicBuilds(new TrendsFilter('Ahri', GameMode::Aram), 1, 24);
         self::assertSame(1, $byMode['total']);
         self::assertSame($aram->getId(), $byMode['builds'][0]->getId());
 
-        $pageTwo = $this->votes->topPublicBuilds(null, null, page: 2, perPage: 2);
+        $pageTwo = $this->votes->topPublicBuilds(new TrendsFilter(), page: 2, perPage: 2);
         self::assertSame(3, $pageTwo['total']);
         self::assertCount(1, $pageTwo['builds']);
+    }
+
+    public function testTopPublicBuildsFiltersByAuthoringLanguage(): void
+    {
+        $french = $this->givenPublicBuild('Ahri')->setLanguage('fr_FR');
+        $english = $this->givenPublicBuild('Ashe'); // defaults to en_US
+        $this->entityManager->flush();
+
+        $fr = $this->votes->topPublicBuilds(new TrendsFilter(language: 'fr_FR'), 1, 24);
+        self::assertSame(1, $fr['total']);
+        self::assertSame($french->getId(), $fr['builds'][0]->getId());
+
+        $en = $this->votes->topPublicBuilds(new TrendsFilter(language: 'en_US'), 1, 24);
+        self::assertSame(1, $en['total']);
+        self::assertSame($english->getId(), $en['builds'][0]->getId());
+
+        // No language facet → every language.
+        self::assertSame(2, $this->votes->topPublicBuilds(new TrendsFilter(), 1, 24)['total']);
     }
 
     private function givenUser(string $username): User

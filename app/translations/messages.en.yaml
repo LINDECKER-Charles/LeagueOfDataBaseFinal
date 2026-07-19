@@ -216,7 +216,7 @@ footer:
 
   project:
     title: "Project"
-    version: "Version: Beta 2.0"
+    version: "Version: %version%"
     updated: "Updated: 17/07/2026"
 
   contact:
@@ -580,6 +580,7 @@ build:
       title: "Game context"
       version: "Patch"
       mode: "Game mode"
+      language: "Authoring language"
       mode_hint: "Item availability follows the selected mode. Items already placed are never removed — they are flagged instead."
     dnd:
       handle: "Drag to reorder"
@@ -669,6 +670,8 @@ build:
       unknown: "Unknown game version."
     mode:
       unknown: "Unknown game mode."
+    language:
+      unknown: "Unknown language."
     runes:
       primary_style: "Invalid primary rune path."
       primary_selection_count: "Pick exactly 4 primary runes."
@@ -696,8 +699,10 @@ community:
     filter:
       champion: "Champion"
       mode: "Game mode"
+      language: "Language"
       all_champions: "All champions"
       all_modes: "All modes"
+      all_languages: "All languages"
       apply: "Filter"
     empty: "No public build matches this filter — forge yours."
     empty_cta: "Forge my build"
