@@ -47,6 +47,28 @@ framework:
             policy: 'sliding_window'
             limit: 3
             interval: '15 minutes'
+        # Anonymous, abuse-prone surfaces, all keyed by client IP (see ThrottlesByIp).
+        # Public contact form — caps mail/DB abuse from a host.
+        contact_form:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'
+        # Sign-up — caps mass account creation + confirmation-mail bombing per host.
+        registration:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'
+        # Forgot-password requests — the bundle throttles per account (1/h); this
+        # complements it by capping a host spraying requests across many addresses.
+        password_request:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'
+        # Donation checkout — caps Stripe Checkout session spam from a host.
+        donation_checkout:
+            policy: 'sliding_window'
+            limit: 10
+            interval: '1 hour'
     #esi: true
     #fragments: true
 

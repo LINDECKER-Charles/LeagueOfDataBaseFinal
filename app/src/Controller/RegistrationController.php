@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Concern\ThrottlesByIp;
 use App\Entity\User;
 use App\Form\RegistrationFormType;
 use App\Service\Audit\AuditAction;
@@ -20,11 +21,14 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class RegistrationController extends AbstractResourceController
 {
+    use ThrottlesByIp;
+
     private const FIREWALL_NAME = 'main';
     private const AUTHENTICATOR = 'form_login';
 
@@ -39,6 +43,7 @@ final class RegistrationController extends AbstractResourceController
         private readonly TranslatorInterface $translator,
         private readonly AuthMailer $authMailer,
         private readonly AuditLogger $audit,
+        private readonly RateLimiterFactoryInterface $registrationLimiter,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -54,6 +59,11 @@ final class RegistrationController extends AbstractResourceController
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
 
+        if ($form->isSubmitted() && $this->isRateLimited($this->registrationLimiter, $request)) {
+            $this->addFlash('error', $this->translator->trans('auth.flash.too_many_attempts'));
+
+            return $this->redirectToRoute('app_register');
+        }
         if ($form->isSubmitted() && $form->isValid()) {
             return $this->finalizeRegistration($user, $form);
         }
