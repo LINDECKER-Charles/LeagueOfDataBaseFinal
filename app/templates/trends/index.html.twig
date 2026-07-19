@@ -42,7 +42,10 @@
           {{ 'community.trends.title'|trans }}
         </h1>
       </div>
-      <span class="hx-chip">{{ 'filter.results'|trans({'%count%': total}) }}</span>
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="hx-chip">{{ 'filter.results'|trans({'%count%': total}) }}</span>
+        {% include 'trends/_forge_cta.html.twig' %}
+      </div>
     </header>
     <hr class="hx-rule mb-8">
 
@@ -75,7 +78,7 @@
         <p class="eyebrow mb-3">{{ 'community.trends.title'|trans }}</p>
         <p class="mx-auto max-w-md text-sm text-text-muted">{{ 'community.trends.empty'|trans }}</p>
         <div class="mt-6">
-          <a href="{{ path('app_build_new') }}" class="hx-btn">{{ 'community.trends.empty_cta'|trans }}</a>
+          {% include 'trends/_forge_cta.html.twig' %}
         </div>
       </div>
     {% else %}
