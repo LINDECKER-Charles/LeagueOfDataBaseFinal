@@ -1,6 +1,37 @@
 {
   "patches": [
     {
+      "id": "2026-07-19-almanach",
+      "version": "2.1.0",
+      "codename": "Almanach",
+      "date": "2026-07-19",
+      "type": "minor",
+      "title": "LeagueOfDataBase 2.1.0 — Almanach",
+      "summary": "Le grand lot « versions » : chaque patch a son adresse durable, un build s'importe d'un patch à l'autre, vos favoris s'épinglent à une version, et un journal retrace toute l'histoire du projet — le tout habillé d'une passe visuelle Hextech.",
+      "tags": [
+        { "kind": "feature", "label": "Pages par patch & import de build" },
+        { "kind": "feature", "label": "Profil vivant & favoris épinglés" },
+        { "kind": "feature", "label": "Refonte visuelle Hextech" },
+        { "kind": "bugfix", "label": "1 correctif" }
+      ],
+      "stats": { "fixes": 1 }
+    },
+    {
+      "id": "2026-07-19-rouage",
+      "version": "2.0.1",
+      "codename": "Rouage",
+      "date": "2026-07-19",
+      "type": "hotfix",
+      "title": "LeagueOfDataBase 2.0.1 — Rouage",
+      "summary": "Une vague de mise au point après Ralliement : les pages ne se figent plus, les images se chargent du premier coup, le son des sorts se contrôle vraiment, et l'écran de chargement se fait discret.",
+      "tags": [
+        { "kind": "feature", "label": "Navigation fiabilisée" },
+        { "kind": "feature", "label": "Images au premier chargement" },
+        { "kind": "bugfix", "label": "4 correctifs" }
+      ],
+      "stats": { "fixes": 4 }
+    },
+    {
       "id": "2026-07-17-ralliement",
       "version": "2.0.0",
       "codename": "Ralliement",
