@@ -157,7 +157,7 @@ common:
   no_result:
     text: "Pro vaše hledání nebyly nalezeny žádné výsledky."
     back: "← Zpět"
-  detail : "Zobrazit podrobnosti →"
+  detail : "Zobrazit podrobnosti"
 base:
   title: "League of Data Base"
   description: "League of Data Base je komunitní platforma, která poskytuje podrobné informace, statistiky a přehledy o League of Legends. Rychlá, spolehlivá a vždy aktuální."

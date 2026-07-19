@@ -157,7 +157,7 @@ common:
   no_result:
     text: "Nincs találat a keresésedre."
     back: "← Vissza"
-  detail : "Részletek megtekintése →"
+  detail : "Részletek megtekintése"
 base:
   title: "League of Data Base"
   description: "A League of Data Base egy közösség által vezérelt platform, amely részletes információkat, statisztikákat és elemzéseket nyújt a League of Legendsről. Gyors, megbízható és mindig naprakész."

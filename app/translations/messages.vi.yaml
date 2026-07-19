@@ -157,7 +157,7 @@ common:
   no_result:
     text: "Không tìm thấy kết quả nào cho tìm kiếm của bạn."
     back: "← Quay lại"
-  detail : "Xem chi tiết →"
+  detail : "Xem chi tiết"
 base:
   title: "League of Data Base"
   description: "League of Data Base là nền tảng do cộng đồng xây dựng, cung cấp thông tin chi tiết, chỉ số và thông tin chuyên sâu về League of Legends. Nhanh chóng, đáng tin cậy và luôn được cập nhật."
