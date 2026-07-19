@@ -226,6 +226,35 @@ footer:
     repo: "Source code"
     linkedin: "LinkedIn"
 
+contact:
+  form:
+    cta: "Contact us"
+    eyebrow: "Contact form"
+    title: "A question, a bug, a project?"
+    intro: "Bug report, suggestion, review or business enquiry: drop us a line and we'll reply by email."
+    category: "Topic"
+    category_bug: "Bug / issue"
+    category_feedback: "Suggestion / feedback"
+    category_review: "Review"
+    category_commercial: "Business enquiry"
+    name: "Name"
+    email: "Email"
+    subject: "Subject"
+    message: "Message"
+    submit: "Send"
+    cancel: "Cancel"
+    close: "Close"
+  flash:
+    sent: "Thanks! Your message has been sent — we'll get back to you soon."
+    throttled: "Too many messages sent. Please try again in a little while."
+    error: "Something went wrong. Please check the form and try again."
+  error:
+    category: "Please pick a topic."
+    email: "Please enter a valid email address."
+    message: "Please write your message."
+    message_short: "Your message is too short (10 characters minimum)."
+    message_long: "Your message is too long (5000 characters maximum)."
+
 loader:
   eyebrow: "Data Dragon"
   title: "Summoning data"
@@ -324,6 +353,7 @@ auth:
   flash:
     registered: "Welcome, summoner — your account is ready."
     verify_sent: "A confirmation email is on its way. Check your inbox."
+    too_many_attempts: "Too many attempts from your connection. Please wait a few minutes before trying again."
     verify_success: "Your email address is confirmed. Have fun, summoner."
     verify_error: "This confirmation link is invalid or has expired."
     verify_already: "Your email address is already confirmed."
@@ -487,6 +517,7 @@ donate:
     unavailable: "Donations are not available right now."
     invalid_amount: "Invalid amount — enter between 1 € and 500 €."
     gateway: "The payment service is unreachable, please try again later."
+    throttled: "Too many payment attempts. Please wait a moment before trying again."
   success:
     eyebrow: "Offering received"
     title: "Thank you, Summoner"
@@ -562,6 +593,8 @@ build:
       search: "Search a champion…"
       empty: "No champion matches."
       selected: "Chosen champion"
+      open: "Choose a champion"
+      close: "Close list"
     runes:
       title: "Runes"
       primary: "Primary path"
@@ -587,6 +620,21 @@ build:
         core: "Core"
         situational: "Situational"
         final: "Final"
+    armory:
+      title: "Armory"
+      add_cta: "Add item"
+      done: "Done"
+      close: "Close the armory"
+      added: "%count% added"
+      in_step: "%count% in this step"
+      full: "Step full"
+      categories:
+        all: "All"
+        attack: "Attack"
+        magic: "Magic"
+        defense: "Defense"
+        mobility: "Mobility"
+        utility: "Utility"
   show:
     by: "By %name%"
     patch: "Forged on patch %version%"

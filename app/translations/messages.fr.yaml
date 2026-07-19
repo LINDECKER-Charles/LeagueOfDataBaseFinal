@@ -227,6 +227,35 @@ footer:
     repo: "Code source"
     linkedin: "LinkedIn"
 
+contact:
+  form:
+    cta: "Nous contacter"
+    eyebrow: "Formulaire de contact"
+    title: "Une question, un bug, un projet ?"
+    intro: "Bug, suggestion, avis ou demande commerciale : écrivez-nous, une réponse vous parviendra par e-mail."
+    category: "Motif"
+    category_bug: "Bug / anomalie"
+    category_feedback: "Suggestion / feedback"
+    category_review: "Avis"
+    category_commercial: "Contact commercial"
+    name: "Nom"
+    email: "E-mail"
+    subject: "Sujet"
+    message: "Message"
+    submit: "Envoyer"
+    cancel: "Annuler"
+    close: "Fermer"
+  flash:
+    sent: "Merci ! Votre message a bien été envoyé, nous vous répondrons rapidement."
+    throttled: "Trop de messages envoyés. Merci de réessayer dans un moment."
+    error: "Une erreur est survenue. Merci de vérifier le formulaire et de réessayer."
+  error:
+    category: "Merci de choisir un motif."
+    email: "Merci d'indiquer une adresse e-mail valide."
+    message: "Merci d'écrire votre message."
+    message_short: "Votre message est trop court (10 caractères minimum)."
+    message_long: "Votre message est trop long (5000 caractères maximum)."
+
 loader:
   eyebrow: "Data Dragon"
   title: "Invocation des données"
@@ -325,6 +354,7 @@ auth:
   flash:
     registered: "Bienvenue, invocateur — votre compte est prêt."
     verify_sent: "Un e-mail de confirmation vient de vous être envoyé. Vérifiez votre boîte de réception."
+    too_many_attempts: "Trop de tentatives depuis votre connexion. Merci de patienter quelques minutes avant de réessayer."
     verify_success: "Votre adresse e-mail est confirmée. Bon jeu, invocateur."
     verify_error: "Ce lien de confirmation est invalide ou a expiré."
     verify_already: "Votre adresse e-mail est déjà confirmée."
@@ -488,6 +518,7 @@ donate:
     unavailable: "Les dons ne sont pas disponibles pour le moment."
     invalid_amount: "Montant invalide — saisissez entre 1 € et 500 €."
     gateway: "Le service de paiement est injoignable, merci de réessayer plus tard."
+    throttled: "Trop de tentatives de paiement. Merci de patienter un moment avant de réessayer."
   success:
     eyebrow: "Offrande reçue"
     title: "Merci, invocateur"
@@ -563,6 +594,8 @@ build:
       search: "Rechercher un champion…"
       empty: "Aucun champion ne correspond."
       selected: "Champion choisi"
+      open: "Choisir un champion"
+      close: "Fermer la liste"
     runes:
       title: "Runes"
       primary: "Voie principale"
@@ -588,6 +621,21 @@ build:
         core: "Cœur"
         situational: "Situationnel"
         final: "Finale"
+    armory:
+      title: "Armurerie"
+      add_cta: "Ajouter un objet"
+      done: "Terminé"
+      close: "Fermer l'armurerie"
+      added: "%count% ajouté(s)"
+      in_step: "%count% dans cette étape"
+      full: "Étape pleine"
+      categories:
+        all: "Tous"
+        attack: "Attaque"
+        magic: "Magie"
+        defense: "Défense"
+        mobility: "Mobilité"
+        utility: "Utilitaire"
   show:
     by: "Par %name%"
     patch: "Forgé sur le patch %version%"
