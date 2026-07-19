@@ -1,8 +1,8 @@
 twig:
     file_name_pattern: '*.twig'
-    globals:
-        # Current application release — rendered in the navbar and on /changelog.
-        app_version: '%app.version%'
+    # The `app_version` global (navbar, footer, /changelog) is provided by
+    # App\Twig\AppVersionExtension, derived from the newest published changelog
+    # entry — the changelog is the single source of truth for the release number.
 
 when@test:
     twig:
