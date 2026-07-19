@@ -150,33 +150,6 @@ final class ClientManager
     }
 
     /**
-     * Crée un cookie d'effacement pour le cookie "remember".
-     *
-     * Le cookie renvoyé a la même clé que le cookie de persistance mais une valeur vide
-     * et une date d'expiration dans le passé, ce qui indique au navigateur de le supprimer.
-     *
-     * Important :
-     * - Les attributs (path/secure/httponly/samesite, et éventuellement domain) doivent
-     *   correspondre à ceux utilisés lors de la création du cookie pour garantir l'effacement.
-     * - Cette opération ne touche pas aux données serveur (session, base, etc.) : elle ne supprime
-     *   que le cookie côté client.
-     *
-     * @return \Symfony\Component\HttpFoundation\Cookie Cookie “deletion” (expire immédiatement)
-     */
-    public function makeForgetCookie(): Cookie
-    {
-        return Cookie::create(
-            name: self::REMEMBER_NAME,
-            value: '',
-            expire: time() - 3600,
-            path: '/',
-            secure: true,
-            httpOnly: true,
-            sameSite: 'lax'
-        );
-    }
-
-    /**
      * Hydrate la session à partir du cookie "remember" si la session ne contient pas déjà
      * la langue et la version. Le cookie doit être au format:
      *   base64(json) . '|' . hmac_sha256(json, appSecret)
