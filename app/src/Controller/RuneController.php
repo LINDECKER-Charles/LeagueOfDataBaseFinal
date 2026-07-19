@@ -63,6 +63,8 @@ final class RuneController extends AbstractResourceController
 
         try {
             $rune   = $this->runeManager->getByName($name, $sel['version'], $sel['lang']);
+            // Detail render resolves images synchronously by default (only the list
+            // opts into deferral), so a cold version paints real icons, not placeholders.
             $images = $this->runeManager->getImages($sel['version'], $sel['lang'], false, [$rune]);
         } catch (\Throwable $e) {
             return $this->detailFailure($sel, $e);

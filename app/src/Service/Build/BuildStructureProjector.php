@@ -74,7 +74,7 @@ final class BuildStructureProjector
             return [self::BLANK_RUNES, false]; // never configured — not a "reset"
         }
 
-        $valid = $this->runeIdSet($runeTrees);
+        $valid = RuneTreeIndex::fromTrees($runeTrees)->allIds();
         foreach ($ids as $id) {
             if (!isset($valid[$id])) {
                 return [self::BLANK_RUNES, true];
@@ -130,26 +130,6 @@ final class BuildStructureProjector
         $entry = $itemData[$id] ?? null;
 
         return is_array($entry) && isset($entry['name']) ? (string) $entry['name'] : $id;
-    }
-
-    /** Every style and perk id present in the target trees. @param array<mixed> $runeTrees @return array<int, true> */
-    private function runeIdSet(array $runeTrees): array
-    {
-        $set = [];
-        foreach ($runeTrees as $tree) {
-            if (($treeId = BuildStructureValidator::readInt($tree['id'] ?? null)) !== null) {
-                $set[$treeId] = true;
-            }
-            foreach ((array) ($tree['slots'] ?? []) as $slot) {
-                foreach ((array) ($slot['runes'] ?? []) as $rune) {
-                    if (($perkId = BuildStructureValidator::readInt($rune['id'] ?? null)) !== null) {
-                        $set[$perkId] = true;
-                    }
-                }
-            }
-        }
-
-        return $set;
     }
 
     /** Every id referenced by a rune page (styles + selections). @return list<int> */

@@ -1,0 +1,333 @@
+/* Summoner profile — danger zone, public card (/u/{username}), identity panels, preview ribbon, public hero. */
+@layer components {
+  /* ---- Danger zone -------------------------------------------------------- */
+  .profile-danger {
+    border: 1px solid color-mix(in srgb, var(--color-danger) 40%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 5%, transparent);
+    padding: 1.5rem;
+  }
+  .profile-danger__title {
+    font-family: var(--font-beaufort);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-danger);
+  }
+  /* Ghost button, danger-tinted. Standalone (not stacked on hx-btn-ghost):
+     utilities would win the border/color war against a components-layer tint. */
+  .profile-danger__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: color-mix(in srgb, var(--color-danger) 80%, var(--color-text));
+    border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+    background: transparent;
+    transition: color 0.3s var(--ease-hextech), border-color 0.3s var(--ease-hextech), background-color 0.3s var(--ease-hextech);
+  }
+  .profile-danger__btn:hover {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+    background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  }
+  .profile-danger__btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .profile-danger__btn, .picker-option, .picker-remove, .picker-close { transition: none; }
+  }
+
+  /* ---- Public summoner card (/u/{username}) ------------------------------- */
+  .profile-card {
+    padding: 2rem 1.5rem 2.25rem;
+  }
+  @media (width >= 40rem) {
+    .profile-card { padding: 2.5rem 2.5rem 2.75rem; }
+  }
+  .profile-card__banner { text-align: center; }
+  .profile-card__plates {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin: 1.5rem 0 2rem;
+  }
+  .profile-card__plates .hx-plate__value { text-align: left; }
+  .profile-card__medallions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+  @media (width >= 40rem) {
+    .profile-card__medallions { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  .profile-card__builds {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .profile-build {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid rgba(200, 170, 110, 0.28);
+    background: linear-gradient(180deg, rgba(15, 27, 45, 0.85), rgba(9, 16, 22, 0.92));
+    transition: border-color 0.3s var(--ease-hextech), box-shadow 0.3s var(--ease-hextech);
+  }
+  .profile-build:hover {
+    border-color: var(--color-gold);
+    box-shadow: 0 0 18px -8px rgba(10, 200, 185, 0.35);
+  }
+  .profile-build__portrait {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    flex: none;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 60%, transparent);
+    background: var(--color-void);
+  }
+  .profile-build__portrait img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-build__portrait--initials {
+    font-family: var(--font-beaufort);
+    font-size: 0.85rem;
+    color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  .profile-build__name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-beaufort);
+    font-size: 0.95rem;
+    color: var(--color-gold-bright);
+  }
+  .profile-build__meta {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+
+  /* ---- Secondary profile panels (identity, set-password) ------------------ */
+  /* Same surface grammar as .profile-danger, gold-tinted instead of danger. */
+  .profile-panel {
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    background: color-mix(in srgb, var(--color-gold-deep) 6%, transparent);
+    padding: 1.5rem;
+  }
+  .profile-panel__title {
+    font-family: var(--font-beaufort);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-gold-light);
+  }
+
+  /* Riot tag input group: the # lives outside the value, as a visual prefix. */
+  .riot-tag {
+    display: flex;
+    align-items: stretch;
+  }
+  .riot-tag__prefix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+    border-right: none;
+    background: color-mix(in srgb, var(--color-gold-deep) 14%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-gold);
+  }
+  .riot-tag__input {
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ---- Preview mode ribbon (owner previewing their public card) ----------- */
+  .preview-ribbon {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+    background: color-mix(in srgb, var(--color-gold-deep) 16%, var(--color-void));
+  }
+  .preview-ribbon__text {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+  .preview-ribbon__badge {
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.66rem;
+    color: var(--color-void);
+    background: var(--color-gold);
+    padding: 0.2rem 0.6rem;
+  }
+  .preview-ribbon__back { flex: none; }
+
+  /* ---- Public hero: full-bleed skin banner + decorative favorite emblems -- */
+  .profile-hero {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: 30rem;
+    overflow: hidden;
+  }
+  .profile-hero--plain { min-height: 22rem; }
+  @media (width >= 48rem) {
+    .profile-hero--art { min-height: 34rem; }
+  }
+  .profile-hero__art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 22%;
+  }
+  .profile-hero__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(3, 8, 15, 0.15) 0%, rgba(3, 8, 15, 0.55) 55%, rgba(3, 8, 15, 0.96) 100%),
+      radial-gradient(120% 90% at 50% 0%, transparent 42%, rgba(3, 8, 15, 0.5) 100%);
+  }
+  .profile-hero__body {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 2.25rem;
+    text-align: center;
+  }
+  @media (width >= 48rem) {
+    .profile-hero__body { padding: 2.5rem 2.5rem 2.75rem; }
+  }
+  .profile-hero__name {
+    margin-top: 0.4rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-family: var(--font-beaufort);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: clamp(1.9rem, 5vw, 3rem);
+  }
+  .profile-hero__meta {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+  .profile-hero__skin {
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.72rem;
+    color: var(--color-gold-bright);
+  }
+
+  /* Suspended favorite orbs floating over the hero, each with a staggered idle
+     drift. Decorative (pointer-events:none), pure CSS, reduced-motion aware. */
+  .profile-orbits {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .profile-orb {
+    --orb-size: 3.6rem;
+    position: absolute;
+    width: var(--orb-size);
+    height: var(--orb-size);
+    animation: profile-float var(--float-dur, 7s) var(--ease-hextech) infinite;
+    animation-delay: var(--float-delay, 0s);
+    will-change: transform;
+  }
+  .profile-orb__disc {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 60%, transparent);
+    background: color-mix(in srgb, var(--color-void) 70%, transparent);
+    box-shadow:
+      0 12px 30px -12px rgba(0, 0, 0, 0.85),
+      0 0 22px -6px color-mix(in srgb, var(--color-hex) 55%, transparent);
+  }
+  .profile-orb__disc picture,
+  .profile-orb__disc img { width: 100%; height: 100%; }
+  .profile-orb__disc img { object-fit: cover; }
+  .profile-orb__initials {
+    font-family: var(--font-beaufort);
+    font-size: 1rem;
+    color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  .profile-orb--primary { --orb-size: 5.25rem; }
+  .profile-orb--primary .profile-orb__disc {
+    border-color: var(--color-gold);
+    box-shadow:
+      0 16px 40px -14px rgba(0, 0, 0, 0.9),
+      0 0 30px -6px color-mix(in srgb, var(--color-gold) 55%, transparent);
+  }
+  /* Scatter positions — kept clear of the centered name/meta block. */
+  .profile-orb--p1 { top: 16%; left: 7%;   --float-dur: 6.5s; --float-delay: 0s; }
+  .profile-orb--p2 { top: 22%; right: 8%;  --float-dur: 8s;   --float-delay: -1.4s; }
+  .profile-orb--p3 { bottom: 26%; left: 12%; --float-dur: 7.4s; --float-delay: -0.7s; }
+  .profile-orb--p4 { bottom: 20%; right: 13%; --float-dur: 6.9s; --float-delay: -2.1s; }
+  @media (width < 40rem) {
+    .profile-orb { --orb-size: 2.9rem; }
+    .profile-orb--primary { --orb-size: 3.9rem; }
+    .profile-orb--p1 { top: 8%; left: 5%; }
+    .profile-orb--p2 { top: 9%; right: 5%; }
+    .profile-orb--p3 { bottom: 30%; left: 6%; }
+    .profile-orb--p4 { bottom: 28%; right: 6%; }
+  }
+  @keyframes profile-float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-14px) rotate(2.5deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .profile-orb { animation: none; }
+  }
+
+  .profile-public__builds {
+    width: 100%;
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 3rem;
+  }
+
+}

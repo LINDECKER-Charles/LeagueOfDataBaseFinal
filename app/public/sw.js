@@ -97,56 +97,79 @@ self.addEventListener('fetch', (event) => {
 });
 
 async function pageStrategy(event) {
-  const cache = await caches.open(PAGES);
+  const cache = await caches.open(PAGES).catch(() => null);
+  const cached = cache ? await cache.match(event.request) : undefined;
   try {
-    const response = await networkWithTimeout(event);
-    if (response.ok) {
+    // Race the network against a timeout ONLY when a cached page can take over;
+    // with no fallback, aborting a slow-but-valid first visit just turns it into a
+    // broken navigation (net::ERR_FAILED). Let the network run to completion then.
+    const response = await networkFetch(event, cached ? PAGE_TIMEOUT_MS : null);
+    if (cache && response.ok) {
       cache.put(event.request, response.clone()).then(() => trim(cache, PAGE_MAX));
     }
     return response;
   } catch {
-    const cached = await cache.match(event.request);
-    return cached || cache.match(OFFLINE_URL);
+    // Guarantee a Response on every path — respondWith(undefined) throws
+    // "Failed to convert value to 'Response'" and breaks the navigation.
+    return cached || (cache && await cache.match(OFFLINE_URL)) || offlineResponse();
   }
 }
 
-async function networkWithTimeout(event) {
+async function networkFetch(event, timeoutMs) {
+  const preloaded = await event.preloadResponse;
+  if (preloaded) return preloaded;
+  if (timeoutMs === null) return fetch(event.request);
+
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), PAGE_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const preloaded = await event.preloadResponse;
-    if (preloaded) return preloaded;
     return await fetch(event.request, { signal: controller.signal });
   } finally {
     clearTimeout(timer);
   }
 }
 
+/** Last-resort page body when even the cached offline shell is unavailable. */
+function offlineResponse() {
+  return new Response(
+    '<!doctype html><meta charset="utf-8"><title>Hors ligne</title><p>Contenu indisponible hors ligne.</p>',
+    { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+  );
+}
+
 async function cacheFirst(name, request, max) {
-  const cache = await caches.open(name);
-  const hit = await cache.match(request);
+  const cache = await caches.open(name).catch(() => null);
+  const hit = cache ? await cache.match(request) : undefined;
   if (hit) return hit;
-  const response = await fetch(request);
-  if (response.ok) {
-    cache.put(request, response.clone()).then(() => trim(cache, max));
+  try {
+    const response = await fetch(request);
+    if (cache && response.ok) {
+      cache.put(request, response.clone()).then(() => trim(cache, max));
+    }
+    return response;
+  } catch {
+    // Nothing cached and the network is down — fail the sub-resource cleanly
+    // rather than rejecting respondWith (unhandled "network error" promise).
+    return Response.error();
   }
-  return response;
 }
 
 /** Re-fetch DDragon art in CORS mode (ACAO:* upstream) so cached responses are
     inspectable and quota-honest; on any failure fall back to the raw request. */
 async function corsArtCache(request) {
-  const cache = await caches.open(ART);
-  const hit = await cache.match(request.url);
+  const cache = await caches.open(ART).catch(() => null);
+  const hit = cache ? await cache.match(request.url) : undefined;
   if (hit) return hit;
   try {
     const response = await fetch(request.url, { mode: 'cors' });
-    if (response.ok) {
+    if (cache && response.ok) {
       cache.put(request.url, response.clone()).then(() => trim(cache, ART_MAX));
     }
     return response;
   } catch {
-    return fetch(request);
+    // CORS re-fetch failed (offline / upstream): fall back to the raw request,
+    // and if that fails too, fail cleanly instead of rejecting respondWith.
+    return fetch(request).catch(() => Response.error());
   }
 }
 

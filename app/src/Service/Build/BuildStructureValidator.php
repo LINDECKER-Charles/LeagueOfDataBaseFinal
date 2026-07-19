@@ -59,7 +59,7 @@ final class BuildStructureValidator
     {
         $errors = [
             ...$this->validateChampion($structure['championId'] ?? null, $validChampionIds),
-            ...$this->validateRunes($structure['runes'] ?? null, $this->indexTreeSlots($runeTrees)),
+            ...$this->validateRunes($structure['runes'] ?? null, RuneTreeIndex::fromTrees($runeTrees)->slotsByTree()),
             ...$this->validateSteps($structure['steps'] ?? null, array_fill_keys($validItemIds, true)),
         ];
 
@@ -218,37 +218,6 @@ final class BuildStructureValidator
     }
 
     /**
-     * treeId => 4 slot maps (perkId => true). Slot order is DDragon's own; the
-     * keystone slot is index 0 by upstream contract.
-     *
-     * @param array<mixed> $runeTrees
-     * @return array<int, list<array<int, true>>>
-     */
-    private function indexTreeSlots(array $runeTrees): array
-    {
-        $index = [];
-        foreach ($runeTrees as $tree) {
-            $treeId = self::readInt($tree['id'] ?? null);
-            if ($treeId === null) {
-                continue;
-            }
-            $slots = [];
-            foreach ($tree['slots'] ?? [] as $slot) {
-                $perks = [];
-                foreach ($slot['runes'] ?? [] as $rune) {
-                    if (($perkId = self::readInt($rune['id'] ?? null)) !== null) {
-                        $perks[$perkId] = true;
-                    }
-                }
-                $slots[] = $perks;
-            }
-            $index[$treeId] = $slots;
-        }
-
-        return $index;
-    }
-
-    /**
      * Slot index (>= 1) holding this perk in the secondary tree — keystones
      * (slot 0) are deliberately unreachable from the secondary path.
      *
@@ -282,10 +251,5 @@ final class BuildStructureValidator
         }
 
         return null;
-    }
-
-    private function toInt(mixed $value): ?int
-    {
-        return self::readInt($value);
     }
 }

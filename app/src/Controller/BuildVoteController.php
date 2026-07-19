@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Concern\ResolvesCurrentUser;
 use App\Entity\Build;
 use App\Entity\BuildVote;
 use App\Entity\User;
@@ -31,6 +32,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class BuildVoteController extends AbstractController
 {
+    use ResolvesCurrentUser;
+
     private const CSRF_TOKEN_ID = 'submit';
     private const DIRECTIONS = ['up' => BuildVote::UP, 'down' => BuildVote::DOWN];
 
@@ -105,16 +108,5 @@ final class BuildVoteController extends AbstractController
         }
 
         return $this->redirectToRoute('app_trends', status: Response::HTTP_SEE_OTHER);
-    }
-
-    private function currentUser(): User
-    {
-        $user = $this->getUser();
-        if (!$user instanceof User) {
-            // access_control guarantees ROLE_USER here; guard against misconfig.
-            throw $this->createAccessDeniedException();
-        }
-
-        return $user;
     }
 }

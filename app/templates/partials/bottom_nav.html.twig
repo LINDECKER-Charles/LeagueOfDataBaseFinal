@@ -1,9 +1,10 @@
 {# Mobile primary navigation — fixed thumb-zone bar, 6 destinations, labels
    always visible (Material/HIG guidance), safe-area aware. Hidden ≥ md where
    the header nav takes over. #}
-{% set navVersion = app.request.attributes.get('version') ?: (client.session.version ?? (client.versions|default([])|first)) %}
-{% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
-{% set currentRoute = app.request.get('_route') %}
+{% set navSelection = page_selection() %}
+{% set navVersion = navSelection.version %}
+{% set navLang = navSelection.lang %}
+{% set currentRoute = app.request.attributes.get('_route') %}
 
 <nav class="bottom-nav" aria-label="{{ 'footer.navigation.title'|trans }}">
   <a href="{{ path('app_home') }}" {% if currentRoute == 'app_home' %}aria-current="page"{% endif %}>

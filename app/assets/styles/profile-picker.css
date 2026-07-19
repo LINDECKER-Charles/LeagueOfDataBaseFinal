@@ -1,0 +1,288 @@
+/* ---------------------------------------------------------------------------
+   Summoner profile — the "chamber" (/profile: identity plates + favorite
+   sockets + danger zone) and the public summoner card (/u/{username}).
+   One signature: the empty socket's hollow hex diamond that lights up cyan.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- /profile layout: identity column left, 2×2 sockets right (≥lg) ---- */
+  .profile-layout {
+    display: grid;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (width >= 64rem) {
+    .profile-layout { grid-template-columns: minmax(0, 21rem) minmax(0, 1fr); }
+  }
+  .profile-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .profile-identity__mono {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---- Favorite sockets --------------------------------------------------- */
+  .socket-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  /* Compact 4-across from tablet up so the selector stays low-footprint. */
+  @media (width >= 40rem) {
+    .socket-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  .socket {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 7.75rem;
+    padding: 0.85rem 0.6rem;
+    text-align: center;
+  }
+  /* Button reset for the interactive island sockets. */
+  .socket--action {
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+  }
+  .socket--action:focus-visible {
+    outline: none;
+    border-color: var(--color-hex);
+  }
+  /* Empty / unavailable states draw their own frame (the filled state stacks
+     the shared hextech-frame + hx-corners utilities instead). */
+  .socket--empty,
+  .socket--unavailable {
+    border: 1px dashed color-mix(in srgb, var(--color-gold-deep) 40%, transparent);
+    background: color-mix(in srgb, var(--color-void) 45%, transparent);
+    clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  }
+  .socket--unavailable {
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  }
+  .socket__type {
+    font-family: var(--font-beaufort);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    color: var(--color-gold);
+  }
+  .socket__portrait {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 3.4rem;
+    height: 3.4rem;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 60%, transparent);
+    background: var(--color-void);
+  }
+  .socket__portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .socket__portrait--initials {
+    font-family: var(--font-beaufort);
+    font-size: 1.1rem;
+    color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  .socket__name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-beaufort);
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    color: var(--color-gold-bright);
+  }
+  .socket__name--muted {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-dim);
+  }
+
+  /* SIGNATURE — the hollow hex diamond of an unfilled socket: a quiet gold
+     outline that wakes up cyan under the pointer, like an empty Hextech mount. */
+  .socket__hex {
+    width: 2.6rem;
+    height: 2.6rem;
+    rotate: 45deg;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    background: transparent;
+    transition:
+      border-color 0.45s var(--ease-hextech),
+      box-shadow 0.45s var(--ease-hextech);
+  }
+  .socket--action:hover .socket__hex,
+  .socket--action:focus-visible .socket__hex {
+    border-color: var(--color-hex);
+    box-shadow:
+      0 0 18px -4px rgba(10, 200, 185, 0.55),
+      inset 0 0 12px -6px rgba(10, 200, 185, 0.45);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .socket__hex { transition: none; }
+  }
+
+  /* ---- Picker dialog — .filter-sheet base (bottom sheet), centered ≥md ---- */
+  .picker-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .picker-sheet:not([open]) { display: none; }
+  @media (width >= 48rem) {
+    .picker-sheet {
+      margin: auto;
+      width: min(32rem, calc(100vw - 3rem));
+      max-height: min(38rem, 85dvh);
+      border: 1px solid rgba(200, 170, 110, 0.45);
+      padding: 1.25rem 1.5rem 1.5rem;
+    }
+    .picker-sheet .filter-sheet__handle { display: none; }
+    /* Neutralise the sheet's slide-from-bottom entrance when centered. */
+    .picker-sheet[open] { transition: none; }
+  }
+  .picker-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .picker-close {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--color-text-muted);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+    transition: color 0.25s var(--ease-hextech), border-color 0.25s var(--ease-hextech);
+  }
+  .picker-close:hover { color: var(--color-gold-bright); border-color: var(--color-gold); }
+  .picker-close svg { width: 1rem; height: 1rem; }
+
+  .picker-list {
+    display: flex;
+    flex-direction: column;
+    min-height: 12rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    max-height: 55dvh;
+    border-top: 1px solid color-mix(in srgb, var(--color-gold-deep) 35%, transparent);
+  }
+  @media (width >= 48rem) {
+    .picker-list { max-height: 24rem; }
+  }
+  .picker-note {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2.5rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+  .picker-retry {
+    padding: 0.35rem 1rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-gold-bright);
+    border: 1px solid var(--color-gold);
+    background: rgba(200, 170, 110, 0.14);
+  }
+
+  .picker-option {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.45rem 0.6rem;
+    text-align: left;
+    font: inherit;
+    color: var(--color-text);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-gold-deep) 18%, transparent);
+    transition: background-color 0.2s var(--ease-hextech), color 0.2s var(--ease-hextech);
+  }
+  .picker-option:hover,
+  .picker-option:focus-visible {
+    outline: none;
+    background: color-mix(in srgb, var(--color-hex) 10%, transparent);
+    color: var(--color-hex-bright);
+  }
+  .picker-option--active {
+    background: rgba(200, 170, 110, 0.14);
+    color: var(--color-gold-bright);
+  }
+  .picker-option--group {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-panel);
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.72rem;
+    color: var(--color-gold);
+    border-bottom-color: color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+  }
+  .picker-option--indent { padding-left: 2rem; }
+  .picker-option__img {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    flex: none;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+    background: var(--color-void);
+  }
+  .picker-option__img img { width: 100%; height: 100%; object-fit: cover; }
+  .picker-option__img--initials {
+    font-family: var(--font-beaufort);
+    font-size: 0.7rem;
+    color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  .picker-option__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+  }
+
+  .picker-foot {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid color-mix(in srgb, var(--color-gold-deep) 35%, transparent);
+    padding-top: 0.9rem;
+  }
+  .picker-remove {
+    padding: 0.4rem 1.1rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-danger);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+    transition: border-color 0.25s var(--ease-hextech), background-color 0.25s var(--ease-hextech);
+  }
+  .picker-remove:hover {
+    border-color: var(--color-danger);
+    background: color-mix(in srgb, var(--color-danger) 16%, transparent);
+  }
+
+}

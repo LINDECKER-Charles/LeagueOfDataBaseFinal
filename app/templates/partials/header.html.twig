@@ -4,11 +4,12 @@
    account, patch/language switcher) stays reachable on every viewport. Every
    popover is a native <details class="switcher"> — no JS menus; enhance.ts
    closes any open switcher on outside interaction. #}
-{% set currentRoute = app.request.get('_route') %}
-{# On a /{version}/… page the route version drives the chrome so navigation stays
-   on the viewed patch; elsewhere the session-remembered selection applies. #}
-{% set navVersion = app.request.attributes.get('version') ?: (client.session.version ?? (client.versions|default([])|first)) %}
-{% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
+{% set currentRoute = app.request.attributes.get('_route') %}
+{# Resolved (version, lang) from the single source (PageContextResolver): the nav
+   always mirrors the patch the page rendered with — path, query or session. #}
+{% set navSelection = page_selection() %}
+{% set navVersion = navSelection.version %}
+{% set navLang = navSelection.lang %}
 {% set isCodexRoute = currentRoute starts with 'app_champion' or currentRoute starts with 'app_item'
   or currentRoute starts with 'app_rune' or currentRoute starts with 'app_summoner' %}
 
@@ -107,7 +108,13 @@
           <span>{{ navLang|split('_')|first|upper }}</span>
           <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
         </summary>
-        <form action="{{ path('app_setup_save') }}" method="post" class="switcher__panel">
+        {# data-turbo="false": this POST redirects (via Referer) to the *current*
+           page with the new ?version&lang. Turbo intercepts the submit but doesn't
+           re-render the redirected page, so the visible page stays on the old
+           version until the next navigation. A native submit follows the 302 and
+           reloads the page on the new selection — same opt-out as every other
+           redirecting POST form (login/logout/vote/profile/donate). #}
+        <form action="{{ path('app_setup_save') }}" method="post" data-turbo="false" class="switcher__panel">
           <p class="eyebrow mb-3">{{ 'header.switcher.label'|trans }}</p>
           <div class="flex flex-col gap-2.5">
             <label for="header-version" class="sr-only">{{ 'setup.form.version'|trans }}</label>

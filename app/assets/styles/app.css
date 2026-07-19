@@ -17,8 +17,12 @@
 @import "./recipe.css";
 @import "./nav.css";
 @import "./auth.css";
-@import "./profile.css";
+/* profile split by concern; kept in source order to preserve the cascade. */
+@import "./profile-picker.css";
+@import "./profile-public.css";
+@import "./profile-edit.css";
 @import "./builds.css";
 @import "./community.css";
 @import "./donate.css";
 @import "./changelog.css";
+@import "./turbo.css";

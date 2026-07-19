@@ -57,6 +57,9 @@ final class PageContextResolver
         '/summoners' => ['type' => 'summoner',      'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE, 'maxPerPage' => 0],
     ];
 
+    /** @var array{version:string, lang:string}|null per-request memo of {@see selection} */
+    private ?array $selection = null;
+
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly ClientManager $clientManager,
@@ -118,6 +121,14 @@ final class PageContextResolver
      * @return array{version:string, lang:string}
      */
     public function selection(): array
+    {
+        // Memoised: controllers, the header and the bottom-nav all read the same
+        // selection within a request — resolve (and its session read) once.
+        return $this->selection ??= $this->resolveSelection();
+    }
+
+    /** @return array{version:string, lang:string} */
+    private function resolveSelection(): array
     {
         $request = $this->requestStack->getCurrentRequest();
 
