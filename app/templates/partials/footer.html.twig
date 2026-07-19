@@ -15,8 +15,12 @@
     {# Navigation #}
     <div>
       <h3 class="eyebrow mb-3">{{ 'footer.navigation.title'|trans }}</h3>
-      {% set navVersion = app.request.attributes.get('version') ?: (client.session.version ?? (client.versions|default([])|first)) %}
-      {% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
+      {# Same single source (PageContextResolver) as header/bottom-nav: footer links
+         must target the SAME patch the page rendered with — path > ?version= > session —
+         not a per-template re-derivation that ignores the query and could drift. #}
+      {% set navSelection = page_selection() %}
+      {% set navVersion = navSelection.version %}
+      {% set navLang = navSelection.lang %}
       <ul class="flex flex-col gap-1.5 text-sm">
         <li><a href="{{ path('app_home') }}" class="nav-link">{{ 'footer.navigation.home'|trans }}</a></li>
         <li><a href="{{ resource_path('app_champions', {}, navVersion, navLang) }}" class="nav-link">{{ 'footer.navigation.champion'|trans }}</a></li>
@@ -48,7 +52,7 @@
     <div>
       <h3 class="eyebrow mb-3">{{ 'footer.project.title'|trans }}</h3>
       <ul class="flex flex-col gap-1.5 text-sm">
-        <li>{{ 'footer.project.version'|trans }}</li>
+        <li>{{ 'footer.project.version'|trans({'%version%': app_version}) }}</li>
         <li>{{ 'footer.project.updated'|trans }}</li>
       </ul>
     </div>
