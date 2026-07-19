@@ -143,14 +143,14 @@ async function run() {
   for (const [name, url, opts] of TARGETS) console.log(await shoot(desktop, name, url, opts))
   await desktop.close()
 
-  // Mobile (a representative subset)
+  // Mobile — every screen (fills the -mobile.png set the README references)
   const mobile = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
     reducedMotion: 'reduce',
   })
   console.log(`\nMobile 390`)
-  for (const [name, url, opts] of [TARGETS[0], TARGETS[1], TARGETS[2], TARGETS[6]]) {
+  for (const [name, url, opts] of TARGETS) {
     console.log(await shoot(mobile, `${name}-mobile`, url, opts))
   }
   await mobile.close()

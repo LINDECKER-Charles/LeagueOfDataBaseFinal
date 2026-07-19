@@ -29,9 +29,9 @@
         <a href="{{ path('app_build_new') }}" class="hx-btn-gold">{{ 'build.list.cta_first'|trans }}</a>
       </div>
     {% else %}
-      {# Import target choices: the latest patches, kept usable — plus each build's
-         own patch, appended per row when it falls outside the recent window. #}
-      {% set importBase = client.versions|default([])|slice(0, 30) %}
+      {# Import target choices: every patch (same full list as the pickers) — plus
+         each build's own patch, appended per row when it's been delisted upstream. #}
+      {% set importBase = client.versions|default([]) %}
       <ul class="space-y-4">
         {% for row in rows %}
           {% set build = row.build %}

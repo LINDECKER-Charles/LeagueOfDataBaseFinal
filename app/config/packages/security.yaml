@@ -24,6 +24,10 @@ security:
             custom_authenticators:
                 - App\Security\AdminAuthenticator
             entry_point: App\Security\AdminAuthenticator
+            # Brute-force guard on the single admin identity (keyed on username + IP).
+            login_throttling:
+                max_attempts: 5
+                interval: '15 minutes'
             logout:
                 path: admin_logout
                 target: admin_login

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { RunePerk, RuneTree } from './catalogTypes'
-import { GHOST_SLOT, KEYSTONE_SLOT, type RuneDraft } from './runeRules'
+import { GHOST_SLOT, KEYSTONE_SLOT, SECONDARY_PICKS, type RuneDraft } from './runeRules'
 import type { RunesLabels, UiLabels } from './editorLabels'
 
 /**
@@ -52,6 +52,9 @@ function isSecondaryPick(perkId: number): boolean {
 function isSecondarySlotUsed(slotIndex: number): boolean {
     return props.draft.secondaryPicks.some((pick) => pick.slotIndex === slotIndex)
 }
+
+/** Both secondary picks are taken: unused rows are dimmed to signal no free third slot. */
+const isSecondaryFull = computed(() => props.draft.secondaryPicks.length >= SECONDARY_PICKS)
 
 /** Stored primary pick of a slot that no longer exists in the catalog row. */
 function primaryGhost(slotIndex: number, perks: RunePerk[]): number | null {
@@ -145,7 +148,10 @@ const secondaryGhosts = computed(() => props.draft.secondaryPicks.filter((p) => 
                         <div
                             v-if="slotIndex > 0"
                             class="forge-slot"
-                            :class="{ 'forge-slot--picked': isSecondarySlotUsed(slotIndex) }"
+                            :class="{
+                                'forge-slot--picked': isSecondarySlotUsed(slotIndex),
+                                'forge-slot--locked': isSecondaryFull && !isSecondarySlotUsed(slotIndex),
+                            }"
                         >
                             <span class="forge-slot__name">{{ slotName(slotIndex) }}</span>
                             <button

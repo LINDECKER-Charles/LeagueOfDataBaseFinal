@@ -26,6 +26,9 @@ final class Build
 {
     private const SHARE_TOKEN_BYTES = 12;
 
+    /** Fallback authoring locale; also backfills builds predating the language column. */
+    public const DEFAULT_LANGUAGE = 'en_US';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -48,6 +51,14 @@ final class Build
     /** Game mode the build targets ({@see GameMode} values); drives item availability. */
     #[ORM\Column(length: 16, enumType: GameMode::class, options: ['default' => 'sr'])]
     private GameMode $gameMode = GameMode::DEFAULT;
+
+    /**
+     * Data Dragon locale the author wrote the free text (name/description) in.
+     * Pure authoring metadata: the build stores language-agnostic ids, so this
+     * never affects rendering — it only powers the trends language filter.
+     */
+    #[ORM\Column(length: 8, options: ['default' => self::DEFAULT_LANGUAGE])]
+    private string $language = self::DEFAULT_LANGUAGE;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
@@ -140,6 +151,18 @@ final class Build
     public function setGameMode(GameMode $gameMode): static
     {
         $this->gameMode = $gameMode;
+
+        return $this;
+    }
+
+    public function getLanguage(): string
+    {
+        return $this->language;
+    }
+
+    public function setLanguage(string $language): static
+    {
+        $this->language = $language;
 
         return $this;
     }

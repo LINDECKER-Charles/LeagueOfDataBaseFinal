@@ -27,17 +27,21 @@ final class BuildSubmission
         public readonly ?array $structure,
         public readonly string $gameVersion,
         public readonly ?GameMode $gameMode,
+        public readonly string $language,
     ) {}
 
     /**
-     * @param string $fallbackVersion version to assume when the form omits one
-     *                                (JS-less submit) — the caller's page context
+     * @param string $fallbackVersion  version to assume when the form omits one
+     *                                 (JS-less submit) — the caller's page context
+     * @param string $fallbackLanguage authoring locale to assume when the form
+     *                                 omits one — the caller's page context
      */
-    public static function fromRequest(Request $request, string $fallbackVersion): self
+    public static function fromRequest(Request $request, string $fallbackVersion, string $fallbackLanguage): self
     {
         $description = trim((string) $request->request->get('description', ''));
         $decoded = json_decode((string) $request->request->get('structure', ''), true);
         $version = trim((string) $request->request->get('game_version', ''));
+        $language = trim((string) $request->request->get('language', ''));
 
         return new self(
             name: trim((string) $request->request->get('name', '')),
@@ -46,6 +50,7 @@ final class BuildSubmission
             structure: is_array($decoded) ? $decoded : null,
             gameVersion: $version === '' ? $fallbackVersion : $version,
             gameMode: GameMode::fromForm($request->request->get('game_mode')),
+            language: $language === '' ? $fallbackLanguage : $language,
         );
     }
 

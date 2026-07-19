@@ -185,7 +185,7 @@ footer:
 
   project:
     title: "Proje"
-    version: "Sürüm: Beta 2.0"
+    version: "Sürüm: %version%"
     updated: "Güncellendi: 17/07/2026"
 
   contact:

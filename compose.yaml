@@ -41,6 +41,8 @@ services:
       # Mailpit SMTP; served environments MUST inject a real relay DSN.
       MAILER_DSN: ${MAILER_DSN:-smtp://mailer:1025}
       MAILER_FROM: "${MAILER_FROM:-LeagueOfDataBase <no-reply@leagueofdatabase.gg>}"
+      # Mailbox receiving footer contact-form submissions (empty -> admin inbox only).
+      CONTACT_RECIPIENT: ${CONTACT_RECIPIENT:-}
     depends_on:
       go-fetcher:
         condition: service_healthy

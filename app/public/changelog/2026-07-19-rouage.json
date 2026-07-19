@@ -1,10 +1,10 @@
 {
   "id": "2026-07-19-rouage",
-  "version": "2.0.1",
+  "version": "2.0.5",
   "codename": "Rouage",
   "date": "2026-07-19",
   "type": "hotfix",
-  "title": "LeagueOfDataBase 2.0.1 — Rouage",
+  "title": "LeagueOfDataBase 2.0.5 — Rouage",
   "summary": "Une vague de mise au point après Ralliement : les pages ne se figent plus, les images se chargent du premier coup, le son des sorts se contrôle vraiment, et l'écran de chargement se fait discret.",
   "intro": "Rouage, ce sont les engrenages qu'on resserre juste après la grande sortie. Les navigations qui « ne se passaient rien » aboutissent de nouveau, les icônes s'affichent dès le premier passage sur un patch fraîchement choisi, et l'aperçu sonore des sorts se coupe, se réactive et s'arrête pour de bon quand vous quittez la page. L'écran de chargement, lui, ne clignote plus sur les pages déjà prêtes. Rien de spectaculaire — juste un site qui répond au quart de tour.",
   "stats": { "fixes": 4, "cards": 2 },

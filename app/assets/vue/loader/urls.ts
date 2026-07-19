@@ -41,7 +41,14 @@ function isVersionedCapable(versionlessPath: string): boolean {
         || /^\/(champion|object|rune|summoner)\//.test(versionlessPath)
 }
 
-/** Only the home + list routes ingest an image batch worth streaming. */
+/**
+ * Warm-only token (NOT a navigable route) the build editor hands to the loader
+ * to pre-warm the patch it forges from. Mirrors `BUILD_WARM_PATH` in
+ * {@see \App\Service\Client\PageContextResolver} — keep the two in sync.
+ */
+export const BUILD_WARM_PATH = '/builds/editor'
+
+/** Only the home + list routes (and the build-editor warm token) ingest an image batch worth streaming. */
 export function resourcesFor(pathname: string): ResourceKey[] {
     const p = (pathWithoutVersion(pathname).replace(/\/+$/, '') || '/').toLowerCase()
     if (p === '/') return ['champions', 'items', 'runes', 'summoners']
@@ -49,6 +56,8 @@ export function resourcesFor(pathname: string): ResourceKey[] {
     if (p === '/objects') return ['items']
     if (p === '/runes') return ['runes']
     if (p === '/summoners') return ['summoners']
+    // Build editor loads champions + items + runes (no summoners) for one patch.
+    if (p === BUILD_WARM_PATH) return ['champions', 'items', 'runes']
     return []
 }
 

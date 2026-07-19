@@ -44,6 +44,14 @@
     left: 50%;
     translate: -50% 0;
   }
+  /* Small phones (<=360px): the full P/Q/W/E/R rail (~370px) overflows the
+     viewport and zooms the page out. Shrink the tabs so the row fits without a
+     scroll container (overflow-x:auto would force overflow-y and clip the
+     ability-key badges that hang below each tab). Desktop/tablet untouched. */
+  @media (max-width: 374px) {
+    .kit__rail { gap: 0.55rem; }
+    .kit__tab { width: 3rem; height: 3rem; }
+  }
 
   .kit__panel {
     border: 1px solid rgba(200, 170, 110, 0.32);

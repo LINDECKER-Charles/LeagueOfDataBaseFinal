@@ -26,7 +26,6 @@ import {
     canAddItem,
     canAddStep,
     createStep,
-    insertItem,
     MAX_ITEMS_PER_STEP,
     moveItem,
     moveStep,
@@ -41,8 +40,14 @@ import {
 } from './stepList'
 import { parseStructure, serializeStructure, type BuildStep } from './structure'
 import { usePickerCatalog } from './usePickerCatalog'
+import { BUILD_WARM_PATH, requestWarm } from '../loader/warmBridge'
 
 export interface GameModeOption {
+    value: string
+    label: string
+}
+
+export interface LanguageOption {
     value: string
     label: string
 }
@@ -59,6 +64,10 @@ export interface BuildEditorProps {
     /** Initially selected game mode value (GameMode enum wire values). */
     gameMode: string
     gameModes: GameModeOption[]
+    /** Initially selected authoring locale (Data Dragon code, e.g. "fr_FR"). */
+    language: string
+    /** Authoring locales offered by the language select. */
+    languages: LanguageOption[]
     labels: BuildEditorLabels
 }
 
@@ -83,7 +92,21 @@ function useEditorCatalogs(props: BuildEditorProps, gameVersion: Ref<string>, ga
     )
     const runes = usePickerCatalog(() => query(props.endpoints.runes), runeTrees)
 
-    watch(gameVersion, () => void Promise.all([champions.reload(), items.reload(), runes.reload()]))
+    // Switching to a patch whose images aren't warm yet loads a full catalog set:
+    // gate it behind the global loader (real SSE progress over the ingestion) so
+    // the reloaded pickers land on real icons, not placeholders. The initial patch
+    // loaded un-gated on mount, and each warmed patch is only gated once a session.
+    const warmedPatches = new Set<string>([props.version])
+
+    async function switchVersion(version: string): Promise<void> {
+        if (!warmedPatches.has(version)) {
+            await requestWarm(version, props.lang, BUILD_WARM_PATH)
+            warmedPatches.add(version)
+        }
+        await Promise.all([champions.reload(), items.reload(), runes.reload()])
+    }
+
+    watch(gameVersion, (version) => void switchVersion(version))
     watch(gameMode, () => void items.reload())
 
     const knownItems = ref<Record<string, ItemOption>>({})
@@ -120,6 +143,9 @@ function useAnnouncer() {
 export function useBuildEditor(props: BuildEditorProps) {
     const gameVersion = ref(props.version)
     const gameMode = ref(props.gameMode)
+    // Authoring locale is pure metadata (the free text's language) — it feeds the
+    // hidden form field only and, unlike version/mode, never reloads any catalog.
+    const language = ref(props.language)
     const { champions, items, runes, knownItems } = useEditorCatalogs(props, gameVersion, gameMode)
     const { announcement, announce } = useAnnouncer()
     const dnd = props.labels.dnd
@@ -193,6 +219,7 @@ export function useBuildEditor(props: BuildEditorProps) {
         runes,
         gameVersion,
         gameMode,
+        language,
         championId,
         runeDraft,
         steps,
@@ -221,7 +248,7 @@ export function useBuildEditor(props: BuildEditorProps) {
         editStep: (index: number, patch: Partial<Pick<BuildStep, 'label' | 'note'>>) =>
             void (steps.value = updateStep(steps.value, index, patch)),
         appendItem: (stepIndex: number, itemId: string) =>
-            void (steps.value = addItem(steps.value, stepIndex, itemId)),
+            commitSteps(addItem(steps.value, stepIndex, itemId), dnd.added, { step: stepIndex + 1 }),
         deleteItem: (stepIndex: number, itemIndex: number) =>
             void (steps.value = removeItem(steps.value, stepIndex, itemIndex)),
         shiftItem: (stepIndex: number, itemIndex: number, delta: number) =>
@@ -238,8 +265,6 @@ export function useBuildEditor(props: BuildEditorProps) {
                       position: (to.index > from.index ? to.index - 1 : to.index) + 1,
                   })
                 : commitSteps(transferItem(steps.value, from, to), dnd.transferred, { step: to.step + 1 }),
-        dropNewItem: (to: ItemLocation, itemId: string) =>
-            commitSteps(insertItem(steps.value, to.step, to.index, itemId), dnd.added, { step: to.step + 1 }),
         announceDragCancelled: () => announce(dnd.cancelled),
         canAddStep: computed(() => canAddStep(steps.value)),
         canAddItemTo: (stepIndex: number) => canAddItem(steps.value, stepIndex),

@@ -185,7 +185,7 @@ footer:
 
   project:
     title: "專案"
-    version: "版本：Beta 2.0"
+    version: "版本：%version%"
     updated: "更新日期：17/07/2026"
 
   contact:

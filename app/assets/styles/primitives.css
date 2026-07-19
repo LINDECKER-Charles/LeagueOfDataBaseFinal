@@ -160,6 +160,15 @@
   .hx-switch::after { transition: none; }
 }
 
+/* Mobile: text inputs/selects must render at >=16px or iOS Safari force-zooms the
+   viewport on focus. text-sm (14px) stays on desktop pointers; lift on small
+   screens only — the single source that also covers the header switcher selects
+   and the footer contact dialog fields (all built on these two utilities). */
+@media (max-width: 640px) {
+  .hx-input,
+  .hx-select { font-size: 1rem; }
+}
+
 /* ---------------------------------------------------------------------------
    Interactive utilities (brand + nav)
 --------------------------------------------------------------------------- */
@@ -267,6 +276,18 @@
     color: var(--color-text-dim);
     white-space: nowrap;
   }
+  /* Mobile: a header carrying BOTH a title and a meta (only /donate today) would
+     force a min-width wider than a phone (~450px -> viewport zoom-out) because
+     both are nowrap on one flex line. Let the meta wrap onto its own full-width
+     line beneath the title + hairline. Desktop (>480px) is untouched. */
+  @media (max-width: 480px) {
+    .codex-header { flex-wrap: wrap; }
+    .codex-header .codex-header__meta {
+      order: 1; /* fall after the ::after hairline: [diamond title ---] then meta on its own line */
+      flex-basis: 100%;
+      white-space: normal;
+    }
+  }
 
   /* Engraved fact plaque — the quick-facts unit of the detail asides. */
   .hx-plate {
@@ -290,4 +311,30 @@
     font-size: 1.05rem;
     color: var(--color-gold-bright);
   }
+}
+
+/* Footer contact form modal — native <dialog> centered by showModal(). Tailwind's
+   preflight doesn't skin <dialog>, so the Hextech frame is declared here. */
+.contact-dialog {
+  width: min(34rem, calc(100vw - 2rem));
+  margin: auto;
+  padding: 0;
+  color: var(--color-text);
+  background: linear-gradient(180deg, var(--color-void), var(--color-hextech-black));
+  border: 1px solid var(--color-gold-deep);
+  box-shadow: 0 30px 90px -24px rgba(0, 0, 0, 0.85);
+}
+.contact-dialog::backdrop {
+  background: rgba(1, 10, 19, 0.78);
+  backdrop-filter: blur(2px);
+}
+.contact-dialog[open] {
+  animation: contact-dialog-in 0.2s var(--ease-hextech);
+}
+@keyframes contact-dialog-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-dialog[open] { animation: none; }
 }

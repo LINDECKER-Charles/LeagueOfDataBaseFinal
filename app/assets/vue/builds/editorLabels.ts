@@ -21,6 +21,7 @@ export interface ContextLabels {
     version: string
     mode: string
     modeHint: string
+    language: string
 }
 
 export interface ChampionLabels {
@@ -28,6 +29,10 @@ export interface ChampionLabels {
     search: string
     empty: string
     selected: string
+    /** Toggle label when the champion grid is collapsed. */
+    open: string
+    /** Toggle label when the champion grid is expanded. */
+    close: string
 }
 
 export interface RunesLabels {
@@ -54,6 +59,34 @@ export interface StepsLabels {
     presets: string[]
 }
 
+/** Category filter chips of the item armory (labels keyed by ItemCategoryKey). */
+export interface ArmoryCategoryLabels {
+    all: string
+    attack: string
+    magic: string
+    defense: string
+    mobility: string
+    utility: string
+}
+
+/** Item armory modal wording (browse-and-add item picker). */
+export interface ArmoryLabels {
+    title: string
+    /** "+ Add an item" call-to-action tile shown in every step. */
+    addCta: string
+    search: string
+    empty: string
+    done: string
+    close: string
+    /** "%count% added" running counter for the current open session. */
+    added: string
+    /** Badge title on a tile already placed in the step: carries "%count%". */
+    inStep: string
+    /** Hint shown when the target step reached its item cap. */
+    full: string
+    categories: ArmoryCategoryLabels
+}
+
 /** Drag-and-drop affordance + polite aria-live announcements. */
 export interface DndLabels {
     handle: string
@@ -70,6 +103,7 @@ export interface BuildEditorLabels extends UiLabels {
     champion: ChampionLabels
     runes: RunesLabels
     steps: StepsLabels
+    armory: ArmoryLabels
     dnd: DndLabels
 }
 

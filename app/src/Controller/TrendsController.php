@@ -11,6 +11,7 @@ use App\Service\API\ChampionManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
+use App\Service\Community\TrendsFilter;
 use App\Service\Community\TrendsViewAssembler;
 use App\Service\Picker\GameMode;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,10 +21,11 @@ use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * Public, indexable trends page: every public build ranked by net vote score.
- * Filters (champion, mode) and the page live in the query string — server
- * rendered so the ranking is crawlable; only the vote controls hydrate as a
- * Vue island. The champion filter offers only champions that actually have a
- * public build (derived from the repository, not the full catalog).
+ * Filters (champion, mode, authoring language) and the page live in the query
+ * string — server rendered so the ranking is crawlable; only the vote controls
+ * hydrate as a Vue island. The champion and language filters offer only values
+ * that actually have a public build (derived from the repository, not the full
+ * catalog).
  */
 final class TrendsController extends AbstractResourceController
 {
@@ -48,10 +50,12 @@ final class TrendsController extends AbstractResourceController
         ['version' => $version, 'lang' => $lang] = $this->pageContext->selection();
         $championId = trim((string) $request->query->get('champion', '')) ?: null;
         $mode = GameMode::tryFrom((string) $request->query->get('mode', ''));
+        $language = $this->requestedLanguage($request);
         $page = max(1, $request->query->getInt('page', 1));
 
+        $filter = new TrendsFilter($championId, $mode, $language);
         ['builds' => $pageBuilds, 'total' => $total] = $this->votes
-            ->topPublicBuilds($championId, $mode, $page, self::PER_PAGE);
+            ->topPublicBuilds($filter, $page, self::PER_PAGE);
 
         return $this->render('trends/index.html.twig', [
             'client' => $this->clientData(),
@@ -59,10 +63,37 @@ final class TrendsController extends AbstractResourceController
             'total' => $total,
             'page' => $page,
             'pages' => max(1, (int) ceil($total / self::PER_PAGE)),
-            'filters' => ['champion' => $championId, 'mode' => $mode?->value],
+            'filters' => ['champion' => $championId, 'mode' => $mode?->value, 'language' => $language],
             'championOptions' => $this->championOptions($version, $lang),
+            'languageOptions' => $this->languageOptions(),
             'gameModes' => GameMode::cases(),
         ]);
+    }
+
+    /** The ?language= facet, kept only when it is a known Data Dragon locale (else: no restriction). */
+    private function requestedLanguage(Request $request): ?string
+    {
+        $language = trim((string) $request->query->get('language', '')) ?: null;
+
+        return $language !== null && $this->versionManager->languageExists($language) ? $language : null;
+    }
+
+    /**
+     * Authoring locales present among public builds, labeled from the Data Dragon
+     * label map (raw code as fallback), sorted by label.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    private function languageOptions(): array
+    {
+        $labels = $this->versionManager->getLanguageLabels();
+        $options = array_map(
+            static fn (string $code): array => ['value' => $code, 'label' => $labels[$code] ?? $code],
+            $this->builds->distinctPublicLanguages(),
+        );
+        usort($options, static fn (array $a, array $b): int => strcasecmp($a['label'], $b['label']));
+
+        return $options;
     }
 
     /**

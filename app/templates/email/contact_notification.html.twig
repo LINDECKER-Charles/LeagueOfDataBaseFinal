@@ -1,0 +1,110 @@
+{#
+  Operator notification for a footer contact submission. Standalone, table-based,
+  fully inline-styled (survives Gmail/Outlook/Apple Mail). Internal ops mail — kept
+  in French, no i18n. Reply-To is the visitor's address, so a plain reply reaches
+  them; the CTA is a mailto shortcut to the same address.
+#}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="fr" xmlns="https://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="supported-color-schemes" content="dark">
+    <title>Nouveau message de contact</title>
+</head>
+<body style="margin:0;padding:0;width:100%;background-color:#010a13;-webkit-text-size-adjust:100%;">
+    <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;color:#010a13;font-size:1px;line-height:1px;">
+        {{ message.category.label }} — {{ message.name ?? message.email }}
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background-color:#010a13;background-image:radial-gradient(circle at 50% 0,#0a1a2e 0,#010a13 60%);">
+        <tr>
+            <td align="center" style="padding:36px 16px;">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
+                       style="width:600px;max-width:600px;background-color:#0a1428;border:1px solid #785a28;border-radius:4px;overflow:hidden;">
+
+                    <tr><td style="height:3px;line-height:3px;font-size:0;background-image:linear-gradient(90deg,#785a28 0,#c8aa6e 25%,#f0e6d2 50%,#c8aa6e 75%,#785a28 100%);">&nbsp;</td></tr>
+
+                    <tr>
+                        <td align="center" style="padding:30px 40px 6px;">
+                            <div style="font-family:'Times New Roman',Georgia,serif;font-size:22px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#f0e6d2;">
+                                League&nbsp;of&nbsp;<span style="color:#c8aa6e;">Database</span>
+                            </div>
+                            <div style="margin-top:8px;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:.32em;text-transform:uppercase;color:#8f8d82;">
+                                Nouveau message de contact
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:20px 44px 4px;">
+                            <span style="display:inline-block;padding:6px 12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#0a1428;background-color:#c8aa6e;border-radius:2px;">
+                                {{ message.category.label }}
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:16px 44px 4px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                                   style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#a09b8c;">
+                                <tr>
+                                    <td style="padding:4px 0;color:#8f8d82;width:90px;">Expéditeur</td>
+                                    <td style="padding:4px 0;color:#f0e6d2;">{{ message.name ?? '—' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:4px 0;color:#8f8d82;">E-mail</td>
+                                    <td style="padding:4px 0;"><a href="mailto:{{ message.email }}" style="color:#0ac8b9;text-decoration:none;">{{ message.email }}</a></td>
+                                </tr>
+                                {% if message.subject %}
+                                <tr>
+                                    <td style="padding:4px 0;color:#8f8d82;">Sujet</td>
+                                    <td style="padding:4px 0;color:#f0e6d2;">{{ message.subject }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td style="padding:4px 0;color:#8f8d82;">Reçu le</td>
+                                    <td style="padding:4px 0;color:#a09b8c;">{{ message.createdAt|date('d/m/Y H:i') }} UTC{% if message.locale %} · {{ message.locale }}{% endif %}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:14px 44px 6px;">
+                            <div style="padding:16px 18px;background-color:#0f1b2d;border:1px solid #1e3a5f;border-radius:3px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#f0e6d2;white-space:pre-wrap;word-break:break-word;">{{ message.message }}</div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center" style="padding:22px 44px 8px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                                <tr>
+                                    <td align="center" bgcolor="#c8aa6e"
+                                        style="border-radius:3px;background-image:linear-gradient(180deg,#f0e6d2 0,#c8aa6e 55%,#a17b3f 100%);">
+                                        <a href="mailto:{{ message.email }}" target="_blank"
+                                           style="display:inline-block;padding:13px 40px;font-family:'Times New Roman',Georgia,serif;font-size:14px;font-weight:700;line-height:1;letter-spacing:.12em;text-transform:uppercase;color:#010a13;text-decoration:none;border-radius:3px;">
+                                            Répondre
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:14px 44px 30px;">
+                            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#6b7280;text-align:center;">
+                                Envoyé depuis le formulaire de contact du pied de page. Retrouvez ce message dans l'espace d'administration.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
