@@ -19,6 +19,9 @@
 {% endblock %}
 
 {% block body %}
+{# Champion portrait art is hotlinked from the DDragon CDN (assumed, like the
+   champion detail hero) — not the ingested square icons. #}
+{% set loadingBase = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading' %}
 <main class="relative px-6 py-12">
   {% include 'partials/main/gradient.html.twig' %}
 
@@ -34,30 +37,36 @@
 
     {% include 'components/list_filter.html.twig' with { grid_id: 'champion-grid' } %}
 
-    <div id="champion-grid" class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div id="champion-grid" class="resource-grid grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {% for c in champions %}
-        {% embed 'components/entity_card.html.twig' with {
-          href: resource_path('app_champion', { name: c.id|default(c.name) }, meta.version, meta.lang),
-          img: images[loop.index0]|default(null),
-          name: c.name|default(''),
-          sub: c.title|default('')|capitalize,
-          footer_label: 'common.detail'|trans,
-          filter_text: (c.name|default('') ~ ' ' ~ c.id|default(''))|lower,
-          filter_tags: c.tags|default([])
-        } %}
-          {% block card_body %}
-            <div class="px-4 pb-4">
-              {% if c.tags is defined and c.tags is not empty %}
-                <div class="mb-2.5 flex flex-wrap gap-1.5">
-                  {% for t in c.tags %}<span class="hx-chip">{{ t }}</span>{% endfor %}
-                </div>
-              {% endif %}
-              {% if c.blurb is defined and c.blurb %}
-                <p class="line-clamp-3 text-[13px] leading-snug text-text-muted">{{ c.blurb }}</p>
-              {% endif %}
-            </div>
-          {% endblock %}
-        {% endembed %}
+        {% set champId = c.id|default(c.name) %}
+        <a href="{{ resource_path('app_champion', { name: champId }, meta.version, meta.lang) }}"
+           class="hextech-frame hextech-frame-hover group flex h-full flex-col overflow-hidden"
+           data-search="{{ (c.name|default('') ~ ' ' ~ c.id|default(''))|lower }}"
+           data-tags="{{ c.tags|default([])|join('|') }}">
+          <div class="relative aspect-[4/5] overflow-hidden border-b border-gold-deep/50 bg-void">
+            <span aria-hidden="true" class="hatch-gold absolute inset-0"></span>
+            <span aria-hidden="true" class="absolute inset-0 grid place-items-center font-beaufort text-6xl text-gold/12">{{ c.name|default('??')|slice(0, 2)|upper }}</span>
+            <img src="{{ loadingBase }}/{{ champId }}_0.jpg" alt="{{ c.name|default('') }}" loading="lazy" decoding="async"
+                 class="relative h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105">
+          </div>
+          <div class="flex flex-1 flex-col p-4">
+            <h3 class="truncate font-beaufort text-[15px] tracking-wide text-gold-grad" title="{{ c.name|default('') }}">{{ c.name|default('') }}</h3>
+            {% if c.title|default('') %}<p class="mt-0.5 truncate font-spiegel text-xs text-text-muted">{{ c.title|capitalize }}</p>{% endif %}
+            {% if c.tags is defined and c.tags is not empty %}
+              <div class="mt-2.5 flex flex-wrap gap-1.5">
+                {% for t in c.tags %}<span class="hx-chip">{{ t }}</span>{% endfor %}
+              </div>
+            {% endif %}
+            {% if c.blurb is defined and c.blurb %}
+              <p class="mt-2 line-clamp-2 text-[13px] leading-snug text-text-muted">{{ c.blurb }}</p>
+            {% endif %}
+            <span class="mt-auto inline-flex items-center gap-2 pt-3 font-beaufort text-xs uppercase tracking-[0.14em] text-gold transition-colors group-hover:text-hex">
+              {{ 'common.detail'|trans }}
+              <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </div>
+        </a>
       {% else %}
         {% include 'components/empty_state.html.twig' %}
       {% endfor %}

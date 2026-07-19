@@ -16,10 +16,11 @@
             color: var(--color-gold-bright);
         }
         .api-banner--muted { border-color: color-mix(in srgb, var(--color-gold-deep) 45%, transparent); color: var(--color-text-muted); }
+        .api-banner--success { border-color: var(--color-blue-abyssal); background: color-mix(in srgb, var(--color-hex) 6%, transparent); color: var(--color-hex-bright); }
         .api-reveal { padding: 1.5rem; margin-bottom: 2rem; }
         .api-reveal__warning { margin-top: 0.5rem; font-size: 0.875rem; color: var(--color-gold-bright); }
-        .api-meter { margin-top: 0.4rem; height: 6px; background: color-mix(in srgb, var(--color-gold-deep) 30%, transparent); }
-        .api-meter__fill { height: 100%; background: linear-gradient(90deg, var(--color-gold-deep), var(--color-gold)); }
+        .api-meter { margin-top: 0.4rem; height: 8px; background: color-mix(in srgb, var(--color-gold-dark) 60%, transparent); border: 1px solid color-mix(in srgb, var(--color-gold-dark) 80%, transparent); }
+        .api-meter__fill { height: 100%; background: linear-gradient(90deg, var(--color-hex-deep), var(--color-hex)); }
         .api-offer { display: flex; flex-direction: column; padding: 1.25rem; }
         .api-offer__name {
             font-family: var(--font-beaufort);
@@ -71,7 +72,7 @@
         {% endif %}
 
         {% if checkoutStatus %}
-            <p class="api-banner {{ checkoutStatus == 'cancelled' ? 'api-banner--muted' }}" role="status">
+            <p class="api-banner {{ checkoutStatus ends with 'success' ? 'api-banner--success' : (checkoutStatus == 'cancelled' ? 'api-banner--muted') }}" role="status">
                 {{ ('portal.status.' ~ checkoutStatus)|trans({}, 'api') }}
             </p>
         {% endif %}
@@ -89,7 +90,7 @@
                             <input type="text" name="name" maxlength="64" autocomplete="off"
                                    placeholder="{{ 'portal.create.name_placeholder'|trans({}, 'api') }}" class="hx-input mt-1.5">
                         </label>
-                        <button type="submit" class="hx-btn">{{ 'portal.create.submit'|trans({}, 'api') }}</button>
+                        <button type="submit" class="hx-btn-gold">{{ 'portal.create.submit'|trans({}, 'api') }}</button>
                     </form>
                 {% else %}
                     <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'auth.verify.gate_api'|trans }}</p>

@@ -4,12 +4,15 @@
    builds vocabulary (forge-row portrait, bshare item tiles) — no new palette.
 --------------------------------------------------------------------------- */
 @layer components {
-  /* ---- Trends filters — inline GET form --------------------------------- */
+  /* ---- Trends filters — inline GET form, framed like the mockup ---------- */
   .trend-filters {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 0.9rem 1.25rem;
+    padding: 1rem;
+    border: 1px solid var(--color-gold-deep);
+    background: linear-gradient(160deg, var(--color-panel), color-mix(in srgb, var(--color-panel) 70%, var(--color-void)));
   }
   .trend-filters__field {
     display: flex;

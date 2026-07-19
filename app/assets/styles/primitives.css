@@ -85,9 +85,24 @@
          hover:border-hex/60 hover:text-hex
          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex/40 motion-reduce:transition-none;
 }
+/* Filled-gold primary — the forge's strongest call to action (dark text on a
+   parchment→gold face). The redesign leans on it for every primary CTA. */
+@utility hx-btn-gold {
+  @apply inline-flex items-center justify-center gap-2 border-0 px-5 py-2.5 font-beaufort text-sm
+         uppercase tracking-[0.15em] text-hextech-black transition-[filter,box-shadow] duration-300
+         hover:brightness-110 hover:shadow-[0_0_28px_-6px_rgba(200,170,110,0.75)]
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 motion-reduce:transition-none;
+  background: linear-gradient(180deg, var(--color-gold-bright), var(--color-gold) 55%, var(--color-gold-rich));
+  clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+}
 @utility hx-chip {
   @apply inline-flex items-center border border-gold-deep/50 bg-void/90 px-2.5 py-1
          font-mono text-[11px] uppercase tracking-wider text-text-muted;
+}
+/* Cyan chip — the "live/interactive" variant: HTTP verbs, active plan, current badge. */
+@utility hx-chip-hex {
+  @apply inline-flex items-center border border-blue-abyssal bg-hex/10 px-2.5 py-1
+         font-mono text-[11px] uppercase tracking-wider text-hex;
 }
 @utility stat-cell {
   @apply border border-gold-deep/40 bg-void/70 px-3 py-2;
@@ -115,6 +130,34 @@
     background-position: center;
     background-size: 0.7rem;
   }
+}
+/* Pure-CSS toggle over a native checkbox — keeps no-JS form submission intact
+   (the underlying <input type="checkbox" name="…"> is unchanged). Cyan = on. */
+@utility hx-switch {
+  @apply relative h-6 w-11 flex-none cursor-pointer appearance-none rounded-full border border-gold-deep bg-void
+         transition-colors duration-200 checked:border-hex
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex/40;
+  &::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background: var(--color-gold-deep);
+    transition: transform 0.2s var(--ease-hextech), background-color 0.2s var(--ease-hextech);
+  }
+  &:checked {
+    background: color-mix(in srgb, var(--color-hex) 18%, transparent);
+  }
+  &:checked::after {
+    transform: translateX(1.25rem);
+    background: var(--color-hex);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hx-switch::after { transition: none; }
 }
 
 /* ---------------------------------------------------------------------------
