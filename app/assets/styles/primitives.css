@@ -74,13 +74,13 @@
 
 /* Reusable Hextech primitives */
 @utility hx-btn {
-  @apply inline-flex items-center justify-center gap-2 border border-gold/70 bg-gold/15 px-4 py-2.5
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-gold/70 bg-gold/15 px-4 py-2.5
          font-beaufort text-sm uppercase tracking-[0.15em] text-gold-bright transition-all duration-300
          hover:border-gold hover:bg-gold/25 hover:shadow-[0_0_28px_-6px_rgba(200,170,110,0.65)]
          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 motion-reduce:transition-none;
 }
 @utility hx-btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 border border-gold-deep/40 bg-transparent px-4 py-2.5
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-gold-deep/40 bg-transparent px-4 py-2.5
          font-beaufort text-sm uppercase tracking-[0.15em] text-text-muted transition-all duration-300
          hover:border-hex/60 hover:text-hex
          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex/40 motion-reduce:transition-none;
@@ -88,7 +88,7 @@
 /* Filled-gold primary — the forge's strongest call to action (dark text on a
    parchment→gold face). The redesign leans on it for every primary CTA. */
 @utility hx-btn-gold {
-  @apply inline-flex items-center justify-center gap-2 border-0 px-5 py-2.5 font-beaufort text-sm
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 border-0 px-5 py-2.5 font-beaufort text-sm
          uppercase tracking-[0.15em] text-hextech-black transition-[filter,box-shadow] duration-300
          hover:brightness-110 hover:shadow-[0_0_28px_-6px_rgba(200,170,110,0.75)]
          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 motion-reduce:transition-none;
