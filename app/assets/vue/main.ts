@@ -1,14 +1,6 @@
 import '@hotwired/turbo'
 import '../styles/app.css'
 
-// Turbo auto-starts on import and installs window.Turbo. It ships no types, so we
-// reach its runtime API through the global (same cast pattern as loader/urls.ts).
-// The progress bar waits 500ms by default so fast visits don't flash it — but that
-// reads as "nothing happens" on slower ones. 150ms surfaces feedback quickly while
-// staying invisible on instant (prefetched / cached) navigations.
-;(window as unknown as { Turbo?: { setProgressBarDelay?: (ms: number) => void } })
-    .Turbo?.setProgressBarDelay?.(150)
-
 import { createApp, type App, type Component } from 'vue'
 import { installEnhancements } from './fx/enhance'
 import { setupProfileForm } from './profile/profileForm'
