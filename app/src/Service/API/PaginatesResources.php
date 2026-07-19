@@ -11,7 +11,8 @@ namespace App\Service\API;
  * how a collection is sliced and indexed.
  *
  * Composed onto {@see AbstractManager}; relies on its data/image access
- * (`getData`, `getImages`, `static::TYPE`).
+ * (`getData`, `getImages`, `static::TYPE`) and its `$ingestion` to scope the
+ * list render's opt-in image deferral ({@see DeferredImageIngestor::withDeferral}).
  */
 trait PaginatesResources
 {
@@ -41,7 +42,10 @@ trait PaginatesResources
             ? $this->splitJson($nb, 0, $json)
             : $this->splitJson($nb, $nb * ($numPage - 1), $json);
 
-        $images = $this->getImages($version, $lang, false, $json);
+        // The list/preview render is the one place cold images may defer: it shows
+        // placeholders and warms them after the response (or via the SSE loader).
+        // Every other getImages caller resolves inline (safe default).
+        $images = $this->ingestion->withDeferral(fn (): array => $this->getImages($version, $lang, false, $json));
 
         return [
             static::TYPE.'s' => $json,

@@ -58,22 +58,6 @@ final class RuneManager extends AbstractManager
     }
 
     /**
-     * Detail page: resolve one tree's nested icons **synchronously**. Unlike the
-     * list ({@see getImages}), a detail render must never defer image ingestion —
-     * on a cold version that would paint broken icons until the next visit
-     * (mirrors {@see AbstractManager::resolveImage} for the flat resources).
-     *
-     * @param array<mixed> $tree
-     * @return array<string, mixed>
-     */
-    public function getDetailImages(string $version, array $tree, bool $force = false): array
-    {
-        $resolved = $this->resolveImages($version, array_keys($this->imageEntries([$tree])), $force, allowDefer: false);
-
-        return $this->mapTreeImages([$tree], $resolved);
-    }
-
-    /**
      * Map resolved icon paths back onto the nested tree structure the template
      * consumes: `treeKey => {icon, slots[slotIndex][runeKey]}`.
      *

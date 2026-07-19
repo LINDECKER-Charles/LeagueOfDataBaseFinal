@@ -168,11 +168,15 @@ abstract class AbstractManager implements WarmableManagerInterface
      * single parallel batch through the gateway, stored content-addressed (dedup),
      * and recorded in the manifest.
      *
+     * Synchronous by default. Cold misses are only deferred to kernel.terminate
+     * when resolved inside {@see DeferredImageIngestor::withDeferral()} — the
+     * list/preview render. Every other context (detail, picker, search, build
+     * view) resolves inline, so it never paints a placeholder it can't replace.
+     *
      * @param string[] $names
-     * @param bool     $allowDefer defer a cold batch to after the response (list pages); false ingests inline
      * @return array<string,string> name => cdn path
      */
-    protected function resolveImages(string $version, array $names, bool $force = false, bool $allowDefer = true): array
+    protected function resolveImages(string $version, array $names, bool $force = false): array
     {
         $manifest = $this->loadManifest($version);
         $result = [];
@@ -190,11 +194,11 @@ abstract class AbstractManager implements WarmableManagerInterface
             return $result;
         }
 
-        // Cold on a user request: don't block the render on a multi-second batch
-        // fetch. Queue the ingestion for after the response is sent (kernel.terminate)
-        // — this page shows placeholders, the next visit is warm. Detail pages
-        // (allowDefer=false) and the warmup command (CLI, no request) ingest now.
-        if ($allowDefer && $this->ingestion->shouldDefer()) {
+        // Cold on a list/preview render (a withDeferral scope): don't block on a
+        // multi-second batch fetch. Queue the ingestion for after the response is
+        // sent (kernel.terminate) — placeholders now, warm on the next visit.
+        // Detail/picker/search/build renders and CLI warmup ingest inline.
+        if ($this->ingestion->shouldDefer()) {
             $this->ingestion->defer(fn (): array => $this->ingestMissing($version, $missing));
 
             return $result;
@@ -358,7 +362,7 @@ abstract class AbstractManager implements WarmableManagerInterface
     /** Resolve a single image (detail pages) — always synchronous. */
     protected function resolveImage(string $version, string $name, bool $force = false): string
     {
-        $resolved = $this->resolveImages($version, [$name], $force, allowDefer: false);
+        $resolved = $this->resolveImages($version, [$name], $force);
         if (!isset($resolved[$name])) {
             throw new \RuntimeException(sprintf('Image indisponible: %s (%s)', $name, static::TYPE));
         }
