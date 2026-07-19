@@ -2,9 +2,6 @@
 <html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}">
     <head>
         <meta charset="UTF-8">
-        {# Turbo Drive cross-fades same-origin visits via the View Transitions API
-           where supported; elsewhere it swaps instantly (progressive enhancement). #}
-        <meta name="view-transition" content="same-origin">
         {# Paramètre par défaut à définir #}
         {% set default_title = 'base.title'|trans %} {# Titre par défaut à définir par sécurité #}
         {% set default_description = 'base.description'|trans %} {# Description par défaut à définir par sécurité #}
