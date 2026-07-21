@@ -50,9 +50,10 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
             return [];
         }
 
-        // Icônes secondaires : on laisse le batch froid se déférer après la
-        // réponse (comme les listes) plutôt que bloquer le rendu. La feature (nom
-        // + lien) ne dépend pas de l'image ; elle apparaît au prochain passage à chaud.
+        // Icônes secondaires résolues via le scope de déferration ambiant : différées
+        // sous un rendu de liste ({@see relatedIndex}), synchrones en détail / éditeur
+        // de build / tendances (icônes réelles sur version froide). La feature (nom +
+        // lien + prix) ne dépend pas de l'image, différable sans la casser.
         $files = array_values(array_filter(array_map(
             static fn (array $entry): ?string => $entry['image']['full'] ?? null,
             $picked,
@@ -96,12 +97,19 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
             return [];
         }
 
-        $index = [];
-        foreach ($this->resolveRelated(array_keys($ids), $version, $lang) as $entry) {
-            $index[$entry['id']] = $entry;
-        }
+        // List render: the union of every item's evolution icons is a large cold
+        // batch (one per upgrade target). Defer it like paginate() defers the
+        // primary icons — otherwise a non-warm patch blocks the whole /objects
+        // response on this synchronous batch (the switch-version-then-navigate lag).
+        // Chips stay usable (name + link + gold); icons warm after the response.
+        return $this->withImageDeferral(function () use ($ids, $version, $lang): array {
+            $index = [];
+            foreach ($this->resolveRelated(array_keys($ids), $version, $lang) as $entry) {
+                $index[$entry['id']] = $entry;
+            }
 
-        return $index;
+            return $index;
+        });
     }
 
     /**

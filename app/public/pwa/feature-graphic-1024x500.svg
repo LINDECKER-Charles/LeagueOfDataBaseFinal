@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500" role="img" aria-label="League Of Data Base">
+  <!-- Play Store feature graphic (1024x500). On-brand Hextech placeholder, rasterize to PNG/JPG before upload. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A1428"/>
+      <stop offset="0.55" stop-color="#04101F"/>
+      <stop offset="1" stop-color="#010A13"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.44" r="0.55">
+      <stop offset="0" stop-color="#C8AA6E" stop-opacity="0.22"/>
+      <stop offset="0.6" stop-color="#C8AA6E" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#C8AA6E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F0E6D2"/>
+      <stop offset="0.5" stop-color="#C8AA6E"/>
+      <stop offset="1" stop-color="#785A28"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="500" fill="url(#bg)"/>
+  <rect width="1024" height="500" fill="url(#glow)"/>
+
+  <!-- Decorative Hextech hexagons -->
+  <g fill="none" stroke="#C8AA6E" stroke-opacity="0.14" stroke-width="1.5">
+    <polygon points="120,250 175,155 285,155 340,250 285,345 175,345"/>
+    <polygon points="684,250 739,155 849,155 904,250 849,345 739,345"/>
+    <polygon points="512,60 545,3 611,3 644,60 611,117 545,117" stroke-opacity="0.10"/>
+  </g>
+
+  <!-- Inner gold frame -->
+  <rect x="22" y="22" width="980" height="456" rx="6" fill="none" stroke="#785A28" stroke-opacity="0.55" stroke-width="1.5"/>
+  <rect x="27" y="27" width="970" height="446" rx="4" fill="none" stroke="#C8AA6E" stroke-opacity="0.20" stroke-width="1"/>
+
+  <!-- Wordmark -->
+  <text x="512" y="240" text-anchor="middle"
+        font-family="'Trajan Pro', 'Times New Roman', Georgia, serif"
+        font-size="62" font-weight="700" letter-spacing="7" fill="url(#gold)">LEAGUE OF DATA BASE</text>
+
+  <!-- Divider with central diamond -->
+  <g stroke="#C8AA6E" stroke-opacity="0.7" stroke-width="1">
+    <line x1="332" y1="286" x2="492" y2="286"/>
+    <line x1="532" y1="286" x2="692" y2="286"/>
+  </g>
+  <polygon points="512,278 521,286 512,294 503,286" fill="#C8AA6E"/>
+
+  <!-- Tagline -->
+  <text x="512" y="330" text-anchor="middle"
+        font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="24" letter-spacing="2" fill="#A09B8C">Encyclopédie League of Legends — patch par patch</text>
+
+  <!-- Sub-tagline -->
+  <text x="512" y="366" text-anchor="middle"
+        font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="17" letter-spacing="3" fill="#5B5A56">CHAMPIONS · OBJETS · RUNES · SORTS D'INVOCATEUR</text>
+</svg>

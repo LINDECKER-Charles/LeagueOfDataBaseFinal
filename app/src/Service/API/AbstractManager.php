@@ -208,6 +208,24 @@ abstract class AbstractManager implements WarmableManagerInterface
     }
 
     /**
+     * Run an image-resolving routine in a scope where cold misses defer to
+     * kernel.terminate ({@see DeferredImageIngestor::withDeferral}) instead of
+     * blocking the response — the list/preview policy. {@see PaginatesResources::paginate}
+     * scopes the primary icons this way; concrete managers reach it for a
+     * secondary-icon batch that belongs to a list render but is resolved outside
+     * paginate (e.g. {@see ItemManager::relatedIndex}). Detail/build/picker renders
+     * never call it — they resolve inline so a cold version paints real icons.
+     *
+     * @template T
+     * @param callable():T $resolve
+     * @return T
+     */
+    protected function withImageDeferral(callable $resolve): mixed
+    {
+        return $this->ingestion->withDeferral($resolve);
+    }
+
+    /**
      * Fetch the missing images through the gateway, store them content-addressed
      * (dedup + WebP sibling) and record them in the manifest.
      *

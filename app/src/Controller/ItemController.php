@@ -81,7 +81,7 @@ final class ItemController extends AbstractResourceController
             // qu'un seul niveau — le vrai « arbre de craft » de l'objet.
             $recipe  = $this->itemManager->recipeTree($name, $sel['version'], $sel['lang']);
         } catch (\Throwable $e) {
-            return $this->detailFailure($sel, $e);
+            return $this->detailFailure($sel, $e, 'app_items_versioned');
         }
 
         return $this->render('item/detail.html.twig', [

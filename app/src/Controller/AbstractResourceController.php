@@ -57,21 +57,72 @@ abstract class AbstractResourceController extends AbstractController
     }
 
     /**
-     * Maps a detail-page data failure to its HTTP outcome. A slug unknown to the
-     * requested dataset is a definitive absence → real 404 (crawlers must never
-     * see a soft-404 redirect to the home). Anything else (upstream 5xx,
-     * timeout, corrupt payload) keeps the historical redirect-with-flash so the
-     * visitor can fix the version/lang selection.
+     * Maps a detail-page data failure to its HTTP outcome.
+     *
+     * A slug unknown to the requested dataset is a definitive absence. On the
+     * canonical clean URL (`/object/{name}`, patch resolved from the session) that
+     * stays a real 404 — crawlers must get an honest 404 for a bad slug, never a
+     * soft redirect. But when the URL itself pins a historical patch the slug may
+     * simply not exist in it yet (an entity added later): switching version on a
+     * detail page lands here. Rather than a dead-end, send the visitor to that
+     * patch's list — a real, related page, reached by a plain 302 the crawler reads
+     * as a redirect, not a soft-404.
+     *
+     * "Pinned in the URL" covers BOTH forms the version can take (mirroring
+     * {@see \App\Service\Client\PageContextResolver}: path > query): the
+     * `/{version}/object/{name}` path segment (JS switcher / canonical historical
+     * link) and a `?version=` query (no-JS switcher fallback, shared links). A patch
+     * defaulted from the session is NOT pinned — the canonical URL keeps 404-ing.
+     *
+     * Anything else (upstream 5xx, timeout, corrupt payload) keeps the historical
+     * redirect-with-flash so the visitor can fix the version/lang selection.
      *
      * @param array{version?:string, lang?:string} $ctx
+     * @param string $versionedListRoute versioned list route of this resource (e.g. "app_items_versioned")
      */
-    protected function detailFailure(array $ctx, \Throwable $e): Response
+    protected function detailFailure(array $ctx, \Throwable $e, string $versionedListRoute): Response
     {
         if ($e instanceof ResourceNotFoundException) {
+            $version = $this->urlPinnedVersion();
+            if ($version !== null) {
+                $params = ['version' => $version];
+                if (($lang = $ctx['lang'] ?? '') !== '') {
+                    $params['lang'] = $lang;
+                }
+
+                // Canonicalise to the versioned path list even when the version rode
+                // in as a `?version=` query, so the redirect target is the single
+                // canonical form for a historical patch.
+                return $this->redirectToRoute($versionedListRoute, $params);
+            }
+
             throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
         return $this->redirectToHomeWithError($ctx, $e);
+    }
+
+    /**
+     * The Data Dragon patch explicitly pinned in the current URL — the `/{version}/…`
+     * path segment, else a `?version=` query — validated against the real version
+     * list. Null when the URL pins nothing (patch defaulted from the session): the
+     * signal that separates a historical URL (redirect to its list) from the clean
+     * canonical URL (honest 404). Never falls back to the session.
+     */
+    private function urlPinnedVersion(): ?string
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        if ($request === null) {
+            return null;
+        }
+
+        foreach ([$request->attributes->get('version'), $request->query->get('version')] as $candidate) {
+            if (is_string($candidate) && $candidate !== '' && $this->versionManager->versionExists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**
