@@ -2,14 +2,20 @@ name: edge
 
 # VPS-global public entrypoint — shared by EVERY project on this host.
 # Not tied to any app's lifecycle: brought up ONCE, then every app stack
-# (lodb-staging, lodb-prod, future projects) publishes itself by adding a
-# `caddy` label on its public container and joining the external `edge` network.
+# (arova-*, lodb-*, future projects) publishes itself by adding a `caddy`
+# label on its public container and joining the external `edge` network.
 # Onboarding a new project therefore touches ZERO file here.
 #
 # caddy-docker-proxy owns 80/443, discovers routes from container labels, and
 # manages Let's Encrypt certs automatically (single ACME store for all domains).
 # It reads the Docker API through a hardened, read-only socket proxy — the raw
 # /var/run/docker.sock is NEVER mounted into the internet-facing Caddy.
+#
+# ⚠️ Cross-repo DRY: every project's pipeline converges this definition to
+# /opt/edge on each deploy. Keep every copy byte-identical — otherwise the
+# deployments overwrite each other. Known copies:
+#   Arova.App/devops-arova/edge · LeagueOfDataBaseFinal/infra/edge
+#   devops-kit templates/infra/edge
 #
 # Bootstrap (once, on the host — see README.md):
 #   docker network create edge
@@ -62,6 +68,12 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data       # issued certs + ACME account key — MUST persist (LE rate limits)
       - caddy_config:/config
+      # Host-provided certificates (e.g. DNS-01 wildcards issued by lego on the host).
+      # An app opts in per-site via a `caddy.tls: /certs/<domain>.crt /certs/<domain>.key`
+      # label; sites without that label keep automatic ACME issuance. The dir may be
+      # empty on hosts that don't use it — the mount is then inert. After a renewal on
+      # the host, restart this container to reload the files (renew hook's job).
+      - /etc/edge/certs:/certs:ro
     networks:
       - internal              # → dockerproxy
       - edge                  # → every app's public container
