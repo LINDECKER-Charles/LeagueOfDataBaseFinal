@@ -103,9 +103,11 @@ Deux niveaux de langue cohabitent :
 
 - **Contenu Data Dragon** (`fr_FR`, `en_US`, `es_ES`…) : la locale des données Riot,
   choisie par l'utilisateur dans le setup, persistée en session + cookie signé `lod_prefs`.
-- **Interface (traductions Symfony)** : le texte du site (`trans`). Elle **suit désormais
-  la langue Data Dragon sélectionnée** ; le TLD (`.fr` → `fr`, sinon `en`) ne sert plus que
-  de défaut tant qu'aucune langue n'a été choisie.
+- **Interface (traductions Symfony)** : le texte du site (`trans`). Elle **suit la langue
+  Data Dragon sélectionnée** ; tant qu'aucune langue n'a été choisie, le repli est
+  `framework.default_locale`. Le domaine n'intervient **plus** : le TLD ne détermine
+  plus la langue par défaut (les quatre domaines servent le même contenu, cf.
+  `config/packages/seo.yaml`).
 
 #### Résolution de la locale d'interface
 
@@ -115,7 +117,7 @@ démarrer de session), puis `UiLocaleResolver` la mappe vers une locale d'UI :
 
 - collapse vers la base 2 lettres (`fr_FR` → `fr`, `en_AU` → `en`, `es_MX` → `es`, `pt_BR` → `pt`) ;
 - le chinois conserve la distinction d'écriture (`zh_CN`/`zh_MY` → `zh_Hans`, `zh_TW` → `zh_Hant`) ;
-- fallback vers le défaut de domaine si la langue n'a pas de catalogue.
+- fallback vers `%kernel.default_locale%` si la langue n'a pas de catalogue.
 
 Les catalogues embarqués sont déclarés dans `framework.enabled_locales` et couvrent toutes les
 langues de l'API : `ar cs de el en es fr hu id it ja ko pl pt ro ru th tr vi zh_Hans zh_Hant`.
@@ -144,6 +146,34 @@ item:
         header: "Items"
         search_placeholder: "Search for an item…"
 ```
+
+### 🔎 Identité SEO (`config/packages/seo.yaml`)
+
+Le déploiement répond sur quatre domaines (apex + `www`, `.com` + `.fr`) qui servent un
+contenu **identique**, dans la même langue. Sans repli, chacun serait une copie
+self-canonical du site entière en concurrence avec les autres.
+
+```yaml
+parameters:
+    # Hôte de référence : tous les miroirs s'y replient. Vide ⇒ repli désactivé
+    # (dev, staging et previews restent self-canonical, jamais pointés vers la prod).
+    seo.canonical_host: 'league-of-data-base.com'
+    seo.mirror_hosts: ['league-of-data-base.com', 'league-of-data-base.fr']
+    # Profils schema.org sameAs : chacun doit identifier publiquement le projet
+    # ou son éditeur, sinon il affaiblit l'entité au lieu de l'ancrer.
+    seo.same_as: ['https://github.com/…']
+```
+
+`App\Service\Seo\CanonicalHost` replie le préfixe `www.` **toujours** (même sans hôte
+préféré) et les miroirs seulement quand `seo.canonical_host` est renseigné. Les hôtes
+inconnus restent self-canonical.
+
+**Aucun `hreflang` n'est émis** : la langue vient de la sélection du visiteur, pas de
+l'URL ni du domaine, donc aucune locale n'a de variante adressable. En annoncer une
+vers des adresses qui ne servent pas cette langue serait pire que de n'en annoncer aucune.
+
+Le câblage des services vit dans `config/services.yaml` (le loader `App\` y est appliqué
+en dernier et écraserait toute définition faite dans `config/packages/`).
 
 #### Configuration des permissions
 
