@@ -59,3 +59,13 @@ developers:
 trends:
   title: "Build LoL thịnh hành"
   description: "Các build công khai của League of Legends xếp hạng theo bình chọn của cộng đồng — lọc theo tướng và chế độ chơi."
+
+about:
+  title: "Giới thiệu dự án"
+  description: "League Of Data Base là bách khoa toàn thư miễn phí về League of Legends: tướng, trang bị, ngọc và phép bổ trợ của mọi bản cập nhật, bằng 21 ngôn ngữ, từ dữ liệu Data Dragon chính thức của Riot."
+  data:
+    title: "Dữ liệu và nguồn"
+    description: "Dữ liệu của League Of Data Base đến từ đâu: bản xuất Data Dragon chính thức của Riot (bản %version%) và Community Dragon, tần suất cập nhật và những gì không bao gồm."
+  faq:
+    title: "Câu hỏi thường gặp"
+    description: "Giải đáp về League Of Data Base: đây là gì, dữ liệu League of Legends lấy từ đâu, cập nhật bao lâu một lần và có cần tài khoản không."

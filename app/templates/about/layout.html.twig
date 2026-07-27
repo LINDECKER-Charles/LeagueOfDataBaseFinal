@@ -1,0 +1,85 @@
+{# Shared shell of the editorial pages (/about, /about/data, /faq): codex banner
+   (eyebrow + title + lead), then the prose column. Children fill page_title,
+   page_lead and about_body, and bring their own structured_data.
+   Unlike legal/*, the copy is fully translatable — everything goes through
+   |trans on the `about` domain, so the 21 catalogs drive all three pages. #}
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Prose typography for long-form editorial HTML — a page-scoped sheet beats
+       repeating utility classes on every paragraph. Design tokens only. #}
+    <style>
+        .about-prose { font-family: var(--font-spiegel); }
+        .about-prose section { scroll-margin-top: 6.5rem; }
+        .about-prose h2 {
+            margin-bottom: 0.85rem;
+            font-family: var(--font-beaufort);
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--color-gold-bright);
+        }
+        .about-prose h3 {
+            margin: 1.25rem 0 0.5rem;
+            font-family: var(--font-beaufort);
+            font-size: 1rem;
+            letter-spacing: 0.06em;
+            color: var(--color-gold);
+        }
+        .about-prose p,
+        .about-prose li { color: var(--color-text-muted); line-height: 1.75; }
+        .about-prose p + p { margin-top: 0.75rem; }
+        .about-prose a { color: var(--color-hex); text-underline-offset: 4px; }
+        .about-prose a:hover { text-decoration: underline; }
+        .about-prose ul { margin: 0.75rem 0; padding-left: 1.4rem; list-style: square; }
+        .about-prose li + li { margin-top: 0.4rem; }
+        .about-prose strong { color: var(--color-text); font-weight: 600; }
+
+        /* Fact grid — the countable claims (patch, entry counts, languages). */
+        .about-facts {
+            display: grid;
+            gap: 0.75rem;
+            grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+            margin: 1.5rem 0;
+        }
+        .about-fact {
+            border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+            background: color-mix(in srgb, var(--color-void) 70%, transparent);
+            padding: 0.9rem 1rem;
+        }
+        .about-fact__value {
+            display: block;
+            font-family: var(--font-beaufort);
+            font-size: 1.75rem;
+            line-height: 1.1;
+            color: var(--color-hex-bright);
+        }
+        .about-fact__label {
+            display: block;
+            margin-top: 0.35rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--color-text-dim);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<main class="relative mx-auto w-full max-w-3xl px-6 pb-20 pt-10 sm:px-8 lg:pt-14">
+    {% include 'partials/main/gradient.html.twig' %}
+
+    <header class="relative mb-10">
+        <div class="codex-header mb-6">
+            <span class="codex-header__title">{{ 'eyebrow'|trans({}, 'about') }}</span>
+        </div>
+        <h1 class="mb-5 font-beaufort text-3xl uppercase tracking-[0.06em] text-gold-grad sm:text-4xl">{{ block('page_title') }}</h1>
+        <p class="max-w-[62ch] font-spiegel text-lg leading-relaxed text-text-muted">{% block page_lead %}{% endblock %}</p>
+    </header>
+
+    <div class="about-prose relative flex flex-col gap-10">
+        {% block about_body %}{% endblock %}
+    </div>
+</main>
+{% endblock %}

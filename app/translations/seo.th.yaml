@@ -59,3 +59,13 @@ developers:
 trends:
   title: "บิลด์ LoL ยอดนิยม"
   description: "บิลด์สาธารณะของ League of Legends จัดอันดับตามโหวตของคอมมูนิตี้ — กรองตามแชมเปี้ยนและโหมดเกม"
+
+about:
+  title: "เกี่ยวกับโปรเจกต์"
+  description: "League Of Data Base คือสารานุกรม League of Legends ที่ใช้งานฟรี รวมแชมเปียน ไอเทม รูน และสเปลผู้เรียกของทุกแพตช์ ใน 21 ภาษา จากข้อมูล Data Dragon อย่างเป็นทางการของ Riot"
+  data:
+    title: "ข้อมูลและแหล่งที่มา"
+    description: "ข้อมูลของ League Of Data Base มาจากไหน: ไฟล์ Data Dragon อย่างเป็นทางการของ Riot (แพตช์ %version%) และ Community Dragon อัปเดตบ่อยแค่ไหน และอะไรที่ไม่ครอบคลุม"
+  faq:
+    title: "คำถามที่พบบ่อย"
+    description: "คำตอบเกี่ยวกับ League Of Data Base: คืออะไร ข้อมูล League of Legends มาจากไหน อัปเดตบ่อยแค่ไหน และต้องมีบัญชีหรือไม่"

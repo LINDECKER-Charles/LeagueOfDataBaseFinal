@@ -59,3 +59,13 @@ developers:
 trends:
   title: "بيلدات LoL الرائجة"
   description: "بيلدات League of Legends العامة مرتبة حسب أصوات المجتمع — صفِّها حسب البطل ووضع اللعب."
+
+about:
+  title: "حول المشروع"
+  description: "League Of Data Base موسوعة مجانية للعبة League of Legends: الأبطال والأغراض والشيفرات وتعاويذ المستدعي لكل تحديث، بـ21 لغة، من بيانات Data Dragon الرسمية من Riot."
+  data:
+    title: "البيانات والمصادر"
+    description: "من أين تأتي بيانات League Of Data Base: التصدير الرسمي Data Dragon من Riot (التحديث %version%) و Community Dragon، وكم مرة تُحدَّث وما لا تغطيه."
+  faq:
+    title: "الأسئلة الشائعة"
+    description: "إجابات عن League Of Data Base: ما هو، ومن أين تأتي بيانات League of Legends، وكم مرة تُحدَّث، وهل يلزم إنشاء حساب."

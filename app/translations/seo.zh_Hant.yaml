@@ -59,3 +59,13 @@ developers:
 trends:
   title: "LoL 熱門配裝"
   description: "依社群投票排序的 League of Legends 公開配裝 — 可依英雄與遊戲模式篩選。"
+
+about:
+  title: "關於本專案"
+  description: "League Of Data Base 是免費的《英雄聯盟》資料庫：涵蓋每個版本的英雄、裝備、符文與召喚師技能，支援 21 種語言，資料來自拳頭官方的 Data Dragon。"
+  data:
+    title: "資料與來源"
+    description: "League Of Data Base 的資料來源：拳頭官方 Data Dragon 匯出（版本 %version%）與 Community Dragon、更新頻率，以及未涵蓋的內容。"
+  faq:
+    title: "常見問題"
+    description: "關於 League Of Data Base 的解答：這是什麼、《英雄聯盟》資料從何而來、多久更新一次，以及是否需要帳號。"

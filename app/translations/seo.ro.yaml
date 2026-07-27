@@ -59,3 +59,13 @@ developers:
 trends:
   title: "Builduri LoL în tendințe"
   description: "Builduri publice League of Legends clasate după voturile comunității — filtrează după campion și mod de joc."
+
+about:
+  title: "Despre proiect"
+  description: "League Of Data Base este o enciclopedie gratuită League of Legends: campioni, obiecte, rune și vrăji de invocator pentru fiecare patch, în 21 de limbi, din datele oficiale Data Dragon de la Riot."
+  data:
+    title: "Date și surse"
+    description: "De unde provin datele League Of Data Base: exportul oficial Data Dragon de la Riot (patch %version%) și Community Dragon, cât de des sunt actualizate și ce nu acoperă."
+  faq:
+    title: "Întrebări frecvente"
+    description: "Răspunsuri despre League Of Data Base: ce este, de unde provin datele sale despre League of Legends, cât de des se actualizează și dacă este nevoie de un cont."

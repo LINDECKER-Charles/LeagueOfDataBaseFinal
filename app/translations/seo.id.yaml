@@ -59,3 +59,13 @@ developers:
 trends:
   title: "Build LoL yang sedang tren"
   description: "Build publik League of Legends yang diperingkat berdasarkan suara komunitas — filter berdasarkan champion dan mode permainan."
+
+about:
+  title: "Tentang proyek"
+  description: "League Of Data Base adalah ensiklopedia League of Legends gratis: juara, item, rune, dan mantra summoner untuk setiap patch, dalam 21 bahasa, dari data Data Dragon resmi Riot."
+  data:
+    title: "Data dan sumber"
+    description: "Dari mana data League Of Data Base berasal: ekspor Data Dragon resmi Riot (patch %version%) dan Community Dragon, seberapa sering diperbarui, dan apa yang tidak dicakup."
+  faq:
+    title: "Pertanyaan umum"
+    description: "Jawaban seputar League Of Data Base: apa itu, dari mana data League of Legends-nya berasal, seberapa sering diperbarui, dan apakah perlu akun."

@@ -59,3 +59,13 @@ developers:
 trends:
   title: "인기 LoL 빌드"
   description: "커뮤니티 투표로 순위가 매겨진 League of Legends 공개 빌드 — 챔피언과 게임 모드로 필터링하세요."
+
+about:
+  title: "프로젝트 소개"
+  description: "League Of Data Base는 무료 리그 오브 레전드 백과사전입니다. 모든 패치의 챔피언, 아이템, 룬, 소환사 주문을 라이엇 공식 Data Dragon 데이터로 21개 언어로 제공합니다."
+  data:
+    title: "데이터와 출처"
+    description: "League Of Data Base 데이터의 출처: 라이엇 공식 Data Dragon 내보내기(패치 %version%)와 Community Dragon, 갱신 주기, 그리고 다루지 않는 범위."
+  faq:
+    title: "자주 묻는 질문"
+    description: "League Of Data Base에 대한 답변: 어떤 사이트인지, 리그 오브 레전드 데이터의 출처, 갱신 주기, 계정이 필요한지 여부."

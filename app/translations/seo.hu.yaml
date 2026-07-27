@@ -59,3 +59,13 @@ developers:
 trends:
   title: "Felkapott LoL buildek"
   description: "Nyilvános League of Legends buildek a közösség szavazatai szerint rangsorolva — szűrhető hős és játékmód szerint."
+
+about:
+  title: "A projektről"
+  description: "A League Of Data Base ingyenes League of Legends-enciklopédia: hősök, tárgyak, rúnák és megidézővarázslatok minden patchhez, 21 nyelven, a Riot hivatalos Data Dragon adataiból."
+  data:
+    title: "Adatok és források"
+    description: "Honnan származnak a League Of Data Base adatai: a Riot hivatalos Data Dragon exportja (%version% patch) és a Community Dragon, milyen gyakran frissülnek, és mit nem fednek le."
+  faq:
+    title: "Gyakori kérdések"
+    description: "Válaszok a League Of Data Base-ről: mi ez, honnan származnak a League of Legends adatai, milyen gyakran frissül, és kell-e hozzá fiók."

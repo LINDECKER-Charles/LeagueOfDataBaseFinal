@@ -59,3 +59,13 @@ developers:
 trends:
   title: "LoLのトレンドビルド"
   description: "コミュニティの投票でランク付けされたLeague of Legendsの公開ビルド。チャンピオンやゲームモードで絞り込めます。"
+
+about:
+  title: "プロジェクトについて"
+  description: "League Of Data Base は無料の League of Legends 百科事典です。すべてのパッチのチャンピオン、アイテム、ルーン、サモナースペルを、Riot 公式の Data Dragon データから 21 言語で提供します。"
+  data:
+    title: "データと出典"
+    description: "League Of Data Base のデータの出典: Riot 公式の Data Dragon エクスポート（パッチ %version%）と Community Dragon、更新頻度、そして対象外の内容について。"
+  faq:
+    title: "よくある質問"
+    description: "League Of Data Base についての回答: 何ができるサイトか、League of Legends のデータの出典、更新頻度、アカウントが必要かどうか。"
