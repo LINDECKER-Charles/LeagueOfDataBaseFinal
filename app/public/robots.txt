@@ -1,3 +1,8 @@
+# Single rule group on purpose. robots.txt groups are NOT inherited: adding a
+# per-agent block (GPTBot, ClaudeBot, PerplexityBot…) would make that agent
+# ignore this one, so every Disallow would have to be repeated and kept in sync.
+# One group covers every crawler, AI assistants included — they are deliberately
+# allowed: being readable by answer engines is the point (see /llms.txt).
 User-agent: *
 Disallow: /admin/
 Disallow: /login
@@ -9,8 +14,11 @@ Disallow: /donate/checkout
 Disallow: /donate/success
 Disallow: /donate/cancel
 Allow: /
-Crawl-delay: 10
 
-# Canonical prod host (matches CADDY_DOMAINS in .env.prod). The sitemap itself
-# emits absolute URLs for whichever host serves it (.fr, .com, staging).
+# No Crawl-delay: it used to be 10s, which capped a full crawl of the ~1000
+# resource pages at several hours per patch — slower than patches ship. Modern
+# crawlers self-throttle, and the pages are cached and cheap to serve.
+
+# Canonical prod host (matches seo.canonical_host). Mirror domains serve the
+# same content and canonicalize here, so one sitemap answers for all of them.
 Sitemap: https://league-of-data-base.com/sitemap.xml

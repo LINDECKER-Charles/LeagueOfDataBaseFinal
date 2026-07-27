@@ -80,10 +80,11 @@
     { name: 'header.navigation.item'|trans, url: seo_absolute(resource_path('app_items', {}, version|default(''), '')) },
     { name: item.name ?? '', url: seo_canonical() }
   ])) }}
-  {{ seo_jsonld(seo_game_item(
-    item.name ?? '',
+  {# Gold economy + categories come straight from the item payload. #}
+  {{ seo_jsonld(seo_item(
+    item,
     image is defined and image ? seo_absolute('/' ~ image) : null,
-    item.plaintext|default(item.description|default('')|striptags)
+    seo_canonical()
   )) }}
 {% endblock %}
 

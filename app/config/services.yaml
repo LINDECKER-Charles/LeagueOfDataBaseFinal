@@ -64,5 +64,20 @@ services:
             $sender: '%env(MAILER_FROM)%'
             $recipient: '%env(CONTACT_RECIPIENT)%'
 
+    # SEO identity — values declared in config/packages/seo.yaml.
+    App\Service\Seo\CanonicalHost:
+        arguments:
+            $preferredHost: '%seo.canonical_host%'
+            $mirrorHosts: '%seo.mirror_hosts%'
+
+    App\Service\Seo\SiteGraphJsonLd:
+        arguments:
+            $siteName: '%legal.site_name%'
+            $sameAs: '%seo.same_as%'
+
+    App\Service\Seo\LlmsTxtBuilder:
+        arguments:
+            $siteName: '%legal.site_name%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

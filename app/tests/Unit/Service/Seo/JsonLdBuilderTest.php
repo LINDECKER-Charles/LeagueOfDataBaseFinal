@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service\Seo;
 
 use App\Service\Seo\JsonLdBuilder;
+use App\Service\Seo\JsonLdEncoder;
 use PHPUnit\Framework\TestCase;
 
 final class JsonLdBuilderTest extends TestCase
@@ -12,7 +13,7 @@ final class JsonLdBuilderTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->builder = new JsonLdBuilder();
+        $this->builder = new JsonLdBuilder(new JsonLdEncoder());
     }
 
     public function testEncodeEscapesAngleBracketsAgainstScriptBreakout(): void
@@ -63,25 +64,6 @@ final class JsonLdBuilderTest extends TestCase
         self::assertCount(JsonLdBuilder::ITEM_LIST_MAX, $graph['itemListElement']);
         self::assertSame(JsonLdBuilder::ITEM_LIST_MAX, $graph['numberOfItems']);
         self::assertSame('Item 1', $graph['itemListElement'][0]['name']);
-    }
-
-    public function testGameCharacterWrapsAPersonInsideTheVideoGame(): void
-    {
-        $graph = $this->builder->gameCharacter('Aatrox', 'https://example.com/cdn/aatrox.png', 'The Darkin Blade.');
-
-        self::assertSame('VideoGame', $graph['@type']);
-        self::assertSame(JsonLdBuilder::GAME_NAME, $graph['name']);
-        self::assertSame(
-            ['@type' => 'Person', 'name' => 'Aatrox', 'image' => 'https://example.com/cdn/aatrox.png', 'description' => 'The Darkin Blade.'],
-            $graph['character'],
-        );
-    }
-
-    public function testGameItemOmitsEmptyOptionalFields(): void
-    {
-        $graph = $this->builder->gameItem('Flash', null, '   ');
-
-        self::assertSame(['@type' => 'Thing', 'name' => 'Flash'], $graph['gameItem']);
     }
 
     public function testPersonPrunesEmptyOptionalFields(): void
@@ -151,15 +133,5 @@ final class JsonLdBuilderTest extends TestCase
         self::assertArrayNotHasKey('about', $graph);
         self::assertArrayNotHasKey('datePublished', $graph);
         self::assertSame(['@context', '@type', 'headline', 'url'], array_keys($graph));
-    }
-
-    public function testWebSiteAndOrganizationCarryTheirOwnContext(): void
-    {
-        $site = $this->builder->webSite('LODB', 'https://example.com/');
-        $org  = $this->builder->organization('LODB', 'https://example.com/', 'https://example.com/logo.png');
-
-        self::assertSame(['WebSite', 'Organization'], [$site['@type'], $org['@type']]);
-        self::assertSame(JsonLdBuilder::SCHEMA_CONTEXT, $site['@context']);
-        self::assertSame('https://example.com/logo.png', $org['logo']);
     }
 }

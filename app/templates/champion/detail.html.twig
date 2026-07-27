@@ -14,10 +14,12 @@
     { name: 'header.navigation.champion'|trans, url: seo_absolute(resource_path('app_champions', {}, version|default(''), '')) },
     { name: champion.name ?? '', url: seo_canonical() }
   ])) }}
-  {{ seo_jsonld(seo_game_character(
-    champion.name ?? '',
+  {# Full entity: role tags, resource, Riot profile ratings and base stats are
+     projected from the champion payload itself (see GameEntityJsonLd). #}
+  {{ seo_jsonld(seo_champion(
+    champion,
     image is defined and image ? seo_absolute('/' ~ image) : null,
-    champion.blurb|default(null)
+    seo_canonical()
   )) }}
 {% endblock %}
 
