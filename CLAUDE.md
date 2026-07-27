@@ -56,7 +56,7 @@ publier, puis **archiver** les entrées traitées dans `docs/changelog/archived/
 
 - **Tout l'egress Data Dragon / CommunityDragon passe par le Go gateway** (`GoFetcherClient` → service `go_fetcher.client`). Ne jamais fetch une URL externe directement depuis PHP. Toute nouvelle source d'asset doit être ajoutée à l'`ALLOWED_HOSTS` du go-fetcher (`compose.yaml`) — **recréer le conteneur** pour prise en compte.
 - **Stockage sans base de données** : images en `blobs/{sha256}.{ext}` (dédup O(1) + sibling WebP), données en `data/{version}/{lang}/{type}.json`, manifeste `manifest/{version}/{type}.json`. Le manifeste se met à jour en **read-merge-write** (`AbstractManager::saveManifest`) — ne jamais réintroduire un overwrite aveugle (course concurrente loader SSE ↔ flush kernel.terminate).
-- **Postgres = données utilisateur uniquement** (comptes/favoris/builds). Les données et images Data Dragon restent hors DB (MinIO) — ne jamais y introduire de dépendance DB. Migrations : `docker compose exec -T php php bin/console doctrine:migrations:migrate`.
+- **Postgres = données utilisateur uniquement** (comptes/favoris/builds). Les données et images Data Dragon restent hors DB (MinIO) — ne jamais y introduire de dépendance DB. Migrations : `docker compose exec -T -u www-data php php bin/console doctrine:migrations:migrate`.
 - **Managers de ressource** (champion/item/rune/summoner) : dérivent `AbstractManager`. La logique partagée (data, images, manifeste, **pagination**) vit dans la base ; un manager concret ne surcharge que ses points de divergence réels (ex. `paginationCollection`, `perPageCap`, `imageUrl`, `imageEntries`).
 - **Contrôleurs de ressource** : dérivent `AbstractResourceController` (dépendances transverses + `dataError`/`redirectToSetupWithError`/`clientData` mutualisés). Résolution version/langue via `PageContextResolver` (query → session, **sans redirect**), jamais de « redirect dance ».
 - **Îlots Vue** : logique d'orchestration hors du SFC (composables + modules purs, ex. `assets/vue/loader/`). Un SFC reste présentation + câblage mince. Code-split par îlot.
@@ -135,8 +135,8 @@ Les **limites chiffrées** sont des plafonds à respecter ; les **principes** so
 ## Garde-fous (à lancer avant de considérer un lot terminé)
 
 ```bash
-# Backend (dans le conteneur, comme la CI)
-docker compose exec -T php php vendor/bin/phpunit tests/Unit   # 51 tests — baseline verte
+# Backend (dans le conteneur, comme la CI) — TOUJOURS `-u www-data`, voir Pièges connus
+docker compose exec -T -u www-data php php vendor/bin/phpunit tests/Unit   # baseline verte
 # Front (hôte, depuis app/)
 npm test          # vitest
 npm run typecheck # vue-tsc --noEmit
@@ -154,6 +154,7 @@ npm run build     # vite build
 - **Chromas** : seule source = CommunityDragon (booléen `chromas` seul côté DDragon). Label couleur dérivé de la teinte (honnête), pas un nom produit Riot.
 - **`/build/` est réservé aux assets Vite (nginx)** — la vue de partage des builds vit sur `/b/{token}` ; ne pas « corriger ».
 - **CSRF stateless** : token ids `submit`/`authenticate`/`logout` — les POST curl de test exigent un header `Origin`.
+- **`docker compose exec php …` tourne en root** (`user: root` en dev, cf. `compose.override.yaml`) : toute commande console/phpunit lancée sans `-u www-data` laisse des dossiers root sous `var/` que le pool FPM (www-data) ne peut plus écrire. Symptôme : `RuntimeException: Unable to create the storage directory (var/cache/dev/profiler/…)` levée **après** l'envoi des headers → page d'erreur 500 collée en fin de HTML sur toutes les pages dev, `_wdt` en 404. Correctif au démarrage : `chown -R` sur `var`. **Toujours `docker compose exec -u www-data php …`.**
 - **Préservation du comportement** en refacto : conserver les contrats publics et la sortie ; prouver l'équivalence (tests + diff de rendu avant/après) avant de commit.
 
 ## Références

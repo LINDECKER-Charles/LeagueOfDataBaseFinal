@@ -21,8 +21,15 @@ services:
     # empty & root-owned, so run as root and hand the mount points to the www-data
     # FPM pool before starting. Populate vendor once (as www-data so it can write):
     #   docker compose exec -u www-data php composer install
+    #
+    # var/ is chowned RECURSIVELY: the container runs as root, so any `docker compose
+    # exec php php bin/console|phpunit` leaves root-owned subtrees under var/cache
+    # (var/cache/dev/profiler, var/cache/test, var/log/test.log). The FPM pool is
+    # www-data and then cannot write them — the profiler throws after the response
+    # headers are flushed, appending a 500 error page to every dev page. Non-recursive
+    # chown never healed that; keep the -R.
     user: root
-    command: sh -c "mkdir -p var/cache var/log && chown www-data:www-data var vendor var/cache var/log && exec php-fpm"
+    command: sh -c "mkdir -p var/cache var/log && chown -R www-data:www-data var && chown www-data:www-data vendor && exec php-fpm"
     volumes:
       - ./app:/var/www/html
       - app_vendor:/var/www/html/vendor
