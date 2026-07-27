@@ -64,7 +64,7 @@
         {{ ui.table(
             ['Invocateur', 'Statuts', 'E-mail', { label: 'Builds', num: true }, 'Inscrit le', { label: 'Actions', num: true }],
             tableRows,
-            q != '' ? 'Aucun compte ne correspond à la recherche.' : 'Aucun compte enregistré.'
+            { empty: q != '' ? 'Aucun compte ne correspond à la recherche.' : 'Aucun compte enregistré.' }
         ) }}
     </section>
 

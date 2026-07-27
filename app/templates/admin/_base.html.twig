@@ -11,6 +11,16 @@
     <link rel="preload" href="/fonts/BeaufortforLOL-Bold.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/Spiegel_TT_Regular.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/admin/admin.css">
+    {# Static ES module (same rationale as the stylesheet): defers the heavy
+       panels and makes the time-series charts zoomable. #}
+    <script type="module" src="/admin/js/admin.js"></script>
+    {% if sync is defined and not sync %}
+        {# Without JavaScript the deferred panels would stay skeletons forever:
+           bounce to the synchronous rendering of the very same fragments. #}
+        <noscript>
+            <meta http-equiv="refresh" content="0; url={{ app.request.pathinfo }}?{{ app.request.query.all|merge({ sync: 1 })|url_encode }}">
+        </noscript>
+    {% endif %}
 </head>
 <body>
     <header class="admin-bar">

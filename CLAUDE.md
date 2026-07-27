@@ -168,7 +168,7 @@ Convention de commits (maintenue par /commit).
 - Scopes (chemin → scope) :
   - `app/src/Service/Seo/**`, `app/src/Twig/SeoExtension.php`, `app/public/robots.txt` → `back/seo`
   - `app/src/EventSubscriber/LocaleSubscriber.php`, `app/src/Service/I18n/**` → `back/i18n`
-  - `app/src/Controller/Admin/**`, `app/src/Service/Admin/**`, `app/templates/admin/**` → `back/admin`
+  - `app/src/Controller/Admin/**`, `app/src/Service/Admin/**`, `app/templates/admin/**`, `app/public/admin/**` → `back/admin`
   - `app/src/Service/API/**` → `back/api`
   - `app/src/Service/Analytics/**` → `back/analytics`
   - `app/src/Controller/**` (hors Admin) → `back/<domaine>`

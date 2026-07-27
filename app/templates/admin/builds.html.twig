@@ -62,7 +62,7 @@
         {{ ui.table(
             ['Build', 'Mode · Patch', 'Auteur', { label: 'Score', num: true }, 'Visibilité', 'Créé le', { label: 'Actions', num: true }],
             tableRows,
-            q != '' or visibility != '' ? 'Aucun build ne correspond aux filtres.' : 'Aucun build enregistré.'
+            { empty: q != '' or visibility != '' ? 'Aucun build ne correspond aux filtres.' : 'Aucun build enregistré.' }
         ) }}
     </section>
 

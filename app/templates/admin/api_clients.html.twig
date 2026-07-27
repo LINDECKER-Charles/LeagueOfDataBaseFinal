@@ -34,7 +34,7 @@
         </section>
         <section class="card">
             <div class="card__head"><h2>Top consommateurs</h2><span class="chip">30 jours</span></div>
-            {{ ui.rank(topConsumers, 'compact', 'cyan', 'Aucun trafic sur 30 jours.') }}
+            {{ ui.rank(topConsumers, { color: 'cyan', empty: 'Aucun trafic sur 30 jours.', limit: 8 }) }}
         </section>
     </div>
 
@@ -76,7 +76,7 @@
         {{ ui.table(
             ['Compte', 'Clé', 'Plan', { label: 'Conso mois', num: true }, { label: 'Crédits', num: true }, { label: 'Req/min', num: true }, 'Statut', 'Créée le', { label: 'Actions', num: true }],
             tableRows,
-            'Aucune clé API émise.'
+            { empty: 'Aucune clé API émise.' }
         ) }}
     </section>
 

@@ -3,8 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use App\Service\Admin\AdminPanelCatalog;
+use App\Service\Admin\PanelContext;
 use App\Service\Analytics\AnalyticsReportService;
-use App\Service\Analytics\GeoLocator;
 use App\Service\Analytics\RollupService;
 use App\Service\Audit\AuditAction;
 use App\Service\Audit\AuditLogger;
@@ -20,20 +21,21 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/admin')]
 final class AnalyticsController extends AbstractController
 {
-    public function __construct(private readonly AnalyticsReportService $analytics) {}
+    public function __construct(
+        private readonly AnalyticsReportService $analytics,
+        private readonly AdminPanelCatalog $panels,
+    ) {}
 
     #[Route('/traffic', name: 'admin_traffic', methods: ['GET'])]
     public function traffic(Request $request): Response
     {
-        return $this->render('admin/traffic.html.twig', $this->context($request));
+        return $this->render('admin/traffic.html.twig', $this->context($request, 'traffic'));
     }
 
     #[Route('/audience', name: 'admin_audience', methods: ['GET'])]
-    public function audience(Request $request, GeoLocator $geo): Response
+    public function audience(Request $request): Response
     {
-        return $this->render('admin/audience.html.twig', $this->context($request) + [
-            'geo_available' => $geo->isAvailable(),
-        ]);
+        return $this->render('admin/audience.html.twig', $this->context($request, 'audience'));
     }
 
     #[Route('/analytics/rollup', name: 'admin_analytics_rollup', methods: ['POST'])]
@@ -56,16 +58,18 @@ final class AnalyticsController extends AbstractController
     }
 
     /**
-     * @return array{report: array<string, mixed>, range: string, ranges: list<string>}
+     * The page renders the head and the range bar only; the report itself is the
+     * deferred `$panel` fragment.
+     *
+     * @return array<string, mixed>
      */
-    private function context(Request $request): array
+    private function context(Request $request, string $panel): array
     {
-        $range = $this->analytics->normalizeRange((string) $request->query->get('range', '30d'));
+        $context = PanelContext::fromRequest($request);
 
         return [
-            'report' => $this->analytics->report($range),
-            'range' => $range,
+            'range' => $this->analytics->normalizeRange($context->range),
             'ranges' => $this->analytics->ranges(),
-        ];
+        ] + $this->panels->pageContext($context, [$panel]);
     }
 }
