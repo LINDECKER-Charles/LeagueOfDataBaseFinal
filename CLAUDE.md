@@ -160,3 +160,25 @@ npm run build     # vite build
 
 - `docs/architecture-report.md` — état archi + refactos appliqués (DRY/SOLID/KISS).
 - `docs/architecture.md`, `docs/docker.md`, `docs/configuration.md`, `docs/PERFORMANCE-AUDIT.md`.
+
+## commit
+
+Convention de commits (maintenue par /commit).
+- Style : Conventional Commits — langue : fr (sujets sans accents, impératif, ≤ 80 car.)
+- Scopes (chemin → scope) :
+  - `app/src/Service/Seo/**`, `app/src/Twig/SeoExtension.php`, `app/public/robots.txt` → `back/seo`
+  - `app/src/EventSubscriber/LocaleSubscriber.php`, `app/src/Service/I18n/**` → `back/i18n`
+  - `app/src/Controller/Admin/**`, `app/src/Service/Admin/**`, `app/templates/admin/**` → `back/admin`
+  - `app/src/Service/API/**` → `back/api`
+  - `app/src/Service/Analytics/**` → `back/analytics`
+  - `app/src/Controller/**` (hors Admin) → `back/<domaine>`
+  - `app/templates/**`, `app/assets/**` → `front/<zone>`
+  - `app/translations/**` → `i18n`
+  - Lot touchant à la fois contrôleur + templates + traductions → `full-stack/<zone>`
+  - `go-workers/**` → `fetcher`
+  - `compose*`, `docker/**`, `infra/**` → `infra`
+  - `.github/**` → `ci`
+  - `docs/**` → `docs`
+- Règles de regroupement :
+  - les tests (`app/tests/**`) voyagent avec le code testé, jamais en commit séparé ;
+  - les entrées `docs/changelog/**` sont jointes au commit feature/fix qu'elles documentent.
