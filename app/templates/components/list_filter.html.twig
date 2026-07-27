@@ -18,5 +18,5 @@
           filters: 'filter.filters'|trans,
           close: 'filter.close'|trans
         }
-      }|json_encode|e('html_attr') }}"></div>
+      }|json_encode|e('html_attr') }}">{% include 'components/skeleton.html.twig' with { kind: 'filter' } only %}</div>
 </div>

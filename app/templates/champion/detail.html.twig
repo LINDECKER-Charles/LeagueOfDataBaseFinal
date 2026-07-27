@@ -168,7 +168,9 @@
               title: 'champion.detail.abilities'|trans,
               meta: 'P · Q · W · E · R'
             } %}
-            <div data-vue="ability-showcase"
+            {# Below the fold and backed by a complete static fallback: the chunk
+               waits for the viewport instead of the critical path. #}
+            <div data-vue="ability-showcase" data-vue-lazy
                  data-props="{{ {
                    championKey: key4,
                    abilities: abilities,
@@ -222,8 +224,8 @@
               title: 'champion.detail.skins'|trans,
               meta: skinData|length
             } %}
-            <div data-vue="skin-gallery"
-                 data-props="{{ { championName: champion.name, skins: skinData }|json_encode|e('html_attr') }}"></div>
+            <div data-vue="skin-gallery" data-vue-lazy
+                 data-props="{{ { championName: champion.name, skins: skinData }|json_encode|e('html_attr') }}">{% include 'components/skeleton.html.twig' with { kind: 'gallery' } only %}</div>
           </section>
         {% endif %}
 
@@ -311,7 +313,7 @@
             </h2>
 
             <div data-vue="stat-scaler"
-                 data-props="{{ { targetId: 'champion-stats', labels: { level: 'champion.detail.level'|trans } }|json_encode|e('html_attr') }}"></div>
+                 data-props="{{ { targetId: 'champion-stats', labels: { level: 'champion.detail.level'|trans } }|json_encode|e('html_attr') }}">{% include 'components/skeleton.html.twig' with { kind: 'control' } only %}</div>
 
             <div id="champion-stats" class="stat-board mt-2">
               {% for row in statRows %}
