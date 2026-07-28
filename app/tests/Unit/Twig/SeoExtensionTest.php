@@ -3,8 +3,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Twig;
 
+use App\Service\Seo\CanonicalHost;
+use App\Service\Seo\ContentJsonLd;
+use App\Service\Seo\GameEntityJsonLd;
 use App\Service\Seo\JsonLdBuilder;
+use App\Service\Seo\JsonLdEncoder;
 use App\Service\Seo\OgLocale;
+use App\Service\Seo\SiteGraphJsonLd;
 use App\Twig\SeoExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,6 +19,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class SeoExtensionTest extends TestCase
 {
     private const SITE_NAME = 'League Of Data Base';
+    private const CANONICAL_HOST = 'league-of-data-base.com';
+    private const MIRROR_HOST = 'league-of-data-base.fr';
 
     private RequestStack $requestStack;
     private SeoExtension $extension;
@@ -26,15 +33,25 @@ final class SeoExtensionTest extends TestCase
         $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(
             static function (string $id, array $params = []): string {
-                $catalogue = ['versioned_suffix' => '(patch %version%)'];
+                $catalogue = [
+                    'versioned_suffix'  => '(patch %version%)',
+                    'base.description'  => 'The League of Legends encyclopaedia.',
+                ];
 
                 return strtr($catalogue[$id] ?? $id, $params);
             },
         );
 
+        $encoder = new JsonLdEncoder();
+        $hosts   = new CanonicalHost(self::CANONICAL_HOST, [self::CANONICAL_HOST, self::MIRROR_HOST]);
+
         $this->extension = new SeoExtension(
             $this->requestStack,
-            new JsonLdBuilder(),
+            new JsonLdBuilder($encoder),
+            new SiteGraphJsonLd($encoder, self::SITE_NAME, ['https://github.com/example']),
+            new GameEntityJsonLd($encoder),
+            new ContentJsonLd($encoder),
+            $hosts,
             new OgLocale(),
             $translator,
             self::SITE_NAME,
@@ -46,6 +63,14 @@ final class SeoExtensionTest extends TestCase
         $this->requestStack->push(Request::create('http://localhost:8080/champion/Aatrox?version=15.1.1&lang=fr_FR'));
 
         self::assertSame('http://localhost:8080/champion/Aatrox', $this->extension->canonical());
+    }
+
+    public function testCanonicalCollapsesTheWwwHost(): void
+    {
+        // www and the apex serve identical content; both must canonicalize to one URL.
+        $this->requestStack->push(Request::create('https://www.league-of-data-base.com/champions'));
+
+        self::assertSame('https://league-of-data-base.com/champions', $this->extension->canonical());
     }
 
     public function testCanonicalIsEmptyOutsideARequest(): void
@@ -67,6 +92,22 @@ final class SeoExtensionTest extends TestCase
         $cdn = 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Aatrox_0.jpg';
 
         self::assertSame($cdn, $this->extension->absolute($cdn));
+    }
+
+    public function testCanonicalFoldsMirrorDomainsIntoThePreferredHost(): void
+    {
+        // .fr serves identical content — it must not compete as a duplicate.
+        $this->requestStack->push(Request::create('https://www.league-of-data-base.fr/champion/Aatrox'));
+
+        self::assertSame('https://league-of-data-base.com/champion/Aatrox', $this->extension->canonical());
+    }
+
+    public function testCanonicalLeavesUnknownHostsSelfCanonical(): void
+    {
+        // Dev/staging/previews must never canonicalize to production.
+        $this->requestStack->push(Request::create('http://localhost:8080/champions'));
+
+        self::assertSame('http://localhost:8080/champions', $this->extension->canonical());
     }
 
     public function testTitleAppendsTheSiteNameAndFallsBackToItWhenEmpty(): void
@@ -105,15 +146,28 @@ final class SeoExtensionTest extends TestCase
         self::assertStringEndsWith('</script>', $html);
     }
 
-    public function testGlobalGraphEmitsWebSiteAndOrganizationNodes(): void
+    public function testGlobalGraphEmitsOneLinkedGraphCarryingThePageTitle(): void
     {
-        $this->requestStack->push(Request::create('https://league-of-data-base.com/'));
+        $request = Request::create('https://league-of-data-base.com/champions');
+        $request->setLocale('en');
+        $this->requestStack->push($request);
 
-        $html = $this->extension->globalGraph();
+        $html = $this->extension->globalGraph('Champions — League Of Data Base');
 
-        self::assertStringContainsString('"WebSite"', $html);
-        self::assertStringContainsString('"Organization"', $html);
-        self::assertStringContainsString('https://league-of-data-base.com/favicon/icon-512.png', $html);
-        self::assertSame(2, substr_count($html, '<script type="application/ld+json">'));
+        // A single script holding one @graph — that is what lets the @id
+        // cross-references resolve into one entity.
+        self::assertSame(1, substr_count($html, '<script type="application/ld+json">'));
+
+        $graph = json_decode(strip_tags($html), true)['@graph'];
+        self::assertSame(['WebSite', 'Organization', 'WebPage'], array_column($graph, '@type'));
+        self::assertSame('https://league-of-data-base.com/#organization', $graph[0]['publisher']['@id']);
+        self::assertSame('https://league-of-data-base.com/favicon/icon-512.png', $graph[1]['logo']['url']);
+        self::assertSame('Champions — League Of Data Base', $graph[2]['name']);
+        self::assertSame('https://league-of-data-base.com/#website', $graph[2]['isPartOf']['@id']);
+    }
+
+    public function testGlobalGraphIsEmptyOutsideARequest(): void
+    {
+        self::assertSame('', $this->extension->globalGraph('Anything'));
     }
 }

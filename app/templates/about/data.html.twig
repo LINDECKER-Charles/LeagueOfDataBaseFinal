@@ -1,0 +1,113 @@
+{% extends 'about/layout.html.twig' %}
+
+{% block title %}{{ seo_title('about.data.title'|trans({}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'about.data.description'|trans({'%version%': inventory.version}, 'seo') }}{% endblock %}
+{% block img %}/preview/objects.png{% endblock %}
+
+{% block structured_data %}
+  {{ seo_jsonld(seo_breadcrumbs([
+    { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+    { name: 'index.title'|trans({}, 'about'), url: seo_absolute(path('app_about')) },
+    { name: 'data.title'|trans({}, 'about'), url: seo_canonical() }
+  ])) }}
+  {# Dataset node — states the corpus, its patch, its languages and its upstream
+     origin, so the project is describable without inferring it from the pages.
+     creator points at the sitewide Organization @id emitted by the base layout. #}
+  {{ seo_jsonld(seo_dataset({
+    name: 'data.dataset_name'|trans({'%version%': inventory.version}, 'about'),
+    url: seo_canonical(),
+    description: 'about.data.description'|trans({'%version%': inventory.version}, 'seo'),
+    version: inventory.version,
+    languages: client.languages|default([]),
+    keywords: ['League of Legends', 'Data Dragon', 'champions', 'items', 'runes', 'summoner spells'],
+    creatorId: seo_absolute('/') ~ '#organization'
+  })) }}
+{% endblock %}
+
+{% block page_title %}{{ 'data.title'|trans({}, 'about') }}{% endblock %}
+{% block page_lead %}{{ 'data.lead'|trans({}, 'about') }}{% endblock %}
+
+{% block about_body %}
+<section id="snapshot">
+  {% include 'components/codex_header.html.twig' with { title: 'data.snapshot.title'|trans({}, 'about') } %}
+  <div class="about-facts">
+    <div class="about-fact">
+      <span class="about-fact__value">{{ inventory.version ?: '—' }}</span>
+      <span class="about-fact__label">{{ 'data.snapshot.patch'|trans({}, 'about') }}</span>
+    </div>
+    <div class="about-fact">
+      <span class="about-fact__value">{{ inventory.champions ?? '—' }}</span>
+      <span class="about-fact__label">{{ 'header.navigation.champion'|trans }}</span>
+    </div>
+    <div class="about-fact">
+      <span class="about-fact__value">{{ inventory.items ?? '—' }}</span>
+      <span class="about-fact__label">{{ 'header.navigation.item'|trans }}</span>
+    </div>
+    <div class="about-fact">
+      <span class="about-fact__value">{{ inventory.summoners ?? '—' }}</span>
+      <span class="about-fact__label">{{ 'header.navigation.summoner'|trans }}</span>
+    </div>
+    <div class="about-fact">
+      <span class="about-fact__value">{{ client.languages|default([])|length }}</span>
+      <span class="about-fact__label">{{ 'data.snapshot.languages'|trans({}, 'about') }}</span>
+    </div>
+    <div class="about-fact">
+      <span class="about-fact__value">{{ client.versions|default([])|length }}</span>
+      <span class="about-fact__label">{{ 'data.snapshot.patches'|trans({}, 'about') }}</span>
+    </div>
+  </div>
+</section>
+
+<hr class="hx-rule">
+
+<section id="sources">
+  {% include 'components/codex_header.html.twig' with { title: 'data.sources.title'|trans({}, 'about') } %}
+  <p>{{ 'data.sources.body'|trans({}, 'about') }}</p>
+  <h3>{{ 'data.sources.ddragon.title'|trans({}, 'about') }}</h3>
+  <p>{{ 'data.sources.ddragon.body'|trans({}, 'about') }}</p>
+  <h3>{{ 'data.sources.cdragon.title'|trans({}, 'about') }}</h3>
+  <p>{{ 'data.sources.cdragon.body'|trans({}, 'about') }}</p>
+</section>
+
+<hr class="hx-rule">
+
+<section id="freshness">
+  {% include 'components/codex_header.html.twig' with { title: 'data.freshness.title'|trans({}, 'about') } %}
+  <p>{{ 'data.freshness.body'|trans({}, 'about') }}</p>
+</section>
+
+<hr class="hx-rule">
+
+<section id="coverage">
+  {% include 'components/codex_header.html.twig' with { title: 'data.coverage.title'|trans({}, 'about') } %}
+  <p>{{ 'data.coverage.body'|trans({}, 'about') }}</p>
+  <ul>
+    <li>{{ 'data.coverage.champions'|trans({}, 'about') }}</li>
+    <li>{{ 'data.coverage.items'|trans({}, 'about') }}</li>
+    <li>{{ 'data.coverage.runes'|trans({}, 'about') }}</li>
+    <li>{{ 'data.coverage.summoners'|trans({}, 'about') }}</li>
+  </ul>
+</section>
+
+<hr class="hx-rule">
+
+<section id="limits">
+  {% include 'components/codex_header.html.twig' with { title: 'data.limits.title'|trans({}, 'about') } %}
+  <p>{{ 'data.limits.body'|trans({}, 'about') }}</p>
+</section>
+
+<hr class="hx-rule">
+
+<section id="reuse">
+  {% include 'components/codex_header.html.twig' with { title: 'data.reuse.title'|trans({}, 'about') } %}
+  <p>{{ 'data.reuse.body'|trans({}, 'about') }}</p>
+  <p><a href="{{ path('app_developers') }}">{{ 'data.reuse.link'|trans({}, 'about') }}</a></p>
+</section>
+
+<hr class="hx-rule">
+
+<section id="disclaimer">
+  {% include 'components/codex_header.html.twig' with { title: 'data.disclaimer.title'|trans({}, 'about') } %}
+  <p>{{ 'data.disclaimer.body'|trans({}, 'about') }}</p>
+</section>
+{% endblock %}

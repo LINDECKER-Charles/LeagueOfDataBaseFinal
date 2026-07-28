@@ -59,3 +59,13 @@ developers:
 trends:
   title: "Populární buildy LoL"
   description: "Veřejné buildy League of Legends seřazené podle hlasů komunity — filtrujte podle šampiona a herního režimu."
+
+about:
+  title: "O projektu"
+  description: "League Of Data Base je bezplatná encyklopedie League of Legends: šampioni, předměty, runy a vyvolávací kouzla pro každý patch, ve 21 jazycích, z oficiálních dat Data Dragon od Riotu."
+  data:
+    title: "Data a zdroje"
+    description: "Odkud pocházejí data League Of Data Base: oficiální export Data Dragon od Riotu (patch %version%) a Community Dragon, jak často se obnovují a co nepokrývají."
+  faq:
+    title: "Časté dotazy"
+    description: "Odpovědi na otázky o League Of Data Base: co to je, odkud pocházejí jeho data o League of Legends, jak často se aktualizují a zda je potřeba účet."

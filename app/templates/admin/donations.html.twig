@@ -29,7 +29,7 @@
         {{ ui.table(
             ['Date', { label: 'Montant', num: true }, 'Compte lié'],
             tableRows,
-            'Aucun don enregistré.'
+            { empty: 'Aucun don enregistré.' }
         ) }}
     </section>
 

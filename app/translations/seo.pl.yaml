@@ -59,3 +59,13 @@ developers:
 trends:
   title: "Popularne buildy LoL"
   description: "Publiczne buildy League of Legends uszeregowane według głosów społeczności — filtruj po bohaterze i trybie gry."
+
+about:
+  title: "O projekcie"
+  description: "League Of Data Base to darmowa encyklopedia League of Legends: bohaterowie, przedmioty, runy i czary przywoływacza dla każdego patcha, w 21 językach, na podstawie oficjalnych danych Data Dragon od Riot."
+  data:
+    title: "Dane i źródła"
+    description: "Skąd pochodzą dane League Of Data Base: oficjalny eksport Data Dragon od Riot (patch %version%) oraz Community Dragon, jak często są odświeżane i czego nie obejmują."
+  faq:
+    title: "Najczęściej zadawane pytania"
+    description: "Odpowiedzi na pytania o League Of Data Base: czym jest, skąd pochodzą jego dane o League of Legends, jak często są aktualizowane i czy potrzebne jest konto."

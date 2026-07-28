@@ -1,0 +1,125 @@
+# /about, /about/data ve /faq sayfalarının editoryal içeriği.
+# faq.* kimlikleri App\Controller\AboutController::FAQ_ENTRIES içinde tanımlıdır.
+eyebrow: "Hakkında"
+
+index:
+  title: "League Of Data Base hakkında"
+  lead: "League Of Data Base ücretsiz bir League of Legends ansiklopedisidir: tüm şampiyonlar, eşyalar, rünler ve sihirdar büyüleri; her yama için, 21 dilde."
+  what:
+    title: "Bu site nedir"
+    body: "League Of Data Base, League of Legends oyun verileri için bir başvuru sitesidir. Oyunun kendi dosyalarını — şampiyonlar, eşyalar, rünler ve sihirdar büyüleri — göz atılabilen, filtrelenebilen ve karşılaştırılabilen okunaklı sayfalar hâlinde yayımlar. Her değer Riot’un resmî Data Dragon dağıtımından gelir: burada okuduğunuz şey oyunun içindekidir, bir tahmin ya da topluluk varsayımı değildir."
+  audience:
+    title: "Kimler için"
+    body: "Maç aralarında bir şampiyonun yeteneklerine ya da bir eşyanın fiyatına bakan oyuncular; yamalar arasında değerleri karşılaştıranlar; kesin sayılara ihtiyaç duyan içerik üreticileri; ve aynı verileri bir API üzerinden isteyen geliştiriciler için. Hiçbir şey giriş arkasında değildir — okumak için hesap gerekmez."
+  features:
+    title: "Burada neler yapabilirsiniz"
+    codex:
+      title: "Tüm külliyata göz atın"
+      body: "Her şampiyon (yetenekler, kostümler, temel istatistikler, hikâye), her eşya (fiyat, istatistikler, yapım yolu), her rün dalı ve her sihirdar büyüsü için ayrıntılı sayfalar; tüm listelerde anlık arama ve filtrelerle."
+    patches:
+      title: "Yamalar arasında gezinin"
+      body: "Herhangi bir Data Dragon yamasına geçin ve siteyi o sürümdeki hâliyle okuyun. Geçmiş sayfalar kendi adreslerini korur: eski bir yamaya verilen bağlantı sonsuza dek doğru kalır."
+    languages:
+      title: "Kendi dilinizde okuyun"
+      body: "Arayüz ve oyun verileri, Riot’un yayımladığı 21 dilde mevcuttur — İngilizce ve Fransızcadan Korece, Japonca, Arapça ve Çincenin her iki yazımına kadar."
+    builds:
+      title: "Dizilim oluşturun ve paylaşın"
+      body: "Cephanelik düzenleyicisinde adım adım bir eşya dizilimi kurun, sonra bir bağlantıyla paylaşın. Dizilimlere oy verilebilir ve herkese açık profiliniz yayımladıklarınızı bir araya getirir."
+    trends:
+      title: "Neye bakıldığını görün"
+      body: "Eğilimler sayfası sitede en çok incelenen şampiyonları, eşyaları ve rünleri sıralar — maç istatistikleri değil, topluluk ilgisinin bir ölçüsü."
+    api:
+      title: "Verileri programla sorgulayın"
+      body: "JSON REST API; herkese açık profilleri, paylaşılan dizilimleri ve görüntülenme eğilimlerini sunar; ücretsiz bir kademe ve yoğun kullanım için ücretli kredi paketleriyle."
+    offline:
+      title: "Kurun ve göz atmaya devam edin"
+      body: "Site kurulabilir bir aşamalı web uygulamasıdır: ana ekranınıza ekleyin, daha önce ziyaret ettiğiniz sayfalar bağlantı olmadan da okunabilir kalsın."
+  data:
+    title: "Veriler nereden geliyor"
+    body: "Sitedeki her değer, Riot Games’in Data Dragon dağıtımından — League of Legends oyun verilerinin resmî statik dışa aktarımından — okunur; kostüm chroma’ları için Community Dragon ile tamamlanır. Hiçbir şey elle düzenlenmez: site bir okuyucudur, bir editör değil."
+    link: "Veriler ve kaynaklar sayfasının tamamını okuyun"
+  who:
+    title: "Kim yürütüyor"
+    body: "League Of Data Base, tek bir geliştirici tarafından yapılan ve sürdürülen, gönüllü bağışlarla finanse edilen bağımsız bir projedir. Reklam göstermez ve kişisel veri satmaz."
+    opensource: "Kaynak kodu herkese açık:"
+  more:
+    title: "Daha ileri"
+
+data:
+  title: "Veriler ve kaynaklar"
+  lead: "Bu site neyi yayımlıyor, nereden geliyor, ne kadar güncel ve bilerek neyi iddia etmiyor."
+  dataset_name: "League of Legends oyun verileri — %version% yaması"
+  snapshot:
+    title: "Güncel durum"
+    patch: "Yama"
+    languages: "Diller"
+    patches: "Yamalar"
+  sources:
+    title: "Kaynak sistemler"
+    body: "Sitenin kendine ait oyun verisi yoktur. Gösterilen her şey resmî dağıtımlardan alınır ve yayımlandığı hâliyle sunulur."
+    ddragon:
+      title: "Data Dragon (Riot Games)"
+      body: "Ana kaynak: Riot’un her yamada yayımladığı resmî statik veri dışa aktarımı. Şampiyonları, eşyaları, rünleri, sihirdar büyülerini, yerelleştirilmiş metinlerini ve görsellerini sağlar."
+    cdragon:
+      title: "Community Dragon"
+      body: "Yalnızca tek bir şey için kullanılır: Data Dragon’un işaret ettiği ama hiç tanımlamadığı şampiyon kostümü chroma çeşitleri. Burada gösterilen renk etiketleri, Riot ürün adlarından değil, görselin gerçek renk tonundan türetilir."
+  freshness:
+    title: "Ne kadar güncel"
+    body: "Yeni yamalar, yayımlandıkları anda Riot’un sürüm listesinden alınır; genellikle bir oyun yaması yayına girdikten sonraki saatler içinde. Önceki yamalar korunur ve gezilebilir kalır: yenisi geldiğinde hiçbir şey kaybolmaz."
+  coverage:
+    title: "Neler kapsanıyor"
+    body: "Her yama ve her dil için site şunları yayımlar:"
+    champions: "Şampiyonlar — yetenekler, temel istatistikler ve seviye başına artış, roller, kaynak türü, kostümler ve chroma’lar, hikâye."
+    items: "Eşyalar — altın maliyeti, yapım yolu, satış değeri, istatistikler, kategoriler ve haritalara göre kullanılabilirlik."
+    runes: "Rün dalları — her yuva, ana rün ve alt rün, etki metniyle birlikte."
+    summoners: "Sihirdar büyüleri — bekleme süresi, menzil, açılma seviyesi ve oyun modları."
+  limits:
+    title: "Kabul edilen sınırlar"
+    body: "Bu site oyun dosyalarının içeriğini aktarır. Kazanma oranı, seçilme oranı ya da güç sıralaması hesaplamaz ve maç geçmişi tutmaz: bunlar canlı oyun verilerinden gelir ve Data Dragon bunları sağlamaz. Riot’un değişkenlerini çözümsüz bıraktığı yetenek açıklamaları, tahmin edilmek yerine geldiği gibi gösterilir."
+  reuse:
+    title: "Verileri yeniden kullanma"
+    body: "Oyun verileri Riot Games’e aittir ve onun koşullarına tabidir. Sitenin kendi katkıları — görüntülenme eğilimleri, herkese açık profiller ve paylaşılan dizilimler — belgelenmiş bir JSON API üzerinden sunulur."
+    link: "Geliştirici API’sine bakın"
+  disclaimer:
+    title: "Riot Games bildirimi"
+    body: "League Of Data Base, Riot Games tarafından onaylanmamıştır ve Riot Games’in ya da League of Legends’ın üretimi veya yönetiminde resmî olarak yer alan hiç kimsenin görüşlerini yansıtmaz. League of Legends ve Riot Games, Riot Games, Inc. şirketinin ticari markaları veya tescilli ticari markalarıdır."
+
+faq:
+  title: "Sıkça sorulan sorular"
+  lead: "Bu sitenin ne olduğu, verilerinin nereden geldiği ve onlarla neler yapabileceğiniz hakkında net yanıtlar."
+  more:
+    title: "Hâlâ mı arıyorsunuz?"
+    body: "Bu sayfalar daha ayrıntılı:"
+  what-is-it:
+    question: "League Of Data Base nedir?"
+    answer: "League Of Data Base, League of Legends’a adanmış ücretsiz bir çevrimiçi ansiklopedidir. Oyundaki her şampiyonu, eşyayı, rünü ve sihirdar büyüsünü kesin istatistikleriyle, herhangi bir yama için ve 21 dilde incelemenizi sağlar. Bağımsız bir projedir, resmî bir Riot Games sitesi değildir."
+  data-source:
+    question: "Veriler nereden geliyor?"
+    answer: "Tüm oyun verileri, Riot Games’in her yamada yayımladığı resmî statik veri dışa aktarımı olan Data Dragon’dan gelir. Data Dragon’un tanımlamadığı kostüm chroma’ları Community Dragon’dan gelir. Site bu değerleri değiştirmez: okur ve sunar."
+  freshness:
+    question: "Veriler ne sıklıkla güncellenir?"
+    answer: "Yeni yamalar, yayımlanır yayımlanmaz Riot’un sürüm listesinden algılanır; genellikle yama yayına girdikten sonraki saatler içinde. Eski yamalar erişilebilir kalır, böylece istediğiniz zaman geri dönüp siteyi önceki bir sürümdeki hâliyle okuyabilirsiniz."
+  languages:
+    question: "Hangi diller mevcut?"
+    answer: "Site, Riot’un oyun verilerini yayımladığı 21 dilde mevcuttur: İngilizce, Fransızca, Almanca, İspanyolca, İtalyanca, Portekizce, Lehçe, Rumence, Macarca, Yunanca, Çekçe, Türkçe, Rusça, Arapça, Tayca, Vietnamca, Endonezce, Japonca, Korece, Basitleştirilmiş ve Geleneksel Çince. Hem arayüz hem de oyun metinleri seçtiğiniz dili izler."
+  old-patches:
+    question: "Eski bir yamaya bakabilir miyim?"
+    answer: "Evet. Riot’un Data Dragon üzerinden yayımladığı her yama gezilebilir kalır ve geçmiş sayfaların kendi kalıcı adresleri vardır. Böylece bir şampiyonu ya da eşyayı iki sürüm arasında karşılaştırabilir veya belirli bir yamanın tam hâline bağlantı verebilirsiniz."
+  free:
+    question: "Ücretsiz mi?"
+    answer: "Evet, sitenin tamamı ücretsizdir; reklam ve ödeme duvarı yoktur. Gönüllü bağışlarla finanse edilir. Yalnızca geliştirici API’sinin yoğun programlı kullanımı ücretli kredi paketleri gerektirir ve orada bile ücretsiz bir kademe vardır."
+  account:
+    question: "Hesap gerekiyor mu?"
+    answer: "Hayır, şampiyonlara, eşyalara, rünlere, sihirdar büyülerine veya herhangi bir yamaya göz atmak için hesap gerekmez. Hesap yalnızca favorileri kaydetmek, eşya dizilimleri oluşturup paylaşmak ve başkalarının paylaştığı dizilimlere oy vermek için gereklidir."
+  builds:
+    question: "Eşya dizilimi oluşturup paylaşabilir miyim?"
+    answer: "Evet. Cephanelik düzenleyicisi bir dizilimi adım adım kurmanıza ve paylaşılabilir bir bağlantıyla yayımlamanıza olanak tanır. Paylaşılan dizilimlere diğer ziyaretçiler oy verebilir ve herkese açık profiliniz yayımladıklarınızı listeler."
+  api:
+    question: "API var mı?"
+    answer: "Evet. JSON REST API, sitenin kendi verilerini — herkese açık profiller, paylaşılan dizilimler ve görüntülenme eğilimleri — ücretsiz bir kademe ve daha büyük hacimler için kredi paketleriyle sunar. Riot’un oyun verileri ise doğrudan Data Dragon’dan erişilebilir kalır."
+  offline:
+    question: "Çevrimdışı çalışır mı?"
+    answer: "Kısmen. Site kurulabilir bir aşamalı web uygulamasıdır: ana ekranınıza veya masaüstünüze ekleyebilirsiniz ve daha önce ziyaret ettiğiniz sayfalar bağlantı olmadan okunabilir kalır. Yeni sayfalar yine de ağ erişimi gerektirir."
+  riot-affiliation:
+    question: "Bu site Riot Games ile bağlantılı mı?"
+    answer: "Hayır. League Of Data Base bağımsız bir projedir, Riot Games tarafından onaylanmamıştır ve Riot Games’in ya da League of Legends’ın üretimi veya yönetiminde resmî olarak yer alan hiç kimsenin görüşlerini yansıtmaz. League of Legends ve Riot Games, Riot Games, Inc. şirketinin ticari markaları veya tescilli ticari markalarıdır."

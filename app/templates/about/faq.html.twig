@@ -1,0 +1,44 @@
+{% extends 'about/layout.html.twig' %}
+
+{% block title %}{{ seo_title('about.faq.title'|trans({}, 'seo')) }}{% endblock %}
+{% block meta_description %}{{ 'about.faq.description'|trans({}, 'seo') }}{% endblock %}
+{% block img %}/preview/home.png{% endblock %}
+
+{% block structured_data %}
+  {{ seo_jsonld(seo_breadcrumbs([
+    { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
+    { name: 'index.title'|trans({}, 'about'), url: seo_absolute(path('app_about')) },
+    { name: 'faq.title'|trans({}, 'about'), url: seo_canonical() }
+  ])) }}
+  {# Same `entries` the page renders — the visible answers and the ones exposed
+     to crawlers are one source, so they cannot drift. #}
+  {{ seo_jsonld(seo_faq(entries, seo_canonical())) }}
+{% endblock %}
+
+{% block page_title %}{{ 'faq.title'|trans({}, 'about') }}{% endblock %}
+{% block page_lead %}{{ 'faq.lead'|trans({}, 'about') }}{% endblock %}
+
+{% block about_body %}
+<section id="questions">
+  <dl class="flex flex-col gap-8">
+    {% for entry in entries %}
+      <div id="{{ entry.id }}" style="scroll-margin-top: 6.5rem;">
+        <dt class="mb-2 font-beaufort text-lg leading-snug tracking-[0.03em] text-gold-bright">{{ entry.question }}</dt>
+        <dd class="font-spiegel leading-relaxed text-text-muted">{{ entry.answer }}</dd>
+      </div>
+    {% endfor %}
+  </dl>
+</section>
+
+<hr class="hx-rule">
+
+<section id="more">
+  {% include 'components/codex_header.html.twig' with { title: 'faq.more.title'|trans({}, 'about') } %}
+  <p>{{ 'faq.more.body'|trans({}, 'about') }}</p>
+  <ul>
+    <li><a href="{{ path('app_about') }}">{{ 'index.title'|trans({}, 'about') }}</a></li>
+    <li><a href="{{ path('app_about_data') }}">{{ 'data.title'|trans({}, 'about') }}</a></li>
+    <li><a href="{{ path('app_developers') }}">{{ 'nav.developers'|trans({}, 'api') }}</a></li>
+  </ul>
+</section>
+{% endblock %}

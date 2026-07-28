@@ -1,0 +1,125 @@
+# Konten editorial untuk halaman /about, /about/data, dan /faq.
+# Id faq.* dideklarasikan di App\Controller\AboutController::FAQ_ENTRIES.
+eyebrow: "Tentang"
+
+index:
+  title: "Tentang League Of Data Base"
+  lead: "League Of Data Base adalah ensiklopedia League of Legends gratis: seluruh juara, item, rune, dan mantra summoner, untuk setiap patch, dalam 21 bahasa."
+  what:
+    title: "Apa itu situs ini"
+    body: "League Of Data Base adalah situs rujukan untuk data game League of Legends. Situs ini menerbitkan berkas game itu sendiri — juara, item, rune, dan mantra summoner — sebagai halaman yang mudah dibaca, dijelajahi, disaring, dan dibandingkan. Setiap nilai berasal dari distribusi resmi Data Dragon milik Riot: yang Anda baca di sini adalah isi game, bukan perkiraan atau dugaan komunitas."
+  audience:
+    title: "Untuk siapa"
+    body: "Untuk pemain yang memeriksa kemampuan juara atau harga item di sela pertandingan; untuk yang membandingkan nilai antarpatch; untuk kreator konten yang butuh angka persis; dan untuk pengembang yang menginginkan data yang sama lewat API. Tidak ada yang disembunyikan di balik login — membaca tidak memerlukan akun."
+  features:
+    title: "Apa yang bisa Anda lakukan di sini"
+    codex:
+      title: "Jelajahi seluruh kodeks"
+      body: "Halaman rinci untuk setiap juara (kemampuan, skin, statistik dasar, kisah), setiap item (harga, statistik, jalur pembuatan), setiap cabang rune, dan setiap mantra summoner, dengan pencarian instan dan filter di setiap daftar."
+    patches:
+      title: "Menjelajah antarpatch"
+      body: "Beralihlah ke patch Data Dragon mana pun dan baca situs seperti keadaannya pada versi tersebut. Halaman lama mempertahankan alamatnya sendiri: tautan ke patch lawas tetap akurat selamanya."
+    languages:
+      title: "Baca dalam bahasa Anda"
+      body: "Antarmuka dan data game tersedia dalam 21 bahasa yang diterbitkan Riot — dari Inggris dan Prancis hingga Korea, Jepang, Arab, serta kedua bentuk tulisan Tionghoa."
+    builds:
+      title: "Buat dan bagikan build"
+      body: "Susun build item langkah demi langkah di editor gudang senjata, lalu bagikan lewat tautan. Build dapat diberi suara, dan profil publik mengumpulkan build yang Anda terbitkan."
+    trends:
+      title: "Lihat apa yang sedang dicari"
+      body: "Halaman tren memeringkat juara, item, dan rune yang paling banyak dilihat di situs — ukuran perhatian komunitas, bukan statistik pertandingan."
+    api:
+      title: "Kueri data secara terprogram"
+      body: "API REST berformat JSON menyediakan profil publik, build yang dibagikan, dan tren tampilan, dengan tingkat gratis serta paket kredit berbayar untuk penggunaan lebih berat."
+    offline:
+      title: "Pasang dan lanjutkan menjelajah"
+      body: "Situs ini adalah aplikasi web progresif yang dapat dipasang: tambahkan ke layar utama, dan halaman yang pernah dikunjungi tetap terbaca tanpa koneksi."
+  data:
+    title: "Dari mana data berasal"
+    body: "Setiap nilai di situs dibaca dari distribusi Data Dragon milik Riot Games, ekspor statis resmi data game League of Legends, dilengkapi Community Dragon untuk kroma skin. Tidak ada yang disunting manual: situs ini pembaca, bukan penyunting."
+    link: "Baca halaman lengkap tentang data dan sumber"
+  who:
+    title: "Siapa yang menjalankannya"
+    body: "League Of Data Base adalah proyek independen yang dibangun dan dirawat oleh satu pengembang serta didanai donasi sukarela. Situs ini tidak menampilkan iklan dan tidak menjual data pribadi."
+    opensource: "Kode sumbernya terbuka di"
+  more:
+    title: "Selengkapnya"
+
+data:
+  title: "Data dan sumber"
+  lead: "Apa yang diterbitkan situs ini, dari mana asalnya, seberapa mutakhir, dan apa yang sengaja tidak diklaimnya."
+  dataset_name: "Data game League of Legends — patch %version%"
+  snapshot:
+    title: "Cuplikan saat ini"
+    patch: "Patch"
+    languages: "Bahasa"
+    patches: "Patch"
+  sources:
+    title: "Sumber hulu"
+    body: "Situs ini tidak memiliki data game sendiri. Semua yang ditampilkan diambil dari distribusi resmi dan disajikan sebagaimana diterbitkan."
+    ddragon:
+      title: "Data Dragon (Riot Games)"
+      body: "Sumber utama: ekspor data statis resmi Riot, dirilis pada setiap patch. Menyediakan juara, item, rune, mantra summoner, teks terlokalisasinya, dan gambarnya."
+    cdragon:
+      title: "Community Dragon"
+      body: "Dipakai untuk satu hal saja: varian kroma skin juara, yang ditandai Data Dragon tetapi tidak pernah dijelaskannya. Label warna yang ditampilkan di sini diturunkan dari rona gambar yang sebenarnya, bukan dari nama produk Riot."
+  freshness:
+    title: "Seberapa mutakhir"
+    body: "Patch baru diambil dari daftar versi Riot begitu muncul, biasanya dalam hitungan jam setelah sebuah patch tayang. Patch sebelumnya disimpan dan tetap dapat dijelajahi: tidak ada yang hilang saat patch baru datang."
+  coverage:
+    title: "Apa yang dicakup"
+    body: "Untuk setiap patch dan setiap bahasa, situs menerbitkan:"
+    champions: "Juara — kemampuan, statistik dasar dan pertumbuhan per level, peran, jenis sumber daya, skin dan kroma, kisah."
+    items: "Item — biaya emas, jalur pembuatan, nilai jual, statistik, kategori, dan ketersediaan per peta."
+    runes: "Cabang rune — setiap slot, rune utama, dan rune minor beserta teks efeknya."
+    summoners: "Mantra summoner — waktu jeda, jangkauan, level pembuka, dan mode permainan."
+  limits:
+    title: "Batasan yang diakui"
+    body: "Situs ini melaporkan isi berkas game. Ia tidak menghitung tingkat kemenangan, tingkat pemilihan, atau daftar peringkat, dan tidak menyimpan riwayat pertandingan: hal-hal itu berasal dari data permainan langsung yang tidak disediakan Data Dragon. Deskripsi kemampuan yang variabelnya dibiarkan tak terselesaikan oleh Riot ditampilkan apa adanya, bukan ditebak."
+  reuse:
+    title: "Menggunakan ulang data"
+    body: "Data game milik Riot Games dan tetap tunduk pada ketentuannya. Kontribusi milik situs sendiri — tren tampilan, profil publik, dan build yang dibagikan — tersedia melalui API JSON yang terdokumentasi."
+    link: "Lihat API untuk pengembang"
+  disclaimer:
+    title: "Pernyataan tentang Riot Games"
+    body: "League Of Data Base tidak didukung oleh Riot Games dan tidak mencerminkan pandangan atau pendapat Riot Games maupun siapa pun yang secara resmi terlibat dalam produksi atau pengelolaan League of Legends. League of Legends dan Riot Games adalah merek dagang atau merek dagang terdaftar milik Riot Games, Inc."
+
+faq:
+  title: "Pertanyaan yang sering diajukan"
+  lead: "Jawaban lugas tentang apa situs ini, dari mana datanya, dan apa yang bisa Anda lakukan dengannya."
+  more:
+    title: "Masih mencari?"
+    body: "Halaman-halaman ini membahas lebih rinci:"
+  what-is-it:
+    question: "Apa itu League Of Data Base?"
+    answer: "League Of Data Base adalah ensiklopedia daring gratis untuk League of Legends. Situs ini memungkinkan Anda menelusuri setiap juara, item, rune, dan mantra summoner dalam game beserta statistik persisnya, untuk patch mana pun dan dalam 21 bahasa. Ini proyek independen, bukan situs resmi Riot Games."
+  data-source:
+    question: "Dari mana data berasal?"
+    answer: "Seluruh data game berasal dari Data Dragon, ekspor data statis resmi yang diterbitkan Riot Games pada setiap patch. Kroma skin, yang tidak dijelaskan Data Dragon, berasal dari Community Dragon. Situs tidak mengubah nilai-nilai ini: ia membaca dan menampilkannya."
+  freshness:
+    question: "Seberapa sering data diperbarui?"
+    answer: "Patch baru terdeteksi dari daftar versi Riot begitu diterbitkan, biasanya dalam hitungan jam setelah tayang. Patch lama tetap tersedia, jadi Anda selalu bisa kembali dan membaca situs seperti keadaannya pada versi sebelumnya."
+  languages:
+    question: "Bahasa apa saja yang tersedia?"
+    answer: "Situs tersedia dalam 21 bahasa tempat Riot menerbitkan data game: Inggris, Prancis, Jerman, Spanyol, Italia, Portugis, Polandia, Rumania, Hungaria, Yunani, Ceko, Turki, Rusia, Arab, Thai, Vietnam, Indonesia, Jepang, Korea, Tionghoa Sederhana, dan Tionghoa Tradisional. Antarmuka maupun teks game mengikuti bahasa yang Anda pilih."
+  old-patches:
+    question: "Bisakah saya melihat patch lama?"
+    answer: "Bisa. Setiap patch yang diterbitkan Riot melalui Data Dragon tetap dapat dijelajahi, dan halaman lama memiliki alamat permanennya sendiri. Dengan begitu Anda bisa membandingkan juara atau item antara dua versi, atau membagikan tautan ke kondisi persis suatu patch."
+  free:
+    question: "Apakah gratis?"
+    answer: "Ya, seluruh situs gratis digunakan, tanpa iklan dan tanpa dinding berbayar. Pendanaannya berasal dari donasi sukarela. Hanya penggunaan API pengembang secara intensif yang memerlukan paket kredit berbayar, dan itu pun memiliki tingkat gratis."
+  account:
+    question: "Apakah saya perlu akun?"
+    answer: "Tidak, tidak perlu akun untuk menelusuri juara, item, rune, mantra summoner, atau patch mana pun. Akun hanya diperlukan untuk menyimpan favorit, membuat dan membagikan build item, serta memberi suara pada build yang dibagikan orang lain."
+  builds:
+    question: "Bisakah saya membuat dan membagikan build item?"
+    answer: "Bisa. Editor gudang senjata memungkinkan Anda menyusun build langkah demi langkah, lalu menerbitkannya lewat tautan yang bisa dibagikan. Build yang dibagikan dapat diberi suara oleh pengunjung lain, dan profil publik Anda mendaftar build yang telah Anda terbitkan."
+  api:
+    question: "Apakah ada API?"
+    answer: "Ada. API REST berformat JSON menyediakan data milik situs — profil publik, build yang dibagikan, dan tren tampilan — dengan tingkat gratis serta paket kredit untuk volume lebih besar. Data game Riot sendiri tetap tersedia langsung dari Data Dragon."
+  offline:
+    question: "Apakah bisa dipakai luring?"
+    answer: "Sebagian. Situs ini adalah aplikasi web progresif yang dapat dipasang: Anda bisa menambahkannya ke layar utama atau desktop, dan halaman yang pernah dikunjungi tetap terbaca tanpa koneksi. Halaman baru tetap memerlukan akses jaringan."
+  riot-affiliation:
+    question: "Apakah situs ini berafiliasi dengan Riot Games?"
+    answer: "Tidak. League Of Data Base adalah proyek independen, tidak didukung oleh Riot Games, dan tidak mencerminkan pandangan atau pendapat Riot Games maupun siapa pun yang secara resmi terlibat dalam produksi atau pengelolaan League of Legends. League of Legends dan Riot Games adalah merek dagang atau merek dagang terdaftar milik Riot Games, Inc."

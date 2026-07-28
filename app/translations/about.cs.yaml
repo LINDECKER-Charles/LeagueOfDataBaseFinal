@@ -1,0 +1,125 @@
+# Redakční obsah stránek /about, /about/data a /faq.
+# Identifikátory faq.* jsou deklarovány v App\Controller\AboutController::FAQ_ENTRIES.
+eyebrow: "O projektu"
+
+index:
+  title: "O League Of Data Base"
+  lead: "League Of Data Base je bezplatná encyklopedie League of Legends: všichni šampioni, předměty, runy a vyvolávací kouzla, pro každý patch, ve 21 jazycích."
+  what:
+    title: "Co je tento web"
+    body: "League Of Data Base je referenční web o herních datech League of Legends. Zveřejňuje soubory samotné hry — šampiony, předměty, runy a vyvolávací kouzla — jako čitelné stránky, které lze procházet, filtrovat a porovnávat. Každá hodnota pochází z oficiální distribuce Data Dragon od Riotu: to, co zde čtete, je obsah hry, nikoli odhad ani domněnka komunity."
+  audience:
+    title: "Pro koho je určen"
+    body: "Pro hráče, kteří si mezi zápasy ověřují schopnosti šampiona nebo cenu předmětu; pro theorycraftery porovnávající hodnoty napříč patchi; pro tvůrce obsahu, kteří potřebují přesná čísla; a pro vývojáře, kteří chtějí stejná data přes API. Nic není za přihlášením — ke čtení není potřeba účet."
+  features:
+    title: "Co zde můžete dělat"
+    codex:
+      title: "Procházet celý kodex"
+      body: "Podrobné stránky pro každého šampiona (schopnosti, skiny, základní statistiky, příběh), každý předmět (cena, statistiky, cesta výroby), každou větev run a každé vyvolávací kouzlo — s okamžitým vyhledáváním a filtry v každém seznamu."
+    patches:
+      title: "Cestovat mezi patchi"
+      body: "Přepněte na libovolný patch Data Dragon a čtěte web tak, jak vypadal v dané verzi. Historické stránky si drží vlastní adresu: odkaz na starší patch zůstane navždy přesný."
+    languages:
+      title: "Číst ve svém jazyce"
+      body: "Rozhraní i herní data jsou dostupná ve 21 jazycích, které Riot vydává — od angličtiny a francouzštiny po korejštinu, japonštinu, arabštinu a obě čínská písma."
+    builds:
+      title: "Vytvářet a sdílet buildy"
+      body: "Sestavte předmětový build krok za krokem v editoru zbrojnice a sdílejte jej odkazem. Buildy lze hodnotit a veřejný profil shromažďuje ty, které zveřejníte."
+    trends:
+      title: "Vidět, co se vyhledává"
+      body: "Stránka trendů řadí nejčastěji zobrazované šampiony, předměty a runy — měřítko pozornosti komunity, nikoli statistiky zápasů."
+    api:
+      title: "Dotazovat data programově"
+      body: "REST API ve formátu JSON zpřístupňuje veřejné profily, sdílené buildy a trendy zobrazení, s bezplatnou úrovní a placenými kreditovými balíčky pro náročnější použití."
+    offline:
+      title: "Nainstalovat a číst dál"
+      body: "Web je instalovatelná progresivní webová aplikace: přidejte si ji na plochu a již navštívené stránky zůstanou čitelné bez připojení."
+  data:
+    title: "Odkud data pocházejí"
+    body: "Každá hodnota na webu se čte z distribuce Data Dragon od Riot Games, oficiálního statického exportu herních dat League of Legends, doplněného o Community Dragon pro chromy skinů. Nic se needituje ručně: web je čtečka, nikoli editor."
+    link: "Přečíst celou stránku o datech a zdrojích"
+  who:
+    title: "Kdo jej provozuje"
+    body: "League Of Data Base je nezávislý projekt, který vytváří a udržuje jediný vývojář a financují jej dobrovolné dary. Nezobrazuje reklamu a neprodává osobní údaje."
+    opensource: "Zdrojový kód je veřejný na"
+  more:
+    title: "Jít dál"
+
+data:
+  title: "Data a zdroje"
+  lead: "Co tento web zveřejňuje, odkud to pochází, jak je to čerstvé a co záměrně netvrdí."
+  dataset_name: "Herní data League of Legends — patch %version%"
+  snapshot:
+    title: "Aktuální stav"
+    patch: "Patch"
+    languages: "Jazyky"
+    patches: "Patche"
+  sources:
+    title: "Zdroje výše v řetězci"
+    body: "Web nemá vlastní herní data. Vše zobrazené se získává z oficiálních distribucí a podává se v publikované podobě."
+    ddragon:
+      title: "Data Dragon (Riot Games)"
+      body: "Hlavní zdroj: oficiální export statických dat od Riotu, vydávaný ke každému patchi. Poskytuje šampiony, předměty, runy, vyvolávací kouzla, jejich lokalizované texty a obrázky."
+    cdragon:
+      title: "Community Dragon"
+      body: "Používá se k jediné věci: chroma variantám skinů šampionů, které Data Dragon signalizuje, ale nikdy nepopisuje. Zde uvedené názvy barev vycházejí ze skutečného odstínu obrázku, nikoli z produktových názvů Riotu."
+  freshness:
+    title: "Jak jsou data čerstvá"
+    body: "Nové patche se přebírají ze seznamu verzí Riotu, jakmile se objeví, obvykle do několika hodin od nasazení herního patche. Předchozí patche se uchovávají a zůstávají dostupné: s příchodem nového nic nemizí."
+  coverage:
+    title: "Co je pokryto"
+    body: "Pro každý patch a každý jazyk web zveřejňuje:"
+    champions: "Šampioni — schopnosti, základní statistiky a růst na úroveň, role, typ zdroje, skiny a chromy, příběh."
+    items: "Předměty — cena ve zlatě, cesta výroby, prodejní hodnota, statistiky, kategorie a dostupnost na mapách."
+    runes: "Větve run — každý slot, klíčová runa a menší runa s textem účinku."
+    summoners: "Vyvolávací kouzla — doba obnovení, dosah, úroveň odemčení a herní režimy."
+  limits:
+    title: "Známé limity"
+    body: "Tento web uvádí to, co obsahují herní soubory. Nepočítá míru vítězství, míru výběru ani tier listy a neuchovává historii zápasů: ta vychází z živých herních dat, která Data Dragon neposkytuje. Popisy schopností, v nichž Riot ponechává nevyřešené proměnné, se zobrazují tak, jak jsou dodány, místo aby se odhadovaly."
+  reuse:
+    title: "Opětovné použití dat"
+    body: "Herní data patří Riot Games a nadále podléhají jeho podmínkám. Vlastní přínosy webu — trendy zobrazení, veřejné profily a sdílené buildy — jsou dostupné přes zdokumentované JSON API."
+    link: "Zobrazit API pro vývojáře"
+  disclaimer:
+    title: "Prohlášení o Riot Games"
+    body: "League Of Data Base není podporován společností Riot Games a nevyjadřuje názory ani stanoviska Riot Games ani kohokoli oficiálně zapojeného do tvorby či správy League of Legends. League of Legends a Riot Games jsou ochranné známky nebo registrované ochranné známky společnosti Riot Games, Inc."
+
+faq:
+  title: "Časté dotazy"
+  lead: "Přímé odpovědi na to, co tento web je, odkud pocházejí jeho data a co s nimi můžete dělat."
+  more:
+    title: "Stále hledáte?"
+    body: "Tyto stránky jdou více do hloubky:"
+  what-is-it:
+    question: "Co je League Of Data Base?"
+    answer: "League Of Data Base je bezplatná online encyklopedie věnovaná League of Legends. Umožňuje vyhledat každého šampiona, předmět, runu a vyvolávací kouzlo ve hře i s přesnými statistikami, pro libovolný patch a ve 21 jazycích. Je to nezávislý projekt, nikoli oficiální web Riot Games."
+  data-source:
+    question: "Odkud pocházejí data?"
+    answer: "Všechna herní data pocházejí z Data Dragon, oficiálního exportu statických dat, který Riot Games vydává ke každému patchi. Chromy skinů, které Data Dragon nepopisuje, pocházejí z Community Dragon. Web tyto hodnoty nemění — čte je a zobrazuje."
+  freshness:
+    question: "Jak často se data aktualizují?"
+    answer: "Nové patche se rozpoznávají v seznamu verzí Riotu, jakmile jsou zveřejněny, obvykle do několika hodin od jejich nasazení. Starší patche zůstávají dostupné, takže se vždy můžete vrátit a číst web ve stavu předchozí verze."
+  languages:
+    question: "Jaké jazyky jsou k dispozici?"
+    answer: "Web je dostupný ve 21 jazycích, ve kterých Riot vydává herní data: angličtina, francouzština, němčina, španělština, italština, portugalština, polština, rumunština, maďarština, řečtina, čeština, turečtina, ruština, arabština, thajština, vietnamština, indonéština, japonština, korejština, zjednodušená a tradiční čínština. Rozhraní i herní texty se řídí zvoleným jazykem."
+  old-patches:
+    question: "Mohu si zobrazit starší patch?"
+    answer: "Ano. Každý patch, který Riot zveřejnil prostřednictvím Data Dragon, zůstává dostupný a historické stránky mají vlastní trvalou adresu. Díky tomu lze porovnat šampiona nebo předmět mezi dvěma verzemi či odkázat na přesný stav konkrétního patche."
+  free:
+    question: "Je to zdarma?"
+    answer: "Ano, celý web je zdarma, bez reklam a bez placeného obsahu. Financují jej dobrovolné dary. Pouze intenzivní programové využití API pro vývojáře znamená placené kreditové balíčky, a i tam existuje bezplatná úroveň."
+  account:
+    question: "Potřebuji účet?"
+    answer: "Ne, k procházení šampionů, předmětů, run, vyvolávacích kouzel ani jakéhokoli patche není účet potřeba. Účet je nutný jen pro ukládání oblíbených, vytváření a sdílení předmětových buildů a hlasování o buildech sdílených ostatními."
+  builds:
+    question: "Mohu vytvářet a sdílet předmětové buildy?"
+    answer: "Ano. Editor zbrojnice umožňuje sestavit build krok za krokem a zveřejnit jej pod odkazem ke sdílení. Sdílené buildy mohou hodnotit ostatní návštěvníci a váš veřejný profil uvádí ty, které jste zveřejnili."
+  api:
+    question: "Existuje API?"
+    answer: "Ano. REST API ve formátu JSON zpřístupňuje vlastní data webu — veřejné profily, sdílené buildy a trendy zobrazení — s bezplatnou úrovní a kreditovými balíčky pro větší objemy. Samotná herní data Riotu zůstávají dostupná přímo z Data Dragon."
+  offline:
+    question: "Funguje offline?"
+    answer: "Částečně. Web je instalovatelná progresivní webová aplikace: můžete si ji přidat na plochu a již navštívené stránky zůstanou čitelné bez připojení. Nové stránky stále vyžadují přístup k síti."
+  riot-affiliation:
+    question: "Je tento web spojen s Riot Games?"
+    answer: "Ne. League Of Data Base je nezávislý projekt, který Riot Games nepodporuje, a nevyjadřuje názory ani stanoviska Riot Games ani kohokoli oficiálně zapojeného do tvorby či správy League of Legends. League of Legends a Riot Games jsou ochranné známky nebo registrované ochranné známky společnosti Riot Games, Inc."

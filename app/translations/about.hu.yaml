@@ -1,0 +1,125 @@
+# Szerkesztői tartalom az /about, /about/data és /faq oldalakhoz.
+# A faq.* azonosítók az App\Controller\AboutController::FAQ_ENTRIES-ben szerepelnek.
+eyebrow: "Névjegy"
+
+index:
+  title: "A League Of Data Base névjegye"
+  lead: "A League Of Data Base ingyenes League of Legends-enciklopédia: minden hős, tárgy, rúna és megidézővarázslat, bármelyik patchhez, 21 nyelven."
+  what:
+    title: "Mi ez az oldal"
+    body: "A League Of Data Base a League of Legends játékadatainak referenciaoldala. A játék saját fájljait — hősöket, tárgyakat, rúnákat és megidézővarázslatokat — teszi közzé olvasható oldalakként, amelyek böngészhetők, szűrhetők és összehasonlíthatók. Minden érték a Riot hivatalos Data Dragon terjesztéséből származik: amit itt olvasol, az van a játékban, nem becslés vagy közösségi feltételezés."
+  audience:
+    title: "Kinek szól"
+    body: "Játékosoknak, akik két meccs között néznek utána egy hős képességeinek vagy egy tárgy árának; theorycraftereknek, akik patchek között hasonlítanak össze értékeket; tartalomkészítőknek, akiknek pontos számok kellenek; és fejlesztőknek, akik ugyanezeket az adatokat API-n át szeretnék. Semmi nem igényel bejelentkezést — az olvasáshoz nem kell fiók."
+  features:
+    title: "Mit tehetsz itt"
+    codex:
+      title: "Böngészd a teljes kódexet"
+      body: "Részletes oldal minden hőshöz (képességek, skinek, alapstatisztikák, történet), minden tárgyhoz (ár, statisztikák, összeállítási út), minden rúnaághoz és minden megidézővarázslathoz — azonnali kereséssel és szűrőkkel minden listán."
+    patches:
+      title: "Utazz a patchek között"
+      body: "Válts át bármelyik Data Dragon patchre, és olvasd az oldalt úgy, ahogyan abban a verzióban kinézett. A régi oldalak megtartják saját címüket: egy korábbi patchre mutató link örökre pontos marad."
+    languages:
+      title: "Olvasd a saját nyelveden"
+      body: "A felület és a játékadatok a Riot által kiadott 21 nyelven érhetők el — az angoltól és a franciától a koreain, japánon és arabon át a kínai mindkét írásmódjáig."
+    builds:
+      title: "Készíts és oszd meg a buildeket"
+      body: "Állíts össze lépésről lépésre egy tárgy-buildet a fegyvertár-szerkesztőben, majd oszd meg linkkel. A buildekre lehet szavazni, a nyilvános profil pedig összegyűjti azokat, amelyeket közzéteszel."
+    trends:
+      title: "Nézd meg, mit keresnek"
+      body: "A trendek oldal a legtöbbet megtekintett hősöket, tárgyakat és rúnákat rangsorolja — a közösségi figyelem mérőszáma, nem meccsstatisztika."
+    api:
+      title: "Kérdezd le az adatokat programból"
+      body: "Egy JSON REST API teszi elérhetővé a nyilvános profilokat, a megosztott buildeket és a megtekintési trendeket, ingyenes szinttel és fizetős kreditcsomagokkal a nagyobb igényekhez."
+    offline:
+      title: "Telepítsd, és böngéssz tovább"
+      body: "Az oldal telepíthető progresszív webalkalmazás: add hozzá a kezdőképernyődhöz, és a már meglátogatott oldalak kapcsolat nélkül is olvashatók maradnak."
+  data:
+    title: "Honnan származnak az adatok"
+    body: "Az oldal minden értéke a Riot Games Data Dragon terjesztéséből származik, amely a League of Legends játékadatainak hivatalos statikus exportja, kiegészítve a Community Dragonnal a skinek chroma-változataihoz. Semmit nem szerkesztünk kézzel: az oldal olvasó, nem szerkesztő."
+    link: "Olvasd el a teljes adatok és források oldalt"
+  who:
+    title: "Ki üzemelteti"
+    body: "A League Of Data Base független projekt, amelyet egyetlen fejlesztő készít és tart karban, önkéntes adományokból finanszírozva. Nem jelenít meg hirdetést, és nem ad el személyes adatot."
+    opensource: "A forráskód nyilvános itt:"
+  more:
+    title: "Tovább"
+
+data:
+  title: "Adatok és források"
+  lead: "Mit tesz közzé ez az oldal, honnan származik, mennyire friss, és mit nem állít szándékosan."
+  dataset_name: "League of Legends játékadatok — %version% patch"
+  snapshot:
+    title: "Jelenlegi pillanatkép"
+    patch: "Patch"
+    languages: "Nyelvek"
+    patches: "Patchek"
+  sources:
+    title: "Forrásrendszerek"
+    body: "Az oldalnak nincs saját játékadata. Minden megjelenített tartalom hivatalos terjesztésekből származik, és a közzétett formában jelenik meg."
+    ddragon:
+      title: "Data Dragon (Riot Games)"
+      body: "Az elsődleges forrás: a Riot hivatalos statikus adatexportja, amely minden patchhez megjelenik. Ez adja a hősöket, tárgyakat, rúnákat, megidézővarázslatokat, a lokalizált szövegeiket és a képeiket."
+    cdragon:
+      title: "Community Dragon"
+      body: "Egyetlen célra használjuk: a hősskinek chroma-változataihoz, amelyeket a Data Dragon jelez, de soha nem ír le. Az itt látható színmegnevezések a kép tényleges színárnyalatából származnak, nem Riot-termékneveket követnek."
+  freshness:
+    title: "Mennyire friss"
+    body: "Az új patcheket a Riot verziólistájából vesszük át, amint megjelennek — általában néhány órán belül, miután egy patch élesbe került. A korábbi patchek megmaradnak és böngészhetők: semmi nem tűnik el, amikor új érkezik."
+  coverage:
+    title: "Mire terjed ki"
+    body: "Minden patchhez és minden nyelvhez az oldal közzéteszi:"
+    champions: "Hősök — képességek, alapstatisztikák és szintenkénti növekedés, szerepek, erőforrástípus, skinek és chromák, történet."
+    items: "Tárgyak — aranyköltség, összeállítási út, eladási érték, statisztikák, kategóriák és pályánkénti elérhetőség."
+    runes: "Rúnaágak — minden hely, kulcsrúna és kisebb rúna a hatásszövegével."
+    summoners: "Megidézővarázslatok — visszatöltődés, hatótáv, feloldási szint és játékmódok."
+  limits:
+    title: "Vállalt korlátok"
+    body: "Ez az oldal azt közli, amit a játékfájlok tartalmaznak. Nem számol győzelmi arányt, választási arányt vagy tier listát, és nem tárol meccselőzményeket: ezek élő játékadatokból származnak, amelyeket a Data Dragon nem ad meg. Azokat a képességleírásokat, amelyekben a Riot feloldatlanul hagyja a változókat, az eredeti formájukban mutatjuk, nem találgatjuk ki."
+  reuse:
+    title: "Az adatok újrafelhasználása"
+    body: "A játékadatok a Riot Games tulajdonát képezik, és továbbra is annak feltételei vonatkoznak rájuk. Az oldal saját hozzájárulásai — megtekintési trendek, nyilvános profilok és megosztott buildek — dokumentált JSON API-n keresztül érhetők el."
+    link: "Nézd meg a fejlesztői API-t"
+  disclaimer:
+    title: "Riot Games nyilatkozat"
+    body: "A League Of Data Base-t a Riot Games nem támogatja, és nem tükrözi a Riot Games vagy a League of Legends készítésében, illetve kezelésében hivatalosan részt vevő bármely személy nézeteit vagy véleményét. A League of Legends és a Riot Games a Riot Games, Inc. védjegyei vagy bejegyzett védjegyei."
+
+faq:
+  title: "Gyakori kérdések"
+  lead: "Egyenes válaszok arról, mi ez az oldal, honnan származnak az adatai, és mit kezdhetsz velük."
+  more:
+    title: "Még keresel valamit?"
+    body: "Ezek az oldalak részletesebbek:"
+  what-is-it:
+    question: "Mi az a League Of Data Base?"
+    answer: "A League Of Data Base ingyenes online enciklopédia a League of Legendshez. Lehetővé teszi a játék összes hősének, tárgyának, rúnájának és megidézővarázslatának megtekintését pontos statisztikákkal, bármelyik patchhez és 21 nyelven. Független projekt, nem hivatalos Riot Games-oldal."
+  data-source:
+    question: "Honnan származnak az adatok?"
+    answer: "Minden játékadat a Data Dragonból származik, amely a Riot Games által minden patchhez közzétett hivatalos statikus adatexport. A skinek chroma-változatai, amelyeket a Data Dragon nem ír le, a Community Dragonból származnak. Az oldal nem módosítja ezeket az értékeket: beolvassa és megjeleníti őket."
+  freshness:
+    question: "Milyen gyakran frissülnek az adatok?"
+    answer: "Az új patcheket a Riot verziólistájából észleljük, amint megjelennek — általában néhány órával azután, hogy egy patch élesbe kerül. A régebbi patchek elérhetők maradnak, így bármikor visszaléphetsz, és elolvashatod az oldalt egy korábbi verzió állapotában."
+  languages:
+    question: "Milyen nyelvek érhetők el?"
+    answer: "Az oldal azon a 21 nyelven érhető el, amelyeken a Riot játékadatokat tesz közzé: angol, francia, német, spanyol, olasz, portugál, lengyel, román, magyar, görög, cseh, török, orosz, arab, thai, vietnámi, indonéz, japán, koreai, egyszerűsített és hagyományos kínai. A felület és a játékszövegek egyaránt a választott nyelvet követik."
+  old-patches:
+    question: "Megnézhetek egy régebbi patchet?"
+    answer: "Igen. Minden patch, amelyet a Riot a Data Dragonon keresztül közzétett, böngészhető marad, és a régi oldalaknak saját állandó címük van. Így összehasonlíthatsz egy hőst vagy tárgyat két verzió között, vagy hivatkozhatsz egy adott patch pontos állapotára."
+  free:
+    question: "Ingyenes?"
+    answer: "Igen, az egész oldal ingyenesen használható, hirdetés és fizetőfal nélkül. Önkéntes adományokból működik. Csak a fejlesztői API intenzív programozott használata jár fizetős kreditcsomagokkal, és még ott is van ingyenes szint."
+  account:
+    question: "Kell hozzá fiók?"
+    answer: "Nem, a hősök, tárgyak, rúnák, megidézővarázslatok vagy bármelyik patch böngészéséhez nem kell fiók. Fiók csak a kedvencek mentéséhez, tárgy-buildek készítéséhez és megosztásához, valamint mások megosztott buildjeire való szavazáshoz szükséges."
+  builds:
+    question: "Készíthetek és megoszthatok tárgy-buildeket?"
+    answer: "Igen. A fegyvertár-szerkesztőben lépésről lépésre összeállíthatsz egy buildet, majd megoszthatod egy linkkel. A megosztott buildekre más látogatók szavazhatnak, a nyilvános profilod pedig felsorolja azokat, amelyeket közzétettél."
+  api:
+    question: "Van API?"
+    answer: "Igen. Egy JSON REST API teszi elérhetővé az oldal saját adatait — nyilvános profilok, megosztott buildek és megtekintési trendek — ingyenes szinttel és kreditcsomagokkal nagyobb mennyiségekhez. A Riot játékadatai továbbra is közvetlenül a Data Dragonból érhetők el."
+  offline:
+    question: "Működik offline?"
+    answer: "Részben. Az oldal telepíthető progresszív webalkalmazás: hozzáadhatod a kezdőképernyődhöz vagy az asztalodhoz, és a már meglátogatott oldalak kapcsolat nélkül is olvashatók maradnak. Az új oldalakhoz továbbra is hálózati hozzáférés kell."
+  riot-affiliation:
+    question: "Kapcsolatban áll ez az oldal a Riot Gamesszel?"
+    answer: "Nem. A League Of Data Base független projekt, amelyet a Riot Games nem támogat, és nem tükrözi a Riot Games vagy a League of Legends készítésében, illetve kezelésében hivatalosan részt vevő bármely személy nézeteit vagy véleményét. A League of Legends és a Riot Games a Riot Games, Inc. védjegyei vagy bejegyzett védjegyei."

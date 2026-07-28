@@ -1,0 +1,125 @@
+# Nội dung biên tập cho các trang /about, /about/data và /faq.
+# Các id faq.* được khai báo trong App\Controller\AboutController::FAQ_ENTRIES.
+eyebrow: "Giới thiệu"
+
+index:
+  title: "Giới thiệu về League Of Data Base"
+  lead: "League Of Data Base là bách khoa toàn thư miễn phí về League of Legends: toàn bộ tướng, trang bị, ngọc và phép bổ trợ, cho mọi bản cập nhật, bằng 21 ngôn ngữ."
+  what:
+    title: "Trang này là gì"
+    body: "League Of Data Base là trang tra cứu dữ liệu game League of Legends. Nó công bố chính các tệp của trò chơi — tướng, trang bị, ngọc và phép bổ trợ — dưới dạng những trang dễ đọc, có thể duyệt, lọc và so sánh. Mọi giá trị đều lấy từ bản phân phối chính thức Data Dragon của Riot: những gì bạn đọc ở đây là những gì trò chơi chứa, không phải ước lượng hay phỏng đoán của cộng đồng."
+  audience:
+    title: "Dành cho ai"
+    body: "Cho người chơi kiểm tra kỹ năng của một vị tướng hay giá một món đồ giữa các trận; cho người so sánh chỉ số qua từng bản cập nhật; cho nhà sáng tạo nội dung cần con số chính xác; và cho lập trình viên muốn cùng dữ liệu đó qua API. Không có gì bị khóa sau đăng nhập — đọc không cần tài khoản."
+  features:
+    title: "Bạn có thể làm gì ở đây"
+    codex:
+      title: "Duyệt toàn bộ thư viện"
+      body: "Trang chi tiết cho từng vị tướng (kỹ năng, trang phục, chỉ số cơ bản, cốt truyện), từng trang bị (giá, chỉ số, cây nâng cấp), từng nhánh ngọc và từng phép bổ trợ, với tìm kiếm tức thì và bộ lọc trên mọi danh sách."
+    patches:
+      title: "Du hành giữa các bản cập nhật"
+      body: "Chuyển sang bất kỳ bản Data Dragon nào và đọc trang web đúng như nó từng ở phiên bản đó. Các trang lịch sử giữ địa chỉ riêng: liên kết tới một bản cũ vẫn chính xác mãi mãi."
+    languages:
+      title: "Đọc bằng ngôn ngữ của bạn"
+      body: "Giao diện và dữ liệu game có sẵn bằng 21 ngôn ngữ mà Riot phát hành — từ tiếng Anh và tiếng Pháp đến tiếng Hàn, tiếng Nhật, tiếng Ả Rập và cả hai lối viết của tiếng Trung."
+    builds:
+      title: "Tạo và chia sẻ bảng trang bị"
+      body: "Dựng bảng trang bị từng bước trong trình biên tập kho vũ khí, rồi chia sẻ bằng một liên kết. Các bảng trang bị có thể được bình chọn, và hồ sơ công khai tập hợp những gì bạn đã đăng."
+    trends:
+      title: "Xem điều gì đang được tra cứu"
+      body: "Trang xu hướng xếp hạng những vị tướng, trang bị và ngọc được xem nhiều nhất trên trang — đó là thước đo sự chú ý của cộng đồng, không phải thống kê trận đấu."
+    api:
+      title: "Truy vấn dữ liệu bằng chương trình"
+      body: "API REST dạng JSON cung cấp hồ sơ công khai, bảng trang bị được chia sẻ và xu hướng lượt xem, với gói miễn phí và các gói tín dụng trả phí cho nhu cầu lớn hơn."
+    offline:
+      title: "Cài đặt và tiếp tục tra cứu"
+      body: "Trang web là ứng dụng web tiến bộ có thể cài đặt: thêm vào màn hình chính và những trang bạn đã xem vẫn đọc được khi không có kết nối."
+  data:
+    title: "Dữ liệu đến từ đâu"
+    body: "Mọi giá trị trên trang được đọc từ bản phân phối Data Dragon của Riot Games — bản xuất dữ liệu tĩnh chính thức của League of Legends — bổ sung bởi Community Dragon cho các biến thể màu của trang phục. Không có gì được sửa bằng tay: trang web là bên đọc, không phải bên biên tập."
+    link: "Đọc trang đầy đủ về dữ liệu và nguồn"
+  who:
+    title: "Ai vận hành"
+    body: "League Of Data Base là một dự án độc lập, do một lập trình viên duy nhất xây dựng và duy trì, được tài trợ bằng những khoản đóng góp tự nguyện. Trang không hiển thị quảng cáo và không bán dữ liệu cá nhân."
+    opensource: "Mã nguồn được công khai trên"
+  more:
+    title: "Tìm hiểu thêm"
+
+data:
+  title: "Dữ liệu và nguồn"
+  lead: "Trang này công bố gì, đến từ đâu, mới đến mức nào, và điều gì nó cố ý không khẳng định."
+  dataset_name: "Dữ liệu game League of Legends — bản %version%"
+  snapshot:
+    title: "Ảnh chụp hiện tại"
+    patch: "Bản cập nhật"
+    languages: "Ngôn ngữ"
+    patches: "Số bản cập nhật"
+  sources:
+    title: "Nguồn thượng nguồn"
+    body: "Trang web không sở hữu dữ liệu game riêng. Mọi thứ hiển thị đều được lấy từ các bản phân phối chính thức và trình bày đúng như đã công bố."
+    ddragon:
+      title: "Data Dragon (Riot Games)"
+      body: "Nguồn chính: bản xuất dữ liệu tĩnh chính thức của Riot, phát hành theo từng bản cập nhật. Nó cung cấp tướng, trang bị, ngọc, phép bổ trợ, phần văn bản đã bản địa hóa và hình ảnh."
+    cdragon:
+      title: "Community Dragon"
+      body: "Chỉ dùng cho một việc: các biến thể màu của trang phục tướng, thứ mà Data Dragon có báo hiệu nhưng không bao giờ mô tả. Nhãn màu hiển thị ở đây được suy ra từ sắc độ thực của hình ảnh, không phải tên thương mại của Riot."
+  freshness:
+    title: "Độ mới của dữ liệu"
+    body: "Các bản cập nhật mới được lấy từ danh sách phiên bản của Riot ngay khi xuất hiện, thường trong vòng vài giờ sau khi một bản đi vào hoạt động. Các bản trước được giữ lại và vẫn duyệt được: không có gì biến mất khi bản mới xuất hiện."
+  coverage:
+    title: "Phạm vi bao phủ"
+    body: "Với mỗi bản cập nhật và mỗi ngôn ngữ, trang công bố:"
+    champions: "Tướng — kỹ năng, chỉ số cơ bản và mức tăng theo cấp, vai trò, loại tài nguyên, trang phục và biến thể màu, cốt truyện."
+    items: "Trang bị — giá vàng, cây nâng cấp, giá bán lại, chỉ số, phân loại và khả năng dùng theo bản đồ."
+    runes: "Nhánh ngọc — từng ô, ngọc chính và ngọc phụ kèm mô tả hiệu ứng."
+    summoners: "Phép bổ trợ — thời gian hồi, tầm xa, cấp mở khóa và các chế độ chơi."
+  limits:
+    title: "Giới hạn được thừa nhận"
+    body: "Trang này thuật lại những gì các tệp game chứa. Nó không tính tỉ lệ thắng, tỉ lệ chọn hay bảng xếp hạng sức mạnh, và không lưu lịch sử trận đấu: những thứ đó đến từ dữ liệu trận đấu trực tiếp mà Data Dragon không cung cấp. Những mô tả kỹ năng mà Riot để nguyên biến chưa thay giá trị sẽ được hiển thị y như vậy thay vì phỏng đoán."
+  reuse:
+    title: "Sử dụng lại dữ liệu"
+    body: "Dữ liệu game thuộc về Riot Games và vẫn chịu các điều khoản của Riot. Phần đóng góp riêng của trang — xu hướng lượt xem, hồ sơ công khai và bảng trang bị được chia sẻ — có sẵn qua một API JSON có tài liệu."
+    link: "Xem API dành cho lập trình viên"
+  disclaimer:
+    title: "Tuyên bố về Riot Games"
+    body: "League Of Data Base không được Riot Games xác nhận và không phản ánh quan điểm hay ý kiến của Riot Games hoặc bất kỳ ai chính thức tham gia sản xuất hay quản lý League of Legends. League of Legends và Riot Games là thương hiệu hoặc thương hiệu đã đăng ký của Riot Games, Inc."
+
+faq:
+  title: "Câu hỏi thường gặp"
+  lead: "Giải đáp thẳng thắn về trang này là gì, dữ liệu đến từ đâu và bạn có thể làm gì với nó."
+  more:
+    title: "Vẫn đang tìm?"
+    body: "Những trang này đi sâu hơn:"
+  what-is-it:
+    question: "League Of Data Base là gì?"
+    answer: "League Of Data Base là bách khoa toàn thư trực tuyến miễn phí dành cho League of Legends. Trang cho phép tra cứu mọi vị tướng, trang bị, ngọc và phép bổ trợ trong game cùng chỉ số chính xác, cho bất kỳ bản cập nhật nào và bằng 21 ngôn ngữ. Đây là dự án độc lập, không phải trang chính thức của Riot Games."
+  data-source:
+    question: "Dữ liệu đến từ đâu?"
+    answer: "Toàn bộ dữ liệu game đến từ Data Dragon, bản xuất dữ liệu tĩnh chính thức mà Riot Games phát hành theo từng bản cập nhật. Các biến thể màu của trang phục, thứ Data Dragon không mô tả, đến từ Community Dragon. Trang không chỉnh sửa các giá trị này: nó đọc và trình bày chúng."
+  freshness:
+    question: "Dữ liệu được cập nhật bao lâu một lần?"
+    answer: "Bản cập nhật mới được phát hiện từ danh sách phiên bản của Riot ngay khi được công bố, thường trong vòng vài giờ sau khi bản đó đi vào hoạt động. Các bản cũ vẫn còn, nên bạn luôn có thể quay lại và đọc trang đúng như ở phiên bản trước."
+  languages:
+    question: "Có những ngôn ngữ nào?"
+    answer: "Trang có sẵn bằng 21 ngôn ngữ mà Riot phát hành dữ liệu game: Anh, Pháp, Đức, Tây Ban Nha, Ý, Bồ Đào Nha, Ba Lan, Romania, Hungary, Hy Lạp, Séc, Thổ Nhĩ Kỳ, Nga, Ả Rập, Thái, Việt, Indonesia, Nhật, Hàn, Trung giản thể và Trung phồn thể. Cả giao diện lẫn văn bản trong game đều theo ngôn ngữ bạn chọn."
+  old-patches:
+    question: "Tôi có thể xem bản cập nhật cũ không?"
+    answer: "Có. Mọi bản cập nhật Riot đã phát hành qua Data Dragon đều còn duyệt được, và các trang lịch sử có địa chỉ cố định riêng. Nhờ vậy bạn có thể so sánh một vị tướng hay món trang bị giữa hai phiên bản, hoặc chia sẻ liên kết tới đúng trạng thái của một bản cụ thể."
+  free:
+    question: "Trang có miễn phí không?"
+    answer: "Có, toàn bộ trang miễn phí, không quảng cáo và không tường phí. Trang được tài trợ bằng đóng góp tự nguyện. Chỉ việc sử dụng API dành cho lập trình viên với cường độ cao mới cần các gói tín dụng trả phí, và ngay cả phần đó cũng có mức miễn phí."
+  account:
+    question: "Tôi có cần tài khoản không?"
+    answer: "Không, bạn không cần tài khoản để xem tướng, trang bị, ngọc, phép bổ trợ hay bất kỳ bản cập nhật nào. Tài khoản chỉ cần khi bạn muốn lưu mục yêu thích, tạo và chia sẻ bảng trang bị, và bình chọn cho bảng trang bị của người khác."
+  builds:
+    question: "Tôi có thể tạo và chia sẻ bảng trang bị không?"
+    answer: "Có. Trình biên tập kho vũ khí cho phép bạn dựng bảng trang bị từng bước rồi đăng dưới một liên kết chia sẻ được. Người xem khác có thể bình chọn cho bảng trang bị đã chia sẻ, và hồ sơ công khai của bạn liệt kê những bảng bạn đã đăng."
+  api:
+    question: "Có API không?"
+    answer: "Có. API REST dạng JSON cung cấp dữ liệu riêng của trang — hồ sơ công khai, bảng trang bị được chia sẻ và xu hướng lượt xem — với gói miễn phí và các gói tín dụng cho khối lượng lớn hơn. Riêng dữ liệu game của Riot vẫn có sẵn trực tiếp từ Data Dragon."
+  offline:
+    question: "Trang có hoạt động ngoại tuyến không?"
+    answer: "Một phần. Trang là ứng dụng web tiến bộ có thể cài đặt: bạn có thể thêm vào màn hình chính hoặc màn hình nền, và những trang đã xem vẫn đọc được khi không có kết nối. Các trang mới vẫn cần truy cập mạng."
+  riot-affiliation:
+    question: "Trang này có liên kết với Riot Games không?"
+    answer: "Không. League Of Data Base là dự án độc lập, không được Riot Games xác nhận, và không phản ánh quan điểm hay ý kiến của Riot Games hoặc bất kỳ ai chính thức tham gia sản xuất hay quản lý League of Legends. League of Legends và Riot Games là thương hiệu hoặc thương hiệu đã đăng ký của Riot Games, Inc."

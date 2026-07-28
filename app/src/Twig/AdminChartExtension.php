@@ -3,19 +3,24 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
+use App\Service\Analytics\Chart\NumberFormat;
 use App\Service\Analytics\Chart\SvgChartRenderer;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 /**
- * Thin Twig adapter over {@see SvgChartRenderer}: chart functions return ready
- * SVG (marked html-safe so templates need no |raw) and the number formatters are
- * surfaced as filters. All rendering logic stays in the pure renderer.
+ * Thin Twig adapter over {@see SvgChartRenderer} and {@see NumberFormat}: chart
+ * functions return ready markup (marked html-safe so templates need no |raw) and
+ * the number formatters are surfaced as filters. All rendering logic stays in
+ * the pure services.
  */
 final class AdminChartExtension extends AbstractExtension
 {
-    public function __construct(private readonly SvgChartRenderer $charts) {}
+    public function __construct(
+        private readonly SvgChartRenderer $charts,
+        private readonly NumberFormat $format,
+    ) {}
 
     public function getFunctions(): array
     {
@@ -32,8 +37,8 @@ final class AdminChartExtension extends AbstractExtension
     public function getFilters(): array
     {
         return [
-            new TwigFilter('bytes', $this->charts->bytes(...)),
-            new TwigFilter('compact', $this->charts->compact(...)),
+            new TwigFilter('bytes', $this->format->bytes(...)),
+            new TwigFilter('compact', $this->format->compact(...)),
             new TwigFilter('pct', $this->percent(...)),
             new TwigFilter('euros', $this->euros(...)),
         ];

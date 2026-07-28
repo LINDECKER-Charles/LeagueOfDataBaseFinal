@@ -59,3 +59,13 @@ developers:
 trends:
   title: "Δημοφιλή builds του LoL"
   description: "Δημόσια builds του League of Legends ταξινομημένα με βάση τις ψήφους της κοινότητας — φιλτράρετε ανά ήρωα και λειτουργία παιχνιδιού."
+
+about:
+  title: "Σχετικά με το έργο"
+  description: "Το League Of Data Base είναι μια δωρεάν εγκυκλοπαίδεια για το League of Legends: ήρωες, αντικείμενα, ρούνοι και ξόρκια για κάθε patch, σε 21 γλώσσες, από τα επίσημα δεδομένα Data Dragon της Riot."
+  data:
+    title: "Δεδομένα και πηγές"
+    description: "Από πού προέρχονται τα δεδομένα του League Of Data Base: η επίσημη εξαγωγή Data Dragon της Riot (patch %version%) και το Community Dragon, πόσο συχνά ανανεώνονται και τι δεν καλύπτουν."
+  faq:
+    title: "Συχνές ερωτήσεις"
+    description: "Απαντήσεις για το League Of Data Base: τι είναι, από πού προέρχονται τα δεδομένα του για το League of Legends, πόσο συχνά ενημερώνονται και αν χρειάζεται λογαριασμός."

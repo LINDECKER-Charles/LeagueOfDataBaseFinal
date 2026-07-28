@@ -3,10 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
-use App\Service\Admin\MonitoringReportService;
+use App\Service\Admin\AdminPanelCatalog;
+use App\Service\Admin\PanelContext;
 use App\Service\Analytics\AnalyticsReportService;
-use App\Service\Analytics\GeoLocator;
-use App\Service\Analytics\StorageAnalyticsService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -40,23 +39,18 @@ final class AdminController extends AbstractController
         throw new \LogicException('Intercepted by the logout key on the admin firewall.');
     }
 
+    /**
+     * The overview aggregates three independent reports; each ships as a deferred
+     * panel, so the page paints before the slowest one resolves.
+     */
     #[Route('', name: 'admin_dashboard', methods: ['GET'])]
-    public function dashboard(
-        Request $request,
-        AnalyticsReportService $analytics,
-        StorageAnalyticsService $storage,
-        GeoLocator $geo,
-        MonitoringReportService $monitoring,
-    ): Response {
-        $range = $analytics->normalizeRange((string) $request->query->get('range', '30d'));
+    public function dashboard(Request $request, AnalyticsReportService $analytics, AdminPanelCatalog $panels): Response
+    {
+        $context = PanelContext::fromRequest($request);
 
         return $this->render('admin/overview.html.twig', [
-            'report' => $analytics->report($range),
-            'storage' => $storage->report(),
-            'app_report' => $monitoring->report(),
-            'range' => $range,
+            'range' => $analytics->normalizeRange($context->range),
             'ranges' => $analytics->ranges(),
-            'geo_available' => $geo->isAvailable(),
-        ]);
+        ] + $panels->pageContext($context, AdminPanelCatalog::OVERVIEW_PANELS));
     }
 }

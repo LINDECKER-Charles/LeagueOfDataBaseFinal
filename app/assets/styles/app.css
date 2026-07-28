@@ -4,13 +4,15 @@
 /* ---------------------------------------------------------------------------
    Hextech design system — split by concern, inlined by Tailwind at build:
    tokens (palette/fonts/motion) → base (canvas/typo/reveal) → primitives
-   (frames/buttons/chips) → ddragon (rich-text vocabulary) → detail + showcase
+   (frames/buttons/chips) → skeleton (island placeholders) → ddragon
+   (rich-text vocabulary) → detail + showcase
    (detail-page toolkit & per-page signatures) → recipe (item build tree) →
    nav (header switcher, mobile bottom bar, list helpers).
 --------------------------------------------------------------------------- */
 @import "./tokens.css";
 @import "./base.css";
 @import "./primitives.css";
+@import "./skeleton.css";
 @import "./list.css";
 @import "./ddragon.css";
 @import "./detail.css";

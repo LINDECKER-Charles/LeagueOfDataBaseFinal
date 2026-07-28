@@ -67,7 +67,7 @@
         {{ ui.table(
             ['Reçu le', 'Catégorie', 'Contact', 'Message', 'Statut', { label: 'Actions', num: true }],
             tableRows,
-            statusValue != '' ? 'Aucun message dans cette catégorie.' : 'Aucun message de contact.'
+            { empty: statusValue != '' ? 'Aucun message dans cette catégorie.' : 'Aucun message de contact.' }
         ) }}
     </section>
 
