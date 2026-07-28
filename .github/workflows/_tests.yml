@@ -33,10 +33,18 @@ jobs:
           extensions: intl, ctype, iconv
           coverage: none
 
-      - name: Prepare test env (from ENV_CI secret)
+      - name: Prepare test env (from ENV_TEST secret)
         env:
-          ENV_CI: ${{ secrets.ENV_CI }}
-        run: printf '%s\n' "$ENV_CI" > .env.test.local
+          ENV_TEST: ${{ secrets.ENV_TEST }}
+        run: |
+          # Only write the override when the secret carries something: an empty write
+          # would shadow nothing but hide the fact that the secret never arrived.
+          # The committed .env.test defaults keep the suite green either way.
+          if [ -n "$ENV_TEST" ]; then
+            printf '%s\n' "$ENV_TEST" > .env.test.local
+          else
+            echo "::warning::ENV_TEST is empty - running on the committed .env.test defaults"
+          fi
 
       - name: Cache Composer
         uses: actions/cache@v5
