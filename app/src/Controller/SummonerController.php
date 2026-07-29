@@ -68,7 +68,7 @@ final class SummonerController extends AbstractResourceController
             $summoner = $this->summoners->getByName($name, $sel['version'], $sel['lang']);
             $image    = $this->summoners->getImage($sel['version'], $name . '.png');
         } catch (\Throwable $e) {
-            return $this->detailFailure($sel, $e);
+            return $this->detailFailure($sel, $e, 'app_summoners_versioned');
         }
 
         return $this->render('summoner/detail.html.twig', [

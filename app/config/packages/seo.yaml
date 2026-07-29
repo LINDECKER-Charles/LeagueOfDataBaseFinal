@@ -1,0 +1,28 @@
+# SEO identity: the host every indexable URL folds into, and the profiles that
+# corroborate the publisher's identity in the Organization node.
+#
+# The deployment answers on four domains (apex + www, .com + .fr) serving
+# identical content in the same language — the interface locale comes from the
+# visitor's selection, never from the domain. Left unfolded, each would be a
+# self-canonical copy of the whole site competing with the others, so every
+# mirror canonicalizes to seo.canonical_host.
+#
+# Hosts are apex forms (no "www."): App\Service\Seo\CanonicalHost collapses the
+# www variant on its own. Leave canonical_host empty to disable folding entirely
+# (dev, staging, previews stay self-canonical).
+#
+# No hreflang is emitted: with the language carried by the session rather than
+# the URL, no locale has an addressable variant to point at.
+parameters:
+    seo.canonical_host: 'league-of-data-base.com'
+    seo.mirror_hosts:
+        - 'league-of-data-base.com'
+        - 'league-of-data-base.fr'
+    # Authoritative profiles for schema.org sameAs — each must publicly identify
+    # the project or its publisher, or it weakens the entity instead of anchoring it.
+    seo.same_as:
+        - 'https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal'
+        - 'https://github.com/LINDECKER-Charles'
+
+# Service wiring lives in config/services.yaml: the `App\` resource loader there
+# is applied last and would otherwise replace any definition made here.

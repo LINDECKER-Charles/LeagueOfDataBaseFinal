@@ -1,0 +1,125 @@
+# Contenuti editoriali di /about, /about/data e /faq.
+# Gli id faq.* sono dichiarati in App\Controller\AboutController::FAQ_ENTRIES.
+eyebrow: "Informazioni"
+
+index:
+  title: "Informazioni su League Of Data Base"
+  lead: "League Of Data Base è un'enciclopedia gratuita di League of Legends: tutti i campioni, oggetti, rune e incantesimi dell'evocatore, per ogni patch, in 21 lingue."
+  what:
+    title: "Che cos'è questo sito"
+    body: "League Of Data Base è un sito di riferimento sui dati di gioco di League of Legends. Pubblica i file del gioco stesso — campioni, oggetti, rune e incantesimi dell'evocatore — come pagine leggibili, filtrabili e confrontabili. Ogni valore proviene dalla distribuzione ufficiale Data Dragon di Riot: quello che leggi qui è ciò che il gioco contiene, non una stima né una supposizione della community."
+  audience:
+    title: "A chi si rivolge"
+    body: "Ai giocatori che controllano le abilità di un campione o il prezzo di un oggetto tra una partita e l'altra; ai theorycrafter che confrontano i valori tra le patch; ai creator che hanno bisogno di numeri esatti; e agli sviluppatori che vogliono gli stessi dati tramite un'API. Nulla è dietro un login: per leggere non serve alcun account."
+  features:
+    title: "Cosa puoi fare qui"
+    codex:
+      title: "Sfogliare l'intero codice"
+      body: "Schede dettagliate per ogni campione (abilità, skin, statistiche base, storia), ogni oggetto (prezzo, statistiche, percorso di creazione), ogni ramo di rune e ogni incantesimo dell'evocatore, con ricerca istantanea e filtri in ogni elenco."
+    patches:
+      title: "Viaggiare tra le patch"
+      body: "Passa a qualsiasi patch di Data Dragon e leggi il sito com'era in quella versione. Le pagine storiche mantengono il proprio indirizzo: un link a una patch passata resta accurato per sempre."
+    languages:
+      title: "Leggere nella tua lingua"
+      body: "Interfaccia e dati di gioco sono disponibili nelle 21 lingue pubblicate da Riot: dall'inglese e dal francese al coreano, giapponese, arabo e a entrambe le scritture del cinese."
+    builds:
+      title: "Creare e condividere build"
+      body: "Componi una build di oggetti passo dopo passo nell'editor armeria, poi condividila con un link. Le build possono ricevere voti e un profilo pubblico raccoglie quelle che pubblichi."
+    trends:
+      title: "Vedere cosa viene consultato"
+      body: "La pagina tendenze classifica i campioni, gli oggetti e le rune più consultati sul sito: una misura dell'attenzione della community, non delle statistiche delle partite."
+    api:
+      title: "Interrogare i dati via codice"
+      body: "Un'API REST JSON espone profili pubblici, build condivise e tendenze di consultazione, con un piano gratuito e pacchetti di crediti a pagamento per usi più intensi."
+    offline:
+      title: "Installarlo e continuare a consultarlo"
+      body: "Il sito è un'applicazione web progressiva installabile: aggiungilo alla schermata home e le pagine già visitate restano leggibili senza connessione."
+  data:
+    title: "Da dove provengono i dati"
+    body: "Ogni valore del sito è letto dalla distribuzione Data Dragon di Riot Games, l'esportazione statica ufficiale dei dati di gioco di League of Legends, completata da Community Dragon per i chroma delle skin. Nulla viene modificato a mano: il sito è un lettore, non un editor."
+    link: "Leggi la pagina completa su dati e fonti"
+  who:
+    title: "Chi lo gestisce"
+    body: "League Of Data Base è un progetto indipendente, creato e mantenuto da un singolo sviluppatore e finanziato da donazioni volontarie. Non mostra pubblicità e non vende dati personali."
+    opensource: "Il codice sorgente è pubblico su"
+  more:
+    title: "Approfondire"
+
+data:
+  title: "Dati e fonti"
+  lead: "Che cosa pubblica questo sito, da dove proviene, quanto è aggiornato e cosa deliberatamente non pretende di fare."
+  dataset_name: "Dati di gioco di League of Legends — patch %version%"
+  snapshot:
+    title: "Istantanea attuale"
+    patch: "Patch"
+    languages: "Lingue"
+    patches: "Patch"
+  sources:
+    title: "Fonti a monte"
+    body: "Il sito non possiede dati di gioco propri. Tutto ciò che viene mostrato è recuperato da distribuzioni ufficiali e servito così com'è stato pubblicato."
+    ddragon:
+      title: "Data Dragon (Riot Games)"
+      body: "La fonte principale: l'esportazione ufficiale di dati statici di Riot, pubblicata a ogni patch. Fornisce campioni, oggetti, rune, incantesimi dell'evocatore, i loro testi localizzati e le loro immagini."
+    cdragon:
+      title: "Community Dragon"
+      body: "Usato per una cosa sola: le varianti chroma delle skin dei campioni, che Data Dragon segnala ma non descrive mai. Le etichette di colore mostrate qui derivano dalla tonalità reale dell'immagine, non da nomi commerciali di Riot."
+  freshness:
+    title: "Quanto sono aggiornati"
+    body: "Le nuove patch vengono rilevate nell'elenco versioni di Riot appena appaiono, di solito entro poche ore dalla pubblicazione di una patch di gioco. Le patch precedenti vengono conservate e restano consultabili: nulla scompare quando ne arriva una nuova."
+  coverage:
+    title: "Cosa è coperto"
+    body: "Per ogni patch e ogni lingua, il sito pubblica:"
+    champions: "Campioni — abilità, statistiche base e crescita per livello, ruoli, tipo di risorsa, skin e chroma, storia."
+    items: "Oggetti — costo in oro, percorso di creazione, valore di vendita, statistiche, categorie e disponibilità per mappa."
+    runes: "Rami di rune — ogni slot, runa chiave e runa minore con il testo del suo effetto."
+    summoners: "Incantesimi dell'evocatore — tempo di recupero, gittata, livello di sblocco e modalità di gioco."
+  limits:
+    title: "Limiti dichiarati"
+    body: "Questo sito riporta ciò che contengono i file di gioco. Non calcola percentuali di vittoria, tassi di scelta o tier list e non conserva cronologie di partite: quei dati derivano dal gioco in tempo reale, che Data Dragon non fornisce. Le descrizioni delle abilità le cui variabili Riot lascia non risolte sono mostrate così come sono, invece di essere indovinate."
+  reuse:
+    title: "Riutilizzare i dati"
+    body: "I dati di gioco appartengono a Riot Games e restano soggetti alle sue condizioni. I contributi propri del sito — tendenze di consultazione, profili pubblici e build condivise — sono disponibili tramite un'API JSON documentata."
+    link: "Vedi l'API per sviluppatori"
+  disclaimer:
+    title: "Avviso su Riot Games"
+    body: "League Of Data Base non è approvato da Riot Games e non riflette le opinioni o i punti di vista di Riot Games né di chiunque sia ufficialmente coinvolto nella produzione o gestione di League of Legends. League of Legends e Riot Games sono marchi o marchi registrati di Riot Games, Inc."
+
+faq:
+  title: "Domande frequenti"
+  lead: "Risposte dirette su cos'è questo sito, da dove provengono i suoi dati e cosa puoi farne."
+  more:
+    title: "Cerchi ancora?"
+    body: "Queste pagine entrano più nel dettaglio:"
+  what-is-it:
+    question: "Che cos'è League Of Data Base?"
+    answer: "League Of Data Base è un'enciclopedia online gratuita dedicata a League of Legends. Permette di consultare tutti i campioni, gli oggetti, le rune e gli incantesimi dell'evocatore del gioco, con le loro statistiche esatte, per qualsiasi patch e in 21 lingue. È un progetto indipendente, non un sito ufficiale di Riot Games."
+  data-source:
+    question: "Da dove provengono i dati?"
+    answer: "Tutti i dati di gioco provengono da Data Dragon, l'esportazione ufficiale di dati statici che Riot Games pubblica a ogni patch. I chroma delle skin, che Data Dragon non descrive, provengono da Community Dragon. Il sito non modifica questi valori: li legge e li presenta."
+  freshness:
+    question: "Ogni quanto vengono aggiornati i dati?"
+    answer: "Le nuove patch vengono rilevate nell'elenco versioni di Riot appena pubblicate, di norma entro poche ore dall'uscita di una patch. Le patch precedenti restano disponibili, quindi puoi sempre tornare indietro e leggere il sito com'era in una versione passata."
+  languages:
+    question: "Quali lingue sono disponibili?"
+    answer: "Il sito è disponibile nelle 21 lingue in cui Riot pubblica i dati di gioco: inglese, francese, tedesco, spagnolo, italiano, portoghese, polacco, rumeno, ungherese, greco, ceco, turco, russo, arabo, thai, vietnamita, indonesiano, giapponese, coreano, cinese semplificato e cinese tradizionale. Sia l'interfaccia sia i testi di gioco seguono la lingua scelta."
+  old-patches:
+    question: "Posso consultare una patch precedente?"
+    answer: "Sì. Ogni patch pubblicata da Riot tramite Data Dragon resta consultabile e le pagine storiche hanno un proprio indirizzo permanente. Questo permette di confrontare un campione o un oggetto tra due versioni, oppure di collegare lo stato esatto di una patch specifica."
+  free:
+    question: "È gratuito?"
+    answer: "Sì, l'intero sito è gratuito, senza pubblicità né contenuti a pagamento. È finanziato da donazioni volontarie. Solo un uso intenso dell'API per sviluppatori comporta pacchetti di crediti a pagamento, e anche in quel caso esiste un piano gratuito."
+  account:
+    question: "Serve un account?"
+    answer: "No, non serve alcun account per consultare campioni, oggetti, rune, incantesimi dell'evocatore o qualsiasi patch. Un account è necessario solo per salvare i preferiti, creare e condividere build di oggetti e votare le build condivise da altri."
+  builds:
+    question: "Posso creare e condividere build di oggetti?"
+    answer: "Sì. L'editor armeria permette di comporre una build passo dopo passo e di pubblicarla con un link condivisibile. Le build condivise possono essere votate da altri visitatori e il tuo profilo pubblico elenca quelle che hai pubblicato."
+  api:
+    question: "Esiste un'API?"
+    answer: "Sì. Un'API REST JSON espone i dati propri del sito — profili pubblici, build condivise e tendenze di consultazione — con un piano gratuito e pacchetti di crediti per volumi maggiori. I dati di gioco di Riot restano disponibili direttamente da Data Dragon."
+  offline:
+    question: "Funziona offline?"
+    answer: "In parte. Il sito è un'applicazione web progressiva installabile: puoi aggiungerlo alla schermata home o al desktop e le pagine già visitate restano leggibili senza connessione. Le pagine nuove richiedono ancora l'accesso alla rete."
+  riot-affiliation:
+    question: "Questo sito è affiliato a Riot Games?"
+    answer: "No. League Of Data Base è un progetto indipendente, non approvato da Riot Games, e non riflette le opinioni o i punti di vista di Riot Games né di chiunque sia ufficialmente coinvolto nella produzione o gestione di League of Legends. League of Legends e Riot Games sono marchi o marchi registrati di Riot Games, Inc."

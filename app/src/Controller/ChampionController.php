@@ -68,7 +68,7 @@ final class ChampionController extends AbstractResourceController
             $champion = $this->championManager->getByName($name, $sel['version'], $sel['lang']);
             $image    = $this->championManager->getImage($sel['version'], $name . '.png');
         } catch (\Throwable $e) {
-            return $this->detailFailure($sel, $e);
+            return $this->detailFailure($sel, $e, 'app_champions_versioned');
         }
 
         // The full detail (spells, skins, lore, tips) is best-effort: if the

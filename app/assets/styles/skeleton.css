@@ -1,0 +1,50 @@
+/* ---------------------------------------------------------------------------
+   Skeletons — pre-mount placeholders for the Vue islands.
+
+   Twig renders them *inside* the island shell (see components/skeleton.html.twig):
+   Vue clears the container when it mounts, so they disappear on their own and
+   need no teardown wiring. Their job is twofold — no empty hole while the
+   code-split chunk downloads, and a reserved height so the mount shifts nothing.
+
+   Shapes mirror the island they stand in for; keep them in sync when a component
+   changes its outer layout.
+--------------------------------------------------------------------------- */
+
+.hx-sk {
+  display: block;
+  border: 1px solid rgba(200, 170, 110, 0.16);
+  background: linear-gradient(
+    90deg,
+    rgba(200, 170, 110, 0.05),
+    rgba(200, 170, 110, 0.13),
+    rgba(200, 170, 110, 0.05)
+  );
+  background-size: 200% 100%;
+  animation: hx-sk-sweep 1.6s linear infinite;
+}
+
+@keyframes hx-sk-sweep {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hx-sk { animation: none; }
+}
+
+/* List filter bar: search field + facet chips. */
+.hx-sk-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.hx-sk-filter .hx-sk-input { height: 2.5rem; width: 100%; max-width: 20rem; }
+.hx-sk-filter .hx-sk-chip { height: 1.6rem; width: 4.5rem; }
+
+/* Ability showcase: tab rail + media panel (matches .kit__rail / .kit__media). */
+.hx-sk-showcase .hx-sk-rail { display: flex; gap: 0.6rem; margin-bottom: 1.25rem; }
+.hx-sk-showcase .hx-sk-tab { height: 3.25rem; width: 3.25rem; }
+.hx-sk-showcase .hx-sk-panel { aspect-ratio: 16 / 9; width: 100%; }
+
+/* Skin carousel: fixed-width tiles, horizontally scrollable like the real one. */
+.hx-sk-gallery { display: flex; gap: 1rem; overflow: hidden; }
+.hx-sk-gallery .hx-sk-tile { height: 9rem; width: 18rem; flex: none; }
+
+/* Slim inline control (level slider). */
+.hx-sk-control .hx-sk-bar { height: 2.25rem; width: 100%; }

@@ -59,3 +59,13 @@ developers:
 trends:
   title: "LoL 热门出装"
   description: "按社区投票排序的 League of Legends 公开出装 — 可按英雄和游戏模式筛选。"
+
+about:
+  title: "关于本项目"
+  description: "League Of Data Base 是一个免费的《英雄联盟》资料库：涵盖每个版本的英雄、装备、符文和召唤师技能，支持 21 种语言，数据来自拳头官方的 Data Dragon。"
+  data:
+    title: "数据与来源"
+    description: "League Of Data Base 的数据来源：拳头官方 Data Dragon 导出（版本 %version%）与 Community Dragon，更新频率以及未覆盖的内容。"
+  faq:
+    title: "常见问题"
+    description: "关于 League Of Data Base 的解答：它是什么，《英雄联盟》数据从何而来，多久更新一次，以及是否需要账号。"

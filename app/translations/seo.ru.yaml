@@ -59,3 +59,13 @@ developers:
 trends:
   title: "Популярные сборки LoL"
   description: "Публичные сборки League of Legends, отсортированные по голосам сообщества — фильтруйте по чемпиону и игровому режиму."
+
+about:
+  title: "О проекте"
+  description: "League Of Data Base — бесплатная энциклопедия League of Legends: чемпионы, предметы, руны и заклинания призывателя для каждого патча, на 21 языке, по официальным данным Data Dragon от Riot."
+  data:
+    title: "Данные и источники"
+    description: "Откуда берутся данные League Of Data Base: официальный экспорт Data Dragon от Riot (патч %version%) и Community Dragon, как часто они обновляются и что не охватывают."
+  faq:
+    title: "Часто задаваемые вопросы"
+    description: "Ответы о League Of Data Base: что это, откуда берутся данные о League of Legends, как часто они обновляются и нужна ли учётная запись."

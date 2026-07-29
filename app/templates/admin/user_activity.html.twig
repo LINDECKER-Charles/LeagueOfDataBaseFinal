@@ -41,7 +41,7 @@
         {{ ui.table(
             ['Horodatage (UTC)', 'Action', 'Cible', 'IP', 'Acteur', 'Résultat'],
             tableRows,
-            'Aucune action journalisée pour ce compte sur cette période.'
+            { empty: 'Aucune action journalisée pour ce compte sur cette période.' }
         ) }}
     </section>
 

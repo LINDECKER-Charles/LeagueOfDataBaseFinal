@@ -3,8 +3,13 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
+use App\Service\Seo\CanonicalHost;
+use App\Service\Seo\ContentJsonLd;
+use App\Service\Seo\GameEntityJsonLd;
 use App\Service\Seo\JsonLdBuilder;
 use App\Service\Seo\OgLocale;
+use App\Service\Seo\SiteGraphContext;
+use App\Service\Seo\SiteGraphJsonLd;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -15,11 +20,14 @@ use Twig\TwigFunction;
 /**
  * SEO primitives shared by every page: canonical URL, absolute URLs for social
  * cards, og:locale, the "{page} — {site}" title pattern and JSON-LD rendering.
+ * Node construction itself lives in the App\Service\Seo builders; this class
+ * only wires them to Twig and resolves request state.
  *
- * Canonical policy: scheme + host + path of the current request, query dropped.
- * The ?version&lang variants of a page are alternate renders of the same
- * document (the default render answers on the bare path), so they all point to
- * the query-less URL and never compete in the index.
+ * Canonical policy: scheme + canonical host + path of the current request, with
+ * the query dropped and mirror domains folded ({@see CanonicalHost}). The
+ * ?version&lang variants of a page are alternate renders of the same document
+ * (the default render answers on the bare path), so they all point to the
+ * query-less URL and never compete in the index.
  */
 final class SeoExtension extends AbstractExtension
 {
@@ -31,9 +39,16 @@ final class SeoExtension extends AbstractExtension
     /** Suffix marking the `/{version}/…` variant of a resource route. */
     private const VERSIONED_SUFFIX = '_versioned';
 
+    /** Sitewide pitch, already shipped in all 21 catalogs. */
+    private const SITE_DESCRIPTION_KEY = 'base.description';
+
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly JsonLdBuilder $jsonLd,
+        private readonly SiteGraphJsonLd $siteGraph,
+        private readonly GameEntityJsonLd $gameEntities,
+        private readonly ContentJsonLd $content,
+        private readonly CanonicalHost $canonicalHost,
         private readonly OgLocale $ogLocale,
         private readonly TranslatorInterface $translator,
         #[Autowire('%legal.site_name%')]
@@ -52,10 +67,15 @@ final class SeoExtension extends AbstractExtension
             new TwigFunction('seo_jsonld_global', $this->globalGraph(...), ['is_safe' => ['html']]),
             new TwigFunction('seo_breadcrumbs', $this->jsonLd->breadcrumbList(...)),
             new TwigFunction('seo_item_list', $this->jsonLd->itemList(...)),
-            new TwigFunction('seo_game_character', $this->jsonLd->gameCharacter(...)),
-            new TwigFunction('seo_game_item', $this->jsonLd->gameItem(...)),
             new TwigFunction('seo_profile_page', $this->jsonLd->profilePage(...)),
             new TwigFunction('seo_article', $this->jsonLd->article(...)),
+            new TwigFunction('seo_champion', $this->gameEntities->champion(...)),
+            new TwigFunction('seo_item', $this->gameEntities->item(...)),
+            new TwigFunction('seo_rune_path', $this->gameEntities->runePath(...)),
+            new TwigFunction('seo_summoner_spell', $this->gameEntities->summonerSpell(...)),
+            new TwigFunction('seo_faq', $this->content->faqPage(...)),
+            new TwigFunction('seo_about_page', $this->content->aboutPage(...)),
+            new TwigFunction('seo_dataset', $this->content->dataset(...)),
         ];
     }
 
@@ -64,7 +84,7 @@ final class SeoExtension extends AbstractExtension
     {
         $request = $this->request();
 
-        return $request === null ? '' : $request->getSchemeAndHttpHost() . $request->getPathInfo();
+        return $request === null ? '' : $this->origin($request) . $request->getPathInfo();
     }
 
     /**
@@ -82,7 +102,7 @@ final class SeoExtension extends AbstractExtension
             return $path;
         }
 
-        return $request->getSchemeAndHttpHost() . '/' . ltrim($path, '/');
+        return $this->origin($request) . '/' . ltrim($path, '/');
     }
 
     /** og:locale for the resolved UI locale of the current request. */
@@ -129,17 +149,33 @@ final class SeoExtension extends AbstractExtension
         return '<script type="application/ld+json">' . $this->jsonLd->encode($data) . '</script>';
     }
 
-    /** Sitewide WebSite + Organization nodes, emitted once from the base layout. */
-    public function globalGraph(): string
+    /**
+     * Sitewide WebSite + Organization + WebPage graph, emitted once from the base
+     * layout. $pageName is the document title of the current render.
+     */
+    public function globalGraph(string $pageName = ''): string
     {
-        $root = $this->absolute('/');
+        $request = $this->request();
+        if ($request === null) {
+            return '';
+        }
 
-        return $this->jsonLdScript($this->jsonLd->webSite($this->siteName, $root))
-            . $this->jsonLdScript($this->jsonLd->organization(
-                $this->siteName,
-                $root,
-                $this->absolute(self::ORGANIZATION_LOGO_PATH),
-            ));
+        $context = new SiteGraphContext(
+            root:            $this->origin($request) . '/',
+            pageUrl:         $this->canonical(),
+            pageName:        trim($pageName),
+            siteDescription: $this->translator->trans(self::SITE_DESCRIPTION_KEY),
+            logoUrl:         $this->absolute(self::ORGANIZATION_LOGO_PATH),
+            locale:          $request->getLocale(),
+        );
+
+        return $this->jsonLdScript($this->siteGraph->graph($context));
+    }
+
+    /** Canonical origin of a request (mirrors folded, non-default port kept). */
+    private function origin(Request $request): string
+    {
+        return $this->canonicalHost->origin($request->getScheme(), $request->getHost(), $request->getPort());
     }
 
     private function request(): ?Request

@@ -23,6 +23,9 @@
            a canonical (error pages) empty this block. #}
         {% block canonical_link %}<link rel="canonical" href="{{ seo_canonical() }}">{% endblock %}
 
+        {# No hreflang: the UI language comes from the visitor's selection, not
+           from the URL or the domain, so no locale has an addressable variant. #}
+
         <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ path('app_sitemap') }}">
 
         <meta name="google-site-verification" content="7sycxfW68dJEaB5yfMSxjIm5MczFFNEWIvsoXL99z0w" />
@@ -99,9 +102,10 @@
             {{ vite_entry_script_tags('app') }}
         {% endblock %}
 
-        {# Structured data — sitewide WebSite/Organization graph, plus per-page
-           nodes (breadcrumbs, item lists, game entities) via structured_data. #}
-        {{ seo_jsonld_global() }}
+        {# Structured data — sitewide WebSite/Organization/WebPage graph (nodes
+           cross-referenced by @id), plus per-page nodes (breadcrumbs, item lists,
+           game entities) via structured_data. #}
+        {{ seo_jsonld_global(block('title')) }}
         {% block structured_data %}{% endblock %}
 
         {% include 'partials/favicon.html.twig' %}

@@ -7,6 +7,8 @@ export default defineConfig({
   plugins: [vue()],
   test: {
     environment: 'jsdom',
-    include: ['assets/vue/**/*.spec.ts'],
+    // tests/js covers the admin panel's static ES modules (public/admin/js),
+    // which live outside the Vite build on purpose.
+    include: ['assets/vue/**/*.spec.ts', 'tests/js/**/*.spec.js'],
   },
 })

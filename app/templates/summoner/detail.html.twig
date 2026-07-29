@@ -14,10 +14,11 @@
     { name: 'header.navigation.summoner'|trans, url: seo_absolute(resource_path('app_summoners', {}, version|default(''), '')) },
     { name: summoner.name ?? '', url: seo_canonical() }
   ])) }}
-  {{ seo_jsonld(seo_game_item(
-    summoner.name ?? '',
+  {# Cooldown / range / unlock level are the facts that distinguish spells. #}
+  {{ seo_jsonld(seo_summoner_spell(
+    summoner,
     image is defined and image ? seo_absolute('/' ~ image) : null,
-    summoner.description|default('')|striptags
+    seo_canonical()
   )) }}
 {% endblock %}
 

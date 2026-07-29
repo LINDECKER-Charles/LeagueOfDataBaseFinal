@@ -59,3 +59,13 @@ developers:
 trends:
   title: "Trend LoL buildleri"
   description: "Topluluk oylarına göre sıralanan herkese açık League of Legends buildleri — şampiyona ve oyun moduna göre filtreleyin."
+
+about:
+  title: "Proje hakkında"
+  description: "League Of Data Base ücretsiz bir League of Legends ansiklopedisidir: her yama için şampiyonlar, eşyalar, rünler ve sihirdar büyüleri; 21 dilde, Riot’un resmî Data Dragon verilerinden."
+  data:
+    title: "Veriler ve kaynaklar"
+    description: "League Of Data Base verilerinin kaynağı: Riot’un resmî Data Dragon dışa aktarımı (%version% yaması) ve Community Dragon; ne sıklıkla yenilendiği ve neleri kapsamadığı."
+  faq:
+    title: "Sıkça sorulan sorular"
+    description: "League Of Data Base hakkında yanıtlar: nedir, League of Legends verileri nereden gelir, ne sıklıkla güncellenir ve hesap gerekir mi."

@@ -177,18 +177,27 @@ docker compose run --rm php sh
 
 ### Commandes Symfony / Composer (service `php`)
 
+> ⚠️ **Toujours `-u www-data`.** En dev le conteneur tourne en `root` (il doit chowner les
+> volumes nommés au démarrage), mais le pool FPM tourne en `www-data`. Une commande lancée
+> en root laisse des dossiers root sous `var/` (`var/cache/dev/profiler`, `var/cache/test`,
+> `var/log/test.log`) que FPM ne peut plus écrire : le profiler lève alors
+> `Unable to create the storage directory` **après** l'envoi des headers, ce qui colle une
+> page d'erreur 500 à la fin de chaque page dev et met `_wdt` en 404.
+> Rattrapage sans redémarrer : `docker compose exec php chown -R www-data:www-data var`
+> (le `command:` du service le refait à chaque démarrage).
+
 ```bash
 # Console Symfony
-docker compose exec php php bin/console cache:clear
-docker compose exec php php bin/console debug:router
-docker compose exec php php bin/console debug:container
+docker compose exec -u www-data php php bin/console cache:clear
+docker compose exec -u www-data php php bin/console debug:router
+docker compose exec -u www-data php php bin/console debug:container
 
 # Composer
-docker compose exec php composer install
-docker compose exec php composer dump-autoload --optimize
+docker compose exec -u www-data php composer install
+docker compose exec -u www-data php composer dump-autoload --optimize
 
 # Tests
-docker compose exec php php bin/phpunit
+docker compose exec -T -u www-data php php vendor/bin/phpunit tests/Unit
 ```
 
 ### MinIO (client `mc`)

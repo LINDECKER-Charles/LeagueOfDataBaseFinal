@@ -24,10 +24,10 @@
     { name: 'header.navigation.runes'|trans, url: seo_absolute(resource_path('app_runes', {}, version|default(''), '')) },
     { name: rune.name ?? '', url: seo_canonical() }
   ])) }}
-  {{ seo_jsonld(seo_game_item(
-    rune.name ?? '',
+  {{ seo_jsonld(seo_rune_path(
+    rune,
     images[rune.key].icon is defined and images[rune.key].icon ? seo_absolute('/' ~ images[rune.key].icon) : null,
-    null
+    seo_canonical()
   )) }}
 {% endblock %}
 

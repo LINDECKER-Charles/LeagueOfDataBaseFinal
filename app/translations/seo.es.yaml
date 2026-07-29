@@ -59,3 +59,13 @@ developers:
 trends:
   title: "Builds de LoL en tendencia"
   description: "Builds públicas de League of Legends ordenadas por los votos de la comunidad: filtra por campeón y modo de juego."
+
+about:
+  title: "Acerca del proyecto"
+  description: "League Of Data Base es una enciclopedia gratuita de League of Legends: campeones, objetos, runas y hechizos de invocador de cada parche, en 21 idiomas, a partir de los datos oficiales Data Dragon de Riot."
+  data:
+    title: "Datos y fuentes"
+    description: "De dónde proceden los datos de League Of Data Base: la exportación oficial Data Dragon de Riot (parche %version%) y Community Dragon, con qué frecuencia se actualizan y qué no cubren."
+  faq:
+    title: "Preguntas frecuentes"
+    description: "Respuestas sobre League Of Data Base: qué es, de dónde vienen sus datos de League of Legends, con qué frecuencia se actualizan y si hace falta una cuenta."

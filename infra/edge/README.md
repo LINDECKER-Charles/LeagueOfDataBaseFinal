@@ -62,6 +62,23 @@ networks:
 + un `COMPOSE_PROJECT_NAME` unique par projet (isolation des namespaces Docker).
 Caddy détecte le conteneur, émet le certificat et route automatiquement.
 
+## 🔐 Certificats fournis par l'hôte (`/etc/edge/certs`)
+
+Pour les certificats que l'edge ne peut pas émettre lui-même (ex. **wildcards** `*.<apex>`,
+qui exigent DNS-01 — cas des sous-domaines de salle d'Arova) : l'hôte dépose
+`<domaine>.crt` / `<domaine>.key` dans **`/etc/edge/certs`** (monté read-only en `/certs`
+dans le Caddy), et le projet référence son cert via le label
+`caddy.tls: /certs/<domaine>.crt /certs/<domaine>.key`. Les sites **sans** ce label (dont
+LODB) restent en émission ACME automatique. Après un renouvellement sur l'hôte, redémarrer
+le Caddy edge pour recharger les fichiers (à la charge du hook de renouvellement du projet).
+
+## ⚠️ DRY inter-repos
+
+Cette définition est convergée vers `/opt/edge` par la pipeline de **chaque** projet du VPS.
+Copies à maintenir **identiques** (sinon les déploiements se réécrasent mutuellement) :
+`LeagueOfDataBaseFinal/infra/edge` (ce dossier), `Arova.App/devops-arova/edge`, et le kit
+`~/.claude/devops-kit/templates/infra/edge`.
+
 ## 🔧 Exploitation
 
 ```bash

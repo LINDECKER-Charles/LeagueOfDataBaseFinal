@@ -35,31 +35,61 @@ const registry: Record<string, Island> = {
 // detached Vue tree (a playing <video> keeps its audio alive until GC).
 const mountedIslands: { app: App; host: HTMLElement }[] = []
 
+// Shells flagged `data-vue-lazy` sit below the fold behind a server-rendered
+// fallback or skeleton: their chunk waits until they approach the viewport, so
+// it never competes with the critical path.
+const LAZY_ROOT_MARGIN = '250px'
+let lazyObserver: IntersectionObserver | null = null
+
 function mountIslands(root: ParentNode = document): void {
-    root.querySelectorAll<HTMLElement>('[data-vue]:not([data-vue-mounted])').forEach(async (el) => {
-        const name = el.dataset.vue
-        const island = name ? registry[name] : undefined
-        if (!island) {
+    root.querySelectorAll<HTMLElement>('[data-vue]:not([data-vue-mounted])').forEach((el) => {
+        if (el.dataset.vueLazy !== undefined && 'IntersectionObserver' in window) {
+            observeIsland(el)
+
             return
         }
-        el.dataset.vueMounted = 'true'
-
-        let props: Record<string, unknown> = {}
-        try {
-            props = el.dataset.props ? JSON.parse(el.dataset.props) : {}
-        } catch {
-            props = {}
-        }
-
-        const { default: component } = await island.load()
-        // The chunk may resolve after a Turbo visit swapped this shell away.
-        if (!el.isConnected) {
-            return
-        }
-        const app = createApp(component, props)
-        app.mount(el)
-        mountedIslands.push({ app, host: el })
+        void mountIsland(el)
     })
+}
+
+function observeIsland(el: HTMLElement): void {
+    lazyObserver ??= new IntersectionObserver(
+        (entries, observer) => {
+            entries.filter((entry) => entry.isIntersecting).forEach((entry) => {
+                observer.unobserve(entry.target)
+                void mountIsland(entry.target as HTMLElement)
+            })
+        },
+        { rootMargin: LAZY_ROOT_MARGIN },
+    )
+    lazyObserver.observe(el)
+}
+
+async function mountIsland(el: HTMLElement): Promise<void> {
+    const name = el.dataset.vue
+    const island = name ? registry[name] : undefined
+    if (!island || el.dataset.vueMounted) {
+        return
+    }
+    el.dataset.vueMounted = 'true'
+
+    let props: Record<string, unknown> = {}
+    try {
+        props = el.dataset.props ? JSON.parse(el.dataset.props) : {}
+    } catch {
+        props = {}
+    }
+
+    const { default: component } = await island.load()
+    // The chunk may resolve after a Turbo visit swapped this shell away.
+    if (!el.isConnected) {
+        return
+    }
+    // Mounting clears the shell, so the server-rendered skeleton/fallback inside
+    // it disappears on its own — no teardown to wire.
+    const app = createApp(component, props)
+    app.mount(el)
+    mountedIslands.push({ app, host: el })
 }
 
 /**
@@ -68,6 +98,9 @@ function mountIslands(root: ParentNode = document): void {
  * mount flag so the cached snapshot re-mounts cleanly on a back/forward visit.
  */
 function teardownIslands(): void {
+    // The observer holds references to shells the visit is about to detach.
+    lazyObserver?.disconnect()
+    lazyObserver = null
     while (mountedIslands.length > 0) {
         const { app, host } = mountedIslands.pop()!
         app.unmount()

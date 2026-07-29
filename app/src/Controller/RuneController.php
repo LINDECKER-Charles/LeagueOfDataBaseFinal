@@ -67,7 +67,7 @@ final class RuneController extends AbstractResourceController
             // opts into deferral), so a cold version paints real icons, not placeholders.
             $images = $this->runeManager->getImages($sel['version'], $sel['lang'], false, [$rune]);
         } catch (\Throwable $e) {
-            return $this->detailFailure($sel, $e);
+            return $this->detailFailure($sel, $e, 'app_runes_versioned');
         }
 
         return $this->render('rune/detail.html.twig', [

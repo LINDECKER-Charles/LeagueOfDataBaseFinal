@@ -233,6 +233,75 @@ select.input-slim { width: auto; }
 .chart .c-dot:hover rect { fill: rgba(200, 170, 110, 0.08); }
 .sparkline { width: 100%; height: 100%; display: block; }
 
+/* --- Chart interaction (added by /admin/js/chart.js) ----------------------- */
+/* Without the script the figure is a plain static chart: every rule below is
+   scoped to .is-interactive, which only the enhancement sets. */
+.chart-fig { position: relative; margin: 0; }
+.chart-fig.is-interactive .c-dot { display: none; } /* superseded by the JS overlay */
+.chart:focus-visible { outline: 1px solid var(--hex); outline-offset: 2px; }
+.chart .c-hit { cursor: crosshair; }
+.chart-fig.is-zoomed .c-hit { cursor: grab; }
+.chart-fig.is-zoomed .c-hit:active { cursor: grabbing; }
+.chart .c-overlay { opacity: 0; transition: opacity 0.12s var(--ease); }
+.chart .c-overlay.is-active { opacity: 1; }
+.chart .c-cross { stroke: var(--gold); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.55; }
+.chart .c-hover-dot { stroke: var(--hextech-black); stroke-width: 2; }
+.chart-tools { position: absolute; top: 0; right: 0; display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.2s var(--ease); }
+.chart-fig:hover .chart-tools, .chart-fig:focus-within .chart-tools, .chart-fig.is-zoomed .chart-tools { opacity: 1; }
+.chart-tool {
+  cursor: pointer; width: 1.6rem; height: 1.6rem; line-height: 1; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); background: rgba(10, 20, 40, 0.85); color: var(--text-muted);
+  font-family: var(--font-mono); font-size: 0.9rem; transition: all 0.25s var(--ease);
+}
+.chart-tool:hover { color: var(--hex); border-color: rgba(10, 200, 185, 0.5); }
+.chart-tip {
+  position: absolute; z-index: 5; pointer-events: none; transform: translateX(0.6rem);
+  display: flex; flex-direction: column; gap: 0.3rem; min-width: 8.5rem;
+  border: 1px solid var(--line); background: rgba(1, 10, 19, 0.95); padding: 0.5rem 0.65rem;
+  box-shadow: 0 10px 30px -14px rgba(1, 10, 19, 0.95);
+}
+.chart-tip.is-flipped { transform: translateX(calc(-100% - 0.6rem)); }
+.chart-tip .tip-date { font-family: var(--font-mono); font-size: 0.68rem; color: var(--gold); letter-spacing: 0.06em; }
+.chart-tip .tip-row { display: flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; color: var(--text-muted); white-space: nowrap; }
+.chart-tip .tip-row .sw { width: 8px; height: 8px; flex: none; transform: rotate(45deg); }
+.chart-tip .tip-row b { margin-left: auto; color: var(--gold-bright); font-weight: 400; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* --- Collapsible long sections (CSS-only, works before/without JS) --------- */
+.collapse-state { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+/* Collapsed rows leave the flow; the reveal restores the display each row type
+   actually uses — a blanket `revert` would flatten the grid rows to block. */
+.collapse-body .is-extra { display: none; }
+.collapse-state:checked ~ .collapse-body .rank-row.is-extra,
+.collapse-state:checked ~ .collapse-body .matrix-row.is-extra { display: grid; }
+.collapse-state:checked ~ .collapse-body tr.is-extra { display: table-row; }
+.collapse-toggle {
+  display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.9rem; cursor: pointer;
+  font-family: var(--font-display); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--text-muted); border: 1px solid var(--line); padding: 0.32rem 0.7rem; transition: all 0.25s var(--ease);
+}
+.collapse-toggle:hover { color: var(--hex); border-color: rgba(10, 200, 185, 0.5); }
+.collapse-state:focus-visible ~ .collapse-toggle { outline: 1px solid var(--hex); outline-offset: 2px; }
+.collapse-toggle .on-expanded, .collapse-state:checked ~ .collapse-toggle .on-collapsed { display: none; }
+.collapse-state:checked ~ .collapse-toggle .on-expanded { display: inline; }
+
+/* --- Skeletons (async panels) --------------------------------------------- */
+.panel-async[data-panel-state='loading'] { cursor: progress; }
+.sk { position: relative; overflow: hidden; background: var(--track); }
+.sk::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(240, 230, 210, 0.08), transparent);
+  animation: sk-sweep 1.5s var(--ease) infinite;
+}
+@keyframes sk-sweep { to { transform: translateX(100%); } }
+.sk-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+.sk-line { height: 0.7rem; }
+.sk-line.short { width: 45%; }
+.sk-line.mid { width: 70%; }
+.sk-bar { height: 6px; }
+.sk-chart { width: 100%; aspect-ratio: 760 / 240; }
+.sk-kpi { height: 5.6rem; }
+
 /* --- Utility -------------------------------------------------------------- */
 .stack { display: flex; flex-direction: column; gap: 1.15rem; }
 .flex { display: flex; align-items: center; gap: 0.6rem; }
@@ -259,4 +328,5 @@ select.input-slim { width: auto; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+  .sk::after { animation: none; }
 }
