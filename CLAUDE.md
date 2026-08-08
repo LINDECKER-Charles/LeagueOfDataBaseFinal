@@ -181,6 +181,7 @@ Convention de commits (maintenue par /commit, initialisée par /b-hive-init).
   - `app/src/Controller/**` (hors Admin) → `back/<domaine>`
   - `app/templates/**`, `app/assets/**` → `front/<zone>`
   - `app/translations/**` → `i18n`
+  - `app/public/changelog/**` (+ archivage `docs/changelog/**` de la même release) → `changelog`
   - Lot touchant à la fois contrôleur + templates + traductions → `full-stack/<zone>`
   - `go-workers/**` → `fetcher`
   - `go-api/**` → `api`

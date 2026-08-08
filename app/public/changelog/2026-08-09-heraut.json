@@ -1,0 +1,104 @@
+{
+  "id": "2026-08-09-heraut",
+  "version": "2.1.2",
+  "codename": "Héraut",
+  "date": "2026-08-09",
+  "type": "hotfix",
+  "title": "LeagueOfDataBase 2.1.2 — Héraut",
+  "summary": "Le site explique enfin ce qu'il est : trois pages À propos, Données et FAQ en 21 langues, des fiches qui annoncent leurs vraies valeurs aux moteurs et aux IA, une langue qui ne dépend plus du domaine, et une console d'administration bien plus lisible.",
+  "intro": "Héraut est le patch qui donne la parole au site. Trois pages — À propos, Données et sources, FAQ — décrivent dans les 21 langues ce que publie League Of Data Base, d'où viennent ses chiffres et ce qu'il ne prétend pas faire ; en parallèle, chaque fiche annonce désormais ses vraies valeurs (statistiques, coûts en or, délais) aux moteurs de recherche comme aux assistants IA. La langue d'affichage cesse de dépendre du domaine visité, et les quatre adresses du site pointent vers une référence unique. Côté coulisses, la console d'administration gagne des graphes zoomables et des listes repliées, les pages s'affichent avant leurs données au lieu d'attendre la section la plus lente, et la passerelle de données a été durcie. Le reste est une vague de mise au point sur la navigation entre patchs.",
+  "stats": { "fixes": 7, "cards": 7 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❒",
+      "tag": "Contenu",
+      "title": "Trois pages expliquent ce qu'est le projet",
+      "description": "À propos, Données et sources, et une FAQ de onze questions rejoignent le pied de page, dans les 21 langues du site. La page Données affiche un instantané réel — patch courant, nombre de champions, objets, runes et sorts publiés, langues et patchs disponibles — et dit d'où viennent les valeurs (Data Dragon, Community Dragon) et à quelle fréquence elles sont rafraîchies. Les limites sont assumées noir sur blanc : pas de taux de victoire, pas de tier list, pas d'historique de parties."
+    },
+    {
+      "kind": "feature",
+      "glyph": "❖",
+      "tag": "Découverte",
+      "title": "Les fiches annoncent leurs vraies données aux moteurs et aux IA",
+      "description": "Une fiche champion expose ses rôles, son type de ressource et ses statistiques de base ; une fiche objet son coût total, son coût de combinaison et sa valeur de revente ; un sort d'invocateur son délai de récupération, sa portée et son niveau de déblocage. Un fichier /llms.txt décrit en clair le projet, le patch courant et les pages principales à destination des assistants IA. Le robots.txt n'impose par ailleurs plus dix secondes d'attente entre deux pages : un parcours complet du site prenait jusqu'ici plusieurs heures par patch."
+    },
+    {
+      "kind": "feature",
+      "glyph": "✦",
+      "tag": "Langues",
+      "title": "La langue ne dépend plus du domaine visité",
+      "description": "Arriver par le .fr n'impose plus le français, et le .com plus l'anglais : seule compte la langue choisie dans l'en-tête, mémorisée comme avant. Les quatre adresses du site (avec ou sans www, .fr ou .com) servent exactement le même contenu et pointent désormais toutes vers une adresse de référence unique."
+    },
+    {
+      "kind": "mana",
+      "glyph": "▦",
+      "tag": "Console",
+      "title": "Graphes zoomables et listes repliées dans la console",
+      "description": "Les courbes de fréquentation et d'ingestion se zooment à la molette, se déplacent au glisser et reviennent à la vue complète d'un double-clic ; au survol, un repère vertical donne la date et la valeur exacte de chaque série. Les sections à rallonge — pays, versions stockées, langues, pages les plus vues, référents — n'affichent plus que leurs premières lignes, avec un bouton « + N de plus ». Sans JavaScript, le repli fonctionne toujours et le graphe reste celui rendu par le serveur."
+    },
+    {
+      "kind": "mana",
+      "glyph": "⚡",
+      "tag": "Performance",
+      "title": "Chargement progressif : la page s'affiche avant ses données",
+      "description": "La console d'administration n'attend plus sa section la plus lente : la page arrive tout de suite et chaque bloc se remplit dès que son rapport est prêt ; un service en panne n'affecte que son propre bloc, avec un bouton « Réessayer ». Sur le site, les modules interactifs — barre de filtres des listes, galerie de skins, sélecteur de niveau des statistiques — réservent leur place par un squelette au lieu de décaler le contenu déjà lu, et ceux situés plus bas se préparent à l'approche du regard."
+    },
+    {
+      "kind": "mana",
+      "glyph": "⧗",
+      "tag": "Navigation",
+      "title": "Un indicateur quand une fiche tarde à s'ouvrir",
+      "description": "Après un changement de version, cliquer sur une fiche champion, objet, rune ou sort affiche un indicateur de chargement avec la version en cours de récupération, au lieu d'un écran figé. Il n'apparaît que si l'attente dépasse un court seuil : les pages déjà prêtes, ou préchargées au survol, s'ouvrent instantanément et sans clignotement."
+    },
+    {
+      "kind": "mana",
+      "glyph": "✶",
+      "tag": "Sécurité",
+      "title": "Passerelle de données et service d'API durcis",
+      "description": "La passerelle qui récupère les données et les images du jeu revérifie sa liste d'adresses autorisées à chaque étape, y compris après une redirection, et refuse une réponse anormalement volumineuse au lieu de la charger entièrement en mémoire. Le service de l'API publique borne par ailleurs le nombre de clés qu'il garde en mémoire. Trois défauts trouvés lors d'un audit interne, aucun n'a été exploité."
+    }
+  ],
+  "bugfixes": [
+    {
+      "id": "LDB-012",
+      "area": "Navigation",
+      "text": "Ouvrir la liste des objets juste après avoir changé de version depuis une fiche ne fige plus la page plusieurs secondes : elle s'affiche immédiatement, et les icônes d'évolution se remplissent ensuite."
+    },
+    {
+      "id": "LDB-013",
+      "area": "Objets",
+      "text": "Passer une fiche d'objet à un ancien patch où cet objet n'existe pas encore renvoie désormais vers la liste des objets de ce patch, en conservant patch et langue, au lieu d'une page « introuvable » sans issue."
+    },
+    {
+      "id": "LDB-014",
+      "area": "Navigation",
+      "text": "Ajouter ?version= ou ?lang= à une adresse change maintenant aussi la page d'accueil et les recherches de champions, d'objets et d'invocateurs, qui affichaient encore la sélection mémorisée dans la session."
+    },
+    {
+      "id": "LDB-015",
+      "area": "Préférences",
+      "text": "Quand Riot retire un patch du catalogue, votre langue n'est plus réinitialisée avec lui : le patch bascule sur le plus récent, la langue reste la vôtre."
+    },
+    {
+      "id": "LDB-016",
+      "area": "Recherche",
+      "text": "En cas de panne de la couche de données, les recherches répondent « service indisponible » au lieu d'un faux succès accompagné d'un message d'erreur technique."
+    },
+    {
+      "id": "LDB-017",
+      "area": "API",
+      "text": "Le champ share_url des builds renvoyés par l'API publique contient l'adresse complète de la page de partage, et plus un simple chemin inutilisable depuis un autre domaine."
+    },
+    {
+      "id": "LDB-018",
+      "area": "API",
+      "text": "Une panne de la couche de stockage répond « service temporairement indisponible » sur les endpoints de contenu, au lieu d'une erreur serveur qui laissait croire à un bug de l'API."
+    }
+  ],
+  "balances": [],
+  "devNote": {
+    "body": "Héraut répare un angle mort : on avait bâti des milliers de fiches sans jamais écrire, quelque part, ce qu'est ce projet. C'est fait — À propos, Données et sources, FAQ, dans vos 21 langues — et les fiches parlent enfin leur contenu aux moteurs comme aux IA. Le reste du patch est un travail d'atelier : une console plus lisible, des pages qui s'affichent avant leurs données, et une poignée de blocages corrigés au passage d'un patch à l'autre. S'il manque une question à la FAQ, dites-le-nous : c'est exactement ce qu'on veut y voir apparaître.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}
