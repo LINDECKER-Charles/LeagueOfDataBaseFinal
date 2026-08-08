@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * API key of the paid public API. Column names are a CONTRACT with the go-api
- * service (go-api/schema.sql reads them nominatively) — never rename them.
+ * service (go/api/schema.sql reads them nominatively) — never rename them.
  * Only the SHA-256 of the raw key is stored; the raw value is shown once at
  * creation time and never persisted.
  *

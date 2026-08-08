@@ -3,7 +3,13 @@ framework:
     secret: '%env(APP_SECRET)%'
     csrf_protection: true
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    session:
+        # Without save_path the framework leaves PHP's native handler on its ini
+        # save_path (/tmp in the official image), which the container recreation of
+        # every deploy wipes — logging every signed-in user out. Setting save_path
+        # switches the handler to session.handler.native_file (FrameworkExtension)
+        # and puts the files under the volume-backed var/state.
+        save_path: '%kernel.project_dir%/var/state/sessions'
 
     # Behind Caddy (TLS) -> nginx -> php-fpm. Trust the direct upstream and read the
     # X-Forwarded-* it relays so generated URLs use https and the real client IP is seen.

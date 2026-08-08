@@ -10,7 +10,7 @@ en agrégats immuables sur MinIO ; les métriques stockage dérivent du bucket l
 |---|---|---|
 | Capture | 1 event/vue de page ressource, au `kernel.terminate` (zéro latence) | `EventListener/RecordRequestListener`, `Service/Analytics/RequestEventFactory` |
 | Parsing | UA → navigateur/OS/appareil/bot ; referer → source ; IP → pays | `UserAgentParser`, `RefererClassifier`, `GeoLocator` |
-| Journal | Append-only NDJSON, 1 fichier/jour UTC | `Service/Analytics/EventStore` → `var/analytics/events/{Y-m-d}.ndjson` |
+| Journal | Append-only NDJSON, 1 fichier/jour UTC | `Service/Analytics/EventStore` → `var/state/analytics/events/{Y-m-d}.ndjson` |
 | Agrégation | Events → agrégat journalier mergeable → rapport de plage | `AnalyticsAggregator`, `RangeReportBuilder`, `AnalyticsReportService` |
 | Durabilité | Consolidation NDJSON local → objets immuables MinIO | `RollupService`, `DailyAggregateStore`, cmd `app:analytics:rollup` |
 | Stockage | Analyse détaillée du bucket (familles, WebP, dédup, complétude) | `StorageAnalyticsService` |
@@ -56,9 +56,27 @@ docker compose exec php php bin/console app:analytics:rollup --force           #
 
 Le bouton **Consolider** de la vue d'ensemble déclenche `--include-today` (CSRF protégé).
 
-> Fenêtre de perte : uniquement les événements non encore consolidés, et seulement
-> sur un reset `down -v` (le volume nommé `var/` survit aux redémarrages normaux).
-> Planifier le rollup fréquemment (p. ex. horaire `--include-today`) réduit la fenêtre.
+### Où vit le NDJSON — `var/state`, adossé à un volume
+
+Un déploiement, c'est `compose pull` + `up -d` : le conteneur `php` est **recréé**,
+et tout ce qui a été écrit dans sa couche writable disparaît. Le journal ne peut donc
+pas vivre n'importe où sous `var/` :
+
+| Chemin | Volume | Pourquoi |
+|---|---|---|
+| `var/state/**` | `app_state` | Durable — events analytics, journal d'audit, sessions, base GeoLite2 |
+| `var/cache`, `var/log` | aucun | Jetable **volontairement** : persister le cache prod servirait le conteneur DI compilé d'une image antérieure après un déploiement |
+
+Le point de montage `var/state` est créé **dans l'image** et `chown www-data`
+(`docker/php/Dockerfile`) : Docker recopie les droits du point de montage lorsqu'il
+peuple un volume nommé vide, et un dossier absent serait créé `root` — le pool FPM ne
+pourrait plus écrire, et `EventStore::append()` avale cet échec en silence.
+
+> Fenêtre de perte : le volume `app_state` couvre la recréation de conteneur (donc
+> tout déploiement). Restent le `down -v` et la perte de l'hôte — c'est le rôle du
+> rollup, exécuté à chaque déploiement sur les journées closes
+> (`.github/workflows/_deploy.yml`). Pour rétrécir encore la fenêtre, planifier un
+> rollup horaire `--include-today`.
 
 ## Vie privée & sécurité
 
@@ -86,11 +104,13 @@ la base ne peut pas être versionnée) :
 # Déposer une base ip→pays au format .mmdb, p. ex. :
 #  - MaxMind GeoLite2-Country (compte gratuit + clé de licence), ou
 #  - DB-IP ip-to-country-lite (CC-BY, même format .mmdb)
-mkdir -p app/var/geoip && cp GeoLite2-Country.mmdb app/var/geoip/
+mkdir -p app/var/state/geoip && cp GeoLite2-Country.mmdb app/var/state/geoip/
 # ou pointer GEOIP_DB_PATH vers un fichier monté (voir compose.yaml / .env)
 ```
 
-Variable `GEOIP_DB_PATH` (vide → `var/geoip/GeoLite2-Country.mmdb` par défaut).
+Variable `GEOIP_DB_PATH` (vide → `var/state/geoip/GeoLite2-Country.mmdb` par défaut).
+Le fichier est déposé **une fois** : `var/state` est adossé au volume `app_state`
+(cf. « Persistance » ci-dessous), il survit aux déploiements.
 
 ## Analytics stockage
 

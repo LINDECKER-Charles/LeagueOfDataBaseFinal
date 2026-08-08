@@ -45,7 +45,7 @@ publier, puis **archiver** les entrées traitées dans `docs/changelog/archived/
 | Couche | Techno |
 |---|---|
 | Backend | Symfony 7.4 LTS / PHP 8.4 (`app/`) |
-| Fetch upstream | micro-service Go `go-workers/` (passerelle thin, allowlist SSRF) |
+| Fetch upstream | micro-service Go `go/fetcher/` (passerelle thin, allowlist SSRF) |
 | Stockage assets | MinIO S3 content-addressed (Flysystem + async-aws) |
 | Données utilisateur | PostgreSQL 17 + Doctrine ORM (comptes, favoris, builds) |
 | Front | Twig + îlots Vite / Vue 3 / TS / PrimeVue, navigation Turbo Drive |
@@ -57,6 +57,7 @@ publier, puis **archiver** les entrées traitées dans `docs/changelog/archived/
 - **Tout l'egress Data Dragon / CommunityDragon passe par le Go gateway** (`GoFetcherClient` → service `go_fetcher.client`). Ne jamais fetch une URL externe directement depuis PHP. Toute nouvelle source d'asset doit être ajoutée à l'`ALLOWED_HOSTS` du go-fetcher (`compose.yaml`) — **recréer le conteneur** pour prise en compte.
 - **Stockage sans base de données** : images en `blobs/{sha256}.{ext}` (dédup O(1) + sibling WebP), données en `data/{version}/{lang}/{type}.json`, manifeste `manifest/{version}/{type}.json`. Le manifeste se met à jour en **read-merge-write** (`AbstractManager::saveManifest`) — ne jamais réintroduire un overwrite aveugle (course concurrente loader SSE ↔ flush kernel.terminate).
 - **Postgres = données utilisateur uniquement** (comptes/favoris/builds). Les données et images Data Dragon restent hors DB (MinIO) — ne jamais y introduire de dépendance DB. Migrations : `docker compose exec -T -u www-data php php bin/console doctrine:migrations:migrate`.
+- **Tout état durable écrit sur disque va sous `var/state/`** (volume `app_state`) : events analytics, journal d'audit, sessions, base GeoLite2. Un déploiement = `compose pull` + `up -d`, donc **recréation du conteneur** : le reste de `var/` (cache, log) est détruit — et doit le rester, persister `var/cache` servirait un conteneur DI compilé depuis une image antérieure. Un nouveau point de montage doit exister dans l'image et être `chown www-data` **avant** `USER www-data` (Docker recopie les droits du point de montage en peuplant un volume vide ; un dossier absent est créé `root`).
 - **Managers de ressource** (champion/item/rune/summoner) : dérivent `AbstractManager`. La logique partagée (data, images, manifeste, **pagination**) vit dans la base ; un manager concret ne surcharge que ses points de divergence réels (ex. `paginationCollection`, `perPageCap`, `imageUrl`, `imageEntries`).
 - **Contrôleurs de ressource** : dérivent `AbstractResourceController` (dépendances transverses + `dataError`/`redirectToSetupWithError`/`clientData` mutualisés). Résolution version/langue via `PageContextResolver` (query → session, **sans redirect**), jamais de « redirect dance ».
 - **Îlots Vue** : logique d'orchestration hors du SFC (composables + modules purs, ex. `assets/vue/loader/`). Un SFC reste présentation + câblage mince. Code-split par îlot.
@@ -183,8 +184,8 @@ Convention de commits (maintenue par /commit, initialisée par /b-hive-init).
   - `app/translations/**` → `i18n`
   - `app/public/changelog/**` (+ archivage `docs/changelog/**` de la même release) → `changelog`
   - Lot touchant à la fois contrôleur + templates + traductions → `full-stack/<zone>`
-  - `go-workers/**` → `fetcher`
-  - `go-api/**` → `api`
+  - `go/fetcher/**` → `fetcher`
+  - `go/api/**` → `api`
   - `compose*`, `docker/**`, `infra/**` → `infra`
   - `tools/**` → `tools`
   - `screenshot/**` → `docs/screenshots`

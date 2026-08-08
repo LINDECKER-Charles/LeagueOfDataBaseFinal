@@ -119,7 +119,7 @@ Mets à jour docs/guides/docker.md avec l'option retenue.
 Lis docs/audits/performance-audit.md sections A5, A6, A7, B3, B4. Traite-les dans cet
 ordre, en me faisant valider entre chaque :
 
-1. A7 — MESURE D'ABORD, ne code rien. go-workers utilise http.DefaultTransport
+1. A7 — MESURE D'ABORD, ne code rien. go/fetcher utilise http.DefaultTransport
    (MaxIdleConnsPerHost=2) avec MaxConcurrency=16. MAIS DefaultTransport a
    ForceAttemptHTTP2=true : si DDragon sert du h2, le problème n'existe pas.
    Vérifie avec GODEBUG=http2debug=1 sur le conteneur go-fetcher et dis-moi ce

@@ -100,7 +100,7 @@ Le `fileExists` de la L.36 est par ailleurs **inutile** : la clé *est* le SHA-2
 
 ### A4 — Le lot entier est bufferisé en base64 des deux côtés 🟠 MAJEUR · confiance : haute
 
-- **Go** : `go-workers/internal/api/handlers.go:95-96` → `wg.Wait()` **puis** `writeJSON(...)`. Rien n'est écrit avant que les N URLs soient **toutes** terminées.
+- **Go** : `go/fetcher/internal/api/handlers.go:95-96` → `wg.Wait()` **puis** `writeJSON(...)`. Rien n'est écrit avant que les N URLs soient **toutes** terminées.
 - **PHP** : `GoFetcherClient.php:77` → `->toArray()` décode l'intégralité du JSON.
 
 Un lot de 200 images en base64 (+33 %) tient intégralement en RAM des deux côtés, contre `memory_limit = 256M`. Et surtout : **rien ne peut être traité avant que tout le lot soit arrivé** — c'est la cause racine de **B1**.
@@ -140,7 +140,7 @@ Le docblock de `app/src/Service/Client/PageContextResolver.php:18` affirme :
 
 Faits établis statiquement :
 
-- `go-workers/internal/fetcher/fetcher.go:31` → `&http.Client{Timeout: timeout}`, `Transport` nil → `http.DefaultTransport`.
+- `go/fetcher/internal/fetcher/fetcher.go:31` → `&http.Client{Timeout: timeout}`, `Transport` nil → `http.DefaultTransport`.
 - Aucun Transport custom nulle part (grep sur les 8 fichiers `.go`).
 - `http.DefaultTransport` ne fixe pas `MaxIdleConnsPerHost` → fallback à **2**, alors que `MaxConcurrency = 16` (`config.go:27`).
 

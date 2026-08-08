@@ -20,6 +20,9 @@ node_modules/
 # JetBrains IDE
 .idea/
 
+# Claude Code (réglages et état locaux, propres à chaque poste)
+/.claude/
+
 # Pitch Discord (local, non versionné)
 /docs/produit/presentation-discord.md
 

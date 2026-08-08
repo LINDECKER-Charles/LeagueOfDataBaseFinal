@@ -16,12 +16,13 @@ use Symfony\Component\HttpFoundation\IpUtils;
  * "unknown" — the rest of analytics is unaffected.
  *
  * Provisioning the database is an ops step (it can't ship in the repo): drop a
- * `GeoLite2-Country.mmdb` at var/geoip/ or point GEOIP_DB_PATH at one. See
- * docs/architecture/analytics.md.
+ * `GeoLite2-Country.mmdb` at var/state/geoip/ or point GEOIP_DB_PATH at one. The
+ * default sits under the volume-backed var/state so an operator drops the file
+ * once instead of after every deploy. See docs/architecture/analytics.md.
  */
 final class GeoLocator
 {
-    private const DEFAULT_RELATIVE_PATH = 'var/geoip/GeoLite2-Country.mmdb';
+    private const DEFAULT_RELATIVE_PATH = 'var/state/geoip/GeoLite2-Country.mmdb';
 
     private ?Reader $reader = null;
     private bool $resolved = false;

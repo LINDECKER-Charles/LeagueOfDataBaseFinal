@@ -20,7 +20,9 @@ league-of-database/
 │   ├── templates/             # Templates Twig
 │   ├── public/               # Assets publics et uploads
 │   └── config/               # Configuration Symfony
-├── go-workers/               # Workers Go pour le traitement asynchrone
+├── go/                      # Micro-services Go (un module par service)
+│   ├── fetcher/            # Passerelle de fetch Data Dragon / CommunityDragon
+│   └── api/                # API REST v1 publique (payante)
 └── docs/                    # Documentation (voir docs/README.md)
     ├── architecture/        # Fonctionnement interne des sous-systèmes
     ├── guides/             # Installation, exploitation, opérations

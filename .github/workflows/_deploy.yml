@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
@@ -103,6 +103,14 @@ jobs:
             # versions dans MinIO, puis backfill WebP. Idempotent + best-effort.
             docker compose exec -d php php bin/console app:ddragon:warmup --limit=3
             docker compose exec -d php php bin/console app:ddragon:webp
+            # Durabilité observabilité : les journées CLOSES sont consolidées dans MinIO
+            # à chaque déploiement. Le volume app_state protège déjà les NDJSON de la
+            # recréation du conteneur ; ceci les met en plus hors de l'hôte.
+            # Volontairement SANS --include-today : le rollup écrase l'agrégat du jour,
+            # et un jour encore ouvert n'a rien à gagner à être figé ici.
+            # Best-effort : une consolidation ratée ne doit pas faire échouer un déploiement.
+            docker compose exec -T php php bin/console app:analytics:rollup || true
+            docker compose exec -T php php bin/console app:audit:rollup || true
             docker image prune -f
             # ── Public TLS smoke test + edge cert self-heal ──────────────────────
             # The shared edge (caddy-docker-proxy) issues Let's Encrypt certs from

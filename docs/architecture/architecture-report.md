@@ -7,7 +7,7 @@
 ## 1. Stack & cartographie
 
 - **Backend** : Symfony 7.4 LTS / PHP 8.4, `strict_types` + classes `final` généralisés.
-- **Fetch** : micro-service **Go** (`go-workers`) = passerelle thin vers Data Dragon / CommunityDragon (SSRF allowlist, batch parallèle).
+- **Fetch** : micro-service **Go** (`go/fetcher`) = passerelle thin vers Data Dragon / CommunityDragon (SSRF allowlist, batch parallèle).
 - **Stockage** : **MinIO** content-addressed (Flysystem + async-aws S3), clé = sha256 (dédup O(1)) + manifeste par `(version, type)`. Cache read-through `ddragon.cache`.
 - **Front** : Twig + îlots **Vite / Vue 3 / TS / PrimeVue**, navigation **Turbo Drive**, design system « Hextech » (`app.css`).
 - **Domaine** : 4 ressources DDragon (champion / item / rune / summoner) via managers dérivant `AbstractManager`.

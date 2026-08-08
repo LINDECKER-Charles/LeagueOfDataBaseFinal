@@ -247,8 +247,11 @@ LeagueOfDataBaseFinal/
 │   │   └── Security/           # Auth admin
 │   ├── assets/vue/             # Îlots Vue 3 (TS) : ResourceLoader, SearchAutocomplete…
 │   └── templates/              # Coques Twig + composants
-├── go-workers/                 # Microservice Go (fetch gateway)
-│   └── internal/{api,fetcher,config}/
+├── go/                         # Micro-services Go (un module par service)
+│   ├── fetcher/                # Passerelle de fetch upstream (allowlist SSRF)
+│   │   └── internal/{api,fetcher,config}/
+│   └── api/                    # API REST v1 publique (payante)
+│       └── internal/{api,keys,quota,ratelimit,store,trends}/
 ├── docker/                     # Dockerfiles + confs (php, nginx, minio)
 ├── infra/edge/                 # Caddy (déploiement)
 ├── screenshot/                 # Captures (Partie Design)

@@ -43,6 +43,14 @@ services:
       MAILER_FROM: "${MAILER_FROM:-LeagueOfDataBase <no-reply@leagueofdatabase.gg>}"
       # Mailbox receiving footer contact-form submissions (empty -> admin inbox only).
       CONTACT_RECIPIENT: ${CONTACT_RECIPIENT:-}
+    volumes:
+      # Durable local state. A deploy is `compose pull` + `up -d`, which RECREATES
+      # this container: anything written to the image's writable layer is destroyed.
+      # Analytics events, the audit journal, sessions and the GeoLite2 DB therefore
+      # live under var/state, the only volume-backed path. The rest of var/ (cache,
+      # log) stays disposable ON PURPOSE — persisting var/cache would serve a
+      # compiled container from a previous image after a deploy.
+      - app_state:/var/www/html/var/state
     depends_on:
       go-fetcher:
         condition: service_healthy
@@ -79,7 +87,7 @@ services:
   go-fetcher:
     image: ${REGISTRY:-lodb}/go-fetcher:${IMAGE_TAG:-latest}
     build:
-      context: ./go-workers
+      context: ./go/fetcher
       dockerfile: Dockerfile
     environment:
       PORT: "8085"
@@ -96,7 +104,7 @@ services:
   go-api:
     image: ${REGISTRY:-lodb}/go-api:${IMAGE_TAG:-latest}
     build:
-      context: ./go-api
+      context: ./go/api
       dockerfile: Dockerfile
     # Public paid API. In dev the host port is published via compose.override.yaml;
     # in staging/prod it is reached through the shared edge proxy on its own
@@ -180,3 +188,5 @@ services:
 volumes:
   minio_data:
   pgdata:
+  # Analytics events, audit journal, sessions, GeoLite2 DB — see the php service.
+  app_state:
