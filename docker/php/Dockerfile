@@ -72,8 +72,13 @@ RUN printf "APP_ENV=prod\nAPP_DEBUG=0\n" > .env
 
 # Entrypoint prepares var/, warms cache, then runs php-fpm
 COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+# var/state is the mount point of the durable named volume (compose.yaml). It MUST
+# exist here, owned by www-data: Docker copies a mount point's ownership from the
+# image when it first populates an empty named volume, and a missing directory
+# would be created root-owned instead — the www-data FPM pool could then not write
+# it, and EventStore::append() swallows that failure silently.
 RUN chmod +x /usr/local/bin/docker-entrypoint \
- && mkdir -p var/cache var/log \
+ && mkdir -p var/cache var/log var/state \
  && chown -R www-data:www-data var .env
 
 USER www-data

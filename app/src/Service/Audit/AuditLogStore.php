@@ -9,17 +9,20 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Append-only local audit log, one NDJSON file per UTC day
- * (var/audit/events/{Y-m-d}.ndjson). The day-file format and its atomicity
+ * (var/state/audit/events/{Y-m-d}.ndjson). The day-file format and its atomicity
  * guarantees live in {@see NdjsonDayStore}; this class only binds the directory
  * and the {@see AuditEvent} write contract.
  *
- * Cross-host durability and survival across `down -v` is the rollup's job
- * ({@see AuditRollupService}), which archives closed days verbatim into MinIO —
- * verbatim, not aggregated, because an audit trail must preserve every row.
+ * var/state is the volume-backed path (compose.yaml), so the journal survives the
+ * container recreation every deploy performs — a legally retained trail must not
+ * depend on a container's lifetime. Cross-host durability and survival across
+ * `down -v` remain the rollup's job ({@see AuditRollupService}), which archives
+ * closed days verbatim into MinIO — verbatim, not aggregated, because an audit
+ * trail must preserve every row.
  */
 final class AuditLogStore extends NdjsonDayStore implements AuditDayReader
 {
-    private const DIR = 'var/audit/events';
+    private const DIR = 'var/state/audit/events';
 
     public function __construct(
         #[Autowire('%kernel.project_dir%')]

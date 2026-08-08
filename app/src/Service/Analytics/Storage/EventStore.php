@@ -9,16 +9,18 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Append-only local event log, one NDJSON file per UTC day
- * (var/analytics/events/{Y-m-d}.ndjson). Everything about the day-file format
- * and its atomicity guarantees lives in {@see NdjsonDayStore}; this class only
- * binds the directory and the {@see RequestEvent} write contract.
+ * (var/state/analytics/events/{Y-m-d}.ndjson). Everything about the day-file
+ * format and its atomicity guarantees lives in {@see NdjsonDayStore}; this class
+ * only binds the directory and the {@see RequestEvent} write contract.
  *
- * Durability across hosts / `down -v` is the rollup's job ({@see RollupService}),
- * which folds closed days into immutable MinIO aggregates.
+ * var/state is the volume-backed path (compose.yaml): it survives the container
+ * recreation every deploy performs. Durability across hosts / `down -v` remains
+ * the rollup's job ({@see RollupService}), which folds closed days into
+ * immutable MinIO aggregates.
  */
 final class EventStore extends NdjsonDayStore
 {
-    private const DIR = 'var/analytics/events';
+    private const DIR = 'var/state/analytics/events';
 
     public function __construct(
         #[Autowire('%kernel.project_dir%')]

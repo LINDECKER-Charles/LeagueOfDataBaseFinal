@@ -40,7 +40,7 @@ Hostinger — si c'est une autre, inverse les deux dans `legal_info.yaml` (1 lig
 | ~~Hébergeur~~ | **Tranché : Hostinger** (operations UAB + entité contractante Intl Ltd) | Fait — entités UE (Lituanie/Chypre), la section « Transferts hors UE » de la confidentialité reste valable. **Micro-point** : choisis un data-center UE (ex. France) dans le panel Hostinger pour rester aligné |
 | ~~Email de contact~~ | **Tranché : email perso** (`charles.lindecker@outlook.fr`) | Fait — posé dans `publisher_email` + `dpo_email` (cohérent avec le footer). Réversible en 2 lignes si un `contact@league-of-data-base.com` est créé un jour |
 | **DPO / contact données** | Désigner un DPO ? (non obligatoire pour un particulier / petite structure) | Recommandé : pas de DPO formel, mais un email de contact données dédié (`legal.dpo_email`). Si aucun : pointer `dpo_email` sur `publisher_email` |
-| **GeoLite2 (pays)** | Activer la géolocalisation pays (`GEOIP_DB_PATH` / `var/geoip/GeoLite2-Country.mmdb`) ? | La politique de confidentialité présente déjà le pays comme **optionnel et résolu localement** — vraie dans les deux cas. Si activation : respecter la licence MaxMind (attribution) et le process de mise à jour de la base |
+| **GeoLite2 (pays)** | Activer la géolocalisation pays (`GEOIP_DB_PATH` / `var/state/geoip/GeoLite2-Country.mmdb`) ? | La politique de confidentialité présente déjà le pays comme **optionnel et résolu localement** — vraie dans les deux cas. Si activation : respecter la licence MaxMind (attribution) et le process de mise à jour de la base |
 | **Rétention analytics — POINT CRITIQUE** | Voir détail ci-dessous | La politique annonce 13 mois (bruts) / 25 mois (agrégats) : il faut rendre ça vrai |
 | **Nom de domaine définitif** | Choisir et poser dans `legal.site_url` | Mentions légales + cohérence du cookie/locale par TLD (`.fr` → défaut FR) |
 
@@ -48,11 +48,15 @@ Hostinger — si c'est une autre, inverse les deux dans `legal_info.yaml` (1 lig
 
 État du code (inchangé) : **aucune purge automatique n'existe.**
 
-- Les journaux bruts NDJSON (`var/analytics/events/{date}.ndjson`) contiennent **IP et
-  User-Agent en clair** et s'accumulent tant que la consolidation manuelle n'est pas lancée.
+- Les journaux bruts NDJSON (`var/state/analytics/events/{date}.ndjson`) contiennent **IP et
+  User-Agent en clair** et s'accumulent tant qu'aucune purge n'est lancée. Depuis le
+  2026-08-09 ils sont adossés au volume `app_state` : ils **survivent aux déploiements**
+  (auparavant la recréation du conteneur les effaçait — perte de données, pas une purge).
 - La consolidation vers MinIO (`analytics/daily/{date}.json`, agrégats **sans IP ni UA**)
-  est **manuelle** : commande `app:analytics:rollup` (ou déclencheur admin), option
-  `--prune` opt-in pour supprimer le NDJSON des journées consolidées. Aucun cron/scheduler.
+  tourne **à chaque déploiement** sur les journées closes (`.github/workflows/_deploy.yml`),
+  et reste déclenchable à la demande : commande `app:analytics:rollup` ou bouton admin.
+  L'option `--prune`, qui supprime le NDJSON brut des journées consolidées, reste **opt-in
+  et manuelle** : aucune purge automatique des bruts n'existe.
 
 Décision appliquée : les deux pages privacy (`legal/{fr,en}/privacy.html.twig`, tableau §1
 + §3) annoncent désormais la réalité — bruts « conservés jusqu'à consolidation puis
