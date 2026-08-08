@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace App\Service\Analytics;
 
+use App\Service\Analytics\Storage\DailyAggregateStore;
+use App\Service\Analytics\Storage\EventStore;
+
 /**
  * Consolidates closed local NDJSON days into immutable MinIO aggregates
  * (analytics/daily/{date}.json) for durability and cheap historical reads. This
@@ -23,31 +26,42 @@ final class RollupService
     /**
      * @return array{rolled: list<string>, skipped: list<string>, pruned: list<string>}
      */
-    public function rollup(bool $includeToday = false, bool $force = false, bool $prune = false): array
-    {
+    public function rollup(
+        bool $includeToday = false,
+        bool $force = false,
+        bool $prune = false,
+    ): array {
         $today = gmdate('Y-m-d');
-        $rolled = $skipped = $pruned = [];
+        $result = ['rolled' => [], 'skipped' => [], 'pruned' => []];
 
         foreach ($this->events->days() as $date) {
             $isToday = $date === $today;
             if ($isToday && !$includeToday) {
                 continue;
             }
-
             if (!$force && !$isToday && $this->dailyStore->exists($date)) {
-                $skipped[] = $date;
+                $result['skipped'][] = $date;
                 continue;
             }
 
-            $this->dailyStore->write($date, $this->aggregator->aggregateDay($date, $this->events->readDay($date)));
-            $rolled[] = $date;
+            $this->persistAggregate($date);
+            $result['rolled'][] = $date;
 
             if ($prune && !$isToday) {
                 $this->events->deleteDay($date);
-                $pruned[] = $date;
+                $result['pruned'][] = $date;
             }
         }
 
-        return ['rolled' => $rolled, 'skipped' => $skipped, 'pruned' => $pruned];
+        return $result;
+    }
+
+    /** Folds the day's raw events and writes the immutable aggregate. */
+    private function persistAggregate(string $date): void
+    {
+        $this->dailyStore->write(
+            $date,
+            $this->aggregator->aggregateDay($date, $this->events->readDay($date)),
+        );
     }
 }

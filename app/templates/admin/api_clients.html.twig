@@ -1,5 +1,5 @@
-{% extends 'admin/_base.html.twig' %}
-{% import 'admin/_ui.html.twig' as ui %}
+{% extends 'admin/shell/_base.html.twig' %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
 
 {% block title %}Clients API · Admin · LODB{% endblock %}
 
@@ -13,17 +13,22 @@
 } %}
 
 {% block admin_body %}
-    {{ ui.page_head('Gestion', 'Clients API', "Clés de l'API publique payante : consommation, révocation et crédits manuels.") }}
+    {{ ui.page_head('Gestion', 'Clients API',
+        "Clés de l'API publique payante : consommation, révocation et crédits manuels.") }}
 
     <div class="kpi-grid">
-        {{ ui.kpi('Clés actives', kpis.active|number_format(0, '.', ' '), null, 'var(--gold)', null) }}
-        {{ ui.kpi('Requêtes ce mois', kpis.monthRequests|compact, 'toutes clés confondues', 'var(--hex)', null) }}
-        {{ ui.kpi('Crédits en circulation', kpis.credits|compact, 'requêtes prépayées (clés actives)', 'var(--series-3)', null) }}
+        {{ ui.kpi('Clés actives', kpis.active|number_format(0, '.', ' '), null,
+            'var(--gold)', null) }}
+        {{ ui.kpi('Requêtes ce mois', kpis.monthRequests|compact,
+            'toutes clés confondues', 'var(--hex)', null) }}
+        {{ ui.kpi('Crédits en circulation', kpis.credits|compact,
+            'requêtes prépayées (clés actives)', 'var(--series-3)', null) }}
     </div>
 
     <div class="grid cols-2" style="margin-top: 1.15rem;">
         <section class="card">
-            <div class="card__head"><h2>Répartition par plan</h2><span class="chip">clés actives</span></div>
+            <div class="card__head"><h2>Répartition par plan</h2>
+                <span class="chip">clés actives</span></div>
             {% set slices = [] %}
             {% for plan, n in kpis.byPlan %}
                 {% set m = planMeta[plan]|default({ label: plan, color: 'var(--text-muted)' }) %}
@@ -33,8 +38,11 @@
             {{ ui.legend(slices|map((s) => { label: s.name, color: s.color, value: s.value })) }}
         </section>
         <section class="card">
-            <div class="card__head"><h2>Top consommateurs</h2><span class="chip">30 jours</span></div>
-            {{ ui.rank(topConsumers, { color: 'cyan', empty: 'Aucun trafic sur 30 jours.', limit: 8 }) }}
+            <div class="card__head"><h2>Top consommateurs</h2>
+                <span class="chip">30 jours</span></div>
+            {{ ui.rank(topConsumers, {
+                color: 'cyan', empty: 'Aucun trafic sur 30 jours.', limit: 8
+            }) }}
         </section>
     </div>
 
@@ -47,14 +55,21 @@
             {% set k = row.key %}
             {% set actions %}
                 {% if k.isActive %}
-                    <form method="post" action="{{ path('admin_api_client_credit', { id: k.id } + listContext) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('admin_api_client_credit') }}">
-                        <input type="number" name="requests" class="input-slim" min="1" max="1000000" step="1" placeholder="Requêtes" required aria-label="Requêtes à créditer">
+                    <form method="post"
+                        action="{{ path('admin_api_client_credit', { id: k.id } + listContext) }}">
+                        <input type="hidden" name="_token"
+                               value="{{ csrf_token('admin_api_client_credit') }}">
+                        <input type="number" name="requests" class="input-slim" min="1"
+                               max="1000000" step="1" placeholder="Requêtes" required
+                               aria-label="Requêtes à créditer">
                         <button type="submit" class="btn small">Créditer</button>
                     </form>
-                    <form method="post" action="{{ path('admin_api_client_revoke', { id: k.id } + listContext) }}"
-                          data-confirm="Révoquer la clé {{ k.keyPrefix|e('html_attr') }}… ? Elle cessera d'authentifier sous ~60 s.">
-                        <input type="hidden" name="_token" value="{{ csrf_token('admin_api_client_revoke') }}">
+                    <form method="post"
+                        action="{{ path('admin_api_client_revoke', { id: k.id } + listContext) }}"
+                        data-confirm="Révoquer la clé {{ k.keyPrefix|e('html_attr')
+                            }}… ? Elle cessera d'authentifier sous ~60 s.">
+                        <input type="hidden" name="_token"
+                               value="{{ csrf_token('admin_api_client_revoke') }}">
                         <button type="submit" class="btn danger small">Révoquer</button>
                     </form>
                 {% else %}
@@ -65,7 +80,8 @@
                 { text: k.user.username, sub: k.name },
                 { text: k.keyPrefix ~ '…' },
                 { chips: [(planMeta[k.plan.value]|default({ label: k.plan.value })).label] },
-                { num: row.used|number_format(0, '.', ' ') ~ ' / ' ~ k.monthlyQuota|number_format(0, '.', ' ') },
+                { num: row.used|number_format(0, '.', ' ')
+                    ~ ' / ' ~ k.monthlyQuota|number_format(0, '.', ' ') },
                 { num: k.creditsBalance|number_format(0, '.', ' ') },
                 { num: k.rateLimitPerMin },
                 { badge: k.isActive ? 'active' : 'révoquée', tone: k.isActive ? 'good' : 'bad' },
@@ -74,7 +90,12 @@
             ]]) %}
         {% endfor %}
         {{ ui.table(
-            ['Compte', 'Clé', 'Plan', { label: 'Conso mois', num: true }, { label: 'Crédits', num: true }, { label: 'Req/min', num: true }, 'Statut', 'Créée le', { label: 'Actions', num: true }],
+            [
+                'Compte', 'Clé', 'Plan',
+                { label: 'Conso mois', num: true }, { label: 'Crédits', num: true },
+                { label: 'Req/min', num: true }, 'Statut', 'Créée le',
+                { label: 'Actions', num: true },
+            ],
             tableRows,
             { empty: 'Aucune clé API émise.' }
         ) }}

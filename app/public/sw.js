@@ -132,7 +132,8 @@ async function networkFetch(event, timeoutMs) {
 /** Last-resort page body when even the cached offline shell is unavailable. */
 function offlineResponse() {
   return new Response(
-    '<!doctype html><meta charset="utf-8"><title>Hors ligne</title><p>Contenu indisponible hors ligne.</p>',
+    '<!doctype html><meta charset="utf-8"><title>Hors ligne</title>'
+      + '<p>Contenu indisponible hors ligne.</p>',
     { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
   );
 }

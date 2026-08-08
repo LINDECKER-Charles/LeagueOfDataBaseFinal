@@ -1,6 +1,6 @@
 # Contenu éditorial de /about, /about/data et /faq — les pages qui expliquent en
 # clair ce qu'est le projet, à qui il s'adresse et d'où viennent ses données.
-# Les ids faq.* sont déclarés dans App\Controller\AboutController::FAQ_ENTRIES.
+# Les ids faq.* sont déclarés dans App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "À propos"
 
 index:

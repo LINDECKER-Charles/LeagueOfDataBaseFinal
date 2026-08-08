@@ -58,6 +58,8 @@ final class CanonicalHost
 
     private function apex(string $host): string
     {
-        return str_starts_with($host, self::WWW_PREFIX) ? substr($host, \strlen(self::WWW_PREFIX)) : $host;
+        return str_starts_with($host, self::WWW_PREFIX)
+            ? substr($host, \strlen(self::WWW_PREFIX))
+            : $host;
     }
 }

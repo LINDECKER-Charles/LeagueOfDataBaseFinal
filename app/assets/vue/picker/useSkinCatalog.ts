@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
-import { normalizeSearchText, type PickerEntry } from './filterOptions'
+import { normalizeSearchText } from '../search/normalizeSearchText'
+import type { PickerEntry } from './filterOptions'
 
 export type CatalogStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -42,9 +43,12 @@ interface SkinsResponse {
     skins?: SkinPayload[]
 }
 
+/** Shared answer for a champion nobody asked to load yet — read, never written. */
+const IDLE_SKIN_STATE: CatalogState = { status: 'idle', entries: [] }
+
 export interface SkinCatalog {
     champions: CatalogState
-    /** Reactive per-champion skin state (created idle on first access). */
+    /** Read-only skin state of a champion; an unloaded one reads as idle. */
     skinsFor: (championId: string) => CatalogState
     ensureChampions: () => Promise<void>
     ensureSkins: (championId: string) => Promise<void>
@@ -61,56 +65,62 @@ export function useSkinCatalog(config: SkinCatalogConfig): SkinCatalog {
     const champions = reactive<CatalogState>({ status: 'idle', entries: [] })
     const skins = reactive<Record<string, CatalogState>>({})
 
-    function skinsFor(championId: string): CatalogState {
-        if (!skins[championId]) {
-            skins[championId] = { status: 'idle', entries: [] }
-        }
-        return skins[championId]
+    return {
+        champions,
+        // Pure read: it is called from a computed, which must not write state.
+        // Reading a missing key still tracks it, so the registration done by
+        // loadSkins re-runs the computed.
+        skinsFor: (championId) => skins[championId] ?? IDLE_SKIN_STATE,
+        ensureChampions: () => loadChampions(champions, config),
+        ensureSkins: (championId) => loadSkins(skins, config, championId),
     }
+}
 
-    async function ensureChampions(): Promise<void> {
-        if (champions.status === 'loading' || champions.status === 'ready') {
-            return
-        }
-        champions.status = 'loading'
-        try {
-            const payload = await fetchJson<ChampionsResponse>(config.championsEndpoint, config)
-            champions.entries = (payload.options ?? []).map((option) => ({
-                id: option.id,
-                name: option.name,
-                image: option.image,
-                // The id joins the haystack so ids and display names both match.
-                searchText: normalizeSearchText(`${option.name} ${option.id}`),
-            }))
-            champions.status = 'ready'
-        } catch {
-            champions.status = 'error'
-        }
+async function loadChampions(state: CatalogState, config: SkinCatalogConfig): Promise<void> {
+    if (state.status === 'loading' || state.status === 'ready') {
+        return
     }
-
-    async function ensureSkins(championId: string): Promise<void> {
-        const state = skinsFor(championId)
-        if (state.status === 'loading' || state.status === 'ready') {
-            return
-        }
-        state.status = 'loading'
-        try {
-            const url = `${config.skinsEndpoint}?champion=${encodeURIComponent(championId)}`
-            const payload = await fetchJson<SkinsResponse>(url, config)
-            state.entries = (payload.skins ?? []).map((skin) => ({
-                id: skin.id,
-                name: skin.name,
-                image: skin.image,
-                banner: skin.banner ?? undefined,
-                searchText: normalizeSearchText(skin.name),
-            }))
-            state.status = 'ready'
-        } catch {
-            state.status = 'error'
-        }
+    state.status = 'loading'
+    try {
+        const payload = await fetchJson<ChampionsResponse>(config.championsEndpoint, config)
+        state.entries = (payload.options ?? []).map((option) => ({
+            id: option.id,
+            name: option.name,
+            image: option.image,
+            // The id joins the haystack so ids and display names both match.
+            searchText: normalizeSearchText(`${option.name} ${option.id}`),
+        }))
+        state.status = 'ready'
+    } catch {
+        state.status = 'error'
     }
+}
 
-    return { champions, skinsFor, ensureChampions, ensureSkins }
+async function loadSkins(
+    skins: Record<string, CatalogState>,
+    config: SkinCatalogConfig,
+    championId: string,
+): Promise<void> {
+    skins[championId] ??= { status: 'idle', entries: [] }
+    const state = skins[championId] as CatalogState
+    if (state.status === 'loading' || state.status === 'ready') {
+        return
+    }
+    state.status = 'loading'
+    try {
+        const url = `${config.skinsEndpoint}?champion=${encodeURIComponent(championId)}`
+        const payload = await fetchJson<SkinsResponse>(url, config)
+        state.entries = (payload.skins ?? []).map((skin) => ({
+            id: skin.id,
+            name: skin.name,
+            image: skin.image,
+            banner: skin.banner ?? undefined,
+            searchText: normalizeSearchText(skin.name),
+        }))
+        state.status = 'ready'
+    } catch {
+        state.status = 'error'
+    }
 }
 
 async function fetchJson<T>(endpoint: string, config: SkinCatalogConfig): Promise<T> {

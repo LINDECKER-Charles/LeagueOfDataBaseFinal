@@ -25,12 +25,16 @@
 curl -H "X-Api-Key: lodb_votrecle…" \
   "{{ apiBaseUrl }}/v1/usage"</pre>
 
+    {# Sample /v1/usage payload. Quota and rate come from ApiPlan::Free so the
+       doc can never contradict the pricing grid rendered on the same page; only
+       the consumption is made up. #}
+    {% set sampleUsed = 137 %}
     <pre class="dev-code">{
   "plan": "free",
-  "monthly_quota": 500,
-  "used_this_month": 137,
-  "remaining_this_month": 363,
+  "monthly_quota": {{ freePlan.monthlyQuota }},
+  "used_this_month": {{ sampleUsed }},
+  "remaining_this_month": {{ freePlan.monthlyQuota - sampleUsed }},
   "credits_balance": 0,
-  "rate_limit_per_min": 10
+  "rate_limit_per_min": {{ freePlan.rateLimitPerMin }}
 }</pre>
 </section>

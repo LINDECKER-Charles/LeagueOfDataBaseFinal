@@ -11,13 +11,14 @@
     <span class="profile-orb__disc">
         {% if current.image %}
             <picture>
-                {% if current.image ends with '.png' %}
-                    <source srcset="{{ current.image|replace({'.png': '.webp'}) }}" type="image/webp">
-                {% endif %}
-                <img src="{{ current.image }}" alt="{{ current.name }}" loading="lazy" decoding="async">
+                {% include 'components/_webp_source.html.twig'
+                   with { src: current.image } only %}
+                <img src="{{ current.image }}" alt="{{ current.name }}" loading="lazy"
+                     decoding="async">
             </picture>
         {% else %}
-            <span class="profile-orb__initials" aria-hidden="true">{{ current.name|slice(0, 2)|upper }}</span>
+            <span class="profile-orb__initials"
+                  aria-hidden="true">{{ current.name|slice(0, 2)|upper }}</span>
         {% endif %}
     </span>
 </div>

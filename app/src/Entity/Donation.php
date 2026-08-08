@@ -40,8 +40,12 @@ final class Donation
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
-    public function __construct(string $stripeSessionId, int $amountCents, string $currency, ?User $user = null)
-    {
+    public function __construct(
+        string $stripeSessionId,
+        int $amountCents,
+        string $currency,
+        ?User $user = null,
+    ) {
         $this->stripeSessionId = $stripeSessionId;
         $this->amountCents = $amountCents;
         $this->currency = $currency;

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service\Analytics;
 
+use App\Service\Analytics\Model\Country;
 use GeoIp2\Database\Reader;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\IpUtils;
@@ -24,7 +25,7 @@ final class GeoLocator
 
     private ?Reader $reader = null;
     private bool $resolved = false;
-    /** @var array<string, array{code: string, name: string}|null> */
+    /** @var array<string, Country|null> */
     private array $memo = [];
 
     public function __construct(
@@ -39,10 +40,7 @@ final class GeoLocator
         return $this->reader() !== null;
     }
 
-    /**
-     * @return array{code: string, name: string}|null
-     */
-    public function locate(?string $ip): ?array
+    public function locate(?string $ip): ?Country
     {
         $ip = trim((string) $ip);
         if ($ip === '' || IpUtils::isPrivateIp($ip)) {
@@ -52,10 +50,7 @@ final class GeoLocator
         return $this->memo[$ip] ??= $this->lookup($ip);
     }
 
-    /**
-     * @return array{code: string, name: string}|null
-     */
-    private function lookup(string $ip): ?array
+    private function lookup(string $ip): ?Country
     {
         $reader = $this->reader();
         if ($reader === null) {
@@ -69,7 +64,7 @@ final class GeoLocator
                 return null;
             }
 
-            return ['code' => $code, 'name' => $country->name ?? $code];
+            return new Country($code, $country->name ?? $code);
         } catch (\Throwable) {
             // Address not in DB / invalid — treat as unknown, never bubble up.
             return null;

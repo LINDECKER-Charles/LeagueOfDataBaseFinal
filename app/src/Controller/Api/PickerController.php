@@ -35,7 +35,11 @@ final class PickerController extends AbstractController
     #[Route('/api/picker/champions', name: 'api_picker_champions', methods: ['GET'])]
     public function champions(Request $request): JsonResponse
     {
-        return $this->catalogResponse($request, 'options', $this->catalog->championOptions(...));
+        return $this->catalogResponse(
+            $request,
+            fn (string $version, string $lang): array
+                => ['options' => $this->catalog->championOptions($version, $lang)],
+        );
     }
 
     #[Route('/api/picker/items', name: 'api_picker_items', methods: ['GET'])]
@@ -47,22 +51,31 @@ final class PickerController extends AbstractController
 
         return $this->catalogResponse(
             $request,
-            'options',
-            fn (string $version, string $lang): array => $this->catalog->itemOptions($version, $lang, $mode),
-            ['mode' => $mode->value],
+            fn (string $version, string $lang): array => [
+                'mode' => $mode->value,
+                'options' => $this->catalog->itemOptions($version, $lang, $mode),
+            ],
         );
     }
 
     #[Route('/api/picker/runes', name: 'api_picker_runes', methods: ['GET'])]
     public function runes(Request $request): JsonResponse
     {
-        return $this->catalogResponse($request, 'trees', $this->catalog->runeTrees(...));
+        return $this->catalogResponse(
+            $request,
+            fn (string $version, string $lang): array
+                => ['trees' => $this->catalog->runeTrees($version, $lang)],
+        );
     }
 
     #[Route('/api/picker/summoners', name: 'api_picker_summoners', methods: ['GET'])]
     public function summoners(Request $request): JsonResponse
     {
-        return $this->catalogResponse($request, 'options', $this->catalog->summonerOptions(...));
+        return $this->catalogResponse(
+            $request,
+            fn (string $version, string $lang): array
+                => ['options' => $this->catalog->summonerOptions($version, $lang)],
+        );
     }
 
     #[Route('/api/picker/skins', name: 'api_picker_skins', methods: ['GET'])]
@@ -77,31 +90,40 @@ final class PickerController extends AbstractController
 
         return $this->catalogResponse(
             $request,
-            'skins',
-            fn (string $version, string $lang): array => $this->skins->options($championId, $version, $lang),
-            ['champion' => $championId],
+            fn (string $version, string $lang): array => [
+                'champion' => $championId,
+                'skins' => $this->skins->options($championId, $version, $lang),
+            ],
         );
     }
 
     /**
-     * @param callable(string, string): list<array<string, mixed>> $load
-     * @param array<string, string>                                $extra echoed payload fields (e.g. items' mode)
+     * Serves one catalogue: the payload always opens on the (version, lang)
+     * actually served so islands can cache, then carries whatever the loader
+     * answered — the collection plus any URL-deterministic dimension it echoes
+     * back (e.g. the items' mode).
+     *
+     * @param callable(string, string): array<string, mixed> $load served payload fragment
      */
-    private function catalogResponse(Request $request, string $collectionKey, callable $load, array $extra = []): JsonResponse
+    private function catalogResponse(Request $request, callable $load): JsonResponse
     {
         ['version' => $version, 'lang' => $lang] = $this->pageContext->selection();
 
         try {
-            $collection = $load($version, $lang);
+            $payload = $load($version, $lang);
         } catch (\Throwable) {
             return new JsonResponse(
-                ['error' => sprintf('Picker data unavailable for version %s / language %s.', $version, $lang)],
+                ['error' => sprintf(
+                    'Picker data unavailable for version %s / language %s.',
+                    $version,
+                    $lang
+                )],
                 Response::HTTP_SERVICE_UNAVAILABLE,
             );
         }
 
-        $served = ['version' => $version, 'lang' => $lang] + $extra;
-        $response = new JsonResponse($served + [$collectionKey => $collection]);
+        $served = ['version' => $version, 'lang' => $lang];
+        $response = new JsonResponse($served + $payload);
         $this->applyCachePolicy($request, $response, $served);
 
         return $response;

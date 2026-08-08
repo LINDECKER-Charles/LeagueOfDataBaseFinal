@@ -1,0 +1,56 @@
+/* ---------------------------------------------------------------------------
+   Changelog — trailing release matter: the bugfix list, the dev note and the
+   empty state shown when no release has been published yet.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* --- Bugfixes (future releases) ---------------------------------------- */
+  .cl-block { margin-top: 1.5rem; }
+  .cl-block__label { margin-bottom: 0.6rem; }
+  .cl-fixes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+  .cl-fix {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+  }
+  .cl-fix__id { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-hex); }
+  .cl-fix__area {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-dim);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 40%, transparent);
+    padding: 0.02rem 0.3rem;
+  }
+
+  /* --- Dev note ---------------------------------------------------------- */
+  .cl-devnote {
+    margin: 1.5rem 0 0;
+    padding: 1rem 1.15rem;
+    border-left: 2px solid color-mix(in srgb, var(--color-gold) 55%, transparent);
+    background: color-mix(in srgb, var(--color-void) 45%, transparent);
+  }
+  .cl-devnote__body {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-style: italic;
+    line-height: 1.6;
+  }
+  .cl-devnote__sign {
+    margin-top: 0.6rem;
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.68rem;
+    color: var(--color-gold);
+  }
+
+  .changelog-empty {
+    margin-top: 2.5rem;
+    text-align: center;
+    color: var(--color-text-dim);
+  }
+}

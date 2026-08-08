@@ -1,5 +1,5 @@
 # Konten editorial untuk halaman /about, /about/data, dan /faq.
-# Id faq.* dideklarasikan di App\Controller\AboutController::FAQ_ENTRIES.
+# Id faq.* dideklarasikan di App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "Tentang"
 
 index:

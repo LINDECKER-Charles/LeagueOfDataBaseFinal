@@ -48,7 +48,8 @@ final class SecurityHeadersSubscriber implements EventSubscriberInterface
         . "form-action 'self' https://checkout.stripe.com https://billing.stripe.com; "
         . "script-src 'self'; "
         . "style-src 'self' 'unsafe-inline'; "
-        . "img-src 'self' data: https://ddragon.leagueoflegends.com https://raw.communitydragon.org https://d28xe8vt774jo5.cloudfront.net; "
+        . "img-src 'self' data: https://ddragon.leagueoflegends.com "
+        . "https://raw.communitydragon.org https://d28xe8vt774jo5.cloudfront.net; "
         . "media-src 'self' https://d28xe8vt774jo5.cloudfront.net; "
         . "font-src 'self'; "
         . "connect-src 'self'; "
@@ -80,7 +81,11 @@ final class SecurityHeadersSubscriber implements EventSubscriberInterface
         // missing/empty type as HTML (Symfony's default) and only bail on a type
         // that is explicitly non-HTML.
         $contentType = $response->headers->get('Content-Type');
-        if (null !== $contentType && '' !== $contentType && !str_contains($contentType, 'text/html')) {
+        if (
+            null !== $contentType
+            && '' !== $contentType
+            && !str_contains($contentType, 'text/html')
+        ) {
             return;
         }
 

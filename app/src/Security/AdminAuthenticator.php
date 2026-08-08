@@ -37,7 +37,9 @@ final class AdminAuthenticator extends AbstractLoginFormAuthenticator
     public function __construct(
         private readonly UrlGeneratorInterface $urlGenerator,
         #[Autowire(env: 'ADMIN_LOGIN')] #[\SensitiveParameter] private readonly string $adminLogin,
-        #[Autowire(env: 'ADMIN_PASSWORD')] #[\SensitiveParameter] private readonly string $adminPassword,
+        #[Autowire(env: 'ADMIN_PASSWORD')]
+        #[\SensitiveParameter]
+        private readonly string $adminPassword,
     ) {}
 
     public function authenticate(Request $request): Passport
@@ -60,12 +62,18 @@ final class AdminAuthenticator extends AbstractLoginFormAuthenticator
         // provider), keeping a single source of truth for the admin identity.
         return new SelfValidatingPassport(
             new UserBadge($this->adminLogin),
-            [new CsrfTokenBadge(self::CSRF_TOKEN_ID, (string) $request->request->get('_csrf_token', ''))],
+            [new CsrfTokenBadge(
+                self::CSRF_TOKEN_ID,
+                (string) $request->request->get('_csrf_token', ''),
+            )],
         );
     }
 
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
-    {
+    public function onAuthenticationSuccess(
+        Request $request,
+        TokenInterface $token,
+        string $firewallName,
+    ): ?Response {
         $target = $this->getTargetPath($request->getSession(), $firewallName)
             ?? $this->urlGenerator->generate('admin_storage');
 

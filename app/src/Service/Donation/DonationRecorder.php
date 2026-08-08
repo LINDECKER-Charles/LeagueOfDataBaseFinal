@@ -24,8 +24,9 @@ final class DonationRecorder implements DonationLedger
         private readonly LoggerInterface $logger,
     ) {}
 
-    public function record(string $sessionId, int $amountCents, string $currency, ?int $userId): void
+    public function record(CompletedDonation $donation): void
     {
+        $sessionId = $donation->sessionId;
         if ($sessionId === '') {
             $this->logger->warning('stripe.donation.session_without_id');
 
@@ -36,15 +37,17 @@ final class DonationRecorder implements DonationLedger
             return;
         }
 
-        $user = $userId === null ? null : $this->users->find($userId);
-        $this->entityManager->persist(new Donation($sessionId, $amountCents, $currency, $user));
+        $user = $donation->userId === null ? null : $this->users->find($donation->userId);
+        $this->entityManager->persist(
+            new Donation($sessionId, $donation->amountCents, $donation->currency, $user),
+        );
         $user?->setIsSupporter(true);
         $this->entityManager->flush();
 
         $this->logger->info('stripe.donation.recorded', [
             'session' => $sessionId,
-            'amount_cents' => $amountCents,
-            'currency' => $currency,
+            'amount_cents' => $donation->amountCents,
+            'currency' => $donation->currency,
             'linked' => $user !== null,
         ]);
     }

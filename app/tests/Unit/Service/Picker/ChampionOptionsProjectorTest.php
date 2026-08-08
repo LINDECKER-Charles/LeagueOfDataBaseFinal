@@ -24,17 +24,30 @@ final class ChampionOptionsProjectorTest extends TestCase
     private function data(): array
     {
         return [
-            'Zed' => ['id' => 'Zed', 'key' => '238', 'name' => 'Zed', 'image' => ['full' => 'Zed.png']],
+            'Zed' => [
+                'id' => 'Zed',
+                'key' => '238',
+                'name' => 'Zed',
+                'image' => ['full' => 'Zed.png'],
+            ],
             // No image node: the manager emits NO positional slot for this entry.
             'Aatrox' => ['id' => 'Aatrox', 'key' => '266', 'name' => 'Aatrox'],
-            'Ahri' => ['id' => 'Ahri', 'key' => '103', 'name' => 'Ahri', 'image' => ['full' => 'Ahri.png']],
+            'Ahri' => [
+                'id' => 'Ahri',
+                'key' => '103',
+                'name' => 'Ahri',
+                'image' => ['full' => 'Ahri.png'],
+            ],
         ];
     }
 
     public function testProjectSortsByNameAndAlignsPositionalImages(): void
     {
         // Two positional slots only (Zed, Ahri) — Aatrox has no image entry.
-        $options = $this->projector->project($this->data(), ['cdn/blobs/zed.png', 'cdn/blobs/ahri.png']);
+        $options = $this->projector->project(
+            $this->data(),
+            ['cdn/blobs/zed.png', 'cdn/blobs/ahri.png'],
+        );
 
         self::assertSame(['Aatrox', 'Ahri', 'Zed'], array_column($options, 'name'));
         self::assertSame(
@@ -57,10 +70,19 @@ final class ChampionOptionsProjectorTest extends TestCase
 
     public function testResolveFindsChampionWithAlignedImage(): void
     {
-        $resolved = $this->projector->resolve($this->data(), ['cdn/blobs/zed.png', 'cdn/blobs/ahri.png'], 'Ahri');
+        $resolved = $this->projector->resolve(
+            $this->data(),
+            ['cdn/blobs/zed.png', 'cdn/blobs/ahri.png'],
+            'Ahri',
+        );
 
         self::assertSame(
-            ['id' => 'Ahri', 'name' => 'Ahri', 'image' => '/cdn/blobs/ahri.png', 'type' => 'champion'],
+            [
+                'id' => 'Ahri',
+                'name' => 'Ahri',
+                'image' => '/cdn/blobs/ahri.png',
+                'type' => 'champion',
+            ],
             $resolved,
         );
     }

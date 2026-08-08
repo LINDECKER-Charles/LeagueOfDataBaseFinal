@@ -1,0 +1,14 @@
+/* ---------------------------------------------------------------------------
+   Changelog — the released version history as a vertical Hextech timeline.
+   Each release is a native <details> node threaded on a single gold rail with a
+   hex-diamond marker; the latest sits open. The version chip (.cl-version-chip)
+   also lives in the navbar next to the brand, linking here. Reuses the shared
+   grammar (hextech-frame, eyebrow, text-gold-grad); only the timeline + release
+   structure is bespoke.
+
+   Split by surface; the import order is the cascade order — keep it.
+--------------------------------------------------------------------------- */
+@import "./timeline.css";
+@import "./release.css";
+@import "./notes.css";
+@import "./responsive.css";

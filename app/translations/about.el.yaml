@@ -1,5 +1,5 @@
 # Συντακτικό περιεχόμενο για τις σελίδες /about, /about/data και /faq.
-# Τα αναγνωριστικά faq.* δηλώνονται στο App\Controller\AboutController::FAQ_ENTRIES.
+# Τα αναγνωριστικά faq.* δηλώνονται στο App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "Σχετικά"
 
 index:

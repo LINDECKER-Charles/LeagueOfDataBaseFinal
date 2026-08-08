@@ -17,7 +17,8 @@
     <section id="responsable">
         <h2>1. Responsable du traitement</h2>
         <p>
-            Le responsable des traitements décrits ci-dessous est <strong>{{ legal.publisherName }}</strong>,
+            Le responsable des traitements décrits ci-dessous est
+            <strong>{{ legal.publisherName }}</strong>,
             éditeur du site {{ legal.siteName }} (voir les
             <a href="{{ path('app_legal_notice') }}">mentions légales</a>).
             Contact pour toute question relative aux données personnelles :
@@ -36,7 +37,7 @@
 
     <section id="traitements">
         <h2>2. Traitements mis en œuvre</h2>
-        <div class="table-scroll">
+        <div class="hx-table-scroll">
             <table>
                 <thead>
                     <tr>
@@ -48,34 +49,53 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>Compte utilisateur</strong><br>création et gestion du compte</td>
-                        <td>Adresse email, nom d'invocateur (pseudonyme), mot de passe (stocké exclusivement sous forme hachée), favoris, préférence de profil public/privé</td>
+                        <td><strong>Compte utilisateur</strong><br>création et gestion du
+                            compte</td>
+                        <td>Adresse email, nom d'invocateur (pseudonyme), mot de passe (stocké
+                            exclusivement sous forme hachée), favoris, préférence de profil
+                            public/privé</td>
                         <td>Exécution du contrat (art. 6.1.b RGPD)</td>
-                        <td>Jusqu'à la suppression du compte (bouton « Supprimer mon compte » sur la page profil)</td>
+                        <td>Jusqu'à la suppression du compte (bouton « Supprimer mon compte »
+                            sur la page profil)</td>
                     </tr>
                     <tr>
-                        <td><strong>Contenus créés</strong><br>builds et configurations de champion</td>
-                        <td>Contenu du build, nom, visibilité choisie (privé, public ou partage par lien), rattachement au compte auteur</td>
+                        <td><strong>Contenus créés</strong><br>builds et configurations de
+                            champion</td>
+                        <td>Contenu du build, nom, visibilité choisie (privé, public ou partage
+                            par lien), rattachement au compte auteur</td>
                         <td>Exécution du contrat (art. 6.1.b RGPD)</td>
-                        <td>Jusqu'à la suppression du build par son auteur, ou du compte (qui emporte celle des builds)</td>
+                        <td>Jusqu'à la suppression du build par son auteur, ou du compte (qui
+                            emporte celle des builds)</td>
                     </tr>
                     <tr>
-                        <td><strong>Mesure d'audience</strong><br>statistiques de fréquentation first-party</td>
-                        <td>Voir le détail en <a href="#audience">section 3</a> (adresse IP, User-Agent, pages consultées, référent, pays optionnel…)</td>
-                        <td>Intérêt légitime (art. 6.1.f RGPD) : connaître et améliorer l'usage du site</td>
-                        <td>Journaux bruts : conservés jusqu'à leur consolidation puis suppression, opérées manuellement par l'éditeur (sans durée fixe garantie). Agrégats statistiques sans IP ni User-Agent : conservés sans limite de durée</td>
+                        <td><strong>Mesure d'audience</strong><br>statistiques de fréquentation
+                            first-party</td>
+                        <td>Voir le détail en <a href="#audience">section 3</a> (adresse IP,
+                            User-Agent, pages consultées, référent, pays optionnel…)</td>
+                        <td>Intérêt légitime (art. 6.1.f RGPD) : connaître et améliorer l'usage
+                            du site</td>
+                        <td>Journaux bruts : conservés jusqu'à leur consolidation puis
+                            suppression, opérées manuellement par l'éditeur (sans durée fixe
+                            garantie). Agrégats statistiques sans IP ni User-Agent : conservés
+                            sans limite de durée</td>
                     </tr>
                     <tr>
                         <td><strong>Dons</strong><br>soutien volontaire via Stripe</td>
-                        <td>Le paiement est traité intégralement par Stripe : nous ne recevons ni ne stockons aucune donnée de carte bancaire. Nous ne conservons que la confirmation technique du don (statut, montant)</td>
-                        <td>Exécution du contrat de don (art. 6.1.b) et intérêt légitime pour le suivi comptable</td>
-                        <td>Confirmations conservées le temps des obligations comptables applicables ; justificatifs et reçus gérés par Stripe</td>
+                        <td>Le paiement est traité intégralement par Stripe : nous ne recevons
+                            ni ne stockons aucune donnée de carte bancaire. Nous ne conservons
+                            que la confirmation technique du don (statut, montant)</td>
+                        <td>Exécution du contrat de don (art. 6.1.b) et intérêt légitime pour le
+                            suivi comptable</td>
+                        <td>Confirmations conservées le temps des obligations comptables
+                            applicables ; justificatifs et reçus gérés par Stripe</td>
                     </tr>
                     <tr>
                         <td><strong>Session et préférences</strong><br>cookies first-party</td>
-                        <td>Cookie de session, préférence de langue/version mémorisée sur demande, cookie « rester connecté »</td>
+                        <td>Cookie de session, préférence de langue/version mémorisée sur
+                            demande, cookie « rester connecté »</td>
                         <td>Intérêt légitime / consentement selon le cookie</td>
-                        <td>Détail complet dans la <a href="{{ path('app_legal_cookies') }}">politique de cookies</a></td>
+                        <td>Détail complet dans la
+                            <a href="{{ path('app_legal_cookies') }}">politique de cookies</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -95,12 +115,23 @@
         </p>
         <p>Pour chaque page vue, un événement contient :</p>
         <ul>
-            <li>l'horodatage (UTC), la page consultée (route et chemin), la ressource et l'entité affichées (ex. la fiche d'un champion), le code de statut HTTP ;</li>
-            <li>la version et la langue Data Dragon demandées, ainsi que la langue d'interface ;</li>
-            <li>votre <strong>adresse IP</strong> et la chaîne <strong>User-Agent</strong> de votre navigateur, dont sont dérivés le navigateur, le système d'exploitation, le type d'appareil et un marquage « robot » ;</li>
-            <li>le site référent (hôte d'origine et classification : accès direct, navigation interne, moteur de recherche, réseau social, autre) ;</li>
-            <li>un <strong>identifiant visiteur pseudonyme</strong> : une empreinte HMAC-SHA256 tronquée, calculée à partir de l'IP et du User-Agent avec une clé secrète connue du seul serveur — elle permet de compter les visiteurs uniques sans les identifier ;</li>
-            <li>optionnellement, le <strong>pays</strong> (code ISO et nom) : uniquement si une base de géolocalisation GeoLite2 est installée sur le serveur, l'IP est alors résolue <em>localement</em>, sans aucune requête vers un service externe. En son absence, aucune donnée de localisation n'est produite.</li>
+            <li>l'horodatage (UTC), la page consultée (route et chemin), la ressource et
+                l'entité affichées (ex. la fiche d'un champion), le code de statut HTTP ;</li>
+            <li>la version et la langue Data Dragon demandées, ainsi que la langue
+                d'interface ;</li>
+            <li>votre <strong>adresse IP</strong> et la chaîne <strong>User-Agent</strong> de
+                votre navigateur, dont sont dérivés le navigateur, le système d'exploitation,
+                le type d'appareil et un marquage « robot » ;</li>
+            <li>le site référent (hôte d'origine et classification : accès direct, navigation
+                interne, moteur de recherche, réseau social, autre) ;</li>
+            <li>un <strong>identifiant visiteur pseudonyme</strong> : une empreinte HMAC-SHA256
+                tronquée, calculée à partir de l'IP et du User-Agent avec une clé secrète connue
+                du seul serveur — elle permet de compter les visiteurs uniques sans les
+                identifier ;</li>
+            <li>optionnellement, le <strong>pays</strong> (code ISO et nom) : uniquement si une
+                base de géolocalisation GeoLite2 est installée sur le serveur, l'IP est alors
+                résolue <em>localement</em>, sans aucune requête vers un service externe. En son
+                absence, aucune donnée de localisation n'est produite.</li>
         </ul>
         <p>
             Ces événements sont écrits dans des journaux quotidiens stockés sur notre serveur,
@@ -121,13 +152,19 @@
 
     <section id="droits">
         <h2>4. Vos droits</h2>
-        <p>Conformément au RGPD et à la loi Informatique et Libertés, vous disposez des droits suivants :</p>
+        <p>Conformément au RGPD et à la loi Informatique et Libertés, vous disposez des droits
+            suivants :</p>
         <ul>
             <li><strong>Accès</strong> — obtenir la copie des données vous concernant ;</li>
-            <li><strong>Rectification</strong> — corriger des données inexactes (email, nom d'invocateur…) ;</li>
-            <li><strong>Effacement</strong> — le bouton <strong>« Supprimer mon compte »</strong> de la page profil supprime immédiatement votre compte et l'ensemble de vos builds ; vous pouvez aussi en faire la demande par email ;</li>
-            <li><strong>Portabilité</strong> — recevoir les données que vous avez fournies dans un format structuré et lisible par machine ;</li>
-            <li><strong>Opposition</strong> — vous opposer aux traitements fondés sur l'intérêt légitime, dont la mesure d'audience ;</li>
+            <li><strong>Rectification</strong> — corriger des données inexactes (email, nom
+                d'invocateur…) ;</li>
+            <li><strong>Effacement</strong> — le bouton <strong>« Supprimer mon compte »</strong>
+                de la page profil supprime immédiatement votre compte et l'ensemble de vos
+                builds ; vous pouvez aussi en faire la demande par email ;</li>
+            <li><strong>Portabilité</strong> — recevoir les données que vous avez fournies dans
+                un format structuré et lisible par machine ;</li>
+            <li><strong>Opposition</strong> — vous opposer aux traitements fondés sur l'intérêt
+                légitime, dont la mesure d'audience ;</li>
             <li><strong>Limitation</strong> — demander le gel temporaire d'un traitement.</li>
         </ul>
         <p>
@@ -151,7 +188,8 @@
         <ul>
             <li><strong>{{ legal.hostName }}</strong> — hébergement du site et de ses données ;</li>
             <li><strong>Stripe</strong> — traitement des dons (voir la
-                <a href="https://stripe.com/fr/privacy" target="_blank" rel="noopener noreferrer">politique de confidentialité de Stripe</a>).</li>
+                <a href="https://stripe.com/fr/privacy" target="_blank"
+                   rel="noopener noreferrer">politique de confidentialité de Stripe</a>).</li>
         </ul>
         <p>
             Aucun profilage ni aucune décision entièrement automatisée produisant des effets
@@ -179,8 +217,10 @@
         <h2>7. Sécurité</h2>
         <ul>
             <li>chiffrement TLS (HTTPS) de toutes les communications ;</li>
-            <li>mots de passe stockés exclusivement sous forme hachée avec un algorithme moderne — jamais en clair ;</li>
-            <li>cookies signés, HttpOnly et Secure (voir la <a href="{{ path('app_legal_cookies') }}">politique de cookies</a>) ;</li>
+            <li>mots de passe stockés exclusivement sous forme hachée avec un algorithme
+                moderne — jamais en clair ;</li>
+            <li>cookies signés, HttpOnly et Secure (voir la
+                <a href="{{ path('app_legal_cookies') }}">politique de cookies</a>) ;</li>
             <li>accès aux journaux et à l'interface d'administration restreint à l'éditeur.</li>
         </ul>
     </section>

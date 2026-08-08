@@ -80,7 +80,7 @@ final class AdminAccessTest extends WebTestCase
         $client->request('GET', '/admin/storage');
 
         // The panel is resilient: it returns 200 whether or not MinIO is reachable
-        // (StorageUsageService degrades to ok=false instead of 500).
+        // (Storage\StorageAnalyticsService degrades to ok=false instead of 500).
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Stockage');
     }

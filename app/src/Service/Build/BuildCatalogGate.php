@@ -47,37 +47,32 @@ final class BuildCatalogGate
      * Champion/rune/item catalogs of a (version, lang) — the reference a build is
      * validated against on write, or forward-ported against on a cross-version
      * import. Data-layer failures bubble (transient upstream), same as validate().
-     *
-     * @return array{runeTrees: array<mixed>, championIds: list<int|string>, itemData: array<int|string, mixed>}
      */
-    public function catalogs(string $version, string $lang): array
+    public function catalogs(string $version, string $lang): BuildCatalogs
     {
-        return [
-            'runeTrees' => $this->runeManager->getData($version, $lang),
-            'championIds' => array_keys($this->championManager->getData($version, $lang)['data'] ?? []),
-            'itemData' => $this->itemManager->getData($version, $lang)['data'] ?? [],
-        ];
+        return BuildCatalogs::of(
+            $this->runeManager->getData($version, $lang),
+            array_keys($this->championManager->getData($version, $lang)['data'] ?? []),
+            $this->itemManager->getData($version, $lang)['data'] ?? [],
+        );
     }
 
     /**
      * Pure evaluation against pre-loaded catalogs.
      *
      * @param array<mixed> $structure
-     * @param array{runeTrees: array<mixed>, championIds: list<int|string>, itemData: array<int|string, mixed>} $catalogs
      * @return list<array{0: string, 1: array<string, string>}>
      */
-    public function evaluate(array $structure, GameMode $mode, array $catalogs): array
+    public function evaluate(array $structure, GameMode $mode, BuildCatalogs $catalogs): array
     {
-        $codes = $this->validator->validate(
-            $structure,
-            $catalogs['runeTrees'],
-            // PHP recasts numeric JSON keys to int — restore the string ids.
-            array_map(strval(...), $catalogs['championIds']),
-            array_map(strval(...), array_keys($catalogs['itemData'])),
-        );
+        $codes = $this->validator->validate($structure, $catalogs);
 
         $errors = array_map(static fn (string $code): array => [$code, []], $codes);
-        $unavailable = $this->itemProjector->unavailableOn($catalogs['itemData'], $mode, $this->stepItemIds($structure));
+        $unavailable = $this->itemProjector->unavailableOn(
+            $catalogs->itemData,
+            $mode,
+            $this->stepItemIds($structure)
+        );
         if ($unavailable !== []) {
             $errors[] = [self::ERROR_ITEM_MODE, ['%items%' => implode(', ', $unavailable)]];
         }

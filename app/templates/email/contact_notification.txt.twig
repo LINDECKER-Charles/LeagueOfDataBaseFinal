@@ -6,7 +6,8 @@ Catégorie : {{ message.category.label }}
 Expéditeur : {{ message.name ?? '—' }}
 E-mail     : {{ message.email }}
 {% if message.subject %}Sujet      : {{ message.subject }}
-{% endif %}Reçu le    : {{ message.createdAt|date('d/m/Y H:i') }} UTC{% if message.locale %} · {{ message.locale }}{% endif %}
+{% endif %}Reçu le    : {{ message.createdAt|date('d/m/Y H:i') }} UTC{% if
+    message.locale %} · {{ message.locale }}{% endif %}
 
 ----------------------------------------
 {{ message.message }}

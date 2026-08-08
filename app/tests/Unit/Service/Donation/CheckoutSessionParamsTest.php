@@ -14,7 +14,12 @@ final class CheckoutSessionParamsTest extends TestCase
 
     public function testBuildsTheExactStripePayload(): void
     {
-        $params = CheckoutSessionParams::build(1000, 'Donation', self::SUCCESS_URL, self::CANCEL_URL);
+        $params = CheckoutSessionParams::build(
+            1000,
+            'Donation',
+            self::SUCCESS_URL,
+            self::CANCEL_URL,
+        );
 
         self::assertSame([
             'mode' => 'payment',
@@ -45,7 +50,12 @@ final class CheckoutSessionParamsTest extends TestCase
 
     public function testAnonymousBuildCarriesNoClientReferenceButAlwaysTheDonationKind(): void
     {
-        $params = CheckoutSessionParams::build(300, 'Donation', self::SUCCESS_URL, self::CANCEL_URL);
+        $params = CheckoutSessionParams::build(
+            300,
+            'Donation',
+            self::SUCCESS_URL,
+            self::CANCEL_URL,
+        );
 
         self::assertArrayNotHasKey('client_reference_id', $params);
         self::assertSame(CheckoutSessionParams::KIND_DONATION, $params['metadata']['kind']);
@@ -53,7 +63,12 @@ final class CheckoutSessionParamsTest extends TestCase
 
     public function testSessionIdPlaceholderIsAppendedVerbatimNotUrlencoded(): void
     {
-        $params = CheckoutSessionParams::build(300, 'Donation', self::SUCCESS_URL, self::CANCEL_URL);
+        $params = CheckoutSessionParams::build(
+            300,
+            'Donation',
+            self::SUCCESS_URL,
+            self::CANCEL_URL,
+        );
 
         // Stripe substitutes the placeholder server-side: %7B...%7D would break it.
         self::assertStringEndsWith('?session_id={CHECKOUT_SESSION_ID}', $params['success_url']);

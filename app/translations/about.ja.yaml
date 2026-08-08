@@ -1,5 +1,5 @@
 # /about、/about/data、/faq の各ページの本文。
-# faq.* の id は App\Controller\AboutController::FAQ_ENTRIES で定義されています。
+# faq.* の id は App\Controller\Editorial\AboutController::FAQ_ENTRIES で定義されています。
 eyebrow: "サイトについて"
 
 index:

@@ -21,9 +21,9 @@ namespace App\Service\Profile;
 final class FavoriteSelectionSanitizer
 {
     /**
-     * @param array<string, ?string>               $submitted raw ids keyed by slot value ({@see FavoriteSlot})
-     * @param array<string, ?string>               $stored    the user's currently persisted ids, keyed by slot value
-     * @param callable(FavoriteSlot, string): bool $exists    does this id exist on the current patch?
+     * @param array<string, ?string> $submitted raw ids keyed by slot value ({@see FavoriteSlot})
+     * @param array<string, ?string> $stored the user's currently persisted ids, keyed by slot value
+     * @param callable(FavoriteSlot, string): bool $exists does this id exist on the current patch?
      * @return array{values: array<string, ?string>, invalid: list<FavoriteSlot>}
      */
     public function sanitize(array $submitted, array $stored, callable $exists): array

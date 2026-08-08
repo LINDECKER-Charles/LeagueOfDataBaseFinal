@@ -55,7 +55,10 @@ final class VersionedRouteRedirectSubscriber implements EventSubscriberInterface
             return; // historical snapshot → serve, self-canonical
         }
 
-        $event->setResponse(new RedirectResponse($this->cleanUrl($request, $route), Response::HTTP_MOVED_PERMANENTLY));
+        $event->setResponse(new RedirectResponse(
+            $this->cleanUrl($request, $route),
+            Response::HTTP_MOVED_PERMANENTLY
+        ));
     }
 
     /** Clean-route URL for the current versioned request, query string preserved. */

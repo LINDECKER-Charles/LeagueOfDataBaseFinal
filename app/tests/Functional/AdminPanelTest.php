@@ -48,7 +48,10 @@ final class AdminPanelTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertStringNotContainsString('<!DOCTYPE', $client->getResponse()->getContent());
-        self::assertStringContainsString('no-store', (string) $client->getResponse()->headers->get('Cache-Control'));
+        self::assertStringContainsString(
+            'no-store',
+            (string) $client->getResponse()->headers->get('Cache-Control')
+        );
     }
 
     #[DataProvider('pages')]
@@ -60,8 +63,15 @@ final class AdminPanelTest extends WebTestCase
         $crawler = $client->request('GET', $path);
 
         self::assertResponseIsSuccessful();
-        self::assertGreaterThan(0, $crawler->filter(sprintf('[data-panel-url*="/admin/panel/%s"]', $panel))->count());
-        self::assertGreaterThan(0, $crawler->filter('.sk')->count(), 'the shell must show a skeleton while loading');
+        self::assertGreaterThan(
+            0,
+            $crawler->filter(sprintf('[data-panel-url*="/admin/panel/%s"]', $panel))->count()
+        );
+        self::assertGreaterThan(
+            0,
+            $crawler->filter('.sk')->count(),
+            'the shell must show a skeleton while loading'
+        );
     }
 
     #[DataProvider('pages')]

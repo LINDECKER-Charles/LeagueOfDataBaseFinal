@@ -5,28 +5,21 @@ namespace App\Service\API;
 
 final class ItemManager extends AbstractManager implements CategoriesInterface
 {
-    protected const TYPE = 'item';
+    public function type(): string
+    {
+        return 'item';
+    }
 
     protected function imageUrl(string $version, string $name): string
     {
-        return sprintf('https://ddragon.leagueoflegends.com/cdn/%s/img/item/%s', $version, $name);
-    }
-
-    public function getByName(string $name, string $version, string $lang): array
-    {
-        $data = $this->dataMap($version, $lang);
-        if (isset($data[$name])) {
-            return $data[$name];
-        }
-
-        throw ResourceNotFoundException::forEntry(static::TYPE, $name);
+        return sprintf('%s/%s/img/item/%s', self::DDRAGON_CDN, $version, $name);
     }
 
     /**
-     * Résout une liste d'identifiants d'objets liés (item.into / item.from) en
-     * entrées enrichies prêtes à lier vers leur page détail. Les IDs absents du
-     * jeu de données courant (objets retirés d'un patch) sont ignorés, les
-     * doublons dédupliqués, et l'ordre d'entrée (= ordre de recette) préservé.
+     * Resolves a list of related item ids (item.into / item.from) into enriched
+     * entries ready to link to their detail page. Ids missing from the current
+     * dataset (items removed in a patch) are skipped, duplicates deduplicated,
+     * and the input order (= recipe order) preserved.
      *
      * @param list<int|string> $ids
      * @return list<array{id: string, name: string, image: ?string, gold: ?int}>
@@ -37,23 +30,15 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
             return [];
         }
 
-        $data = $this->getData($version, $lang)['data'] ?? [];
-
-        $picked = [];
-        foreach ($ids as $id) {
-            $id = (string) $id;
-            if (isset($data[$id]) && !isset($picked[$id])) {
-                $picked[$id] = $data[$id];
-            }
-        }
+        $picked = $this->pickKnownItems($ids, $this->dataMap(new DatasetRef($version, $lang)));
         if ($picked === []) {
             return [];
         }
 
-        // Icônes secondaires résolues via le scope de déferration ambiant : différées
-        // sous un rendu de liste ({@see relatedIndex}), synchrones en détail / éditeur
-        // de build / tendances (icônes réelles sur version froide). La feature (nom +
-        // lien + prix) ne dépend pas de l'image, différable sans la casser.
+        // Secondary icons resolved through the ambient deferral scope: deferred
+        // under a list render ({@see relatedIndex}), synchronous on detail / build
+        // editor / trends (real icons on a cold version). The feature (name + link
+        // + gold) does not depend on the image, so deferring never breaks it.
         $files = array_values(array_filter(array_map(
             static fn (array $entry): ?string => $entry['image']['full'] ?? null,
             $picked,
@@ -62,25 +47,60 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
 
         $result = [];
         foreach ($picked as $id => $entry) {
-            $file = $entry['image']['full'] ?? null;
-            $result[] = [
-                // PHP recaste les clés de tableau numériques en int → on rétablit.
-                'id'    => (string) $id,
-                'name'  => (string) ($entry['name'] ?? ''),
-                'image' => $file !== null ? ($paths[$file] ?? null) : null,
-                // Coût total du composant/évolution — permet d'afficher le prix
-                // sur les nœuds de l'arbre de recette sans requête additionnelle.
-                'gold'  => isset($entry['gold']['total']) ? (int) $entry['gold']['total'] : null,
-            ];
+            // PHP recasts numeric array keys to int — restore the string form.
+            $result[] = $this->projectRelated((string) $id, $entry, $paths);
         }
 
         return $result;
     }
 
     /**
-     * Index (id → entrée résolue) de toutes les évolutions (`into`) référencées
-     * par les objets fournis, résolues en une passe. Permet à la liste d'afficher
-     * nom/icône/lien réels pour chaque id d'évolution sans une résolution par carte.
+     * The requested ids that the dataset still carries, deduplicated, in input
+     * (= recipe) order.
+     *
+     * @param list<int|string> $ids
+     * @param array<mixed> $data id => item entry
+     * @return array<string, array<string, mixed>>
+     */
+    private function pickKnownItems(array $ids, array $data): array
+    {
+        $picked = [];
+        foreach ($ids as $id) {
+            $id = (string) $id;
+            if (isset($data[$id]) && !isset($picked[$id])) {
+                $picked[$id] = $data[$id];
+            }
+        }
+
+        return $picked;
+    }
+
+    /**
+     * One related item as its consumers read it: enough to link to its detail
+     * page and price it, with its icon when that one is already resolved.
+     *
+     * @param array<string, mixed> $entry
+     * @param array<string, string> $paths image file name => cdn path
+     * @return array{id: string, name: string, image: ?string, gold: ?int}
+     */
+    private function projectRelated(string $id, array $entry, array $paths): array
+    {
+        $file = $entry['image']['full'] ?? null;
+
+        return [
+            'id'    => $id,
+            'name'  => (string) ($entry['name'] ?? ''),
+            'image' => $file !== null ? ($paths[$file] ?? null) : null,
+            // Total cost of the component/upgrade — lets the recipe tree nodes
+            // show the price without an extra lookup.
+            'gold'  => isset($entry['gold']['total']) ? (int) $entry['gold']['total'] : null,
+        ];
+    }
+
+    /**
+     * Index (id → resolved entry) of every upgrade (`into`) referenced by the
+     * given items, resolved in a single pass. Lets the list show the real
+     * name/icon/link for each upgrade id without a per-card resolution.
      *
      * @param iterable<array<string, mixed>> $items
      * @return array<string, array{id: string, name: string, image: ?string, gold: ?int}>
@@ -113,61 +133,36 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
     }
 
     /**
-     * Arbre de recette descendant : cet objet en racine, chaque composant (`from`)
-     * développé récursivement jusqu'aux objets de base. Construit depuis le jeu de
-     * données en cache (aucune sortie réseau pour les données) ; toutes les icônes
-     * sont résolues en une seule passe. La garde `seen` (par chemin) coupe les
-     * cycles tout en autorisant un même composant dans des branches sœurs (ex. deux
-     * épées longues), et `maxDepth` borne les recettes pathologiques.
+     * Top-down recipe tree: this item at the root, every component (`from`)
+     * expanded recursively down to the base items ({@see RecipeTreeBuilder} for
+     * the walk and its guards). Built from the cached dataset (no network egress
+     * for the data); every icon of the tree is resolved in a single pass.
      *
-     * @return array{id:string,name:string,image:?string,gold:?int,combine:?int,children:list<mixed>}|array{}
+     * @return array{
+     *     id: string,
+     *     name: string,
+     *     image: ?string,
+     *     gold: ?int,
+     *     combine: ?int,
+     *     children: list<mixed>
+     * }|array{}
      */
-    public function recipeTree(string $id, string $version, string $lang, int $maxDepth = 6): array
+    public function recipeTree(string $id, string $version, string $lang): array
     {
-        $data = $this->getData($version, $lang)['data'] ?? [];
-
-        $files = [];
-        $build = static function (string $nid, array $seen, int $depth) use (&$build, $data, $maxDepth, &$files): ?array {
-            if (!isset($data[$nid]) || isset($seen[$nid]) || $depth > $maxDepth) {
-                return null;
-            }
-            $seen[$nid] = true;
-            $entry = $data[$nid];
-            $file = $entry['image']['full'] ?? null;
-            if ($file !== null) {
-                $files[$file] = true;
-            }
-
-            $children = [];
-            foreach ($entry['from'] ?? [] as $childId) {
-                $node = $build((string) $childId, $seen, $depth + 1);
-                if ($node !== null) {
-                    $children[] = $node;
-                }
-            }
-
-            return [
-                'id'       => $nid,
-                'name'     => (string) ($entry['name'] ?? ''),
-                'file'     => $file,
-                'gold'     => isset($entry['gold']['total']) ? (int) $entry['gold']['total'] : null,
-                'combine'  => isset($entry['gold']['base']) ? (int) $entry['gold']['base'] : null,
-                'children' => $children,
-            ];
-        };
-
-        $tree = $build($id, [], 0);
+        $builder = new RecipeTreeBuilder($this->dataMap(new DatasetRef($version, $lang)));
+        $tree    = $builder->build($id);
         if ($tree === null) {
             return [];
         }
 
-        $paths = $files === [] ? [] : $this->resolveImages($version, array_keys($files));
+        $files = $builder->referencedFiles();
+        $paths = $files === [] ? [] : $this->resolveImages($version, $files);
 
         return $this->attachRecipeImages($tree, $paths);
     }
 
     /**
-     * Remplace le fichier d'icône brut par son URL résolue sur tout l'arbre.
+     * Replaces the raw icon file with its resolved URL across the whole tree.
      *
      * @param array<string, mixed> $node
      * @param array<string, ?string> $paths
@@ -177,48 +172,37 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
     {
         $node['image'] = $node['file'] !== null ? ($paths[$node['file']] ?? null) : null;
         unset($node['file']);
-        $node['children'] = array_map(fn (array $child): array => $this->attachRecipeImages($child, $paths), $node['children']);
+        $node['children'] = array_map(
+            fn (array $child): array => $this->attachRecipeImages($child, $paths),
+            $node['children'],
+        );
 
         return $node;
     }
 
-    public function searchByName(string $name, string $version, string $lang, int $max = 0): array
+    /** Item entries carry no id field — their id is the map key, so only names match. */
+    protected function matchesQuery(array $entry, string $needle): bool
     {
-        $this->assertSearchable($name);
+        $name = $entry['name'] ?? null;
 
-        $data = $this->getData($version, $lang)['data'] ?? [];
-        if (!is_array($data)) {
-            throw new \RuntimeException('Format de données invalide.');
-        }
-
-        $results = [];
-        $search = mb_strtolower($name);
-        foreach ($data as $key => $item) {
-            if ($max !== 0 && count($results) >= $max) {
-                break;
-            }
-            if (isset($item['name']) && str_contains(mb_strtolower($item['name']), $search)) {
-                $results[] = array_merge($item, ['id' => $key]);
-            }
-        }
-
-        return $results;
+        return is_scalar($name) && str_contains(mb_strtolower((string) $name), $needle);
     }
 
-    public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
+    /** The item id lives in the map key; consumers expect it inside the entry. */
+    protected function projectSearchResult(array $entry, string|int $key): array
     {
-        if (!$data) {
-            $data = $this->dataList($this->getData($version, $lang));
-        }
+        return array_merge($entry, ['id' => $key]);
+    }
 
-        $resolved = $this->resolveImages($version, array_keys($this->imageEntries($data)), $force);
-
+    /** Keyed by display name — the shape the item list/search consumers index by. */
+    protected function projectImages(array $data, array $resolved): array
+    {
         $result = [];
-        foreach ($data as $d) {
-            $id = $d['name'] ?? null;
-            $img = $d['image']['full'] ?? null;
-            if ($id && $img) {
-                $result[$id] = $resolved[$img] ?? null;
+        foreach ($data as $entry) {
+            $name  = $entry['name'] ?? null;
+            $image = $entry['image']['full'] ?? null;
+            if ($name && $image) {
+                $result[$name] = $resolved[$image] ?? null;
             }
         }
 

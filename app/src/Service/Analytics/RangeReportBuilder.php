@@ -22,32 +22,85 @@ final class RangeReportBuilder
     public function build(array $dailies, string $range): array
     {
         $maps = $this->mergeAllMaps($dailies);
-        $visitors = $this->visitors($dailies);
-        $hourly = $this->sumVectors($dailies, 'byHour', 24);
-        $weekly = $this->sumVectors($dailies, 'byWeekday', 7);
 
         return [
             'range' => $range,
             'from' => $dailies[0]['date'] ?? null,
             'to' => $dailies[count($dailies) - 1]['date'] ?? null,
             'days' => count($dailies),
-            'totals' => [
-                'views' => array_sum(array_column($dailies, 'views')),
-                'botViews' => array_sum(array_column($dailies, 'botViews')),
-                'uniqueVisitors' => $visitors['unique'],
-                'returningVisitors' => $visitors['returning'],
-                'pagesTracked' => count($maps['pages']),
-            ],
+            'totals' => $this->totals($dailies, $maps),
             'series' => $this->series($dailies),
+        ]
+            + $this->contentSection($maps)
+            + $this->rhythmSection($dailies, $maps)
+            + $this->audienceSection($maps);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $dailies
+     * @param array<string, array<string, mixed>> $maps
+     * @return array<string, int>
+     */
+    private function totals(array $dailies, array $maps): array
+    {
+        $visitors = $this->visitors($dailies);
+
+        return [
+            'views' => array_sum(array_column($dailies, 'views')),
+            'botViews' => array_sum(array_column($dailies, 'botViews')),
+            'uniqueVisitors' => $visitors['unique'],
+            'returningVisitors' => $visitors['returning'],
+            'pagesTracked' => count($maps['pages']),
+        ];
+    }
+
+    /**
+     * What was consulted.
+     *
+     * @param array<string, array<string, mixed>> $maps
+     * @return array<string, mixed>
+     */
+    private function contentSection(array $maps): array
+    {
+        return [
             'byType' => $this->rank($maps['byType']),
             'byKind' => $this->rank($maps['byKind']),
             'byRoute' => $this->rank($maps['byRoute']),
             'status' => $this->rank($maps['status']),
             'topPages' => $this->rank($maps['pages'], self::TOP_PAGES),
             'topEntities' => $this->rank($maps['entities'], self::TOP_ENTITIES),
-            'byHour' => $hourly,
-            'byWeekday' => $weekly,
+        ];
+    }
+
+    /**
+     * When it was consulted.
+     *
+     * @param list<array<string, mixed>> $dailies
+     * @param array<string, array<string, mixed>> $maps
+     * @return array<string, mixed>
+     */
+    private function rhythmSection(array $dailies, array $maps): array
+    {
+        return [
+            'byHour' => $this->sumVectors($dailies, 'byHour', AnalyticsAggregator::HOURS_PER_DAY),
+            'byWeekday' => $this->sumVectors(
+                $dailies,
+                'byWeekday',
+                AnalyticsAggregator::DAYS_PER_WEEK,
+            ),
             'heatmap' => $this->heatmap($maps['heatmap']),
+        ];
+    }
+
+    /**
+     * Who consulted it, and where they came from.
+     *
+     * @param array<string, array<string, mixed>> $maps
+     * @return array<string, mixed>
+     */
+    private function audienceSection(array $maps): array
+    {
+        return [
             'locale' => $this->rank($maps['locale']),
             'lang' => $this->rank($maps['lang']),
             'browser' => $this->rank($maps['browser']),
@@ -65,8 +118,7 @@ final class RangeReportBuilder
      */
     private function mergeAllMaps(array $dailies): array
     {
-        $keys = ['byType', 'byKind', 'byRoute', 'status', 'pages', 'entities',
-            'heatmap', 'locale', 'lang', 'browser', 'os', 'device', 'refSource', 'refHost', 'country'];
+        $keys = AnalyticsAggregator::COUNTER_BUCKETS;
         $merged = array_fill_keys($keys, []);
         $merged['countryNames'] = [];
 
@@ -137,14 +189,18 @@ final class RangeReportBuilder
     }
 
     /**
-     * @param array<string, int> $heatmap "weekday:hour" => count
-     * @return list<list<int>> 7 rows (Mon..Sun) × 24 hours
+     * @param array<string, int> $heatmap composite cell key => count
+     * @return list<list<int>> DAYS_PER_WEEK rows (Mon..Sun) × HOURS_PER_DAY
      */
     private function heatmap(array $heatmap): array
     {
-        $grid = array_map(static fn (): array => array_fill(0, 24, 0), range(0, 6));
+        $grid = array_fill(
+            0,
+            AnalyticsAggregator::DAYS_PER_WEEK,
+            array_fill(0, AnalyticsAggregator::HOURS_PER_DAY, 0),
+        );
         foreach ($heatmap as $cell => $count) {
-            [$weekday, $hour] = array_map('intval', explode(':', (string) $cell));
+            [$weekday, $hour] = AnalyticsAggregator::parseHeatmapKey((string) $cell);
             if (isset($grid[$weekday][$hour])) {
                 $grid[$weekday][$hour] = (int) $count;
             }
@@ -188,7 +244,11 @@ final class RangeReportBuilder
         }
         $rows = [];
         foreach ($map as $name => $count) {
-            $rows[] = ['name' => (string) $name, 'count' => $count, 'pct' => $total > 0 ? $count / $total * 100 : 0.0];
+            $rows[] = [
+                'name' => (string) $name,
+                'count' => $count,
+                'pct' => $total > 0 ? $count / $total * 100 : 0.0,
+            ];
         }
 
         return $rows;

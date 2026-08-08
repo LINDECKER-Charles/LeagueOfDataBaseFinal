@@ -1,17 +1,26 @@
 {# templates/champion/detail.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ seo_title('champion.detail.title'|trans({'%name%': champion.name ?? 'Champion'}, 'seo')) }}{% endblock %}
+{# Single source for the rendered (version, lang): PageContextResolver, the same
+   resolution the controller used — never re-derived from the session here. #}
+{% set selection = page_selection() %}
+
+{% block title %}{{ seo_title(
+  'champion.detail.title'|trans({'%name%': champion.name ?? 'Champion'}, 'seo')
+) }}{% endblock %}
 {% block meta_description %}{{ 'champion.detail.description'|trans({
   '%name%': champion.name ?? 'Champion',
-  '%version%': version|default(client.session.version ?? (client.versions|first))
+  '%version%': selection.version
 }, 'seo') }}{% endblock %}
 {% block img %}/preview/champions.png{% endblock %}
 
 {% block structured_data %}
   {{ seo_jsonld(seo_breadcrumbs([
     { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
-    { name: 'header.navigation.champion'|trans, url: seo_absolute(resource_path('app_champions', {}, version|default(''), '')) },
+    {
+      name: 'header.navigation.champion'|trans,
+      url: seo_absolute(resource_path('app_champions', {}, version|default(''), ''))
+    },
     { name: champion.name ?? '', url: seo_canonical() }
   ])) }}
   {# Full entity: role tags, resource, Riot profile ratings and base stats are
@@ -24,12 +33,9 @@
 {% endblock %}
 
 {% block body %}
-{% set selectedVersion = version|default(client.session.version ?? (client.versions|default([])|first)) %}
-{% set selectedLocale  = lang|default(client.session.locale ?? client.currentLocale ?? 'en_US') %}
 {% set champId = champion.id ?? champion.key %}
 {% set splashBase = 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash' %}
 {% set centeredBase = 'https://ddragon.leagueoflegends.com/cdn/img/champion/centered' %}
-{% set key4 = '%04d'|format(champion.key|default(0)) %}
 
 {# ---- Ability view-model: P + Q/W/E/R, shared by the showcase island and its
    no-JS fallback. Descriptions keep DDragon's localized markup (cleaned of
@@ -86,155 +92,62 @@
 
 <main class="relative">
   {# ================= Hero — cinematic centered splash ==================== #}
-  <section class="relative h-[62vh] min-h-[26rem] max-h-[46rem] w-full overflow-hidden">
-    {% if champId %}
-      {# The undocumented `centered/` variant frames the subject at any crop;
-         data-img-fallback falls back to the classic splash for champions missing it. #}
-      <img src="{{ centeredBase }}/{{ champId }}_0.jpg" alt=""
-           data-img-fallback="{{ splashBase }}/{{ champId }}_0.jpg"
-           loading="eager" fetchpriority="high" decoding="async"
-           class="absolute inset-0 h-full w-full object-cover object-[50%_18%]">
-    {% endif %}
-    <div class="splash-scrim absolute inset-0"></div>
-
-    <div class="absolute inset-x-0 bottom-0">
-      <div class="mx-auto max-w-7xl px-6 pb-9">
-        <p class="eyebrow mb-3">
-          {{ 'champion.list.title'|trans }}
-          <span class="mx-2 text-gold-deep" aria-hidden="true">◆</span>
-          <span class="normal-case tracking-normal font-mono text-[11px] text-text-muted">{{ selectedVersion }} · {{ selectedLocale }}</span>
-        </p>
-        <h1 class="hero-name hero-name--epic text-gold-grad drop-shadow-[0_2px_18px_rgba(1,10,19,0.9)]">
-          {{ champion.name ?? 'Champion' }}
-        </h1>
-        {% if champion.title is defined and champion.title %}
-          <p class="mt-2.5 font-spiegel text-lg text-text-muted sm:text-xl">{{ champion.title|capitalize }}</p>
-        {% endif %}
-
-        <div class="mt-5 flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
-          <div class="flex flex-wrap items-center gap-2">
-            {% for tag in champion.tags|default([]) %}<span class="hx-chip">{{ tag }}</span>{% endfor %}
-            {% if champion.partype is defined and champion.partype %}
-              <span class="hx-chip text-text-dim">{{ 'champion.detail.partype'|trans({'%partype%': champion.partype}) }}</span>
-            {% endif %}
-          </div>
-
-          {% if champion.info is defined %}
-            {% set gaugeDefs = [
-              { k: 'attack',     v: champion.info.attack|default(0),     label: 'champion.detail.profile.attack'|trans },
-              { k: 'defense',    v: champion.info.defense|default(0),    label: 'champion.detail.profile.defense'|trans },
-              { k: 'magic',      v: champion.info.magic|default(0),      label: 'champion.detail.profile.magic'|trans },
-              { k: 'difficulty', v: champion.info.difficulty|default(0), label: 'champion.detail.profile.difficulty'|trans }
-            ] %}
-            <div class="flex flex-wrap gap-x-8 gap-y-3">
-              {% for g in gaugeDefs %}
-                <div>
-                  <div class="mb-1.5 flex items-baseline justify-between gap-3">
-                    <span class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{ g.label }}</span>
-                    <span class="font-beaufort text-xs text-gold-light">{{ g.v }}</span>
-                  </div>
-                  <div class="gauge gauge--{{ g.k }}" role="img" aria-label="{{ g.label }} : {{ g.v }}/10">
-                    {%- for i in 1..10 %}<i class="{{ i <= g.v ? 'on' }}"></i>{% endfor -%}
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </section>
+  {% include 'champion/_hero.html.twig' with {
+    champion: champion, champId: champId,
+    splashBase: splashBase, centeredBase: centeredBase, selection: selection
+  } only %}
 
   {# ================= Sticky in-page section nav =========================== #}
   <nav class="section-nav" aria-label="{{ 'detail.nav.sections'|trans }}" data-scrollspy>
-    {% if abilities is not empty %}<a href="#abilities">{{ 'champion.detail.abilities'|trans }}</a>{% endif %}
-    {% if skinData is not empty %}<a href="#skins">{{ 'champion.detail.skins'|trans }}</a>{% endif %}
+    {% if abilities is not empty %}<a href="#abilities">{{
+      'champion.detail.abilities'|trans }}</a>{% endif %}
+    {% if skinData is not empty %}<a href="#skins">{{
+      'champion.detail.skins'|trans }}</a>{% endif %}
     {% if lore %}<a href="#lore">{{ 'champion.detail.lore.title'|trans }}</a>{% endif %}
-    {% if ally is not empty or enemy is not empty %}<a href="#tips">{{ 'champion.detail.tips'|trans }}</a>{% endif %}
-    {% if champion.stats is defined %}<a href="#stats">{{ 'champion.detail.stats.title'|trans }}</a>{% endif %}
+    {% if ally is not empty or enemy is not empty %}<a href="#tips">{{
+      'champion.detail.tips'|trans }}</a>{% endif %}
+    {% if champion.stats is defined %}<a href="#stats">{{
+      'champion.detail.stats.title'|trans }}</a>{% endif %}
   </nav>
 
   {# ================= Codex spread : main column + artifact aside ========== #}
   <div class="relative px-6 py-14">
     {% include 'partials/main/gradient.html.twig' %}
 
-    <div class="relative mx-auto max-w-7xl lg:grid lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:gap-12">
+    <div class="relative mx-auto max-w-7xl lg:grid lg:grid-cols-[minmax(0,1fr)_21rem]
+         lg:items-start lg:gap-12">
       <div class="space-y-16">
 
         {# ---- Signature : the ability showcase --------------------------- #}
         {% if abilities is not empty %}
-          <section id="abilities" data-reveal>
-            {% include 'components/codex_header.html.twig' with {
-              title: 'champion.detail.abilities'|trans,
-              meta: 'P · Q · W · E · R'
-            } %}
-            {# Below the fold and backed by a complete static fallback: the chunk
-               waits for the viewport instead of the critical path. #}
-            <div data-vue="ability-showcase" data-vue-lazy
-                 data-props="{{ {
-                   championKey: key4,
-                   abilities: abilities,
-                   resource: champion.partype|default(''),
-                   labels: {
-                     passive: 'champion.detail.passive'|trans,
-                     cooldown: 'champion.detail.cooldown'|trans,
-                     cost: 'champion.detail.cost'|trans,
-                     range: 'champion.detail.range'|trans,
-                     charges: 'champion.detail.charges'|trans,
-                     ranks: 'champion.detail.ranks'|trans,
-                     play: 'champion.detail.video_play'|trans,
-                     pause: 'champion.detail.video_pause'|trans,
-                     mute: 'champion.detail.video_mute'|trans,
-                     unmute: 'champion.detail.video_unmute'|trans,
-                     videoNotice: 'champion.detail.video_notice'|trans
-                   }
-                 }|json_encode|e('html_attr') }}">
-              {# No-JS fallback — replaced by the interactive showcase on mount. #}
-              <div class="space-y-4">
-                {% for a in abilities %}
-                  <article class="hextech-frame flex gap-4 p-4">
-                    <div class="relative h-14 w-14 shrink-0 overflow-hidden border border-gold-deep/50 bg-void sm:h-16 sm:w-16">
-                      {% if a.icon %}<img src="{{ a.icon }}" alt="{{ a.name }}" class="absolute inset-0 h-full w-full object-cover">{% endif %}
-                    </div>
-                    <div class="min-w-0 flex-1">
-                      <div class="mb-1.5 flex flex-wrap items-center gap-2">
-                        <span class="ability-key" data-key="{{ a.key }}">{{ a.key }}</span>
-                        <h3 class="font-beaufort uppercase tracking-wide text-gold-bright">{{ a.name }}</h3>
-                      </div>
-                      {% if a.cooldown or a.cost or a.range %}
-                        <div class="mb-2 flex flex-wrap gap-1.5">
-                          {% if a.cooldown %}<span class="hx-chip">{{ 'champion.detail.cooldown'|trans }}: {{ a.cooldown }}</span>{% endif %}
-                          {% if a.cost and a.cost != '0' %}<span class="hx-chip">{{ 'champion.detail.cost'|trans }}: {{ a.cost }}</span>{% endif %}
-                          {% if a.range %}<span class="hx-chip">{{ 'champion.detail.range'|trans }}: {{ a.range }}</span>{% endif %}
-                        </div>
-                      {% endif %}
-                      <div class="ddragon-rich text-sm text-text-muted">{{ a.description|raw }}</div>
-                    </div>
-                  </article>
-                {% endfor %}
-              </div>
-            </div>
-          </section>
+          {% include 'champion/_abilities.html.twig'
+             with { champion: champion, abilities: abilities } only %}
         {% endif %}
 
         {# ---- Skins ------------------------------------------------------- #}
         {% if skinData is not empty %}
           <section id="skins" data-reveal>
-            {% include 'components/codex_header.html.twig' with {
+            {% include 'components/codex/codex_header.html.twig' with {
               title: 'champion.detail.skins'|trans,
               meta: skinData|length
             } %}
             <div data-vue="skin-gallery" data-vue-lazy
-                 data-props="{{ { championName: champion.name, skins: skinData }|json_encode|e('html_attr') }}">{% include 'components/skeleton.html.twig' with { kind: 'gallery' } only %}</div>
+                 data-props="{{ {
+                   championName: champion.name,
+                   skins: skinData
+                 }|json_encode|e('html_attr') }}">{% include
+                   'components/ui/skeleton.html.twig' with { kind: 'gallery' } only %}</div>
           </section>
         {% endif %}
 
         {# ---- Lore -------------------------------------------------------- #}
         {% if lore %}
           <section id="lore" data-reveal>
-            {% include 'components/codex_header.html.twig' with { title: 'champion.detail.lore.title'|trans } %}
+            {% include 'components/codex/codex_header.html.twig'
+               with { title: 'champion.detail.lore.title'|trans } %}
             <div class="hextech-frame hx-corners p-7 sm:p-9">
-              <div class="ddragon-rich ddragon-rich--lore max-w-[65ch]">{{ lore|ddragon_text|raw }}</div>
+              <div class="ddragon-rich ddragon-rich--lore max-w-[65ch]">{{
+                lore|ddragon_text|raw }}</div>
             </div>
           </section>
         {% endif %}
@@ -242,21 +155,26 @@
         {# ---- Tips ---------------------------------------------------------- #}
         {% if ally is not empty or enemy is not empty %}
           <section id="tips" data-reveal>
-            {% include 'components/codex_header.html.twig' with { title: 'champion.detail.tips'|trans } %}
+            {% include 'components/codex/codex_header.html.twig'
+               with { title: 'champion.detail.tips'|trans } %}
             <div class="grid gap-6 md:grid-cols-2">
               {% if ally is not empty %}
                 <div class="hextech-frame p-6">
-                  <h3 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{ 'champion.detail.tips_as'|trans }}</h3>
+                  <h3 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-gold">{{
+                    'champion.detail.tips_as'|trans }}</h3>
                   <ul class="space-y-2.5 text-sm text-text-muted">
-                    {% for tip in ally %}<li class="border-l-2 border-gold-deep pl-3">{{ tip }}</li>{% endfor %}
+                    {% for tip in ally %}<li class="border-l-2 border-gold-deep pl-3">{{
+                      tip }}</li>{% endfor %}
                   </ul>
                 </div>
               {% endif %}
               {% if enemy is not empty %}
                 <div class="hextech-frame p-6">
-                  <h3 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em] text-[#d47c7c]">{{ 'champion.detail.tips_against'|trans }}</h3>
+                  <h3 class="mb-4 font-beaufort text-sm uppercase tracking-[0.2em]
+                      text-danger-light">{{ 'champion.detail.tips_against'|trans }}</h3>
                   <ul class="space-y-2.5 text-sm text-text-muted">
-                    {% for tip in enemy %}<li class="border-l-2 border-[#be1e37]/60 pl-3">{{ tip }}</li>{% endfor %}
+                    {% for tip in enemy %}<li class="border-l-2 border-danger-strong/60 pl-3">{{
+                      tip }}</li>{% endfor %}
                   </ul>
                 </div>
               {% endif %}
@@ -267,88 +185,21 @@
 
       {# ---- Artifact aside : statistics + level scaling ------------------- #}
       {% if champion.stats is defined %}
-        {% set s = champion.stats %}
-        {% set resourceLabel = champion.partype|default('') %}
-        {% set statRows = [
-          { stat: 'attack_damage', label: 'stat.attack_damage'|trans, base: s.attackdamage|default(0), growth: s.attackdamageperlevel|default(0), kind: 'flat' },
-          { stat: 'attack_speed',  label: 'stat.attack_speed'|trans,  base: s.attackspeed|default(0),  growth: s.attackspeedperlevel|default(0),  kind: 'percent' },
-          { stat: 'health',        label: 'stat.health'|trans,        base: s.hp|default(0),           growth: s.hpperlevel|default(0),           kind: 'flat' },
-          { stat: 'health_regen',  label: 'stat.health_regen'|trans,  base: s.hpregen|default(0),      growth: s.hpregenperlevel|default(0),      kind: 'flat' },
-          { stat: 'armor',         label: 'stat.armor'|trans,         base: s.armor|default(0),        growth: s.armorperlevel|default(0),        kind: 'flat' },
-          { stat: 'magic_resist',  label: 'stat.magic_resist'|trans,  base: s.spellblock|default(0),   growth: s.spellblockperlevel|default(0),   kind: 'flat' }
-        ] %}
-        {% if resourceLabel and (s.mp|default(0)) > 0 %}
-          {% set statRows = statRows|merge([
-            { stat: 'mana',       label: resourceLabel,                                base: s.mp|default(0),      growth: s.mpperlevel|default(0),      kind: 'flat' },
-            { stat: 'mana_regen', label: 'champion.detail.stats.resource_regen'|trans, base: s.mpregen|default(0), growth: s.mpregenperlevel|default(0), kind: 'flat' }
-          ]) %}
-        {% endif %}
-        {% set statRows = statRows|merge([
-          { stat: 'move_speed',   label: 'stat.move_speed'|trans,   base: s.movespeed|default(0),   growth: 0, kind: 'static' },
-          { stat: 'attack_range', label: 'stat.attack_range'|trans, base: s.attackrange|default(0), growth: 0, kind: 'static' }
-        ]) %}
-
-        <aside id="stats" class="mt-16 lg:mt-0 lg:sticky lg:top-[4.25rem]" data-reveal>
-          <div class="hextech-frame hx-corners p-6">
-            {# Version-accurate champion icon: unlike the splash (unversioned CDN),
-               the square icon is resolved per selected patch, so it reflects the
-               art of the version being viewed. #}
-            {% if image %}
-              <div class="mb-5 flex items-center gap-3 border-b border-gold-deep/40 pb-4">
-                <div class="relative h-14 w-14 shrink-0 overflow-hidden border border-gold-deep/50 bg-void">
-                  <picture>
-                    {% if image ends with '.png' %}<source srcset="/{{ image|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
-                    <img src="/{{ image }}" alt="{{ champion.name ?? '' }}" width="56" height="56"
-                         loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover">
-                  </picture>
-                </div>
-                <div class="min-w-0">
-                  <p class="truncate font-beaufort text-sm uppercase tracking-wide text-gold-bright" title="{{ champion.name ?? '' }}">{{ champion.name ?? '' }}</p>
-                  <p class="font-mono text-[11px] text-text-muted">{{ 'champion.detail.icon_version'|trans({'%version%': selectedVersion}) }}</p>
-                </div>
-              </div>
-            {% endif %}
-            <h2 class="mb-5 font-beaufort text-sm uppercase tracking-[0.22em] text-gold">
-              {{ 'champion.detail.stats.title'|trans }}
-            </h2>
-
-            <div data-vue="stat-scaler"
-                 data-props="{{ { targetId: 'champion-stats', labels: { level: 'champion.detail.level'|trans } }|json_encode|e('html_attr') }}">{% include 'components/skeleton.html.twig' with { kind: 'control' } only %}</div>
-
-            <div id="champion-stats" class="stat-board mt-2">
-              {% for row in statRows %}
-                <div class="stat-board__row" data-stat
-                     data-base="{{ row.base }}" data-growth="{{ row.growth }}" data-kind="{{ row.kind }}">
-                  <span class="stat-board__label">
-                    {%- set statIcon = stat_icon_url(row.stat) -%}
-                    {%- if statIcon %}<img src="{{ statIcon }}" alt="" width="18" height="18" loading="lazy" decoding="async" class="stat-icon">{% endif -%}
-                    {{ row.label }}
-                  </span>
-                  <span>
-                    <span class="stat-board__value" data-stat-value>{{ row.base }}</span>
-                    {% if row.kind == 'flat' and row.growth > 0 %}
-                      <span class="stat-board__growth">+{{ row.growth }}</span>
-                    {% elseif row.kind == 'percent' and row.growth > 0 %}
-                      <span class="stat-board__growth">+{{ row.growth }}%</span>
-                    {% endif %}
-                  </span>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        </aside>
+        {% include 'champion/_stats_aside.html.twig' with {
+          champion: champion, image: image|default(null), selection: selection
+        } only %}
       {% endif %}
     </div>
 
     <div class="relative mx-auto max-w-7xl">
-      {% include 'components/detail_pager.html.twig' with {
+      {% include 'components/codex/detail_pager.html.twig' with {
         nav: nav|default({ prev: null, next: null }),
         route: 'app_champion',
-        list_href: resource_path('app_champions', {}, selectedVersion, selectedLocale),
-        version: selectedVersion,
-        lang: selectedLocale
+        list_href: resource_path('app_champions', {}, selection.version, selection.lang),
+        version: selection.version,
+        lang: selection.lang
       } %}
-      {% include 'components/detail_actions.html.twig' %}
+      {% include 'components/codex/detail_actions.html.twig' %}
     </div>
   </div>
 </main>

@@ -46,7 +46,10 @@ final class TimeSeriesChartTest extends TestCase
         $html = $this->chart->render(self::SERIES, self::LINES);
 
         self::assertMatchesRegularExpression('/<clipPath id="cp-[0-9a-f]{10}">/', $html);
-        self::assertMatchesRegularExpression('/<g class="c-plot" clip-path="url\(#cp-[0-9a-f]{10}\)">/', $html);
+        self::assertMatchesRegularExpression(
+            '/<g class="c-plot" clip-path="url\(#cp-[0-9a-f]{10}\)">/',
+            $html,
+        );
     }
 
     public function testPayloadCarriesRawValuesForTheClientTooltip(): void
@@ -76,7 +79,10 @@ final class TimeSeriesChartTest extends TestCase
 
     public function testPayloadIsAttributeEscaped(): void
     {
-        $html = $this->chart->render(self::SERIES, [['key' => 'views', 'label' => 'A & "B"', 'color' => 'x']]);
+        $html = $this->chart->render(
+            self::SERIES,
+            [['key' => 'views', 'label' => 'A & "B"', 'color' => 'x']],
+        );
 
         self::assertStringNotContainsString('data-chart="{"', $html);
         self::assertSame('A & "B"', $this->payloadOf($html)['series'][0]['label']);
@@ -87,6 +93,10 @@ final class TimeSeriesChartTest extends TestCase
     {
         self::assertSame(1, preg_match('/data-chart="([^"]*)"/', $html, $m));
 
-        return json_decode(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'), true, flags: JSON_THROW_ON_ERROR);
+        return json_decode(
+            html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
     }
 }

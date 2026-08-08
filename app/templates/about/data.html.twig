@@ -1,7 +1,9 @@
 {% extends 'about/layout.html.twig' %}
 
 {% block title %}{{ seo_title('about.data.title'|trans({}, 'seo')) }}{% endblock %}
-{% block meta_description %}{{ 'about.data.description'|trans({'%version%': inventory.version}, 'seo') }}{% endblock %}
+{% block meta_description %}{{ 'about.data.description'|trans(
+  {'%version%': inventory.version}, 'seo'
+) }}{% endblock %}
 {% block img %}/preview/objects.png{% endblock %}
 
 {% block structured_data %}
@@ -19,7 +21,9 @@
     description: 'about.data.description'|trans({'%version%': inventory.version}, 'seo'),
     version: inventory.version,
     languages: client.languages|default([]),
-    keywords: ['League of Legends', 'Data Dragon', 'champions', 'items', 'runes', 'summoner spells'],
+    keywords: [
+      'League of Legends', 'Data Dragon', 'champions', 'items', 'runes', 'summoner spells'
+    ],
     creatorId: seo_absolute('/') ~ '#organization'
   })) }}
 {% endblock %}
@@ -29,7 +33,8 @@
 
 {% block about_body %}
 <section id="snapshot">
-  {% include 'components/codex_header.html.twig' with { title: 'data.snapshot.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'data.snapshot.title'|trans({}, 'about') } %}
   <div class="about-facts">
     <div class="about-fact">
       <span class="about-fact__value">{{ inventory.version ?: '—' }}</span>
@@ -61,7 +66,8 @@
 <hr class="hx-rule">
 
 <section id="sources">
-  {% include 'components/codex_header.html.twig' with { title: 'data.sources.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'data.sources.title'|trans({}, 'about') } %}
   <p>{{ 'data.sources.body'|trans({}, 'about') }}</p>
   <h3>{{ 'data.sources.ddragon.title'|trans({}, 'about') }}</h3>
   <p>{{ 'data.sources.ddragon.body'|trans({}, 'about') }}</p>
@@ -72,14 +78,16 @@
 <hr class="hx-rule">
 
 <section id="freshness">
-  {% include 'components/codex_header.html.twig' with { title: 'data.freshness.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'data.freshness.title'|trans({}, 'about') } %}
   <p>{{ 'data.freshness.body'|trans({}, 'about') }}</p>
 </section>
 
 <hr class="hx-rule">
 
 <section id="coverage">
-  {% include 'components/codex_header.html.twig' with { title: 'data.coverage.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'data.coverage.title'|trans({}, 'about') } %}
   <p>{{ 'data.coverage.body'|trans({}, 'about') }}</p>
   <ul>
     <li>{{ 'data.coverage.champions'|trans({}, 'about') }}</li>
@@ -92,14 +100,16 @@
 <hr class="hx-rule">
 
 <section id="limits">
-  {% include 'components/codex_header.html.twig' with { title: 'data.limits.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'data.limits.title'|trans({}, 'about') } %}
   <p>{{ 'data.limits.body'|trans({}, 'about') }}</p>
 </section>
 
 <hr class="hx-rule">
 
 <section id="reuse">
-  {% include 'components/codex_header.html.twig' with { title: 'data.reuse.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'data.reuse.title'|trans({}, 'about') } %}
   <p>{{ 'data.reuse.body'|trans({}, 'about') }}</p>
   <p><a href="{{ path('app_developers') }}">{{ 'data.reuse.link'|trans({}, 'about') }}</a></p>
 </section>
@@ -107,7 +117,8 @@
 <hr class="hx-rule">
 
 <section id="disclaimer">
-  {% include 'components/codex_header.html.twig' with { title: 'data.disclaimer.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'data.disclaimer.title'|trans({}, 'about') } %}
   <p>{{ 'data.disclaimer.body'|trans({}, 'about') }}</p>
 </section>
 {% endblock %}

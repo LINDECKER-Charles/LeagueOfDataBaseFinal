@@ -17,8 +17,10 @@ final class ItemOptionsProjector
     public const TYPE = 'item';
 
     /**
-     * @param array<int|string, array<string, mixed>> $data   raw item.json "data" map (key = item id)
-     * @param array<string, ?string>                  $images name-keyed ItemManager::getImages() result
+     * @param array<int|string, array<string, mixed>> $data   raw item.json "data" map
+     *                                                        (key = item id)
+     * @param array<string, ?string>                  $images name-keyed
+     *                                                        ItemManager::getImages() result
      * @return list<array<string, mixed>>
      */
     public function project(array $data, array $images, GameMode $mode = GameMode::DEFAULT): array
@@ -74,7 +76,11 @@ final class ItemOptionsProjector
 
         $names = [];
         foreach ($data as $id => $entry) {
-            if (!isset($wanted[(string) $id]) || !\is_array($entry) || $this->isOnMap($entry, $mode)) {
+            if (
+                !isset($wanted[(string) $id])
+                || !\is_array($entry)
+                || $this->isOnMap($entry, $mode)
+            ) {
                 continue;
             }
             $names[(string) ($entry['name'] ?? $id)] = true;
@@ -118,22 +124,22 @@ final class ItemOptionsProjector
     }
 
     /**
+     * The picker contract, and nothing more: the island filters on name/tags/gold
+     * and renders the icon. Recipe data (from/into/depth) belongs to the item
+     * detail page, which builds its craft tree from `recipeTree`, not from here.
+     *
      * @param array<string, mixed>   $entry
      * @param array<string, ?string> $images
-     * @return array<string, mixed>
+     * @return array{id: string, name: string, image: ?string, gold: int, tags: list<string>}
      */
     private function option(string $id, array $entry, array $images): array
     {
         return [
-            'id'          => $id,
-            'name'        => (string) ($entry['name'] ?? $id),
-            'image'       => $this->imageOf($entry, $images),
-            'gold'        => (int) ($entry['gold']['total'] ?? 0),
-            'purchasable' => true,
-            'tags'        => array_values(array_map(strval(...), (array) ($entry['tags'] ?? []))),
-            'from'        => array_values(array_unique(array_map(strval(...), (array) ($entry['from'] ?? [])))),
-            'into'        => array_values(array_map(strval(...), (array) ($entry['into'] ?? []))),
-            'depth'       => isset($entry['depth']) ? (int) $entry['depth'] : null,
+            'id'    => $id,
+            'name'  => (string) ($entry['name'] ?? $id),
+            'image' => $this->imageOf($entry, $images),
+            'gold'  => (int) ($entry['gold']['total'] ?? 0),
+            'tags'  => array_values(array_map(strval(...), (array) ($entry['tags'] ?? []))),
         ];
     }
 

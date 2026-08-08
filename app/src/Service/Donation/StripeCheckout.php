@@ -8,7 +8,8 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Thin gateway to Stripe Checkout. Holds the only reference to the secret key;
- * callers deal in validated params (CheckoutSessionParams) and redirect URLs.
+ * callers deal in validated params — {@see CheckoutSessionParams} for donations,
+ * {@see \App\Service\PublicApi\ApiCheckoutParams} for API credit packs and plans.
  * Stripe API failures (\Stripe\Exception\ApiErrorException) bubble up — the
  * controller owns the user-facing fallback.
  */
@@ -27,7 +28,8 @@ final readonly class StripeCheckout
     /**
      * Creates a Checkout Session and returns its hosted-page URL.
      *
-     * @param array<string, mixed> $params See CheckoutSessionParams::build()
+     * @param array<string, mixed> $params payload built by CheckoutSessionParams
+     *                                     (donations) or ApiCheckoutParams (packs/plans)
      *
      * @throws \Stripe\Exception\ApiErrorException
      */
@@ -36,7 +38,9 @@ final readonly class StripeCheckout
         $session = (new StripeClient($this->secretKey))->checkout->sessions->create($params);
 
         if (!\is_string($session->url) || $session->url === '') {
-            throw new \RuntimeException('Stripe returned a Checkout Session without a redirect URL.');
+            throw new \RuntimeException(
+                'Stripe returned a Checkout Session without a redirect URL.',
+            );
         }
 
         return $session->url;

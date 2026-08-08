@@ -12,7 +12,8 @@ describe('section-nav in-page anchor', () => {
 
     beforeEach(() => {
         vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })))
-        Element.prototype.scrollIntoView = scrollIntoView as unknown as typeof Element.prototype.scrollIntoView
+        Element.prototype.scrollIntoView =
+            scrollIntoView as unknown as typeof Element.prototype.scrollIntoView
         installEnhancements() // document-level listeners; same fn ref → deduped across calls
     })
 
@@ -66,7 +67,9 @@ describe('section-nav in-page anchor', () => {
             '<nav data-scrollspy><a href="#abilities">A</a></nav><section id="abilities"></section>'
         const link = document.querySelector('a[href="#abilities"]')!
 
-        const event = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0, metaKey: true })
+        const event = new MouseEvent('click', {
+            bubbles: true, cancelable: true, button: 0, metaKey: true,
+        })
         link.dispatchEvent(event)
 
         expect(event.defaultPrevented).toBe(false)

@@ -26,7 +26,8 @@
                 <label for="{{ registrationForm.email.vars.id }}" class="auth-label">
                     {{ 'auth.register.email'|trans }}
                 </label>
-                {{ form_widget(registrationForm.email, {attr: {class: 'hx-input mt-1.5', autocomplete: 'email'}}) }}
+                {{ form_widget(registrationForm.email,
+                    {attr: {class: 'hx-input mt-1.5', autocomplete: 'email'}}) }}
                 {% for err in registrationForm.email.vars.errors %}
                     <p class="auth-field-error">{{ err.message }}</p>
                 {% endfor %}
@@ -35,16 +36,19 @@
                 <label for="{{ registrationForm.username.vars.id }}" class="auth-label">
                     {{ 'auth.register.username'|trans }}
                 </label>
-                {{ form_widget(registrationForm.username, {attr: {class: 'hx-input mt-1.5', autocomplete: 'username'}}) }}
+                {{ form_widget(registrationForm.username,
+                    {attr: {class: 'hx-input mt-1.5', autocomplete: 'username'}}) }}
                 <p class="auth-help">{{ 'auth.register.username_help'|trans }}</p>
                 {% for err in registrationForm.username.vars.errors %}
                     <p class="auth-field-error">{{ err.message }}</p>
                 {% endfor %}
             </div>
-            {% include 'security/_password_pair.html.twig' with { field: registrationForm.plainPassword } only %}
+            {% include 'security/_password_pair.html.twig'
+                with { field: registrationForm.plainPassword } only %}
             <div>
                 <label class="flex items-start gap-2.5 text-sm text-text-muted">
-                    {{ form_widget(registrationForm.agreeTerms, {attr: {class: 'hx-check mt-0.5'}}) }}
+                    {{ form_widget(registrationForm.agreeTerms,
+                        {attr: {class: 'hx-check mt-0.5'}}) }}
                     <span>{{ 'auth.register.terms'|trans }}</span>
                 </label>
                 {% for err in registrationForm.agreeTerms.vars.errors %}
@@ -58,7 +62,8 @@
 
         <div class="gold-hairline mt-8 pt-5 text-center text-sm text-text-muted">
             {{ 'auth.register.have_account'|trans }}
-            <a href="{{ path('app_login') }}" class="nav-link text-gold">{{ 'auth.login.title'|trans }}</a>
+            <a href="{{ path('app_login') }}"
+               class="nav-link text-gold">{{ 'auth.login.title'|trans }}</a>
         </div>
     </section>
 </main>

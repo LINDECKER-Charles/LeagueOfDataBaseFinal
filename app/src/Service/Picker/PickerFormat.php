@@ -31,7 +31,10 @@ final class PickerFormat
      */
     public static function sortByName(array $options): array
     {
-        usort($options, static fn (array $a, array $b): int => strcmp((string) $a['name'], (string) $b['name']));
+        usort(
+            $options,
+            static fn (array $a, array $b): int => strcmp((string) $a['name'], (string) $b['name']),
+        );
 
         return $options;
     }

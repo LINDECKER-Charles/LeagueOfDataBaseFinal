@@ -120,6 +120,6 @@ final class AuditRollupService
     /** Union of local and archived dates, deduplicated. @return list<string> */
     private function allDates(): array
     {
-        return array_values(array_unique([...$this->local->days(), ...$this->archive->dates()]));
+        return array_values(array_unique([...$this->local->days(), ...$this->archive->days()]));
     }
 }

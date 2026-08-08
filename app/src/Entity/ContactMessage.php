@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Dto\ContactSubmission;
+use App\Entity\Enum\ContactCategory;
+use App\Entity\Enum\ContactStatus;
 use App\Repository\ContactMessageRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -23,6 +25,14 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(columns: ['created_at'])]
 final class ContactMessage
 {
+    /**
+     * Storage bounds, referenced by {@see ContactSubmission}'s Assert\Length so a
+     * payload that validates can never overflow the column at flush time.
+     */
+    public const NAME_MAX_LENGTH = 120;
+    public const EMAIL_MAX_LENGTH = 255;
+    public const SUBJECT_MAX_LENGTH = 160;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -31,13 +41,13 @@ final class ContactMessage
     #[ORM\Column(enumType: ContactCategory::class)]
     private ContactCategory $category;
 
-    #[ORM\Column(length: 120, nullable: true)]
+    #[ORM\Column(length: self::NAME_MAX_LENGTH, nullable: true)]
     private ?string $name;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: self::EMAIL_MAX_LENGTH)]
     private string $email;
 
-    #[ORM\Column(length: 160, nullable: true)]
+    #[ORM\Column(length: self::SUBJECT_MAX_LENGTH, nullable: true)]
     private ?string $subject;
 
     #[ORM\Column(type: Types::TEXT)]
@@ -46,7 +56,10 @@ final class ContactMessage
     #[ORM\Column(length: 16, nullable: true)]
     private ?string $locale;
 
-    /** Origin IP for abuse triage only (audit journal already stores IPs at the same sensitivity). */
+    /**
+     * Origin IP for abuse triage only (audit journal already stores IPs at the
+     * same sensitivity).
+     */
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $ip;
 
@@ -63,10 +76,15 @@ final class ContactMessage
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $handledAt = null;
 
-    public function __construct(ContactSubmission $submission, ?string $ip = null, ?User $user = null)
-    {
+    public function __construct(
+        ContactSubmission $submission,
+        ?string $ip = null,
+        ?User $user = null
+    ) {
         $this->category = $submission->category
-            ?? throw new \InvalidArgumentException('ContactSubmission must be validated (non-null category) before persistence.');
+            ?? throw new \InvalidArgumentException(
+                'ContactSubmission must be validated (non-null category) before persistence.'
+            );
         $this->email = $submission->email;
         $this->message = $submission->message;
         $this->name = $submission->name;

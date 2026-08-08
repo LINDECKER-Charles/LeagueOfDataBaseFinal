@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\ContactMessage;
-use App\Entity\ContactStatus;
+use App\Entity\Enum\ContactStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -35,7 +35,12 @@ final class ContactMessageRepository extends ServiceEntityRepository
         $criteria = $status === null ? [] : ['status' => $status];
 
         return [
-            'rows' => $this->findBy($criteria, ['createdAt' => 'DESC', 'id' => 'DESC'], $perPage, max(0, ($page - 1) * $perPage)),
+            'rows' => $this->findBy(
+                $criteria,
+                ['createdAt' => 'DESC', 'id' => 'DESC'],
+                $perPage,
+                max(0, ($page - 1) * $perPage)
+            ),
             'total' => (int) $this->count($criteria),
         ];
     }

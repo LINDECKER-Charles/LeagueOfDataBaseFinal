@@ -15,16 +15,23 @@ use Symfony\Component\HttpFoundation\Request;
 abstract class AbstractAdminController extends AbstractController
 {
     protected const PER_PAGE = 25;
+
+    /** Single wording of the CSRF rejection, shared by every /admin mutation. */
+    private const CSRF_ERROR_MESSAGE = 'Jeton CSRF invalide.';
+
     /** Query params carrying the list context, echoed through action redirects. */
-    private const LIST_PARAMS = ['q', 'page', 'visibility'];
+    private const LIST_PARAMS = ['q', 'page', 'status', 'visibility'];
 
     /** Null when the POSTed token is valid; otherwise the error redirect to return. */
-    protected function csrfError(Request $request, string $tokenId, string $listRoute): ?RedirectResponse
-    {
+    protected function csrfError(
+        Request $request,
+        string $tokenId,
+        string $listRoute,
+    ): ?RedirectResponse {
         if ($this->isCsrfTokenValid($tokenId, (string) $request->request->get('_token'))) {
             return null;
         }
-        $this->addFlash('error', 'Jeton CSRF invalide.');
+        $this->addFlash('error', self::CSRF_ERROR_MESSAGE);
 
         return $this->backToList($request, $listRoute);
     }
@@ -32,8 +39,11 @@ abstract class AbstractAdminController extends AbstractController
     protected function backToList(Request $request, string $listRoute): RedirectResponse
     {
         $context = array_intersect_key($request->query->all(), array_flip(self::LIST_PARAMS));
+        // Blank filters are dropped rather than echoed: the redirect target stays
+        // the canonical list URL instead of growing empty query params.
+        $keep = static fn (mixed $value): bool => is_scalar($value) && (string) $value !== '';
 
-        return $this->redirectToRoute($listRoute, array_filter($context, is_scalar(...)));
+        return $this->redirectToRoute($listRoute, array_filter($context, $keep));
     }
 
     protected function pageParam(Request $request): int

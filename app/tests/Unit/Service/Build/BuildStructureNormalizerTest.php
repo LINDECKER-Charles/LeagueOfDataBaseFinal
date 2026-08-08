@@ -57,7 +57,12 @@ final class BuildStructureNormalizerTest extends TestCase
 
         self::assertSame('', $normalized['championId']);
         self::assertSame(
-            ['primaryStyleId' => 0, 'primarySelections' => [], 'secondaryStyleId' => 0, 'secondarySelections' => []],
+            [
+                'primaryStyleId' => 0,
+                'primarySelections' => [],
+                'secondaryStyleId' => 0,
+                'secondarySelections' => [],
+            ],
             $normalized['runes'],
         );
         self::assertSame([], $normalized['steps']);

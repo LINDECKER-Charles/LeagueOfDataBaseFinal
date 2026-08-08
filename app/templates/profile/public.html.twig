@@ -3,10 +3,12 @@
 {% set isPreview = preview|default(false) %}
 
 {% block title %}{{ seo_title(profileUser.displayName) }}{% endblock %}
-{% block meta_description %}{{ 'profile.public.description'|trans({'%username%': profileUser.displayName}) }}{% endblock %}
+{% block meta_description %}{{
+    'profile.public.description'|trans({'%username%': profileUser.displayName}) }}{% endblock %}
 {% block meta_robots %}{{ isPreview ? 'noindex, nofollow' : 'index, follow' }}{% endblock %}
 {% block og_type %}profile{% endblock %}
-{# Favorite skin splash makes the richest share card (og + twitter); empty here lets base fall back to the site default. #}
+{# Favorite skin splash makes the richest share card (og + twitter); empty here
+   lets base fall back to the site default. #}
 {% block img %}{{ skinBanner ? skinBanner.splash }}{% endblock %}
 
 {# Structured data lives only on the crawlable public render — the owner's
@@ -42,23 +44,29 @@
         <div class="preview-ribbon">
             <div class="preview-ribbon__text">
                 <span class="preview-ribbon__badge">{{ 'profile.preview.badge'|trans }}</span>
-                <span>{{ (profileUser.isPublicProfile ? 'profile.preview.note_public' : 'profile.preview.note_private')|trans }}</span>
+                <span>{{ (profileUser.isPublicProfile
+                    ? 'profile.preview.note_public'
+                    : 'profile.preview.note_private')|trans }}</span>
             </div>
-            <a href="{{ path('app_profile') }}" class="hx-btn-ghost preview-ribbon__back">{{ 'profile.preview.back'|trans }}</a>
+            <a href="{{ path('app_profile') }}"
+               class="hx-btn-ghost preview-ribbon__back">{{ 'profile.preview.back'|trans }}</a>
         </div>
     {% endif %}
 
     {# Orbs float over the hero; the champion is skipped when it IS the backdrop. #}
     {% set orbSlots = [] %}
     {% for slot in ['champion', 'item', 'rune', 'summoner'] %}
-        {% if favorites[slot].current and not (slot == 'champion' and heroBackground and heroBackground.kind == 'champion') %}
+        {% if favorites[slot].current
+            and not (slot == 'champion' and heroBackground and heroBackground.kind == 'champion') %}
             {% set orbSlots = orbSlots|merge([slot]) %}
         {% endif %}
     {% endfor %}
 
-    <section class="profile-hero {{ heroBackground ? 'profile-hero--art' : 'profile-hero--plain' }}">
+    <section class="profile-hero {{ heroBackground
+        ? 'profile-hero--art' : 'profile-hero--plain' }}">
         {% if heroBackground %}
-            {# Centered crop frames the champion; data-img-fallback falls back to the classic splash. #}
+            {# Centered crop frames the champion; data-img-fallback falls back to
+               the classic splash. #}
             <img class="profile-hero__art" src="{{ heroBackground.image }}" alt=""
                  data-img-fallback="{{ heroBackground.fallback }}"
                  loading="eager" fetchpriority="high" decoding="async">
@@ -84,11 +92,13 @@
             <p class="eyebrow">{{ 'profile.public.eyebrow'|trans }}</p>
             <h1 class="profile-hero__name text-gold-grad">
                 {{ profileUser.displayName }}
-                {% if profileUser.isSupporter %}{% include 'components/_supporter_badge.html.twig' %}{% endif %}
+                {% if profileUser.isSupporter %}{% include
+                    'components/community/_supporter_badge.html.twig' %}{% endif %}
             </h1>
             <p class="profile-hero__meta">
                 <span>{{ 'profile.identity.member_since'|trans }} · {{ memberSince }}</span>
-                {% if skinBanner %}<span class="profile-hero__skin">{{ skinBanner.name }}</span>{% endif %}
+                {% if skinBanner %}<span class="profile-hero__skin">{{
+                    skinBanner.name }}</span>{% endif %}
             </p>
         </div>
     </section>
@@ -99,29 +109,34 @@
             <span class="codex-header__meta">{{ builds|length }}</span>
         </div>
         {% if builds is empty %}
-            <p class="py-4 text-center font-mono text-sm text-text-muted">{{ 'profile.public.no_builds'|trans }}</p>
+            <p class="py-4 text-center font-mono text-sm text-text-muted">{{
+                'profile.public.no_builds'|trans }}</p>
         {% else %}
             <ul class="profile-card__builds">
                 {% for build in builds %}
                     <li>
-                        <a class="profile-build" href="{{ path('app_build_show', { token: build.shareToken }) }}">
+                        <a class="profile-build"
+                           href="{{ path('app_build_show', { token: build.shareToken }) }}">
                             {% if build.championImage %}
                                 <picture class="profile-build__portrait">
-                                    {% if build.championImage ends with '.png' %}
-                                        <source srcset="{{ build.championImage|replace({'.png': '.webp'}) }}" type="image/webp">
-                                    {% endif %}
-                                    <img src="{{ build.championImage }}" alt="{{ build.championName ?? build.championId }}"
+                                    {% include 'components/_webp_source.html.twig'
+                                       with { src: build.championImage } only %}
+                                    <img src="{{ build.championImage }}"
+                                         alt="{{ build.championName ?? build.championId }}"
                                          width="48" height="48" loading="lazy" decoding="async">
                                 </picture>
                             {% else %}
-                                <span class="profile-build__portrait profile-build__portrait--initials" aria-hidden="true">
+                                <span class="profile-build__portrait
+                                             profile-build__portrait--initials"
+                                      aria-hidden="true">
                                     {{ (build.championName ?? build.championId)|slice(0, 2)|upper }}
                                 </span>
                             {% endif %}
                             <span class="min-w-0">
                                 <span class="profile-build__name">{{ build.name }}</span>
                                 <span class="profile-build__meta">
-                                    {{ build.championName ?? build.championId }} · {{ build.gameVersion }}
+                                    {{ build.championName
+                                        ?? build.championId }} · {{ build.gameVersion }}
                                 </span>
                             </span>
                         </a>

@@ -1,0 +1,35 @@
+{# Domain vocabulary of the admin: how an audit actor/outcome and a Data Dragon
+   resource are named and tinted. One definition, so a new actor type can never
+   land on only one of the pages that read it. #}
+{# Audit vocabulary shared by the journal (/admin/logs) and the per-user activity
+   view. One definition, so a new actor type or outcome can never land on only
+   one of the two pages. #}
+{% macro actor_type_label(type) %}
+    {%- set labels = { user: 'utilisateur', admin: 'admin', anonymous: 'anonyme' } -%}
+    {{- labels[type]|default(type) -}}
+{% endmacro %}
+
+{% macro outcome_tone(outcome) %}
+    {%- set tones = { success: 'good', failure: 'bad', denied: 'warn' } -%}
+    {{- tones[outcome]|default('') -}}
+{% endmacro %}
+
+{# Data Dragon resource type → its French label and its series colour in the
+   traffic panels. One definition, so the overview donut and the traffic page can
+   never name (or tint) the same resource differently. #}
+{% macro resource_label(type) %}
+    {%- set labels = {
+        champion: 'Champions', item: 'Objets', runesReforged: 'Runes',
+        summoner: 'Sorts', home: 'Accueil'
+    } -%}
+    {{- labels[type]|default(type) -}}
+{% endmacro %}
+
+{% macro resource_color(type) %}
+    {%- set colors = {
+        champion: 'var(--series-1)', item: 'var(--series-2)',
+        runesReforged: 'var(--series-3)', summoner: 'var(--series-4)',
+        home: 'var(--series-5)'
+    } -%}
+    {{- colors[type]|default('var(--text-muted)') -}}
+{% endmacro %}

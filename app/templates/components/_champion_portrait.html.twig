@@ -1,0 +1,24 @@
+{# Champion medallion of a build row, with the keystone rune pinned on it —
+   shared by the personal forge (/builds) and the community trends board, which
+   render the same row visual and must keep doing so.
+
+   Params:
+   - champion: {image, name, missing} — `missing` greys out a champion the
+     selected patch no longer ships; initials stand in when the icon is cold.
+   - keystone: {icon, name} — optional overlay. #}
+<span class="forge-row__portrait {{ champion.missing ? 'forge-ghost' }}">
+  {% if champion.image %}
+    <picture>
+      {% include 'components/_webp_source.html.twig'
+         with { src: '/' ~ champion.image } only %}
+      <img src="/{{ champion.image }}" alt="{{ champion.name }}"
+           width="56" height="56" loading="lazy" decoding="async">
+    </picture>
+  {% else %}
+    <span class="forge-row__initials">{{ champion.name|slice(0, 2)|upper }}</span>
+  {% endif %}
+  {% if keystone.icon %}
+    <img class="forge-row__keystone" src="/{{ keystone.icon }}"
+         alt="{{ keystone.name }}" width="26" height="26" loading="lazy" decoding="async">
+  {% endif %}
+</span>

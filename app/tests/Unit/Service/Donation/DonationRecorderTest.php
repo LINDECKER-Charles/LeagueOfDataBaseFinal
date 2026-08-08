@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Donation;
 
-use App\Controller\StripeWebhookController;
+use App\Controller\Billing\StripeWebhookController;
 use App\Entity\Build;
 use App\Entity\Donation;
 use App\Entity\User;
@@ -34,7 +34,9 @@ final class DonationRecorderTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->entityManager = InMemoryOrm::entityManager([User::class, Build::class, Donation::class]);
+        $this->entityManager = InMemoryOrm::entityManager(
+            [User::class, Build::class, Donation::class],
+        );
 
         $registry = $this->createStub(ManagerRegistry::class);
         $registry->method('getManagerForClass')->willReturn($this->entityManager);
@@ -72,7 +74,9 @@ final class DonationRecorderTest extends TestCase
 
     public function testAnonymousSignedDonationIsPersistedWithoutAnyAccountLink(): void
     {
-        $response = $this->controller->handle(self::signedRequest(self::donationPayload('cs_anon', 1000, null)));
+        $response = $this->controller->handle(
+            self::signedRequest(self::donationPayload('cs_anon', 1000, null)),
+        );
 
         self::assertSame(200, $response->getStatusCode());
         $donation = $this->donations->findOneBy(['stripeSessionId' => 'cs_anon']);
@@ -98,10 +102,14 @@ final class DonationRecorderTest extends TestCase
 
     public function testUnknownDonorReferenceStillRecordsTheDonationUnlinked(): void
     {
-        $response = $this->controller->handle(self::signedRequest(self::donationPayload('cs_ghost', 300, '9999')));
+        $response = $this->controller->handle(
+            self::signedRequest(self::donationPayload('cs_ghost', 300, '9999')),
+        );
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertNull($this->donations->findOneBy(['stripeSessionId' => 'cs_ghost'])?->getUser());
+        self::assertNull(
+            $this->donations->findOneBy(['stripeSessionId' => 'cs_ghost'])?->getUser(),
+        );
     }
 
     private function givenUser(string $username): User
@@ -113,8 +121,11 @@ final class DonationRecorderTest extends TestCase
         return $user;
     }
 
-    private static function donationPayload(string $sessionId, int $amountCents, ?string $reference): string
-    {
+    private static function donationPayload(
+        string $sessionId,
+        int $amountCents,
+        ?string $reference,
+    ): string {
         $session = [
             'id' => $sessionId,
             'object' => 'checkout.session',

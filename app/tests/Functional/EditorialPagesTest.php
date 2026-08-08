@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
-use App\Service\Seo\SiteInventory;
+use App\Service\Seo\Inventory\SiteInventory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -95,13 +95,18 @@ final class EditorialPagesTest extends WebTestCase
     /**
      * @return list<string> the ld+json payloads containing $needle
      */
-    private function structuredData(\Symfony\Component\DomCrawler\Crawler $crawler, string $needle): array
-    {
+    private function structuredData(
+        \Symfony\Component\DomCrawler\Crawler $crawler,
+        string $needle,
+    ): array {
         $scripts = $crawler->filter('script[type="application/ld+json"]')->each(
             static fn (\Symfony\Component\DomCrawler\Crawler $node): string => $node->text(),
         );
 
-        return array_values(array_filter($scripts, static fn (string $json): bool => str_contains($json, $needle)));
+        return array_values(array_filter(
+            $scripts,
+            static fn (string $json): bool => str_contains($json, $needle),
+        ));
     }
 
     /** Skips when no patch can be resolved — an environment gap, not a regression. */
@@ -111,7 +116,9 @@ final class EditorialPagesTest extends WebTestCase
         \assert($inventory instanceof SiteInventory);
 
         if ($inventory->latestVersion() === '') {
-            self::markTestSkipped('Data Dragon datasets unavailable (no MinIO/go-fetcher in this environment).');
+            self::markTestSkipped(
+                'Data Dragon datasets unavailable (no MinIO/go-fetcher in this environment).',
+            );
         }
     }
 }

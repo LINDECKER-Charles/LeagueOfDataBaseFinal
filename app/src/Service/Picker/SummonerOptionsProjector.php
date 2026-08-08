@@ -17,8 +17,10 @@ final class SummonerOptionsProjector
     private const REQUIRED_MODE = 'CLASSIC';
 
     /**
-     * @param array<string, array<string, mixed>> $data   raw summoner.json "data" map (key = spell id)
-     * @param array<string, ?string>              $images id-keyed SummonerManager::getImages() result
+     * @param array<string, array<string, mixed>> $data   raw summoner.json "data" map
+     *                                                    (key = spell id)
+     * @param array<string, ?string>              $images id-keyed
+     *                                                    SummonerManager::getImages() result
      * @return list<array{id: string, key: string, name: string, image: ?string}>
      */
     public function project(array $data, array $images): array

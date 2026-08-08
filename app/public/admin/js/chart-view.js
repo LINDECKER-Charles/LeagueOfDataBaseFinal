@@ -15,7 +15,10 @@ const AXIS_BASELINE_GAP = 16
 
 /**
  * @param {{ zoomIn: () => void, zoomOut: () => void, reset: () => void }} actions
- * @returns {{ group: SVGGElement, crosshair: SVGLineElement, dots: SVGGElement, hit: SVGRectElement, tip: HTMLElement }}
+ * @returns {{
+ *   group: SVGGElement, crosshair: SVGLineElement, dots: SVGGElement,
+ *   hit: SVGRectElement, tip: HTMLElement,
+ * }}
  */
 export function createLayers(fig, svg, box, actions) {
     const crosshair = svgNode('line', {
@@ -24,7 +27,8 @@ export function createLayers(fig, svg, box, actions) {
     const dots = svgNode('g', { class: 'c-hover' })
     // Last child of the overlay: it must sit above the marks to catch pointers.
     const hit = svgNode('rect', {
-        class: 'c-hit', x: box.padX, y: box.padTop, width: box.plotW, height: box.plotH, fill: 'transparent',
+        class: 'c-hit', x: box.padX, y: box.padTop,
+        width: box.plotW, height: box.plotH, fill: 'transparent',
     })
     const group = svgNode('g', { class: 'c-overlay' })
     group.append(crosshair, dots, hit)
@@ -68,7 +72,8 @@ export function renderHover(chart) {
     overlay.crosshair.setAttribute('x1', String(screenX))
     overlay.crosshair.setAttribute('x2', String(screenX))
     overlay.dots.replaceChildren(...model.series.map((serie) => svgNode('circle', {
-        class: 'c-hover-dot', cx: screenX, cy: valueY(serie.values[hover], model), r: 4, fill: serie.color,
+        class: 'c-hover-dot', cx: screenX,
+        cy: valueY(serie.values[hover], model), r: 4, fill: serie.color,
     })))
     renderTip(chart, screenX)
 }

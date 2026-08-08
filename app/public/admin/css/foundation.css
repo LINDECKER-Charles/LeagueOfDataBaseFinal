@@ -1,0 +1,71 @@
+/* =============================================================================
+   LODB Admin — foundation: self-hosted faces, design tokens, element defaults.
+
+   Tokens/typography mirror app/assets/styles/tokens.css 1:1 so the admin reads
+   as the same product — just authored in plain CSS instead of Tailwind.
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Beaufort'; src: url('/fonts/BeaufortforLOL-Regular.woff2') format('woff2');
+  font-weight: 400; font-display: swap;
+}
+@font-face {
+  font-family: 'Beaufort'; src: url('/fonts/BeaufortforLOL-Bold.woff2') format('woff2');
+  font-weight: 700; font-display: swap;
+}
+@font-face {
+  font-family: 'Spiegel'; src: url('/fonts/Spiegel_TT_Regular.woff2') format('woff2');
+  font-weight: 400; font-display: swap;
+}
+
+:root {
+  /* Surfaces */
+  --hextech-black: #010a13; --void: #0a1428; --abyss: #091016;
+  --panel: #0f1b2d; --panel-2: #162033;
+  /* Gold */
+  --gold: #c8aa6e; --gold-bright: #f0e6d2; --gold-light: #cdbe91;
+  --gold-deep: #785a28; --gold-dark: #463714;
+  /* Hextech cyan */
+  --hex: #0ac8b9; --hex-deep: #0397ab; --hex-bright: #cdfafa;
+  /* Text */
+  --text: #f0e6d2; --text-muted: #a09b8c; --text-dim: #8f8d82;
+  /* State + chrome */
+  --good: #37b06e; --warn: #c8aa6e; --bad: #dc3d3d;
+  --line: rgba(200, 170, 110, 0.28); --line-soft: rgba(200, 170, 110, 0.16);
+  --track: rgba(255, 255, 255, 0.06);
+  /* Categorical series (fixed order; CVD-separated, always paired with labels) */
+  --series-1: #c8aa6e; --series-2: #6a8cff; --series-3: #37b06e;
+  --series-4: #dc3d3d; --series-5: #49cfd6;
+  /* Fonts + motion */
+  --font-display: 'Beaufort', 'Times New Roman', serif;
+  --font-body: 'Spiegel', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Mirrors --hx-bevel (assets/styles/tokens.css); keep both in sync. */
+  --bevel: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; min-height: 100vh; background-color: var(--void); color: var(--text);
+  font-family: var(--font-body); line-height: 1.55; -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(1200px 600px at 50% -10%, rgba(3, 151, 171, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(200, 170, 110, 0.06), transparent 55%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display); letter-spacing: 0.06em; color: var(--gold-bright);
+  margin: 0; font-weight: 700;
+}
+a { color: var(--gold); text-decoration: none; transition: color 0.25s var(--ease); }
+a:hover { color: var(--gold-bright); }
+code, .mono { font-family: var(--font-mono); }
+::selection { background: rgba(10, 200, 185, 0.30); color: var(--gold-bright); }
+* { scrollbar-width: thin; scrollbar-color: var(--gold-deep) transparent; }
+.muted { color: var(--text-muted); }
+.dim { color: var(--text-dim); }
+.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+.right { text-align: right; }

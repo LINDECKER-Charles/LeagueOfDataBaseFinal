@@ -12,7 +12,11 @@ export const MIN_SCALE = 1
 export const MAX_SCALE = 24
 export const ZOOM_STEP = 1.25
 
-/** @typedef {{ padX: number, padTop: number, plotW: number, plotH: number, w: number, h: number }} Box */
+/**
+ * @typedef {{
+ *   padX: number, padTop: number, plotW: number, plotH: number, w: number, h: number
+ * }} Box
+ */
 /** @typedef {{ scale: number, offset: number }} View */
 
 export const IDENTITY = { scale: MIN_SCALE, offset: 0 }
@@ -48,7 +52,10 @@ export function zoomAt(view, box, screenX, factor) {
 }
 
 export function panBy(view, box, deltaScreenX) {
-    return { scale: view.scale, offset: clampOffset(view.offset + deltaScreenX, view.scale, box.plotW) }
+    return {
+        scale: view.scale,
+        offset: clampOffset(view.offset + deltaScreenX, view.scale, box.plotW)
+    }
 }
 
 export function modelXOf(index, box, count) {

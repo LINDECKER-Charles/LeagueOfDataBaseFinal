@@ -58,7 +58,12 @@ final class DonationRepository extends ServiceEntityRepository
     public function page(int $page, int $perPage): array
     {
         return [
-            'donations' => $this->findBy([], ['createdAt' => 'DESC', 'id' => 'DESC'], $perPage, max(0, ($page - 1) * $perPage)),
+            'donations' => $this->findBy(
+                [],
+                ['createdAt' => 'DESC', 'id' => 'DESC'],
+                $perPage,
+                max(0, ($page - 1) * $perPage),
+            ),
             'total' => $this->countAll(),
         ];
     }

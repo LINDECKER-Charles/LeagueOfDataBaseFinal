@@ -64,7 +64,7 @@ final class BlobStore
     /**
      * Deterministic content-addressed key: blobs/<sha256>.<ext>.
      */
-    public function keyFor(string $bytes, string $sourceName): string
+    private function keyFor(string $bytes, string $sourceName): string
     {
         $ext = strtolower(pathinfo($sourceName, PATHINFO_EXTENSION)) ?: 'png';
 

@@ -63,8 +63,14 @@ final class AbstractManagerDataResolutionTest extends TestCase
 
         self::assertSame([], $manager->getData(self::VERSION, 'en_US'));
         // Persisted verdict → a fresh manager over the same storage never re-fetches.
-        self::assertSame('[]', $fs->read(sprintf('data/%s/en_US/runesReforged.json', self::VERSION)));
-        self::assertSame([], $this->manager($fs, $this->noEgress())->getData(self::VERSION, 'en_US'));
+        self::assertSame(
+            '[]',
+            $fs->read(sprintf('data/%s/en_US/runesReforged.json', self::VERSION)),
+        );
+        self::assertSame(
+            [],
+            $this->manager($fs, $this->noEgress())->getData(self::VERSION, 'en_US'),
+        );
         self::assertSame(1, $calls, 'the CDN is hit at most once for an immutable absence');
     }
 
@@ -73,13 +79,15 @@ final class AbstractManagerDataResolutionTest extends TestCase
         $fs = new Filesystem(new LocalFilesystemAdapter($this->dir));
         $enBody = [['id' => 8000, 'key' => 'Precision', 'name' => 'Precision', 'icon' => 'x.png']];
 
-        $manager = $this->manager($fs, $this->gateway(static function (string $url) use ($enBody): array {
-            if (str_contains($url, '/fr_FR/')) {
-                return ['status' => 404]; // locale absent from this old patch
-            }
+        $manager = $this->manager($fs, $this->gateway(
+            static function (string $url) use ($enBody): array {
+                if (str_contains($url, '/fr_FR/')) {
+                    return ['status' => 404]; // locale absent from this old patch
+                }
 
-            return ['status' => 200, 'body' => $enBody];
-        }));
+                return ['status' => 200, 'body' => $enBody];
+            },
+        ));
 
         // Requested in French, served in English rather than failing.
         self::assertSame($enBody, $manager->getData(self::VERSION, 'fr_FR'));
@@ -112,20 +120,32 @@ final class AbstractManagerDataResolutionTest extends TestCase
      */
     private function gateway(callable $resolve): GoFetcherClient
     {
-        return new GoFetcherClient(new MockHttpClient(static function (string $method, string $url, array $options) use ($resolve): MockResponse {
-            $requested = json_decode((string) $options['body'], true, flags: JSON_THROW_ON_ERROR)['urls'][0];
-            $r = $resolve($requested);
+        return new GoFetcherClient(new MockHttpClient(
+            static function (
+                string $method,
+                string $url,
+                array $options,
+            ) use ($resolve): MockResponse {
+                $requested = json_decode(
+                    (string) $options['body'],
+                    true,
+                    flags: JSON_THROW_ON_ERROR,
+                )['urls'][0];
+                $r = $resolve($requested);
 
-            $entry = ['url' => $requested, 'status' => $r['status']];
-            if (isset($r['body'])) {
-                $entry['body_base64'] = base64_encode(json_encode($r['body'], JSON_THROW_ON_ERROR));
-            }
+                $entry = ['url' => $requested, 'status' => $r['status']];
+                if (isset($r['body'])) {
+                    $entry['body_base64'] = base64_encode(
+                        json_encode($r['body'], JSON_THROW_ON_ERROR),
+                    );
+                }
 
-            return new MockResponse(
-                json_encode(['results' => [$entry]], JSON_THROW_ON_ERROR),
-                ['response_headers' => ['content-type' => 'application/json']],
-            );
-        }));
+                return new MockResponse(
+                    json_encode(['results' => [$entry]], JSON_THROW_ON_ERROR),
+                    ['response_headers' => ['content-type' => 'application/json']],
+                );
+            },
+        ));
     }
 
     private function noEgress(): GoFetcherClient

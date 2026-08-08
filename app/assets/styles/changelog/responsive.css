@@ -1,0 +1,11 @@
+/* ---------------------------------------------------------------------------
+   Changelog — narrow-viewport overrides. Loaded last on purpose: they must win
+   over the base declarations at equal specificity (e.g. .cl-release__date).
+--------------------------------------------------------------------------- */
+@layer components {
+  @media (max-width: 480px) {
+    .cl-timeline { padding-left: 1.5rem; }
+    .cl-node::before { left: -1.13rem; }
+    .cl-release__date { margin-left: 0; width: 100%; }
+  }
+}

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Build;
 
+use App\Service\Build\BuildCatalogs;
 use App\Service\Build\BuildStructureProjector;
 use App\Service\Picker\GameMode;
 use App\Service\Picker\ItemOptionsProjector;
@@ -22,29 +23,30 @@ final class BuildStructureProjectorTest extends TestCase
         $this->projector = new BuildStructureProjector(new ItemOptionsProjector());
     }
 
-    /** @return array{runeTrees: array<mixed>, championIds: list<string>, itemData: array<int, array<string, mixed>>} */
-    private static function catalogs(): array
+    private static function catalogs(): BuildCatalogs
     {
         $tree = static fn (int $id, array $slots): array => [
             'id' => $id,
             'slots' => array_map(
-                static fn (array $perkIds): array => ['runes' => array_map(static fn (int $p): array => ['id' => $p], $perkIds)],
+                static fn (array $perkIds): array => [
+                    'runes' => array_map(static fn (int $p): array => ['id' => $p], $perkIds),
+                ],
                 $slots,
             ),
         ];
 
-        return [
-            'runeTrees' => [
+        return BuildCatalogs::of(
+            [
                 $tree(8000, [[8005, 8008], [9101, 9111], [9104, 9105], [8014, 8017]]),
                 $tree(8100, [[8112, 8124], [8126, 8139], [8138, 8135], [8106, 8105]]),
             ],
-            'championIds' => ['Aatrox', 'Ahri'],
-            'itemData' => [
+            ['Aatrox', 'Ahri'],
+            [
                 1055 => ['name' => "Doran's Blade", 'maps' => [11 => true, 12 => true]],
                 3006 => ['name' => 'Berserker Greaves', 'maps' => [11 => true, 12 => false]],
                 2003 => ['name' => 'Health Potion'],
             ],
-        ];
+        );
     }
 
     /** @return array<mixed> */
@@ -100,7 +102,11 @@ final class BuildStructureProjectorTest extends TestCase
         $result = $this->projector->project($structure, GameMode::Aram, self::catalogs());
 
         self::assertSame(['1055'], $result['structure']['steps'][0]['items']);
-        self::assertCount(1, $result['structure']['steps'], 'the step left with no item is removed');
+        self::assertCount(
+            1,
+            $result['structure']['steps'],
+            'the step left with no item is removed',
+        );
 
         $byId = array_column($result['report']['droppedItems'], 'name', 'id');
         self::assertSame('Berserker Greaves', $byId['3006'], 'known item drops with its name');
@@ -124,7 +130,12 @@ final class BuildStructureProjectorTest extends TestCase
 
         self::assertTrue($result['report']['runesReset']);
         self::assertSame(
-            ['primaryStyleId' => 0, 'primarySelections' => [], 'secondaryStyleId' => 0, 'secondarySelections' => []],
+            [
+                'primaryStyleId' => 0,
+                'primarySelections' => [],
+                'secondaryStyleId' => 0,
+                'secondarySelections' => [],
+            ],
             $result['structure']['runes'],
         );
     }

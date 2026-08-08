@@ -4,11 +4,11 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Entity\ApiKey;
-use App\Entity\ApiPlan;
+use App\Entity\Enum\ApiPlan;
 use App\Repository\ApiKeyRepository;
-use App\Service\Audit\AuditAction;
+use App\Service\Audit\Model\AuditAction;
 use App\Service\Audit\AuditLogger;
-use App\Service\Audit\AuditTarget;
+use App\Service\Audit\Model\AuditTarget;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -79,8 +79,11 @@ final class ApiClientController extends AbstractAdminController
 
         $key->revoke();
         $this->entityManager->flush();
-        $this->audit->log(AuditAction::AdminApiClientRevoke, target: AuditTarget::of(AuditTarget::TYPE_API_CLIENT, $key->getId(), $key->getKeyPrefix() . '…'));
-        $this->addFlash('success', sprintf('Clé %s… révoquée (effective sous ~60 s côté API).', $key->getKeyPrefix()));
+        $this->audit->log(AuditAction::AdminApiClientRevoke, target: self::auditTarget($key));
+        $this->addFlash('success', sprintf(
+            'Clé %s… révoquée (effective sous ~60 s côté API).',
+            $key->getKeyPrefix(),
+        ));
 
         return $this->backToList($request, 'admin_api_clients');
     }
@@ -94,18 +97,49 @@ final class ApiClientController extends AbstractAdminController
 
         $requests = $request->request->getInt('requests');
         if ($requests < self::CREDIT_MIN || $requests > self::CREDIT_MAX) {
-            $this->addFlash('error', sprintf('Nombre de requêtes invalide (%d à %s).', self::CREDIT_MIN, number_format(self::CREDIT_MAX, 0, '.', ' ')));
+            $this->addFlash('error', sprintf(
+                'Nombre de requêtes invalide (%d à %s).',
+                self::CREDIT_MIN,
+                number_format(self::CREDIT_MAX, 0, '.', ' '),
+            ));
 
             return $this->backToList($request, 'admin_api_clients');
         }
 
         // Same atomic path as the Stripe credit packs (rate floor included).
         $this->apiKeys->addCredits($key, $requests, ApiPlan::RATE_CREDITS);
-        $this->logger->info(self::LOG_CREDIT_GRANTED, ['api_key_id' => $key->getId(), 'requests' => $requests]);
-        $this->audit->log(AuditAction::AdminApiClientCredit, target: AuditTarget::of(AuditTarget::TYPE_API_CLIENT, $key->getId(), $key->getKeyPrefix() . '…'), metadata: ['requests' => $requests]);
-        $this->addFlash('success', sprintf('%s requêtes créditées sur la clé %s….', number_format($requests, 0, '.', ' '), $key->getKeyPrefix()));
+        $this->traceCreditGrant($key, $requests);
+        $this->addFlash('success', sprintf(
+            '%s requêtes créditées sur la clé %s….',
+            number_format($requests, 0, '.', ' '),
+            $key->getKeyPrefix(),
+        ));
 
         return $this->backToList($request, 'admin_api_clients');
+    }
+
+    /** Both trails of a manual grant: the application log and the audit journal. */
+    private function traceCreditGrant(ApiKey $key, int $requests): void
+    {
+        $this->logger->info(
+            self::LOG_CREDIT_GRANTED,
+            ['api_key_id' => $key->getId(), 'requests' => $requests],
+        );
+        $this->audit->log(
+            AuditAction::AdminApiClientCredit,
+            target: self::auditTarget($key),
+            metadata: ['requests' => $requests],
+        );
+    }
+
+    /** Keys are named by their public prefix only — never by their owner. */
+    private static function auditTarget(ApiKey $key): AuditTarget
+    {
+        return AuditTarget::of(
+            AuditTarget::TYPE_API_CLIENT,
+            $key->getId(),
+            $key->getKeyPrefix() . '…',
+        );
     }
 
     /**

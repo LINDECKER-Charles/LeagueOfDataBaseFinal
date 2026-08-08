@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Entity\Concern\PinsProfileFavorites;
+use App\Entity\Concern\TracksModerationBan;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -26,11 +27,17 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[UniqueEntity(fields: ['username'], repositoryMethod: 'findForUsernameUniqueness')]
 final class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    use PinsProfileFavorites;
+    use TracksModerationBan;
+
     public const ROLE_DEFAULT = 'ROLE_USER';
-    public const USERNAME_PATTERN = '/^[a-zA-Z0-9][a-zA-Z0-9_.-]{2,23}$/';
+    /** Username bounds — the pattern, the column and UsernameAllocator all derive from them. */
+    public const USERNAME_MIN_LENGTH = 3;
+    public const USERNAME_MAX_LENGTH = 24;
+    public const USERNAME_PATTERN = '/^[a-zA-Z0-9][a-zA-Z0-9_.-]{'
+        .(self::USERNAME_MIN_LENGTH - 1).','.(self::USERNAME_MAX_LENGTH - 1).'}$/';
     // Riot ID tagline (the part after the #): 3-5 alphanumerics, per Riot's format.
     public const RIOT_TAGLINE_PATTERN = '/^[A-Za-z0-9]{3,5}$/';
-    public const BAN_REASON_MAX_LENGTH = 255;
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -43,7 +50,7 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Length(max: 180)]
     private string $email = '';
 
-    #[ORM\Column(length: 24)]
+    #[ORM\Column(length: self::USERNAME_MAX_LENGTH)]
     #[Assert\NotBlank]
     #[Assert\Regex(pattern: self::USERNAME_PATTERN)]
     private string $username = '';
@@ -79,41 +86,6 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column(options: ['default' => false])]
     private bool $isVerified = false;
-
-    /** Moderation ban: blocks login (UserChecker) and hides the public surfaces. */
-    #[ORM\Column(options: ['default' => false])]
-    private bool $isBanned = false;
-
-    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $bannedAt = null;
-
-    /** Operator-facing note, never shown to the banned player. */
-    #[ORM\Column(length: self::BAN_REASON_MAX_LENGTH, nullable: true)]
-    private ?string $banReason = null;
-
-    #[ORM\Column(length: 64, nullable: true)]
-    private ?string $favoriteChampionId = null;
-
-    #[ORM\Column(length: 16, nullable: true)]
-    private ?string $favoriteItemId = null;
-
-    #[ORM\Column(length: 16, nullable: true)]
-    private ?string $favoriteRuneId = null;
-
-    #[ORM\Column(length: 64, nullable: true)]
-    private ?string $favoriteSummonerId = null;
-
-    /** Favorite skin as the profile banner. Stored as "{championId}_{skinNum}" (e.g. "Ahri_7") — the DDragon splash filename stem, so the banner URL derives without any data-layer lookup. */
-    #[ORM\Column(length: 64, nullable: true)]
-    private ?string $favoriteSkinId = null;
-
-    /**
-     * Data Dragon patch the profile pins its favorites to, so a favorite never
-     * silently disappears (nor gets wiped on save) when the browsing version
-     * lacks it. Null = follow the current browsing version.
-     */
-    #[ORM\Column(length: 24, nullable: true)]
-    private ?string $preferredVersion = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -204,7 +176,10 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->password !== null;
     }
 
-    /** True once linked to a Google identity — its `sub` claim, not a password, is the credential of record. */
+    /**
+     * True once linked to a Google identity — its `sub` claim, not a password,
+     * is the credential of record.
+     */
     public function isGoogleAccount(): bool
     {
         return $this->googleId !== null;
@@ -237,7 +212,9 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
     /** Public-facing name: `username` or `username#TAG` when the Riot tagline is set. */
     public function displayName(): string
     {
-        return $this->riotTagline === null ? $this->username : $this->username.'#'.$this->riotTagline;
+        return $this->riotTagline === null
+            ? $this->username
+            : $this->username.'#'.$this->riotTagline;
     }
 
     public function isPublicProfile(): bool
@@ -274,107 +251,6 @@ final class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->isVerified = $isVerified;
 
         return $this;
-    }
-
-    public function getFavoriteChampionId(): ?string
-    {
-        return $this->favoriteChampionId;
-    }
-
-    public function setFavoriteChampionId(?string $favoriteChampionId): static
-    {
-        $this->favoriteChampionId = $favoriteChampionId;
-
-        return $this;
-    }
-
-    public function getFavoriteItemId(): ?string
-    {
-        return $this->favoriteItemId;
-    }
-
-    public function setFavoriteItemId(?string $favoriteItemId): static
-    {
-        $this->favoriteItemId = $favoriteItemId;
-
-        return $this;
-    }
-
-    public function getFavoriteRuneId(): ?string
-    {
-        return $this->favoriteRuneId;
-    }
-
-    public function setFavoriteRuneId(?string $favoriteRuneId): static
-    {
-        $this->favoriteRuneId = $favoriteRuneId;
-
-        return $this;
-    }
-
-    public function getFavoriteSummonerId(): ?string
-    {
-        return $this->favoriteSummonerId;
-    }
-
-    public function setFavoriteSummonerId(?string $favoriteSummonerId): static
-    {
-        $this->favoriteSummonerId = $favoriteSummonerId;
-
-        return $this;
-    }
-
-    public function getFavoriteSkinId(): ?string
-    {
-        return $this->favoriteSkinId;
-    }
-
-    public function setFavoriteSkinId(?string $favoriteSkinId): static
-    {
-        $this->favoriteSkinId = $favoriteSkinId;
-
-        return $this;
-    }
-
-    public function getPreferredVersion(): ?string
-    {
-        return $this->preferredVersion;
-    }
-
-    public function setPreferredVersion(?string $preferredVersion): static
-    {
-        $this->preferredVersion = $preferredVersion;
-
-        return $this;
-    }
-
-    public function isBanned(): bool
-    {
-        return $this->isBanned;
-    }
-
-    public function getBannedAt(): ?\DateTimeImmutable
-    {
-        return $this->bannedAt;
-    }
-
-    public function getBanReason(): ?string
-    {
-        return $this->banReason;
-    }
-
-    public function ban(?string $reason = null): void
-    {
-        $this->isBanned = true;
-        $this->bannedAt = new \DateTimeImmutable();
-        $this->banReason = $reason === null ? null : mb_substr($reason, 0, self::BAN_REASON_MAX_LENGTH);
-    }
-
-    public function unban(): void
-    {
-        $this->isBanned = false;
-        $this->bannedAt = null;
-        $this->banReason = null;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

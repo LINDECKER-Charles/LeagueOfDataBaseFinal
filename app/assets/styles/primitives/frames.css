@@ -1,0 +1,70 @@
+/* ---------------------------------------------------------------------------
+   Signature — the Hextech frame (gold hairline + beveled corners + cyan glow)
+   and the framing/typography accents built on it. Riot's own grammar drives the
+   shapes: square linework frames information, the diamond guides the eye.
+--------------------------------------------------------------------------- */
+@utility hextech-frame {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(26, 38, 60, 0.94), rgba(10, 20, 40, 0.94));
+  border: 1px solid color-mix(in srgb, var(--color-gold) 42%, transparent);
+  clip-path: var(--hx-bevel);
+  box-shadow:
+    inset 0 1px 0 rgba(240, 230, 210, 0.06),
+    0 12px 44px -14px rgba(1, 10, 19, 0.85);
+  transition: border-color 0.4s var(--ease-hextech), box-shadow 0.4s var(--ease-hextech);
+}
+
+@utility hextech-frame-hover {
+  &:hover {
+    border-color: var(--color-gold);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-hex) 25%, transparent),
+      0 0 24px -6px color-mix(in srgb, var(--color-hex) 35%, transparent);
+  }
+}
+
+/* Etched gold corner brackets — quiet ornament for panels that deserve weight. */
+@utility hx-corners {
+  position: relative;
+  &::before, &::after {
+    content: "";
+    position: absolute;
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 75%, transparent);
+    pointer-events: none;
+  }
+  &::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+  &::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+}
+
+@utility gold-rule {
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(90deg, transparent, var(--color-gold), transparent) 1;
+}
+
+@utility gold-hairline {
+  box-shadow: inset 0 1px 0 0 color-mix(in srgb, var(--color-gold) 35%, transparent);
+}
+
+@utility hex-glow {
+  box-shadow: 0 0 20px -4px color-mix(in srgb, var(--color-hex) 35%, transparent);
+}
+
+@utility eyebrow {
+  font-family: var(--font-beaufort);
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  font-size: 0.7rem;
+  color: var(--color-gold);
+}
+
+/* Display-name treatment — parchment-to-gold gradient over Beaufort caps. */
+@utility text-gold-grad {
+  background:
+    linear-gradient(180deg, #f5ecd8 8%, var(--color-gold) 60%, var(--color-gold-rich) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

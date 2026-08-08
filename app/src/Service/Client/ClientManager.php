@@ -3,32 +3,37 @@ declare(strict_types=1);
 
 namespace App\Service\Client;
 
-use App\Service\Client\VersionManager;
 use Symfony\Component\HttpFoundation\Cookie;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+/**
+ * Owns the visitor's patch+language preference: where it is stored (session,
+ * with the signed "remember" cookie as the durable backup) and what it falls
+ * back to when the stored value no longer exists upstream.
+ *
+ * The cookie's wire format and signature belong to {@see RememberPreferencesCookie}.
+ */
 final class ClientManager
 {
     private const K_LOCALE  = '_locale';
     private const K_VERSION = 'dd_version';
-    private const REMEMBER_NAME  = 'lod_prefs'; // nom du cookie
 
-    // HMAC key of last resort when %kernel.secret% is empty. Signing and
-    // verification MUST use the same value — hence a single constant, never a
-    // repeated literal (a divergence would make emitted signatures unverifiable).
-    private const HMAC_FALLBACK_SECRET = 'fallback-secret';
+    private readonly RememberPreferencesCookie $rememberCookie;
 
     public function __construct(
         private readonly RequestStack $requestStack,
-        private readonly VersionManager $versionManager,
-        private readonly string $appSecret = '', // injecté via services.yaml (%kernel.secret%) pour signer les cookies
-        private readonly string $defaultLocale = 'en_US', // fallback si pas d'en-tête
-    ) {}
+        private readonly VersionCatalogInterface $versionCatalog,
+        // Injected from services.yaml (%kernel.secret%) — signs the remember cookie.
+        #[\SensitiveParameter] string $appSecret = '',
+        // Fallback used when no language could be detected.
+        private readonly string $defaultLocale = 'en_US',
+    ) {
+        // Built here rather than wired: the codec is a pure function of the
+        // secret this service is already bound to, so injecting it would only
+        // duplicate the %kernel.secret% binding.
+        $this->rememberCookie = new RememberPreferencesCookie($appSecret);
+    }
 
-    /**
-     * Récupère la langue par défaut
-     */
     public function getLangue(): string
     {
         return $this->defaultLocale;
@@ -36,262 +41,147 @@ final class ClientManager
 
     /** --- SET --- */
 
-    /**
-     * Enregistre la langue en session.
-     *
-     * @param string $locale Exemple: "fr_FR"
-     */
+    /** @param string $locale e.g. "fr_FR" */
     public function setLocaleInSession(string $locale): void
     {
         $this->requestStack->getSession()?->set(self::K_LOCALE, $locale);
     }
 
-    /**
-     * Enregistre la version Data Dragon en session.
-     *
-     * @param string $version Exemple: "14.16.1"
-     */
+    /** @param string $version e.g. "14.16.1" */
     public function setVersionInSession(string $version): void
     {
         $this->requestStack->getSession()?->set(self::K_VERSION, $version);
     }
 
     /**
-     * Enregistre en une fois la langue et la version en session.
-     * Les valeurs nulles ou vides sont ignorées.
+     * Persistent cookie remembering the selection for $days days.
      *
-     * @param string|null $locale  Exemple: "fr_FR"
-     * @param string|null $version Exemple: "14.16.1"
+     * @param string      $locale  locale to remember, e.g. "fr_FR"
+     * @param string|null $version Data Dragon version to remember, e.g. "14.16.1"
      */
-    public function setPreferencesInSession(?string $locale, ?string $version): void
+    public function makeRememberCookie(string $locale, ?string $version, int $days): Cookie
     {
-        $session = $this->requestStack->getSession();
-        if (!$session) {
-            return;
-        }
-
-        if (is_string($locale) && $locale !== '') {
-            $session->set(self::K_LOCALE, $locale);
-        }
-        if (is_string($version) && $version !== '') {
-            $session->set(self::K_VERSION, $version);
-        }
-    }
-
-    /** --- GET --- */
-
-    /**
-     * Récupère la langue depuis la session.
-     *
-     * @return string|null "fr_FR" par ex., ou null si absente/vides
-     */
-    public function getLocaleFromSession(): ?string
-    {
-        $v = $this->requestStack->getSession()?->get(self::K_LOCALE);
-        return (is_string($v) && $v !== '') ? $v : null;
+        return $this->rememberCookie->create($locale, $version, $days);
     }
 
     /**
-     * Récupère la version Data Dragon depuis la session.
+     * Selected DDragon locale (session first, then the "remember" cookie) without
+     * starting or writing the session. It drives the UI locale on every request,
+     * so it must stay free of session side effects.
      *
-     * @return string|null "14.16.1" par ex., ou null si absente/vides
-     */
-    public function getVersionFromSession(): ?string
-    {
-        $v = $this->requestStack->getSession()?->get(self::K_VERSION);
-        return (is_string($v) && $v !== '') ? $v : null;
-    }
-
-    /**
-     * Récupère langue + version d'un coup.
-     *
-     * @return array{locale: ?string, version: ?string}
-     */
-    public function getPreferencesFromSession(): array
-    {
-        return [
-            'locale'  => $this->getLocaleFromSession(),
-            'version' => $this->getVersionFromSession(),
-        ];
-    }
-
-    /**
-     * Crée un cookie "remember" signé qui persiste la locale (et optionnellement la version)
-     * pendant $days jours. Le JSON est base64-encodé puis concaténé avec une signature HMAC
-     * (sha256) basée sur le secret applicatif : base64(json) . '|' . hmac.
-     *
-     * Sécurité : le cookie garantit l'intégrité (signature) mais pas la confidentialité
-     * (pas chiffré). Ne pas y stocker de données sensibles.
-     *
-     * @param string      $locale  Locale à mémoriser (ex. "fr_FR")
-     * @param string|null $version Version Data Dragon à mémoriser (ex. "14.16.1") ou null
-     * @param int         $days    Durée de vie en jours (par défaut 7)
-     *
-     * @return \Symfony\Component\HttpFoundation\Cookie Cookie persistant (Secure, HttpOnly, SameSite=Lax)
-     */
-    public function makeRememberCookie(string $locale, ?string $version, int $days = 7): Cookie
-    {
-        $payload = ['l' => $locale, 'v' => $version];
-        $json    = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $sig     = hash_hmac('sha256', $json, $this->appSecret ?: self::HMAC_FALLBACK_SECRET);
-        $value   = base64_encode($json).'|'.$sig;
-
-        $expire = time() + ($days * 86400);
-
-        return Cookie::create(
-            name: self::REMEMBER_NAME,
-            value: $value,
-            expire: $expire,
-            path: '/',
-            secure: true,
-            httpOnly: true,
-            sameSite: 'lax'
-        );
-    }
-
-    /**
-     * Hydrate la session à partir du cookie "remember" si la session ne contient pas déjà
-     * la langue et la version. Le cookie doit être au format:
-     *   base64(json) . '|' . hmac_sha256(json, appSecret)
-     *
-     * Étapes:
-     * - Ne fait rien si la session a déjà _locale ET dd_version.
-     * - Lit le cookie (nom = self::REMEMBER_NAME). S’il est absent ou mal formé, sort.
-     * - Décode la partie base64 en JSON, recalcule la signature HMAC-SHA256 avec le secret
-     *   applicatif et vérifie l’intégrité via hash_equals. En cas d’échec, ignore.
-     * - Décode le JSON en tableau et, si présents, écrit:
-     *     - _locale  <- $data['l']
-     *     - dd_version <- $data['v']
-     *
-     * Remarques:
-     * - Garantit l’intégrité (HMAC) mais pas la confidentialité (contenu en clair).
-     * - Ne valide pas la valeur fonctionnellement (à faire via VersionManager si nécessaire).
-     * - À appeler tôt dans le cycle requête (ex: subscriber sur KernelEvents::REQUEST).
-     */
-    public function hydrateSessionFromRememberCookie(): void
-    {
-        $req = $this->requestStack->getCurrentRequest();
-        $sess = $this->requestStack->getSession();
-        if (!$req || !$sess) return;
-
-        if ($sess->has(self::K_LOCALE) && $sess->has(self::K_VERSION)) {
-            return; // déjà hydraté
-        }
-
-        $data = $this->readRememberPayload($req);
-        if ($data === null) return;
-
-        if (!empty($data['l'])) $sess->set(self::K_LOCALE, (string)$data['l']);
-        if (!empty($data['v'])) $sess->set(self::K_VERSION, (string)$data['v']);
-    }
-
-    /**
-     * Décode et vérifie l'intégrité du cookie "remember" (base64(json).'|'.hmac).
-     * Lecture seule : ne touche ni la session ni la requête.
-     *
-     * @return array{l?: string, v?: ?string}|null Payload validé, ou null si absent/altéré.
-     */
-    private function readRememberPayload(Request $req): ?array
-    {
-        $raw = $req->cookies->get(self::REMEMBER_NAME);
-        if (!is_string($raw) || !str_contains($raw, '|')) {
-            return null;
-        }
-
-        [$b64, $sig] = explode('|', $raw, 2);
-        $json = base64_decode($b64, true);
-        if ($json === false) {
-            return null;
-        }
-
-        $expected = hash_hmac('sha256', $json, $this->appSecret ?: self::HMAC_FALLBACK_SECRET);
-        if (!hash_equals($expected, $sig)) {
-            return null; // cookie altéré → on ignore
-        }
-
-        $data = json_decode($json, true);
-        return is_array($data) ? $data : null;
-    }
-
-    /**
-     * Récupère la locale DDragon sélectionnée (session puis cookie "remember"),
-     * sans démarrer ni écrire la session. Pensé pour piloter la locale d'UI à
-     * chaque requête sans surcoût.
-     *
-     * @return string|null "fr_FR" par ex., ou null si rien de mémorisé.
+     * @return string|null e.g. "fr_FR", or null when nothing was remembered
      */
     public function getSelectedLocale(): ?string
     {
-        $req = $this->requestStack->getCurrentRequest();
-        if ($req === null) {
+        $request = $this->requestStack->getCurrentRequest();
+        if ($request === null) {
             return null;
         }
 
-        // Session d'abord, mais seulement si elle existe déjà (ne pas la démarrer).
-        if ($req->hasSession() && $req->hasPreviousSession()) {
-            $loc = $req->getSession()->get(self::K_LOCALE);
-            if (is_string($loc) && $loc !== '') {
-                return $loc;
+        // Session first, but only if one already exists (never start one here).
+        if ($request->hasSession() && $request->hasPreviousSession()) {
+            $locale = $request->getSession()->get(self::K_LOCALE);
+            if (is_string($locale) && $locale !== '') {
+                return $locale;
             }
         }
 
-        $loc = $this->readRememberPayload($req)['l'] ?? null;
-        return (is_string($loc) && $loc !== '') ? $loc : null;
+        $locale = $this->rememberCookie->read($request)['l'] ?? null;
+
+        return (is_string($locale) && $locale !== '') ? $locale : null;
     }
 
     /**
-     * Retourne les préférences depuis la session si elles sont complètes (locale + version).
-     * Sinon, tente de réhydrater la session depuis le cookie "remember", puis renvoie
-     * ce que contient la session (même partiel).
+     * Preferences from the session when they are complete (locale + version).
+     * Otherwise tries to rehydrate the session from the "remember" cookie, then
+     * returns whatever the session holds — possibly still partial.
      *
      * @return array{locale: ?string, version: ?string}
      */
     public function getOrHydratePreferences(): array
     {
-        $sess = $this->requestStack->getSession();
-
-        if (!$sess) {
-            return ['locale' => null, 'version' => null];
+        $preferences = $this->readPreferences();
+        if ($preferences['locale'] !== null && $preferences['version'] !== null) {
+            return $preferences;
         }
 
-        $loc = $sess->get(self::K_LOCALE);
-        $ver = $sess->get(self::K_VERSION);
-
-        $hasLoc = is_string($loc) && $loc !== '';
-        $hasVer = is_string($ver) && $ver !== '';
-
-        if ($hasLoc && $hasVer) {
-            return ['locale' => $loc, 'version' => $ver];
-        }
-
-        // session incomplète → on essaie le cookie
+        // incomplete session → fall back to the cookie, then re-read
         $this->hydrateSessionFromRememberCookie();
 
-        // relire après hydratation
-        $loc = $sess->get(self::K_LOCALE);
-        $ver = $sess->get(self::K_VERSION);
-
-        return [
-            'locale'  => (is_string($loc) && $loc !== '') ? $loc : null,
-            'version' => (is_string($ver) && $ver !== '') ? $ver : null,
-        ];
+        return $this->readPreferences();
     }
 
     /**
-     * Récupère la version et la langue stockées dans la session de l’utilisateur.
+     * Version and language for the current visitor.
      *
-     * Si aucune préférence n’est trouvée dans la session, utilise la langue
-     * détectée par défaut et la dernière version disponible depuis le VersionManager.
+     * Each axis falls back on its own: a patch that vanished between two visits
+     * must not also reset a language the visitor picked (nor the other way
+     * round), matching {@see PageContextResolver::selection()}. An unavailable
+     * catalog yields '' for the version rather than an undefined index.
      *
      * @return array{version: string, lang: string}
      */
     public function getSession(): array
     {
-        $val = $this->getOrHydratePreferences();
-        if (!$this->versionManager->languageExists($val['locale']) || !$this->versionManager->versionExists($val['version'])) {
-            $val['version'] = $this->versionManager->getVersions()[0];
-            $val['locale'] = $this->getLangue();
+        $preferences = $this->getOrHydratePreferences();
+
+        return [
+            'version' => $this->versionCatalog->versionExists($preferences['version'])
+                ? (string) $preferences['version']
+                : $this->versionCatalog->latestVersion(),
+            'lang' => $this->versionCatalog->languageExists($preferences['locale'])
+                ? (string) $preferences['locale']
+                : $this->getLangue(),
+        ];
+    }
+
+    /**
+     * Hydrates the session from the "remember" cookie, but only when the session
+     * does not already hold both the locale and the version — a live session
+     * always wins over the cookie.
+     *
+     * The value is not validated functionally here ({@see getSession} does that
+     * later).
+     */
+    private function hydrateSessionFromRememberCookie(): void
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $session = $this->requestStack->getSession();
+        if (!$request || !$session) {
+            return;
         }
-        return ['version' => $val['version'], 'lang' => $val['locale']];
+
+        if ($session->has(self::K_LOCALE) && $session->has(self::K_VERSION)) {
+            return; // already hydrated
+        }
+
+        $payload = $this->rememberCookie->read($request);
+        if ($payload === null) {
+            return;
+        }
+
+        if (!empty($payload['l'])) {
+            $session->set(self::K_LOCALE, (string) $payload['l']);
+        }
+        if (!empty($payload['v'])) {
+            $session->set(self::K_VERSION, (string) $payload['v']);
+        }
+    }
+
+    /**
+     * Session preferences, empty strings normalised to null.
+     *
+     * @return array{locale: ?string, version: ?string}
+     */
+    private function readPreferences(): array
+    {
+        $session = $this->requestStack->getSession();
+        $locale  = $session?->get(self::K_LOCALE);
+        $version = $session?->get(self::K_VERSION);
+
+        return [
+            'locale'  => (is_string($locale) && $locale !== '') ? $locale : null,
+            'version' => (is_string($version) && $version !== '') ? $version : null,
+        ];
     }
 }

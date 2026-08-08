@@ -26,7 +26,9 @@ final class BuildVoteRepositoryTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->entityManager = InMemoryOrm::entityManager([User::class, Build::class, BuildVote::class]);
+        $this->entityManager = InMemoryOrm::entityManager(
+            [User::class, Build::class, BuildVote::class],
+        );
         $registry = $this->createStub(ManagerRegistry::class);
         $registry->method('getManagerForClass')->willReturn($this->entityManager);
         $this->votes = new BuildVoteRepository($registry);
@@ -39,7 +41,10 @@ final class BuildVoteRepositoryTest extends TestCase
         $this->votes->applyVote($build, $voter, BuildVote::UP);
 
         self::assertSame([$build->getId() => 1], $this->votes->scoreFor([$build->getId()]));
-        self::assertSame(BuildVote::UP, $this->votes->findOneByBuildAndVoter($build, $voter)?->getValue());
+        self::assertSame(
+            BuildVote::UP,
+            $this->votes->findOneByBuildAndVoter($build, $voter)?->getValue(),
+        );
     }
 
     public function testRevotingTheSameValueWithdrawsTheVote(): void
@@ -101,16 +106,19 @@ final class BuildVoteRepositoryTest extends TestCase
         $this->votes->applyVote($build, $me, BuildVote::DOWN);
         $this->votes->applyVote($other, $someone, BuildVote::UP);
 
-        self::assertSame([$build->getId() => -1], $this->votes->valuesFor($me, [$build->getId(), $other->getId()]));
+        self::assertSame(
+            [$build->getId() => -1],
+            $this->votes->valuesFor($me, [$build->getId(), $other->getId()]),
+        );
     }
 
     public function testTopPublicBuildsRanksByScoreThenNewestAndKeepsZeroVoteBuilds(): void
     {
-        $top = $this->givenPublicBuild('Ahri', createdDaysAgo: 3);
-        $oldSilent = $this->givenPublicBuild('Amumu', createdDaysAgo: 2);
-        $newSilent = $this->givenPublicBuild('Anivia', createdDaysAgo: 1);
-        $downvoted = $this->givenPublicBuild('Ashe', createdDaysAgo: 4);
-        $this->givenBuild('Aatrox', isPublic: false); // must never surface
+        $top = $this->givenPublicBuildCreatedDaysAgo('Ahri', 3);
+        $oldSilent = $this->givenPublicBuildCreatedDaysAgo('Amumu', 2);
+        $newSilent = $this->givenPublicBuildCreatedDaysAgo('Anivia', 1);
+        $downvoted = $this->givenPublicBuildCreatedDaysAgo('Ashe', 4);
+        $this->givenPrivateBuild('Aatrox'); // must never surface
 
         $voter = $this->givenUser('ranker');
         $this->votes->applyVote($top, $voter, BuildVote::UP);
@@ -129,7 +137,7 @@ final class BuildVoteRepositoryTest extends TestCase
     public function testTopPublicBuildsExcludesBannedOwners(): void
     {
         $bannedOwner = $this->givenUser('banned-owner');
-        $this->givenPublicBuild('Ahri', owner: $bannedOwner);
+        $this->givenPublicBuildOwnedBy($bannedOwner, 'Ahri');
         $visible = $this->givenPublicBuild('Ashe');
         $bannedOwner->ban('spam');
         $this->entityManager->flush();
@@ -137,7 +145,10 @@ final class BuildVoteRepositoryTest extends TestCase
         $result = $this->votes->topPublicBuilds(new TrendsFilter(), page: 1, perPage: 24);
 
         self::assertSame(1, $result['total']);
-        self::assertSame([$visible->getId()], array_map(static fn (Build $b): ?int => $b->getId(), $result['builds']));
+        self::assertSame(
+            [$visible->getId()],
+            array_map(static fn (Build $b): ?int => $b->getId(), $result['builds']),
+        );
 
         $bannedOwner->unban();
         $this->entityManager->flush();
@@ -192,20 +203,38 @@ final class BuildVoteRepositoryTest extends TestCase
     private function givenPublicBuild(
         string $championId,
         GameMode $mode = GameMode::SummonersRift,
-        int $createdDaysAgo = 0,
-        ?User $owner = null,
     ): Build {
-        return $this->givenBuild($championId, true, $mode, $createdDaysAgo, $owner);
+        return $this->persist($this->draftBuild($championId, $mode));
     }
 
-    private function givenBuild(
+    private function givenPublicBuildOwnedBy(User $owner, string $championId): Build
+    {
+        return $this->persist($this->draftBuild($championId, owner: $owner));
+    }
+
+    private function givenPublicBuildCreatedDaysAgo(string $championId, int $days): Build
+    {
+        $build = $this->draftBuild($championId);
+        // No public mutator on purpose (creation date is immutable in prod);
+        // the ranking tests need distinct timestamps, hence reflection.
+        new \ReflectionProperty(Build::class, 'createdAt')
+            ->setValue($build, new \DateTimeImmutable("-{$days} days"));
+
+        return $this->persist($build);
+    }
+
+    private function givenPrivateBuild(string $championId): Build
+    {
+        return $this->persist($this->draftBuild($championId)->setIsPublic(false));
+    }
+
+    /** A valid public build, owned by a throwaway account unless told otherwise. */
+    private function draftBuild(
         string $championId,
-        bool $isPublic,
         GameMode $mode = GameMode::SummonersRift,
-        int $createdDaysAgo = 0,
         ?User $owner = null,
     ): Build {
-        $build = new Build()
+        return new Build()
             ->setOwner($owner ?? $this->givenUser('owner-' . bin2hex(random_bytes(4))))
             ->setName($championId . ' build')
             ->setChampionId($championId)
@@ -213,15 +242,11 @@ final class BuildVoteRepositoryTest extends TestCase
             ->setGameMode($mode)
             ->setRunes([])
             ->setSteps([])
-            ->setIsPublic($isPublic);
+            ->setIsPublic(true);
+    }
 
-        if ($createdDaysAgo > 0) {
-            // No public mutator on purpose (creation date is immutable in prod);
-            // the ranking tests need distinct timestamps, hence reflection.
-            new \ReflectionProperty(Build::class, 'createdAt')
-                ->setValue($build, new \DateTimeImmutable("-{$createdDaysAgo} days"));
-        }
-
+    private function persist(Build $build): Build
+    {
         $this->entityManager->persist($build);
         $this->entityManager->flush();
 

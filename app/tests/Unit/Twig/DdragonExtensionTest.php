@@ -29,7 +29,8 @@ final class DdragonExtensionTest extends TestCase
 
     public function testPreservesRegularDdragonMarkup(): void
     {
-        $html = '<mainText><stats><attention>+40</attention> AD</stats><br><passive>Mist</passive></mainText>';
+        $html = '<mainText><stats><attention>+40</attention> '
+            . 'AD</stats><br><passive>Mist</passive></mainText>';
 
         self::assertSame($html, $this->extension->clean($html));
     }

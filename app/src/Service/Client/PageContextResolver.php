@@ -62,10 +62,26 @@ final class PageContextResolver
      * deferred ingestor and the next visit reconcile it — so it never breaks a render.
      */
     public const LIST_PAGES = [
-        '/champions' => ['type' => 'champion',      'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE, 'maxPerPage' => 20],
-        '/objects'   => ['type' => 'item',          'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE, 'maxPerPage' => 20],
-        '/runes'     => ['type' => 'runesReforged', 'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE, 'maxPerPage' => 20],
-        '/summoners' => ['type' => 'summoner',      'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE, 'maxPerPage' => 0],
+        '/champions' => [
+            'type' => 'champion',
+            'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE,
+            'maxPerPage' => 20,
+        ],
+        '/objects'   => [
+            'type' => 'item',
+            'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE,
+            'maxPerPage' => 20,
+        ],
+        '/runes'     => [
+            'type' => 'runesReforged',
+            'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE,
+            'maxPerPage' => 20,
+        ],
+        '/summoners' => [
+            'type' => 'summoner',
+            'defaultPerPage' => self::LIST_INITIAL_PAGE_SIZE,
+            'maxPerPage' => 0,
+        ],
     ];
 
     /** @var array{version:string, lang:string}|null per-request memo of {@see selection} */
@@ -93,40 +109,59 @@ final class PageContextResolver
     {
         // A versioned list path (/{version}/champions) warms the same image batch
         // as its clean form — drop the leading version segment before matching.
-        $path = preg_replace('#^/' . VersionManager::VERSION_PATTERN . '(?=/)#', '', $path) ?? $path;
+        $path = preg_replace(VersionManager::VERSION_SEGMENT_REGEX, '', $path) ?? $path;
         $p = strtolower(rtrim($path, '/')) ?: '/';
 
         if ($p === '/') {
-            return array_map(
-                static fn (string $type): array => ['type' => $type, 'perPage' => self::HOME_PER_PAGE, 'page' => 1],
-                self::HOME_TYPES,
-            );
+            return $this->firstPageSteps(self::HOME_TYPES, self::HOME_PER_PAGE);
         }
 
         // Build editor: warm the full champion/item/rune set (perPage 0 = no slice)
         // so every picker icon is warm when the editor reloads its catalogs.
         if ($p === self::BUILD_WARM_PATH) {
-            return array_map(
-                static fn (string $type): array => ['type' => $type, 'perPage' => 0, 'page' => 1],
-                self::BUILD_TYPES,
-            );
+            return $this->firstPageSteps(self::BUILD_TYPES, 0);
         }
 
         $cfg = self::LIST_PAGES[$p] ?? null;
-        if ($cfg === null) {
-            return [];
-        }
 
-        $page    = max(1, $page ?? 1);
-        $perPage = $perPage ?? 0;
-        if ($perPage <= 0) {
-            $perPage = $cfg['defaultPerPage'];
+        return $cfg === null ? [] : [$this->listStep($cfg, $page, $perPage)];
+    }
+
+    /**
+     * One page-1 step per type, all warming the same batch size (0 = whole set).
+     *
+     * @param list<string> $types
+     * @return list<array{type:string, perPage:int, page:int}>
+     */
+    private function firstPageSteps(array $types, int $perPage): array
+    {
+        return array_map(
+            static fn (string $type): array => [
+                'type' => $type,
+                'perPage' => $perPage,
+                'page' => 1,
+            ],
+            $types,
+        );
+    }
+
+    /**
+     * Clamps a caller-supplied pagination onto the route's own defaults/cap.
+     *
+     * @param array{type:string, defaultPerPage:int, maxPerPage:int} $cfg
+     * @return array{type:string, perPage:int, page:int}
+     */
+    private function listStep(array $cfg, ?int $page, ?int $perPage): array
+    {
+        $size = $perPage ?? 0;
+        if ($size <= 0) {
+            $size = $cfg['defaultPerPage'];
         }
         if ($cfg['maxPerPage'] > 0) {
-            $perPage = min($perPage, $cfg['maxPerPage']);
+            $size = min($size, $cfg['maxPerPage']);
         }
 
-        return [['type' => $cfg['type'], 'perPage' => $perPage, 'page' => $page]];
+        return ['type' => $cfg['type'], 'perPage' => $size, 'page' => max(1, $page ?? 1)];
     }
 
     /**
@@ -173,7 +208,10 @@ final class PageContextResolver
     /** Valid version from the route path segment, else the query — '' when neither applies. */
     private function requestVersion(?Request $request): string
     {
-        foreach ([$request?->attributes->get('version'), $request?->query->get('version')] as $candidate) {
+        foreach ([
+            $request?->attributes->get('version'),
+            $request?->query->get('version'),
+        ] as $candidate) {
             $candidate = trim((string) ($candidate ?? ''));
             if ($candidate !== '' && $this->versionManager->versionExists($candidate)) {
                 return $candidate;

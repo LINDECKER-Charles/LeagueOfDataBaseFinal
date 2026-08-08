@@ -1,0 +1,51 @@
+/**
+ * Pure visibility rule of the filtered resource grid: which cards match the
+ * search + facet, how many pages that makes, and which cards the current page
+ * shows. No Vue, no DOM — the island only binds the result.
+ */
+
+/** Sentinel page size: a single page holding every matching card. */
+export const PAGE_SIZE_ALL = 0
+
+export interface FilterableCard {
+    /** Comparison haystack of the card (already lowercased). */
+    search: string
+    tags: string[]
+}
+
+export interface GridCriteria {
+    query: string
+    tags: ReadonlySet<string>
+    page: number
+    /** {@link PAGE_SIZE_ALL} or a positive page size. */
+    pageSize: number
+}
+
+export interface GridSelection<T> {
+    matching: T[]
+    pageCount: number
+    /** The requested page, sent back to 1 when it fell past the last one. */
+    page: number
+    visible: T[]
+}
+
+export function selectVisibleCards<T extends FilterableCard>(
+    cards: readonly T[],
+    criteria: GridCriteria,
+): GridSelection<T> {
+    const needle = criteria.query.trim().toLowerCase()
+    const matching = cards.filter(
+        (card) =>
+            (needle === '' || card.search.includes(needle))
+            && (criteria.tags.size === 0 || card.tags.some((tag) => criteria.tags.has(tag))),
+    )
+    const size = criteria.pageSize === PAGE_SIZE_ALL
+        ? Math.max(1, matching.length)
+        : criteria.pageSize
+    const pageCount = Math.max(1, Math.ceil(matching.length / size))
+    // Narrowing the filter can strand the reader past the last page: send them
+    // back to the first one rather than to a silently different set of cards.
+    const page = criteria.page > pageCount ? 1 : criteria.page
+    const start = (page - 1) * size
+    return { matching, pageCount, page, visible: matching.slice(start, start + size) }
+}

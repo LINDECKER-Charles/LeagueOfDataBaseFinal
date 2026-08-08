@@ -1,5 +1,5 @@
 # Redaktionelle Texte für /about, /about/data und /faq.
-# Die faq.*-Ids sind in App\Controller\AboutController::FAQ_ENTRIES deklariert.
+# Die faq.*-Ids sind in App\Controller\Editorial\AboutController::FAQ_ENTRIES deklariert.
 eyebrow: "Über uns"
 
 index:

@@ -6,22 +6,20 @@ namespace App\Service\Build;
 /**
  * Pure validation core of the build "structure" contract (championId + runes +
  * steps, see {@see \App\Entity\Build} for the persisted shapes). No I/O: the
- * catalogs (rune trees in raw DDragon shape, valid champion/item ids) are passed
- * in by {@see BuildCatalogGate}, which keeps every rule unit-testable offline.
+ * reference {@see BuildCatalogs} are loaded and passed in by
+ * {@see BuildCatalogGate}, which keeps every rule unit-testable offline.
  *
  * Errors are STABLE codes doubling as translation keys (build.error.*) — the
  * controller translates them into flashes, tests assert them literally.
  */
 final class BuildStructureValidator
 {
-    public const NAME_MIN = 3;
-    public const NAME_MAX = 80;
-    public const DESCRIPTION_MAX = 2000;
-
     public const PRIMARY_PICKS = 4;
     public const SECONDARY_PICKS = 2;
-    /** Secondary picks come from the minor slots only — never from the keystone slot 0. */
-    public const SECONDARY_SLOT_MIN = 1;
+    /** Slot 0 of every tree holds the keystones (Data Dragon contract). */
+    public const KEYSTONE_SLOT = 0;
+    /** Minor slots follow the keystone; secondary picks come from those only. */
+    public const FIRST_MINOR_SLOT = self::KEYSTONE_SLOT + 1;
 
     public const STEPS_MIN = 1;
     public const STEPS_MAX = 10;
@@ -49,21 +47,36 @@ final class BuildStructureValidator
     public const ERROR_STEPS_TOTAL_ITEMS = 'build.error.steps.total_items';
 
     /**
-     * @param array<mixed>        $structure        decoded structure JSON
-     * @param array<mixed>        $runeTrees        raw DDragon runesReforged list (5 trees, 4 slots each)
-     * @param list<string>        $validChampionIds e.g. ["Aatrox", ...]
-     * @param list<string>        $validItemIds     e.g. ["1055", "3006", ...]
+     * @param array<mixed> $structure decoded structure JSON
+     * @param BuildCatalogs $catalogs reference catalogs of one (version, lang)
      * @return list<string> deduplicated error codes; empty means valid
      */
-    public function validate(array $structure, array $runeTrees, array $validChampionIds, array $validItemIds): array
+    public function validate(array $structure, BuildCatalogs $catalogs): array
     {
         $errors = [
-            ...$this->validateChampion($structure['championId'] ?? null, $validChampionIds),
-            ...$this->validateRunes($structure['runes'] ?? null, RuneTreeIndex::fromTrees($runeTrees)->slotsByTree()),
-            ...$this->validateSteps($structure['steps'] ?? null, array_fill_keys($validItemIds, true)),
+            ...$this->validateChampion(
+                $structure['championId'] ?? null,
+                $catalogs->championIds,
+            ),
+            ...$this->validateRunes(
+                $structure['runes'] ?? null,
+                RuneTreeIndex::fromTrees($catalogs->runeTrees)->slotsByTree(),
+            ),
+            ...$this->validateSteps($structure['steps'] ?? null, self::itemIdSet($catalogs)),
         ];
 
         return array_values(array_unique($errors));
+    }
+
+    /**
+     * Item ids as a membership set. PHP recasts numeric JSON map keys to int, so
+     * the ids are restored to the string form stored structures carry.
+     *
+     * @return array<int|string, true>
+     */
+    private static function itemIdSet(BuildCatalogs $catalogs): array
+    {
+        return array_fill_keys(array_map(strval(...), array_keys($catalogs->itemData)), true);
     }
 
     /** @return list<string> */
@@ -73,7 +86,9 @@ final class BuildStructureValidator
             return [self::ERROR_STRUCTURE];
         }
 
-        return in_array(trim($championId), $validChampionIds, true) ? [] : [self::ERROR_CHAMPION_UNKNOWN];
+        return in_array(trim($championId), $validChampionIds, true)
+            ? []
+            : [self::ERROR_CHAMPION_UNKNOWN];
     }
 
     /**
@@ -86,10 +101,14 @@ final class BuildStructureValidator
             return [self::ERROR_STRUCTURE];
         }
 
-        $primaryStyleId = self::readInt($runes['primaryStyleId'] ?? null);
+        $primaryStyleId = IntegerValue::read($runes['primaryStyleId'] ?? null);
 
         return [
-            ...$this->validatePrimary($primaryStyleId, $runes['primarySelections'] ?? null, $slotsByTree),
+            ...$this->validatePrimary(
+                $primaryStyleId,
+                $runes['primarySelections'] ?? null,
+                $slotsByTree,
+            ),
             ...$this->validateSecondary($runes, $primaryStyleId, $slotsByTree),
         ];
     }
@@ -104,13 +123,15 @@ final class BuildStructureValidator
             return [self::ERROR_PRIMARY_STYLE];
         }
 
-        if (!is_array($selections) || count($selections) !== self::PRIMARY_PICKS || !array_is_list($selections)) {
+        if (!is_array($selections) || count($selections) !== self::PRIMARY_PICKS
+            || !array_is_list($selections)
+        ) {
             return [self::ERROR_PRIMARY_COUNT];
         }
 
         $errors = [];
         foreach ($selections as $slotIndex => $raw) {
-            $perkId = self::readInt($raw);
+            $perkId = IntegerValue::read($raw);
             // Selection i must be a perk of slot i of the primary tree (slot 0 = keystone).
             if ($perkId === null || !isset($slotsByTree[$styleId][$slotIndex][$perkId])) {
                 $errors[] = self::ERROR_PRIMARY_SLOT;
@@ -125,9 +146,12 @@ final class BuildStructureValidator
      * @param array<int, list<array<int, true>>> $slotsByTree
      * @return list<string>
      */
-    private function validateSecondary(array $runes, ?int $primaryStyleId, array $slotsByTree): array
-    {
-        $styleId = self::readInt($runes['secondaryStyleId'] ?? null);
+    private function validateSecondary(
+        array $runes,
+        ?int $primaryStyleId,
+        array $slotsByTree,
+    ): array {
+        $styleId = IntegerValue::read($runes['secondaryStyleId'] ?? null);
         if ($styleId === null || !isset($slotsByTree[$styleId])) {
             return [self::ERROR_SECONDARY_STYLE];
         }
@@ -136,14 +160,28 @@ final class BuildStructureValidator
         }
 
         $selections = $runes['secondarySelections'] ?? null;
-        if (!is_array($selections) || count($selections) !== self::SECONDARY_PICKS || !array_is_list($selections)) {
+        if (!is_array($selections) || count($selections) !== self::SECONDARY_PICKS
+            || !array_is_list($selections)
+        ) {
             return [self::ERROR_SECONDARY_COUNT];
         }
 
+        return $this->validateSecondarySelections($selections, $slotsByTree[$styleId]);
+    }
+
+    /**
+     * Both minor picks must land in distinct non-keystone slots of the secondary tree.
+     *
+     * @param list<mixed>            $selections
+     * @param list<array<int, true>> $slots      slots of the secondary tree
+     * @return list<string>
+     */
+    private function validateSecondarySelections(array $selections, array $slots): array
+    {
         $errors = [];
         $usedSlots = [];
         foreach ($selections as $raw) {
-            $slot = $this->secondarySlotOf(self::readInt($raw), $slotsByTree[$styleId]);
+            $slot = $this->secondarySlotOf(IntegerValue::read($raw), $slots);
             if ($slot === null) {
                 $errors[] = self::ERROR_SECONDARY_SLOT;
                 continue;
@@ -169,7 +207,9 @@ final class BuildStructureValidator
         $errors = [];
         $totalItems = 0;
         foreach ($steps as $step) {
-            $errors = [...$errors, ...$this->validateStep($step, $validItems, $totalItems)];
+            $outcome = $this->validateStep($step, $validItems);
+            $errors = [...$errors, ...$outcome['errors']];
+            $totalItems += $outcome['itemCount'];
         }
         if ($totalItems > self::TOTAL_ITEMS_MAX) {
             $errors[] = self::ERROR_STEPS_TOTAL_ITEMS;
@@ -180,38 +220,51 @@ final class BuildStructureValidator
 
     /**
      * @param array<int|string, true> $validItems
-     * @return list<string>
+     * @return array{errors: list<string>, itemCount: int} itemCount is 0 whenever
+     *         the step's own item list is already rejected: a step that breaks the
+     *         per-step bounds must not also inflate the cross-step total.
      */
-    private function validateStep(mixed $step, array $validItems, int &$totalItems): array
+    private function validateStep(mixed $step, array $validItems): array
     {
         if (!is_array($step)) {
-            return [self::ERROR_STRUCTURE];
+            return ['errors' => [self::ERROR_STRUCTURE], 'itemCount' => 0];
         }
 
+        $errors = $this->validateStepText($step);
+        $items = $step['items'] ?? null;
+        if (!is_array($items) || !array_is_list($items)
+            || count($items) < self::ITEMS_PER_STEP_MIN || count($items) > self::ITEMS_PER_STEP_MAX
+        ) {
+            return ['errors' => [...$errors, self::ERROR_STEP_ITEMS_COUNT], 'itemCount' => 0];
+        }
+
+        foreach ($items as $itemId) {
+            // Duplicates are legitimate (potions, stacked components) — only existence matters.
+            if (!is_scalar($itemId) || !isset($validItems[(string) $itemId])) {
+                $errors[] = self::ERROR_STEP_ITEM_UNKNOWN;
+            }
+        }
+
+        return ['errors' => $errors, 'itemCount' => count($items)];
+    }
+
+    /**
+     * @param array<mixed> $step
+     * @return list<string>
+     */
+    private function validateStepText(array $step): array
+    {
         $errors = [];
         $label = $step['label'] ?? null;
-        if (!is_string($label) || trim($label) === '' || mb_strlen(trim($label)) > self::STEP_LABEL_MAX) {
+        if (!is_string($label) || trim($label) === ''
+            || mb_strlen(trim($label)) > self::STEP_LABEL_MAX
+        ) {
             $errors[] = self::ERROR_STEP_LABEL;
         }
 
         $note = $step['note'] ?? null;
         if ($note !== null && (!is_string($note) || mb_strlen(trim($note)) > self::STEP_NOTE_MAX)) {
             $errors[] = self::ERROR_STEP_NOTE;
-        }
-
-        $items = $step['items'] ?? null;
-        if (!is_array($items) || !array_is_list($items)
-            || count($items) < self::ITEMS_PER_STEP_MIN || count($items) > self::ITEMS_PER_STEP_MAX
-        ) {
-            return [...$errors, self::ERROR_STEP_ITEMS_COUNT];
-        }
-
-        $totalItems += count($items);
-        foreach ($items as $itemId) {
-            // Duplicates are legitimate (potions, stacked components) — only existence matters.
-            if (!is_scalar($itemId) || !isset($validItems[(string) $itemId])) {
-                $errors[] = self::ERROR_STEP_ITEM_UNKNOWN;
-            }
         }
 
         return $errors;
@@ -229,25 +282,9 @@ final class BuildStructureValidator
             return null;
         }
         foreach ($slots as $slotIndex => $perks) {
-            if ($slotIndex >= self::SECONDARY_SLOT_MIN && isset($perks[$perkId])) {
+            if ($slotIndex >= self::FIRST_MINOR_SLOT && isset($perks[$perkId])) {
                 return $slotIndex;
             }
-        }
-
-        return null;
-    }
-
-    /**
-     * Lenient int reading shared with {@see BuildStructureNormalizer}: accepts
-     * an int or an int-shaped string (JSON round-trips), nothing else.
-     */
-    public static function readInt(mixed $value): ?int
-    {
-        if (is_int($value)) {
-            return $value;
-        }
-        if (is_string($value) && $value !== '' && (string) (int) $value === $value) {
-            return (int) $value;
         }
 
         return null;

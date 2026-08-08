@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Repository;
 
 use App\Dto\ContactSubmission;
-use App\Entity\ContactCategory;
+use App\Entity\Enum\ContactCategory;
 use App\Entity\ContactMessage;
-use App\Entity\ContactStatus;
+use App\Entity\Enum\ContactStatus;
 use App\Entity\User;
 use App\Repository\ContactMessageRepository;
 use App\Tests\Unit\Support\InMemoryOrm;
@@ -57,7 +57,11 @@ final class ContactMessageRepositoryAdminTest extends TestCase
         self::assertSame(2, $this->messages->countByStatus(ContactStatus::New));
         self::assertSame(1, $this->messages->countByStatus(ContactStatus::Handled));
 
-        ['rows' => $handledRows, 'total' => $handledTotal] = $this->messages->page(1, 25, ContactStatus::Handled);
+        ['rows' => $handledRows, 'total' => $handledTotal] = $this->messages->page(
+            1,
+            25,
+            ContactStatus::Handled,
+        );
         self::assertSame(1, $handledTotal);
         self::assertSame('done@example.test', $handledRows[0]->getEmail());
         self::assertTrue($handledRows[0]->isHandled());

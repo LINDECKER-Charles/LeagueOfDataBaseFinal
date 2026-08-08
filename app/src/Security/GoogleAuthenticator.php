@@ -63,13 +63,18 @@ final class GoogleAuthenticator extends OAuth2Authenticator
         ));
     }
 
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
-    {
+    public function onAuthenticationSuccess(
+        Request $request,
+        TokenInterface $token,
+        string $firewallName,
+    ): ?Response {
         return new RedirectResponse($this->urlGenerator->generate('app_profile'));
     }
 
-    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
-    {
+    public function onAuthenticationFailure(
+        Request $request,
+        AuthenticationException $exception,
+    ): ?Response {
         $session = $request->hasSession() ? $request->getSession() : null;
         if ($session instanceof FlashBagAwareSessionInterface) {
             $session->getFlashBag()->add('error', $this->translator->trans('auth.google.failed'));

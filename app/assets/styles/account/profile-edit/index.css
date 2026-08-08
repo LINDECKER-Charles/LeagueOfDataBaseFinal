@@ -1,0 +1,7 @@
+/* Summoner profile edit chrome — skin banner picker + tiles, personal backdrop,
+   cover header, visibility switch, autosave.
+   Split by zone; the import order is the cascade order — keep it. */
+@import "./banner.css";
+@import "./cover.css";
+@import "./visibility.css";
+@import "./status.css";

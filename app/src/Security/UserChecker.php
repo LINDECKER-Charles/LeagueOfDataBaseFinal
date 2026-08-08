@@ -28,7 +28,9 @@ final class UserChecker implements UserCheckerInterface
             return;
         }
 
-        throw new CustomUserMessageAccountStatusException($this->translator->trans(self::MESSAGE_KEY));
+        throw new CustomUserMessageAccountStatusException(
+            $this->translator->trans(self::MESSAGE_KEY),
+        );
     }
 
     public function checkPostAuth(UserInterface $user): void

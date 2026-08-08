@@ -1,0 +1,38 @@
+{# Profile cover header — display name over the favorite-champion backdrop, with
+   the favorite orbs drifting in its top-right and the preview/logout actions.
+   Contract: user, orbSlots, favorites. #}
+<header class="profile-cover mb-10">
+    {% if orbSlots is not empty %}
+        <div class="profile-orbits profile-orbits--cover" aria-hidden="true">
+            {% for slot in orbSlots %}
+                {% include 'profile/_favorite_orb.html.twig' with {
+                    favorite: favorites[slot],
+                    pos_class: '',
+                    primary: slot == 'champion',
+                    type_label: ('profile.slot.' ~ slot)|trans,
+                } only %}
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="profile-cover__body">
+        <div>
+            <p class="eyebrow">{{ 'profile.eyebrow'|trans }}</p>
+            <h1 class="mt-2 flex items-center gap-2.5 font-beaufort text-4xl font-bold
+                uppercase tracking-wide text-gold-grad">
+                {{ user.displayName }}
+                {% if user.isSupporter %}{% include
+                    'components/community/_supporter_badge.html.twig' %}{% endif %}
+            </h1>
+        </div>
+        <div class="profile-cover__actions">
+            <a href="{{ path('app_profile_preview') }}" class="hx-btn-ghost">
+                {{ 'profile.preview.button'|trans }}
+            </a>
+            <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                <button type="submit"
+                        class="hx-btn-ghost">{{ 'auth.logout'|trans }}</button>
+            </form>
+        </div>
+    </div>
+</header>

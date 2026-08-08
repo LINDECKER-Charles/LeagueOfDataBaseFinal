@@ -39,7 +39,14 @@ final class GoogleAccountProvisioner
             return $known;
         }
 
-        $user = $this->attachByVerifiedEmail($googleUser, $googleId) ?? $this->createAccount($googleUser, $googleId);
+        $existing = $this->findByVerifiedEmail($googleUser);
+        if ($existing !== null) {
+            // Attach the Google identity to the pre-existing account (step 2 of
+            // the class docblock) — made explicit here, not hidden in a lookup.
+            $existing->setGoogleId($googleId);
+        }
+
+        $user = $existing ?? $this->createAccount($googleUser, $googleId);
         // Both paths require a Google-verified email, so the address is proven:
         // skip our own confirmation step for accounts arriving through Google.
         $user->setIsVerified(true);
@@ -48,15 +55,14 @@ final class GoogleAccountProvisioner
         return $user;
     }
 
-    private function attachByVerifiedEmail(GoogleUser $googleUser, string $googleId): ?User
+    /** Account owning the Google address, only when Google itself vouches for it. */
+    private function findByVerifiedEmail(GoogleUser $googleUser): ?User
     {
         if (($googleUser->toArray()['email_verified'] ?? false) !== true) {
             return null;
         }
 
-        $user = $this->users->findOneBy(['email' => mb_strtolower($this->email($googleUser))]);
-
-        return $user?->setGoogleId($googleId);
+        return $this->users->findOneBy(['email' => mb_strtolower($this->email($googleUser))]);
     }
 
     private function createAccount(GoogleUser $googleUser, string $googleId): User
@@ -65,7 +71,8 @@ final class GoogleAccountProvisioner
         $localPart = explode('@', $email, 2)[0];
         $username = $this->usernameAllocator->allocate(
             [(string) $googleUser->getFirstName(), $localPart],
-            fn (string $candidate): bool => $this->users->findOneByUsernameInsensitive($candidate) !== null,
+            fn (string $candidate): bool => $this->users
+                ->findOneByUsernameInsensitive($candidate) !== null,
         );
 
         $user = (new User())

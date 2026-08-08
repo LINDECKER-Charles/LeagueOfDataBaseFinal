@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Security;
 
 use App\Entity\User;
-use Symfony\Component\String\Slugger\AsciiSlugger;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 /**
  * Derives a free, URL-safe username (User::USERNAME_PATTERN) from OAuth profile
@@ -14,16 +14,15 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 final class UsernameAllocator
 {
     private const FALLBACK = 'Summoner';
-    private const MIN_LENGTH = 3;
-    private const MAX_LENGTH = 24;
     // Beyond sequential probing, jump to random suffixes to guarantee termination.
     private const MAX_SEQUENTIAL_PROBES = 50;
+    // 6-digit tail: a space wide enough that the random branch terminates in a
+    // draw or two even once every short suffix is taken.
+    private const RANDOM_SUFFIX_MIN = 100_000;
+    private const RANDOM_SUFFIX_MAX = 999_999;
 
-    private readonly AsciiSlugger $slugger;
-
-    public function __construct()
+    public function __construct(private readonly SluggerInterface $slugger)
     {
-        $this->slugger = new AsciiSlugger();
     }
 
     /**
@@ -45,7 +44,10 @@ final class UsernameAllocator
         }
 
         do {
-            $candidate = $this->withSuffix($base, (string) random_int(100000, 999999));
+            $candidate = $this->withSuffix(
+                $base,
+                (string) random_int(self::RANDOM_SUFFIX_MIN, self::RANDOM_SUFFIX_MAX),
+            );
         } while ($isTaken($candidate));
 
         return $candidate;
@@ -71,17 +73,17 @@ final class UsernameAllocator
         // The slugger already yields [A-Za-z0-9-]; drop leading separators so the
         // first character is alphanumeric, then cap the length.
         $slug = ltrim($slug, '-_.');
-        $slug = mb_substr($slug, 0, self::MAX_LENGTH);
+        $slug = mb_substr($slug, 0, User::USERNAME_MAX_LENGTH);
 
-        $isValid = mb_strlen($slug) >= self::MIN_LENGTH
+        $isValid = mb_strlen($slug) >= User::USERNAME_MIN_LENGTH
             && preg_match(User::USERNAME_PATTERN, $slug) === 1;
 
         return $isValid ? $slug : null;
     }
 
-    /** Append the suffix, shortening the base so the result stays within 24 chars. */
+    /** Append the suffix, shortening the base so the result still fits the column. */
     private function withSuffix(string $base, string $suffix): string
     {
-        return mb_substr($base, 0, self::MAX_LENGTH - mb_strlen($suffix)).$suffix;
+        return mb_substr($base, 0, User::USERNAME_MAX_LENGTH - mb_strlen($suffix)).$suffix;
     }
 }

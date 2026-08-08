@@ -42,7 +42,11 @@ final class SummonerOptionsProjectorTest extends TestCase
     {
         $options = $this->projector->project($this->data(), ['SummonerDot' => 'cdn/blobs/dot.png']);
 
-        self::assertSame(['SummonerDot', 'SummonerFlash'], array_column($options, 'id'), 'ARAM-only spell excluded, name order');
+        self::assertSame(
+            ['SummonerDot', 'SummonerFlash'],
+            array_column($options, 'id'),
+            'ARAM-only spell excluded, name order',
+        );
         self::assertSame(
             ['SummonerDot' => '/cdn/blobs/dot.png', 'SummonerFlash' => null],
             array_column($options, 'image', 'id'),
@@ -53,10 +57,19 @@ final class SummonerOptionsProjectorTest extends TestCase
 
     public function testResolveIsPresenceBasedNotModeFiltered(): void
     {
-        $resolved = $this->projector->resolve($this->data(), ['SummonerSnowball' => 'cdn/blobs/snow.png'], 'SummonerSnowball');
+        $resolved = $this->projector->resolve(
+            $this->data(),
+            ['SummonerSnowball' => 'cdn/blobs/snow.png'],
+            'SummonerSnowball',
+        );
 
         self::assertSame(
-            ['id' => 'SummonerSnowball', 'name' => 'Boule de neige', 'image' => '/cdn/blobs/snow.png', 'type' => 'summoner'],
+            [
+                'id' => 'SummonerSnowball',
+                'name' => 'Boule de neige',
+                'image' => '/cdn/blobs/snow.png',
+                'type' => 'summoner',
+            ],
             $resolved,
         );
         self::assertNull($this->projector->resolve($this->data(), [], 'SummonerNope'));

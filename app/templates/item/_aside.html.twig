@@ -1,0 +1,82 @@
+{# Item aside — combat statistics, gold ledger, availability and categories.
+   Contract: item, availableMaps, hasTier, hasRestriction, mapNames. #}
+      <aside class="mt-12 space-y-6 lg:mt-0 lg:sticky lg:top-6" data-reveal>
+        {# Combat statistics — Data Dragon's structured `stats` block, iconified. #}
+        {% set itemStats = item_stats(item.stats|default(null)) %}
+        {% if itemStats is not empty %}
+          <div class="hextech-frame p-5">
+            <h2 class="mb-4 font-beaufort text-xs uppercase tracking-[0.22em]
+                       text-gold">{{ 'item.detail.stats'|trans }}</h2>
+            <div class="stat-board">
+              {% for row in itemStats %}
+                <div class="stat-board__row">
+                  <span class="stat-board__label">
+                    {%- set statIcon = stat_icon_url(row.slug) -%}
+                    {%- if statIcon %}<img src="{{ statIcon }}" alt="" width="18" height="18"
+                      loading="lazy" decoding="async" class="stat-icon">{% endif -%}
+                    {{ row.label|trans }}
+                  </span>
+                  <span class="stat-board__value">{{ row.value }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {# Gold ledger #}
+        {% if item.gold is defined %}
+          <div class="hextech-frame p-5">
+            <h2 class="mb-4 font-beaufort text-xs uppercase tracking-[0.22em]
+                       text-gold">{{ 'item.detail.gold_ledger'|trans }}</h2>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="hx-plate">
+                <span class="hx-plate__label">{{ 'item.detail.price_total'|trans }}</span>
+                <span class="hx-plate__value text-gold">{{ item.gold.total ?? '–' }}</span>
+              </div>
+              <div class="hx-plate">
+                <span class="hx-plate__label">{{ 'item.detail.price_base'|trans }}</span>
+                <span class="hx-plate__value">{{ item.gold.base ?? '–' }}</span>
+              </div>
+              <div class="hx-plate">
+                <span class="hx-plate__label">{{ 'item.detail.price_sell'|trans }}</span>
+                <span class="hx-plate__value">{{ item.gold.sell ?? '–' }}</span>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {# Availability #}
+        {% if availableMaps is not empty or hasTier or hasRestriction %}
+          <div class="hextech-frame p-5">
+            <h2 class="mb-4 font-beaufort text-xs uppercase tracking-[0.22em]
+                       text-gold">{{ 'item.detail.availability'|trans }}</h2>
+            <div class="flex flex-wrap gap-2">
+              {% if hasTier %}
+                <span class="hx-chip border-gold/50 text-gold">{{
+                  'item.detail.tier'|trans({ '%depth%': item.depth })
+                }}</span>
+              {% endif %}
+              {% if item.requiredChampion is defined and item.requiredChampion %}
+                <span class="hx-chip border-gold/50 text-gold">{{ item.requiredChampion }}</span>
+              {% endif %}
+              {% if item.requiredAlly is defined and item.requiredAlly %}
+                <span class="hx-chip border-gold/50 text-gold">{{ item.requiredAlly }}</span>
+              {% endif %}
+              {% for id in availableMaps %}
+                <span class="hx-chip">{{ mapNames[id] ?? ('Map ' ~ id) }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {# Categories #}
+        {% if item.tags is defined and item.tags is iterable and item.tags is not empty %}
+          <div class="hextech-frame p-5">
+            <h2 class="mb-4 font-beaufort text-xs uppercase tracking-[0.22em]
+                       text-gold">{{ 'item.detail.categories'|trans }}</h2>
+            <div class="flex flex-wrap gap-2">
+              {% for tag in item.tags %}<span class="hx-chip">{{ tag }}</span>{% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </aside>

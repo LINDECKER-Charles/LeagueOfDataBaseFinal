@@ -32,7 +32,8 @@
     {% else %}
         <ol class="cl-timeline" role="list">
             {% for release in releases %}
-                {{ include('changelog/_release.html.twig', { release: release, open: loop.first }) }}
+                {{ include('changelog/_release.html.twig',
+                    { release: release, open: loop.first }) }}
             {% endfor %}
         </ol>
     {% endif %}

@@ -25,9 +25,15 @@ final class ThrottlesByIpTest extends TestCase
         $request = $this->requestFrom('203.0.113.7');
 
         for ($i = 1; $i <= self::LIMIT; $i++) {
-            self::assertFalse($subject->throttled($limiter, $request), "attempt {$i} within budget");
+            self::assertFalse(
+                $subject->throttled($limiter, $request),
+                "attempt {$i} within budget",
+            );
         }
-        self::assertTrue($subject->throttled($limiter, $request), 'attempt beyond budget is rejected');
+        self::assertTrue(
+            $subject->throttled($limiter, $request),
+            'attempt beyond budget is rejected',
+        );
     }
 
     public function testBudgetsAreIndependentPerIp(): void
@@ -49,7 +55,12 @@ final class ThrottlesByIpTest extends TestCase
     private function limiter(): RateLimiterFactoryInterface
     {
         return new RateLimiterFactory(
-            ['id' => 'test', 'policy' => 'fixed_window', 'limit' => self::LIMIT, 'interval' => '1 minute'],
+            [
+                'id' => 'test',
+                'policy' => 'fixed_window',
+                'limit' => self::LIMIT,
+                'interval' => '1 minute',
+            ],
             new InMemoryStorage(),
         );
     }

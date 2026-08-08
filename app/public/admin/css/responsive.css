@@ -1,0 +1,18 @@
+/* =============================================================================
+   LODB Admin — cross-section overrides. Loaded last on purpose: these rules
+   must win over every base declaration above, at equal specificity.
+   ========================================================================== */
+
+@media (max-width: 860px) {
+  .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; }
+  .span-2 { grid-column: auto; }
+  .donut-wrap { grid-template-columns: 1fr; }
+  .heat { grid-template-columns: 2rem repeat(24, 1fr); }
+  .admin-main { padding: 1.5rem 1rem 3rem; }
+  .purge-form .btn.danger { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .sk::after { animation: none; }
+}

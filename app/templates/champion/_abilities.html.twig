@@ -1,0 +1,62 @@
+{# Ability showcase island plus its complete no-JS fallback.
+   Contract: champion, abilities (the P/Q/W/E/R view-model built by the caller). #}
+{% set key4 = '%04d'|format(champion.key|default(0)) %}
+<section id="abilities" data-reveal>
+  {% include 'components/codex/codex_header.html.twig' with {
+    title: 'champion.detail.abilities'|trans,
+    meta: 'P · Q · W · E · R'
+  } %}
+  {# Below the fold and backed by a complete static fallback: the chunk
+     waits for the viewport instead of the critical path. #}
+  <div data-vue="ability-showcase" data-vue-lazy
+       data-props="{{ {
+         championKey: key4,
+         abilities: abilities,
+         resource: champion.partype|default(''),
+         labels: {
+           passive: 'champion.detail.passive'|trans,
+           cooldown: 'champion.detail.cooldown'|trans,
+           cost: 'champion.detail.cost'|trans,
+           range: 'champion.detail.range'|trans,
+           charges: 'champion.detail.charges'|trans,
+           ranks: 'champion.detail.ranks'|trans,
+           play: 'champion.detail.video_play'|trans,
+           pause: 'champion.detail.video_pause'|trans,
+           mute: 'champion.detail.video_mute'|trans,
+           unmute: 'champion.detail.video_unmute'|trans,
+           videoNotice: 'champion.detail.video_notice'|trans
+         }
+       }|json_encode|e('html_attr') }}">
+    {# No-JS fallback — replaced by the interactive showcase on mount. #}
+    <div class="space-y-4">
+      {% for a in abilities %}
+        <article class="hextech-frame flex gap-4 p-4">
+          <div class="relative h-14 w-14 shrink-0 overflow-hidden border
+               border-gold-deep/50 bg-void sm:h-16 sm:w-16">
+            {% if a.icon %}<img src="{{ a.icon }}" alt="{{ a.name }}"
+                 class="absolute inset-0 h-full w-full object-cover">{% endif %}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="mb-1.5 flex flex-wrap items-center gap-2">
+              <span class="ability-key" data-key="{{ a.key }}">{{ a.key }}</span>
+              <h3 class="font-beaufort uppercase tracking-wide text-gold-bright">{{
+                a.name }}</h3>
+            </div>
+            {% if a.cooldown or a.cost or a.range %}
+              <div class="mb-2 flex flex-wrap gap-1.5">
+                {% if a.cooldown %}<span class="hx-chip">{{
+                  'champion.detail.cooldown'|trans }}: {{ a.cooldown }}</span>{% endif %}
+                {% if a.cost and a.cost != '0' %}<span class="hx-chip">{{
+                  'champion.detail.cost'|trans }}: {{ a.cost }}</span>{% endif %}
+                {% if a.range %}<span class="hx-chip">{{
+                  'champion.detail.range'|trans }}: {{ a.range }}</span>{% endif %}
+              </div>
+            {% endif %}
+            <div class="ddragon-rich text-sm text-text-muted">{{
+              a.description|raw }}</div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
