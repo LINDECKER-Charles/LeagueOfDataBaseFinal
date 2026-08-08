@@ -1,10 +1,13 @@
 package trends
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -39,7 +42,13 @@ func newFixtureService(names NameResolver) (*Service, *fixtureReader) {
 	if names == nil {
 		names = staticNames{}
 	}
-	return New(reader, names, 5*time.Minute, fixtureNow), reader
+	svc := New(Options{
+		Reader:   reader,
+		Names:    names,
+		CacheTTL: 5 * time.Minute,
+		Now:      fixtureNow,
+	})
+	return svc, reader
 }
 
 func TestTopMergesDaysAndRanks(t *testing.T) {
@@ -71,7 +80,8 @@ func TestTopFiltersByRequestedType(t *testing.T) {
 	}
 	// Both items total 9 views (1001: 7+2, 3006: 9) — equal views must be
 	// tie-broken deterministically by ascending id.
-	if entries[0].ID != "1001" || entries[0].Views != 9 || entries[1].ID != "3006" || entries[1].Views != 9 {
+	if entries[0].ID != "1001" || entries[0].Views != 9 ||
+		entries[1].ID != "3006" || entries[1].Views != 9 {
 		t.Fatalf("tie-break order wrong: %+v", entries)
 	}
 }
@@ -113,6 +123,78 @@ func TestTopCachesPerTypeAndRange(t *testing.T) {
 	svc.Top(context.Background(), "champions", 30)
 	if reader.reads == first {
 		t.Fatal("a different range must trigger a fresh computation")
+	}
+}
+
+// emptyReader stands for a bucket where no rollup was ever published.
+type emptyReader struct{}
+
+func (emptyReader) ReadDaily(context.Context, string) ([]byte, error) {
+	return nil, errors.New("day absent")
+}
+
+func newLoggingService(reader DailyReader) (*Service, *bytes.Buffer) {
+	var logs bytes.Buffer
+	svc := New(Options{
+		Reader:   reader,
+		Names:    staticNames{},
+		CacheTTL: 5 * time.Minute,
+		Log:      slog.New(slog.NewTextHandler(&logs, nil)),
+		Now:      fixtureNow,
+	})
+	return svc, &logs
+}
+
+const noAggregateWarning = "no analytics aggregate could be decoded"
+
+func TestTopWarnsWhenTheWholeWindowIsUndecodable(t *testing.T) {
+	svc, logs := newLoggingService(emptyReader{})
+	if _, ok := svc.Top(context.Background(), "champions", 7); !ok {
+		t.Fatal("champions must stay a known type even with no aggregate")
+	}
+	if !strings.Contains(logs.String(), noAggregateWarning) {
+		t.Fatalf("expected a warning about the unreadable window, got %q", logs.String())
+	}
+}
+
+func TestTopStaysSilentWhenAtLeastOneDayDecodes(t *testing.T) {
+	svc, logs := newLoggingService(&fixtureReader{})
+	svc.Top(context.Background(), "champions", 7)
+	if strings.Contains(logs.String(), noAggregateWarning) {
+		t.Fatalf("a partially readable window must not warn, got %q", logs.String())
+	}
+}
+
+func TestRangeDaysOwnsTheSupportedWindows(t *testing.T) {
+	for label, want := range map[string]int{"7d": 7, "30d": 30} {
+		got, ok := RangeDays(label)
+		if !ok || got != want {
+			t.Errorf("RangeDays(%q) = %d, %v; want %d, true", label, got, ok, want)
+		}
+	}
+	if _, ok := RangeDays("90d"); ok {
+		t.Error("90d must not be a supported window")
+	}
+	if DefaultRange() != "7d" {
+		t.Errorf("DefaultRange() = %q, want 7d", DefaultRange())
+	}
+	if got := strings.Join(SupportedRanges(), ", "); got != "7d, 30d" {
+		t.Errorf("SupportedRanges() = %q, want \"7d, 30d\"", got)
+	}
+}
+
+func TestSupportedTypesCoversEveryRoutedType(t *testing.T) {
+	got := SupportedTypes()
+	if len(got) != len(apiTypes) {
+		t.Fatalf("SupportedTypes() = %v, want %d entries", got, len(apiTypes))
+	}
+	for _, apiType := range got {
+		if _, routed := apiTypes[apiType]; !routed {
+			t.Errorf("%q is advertised but not routed", apiType)
+		}
+	}
+	if want := "champions, items, runes, summoners"; strings.Join(got, ", ") != want {
+		t.Errorf("SupportedTypes() = %v, want %q", got, want)
 	}
 }
 

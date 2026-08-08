@@ -1,0 +1,39 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "15.1.1",
+  "data": {
+    "Aatrox": {
+      "version": "15.1.1",
+      "id": "Aatrox",
+      "key": "266",
+      "name": "Aatrox",
+      "title": "the Darkin Blade",
+      "blurb": "Once honored defenders of Shurima against the Void...",
+      "image": {
+        "full": "Aatrox.png",
+        "sprite": "champion0.png",
+        "group": "champion"
+      },
+      "tags": ["Fighter"],
+      "partype": "Blood Well",
+      "stats": { "hp": 650, "armor": 38 }
+    },
+    "MonkeyKing": {
+      "version": "15.1.1",
+      "id": "MonkeyKing",
+      "key": "62",
+      "name": "Wukong",
+      "title": "the Monkey King",
+      "blurb": "Wukong is a vastaya trickster...",
+      "image": {
+        "full": "MonkeyKing.png",
+        "sprite": "champion3.png",
+        "group": "champion"
+      },
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "stats": { "hp": 610, "armor": 31 }
+    }
+  }
+}

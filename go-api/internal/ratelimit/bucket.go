@@ -54,14 +54,14 @@ func (l *Limiter) Allow(keyID, perMin int) Verdict {
 	now := l.now()
 	b := l.refilled(keyID, perMin, now)
 	if b.tokens < 1 {
-		return Verdict{Allowed: false, Limit: perMin, Remaining: 0, Reset: l.resetAt(b, perMin, 1, now)}
+		return Verdict{Allowed: false, Limit: perMin, Remaining: 0, Reset: b.resetAt(perMin, 1, now)}
 	}
 	b.tokens--
 	return Verdict{
 		Allowed:   true,
 		Limit:     perMin,
 		Remaining: int(b.tokens),
-		Reset:     l.resetAt(b, perMin, float64(perMin), now),
+		Reset:     b.resetAt(perMin, float64(perMin), now),
 	}
 }
 
@@ -73,18 +73,21 @@ func (l *Limiter) refilled(keyID, perMin int, now time.Time) *bucket {
 		l.buckets[keyID] = b
 		return b
 	}
-	refillPerSecond := float64(perMin) / secondsPerMinute
-	b.tokens = math.Min(float64(perMin), b.tokens+now.Sub(b.lastFill).Seconds()*refillPerSecond)
+	elapsed := now.Sub(b.lastFill).Seconds()
+	b.tokens = math.Min(float64(perMin), b.tokens+elapsed*refillPerSecond(perMin))
 	b.lastFill = now
 	return b
 }
 
 // resetAt computes when the bucket will hold `target` tokens.
-func (l *Limiter) resetAt(b *bucket, perMin int, target float64, now time.Time) int64 {
+func (b *bucket) resetAt(perMin int, target float64, now time.Time) int64 {
 	missing := target - b.tokens
 	if missing <= 0 {
 		return now.Unix()
 	}
-	refillPerSecond := float64(perMin) / secondsPerMinute
-	return now.Add(time.Duration(math.Ceil(missing/refillPerSecond)) * time.Second).Unix()
+	seconds := math.Ceil(missing / refillPerSecond(perMin))
+	return now.Add(time.Duration(seconds) * time.Second).Unix()
 }
+
+// refillPerSecond spreads a per-minute allowance over the minute.
+func refillPerSecond(perMin int) float64 { return float64(perMin) / secondsPerMinute }

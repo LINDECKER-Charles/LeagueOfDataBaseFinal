@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -86,5 +87,62 @@ func TestUsable(t *testing.T) {
 		if c.key.Usable() != c.want {
 			t.Errorf("case %d: Usable() = %v, want %v", i, c.key.Usable(), c.want)
 		}
+	}
+}
+
+// A negative entry is never read again, so nothing would ever evict it: without
+// a ceiling, unauthenticated traffic with random keys grows the map forever.
+func TestCacheStopsGrowingAtItsCeiling(t *testing.T) {
+	now := time.Unix(2_000_000, 0)
+	cache := NewCache(60*time.Second, func() time.Time { return now })
+	cache.maxEntries = 8
+
+	for i := range 40 {
+		cache.PutInvalid(fmt.Sprintf("hash-%d", i))
+	}
+
+	if size := cache.size(); size > cache.maxEntries {
+		t.Fatalf("cache holds %d entries, ceiling is %d", size, cache.maxEntries)
+	}
+}
+
+func TestCacheReclaimsRoomOnceEntriesExpire(t *testing.T) {
+	now := time.Unix(3_000_000, 0)
+	cache := NewCache(60*time.Second, func() time.Time { return now })
+	cache.maxEntries = 4
+
+	for i := range 4 {
+		cache.PutInvalid(fmt.Sprintf("old-%d", i))
+	}
+	now = now.Add(61 * time.Second)
+	cache.PutInvalid("fresh")
+
+	if cache.Get("fresh") == nil {
+		t.Fatal("a fresh entry must be cached once expired ones were swept")
+	}
+	if cache.Get("old-0") != nil {
+		t.Fatal("expired entry should have been swept")
+	}
+}
+
+// Saturation must degrade to "no caching", never to "no service".
+func TestSaturatedCacheStillServesTheEntry(t *testing.T) {
+	now := time.Unix(4_000_000, 0)
+	cache := NewCache(60*time.Second, func() time.Time { return now })
+	cache.maxEntries = 2
+
+	cache.PutValid("a", APIKey{ID: 1, Active: true}, 0)
+	cache.PutValid("b", APIKey{ID: 2, Active: true}, 0)
+
+	entry := cache.PutValid("c", APIKey{ID: 3, Active: true, MonthlyQuota: 99}, 7)
+	if entry == nil {
+		t.Fatal("PutValid must return a usable entry even when the cache is full")
+	}
+	if entry.KeyID() != 3 || entry.MonthlyUsed() != 7 || entry.MonthlyQuota() != 99 {
+		t.Fatalf("returned entry does not describe the key: id=%d used=%d quota=%d",
+			entry.KeyID(), entry.MonthlyUsed(), entry.MonthlyQuota())
+	}
+	if cache.Get("c") != nil {
+		t.Fatal("a saturated cache must not store the new entry")
 	}
 }

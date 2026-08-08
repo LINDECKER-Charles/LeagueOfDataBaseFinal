@@ -79,7 +79,7 @@ curl -H "X-Api-Key: lodb_votrecle..." \
       "game_version": "15.1.1",
       "runes": { "primary": 8000 },
       "steps": [ { "items": ["3074"] } ],
-      "share_url": "/b/Kf3xQ9pLmT2c",
+      "share_url": "https://league-of-data-base.com/b/Kf3xQ9pLmT2c",
       "created_at": "2026-07-15T18:40:00Z"
     }
   ],
@@ -88,7 +88,9 @@ curl -H "X-Api-Key: lodb_votrecle..." \
 ```
 
 `runes` et `steps` sont restitués tels que sauvegardés par leur auteur (JSON brut).
-`share_url` est relatif au site public (`https://<site>/b/{token}`).
+`share_url` est une URL **absolue** vers la page de partage du build. L'origine vient de
+`PUBLIC_SITE_URL` (défaut : le site de production) : les clients appellent l'API depuis une autre
+origine que le site, un chemin relatif leur serait donc inexploitable.
 
 ### `GET /v1/trends/{type}`
 

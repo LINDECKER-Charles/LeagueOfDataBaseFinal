@@ -112,6 +112,11 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-ddragon}
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-lodb}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      # Origin the API prefixes onto share_url. Third-party clients call from
+      # another origin, so a relative path would be unusable on their side; the
+      # default targets production, hence staging/dev MUST override it or they
+      # hand out links pointing at prod.
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://league-of-data-base.com}
     depends_on:
       postgres:
         condition: service_healthy

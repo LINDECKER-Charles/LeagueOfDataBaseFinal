@@ -13,10 +13,10 @@ import (
 func (p *Postgres) KeyByHash(ctx context.Context, hash string) (keys.APIKey, error) {
 	var k keys.APIKey
 	err := p.pool.QueryRow(ctx,
-		`SELECT id, user_id, plan, monthly_quota, credits_balance,
+		`SELECT id, plan, monthly_quota, credits_balance,
 		        rate_limit_per_min, is_active, revoked_at
 		   FROM api_keys WHERE key_hash = $1`, hash,
-	).Scan(&k.ID, &k.UserID, &k.Plan, &k.MonthlyQuota, &k.CreditsBalance,
+	).Scan(&k.ID, &k.Plan, &k.MonthlyQuota, &k.CreditsBalance,
 		&k.RateLimitPerMin, &k.Active, &k.RevokedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return keys.APIKey{}, ErrNotFound
@@ -64,7 +64,10 @@ func (p *Postgres) UsageSnapshot(ctx context.Context, keyID int) (UsageSnapshot,
 // ConsumeCredit atomically spends one prepaid credit. The WHERE guard makes
 // concurrent spends safe: whoever decrements last simply finds no row and the
 // request is denied.
-func (p *Postgres) ConsumeCredit(ctx context.Context, keyID int) (balance int64, spent bool, err error) {
+func (p *Postgres) ConsumeCredit(
+	ctx context.Context,
+	keyID int,
+) (balance int64, spent bool, err error) {
 	err = p.pool.QueryRow(ctx,
 		`UPDATE api_keys SET credits_balance = credits_balance - 1
 		  WHERE id = $1 AND credits_balance > 0

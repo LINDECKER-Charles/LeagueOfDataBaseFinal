@@ -56,6 +56,10 @@ services:
   go-api:
     ports:
       - "8090:8090"   # dev only: hit the paid API directly (deployed entry is the edge subdomain)
+    environment:
+      # share_url is absolute: without this override the dev API would hand out
+      # links into production. Staging sets it through the repo-root .env.staging.
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8080}
 
   minio:
     ports:

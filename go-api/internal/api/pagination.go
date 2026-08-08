@@ -10,7 +10,10 @@ const (
 	// DefaultPerPage / MaxPerPage bound the page size of collection endpoints.
 	DefaultPerPage = 20
 	MaxPerPage     = 50
-	firstPage      = 1
+	// firstPage is a page *number*; minTotalPages is a page *count*. Same digit,
+	// two units — keeping them apart stops TotalPages from reading like a bug.
+	firstPage     = 1
+	minTotalPages = 1
 )
 
 // ErrInvalidPagination flags query values that are not positive integers.
@@ -28,7 +31,7 @@ func (p Pagination) Offset() int { return (p.Page - firstPage) * p.PerPage }
 // TotalPages derives the page count for a collection size (minimum 1).
 func (p Pagination) TotalPages(total int64) int64 {
 	if total <= 0 {
-		return firstPage
+		return minTotalPages
 	}
 	perPage := int64(p.PerPage)
 	return (total + perPage - 1) / perPage
