@@ -5,7 +5,7 @@ Ce document décrit la stratégie responsive, les composants spécifiques mobile
 breakpoints, la méthode d'audit, et les limitations connues.
 
 > Complément de [`architecture.md`](architecture.md) (§ Architecture frontend). Le brief
-> [`brief-design-pages.md`](brief-design-pages.md) laisse volontairement le responsive
+> [`brief-design-pages.md`](../briefs/brief-design-pages.md) laisse volontairement le responsive
 > hors de son périmètre : ce fichier est la référence.
 
 ## Stratégie

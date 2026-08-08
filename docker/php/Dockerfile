@@ -25,7 +25,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 # Stage 1b — Dev image: php_base + composer. Source is bind-mounted and
 # vendor/ + var/ are named volumes (compose.override.yaml), so composer must run
 # in-container to populate the vendor volume. composer lives ONLY here — the prod
-# `app` image builds from php_base and never ships it. See docs/docker.md.
+# `app` image builds from php_base and never ships it. See docs/guides/docker.md.
 ########################################################################
 FROM php_base AS php_dev
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

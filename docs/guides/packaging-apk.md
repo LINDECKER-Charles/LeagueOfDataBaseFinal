@@ -49,7 +49,7 @@ installer). Le dépôt est déjà câblé ; il te reste 3 actions manuelles (§ 
 |---|---|---|
 | `app/public/.well-known/assetlinks.json` | Digital Asset Links — lie le domaine à l'APK | **Template** (2 valeurs à remplir) |
 | `app/public/pwa/feature-graphic-1024x500.svg` | Visuel de fiche Play Store (1024×500), on-brand Hextech | Fourni, **à rasteriser en PNG** si publication Store |
-| `docs/mobile/packaging-apk.md` | Ce guide | — |
+| `docs/guides/packaging-apk.md` | Ce guide | — |
 
 **Aucune modification serveur nécessaire** — vérifié sur `docker/nginx/default.conf` :
 `root = app/public`, `location / { try_files $uri /index.php... }` sert un fichier

@@ -25,7 +25,7 @@ POSTGRES_DB=lodb
 DATABASE_URL="postgresql://lodb:lodb@postgres:5432/lodb?serverVersion=17&charset=utf8"
 
 # Stripe — page de don /donate + webhook /webhooks/stripe
-# Placeholders : renseigner depuis le dashboard Stripe (cf. docs/legal-info.md).
+# Placeholders : renseigner depuis le dashboard Stripe (cf. docs/guides/legal-info.md).
 # Vides ⇒ la page de don annonce proprement que la passerelle est désactivée.
 STRIPE_SECRET_KEY=             # sk_test_… en dev, sk_live_… en production
 STRIPE_WEBHOOK_SECRET=         # whsec_… (signature des webhooks Stripe)
@@ -36,7 +36,7 @@ ne surcharger `DATABASE_URL` que pour pointer une base externe. Migrations :
 `docker compose exec -T php php bin/console doctrine:migrations:migrate`.
 
 En production/staging, ces valeurs vivent dans les secrets GitHub Actions
-(`ENV_PROD` / `ENV_STAGING`) — voir `docs/github-actions-secrets.md`.
+(`ENV_PROD` / `ENV_STAGING`) — voir `docs/guides/github-actions-secrets.md`.
 
 ### 🎨 Configuration frontend
 

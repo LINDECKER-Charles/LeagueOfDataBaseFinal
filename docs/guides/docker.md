@@ -17,7 +17,7 @@ Référence des commandes Docker / Docker Compose pour la stack **LODB**.
 | `minio-init` | Init bucket (one-shot)        | —                                |
 | `mailer`     | Mailpit (SMTP + UI de test)   | `8025` UI · `1025` SMTP          |
 
-Prérequis : copier `.env.example` → `.env` (voir `docs/configuration.md`).
+Prérequis : copier `.env.example` → `.env` (voir `docs/guides/configuration.md`).
 
 ---
 
@@ -300,7 +300,7 @@ docker compose ps
 docker compose logs --tail=50 <service>
 
 # "APP_SECRET is required" / "MINIO_ROOT_PASSWORD is required"
-#   → variable manquante dans .env (voir docs/configuration.md)
+#   → variable manquante dans .env (voir docs/guides/configuration.md)
 docker compose config   # montre quelles substitutions échouent
 
 # Repartir de zéro (⚠️ efface les données)

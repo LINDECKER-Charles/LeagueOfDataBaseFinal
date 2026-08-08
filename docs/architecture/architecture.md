@@ -21,7 +21,13 @@ league-of-database/
 │   ├── public/               # Assets publics et uploads
 │   └── config/               # Configuration Symfony
 ├── go-workers/               # Workers Go pour le traitement asynchrone
-└── docs/                    # Documentation
+└── docs/                    # Documentation (voir docs/README.md)
+    ├── architecture/        # Fonctionnement interne des sous-systèmes
+    ├── guides/             # Installation, exploitation, opérations
+    ├── audits/            # Audits ponctuels et plans de correction
+    ├── briefs/            # Briefs de design
+    ├── produit/           # Veille, SEO, communication
+    └── changelog/         # Journal technique interne
 ```
 
 ## 🔧 Architecture des services

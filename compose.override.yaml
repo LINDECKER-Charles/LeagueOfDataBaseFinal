@@ -1,6 +1,6 @@
 # Local development overrides (auto-merged by `docker compose`).
 # - php runs against the live ./app source; vendor/ and var/ are named volumes on
-#   the Linux VM (off the ./app 9p bind-mount) so file I/O isn't slow — see docs/docker.md
+#   the Linux VM (off the ./app 9p bind-mount) so file I/O isn't slow — see docs/guides/docker.md
 # - nginx uses the stock image + bind-mounted public/ and config
 # - MinIO console, Mailpit UI and the Go service ports are published for convenience
 #
@@ -17,7 +17,7 @@ services:
       APP_ENV: dev
       APP_DEBUG: "1"
     # vendor/ (9k files) and var/ (3k files) live in named volumes on the Linux VM
-    # instead of the ./app 9p bind-mount — the A1 fix (docs/docker.md). They start
+    # instead of the ./app 9p bind-mount — the A1 fix (docs/guides/docker.md). They start
     # empty & root-owned, so run as root and hand the mount points to the www-data
     # FPM pool before starting. Populate vendor once (as www-data so it can write):
     #   docker compose exec -u www-data php composer install

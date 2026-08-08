@@ -9,7 +9,7 @@ Passage de l'ancien stack combiné `lodb` (Caddy embarqué, collision staging/pr
 > fichiers `/opt/edge` (copiés du repo) et proxy sont (re)convergés à chaque déploiement,
 > avant l'app. Rien à monter à la main. La seule action one-shot ci-dessous est de
 > **libérer les ports 80/443** encore tenus par le legacy `lodb`.
-> Contexte : `infra/edge/README.md`, `docs/github-actions-secrets.md`.
+> Contexte : `infra/edge/README.md`, `docs/guides/github-actions-secrets.md`.
 
 ---
 

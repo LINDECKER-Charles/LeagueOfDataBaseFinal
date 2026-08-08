@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\IpUtils;
  *
  * Provisioning the database is an ops step (it can't ship in the repo): drop a
  * `GeoLite2-Country.mmdb` at var/geoip/ or point GEOIP_DB_PATH at one. See
- * docs/analytics.md.
+ * docs/architecture/analytics.md.
  */
 final class GeoLocator
 {

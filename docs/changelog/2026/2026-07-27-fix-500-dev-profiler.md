@@ -34,7 +34,7 @@ avoir envoyé la page, ce qui ajoutait une erreur 500 en fin de document.
 - Correctif : `compose.override.yaml` chowne `var` **récursivement** au démarrage du
   service (`chown -R www-data:www-data var`) au lieu des seuls dossiers de premier niveau,
   qui ne rattrapaient jamais les sous-arbres root.
-- Convention documentée (CLAUDE.md « Pièges connus », `docs/docker.md`) : lancer les
+- Convention documentée (CLAUDE.md « Pièges connus », `docs/guides/docker.md`) : lancer les
   commandes conteneur en `docker compose exec -u www-data php …` — les garde-fous
   (`phpunit`, migrations) sont mis à jour en conséquence.
 - Vérification Playwright après correctif : 20 routes anonymes + parcours connecté

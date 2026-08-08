@@ -1,7 +1,7 @@
 # 📋 Prompt de correction — à copier-coller
 
 Prompt destiné à une session Claude Code ouverte à la racine du repo.
-Il s'appuie sur [`docs/PERFORMANCE-AUDIT.md`](./PERFORMANCE-AUDIT.md).
+Il s'appuie sur [`docs/audits/performance-audit.md`](./performance-audit.md).
 
 > 💡 **Conseil** : ne lance pas les 3 lots d'un coup. Fais le **Lot 1**, vérifie, commit, puis enchaîne.
 > Le Lot 1 seul devrait déjà régler les deux symptômes visibles.
@@ -11,7 +11,7 @@ Il s'appuie sur [`docs/PERFORMANCE-AUDIT.md`](./PERFORMANCE-AUDIT.md).
 ## 🔥 Lot 1 — Les 4 correctifs qui règlent les symptômes
 
 ```
-Lis d'abord docs/PERFORMANCE-AUDIT.md : c'est un audit de ce repo, les constats
+Lis d'abord docs/audits/performance-audit.md : c'est un audit de ce repo, les constats
 sont référencés fichier:ligne. Applique les correctifs A2, B1, A3 et B2.
 Ne fais QUE ces quatre-là, ne refactore rien d'autre au passage.
 
@@ -90,7 +90,7 @@ Contraintes :
 ## 🐳 Lot 2 — Le dev sous Docker/Windows
 
 ```
-Lis docs/PERFORMANCE-AUDIT.md section A1. Le bind-mount ./app:/var/www/html de
+Lis docs/audits/performance-audit.md section A1. Le bind-mount ./app:/var/www/html de
 compose.override.yaml expose 9 049 fichiers vendor + 3 363 fichiers var/ à travers
 la frontière Windows→Linux. C'est le suspect n°1 de la lenteur en dev.
 
@@ -108,7 +108,7 @@ compromis explicites (je veux choisir, ne tranche pas seul) :
   c) ddragon.cache en cache.adapter.apcu au lieu de filesystem — quelles
      conséquences si on scale php à plusieurs conteneurs ?
 
-Mets à jour docs/docker.md avec l'option retenue.
+Mets à jour docs/guides/docker.md avec l'option retenue.
 ```
 
 ---
@@ -116,7 +116,7 @@ Mets à jour docs/docker.md avec l'option retenue.
 ## 🔍 Lot 3 — Vérifications et dette
 
 ```
-Lis docs/PERFORMANCE-AUDIT.md sections A5, A6, A7, B3, B4. Traite-les dans cet
+Lis docs/audits/performance-audit.md sections A5, A6, A7, B3, B4. Traite-les dans cet
 ordre, en me faisant valider entre chaque :
 
 1. A7 — MESURE D'ABORD, ne code rien. go-workers utilise http.DefaultTransport

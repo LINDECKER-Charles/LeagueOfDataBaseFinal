@@ -38,7 +38,7 @@ publicité, aucun traceur tiers) et à quelles conditions le service est fourni.
   sinon EN).
 - Identité éditeur centralisée dans `config/packages/legal_info.yaml`
   (paramètres `legal.*` → DTO `App\Dto\LegalInfo` autowiré) avec placeholders
-  `[[À COMPLÉTER]]` — checklist de complétion dans `docs/legal-info.md`.
+  `[[À COMPLÉTER]]` — checklist de complétion dans `docs/guides/legal-info.md`.
 - Layout commun `templates/legal/layout.html.twig` (bandeau codex, plate de date,
   sommaire ancré, typographie prose scopée sur tokens Hextech) ; corps légal en dur
   par locale, chrome via clés `legal.*` (à ajouter aux catalogues).

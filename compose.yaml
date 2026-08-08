@@ -2,7 +2,7 @@ name: lodb
 
 # Production-oriented stack. Local dev conveniences live in compose.override.yaml
 # (auto-merged by `docker compose`). Variable substitution reads the repo-root .env
-# (copy .env.example -> .env). See docs/github-actions-secrets.md for the required secrets.
+# (copy .env.example -> .env). See docs/guides/github-actions-secrets.md for the required secrets.
 
 services:
   php:

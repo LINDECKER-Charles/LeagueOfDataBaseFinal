@@ -49,4 +49,4 @@ n'ont pas de mot de passe : une section dédiée du profil permet d'en définir 
   tant que `password IS NULL` ; suppression de compte adaptée.
 - Étapes manuelles Google Cloud Console (consentement, publication sans revue,
   client Web, redirect URIs exactes, secrets, piège trusted_proxies) :
-  `docs/oauth-google-setup.md`.
+  `docs/guides/oauth-google-setup.md`.

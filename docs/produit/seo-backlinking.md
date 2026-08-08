@@ -93,7 +93,7 @@ ce qui se cite :
 
 - Cadence réaliste : 1 action communautaire par patch (≈ toutes les 2 semaines),
   alignée sur la mise à jour des données — le moment où le site a un « scoop ».
-- Suivi : Search Console (à configurer, cf. `docs/seo-indexabilite.md`) pour les
+- Suivi : Search Console (à configurer, cf. `docs/produit/seo-indexabilite.md`) pour les
   backlinks découverts ; analytics maison pour les référents réels.
 - Critère de succès à 6 mois : des liens entrants depuis ≥ 3 communautés
   distinctes (Reddit, un wiki/annuaire, un site fan FR) et des partages `/b/`

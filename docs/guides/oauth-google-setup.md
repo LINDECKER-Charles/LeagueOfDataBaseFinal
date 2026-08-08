@@ -107,7 +107,7 @@ Chaîne de propagation (identique à Stripe/MinIO) :
    ```
 
 4. En CI/CD, ajouter les deux secrets au même endroit que les autres
-   (cf. `docs/github-actions-secrets.md`).
+   (cf. `docs/guides/github-actions-secrets.md`).
 
 Vérification rapide : `curl -sI http://localhost:8080/connect/google` doit renvoyer
 un `302` vers `accounts.google.com` (variables posées) ou vers `/login` (variables

@@ -23,7 +23,7 @@ docker compose up -d --build
 # app :8080 · MinIO console :9001 · Mailpit :8025 · go-fetcher :8085/healthz
 ```
 
-Détails : [`docs/docker.md`](docs/docker.md), [`docs/configuration.md`](docs/configuration.md).
+Détails : [`docs/guides/docker.md`](docs/guides/docker.md), [`docs/guides/configuration.md`](docs/guides/configuration.md).
 
 ## Workflow Git
 

@@ -31,7 +31,7 @@ payants.
 - `GET /v1/usage` — consommation de la clé (toujours accessible, même quota épuisé).
 - Erreurs uniformes, en-têtes `X-RateLimit-*`, CORS ouvert (utilisable depuis un navigateur).
 - Offres : Free 500 req/mois, packs crédits 5/10/20 €, abonnements 5–15 €/mois et 48–144 €/an
-  (détail dans `docs/api-publique.md`) ; clés générées depuis `/profile`, paiement Stripe côté site.
+  (détail dans `docs/architecture/api-publique.md`) ; clés générées depuis `/profile`, paiement Stripe côté site.
 
 ## Technique
 

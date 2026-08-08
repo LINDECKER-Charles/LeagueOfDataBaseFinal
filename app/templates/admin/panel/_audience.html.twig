@@ -30,7 +30,7 @@
         {% if geo_available or report.country|length %}
             {{ ui.rank(report.country, { color: 'cyan', empty: 'Aucune donnée géographique.', limit: 10 }) }}
         {% else %}
-            <p class="dim">Résolution IP→pays inactive : aucune base GeoLite2 provisionnée (voir <code>docs/analytics.md</code>). Les IP brutes sont bien collectées et la carte se remplira dès qu'une base <code>.mmdb</code> est déposée.</p>
+            <p class="dim">Résolution IP→pays inactive : aucune base GeoLite2 provisionnée (voir <code>docs/architecture/analytics.md</code>). Les IP brutes sont bien collectées et la carte se remplira dès qu'une base <code>.mmdb</code> est déposée.</p>
         {% endif %}
     </section>
     <section class="card">

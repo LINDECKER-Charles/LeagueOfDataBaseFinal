@@ -40,7 +40,7 @@ Nous sommes ravis que vous souhaitiez contribuer à **League of Database** ! Ce 
    docker compose up -d --build
    # app :8080 · MinIO console :9001 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Détails : [`docker.md`](docker.md), [`configuration.md`](configuration.md).
+   Détails : [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
 
 3. **Dev front (optionnel, depuis `app/`)**
    ```bash
@@ -175,7 +175,7 @@ We're excited that you want to contribute to **League of Database**! This guide 
    docker compose up -d --build
    # app :8080 · MinIO console :9001 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Details: [`docker.md`](docker.md), [`configuration.md`](configuration.md).
+   Details: [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
 
 3. **Frontend dev (optional, from `app/`)**
    ```bash
@@ -310,7 +310,7 @@ The tracker provides **guided forms** (bug / feature): see [`.github/ISSUE_TEMPL
    docker compose up -d --build
    # app :8080 · MinIO console :9001 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Detalles: [`docker.md`](docker.md), [`configuration.md`](configuration.md).
+   Detalles: [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
 
 3. **Dev frontend (opcional, desde `app/`)**
    ```bash

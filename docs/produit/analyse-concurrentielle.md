@@ -80,7 +80,7 @@ Le préfixe public est passé à `année.patch` (26 = 2026) tandis que Data Drag
 
 ## 2. Point de référence — ce que fait LeagueOfDataBase
 
-Rappel synthétique pour ancrer les comparaisons (source : `README.md`, `CLAUDE.md`, `docs/architecture.md`).
+Rappel synthétique pour ancrer les comparaisons (source : `README.md`, `CLAUDE.md`, `docs/architecture/architecture.md`).
 
 | Axe | État |
 |---|---|
