@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
@@ -12,11 +13,11 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) handleVersions(w http.ResponseWriter, r *http.Request) {
-	s.proxyGet(w, r, ddragonBase+"/api/versions.json")
+	s.proxyGet(w, r, s.ddragonBase+"/api/versions.json")
 }
 
 func (s *Server) handleLanguages(w http.ResponseWriter, r *http.Request) {
-	s.proxyGet(w, r, ddragonBase+"/cdn/languages.json")
+	s.proxyGet(w, r, s.ddragonBase+"/cdn/languages.json")
 }
 
 // proxyGet fetches a single DDragon URL and streams the body through unchanged.
@@ -51,47 +52,74 @@ type fetchResponse struct {
 	Results []fetchItem `json:"results"`
 }
 
+// MaxRequestBodyBytes caps an incoming /fetch payload. This is an inter-service
+// contract, not a local tuning knob: the PHP client documents and respects the
+// same 1 MiB ceiling (App\Service\Tools\GoFetcherClient).
+const MaxRequestBodyBytes int64 = 1 << 20
+
 // handleFetch retrieves many DDragon URLs concurrently (bounded), preserving order.
 // Bodies are base64-encoded so binary (images) and text (JSON) share one contract.
 func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
-	var req fetchRequest
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid JSON body")
+	urls, ok := s.acceptedURLs(w, r)
+	if !ok {
 		return
+	}
+	writeJSON(w, http.StatusOK, fetchResponse{Results: s.fetchAll(r, urls)})
+}
+
+// acceptedURLs decodes and validates the batch payload. It renders the refusal
+// itself and reports whether the request may proceed; an empty batch is a valid
+// request answered on the spot with an empty result set.
+func (s *Server) acceptedURLs(w http.ResponseWriter, r *http.Request) ([]string, bool) {
+	var req fetchRequest
+	body := http.MaxBytesReader(w, r.Body, MaxRequestBodyBytes)
+	if err := json.NewDecoder(body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON body")
+		return nil, false
 	}
 	if len(req.URLs) == 0 {
 		writeJSON(w, http.StatusOK, fetchResponse{Results: []fetchItem{}})
-		return
+		return nil, false
 	}
 	if len(req.URLs) > s.maxURLs {
 		writeError(w, http.StatusRequestEntityTooLarge, "too many urls")
-		return
+		return nil, false
 	}
+	return req.URLs, true
+}
 
-	results := make([]fetchItem, len(req.URLs))
+// fetchAll runs the batch with at most maxConcurrency in-flight fetches and
+// returns the results in request order.
+func (s *Server) fetchAll(r *http.Request, urls []string) []fetchItem {
+	results := make([]fetchItem, len(urls))
 	sem := make(chan struct{}, s.maxConcurrency)
 	var wg sync.WaitGroup
 
-	for i, u := range req.URLs {
+	for i, u := range urls {
 		wg.Add(1)
 		go func(i int, u string) {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
-
-			item := fetchItem{URL: u}
-			res, err := s.fetcher.Fetch(r.Context(), u)
-			if err != nil {
-				item.Error = err.Error()
-			} else {
-				item.Status = res.Status
-				item.ContentType = res.ContentType
-				item.BodyBase64 = base64.StdEncoding.EncodeToString(res.Body)
-			}
-			results[i] = item
+			results[i] = s.fetchOne(r.Context(), u)
 		}(i, u)
 	}
 
 	wg.Wait()
-	writeJSON(w, http.StatusOK, fetchResponse{Results: results})
+	return results
+}
+
+// fetchOne never fails: a per-URL error is reported in-band so one bad URL
+// cannot sink the whole batch.
+func (s *Server) fetchOne(ctx context.Context, url string) fetchItem {
+	item := fetchItem{URL: url}
+	res, err := s.fetcher.Fetch(ctx, url)
+	if err != nil {
+		item.Error = err.Error()
+		return item
+	}
+	item.Status = res.Status
+	item.ContentType = res.ContentType
+	item.BodyBase64 = base64.StdEncoding.EncodeToString(res.Body)
+	return item
 }
