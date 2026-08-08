@@ -3,19 +3,35 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Seo;
 
-use App\Service\Seo\InventorySnapshot;
+use App\Service\Seo\Inventory\InventorySnapshot;
 use App\Service\Seo\LlmsTxtBuilder;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
 
 final class LlmsTxtBuilderTest extends TestCase
 {
     private const ORIGIN = 'https://league-of-data-base.com';
 
+    /** Route name => path, as declared by the controllers the brief links to. */
+    private const ROUTES = [
+        'app_champions' => '/champions',
+        'app_items' => '/objects',
+        'app_runes' => '/runes',
+        'app_summoners' => '/summoners',
+        'app_about' => '/about',
+        'app_about_data' => '/about/data',
+        'app_faq' => '/faq',
+        'app_developers' => '/developers',
+        'app_changelog' => '/changelog',
+    ];
+
     private LlmsTxtBuilder $builder;
 
     protected function setUp(): void
     {
-        $this->builder = new LlmsTxtBuilder('League Of Data Base');
+        $this->builder = new LlmsTxtBuilder($this->router(), 'League Of Data Base');
     }
 
     public function testOpensWithTheLlmsTxtHeaderAndSummary(): void
@@ -42,7 +58,10 @@ final class LlmsTxtBuilderTest extends TestCase
     public function testDropsTheCountsRatherThanQuotingZerosWhenASectionIsUnreadable(): void
     {
         // An engine would quote "0 items" back as fact — say nothing instead.
-        $text = $this->builder->build(self::ORIGIN, new InventorySnapshot('15.1.1', 170, null, 5, 18));
+        $text = $this->builder->build(
+            self::ORIGIN,
+            new InventorySnapshot('15.1.1', 170, null, 5, 18),
+        );
 
         self::assertStringContainsString('Current patch: 15.1.1.', $text);
         self::assertStringNotContainsString('It publishes', $text);
@@ -52,7 +71,10 @@ final class LlmsTxtBuilderTest extends TestCase
     public function testDegradesGracefullyWhenTheUpstreamVersionIsUnavailable(): void
     {
         // A transient outage must still produce a usable brief, not a broken one.
-        $text = $this->builder->build(self::ORIGIN, new InventorySnapshot('', null, null, null, null));
+        $text = $this->builder->build(
+            self::ORIGIN,
+            new InventorySnapshot('', null, null, null, null),
+        );
 
         self::assertStringContainsString('Current patch: unavailable', $text);
         self::assertStringContainsString('# League Of Data Base', $text);
@@ -63,7 +85,9 @@ final class LlmsTxtBuilderTest extends TestCase
     {
         $text = $this->builder->build(self::ORIGIN, $this->snapshot());
 
-        foreach (['/champions', '/objects', '/runes', '/summoners', '/about', '/about/data', '/faq'] as $path) {
+        foreach ([
+            '/champions', '/objects', '/runes', '/summoners', '/about', '/about/data', '/faq',
+        ] as $path) {
             self::assertStringContainsString(self::ORIGIN . $path, $text);
         }
         self::assertStringNotContainsString('](/', $text);
@@ -74,7 +98,10 @@ final class LlmsTxtBuilderTest extends TestCase
         $text = $this->builder->build(self::ORIGIN, $this->snapshot());
 
         self::assertStringContainsString('Not affiliated with, or endorsed by, Riot Games.', $text);
-        self::assertStringContainsString('No win rates, pick rates, tier lists or match history', $text);
+        self::assertStringContainsString(
+            'No win rates, pick rates, tier lists or match history',
+            $text,
+        );
     }
 
     public function testEndsWithASingleTrailingNewline(): void
@@ -88,5 +115,19 @@ final class LlmsTxtBuilderTest extends TestCase
     private function snapshot(): InventorySnapshot
     {
         return new InventorySnapshot('15.1.1', 170, 412, 5, 18);
+    }
+
+    /** Real generator over the routes under test — a stub would prove nothing. */
+    private function router(): UrlGeneratorInterface
+    {
+        $collection = new RouteCollection();
+        foreach (self::ROUTES as $name => $path) {
+            $collection->add($name, new Route($path));
+        }
+
+        return new \Symfony\Component\Routing\Generator\UrlGenerator(
+            $collection,
+            new \Symfony\Component\Routing\RequestContext(),
+        );
     }
 }

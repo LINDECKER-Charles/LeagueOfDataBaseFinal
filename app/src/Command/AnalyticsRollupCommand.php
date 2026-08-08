@@ -30,9 +30,24 @@ final class AnalyticsRollupCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addOption('include-today', 't', InputOption::VALUE_NONE, "Consolider aussi la journée courante (encore ouverte)")
-            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Réécrire les agrégats déjà présents')
-            ->addOption('prune', 'p', InputOption::VALUE_NONE, 'Supprimer le NDJSON local des journées consolidées (hors aujourd\'hui)')
+            ->addOption(
+                'include-today',
+                't',
+                InputOption::VALUE_NONE,
+                "Consolider aussi la journée courante (encore ouverte)"
+            )
+            ->addOption(
+                'force',
+                'f',
+                InputOption::VALUE_NONE,
+                'Réécrire les agrégats déjà présents'
+            )
+            ->addOption(
+                'prune',
+                'p',
+                InputOption::VALUE_NONE,
+                'Supprimer le NDJSON local des journées consolidées (hors aujourd\'hui)'
+            )
         ;
     }
 

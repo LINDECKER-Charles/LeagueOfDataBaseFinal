@@ -11,8 +11,10 @@ final class Version20260717200000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Moderation lot: ban state on users (is_banned flag, banned_at TIMESTAMPTZ, optional ban_reason) — '
-            . 'enforced at login (UserChecker) and on the public surfaces (profile 404, trends exclusion).';
+        return 'Moderation lot: ban state on users (is_banned flag, banned_at TIMESTAMPTZ, '
+            .'optional ban_reason) — '
+            . 'enforced at login (UserChecker) and on the public surfaces (profile 404, trends '
+                .'exclusion).';
     }
 
     public function up(Schema $schema): void

@@ -1,18 +1,23 @@
-{% extends 'admin/_base.html.twig' %}
-{% import 'admin/_ui.html.twig' as ui %}
+{% extends 'admin/shell/_base.html.twig' %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
 
 {% block title %}Vue d'ensemble · Admin · LODB{% endblock %}
 
-{% set rangeLabels = { '7d': '7 jours', '30d': '30 jours', '90d': '90 jours', 'all': "tout l'historique" } %}
+{% set rangeLabels = {
+    '7d': '7 jours', '30d': '30 jours', '90d': '90 jours', 'all': "tout l'historique"
+} %}
 
 {% block admin_body %}
-    <div class="flex between wrap" style="margin-bottom: 1.5rem;">
-        {{ ui.page_head('Console', "Vue d'ensemble", 'Trafic, audience et stockage — ' ~ (rangeLabels[range]|default(range)) ~ '.') }}
-        <div class="flex wrap" style="gap: 0.75rem;">
+    <div class="page-toolbar">
+        {{ ui.page_head('Console', "Vue d'ensemble",
+            'Trafic, audience et stockage — ' ~ (rangeLabels[range]|default(range)) ~ '.') }}
+        <div class="page-toolbar__actions">
             {{ ui.range_bar(range, ranges, 'admin_dashboard') }}
             <form method="post" action="{{ path('admin_analytics_rollup') }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('analytics_rollup') }}">
-                <button type="submit" class="btn ghost" title="Consolider les journées locales en agrégats MinIO durables">Consolider</button>
+                <button type="submit" class="btn ghost"
+                        title="Consolider les journées locales en agrégats MinIO durables"
+                >Consolider</button>
             </form>
         </div>
     </div>
@@ -22,7 +27,8 @@
     {{ ui.panel('overview-app', {}, panels['overview-app']|default(null), 'kpi') }}
 
     <div class="rule" data-label="Trafic"></div>
-    {{ ui.panel('overview-traffic', { range: range }, panels['overview-traffic']|default(null), 'chart') }}
+    {{ ui.panel('overview-traffic', { range: range },
+        panels['overview-traffic']|default(null), 'chart') }}
 
     <div class="rule" data-label="Stockage"></div>
     {{ ui.panel('overview-storage', {}, panels['overview-storage']|default(null), 'cards') }}

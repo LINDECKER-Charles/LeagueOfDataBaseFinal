@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service\PublicApi;
 
-use App\Entity\ApiPlan;
+use App\Entity\Enum\ApiPlan;
 
 /**
  * Port between the Stripe webhook layer and the API key persistence: what a
@@ -17,7 +17,7 @@ interface ApiEntitlements
     public function applyPack(int $userId, int $requests): void;
 
     /** Activates a subscription plan on the buyer's active key (creating a free key if none). */
-    public function applyPlan(int $userId, ApiPlan $plan, ?string $customerId, ?string $subscriptionId): void;
+    public function applyPlan(int $userId, ApiPlan $plan, StripeSubscriptionRef $stripe): void;
 
     /** Subscription cancelled/expired on Stripe's side: back to free, credits kept. */
     public function releaseSubscription(string $subscriptionId): void;

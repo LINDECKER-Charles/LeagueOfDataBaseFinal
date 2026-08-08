@@ -1,5 +1,5 @@
 # /about、/about/data 與 /faq 頁面的正文內容。
-# faq.* 的識別碼在 App\Controller\AboutController::FAQ_ENTRIES 中宣告。
+# faq.* 的識別碼在 App\Controller\Editorial\AboutController::FAQ_ENTRIES 中宣告。
 eyebrow: "關於"
 
 index:

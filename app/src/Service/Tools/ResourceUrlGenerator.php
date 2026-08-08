@@ -32,13 +32,20 @@ final class ResourceUrlGenerator
      * @param string               $route  clean resource route name (e.g. "app_champion")
      * @param array<string,scalar> $params clean-route params (e.g. {name: "Aatrox"})
      */
-    public function resourcePath(string $route, array $params = [], string $version = '', string $lang = ''): string
-    {
+    public function resourcePath(
+        string $route,
+        array $params = [],
+        string $version = '',
+        string $lang = ''
+    ): string {
         $version = trim($version);
-        $latest  = $this->versionManager->getVersions()[0] ?? '';
+        $latest  = $this->versionManager->latestVersion();
 
         $url = $version !== '' && $version !== $latest
-            ? $this->router->generate($route . self::VERSIONED_SUFFIX, ['version' => $version] + $params)
+            ? $this->router->generate(
+                $route . self::VERSIONED_SUFFIX,
+                ['version' => $version] + $params
+            )
             : $this->router->generate($route, $params);
 
         $lang = trim($lang);

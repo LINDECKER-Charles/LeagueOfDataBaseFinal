@@ -49,9 +49,15 @@ final class CanonicalHostTest extends TestCase
 
     public function testOriginOmitsDefaultPortsAndKeepsOthers(): void
     {
-        self::assertSame('https://' . self::PREFERRED, $this->hosts->origin('https', self::MIRROR, 443));
+        self::assertSame(
+            'https://' . self::PREFERRED,
+            $this->hosts->origin('https', self::MIRROR, 443),
+        );
         self::assertSame('http://localhost', $this->hosts->origin('http', 'localhost', 80));
         self::assertSame('http://localhost:8080', $this->hosts->origin('http', 'localhost', 8080));
-        self::assertSame('https://' . self::PREFERRED, $this->hosts->origin('https', 'www.' . self::PREFERRED));
+        self::assertSame(
+            'https://' . self::PREFERRED,
+            $this->hosts->origin('https', 'www.' . self::PREFERRED),
+        );
     }
 }

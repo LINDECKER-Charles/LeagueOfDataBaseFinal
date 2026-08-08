@@ -18,12 +18,20 @@ final class TimeSeriesChart
 {
     /** Above this point count the per-point markers turn to visual noise. */
     private const DOT_LIMIT = 45;
+    private const DOT_RADIUS = 2.5;
     private const GRID_STEPS = [0.0, 0.5, 1.0];
     /** Half-width of the invisible hover target around each point. */
     private const HIT_HALF_WIDTH = 6.0;
-
-    private const PLOT_W = SvgPrimitives::W - 2 * SvgPrimitives::PAD_X;
-    private const PLOT_H = SvgPrimitives::H - SvgPrimitives::PAD_TOP - SvgPrimitives::PAD_BOTTOM;
+    /** Gap between a Y grid line and its right-aligned label. */
+    private const Y_LABEL_GAP = 6;
+    /** Nudges the Y label onto the grid line's optical centre. */
+    private const Y_LABEL_BASELINE = 3;
+    /** Drop of the X labels below the baseline, clearing the axis. */
+    private const X_LABEL_DROP = 16;
+    /** Enough of the payload digest to make the clip-path id unique on a page. */
+    private const CLIP_ID_LENGTH = 10;
+    /** Strips the year from an ISO date, leaving the MM-DD tick label. */
+    private const MONTH_DAY_OFFSET = 5;
 
     public function __construct(
         private readonly SvgPrimitives $svg,
@@ -34,22 +42,28 @@ final class TimeSeriesChart
      * @param list<array{date: string, ...}> $series
      * @param list<array{key: string, label: string, color: string, format?: string}> $lines
      */
-    public function render(array $series, array $lines, string $ariaLabel = 'Série temporelle'): string
-    {
+    public function render(
+        array $series,
+        array $lines,
+        string $ariaLabel = 'Série temporelle',
+    ): string {
         if ($series === []) {
-            return $this->svg->empty($ariaLabel);
+            return $this->svg->emptyChart($ariaLabel);
         }
 
         $max = $this->seriesMax($series, $lines);
-        $x = $this->xScale(count($series));
-        $y = $this->yScale($max);
+        $scales = new PlotScales(count($series), $max);
         $payload = $this->payload($series, $lines, $max);
-        $clipId = 'cp-' . substr(sha1($payload), 0, 10);
+        $clipId = 'cp-' . substr(sha1($payload), 0, self::CLIP_ID_LENGTH);
 
         $body = $this->defs($clipId)
-            . $this->gridY($max, $y)
-            . sprintf('<g class="c-plot" clip-path="url(#%s)">%s</g>', $clipId, $this->marks($series, $lines, $x, $y))
-            . sprintf('<g class="c-xaxis">%s</g>', $this->axisX($series, $x, $y(0.0)));
+            . $this->gridY($max, $scales)
+            . sprintf(
+                '<g class="c-plot" clip-path="url(#%s)">%s</g>',
+                $clipId,
+                $this->marks($series, $lines, $scales),
+            )
+            . sprintf('<g class="c-xaxis">%s</g>', $this->axisX($series, $scales));
 
         return sprintf(
             '<figure class="chart-fig" data-chart="%s">%s</figure>',
@@ -61,8 +75,14 @@ final class TimeSeriesChart
     private function defs(string $clipId): string
     {
         return sprintf(
-            '<defs><clipPath id="%s"><rect x="%d" y="%d" width="%d" height="%d"/></clipPath></defs>',
-            $clipId, SvgPrimitives::PAD_X, SvgPrimitives::PAD_TOP, self::PLOT_W, self::PLOT_H,
+            '<defs><clipPath id="%s">'
+            . '<rect x="%d" y="%d" width="%d" height="%d"/>'
+            . '</clipPath></defs>',
+            $clipId,
+            SvgPrimitives::PAD_X,
+            SvgPrimitives::PAD_TOP,
+            SvgPrimitives::PLOT_W,
+            SvgPrimitives::PLOT_H,
         );
     }
 
@@ -70,17 +90,19 @@ final class TimeSeriesChart
      * @param list<array{date: string, ...}> $series
      * @param list<array{key: string, label: string, color: string, format?: string}> $lines
      */
-    private function marks(array $series, array $lines, \Closure $x, \Closure $y): string
+    private function marks(array $series, array $lines, PlotScales $scales): string
     {
         $out = '';
         foreach ($lines as $idx => $line) {
             $points = [];
             foreach ($series as $i => $row) {
-                $points[] = [$x($i), $y((float) ($row[$line['key']] ?? 0))];
+                $points[] = [$scales->x($i), $scales->y((float) ($row[$line['key']] ?? 0))];
             }
             // Only the first series gets the filled area: stacked fills would
             // read as a part-to-whole relation the data does not carry.
-            $out .= $idx === 0 ? $this->svg->area($points, $y(0.0), $line['color']) : '';
+            $out .= $idx === 0
+                ? $this->svg->area($points, $scales->baseline(), $line['color'])
+                : '';
             $out .= $this->svg->polyline($points, $line['color']);
             $out .= $this->dots($points, $series, $line);
         }
@@ -99,11 +121,23 @@ final class TimeSeriesChart
         $showMarkers = count($points) <= self::DOT_LIMIT;
         foreach ($points as $i => $p) {
             $marker = $showMarkers
-                ? sprintf('<circle cx="%.1f" cy="%.1f" r="2.5" fill="%s"/>', $p[0], $p[1], $line['color'])
+                ? sprintf(
+                    '<circle cx="%.1f" cy="%.1f" r="%s" fill="%s"/>',
+                    $p[0],
+                    $p[1],
+                    self::DOT_RADIUS,
+                    $line['color'],
+                )
                 : '';
             $out .= sprintf(
-                '<g class="c-dot"><rect x="%.1f" y="%d" width="%.1f" height="%d" fill="transparent"/>%s<title>%s — %s : %s</title></g>',
-                $p[0] - self::HIT_HALF_WIDTH, SvgPrimitives::PAD_TOP, self::HIT_HALF_WIDTH * 2, self::PLOT_H, $marker,
+                '<g class="c-dot">'
+                . '<rect x="%.1f" y="%d" width="%.1f" height="%d" fill="transparent"/>%s'
+                . '<title>%s — %s : %s</title></g>',
+                $p[0] - self::HIT_HALF_WIDTH,
+                SvgPrimitives::PAD_TOP,
+                self::HIT_HALF_WIDTH * 2,
+                SvgPrimitives::PLOT_H,
+                $marker,
                 $this->svg->esc((string) $series[$i]['date']),
                 $this->svg->esc($line['label']),
                 $this->format->integer((float) ($series[$i][$line['key']] ?? 0)),
@@ -113,19 +147,24 @@ final class TimeSeriesChart
         return $out;
     }
 
-    private function gridY(float $max, \Closure $y): string
+    private function gridY(float $max, PlotScales $scales): string
     {
         $out = '';
         foreach (self::GRID_STEPS as $step) {
             $value = $max * $step;
-            $at = $y($value);
+            $at = $scales->y($value);
             $out .= sprintf(
                 '<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" class="c-grid"/>',
-                SvgPrimitives::PAD_X, $at, SvgPrimitives::PAD_X + self::PLOT_W, $at,
+                SvgPrimitives::PAD_X,
+                $at,
+                SvgPrimitives::PAD_X + SvgPrimitives::PLOT_W,
+                $at,
             );
             $out .= sprintf(
                 '<text x="%d" y="%.1f" class="c-axis" text-anchor="end">%s</text>',
-                SvgPrimitives::PAD_X - 6, $at + 3, $this->format->compact($value),
+                SvgPrimitives::PAD_X - self::Y_LABEL_GAP,
+                $at + self::Y_LABEL_BASELINE,
+                $this->format->compact($value),
             );
         }
 
@@ -133,17 +172,18 @@ final class TimeSeriesChart
     }
 
     /** @param list<array{date: string, ...}> $series */
-    private function axisX(array $series, \Closure $x, float $baseY): string
+    private function axisX(array $series, PlotScales $scales): string
     {
         $n = count($series);
         $ticks = array_values(array_unique([0, intdiv($n - 1, 2), $n - 1]));
+        $labelY = $scales->baseline() + self::X_LABEL_DROP;
         $out = '';
         foreach ($ticks as $i) {
-            $label = substr((string) ($series[$i]['date'] ?? ''), 5); // MM-DD
+            $label = substr((string) ($series[$i]['date'] ?? ''), self::MONTH_DAY_OFFSET);
             $anchor = $i === 0 ? 'start' : ($i === $n - 1 ? 'end' : 'middle');
             $out .= sprintf(
                 '<text x="%.1f" y="%.1f" class="c-axis" text-anchor="%s">%s</text>',
-                $x($i), $baseY + 16, $anchor, $this->svg->esc($label),
+                $scales->x($i), $labelY, $anchor, $this->svg->esc($label),
             );
         }
 
@@ -160,6 +200,33 @@ final class TimeSeriesChart
      */
     private function payload(array $series, array $lines, float $max): string
     {
+        return json_encode([
+            'box' => [
+                'w' => SvgPrimitives::W,
+                'h' => SvgPrimitives::H,
+                'padX' => SvgPrimitives::PAD_X,
+                'padTop' => SvgPrimitives::PAD_TOP,
+                'plotW' => SvgPrimitives::PLOT_W,
+                'plotH' => SvgPrimitives::PLOT_H,
+            ],
+            'max' => $max,
+            'dates' => array_map(
+                static fn (array $row): string => (string) ($row['date'] ?? ''),
+                $series,
+            ),
+            'series' => $this->plottedLines($series, $lines),
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * One entry per line: its legend, and its raw values in series order.
+     *
+     * @param list<array{date: string, ...}> $series
+     * @param list<array{key: string, label: string, color: string, format?: string}> $lines
+     * @return list<array{label: string, color: string, format: string, values: list<float>}>
+     */
+    private function plottedLines(array $series, array $lines): array
+    {
         $plotted = [];
         foreach ($lines as $line) {
             $plotted[] = [
@@ -173,31 +240,7 @@ final class TimeSeriesChart
             ];
         }
 
-        return json_encode([
-            'box' => [
-                'w' => SvgPrimitives::W,
-                'h' => SvgPrimitives::H,
-                'padX' => SvgPrimitives::PAD_X,
-                'padTop' => SvgPrimitives::PAD_TOP,
-                'plotW' => self::PLOT_W,
-                'plotH' => self::PLOT_H,
-            ],
-            'max' => $max,
-            'dates' => array_map(static fn (array $row): string => (string) ($row['date'] ?? ''), $series),
-            'series' => $plotted,
-        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    }
-
-    private function xScale(int $n): \Closure
-    {
-        return static fn (int $i): float => SvgPrimitives::PAD_X
-            + ($n === 1 ? self::PLOT_W / 2 : $i * self::PLOT_W / ($n - 1));
-    }
-
-    private function yScale(float $max): \Closure
-    {
-        return static fn (float $v): float => SvgPrimitives::PAD_TOP + self::PLOT_H
-            - ($max > 0 ? $v / $max : 0) * self::PLOT_H;
+        return $plotted;
     }
 
     /**

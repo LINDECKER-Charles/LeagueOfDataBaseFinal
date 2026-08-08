@@ -1,22 +1,26 @@
 {# Deferred panel — application counters + service health. `report` is the
    MonitoringReportService payload (see App\Service\Admin\AdminPanelCatalog). #}
-{% import 'admin/_ui.html.twig' as ui %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
 
 {% if report.counters.ok %}
     <div class="kpi-grid">
         {{ ui.kpi('Comptes', report.counters.users.total|number_format(0, '.', ' '),
-            '+' ~ report.counters.users.newWeek ~ ' sur 7 j · ' ~ report.counters.users.banned ~ ' banni(s)', 'var(--gold)', null) }}
+            '+' ~ report.counters.users.newWeek ~ ' sur 7 j · '
+                ~ report.counters.users.banned ~ ' banni(s)', 'var(--gold)', null) }}
         {{ ui.kpi('Builds', report.counters.builds.total|number_format(0, '.', ' '),
             report.counters.builds.public ~ ' public(s)', 'var(--hex)', null) }}
         {{ ui.kpi('Dons', report.counters.donations.totalCents|euros,
             report.counters.donations.count ~ ' don(s)', 'var(--series-3)', null) }}
         {{ ui.kpi('Clés API actives', report.counters.apiKeysActive|number_format(0, '.', ' '),
             report.counters.apiRequests.month|compact ~ ' req. ce mois', 'var(--series-2)', null) }}
-        <a class="kpi kpi--link" style="--accent: var(--series-5)" href="{{ path('admin_monitoring') }}">
+        <a class="kpi kpi--link" style="--accent: var(--series-5)"
+           href="{{ path('admin_monitoring') }}">
             <span class="k-label">Services</span>
             <span class="badges" style="margin-top: 0.55rem;">
                 {% for name, probe in report.services %}
-                    {% set tone = probe.status == 'ok' ? 'good' : (probe.status == 'degraded' ? 'warn' : 'bad') %}
+                    {% set tone = probe.status == 'ok'
+                        ? 'good'
+                        : (probe.status == 'degraded' ? 'warn' : 'bad') %}
                     <span class="badge {{ tone }}">{{ name }}</span>
                 {% endfor %}
             </span>

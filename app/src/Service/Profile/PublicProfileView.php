@@ -35,7 +35,11 @@ final class PublicProfileView
             'favorites'      => $this->favoriteSlots->resolveAll($user, $version, $lang),
             'skinBanner'     => $skinBanner,
             'heroBackground' => $heroBackground,
-            'builds'         => $this->buildCards($this->builds->findPublicByOwner($user), $version, $lang),
+            'builds'         => $this->buildCards(
+                $this->builds->findPublicByOwner($user),
+                $version,
+                $lang,
+            ),
         ];
     }
 

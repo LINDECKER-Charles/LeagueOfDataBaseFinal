@@ -1,27 +1,36 @@
 {# Deferred panel — traffic summary. `report` is the AnalyticsReportService
    payload for `range` (see App\Service\Admin\AdminPanelCatalog). #}
-{% import 'admin/_ui.html.twig' as ui %}
-
-{% set typeMeta = {
-    champion:      { label: 'Champions', color: 'var(--series-1)' },
-    item:          { label: 'Objets',    color: 'var(--series-2)' },
-    runesReforged: { label: 'Runes',     color: 'var(--series-3)' },
-    summoner:      { label: 'Sorts',     color: 'var(--series-4)' },
-    home:          { label: 'Accueil',   color: 'var(--series-5)' }
-} %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
+{% import 'admin/shell/_vocabulary.html.twig' as vocab %}
 
 <div class="kpi-grid" style="margin-bottom: 1.15rem;">
-    {{ ui.kpi('Vues', report.totals.views|compact, report.totals.botViews|compact ~ ' bots exclus', 'var(--gold)',
-        chart_sparkline(report.series|map((s) => s.views), 'var(--gold)')) }}
-    {{ ui.kpi('Visiteurs uniques', report.totals.uniqueVisitors|compact, report.totals.returningVisitors|compact ~ ' récurrents', 'var(--hex)',
-        chart_sparkline(report.series|map((s) => s.visitors), 'var(--hex)')) }}
-    {{ ui.kpi('Page la plus vue', report.topPages|first ? (report.topPages|first).count|compact : '0',
-        report.topPages|first ? (report.topPages|first).name : '—', 'var(--series-3)', null) }}
+    {{ ui.kpi(
+        'Vues',
+        report.totals.views|compact,
+        report.totals.botViews|compact ~ ' bots exclus',
+        'var(--gold)',
+        chart_sparkline(report.series|map((s) => s.views), 'var(--gold)')
+    ) }}
+    {{ ui.kpi(
+        'Visiteurs uniques',
+        report.totals.uniqueVisitors|compact,
+        report.totals.returningVisitors|compact ~ ' récurrents',
+        'var(--hex)',
+        chart_sparkline(report.series|map((s) => s.visitors), 'var(--hex)')
+    ) }}
+    {{ ui.kpi(
+        'Page la plus vue',
+        report.topPages|first ? (report.topPages|first).count|compact : '0',
+        report.topPages|first ? (report.topPages|first).name : '—',
+        'var(--series-3)',
+        null
+    ) }}
 </div>
 
 <div class="grid cols-3">
     <section class="card span-2">
-        <div class="card__head"><h2>Fréquentation</h2><span class="chip">vues · visiteurs</span></div>
+        <div class="card__head">
+            <h2>Fréquentation</h2><span class="chip">vues · visiteurs</span></div>
         {{ chart_timeseries(report.series, [
             { key: 'views',    label: 'Vues',       color: 'var(--gold)' },
             { key: 'visitors', label: 'Visiteurs',  color: 'var(--hex)' }
@@ -34,22 +43,33 @@
     <section class="card">
         <div class="card__head"><h2>Par ressource</h2></div>
         {% set slices = [] %}
+        {# `~ ''` flattens the macro's Markup into a plain string — the SVG
+           renderer takes strictly typed scalars, not Stringable. #}
         {% for row in report.byType %}
-            {% set m = typeMeta[row.name]|default({ label: row.name, color: 'var(--text-muted)' }) %}
-            {% set slices = slices|merge([{ name: m.label, value: row.count, color: m.color }]) %}
+            {% set slices = slices|merge([{
+                name: vocab.resource_label(row.name) ~ '',
+                value: row.count,
+                color: vocab.resource_color(row.name) ~ ''
+            }]) %}
         {% endfor %}
         {{ chart_donut(slices, report.totals.views|compact, 'vues', 'Vues par ressource') }}
-        {{ ui.legend(slices|map((s) => { label: s.name, color: s.color, value: s.value|compact })) }}
+        {{ ui.legend(slices|map(
+            (s) => { label: s.name, color: s.color, value: s.value|compact }
+        )) }}
     </section>
 </div>
 
 <div class="grid cols-2" style="margin-top: 1.15rem;">
     <section class="card">
-        <div class="card__head"><h2>Pages les plus consultées</h2><a class="chip" href="{{ path('admin_traffic', { range: range }) }}">Détail →</a></div>
+        <div class="card__head">
+            <h2>Pages les plus consultées</h2><a class="chip"
+                href="{{ path('admin_traffic', { range: range }) }}">Détail →</a></div>
         {{ ui.rank(report.topPages, { empty: 'Aucune vue enregistrée.', limit: 8 }) }}
     </section>
     <section class="card">
-        <div class="card__head"><h2>Sources de trafic</h2><a class="chip" href="{{ path('admin_audience', { range: range }) }}">Audience →</a></div>
+        <div class="card__head">
+            <h2>Sources de trafic</h2><a class="chip"
+                href="{{ path('admin_audience', { range: range }) }}">Audience →</a></div>
         {{ ui.rank(report.refSource, { color: 'cyan', empty: 'Aucune source.', limit: 6 }) }}
     </section>
 </div>

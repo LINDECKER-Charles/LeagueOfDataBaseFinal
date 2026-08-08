@@ -1,29 +1,47 @@
-{% extends 'admin/_base.html.twig' %}
-{% import 'admin/_ui.html.twig' as ui %}
+{% extends 'admin/shell/_base.html.twig' %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
 
 {% block title %}Messages · Admin · LODB{% endblock %}
 
 {% block admin_body %}
-    {{ ui.page_head('Gestion', 'Messages de contact', 'Demandes envoyées depuis le formulaire du pied de page — bugs, retours, avis et contacts commerciaux.') }}
+    {{ ui.page_head(
+        'Gestion',
+        'Messages de contact',
+        'Demandes envoyées depuis le formulaire du pied de page'
+            ~ ' — bugs, retours, avis et contacts commerciaux.'
+    ) }}
 
     <div class="kpi-grid">
         {{ ui.kpi('Total', stats.total|number_format(0, '.', ' '), null, 'var(--gold)', null) }}
-        {{ ui.kpi('À traiter', stats.new|number_format(0, '.', ' '), null, stats.new > 0 ? 'var(--warn)' : 'var(--good)', null) }}
+        {{ ui.kpi(
+            'À traiter',
+            stats.new|number_format(0, '.', ' '),
+            null,
+            stats.new > 0 ? 'var(--warn)' : 'var(--good)',
+            null
+        ) }}
         {{ ui.kpi('Traités', stats.handled|number_format(0, '.', ' '), null, 'var(--good)', null) }}
-        {{ ui.kpi('7 derniers jours', stats.week|number_format(0, '.', ' '), null, 'var(--hex)', null) }}
+        {{ ui.kpi(
+            '7 derniers jours', stats.week|number_format(0, '.', ' '), null, 'var(--hex)', null
+        ) }}
     </div>
 
     <div class="rule" data-label="Boîte de réception"></div>
 
     {% set statusValue = status ? status.value : '' %}
     <div class="rangebar">
-        <a href="{{ path('admin_contacts') }}" class="{{ statusValue == '' ? 'is-active' }}">Tous</a>
-        <a href="{{ path('admin_contacts', { status: 'new' }) }}" class="{{ statusValue == 'new' ? 'is-active' }}">Nouveaux</a>
-        <a href="{{ path('admin_contacts', { status: 'handled' }) }}" class="{{ statusValue == 'handled' ? 'is-active' }}">Traités</a>
+        <a href="{{ path('admin_contacts') }}"
+           class="{{ statusValue == '' ? 'is-active' }}">Tous</a>
+        <a href="{{ path('admin_contacts', { status: 'new' }) }}"
+           class="{{ statusValue == 'new' ? 'is-active' }}">Nouveaux</a>
+        <a href="{{ path('admin_contacts', { status: 'handled' }) }}"
+           class="{{ statusValue == 'handled' ? 'is-active' }}">Traités</a>
     </div>
 
     <section class="card">
-        {% set listContext = statusValue != '' ? { status: statusValue, page: page } : { page: page } %}
+        {% set listContext = statusValue != ''
+            ? { status: statusValue, page: page }
+            : { page: page } %}
         {% set tableRows = [] %}
         {% for m in rows %}
             {% set msgFull = m.message %}
@@ -35,23 +53,31 @@
             {% set contactCell %}
                 <a href="mailto:{{ m.email|e('html_attr') }}">{{ m.name ?? m.email }}</a>
                 {% if m.name %}<span class="cell-sub">{{ m.email }}</span>{% endif %}
-                {% if m.user %}<span class="cell-sub">compte : {{ m.user.username }}</span>{% endif %}
+                {% if m.user %}
+                    <span class="cell-sub">compte : {{ m.user.username }}</span>
+                {% endif %}
             {% endset %}
             {% set actions %}
                 {% if m.isHandled %}
-                    <form method="post" action="{{ path('admin_contact_reopen', { id: m.id } + listContext) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('admin_contact_reopen') }}">
+                    <form method="post"
+                          action="{{ path('admin_contact_reopen', { id: m.id } + listContext) }}">
+                        <input type="hidden" name="_token"
+                               value="{{ csrf_token('admin_contact_reopen') }}">
                         <button type="submit" class="btn ghost small">Rouvrir</button>
                     </form>
                 {% else %}
-                    <form method="post" action="{{ path('admin_contact_handle', { id: m.id } + listContext) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('admin_contact_handle') }}">
+                    <form method="post"
+                          action="{{ path('admin_contact_handle', { id: m.id } + listContext) }}">
+                        <input type="hidden" name="_token"
+                               value="{{ csrf_token('admin_contact_handle') }}">
                         <button type="submit" class="btn small">Marquer traité</button>
                     </form>
                 {% endif %}
-                <form method="post" action="{{ path('admin_contact_delete', { id: m.id } + listContext) }}"
+                <form method="post"
+                      action="{{ path('admin_contact_delete', { id: m.id } + listContext) }}"
                       data-confirm="Supprimer définitivement ce message ?">
-                    <input type="hidden" name="_token" value="{{ csrf_token('admin_contact_delete') }}">
+                    <input type="hidden" name="_token"
+                           value="{{ csrf_token('admin_contact_delete') }}">
                     <button type="submit" class="btn danger small">Supprimer</button>
                 </form>
             {% endset %}
@@ -65,9 +91,16 @@
             ]]) %}
         {% endfor %}
         {{ ui.table(
-            ['Reçu le', 'Catégorie', 'Contact', 'Message', 'Statut', { label: 'Actions', num: true }],
+            [
+                'Reçu le', 'Catégorie', 'Contact', 'Message', 'Statut',
+                { label: 'Actions', num: true },
+            ],
             tableRows,
-            { empty: statusValue != '' ? 'Aucun message dans cette catégorie.' : 'Aucun message de contact.' }
+            {
+                empty: statusValue != ''
+                    ? 'Aucun message dans cette catégorie.'
+                    : 'Aucun message de contact.',
+            }
         ) }}
     </section>
 

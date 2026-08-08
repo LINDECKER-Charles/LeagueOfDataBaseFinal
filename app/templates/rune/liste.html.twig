@@ -1,7 +1,9 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}{{ seo_title('rune.list.title'|trans({}, 'seo')) }}{% endblock %}
-{% block meta_description %}{{ 'rune.list.description'|trans({'%count%': meta.totalItem, '%version%': meta.version}, 'seo') }}{% endblock %}
+{% block meta_description %}{{ 'rune.list.description'|trans(
+  {'%count%': meta.totalItem, '%version%': meta.version}, 'seo'
+) }}{% endblock %}
 {% block img %}/preview/runes.png{% endblock %}
 
 {% block structured_data %}
@@ -21,21 +23,22 @@
 
   <div class="relative mx-auto max-w-[110rem]">
     <header class="mb-8">
-      {% include 'components/section_header.html.twig' with {
-        eyebrow: 'Data Dragon · ' ~ (client.session.version ?? (client.versions|first)),
+      {% include 'components/codex/section_header.html.twig' with {
+        eyebrow: 'Data Dragon · ' ~ meta.version,
         title: 'rune.list.title'|trans,
         count: meta.totalItem,
         count_label: 'rune.list.title'|trans|lower
       } %}
     </header>
 
-    {% include 'components/list_filter.html.twig' with { grid_id: 'rune-grid' } %}
+    {% include 'components/codex/list_filter.html.twig' with { grid_id: 'rune-grid' } %}
 
-    <div id="rune-grid" class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div id="rune-grid"
+         class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for runeTree in runesReforgeds %}
         {# No facet here: one tree per card would make each its own tag (degenerate).
            Search stays via filter_text; the tree icon is the circular "focus" glyph. #}
-        {% embed 'components/entity_card.html.twig' with {
+        {% embed 'components/codex/entity_card.html.twig' with {
           href: resource_path('app_rune', { name: runeTree.key }, meta.version, meta.lang),
           img: images[runeTree.key].icon ?? null,
           name: runeTree.name,
@@ -52,8 +55,10 @@
                 {% for r in slot0 %}
                   {% set runeIcon = images[runeTree.key].slots[0][r.key] ?? null %}
                   {% if runeIcon %}
-                    <div class="aspect-square overflow-hidden border border-gold-deep/40 bg-void/60">
-                      <img src="/{{ runeIcon }}" alt="{{ r.name }}" class="h-full w-full object-cover">
+                    <div class="aspect-square overflow-hidden border border-gold-deep/40
+                                bg-void/60">
+                      <img src="/{{ runeIcon }}" alt="{{ r.name }}"
+                           class="h-full w-full object-cover">
                     </div>
                   {% endif %}
                 {% endfor %}
@@ -62,7 +67,7 @@
           {% endblock %}
         {% endembed %}
       {% else %}
-        {% include 'components/empty_state.html.twig' %}
+        {% include 'components/ui/empty_state.html.twig' %}
       {% endfor %}
     </div>
   </div>

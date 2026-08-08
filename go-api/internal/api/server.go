@@ -28,7 +28,7 @@ type AuthStore interface {
 type ContentStore interface {
 	ProfileByUsername(ctx context.Context, username string) (store.Profile, error)
 	CountPublicBuilds(ctx context.Context, userID int) (int64, error)
-	PublicBuilds(ctx context.Context, championID string, limit, offset int) ([]store.Build, int64, error)
+	PublicBuilds(ctx context.Context, q store.BuildsQuery) ([]store.Build, int64, error)
 }
 
 // Pinger reports dependency reachability for /healthz.
@@ -43,15 +43,16 @@ type UsageMeter interface {
 
 // Server wires the HTTP surface over its dependencies.
 type Server struct {
-	auth     AuthStore
-	content  ContentStore
-	trends   *trends.Service
-	keyCache *keys.Cache
-	limiter  *ratelimit.Limiter
-	meter    UsageMeter
-	pgPing   Pinger
-	s3Ping   Pinger
-	log      *slog.Logger
+	auth        AuthStore
+	content     ContentStore
+	trends      *trends.Service
+	keyCache    *keys.Cache
+	limiter     *ratelimit.Limiter
+	meter       UsageMeter
+	pgPing      Pinger
+	s3Ping      Pinger
+	siteBaseURL string
+	log         *slog.Logger
 }
 
 // Deps groups the server dependencies (constructor object, DI-style).
@@ -64,14 +65,18 @@ type Deps struct {
 	Meter    UsageMeter
 	PGPing   Pinger
 	S3Ping   Pinger
-	Log      *slog.Logger
+	// SiteBaseURL is the public origin of the website, used to render absolute
+	// links (build sharing) in responses served to third-party clients.
+	SiteBaseURL string
+	Log         *slog.Logger
 }
 
 // NewServer builds the routed handler with CORS + request logging applied.
 func NewServer(d Deps) http.Handler {
 	s := &Server{
 		auth: d.Auth, content: d.Content, trends: d.Trends, keyCache: d.KeyCache,
-		limiter: d.Limiter, meter: d.Meter, pgPing: d.PGPing, s3Ping: d.S3Ping, log: d.Log,
+		limiter: d.Limiter, meter: d.Meter, pgPing: d.PGPing, s3Ping: d.S3Ping,
+		siteBaseURL: d.SiteBaseURL, log: d.Log,
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.handleHealth)
@@ -121,3 +126,12 @@ func (s *Server) logRequests(next http.Handler) http.Handler {
 }
 
 func isNotFound(err error) bool { return errors.Is(err, store.ErrNotFound) }
+
+// storeFailure reports a persistence-layer failure. Every error the stores can
+// still surface here means the dependency is down (or unmigrated), which is a
+// 503 — writeInternal stays reserved for genuine internal faults, so the status
+// keeps telling supervision apart "our bug" from "database outage".
+func (s *Server) storeFailure(w http.ResponseWriter, msg string, err error) {
+	s.log.Error(msg, "error", err)
+	writeUnavailable(w)
+}

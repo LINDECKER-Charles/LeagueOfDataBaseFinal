@@ -2,6 +2,8 @@
  * Pure filtering helpers of the favorite picker — no Vue, no DOM, no fetch.
  */
 
+import { normalizeSearchText } from '../search/normalizeSearchText'
+
 /** One selectable row of the picker list (rune trees double as group headers). */
 export interface PickerEntry {
     id: string
@@ -15,11 +17,13 @@ export interface PickerEntry {
     isGroup?: boolean
 }
 
-const COMBINING_MARKS = /[\u0300-\u036f]/g
-
-/** Lowercased, accent-stripped comparison form ("Séraphine" → "seraphine"). */
-export function normalizeSearchText(value: string): string {
-    return value.normalize('NFD').replace(COMBINING_MARKS, '').toLowerCase()
+/** What matched a query, and which groups that pulls in either way. */
+interface MatchIndex {
+    entries: Set<PickerEntry>
+    /** Trees whose own header matched: all of their perks stay visible. */
+    matchedGroupIds: Set<string>
+    /** Trees with at least one matching perk: their header stays visible. */
+    groupsWithMatch: Set<string>
 }
 
 /**
@@ -32,29 +36,39 @@ export function filterOptions(entries: readonly PickerEntry[], query: string): P
     if (q === '') {
         return [...entries]
     }
+    const index = indexMatches(entries, q)
 
-    const matches = new Set<PickerEntry>()
-    const matchedGroupIds = new Set<string>()
-    const groupsWithMatch = new Set<string>()
+    return entries.filter((entry) => isVisible(entry, index))
+}
+
+function indexMatches(entries: readonly PickerEntry[], q: string): MatchIndex {
+    const index: MatchIndex = {
+        entries: new Set(),
+        matchedGroupIds: new Set(),
+        groupsWithMatch: new Set(),
+    }
     for (const entry of entries) {
         if (!entry.searchText.includes(q)) {
             continue
         }
-        matches.add(entry)
+        index.entries.add(entry)
         if (entry.isGroup) {
-            matchedGroupIds.add(entry.id)
+            index.matchedGroupIds.add(entry.id)
         } else if (entry.groupId !== undefined) {
-            groupsWithMatch.add(entry.groupId)
+            index.groupsWithMatch.add(entry.groupId)
         }
     }
 
-    return entries.filter((entry) => {
-        if (matches.has(entry)) {
-            return true
-        }
-        if (entry.isGroup) {
-            return groupsWithMatch.has(entry.id)
-        }
-        return entry.groupId !== undefined && matchedGroupIds.has(entry.groupId)
-    })
+    return index
+}
+
+function isVisible(entry: PickerEntry, index: MatchIndex): boolean {
+    if (index.entries.has(entry)) {
+        return true
+    }
+    if (entry.isGroup) {
+        return index.groupsWithMatch.has(entry.id)
+    }
+
+    return entry.groupId !== undefined && index.matchedGroupIds.has(entry.groupId)
 }

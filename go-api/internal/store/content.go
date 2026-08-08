@@ -57,11 +57,19 @@ func (p *Postgres) CountPublicBuilds(ctx context.Context, userID int) (int64, er
 	return count, err
 }
 
-// PublicBuilds pages through the public builds of one champion, newest first.
-func (p *Postgres) PublicBuilds(ctx context.Context, championID string, limit, offset int) ([]Build, int64, error) {
+// BuildsQuery addresses one page of a champion's public builds.
+type BuildsQuery struct {
+	ChampionID string
+	Limit      int
+	Offset     int
+}
+
+// PublicBuilds pages through the public builds of one champion, newest first,
+// and reports the total the page was cut from.
+func (p *Postgres) PublicBuilds(ctx context.Context, q BuildsQuery) ([]Build, int64, error) {
 	var total int64
 	err := p.pool.QueryRow(ctx,
-		`SELECT COUNT(*) FROM builds WHERE champion_id = $1 AND is_public`, championID,
+		`SELECT COUNT(*) FROM builds WHERE champion_id = $1 AND is_public`, q.ChampionID,
 	).Scan(&total)
 	if err != nil {
 		return nil, 0, err
@@ -71,20 +79,29 @@ func (p *Postgres) PublicBuilds(ctx context.Context, championID string, limit, o
 		`SELECT name, description, game_version, runes, steps, share_token, created_at
 		   FROM builds WHERE champion_id = $1 AND is_public
 		  ORDER BY created_at DESC, id DESC
-		  LIMIT $2 OFFSET $3`, championID, limit, offset)
+		  LIMIT $2 OFFSET $3`, q.ChampionID, q.Limit, q.Offset)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rows.Close()
 
-	builds := make([]Build, 0, limit)
+	builds, err := scanBuilds(rows, q.Limit)
+	if err != nil {
+		return nil, 0, err
+	}
+	return builds, total, nil
+}
+
+// scanBuilds materialises the result set, pre-sized to the requested page.
+func scanBuilds(rows pgx.Rows, pageSize int) ([]Build, error) {
+	builds := make([]Build, 0, pageSize)
 	for rows.Next() {
 		var b Build
 		if err := rows.Scan(&b.Name, &b.Description, &b.GameVersion, &b.Runes,
 			&b.Steps, &b.ShareToken, &b.CreatedAt); err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 		builds = append(builds, b)
 	}
-	return builds, total, rows.Err()
+	return builds, rows.Err()
 }

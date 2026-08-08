@@ -2,29 +2,33 @@
 @source not "../../public";
 
 /* ---------------------------------------------------------------------------
-   Hextech design system — split by concern, inlined by Tailwind at build:
-   tokens (palette/fonts/motion) → base (canvas/typo/reveal) → primitives
-   (frames/buttons/chips) → skeleton (island placeholders) → ddragon
-   (rich-text vocabulary) → detail + showcase
-   (detail-page toolkit & per-page signatures) → recipe (item build tree) →
-   nav (header switcher, mobile bottom bar, list helpers).
+   Hextech design system — split by surface, inlined by Tailwind at build:
+   foundation (palette/fonts/motion, canvas/typo/reveal, island placeholders,
+   rich-text vocabulary, editorial bodies, app chrome) → primitives
+   (frames/buttons/chips) → codex (list helpers, detail-page toolkit, item
+   build tree) → showcase (per-page signatures) → account (auth portal,
+   profile chamber, public card, edit chrome) → builds → community → changelog.
+
+   One folder per surface, its `index.css` being the folder's own cascade.
+   The order below IS the cascade order — keep it.
 --------------------------------------------------------------------------- */
-@import "./tokens.css";
-@import "./base.css";
-@import "./primitives.css";
-@import "./skeleton.css";
-@import "./list.css";
-@import "./ddragon.css";
-@import "./detail.css";
-@import "./showcase.css";
-@import "./recipe.css";
-@import "./nav.css";
-@import "./auth.css";
+@import "./foundation/tokens.css";
+@import "./foundation/base.css";
+@import "./primitives/index.css";
+@import "./foundation/skeleton.css";
+@import "./codex/list.css";
+@import "./foundation/ddragon.css";
+@import "./foundation/prose.css";
+@import "./codex/detail.css";
+@import "./showcase/index.css";
+@import "./codex/recipe.css";
+@import "./foundation/nav.css";
+@import "./account/auth.css";
 /* profile split by concern; kept in source order to preserve the cascade. */
-@import "./profile-picker.css";
-@import "./profile-public.css";
-@import "./profile-edit.css";
-@import "./builds.css";
-@import "./community.css";
-@import "./donate.css";
-@import "./changelog.css";
+@import "./account/profile-picker.css";
+@import "./account/profile-public/index.css";
+@import "./account/profile-edit/index.css";
+@import "./builds/index.css";
+@import "./community/community.css";
+@import "./community/donate.css";
+@import "./changelog/index.css";

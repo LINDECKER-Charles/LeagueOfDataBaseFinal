@@ -19,7 +19,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 #[AsCommand(
     name: 'app:audit:rollup',
-    description: 'Archive les journaux d\'audit locaux vers MinIO et applique la rétention CNIL (6 mois).'
+    description: 'Archive les journaux d\'audit locaux vers MinIO et applique la '
+        . 'rétention CNIL (6 mois).'
 )]
 final class AuditRollupCommand extends Command
 {
@@ -31,8 +32,18 @@ final class AuditRollupCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addOption('prune', 'p', InputOption::VALUE_NONE, 'Supprimer le NDJSON local des journées archivées')
-            ->addOption('enforce-retention', 'r', InputOption::VALUE_NONE, 'Supprimer les journées au-delà de la rétention CNIL (6 mois)')
+            ->addOption(
+                'prune',
+                'p',
+                InputOption::VALUE_NONE,
+                'Supprimer le NDJSON local des journées archivées',
+            )
+            ->addOption(
+                'enforce-retention',
+                'r',
+                InputOption::VALUE_NONE,
+                'Supprimer les journées au-delà de la rétention CNIL (6 mois)',
+            )
         ;
     }
 
@@ -49,7 +60,10 @@ final class AuditRollupCommand extends Command
 
         if ($input->getOption('enforce-retention')) {
             $retention = $this->rollup->enforceRetention();
-            $io->success(sprintf('Rétention : %d journée(s) supprimée(s) au-delà de 6 mois.', count($retention['deleted'])));
+            $io->success(sprintf(
+                'Rétention : %d journée(s) supprimée(s) au-delà de 6 mois.',
+                count($retention['deleted']),
+            ));
         }
 
         return Command::SUCCESS;

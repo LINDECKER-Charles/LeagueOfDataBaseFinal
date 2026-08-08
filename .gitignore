@@ -1,6 +1,6 @@
 commande.md
 
-# Env & secrets (see docs/github-actions-secrets.md).
+# Env & secrets (see docs/guides/github-actions-secrets.md).
 # Real env files are git-ignored; committed *.example templates and the non-secret
 # Symfony defaults (app/.env, app/.env.test) are not.
 
@@ -21,8 +21,11 @@ node_modules/
 .idea/
 
 # Pitch Discord (local, non versionné)
-/docs/presentation-discord.md
+/docs/produit/presentation-discord.md
 
 # graphify (cache/rapport knowledge-graph généré)
 /graphify-out/
 design
+
+# Rapports d'audit générés (knowledge-graph, archi, conventions)
+/docs/report/

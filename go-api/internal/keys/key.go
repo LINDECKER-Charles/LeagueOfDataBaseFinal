@@ -21,9 +21,10 @@ const (
 var ErrMalformed = errors.New("malformed api key")
 
 // APIKey is the database identity of a key, as consumed by the middleware.
+// Only the columns the middleware actually decides on are carried here — the
+// owning account is deliberately absent, so the hot per-key SELECT stays minimal.
 type APIKey struct {
 	ID              int
-	UserID          int
 	Plan            string
 	MonthlyQuota    int64
 	CreditsBalance  int64

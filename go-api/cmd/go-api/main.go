@@ -44,37 +44,50 @@ func run(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 		return err
 	}
 
-	recorder := metering.New(db, config.MeterFlushInterval, log)
-	meterCtx, stopMeter := context.WithCancel(context.Background())
-	meterDone := make(chan struct{})
-	go func() { defer close(meterDone); recorder.Run(meterCtx) }()
+	recorder := metering.New(db, metering.Options{
+		FlushInterval: config.MeterFlushInterval,
+		FlushTimeout:  config.MeterFlushTimeout,
+	}, log)
+	meter := startMetering(recorder)
 
-	srv := newHTTPServer(cfg, buildHandler(cfg, db, s3, recorder, log))
-	go func() {
-		log.Info("go-api listening", "addr", cfg.Addr())
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Error("server error", "error", err)
-		}
-	}()
+	wired := wiring{cfg: cfg, db: db, s3: s3, recorder: recorder, log: log}
+	srv := newHTTPServer(cfg, wired.handler())
+	go listen(srv, log)
 
 	<-ctx.Done()
-	return shutdown(srv, stopMeter, meterDone, log)
+	return shutdown(srv, meter, log)
 }
 
-// buildHandler assembles the HTTP surface over the stores.
-func buildHandler(cfg config.Config, db *store.Postgres, s3 *store.Minio,
-	recorder *metering.Recorder, log *slog.Logger) http.Handler {
-	names := trends.NewStoreNameResolver(s3, config.NamesCacheTTL, nil)
+// wiring is what run assembled: the process-wide dependencies the HTTP surface
+// is built from, as one value rather than an argument list whose order says
+// nothing.
+type wiring struct {
+	cfg      config.Config
+	db       *store.Postgres
+	s3       *store.Minio
+	recorder *metering.Recorder
+	log      *slog.Logger
+}
+
+// handler assembles the HTTP surface over the stores.
+func (w wiring) handler() http.Handler {
+	names := trends.NewStoreNameResolver(w.s3, config.NamesCacheTTL, nil)
 	return api.NewServer(api.Deps{
-		Auth:     db,
-		Content:  db,
-		Trends:   trends.New(s3, names, config.TrendsCacheTTL, nil),
-		KeyCache: keys.NewCache(config.KeyCacheTTL, nil),
-		Limiter:  ratelimit.New(nil),
-		Meter:    recorder,
-		PGPing:   db,
-		S3Ping:   s3,
-		Log:      log,
+		Auth:    w.db,
+		Content: w.db,
+		Trends: trends.New(trends.Options{
+			Reader:   w.s3,
+			Names:    names,
+			CacheTTL: config.TrendsCacheTTL,
+			Log:      w.log,
+		}),
+		KeyCache:    keys.NewCache(config.KeyCacheTTL, nil),
+		Limiter:     ratelimit.New(nil),
+		Meter:       w.recorder,
+		PGPing:      w.db,
+		S3Ping:      w.s3,
+		SiteBaseURL: w.cfg.PublicSiteURL,
+		Log:         w.log,
 	})
 }
 
@@ -88,14 +101,41 @@ func newHTTPServer(cfg config.Config, handler http.Handler) *http.Server {
 	}
 }
 
+func listen(srv *http.Server, log *slog.Logger) {
+	log.Info("go-api listening", "addr", srv.Addr)
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Error("server error", "error", err)
+	}
+}
+
+// meterLoop is the handle on the metering goroutine: cancel it, then wait for
+// its final flush.
+type meterLoop struct {
+	stop context.CancelFunc
+	done <-chan struct{}
+}
+
+// startMetering runs the recorder on its own context, deliberately not the
+// signal-cancelled one: the final flush still needs a live context.
+func startMetering(recorder *metering.Recorder) meterLoop {
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() { defer close(done); recorder.Run(ctx) }()
+	return meterLoop{stop: cancel, done: done}
+}
+
+func (m meterLoop) stopAndDrain() {
+	m.stop()
+	<-m.done
+}
+
 // shutdown drains HTTP first, then lets the metering recorder do a final flush
 // so buffered usage counters reach api_usage before exit.
-func shutdown(srv *http.Server, stopMeter context.CancelFunc, meterDone <-chan struct{}, log *slog.Logger) error {
+func shutdown(srv *http.Server, meter meterLoop, log *slog.Logger) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.ShutdownTimeout)
 	defer cancel()
 	err := srv.Shutdown(ctx)
-	stopMeter()
-	<-meterDone
+	meter.stopAndDrain()
 	log.Info("go-api stopped")
 	return err
 }

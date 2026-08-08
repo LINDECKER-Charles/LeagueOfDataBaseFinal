@@ -26,7 +26,8 @@ final class ChampionManagerChromasTest extends TestCase
 {
     private const VERSION = '15.13.1';
     private const KEY = '799';
-    private const CDRAGON = 'https://raw.communitydragon.org/%s/plugins/rcp-be-lol-game-data/global/default';
+    private const CDRAGON =
+        'https://raw.communitydragon.org/%s/plugins/rcp-be-lol-game-data/global/default';
 
     private string $dir;
 
@@ -60,23 +61,7 @@ final class ChampionManagerChromasTest extends TestCase
             return ['status' => 200, 'body' => $this->cdragonPayload()];
         }));
 
-        $base = sprintf(self::CDRAGON, '15.13');
-        $expected = [
-            '799001' => [
-                [
-                    'id'     => 799002,
-                    'name'   => 'Chosen of the Wolf Ambessa (Ruby)',
-                    'colors' => ['#D33528', '#D33528'],
-                    'image'  => $base.'/v1/champion-chroma-images/799/799002.png',
-                ],
-                [
-                    'id'     => 799003,
-                    'name'   => 'Chosen of the Wolf Ambessa (Emerald)',
-                    'colors' => ['#0BB874'], // the blank second colour is dropped
-                    'image'  => $base.'/v1/champion-chroma-images/799/799003.png',
-                ],
-            ],
-        ];
+        $expected = $this->slimmedChromas(sprintf(self::CDRAGON, '15.13'));
 
         self::assertSame($expected, $manager->getChromas(self::KEY, self::VERSION));
 
@@ -85,7 +70,11 @@ final class ChampionManagerChromasTest extends TestCase
             $expected,
             $this->manager($fs, $this->noEgress())->getChromas(self::KEY, self::VERSION),
         );
-        self::assertSame(1, $calls, 'the chroma source is hit at most once per (version, champion)');
+        self::assertSame(
+            1,
+            $calls,
+            'the chroma source is hit at most once per (version, champion)',
+        );
     }
 
     public function testFallsBackToLatestWhenTheVersionedPatchIsAbsent(): void
@@ -118,7 +107,10 @@ final class ChampionManagerChromasTest extends TestCase
 
     public function testWithoutChromaSkinsDropsDataDragonInlinedChromaEntries(): void
     {
-        $manager = $this->manager(new Filesystem(new LocalFilesystemAdapter($this->dir)), $this->noEgress());
+        $manager = $this->manager(
+            new Filesystem(new LocalFilesystemAdapter($this->dir)),
+            $this->noEgress(),
+        );
 
         // Data Dragon inlines each chroma as a standalone skin carrying the same id
         // as the CommunityDragon chroma — here 799002/799003 under parent 799001.
@@ -135,18 +127,50 @@ final class ChampionManagerChromasTest extends TestCase
             ],
         ];
 
-        self::assertSame(['799000', '799001'], array_column($manager->withoutChromaSkins($skins, $chromas), 'id'));
+        self::assertSame(
+            ['799000', '799001'],
+            array_column($manager->withoutChromaSkins($skins, $chromas), 'id'),
+        );
     }
 
     public function testWithoutChromaSkinsIsNoOpWhenChromaDataUnavailable(): void
     {
-        $manager = $this->manager(new Filesystem(new LocalFilesystemAdapter($this->dir)), $this->noEgress());
+        $manager = $this->manager(
+            new Filesystem(new LocalFilesystemAdapter($this->dir)),
+            $this->noEgress(),
+        );
         $skins = [
             ['id' => '799000', 'num' => 0, 'name' => 'default'],
             ['id' => '799001', 'num' => 1, 'name' => 'Chosen of the Wolf Ambessa'],
         ];
 
         self::assertSame($skins, $manager->withoutChromaSkins($skins, []));
+    }
+
+    /**
+     * What {@see cdragonPayload()} must be slimmed down to: only the skin that
+     * has usable chromas, its asset paths rebased on $cdnBase.
+     *
+     * @return array<string, list<array<string, mixed>>>
+     */
+    private function slimmedChromas(string $cdnBase): array
+    {
+        return [
+            '799001' => [
+                [
+                    'id'     => 799002,
+                    'name'   => 'Chosen of the Wolf Ambessa (Ruby)',
+                    'colors' => ['#D33528', '#D33528'],
+                    'image'  => $cdnBase.'/v1/champion-chroma-images/799/799002.png',
+                ],
+                [
+                    'id'     => 799003,
+                    'name'   => 'Chosen of the Wolf Ambessa (Emerald)',
+                    'colors' => ['#0BB874'], // the blank second colour is dropped
+                    'image'  => $cdnBase.'/v1/champion-chroma-images/799/799003.png',
+                ],
+            ],
+        ];
     }
 
     /**
@@ -164,13 +188,15 @@ final class ChampionManagerChromasTest extends TestCase
                     [
                         'id' => 799002,
                         'name' => 'Chosen of the Wolf Ambessa (Ruby)',
-                        'chromaPath' => '/lol-game-data/assets/v1/champion-chroma-images/799/799002.png',
+                        'chromaPath' =>
+                            '/lol-game-data/assets/v1/champion-chroma-images/799/799002.png',
                         'colors' => ['#D33528', '#D33528'],
                     ],
                     [
                         'id' => 799003,
                         'name' => 'Chosen of the Wolf Ambessa (Emerald)',
-                        'chromaPath' => '/lol-game-data/assets/v1/champion-chroma-images/799/799003.png',
+                        'chromaPath' =>
+                            '/lol-game-data/assets/v1/champion-chroma-images/799/799003.png',
                         'colors' => ['#0BB874', ''],
                     ],
                 ]],
@@ -197,8 +223,16 @@ final class ChampionManagerChromasTest extends TestCase
      */
     private function gateway(callable $resolve): GoFetcherClient
     {
-        return new GoFetcherClient(new MockHttpClient(static function (string $method, string $url, array $options) use ($resolve): MockResponse {
-            $requested = json_decode((string) $options['body'], true, flags: JSON_THROW_ON_ERROR)['urls'][0];
+        return new GoFetcherClient(new MockHttpClient(static function (
+            string $method,
+            string $url,
+            array $options,
+        ) use ($resolve): MockResponse {
+            $requested = json_decode(
+                (string) $options['body'],
+                true,
+                flags: JSON_THROW_ON_ERROR,
+            )['urls'][0];
             $r = $resolve($requested);
 
             $entry = ['url' => $requested, 'status' => $r['status']];

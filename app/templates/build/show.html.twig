@@ -6,16 +6,13 @@
 
 {% set primary = vm.runes.primary %}
 {% set secondary = vm.runes.secondary %}
-{% set pathClass = {
-  'Precision':   'path-precision',
-  'Domination':  'path-domination',
-  'Sorcery':     'path-sorcery',
-  'Resolve':     'path-resolve',
-  'Inspiration': 'path-inspiration'
-}[primary.key]|default('path-precision') %}
+{% import 'components/_rune_path.html.twig' as runePath %}
+{% set pathClass = runePath.theme_class(primary.key) %}
 
 {% block title %}{{ seo_title(build.name ~ ' · ' ~ vm.champion.name) }}{% endblock %}
-{% block meta_description %}{{ build.description ? build.description|slice(0, 160) : 'build.show.meta_fallback'|trans({'%champion%': vm.champion.name}) }}{% endblock %}
+{% block meta_description %}{{ build.description
+  ? build.description|slice(0, 160)
+  : 'build.show.meta_fallback'|trans({'%champion%': vm.champion.name}) }}{% endblock %}
 {% block og_type %}article{% endblock %}
 {% block meta_robots %}{{ build.public ? 'index, follow' : 'noindex, nofollow' }}{% endblock %}
 
@@ -36,7 +33,9 @@
       datePublished: build.createdAt|date('c'),
       dateModified: build.updatedAt|date('c'),
       authorName: build.owner.displayName,
-      authorUrl: build.owner.publicProfile ? seo_absolute(path('app_profile_public', { username: build.owner.username })) : null,
+      authorUrl: build.owner.publicProfile
+        ? seo_absolute(path('app_profile_public', { username: build.owner.username }))
+        : null,
       about: vm.champion.name
     })) }}
   {% endif %}
@@ -55,10 +54,10 @@
            {% if vm.champion.missing %}title="{{ 'build.show.missing'|trans }}"{% endif %}>
         {% if vm.champion.image %}
           <picture>
-            {% if vm.champion.image ends with '.png' %}
-              <source srcset="/{{ vm.champion.image|replace({'.png': '.webp'}) }}" type="image/webp">
-            {% endif %}
-            <img src="/{{ vm.champion.image }}" alt="{{ vm.champion.name }}" width="96" height="96" decoding="async">
+            {% include 'components/_webp_source.html.twig'
+               with { src: '/' ~ vm.champion.image } only %}
+            <img src="/{{ vm.champion.image }}" alt="{{ vm.champion.name }}"
+                 width="96" height="96" decoding="async">
           </picture>
         {% else %}
           <span class="bshare-portrait__initials">{{ vm.champion.name|slice(0, 2)|upper }}</span>
@@ -67,40 +66,48 @@
 
       <div class="min-w-0 flex-1">
         <p class="eyebrow path-text">
-          {{ vm.champion.name }}{% if vm.champion.title %} <span class="normal-case tracking-normal text-text-muted">· {{ vm.champion.title }}</span>{% endif %}
+          {{ vm.champion.name }}{% if vm.champion.title %} <span class="normal-case
+            tracking-normal text-text-muted">· {{ vm.champion.title }}</span>{% endif %}
         </p>
-        <h1 class="mt-1.5 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad sm:text-4xl">
+        <h1 class="mt-1.5 font-beaufort text-3xl font-bold uppercase tracking-wide
+                   text-gold-grad sm:text-4xl">
           {{ build.name }}
         </h1>
         <p class="mt-3 flex flex-wrap items-center gap-2 font-mono text-xs text-text-muted">
           {% if build.owner.publicProfile %}
             {# URL keeps the raw username (the tag's # cannot live in a path). #}
-            <a class="nav-link text-gold" href="{{ path('app_profile_public', { username: build.owner.username }) }}">
+            <a class="nav-link text-gold"
+               href="{{ path('app_profile_public', { username: build.owner.username }) }}">
               {{ 'build.show.by'|trans({'%name%': build.owner.displayName}) }}
             </a>
           {% else %}
             <span>{{ 'build.show.by'|trans({'%name%': build.owner.displayName}) }}</span>
           {% endif %}
-          {% if build.owner.isSupporter %}{% include 'components/_supporter_badge.html.twig' %}{% endif %}
+          {% if build.owner.isSupporter %}{% include
+            'components/community/_supporter_badge.html.twig' %}{% endif %}
           <span aria-hidden="true" class="opacity-50">◆</span>
           <span>{{ build.updatedAt|date('d/m/Y') }}</span>
-          <span class="hx-chip" title="{{ 'build.show.mode'|trans }}">{{ ('build.mode.' ~ build.gameMode.value)|trans }}</span>
+          <span class="hx-chip" title="{{ 'build.show.mode'|trans }}">{{
+            ('build.mode.' ~ build.gameMode.value)|trans }}</span>
           {% if build.gameVersion %}
             {# The page renders PINNED on the build's patch; the chip is informative. #}
             {% if vm.patchMismatch %}
-              <span class="hx-chip">{{ 'build.show.patch_current'|trans({'%version%': build.gameVersion, '%current%': currentVersion}) }}</span>
+              <span class="hx-chip">{{ 'build.show.patch_current'|trans(
+                {'%version%': build.gameVersion, '%current%': currentVersion}) }}</span>
             {% else %}
-              <span class="hx-chip">{{ 'build.show.patch'|trans({'%version%': build.gameVersion}) }}</span>
+              <span class="hx-chip">{{ 'build.show.patch'|trans(
+                {'%version%': build.gameVersion}) }}</span>
             {% endif %}
           {% endif %}
-          {% if build.language %}<span class="hx-chip">{{ client.languageLabels[build.language]|default(build.language) }}</span>{% endif %}
+          {% if build.language %}<span class="hx-chip">{{
+            client.languageLabels[build.language]|default(build.language) }}</span>{% endif %}
         </p>
       </div>
 
       <div class="flex flex-col items-end gap-3">
         {% if voteScore is defined and voteScore is not null %}
           {# Community verdict — public builds only (an unlisted link must not score). #}
-          {% include 'components/_vote_score.html.twig' with {
+          {% include 'components/community/_vote_score.html.twig' with {
             build: build, score: voteScore, myVote: myVote
           } only %}
         {% endif %}
@@ -121,7 +128,7 @@
 
     {# ================= Runes ============================================== #}
     <section class="mt-12">
-      {% include 'components/codex_header.html.twig' with {
+      {% include 'components/codex/codex_header.html.twig' with {
         title: 'build.show.runes'|trans,
         meta: primary.name ~ ' + ' ~ secondary.name
       } %}
@@ -129,17 +136,21 @@
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-[1.35fr_1fr]">
         <article class="hextech-frame path-border p-6">
           <p class="bshare-tree path-text">
-            {% if primary.icon %}<img src="/{{ primary.icon }}" alt="" width="22" height="22">{% endif %}
+            {% if primary.icon %}<img src="/{{ primary.icon }}"
+              alt="" width="22" height="22">{% endif %}
             {{ primary.name }}
           </p>
           <div class="mt-5 flex items-center gap-4">
             <div class="keystone__icon {{ primary.keystone.missing ? 'forge-ghost' }}"
-                 {% if primary.keystone.missing %}title="{{ 'build.show.missing'|trans }}"{% endif %}>
-              {% if primary.keystone.icon %}<img src="/{{ primary.keystone.icon }}" alt="">{% endif %}
+              {% if primary.keystone.missing %}title="{{ 'build.show.missing'|trans }}"{% endif %}>
+              {% if primary.keystone.icon %}<img src="/{{ primary.keystone.icon }}"
+                alt="">{% endif %}
             </div>
             <div class="min-w-0">
-              <p class="font-mono text-[11px] uppercase tracking-wider text-text-dim">{{ 'build.show.keystone'|trans }}</p>
-              <p class="font-beaufort text-lg uppercase tracking-wide text-gold-bright">{{ primary.keystone.name }}</p>
+              <p class="font-mono text-[11px] uppercase tracking-wider
+                        text-text-dim">{{ 'build.show.keystone'|trans }}</p>
+              <p class="font-beaufort text-lg uppercase tracking-wide
+                        text-gold-bright">{{ primary.keystone.name }}</p>
             </div>
           </div>
           <ul class="mt-5 space-y-2.5">
@@ -157,7 +168,8 @@
 
         <article class="hextech-frame p-6">
           <p class="bshare-tree">
-            {% if secondary.icon %}<img src="/{{ secondary.icon }}" alt="" width="22" height="22">{% endif %}
+            {% if secondary.icon %}<img src="/{{ secondary.icon }}"
+              alt="" width="22" height="22">{% endif %}
             {{ secondary.name }}
           </p>
           <ul class="mt-5 space-y-2.5">
@@ -177,7 +189,7 @@
 
     {# ================= Purchase order — the page's signature ============== #}
     <section class="mt-12">
-      {% include 'components/codex_header.html.twig' with {
+      {% include 'components/codex/codex_header.html.twig' with {
         title: 'build.show.order'|trans,
         meta: vm.steps|length ~ ' × ◆'
       } %}
@@ -188,8 +200,10 @@
             <span class="bsteps-marker" aria-hidden="true"></span>
             <article class="hextech-frame p-5">
               <header class="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 class="font-beaufort text-base uppercase tracking-wide text-gold-bright">{{ step.label }}</h3>
-                <span class="hx-chip" title="{{ 'build.show.step_cost'|trans }}">{{ step.gold }} ◆</span>
+                <h3 class="font-beaufort text-base uppercase tracking-wide
+                           text-gold-bright">{{ step.label }}</h3>
+                <span class="hx-chip"
+                      title="{{ 'build.show.step_cost'|trans }}">{{ step.gold }} ◆</span>
               </header>
               {% if step.note %}
                 <p class="mt-2 font-spiegel text-sm italic text-text-muted">{{ step.note }}</p>
@@ -200,10 +214,10 @@
                       title="{{ item.missing ? 'build.show.missing'|trans : item.name }}">
                     {% if item.image %}
                       <picture>
-                        {% if item.image ends with '.png' %}
-                          <source srcset="/{{ item.image|replace({'.png': '.webp'}) }}" type="image/webp">
-                        {% endif %}
-                        <img src="/{{ item.image }}" alt="{{ item.name }}" width="48" height="48" loading="lazy" decoding="async">
+                        {% include 'components/_webp_source.html.twig'
+                           with { src: '/' ~ item.image } only %}
+                        <img src="/{{ item.image }}" alt="{{ item.name }}"
+                             width="48" height="48" loading="lazy" decoding="async">
                       </picture>
                     {% else %}
                       <span class="bshare-item__fallback">{{ item.name|slice(0, 2) }}</span>

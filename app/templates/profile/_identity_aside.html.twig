@@ -1,0 +1,67 @@
+{# Account side column — read-only identity plaques, the public/private
+   visibility card and the shortcuts to builds and the API portal.
+   Contract: user, maskedEmail, memberSince. #}
+<aside class="profile-identity">
+    <div class="hx-plate">
+        <span class="hx-plate__label">{{ 'profile.identity.email'|trans }}</span>
+        <span class="hx-plate__value profile-identity__mono">{{ maskedEmail }}</span>
+    </div>
+    <div class="hx-plate">
+        <span class="hx-plate__label">{{ 'profile.identity.member_since'|trans }}</span>
+        <span class="hx-plate__value">{{ memberSince }}</span>
+    </div>
+    <div class="visibility-card {{ user.isPublicProfile
+           ? 'visibility-card--public' : 'visibility-card--private' }}"
+         data-visibility
+         data-state-public="{{ 'profile.visibility.state_public'|trans }}"
+         data-state-private="{{ 'profile.visibility.state_private'|trans }}">
+        <div class="visibility-card__head">
+            <span class="visibility-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.6">
+                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+            </span>
+            <span class="visibility-card__text">
+                <span class="visibility-card__label">{{
+                    'profile.visibility.label'|trans }}</span>
+                <span class="visibility-card__state" data-visibility-state>
+                    {{ (user.isPublicProfile
+                        ? 'profile.visibility.state_public'
+                        : 'profile.visibility.state_private')|trans }}
+                </span>
+            </span>
+            <input type="checkbox" name="isPublicProfile" value="1" class="hx-switch"
+                   aria-label="{{ 'profile.visibility.label'|trans }}"
+                   {{ user.isPublicProfile ? 'checked' }}>
+        </div>
+        <p class="visibility-card__help">{{ 'profile.visibility.help'|trans }}</p>
+        <div class="visibility-card__public" data-visibility-public-only
+             {{ user.isPublicProfile ? '' : 'hidden' }}>
+            <a href="{{ path('app_profile_public', { username: user.username }) }}"
+               class="visibility-card__link">
+                <span class="visibility-card__url">/u/{{ user.username }}</span>
+                <span aria-hidden="true">→</span>
+            </a>
+        </div>
+    </div>
+    <div class="hx-plate">
+        <span class="hx-plate__label">{{ 'profile.builds.label'|trans }}</span>
+        <a href="{{ path('app_builds') }}"
+           class="nav-link mt-1 inline-block font-beaufort text-sm uppercase
+                  tracking-[0.15em] text-gold">
+            {{ 'profile.builds.manage'|trans }} →
+        </a>
+    </div>
+    <div class="hx-plate">
+        <span class="hx-plate__label">{{
+            'portal.profile_link.label'|trans({}, 'api') }}</span>
+        <a href="{{ path('app_api_portal') }}"
+           class="nav-link mt-1 inline-block font-beaufort text-sm uppercase
+                  tracking-[0.15em] text-gold">
+            {{ 'portal.profile_link.manage'|trans({}, 'api') }} →
+        </a>
+    </div>
+</aside>

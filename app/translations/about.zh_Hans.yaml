@@ -1,5 +1,5 @@
 # /about、/about/data 与 /faq 页面的正文内容。
-# faq.* 的标识符在 App\Controller\AboutController::FAQ_ENTRIES 中声明。
+# faq.* 的标识符在 App\Controller\Editorial\AboutController::FAQ_ENTRIES 中声明。
 eyebrow: "关于"
 
 index:

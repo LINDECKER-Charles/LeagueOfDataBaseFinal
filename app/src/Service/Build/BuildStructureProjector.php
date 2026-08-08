@@ -14,8 +14,8 @@ use App\Service\Picker\ItemOptionsProjector;
  * where {@see BuildCatalogGate} rejects a structure wholesale, this salvages the
  * compatible parts so the visitor lands in the editor with a working draft.
  *
- * Pure: catalogs (champion ids, rune trees, item data) are passed in by the
- * caller ({@see BuildCatalogGate::catalogs}), which keeps it unit-testable offline.
+ * Pure: the {@see BuildCatalogs} of the target patch are passed in by the caller
+ * ({@see BuildCatalogGate::catalogs}), which keeps it unit-testable offline.
  * It is best-effort by design — the normal write pipeline stays the final gate,
  * so a champion that must be re-picked or an emptied step is fixed there, not here.
  */
@@ -23,9 +23,9 @@ final class BuildStructureProjector
 {
     /** A rune page that carried nothing to the target — the editor treats it as unset. */
     private const BLANK_RUNES = [
-        'primaryStyleId' => 0,
+        'primaryStyleId' => BuildStructureNormalizer::UNSET_PERK_ID,
         'primarySelections' => [],
-        'secondaryStyleId' => 0,
+        'secondaryStyleId' => BuildStructureNormalizer::UNSET_PERK_ID,
         'secondarySelections' => [],
     ];
 
@@ -34,25 +34,35 @@ final class BuildStructureProjector
     ) {}
 
     /**
-     * @param array{championId?: mixed, runes?: mixed, steps?: mixed}                       $structure
-     * @param array{runeTrees: array<mixed>, championIds: list<int|string>, itemData: array<int|string, mixed>} $catalogs
+     * @param array{championId?: mixed, runes?: mixed, steps?: mixed} $structure
      * @return array{
      *   structure: array{championId: string, runes: array<mixed>, steps: list<array<mixed>>},
-     *   report: array{championMissing: bool, runesReset: bool, droppedItems: list<array{step: int, id: string, name: string}>}
+     *   report: array{
+     *     championMissing: bool,
+     *     runesReset: bool,
+     *     droppedItems: list<array{step: int, id: string, name: string}>
+     *   }
      * }
      */
-    public function project(array $structure, GameMode $mode, array $catalogs): array
+    public function project(array $structure, GameMode $mode, BuildCatalogs $catalogs): array
     {
         $championId = trim((string) ($structure['championId'] ?? ''));
-        $championIds = array_map(strval(...), $catalogs['championIds']);
 
-        [$runes, $runesReset] = $this->projectRunes($structure['runes'] ?? null, $catalogs['runeTrees']);
-        [$steps, $droppedItems] = $this->projectSteps($structure['steps'] ?? null, $mode, $catalogs['itemData']);
+        [$runes, $runesReset] = $this->projectRunes(
+            $structure['runes'] ?? null,
+            $catalogs->runeTrees,
+        );
+        [$steps, $droppedItems] = $this->projectSteps(
+            $structure['steps'] ?? null,
+            $mode,
+            $catalogs->itemData,
+        );
 
         return [
             'structure' => ['championId' => $championId, 'runes' => $runes, 'steps' => $steps],
             'report' => [
-                'championMissing' => $championId === '' || !in_array($championId, $championIds, true),
+                'championMissing' => $championId === ''
+                    || !in_array($championId, $catalogs->championIds, true),
                 'runesReset' => $runesReset,
                 'droppedItems' => $droppedItems,
             ],
@@ -100,20 +110,60 @@ final class BuildStructureProjector
             if (!is_array($step)) {
                 continue;
             }
-            $filtered = [];
-            foreach ($this->itemIdsOf($step) as $id) {
-                if ($this->itemProjector->isPlayable($itemData, $mode, $id)) {
-                    $filtered[] = $id;
-                } else {
-                    $dropped[] = ['step' => $index, 'id' => $id, 'name' => $this->itemName($itemData, $id)];
-                }
+            $ids = $this->itemIdsOf($step);
+            [$playable, $rejected] = $this->partitionPlayable($ids, $mode, $itemData);
+            foreach ($rejected as $id) {
+                $dropped[] = [
+                    'step' => $index,
+                    'id' => $id,
+                    'name' => $this->itemName($itemData, $id),
+                ];
             }
-            if ($filtered !== []) {
-                $kept[] = ['label' => (string) ($step['label'] ?? ''), 'note' => $step['note'] ?? null, 'items' => $filtered];
+            if ($playable !== []) {
+                $kept[] = $this->keptStep($step, $playable);
             }
         }
 
         return [$kept, $dropped];
+    }
+
+    /**
+     * Splits a step's item ids into those still playable on the target mode and
+     * those the caller must report as dropped (with their step index).
+     *
+     * @param list<string>             $ids
+     * @param array<int|string, mixed> $itemData
+     * @return array{0: list<string>, 1: list<string>} [playable, rejected]
+     */
+    private function partitionPlayable(array $ids, GameMode $mode, array $itemData): array
+    {
+        $playable = [];
+        $rejected = [];
+        foreach ($ids as $id) {
+            if ($this->itemProjector->isPlayable($itemData, $mode, $id)) {
+                $playable[] = $id;
+            } else {
+                $rejected[] = $id;
+            }
+        }
+
+        return [$playable, $rejected];
+    }
+
+    /**
+     * A step as it lands on the target patch: its own wording, its surviving items.
+     *
+     * @param array<mixed> $step
+     * @param list<string> $items
+     * @return array{label: string, note: mixed, items: list<string>}
+     */
+    private function keptStep(array $step, array $items): array
+    {
+        return [
+            'label' => (string) ($step['label'] ?? ''),
+            'note' => $step['note'] ?? null,
+            'items' => $items,
+        ];
     }
 
     /** @param array<mixed> $step @return list<string> */
@@ -141,13 +191,13 @@ final class BuildStructureProjector
 
         $ids = [];
         foreach (['primaryStyleId', 'secondaryStyleId'] as $key) {
-            if (($id = BuildStructureValidator::readInt($runes[$key] ?? null)) !== null) {
+            if (($id = IntegerValue::read($runes[$key] ?? null)) !== null) {
                 $ids[] = $id;
             }
         }
         foreach (['primarySelections', 'secondarySelections'] as $key) {
             foreach ((array) ($runes[$key] ?? []) as $raw) {
-                if (($id = BuildStructureValidator::readInt($raw)) !== null) {
+                if (($id = IntegerValue::read($raw)) !== null) {
                     $ids[] = $id;
                 }
             }

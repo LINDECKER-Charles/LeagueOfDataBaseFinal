@@ -26,81 +26,113 @@ export interface VideoPlayback {
     onPause: () => void
 }
 
+/** Reactive surface + the two plain (non-reactive) bits of loop bookkeeping. */
+interface PlaybackState {
+    videoEl: Ref<HTMLVideoElement | null>
+    isPaused: Ref<boolean>
+    isMuted: Ref<boolean>
+    progress: Ref<number>
+    rafId: number
+    resumeOnVisible: boolean
+}
+
 export function useVideoPlayback(): VideoPlayback {
-    const videoEl = ref<HTMLVideoElement | null>(null)
-    const isPaused = ref(false)
-    const isMuted = ref(true)
-    const progress = ref(0)
-    let rafId = 0
-
-    const syncProgress = (): void => {
-        const video = videoEl.value
-        if (!video) return
-        if (video.duration > 0) progress.value = video.currentTime / video.duration
-        if (!video.paused) rafId = requestAnimationFrame(syncProgress)
+    const state: PlaybackState = {
+        videoEl: ref(null),
+        isPaused: ref(false),
+        isMuted: ref(true),
+        progress: ref(0),
+        rafId: 0,
+        resumeOnVisible: false,
     }
 
-    const onPlay = (): void => {
-        isPaused.value = false
-        cancelAnimationFrame(rafId)
-        rafId = requestAnimationFrame(syncProgress)
-    }
-
-    const onPause = (): void => {
-        isPaused.value = true
-        cancelAnimationFrame(rafId)
-        syncProgress()
-    }
-
-    const toggle = (): void => {
-        const video = videoEl.value
-        if (!video) return
-        if (video.paused) void video.play()
-        else video.pause()
-    }
-
-    const toggleMute = (): void => {
-        isMuted.value = !isMuted.value
-        if (videoEl.value) videoEl.value.muted = isMuted.value
-    }
-
-    // A playing preview must not keep blaring from a backgrounded tab. Pause on
-    // hide; resume on return only when it was actually playing, never overriding
-    // a manual pause. play()/pause() fire the @play/@pause handlers, so isPaused
-    // and the progress loop stay consistent.
-    let resumeOnVisible = false
-    const onVisibilityChange = (): void => {
-        const video = videoEl.value
-        if (!video) return
-        if (document.hidden) {
-            resumeOnVisible = !video.paused
-            if (resumeOnVisible) video.pause()
-        } else if (resumeOnVisible) {
-            resumeOnVisible = false
-            void video.play()
-        }
-    }
+    const onVisibilityChange = (): void => syncWithTabVisibility(state)
     document.addEventListener('visibilitychange', onVisibilityChange)
 
-    watch(videoEl, (el, prev) => {
-        // Keyed swap detaches the old element; pausing it guarantees its looping
-        // audio stops immediately when moving to another spell.
-        prev?.pause()
-        cancelAnimationFrame(rafId)
-        isPaused.value = false
-        progress.value = 0
-        // Enforce the sticky mute choice on the fresh element (attribute alone
-        // would not, see class doc).
-        if (el) el.muted = isMuted.value
-    })
+    watch(state.videoEl, (el, prev) => adoptElement(state, el, prev))
+    onBeforeUnmount(() => teardown(state, onVisibilityChange))
 
-    onBeforeUnmount(() => {
-        cancelAnimationFrame(rafId)
-        document.removeEventListener('visibilitychange', onVisibilityChange)
-        // Stop the audio on teardown (Turbo navigation unmounts the island): a
-        // detached <video> can keep playing until GC in Chrome.
-        videoEl.value?.pause()
-    })
+    return {
+        videoEl: state.videoEl,
+        isPaused: state.isPaused,
+        isMuted: state.isMuted,
+        progress: state.progress,
+        toggle: () => togglePlayback(state),
+        toggleMute: () => toggleMute(state),
+        onPlay: () => startSampling(state),
+        onPause: () => stopSampling(state),
+    }
+}
 
-    return { videoEl, isPaused, isMuted, progress, toggle, toggleMute, onPlay, onPause }
+function syncProgress(state: PlaybackState): void {
+    const video = state.videoEl.value
+    if (!video) return
+    if (video.duration > 0) state.progress.value = video.currentTime / video.duration
+    if (!video.paused) state.rafId = requestAnimationFrame(() => syncProgress(state))
+}
+
+function startSampling(state: PlaybackState): void {
+    state.isPaused.value = false
+    cancelAnimationFrame(state.rafId)
+    state.rafId = requestAnimationFrame(() => syncProgress(state))
+}
+
+function stopSampling(state: PlaybackState): void {
+    state.isPaused.value = true
+    cancelAnimationFrame(state.rafId)
+    syncProgress(state)
+}
+
+function togglePlayback(state: PlaybackState): void {
+    const video = state.videoEl.value
+    if (!video) return
+    if (video.paused) void video.play()
+    else video.pause()
+}
+
+function toggleMute(state: PlaybackState): void {
+    state.isMuted.value = !state.isMuted.value
+    if (state.videoEl.value) state.videoEl.value.muted = state.isMuted.value
+}
+
+/**
+ * A playing preview must not keep blaring from a backgrounded tab. Pause on
+ * hide; resume on return only when it was actually playing, never overriding a
+ * manual pause. play()/pause() fire the @play/@pause handlers, so isPaused and
+ * the progress loop stay consistent.
+ */
+function syncWithTabVisibility(state: PlaybackState): void {
+    const video = state.videoEl.value
+    if (!video) return
+    if (document.hidden) {
+        state.resumeOnVisible = !video.paused
+        if (state.resumeOnVisible) video.pause()
+    } else if (state.resumeOnVisible) {
+        state.resumeOnVisible = false
+        void video.play()
+    }
+}
+
+function adoptElement(
+    state: PlaybackState,
+    el: HTMLVideoElement | null,
+    previous: HTMLVideoElement | null | undefined,
+): void {
+    // Keyed swap detaches the old element; pausing it guarantees its looping
+    // audio stops immediately when moving to another spell.
+    previous?.pause()
+    cancelAnimationFrame(state.rafId)
+    state.isPaused.value = false
+    state.progress.value = 0
+    // Enforce the sticky mute choice on the fresh element (attribute alone
+    // would not, see the composable doc).
+    if (el) el.muted = state.isMuted.value
+}
+
+function teardown(state: PlaybackState, onVisibilityChange: () => void): void {
+    cancelAnimationFrame(state.rafId)
+    document.removeEventListener('visibilitychange', onVisibilityChange)
+    // Stop the audio on teardown (Turbo navigation unmounts the island): a
+    // detached <video> can keep playing until GC in Chrome.
+    state.videoEl.value?.pause()
 }

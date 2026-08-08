@@ -4,6 +4,10 @@ declare(strict_types=1);
 namespace App\Service\Audit;
 
 use App\Entity\User;
+use App\Service\Audit\Model\AuditEvent;
+use App\Service\Audit\Model\AuditFilter;
+use App\Service\Audit\Model\AuditTarget;
+use App\Service\Audit\Model\PageWindow;
 
 /**
  * Read side of the audit journal. Merges the local (hot) and MinIO (archived)
@@ -24,37 +28,46 @@ final class AuditQueryService
     ) {}
 
     /** @return array{rows: list<AuditEvent>, hasMore: bool} */
-    public function recent(AuditFilter $filter, int $page, int $perPage): array
+    public function recent(AuditFilter $filter, PageWindow $window): array
     {
-        return $this->scan($filter, null, $page, $perPage);
+        return $this->scan($filter, null, $window);
     }
 
-    /** Actions performed by, or targeting, one account. @return array{rows: list<AuditEvent>, hasMore: bool} */
-    public function forUser(User $user, AuditFilter $filter, int $page, int $perPage): array
+    /**
+     * Actions performed by, or targeting, one account.
+     *
+     * @return array{rows: list<AuditEvent>, hasMore: bool}
+     */
+    public function forUser(User $user, AuditFilter $filter, PageWindow $window): array
     {
-        return $this->scan($filter, $this->userPredicate($user), $page, $perPage);
+        return $this->scan($filter, $this->userPredicate($user), $window);
     }
 
     /**
      * Storage footprint for the purge UI.
      *
-     * @return array{local: array{days: int, bytes: int}, archived: array{days: int, bytes: int}, totalBytes: int, oldest: ?string, newest: ?string}
+     * @return array{
+     *     local: array{days: int, bytes: int},
+     *     archived: array{days: int, bytes: int},
+     *     totalBytes: int,
+     *     oldest: ?string,
+     *     newest: ?string
+     * }
      */
     public function volume(): array
     {
         $localDays = $this->local->days();
-        $archivedDates = $this->archive->dates();
+        $archivedDays = $this->archive->days();
         $localBytes = array_sum(array_map($this->local->sizeOf(...), $localDays));
-        $archivedBytes = array_sum(array_map($this->archive->sizeOf(...), $archivedDates));
-        $all = array_values(array_unique([...$localDays, ...$archivedDates]));
-        sort($all);
+        $archivedBytes = array_sum(array_map($this->archive->sizeOf(...), $archivedDays));
+        $dates = array_keys($this->index($localDays, $archivedDays)); // newest first
 
         return [
             'local' => ['days' => count($localDays), 'bytes' => $localBytes],
-            'archived' => ['days' => count($archivedDates), 'bytes' => $archivedBytes],
+            'archived' => ['days' => count($archivedDays), 'bytes' => $archivedBytes],
             'totalBytes' => $localBytes + $archivedBytes,
-            'oldest' => $all[0] ?? null,
-            'newest' => $all === [] ? null : $all[array_key_last($all)],
+            'oldest' => $dates === [] ? null : $dates[array_key_last($dates)],
+            'newest' => $dates[0] ?? null,
         ];
     }
 
@@ -62,37 +75,31 @@ final class AuditQueryService
      * @param null|callable(AuditEvent): bool $predicate
      * @return array{rows: list<AuditEvent>, hasMore: bool}
      */
-    private function scan(AuditFilter $filter, ?callable $predicate, int $page, int $perPage): array
+    private function scan(AuditFilter $filter, ?callable $predicate, PageWindow $window): array
     {
-        $page = max(1, $page);
-        $offset = ($page - 1) * $perPage;
-        $limit = $offset + $perPage + 1; // one extra row proves a next page exists
-        $localSet = array_flip($this->local->days());
+        $limit = $window->scanLimit();
         $matched = [];
+        $scanned = 0;
 
-        foreach ($this->dates() as $i => $date) {
-            if ($i >= self::MAX_DAYS_SCAN || count($matched) >= $limit) {
+        foreach ($this->index($this->local->days(), $this->archive->days()) as $date => $reader) {
+            if ($scanned++ >= self::MAX_DAYS_SCAN || count($matched) >= $limit) {
                 break;
             }
-            foreach ($this->eventsForDate($date, isset($localSet[$date])) as $event) {
+            foreach ($this->eventsFrom($reader, $date) as $event) {
                 if ($filter->matches($event) && ($predicate === null || $predicate($event))) {
                     $matched[] = $event;
                 }
             }
         }
 
-        return [
-            'rows' => array_slice($matched, $offset, $perPage),
-            'hasMore' => count($matched) > $offset + $perPage,
-        ];
+        return $window->cut($matched);
     }
 
     /** @return list<AuditEvent> newest-first within the day */
-    private function eventsForDate(string $date, bool $inLocal): array
+    private function eventsFrom(AuditDayReader $reader, string $date): array
     {
-        $rows = $inLocal ? $this->local->readDay($date) : $this->archive->readDay($date);
         $events = [];
-        foreach ($rows as $row) {
+        foreach ($reader->readDay($date) as $row) {
             try {
                 $events[] = AuditEvent::fromArray($row);
             } catch (\Throwable) {
@@ -123,12 +130,27 @@ final class AuditQueryService
         };
     }
 
-    /** Union of local + archived dates, newest first. @return list<string> */
-    private function dates(): array
+    /**
+     * Date => the tier that owns it, newest first. Local wins on a date present
+     * in both: it is the hot copy of a day archived but not yet pruned. Taking
+     * the day lists as arguments keeps this the single union of the two tiers
+     * while each store is listed exactly once per query.
+     *
+     * @param list<string> $localDays
+     * @param list<string> $archivedDays
+     * @return array<string, AuditDayReader>
+     */
+    private function index(array $localDays, array $archivedDays): array
     {
-        $dates = array_values(array_unique([...$this->local->days(), ...$this->archive->dates()]));
-        rsort($dates);
+        $index = [];
+        foreach ($localDays as $date) {
+            $index[$date] = $this->local;
+        }
+        foreach ($archivedDays as $date) {
+            $index[$date] ??= $this->archive;
+        }
+        krsort($index, SORT_STRING);
 
-        return $dates;
+        return $index;
     }
 }

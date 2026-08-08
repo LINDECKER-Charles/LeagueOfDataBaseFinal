@@ -17,7 +17,9 @@
         type: def.type,
         fieldName: def.field,
         typeLabel: def.label,
-        current: fav.current ? { id: fav.current.id, name: fav.current.name, image: fav.current.image } : null,
+        current: fav.current
+            ? { id: fav.current.id, name: fav.current.name, image: fav.current.image }
+            : null,
         storedId: fav.storedId,
         emptyLabel: 'profile.favorites.empty'|trans,
     }]) %}
@@ -40,38 +42,8 @@
     {% endif %}
 
     <div class="relative z-10 mx-auto max-w-6xl">
-        <header class="profile-cover mb-10">
-            {% if orbSlots is not empty %}
-                <div class="profile-orbits profile-orbits--cover" aria-hidden="true">
-                    {% for slot in orbSlots %}
-                        {% include 'profile/_favorite_orb.html.twig' with {
-                            favorite: favorites[slot],
-                            pos_class: '',
-                            primary: slot == 'champion',
-                            type_label: ('profile.slot.' ~ slot)|trans,
-                        } only %}
-                    {% endfor %}
-                </div>
-            {% endif %}
-            <div class="profile-cover__body">
-                <div>
-                    <p class="eyebrow">{{ 'profile.eyebrow'|trans }}</p>
-                    <h1 class="mt-2 flex items-center gap-2.5 font-beaufort text-4xl font-bold uppercase tracking-wide text-gold-grad">
-                        {{ user.displayName }}
-                        {% if user.isSupporter %}{% include 'components/_supporter_badge.html.twig' %}{% endif %}
-                    </h1>
-                </div>
-                <div class="profile-cover__actions">
-                    <a href="{{ path('app_profile_preview') }}" class="hx-btn-ghost">
-                        {{ 'profile.preview.button'|trans }}
-                    </a>
-                    <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
-                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
-                        <button type="submit" class="hx-btn-ghost">{{ 'auth.logout'|trans }}</button>
-                    </form>
-                </div>
-            </div>
-        </header>
+        {% include 'profile/_cover.html.twig'
+            with { user: user, orbSlots: orbSlots, favorites: favorites } only %}
 
         {# Standalone target for the favorites version picker: kept OUT of the
            autosave form (no nested forms) — the <select>/<button> in the codex
@@ -81,169 +53,34 @@
             <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
         </form>
 
-        <form method="post" action="{{ path('app_profile_save') }}" data-turbo="false" data-autosave class="profile-layout">
+        <form method="post" action="{{ path('app_profile_save') }}" data-turbo="false"
+              data-autosave class="profile-layout">
             <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
 
-            <aside class="profile-identity">
-                <div class="hx-plate">
-                    <span class="hx-plate__label">{{ 'profile.identity.email'|trans }}</span>
-                    <span class="hx-plate__value profile-identity__mono">{{ maskedEmail }}</span>
-                </div>
-                <div class="hx-plate">
-                    <span class="hx-plate__label">{{ 'profile.identity.member_since'|trans }}</span>
-                    <span class="hx-plate__value">{{ memberSince }}</span>
-                </div>
-                <div class="visibility-card {{ user.isPublicProfile ? 'visibility-card--public' : 'visibility-card--private' }}"
-                     data-visibility
-                     data-state-public="{{ 'profile.visibility.state_public'|trans }}"
-                     data-state-private="{{ 'profile.visibility.state_private'|trans }}">
-                    <div class="visibility-card__head">
-                        <span class="visibility-card__icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                        </span>
-                        <span class="visibility-card__text">
-                            <span class="visibility-card__label">{{ 'profile.visibility.label'|trans }}</span>
-                            <span class="visibility-card__state" data-visibility-state>
-                                {{ (user.isPublicProfile ? 'profile.visibility.state_public' : 'profile.visibility.state_private')|trans }}
-                            </span>
-                        </span>
-                        <input type="checkbox" name="isPublicProfile" value="1" class="hx-switch"
-                               aria-label="{{ 'profile.visibility.label'|trans }}" {{ user.isPublicProfile ? 'checked' }}>
-                    </div>
-                    <p class="visibility-card__help">{{ 'profile.visibility.help'|trans }}</p>
-                    <div class="visibility-card__public" data-visibility-public-only {{ user.isPublicProfile ? '' : 'hidden' }}>
-                        <a href="{{ path('app_profile_public', { username: user.username }) }}" class="visibility-card__link">
-                            <span class="visibility-card__url">/u/{{ user.username }}</span>
-                            <span aria-hidden="true">→</span>
-                        </a>
-                    </div>
-                </div>
-                <div class="hx-plate">
-                    <span class="hx-plate__label">{{ 'profile.builds.label'|trans }}</span>
-                    <a href="{{ path('app_builds') }}" class="nav-link mt-1 inline-block font-beaufort text-sm uppercase tracking-[0.15em] text-gold">
-                        {{ 'profile.builds.manage'|trans }} →
-                    </a>
-                </div>
-                <div class="hx-plate">
-                    <span class="hx-plate__label">{{ 'portal.profile_link.label'|trans({}, 'api') }}</span>
-                    <a href="{{ path('app_api_portal') }}" class="nav-link mt-1 inline-block font-beaufort text-sm uppercase tracking-[0.15em] text-gold">
-                        {{ 'portal.profile_link.manage'|trans({}, 'api') }} →
-                    </a>
-                </div>
-            </aside>
+            {% include 'profile/_identity_aside.html.twig' with {
+                user: user, maskedEmail: maskedEmail, memberSince: memberSince
+            } only %}
 
-            <section class="profile-favorites">
-                <div class="codex-header mb-6">
-                    <h2>{{ 'profile.favorites.title'|trans }}</h2>
-                    {# Pin the patch the favorites resolve at, so one absent from the
-                       browsing version neither disappears nor gets wiped on save. #}
-                    <div class="profile-version">
-                        <label class="profile-version__label" for="profile-version">{{ 'profile.favorites.version_label'|trans }}</label>
-                        <select id="profile-version" name="preferredVersion" form="profile-version-form"
-                                class="hx-select profile-version__select" data-version-select
-                                aria-label="{{ 'profile.favorites.version_label'|trans }}">
-                            <option value="">{{ 'profile.favorites.version_auto'|trans }}</option>
-                            {% for v in versions %}
-                                <option value="{{ v }}" {{ v == preferredVersion ? 'selected' }}>{{ v }}</option>
-                            {% endfor %}
-                        </select>
-                        {# No-JS fallback: an explicit apply button submits the version form. #}
-                        <button type="submit" form="profile-version-form" class="hx-btn profile-version__apply" data-version-hide>
-                            {{ 'profile.favorites.version_apply'|trans }}
-                        </button>
-                    </div>
-                </div>
-
-                <div class="skin-field mb-6">
-                    <span class="skin-field__label">{{ 'profile.slot.skin'|trans }}</span>
-                    <div data-vue="skin-banner-picker" data-props="{{ {
-                        fieldName: 'favoriteSkinId',
-                        current: skinBanner ? { id: skinBanner.id, name: skinBanner.name, banner: skinBanner.banner } : null,
-                        championsEndpoint: path('api_picker_champions'),
-                        skinsEndpoint: path('api_picker_skins'),
-                        version: version,
-                        lang: lang,
-                        labels: {
-                            pick: 'profile.slot.skin'|trans,
-                            change: 'profile.skin.change'|trans,
-                            remove: 'profile.picker.remove'|trans,
-                            empty: 'profile.skin.empty'|trans,
-                            chooseChampion: 'profile.skin.choose_champion'|trans,
-                            chooseSkin: 'profile.skin.choose_skin'|trans,
-                            back: 'profile.skin.back'|trans,
-                            close: 'filter.close'|trans,
-                            search: 'profile.picker.search'|trans,
-                            loading: 'profile.picker.loading'|trans,
-                            error: 'profile.picker.error'|trans,
-                            retry: 'profile.picker.retry'|trans,
-                            noResults: 'filter.empty'|trans,
-                        },
-                    }|json_encode|e('html_attr') }}">
-                        {# No-JS / pre-mount fallback: the stored id round-trips on a plain submit. #}
-                        <input type="hidden" name="favoriteSkinId" value="{{ user.favoriteSkinId ?? '' }}">
-                    </div>
-                </div>
-
-                <div data-vue="favorite-picker" data-props="{{ {
-                    slots: pickerSlots,
-                    endpoints: {
-                        champion: path('api_picker_champions'),
-                        item: path('api_picker_items'),
-                        rune: path('api_picker_runes'),
-                        summoner: path('api_picker_summoners'),
-                    },
-                    version: version,
-                    lang: lang,
-                    labels: {
-                        search: 'profile.picker.search'|trans,
-                        remove: 'profile.picker.remove'|trans,
-                        close: 'filter.close'|trans,
-                        loading: 'profile.picker.loading'|trans,
-                        error: 'profile.picker.error'|trans,
-                        retry: 'profile.picker.retry'|trans,
-                        noResults: 'filter.empty'|trans,
-                        unavailable: 'profile.favorites.unavailable'|trans,
-                    },
-                }|json_encode|e('html_attr') }}">
-                    {# No-JS / pre-mount fallback: static sockets + hidden inputs so a plain
-                       submit round-trips the stored favorites. Replaced when the island mounts. #}
-                    <div class="socket-grid">
-                        {% for def in slotDefs %}
-                            {% include 'profile/_favorite_socket.html.twig' with {
-                                type_label: def.label,
-                                favorite: favorites[def.type],
-                            } only %}
-                        {% endfor %}
-                    </div>
-                    {% for def in slotDefs %}
-                        <input type="hidden" name="{{ def.field }}" value="{{ favorites[def.type].storedId ?? '' }}">
-                    {% endfor %}
-                </div>
-
-                <div class="mt-6 flex items-center justify-end gap-4">
-                    <span class="autosave-status" data-autosave-status hidden aria-live="polite"
-                          data-label-saving="{{ 'profile.autosave.saving'|trans }}"
-                          data-label-saved="{{ 'profile.autosave.saved'|trans }}"
-                          data-label-error="{{ 'profile.autosave.error'|trans }}"
-                          data-label-dropped="{{ 'profile.autosave.dropped'|trans }}"></span>
-                    <button type="submit" class="hx-btn" data-autosave-hide>{{ 'profile.save'|trans }}</button>
-                </div>
-            </section>
+            {% include 'profile/_favorites_section.html.twig' with {
+                slotDefs: slotDefs, pickerSlots: pickerSlots, favorites: favorites,
+                user: user, versions: versions, preferredVersion: preferredVersion,
+                skinBanner: skinBanner, version: version, lang: lang
+            } only %}
         </form>
 
         <section class="profile-panel mt-14" aria-labelledby="profile-identity-title">
-            <h2 id="profile-identity-title" class="profile-panel__title">{{ 'profile.identity.title'|trans }}</h2>
-            <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'profile.identity.url_warning'|trans }}</p>
+            <h2 id="profile-identity-title"
+                class="profile-panel__title">{{ 'profile.identity.title'|trans }}</h2>
+            <p class="mt-2 max-w-2xl text-sm
+               text-text-muted">{{ 'profile.identity.url_warning'|trans }}</p>
             <form method="post" action="{{ path('app_profile_identity') }}" data-turbo="false"
                   class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
                 <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
                 <label class="flex-1 sm:max-w-xs">
                     <span class="auth-label">{{ 'profile.identity.username'|trans }}</span>
                     <input type="text" name="username" value="{{ user.username }}" required
-                           minlength="3" maxlength="24" autocomplete="username" class="hx-input mt-1.5">
+                           minlength="3" maxlength="24" autocomplete="username"
+                           class="hx-input mt-1.5">
                 </label>
                 <label class="sm:w-40">
                     <span class="auth-label">{{ 'profile.identity.tag'|trans }}</span>
@@ -262,19 +99,29 @@
 
         {% if passwordForm %}
             <section class="profile-panel mt-14" aria-labelledby="profile-password-title">
-                <h2 id="profile-password-title" class="profile-panel__title">{{ 'profile.password.title'|trans }}</h2>
-                <p class="mt-2 max-w-2xl text-sm text-text-muted">{{ 'profile.password.help'|trans }}</p>
-                {{ form_start(passwordForm, {action: path('app_profile_password'), attr: {'data-turbo': 'false', class: 'mt-5 max-w-md space-y-5'}}) }}
-                    {% include 'security/_password_pair.html.twig' with { field: passwordForm.plainPassword } only %}
-                    <button type="submit" class="hx-btn">{{ 'profile.password.submit'|trans }}</button>
+                <h2 id="profile-password-title"
+                    class="profile-panel__title">{{ 'profile.password.title'|trans }}</h2>
+                <p class="mt-2 max-w-2xl text-sm
+                   text-text-muted">{{ 'profile.password.help'|trans }}</p>
+                {{ form_start(passwordForm, {
+                    action: path('app_profile_password'),
+                    attr: {'data-turbo': 'false', class: 'mt-5 max-w-md space-y-5'}
+                }) }}
+                    {% include 'security/_password_pair.html.twig'
+                        with { field: passwordForm.plainPassword } only %}
+                    <button type="submit"
+                            class="hx-btn">{{ 'profile.password.submit'|trans }}</button>
                 {{ form_end(passwordForm) }}
             </section>
         {% endif %}
 
         <section class="profile-danger mt-14" aria-labelledby="profile-danger-title">
-            <h2 id="profile-danger-title" class="profile-danger__title">{{ 'profile.danger.title'|trans }}</h2>
+            <h2 id="profile-danger-title"
+                class="profile-danger__title">{{ 'profile.danger.title'|trans }}</h2>
             <p class="mt-2 max-w-2xl text-sm text-text-muted">
-                {{ (user.isGoogleAccount or not user.hasPassword ? 'profile.danger.help_no_password' : 'profile.danger.help')|trans }}
+                {{ (user.isGoogleAccount or not user.hasPassword
+                    ? 'profile.danger.help_no_password'
+                    : 'profile.danger.help')|trans }}
             </p>
             <form method="post" action="{{ path('app_profile_delete') }}" data-turbo="false"
                   class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -282,17 +129,23 @@
                 {% if user.isGoogleAccount %}
                     {% set confirmPhrase = 'profile.danger.confirm_phrase'|trans %}
                     <label class="flex-1 sm:max-w-xs">
-                        <span class="auth-label">{{ 'profile.danger.confirm_label'|trans({ '%phrase%': confirmPhrase }) }}</span>
-                        <input type="text" name="confirmation" required autocomplete="off" autocapitalize="none"
-                               autocorrect="off" spellcheck="false" placeholder="{{ confirmPhrase }}" class="hx-input mt-1.5">
+                        <span class="auth-label">{{ 'profile.danger.confirm_label'|trans({
+                            '%phrase%': confirmPhrase
+                        }) }}</span>
+                        <input type="text" name="confirmation" required
+                               autocomplete="off" autocapitalize="none"
+                               autocorrect="off" spellcheck="false"
+                               placeholder="{{ confirmPhrase }}" class="hx-input mt-1.5">
                     </label>
                 {% elseif user.hasPassword %}
                     <label class="flex-1 sm:max-w-xs">
                         <span class="auth-label">{{ 'profile.danger.password'|trans }}</span>
-                        <input type="password" name="password" required autocomplete="current-password" class="hx-input mt-1.5">
+                        <input type="password" name="password" required
+                               autocomplete="current-password" class="hx-input mt-1.5">
                     </label>
                 {% endif %}
-                <button type="submit" class="profile-danger__btn">{{ 'profile.danger.delete'|trans }}</button>
+                <button type="submit"
+                        class="profile-danger__btn">{{ 'profile.danger.delete'|trans }}</button>
             </form>
         </section>
     </div>

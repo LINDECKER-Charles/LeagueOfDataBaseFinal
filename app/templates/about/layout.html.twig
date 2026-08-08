@@ -7,35 +7,9 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# Prose typography for long-form editorial HTML — a page-scoped sheet beats
-       repeating utility classes on every paragraph. Design tokens only. #}
+    {# Only the fact grid is page-scoped; the prose typography is shared
+       (.hx-prose in assets/styles/foundation/prose.css). #}
     <style>
-        .about-prose { font-family: var(--font-spiegel); }
-        .about-prose section { scroll-margin-top: 6.5rem; }
-        .about-prose h2 {
-            margin-bottom: 0.85rem;
-            font-family: var(--font-beaufort);
-            font-size: 1.25rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--color-gold-bright);
-        }
-        .about-prose h3 {
-            margin: 1.25rem 0 0.5rem;
-            font-family: var(--font-beaufort);
-            font-size: 1rem;
-            letter-spacing: 0.06em;
-            color: var(--color-gold);
-        }
-        .about-prose p,
-        .about-prose li { color: var(--color-text-muted); line-height: 1.75; }
-        .about-prose p + p { margin-top: 0.75rem; }
-        .about-prose a { color: var(--color-hex); text-underline-offset: 4px; }
-        .about-prose a:hover { text-decoration: underline; }
-        .about-prose ul { margin: 0.75rem 0; padding-left: 1.4rem; list-style: square; }
-        .about-prose li + li { margin-top: 0.4rem; }
-        .about-prose strong { color: var(--color-text); font-weight: 600; }
-
         /* Fact grid — the countable claims (patch, entry counts, languages). */
         .about-facts {
             display: grid;
@@ -74,11 +48,13 @@
         <div class="codex-header mb-6">
             <span class="codex-header__title">{{ 'eyebrow'|trans({}, 'about') }}</span>
         </div>
-        <h1 class="mb-5 font-beaufort text-3xl uppercase tracking-[0.06em] text-gold-grad sm:text-4xl">{{ block('page_title') }}</h1>
-        <p class="max-w-[62ch] font-spiegel text-lg leading-relaxed text-text-muted">{% block page_lead %}{% endblock %}</p>
+        <h1 class="mb-5 font-beaufort text-3xl uppercase tracking-[0.06em] text-gold-grad
+                   sm:text-4xl">{{ block('page_title') }}</h1>
+        <p class="max-w-[62ch] font-spiegel text-lg leading-relaxed
+                  text-text-muted">{% block page_lead %}{% endblock %}</p>
     </header>
 
-    <div class="about-prose relative flex flex-col gap-10">
+    <div class="hx-prose relative flex flex-col gap-10">
         {% block about_body %}{% endblock %}
     </div>
 </main>

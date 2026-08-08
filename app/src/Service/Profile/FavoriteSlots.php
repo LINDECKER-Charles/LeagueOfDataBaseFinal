@@ -56,32 +56,28 @@ final class FavoriteSlots
      * Display state of the four slots: `current` is null both for an empty slot
      * and for a favorite unavailable on this patch (storedId tells them apart).
      *
-     * @return array<string, array{storedId: ?string, current: ?array{id: string, name: string, image: ?string, type: string}}>
+     * @return array<string, array{
+     *     storedId: ?string,
+     *     current: ?array{id: string, name: string, image: ?string, type: string}
+     * }>
      */
     public function resolveAll(User $user, string $version, string $lang): array
     {
         $slots = [];
         foreach ($this->storedIds($user) as $slotValue => $storedId) {
-            $slots[$slotValue] = [
-                'storedId' => $storedId,
-                'current' => $this->tryResolve(FavoriteSlot::from($slotValue), $storedId, $version, $lang),
-            ];
+            $slot = FavoriteSlot::from($slotValue);
+            $current = null;
+            if ($storedId !== null && $storedId !== '') {
+                try {
+                    $current = $this->resolve($slot, $storedId, $version, $lang);
+                } catch (\Throwable) {
+                    // Display-time best effort: a down data layer empties the slot
+                    // rather than blowing up the whole profile render.
+                }
+            }
+            $slots[$slotValue] = ['storedId' => $storedId, 'current' => $current];
         }
 
         return $slots;
-    }
-
-    /** @return ?array{id: string, name: string, image: ?string, type: string} */
-    private function tryResolve(FavoriteSlot $slot, ?string $id, string $version, string $lang): ?array
-    {
-        if ($id === null || $id === '') {
-            return null;
-        }
-
-        try {
-            return $this->resolve($slot, $id, $version, $lang);
-        } catch (\Throwable) {
-            return null;
-        }
     }
 }

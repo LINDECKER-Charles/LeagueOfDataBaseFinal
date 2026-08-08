@@ -48,7 +48,10 @@ final class BuildVoteRepository extends ServiceEntityRepository
             ->getArrayResult();
 
         return array_column(array_map(
-            static fn (array $row): array => ['id' => (int) $row['buildId'], 'score' => (int) $row['score']],
+            static fn (array $row): array => [
+                'id' => (int) $row['buildId'],
+                'score' => (int) $row['score'],
+            ],
             $rows,
         ), 'score', 'id');
     }
@@ -80,7 +83,10 @@ final class BuildVoteRepository extends ServiceEntityRepository
             ->getArrayResult();
 
         return array_column(array_map(
-            static fn (array $row): array => ['id' => (int) $row['buildId'], 'value' => (int) $row['value']],
+            static fn (array $row): array => [
+                'id' => (int) $row['buildId'],
+                'value' => (int) $row['value'],
+            ],
             $rows,
         ), 'value', 'id');
     }
@@ -94,7 +100,9 @@ final class BuildVoteRepository extends ServiceEntityRepository
     public function applyVote(Build $build, User $voter, int $value): void
     {
         if (!\in_array($value, [BuildVote::UP, BuildVote::DOWN], true)) {
-            throw new \InvalidArgumentException(sprintf('Vote value must be +1 or -1, got %d.', $value));
+            throw new \InvalidArgumentException(
+                sprintf('Vote value must be +1 or -1, got %d.', $value),
+            );
         }
 
         $entityManager = $this->getEntityManager();
@@ -157,7 +165,8 @@ final class BuildVoteRepository extends ServiceEntityRepository
             ->setParameter('ownerBanned', false);
 
         if ($filter->championId !== null) {
-            $qb->andWhere('b.championId = :championId')->setParameter('championId', $filter->championId);
+            $qb->andWhere('b.championId = :championId')
+                ->setParameter('championId', $filter->championId);
         }
         if ($filter->mode !== null) {
             $qb->andWhere('b.gameMode = :mode')->setParameter('mode', $filter->mode);

@@ -1,6 +1,6 @@
 # Site-identity facts surfaced verbatim on the /legal/* pages (notice, privacy,
 # terms, cookies). Fully filled on 2026-07-17 — remaining pre-prod checks live
-# in docs/legal-info.md (§5).
+# in docs/guides/legal-info.md (§5).
 # Consumed through the App\Dto\LegalInfo value object (autowired constructor).
 #
 # publisher_address is intentionally EMPTY: non-professional publisher regime

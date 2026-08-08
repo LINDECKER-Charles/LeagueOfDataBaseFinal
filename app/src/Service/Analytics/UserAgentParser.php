@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Service\Analytics;
 
+use App\Service\Analytics\Model\UserAgentProfile;
+
 /**
  * Dependency-free User-Agent classification. A deliberately small heuristic — it
  * only needs to power audience breakdowns (browser / OS / device family / bot),
@@ -35,26 +37,23 @@ final class UserAgentParser
         'Macintosh' => 'macOS', 'Linux' => 'Linux',
     ];
 
-    /**
-     * @return array{browser: string, os: string, device: string, isBot: bool}
-     */
-    public function parse(?string $ua): array
+    public function parse(?string $ua): UserAgentProfile
     {
         $ua = trim((string) $ua);
         if ($ua === '') {
-            return ['browser' => 'other', 'os' => 'other', 'device' => 'other', 'isBot' => false];
+            return UserAgentProfile::unknown();
         }
 
         if ($this->looksLikeBot($ua)) {
-            return ['browser' => 'Bot', 'os' => 'other', 'device' => 'bot', 'isBot' => true];
+            return UserAgentProfile::bot();
         }
 
-        return [
-            'browser' => $this->match(self::BROWSERS, $ua, 'other'),
-            'os' => $this->match(self::SYSTEMS, $ua, 'other'),
-            'device' => $this->device($ua),
-            'isBot' => false,
-        ];
+        return new UserAgentProfile(
+            browser: $this->match(self::BROWSERS, $ua, UserAgentProfile::UNKNOWN),
+            os: $this->match(self::SYSTEMS, $ua, UserAgentProfile::UNKNOWN),
+            device: $this->device($ua),
+            isBot: false,
+        );
     }
 
     private function looksLikeBot(string $ua): bool

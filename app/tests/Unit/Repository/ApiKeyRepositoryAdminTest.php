@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Repository;
 
 use App\Entity\ApiKey;
-use App\Entity\ApiPlan;
+use App\Entity\Enum\ApiPlan;
 use App\Entity\ApiUsage;
 use App\Entity\User;
 use App\Repository\ApiKeyRepository;
@@ -25,7 +25,9 @@ final class ApiKeyRepositoryAdminTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->entityManager = InMemoryOrm::entityManager([User::class, ApiKey::class, ApiUsage::class]);
+        $this->entityManager = InMemoryOrm::entityManager(
+            [User::class, ApiKey::class, ApiUsage::class],
+        );
         $registry = $this->createStub(ManagerRegistry::class);
         $registry->method('getManagerForClass')->willReturn($this->entityManager);
         $this->apiKeys = new ApiKeyRepository($registry);
@@ -87,7 +89,12 @@ final class ApiKeyRepositoryAdminTest extends TestCase
     {
         $user = new User()->setEmail($username . '@example.test')->setUsername($username);
         $this->entityManager->persist($user);
-        $key = new ApiKey($user, 'default', hash('sha256', $prefix . bin2hex(random_bytes(8))), $prefix);
+        $key = new ApiKey(
+            $user,
+            'default',
+            hash('sha256', $prefix . bin2hex(random_bytes(8))),
+            $prefix,
+        );
         $this->entityManager->persist($key);
         $this->entityManager->flush();
 

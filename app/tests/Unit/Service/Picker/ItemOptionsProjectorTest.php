@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Item options are shop-filtered (purchasable, playable on the requested
- * mode's map — Summoner's Rift by default —, not hidden, not champion-bound),
- * string-id'd despite PHP's int map keys, and `from` deduplicated. Resolution
- * stays presence-based (unfiltered).
+ * mode's map — Summoner's Rift by default —, not hidden, not champion-bound)
+ * and string-id'd despite PHP's int map keys. Resolution stays presence-based
+ * (unfiltered).
  */
 final class ItemOptionsProjectorTest extends TestCase
 {
@@ -22,8 +22,18 @@ final class ItemOptionsProjectorTest extends TestCase
         $this->projector = new ItemOptionsProjector();
     }
 
-    /** @return array<int|string, array<string, mixed>> int keys on purpose — json_decode does the same */
+    /**
+     * Int keys on purpose — json_decode does the same.
+     *
+     * @return array<int|string, array<string, mixed>>
+     */
     private function data(): array
+    {
+        return $this->riftShopItems() + $this->mapRestrictedItems() + $this->unpickableItems();
+    }
+
+    /** Purchasable on Summoner's Rift — the only two the default projection keeps. */
+    private function riftShopItems(): array
     {
         return [
             3006 => [
@@ -42,15 +52,29 @@ final class ItemOptionsProjectorTest extends TestCase
                 'gold' => ['total' => 300, 'purchasable' => true],
                 'maps' => [11 => true],
             ],
-            2010 => [
-                'name' => 'Locked Biscuit',
-                'gold' => ['total' => 50, 'purchasable' => false],
-                'maps' => [11 => true],
-            ],
+        ];
+    }
+
+    /** Playable on the Howling Abyss (map 12) only. */
+    private function mapRestrictedItems(): array
+    {
+        return [
             3070 => [
                 'name' => 'Aram Only',
                 'gold' => ['total' => 400, 'purchasable' => true],
                 'maps' => [11 => false, 12 => true],
+            ],
+        ];
+    }
+
+    /** Excluded from the shop whatever the mode: not for sale, hidden, champion-bound. */
+    private function unpickableItems(): array
+    {
+        return [
+            2010 => [
+                'name' => 'Locked Biscuit',
+                'gold' => ['total' => 50, 'purchasable' => false],
+                'maps' => [11 => true],
             ],
             7013 => [
                 'name' => 'Hidden Ornn Thing',
@@ -69,42 +93,53 @@ final class ItemOptionsProjectorTest extends TestCase
     {
         $options = $this->projector->project($this->data(), []);
 
-        self::assertSame(['3006', '1001'], array_column($options, 'id'), 'name order ("Berserker…" < "Boots"), ids restored to strings');
+        self::assertSame(
+            ['3006', '1001'],
+            array_column($options, 'id'),
+            'name order ("Berserker…" < "Boots"), ids restored to strings',
+        );
     }
 
     public function testProjectShapesTheContractFields(): void
     {
-        $options = $this->projector->project($this->data(), ['Berserker Greaves' => 'cdn/blobs/3006.png']);
-        $greaves = array_values(array_filter($options, static fn (array $o): bool => $o['id'] === '3006'))[0];
+        $options = $this->projector->project(
+            $this->data(),
+            ['Berserker Greaves' => 'cdn/blobs/3006.png'],
+        );
+        $greaves = array_values(array_filter(
+            $options,
+            static fn (array $o): bool => $o['id'] === '3006',
+        ))[0];
 
         self::assertSame([
             'id' => '3006',
             'name' => 'Berserker Greaves',
             'image' => '/cdn/blobs/3006.png',
             'gold' => 1100,
-            'purchasable' => true,
             'tags' => ['Boots'],
-            'from' => ['1001', '1042'],
-            'into' => ['3172'],
-            'depth' => 2,
-        ], $greaves, '`from` deduplicated, `into` recast to strings');
+        ], $greaves, 'exactly the five fields the picker island consumes');
     }
 
-    public function testMissingImageAndDepthDegradeToNull(): void
+    public function testMissingImageDegradesToNull(): void
     {
         $options = $this->projector->project($this->data(), []);
-        $boots = array_values(array_filter($options, static fn (array $o): bool => $o['id'] === '1001'))[0];
+        $boots = array_values(array_filter(
+            $options,
+            static fn (array $o): bool => $o['id'] === '1001',
+        ))[0];
 
         self::assertNull($boots['image']);
-        self::assertNull($boots['depth']);
-        self::assertSame([], $boots['from']);
+        self::assertSame([], $boots['tags'], 'a tag-less entry still carries the key');
     }
 
     public function testResolveIsPresenceBasedNotShopFiltered(): void
     {
         $resolved = $this->projector->resolve($this->data(), [], '2010');
 
-        self::assertSame(['id' => '2010', 'name' => 'Locked Biscuit', 'image' => null, 'type' => 'item'], $resolved);
+        self::assertSame(
+            ['id' => '2010', 'name' => 'Locked Biscuit', 'image' => null, 'type' => 'item'],
+            $resolved,
+        );
         self::assertNull($this->projector->resolve($this->data(), [], '9999'));
     }
 
@@ -133,7 +168,14 @@ final class ItemOptionsProjectorTest extends TestCase
             ['3006', '3006', '1001', '9999'], // duplicate + available + unknown-to-dataset
         );
 
-        self::assertSame(['Berserker Greaves'], $names, 'deduplicated; unknown ids are the validator\'s concern');
-        self::assertSame([], $this->projector->unavailableOn($data, GameMode::SummonersRift, ['3006', '1001']));
+        self::assertSame(
+            ['Berserker Greaves'],
+            $names,
+            'deduplicated; unknown ids are the validator\'s concern',
+        );
+        self::assertSame(
+            [],
+            $this->projector->unavailableOn($data, GameMode::SummonersRift, ['3006', '1001']),
+        );
     }
 }

@@ -9,7 +9,10 @@ use App\Service\Picker\GameMode;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
-/** POST boundary parsing + native-field bounds (name / description / structure JSON / version / mode). */
+/**
+ * POST boundary parsing + native-field bounds (name / description / structure
+ * JSON / version / mode).
+ */
 final class BuildSubmissionTest extends TestCase
 {
     private const FALLBACK_VERSION = '16.14.1';
@@ -62,13 +65,18 @@ final class BuildSubmissionTest extends TestCase
 
     public function testLanguageIsTrimmedOrFallsBackToTheContext(): void
     {
-        self::assertSame('fr_FR', self::submission(['name' => 'valid', 'language' => '  fr_FR  '])->language);
+        self::assertSame(
+            'fr_FR',
+            self::submission(['name' => 'valid', 'language' => '  fr_FR  '])->language,
+        );
         self::assertSame(self::FALLBACK_LANGUAGE, self::submission(['name' => 'valid'])->language);
     }
 
     public function testUnknownModeIsAnExplicitError(): void
     {
-        $submission = self::submission(['name' => 'valid', 'structure' => '{"a":1}', 'game_mode' => 'urf']);
+        $submission = self::submission(
+            ['name' => 'valid', 'structure' => '{"a":1}', 'game_mode' => 'urf'],
+        );
 
         self::assertNull($submission->gameMode);
         self::assertContains(BuildSubmission::ERROR_MODE_UNKNOWN, $submission->formErrors());
@@ -76,10 +84,19 @@ final class BuildSubmissionTest extends TestCase
 
     public function testNameBounds(): void
     {
-        foreach (['ab' => true, 'abc' => false, str_repeat('n', 80) => false, str_repeat('n', 81) => true] as $name => $shouldFail) {
+        foreach ([
+            'ab' => true,
+            'abc' => false,
+            str_repeat('n', 80) => false,
+            str_repeat('n', 81) => true,
+        ] as $name => $shouldFail) {
             $errors = self::submission(['name' => $name, 'structure' => '{"a":1}'])->formErrors();
 
-            self::assertSame($shouldFail, in_array(BuildSubmission::ERROR_NAME_LENGTH, $errors, true), "name: $name");
+            self::assertSame(
+                $shouldFail,
+                in_array(BuildSubmission::ERROR_NAME_LENGTH, $errors, true),
+                "name: $name",
+            );
         }
     }
 
@@ -100,7 +117,10 @@ final class BuildSubmissionTest extends TestCase
             $submission = self::submission(['name' => 'valid', 'structure' => $raw]);
 
             self::assertNull($submission->structure);
-            self::assertContains(BuildStructureValidator::ERROR_STRUCTURE, $submission->formErrors());
+            self::assertContains(
+                BuildStructureValidator::ERROR_STRUCTURE,
+                $submission->formErrors(),
+            );
         }
     }
 }

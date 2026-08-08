@@ -1,7 +1,7 @@
 # Editorial copy for /about, /about/data and /faq — the pages that state in
 # prose what the project is, who it is for and where its data comes from.
 # English is the reference catalog: any key missing elsewhere falls back here.
-# faq.* ids are declared in App\Controller\AboutController::FAQ_ENTRIES.
+# faq.* ids are declared in App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "About"
 
 index:

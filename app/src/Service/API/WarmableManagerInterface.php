@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
  * A DDragon resource manager whose datasets and images can be pre-warmed into
  * object storage ahead of any user request. Implementors are auto-tagged, so a
  * new manager is picked up by {@see \App\Command\WarmupDdragonCommand} and by the
- * streaming loader ({@see \App\Controller\LoaderController}) for free.
+ * streaming loader ({@see \App\Controller\Resource\LoaderController}) for free.
  */
 #[AutoconfigureTag('app.ddragon.manager')]
 interface WarmableManagerInterface
@@ -26,7 +26,11 @@ interface WarmableManagerInterface
      * @param array<mixed> $data
      * @return array<mixed>
      */
-    public function getImages(string $version, string $lang, bool $force = false, array $data = []): array;
+    public function getImages(
+        DatasetRef $dataset,
+        bool $force = false,
+        array $data = [],
+    ): array;
 
     /**
      * Cost of warming a page slice's images, without fetching anything.
@@ -34,7 +38,7 @@ interface WarmableManagerInterface
      * @return array{entries: array<string,string>, missing: int}
      *         entries = imageFileName => human-readable display name
      */
-    public function collectPlan(string $version, string $lang, int $perPage, int $page): array;
+    public function collectPlan(DatasetRef $dataset, int $perPage, int $page): array;
 
     /**
      * Synchronously fetch + store the still-missing images of a pre-computed

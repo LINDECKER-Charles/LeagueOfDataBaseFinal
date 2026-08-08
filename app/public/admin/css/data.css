@@ -1,0 +1,124 @@
+/* =============================================================================
+   LODB Admin — data readouts: KPI tiles, ranked bars, tables, chips/badges,
+   legends, the hour heatmap and the version/language coverage matrix.
+   ========================================================================== */
+
+/* --- KPI tiles ------------------------------------------------------------ */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem; }
+.kpi {
+  position: relative; border: 1px solid var(--line); background: rgba(10, 20, 40, 0.6);
+  padding: 1rem 1.15rem; overflow: hidden;
+}
+.kpi::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--accent, var(--gold));
+}
+.kpi .k-label {
+  display: block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+.kpi .k-val {
+  display: block; font-family: var(--font-display); font-size: 1.9rem;
+  color: var(--gold-bright); line-height: 1.1; margin-top: 0.35rem;
+}
+.kpi .k-sub { display: block; font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem; }
+.kpi .k-spark {
+  position: absolute; right: 0.6rem; bottom: 0.5rem; width: 5.5rem; height: 1.6rem;
+  opacity: 0.75;
+}
+
+/* --- Ranked bars ---------------------------------------------------------- */
+.rank { display: flex; flex-direction: column; gap: 0.7rem; }
+.rank-row {
+  display: grid; grid-template-columns: minmax(6rem, 1fr) auto; gap: 0.4rem 0.9rem;
+  align-items: center;
+}
+.rank-row .r-name {
+  font-size: 0.86rem; color: var(--text); overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rank-row .r-val {
+  font-family: var(--font-mono); font-size: 0.82rem; color: var(--gold-bright);
+  font-variant-numeric: tabular-nums;
+}
+.rank-row .r-track { grid-column: 1 / -1; height: 6px; background: var(--track); overflow: hidden; }
+.rank-row .r-fill {
+  height: 100%; background: linear-gradient(90deg, var(--gold-deep), var(--gold));
+}
+.rank-row .r-fill.cyan { background: linear-gradient(90deg, var(--hex-deep), var(--hex)); }
+
+/* --- Table ---------------------------------------------------------------- */
+.tbl-wrap { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.tbl th, .tbl td {
+  text-align: left; padding: 0.6rem 0.65rem; border-bottom: 1px solid var(--line-soft);
+}
+.tbl th {
+  font-family: var(--font-display); font-size: 0.66rem; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--gold); font-weight: 400;
+}
+.tbl td.num, .tbl th.num {
+  text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+}
+.tbl tbody tr:hover { background: rgba(200, 170, 110, 0.05); }
+.tbl .t-empty { color: var(--text-dim); text-align: center; padding: 1.4rem; }
+.tbl .cell-sub {
+  display: block; font-size: 0.72rem; color: var(--text-dim); max-width: 16rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.badges { display: inline-flex; gap: 0.3rem; flex-wrap: wrap; }
+.actions-cell { text-align: right; white-space: nowrap; }
+.actions-cell form {
+  display: inline-flex; align-items: center; gap: 0.35rem; margin: 0 0 0 0.45rem;
+  vertical-align: middle;
+}
+.actions-cell > a { vertical-align: middle; }
+
+/* --- Chips / badges ------------------------------------------------------- */
+.chip {
+  display: inline-flex; align-items: center; border: 1px solid var(--gold-deep);
+  background: rgba(10, 20, 40, 0.9); padding: 0.18rem 0.5rem;
+  font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted);
+}
+.badge {
+  display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem;
+  font-family: var(--font-mono); padding: 0.15rem 0.5rem; border: 1px solid var(--line);
+  color: var(--text-muted);
+}
+.badge.good { color: var(--good); border-color: rgba(55, 176, 110, 0.5); }
+.badge.warn { color: var(--warn); border-color: var(--line); }
+.badge.bad { color: var(--bad); border-color: rgba(220, 61, 61, 0.5); }
+
+/* --- Legend --------------------------------------------------------------- */
+.legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; margin-top: 0.9rem; }
+.legend-item {
+  display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.legend-item .sw { width: 10px; height: 10px; flex: none; transform: rotate(45deg); }
+.legend-item b { color: var(--text); font-weight: 400; font-family: var(--font-mono); }
+
+/* --- Heatmap -------------------------------------------------------------- */
+.heat {
+  display: grid; grid-template-columns: 2.2rem repeat(24, 1fr); gap: 2px; align-items: center;
+}
+.heat .h-corner, .heat .h-col {
+  font-size: 0.6rem; color: var(--text-dim); text-align: center; font-family: var(--font-mono);
+}
+.heat .h-row {
+  font-size: 0.62rem; color: var(--text-muted); font-family: var(--font-display);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.heat .cell { aspect-ratio: 1 / 1; border: 1px solid rgba(255, 255, 255, 0.03); min-height: 12px; }
+.heat .cell:hover { outline: 1px solid var(--gold); }
+
+/* --- Coverage matrix ------------------------------------------------------ */
+.matrix { display: flex; flex-direction: column; gap: 0.55rem; }
+.matrix-row { display: grid; grid-template-columns: 7rem 1fr; gap: 0.8rem; align-items: center; }
+.matrix-row .m-ver { font-family: var(--font-mono); font-size: 0.82rem; color: var(--gold-bright); }
+.matrix-row .m-langs { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.matrix-row .m-langs .lang {
+  font-size: 0.62rem; font-family: var(--font-mono); text-transform: uppercase;
+  padding: 0.1rem 0.35rem; border: 1px solid var(--line-soft); color: var(--text-muted);
+}

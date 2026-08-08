@@ -22,7 +22,10 @@ export const TYPE_TO_KEY: Record<string, ResourceKey> = {
     runesReforged: 'runes',
 }
 
-/** Leading `/{version}/` path segment (dotted numeric) — mirrors VersionManager::VERSION_PATTERN. */
+/**
+ * Leading `/{version}/` path segment (dotted numeric) — mirrors
+ * VersionManager::VERSION_PATTERN.
+ */
 const VERSION_PREFIX = /^\/(\d+(?:\.\d+)+)(?=\/)/
 
 /** Patch pinned in the URL path (`/15.14.1/champions`), else '' (clean/latest URL). */
@@ -48,7 +51,10 @@ function isVersionedCapable(versionlessPath: string): boolean {
  */
 export const BUILD_WARM_PATH = '/builds/editor'
 
-/** Only the home + list routes (and the build-editor warm token) ingest an image batch worth streaming. */
+/**
+ * Only the home + list routes (and the build-editor warm token) ingest an image
+ * batch worth streaming.
+ */
 export function resourcesFor(pathname: string): ResourceKey[] {
     const p = (pathWithoutVersion(pathname).replace(/\/+$/, '') || '/').toLowerCase()
     if (p === '/') return ['champions', 'items', 'runes', 'summoners']
@@ -61,33 +67,52 @@ export function resourcesFor(pathname: string): ResourceKey[] {
     return []
 }
 
-export function meta(name: string): string {
+/** Content of a `<meta name="…">`, or '' when the page carries none. */
+export function metaContent(name: string): string {
     return document.querySelector(`meta[name="${name}"]`)?.getAttribute('content') ?? ''
 }
 
-export function resolveVL(destUrl: string, override?: { version: string; lang: string }): { version: string; lang: string } {
+export function resolveVersionAndLang(
+    destUrl: string,
+    override?: { version: string; lang: string },
+): { version: string; lang: string } {
     if (override) return override
-    const u = new URL(destUrl, window.location.origin)
+    const target = new URL(destUrl, window.location.origin)
     return {
         // Path segment wins (canonical versioned URL), then query, then the session meta.
-        version: versionFromPath(u.pathname) || u.searchParams.get('version') || meta('dd-version'),
-        lang: u.searchParams.get('lang') || meta('dd-lang'),
+        version: versionFromPath(target.pathname)
+            || target.searchParams.get('version')
+            || metaContent('dd-version'),
+        lang: target.searchParams.get('lang') || metaContent('dd-lang'),
+    }
+}
+
+/**
+ * Pagination params that take part in a warm's identity: two pages of the same
+ * list warm different image batches, and a version switch must keep the reader
+ * on their page. Declared once so the three functions below cannot drift.
+ */
+const WARM_QUERY_PARAMS = ['numpage', 'itemperpage'] as const
+
+/** Copy the warm-identity params of `from` into a query being built. */
+function carryWarmParams(from: URL, into: URLSearchParams): void {
+    for (const name of WARM_QUERY_PARAMS) {
+        const value = from.searchParams.get(name)
+        if (value) into.set(name, value)
     }
 }
 
 export function warmKey(destUrl: string, version: string, lang: string): string {
-    const u = new URL(destUrl, window.location.origin)
-    return [version, lang, u.pathname, u.searchParams.get('numpage') ?? '', u.searchParams.get('itemperpage') ?? ''].join('|')
+    const target = new URL(destUrl, window.location.origin)
+    const pagination = WARM_QUERY_PARAMS.map((name) => target.searchParams.get(name) ?? '')
+    return [version, lang, target.pathname, ...pagination].join('|')
 }
 
 export function prepareUrl(destUrl: string, version: string, lang: string): string {
-    const u = new URL(destUrl, window.location.origin)
-    const q = new URLSearchParams({ path: u.pathname, version, lang })
-    const np = u.searchParams.get('numpage')
-    const ip = u.searchParams.get('itemperpage')
-    if (np) q.set('numpage', np)
-    if (ip) q.set('itemperpage', ip)
-    return `/api/loader/prepare?${q.toString()}`
+    const target = new URL(destUrl, window.location.origin)
+    const query = new URLSearchParams({ path: target.pathname, version, lang })
+    carryWarmParams(target, query)
+    return `/api/loader/prepare?${query.toString()}`
 }
 
 /**
@@ -97,13 +122,12 @@ export function prepareUrl(destUrl: string, version: string, lang: string): stri
  * page. Elsewhere (home) the query drives the switch via the session fallback.
  */
 export function destinationForSwitch(version: string, lang: string, latest: string): string {
-    const u = new URL(window.location.href)
-    const rest = pathWithoutVersion(u.pathname)
+    const current = new URL(window.location.href)
+    const rest = pathWithoutVersion(current.pathname)
 
     const params = new URLSearchParams()
     if (lang) params.set('lang', lang)
-    const np = u.searchParams.get('numpage'); if (np) params.set('numpage', np)
-    const ip = u.searchParams.get('itemperpage'); if (ip) params.set('itemperpage', ip)
+    carryWarmParams(current, params)
 
     let base = rest
     if (isVersionedCapable(rest)) {
@@ -120,7 +144,8 @@ export function turbo(): { visit?: (url: string) => void } | undefined {
     return (window as unknown as { Turbo?: { visit?: (url: string) => void } }).Turbo
 }
 
-export function parse(ev: Event): Record<string, unknown> {
+/** JSON body of an SSE message; a malformed frame degrades to an empty payload. */
+export function parseStreamPayload(ev: Event): Record<string, unknown> {
     try {
         return JSON.parse((ev as MessageEvent).data) as Record<string, unknown>
     } catch {

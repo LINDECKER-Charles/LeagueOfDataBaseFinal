@@ -9,7 +9,10 @@
  * rewrites the data marks, so a failure here degrades to the static chart.
  */
 
-import { IDENTITY, MIN_SCALE, ZOOM_STEP, indexAt, modelXOf, offsetToReveal, panBy, toModelX, toScreenX, zoomAt } from './chart-scale.js'
+import {
+    IDENTITY, MIN_SCALE, ZOOM_STEP, indexAt, modelXOf,
+    offsetToReveal, panBy, toModelX, toScreenX, zoomAt,
+} from './chart-scale.js'
 import { createLayers, renderAxis, renderHover } from './chart-view.js'
 
 const DRAG_THRESHOLD_PX = 3
@@ -78,10 +81,16 @@ function bindPointer(chart) {
         const box = chart.model.box
         const x = pointerX(chart, event)
         if (drag && Math.abs(x - drag.originX) > DRAG_THRESHOLD_PX) {
-            chart.view = panBy({ scale: chart.view.scale, offset: drag.offset }, box, x - drag.originX)
+            chart.view = panBy(
+                { scale: chart.view.scale, offset: drag.offset },
+                box,
+                x - drag.originX,
+            )
         }
         const inside = x >= box.padX && x <= box.padX + box.plotW
-        chart.hover = inside ? indexAt(toModelX(x, chart.view, box), box, chart.model.dates.length) : null
+        chart.hover = inside
+            ? indexAt(toModelX(x, chart.view, box), box, chart.model.dates.length)
+            : null
         render(chart)
     })
 

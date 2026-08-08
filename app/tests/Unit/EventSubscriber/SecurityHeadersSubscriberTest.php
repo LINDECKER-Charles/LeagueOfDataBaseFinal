@@ -16,8 +16,11 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
  */
 final class SecurityHeadersSubscriberTest extends TestCase
 {
-    private function dispatch(Response $response, bool $debug, int $requestType = HttpKernelInterface::MAIN_REQUEST): Response
-    {
+    private function dispatch(
+        Response $response,
+        bool $debug,
+        int $requestType = HttpKernelInterface::MAIN_REQUEST,
+    ): Response {
         $event = new ResponseEvent(
             $this->createStub(HttpKernelInterface::class),
             new Request(),
@@ -31,7 +34,10 @@ final class SecurityHeadersSubscriberTest extends TestCase
 
     public function testSetsPolicyOnHtmlResponseInProd(): void
     {
-        $response = $this->dispatch(new Response('<html></html>', 200, ['Content-Type' => 'text/html']), debug: false);
+        $response = $this->dispatch(
+            new Response('<html></html>', 200, ['Content-Type' => 'text/html']),
+            debug: false,
+        );
 
         $csp = $response->headers->get('Content-Security-Policy');
         self::assertNotNull($csp);
@@ -54,7 +60,10 @@ final class SecurityHeadersSubscriberTest extends TestCase
 
     public function testSkipsInDebug(): void
     {
-        $response = $this->dispatch(new Response('<html></html>', 200, ['Content-Type' => 'text/html']), debug: true);
+        $response = $this->dispatch(
+            new Response('<html></html>', 200, ['Content-Type' => 'text/html']),
+            debug: true,
+        );
 
         self::assertFalse($response->headers->has('Content-Security-Policy'));
         self::assertFalse($response->headers->has('X-Frame-Options'));
@@ -62,7 +71,10 @@ final class SecurityHeadersSubscriberTest extends TestCase
 
     public function testSkipsNonHtmlResponse(): void
     {
-        $response = $this->dispatch(new Response('{}', 200, ['Content-Type' => 'application/json']), debug: false);
+        $response = $this->dispatch(
+            new Response('{}', 200, ['Content-Type' => 'application/json']),
+            debug: false,
+        );
 
         self::assertFalse($response->headers->has('Content-Security-Policy'));
     }
@@ -82,7 +94,10 @@ final class SecurityHeadersSubscriberTest extends TestCase
     {
         $scoped = "default-src 'self'; script-src 'self' 'unsafe-inline'";
         $response = $this->dispatch(
-            new Response('<html></html>', 200, ['Content-Type' => 'text/html', 'Content-Security-Policy' => $scoped]),
+            new Response('<html></html>', 200, [
+                'Content-Type' => 'text/html',
+                'Content-Security-Policy' => $scoped,
+            ]),
             debug: false,
         );
 

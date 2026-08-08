@@ -1,0 +1,24 @@
+{# Pre-mount placeholder for a Vue island shell.
+
+   Rendered INSIDE the `data-vue` container: Vue clears the container when it
+   mounts, so the placeholder removes itself — no cleanup wiring. It keeps the
+   layout from collapsing while the code-split chunk downloads (and while a lazy
+   island waits for the viewport), so the mount shifts nothing.
+
+   Params: kind (filter | showcase | gallery | control). Shapes live in
+   assets/styles/foundation/skeleton.css. #}
+{% set kind = kind|default('control') %}
+<div class="hx-sk-{{ kind }}" aria-hidden="true">
+    {% if kind == 'filter' %}
+        <span class="hx-sk hx-sk-input"></span>
+        {% for i in 1..3 %}<span class="hx-sk hx-sk-chip"></span>{% endfor %}
+    {% elseif kind == 'showcase' %}
+        <div class="hx-sk-rail">{% for i in 1..5 %}<span
+            class="hx-sk hx-sk-tab"></span>{% endfor %}</div>
+        <span class="hx-sk hx-sk-panel"></span>
+    {% elseif kind == 'gallery' %}
+        {% for i in 1..4 %}<span class="hx-sk hx-sk-tile"></span>{% endfor %}
+    {% else %}
+        <span class="hx-sk hx-sk-bar"></span>
+    {% endif %}
+</div>

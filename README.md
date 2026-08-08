@@ -48,7 +48,7 @@ Ce README est organisé en **deux parties** indépendantes :
 <a id="partie-1--design"></a>
 ## <img src="docs/assets/icons/palette.svg" width="26" align="top" alt=""> Partie 1 — Design
 
-Interface **responsive** sur **Tailwind CSS 4** (du petit mobile 320 px à l'iPad — voir [Responsive & mobile](docs/responsive-mobile.md)), **PWA installable** (manifest + service worker), îlots interactifs **Vue 3**, typographie officielle (*Beaufort for LoL* + *Spiegel*). Les visuels vivent dans [`screenshot/`](screenshot/) et sont régénérables via Playwright (`node tools/screenshots/capture.mjs`).
+Interface **responsive** sur **Tailwind CSS 4** (du petit mobile 320 px à l'iPad — voir [Responsive & mobile](docs/architecture/responsive-mobile.md)), **PWA installable** (manifest + service worker), îlots interactifs **Vue 3**, typographie officielle (*Beaufort for LoL* + *Spiegel*). Les visuels vivent dans [`screenshot/`](screenshot/) et sont régénérables via Playwright (`node tools/screenshots/capture.mjs`).
 
 > <img src="docs/assets/icons/camera.svg" width="15" align="top" alt=""> *Les captures sont des instantanés de l'état actuel — remplaçables librement, les chemins restent stables.*
 
@@ -482,7 +482,7 @@ flowchart LR
 git clone https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
 cd LeagueOfDataBaseFinal
 
-# 2. Configurer l'environnement (secrets CI : docs/github-actions-secrets.md)
+# 2. Configurer l'environnement (secrets CI : docs/guides/github-actions-secrets.md)
 cp .env.example .env
 
 # 3. Pré-requis dev (le conteneur php bind-monte ./app)
@@ -509,14 +509,16 @@ Captures Playwright : `node tools/screenshots/capture.mjs` → [`screenshot/`](s
 <a id="documentation"></a>
 ## <img src="docs/assets/icons/book-open.svg" width="24" align="top" alt=""> Documentation
 
+> Index complet, rangé par domaine : [`docs/README.md`](docs/README.md).
+
 | Doc | Contenu |
 |---|---|
-| [Installation](docs/setup.md) | Prérequis, installation détaillée, dépannage |
-| [Architecture](docs/architecture.md) | Détail des services et flux |
-| [Responsive &amp; mobile](docs/responsive-mobile.md) | Stratégie mobile, breakpoints, composants, méthode d'audit |
-| [Docker](docs/docker.md) | Référence complète des commandes de la stack |
-| [Configuration](docs/configuration.md) | Variables d'environnement |
-| [Secrets CI](docs/github-actions-secrets.md) | Secrets GitHub Actions / GHCR |
+| [Installation](docs/guides/setup.md) | Prérequis, installation détaillée, dépannage |
+| [Architecture](docs/architecture/architecture.md) | Détail des services et flux |
+| [Responsive &amp; mobile](docs/architecture/responsive-mobile.md) | Stratégie mobile, breakpoints, composants, méthode d'audit |
+| [Docker](docs/guides/docker.md) | Référence complète des commandes de la stack |
+| [Configuration](docs/guides/configuration.md) | Variables d'environnement |
+| [Secrets CI](docs/guides/github-actions-secrets.md) | Secrets GitHub Actions / GHCR |
 | [Contribution](CONTRIBUTING.md) | Démarrage contributeur — [version détaillée FR/EN/ES](docs/contribution.md) |
 
 ---

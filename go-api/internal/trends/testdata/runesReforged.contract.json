@@ -1,0 +1,62 @@
+[
+  {
+    "id": 8000,
+    "key": "Precision",
+    "icon": "perk-images/Styles/7201_Precision.png",
+    "name": "Precision",
+    "slots": [
+      {
+        "runes": [
+          {
+            "id": 8005,
+            "key": "PressTheAttack",
+            "icon": "perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png",
+            "name": "Press the Attack",
+            "shortDesc": "Hitting an enemy champion with 3 consecutive basic attacks.",
+            "longDesc": "Hitting an enemy champion with 3 consecutive basic attacks."
+          },
+          {
+            "id": 8021,
+            "key": "FleetFootwork",
+            "icon": "perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
+            "name": "Fleet Footwork",
+            "shortDesc": "Attacking and moving builds Energy stacks.",
+            "longDesc": "Attacking and moving builds Energy stacks."
+          }
+        ]
+      },
+      {
+        "runes": [
+          {
+            "id": 9101,
+            "key": "AbsorbLife",
+            "icon": "perk-images/Styles/Precision/AbsorbLife/AbsorbLife.png",
+            "name": "Absorb Life",
+            "shortDesc": "Champion takedowns heal you.",
+            "longDesc": "Champion takedowns heal you."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 8100,
+    "key": "Domination",
+    "icon": "perk-images/Styles/7200_Domination.png",
+    "name": "Domination",
+    "slots": [
+      {
+        "runes": [
+          {
+            "id": 8112,
+            "key": "Electrocute",
+            "icon": "perk-images/Styles/Domination/Electrocute/Electrocute.png",
+            "name": "Electrocute",
+            "shortDesc": "Hitting a champion with 3 separate attacks deals bonus damage.",
+            "longDesc": "Hitting a champion with 3 separate attacks deals bonus damage."
+          }
+        ]
+      }
+    ]
+  }
+]

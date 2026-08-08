@@ -1,0 +1,10 @@
+/* ---------------------------------------------------------------------------
+   Page signatures — one hero piece per detail page, everything else stays
+   quiet. Champion: the ability showcase (official spell videos). Summoner:
+   the invocation seal (circle = focus). Rune: the path constellation.
+
+   One file per signature; the import order is the cascade order — keep it.
+--------------------------------------------------------------------------- */
+@import "./ability-kit.css";
+@import "./seal.css";
+@import "./constellation.css";

@@ -28,7 +28,7 @@
 
     <section id="cookies">
         <h2>2. Cookies we use</h2>
-        <div class="table-scroll">
+        <div class="hx-table-scroll">
             <table>
                 <thead>
                     <tr>
@@ -42,13 +42,17 @@
                     <tr>
                         <td><strong>PHPSESSID</strong></td>
                         <td>Essential</td>
-                        <td>Session cookie: keeps your browsing state (current version and language preferences, site messages, anti-CSRF security tokens, signed-in state)</td>
+                        <td>Session cookie: keeps your browsing state (current version and
+                            language preferences, site messages, anti-CSRF security tokens,
+                            signed-in state)</td>
                         <td>Session — deleted when the browser closes</td>
                     </tr>
                     <tr>
                         <td><strong>lod_prefs</strong></td>
-                        <td>Preference (set only if you tick "remember" in the version/language selector)</td>
-                        <td>Remembers your chosen Data Dragon language and version between visits. Signed content (integrity) — Secure, HttpOnly, SameSite=Lax</td>
+                        <td>Preference (set only if you tick "remember" in the version/language
+                            selector)</td>
+                        <td>Remembers your chosen Data Dragon language and version between visits.
+                            Signed content (integrity) — Secure, HttpOnly, SameSite=Lax</td>
                         <td>7 days</td>
                     </tr>
                     <tr>
@@ -91,7 +95,8 @@
             <strong>on its own domain</strong>, in particular for security and fraud
             prevention; those cookies are neither controlled nor readable by
             {{ legal.siteName }}. See the
-            <a href="https://stripe.com/legal/cookies-policy" target="_blank" rel="noopener noreferrer">Stripe cookie policy</a>
+            <a href="https://stripe.com/legal/cookies-policy" target="_blank"
+               rel="noopener noreferrer">Stripe cookie policy</a>
             for details.
         </p>
     </section>
@@ -119,9 +124,12 @@
             time ("Privacy" or "Cookies and site data" settings). Possible consequences:
         </p>
         <ul>
-            <li>without the session cookie, browsing still works but your version/language preferences are no longer kept from page to page and signing in to an account becomes impossible;</li>
+            <li>without the session cookie, browsing still works but your version/language
+                preferences are no longer kept from page to page and signing in to an account
+                becomes impossible;</li>
             <li>deleting <strong>lod_prefs</strong> resets the remembered language and version;</li>
-            <li>deleting <strong>REMEMBERME</strong> signs you out at the end of the current session.</li>
+            <li>deleting <strong>REMEMBERME</strong> signs you out at the end of the current
+                session.</li>
         </ul>
         <p>
             Questions: <a href="mailto:{{ legal.publisherEmail }}">{{ legal.publisherEmail }}</a>.

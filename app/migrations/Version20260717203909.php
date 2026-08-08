@@ -15,7 +15,8 @@ final class Version20260717203909 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Add users.is_verified and reset_password_request (email confirmation + password reset).';
+        return 'Add users.is_verified and reset_password_request (email confirmation + password '
+            .'reset).';
     }
 
     public function up(Schema $schema): void
@@ -36,7 +37,8 @@ final class Version20260717203909 extends AbstractMigration
             ALTER TABLE
               reset_password_request
             ADD
-              CONSTRAINT FK_7CE748AA76ED395 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE NOT DEFERRABLE
+              CONSTRAINT FK_7CE748AA76ED395 FOREIGN KEY (user_id) REFERENCES users (id)
+              ON DELETE CASCADE NOT DEFERRABLE
         SQL);
         $this->addSql('ALTER TABLE users ADD is_verified BOOLEAN DEFAULT false NOT NULL');
         // Grandfather pre-existing accounts: they never received a confirmation

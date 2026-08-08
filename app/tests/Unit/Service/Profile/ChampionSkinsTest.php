@@ -90,7 +90,10 @@ final class ChampionSkinsTest extends TestCase
         // Pre-seed the chroma cache so getChromas reads storage (no egress).
         $fs->write(
             sprintf('data/%s/cdragon/chromas/103.json', self::VERSION),
-            json_encode(['103001' => [['id' => 103002, 'name' => 'x', 'colors' => [], 'image' => 'y']]], JSON_THROW_ON_ERROR),
+            json_encode(
+                ['103001' => [['id' => 103002, 'name' => 'x', 'colors' => [], 'image' => 'y']]],
+                JSON_THROW_ON_ERROR,
+            ),
         );
 
         $options = $this->skins($fs)->options('Ahri', self::VERSION, self::LANG);
@@ -119,7 +122,10 @@ final class ChampionSkinsTest extends TestCase
     {
         // No detail file on disk → getDetail hits the gateway, which refuses egress;
         // the art still derives, only the label degrades to the champion id.
-        $skins = $this->skins(new Filesystem(new LocalFilesystemAdapter($this->dir)), $this->noEgress());
+        $skins = $this->skins(
+            new Filesystem(new LocalFilesystemAdapter($this->dir)),
+            $this->noEgress()
+        );
 
         $banner = $skins->resolveBanner('Ahri_7', self::VERSION, self::LANG);
 
@@ -130,7 +136,10 @@ final class ChampionSkinsTest extends TestCase
 
     public function testResolveBannerRejectsNull(): void
     {
-        $skins = $this->skins(new Filesystem(new LocalFilesystemAdapter($this->dir)), $this->noEgress());
+        $skins = $this->skins(
+            new Filesystem(new LocalFilesystemAdapter($this->dir)),
+            $this->noEgress()
+        );
 
         self::assertNull($skins->resolveBanner(null, self::VERSION, self::LANG));
     }
@@ -152,14 +161,20 @@ final class ChampionSkinsTest extends TestCase
     #[DataProvider('malformedIds')]
     public function testResolveBannerRejectsMalformedIds(string $id): void
     {
-        $skins = $this->skins(new Filesystem(new LocalFilesystemAdapter($this->dir)), $this->noEgress());
+        $skins = $this->skins(
+            new Filesystem(new LocalFilesystemAdapter($this->dir)),
+            $this->noEgress()
+        );
 
         self::assertNull($skins->resolveBanner($id, self::VERSION, self::LANG));
     }
 
     public function testIsWellFormedGatesFormatWithoutEgress(): void
     {
-        $skins = $this->skins(new Filesystem(new LocalFilesystemAdapter($this->dir)), $this->noEgress());
+        $skins = $this->skins(
+            new Filesystem(new LocalFilesystemAdapter($this->dir)),
+            $this->noEgress()
+        );
 
         self::assertTrue($skins->isWellFormed('Ahri_7'));
         self::assertTrue($skins->isWellFormed('MonkeyKing_12'));

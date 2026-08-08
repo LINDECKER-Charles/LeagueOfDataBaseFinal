@@ -1,0 +1,75 @@
+/* ---------------------------------------------------------------------------
+   Rune signature — the path constellation: keystones and slots strung on a light
+   spine, tinted by the --path variable of the rune tree being viewed.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- Rune constellation — keystones + slots strung on a light spine ------ */
+  .constellation { position: relative; }
+  .constellation::before {
+    content: "";
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent),
+      color-mix(in srgb, var(--path, var(--color-gold)) 22%, transparent) 70%,
+      transparent
+    );
+  }
+  .slot-node {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    padding: 2.25rem 0 1.5rem;
+  }
+  .slot-node span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 45%, transparent);
+    background: var(--color-hextech-black);
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--path, var(--color-gold));
+  }
+  .slot-node i {
+    width: 7px; height: 7px;
+    rotate: 45deg;
+    background: var(--path, var(--color-gold));
+    box-shadow: 0 0 10px var(--path, var(--color-gold));
+  }
+
+  .keystone__icon {
+    position: relative;
+    flex: none;
+    align-self: flex-start; /* keep the circle round inside stretch-aligned flex rows */
+    width: 5.75rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent);
+    background:
+      radial-gradient(closest-side,
+        color-mix(in srgb, var(--path, var(--color-gold)) 24%, transparent), transparent 80%),
+      var(--color-hextech-black);
+    box-shadow: 0 0 34px -8px var(--path, var(--color-gold));
+  }
+  .keystone__icon img { width: 100%; height: 100%; object-fit: cover; }
+  .rune-medallion {
+    flex: none;
+    width: 3rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+    background: var(--color-hextech-black);
+  }
+  .rune-medallion img { width: 100%; height: 100%; object-fit: cover; }
+}

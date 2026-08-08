@@ -1,0 +1,188 @@
+/* ---------------------------------------------------------------------------
+   Champion signature — the ability showcase: spell rail, official spell video
+   with its click-to-pause / sound / loop-progress chrome, and the cast stats.
+   Classes are global because the showcase island and its server-rendered no-JS
+   fallback share the same markup vocabulary.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- Champion ability showcase ------------------------------------------ */
+  .kit__rail {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding-bottom: 0.9rem;
+  }
+  .kit__tab {
+    position: relative;
+    flex: none;
+    width: 3.6rem;
+    height: 3.6rem;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+    background: var(--color-void);
+    cursor: pointer;
+    transition: border-color 0.25s var(--ease-hextech), box-shadow 0.25s var(--ease-hextech);
+  }
+  .kit__tab img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: saturate(0.4) brightness(0.62);
+    transition: filter 0.25s var(--ease-hextech);
+  }
+  .kit__tab:hover img, .kit__tab:focus-visible img { filter: none; }
+  .kit__tab:focus-visible { outline: none; border-color: var(--color-hex); }
+  /* Selected cast: the page's single brightest teal moment. */
+  .kit__tab.is-active {
+    border-color: var(--color-hex);
+    box-shadow: 0 0 24px -6px color-mix(in srgb, var(--color-hex) 80%, transparent);
+  }
+  .kit__tab.is-active img { filter: none; }
+  .kit__tab .ability-key {
+    position: absolute;
+    bottom: -0.7rem;
+    left: 50%;
+    translate: -50% 0;
+  }
+  /* Small phones (<=360px): the full P/Q/W/E/R rail (~370px) overflows the
+     viewport and zooms the page out. Shrink the tabs so the row fits without a
+     scroll container (overflow-x:auto would force overflow-y and clip the
+     ability-key badges that hang below each tab). Desktop/tablet untouched. */
+  @media (max-width: 374px) {
+    .kit__rail { gap: 0.55rem; }
+    .kit__tab { width: 3rem; height: 3rem; }
+  }
+
+  .kit__panel {
+    border: 1px solid color-mix(in srgb, var(--color-gold) 32%, transparent);
+    background: linear-gradient(180deg, rgba(15, 27, 45, 0.92), rgba(9, 16, 22, 0.96));
+    box-shadow: 0 18px 60px -24px rgba(1, 10, 19, 0.9);
+  }
+  .kit__media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--color-hextech-black);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-gold) 25%, transparent);
+  }
+  .kit__media video,
+  .kit__media .kit__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Click-to-pause: an invisible full-surface button keeps the <video> itself
+     chrome-less (it stays aria-hidden); the glyph only surfaces on intent
+     (hover/focus) or while paused, so the loop stays clean by default. */
+  .kit__media-toggle {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.25s var(--ease-hextech);
+  }
+  .kit__media-glyph {
+    width: 3.2rem;
+    height: 3.2rem;
+    padding: 0.85rem;
+    fill: var(--color-hex-bright);
+    border: 1px solid color-mix(in srgb, var(--color-hex) 55%, transparent);
+    border-radius: 50%;
+    background: rgba(9, 16, 22, 0.72);
+    box-shadow: 0 0 32px -6px color-mix(in srgb, var(--color-hex) 70%, transparent);
+    opacity: 0;
+    scale: 0.9;
+    transition: opacity 0.25s var(--ease-hextech), scale 0.25s var(--ease-hextech);
+  }
+  .kit__media-toggle:hover .kit__media-glyph,
+  .kit__media-toggle:focus-visible .kit__media-glyph,
+  .kit__media.is-paused .kit__media-glyph {
+    opacity: 1;
+    scale: 1;
+  }
+  .kit__media-toggle:focus-visible { outline: none; }
+  .kit__media.is-paused .kit__media-toggle { background: rgba(1, 10, 19, 0.35); }
+  /* Sound toggle — pinned above the full-surface pause button so it stays
+     clickable; muted by default, so it reads as a quiet opt-in until sound is on. */
+  .kit__media-sound {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.7rem;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.55rem;
+    border: 1px solid color-mix(in srgb, var(--color-hex) 45%, transparent);
+    border-radius: 50%;
+    background: rgba(9, 16, 22, 0.72);
+    color: var(--color-hex-bright);
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.25s var(--ease-hextech), border-color 0.25s var(--ease-hextech),
+      box-shadow 0.25s var(--ease-hextech);
+  }
+  .kit__media-sound:hover,
+  .kit__media-sound:focus-visible {
+    opacity: 1;
+    outline: none;
+    border-color: color-mix(in srgb, var(--color-hex) 85%, transparent);
+  }
+  .kit__media-sound.is-active {
+    opacity: 1;
+    border-color: color-mix(in srgb, var(--color-hex) 85%, transparent);
+    box-shadow: 0 0 22px -6px color-mix(in srgb, var(--color-hex) 70%, transparent);
+  }
+  .kit__media-sound svg { width: 100%; height: 100%; fill: currentColor; }
+  /* Loop progress — pinned under the frame, driven by scaleX (no layout work). */
+  .kit__progress {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 3px;
+    background: color-mix(in srgb, var(--color-gold) 18%, transparent);
+  }
+  .kit__progress-fill {
+    display: block;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    background: linear-gradient(90deg, var(--color-hex), var(--color-hex-bright));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--color-hex) 55%, transparent);
+    will-change: transform;
+  }
+  /* No-video fallback: the spell icon held in a quiet arcane glow. */
+  .kit__media--idle {
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(24rem 14rem at 50% 60%,
+        color-mix(in srgb, var(--color-hex) 14%, transparent), transparent 70%),
+      var(--color-hextech-black);
+  }
+  .kit__media--idle img {
+    position: static;
+    width: 7rem;
+    height: 7rem;
+    object-fit: cover;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 50%, transparent);
+    box-shadow: 0 0 44px -8px color-mix(in srgb, var(--color-hex) 55%, transparent);
+  }
+  .kit__stat {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+  .kit__stat b {
+    font-weight: 600;
+    color: var(--color-hex-bright);
+    font-variant-numeric: tabular-nums;
+  }
+}

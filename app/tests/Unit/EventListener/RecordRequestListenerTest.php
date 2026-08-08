@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\EventListener;
 
 use App\EventListener\RecordRequestListener;
-use App\Service\Analytics\EventStore;
+use App\Service\Analytics\Storage\EventStore;
 use App\Service\Analytics\GeoLocator;
 use App\Service\Analytics\RefererClassifier;
 use App\Service\Analytics\RequestEventFactory;

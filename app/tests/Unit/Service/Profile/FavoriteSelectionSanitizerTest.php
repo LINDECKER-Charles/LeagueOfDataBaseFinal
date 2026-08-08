@@ -24,13 +24,23 @@ final class FavoriteSelectionSanitizerTest extends TestCase
     public function testValidIdsPassThroughTrimmed(): void
     {
         $result = $this->sanitizer->sanitize(
-            ['champion' => '  Aatrox ', 'item' => '3006', 'rune' => '8112', 'summoner' => 'SummonerFlash'],
+            [
+                'champion' => '  Aatrox ',
+                'item' => '3006',
+                'rune' => '8112',
+                'summoner' => 'SummonerFlash',
+            ],
             [],
             static fn (): bool => true,
         );
 
         self::assertSame(
-            ['champion' => 'Aatrox', 'item' => '3006', 'rune' => '8112', 'summoner' => 'SummonerFlash'],
+            [
+                'champion' => 'Aatrox',
+                'item' => '3006',
+                'rune' => '8112',
+                'summoner' => 'SummonerFlash',
+            ],
             $result['values'],
         );
         self::assertSame([], $result['invalid']);
@@ -38,7 +48,11 @@ final class FavoriteSelectionSanitizerTest extends TestCase
 
     public function testEmptyOrMissingClearsWithoutWarning(): void
     {
-        $result = $this->sanitizer->sanitize(['champion' => '', 'item' => null], [], static fn (): bool => true);
+        $result = $this->sanitizer->sanitize(
+            ['champion' => '', 'item' => null],
+            [],
+            static fn (): bool => true,
+        );
 
         self::assertSame(
             ['champion' => null, 'item' => null, 'rune' => null, 'summoner' => null],
@@ -75,7 +89,10 @@ final class FavoriteSelectionSanitizerTest extends TestCase
 
         self::assertNull($result['values']['item']);
         self::assertSame([FavoriteSlot::Item], $result['invalid']);
-        self::assertFalse($existenceProbed, 'length guard runs before the (potentially costly) existence check');
+        self::assertFalse(
+            $existenceProbed,
+            'length guard runs before the (potentially costly) existence check',
+        );
     }
 
     public function testUnchangedFavoriteAbsentFromPatchIsPreservedNotWiped(): void
@@ -89,7 +106,11 @@ final class FavoriteSelectionSanitizerTest extends TestCase
         );
 
         self::assertSame('Smolder', $result['values']['champion']);
-        self::assertSame([], $result['invalid'], 'an unchanged off-patch favorite is preserved silently');
+        self::assertSame(
+            [],
+            $result['invalid'],
+            'an unchanged off-patch favorite is preserved silently',
+        );
     }
 
     public function testAbsentIdThatDiffersFromStoredIsStillDropped(): void

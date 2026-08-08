@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\ApiKey;
-use App\Entity\ApiPlan;
+use App\Entity\Enum\ApiPlan;
 use App\Entity\ApiUsage;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -29,12 +29,18 @@ final class ApiKeyRepository extends ServiceEntityRepository
 
     public function findOneActiveByStripeCustomer(string $customerId): ?ApiKey
     {
-        return $this->findOneBy(['stripeCustomerId' => $customerId, 'isActive' => true], ['id' => 'DESC']);
+        return $this->findOneBy(
+            ['stripeCustomerId' => $customerId, 'isActive' => true],
+            ['id' => 'DESC'],
+        );
     }
 
     public function findOneActiveByStripeSubscription(string $subscriptionId): ?ApiKey
     {
-        return $this->findOneBy(['stripeSubscriptionId' => $subscriptionId, 'isActive' => true], ['id' => 'DESC']);
+        return $this->findOneBy(
+            ['stripeSubscriptionId' => $subscriptionId, 'isActive' => true],
+            ['id' => 'DESC'],
+        );
     }
 
     /**
@@ -104,7 +110,12 @@ final class ApiKeyRepository extends ServiceEntityRepository
     public function page(int $page, int $perPage): array
     {
         return [
-            'keys' => $this->findBy([], ['createdAt' => 'DESC', 'id' => 'DESC'], $perPage, max(0, ($page - 1) * $perPage)),
+            'keys' => $this->findBy(
+                [],
+                ['createdAt' => 'DESC', 'id' => 'DESC'],
+                $perPage,
+                max(0, ($page - 1) * $perPage),
+            ),
             'total' => $this->count([]),
         ];
     }
@@ -197,7 +208,11 @@ final class ApiKeyRepository extends ServiceEntityRepository
     public function topConsumersSince(\DateTimeImmutable $from, int $limit): array
     {
         $rows = $this->getEntityManager()->createQueryBuilder()
-            ->select('k.keyPrefix AS keyPrefix', 'usr.username AS username', 'SUM(u.requests) AS requests')
+            ->select(
+                'k.keyPrefix AS keyPrefix',
+                'usr.username AS username',
+                'SUM(u.requests) AS requests',
+            )
             ->from(ApiUsage::class, 'u')
             ->join('u.apiKey', 'k')
             ->join('k.user', 'usr')

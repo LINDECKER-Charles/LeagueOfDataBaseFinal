@@ -70,7 +70,7 @@ services:
             $preferredHost: '%seo.canonical_host%'
             $mirrorHosts: '%seo.mirror_hosts%'
 
-    App\Service\Seo\SiteGraphJsonLd:
+    App\Service\Seo\JsonLd\SiteGraphJsonLd:
         arguments:
             $siteName: '%legal.site_name%'
             $sameAs: '%seo.same_as%'
@@ -78,6 +78,17 @@ services:
     App\Service\Seo\LlmsTxtBuilder:
         arguments:
             $siteName: '%legal.site_name%'
+
+    # Locale-less slugger on purpose: the container's default `slugger` is bound
+    # to the app locale, which expands symbols per language ("&" → "-and-" in en,
+    # "-et-" in fr). A username must not depend on the browsing language of the
+    # visitor who happened to sign up, so identity derivation stays deterministic.
+    App\Security\UsernameAllocator:
+        arguments:
+            $slugger: '@App\Security\username_slugger'
+
+    App\Security\username_slugger:
+        class: Symfony\Component\String\Slugger\AsciiSlugger
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

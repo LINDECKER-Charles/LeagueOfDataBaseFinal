@@ -55,9 +55,18 @@ func (m *Minio) ReadDaily(ctx context.Context, date string) ([]byte, error) {
 	return m.readObject(ctx, dailyAggregatePrefix+date+".json")
 }
 
-// ReadDataset returns the stored Data Dragon JSON for (version, lang, type).
-func (m *Minio) ReadDataset(ctx context.Context, version, lang, ddragonType string) ([]byte, error) {
-	return m.readObject(ctx, dataPrefix+version+"/"+lang+"/"+ddragonType+".json")
+// DatasetRef addresses one stored Data Dragon dataset. The three segments are
+// the object path itself (data/{version}/{lang}/{type}.json), so they only ever
+// make sense together.
+type DatasetRef struct {
+	Version string
+	Lang    string
+	Type    string
+}
+
+// ReadDataset returns the stored Data Dragon JSON for a dataset address.
+func (m *Minio) ReadDataset(ctx context.Context, ref DatasetRef) ([]byte, error) {
+	return m.readObject(ctx, dataPrefix+ref.Version+"/"+ref.Lang+"/"+ref.Type+".json")
 }
 
 func (m *Minio) readObject(ctx context.Context, key string) ([]byte, error) {

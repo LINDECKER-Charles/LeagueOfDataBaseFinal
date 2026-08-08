@@ -1,83 +1,25 @@
 {% extends 'base.html.twig' %}
 
-{# ---------------------------------------------------------------------------
-   Recipe node — a single linked item card (component or evolution). The whole
-   card is an <a>, so it is reachable and activable at the keyboard.
---------------------------------------------------------------------------- #}
-{% macro recipe_node(node, version, lang) %}
-  <a href="{{ resource_path('app_item', { name: node.id }, version, lang) }}"
-     title="{{ node.name ?: node.id }}"
-     class="group/node hextech-frame hextech-frame-hover flex w-28 flex-col items-center gap-2 p-3 text-center transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 sm:w-32">
-    <span class="relative h-12 w-12 shrink-0 overflow-hidden border border-gold-deep/50 bg-void">
-      {% if node.image %}
-        <picture>
-          {% if node.image ends with '.png' %}<source srcset="/{{ node.image|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
-          <img src="/{{ node.image }}" alt="{{ node.name ?: node.id }}" width="48" height="48" loading="lazy" decoding="async"
-               class="absolute inset-0 h-full w-full object-contain transition-transform duration-500 group-hover/node:scale-110">
-        </picture>
-      {% else %}
-        <span class="grid h-full w-full place-items-center font-mono text-[10px] text-gold/50">{{ node.id }}</span>
-      {% endif %}
-    </span>
-    <span class="min-w-0 font-beaufort text-xs leading-tight tracking-wide text-text transition-colors group-hover/node:text-gold-bright">{{ node.name ?: node.id }}</span>
-    {% if node.gold is not null %}
-      <span class="font-mono text-[11px] text-gold">{{ node.gold }}</span>
-    {% endif %}
-  </a>
-{% endmacro %}
+{% import 'item/_recipe_macros.html.twig' as recipe %}
 
-{# ---------------------------------------------------------------------------
-   Recipe tree node — recursive. Renders one item card, then its components as a
-   nested list; the CSS (.recipe-tree) draws the connector lines. The root is the
-   current item (gold-lit, not a link); every descendant links to its own page.
---------------------------------------------------------------------------- #}
-{% macro tree_node(node, version, lang, is_root) %}
-  {% import _self as recipe %}
-  <li>
-    <{{ is_root ? 'div' : 'a' }}
-       {% if not is_root %}href="{{ resource_path('app_item', { name: node.id }, version, lang) }}"{% endif %}
-       title="{{ node.name ?: node.id }}"
-       class="recipe-node group/node {{ is_root ? 'recipe-node--root' : '' }} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40">
-      <span class="recipe-node__icon">
-        {% if node.image %}
-          <picture>
-            {% if node.image ends with '.png' %}<source srcset="/{{ node.image|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
-            <img src="/{{ node.image }}" alt="{{ node.name ?: node.id }}" width="44" height="44" loading="lazy" decoding="async"
-                 class="h-full w-full object-contain transition-transform duration-500 group-hover/node:scale-110">
-          </picture>
-        {% else %}
-          <span class="grid h-full w-full place-items-center font-mono text-[10px] text-gold/50">{{ node.id }}</span>
-        {% endif %}
-      </span>
-      <span class="recipe-node__name {{ is_root ? 'text-gold-bright' : 'group-hover/node:text-gold-bright' }}">{{ node.name ?: node.id }}</span>
-      {% if node.gold is not null %}
-        <span class="recipe-node__gold">
-          {{ node.gold }}
-          {% if node.children is not empty and node.combine %}<em class="recipe-node__combine">+{{ node.combine }}</em>{% endif %}
-        </span>
-      {% endif %}
-    </{{ is_root ? 'div' : 'a' }}>
-    {% if node.children is not empty %}
-      <ul>
-        {% for c in node.children %}{{ recipe.tree_node(c, version, lang, false) }}{% endfor %}
-      </ul>
-    {% endif %}
-  </li>
-{% endmacro %}
+{# Single source for the rendered (version, lang): PageContextResolver, the same
+   resolution the controller used — never re-derived from the session here. #}
+{% set selection = page_selection() %}
 
-{% import _self as recipe %}
-
-{% block title %}{{ seo_title('item.detail.title'|trans({'%name%': item.name ?? 'Item'}, 'seo')) }}{% endblock %}
+{% block title %}{{ seo_title(
+  'item.detail.title'|trans({'%name%': item.name ?? 'Item'}, 'seo')
+) }}{% endblock %}
 {% block meta_description %}{{ 'item.detail.description'|trans({
   '%name%': item.name ?? 'Item',
-  '%version%': version|default(client.session.version ?? (client.versions|first))
+  '%version%': selection.version
 }, 'seo') }}{% endblock %}
 {% block img %}/preview/objects.png{% endblock %}
 
 {% block structured_data %}
   {{ seo_jsonld(seo_breadcrumbs([
     { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
-    { name: 'header.navigation.item'|trans, url: seo_absolute(resource_path('app_items', {}, version|default(''), '')) },
+    { name: 'header.navigation.item'|trans,
+      url: seo_absolute(resource_path('app_items', {}, version|default(''), '')) },
     { name: item.name ?? '', url: seo_canonical() }
   ])) }}
   {# Gold economy + categories come straight from the item payload. #}
@@ -89,12 +31,14 @@
 {% endblock %}
 
 {% block body %}
-{% set selectedVersion = version|default(client.session.version ?? (client.versions|default([])|first)) %}
-{% set selectedLocale  = lang|default(client.session.locale ?? client.currentLocale ?? 'en_US') %}
-{% set mapNames = { '11': "Summoner's Rift", '12': 'ARAM', '21': 'Nexus Blitz', '30': 'Arena', '35': 'Brawl' } %}
+{% set mapNames = {
+  '11': "Summoner's Rift", '12': 'ARAM', '21': 'Nexus Blitz', '30': 'Arena', '35': 'Brawl'
+} %}
 
-{% set hasTree = recipeTree is defined and recipeTree.children is defined and recipeTree.children is not empty %}
-{% set availableMaps = item.maps is defined and item.maps is iterable ? item.maps|filter(v => v)|keys : [] %}
+{% set hasTree = recipeTree is defined
+    and recipeTree.children is defined and recipeTree.children is not empty %}
+{% set availableMaps = item.maps is defined and item.maps is iterable
+    ? item.maps|filter(v => v)|keys : [] %}
 {% set hasTier = item.depth is defined and item.depth > 1 %}
 {% set hasRestriction = (item.requiredChampion is defined and item.requiredChampion)
     or (item.requiredAlly is defined and item.requiredAlly) %}
@@ -111,11 +55,14 @@
       {% endif %}
 
       <div class="relative flex flex-col gap-8 sm:flex-row sm:items-center">
-        <div class="hextech-frame hx-corners grid h-28 w-28 shrink-0 place-items-center p-3 sm:h-32 sm:w-32">
+        <div class="hextech-frame hx-corners grid h-28 w-28 shrink-0 place-items-center p-3
+                    sm:h-32 sm:w-32">
           {% if image %}
-            <img src="/{{ image }}" alt="{{ item.name ?? 'Item' }}" class="h-full w-full object-contain">
+            <img src="/{{ image }}" alt="{{ item.name ?? 'Item' }}"
+                 class="h-full w-full object-contain">
           {% else %}
-            <span class="font-beaufort text-2xl text-gold/70">{{ (item.name ?? '??')|slice(0, 2)|upper }}</span>
+            <span class="font-beaufort text-2xl
+                         text-gold/70">{{ (item.name ?? '??')|slice(0, 2)|upper }}</span>
           {% endif %}
         </div>
 
@@ -123,7 +70,8 @@
           <p class="eyebrow mb-2.5">
             {{ 'item.list.title'|trans }}
             <span class="mx-2 text-gold-deep" aria-hidden="true">◆</span>
-            <span class="normal-case tracking-normal font-mono text-[11px] text-text-muted">{{ selectedVersion }} · {{ selectedLocale }}</span>
+            <span class="normal-case tracking-normal font-mono text-[11px]
+                         text-text-muted">{{ selection.version }} · {{ selection.lang }}</span>
           </p>
           <h1 class="hero-name text-gold-grad">{{ item.name ?? 'Item' }}</h1>
           {% if item.plaintext is defined and item.plaintext %}
@@ -134,15 +82,21 @@
         {# The defining metric of an item: its price in gold. #}
         {% if item.gold.total is defined %}
           <div class="shrink-0 sm:pl-4 sm:text-right">
-            <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim">{{ 'item.detail.price_total'|trans }}</p>
+            <p class="font-mono text-[10px] uppercase tracking-[0.2em]
+                      text-text-dim">{{ 'item.detail.price_total'|trans }}</p>
             <p class="mt-1 flex items-baseline gap-2 sm:justify-end">
-              <span class="font-beaufort text-5xl leading-none text-gold-grad text-gold">{{ item.gold.total }}</span>
-              <svg class="h-5 w-5 shrink-0 text-gold-rich" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                <circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v7M7.4 8.4c0-1 1.2-1.7 2.6-1.7s2.6.7 2.6 1.7c0 2.4-5.2 1-5.2 3.3 0 1 1.2 1.7 2.6 1.7s2.6-.7 2.6-1.7"/>
+              <span class="font-beaufort text-5xl leading-none text-gold-grad
+                           text-gold">{{ item.gold.total }}</span>
+              <svg class="h-5 w-5 shrink-0 text-gold-rich" viewBox="0 0 20 20" fill="none"
+                   stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <circle cx="10" cy="10" r="7.5"/>
+                <path d="M10 6.5v7M7.4 8.4c0-1 1.2-1.7 2.6-1.7s2.6.7 2.6 1.7c0 2.4-5.2
+                         1-5.2 3.3 0 1 1.2 1.7 2.6 1.7s2.6-.7 2.6-1.7"/>
               </svg>
             </p>
             {% if item.gold.purchasable is defined and item.gold.purchasable == false %}
-              <p class="mt-1.5 font-mono text-[10px] uppercase tracking-wider text-text-dim">{{ 'item.detail.not_purchasable'|trans }}</p>
+              <p class="mt-1.5 font-mono text-[10px] uppercase tracking-wider
+                        text-text-dim">{{ 'item.detail.not_purchasable'|trans }}</p>
             {% endif %}
           </div>
         {% endif %}
@@ -152,22 +106,26 @@
     {# ================= Signature : the crafting tree ======================= #}
     {% if hasTree or (related is defined and related is not empty) %}
       <section class="mb-16" data-reveal>
-        {% include 'components/codex_header.html.twig' with { title: 'item.detail.recipe'|trans } %}
+        {% include 'components/codex/codex_header.html.twig'
+          with { title: 'item.detail.recipe'|trans } %}
 
         {% if hasTree %}
           <p class="eyebrow mb-5 text-center">{{ 'item.detail.builds_from'|trans }}</p>
           <div class="overflow-x-auto pb-2">
             <ul class="recipe-tree">
-              {{ recipe.tree_node(recipeTree, selectedVersion, selectedLocale, true) }}
+              {{ recipe.tree_node(recipeTree, selection.version, selection.lang, true) }}
             </ul>
           </div>
         {% endif %}
 
         {% if related is defined and related is not empty %}
-          <div class="flex flex-col items-center gap-4 {{ hasTree ? 'mt-10 border-t border-gold-deep/30 pt-8' : '' }}">
+          <div class="flex flex-col items-center gap-4
+            {{ hasTree ? 'mt-10 border-t border-gold-deep/30 pt-8' : '' }}">
             <p class="eyebrow">{{ 'item.detail.evolutions'|trans }}</p>
             <div class="flex flex-wrap items-start justify-center gap-3">
-              {% for child in related %}{{ recipe.recipe_node(child, selectedVersion, selectedLocale) }}{% endfor %}
+              {% for child in related %}{{
+                recipe.recipe_node(child, selection.version, selection.lang)
+              }}{% endfor %}
             </div>
           </div>
         {% endif %}
@@ -179,7 +137,8 @@
       <div>
         {% if item.description is defined and item.description %}
           <section data-reveal>
-            {% include 'components/codex_header.html.twig' with { title: 'item.detail.description'|trans } %}
+            {% include 'components/codex/codex_header.html.twig'
+              with { title: 'item.detail.description'|trans } %}
             <div class="hextech-frame hx-corners p-7 sm:p-8">
               {# DDragon's own localized markup (<stats>/<passive>/<active>…),
                  styled by .ddragon-rich — the canonical, translated stat sheet. #}
@@ -189,89 +148,20 @@
         {% endif %}
       </div>
 
-      <aside class="mt-12 space-y-6 lg:mt-0 lg:sticky lg:top-6" data-reveal>
-        {# Combat statistics — Data Dragon's structured `stats` block, iconified. #}
-        {% set itemStats = item_stats(item.stats|default(null)) %}
-        {% if itemStats is not empty %}
-          <div class="hextech-frame p-5">
-            <h2 class="mb-4 font-beaufort text-xs uppercase tracking-[0.22em] text-gold">{{ 'item.detail.stats'|trans }}</h2>
-            <div class="stat-board">
-              {% for row in itemStats %}
-                <div class="stat-board__row">
-                  <span class="stat-board__label">
-                    {%- set statIcon = stat_icon_url(row.slug) -%}
-                    {%- if statIcon %}<img src="{{ statIcon }}" alt="" width="18" height="18" loading="lazy" decoding="async" class="stat-icon">{% endif -%}
-                    {{ row.label|trans }}
-                  </span>
-                  <span class="stat-board__value">{{ row.value }}</span>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-
-        {# Gold ledger #}
-        {% if item.gold is defined %}
-          <div class="hextech-frame p-5">
-            <h2 class="mb-4 font-beaufort text-xs uppercase tracking-[0.22em] text-gold">{{ 'item.detail.gold_ledger'|trans }}</h2>
-            <div class="grid grid-cols-3 gap-2">
-              <div class="hx-plate">
-                <span class="hx-plate__label">{{ 'item.detail.price_total'|trans }}</span>
-                <span class="hx-plate__value text-gold">{{ item.gold.total ?? '–' }}</span>
-              </div>
-              <div class="hx-plate">
-                <span class="hx-plate__label">{{ 'item.detail.price_base'|trans }}</span>
-                <span class="hx-plate__value">{{ item.gold.base ?? '–' }}</span>
-              </div>
-              <div class="hx-plate">
-                <span class="hx-plate__label">{{ 'item.detail.price_sell'|trans }}</span>
-                <span class="hx-plate__value">{{ item.gold.sell ?? '–' }}</span>
-              </div>
-            </div>
-          </div>
-        {% endif %}
-
-        {# Availability #}
-        {% if availableMaps is not empty or hasTier or hasRestriction %}
-          <div class="hextech-frame p-5">
-            <h2 class="mb-4 font-beaufort text-xs uppercase tracking-[0.22em] text-gold">{{ 'item.detail.availability'|trans }}</h2>
-            <div class="flex flex-wrap gap-2">
-              {% if hasTier %}
-                <span class="hx-chip border-gold/50 text-gold">{{ 'item.detail.tier'|trans({ '%depth%': item.depth }) }}</span>
-              {% endif %}
-              {% if item.requiredChampion is defined and item.requiredChampion %}
-                <span class="hx-chip border-gold/50 text-gold">{{ item.requiredChampion }}</span>
-              {% endif %}
-              {% if item.requiredAlly is defined and item.requiredAlly %}
-                <span class="hx-chip border-gold/50 text-gold">{{ item.requiredAlly }}</span>
-              {% endif %}
-              {% for id in availableMaps %}
-                <span class="hx-chip">{{ mapNames[id] ?? ('Map ' ~ id) }}</span>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-
-        {# Categories #}
-        {% if item.tags is defined and item.tags is iterable and item.tags is not empty %}
-          <div class="hextech-frame p-5">
-            <h2 class="mb-4 font-beaufort text-xs uppercase tracking-[0.22em] text-gold">{{ 'item.detail.categories'|trans }}</h2>
-            <div class="flex flex-wrap gap-2">
-              {% for tag in item.tags %}<span class="hx-chip">{{ tag }}</span>{% endfor %}
-            </div>
-          </div>
-        {% endif %}
-      </aside>
+      {% include 'item/_aside.html.twig' with {
+        item: item, availableMaps: availableMaps, hasTier: hasTier,
+        hasRestriction: hasRestriction, mapNames: mapNames
+      } only %}
     </div>
 
-    {% include 'components/detail_pager.html.twig' with {
+    {% include 'components/codex/detail_pager.html.twig' with {
       nav: nav|default({ prev: null, next: null }),
       route: 'app_item',
-      list_href: resource_path('app_items', {}, selectedVersion, selectedLocale),
-      version: selectedVersion,
-      lang: selectedLocale
+      list_href: resource_path('app_items', {}, selection.version, selection.lang),
+      version: selection.version,
+      lang: selection.lang
     } %}
-    {% include 'components/detail_actions.html.twig' %}
+    {% include 'components/codex/detail_actions.html.twig' %}
   </div>
 </main>
 {% endblock %}

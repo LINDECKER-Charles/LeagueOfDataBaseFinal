@@ -49,7 +49,8 @@ function failure(error, retry, shell, skeleton) {
     const alert = document.createElement('div')
     alert.className = 'alert'
     const text = document.createElement('span')
-    text.textContent = `Panneau indisponible (${error.name === 'TimeoutError' ? 'délai dépassé' : error.message}). `
+    text.textContent = 'Panneau indisponible ('
+        + `${error.name === 'TimeoutError' ? 'délai dépassé' : error.message}). `
     const button = document.createElement('button')
     button.type = 'button'
     button.className = 'btn ghost small'

@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 namespace App\Service\Stripe;
 
-use App\Entity\ApiPlan;
+use App\Entity\Enum\ApiPlan;
+use App\Service\Donation\CompletedDonation;
 use App\Service\Donation\DonationLedger;
 use App\Service\PublicApi\ApiCheckoutParams;
 use App\Service\PublicApi\ApiEntitlements;
+use App\Service\PublicApi\StripeSubscriptionRef;
 use Psr\Log\LoggerInterface;
 use Stripe\Event;
 use Stripe\StripeObject;
@@ -63,8 +65,10 @@ final readonly class CheckoutSessionCompletedHandler implements StripeEventHandl
         $this->entitlements->applyPlan(
             $this->userId($session, $metadata),
             $plan,
-            \is_string($session->customer) ? $session->customer : null,
-            \is_string($session->subscription) ? $session->subscription : null,
+            new StripeSubscriptionRef(
+                \is_string($session->customer) ? $session->customer : null,
+                \is_string($session->subscription) ? $session->subscription : null,
+            ),
         );
     }
 
@@ -79,11 +83,11 @@ final readonly class CheckoutSessionCompletedHandler implements StripeEventHandl
     {
         $reference = $session->client_reference_id ?? null;
 
-        $this->donations->record(
+        $this->donations->record(new CompletedDonation(
             (string) $session->id,
             (int) ($session->amount_total ?? 0),
             (string) ($session->currency ?? ''),
             \is_string($reference) && ctype_digit($reference) ? (int) $reference : null,
-        );
+        ));
     }
 }

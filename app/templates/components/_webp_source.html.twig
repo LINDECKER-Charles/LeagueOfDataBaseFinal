@@ -1,0 +1,12 @@
+{# Modern <source> of a <picture> over an ingested blob.
+
+   MinIO stores images content-addressed with a sibling WebP next to the PNG, so
+   the modern candidate is DERIVED from the original path, never carried in the
+   payload. Deriving it for anything but a .png would point the browser at a file
+   that was never written (silent 404 inside the <picture>) — hence the guard,
+   which lives here once instead of in every call site.
+
+   Param: src — browser-ready URL of the original, leading slash included. #}
+{%- if src ends with '.png' -%}
+    <source srcset="{{ src|replace({'.png': '.webp'}) }}" type="image/webp">
+{%- endif -%}

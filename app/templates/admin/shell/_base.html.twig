@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0a1428">
+    <title>{% block title %}Admin · LODB{% endblock %}</title>
+    {# Self-contained: committed static stylesheets (nginx-served, NOT the Vite
+       build) so the ops panel keeps its styling even if the front build breaks.
+       One <link> per sheet rather than @import chains: they download in
+       parallel. The listed order IS the cascade order — keep it. #}
+    <link rel="preload" href="/fonts/BeaufortforLOL-Bold.woff2" as="font" type="font/woff2"
+          crossorigin>
+    <link rel="preload" href="/fonts/Spiegel_TT_Regular.woff2" as="font" type="font/woff2"
+          crossorigin>
+    {% for sheet in ['foundation', 'chrome', 'data', 'controls', 'charts', 'panels',
+        'responsive'] %}
+        <link rel="stylesheet" href="/admin/css/{{ sheet }}.css">
+    {% endfor %}
+    {# Static ES module (same rationale as the stylesheet): defers the heavy
+       panels and makes the time-series charts zoomable. #}
+    <script type="module" src="/admin/js/admin.js"></script>
+    {% if sync is defined and not sync %}
+        {# Without JavaScript the deferred panels would stay skeletons forever:
+           bounce to the synchronous rendering of the very same fragments. #}
+        <noscript>
+            <meta http-equiv="refresh" content="0; url={{ app.request.pathinfo }}?{{
+                app.request.query.all|merge({ sync: 1 })|url_encode
+            }}">
+        </noscript>
+    {% endif %}
+</head>
+<body>
+    <header class="admin-bar">
+        <span class="brand"><b>LODB</b><span>Admin</span></span>
+        {% if app.user %}
+            {% set route = app.request.attributes.get('_route') %}
+            <nav aria-label="Navigation admin">
+                <span class="nav-label">Analytics</span>
+                <a href="{{ path('admin_dashboard') }}"
+                   class="{{ route == 'admin_dashboard' ? 'is-active' }}">Vue d'ensemble</a>
+                <a href="{{ path('admin_traffic') }}"
+                   class="{{ route == 'admin_traffic' ? 'is-active' }}">Trafic</a>
+                <a href="{{ path('admin_audience') }}"
+                   class="{{ route == 'admin_audience' ? 'is-active' }}">Audience</a>
+                <a href="{{ path('admin_storage') }}"
+                   class="{{ route == 'admin_storage' ? 'is-active' }}">Stockage</a>
+                <span class="nav-sep" aria-hidden="true"></span>
+                <span class="nav-label">Gestion</span>
+                <a href="{{ path('admin_users') }}"
+                   class="{{ route == 'admin_users' ? 'is-active' }}">Utilisateurs</a>
+                <a href="{{ path('admin_builds') }}"
+                   class="{{ route == 'admin_builds' ? 'is-active' }}">Builds</a>
+                <a href="{{ path('admin_donations') }}"
+                   class="{{ route == 'admin_donations' ? 'is-active' }}">Dons</a>
+                <a href="{{ path('admin_contacts') }}"
+                   class="{{ route == 'admin_contacts' ? 'is-active' }}">Messages</a>
+                <a href="{{ path('admin_api_clients') }}"
+                   class="{{ route == 'admin_api_clients' ? 'is-active' }}">Clients API</a>
+                <a href="{{ path('admin_monitoring') }}"
+                   class="{{ route == 'admin_monitoring' ? 'is-active' }}">Surveillance</a>
+                <a href="{{ path('admin_logs') }}"
+                   class="{{ route in ['admin_logs', 'admin_user_activity']
+                       ? 'is-active' }}">Journal</a>
+            </nav>
+        {% endif %}
+        <span class="spacer"></span>
+        {% if app.user %}
+            <a class="logout" href="{{ path('admin_logout') }}">Déconnexion</a>
+        {% endif %}
+    </header>
+
+    <main class="admin-main">
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="{{ label == 'success' ? 'notice' : 'alert' }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+        {% block admin_body %}{% endblock %}
+    </main>
+</body>
+</html>

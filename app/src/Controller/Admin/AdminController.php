@@ -44,8 +44,11 @@ final class AdminController extends AbstractController
      * panel, so the page paints before the slowest one resolves.
      */
     #[Route('', name: 'admin_dashboard', methods: ['GET'])]
-    public function dashboard(Request $request, AnalyticsReportService $analytics, AdminPanelCatalog $panels): Response
-    {
+    public function dashboard(
+        Request $request,
+        AnalyticsReportService $analytics,
+        AdminPanelCatalog $panels
+    ): Response {
         $context = PanelContext::fromRequest($request);
 
         return $this->render('admin/overview.html.twig', [

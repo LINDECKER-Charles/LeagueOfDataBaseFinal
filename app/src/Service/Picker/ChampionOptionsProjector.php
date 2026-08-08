@@ -16,8 +16,9 @@ final class ChampionOptionsProjector
     public const TYPE = 'champion';
 
     /**
-     * @param array<string, array<string, mixed>> $data   raw champion.json "data" map (key = champion id)
-     * @param list<?string>                       $images positional ChampionManager::getImages() result
+     * @param array<string, array<string, mixed>> $data raw champion.json "data" map
+     *        (key = champion id)
+     * @param list<?string> $images positional ChampionManager::getImages() result
      * @return list<array{id: string, key: string, name: string, image: ?string}>
      */
     public function project(array $data, array $images): array
@@ -26,7 +27,7 @@ final class ChampionOptionsProjector
 
         $options = [];
         foreach ($data as $storageKey => $entry) {
-            $id = (string) ($entry['id'] ?? $storageKey);
+            $id = $this->entryId($storageKey, $entry);
             $options[] = [
                 'id'    => $id,
                 'key'   => (string) ($entry['key'] ?? ''),
@@ -46,7 +47,7 @@ final class ChampionOptionsProjector
     public function resolve(array $data, array $images, string $id): ?array
     {
         foreach ($data as $storageKey => $entry) {
-            if ((string) ($entry['id'] ?? $storageKey) !== $id) {
+            if ($this->entryId($storageKey, $entry) !== $id) {
                 continue;
             }
 
@@ -59,6 +60,17 @@ final class ChampionOptionsProjector
         }
 
         return null;
+    }
+
+    /**
+     * Identity of a dataset entry: its own id, falling back to the storage key
+     * the champion is filed under.
+     *
+     * @param array<string, mixed> $entry
+     */
+    private function entryId(int|string $storageKey, array $entry): string
+    {
+        return (string) ($entry['id'] ?? $storageKey);
     }
 
     /**
@@ -75,7 +87,7 @@ final class ChampionOptionsProjector
         $cursor = 0;
         foreach ($data as $storageKey => $entry) {
             $hasImage = ($entry['name'] ?? null) && ($entry['image']['full'] ?? null);
-            $byId[(string) ($entry['id'] ?? $storageKey)] = $hasImage
+            $byId[$this->entryId($storageKey, $entry)] = $hasImage
                 ? PickerFormat::imagePath($images[$cursor++] ?? null)
                 : null;
         }

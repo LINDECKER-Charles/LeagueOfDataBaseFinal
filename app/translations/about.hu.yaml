@@ -1,5 +1,5 @@
 # Szerkesztői tartalom az /about, /about/data és /faq oldalakhoz.
-# A faq.* azonosítók az App\Controller\AboutController::FAQ_ENTRIES-ben szerepelnek.
+# A faq.* azonosítók az App\Controller\Editorial\AboutController::FAQ_ENTRIES-ben szerepelnek.
 eyebrow: "Névjegy"
 
 index:

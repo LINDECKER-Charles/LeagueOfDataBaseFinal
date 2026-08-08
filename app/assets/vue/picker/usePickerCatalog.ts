@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
-import { normalizeSearchText, type PickerEntry } from './filterOptions'
+import { normalizeSearchText } from '../search/normalizeSearchText'
+import type { PickerEntry } from './filterOptions'
 
 export type SlotType = 'champion' | 'item' | 'rune' | 'summoner'
 

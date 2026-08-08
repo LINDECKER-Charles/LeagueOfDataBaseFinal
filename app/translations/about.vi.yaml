@@ -1,5 +1,5 @@
 # Nội dung biên tập cho các trang /about, /about/data và /faq.
-# Các id faq.* được khai báo trong App\Controller\AboutController::FAQ_ENTRIES.
+# Các id faq.* được khai báo trong App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "Giới thiệu"
 
 index:

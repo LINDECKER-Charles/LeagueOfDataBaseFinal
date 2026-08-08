@@ -5,11 +5,13 @@ namespace App\Service\Analytics;
 
 /**
  * One captured page view. Immutable value object persisted as a single NDJSON
- * line by {@see EventStore}; the aggregators reconstruct it from that array.
+ * line by {@see Storage\EventStore}.
  *
- * The field set is the contract shared by the writer (terminate listener), the
- * NDJSON line format, and every reader — keep {@see toArray()}/{@see fromArray()}
- * symmetrical. Timestamps are always UTC ISO-8601.
+ * The contract is deliberately write-only: {@see toArray()} defines the line
+ * format, and readers ({@see AnalyticsAggregator}) fold the decoded rows as
+ * plain arrays rather than rehydrating a 21-field object per event — a fold that
+ * touches a dozen keys gains nothing from hydration and pays for it on every
+ * rolled-up day. Timestamps are always UTC ISO-8601.
  */
 final readonly class RequestEvent
 {
@@ -63,38 +65,5 @@ final readonly class RequestEvent
             'country' => $this->country,
             'countryName' => $this->countryName,
         ];
-    }
-
-    /** @param array<string, mixed> $row */
-    public static function fromArray(array $row): self
-    {
-        return new self(
-            at: new \DateTimeImmutable((string) ($row['at'] ?? 'now'), new \DateTimeZone('UTC')),
-            route: (string) ($row['route'] ?? ''),
-            path: (string) ($row['path'] ?? ''),
-            type: (string) ($row['type'] ?? ''),
-            kind: (string) ($row['kind'] ?? ''),
-            entity: self::nullableString($row['entity'] ?? null),
-            status: (int) ($row['status'] ?? 0),
-            version: self::nullableString($row['version'] ?? null),
-            lang: self::nullableString($row['lang'] ?? null),
-            locale: (string) ($row['locale'] ?? ''),
-            ip: self::nullableString($row['ip'] ?? null),
-            visitorId: (string) ($row['visitor'] ?? ''),
-            userAgent: self::nullableString($row['ua'] ?? null),
-            browser: (string) ($row['browser'] ?? 'other'),
-            os: (string) ($row['os'] ?? 'other'),
-            device: (string) ($row['device'] ?? 'other'),
-            isBot: (bool) ($row['bot'] ?? false),
-            refererHost: self::nullableString($row['refHost'] ?? null),
-            refererSource: (string) ($row['refSource'] ?? 'direct'),
-            country: self::nullableString($row['country'] ?? null),
-            countryName: self::nullableString($row['countryName'] ?? null),
-        );
-    }
-
-    private static function nullableString(mixed $value): ?string
-    {
-        return $value === null || $value === '' ? null : (string) $value;
     }
 }

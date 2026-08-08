@@ -2,7 +2,9 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}{{ seo_title('champion.list.title'|trans({}, 'seo')) }}{% endblock %}
-{% block meta_description %}{{ 'champion.list.description'|trans({'%count%': meta.totalItem, '%version%': meta.version}, 'seo') }}{% endblock %}
+{% block meta_description %}{{ 'champion.list.description'|trans(
+  {'%count%': meta.totalItem, '%version%': meta.version}, 'seo'
+) }}{% endblock %}
 {% block img %}/preview/champions.png{% endblock %}
 
 {% block structured_data %}
@@ -12,7 +14,9 @@
   {% for c in champions|slice(0, 20) %}
     {% set seoItems = seoItems|merge([{
       name: c.name|default(''),
-      url: seo_absolute(resource_path('app_champion', { name: c.id|default(c.name) }, meta.version, ''))
+      url: seo_absolute(
+        resource_path('app_champion', { name: c.id|default(c.name) }, meta.version, '')
+      )
     }]) %}
   {% endfor %}
   {{ seo_jsonld(seo_item_list(seoItems)) }}
@@ -27,17 +31,18 @@
 
   <div class="relative mx-auto max-w-[110rem]">
     <header class="mb-8">
-      {% include 'components/section_header.html.twig' with {
-        eyebrow: 'Data Dragon · ' ~ (client.session.version ?? (client.versions|first)),
+      {% include 'components/codex/section_header.html.twig' with {
+        eyebrow: 'Data Dragon · ' ~ meta.version,
         title: 'champion.list.title'|trans,
         count: meta.totalItem,
         count_label: 'champion.list.title'|trans|lower
       } %}
     </header>
 
-    {% include 'components/list_filter.html.twig' with { grid_id: 'champion-grid' } %}
+    {% include 'components/codex/list_filter.html.twig' with { grid_id: 'champion-grid' } %}
 
-    <div id="champion-grid" class="resource-grid grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div id="champion-grid"
+         class="resource-grid grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {% for c in champions %}
         {% set champId = c.id|default(c.name) %}
         {# Versioned square icon (ingested per patch); overlaid on the unversioned
@@ -49,37 +54,51 @@
            data-tags="{{ c.tags|default([])|join('|') }}">
           <div class="relative aspect-[4/5] overflow-hidden border-b border-gold-deep/50 bg-void">
             <span aria-hidden="true" class="hatch-gold absolute inset-0"></span>
-            <span aria-hidden="true" class="absolute inset-0 grid place-items-center font-beaufort text-6xl text-gold/12">{{ c.name|default('??')|slice(0, 2)|upper }}</span>
-            <img src="{{ loadingBase }}/{{ champId }}_0.jpg" alt="{{ c.name|default('') }}" loading="lazy" decoding="async"
-                 class="relative h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105">
+            <span aria-hidden="true"
+                  class="absolute inset-0 grid place-items-center font-beaufort text-6xl
+                         text-gold/12">{{ c.name|default('??')|slice(0, 2)|upper }}</span>
+            <img src="{{ loadingBase }}/{{ champId }}_0.jpg" alt="{{ c.name|default('') }}"
+                 loading="lazy" decoding="async"
+                 class="relative h-full w-full object-cover object-top transition-transform
+                        duration-500 group-hover:scale-105">
             {% if champIcon %}
-              <span class="absolute bottom-2 left-2 h-10 w-10 overflow-hidden border border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]">
+              <span class="absolute bottom-2 left-2 h-10 w-10 overflow-hidden border
+                           border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]">
                 <picture>
-                  {% if champIcon ends with '.png' %}<source srcset="/{{ champIcon|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
-                  <img src="/{{ champIcon }}" alt="" width="40" height="40" loading="lazy" decoding="async" class="h-full w-full object-cover">
+                  {% include 'components/_webp_source.html.twig'
+                     with { src: '/' ~ champIcon } only %}
+                  <img src="/{{ champIcon }}" alt="" width="40" height="40" loading="lazy"
+                       decoding="async" class="h-full w-full object-cover">
                 </picture>
               </span>
             {% endif %}
           </div>
           <div class="flex flex-1 flex-col p-4">
-            <h3 class="truncate font-beaufort text-[15px] tracking-wide text-gold-grad" title="{{ c.name|default('') }}">{{ c.name|default('') }}</h3>
-            {% if c.title|default('') %}<p class="mt-0.5 truncate font-spiegel text-xs text-text-muted">{{ c.title|capitalize }}</p>{% endif %}
+            <h3 class="truncate font-beaufort text-[15px] tracking-wide text-gold-grad"
+                title="{{ c.name|default('') }}">{{ c.name|default('') }}</h3>
+            {% if c.title|default('') %}<p class="mt-0.5 truncate font-spiegel text-xs
+              text-text-muted">{{ c.title|capitalize }}</p>{% endif %}
             {% if c.tags is defined and c.tags is not empty %}
               <div class="mt-2.5 flex flex-wrap gap-1.5">
                 {% for t in c.tags %}<span class="hx-chip">{{ t }}</span>{% endfor %}
               </div>
             {% endif %}
             {% if c.blurb is defined and c.blurb %}
-              <p class="mt-2 line-clamp-2 text-[13px] leading-snug text-text-muted">{{ c.blurb }}</p>
+              <p class="mt-2 line-clamp-2 text-[13px] leading-snug
+                 text-text-muted">{{ c.blurb }}</p>
             {% endif %}
-            <span class="mt-auto inline-flex items-center gap-2 pt-3 font-beaufort text-xs uppercase tracking-[0.14em] text-gold transition-colors group-hover:text-hex">
+            <span class="mt-auto inline-flex items-center gap-2 pt-3 font-beaufort text-xs
+                         uppercase tracking-[0.14em] text-gold transition-colors
+                         group-hover:text-hex">
               {{ 'common.detail'|trans }}
-              <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </span>
           </div>
         </a>
       {% else %}
-        {% include 'components/empty_state.html.twig' %}
+        {% include 'components/ui/empty_state.html.twig' %}
       {% endfor %}
     </div>
   </div>

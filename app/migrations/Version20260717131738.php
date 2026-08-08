@@ -11,7 +11,8 @@ final class Version20260717131738 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Google OAuth (nullable password + unique google_id) and the Riot ID tagline on users.';
+        return 'Google OAuth (nullable password + unique google_id) and the Riot ID tagline on '
+            .'users.';
     }
 
     public function up(Schema $schema): void

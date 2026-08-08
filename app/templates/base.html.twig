@@ -2,21 +2,21 @@
 <html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}">
     <head>
         <meta charset="UTF-8">
-        {# Paramètre par défaut à définir #}
-        {% set default_title = 'base.title'|trans %} {# Titre par défaut à définir par sécurité #}
-        {% set default_description = 'base.description'|trans %} {# Description par défaut à définir par sécurité #}
+        {% set default_title = 'base.title'|trans %}
+        {% set default_description = 'base.description'|trans %}
 
-        {# Mise en place des titre #}
         <title>{% block title %}{{ default_title }}{% endblock %}</title>
-        <meta property="og:title" content="{% block og_title %}{{ block('title')|default(default_title) }}{% endblock %}">
-        <meta name="twitter:title" content="{% block twitter_title %}{{ block('title')|default(default_title) }}{% endblock %}">
+        <meta property="og:title" content="{% block og_title %}{{
+            block('title')|default(default_title) }}{% endblock %}">
+        <meta name="twitter:title" content="{% block twitter_title %}{{
+            block('title')|default(default_title) }}{% endblock %}">
 
-        {# Remplire la balise {% block title %}Exemple{% endblock %} dans vos pages enfant va automatiquement remplir tous les titres. Possible quand même de choisir si vous voulez mettre un titre différent pour chaque propriété #}
-
-        {# Mise en place des descriptions #}
-        <meta name="description" content="{% block meta_description %}{{ default_description }}{% endblock %}">
-        <meta property="og:description" content="{% block og_description %}{{ block('meta_description')|default(default_description) }}{% endblock %}">
-        <meta name="twitter:description" content="{% block twitter_description %}{{ block('meta_description')|default(default_description) }}{% endblock %}">
+        <meta name="description" content="{% block meta_description %}{{
+            default_description }}{% endblock %}">
+        <meta property="og:description" content="{% block og_description %}{{
+            block('meta_description')|default(default_description) }}{% endblock %}">
+        <meta name="twitter:description" content="{% block twitter_description %}{{
+            block('meta_description')|default(default_description) }}{% endblock %}">
 
         {# Canonical: current path without its query — the ?version&lang variants
            are alternate renders of the same document. Pages that must not carry
@@ -28,35 +28,19 @@
 
         <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ path('app_sitemap') }}">
 
-        <meta name="google-site-verification" content="7sycxfW68dJEaB5yfMSxjIm5MczFFNEWIvsoXL99z0w" />
-        <meta name="google-site-verification" content="rtsHuRhsWtuo3cqSsG0rwrgn9Ctz4BeFeUpjqMA0NpM" />
-        {# --- Open Graph --- #}
-
-        {# og:url suit la canonical (URL propre sans query) ; redéfinissable par page. #}
+        <meta name="google-site-verification"
+              content="7sycxfW68dJEaB5yfMSxjIm5MczFFNEWIvsoXL99z0w" />
+        <meta name="google-site-verification"
+              content="rtsHuRhsWtuo3cqSsG0rwrgn9Ctz4BeFeUpjqMA0NpM" />
+        {# og:url follows the canonical (clean URL, no query); overridable per page. #}
         <meta property="og:url" content="{% block og_url %}{{ seo_canonical() }}{% endblock %}">
         <meta property="og:site_name" content="{{ seo_site_name() }}">
         <meta property="og:locale" content="{{ seo_og_locale() }}">
 
-        {# Plusieur valeurs possible
-            website --> contenu générique, type site ou page classique (par défaut).
-            article --> pour un article de blog, une actu, une page éditoriale.
-            video.movie, video.episode, video.tv_show --> si c’est une vidéo.
-            music.song, music.album --> pour du contenu audio.
-            product --> pour une fiche produit (e-commerce).
-        #}
         <meta property="og:type" content="{% block og_type %}website{% endblock %}">
 
-        {# --- Twitter Cards --- #}
-
-        {# Défini la taille de la card qui s'affiche sur twitter :
-            summary --> petite carte, image carrée à gauche + titre/description à droite.
-            summary_large_image --> grande image en pleine largeur + titre/description dessous.
-            app --> pour promouvoir une application mobile (rarement utilisé sauf pour les grosses apps).
-            player --> carte multimédia (intégrer un lecteur vidéo/audio).
-        #}
-        <meta name="twitter:card" content="{% block twitter_card %}summary_large_image{% endblock %}">
-
-        {# Les Images #}
+        <meta name="twitter:card"
+              content="{% block twitter_card %}summary_large_image{% endblock %}">
 
         {% set default_image = '/preview/home.png' %}
         {% if block('img') is defined %}
@@ -65,34 +49,41 @@
             {% set img = default_image %}
         {% endif %}
 
-        {# Social crawlers ignorent les chemins relatifs → URL absolue systématique. #}
-        <meta property="og:image" content="{% block og_image %}{{ seo_absolute(img) }}{% endblock %}">
-        <meta name="twitter:image" content="{% block twitter_image %}{{ seo_absolute(img) }}{% endblock %}">
+        {# Social crawlers ignore relative paths → always emit an absolute URL. #}
+        <meta property="og:image"
+              content="{% block og_image %}{{ seo_absolute(img) }}{% endblock %}">
+        <meta name="twitter:image"
+              content="{% block twitter_image %}{{ seo_absolute(img) }}{% endblock %}">
 
-        {# Défini si un robot est autorisier à index la page dans un moteur de rechercher et a suivre les liens présents dans la page. Valeur possible :
-            --> index, noindex
-            --> follow, nofollow
-        #}
         <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
-        {# Défini la couleur de fond de certain navigateur moderne #}
         <meta name="theme-color" content="{% block theme_color %}#010a13{% endblock %}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
         {# Effective DDragon selection, re-rendered every Turbo visit (NOT permanent
            like the loader island) so ResourceLoader reads a fresh version/lang when
-           the destination URL doesn't carry them (e.g. the /home nav link). #}
+           the destination URL doesn't carry them (e.g. the /home nav link).
+           Deliberately the SESSION selection, not page_selection(): these metas are
+           the loader's fallback for a destination whose URL carries no version/lang,
+           and such a destination renders from the session too. Using the current
+           page's resolved patch here would warm the wrong one after a /{version}/… visit. #}
         {% if client is defined %}
-        <meta name="dd-version" content="{{ client.session.version ?? (client.versions|default([])|first) }}">
-        <meta name="dd-lang" content="{{ client.session.locale ?? client.currentLocale ?? 'en_US' }}">
-        {# Latest patch — lets the switcher route a version change into the path (or drop it when latest). #}
+        <meta name="dd-version" content="{{
+            client.session.version ?? (client.versions|default([])|first) }}">
+        <meta name="dd-lang" content="{{
+            client.session.locale ?? client.currentLocale ?? 'en_US' }}">
+        {# Latest patch — lets the switcher route a version change into the path
+           (or drop it when latest). #}
         <meta name="dd-latest" content="{{ client.versions|default([])|first }}">
         {% endif %}
 
         {# Preload the self-hosted display/body faces (above-the-fold) so the swap
            happens on first paint instead of after the CSS is parsed. #}
-        <link rel="preload" as="font" type="font/woff2" href="/fonts/Spiegel_TT_Regular.woff2" crossorigin>
-        <link rel="preload" as="font" type="font/woff2" href="/fonts/BeaufortforLOL-Regular.woff2" crossorigin>
-        <link rel="preload" as="font" type="font/woff2" href="/fonts/BeaufortforLOL-Bold.woff2" crossorigin>
+        <link rel="preload" as="font" type="font/woff2"
+              href="/fonts/Spiegel_TT_Regular.woff2" crossorigin>
+        <link rel="preload" as="font" type="font/woff2"
+              href="/fonts/BeaufortforLOL-Regular.woff2" crossorigin>
+        <link rel="preload" as="font" type="font/woff2"
+              href="/fonts/BeaufortforLOL-Bold.woff2" crossorigin>
 
         {% block stylesheets %}
             {{ vite_entry_link_tags('app') }}
@@ -116,11 +107,16 @@
         {# Unverified site accounts only (guarded so the admin identity, which has
            no isVerified(), never trips the getter). #}
         {% if app.user and app.user.isVerified is defined and not app.user.isVerified %}
-            <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 border-b border-gold-deep bg-panel px-4 py-2.5 text-center text-sm text-gold-bright" role="alert">
+            <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 border-b
+                        border-gold-deep bg-panel px-4 py-2.5 text-center text-sm text-gold-bright"
+                 role="alert">
                 <span>{{ 'auth.verify.banner'|trans }}</span>
-                <form method="post" action="{{ path('app_verify_resend') }}" data-turbo="false" class="inline">
+                <form method="post" action="{{ path('app_verify_resend') }}"
+                      data-turbo="false" class="inline">
                     <input type="hidden" name="_token" value="{{ csrf_token('verify-resend') }}">
-                    <button type="submit" class="font-semibold text-gold underline decoration-gold-deep underline-offset-4 transition-colors hover:text-gold-bright">
+                    <button type="submit"
+                            class="font-semibold text-gold underline decoration-gold-deep
+                                   underline-offset-4 transition-colors hover:text-gold-bright">
                         {{ 'auth.verify.banner_cta'|trans }}
                     </button>
                 </form>
@@ -139,7 +135,8 @@
                 {% set flashMessages = flashMessages|merge([{ type: type, text: m }]) %}
             {% endfor %}
         {% endfor %}
-        <div data-vue="toaster" data-props="{{ { messages: flashMessages }|json_encode|e('html_attr') }}"></div>
+        <div data-vue="toaster" data-props="{{
+            { messages: flashMessages }|json_encode|e('html_attr') }}"></div>
 
         {# Global navigation loader — persists across Turbo visits (data-turbo-permanent),
            names the resources the destination page is loading during cold DDragon renders. #}
@@ -152,7 +149,9 @@
                 title: 'loader.title'|trans,
                 subtitle: 'loader.subtitle'|trans,
                 preparing: 'loader.preparing'|trans,
-                status: { fetching: 'loader.status.fetching'|trans, ready: 'loader.status.ready'|trans },
+                status: {
+                    fetching: 'loader.status.fetching'|trans, ready: 'loader.status.ready'|trans
+                },
                 labels: {
                     champions: 'header.navigation.champion'|trans,
                     items: 'header.navigation.item'|trans,

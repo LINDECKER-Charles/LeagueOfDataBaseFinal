@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service\Client;
 
 use App\Service\Client\ClientManager;
-use App\Service\Client\VersionManager;
+use App\Service\Client\VersionCatalogInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -47,11 +47,11 @@ final class ClientManagerSelectedLocaleTest extends TestCase
         $stack = new RequestStack();
         $stack->push($request);
 
-        $versionManager = $this->createStub(VersionManager::class);
+        $versionCatalog = $this->createStub(VersionCatalogInterface::class);
 
         return new ClientManager(
             $stack,
-            $versionManager,
+            $versionCatalog,
             self::SECRET,
             'en_US',
         );

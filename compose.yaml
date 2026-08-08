@@ -2,7 +2,7 @@ name: lodb
 
 # Production-oriented stack. Local dev conveniences live in compose.override.yaml
 # (auto-merged by `docker compose`). Variable substitution reads the repo-root .env
-# (copy .env.example -> .env). See docs/github-actions-secrets.md for the required secrets.
+# (copy .env.example -> .env). See docs/guides/github-actions-secrets.md for the required secrets.
 
 services:
   php:
@@ -112,6 +112,11 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-ddragon}
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-lodb}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      # Origin the API prefixes onto share_url. Third-party clients call from
+      # another origin, so a relative path would be unusable on their side; the
+      # default targets production, hence staging/dev MUST override it or they
+      # hand out links pointing at prod.
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://league-of-data-base.com}
     depends_on:
       postgres:
         condition: service_healthy

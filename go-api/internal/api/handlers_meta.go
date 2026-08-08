@@ -3,14 +3,9 @@ package api
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"leagueofdatabase/go-api/internal/trends"
-)
-
-// Supported ?range= values for /v1/trends.
-const (
-	rangeWeek  = "7d"
-	rangeMonth = "30d"
 )
 
 type trendsResponse struct {
@@ -19,21 +14,25 @@ type trendsResponse struct {
 	Entries []trends.Entry `json:"entries"`
 }
 
-// handleTrends serves GET /v1/trends/{type} with type in champions|items|runes|summoners.
+// handleTrends serves GET /v1/trends/{type}. The accepted type segments and
+// ?range= windows are owned by the trends package; both error messages are
+// derived from it so they cannot drift from what the service actually accepts.
 func (s *Server) handleTrends(w http.ResponseWriter, r *http.Request) {
 	rangeParam := r.URL.Query().Get("range")
 	if rangeParam == "" {
-		rangeParam = rangeWeek
+		rangeParam = trends.DefaultRange()
 	}
-	rangeDays, ok := map[string]int{rangeWeek: trends.DefaultRangeDays, rangeMonth: trends.LongRangeDays}[rangeParam]
+	rangeDays, ok := trends.RangeDays(rangeParam)
 	if !ok {
-		writeError(w, http.StatusBadRequest, CodeInvalid, "range must be 7d or 30d")
+		apiError{http.StatusBadRequest, CodeInvalid,
+			"range must be " + strings.Join(trends.SupportedRanges(), " or ")}.write(w)
 		return
 	}
 	trendType := r.PathValue("type")
 	entries, known := s.trends.Top(r.Context(), trendType, rangeDays)
 	if !known {
-		writeError(w, http.StatusNotFound, CodeNotFound, "type must be one of champions, items, runes, summoners")
+		apiError{http.StatusNotFound, CodeNotFound,
+			"type must be one of " + strings.Join(trends.SupportedTypes(), ", ")}.write(w)
 		return
 	}
 	writeJSON(w, http.StatusOK, trendsResponse{Type: trendType, Range: rangeParam, Entries: entries})
@@ -56,9 +55,9 @@ func (s *Server) handleUsage(w http.ResponseWriter, r *http.Request) {
 		writeInternal(w)
 		return
 	}
-	snapshot, err := s.auth.UsageSnapshot(r.Context(), entry.Key.ID)
+	snapshot, err := s.auth.UsageSnapshot(r.Context(), entry.KeyID())
 	if err != nil {
-		s.log.Error("usage snapshot failed", "error", err, "api_key_id", entry.Key.ID)
+		s.log.Error("usage snapshot failed", "error", err, "api_key_id", entry.KeyID())
 		writeUnavailable(w)
 		return
 	}
@@ -77,6 +76,9 @@ func (s *Server) handleUsage(w http.ResponseWriter, r *http.Request) {
 }
 
 const (
+	// statusOK is the overall verdict of /healthz; depOK/depDegraded describe one
+	// dependency. Two distinct vocabularies that happen to share a spelling.
+	statusOK    = "ok"
 	depOK       = "ok"
 	depDegraded = "degraded"
 )
@@ -91,7 +93,7 @@ type healthResponse struct {
 // orchestration keeps the API up while it can still serve partially.
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, healthResponse{
-		Status: "ok",
+		Status: statusOK,
 		Dependencies: map[string]string{
 			"postgres": dependencyState(r.Context(), s.pgPing),
 			"minio":    dependencyState(r.Context(), s.s3Ping),

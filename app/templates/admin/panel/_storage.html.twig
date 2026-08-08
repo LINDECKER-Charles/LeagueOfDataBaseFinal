@@ -1,15 +1,23 @@
 {# Deferred panel — object-storage page body. `report` is the
    StorageAnalyticsService payload (see App\Service\Admin\AdminPanelCatalog). #}
-{% import 'admin/_ui.html.twig' as ui %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
 
 {% if not report.ok %}
     <p class="alert">Stockage indisponible : {{ report.error }}</p>
 {% else %}
     <div class="kpi-grid" style="margin-bottom: 1.5rem;">
-        {{ ui.kpi('Poids total', report.total.bytes|bytes, report.total.objects|number_format(0, '.', ' ') ~ ' objets', 'var(--gold)', null) }}
-        {{ ui.kpi('Blobs', (report.families|filter((f) => f.name == 'blobs')|first).objects|default(0)|compact, 'images content-addressed', 'var(--series-1)', null) }}
-        {{ ui.kpi('Couverture WebP', (report.blobs.webpCoverage * 100)|round ~ ' %', report.blobs.webpSiblings ~ ' / ' ~ report.blobs.sources, 'var(--series-5)', null) }}
-        {{ ui.kpi('Déduplication', report.dedup.ratio|round(2) ~ '×', '≈ ' ~ report.dedup.savedBytesApprox|bytes ~ ' économisés', 'var(--series-3)', null) }}
+        {{ ui.kpi('Poids total', report.total.bytes|bytes,
+            report.total.objects|number_format(0, '.', ' ') ~ ' objets',
+            'var(--gold)', null) }}
+        {{ ui.kpi('Blobs',
+            (report.families|filter((f) => f.name == 'blobs')|first).objects|default(0)|compact,
+            'images content-addressed', 'var(--series-1)', null) }}
+        {{ ui.kpi('Couverture WebP', (report.blobs.webpCoverage * 100)|round ~ ' %',
+            report.blobs.webpSiblings ~ ' / ' ~ report.blobs.sources,
+            'var(--series-5)', null) }}
+        {{ ui.kpi('Déduplication', report.dedup.ratio|round(2) ~ '×',
+            '≈ ' ~ report.dedup.savedBytesApprox|bytes ~ ' économisés',
+            'var(--series-3)', null) }}
         {{ ui.kpi('Versions', report.coverage|length, 'jeux de données', 'var(--series-4)', null) }}
     </div>
 
@@ -19,8 +27,14 @@
             {{ ui.rank(report.families, { fmt: 'bytes', field: 'bytes', empty: 'Vide.' }) }}
         </section>
         <section class="card span-2">
-            <div class="card__head"><h2>Ingestion dans le temps</h2><span class="chip">objets / jour</span></div>
-            {{ chart_timeseries(report.timeline, [{ key: 'objects', label: 'Objets', color: 'var(--hex)' }], 'Objets ajoutés par jour') }}
+            <div class="card__head">
+                <h2>Ingestion dans le temps</h2><span class="chip">objets / jour</span>
+            </div>
+            {{ chart_timeseries(
+                report.timeline,
+                [{ key: 'objects', label: 'Objets', color: 'var(--hex)' }],
+                'Objets ajoutés par jour'
+            ) }}
         </section>
     </div>
 
@@ -28,17 +42,26 @@
     <div class="grid cols-3">
         <section class="card span-2">
             <div class="card__head"><h2>Blobs par extension</h2></div>
-            {{ ui.rank(report.blobs.byExt, { fmt: 'bytes', field: 'bytes', empty: 'Aucun blob.', limit: 6 }) }}
+            {{ ui.rank(report.blobs.byExt,
+                { fmt: 'bytes', field: 'bytes', empty: 'Aucun blob.', limit: 6 }) }}
         </section>
         <section class="card">
             <div class="card__head"><h2>WebP</h2></div>
             <div class="stack">
                 <div>
                     <span class="k-label">Couverture des variantes</span>
-                    <span class="k-val" style="font-size: 1.5rem;">{{ (report.blobs.webpCoverage * 100)|round(1) }} %</span>
+                    <span class="k-val k-val--sm">{{
+                        (report.blobs.webpCoverage * 100)|round(1)
+                    }} %</span>
                 </div>
-                <div class="r-track" style="height: 8px;"><div class="r-fill cyan" style="width: {{ (report.blobs.webpCoverage * 100)|round(1) }}%"></div></div>
-                <p class="dim" style="margin: 0; font-size: 0.82rem;">{{ report.blobs.sourceBytes|bytes }} de sources → {{ report.blobs.webpBytes|bytes }} en WebP.</p>
+                <div class="r-track" style="height: 8px;">
+                    <div class="r-fill cyan"
+                         style="width: {{ (report.blobs.webpCoverage * 100)|round(1) }}%"></div>
+                </div>
+                <p class="dim" style="margin: 0; font-size: 0.82rem;">
+                    {{ report.blobs.sourceBytes|bytes }} de sources →
+                    {{ report.blobs.webpBytes|bytes }} en WebP.
+                </p>
             </div>
         </section>
     </div>
@@ -47,15 +70,19 @@
     <div class="grid cols-3">
         <section class="card">
             <div class="card__head"><h2>Par version</h2></div>
-            {{ ui.rank(report.data.byVersion, { fmt: 'bytes', field: 'bytes', empty: 'Aucune donnée.', limit: 8 }) }}
+            {{ ui.rank(report.data.byVersion,
+                { fmt: 'bytes', field: 'bytes', empty: 'Aucune donnée.', limit: 8 }) }}
         </section>
         <section class="card">
             <div class="card__head"><h2>Par langue</h2></div>
-            {{ ui.rank(report.data.byLang, { fmt: 'bytes', field: 'bytes', color: 'cyan', empty: 'Aucune donnée.', limit: 8 }) }}
+            {{ ui.rank(report.data.byLang, {
+                fmt: 'bytes', field: 'bytes', color: 'cyan', empty: 'Aucune donnée.', limit: 8
+            }) }}
         </section>
         <section class="card">
             <div class="card__head"><h2>Par type</h2></div>
-            {{ ui.rank(report.data.byType, { fmt: 'bytes', field: 'bytes', empty: 'Aucune donnée.', limit: 8 }) }}
+            {{ ui.rank(report.data.byType,
+                { fmt: 'bytes', field: 'bytes', empty: 'Aucune donnée.', limit: 8 }) }}
         </section>
     </div>
 
@@ -65,12 +92,18 @@
             <div class="card__head"><h2>Objets les plus lourds</h2></div>
             {% set largestRows = [] %}
             {% for o in report.largest %}
-                {% set largestRows = largestRows|merge([[ { html: '<code style="font-size: 0.78rem;">' ~ o.path|e ~ '</code>' }, { num: o.bytes|bytes } ]]) %}
+                {% set largestRows = largestRows|merge([[
+                    { html: '<code style="font-size: 0.78rem;">' ~ o.path|e ~ '</code>' },
+                    { num: o.bytes|bytes }
+                ]]) %}
             {% endfor %}
-            {{ ui.table(['Clé', { label: 'Poids', num: true }], largestRows, { empty: 'Aucun objet.', limit: 8 }) }}
+            {{ ui.table(['Clé', { label: 'Poids', num: true }], largestRows,
+                { empty: 'Aucun objet.', limit: 8 }) }}
         </section>
         <section class="card">
-            <div class="card__head"><h2>Complétude par version</h2><span class="chip">langues ingérées</span></div>
+            <div class="card__head">
+                <h2>Complétude par version</h2><span class="chip">langues ingérées</span>
+            </div>
             {{ ui.matrix(report.coverage, { limit: 6 }) }}
         </section>
     </div>

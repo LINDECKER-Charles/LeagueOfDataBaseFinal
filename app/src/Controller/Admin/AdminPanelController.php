@@ -20,7 +20,12 @@ final class AdminPanelController extends AbstractController
 {
     public function __construct(private readonly AdminPanelCatalog $panels) {}
 
-    #[Route('/panel/{panel}', name: 'admin_panel', requirements: ['panel' => '[a-z-]+'], methods: ['GET'])]
+    #[Route(
+        '/panel/{panel}',
+        name: 'admin_panel',
+        requirements: ['panel' => '[a-z-]+'],
+        methods: ['GET']
+    )]
     public function panel(string $panel, Request $request): Response
     {
         if (!$this->panels->has($panel)) {

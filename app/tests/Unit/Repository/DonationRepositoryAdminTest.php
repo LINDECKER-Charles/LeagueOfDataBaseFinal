@@ -65,7 +65,10 @@ final class DonationRepositoryAdminTest extends TestCase
         ['donations' => $rows, 'total' => $total] = $this->donations->page(1, 2);
 
         self::assertSame(3, $total);
-        self::assertSame([200, 300], array_map(static fn (Donation $d): int => $d->getAmountCents(), $rows));
+        self::assertSame(
+            [200, 300],
+            array_map(static fn (Donation $d): int => $d->getAmountCents(), $rows),
+        );
     }
 
     private function givenUser(string $username): User

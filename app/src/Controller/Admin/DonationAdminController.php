@@ -19,8 +19,11 @@ final class DonationAdminController extends AbstractAdminController
     private const SPARKLINE_DAYS = 30;
 
     #[Route('/donations', name: 'admin_donations', methods: ['GET'])]
-    public function index(Request $request, DonationRepository $donations, UserRepository $users): Response
-    {
+    public function index(
+        Request $request,
+        DonationRepository $donations,
+        UserRepository $users,
+    ): Response {
         $page = $this->pageParam($request);
         ['donations' => $rows, 'total' => $total] = $donations->page($page, self::PER_PAGE);
         $daily = $donations->dailyTotals(self::SPARKLINE_DAYS);

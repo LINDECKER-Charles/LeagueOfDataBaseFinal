@@ -4,15 +4,15 @@ declare(strict_types=1);
 namespace App\Service\Tools;
 
 /**
- * Levée par {@see GoFetcherClient::fetch()} quand Data Dragon répond un statut
- * d'absence *définitif* (403/404) pour une ressource JSON — par opposition à une
- * panne transitoire (5xx, timeout, erreur transport).
+ * Thrown by {@see GoFetcherClient::fetch()} when Data Dragon answers with a
+ * *definitive* absence status (403/404) for a JSON resource — as opposed to a
+ * transient outage (5xx, timeout, transport error).
  *
- * Les appelants s'en servent pour dégrader proprement (jeu de données vide,
- * repli de langue) au lieu de propager une erreur, tout en laissant les vraies
- * pannes remonter : une ressource légitimement absente pour une (version, langue)
- * — p.ex. runesReforged avant le patch 7.22, ou une locale absente d'un vieux
- * patch — ne doit jamais casser une page ni être confondue avec un incident.
+ * Callers use it to degrade gracefully (empty dataset, language fallback)
+ * instead of propagating an error, while still letting real outages bubble up:
+ * a resource legitimately missing for a (version, language) — e.g.
+ * runesReforged before patch 7.22, or a locale absent from an old patch — must
+ * never break a page nor be mistaken for an incident.
  */
 final class UpstreamNotFoundException extends \RuntimeException
 {

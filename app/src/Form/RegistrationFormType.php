@@ -31,7 +31,11 @@ final class RegistrationFormType extends AbstractType
                 'help' => 'auth.register.username_help',
             ])
             // CNIL policy + confirmation; shared with the profile set-password flow.
-            ->add('plainPassword', RepeatedType::class, PasswordFieldOptions::repeated($this->translator))
+            ->add(
+                'plainPassword',
+                RepeatedType::class,
+                PasswordFieldOptions::repeated($this->translator)
+            )
             ->add('agreeTerms', CheckboxType::class, [
                 'label' => 'auth.register.terms',
                 'mapped' => false,

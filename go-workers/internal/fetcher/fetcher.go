@@ -19,30 +19,60 @@ type Result struct {
 	Status      int
 }
 
+// Options configures a Fetcher. Grouped in a struct rather than passed
+// positionally: the knobs are unrelated to one another and a bare argument list
+// would not say which is which at the call site.
+type Options struct {
+	AllowedHosts []string
+	Timeout      time.Duration
+	// MaxIdlePerHost sizes the keep-alive connection pool.
+	MaxIdlePerHost int
+	// MaxBodyBytes caps a single response. Zero falls back to DefaultMaxBodyBytes.
+	MaxBodyBytes int64
+}
+
+// DefaultMaxBodyBytes bounds one upstream response. The largest artifact we
+// legitimately fetch is Data Dragon's championFull.json (single-digit MB), so
+// this leaves ample headroom while keeping a hostile or truncated upstream from
+// growing the process heap without limit.
+const DefaultMaxBodyBytes int64 = 32 << 20 // 32 MiB
+
 // Fetcher issues guarded GET requests with a shared, timeout-bounded client.
 type Fetcher struct {
 	client       *http.Client
 	allowedHosts []string
+	maxBodyBytes int64
 }
 
-// New builds a Fetcher restricted to allowedHosts with the given per-request
-// timeout. maxIdlePerHost sizes the keep-alive connection pool.
+// New builds a Fetcher restricted to opts.AllowedHosts.
 //
 // DDragon's image CDN offers only HTTP/1.1 (no h2 via ALPN — verified), so every
 // request rides its own TCP/TLS connection. http.DefaultTransport caps idle
 // connections per host at 2, which would force a fresh TLS handshake for all but
 // two of each up-to-MaxConcurrency batch wave. Sizing the idle pool to the fetch
 // concurrency lets keep-alive connections be reused across waves instead.
-func New(allowedHosts []string, timeout time.Duration, maxIdlePerHost int) *Fetcher {
+func New(opts Options) *Fetcher {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
-	if maxIdlePerHost > 0 {
-		transport.MaxIdleConns = maxIdlePerHost
-		transport.MaxIdleConnsPerHost = maxIdlePerHost
+	if opts.MaxIdlePerHost > 0 {
+		transport.MaxIdleConns = opts.MaxIdlePerHost
+		transport.MaxIdleConnsPerHost = opts.MaxIdlePerHost
 	}
-	return &Fetcher{
-		client:       &http.Client{Timeout: timeout, Transport: transport},
-		allowedHosts: allowedHosts,
+	maxBody := opts.MaxBodyBytes
+	if maxBody <= 0 {
+		maxBody = DefaultMaxBodyBytes
 	}
+	f := &Fetcher{
+		client:       &http.Client{Timeout: opts.Timeout, Transport: transport},
+		allowedHosts: opts.AllowedHosts,
+		maxBodyBytes: maxBody,
+	}
+	// Without this, only the FIRST hop is allow-listed: Go follows up to 10
+	// redirects on its own, so an allowed host answering 302 would carry the
+	// request anywhere. Re-checking every hop closes that SSRF bypass.
+	f.client.CheckRedirect = func(req *http.Request, _ []*http.Request) error {
+		return f.Allowed(req.URL.String())
+	}
+	return f
 }
 
 // Allowed enforces the SSRF guard: https scheme and an allow-listed host.
@@ -75,9 +105,14 @@ func (f *Fetcher) Fetch(ctx context.Context, raw string) (Result, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	// Read one byte past the cap so an oversized response is detected rather
+	// than silently truncated into a corrupt asset.
+	body, err := io.ReadAll(io.LimitReader(resp.Body, f.maxBodyBytes+1))
 	if err != nil {
 		return Result{}, fmt.Errorf("read body: %w", err)
+	}
+	if int64(len(body)) > f.maxBodyBytes {
+		return Result{}, fmt.Errorf("response exceeds %d bytes", f.maxBodyBytes)
 	}
 	return Result{
 		Body:        body,

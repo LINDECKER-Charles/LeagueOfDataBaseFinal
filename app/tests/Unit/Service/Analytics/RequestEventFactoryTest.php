@@ -25,13 +25,31 @@ final class RequestEventFactoryTest extends TestCase
         );
     }
 
-    private function request(string $route, array $query = [], array $attrs = [], array $server = []): Request
+    /**
+     * @param array<string, string> $query
+     * @param array<string, mixed>  $attrs route placeholders (champion name, …)
+     */
+    private function request(string $route, array $query = [], array $attrs = []): Request
     {
-        $request = Request::create('/x', 'GET', $query, [], [], $server);
+        $request = Request::create('/x', 'GET', $query);
         $request->attributes->set('_route', $route);
-        foreach ($attrs as $k => $v) {
-            $request->attributes->set($k, $v);
+        foreach ($attrs as $key => $value) {
+            $request->attributes->set($key, $value);
         }
+
+        return $request;
+    }
+
+    /**
+     * Headers must be seeded through $_SERVER at creation time — Request only
+     * derives its HeaderBag from the server bag it was built with.
+     *
+     * @param array<string, string> $server
+     */
+    private function requestWithHeaders(string $route, array $server): Request
+    {
+        $request = Request::create('/x', 'GET', [], [], [], $server);
+        $request->attributes->set('_route', $route);
 
         return $request;
     }
@@ -49,13 +67,24 @@ final class RequestEventFactoryTest extends TestCase
         $request = $this->request('app_home_legacy');
 
         self::assertNull($this->factory->fromRequestResponse($request, new Response()));
-        self::assertNull($this->factory->fromRequestResponse($this->request('admin_dashboard'), new Response()));
-        self::assertNull($this->factory->fromRequestResponse($this->request('api_champions_search'), new Response()));
+        self::assertNull(
+            $this->factory->fromRequestResponse($this->request('admin_dashboard'), new Response())
+        );
+        self::assertNull(
+            $this->factory->fromRequestResponse(
+                $this->request('api_champions_search'),
+                new Response()
+            )
+        );
     }
 
     public function testDetailRouteCapturesEntityAndKind(): void
     {
-        $request = $this->request('app_champion', ['version' => '15.1.1', 'lang' => 'fr_FR'], ['name' => 'Aatrox']);
+        $request = $this->request(
+            'app_champion',
+            ['version' => '15.1.1', 'lang' => 'fr_FR'],
+            ['name' => 'Aatrox']
+        );
         $event = $this->factory->fromRequestResponse($request, new Response('', 200));
 
         self::assertNotNull($event);
@@ -79,8 +108,9 @@ final class RequestEventFactoryTest extends TestCase
 
     public function testUserAgentIsParsedAndRefererClassified(): void
     {
-        $request = $this->request('app_home', [], [], [
-            'HTTP_USER_AGENT' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile Safari/604.1',
+        $request = $this->requestWithHeaders('app_home', [
+            'HTTP_USER_AGENT' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) '
+                . 'Mobile Safari/604.1',
             'HTTP_REFERER' => 'https://www.google.com/search',
         ]);
         $event = $this->factory->fromRequestResponse($request, new Response());
@@ -92,9 +122,18 @@ final class RequestEventFactoryTest extends TestCase
 
     public function testVisitorIdIsStablePerIpAndAgentButDiffersOtherwise(): void
     {
-        $a = $this->factory->fromRequestResponse($this->request('app_home', [], [], ['HTTP_USER_AGENT' => 'UA-1']), new Response());
-        $b = $this->factory->fromRequestResponse($this->request('app_home', [], [], ['HTTP_USER_AGENT' => 'UA-1']), new Response());
-        $c = $this->factory->fromRequestResponse($this->request('app_home', [], [], ['HTTP_USER_AGENT' => 'UA-2']), new Response());
+        $a = $this->factory->fromRequestResponse(
+            $this->requestWithHeaders('app_home', ['HTTP_USER_AGENT' => 'UA-1']),
+            new Response()
+        );
+        $b = $this->factory->fromRequestResponse(
+            $this->requestWithHeaders('app_home', ['HTTP_USER_AGENT' => 'UA-1']),
+            new Response()
+        );
+        $c = $this->factory->fromRequestResponse(
+            $this->requestWithHeaders('app_home', ['HTTP_USER_AGENT' => 'UA-2']),
+            new Response()
+        );
 
         self::assertSame($a->visitorId, $b->visitorId);
         self::assertNotSame($a->visitorId, $c->visitorId);

@@ -21,19 +21,28 @@ final class SvgPrimitives
     public const PAD_TOP = 16;
     public const PAD_BOTTOM = 26;
 
+    /** Drawable box inside the padding — the frame every scale maps into. */
+    public const PLOT_W = self::W - 2 * self::PAD_X;
+    public const PLOT_H = self::H - self::PAD_TOP - self::PAD_BOTTOM;
+
     /** @param list<array{0: float, 1: float}> $points */
     public function polyline(array $points, string $color, float $width = 2): string
     {
         return sprintf(
-            '<polyline fill="none" stroke="%s" stroke-width="%s" stroke-linejoin="round" stroke-linecap="round"'
+            '<polyline fill="none" stroke="%s" stroke-width="%s"'
+            . ' stroke-linejoin="round" stroke-linecap="round"'
             . ' vector-effect="non-scaling-stroke" points="%s"/>',
             $color, $width, $this->points($points),
         );
     }
 
     /** @param list<array{0: float, 1: float}> $points */
-    public function area(array $points, float $baseline, string $color, float $opacity = 0.12): string
-    {
+    public function area(
+        array $points,
+        float $baseline,
+        string $color,
+        float $opacity = 0.12
+    ): string {
         if ($points === []) {
             return '';
         }
@@ -49,21 +58,28 @@ final class SvgPrimitives
     /** @param list<array{0: float, 1: float}> $points */
     public function points(array $points): string
     {
-        return implode(' ', array_map(static fn (array $p): string => sprintf('%.1f,%.1f', $p[0], $p[1]), $points));
+        return implode(' ', array_map(
+            static fn (array $p): string => sprintf('%.1f,%.1f', $p[0], $p[1]),
+            $points
+        ));
     }
 
     public function svg(string $body, string $ariaLabel): string
     {
         return sprintf(
-            '<svg viewBox="0 0 %d %d" class="chart" role="img" aria-label="%s" preserveAspectRatio="xMidYMid meet">%s</svg>',
+            '<svg viewBox="0 0 %d %d" class="chart" role="img" aria-label="%s"'
+            . ' preserveAspectRatio="xMidYMid meet">%s</svg>',
             self::W, self::H, $this->esc($ariaLabel), $body,
         );
     }
 
-    public function empty(string $ariaLabel): string
+    /** Same canvas as a real chart, carrying a "no data" notice instead of marks. */
+    public function emptyChart(string $ariaLabel): string
     {
         return sprintf(
-            '<svg viewBox="0 0 %d %d" class="chart" role="img" aria-label="%s"><text x="%d" y="%d" text-anchor="middle" class="c-empty">Aucune donnée</text></svg>',
+            '<svg viewBox="0 0 %d %d" class="chart" role="img" aria-label="%s">'
+            . '<text x="%d" y="%d" text-anchor="middle" class="c-empty">Aucune donnée</text>'
+            . '</svg>',
             self::W, self::H, $this->esc($ariaLabel), self::W / 2, self::H / 2,
         );
     }

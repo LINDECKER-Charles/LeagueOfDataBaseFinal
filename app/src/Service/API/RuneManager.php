@@ -5,24 +5,27 @@ namespace App\Service\API;
 
 final class RuneManager extends AbstractManager
 {
-    protected const TYPE = 'runesReforged';
+    public function type(): string
+    {
+        return 'runesReforged';
+    }
 
     protected function imageUrl(string $version, string $name): string
     {
         // Rune icons live under a version-less path, and $name is already a full sub-path.
-        return 'https://ddragon.leagueoflegends.com/cdn/img/'.$name;
+        return self::DDRAGON_CDN.'/img/'.$name;
     }
 
-    public function getByName(string $name, string $version, string $lang): array
+    /** Rune trees are a top-level list: the route id is the tree `key`, not a map key. */
+    protected function findEntry(array $collection, string $name): ?array
     {
-        $data = $this->getData($version, $lang);
-        foreach ($data as $rune) {
-            if (($rune['key'] ?? null) === $name) {
-                return $rune;
+        foreach ($collection as $tree) {
+            if (is_array($tree) && ($tree['key'] ?? null) === $name) {
+                return $tree;
             }
         }
 
-        throw ResourceNotFoundException::forEntry(static::TYPE, $name);
+        return null;
     }
 
     /**
@@ -32,15 +35,29 @@ final class RuneManager extends AbstractManager
     protected function imageEntries(array $data): array
     {
         $entries = [];
-        foreach ($data as $d) {
-            if ($icon = $d['icon'] ?? null) {
-                $entries[$icon] = $d['name'] ?? $icon;
+        foreach ($data as $tree) {
+            if ($icon = $tree['icon'] ?? null) {
+                $entries[$icon] = $tree['name'] ?? $icon;
             }
-            foreach ($d['slots'] ?? [] as $slot) {
-                foreach ($slot['runes'] ?? [] as $rune) {
-                    if ($icon = $rune['icon'] ?? null) {
-                        $entries[$icon] = $rune['name'] ?? $icon;
-                    }
+            $entries = array_replace($entries, $this->runeEntries($tree['slots'] ?? []));
+        }
+
+        return $entries;
+    }
+
+    /**
+     * Every keystone/minor rune icon of one tree's slots, mapped to its name.
+     *
+     * @param array<mixed> $slots
+     * @return array<string,string> icon path => rune display name
+     */
+    private function runeEntries(array $slots): array
+    {
+        $entries = [];
+        foreach ($slots as $slot) {
+            foreach ($slot['runes'] ?? [] as $rune) {
+                if ($icon = $rune['icon'] ?? null) {
+                    $entries[$icon] = $rune['name'] ?? $icon;
                 }
             }
         }
@@ -48,56 +65,60 @@ final class RuneManager extends AbstractManager
         return $entries;
     }
 
-    public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
-    {
-        if (!$data) {
-            $data = $this->dataList($this->getData($version, $lang));
-        }
-
-        return $this->mapTreeImages($data, $this->resolveImages($version, array_keys($this->imageEntries($data)), $force));
-    }
-
     /**
-     * Map resolved icon paths back onto the nested tree structure the template
-     * consumes: `treeKey => {icon, slots[slotIndex][runeKey]}`.
-     *
-     * @param array<mixed> $data
-     * @param array<string, string> $resolved image name => cdn path
-     * @return array<string, mixed>
+     * Nested shape the rune templates consume: `treeKey => {icon,
+     * slots[slotIndex][runeKey]}` — the tree structure, not a flat list.
      */
-    private function mapTreeImages(array $data, array $resolved): array
+    protected function projectImages(array $data, array $resolved): array
     {
         $result = [];
-        foreach ($data as $d) {
-            $key = $d['key'] ?? null;
-            $icon = $d['icon'] ?? null;
+        foreach ($data as $tree) {
+            $key  = $tree['key'] ?? null;
+            $icon = $tree['icon'] ?? null;
             if (!$key || !$icon) {
                 continue;
             }
             $result[$key]['icon'] = $resolved[$icon] ?? null;
 
-            foreach ($d['slots'] ?? [] as $index => $slot) {
-                foreach ($slot['runes'] ?? [] as $rune) {
-                    $runeIcon = $rune['icon'] ?? null;
-                    $runeKey = $rune['key'] ?? null;
-                    if (!$runeIcon || !$runeKey) {
-                        continue;
-                    }
-                    $result[$key]['slots'][$index][$runeKey] = $resolved[$runeIcon] ?? null;
-                }
+            // Kept off the tree when a patch carries no usable rune slot, so the
+            // shape stays exactly what the templates already branch on.
+            $slots = $this->mapSlotImages($tree['slots'] ?? [], $resolved);
+            if ($slots !== []) {
+                $result[$key]['slots'] = $slots;
             }
         }
 
         return $result;
     }
 
-    /** Les runes paginent la liste top-level des arbres, pas une map `['data']`. */
+    /**
+     * @param array<mixed> $slots
+     * @param array<string,string> $resolved image name => cdn path
+     * @return array<int|string, array<string,?string>> slotIndex => runeKey => cdn path
+     */
+    private function mapSlotImages(array $slots, array $resolved): array
+    {
+        $mapped = [];
+        foreach ($slots as $index => $slot) {
+            foreach ($slot['runes'] ?? [] as $rune) {
+                $icon = $rune['icon'] ?? null;
+                $key  = $rune['key'] ?? null;
+                if ($icon && $key) {
+                    $mapped[$index][$key] = $resolved[$icon] ?? null;
+                }
+            }
+        }
+
+        return $mapped;
+    }
+
+    /** Runes paginate the top-level list of trees, not a `['data']` map. */
     protected function paginationCollection(array $raw): array
     {
         return $raw;
     }
 
-    /** La route détail des runes est indexée par la KEY d'arbre, pas par l'id numérique. */
+    /** The rune detail route is keyed by the tree KEY, not by the numeric id. */
     protected function entryRouteId(array $entry, string $storageKey): string
     {
         return (string) ($entry['key'] ?? $storageKey);

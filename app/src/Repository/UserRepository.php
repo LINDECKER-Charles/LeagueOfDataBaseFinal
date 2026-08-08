@@ -15,7 +15,9 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 /**
  * @extends ServiceEntityRepository<User>
  */
-final class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface, UserLoaderInterface
+final class UserRepository extends ServiceEntityRepository implements
+    PasswordUpgraderInterface,
+    UserLoaderInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
@@ -91,7 +93,10 @@ final class UserRepository extends ServiceEntityRepository implements PasswordUp
 
         return [
             'rows' => array_map(
-                static fn (array $row): array => ['user' => $row['user'], 'buildCount' => (int) $row['buildCount']],
+                static fn (array $row): array => [
+                    'user' => $row['user'],
+                    'buildCount' => (int) $row['buildCount'],
+                ],
                 $rows,
             ),
             'total' => $this->countSearch($query),
@@ -151,10 +156,14 @@ final class UserRepository extends ServiceEntityRepository implements PasswordUp
      *
      * @see PasswordUpgraderInterface
      */
-    public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
-    {
+    public function upgradePassword(
+        PasswordAuthenticatedUserInterface $user,
+        string $newHashedPassword
+    ): void {
         if (!$user instanceof User) {
-            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', $user::class));
+            throw new UnsupportedUserException(
+                sprintf('Instances of "%s" are not supported.', $user::class)
+            );
         }
 
         $user->setPassword($newHashedPassword);

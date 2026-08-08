@@ -33,7 +33,8 @@ final class TrendsViewAssembler
         $itemIndex = $this->itemIndex($builds, $version, $lang);
 
         return array_map(
-            fn (Build $build): array => ['build' => $build, 'items' => $this->itemsExcerpt($build, $itemIndex)]
+            fn (Build $build): array =>
+                ['build' => $build, 'items' => $this->itemsExcerpt($build, $itemIndex)]
                 + $this->buildAssembler->listRow($build, $version, $lang),
             $builds,
         );
@@ -56,7 +57,9 @@ final class TrendsViewAssembler
 
         try {
             $index = [];
-            foreach ($this->itemManager->resolveRelated(array_keys($ids), $version, $lang) as $entry) {
+            foreach (
+                $this->itemManager->resolveRelated(array_keys($ids), $version, $lang) as $entry
+            ) {
                 $index[$entry['id']] = $entry;
             }
 
@@ -90,7 +93,12 @@ final class TrendsViewAssembler
     {
         return array_map(
             static fn (string $id): array => isset($index[$id])
-                ? ['id' => $id, 'name' => $index[$id]['name'], 'image' => $index[$id]['image'], 'missing' => false]
+                ? [
+                    'id' => $id,
+                    'name' => $index[$id]['name'],
+                    'image' => $index[$id]['image'],
+                    'missing' => false,
+                ]
                 : ['id' => $id, 'name' => $id, 'image' => null, 'missing' => true],
             $this->excerptIds($build),
         );

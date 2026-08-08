@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace App\Dto;
 
-use App\Entity\ContactCategory;
+use App\Entity\Enum\ContactCategory;
+use App\Entity\ContactMessage;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -23,17 +24,22 @@ final readonly class ContactSubmission
 
         #[Assert\NotBlank(message: 'contact.error.email')]
         #[Assert\Email(message: 'contact.error.email')]
-        #[Assert\Length(max: 255)]
+        #[Assert\Length(max: ContactMessage::EMAIL_MAX_LENGTH)]
         public string $email,
 
         #[Assert\NotBlank(message: 'contact.error.message')]
-        #[Assert\Length(min: 10, max: 5000, minMessage: 'contact.error.message_short', maxMessage: 'contact.error.message_long')]
+        #[Assert\Length(
+            min: 10,
+            max: 5000,
+            minMessage: 'contact.error.message_short',
+            maxMessage: 'contact.error.message_long',
+        )]
         public string $message,
 
-        #[Assert\Length(max: 120)]
+        #[Assert\Length(max: ContactMessage::NAME_MAX_LENGTH)]
         public ?string $name = null,
 
-        #[Assert\Length(max: 160)]
+        #[Assert\Length(max: ContactMessage::SUBJECT_MAX_LENGTH)]
         public ?string $subject = null,
 
         public ?string $locale = null,

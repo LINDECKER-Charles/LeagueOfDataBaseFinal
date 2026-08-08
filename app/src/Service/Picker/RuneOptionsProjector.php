@@ -16,8 +16,9 @@ final class RuneOptionsProjector
     public const TYPE = 'rune';
 
     /**
-     * @param list<array<string, mixed>>                                              $data   top-level runesReforged.json tree list
-     * @param array<string, array{icon?: ?string, slots?: array<int, array<string, ?string>>}> $images nested RuneManager::getImages() result
+     * @param list<array<string, mixed>> $data top-level runesReforged.json tree list
+     * @param array<string, array{icon?: ?string, slots?: array<int, array<string, ?string>>}>
+     *        $images nested RuneManager::getImages() result
      * @return list<array<string, mixed>>
      */
     public function project(array $data, array $images): array
@@ -42,14 +43,23 @@ final class RuneOptionsProjector
     }
 
     /**
+     * Direct lookup in the raw dataset: only the matching node is projected,
+     * instead of building the whole 5-tree catalog (~70 perks, each stripped and
+     * image-resolved) to keep a single entry. Search order mirrors
+     * {@see project()} — each tree's own id first, then its perks.
+     *
      * @param list<array<string, mixed>> $data
-     * @param array<string, array{icon?: ?string, slots?: array<int, array<string, ?string>>}> $images
+     * @param array<string, array{icon?: ?string, slots?: array<int, array<string, ?string>>}>
+     *        $images
      * @return ?array{id: string, name: string, image: ?string, type: string}
      */
     public function resolve(array $data, array $images, string $id): ?array
     {
-        foreach ($this->project($data, $images) as $tree) {
-            $found = $this->findInTree($tree, $id);
+        foreach ($data as $tree) {
+            if (!\is_array($tree)) {
+                continue;
+            }
+            $found = $this->findInTree($tree, $images, $id);
             if ($found !== null) {
                 return $found;
             }
@@ -61,7 +71,9 @@ final class RuneOptionsProjector
     /**
      * @param array<string, mixed>                  $tree
      * @param array<int, array<string, ?string>> $slotIcons
-     * @return list<list<array{id: int, key: string, name: string, icon: ?string, shortDesc: string}>>
+     * @return list<list<array{
+     *     id: int, key: string, name: string, icon: ?string, shortDesc: string
+     * }>>
      */
     private function projectSlots(array $tree, array $slotIcons): array
     {
@@ -96,23 +108,73 @@ final class RuneOptionsProjector
     }
 
     /**
-     * @param array<string, mixed> $tree a {@see project()} tree
+     * @param array<string, mixed> $tree a raw runesReforged tree
+     * @param array<string, array{icon?: ?string, slots?: array<int, array<string, ?string>>}>
+     *        $images
      * @return ?array{id: string, name: string, image: ?string, type: string}
      */
-    private function findInTree(array $tree, string $id): ?array
+    private function findInTree(array $tree, array $images, string $id): ?array
     {
-        if ((string) $tree['id'] === $id) {
-            return ['id' => $id, 'name' => $tree['name'], 'image' => $tree['icon'], 'type' => self::TYPE];
+        $treeKey = (string) ($tree['key'] ?? '');
+        $treeImages = (array) ($images[$treeKey] ?? []);
+        if ((string) (int) ($tree['id'] ?? 0) === $id) {
+            return $this->resolved(
+                $id,
+                (string) ($tree['name'] ?? $treeKey),
+                $treeImages['icon'] ?? null,
+            );
         }
 
-        foreach ($tree['slots'] as $perks) {
-            foreach ($perks as $perk) {
-                if ((string) $perk['id'] === $id) {
-                    return ['id' => $id, 'name' => $perk['name'], 'image' => $perk['icon'], 'type' => self::TYPE];
+        return $this->findPerk($tree, (array) ($treeImages['slots'] ?? []), $id);
+    }
+
+    /**
+     * @param array<string, mixed>               $tree      a raw runesReforged tree
+     * @param array<int, array<string, ?string>> $slotIcons the tree's slot icon maps
+     * @return ?array{id: string, name: string, image: ?string, type: string}
+     */
+    private function findPerk(array $tree, array $slotIcons, string $id): ?array
+    {
+        foreach (array_values((array) ($tree['slots'] ?? [])) as $index => $slot) {
+            $icons = (array) ($slotIcons[$index] ?? []);
+            foreach ((array) ($slot['runes'] ?? []) as $perk) {
+                $found = $this->perkIfMatching((array) $perk, $icons, $id);
+                if ($found !== null) {
+                    return $found;
                 }
             }
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string, mixed>   $perk
+     * @param array<string, ?string> $icons perk-key-keyed icon paths of the perk's slot
+     * @return ?array{id: string, name: string, image: ?string, type: string}
+     */
+    private function perkIfMatching(array $perk, array $icons, string $id): ?array
+    {
+        if ((string) (int) ($perk['id'] ?? 0) !== $id) {
+            return null;
+        }
+        $perkKey = (string) ($perk['key'] ?? '');
+
+        return $this->resolved(
+            $id,
+            (string) ($perk['name'] ?? $perkKey),
+            $icons[$perkKey] ?? null,
+        );
+    }
+
+    /** @return array{id: string, name: string, image: ?string, type: string} */
+    private function resolved(string $id, string $name, ?string $storagePath): array
+    {
+        return [
+            'id' => $id,
+            'name' => $name,
+            'image' => PickerFormat::imagePath($storagePath),
+            'type' => self::TYPE,
+        ];
     }
 }

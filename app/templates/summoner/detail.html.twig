@@ -1,17 +1,24 @@
 {# templates/summoner/detail.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ seo_title('summoner.detail.title'|trans({'%name%': summoner.name ?? 'Summoner Spell'}, 'seo')) }}{% endblock %}
+{# Single source for the rendered (version, lang): PageContextResolver, the same
+   resolution the controller used — never re-derived from the session here. #}
+{% set selection = page_selection() %}
+
+{% block title %}{{ seo_title(
+  'summoner.detail.title'|trans({'%name%': summoner.name ?? 'Summoner Spell'}, 'seo')
+) }}{% endblock %}
 {% block meta_description %}{{ 'summoner.detail.description'|trans({
   '%name%': summoner.name ?? 'Summoner Spell',
-  '%version%': version|default(client.session.version ?? (client.versions|first))
+  '%version%': selection.version
 }, 'seo') }}{% endblock %}
 {% block img %}/preview/summoners.png{% endblock %}
 
 {% block structured_data %}
   {{ seo_jsonld(seo_breadcrumbs([
     { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
-    { name: 'header.navigation.summoner'|trans, url: seo_absolute(resource_path('app_summoners', {}, version|default(''), '')) },
+    { name: 'header.navigation.summoner'|trans,
+      url: seo_absolute(resource_path('app_summoners', {}, version|default(''), '')) },
     { name: summoner.name ?? '', url: seo_canonical() }
   ])) }}
   {# Cooldown / range / unlock level are the facts that distinguish spells. #}
@@ -23,8 +30,6 @@
 {% endblock %}
 
 {% block body %}
-{% set selectedVersion = version|default(client.session.version ?? (client.versions|default([])|first)) %}
-{% set selectedLocale  = lang|default(client.session.locale ?? client.currentLocale ?? 'en_US') %}
 
 {# ---- Normalised, meaningful values only (no -1 / No Cost / WIP noise) ------ #}
 {% set cd        = summoner.cooldown|default([])|first %}
@@ -32,7 +37,8 @@
 {% set ammo      = (summoner.maxammo|default(-1)) + 0 %}
 {% set costVal   = summoner.cost|default([])|first %}
 {% set costType  = summoner.costType|default(summoner.resource|default('')) %}
-{% set noCost    = costType is empty or costType|lower in ['no cost', 'nocost'] or costVal in [0, null] %}
+{% set noCost    = costType is empty or costType|lower in ['no cost', 'nocost']
+                   or costVal in [0, null] %}
 {% set modeLabels = {
   'CLASSIC': 'Classic', 'ARAM': 'ARAM', 'CHERRY': 'Arena', 'BRAWL': 'Brawl',
   'NEXUSBLITZ': 'Nexus Blitz', 'URF': 'URF', 'ONEFORALL': 'One for All',
@@ -51,13 +57,15 @@
     {# ================= Hero : the invocation seal ========================== #}
     <header class="detail-hero mb-12 flex flex-col items-center text-center">
       {% if image %}
-        <img class="detail-hero__echo" src="/{{ image }}" alt="" aria-hidden="true" style="right: 50%; translate: 50% -50%; top: 8rem;">
+        <img class="detail-hero__echo" src="/{{ image }}" alt="" aria-hidden="true"
+             style="right: 50%; translate: 50% -50%; top: 8rem;">
       {% endif %}
 
       <p class="eyebrow relative mb-7">
         {{ 'summoner.list.title'|trans }}
         <span class="mx-2 text-gold-deep" aria-hidden="true">◆</span>
-        <span class="normal-case tracking-normal font-mono text-[11px] text-text-muted">{{ selectedVersion }} · {{ selectedLocale }}</span>
+        <span class="normal-case tracking-normal font-mono text-[11px]
+                     text-text-muted">{{ selection.version }} · {{ selection.lang }}</span>
       </p>
 
       <div class="seal">
@@ -77,8 +85,10 @@
       {# The defining metric of a summoner spell: its cooldown. #}
       {% if cd is not null %}
         <p class="relative mt-4 flex items-baseline gap-2">
-          <span class="font-beaufort text-4xl leading-none text-hex-bright">{{ cd }}<span class="text-xl">s</span></span>
-          <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">{{ 'summoner.detail.fields.cooldown'|trans }}</span>
+          <span class="font-beaufort text-4xl leading-none
+                       text-hex-bright">{{ cd }}<span class="text-xl">s</span></span>
+          <span class="font-mono text-[10px] uppercase tracking-[0.2em]
+                       text-text-muted">{{ 'summoner.detail.fields.cooldown'|trans }}</span>
         </p>
       {% endif %}
     </header>
@@ -104,7 +114,9 @@
       }]) %}
     {% endif %}
     {% if ammo > 0 %}
-      {% set plaques = plaques|merge([{ label: 'summoner.detail.fields.maxammo'|trans, value: ammo }]) %}
+      {% set plaques = plaques|merge([
+        { label: 'summoner.detail.fields.maxammo'|trans, value: ammo }
+      ]) %}
     {% endif %}
 
     {% if plaques is not empty %}
@@ -121,7 +133,9 @@
     {# ================= Description ========================================= #}
     {% if summoner.description is defined and summoner.description %}
       <section class="mb-12" data-reveal>
-        {% include 'components/codex_header.html.twig' with { title: 'summoner.detail.description'|trans } %}
+        {% include 'components/codex/codex_header.html.twig' with {
+          title: 'summoner.detail.description'|trans
+        } %}
         <div class="hextech-frame hx-corners p-7">
           <div class="ddragon-rich max-w-[60ch]">{{ summoner.description|ddragon_text|raw }}</div>
         </div>
@@ -131,7 +145,7 @@
     {# ================= Game modes ========================================== #}
     {% if modes is not empty %}
       <section data-reveal>
-        {% include 'components/codex_header.html.twig' with {
+        {% include 'components/codex/codex_header.html.twig' with {
           title: 'summoner.detail.modes'|trans,
           meta: modes|length
         } %}
@@ -143,14 +157,14 @@
       </section>
     {% endif %}
 
-    {% include 'components/detail_pager.html.twig' with {
+    {% include 'components/codex/detail_pager.html.twig' with {
       nav: nav|default({ prev: null, next: null }),
       route: 'app_summoner',
-      list_href: resource_path('app_summoners', {}, selectedVersion, selectedLocale),
-      version: selectedVersion,
-      lang: selectedLocale
+      list_href: resource_path('app_summoners', {}, selection.version, selection.lang),
+      version: selection.version,
+      lang: selection.lang
     } %}
-    {% include 'components/detail_actions.html.twig' %}
+    {% include 'components/codex/detail_actions.html.twig' %}
   </div>
 </main>
 {% endblock %}

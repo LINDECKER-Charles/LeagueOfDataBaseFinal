@@ -35,7 +35,8 @@ final class ResponseTimeSubscriberTest extends TestCase
         $request = new Request();
         $request->server->set('REQUEST_TIME_FLOAT', microtime(true) - 0.05); // started ~50 ms ago
 
-        $header = $this->dispatch($request, HttpKernelInterface::MAIN_REQUEST)->headers->get('X-Runtime');
+        $header = $this->dispatch($request, HttpKernelInterface::MAIN_REQUEST)
+            ->headers->get('X-Runtime');
 
         self::assertNotNull($header);
         self::assertGreaterThanOrEqual(0.0, (float) $header);
@@ -47,12 +48,17 @@ final class ResponseTimeSubscriberTest extends TestCase
         $request = new Request();
         $request->server->set('REQUEST_TIME_FLOAT', microtime(true));
 
-        self::assertFalse($this->dispatch($request, HttpKernelInterface::SUB_REQUEST)->headers->has('X-Runtime'));
+        self::assertFalse(
+            $this->dispatch($request, HttpKernelInterface::SUB_REQUEST)->headers->has('X-Runtime'),
+        );
     }
 
     public function testSkipsWhenRequestTimeIsMissing(): void
     {
         // A hand-built Request carries no REQUEST_TIME_FLOAT (unlike createFromGlobals).
-        self::assertFalse($this->dispatch(new Request(), HttpKernelInterface::MAIN_REQUEST)->headers->has('X-Runtime'));
+        self::assertFalse(
+            $this->dispatch(new Request(), HttpKernelInterface::MAIN_REQUEST)
+                ->headers->has('X-Runtime'),
+        );
     }
 }
