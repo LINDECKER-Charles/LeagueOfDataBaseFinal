@@ -231,9 +231,9 @@ Facturation gérée côté Symfony (`/profile/api`) via Stripe Checkout, `price_
 
 ## Notes d'implémentation (résumé)
 
-- Service Go autonome (`go-api/`, port 8090), lecture seule sur Postgres (`users`,
+- Service Go autonome (`go/api/`, port 8090), lecture seule sur Postgres (`users`,
   `builds`) et MinIO (agrégats `analytics/daily/*.json`, datasets Data Dragon pour les
-  noms). Schéma des tables `api_keys` / `api_usage` : `go-api/schema.sql` (migration
+  noms). Schéma des tables `api_keys` / `api_usage` : `go/api/schema.sql` (migration
   Doctrine côté `app/`).
 - Clés validées mises en cache 60 s ; le compteur mensuel est décompté en mémoire entre
   deux rafraîchissements et le métrage est flushé en base par lots (~1 s) : un léger

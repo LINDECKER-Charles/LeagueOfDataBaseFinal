@@ -67,9 +67,13 @@ jobs:
 
   go:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [fetcher, api]
     defaults:
       run:
-        working-directory: go-workers
+        working-directory: go/${{ matrix.module }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -78,9 +82,10 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: '1.25'
-          # Module vit dans go-workers/ et n'a pas de go.sum (deps stdlib) :
-          # cible go.mod pour la clé de cache, sinon setup-go cherche à la racine.
-          cache-dependency-path: go-workers/go.mod
+          # Chaque module vit dans go/<module>/ et fetcher n'a pas de go.sum
+          # (deps stdlib) : cible go.mod pour la clé de cache, sinon setup-go
+          # cherche à la racine du dépôt.
+          cache-dependency-path: go/${{ matrix.module }}/go.mod
 
       - name: Vet
         run: go vet ./...

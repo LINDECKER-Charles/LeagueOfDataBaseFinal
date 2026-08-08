@@ -6,7 +6,7 @@ namespace App\Entity\Enum;
 /**
  * Billing plan carried by an API key. Backed values are the exact strings
  * stored in api_keys.plan and consumed by the go-api service (contract:
- * go-api/schema.sql — do not rename).
+ * go/api/schema.sql — do not rename).
  *
  * Quotas are per CALENDAR MONTH even for annual plans: go-api enforces usage
  * against monthly_quota over the current month, so yearly volumes are

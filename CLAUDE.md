@@ -45,7 +45,7 @@ publier, puis **archiver** les entrées traitées dans `docs/changelog/archived/
 | Couche | Techno |
 |---|---|
 | Backend | Symfony 7.4 LTS / PHP 8.4 (`app/`) |
-| Fetch upstream | micro-service Go `go-workers/` (passerelle thin, allowlist SSRF) |
+| Fetch upstream | micro-service Go `go/fetcher/` (passerelle thin, allowlist SSRF) |
 | Stockage assets | MinIO S3 content-addressed (Flysystem + async-aws) |
 | Données utilisateur | PostgreSQL 17 + Doctrine ORM (comptes, favoris, builds) |
 | Front | Twig + îlots Vite / Vue 3 / TS / PrimeVue, navigation Turbo Drive |
@@ -183,8 +183,8 @@ Convention de commits (maintenue par /commit, initialisée par /b-hive-init).
   - `app/translations/**` → `i18n`
   - `app/public/changelog/**` (+ archivage `docs/changelog/**` de la même release) → `changelog`
   - Lot touchant à la fois contrôleur + templates + traductions → `full-stack/<zone>`
-  - `go-workers/**` → `fetcher`
-  - `go-api/**` → `api`
+  - `go/fetcher/**` → `fetcher`
+  - `go/api/**` → `api`
   - `compose*`, `docker/**`, `infra/**` → `infra`
   - `tools/**` → `tools`
   - `screenshot/**` → `docs/screenshots`

@@ -79,7 +79,7 @@ services:
   go-fetcher:
     image: ${REGISTRY:-lodb}/go-fetcher:${IMAGE_TAG:-latest}
     build:
-      context: ./go-workers
+      context: ./go/fetcher
       dockerfile: Dockerfile
     environment:
       PORT: "8085"
@@ -96,7 +96,7 @@ services:
   go-api:
     image: ${REGISTRY:-lodb}/go-api:${IMAGE_TAG:-latest}
     build:
-      context: ./go-api
+      context: ./go/api
       dockerfile: Dockerfile
     # Public paid API. In dev the host port is published via compose.override.yaml;
     # in staging/prod it is reached through the shared edge proxy on its own
