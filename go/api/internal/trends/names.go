@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"leagueofdatabase/go-api/internal/store"
+	"lodb/go/api/internal/store"
 )
 
 // nameResolutionLang is the dataset language used for display names — en_US is

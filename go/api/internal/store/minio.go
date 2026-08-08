@@ -11,7 +11,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
-	"leagueofdatabase/go-api/internal/config"
+	"lodb/go/api/internal/config"
 )
 
 const (

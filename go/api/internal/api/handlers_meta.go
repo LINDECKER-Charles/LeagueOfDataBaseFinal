@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"leagueofdatabase/go-api/internal/trends"
+	"lodb/go/api/internal/trends"
 )
 
 type trendsResponse struct {

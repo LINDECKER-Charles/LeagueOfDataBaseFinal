@@ -1,4 +1,4 @@
-module leagueofdatabase/go-api
+module lodb/go/api
 
 go 1.25
 

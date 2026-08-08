@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"go-workers/internal/fetcher"
+	"lodb/go/fetcher/internal/fetcher"
 )
 
 type stubFetcher struct {

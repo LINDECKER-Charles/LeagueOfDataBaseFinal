@@ -22,7 +22,7 @@ app/.env.local
 app/.env.*.local
 
 # Not part of the php/nginx image (built from their own contexts / unrelated)
-go-workers
+go
 docs
 screenshot
 tailwind.config.js

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"leagueofdatabase/go-api/internal/store"
+	"lodb/go/api/internal/store"
 )
 
 type fakeDatasets struct {

@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"leagueofdatabase/go-api/internal/keys"
-	"leagueofdatabase/go-api/internal/ratelimit"
-	"leagueofdatabase/go-api/internal/store"
-	"leagueofdatabase/go-api/internal/trends"
+	"lodb/go/api/internal/keys"
+	"lodb/go/api/internal/ratelimit"
+	"lodb/go/api/internal/store"
+	"lodb/go/api/internal/trends"
 )
 
 // AuthStore covers the key/quota persistence needed by the middleware.

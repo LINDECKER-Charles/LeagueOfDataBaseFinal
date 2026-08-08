@@ -11,13 +11,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"leagueofdatabase/go-api/internal/api"
-	"leagueofdatabase/go-api/internal/config"
-	"leagueofdatabase/go-api/internal/keys"
-	"leagueofdatabase/go-api/internal/metering"
-	"leagueofdatabase/go-api/internal/ratelimit"
-	"leagueofdatabase/go-api/internal/store"
-	"leagueofdatabase/go-api/internal/trends"
+	"lodb/go/api/internal/api"
+	"lodb/go/api/internal/config"
+	"lodb/go/api/internal/keys"
+	"lodb/go/api/internal/metering"
+	"lodb/go/api/internal/ratelimit"
+	"lodb/go/api/internal/store"
+	"lodb/go/api/internal/trends"
 )
 
 func main() {

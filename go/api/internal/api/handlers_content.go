@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"leagueofdatabase/go-api/internal/store"
+	"lodb/go/api/internal/store"
 )
 
 // buildSharePathPrefix matches the site's build sharing route (/b/{token}).

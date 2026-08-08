@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"leagueofdatabase/go-api/internal/store"
+	"lodb/go/api/internal/store"
 )
 
 func publicProfileAuth() *stubAuth { return &stubAuth{key: usableKey()} }

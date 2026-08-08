@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Build context = ./go-api
+# Build context = ./go/api
 FROM golang:1.25-alpine AS build
 WORKDIR /src
 COPY go.mod go.sum ./

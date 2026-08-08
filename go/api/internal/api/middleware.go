@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"leagueofdatabase/go-api/internal/keys"
-	"leagueofdatabase/go-api/internal/quota"
-	"leagueofdatabase/go-api/internal/ratelimit"
+	"lodb/go/api/internal/keys"
+	"lodb/go/api/internal/quota"
+	"lodb/go/api/internal/ratelimit"
 )
 
 type entryContextKey struct{}

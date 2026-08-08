@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"go-workers/internal/api"
-	"go-workers/internal/config"
-	"go-workers/internal/fetcher"
+	"lodb/go/fetcher/internal/api"
+	"lodb/go/fetcher/internal/config"
+	"lodb/go/fetcher/internal/fetcher"
 )
 
 // Server-side budgets. Named rather than inlined so the relationship between

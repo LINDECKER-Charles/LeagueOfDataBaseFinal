@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"leagueofdatabase/go-api/internal/store"
+	"lodb/go/api/internal/store"
 )
 
 // publicContent answers every content query without failing.

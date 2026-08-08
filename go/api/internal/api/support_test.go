@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"leagueofdatabase/go-api/internal/keys"
-	"leagueofdatabase/go-api/internal/ratelimit"
-	"leagueofdatabase/go-api/internal/store"
-	"leagueofdatabase/go-api/internal/trends"
+	"lodb/go/api/internal/keys"
+	"lodb/go/api/internal/ratelimit"
+	"lodb/go/api/internal/store"
+	"lodb/go/api/internal/trends"
 )
 
 // testRawKey is the only shape keys.Hash accepts: lodb_ + 40 hex characters.

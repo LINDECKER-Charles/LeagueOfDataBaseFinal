@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"leagueofdatabase/go-api/internal/keys"
+	"lodb/go/api/internal/keys"
 )
 
 // KeyByHash resolves an API key row by the SHA-256 hex of the raw key.

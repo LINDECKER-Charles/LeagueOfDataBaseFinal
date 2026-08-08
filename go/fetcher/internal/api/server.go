@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"go-workers/internal/fetcher"
+	"lodb/go/fetcher/internal/fetcher"
 )
 
 // URLFetcher is the subset of *fetcher.Fetcher the server needs (stubbable in tests).
