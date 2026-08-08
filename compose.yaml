@@ -43,6 +43,14 @@ services:
       MAILER_FROM: "${MAILER_FROM:-LeagueOfDataBase <no-reply@leagueofdatabase.gg>}"
       # Mailbox receiving footer contact-form submissions (empty -> admin inbox only).
       CONTACT_RECIPIENT: ${CONTACT_RECIPIENT:-}
+    volumes:
+      # Durable local state. A deploy is `compose pull` + `up -d`, which RECREATES
+      # this container: anything written to the image's writable layer is destroyed.
+      # Analytics events, the audit journal, sessions and the GeoLite2 DB therefore
+      # live under var/state, the only volume-backed path. The rest of var/ (cache,
+      # log) stays disposable ON PURPOSE — persisting var/cache would serve a
+      # compiled container from a previous image after a deploy.
+      - app_state:/var/www/html/var/state
     depends_on:
       go-fetcher:
         condition: service_healthy
@@ -180,3 +188,5 @@ services:
 volumes:
   minio_data:
   pgdata:
+  # Analytics events, audit journal, sessions, GeoLite2 DB — see the php service.
+  app_state:

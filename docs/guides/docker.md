@@ -254,6 +254,18 @@ docker compose down
 docker volume rm lodb_minio_data
 ```
 
+### Volumes de données (à ne pas supprimer à la légère)
+
+| Volume | Monté sur | Contenu |
+|---|---|---|
+| `lodb_minio_data` | `minio:/data` | Bucket DDragon : images, datasets, manifestes, agrégats analytics |
+| `lodb_pgdata` | `postgres:/var/lib/postgresql/data` | Données utilisateur : comptes, favoris, builds |
+| `lodb_app_state` | `php:/var/www/html/var/state` | Events analytics, journal d'audit, sessions, base GeoLite2 |
+
+`app_state` est ce qui rend l'observabilité durable : un déploiement recrée le
+conteneur `php`, et tout ce qui vit ailleurs sous `var/` (cache, log) est perdu —
+volontairement, cf. `docs/architecture/analytics.md`.
+
 ---
 
 ## 🌐 Réseau
