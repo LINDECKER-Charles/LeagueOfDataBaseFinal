@@ -1,6 +1,22 @@
 {
   "patches": [
     {
+      "id": "2026-08-09-heraut",
+      "version": "2.1.2",
+      "codename": "Héraut",
+      "date": "2026-08-09",
+      "type": "hotfix",
+      "title": "LeagueOfDataBase 2.1.2 — Héraut",
+      "summary": "Le site explique enfin ce qu'il est : trois pages À propos, Données et FAQ en 21 langues, des fiches qui annoncent leurs vraies valeurs aux moteurs et aux IA, une langue qui ne dépend plus du domaine, et une console d'administration bien plus lisible.",
+      "tags": [
+        { "kind": "feature", "label": "Pages À propos, Données & FAQ" },
+        { "kind": "feature", "label": "Fiches lisibles par les moteurs & IA" },
+        { "kind": "feature", "label": "Console admin plus lisible" },
+        { "kind": "bugfix", "label": "7 correctifs" }
+      ],
+      "stats": { "fixes": 7 }
+    },
+    {
       "id": "2026-07-19-enclume",
       "version": "2.1.1",
       "codename": "Enclume",
