@@ -28,10 +28,10 @@ final class NumberFormat
     {
         $n = (float) $n;
         if ($n >= 1_000_000) {
-            return $this->trim(number_format($n / 1_000_000, 1)) . 'M';
+            return $this->stripTrailingZeros(number_format($n / 1_000_000, 1)) . 'M';
         }
         if ($n >= 1_000) {
-            return $this->trim(number_format($n / 1_000, 1)) . 'k';
+            return $this->stripTrailingZeros(number_format($n / 1_000, 1)) . 'k';
         }
 
         return (string) (int) $n;
@@ -43,7 +43,8 @@ final class NumberFormat
         return number_format((float) $n, 0, '.', ' ');
     }
 
-    private function trim(string $formatted): string
+    /** "1.0k" reads worse than "1k": drop a decimal that carries no information. */
+    private function stripTrailingZeros(string $formatted): string
     {
         return rtrim(rtrim($formatted, '0'), '.');
     }

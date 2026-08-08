@@ -1,5 +1,5 @@
 # /about, /about/data, /faq 페이지의 본문입니다.
-# faq.* 식별자는 App\Controller\AboutController::FAQ_ENTRIES에 선언되어 있습니다.
+# faq.* 식별자는 App\Controller\Editorial\AboutController::FAQ_ENTRIES에 선언되어 있습니다.
 eyebrow: "소개"
 
 index:

@@ -1,5 +1,5 @@
 # เนื้อหาสำหรับหน้า /about, /about/data และ /faq
-# รหัส faq.* ถูกประกาศไว้ใน App\Controller\AboutController::FAQ_ENTRIES
+# รหัส faq.* ถูกประกาศไว้ใน App\Controller\Editorial\AboutController::FAQ_ENTRIES
 eyebrow: "เกี่ยวกับ"
 
 index:

@@ -1,5 +1,5 @@
 # /about, /about/data ve /faq sayfalarının editoryal içeriği.
-# faq.* kimlikleri App\Controller\AboutController::FAQ_ENTRIES içinde tanımlıdır.
+# faq.* kimlikleri App\Controller\Editorial\AboutController::FAQ_ENTRIES içinde tanımlıdır.
 eyebrow: "Hakkında"
 
 index:

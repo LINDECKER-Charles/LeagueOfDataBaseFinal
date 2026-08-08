@@ -22,8 +22,12 @@ final class CnilPasswordValidatorTest extends ConstraintValidatorTestCase
     protected function createValidator(): CnilPasswordValidator
     {
         $echoTranslator = new class implements TranslatorInterface {
-            public function trans(?string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string
-            {
+            public function trans(
+                ?string $id,
+                array $parameters = [],
+                ?string $domain = null,
+                ?string $locale = null,
+            ): string {
                 return (string) $id;
             }
 
@@ -59,8 +63,10 @@ final class CnilPasswordValidatorTest extends ConstraintValidatorTestCase
     }
 
     #[DataProvider('provideSingleMissingCriterion')]
-    public function testEachMissingCriterionIsReportedAlone(string $password, string $expectedKey): void
-    {
+    public function testEachMissingCriterionIsReportedAlone(
+        string $password,
+        string $expectedKey,
+    ): void {
         $this->validator->validate($password, new CnilPassword());
 
         $this->buildViolation($expectedKey)->assertRaised();

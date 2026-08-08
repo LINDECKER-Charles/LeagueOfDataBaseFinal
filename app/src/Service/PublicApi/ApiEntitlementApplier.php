@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Service\PublicApi;
 
 use App\Entity\ApiKey;
-use App\Entity\ApiPlan;
+use App\Entity\Enum\ApiPlan;
 use App\Repository\ApiKeyRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -41,10 +41,13 @@ final class ApiEntitlementApplier implements ApiEntitlements
         }
 
         $this->apiKeys->addCredits($key, $requests, ApiPlan::RATE_CREDITS);
-        $this->logger->info('stripe.api.credits_added', ['api_key_id' => $key->getId(), 'requests' => $requests]);
+        $this->logger->info(
+            'stripe.api.credits_added',
+            ['api_key_id' => $key->getId(), 'requests' => $requests]
+        );
     }
 
-    public function applyPlan(int $userId, ApiPlan $plan, ?string $customerId, ?string $subscriptionId): void
+    public function applyPlan(int $userId, ApiPlan $plan, StripeSubscriptionRef $stripe): void
     {
         if (!$plan->isSubscription()) {
             $this->logger->warning('stripe.api.plan_not_subscribable', ['plan' => $plan->value]);
@@ -58,9 +61,12 @@ final class ApiEntitlementApplier implements ApiEntitlements
         }
 
         $key->applyPlan($plan);
-        $key->attachStripe($customerId, $subscriptionId);
+        $key->attachStripe($stripe->customerId, $stripe->subscriptionId);
         $this->entityManager->flush();
-        $this->logger->info('stripe.api.plan_activated', ['api_key_id' => $key->getId(), 'plan' => $plan->value]);
+        $this->logger->info(
+            'stripe.api.plan_activated',
+            ['api_key_id' => $key->getId(), 'plan' => $plan->value]
+        );
     }
 
     /** Subscription cancelled/expired on Stripe's side: back to free, credits kept. */
@@ -103,7 +109,10 @@ final class ApiEntitlementApplier implements ApiEntitlements
         $this->entityManager->persist($issued->key);
         // Flush now: addCredits() needs the id for its SQL-level increment.
         $this->entityManager->flush();
-        $this->logger->info('stripe.api.key_autoprovisioned', ['api_key_id' => $issued->key->getId()]);
+        $this->logger->info(
+            'stripe.api.key_autoprovisioned',
+            ['api_key_id' => $issued->key->getId()]
+        );
 
         return $issued->key;
     }

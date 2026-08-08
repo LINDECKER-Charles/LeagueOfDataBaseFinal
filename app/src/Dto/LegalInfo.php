@@ -8,7 +8,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 /**
  * Site-identity facts rendered verbatim on the /legal/* pages. Values come from
  * config/packages/legal_info.yaml; the "[[À COMPLÉTER : …]]" placeholders must
- * be replaced before production (tracked in docs/legal-info.md).
+ * be replaced before production (tracked in docs/guides/legal-info.md).
  */
 final readonly class LegalInfo
 {

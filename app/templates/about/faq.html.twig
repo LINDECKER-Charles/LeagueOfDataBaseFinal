@@ -23,7 +23,8 @@
   <dl class="flex flex-col gap-8">
     {% for entry in entries %}
       <div id="{{ entry.id }}" style="scroll-margin-top: 6.5rem;">
-        <dt class="mb-2 font-beaufort text-lg leading-snug tracking-[0.03em] text-gold-bright">{{ entry.question }}</dt>
+        <dt class="mb-2 font-beaufort text-lg leading-snug tracking-[0.03em]
+            text-gold-bright">{{ entry.question }}</dt>
         <dd class="font-spiegel leading-relaxed text-text-muted">{{ entry.answer }}</dd>
       </div>
     {% endfor %}
@@ -33,7 +34,8 @@
 <hr class="hx-rule">
 
 <section id="more">
-  {% include 'components/codex_header.html.twig' with { title: 'faq.more.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'faq.more.title'|trans({}, 'about') } %}
   <p>{{ 'faq.more.body'|trans({}, 'about') }}</p>
   <ul>
     <li><a href="{{ path('app_about') }}">{{ 'index.title'|trans({}, 'about') }}</a></li>

@@ -36,7 +36,8 @@
             </div>
         {% else %}
             {# External 303 redirect to Stripe's hosted page: keep Turbo out. #}
-            <form method="post" action="{{ path('app_donate_checkout') }}" data-turbo="false" class="donate-form mt-6">
+            <form method="post" action="{{ path('app_donate_checkout') }}"
+                  data-turbo="false" class="donate-form mt-6">
                 {% set tierLabels = {
                     300: 'donate.tier.spark',
                     500: 'donate.tier.gem',
@@ -58,9 +59,13 @@
                                     {{ cents == defaultPreset ? 'checked' }}
                                 >
                                 <span class="donate-tier__gem" aria-hidden="true"></span>
-                                <span class="donate-tier__amount">{{ cents // 100 }}<span class="donate-tier__currency">€</span></span>
+                                <span class="donate-tier__amount">{{
+                                    cents // 100
+                                }}<span class="donate-tier__currency">€</span></span>
                                 {% if tierLabels[cents] is defined %}
-                                    <span class="donate-tier__label">{{ tierLabels[cents]|trans }}</span>
+                                    <span class="donate-tier__label">{{
+                                        tierLabels[cents]|trans
+                                    }}</span>
                                 {% endif %}
                             </label>
                         {% endfor %}
@@ -68,7 +73,8 @@
                 </fieldset>
 
                 <div class="donate-custom">
-                    <label for="donate-amount" class="donate-legend">{{ 'donate.custom.label'|trans }}</label>
+                    <label for="donate-amount"
+                           class="donate-legend">{{ 'donate.custom.label'|trans }}</label>
                     <div class="donate-custom__field">
                         <input
                             type="text"
@@ -89,15 +95,18 @@
                 </div>
 
                 <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
-                <button type="submit" class="hx-btn-gold mt-6 w-full">{{ 'donate.submit'|trans }}</button>
+                <button type="submit"
+                        class="hx-btn-gold mt-6 w-full">{{ 'donate.submit'|trans }}</button>
             </form>
         {% endif %}
 
         <p class="donate-legal gold-hairline">
             {{ 'donate.legal.secure'|trans }} —
-            <a href="{{ path('app_legal_privacy') }}" class="nav-link text-gold">{{ 'donate.legal.privacy'|trans }}</a>
+            <a href="{{ path('app_legal_privacy') }}"
+               class="nav-link text-gold">{{ 'donate.legal.privacy'|trans }}</a>
             ·
-            <a href="{{ path('app_legal_terms') }}" class="nav-link text-gold">{{ 'donate.legal.terms'|trans }}</a>
+            <a href="{{ path('app_legal_terms') }}"
+               class="nav-link text-gold">{{ 'donate.legal.terms'|trans }}</a>
         </p>
     </section>
 </main>

@@ -7,21 +7,18 @@ use App\Service\Client\ClientManager;
 use App\Service\Client\VersionManager;
 
 /**
- * Données client transverses (utilisables sur toutes les pages).
- * Contient uniquement :
- * - versions          : liste des versions DDragon
- * - languages         : liste des langues DDragon
- * - languageLabels    : libellés lisibles par langue
- * - currentLocale     : langue du navigateur (BCP47 normalisée, ex. "fr_FR")
- * - session           : préférences { locale:?string, version:?string } hydratées depuis session/cookie
+ * Immutable snapshot of the version/language context handed to every view: built
+ * once per request so no template has to re-query the managers, and frozen so a
+ * late mutation cannot make two fragments of the same page disagree.
  */
 final class ClientData
 {
     /**
-     * @param string[]             $versions
-     * @param string[]             $languages
-     * @param array<string,string> $languageLabels
-     * @param array{locale:?string, version:?string} $session
+     * @param string[]             $versions       DDragon versions, newest first
+     * @param string[]             $languages      DDragon language codes
+     * @param array<string,string> $languageLabels human-readable label per language
+     * @param string               $currentLocale  resolved UI locale (BCP47, e.g. "fr_FR")
+     * @param array{locale:?string, version:?string} $session preferences from session/cookie
      */
     public function __construct(
         public readonly array  $versions,
@@ -31,17 +28,14 @@ final class ClientData
         public readonly array  $session,
     ) {}
 
-    /**
-     * Construit un ClientData depuis les services applicatifs.
-     */
-    public static function fromServices(VersionManager $vm, ClientManager $cm): self
+    public static function fromServices(VersionManager $versions, ClientManager $client): self
     {
         return new self(
-            versions:       $vm->getVersions(),
-            languages:      $vm->getLanguages(),
-            languageLabels: $vm->getLanguageLabels(),
-            currentLocale:  $cm->getLangue(),
-            session:        $cm->getOrHydratePreferences(),
+            versions:       $versions->getVersions(),
+            languages:      $versions->getLanguages(),
+            languageLabels: $versions->getLanguageLabels(),
+            currentLocale:  $client->getLangue(),
+            session:        $client->getOrHydratePreferences(),
         );
     }
 }

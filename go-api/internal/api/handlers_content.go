@@ -30,22 +30,29 @@ type profileFavorites struct {
 func (s *Server) handleProfile(w http.ResponseWriter, r *http.Request) {
 	username := r.PathValue("username")
 	profile, err := s.content.ProfileByUsername(r.Context(), username)
-	if err != nil && !isNotFound(err) {
-		s.log.Error("profile lookup failed", "error", err)
-		writeInternal(w)
+	if isNotFound(err) {
+		writeNoPublicProfile(w)
 		return
 	}
-	if isNotFound(err) || !profile.IsPublic {
-		writeError(w, http.StatusNotFound, CodeNotFound, "no public profile for this username")
+	if err != nil {
+		s.storeFailure(w, "profile lookup failed", err)
+		return
+	}
+	if !profile.IsPublic {
+		writeNoPublicProfile(w)
 		return
 	}
 	buildCount, err := s.content.CountPublicBuilds(r.Context(), profile.ID)
 	if err != nil {
-		s.log.Error("build count failed", "error", err)
-		writeInternal(w)
+		s.storeFailure(w, "build count failed", err)
 		return
 	}
-	writeJSON(w, http.StatusOK, profileResponse{
+	writeJSON(w, http.StatusOK, toProfileResponse(profile, buildCount))
+}
+
+// toProfileResponse projects a stored profile onto the public contract.
+func toProfileResponse(profile store.Profile, buildCount int64) profileResponse {
+	return profileResponse{
 		Username:  profile.Username,
 		CreatedAt: profile.CreatedAt,
 		Favorites: profileFavorites{
@@ -55,7 +62,15 @@ func (s *Server) handleProfile(w http.ResponseWriter, r *http.Request) {
 			SummonerID: profile.FavoriteSummonerID,
 		},
 		PublicBuilds: buildCount,
-	})
+	}
+}
+
+// writeNoPublicProfile is the single 404 of handleProfile: an unknown account
+// and a private one must be indistinguishable from the outside.
+func writeNoPublicProfile(w http.ResponseWriter) {
+	apiError{
+		http.StatusNotFound, CodeNotFound, "no public profile for this username",
+	}.write(w)
 }
 
 type buildItem struct {
@@ -85,19 +100,22 @@ type buildsResponse struct {
 func (s *Server) handleChampionBuilds(w http.ResponseWriter, r *http.Request) {
 	paging, err := ParsePagination(r.URL.Query())
 	if err != nil {
-		writeError(w, http.StatusBadRequest, CodeInvalid, err.Error())
+		apiError{http.StatusBadRequest, CodeInvalid, err.Error()}.write(w)
 		return
 	}
 	championID := r.PathValue("championId")
-	builds, total, err := s.content.PublicBuilds(r.Context(), championID, paging.PerPage, paging.Offset())
+	builds, total, err := s.content.PublicBuilds(r.Context(), store.BuildsQuery{
+		ChampionID: championID,
+		Limit:      paging.PerPage,
+		Offset:     paging.Offset(),
+	})
 	if err != nil {
-		s.log.Error("builds query failed", "error", err)
-		writeInternal(w)
+		s.storeFailure(w, "builds query failed", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, buildsResponse{
 		ChampionID: championID,
-		Data:       toBuildItems(builds),
+		Data:       toBuildItems(builds, s.siteBaseURL),
 		Pagination: paginationMeta{
 			Page: paging.Page, PerPage: paging.PerPage,
 			Total: total, TotalPages: paging.TotalPages(total),
@@ -105,7 +123,10 @@ func (s *Server) handleChampionBuilds(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func toBuildItems(builds []store.Build) []buildItem {
+// toBuildItems projects stored builds onto the public contract. share_url is
+// absolute: consumers of this API sit on another origin and cannot resolve a
+// site-relative path themselves.
+func toBuildItems(builds []store.Build, siteBaseURL string) []buildItem {
 	items := make([]buildItem, 0, len(builds))
 	for _, b := range builds {
 		items = append(items, buildItem{
@@ -114,7 +135,7 @@ func toBuildItems(builds []store.Build) []buildItem {
 			GameVersion: b.GameVersion,
 			Runes:       b.Runes,
 			Steps:       b.Steps,
-			ShareURL:    buildSharePathPrefix + b.ShareToken,
+			ShareURL:    siteBaseURL + buildSharePathPrefix + b.ShareToken,
 			CreatedAt:   b.CreatedAt,
 		})
 	}

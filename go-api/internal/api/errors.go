@@ -26,24 +26,36 @@ type errorEnvelope struct {
 	Error errorBody `json:"error"`
 }
 
+// apiError is one refusal: the status and the envelope served with it. The
+// three parts are a single value because they always travel together — the
+// auth pipeline decides on a refusal long before anything renders it.
+type apiError struct {
+	status  int
+	code    string
+	message string
+}
+
+// write renders the refusal. Single place responsible for the envelope shape.
+func (e apiError) write(w http.ResponseWriter) {
+	writeJSON(w, e.status, errorEnvelope{Error: errorBody{Code: e.code, Message: e.message}})
+}
+
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-func writeError(w http.ResponseWriter, status int, code, message string) {
-	writeJSON(w, status, errorEnvelope{Error: errorBody{Code: code, Message: message}})
-}
-
 // writeInternal hides the underlying failure behind the uniform envelope; the
 // real error is expected to be logged by the caller.
 func writeInternal(w http.ResponseWriter) {
-	writeError(w, http.StatusInternalServerError, CodeInternal, "internal error")
+	apiError{http.StatusInternalServerError, CodeInternal, "internal error"}.write(w)
 }
 
 // writeUnavailable is used when a dependency (database) is down or the schema
 // is not migrated yet: same envelope, 503 status.
 func writeUnavailable(w http.ResponseWriter) {
-	writeError(w, http.StatusServiceUnavailable, CodeInternal, "service temporarily unavailable")
+	apiError{
+		http.StatusServiceUnavailable, CodeInternal, "service temporarily unavailable",
+	}.write(w)
 }

@@ -32,7 +32,8 @@ final class GoFetcherClient
     public function fetch(string $url): string
     {
         try {
-            $data = $this->http->request('POST', '/fetch', ['json' => ['urls' => [$url]]])->toArray();
+            $data = $this->http->request('POST', '/fetch', ['json' => ['urls' => [$url]]])
+                ->toArray();
         } catch (\Throwable $e) {
             throw new \RuntimeException('go-fetcher: request failed: '.$e->getMessage(), 0, $e);
         }
@@ -75,22 +76,25 @@ final class GoFetcherClient
     private function fetchBatch(array $urls): array
     {
         try {
-            $data = $this->http->request('POST', '/fetch', ['json' => ['urls' => $urls]])->toArray();
+            $data = $this->http->request('POST', '/fetch', ['json' => ['urls' => $urls]])
+                ->toArray();
         } catch (\Throwable $e) {
-            throw new \RuntimeException('go-fetcher: batch request failed: '.$e->getMessage(), 0, $e);
+            throw new \RuntimeException(
+                'go-fetcher: batch request failed: '.$e->getMessage(),
+                0,
+                $e
+            );
         }
 
         $out = [];
         foreach ($data['results'] ?? [] as $item) {
-            if (!is_array($item) || isset($item['error'])) {
+            if (!is_array($item) || !isset($item['url'])) {
                 continue;
             }
-            $status = (int) ($item['status'] ?? 0);
-            if ($status < 200 || $status >= 300) {
-                continue;
-            }
-            $bytes = base64_decode((string) ($item['body_base64'] ?? ''), true);
-            if ($bytes !== false && isset($item['url'])) {
+            // Batch policy: an unusable result is dropped, never fatal — one bad
+            // image must not sink the whole ingest.
+            $bytes = $this->decodeBody($item);
+            if ($bytes !== null) {
                 $out[(string) $item['url']] = $bytes;
             }
         }
@@ -123,23 +127,57 @@ final class GoFetcherClient
      */
     private function decodeItem(array $item, string $url): string
     {
-        if (isset($item['error'])) {
-            throw new \RuntimeException('go-fetcher: '.$item['error']);
-        }
+        // Single-fetch policy: the caller asked for this exact resource, so an
+        // unusable result is an error it must be able to classify.
+        return $this->decodeBody($item) ?? throw $this->failure($item, $url);
+    }
+
+    /**
+     * Usable body bytes of one gateway result, or null when it carries an error,
+     * a non-2xx status or an undecodable body.
+     *
+     * Sole reader of the gateway's response shape (`error`, `status`,
+     * `body_base64`): batch and single fetch differ only in what they do with a
+     * null, never in how they read it.
+     *
+     * @param array<string,mixed> $item
+     */
+    private function decodeBody(array $item): ?string
+    {
         $status = (int) ($item['status'] ?? 0);
-        // 403/404 = ressource définitivement absente (repli/dégradation possible) ;
-        // tout autre non-2xx = panne transitoire à propager telle quelle.
-        if ($status === 403 || $status === 404) {
-            throw new UpstreamNotFoundException(sprintf('go-fetcher: upstream %d for %s', $status, $url));
-        }
-        if ($status < 200 || $status >= 300) {
-            throw new \RuntimeException(sprintf('go-fetcher: upstream status %d for %s', $status, $url));
+        if (isset($item['error']) || $status < 200 || $status >= 300) {
+            return null;
         }
         $bytes = base64_decode((string) ($item['body_base64'] ?? ''), true);
-        if ($bytes === false) {
-            throw new \RuntimeException('go-fetcher: invalid base64 body for '.$url);
+
+        return $bytes === false ? null : $bytes;
+    }
+
+    /**
+     * Classifies why a result was unusable. 403/404 = resource definitively
+     * absent (fallback/degradation is fine); any other non-2xx = transient
+     * outage, propagated as-is.
+     *
+     * @param array<string,mixed> $item
+     */
+    private function failure(array $item, string $url): \RuntimeException
+    {
+        if (isset($item['error'])) {
+            return new \RuntimeException('go-fetcher: '.$item['error']);
         }
 
-        return $bytes;
+        $status = (int) ($item['status'] ?? 0);
+        if ($status === 403 || $status === 404) {
+            return new UpstreamNotFoundException(
+                sprintf('go-fetcher: upstream %d for %s', $status, $url)
+            );
+        }
+        if ($status < 200 || $status >= 300) {
+            return new \RuntimeException(
+                sprintf('go-fetcher: upstream status %d for %s', $status, $url)
+            );
+        }
+
+        return new \RuntimeException('go-fetcher: invalid base64 body for '.$url);
     }
 }

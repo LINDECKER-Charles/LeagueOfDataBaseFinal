@@ -1,0 +1,77 @@
+/* ---------------------------------------------------------------------------
+   Long-form editorial typography + data tables.
+
+   Legal notices, the About pages and the developer docs are raw HTML bodies:
+   utility classes on every paragraph of a 300-line text would be unreadable, so
+   the container styles its own children. The rules used to be duplicated in four
+   page-scoped <style> blocks (about/legal/api/developers) which had already
+   started to drift; they live here once, minified and cached like the rest of
+   the bundle.
+--------------------------------------------------------------------------- */
+@layer components {
+  .hx-prose { font-family: var(--font-spiegel); }
+  .hx-prose section { scroll-margin-top: 6.5rem; }
+  .hx-prose h2 {
+    margin-bottom: 1rem;
+    font-family: var(--font-beaufort);
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-gold-bright);
+  }
+  .hx-prose h3 {
+    margin: 1.25rem 0 0.5rem;
+    font-family: var(--font-beaufort);
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+    color: var(--color-gold);
+  }
+  .hx-prose p,
+  .hx-prose li,
+  .hx-prose blockquote { color: var(--color-text-muted); line-height: 1.75; }
+  .hx-prose p + p { margin-top: 0.75rem; }
+  .hx-prose a { color: var(--color-hex); text-underline-offset: 4px; }
+  .hx-prose a:hover { text-decoration: underline; }
+  .hx-prose ul, .hx-prose ol { margin: 0.75rem 0; padding-left: 1.4rem; }
+  .hx-prose ul { list-style: square; }
+  .hx-prose ol { list-style: decimal; }
+  .hx-prose li + li { margin-top: 0.4rem; }
+  .hx-prose strong { color: var(--color-text); font-weight: 600; }
+
+  /* ---- Data table — framed by default, inside prose or standalone --------- */
+  .hx-table-scroll { overflow-x: auto; }
+  .hx-prose table,
+  .hx-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  /* Inside prose the table is a paragraph-level block and owns its rhythm;
+     standalone it is positioned by its container. */
+  .hx-prose table { margin: 1rem 0; }
+  .hx-prose th, .hx-prose td,
+  .hx-table th, .hx-table td {
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  .hx-prose th,
+  .hx-table th {
+    font-family: var(--font-beaufort);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-gold);
+    background: color-mix(in srgb, var(--color-void) 70%, transparent);
+  }
+  /* Flush variant — rule-separated rows for dense readouts (API usage), where a
+     full grid would out-shout the numbers it frames. */
+  .hx-table--flush th, .hx-table--flush td {
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-gold-deep) 35%, transparent);
+    padding: 0.5rem 0.75rem;
+  }
+  .hx-table--flush th { background: none; }
+  .hx-table .num { text-align: right; font-family: var(--font-mono, monospace); }
+}

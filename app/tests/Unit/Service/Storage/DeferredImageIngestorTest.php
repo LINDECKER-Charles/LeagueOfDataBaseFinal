@@ -18,7 +18,10 @@ final class DeferredImageIngestorTest extends TestCase
         // Safe default: never defer unless explicitly opted in — even under a request.
         self::assertFalse($ingestor->shouldDefer(), 'default (no opt-in) → ingest inline');
         $stack->push(new Request());
-        self::assertFalse($ingestor->shouldDefer(), 'HTTP request alone is not enough → still inline');
+        self::assertFalse(
+            $ingestor->shouldDefer(),
+            'HTTP request alone is not enough → still inline',
+        );
 
         // Opt-in only defers when there is also a request to defer to.
         $ingestor->withDeferral(function () use ($ingestor): void {

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service\Analytics;
 
+use App\Service\Analytics\Model\RefererOrigin;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,17 +19,22 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class RequestEventFactory
 {
+    /** The only page kind that carries an entity name (the detail target). */
+    private const KIND_DETAIL = 'detail';
+    private const KIND_LIST = 'list';
+    private const KIND_HOME = 'home';
+
     /** Loggable route name => [resource type, page kind]. */
     private const ROUTES = [
-        'app_home' => ['home', 'home'],
-        'app_champions' => ['champion', 'list'],
-        'app_champion' => ['champion', 'detail'],
-        'app_items' => ['item', 'list'],
-        'app_item' => ['item', 'detail'],
-        'app_runes' => ['runesReforged', 'list'],
-        'app_rune' => ['runesReforged', 'detail'],
-        'app_summoners' => ['summoner', 'list'],
-        'app_summoner' => ['summoner', 'detail'],
+        'app_home' => ['home', self::KIND_HOME],
+        'app_champions' => ['champion', self::KIND_LIST],
+        'app_champion' => ['champion', self::KIND_DETAIL],
+        'app_items' => ['item', self::KIND_LIST],
+        'app_item' => ['item', self::KIND_DETAIL],
+        'app_runes' => ['runesReforged', self::KIND_LIST],
+        'app_rune' => ['runesReforged', self::KIND_DETAIL],
+        'app_summoners' => ['summoner', self::KIND_LIST],
+        'app_summoner' => ['summoner', self::KIND_DETAIL],
     ];
 
     public function __construct(
@@ -41,21 +47,22 @@ final class RequestEventFactory
 
     public function fromRequestResponse(Request $request, Response $response): ?RequestEvent
     {
-        if ($request->getMethod() !== 'GET') {
-            return null;
-        }
-
         $route = (string) $request->attributes->get('_route');
-        $mapping = self::ROUTES[$route] ?? null;
-        if ($mapping === null) {
+        if ($request->getMethod() !== 'GET' || !isset(self::ROUTES[$route])) {
             return null;
         }
 
-        [$type, $kind] = $mapping;
+        return $this->capture($request, $response, $route);
+    }
+
+    /** @param string $route already proven loggable by {@see fromRequestResponse()} */
+    private function capture(Request $request, Response $response, string $route): RequestEvent
+    {
+        [$type, $kind] = self::ROUTES[$route];
         $ip = $request->getClientIp();
         $userAgent = $request->headers->get('User-Agent');
-        $ua = $this->userAgents->parse($userAgent);
-        $referer = $this->referers->classify($request->headers->get('Referer'), $request->getHost());
+        $client = $this->userAgents->parse($userAgent);
+        $referer = $this->classifyReferer($request);
         $country = $this->geo->locate($ip);
 
         return new RequestEvent(
@@ -64,7 +71,7 @@ final class RequestEventFactory
             path: $request->getPathInfo(),
             type: $type,
             kind: $kind,
-            entity: $kind === 'detail' ? $this->entity($request) : null,
+            entity: $kind === self::KIND_DETAIL ? $this->entity($request) : null,
             status: $response->getStatusCode(),
             version: $this->queryString($request, 'version'),
             lang: $this->queryString($request, 'lang'),
@@ -72,15 +79,16 @@ final class RequestEventFactory
             ip: $ip,
             visitorId: $this->visitorId($ip, $userAgent),
             userAgent: $userAgent,
-            browser: $ua['browser'],
-            os: $ua['os'],
-            device: $ua['device'],
-            isBot: $ua['isBot'],
-            refererHost: $referer['host'],
-            refererSource: $referer['source'],
-            country: $country['code'] ?? null,
-            countryName: $country['name'] ?? null,
+            browser: $client->browser, os: $client->os,
+            device: $client->device, isBot: $client->isBot,
+            refererHost: $referer->host, refererSource: $referer->source->value,
+            country: $country?->code, countryName: $country?->name,
         );
+    }
+
+    private function classifyReferer(Request $request): RefererOrigin
+    {
+        return $this->referers->classify($request->headers->get('Referer'), $request->getHost());
     }
 
     private function entity(Request $request): ?string

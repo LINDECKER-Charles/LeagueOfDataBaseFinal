@@ -33,7 +33,10 @@ final class InMemoryOrm
         // exercise the real column names — otherwise attribute-declared indexes on
         // e.g. `created_at` don't resolve against the default (camelCase) schema.
         $config->setNamingStrategy(new UnderscoreNamingStrategy());
-        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true], $config);
+        $connection = DriverManager::getConnection(
+            ['driver' => 'pdo_sqlite', 'memory' => true],
+            $config,
+        );
         $entityManager = new EntityManager($connection, $config);
 
         new SchemaTool($entityManager)->createSchema(

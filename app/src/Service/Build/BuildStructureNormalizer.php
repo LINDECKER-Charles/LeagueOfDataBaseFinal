@@ -15,26 +15,55 @@ namespace App\Service\Build;
 final class BuildStructureNormalizer
 {
     /**
+     * Sentinel written when a style/perk id cannot be read: the editor reads 0 as
+     * "nothing chosen yet" (same meaning as {@see BuildStructureProjector} blank
+     * pages), and the validator rejects it on the next write.
+     */
+    public const UNSET_PERK_ID = 0;
+
+    /**
      * @param array<mixed> $structure
-     * @return array{championId: string, runes: array<string, mixed>, steps: list<array<string, mixed>>}
+     * @return array{
+     *     championId: string,
+     *     runes: array<string, mixed>,
+     *     steps: list<array<string, mixed>>
+     * }
      */
     public function normalize(array $structure): array
     {
-        $runes = is_array($structure['runes'] ?? null) ? $structure['runes'] : [];
-
         return [
             'championId' => trim((string) ($structure['championId'] ?? '')),
-            'runes' => [
-                'primaryStyleId' => (int) BuildStructureValidator::readInt($runes['primaryStyleId'] ?? null),
-                'primarySelections' => $this->toIntList($runes['primarySelections'] ?? []),
-                'secondaryStyleId' => (int) BuildStructureValidator::readInt($runes['secondaryStyleId'] ?? null),
-                'secondarySelections' => $this->toIntList($runes['secondarySelections'] ?? []),
-            ],
+            'runes' => $this->normalizeRunes($structure['runes'] ?? null),
             'steps' => array_values(array_map(
                 $this->normalizeStep(...),
                 is_array($structure['steps'] ?? null) ? $structure['steps'] : [],
             )),
         ];
+    }
+
+    /**
+     * @return array{
+     *     primaryStyleId: int,
+     *     primarySelections: list<int>,
+     *     secondaryStyleId: int,
+     *     secondarySelections: list<int>
+     * }
+     */
+    private function normalizeRunes(mixed $runes): array
+    {
+        $runes = is_array($runes) ? $runes : [];
+
+        return [
+            'primaryStyleId' => $this->toPerkId($runes['primaryStyleId'] ?? null),
+            'primarySelections' => $this->toIntList($runes['primarySelections'] ?? []),
+            'secondaryStyleId' => $this->toPerkId($runes['secondaryStyleId'] ?? null),
+            'secondarySelections' => $this->toIntList($runes['secondarySelections'] ?? []),
+        ];
+    }
+
+    private function toPerkId(mixed $value): int
+    {
+        return IntegerValue::read($value) ?? self::UNSET_PERK_ID;
     }
 
     /** @return list<int> */
@@ -44,10 +73,7 @@ final class BuildStructureNormalizer
             return [];
         }
 
-        return array_values(array_map(
-            static fn (mixed $v): int => (int) BuildStructureValidator::readInt($v),
-            $values,
-        ));
+        return array_values(array_map($this->toPerkId(...), $values));
     }
 
     /**

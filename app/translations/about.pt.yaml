@@ -1,5 +1,5 @@
 # Conteúdo editorial de /about, /about/data e /faq.
-# Os ids faq.* são declarados em App\Controller\AboutController::FAQ_ENTRIES.
+# Os ids faq.* são declarados em App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "Sobre"
 
 index:

@@ -30,20 +30,37 @@ final class RuneOptionsProjectorTest extends TestCase
                 'icon' => 'perk-images/Styles/7200_Domination.png',
                 'name' => 'Domination',
                 'slots' => [
-                    ['runes' => [
-                        [
-                            'id' => 8112,
-                            'key' => 'Electrocute',
-                            'icon' => 'perk-images/Styles/Domination/Electrocute/Electrocute.png',
-                            'name' => 'Électrocution',
-                            'shortDesc' => "Toucher un champion avec 3 attaques <b>distinctes</b> inflige des <lol-uikit-tooltipped-keyword key='LinkTooltip'>dégâts adaptatifs</lol-uikit-tooltipped-keyword> bonus.",
-                        ],
-                    ]],
-                    ['runes' => [
-                        ['id' => 8126, 'key' => 'CheapShot', 'icon' => 'x/CheapShot.png', 'name' => 'Coup bas', 'shortDesc' => 'Plain.'],
-                    ]],
+                    ['runes' => [$this->electrocute()]],
+                    ['runes' => [$this->cheapShot()]],
                 ],
             ],
+        ];
+    }
+
+    /** Keystone whose shortDesc carries the DDragon inline markup to strip. */
+    private function electrocute(): array
+    {
+        return [
+            'id' => 8112,
+            'key' => 'Electrocute',
+            'icon' => 'perk-images/Styles/Domination/Electrocute/Electrocute.png',
+            'name' => 'Électrocution',
+            'shortDesc' => "Toucher un champion avec 3 attaques "
+                . "<b>distinctes</b> inflige des "
+                . "<lol-uikit-tooltipped-keyword key='LinkTooltip'>"
+                . "dégâts adaptatifs</lol-uikit-tooltipped-keyword> bonus.",
+        ];
+    }
+
+    /** Minor rune sitting in the slot left unresolved by {@see images()}. */
+    private function cheapShot(): array
+    {
+        return [
+            'id' => 8126,
+            'key' => 'CheapShot',
+            'icon' => 'x/CheapShot.png',
+            'name' => 'Coup bas',
+            'shortDesc' => 'Plain.',
         ];
     }
 
@@ -67,7 +84,10 @@ final class RuneOptionsProjectorTest extends TestCase
 
         self::assertCount(1, $trees);
         $tree = $trees[0];
-        self::assertSame([8100, 'Domination', 'Domination', '/cdn/blobs/domi.png'], [$tree['id'], $tree['key'], $tree['name'], $tree['icon']]);
+        self::assertSame(
+            [8100, 'Domination', 'Domination', '/cdn/blobs/domi.png'],
+            [$tree['id'], $tree['key'], $tree['name'], $tree['icon']],
+        );
         self::assertCount(2, $tree['slots'], 'slots stay a list of perk lists');
 
         $electrocute = $tree['slots'][0][0];
@@ -86,14 +106,41 @@ final class RuneOptionsProjectorTest extends TestCase
     {
         $resolved = $this->projector->resolve($this->data(), $this->images(), '8100');
 
-        self::assertSame(['id' => '8100', 'name' => 'Domination', 'image' => '/cdn/blobs/domi.png', 'type' => 'rune'], $resolved);
+        self::assertSame(
+            [
+                'id' => '8100',
+                'name' => 'Domination',
+                'image' => '/cdn/blobs/domi.png',
+                'type' => 'rune',
+            ],
+            $resolved,
+        );
     }
 
     public function testResolveAcceptsPerkId(): void
     {
         $resolved = $this->projector->resolve($this->data(), $this->images(), '8112');
 
-        self::assertSame(['id' => '8112', 'name' => 'Électrocution', 'image' => '/cdn/blobs/electro.png', 'type' => 'rune'], $resolved);
+        self::assertSame(
+            [
+                'id' => '8112',
+                'name' => 'Électrocution',
+                'image' => '/cdn/blobs/electro.png',
+                'type' => 'rune',
+            ],
+            $resolved,
+        );
+    }
+
+    public function testResolvePerkOfAnUnresolvedSlotKeepsItsNameAndNullIcon(): void
+    {
+        $resolved = $this->projector->resolve($this->data(), $this->images(), '8126');
+
+        self::assertSame(
+            ['id' => '8126', 'name' => 'Coup bas', 'image' => null, 'type' => 'rune'],
+            $resolved,
+            'slot icons are keyed by slot position — slot 1 has none, the perk still resolves',
+        );
     }
 
     public function testResolveUnknownIdReturnsNull(): void

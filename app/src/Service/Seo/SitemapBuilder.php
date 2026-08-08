@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Service\Seo;
 
-use App\Service\API\AbstractManager;
 use App\Service\API\ChampionManager;
 use App\Service\API\ItemManager;
 use App\Service\API\RuneManager;
 use App\Service\API\SummonerManager;
 use App\Service\Client\VersionManager;
+use App\Service\Seo\Inventory\DatasetIndexReader;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Builds the XML sitemap tree from the live datasets: a sitemap index pointing at
@@ -18,36 +19,38 @@ use App\Service\Client\VersionManager;
  * snapshots). The latest patch is served only by the primary sitemap; its
  * versioned form 301s away, so it is never listed here.
  *
+ * Pages are named by route, never by literal path: a renamed route would
+ * otherwise silently publish a sitemap full of 404s.
+ *
  * Detail slugs are locale-invariant ids, so a single reference language enumerates
  * every page; the sitemap XML itself is language-agnostic by design (a standard).
  */
 final class SitemapBuilder
 {
-    /** Reference dataset for slug enumeration — ids are identical across languages. */
-    private const SITEMAP_LANG = 'en_US';
-
-    /** Non-versioned pages — listed once, in the primary sitemap. */
-    private const STATIC_PATHS = [
-        '/',
-        '/champions',
-        '/objects',
-        '/runes',
-        '/summoners',
-        '/about',
-        '/about/data',
-        '/faq',
-        '/legal/notice',
-        '/legal/privacy',
-        '/legal/terms',
-        '/legal/cookies',
-        '/donate',
-        '/developers',
-        '/trends',
-        '/changelog',
+    /** Non-versioned pages — listed once, in the primary sitemap, in this order. */
+    private const STATIC_ROUTES = [
+        'app_home',
+        'app_champions',
+        'app_items',
+        'app_runes',
+        'app_summoners',
+        'app_about',
+        'app_about_data',
+        'app_faq',
+        'app_legal_notice',
+        'app_legal_privacy',
+        'app_legal_terms',
+        'app_legal_cookies',
+        'app_donate',
+        'app_developers',
+        'app_trends',
+        'app_changelog',
     ];
 
     public function __construct(
         private readonly VersionManager $versionManager,
+        private readonly UrlGeneratorInterface $router,
+        private readonly DatasetIndexReader $datasets,
         private readonly ChampionManager $champions,
         private readonly ItemManager $items,
         private readonly RuneManager $runes,
@@ -57,11 +60,10 @@ final class SitemapBuilder
     /** Sitemap index: the primary sitemap plus one entry per historical version. */
     public function indexXml(string $host): string
     {
-        $versions = $this->versionManager->getVersions();
-        $latest   = $versions[0] ?? null;
+        $latest = $this->versionManager->latestVersion();
 
         $locs = [$host . '/sitemaps/latest.xml'];
-        foreach ($versions as $version) {
+        foreach ($this->versionManager->getVersions() as $version) {
             if ($version !== $latest) {
                 $locs[] = $host . '/sitemaps/' . $version . '.xml';
             }
@@ -73,13 +75,13 @@ final class SitemapBuilder
     /** Primary sitemap: static pages + clean, canonical detail URLs for the latest patch. */
     public function latestXml(string $host): string
     {
-        $paths  = self::STATIC_PATHS;
-        $latest = $this->versionManager->getVersions()[0] ?? null;
+        $paths  = $this->staticPaths();
+        $latest = $this->versionManager->latestVersion();
 
-        if ($latest !== null) {
-            foreach ($this->sections() as [$prefix, $manager]) {
-                foreach ($this->slugs($manager, $latest) as $slug) {
-                    $paths[] = $prefix . rawurlencode($slug);
+        if ($latest !== '') {
+            foreach ($this->sections() as $section) {
+                foreach ($this->slugs($section, $latest) as $slug) {
+                    $paths[] = $section->detailPrefix . rawurlencode($slug);
                 }
             }
         }
@@ -91,10 +93,10 @@ final class SitemapBuilder
     public function versionXml(string $host, string $version): string
     {
         $paths = [];
-        foreach ($this->sections() as [$prefix, $manager, $listPath]) {
-            $paths[] = '/' . $version . $listPath;
-            foreach ($this->slugs($manager, $version) as $slug) {
-                $paths[] = '/' . $version . $prefix . rawurlencode($slug);
+        foreach ($this->sections() as $section) {
+            $paths[] = '/' . $version . $section->listPath;
+            foreach ($this->slugs($section, $version) as $slug) {
+                $paths[] = '/' . $version . $section->detailPrefix . rawurlencode($slug);
             }
         }
 
@@ -103,18 +105,29 @@ final class SitemapBuilder
 
     public function isLatest(string $version): bool
     {
-        return ($this->versionManager->getVersions()[0] ?? null) === $version;
+        return $version !== '' && $this->versionManager->latestVersion() === $version;
     }
 
-    /** @return list<array{0:string,1:AbstractManager,2:string}> detail-prefix, manager, list-path */
+    /** @return list<string> */
+    private function staticPaths(): array
+    {
+        return array_map($this->path(...), self::STATIC_ROUTES);
+    }
+
+    /** @return list<SitemapSection> */
     private function sections(): array
     {
         return [
-            ['/champion/', $this->champions, '/champions'],
-            ['/object/',   $this->items,     '/objects'],
-            ['/rune/',     $this->runes,     '/runes'],
-            ['/summoner/', $this->summoners, '/summoners'],
+            new SitemapSection('/champion/', $this->champions, $this->path('app_champions')),
+            new SitemapSection('/object/', $this->items, $this->path('app_items')),
+            new SitemapSection('/rune/', $this->runes, $this->path('app_runes')),
+            new SitemapSection('/summoner/', $this->summoners, $this->path('app_summoners')),
         ];
+    }
+
+    private function path(string $route): string
+    {
+        return $this->router->generate($route);
     }
 
     /**
@@ -123,13 +136,11 @@ final class SitemapBuilder
      *
      * @return list<string>
      */
-    private function slugs(AbstractManager $manager, string $version): array
+    private function slugs(SitemapSection $section, string $version): array
     {
-        try {
-            return array_map(strval(...), array_keys($manager->listIndex($version, self::SITEMAP_LANG)));
-        } catch (\Throwable) {
-            return [];
-        }
+        $index = $this->datasets->read($section->manager, $version) ?? [];
+
+        return array_map(strval(...), array_keys($index));
     }
 
     /** @param list<string> $paths */

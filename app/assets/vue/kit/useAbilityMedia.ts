@@ -1,4 +1,5 @@
-import { reactive, computed, type ComputedRef } from 'vue'
+import { reactive } from 'vue'
+import { prefersReducedMotion } from '../fx/reducedMotion'
 
 export type AbilitySlot = 'P' | 'Q' | 'W' | 'E' | 'R'
 
@@ -18,7 +19,13 @@ export interface AbilityMedia {
     poster: (slot: AbilitySlot) => string
     markUnavailable: (slot: AbilitySlot) => void
     isAvailable: (slot: AbilitySlot) => boolean
-    shouldAutoplay: ComputedRef<boolean>
+    /**
+     * Read once, when the island mounts — deliberately NOT reactive: the island
+     * is torn down and rebuilt on every Turbo visit, so a preference flipped
+     * mid-session is picked up on the next page anyway, and no media-query
+     * listener has to survive (and leak past) that teardown.
+     */
+    shouldAutoplay: boolean
 }
 
 export function useAbilityMedia(championKey: string): AbilityMedia {
@@ -32,8 +39,6 @@ export function useAbilityMedia(championKey: string): AbilityMedia {
         poster: (slot) => url(slot, 'jpg'),
         markUnavailable: (slot) => unavailable.add(slot),
         isAvailable: (slot) => !unavailable.has(slot),
-        shouldAutoplay: computed(
-            () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-        ),
+        shouldAutoplay: !prefersReducedMotion(),
     }
 }

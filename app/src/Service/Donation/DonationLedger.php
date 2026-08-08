@@ -13,8 +13,8 @@ interface DonationLedger
 {
     /**
      * Records a completed donation once; a replayed session id is a silent
-     * no-op. When $userId resolves to an existing account, the donation is
+     * no-op. When the donor id resolves to an existing account, the donation is
      * linked to it and the account becomes a supporter.
      */
-    public function record(string $sessionId, int $amountCents, string $currency, ?int $userId): void;
+    public function record(CompletedDonation $donation): void;
 }

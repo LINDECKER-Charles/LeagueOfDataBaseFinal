@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
-class VersionManager
+final class VersionManager implements VersionCatalogInterface
 {
     /**
      * Shape of a Data Dragon version (dotted numeric, e.g. "15.14.1", "1.0.0.152").
@@ -16,6 +16,68 @@ class VersionManager
      * path-prefix strip — a clean segment ("champion", "objects") never matches.
      */
     public const VERSION_PATTERN = '\d+(?:\.\d+)+';
+
+    /**
+     * Leading `/{version}` path segment, anchored on a full segment. The loader
+     * strips it and the selection rewriter replaces it: both MUST recognise the
+     * exact same shape, so the whole expression — not just the number pattern —
+     * lives here.
+     */
+    public const VERSION_SEGMENT_REGEX = '#^/' . self::VERSION_PATTERN . '(?=/)#';
+
+    /**
+     * Data Dragon still publishes pre-2013 `lolpatch_*` entries in its version
+     * list; they carry no modern dataset, so they never reach a caller.
+     */
+    private const LEGACY_VERSION_PREFIX = 'lol';
+
+    private const VERSIONS_CACHE_KEY = 'riot_versions';
+
+    /**
+     * Patches ship roughly biweekly, so a shorter TTL only multiplied the Data
+     * Dragon round trips with no freshness benefit.
+     */
+    private const VERSIONS_TTL_S = 3600;
+
+    private const LANGUAGES_CACHE_KEY = 'riot_languages';
+
+    /** The Data Dragon locale list barely ever moves. */
+    private const LANGUAGES_TTL_S = 2592000;
+
+    /**
+     * Data Dragon locale => English display name. Also the offline fallback of
+     * {@see languageExists()} when the upstream language list is unreachable.
+     */
+    private const LANGUAGE_LABELS = [
+        'ar_AE' => 'Arabic (United Arab Emirates)',
+        'en_US' => 'English (United States)',
+        'cs_CZ' => 'Czech',
+        'de_DE' => 'German',
+        'el_GR' => 'Greek',
+        'en_AU' => 'English (Australia)',
+        'en_GB' => 'English (United Kingdom)',
+        'en_PH' => 'English (Philippines)',
+        'en_SG' => 'English (Singapore)',
+        'es_AR' => 'Spanish (Argentina)',
+        'es_ES' => 'Spanish (Spain)',
+        'es_MX' => 'Spanish (Mexico)',
+        'fr_FR' => 'French',
+        'hu_HU' => 'Hungarian',
+        'id_ID' => 'Indonesian',
+        'it_IT' => 'Italian',
+        'ja_JP' => 'Japanese',
+        'ko_KR' => 'Korean',
+        'pl_PL' => 'Polish',
+        'pt_BR' => 'Portuguese (Brazil)',
+        'ro_RO' => 'Romanian',
+        'ru_RU' => 'Russian',
+        'th_TH' => 'Thai',
+        'tr_TR' => 'Turkish',
+        'vi_VN' => 'Vietnamese',
+        'zh_CN' => 'Chinese (Simplified)',
+        'zh_MY' => 'Chinese (Malaysia)',
+        'zh_TW' => 'Chinese (Traditional)',
+    ];
 
     /** @var string[]|null in-request memo (getVersions is called several times per request) */
     private ?array $versionsMemo = null;
@@ -29,104 +91,84 @@ class VersionManager
         private readonly LoggerInterface $logger,
     ) {}
 
-    /* Partie API */
+    /* API */
 
     /**
-     * Récupère la liste complète des versions depuis Riot (Data Dragon)
-     *
-     * @return array Liste des versions, la première étant la plus récente
+     * @return list<string> versions, the first one being the most recent
      */
     public function getVersions(): array
     {
         // Called 3+ times per request (param validation, ClientData, redirects).
-        // Memoize in-request so the cross-request pool is hit at most once, and
-        // keep a 1h TTL: patches ship ~biweekly, so 10min just multiplied the
-        // DDragon round-trips with no freshness benefit.
-        return $this->versionsMemo ??= $this->cache->get('riot_versions', function (ItemInterface $item) {
-            $item->expiresAfter(3600); // 1h
-            try {
-                $versions = array_values(array_filter(
-                    $this->goFetcher->versions(),
-                    fn($v) => !(is_string($v) && preg_match('/^lol/', $v))
-                ));
-                return $versions;
-            } catch (\Throwable $e) {
-                $this->logger->error('Erreur lors de la récupération des versions Riot', [
-                    'message' => $e->getMessage(),
-                ]);
-                return [];
+        // Memoize in-request so the cross-request pool is hit at most once.
+        return $this->versionsMemo ??= $this->cache->get(
+            self::VERSIONS_CACHE_KEY,
+            function (ItemInterface $item) {
+                $item->expiresAfter(self::VERSIONS_TTL_S);
+                try {
+                    return array_values(array_filter(
+                        $this->goFetcher->versions(),
+                        static fn (mixed $version): bool => is_string($version)
+                            && !str_starts_with($version, self::LEGACY_VERSION_PREFIX),
+                    ));
+                } catch (\Throwable $e) {
+                    $this->logger->error('Erreur lors de la récupération des versions Riot', [
+                        'message' => $e->getMessage(),
+                    ]);
+                    return [];
+                }
             }
-        });
+        );
     }
 
     /**
-     * Récupère la liste des langues disponibles dans Data Dragon (API Riot Games)
+     * Newest known patch, or '' when the version list is unavailable.
      *
-     * @return string[] Tableau des codes de langue au format "lang_REGION"
-     *                  Exemple : ["fr_FR", "en_US", "ja_JP", ...]
-     *
-     * Mise en cache : 1 mois (2 592 000 secondes)
+     * Single answer to "which patch is current?": every caller (URL builder,
+     * sitemap, session fallback) used to re-implement `getVersions()[0]` with its
+     * own guard, and the unguarded ones broke on an upstream outage.
+     */
+    public function latestVersion(): string
+    {
+        try {
+            return (string) ($this->getVersions()[0] ?? '');
+        } catch (\Throwable) {
+            // Crawler- and render-facing callers must degrade, never 500: an
+            // unreachable cache backend is not a reason to lose a whole page.
+            return '';
+        }
+    }
+
+    /**
+     * @return string[] language codes in "lang_REGION" form, e.g. ["fr_FR", "en_US", "ja_JP", ...]
      */
     public function getLanguages(): array
     {
-        return $this->languagesMemo ??= $this->cache->get('riot_languages', function (ItemInterface $item) {
-            // Expiration dans 1 mois
-            $item->expiresAfter(2592000);
-            try {
-                return $this->goFetcher->languages();
-            } catch (\Throwable $e) {
-                $this->logger->error('Erreur lors de la récupération des langues Riot', [
-                    'message' => $e->getMessage(),
-                ]);
-                return [];
+        return $this->languagesMemo ??= $this->cache->get(
+            self::LANGUAGES_CACHE_KEY,
+            function (ItemInterface $item) {
+                $item->expiresAfter(self::LANGUAGES_TTL_S);
+                try {
+                    return $this->goFetcher->languages();
+                } catch (\Throwable $e) {
+                    $this->logger->error('Erreur lors de la récupération des langues Riot', [
+                        'message' => $e->getMessage(),
+                    ]);
+                    return [];
+                }
             }
-        });
+        );
     }
 
     /**
-     * Retourne un tableau de correspondance code_langue => nom affiché
-     *
-     * @return array<string, string>
+     * @return array<string, string> language code => display name
      */
     public function getLanguageLabels(): array
     {
-        return [
-            'ar_AE' => 'Arabic (United Arab Emirates)',
-            'en_US' => 'English (United States)',
-            'cs_CZ' => 'Czech',
-            'de_DE' => 'German',
-            'el_GR' => 'Greek',
-            'en_AU' => 'English (Australia)',
-            'en_GB' => 'English (United Kingdom)',
-            'en_PH' => 'English (Philippines)',
-            'en_SG' => 'English (Singapore)',
-            'es_AR' => 'Spanish (Argentina)',
-            'es_ES' => 'Spanish (Spain)',
-            'es_MX' => 'Spanish (Mexico)',
-            'fr_FR' => 'French',
-            'hu_HU' => 'Hungarian',
-            'id_ID' => 'Indonesian',
-            'it_IT' => 'Italian',
-            'ja_JP' => 'Japanese',
-            'ko_KR' => 'Korean',
-            'pl_PL' => 'Polish',
-            'pt_BR' => 'Portuguese (Brazil)',
-            'ro_RO' => 'Romanian',
-            'ru_RU' => 'Russian',
-            'th_TH' => 'Thai',
-            'tr_TR' => 'Turkish',
-            'vi_VN' => 'Vietnamese',
-            'zh_CN' => 'Chinese (Simplified)',
-            'zh_MY' => 'Chinese (Malaysia)',
-            'zh_TW' => 'Chinese (Traditional)',
-        ];
+        return self::LANGUAGE_LABELS;
     }
 
-    /* Vérification */
+    /* Validation */
 
-    /**
-     * Retourne true si la version existe dans la liste Riot.
-     */
     public function versionExists(?string $version): bool
     {
         if (!is_string($version) || $version === '') {
@@ -136,9 +178,7 @@ class VersionManager
         return in_array($version, $versions, true);
     }
 
-    /**
-     * Retourne true si la langue existe dans la liste Riot (fallback sur nos labels si l'API est KO).
-     */
+    /** Falls back to our own label list when the Riot API is down. */
     public function languageExists(?string $language): bool
     {
         if (!is_string($language) || $language === '') {
@@ -146,14 +186,12 @@ class VersionManager
         }
         $languages = $this->getLanguages();
         if (empty($languages)) {
-            $languages = array_keys($this->getLanguageLabels());
+            $languages = array_keys(self::LANGUAGE_LABELS);
         }
         return in_array($language, $languages, true);
     }
 
     /**
-     * Valide un couple (version, langue) et renvoie un petit rapport.
-     *
      * @return array{ok:bool, errors:array<string,string>}
      */
     public function validateSelection(?string $version, ?string $language): array

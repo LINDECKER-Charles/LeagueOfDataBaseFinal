@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Service\Analytics;
 
+use App\Service\Analytics\Storage\DailyAggregateStore;
+use App\Service\Analytics\Storage\EventStore;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -57,7 +59,10 @@ final class AnalyticsReportService
             $item->expiresAfter(self::CACHE_TTL);
             $today = new \DateTimeImmutable('today', new \DateTimeZone('UTC'));
             $dates = $this->windowDates($range, $today);
-            $dailies = array_map(fn (string $date): array => $this->dailyFor($date, $today), $dates);
+            $dailies = array_map(
+                fn (string $date): array => $this->dailyFor($date, $today),
+                $dates,
+            );
 
             return $this->builder->build($dailies, $range);
         });

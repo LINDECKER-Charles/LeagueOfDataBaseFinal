@@ -21,7 +21,10 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 final class PageContextResolverLoaderStepsTest extends TestCase
 {
-    /** Real (final) collaborators wired against a no-egress gateway; loaderSteps never calls them. */
+    /**
+     * Real (final) collaborators wired against a no-egress gateway; loaderSteps
+     * never calls them.
+     */
     private function resolver(array $query = []): PageContextResolver
     {
         $stack = new RequestStack();
@@ -97,7 +100,13 @@ final class PageContextResolverLoaderStepsTest extends TestCase
         // '/home' is the legacy home URL: it 301s to '/' before rendering, so the
         // loader never warms it.
         $resolver = $this->resolver();
-        foreach (['/champion/Ahri', '/object/1001', '/rune/8000', '/home', '/working-progress'] as $path) {
+        foreach ([
+            '/champion/Ahri',
+            '/object/1001',
+            '/rune/8000',
+            '/home',
+            '/working-progress',
+        ] as $path) {
             self::assertSame([], $resolver->loaderSteps($path), $path);
         }
     }

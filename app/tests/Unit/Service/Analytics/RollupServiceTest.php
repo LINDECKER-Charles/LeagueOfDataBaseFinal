@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service\Analytics;
 
 use App\Service\Analytics\AnalyticsAggregator;
-use App\Service\Analytics\DailyAggregateStore;
-use App\Service\Analytics\EventStore;
+use App\Service\Analytics\Storage\DailyAggregateStore;
+use App\Service\Analytics\Storage\EventStore;
 use App\Service\Analytics\RequestEvent;
 use App\Service\Analytics\RollupService;
 use League\Flysystem\Filesystem;
@@ -25,8 +25,14 @@ final class RollupServiceTest extends TestCase
     {
         $this->dir = sys_get_temp_dir() . '/lodb_rollup_' . bin2hex(random_bytes(6));
         $this->events = new EventStore($this->dir);
-        $this->dailyStore = new DailyAggregateStore(new Filesystem(new LocalFilesystemAdapter($this->dir . '/minio')));
-        $this->rollup = new RollupService($this->events, $this->dailyStore, new AnalyticsAggregator());
+        $this->dailyStore = new DailyAggregateStore(
+            new Filesystem(new LocalFilesystemAdapter($this->dir . '/minio'))
+        );
+        $this->rollup = new RollupService(
+            $this->events,
+            $this->dailyStore,
+            new AnalyticsAggregator()
+        );
         $this->today = gmdate('Y-m-d');
         $this->yesterday = gmdate('Y-m-d', time() - 86400);
     }

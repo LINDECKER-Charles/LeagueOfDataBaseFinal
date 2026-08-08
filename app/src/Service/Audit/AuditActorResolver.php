@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Service\Audit;
 
 use App\Entity\User;
+use App\Service\Audit\Model\AuditActor;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -16,27 +17,18 @@ final class AuditActorResolver
 {
     public function __construct(private readonly Security $security) {}
 
-    /**
-     * @return array{type: string, id: ?string, label: string}
-     */
-    public function resolve(?UserInterface $actor = null): array
+    public function resolve(?UserInterface $actor = null): AuditActor
     {
         $actor ??= $this->security->getUser();
 
         if ($actor instanceof User) {
-            return [
-                'type' => AuditEvent::ACTOR_USER,
-                'id' => (string) $actor->getId(),
-                'label' => $actor->displayName(),
-            ];
+            return AuditActor::user((string) $actor->getId(), $actor->displayName());
         }
 
         if ($actor instanceof UserInterface) {
-            $identifier = $actor->getUserIdentifier();
-
-            return ['type' => AuditEvent::ACTOR_ADMIN, 'id' => $identifier, 'label' => $identifier];
+            return AuditActor::admin($actor->getUserIdentifier());
         }
 
-        return ['type' => AuditEvent::ACTOR_ANONYMOUS, 'id' => null, 'label' => 'anonyme'];
+        return AuditActor::anonymous();
     }
 }

@@ -1,6 +1,6 @@
 {# Deferred panel — monitoring page body. `report` is the
    MonitoringReportService payload (see App\Service\Admin\AdminPanelCatalog). #}
-{% import 'admin/_ui.html.twig' as ui %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
 
 {% set serviceLabels = {
     'postgres': 'PostgreSQL',
@@ -9,7 +9,7 @@
     'go-api': 'Go API'
 } %}
 
-{# ---- Santé services ---- #}
+{# ---- Service health ---- #}
 <div class="flex between wrap" style="margin-bottom: 0.9rem;">
     <span class="eyebrow">Sondes</span>
     <span class="chip" title="Heure de génération du rapport">{{ report.generatedAt }}</span>
@@ -23,27 +23,44 @@
             </div>
             <div class="flex wrap" style="margin-top: 0.7rem; gap: 0.45rem;">
                 <span class="chip">{{ probe.latencyMs }} ms</span>
-                {% if probe.meta.version|default(null) %}<span class="chip">{{ probe.meta.version }}</span>{% endif %}
-                {% if probe.meta.databaseBytes|default(null) %}<span class="chip">base {{ probe.meta.databaseBytes|bytes }}</span>{% endif %}
-                {% if probe.meta.objects|default(null) %}<span class="chip">{{ probe.meta.objects|number_format(0, '.', ' ') }} objets · {{ probe.meta.bytes|bytes }}</span>{% endif %}
+                {% if probe.meta.version|default(null) %}
+                    <span class="chip">{{ probe.meta.version }}</span>
+                {% endif %}
+                {% if probe.meta.databaseBytes|default(null) %}
+                    <span class="chip">base {{ probe.meta.databaseBytes|bytes }}</span>
+                {% endif %}
+                {% if probe.meta.objects|default(null) %}
+                    <span class="chip">{{
+                        probe.meta.objects|number_format(0, '.', ' ')
+                    }} objets · {{ probe.meta.bytes|bytes }}</span>
+                {% endif %}
             </div>
-            {% if probe.detail %}<p class="dim" style="margin: 0.6rem 0 0; font-size: 0.8rem;">{{ probe.detail }}</p>{% endif %}
+            {% if probe.detail %}
+                <p class="dim" style="margin: 0.6rem 0 0; font-size: 0.8rem;">{{ probe.detail }}</p>
+            {% endif %}
         </section>
     {% endfor %}
 </div>
 
-{# ---- Compteurs applicatifs ---- #}
+{# ---- Application counters ---- #}
 <div class="rule" data-label="Application"></div>
 {% if report.counters.ok %}
     <div class="kpi-grid">
         {{ ui.kpi('Comptes', report.counters.users.total|number_format(0, '.', ' '),
-            '+' ~ report.counters.users.newWeek ~ ' sur 7 j · ' ~ report.counters.users.banned ~ ' banni(s)', 'var(--gold)', null) }}
+            '+' ~ report.counters.users.newWeek ~ ' sur 7 j · '
+                ~ report.counters.users.banned ~ ' banni(s)',
+            'var(--gold)', null) }}
         {{ ui.kpi('Builds', report.counters.builds.total|number_format(0, '.', ' '),
             report.counters.builds.public ~ ' public(s)', 'var(--hex)', null) }}
-        {{ ui.kpi('Votes', report.counters.votes|number_format(0, '.', ' '), null, 'var(--series-2)', null) }}
+        {{ ui.kpi(
+            'Votes', report.counters.votes|number_format(0, '.', ' '), null, 'var(--series-2)', null
+        ) }}
         {{ ui.kpi('Dons', report.counters.donations.totalCents|euros,
             report.counters.donations.count ~ ' don(s)', 'var(--series-3)', null) }}
-        {{ ui.kpi('Clés API actives', report.counters.apiKeysActive|number_format(0, '.', ' '), null, 'var(--series-4)', null) }}
+        {{ ui.kpi(
+            'Clés API actives', report.counters.apiKeysActive|number_format(0, '.', ' '),
+            null, 'var(--series-4)', null
+        ) }}
         {{ ui.kpi('Requêtes API', report.counters.apiRequests.today|compact,
             report.counters.apiRequests.month|compact ~ ' ce mois', 'var(--series-5)', null) }}
     </div>
@@ -55,21 +72,32 @@
 <div class="rule" data-label="Volumes"></div>
 <div class="grid cols-2">
     <section class="card">
-        <div class="card__head"><h2>Tables principales</h2><span class="chip">pg_total_relation_size</span></div>
+        <div class="card__head">
+            <h2>Tables principales</h2><span class="chip">pg_total_relation_size</span>
+        </div>
         {% set tableRows = [] %}
         {% for t in report.volumes.tables %}
             {% set tableRows = tableRows|merge([[ { text: t.name }, { num: t.bytes|bytes } ]]) %}
         {% endfor %}
-        {{ ui.table(['Table', { label: 'Poids total', num: true }], tableRows, { empty: 'Tailles indisponibles (Postgres requis).' }) }}
+        {{ ui.table(
+            ['Table', { label: 'Poids total', num: true }],
+            tableRows,
+            { empty: 'Tailles indisponibles (Postgres requis).' }
+        ) }}
     </section>
     <section class="card">
-        <div class="card__head"><h2>File Messenger</h2><span class="chip">messenger_messages</span></div>
+        <div class="card__head">
+            <h2>File Messenger</h2><span class="chip">messenger_messages</span>
+        </div>
         <div class="stack">
             <div>
                 <span class="k-label">Messages en attente</span>
-                <span class="k-val" style="font-size: 1.5rem;">{{ report.volumes.messengerPending|number_format(0, '.', ' ') }}</span>
+                <span class="k-val k-val--sm">{{
+                    report.volumes.messengerPending|number_format(0, '.', ' ')
+                }}</span>
             </div>
-            <p class="dim" style="margin: 0; font-size: 0.82rem;">E-mails et tâches asynchrones non consommés. Un backlog durable signale un worker arrêté.</p>
+            <p class="dim" style="margin: 0; font-size: 0.82rem;">E-mails et tâches asynchrones
+                non consommés. Un backlog durable signale un worker arrêté.</p>
         </div>
     </section>
 </div>

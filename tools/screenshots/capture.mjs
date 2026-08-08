@@ -11,7 +11,8 @@ const L = process.env.LODB_LANG ?? 'en_US'
 const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'screenshot')
 
 const q = (pp) => `?version=${V}&lang=${L}&numpage=1&itemperpage=${pp}`
-const d = `?version=${V}&lang=${L}` // detail routes need an explicit version (fresh capture context has no session)
+// Detail routes need an explicit version: a fresh capture context has no session.
+const d = `?version=${V}&lang=${L}`
 
 // Third tuple element = per-shot options:
 //   full: false        → viewport shot instead of full page
@@ -69,7 +70,9 @@ async function waitForImages(page, timeout = 6000) {
         Promise.race([
           Promise.all(
             Array.from(document.images).map((img) =>
-              img.complete ? Promise.resolve() : new Promise((res) => { img.onload = img.onerror = () => res() }),
+              img.complete
+                ? Promise.resolve()
+                : new Promise((res) => { img.onload = img.onerror = () => res() }),
             ),
           ),
           new Promise((res) => setTimeout(res, t)),

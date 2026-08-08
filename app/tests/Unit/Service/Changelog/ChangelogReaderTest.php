@@ -83,7 +83,10 @@ final class ChangelogReaderTest extends TestCase
     public function testLatestVersionReturnsNewestManifestEntryVersion(): void
     {
         // Manifest is authored newest-first, so the head entry is the current release.
-        $this->writeManifest([['id' => 'b', 'version' => '2.1.1'], ['id' => 'a', 'version' => '1.0.0']]);
+        $this->writeManifest([
+            ['id' => 'b', 'version' => '2.1.1'],
+            ['id' => 'a', 'version' => '1.0.0'],
+        ]);
 
         self::assertSame('2.1.1', $this->reader()->latestVersion());
     }

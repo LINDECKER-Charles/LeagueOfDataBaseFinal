@@ -2,7 +2,9 @@
 
 {% set isEdit = mode == 'edit' %}
 
-{% block title %}{{ (isEdit ? 'build.editor.title_edit' : 'build.editor.title_create')|trans }} · {{ 'base.title'|trans }}{% endblock %}
+{% block title %}{{
+    (isEdit ? 'build.editor.title_edit' : 'build.editor.title_create')|trans
+}} · {{ 'base.title'|trans }}{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
 {% block body %}
@@ -12,19 +14,23 @@
   <div class="relative mx-auto max-w-5xl">
     <header class="mb-8">
       <p class="eyebrow">{{ 'build.editor.eyebrow'|trans }}</p>
-      <h1 class="mt-2 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad sm:text-4xl">
+      <h1 class="mt-2 font-beaufort text-3xl font-bold uppercase tracking-wide text-gold-grad
+                 sm:text-4xl">
         {{ (isEdit ? 'build.editor.title_edit' : 'build.editor.title_create')|trans }}
       </h1>
       <hr class="hx-rule mt-5">
     </header>
 
     <form method="post"
-          action="{{ isEdit ? path('app_build_update', { id: build.id }) : path('app_build_create') }}"
+          action="{{ isEdit
+              ? path('app_build_update', { id: build.id })
+              : path('app_build_create') }}"
           class="space-y-8">
       <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
 
       <section class="hextech-frame hx-corners p-6 sm:p-8">
-        {% include 'components/codex_header.html.twig' with { title: 'build.editor.identity'|trans } %}
+        {% include 'components/codex/codex_header.html.twig'
+            with { title: 'build.editor.identity'|trans } %}
         <div class="space-y-5">
           <div>
             <label for="build-name" class="auth-label">{{ 'build.editor.name'|trans }}</label>
@@ -35,12 +41,14 @@
                    class="hx-input mt-1.5">
           </div>
           <div>
-            <label for="build-description" class="auth-label">{{ 'build.editor.description'|trans }}</label>
+            <label for="build-description" class="auth-label">{{
+                'build.editor.description'|trans }}</label>
             <textarea id="build-description" name="description" rows="3" maxlength="2000"
                       class="hx-input mt-1.5">{{ values.description }}</textarea>
           </div>
           <label class="flex items-center gap-3 text-sm text-text-muted">
-            <input type="checkbox" name="isPublic" class="hx-switch" {{ values.isPublic ? 'checked' }}>
+            <input type="checkbox" name="isPublic" class="hx-switch"
+                   {{ values.isPublic ? 'checked' }}>
             <span>{{ 'build.editor.public'|trans }}</span>
           </label>
         </div>
@@ -64,7 +72,9 @@
             gameMode: gameMode,
             gameModes: gameModes|map(m => { value: m.value, label: m.labelKey|trans }),
             language: language,
-            languages: client.languages|map(code => { value: code, label: client.languageLabels[code]|default(code) }),
+            languages: client.languages|map(code => {
+              value: code, label: client.languageLabels[code]|default(code)
+            }),
             labels: {
               loading: 'build.editor.loading'|trans,
               error: 'build.editor.error'|trans,
@@ -145,7 +155,8 @@
             }
           }|json_encode|e('html_attr') }}">
         <noscript><p class="hx-chip">{{ 'build.editor.nojs'|trans }}</p></noscript>
-        <input type="hidden" name="structure" value="{{ values.structure ? values.structure|json_encode : '' }}">
+        <input type="hidden" name="structure"
+               value="{{ values.structure ? values.structure|json_encode : '' }}">
         <input type="hidden" name="game_version" value="{{ version }}">
         <input type="hidden" name="game_mode" value="{{ gameMode }}">
         <input type="hidden" name="language" value="{{ language }}">

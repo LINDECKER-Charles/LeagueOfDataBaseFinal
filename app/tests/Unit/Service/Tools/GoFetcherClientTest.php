@@ -13,7 +13,10 @@ final class GoFetcherClientTest extends TestCase
 {
     private function json(array $payload): MockResponse
     {
-        return new MockResponse(json_encode($payload), ['response_headers' => ['content-type' => 'application/json']]);
+        return new MockResponse(
+            json_encode($payload),
+            ['response_headers' => ['content-type' => 'application/json']],
+        );
     }
 
     public function testFetchDecodesBase64Body(): void
@@ -41,6 +44,31 @@ final class GoFetcherClientTest extends TestCase
         (new GoFetcherClient($client))->fetch('https://ddragon.leagueoflegends.com/x.json');
     }
 
+    /**
+     * A gateway that answers 200 for every URL of the batch it receives, and
+     * announces each batch size so chunking can be asserted.
+     *
+     * @param callable(int):void $onBatch
+     */
+    private function echoingClient(callable $onBatch): MockHttpClient
+    {
+        return new MockHttpClient(
+            function (string $method, string $url, array $options) use ($onBatch): MockResponse {
+                $chunk = json_decode((string) $options['body'], true)['urls'];
+                $onBatch(count($chunk));
+
+                return $this->json(['results' => array_map(
+                    static fn (string $u): array => [
+                        'url' => $u,
+                        'status' => 200,
+                        'body_base64' => base64_encode('x'),
+                    ],
+                    $chunk,
+                )]);
+            },
+        );
+    }
+
     private function fetchWithStatus(int $status): void
     {
         $client = new MockHttpClient($this->json(['results' => [[
@@ -50,21 +78,21 @@ final class GoFetcherClientTest extends TestCase
         (new GoFetcherClient($client))->fetch('https://ddragon.leagueoflegends.com/x.json');
     }
 
-    /** 403 = ressource définitivement absente → exception typée dédiée. */
+    /** 403 = the resource is permanently gone upstream → dedicated typed exception. */
     public function testFetchThrowsNotFoundOn403(): void
     {
         $this->expectException(UpstreamNotFoundException::class);
         $this->fetchWithStatus(403);
     }
 
-    /** 404 = ressource définitivement absente → exception typée dédiée. */
+    /** 404 = the resource is permanently gone upstream → dedicated typed exception. */
     public function testFetchThrowsNotFoundOn404(): void
     {
         $this->expectException(UpstreamNotFoundException::class);
         $this->fetchWithStatus(404);
     }
 
-    /** Une panne transitoire (5xx) reste une RuntimeException générique, pas une absence. */
+    /** A transient failure (5xx) stays a generic RuntimeException, not an absence. */
     public function testFetchThrowsGenericRuntimeOnTransientUpstream(): void
     {
         $client = new MockHttpClient($this->json(['results' => [[
@@ -84,9 +112,17 @@ final class GoFetcherClientTest extends TestCase
     public function testFetchManyReturnsOnlySuccessfulEntries(): void
     {
         $client = new MockHttpClient($this->json(['results' => [
-            ['url' => 'https://ddragon.leagueoflegends.com/a.png', 'status' => 200, 'body_base64' => base64_encode('A')],
+            [
+                'url' => 'https://ddragon.leagueoflegends.com/a.png',
+                'status' => 200,
+                'body_base64' => base64_encode('A'),
+            ],
             ['url' => 'https://ddragon.leagueoflegends.com/b.png', 'error' => 'boom'],
-            ['url' => 'https://ddragon.leagueoflegends.com/c.png', 'status' => 404, 'body_base64' => base64_encode('missing')],
+            [
+                'url' => 'https://ddragon.leagueoflegends.com/c.png',
+                'status' => 404,
+                'body_base64' => base64_encode('missing'),
+            ],
         ]]));
 
         $out = (new GoFetcherClient($client))->fetchMany([
@@ -106,14 +142,8 @@ final class GoFetcherClientTest extends TestCase
         );
 
         $batchSizes = [];
-        $client = new MockHttpClient(function (string $method, string $url, array $options) use (&$batchSizes): MockResponse {
-            $chunk = json_decode((string) $options['body'], true)['urls'];
-            $batchSizes[] = count($chunk);
-
-            return $this->json(['results' => array_map(
-                static fn (string $u): array => ['url' => $u, 'status' => 200, 'body_base64' => base64_encode('x')],
-                $chunk,
-            )]);
+        $client = $this->echoingClient(static function (int $size) use (&$batchSizes): void {
+            $batchSizes[] = $size;
         });
 
         $out = (new GoFetcherClient($client))->fetchMany($urls);

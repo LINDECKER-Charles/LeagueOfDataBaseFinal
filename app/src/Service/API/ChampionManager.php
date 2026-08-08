@@ -4,18 +4,21 @@ declare(strict_types=1);
 namespace App\Service\API;
 
 use App\Service\Tools\UpstreamNotFoundException;
-use League\Flysystem\UnableToReadFile;
 
 final class ChampionManager extends AbstractManager implements CategoriesInterface
 {
-    protected const TYPE = 'champion';
-
     /** CommunityDragon game-data root (per patch) — the only source of chroma assets. */
-    private const CDRAGON_BASE = 'https://raw.communitydragon.org/%s/plugins/rcp-be-lol-game-data/global/default';
+    private const CDRAGON_BASE =
+        'https://raw.communitydragon.org/%s/plugins/rcp-be-lol-game-data/global/default';
+
+    public function type(): string
+    {
+        return 'champion';
+    }
 
     protected function imageUrl(string $version, string $name): string
     {
-        return sprintf('https://ddragon.leagueoflegends.com/cdn/%s/img/champion/%s', $version, $name);
+        return sprintf('%s/%s/img/champion/%s', self::DDRAGON_CDN, $version, $name);
     }
 
     /**
@@ -27,27 +30,31 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
      */
     public function getDetail(string $name, string $version, string $lang): array
     {
-        $key = sprintf('data/%s/%s/championDetail/%s.json', $version, $lang, $name);
-
-        try {
-            $data = json_decode($this->ddragonStorage->read($key), true) ?? [];
-        } catch (UnableToReadFile) {
-            $url = sprintf(
-                'https://ddragon.leagueoflegends.com/cdn/%s/data/%s/champion/%s.json',
-                $version,
-                $lang,
-                $name
-            );
-            try {
-                $data = json_decode($this->goFetcher->fetch($url), true) ?? [];
-            } catch (UpstreamNotFoundException) {
-                // No per-champion detail file on this patch → render on the summary.
-                $data = [];
-            }
-            $this->ddragonStorage->write($key, json_encode($data));
-        }
+        $data = $this->storedJson(
+            $this->scopedDataKey($version, $lang, 'championDetail', $name.'.json'),
+            fn (): array => $this->fetchDetail($name, $version, $lang),
+        );
 
         return $data['data'][$name] ?? [];
+    }
+
+    /** @return array<mixed> */
+    private function fetchDetail(string $name, string $version, string $lang): array
+    {
+        $url = sprintf(
+            '%s/%s/data/%s/champion/%s.json',
+            self::DDRAGON_CDN,
+            $version,
+            $lang,
+            $name
+        );
+
+        try {
+            return json_decode($this->goFetcher->fetch($url), true) ?? [];
+        } catch (UpstreamNotFoundException) {
+            // No per-champion detail file on this patch → render on the summary.
+            return [];
+        }
     }
 
     /**
@@ -63,7 +70,8 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
 
         if ($passive = $detail['passive']['image']['full'] ?? null) {
             $urlsByName[$passive] = sprintf(
-                'https://ddragon.leagueoflegends.com/cdn/%s/img/passive/%s',
+                '%s/%s/img/passive/%s',
+                self::DDRAGON_CDN,
                 $version,
                 $passive
             );
@@ -72,7 +80,8 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
         foreach ($detail['spells'] ?? [] as $spell) {
             if ($full = $spell['image']['full'] ?? null) {
                 $urlsByName[$full] = sprintf(
-                    'https://ddragon.leagueoflegends.com/cdn/%s/img/spell/%s',
+                    '%s/%s/img/spell/%s',
+                    self::DDRAGON_CDN,
                     $version,
                     $full
                 );
@@ -102,16 +111,10 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
             return [];
         }
 
-        $key = sprintf('data/%s/cdragon/chromas/%s.json', $version, $championKey);
-
-        try {
-            return json_decode($this->ddragonStorage->read($key), true) ?? [];
-        } catch (UnableToReadFile) {
-            $chromas = $this->fetchChromas($championKey, $version);
-            $this->ddragonStorage->write($key, json_encode($chromas));
-
-            return $chromas;
-        }
+        return $this->storedJson(
+            $this->scopedDataKey($version, 'cdragon', 'chromas', $championKey.'.json'),
+            fn (): array => $this->fetchChromas($championKey, $version),
+        );
     }
 
     /**
@@ -125,7 +128,10 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
         // on the most-used version.
         foreach (array_unique([$this->cdragonPatch($version), 'latest']) as $patch) {
             try {
-                $raw = json_decode($this->goFetcher->fetch($this->cdragonChampionUrl($championKey, $patch)), true);
+                $raw = json_decode(
+                    $this->goFetcher->fetch($this->cdragonChampionUrl($championKey, $patch)),
+                    true
+                );
             } catch (UpstreamNotFoundException) {
                 continue; // no data file on this patch → try the fallback
             }
@@ -152,7 +158,9 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
             }
 
             $entries = array_values(array_filter(array_map(
-                fn ($c): ?array => is_array($c) ? $this->mapChroma($c, $patch) : null,
+                fn ($chroma): ?array => is_array($chroma)
+                    ? $this->mapChroma($chroma, $patch)
+                    : null,
                 $chromas,
             )));
 
@@ -165,22 +173,23 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
     }
 
     /**
-     * @param array<mixed> $c a CommunityDragon chroma node
-     * @return ?array{id:int, name:string, colors:list<string>, image:string} null when it carries no asset path
+     * @param array<mixed> $chroma a CommunityDragon chroma node
+     * @return ?array{id:int, name:string, colors:list<string>, image:string}
+     *         null when it carries no asset path
      */
-    private function mapChroma(array $c, string $patch): ?array
+    private function mapChroma(array $chroma, string $patch): ?array
     {
-        $path = $c['chromaPath'] ?? null;
+        $path = $chroma['chromaPath'] ?? null;
         if (!is_string($path) || $path === '') {
             return null;
         }
 
         return [
-            'id'     => (int) ($c['id'] ?? 0),
-            'name'   => (string) ($c['name'] ?? ''),
+            'id'     => (int) ($chroma['id'] ?? 0),
+            'name'   => (string) ($chroma['name'] ?? ''),
             'colors' => array_values(array_filter(
-                (array) ($c['colors'] ?? []),
-                static fn ($v): bool => is_string($v) && $v !== '',
+                (array) ($chroma['colors'] ?? []),
+                static fn ($color): bool => is_string($color) && $color !== '',
             )),
             'image'  => $this->cdragonAssetUrl($path, $patch),
         ];
@@ -197,7 +206,8 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
      * than guessing from names.
      *
      * @param list<array<string, mixed>> $skins   DDragon skin nodes
-     * @param array<string, list<array{id:int, name:string, colors:list<string>, image:string}>> $chromas {@see getChromas()}
+     * @param array<string, list<array{id:int, name:string, colors:list<string>, image:string}>>
+     *        $chromas {@see getChromas()}
      * @return list<array<string, mixed>>
      */
     public function withoutChromaSkins(array $skins, array $chromas): array
@@ -244,53 +254,17 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
         return sprintf(self::CDRAGON_BASE.'/%s', $patch, $rel);
     }
 
-    public function getByName(string $name, string $version, string $lang): array
+    /**
+     * POSITIONAL list: one resolved path (or null) per entry carrying both a name
+     * and an image node, in dataset order. Consumers realign it against the same
+     * skip rule ({@see \App\Service\Picker\ChampionOptionsProjector}).
+     */
+    protected function projectImages(array $data, array $resolved): array
     {
-        $data = $this->dataMap($version, $lang);
-        if (isset($data[$name])) {
-            return $data[$name];
-        }
-
-        throw ResourceNotFoundException::forEntry(static::TYPE, $name);
-    }
-
-    public function searchByName(string $name, string $version, string $lang, int $max = 0): array
-    {
-        $this->assertSearchable($name);
-
-        $data = $this->getData($version, $lang)['data'] ?? [];
-        if (!is_array($data)) {
-            throw new \RuntimeException('Format de données invalide.');
-        }
-
-        $results = [];
-        $search = mb_strtolower($name);
-        foreach ($data as $champion) {
-            if ($max !== 0 && count($results) >= $max) {
-                break;
-            }
-            $idMatch = isset($champion['id']) && str_contains(mb_strtolower($champion['id']), $search);
-            $nameMatch = isset($champion['name']) && str_contains(mb_strtolower($champion['name']), $search);
-            if ($idMatch || $nameMatch) {
-                $results[] = $champion;
-            }
-        }
-
-        return $results;
-    }
-
-    public function getImages(string $version, string $lang, bool $force = false, array $data = []): array
-    {
-        if (!$data) {
-            $data = $this->dataList($this->getData($version, $lang));
-        }
-
-        $resolved = $this->resolveImages($version, array_keys($this->imageEntries($data)), $force);
-
         $result = [];
-        foreach ($data as $d) {
-            if (($d['name'] ?? null) && ($img = $d['image']['full'] ?? null)) {
-                $result[] = $resolved[$img] ?? null;
+        foreach ($data as $entry) {
+            if (($entry['name'] ?? null) && ($image = $entry['image']['full'] ?? null)) {
+                $result[] = $resolved[$image] ?? null;
             }
         }
 

@@ -1,0 +1,109 @@
+/* ---------------------------------------------------------------------------
+   Composed surfaces — ambient page backdrop, brand link, codex section header
+   and the engraved fact plaque. Components rather than utilities: each is one
+   named block a template drops in, not a modifier.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* Ambient page backdrop (partials/main/gradient) + logo halo. These were
+     inline style="" attributes re-emitted on every list/detail/home render:
+     they are palette, so they belong to the sheet and read from the tokens. */
+  .hx-ambient-glow--cyan {
+    background: radial-gradient(closest-side,
+      color-mix(in srgb, var(--color-hex) 20%, transparent),
+      color-mix(in srgb, var(--color-hex-deep) 8%, transparent) 45%, transparent 72%);
+  }
+  .hx-ambient-glow--gold {
+    background: radial-gradient(closest-side,
+      color-mix(in srgb, var(--color-gold) 16%, transparent), transparent 70%);
+  }
+  .hx-ambient-vignette {
+    background: radial-gradient(120% 80% at 50% 0%, transparent 55%,
+      color-mix(in srgb, var(--color-hextech-black) 55%, transparent));
+  }
+  .hx-logo-halo {
+    background: radial-gradient(closest-side,
+      color-mix(in srgb, var(--color-hex) 35%, transparent), transparent);
+  }
+
+  .brand-link {
+    @apply inline-block relative cursor-pointer select-none
+           transition-transform duration-300 hover:-translate-y-0.5
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex/40;
+  }
+
+  /* Codex section header — diamond marker, small-caps Beaufort, trailing
+     hairline that visually binds the header to its content column. */
+  .codex-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+  .codex-header::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    flex: none;
+    transform: rotate(45deg);
+    background: var(--color-gold);
+    box-shadow: 0 0 12px -2px color-mix(in srgb, var(--color-gold) 90%, transparent);
+  }
+  .codex-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg,
+      color-mix(in srgb, var(--color-gold) 45%, transparent), transparent);
+  }
+  .codex-header h2,
+  .codex-header .codex-header__title {
+    font-family: var(--font-beaufort);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: var(--color-gold);
+    white-space: nowrap;
+  }
+  .codex-header .codex-header__meta {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--color-text-dim);
+    white-space: nowrap;
+  }
+  /* Mobile: a header carrying BOTH a title and a meta (only /donate today) would
+     force a min-width wider than a phone (~450px -> viewport zoom-out) because
+     both are nowrap on one flex line. Let the meta wrap onto its own full-width
+     line beneath the title + hairline. Desktop (>480px) is untouched. */
+  @media (max-width: 480px) {
+    .codex-header { flex-wrap: wrap; }
+    .codex-header .codex-header__meta {
+      /* fall after the ::after hairline: [diamond title ---] then meta alone */
+      order: 1;
+      flex-basis: 100%;
+      white-space: normal;
+    }
+  }
+
+  /* Engraved fact plaque — the quick-facts unit of the detail asides. */
+  .hx-plate {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+    background: linear-gradient(180deg, rgba(15, 27, 45, 0.85), rgba(9, 16, 22, 0.92));
+    box-shadow: inset 0 1px 0 rgba(240, 230, 210, 0.05);
+  }
+  .hx-plate__label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-dim);
+  }
+  .hx-plate__value {
+    font-family: var(--font-beaufort);
+    font-size: 1.05rem;
+    color: var(--color-gold-bright);
+  }
+}

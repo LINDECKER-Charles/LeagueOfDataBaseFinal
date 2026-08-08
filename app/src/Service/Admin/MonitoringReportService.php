@@ -27,7 +27,14 @@ final class MonitoringReportService
     private const CACHE_TTL = 30;
     private const NEW_USERS_WINDOW = '-7 days';
     /** User-data tables whose on-disk weight the panel tracks. */
-    private const TRACKED_TABLES = ['users', 'builds', 'build_votes', 'donations', 'api_keys', 'api_usage'];
+    private const TRACKED_TABLES = [
+        'users',
+        'builds',
+        'build_votes',
+        'donations',
+        'api_keys',
+        'api_usage',
+    ];
 
     public function __construct(
         private readonly ServiceHealthProbe $probe,
@@ -63,27 +70,57 @@ final class MonitoringReportService
     private function counters(): array
     {
         try {
-            $today = new \DateTimeImmutable('today');
-
-            return [
-                'ok' => true,
-                'users' => [
-                    'total' => $this->users->countAll(),
-                    'newWeek' => $this->users->countNewSince(new \DateTimeImmutable(self::NEW_USERS_WINDOW)),
-                    'banned' => $this->users->countBanned(),
-                ],
-                'builds' => ['total' => $this->builds->countAll(), 'public' => $this->builds->countPublic()],
-                'votes' => $this->votes->count([]),
-                'donations' => ['count' => $this->donations->countAll(), 'totalCents' => $this->donations->sumAll()],
-                'apiKeysActive' => $this->apiKeys->countActive(),
-                'apiRequests' => [
-                    'today' => $this->apiKeys->sumRequestsSince($today),
-                    'month' => $this->apiKeys->sumRequestsSince($today->modify('first day of this month')),
-                ],
-            ];
+            return ['ok' => true, ...$this->communityCounters(), ...$this->apiCounters()];
         } catch (\Throwable $e) {
             return ['ok' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * What the community produced: accounts, builds, votes, donations.
+     *
+     * @return array<string, mixed>
+     */
+    private function communityCounters(): array
+    {
+        return [
+            'users' => [
+                'total' => $this->users->countAll(),
+                'newWeek' => $this->users->countNewSince(
+                    new \DateTimeImmutable(self::NEW_USERS_WINDOW),
+                ),
+                'banned' => $this->users->countBanned(),
+            ],
+            'builds' => [
+                'total' => $this->builds->countAll(),
+                'public' => $this->builds->countPublic(),
+            ],
+            'votes' => $this->votes->count([]),
+            'donations' => [
+                'count' => $this->donations->countAll(),
+                'totalCents' => $this->donations->sumAll(),
+            ],
+        ];
+    }
+
+    /**
+     * Public-API consumption: live keys and the request volumes they burned.
+     *
+     * @return array<string, mixed>
+     */
+    private function apiCounters(): array
+    {
+        $today = new \DateTimeImmutable('today');
+
+        return [
+            'apiKeysActive' => $this->apiKeys->countActive(),
+            'apiRequests' => [
+                'today' => $this->apiKeys->sumRequestsSince($today),
+                'month' => $this->apiKeys->sumRequestsSince(
+                    $today->modify('first day of this month'),
+                ),
+            ],
+        ];
     }
 
     /** @return array{messengerPending: int, tables: list<array{name: string, bytes: int}>} */

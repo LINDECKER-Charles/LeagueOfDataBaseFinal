@@ -23,7 +23,10 @@ afterEach(() => {
 
 describe('loadPanels', () => {
     it('swaps the skeleton for the fetched fragment', async () => {
-        const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => '<section class="card">ok</section>' })
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            text: async () => '<section class="card">ok</section>',
+        })
         vi.stubGlobal('fetch', fetchMock)
 
         const panel = shell()

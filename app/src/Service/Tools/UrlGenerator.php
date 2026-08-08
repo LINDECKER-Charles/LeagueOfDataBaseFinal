@@ -22,12 +22,14 @@ final class UrlGenerator
 
     /**
      * Back-URL from the HTTP "referer", falling back to a route when it is absent
-     * or (optionally) cross-host — the guard against an open redirect.
+     * or cross-host. The same-host check is unconditional: it is the guard against
+     * an open redirect, so it is not something a caller may opt out of.
+     *
+     * @param array<string, scalar> $fallbackParams
      */
-    public function generateBackurl(
+    public function generateBackUrl(
         string $fallbackRoute = 'app_home',
         array $fallbackParams = [],
-        bool $sameHostOnly = true,
     ): string {
         $request = $this->requestStack->getCurrentRequest();
 
@@ -37,15 +39,9 @@ final class UrlGenerator
         }
 
         $referer = (string) ($request->headers->get('referer') ?? '');
-        if ($referer === '') {
+        $host    = $request->getSchemeAndHttpHost();
+        if ($referer === '' || $host === '' || !str_starts_with($referer, $host)) {
             return $fallback;
-        }
-
-        if ($sameHostOnly) {
-            $host = $request->getSchemeAndHttpHost();
-            if ($host === '' || !str_starts_with($referer, $host)) {
-                return $fallback;
-            }
         }
 
         return $referer;
@@ -56,7 +52,8 @@ final class UrlGenerator
      *
      * The version's home depends on the URL shape and MUST match
      * {@see \App\Service\Client\PageContextResolver} precedence
-     * (path segment > ?version= > session):
+     * (path segment > ?version= > session) — hence the shared
+     * {@see VersionManager::VERSION_SEGMENT_REGEX}:
      *  - versioned path (`/{version}/champion/…`) → swap the leading segment, so the
      *    new version actually wins. Writing it only to `?version=` would leave the
      *    old path segment in place and shadow it — the exact bug this handles.
@@ -77,7 +74,7 @@ final class UrlGenerator
         parse_str($query, $params);
         unset($params['version'], $params['lang']); // re-derived below
 
-        $versionedSegment = '#^/'.VersionManager::VERSION_PATTERN.'(?=/)#';
+        $versionedSegment = VersionManager::VERSION_SEGMENT_REGEX;
         if (preg_match($versionedSegment, $path) === 1) {
             $path = (string) preg_replace($versionedSegment, '/'.$version, $path, 1);
         } else {

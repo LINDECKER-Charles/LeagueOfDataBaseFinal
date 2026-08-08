@@ -13,19 +13,22 @@
     {% if current %}
         {% if current.image %}
             <picture class="socket__portrait">
-                {% if current.image ends with '.png' %}
-                    <source srcset="{{ current.image|replace({'.png': '.webp'}) }}" type="image/webp">
-                {% endif %}
-                <img src="{{ current.image }}" alt="{{ current.name }}" width="72" height="72" loading="lazy" decoding="async">
+                {% include 'components/_webp_source.html.twig'
+                   with { src: current.image } only %}
+                <img src="{{ current.image }}" alt="{{ current.name }}"
+                     width="72" height="72" loading="lazy" decoding="async">
             </picture>
         {% else %}
-            <span class="socket__portrait socket__portrait--initials" aria-hidden="true">{{ current.name|slice(0, 2)|upper }}</span>
+            <span class="socket__portrait socket__portrait--initials"
+                  aria-hidden="true">{{ current.name|slice(0, 2)|upper }}</span>
         {% endif %}
         <span class="socket__name">{{ current.name }}</span>
     {% else %}
         <span class="socket__hex" aria-hidden="true"></span>
         <span class="socket__name socket__name--muted">
-            {{ (favorite.storedId ? 'profile.favorites.unavailable' : 'profile.favorites.empty')|trans }}
+            {{ (favorite.storedId
+                ? 'profile.favorites.unavailable'
+                : 'profile.favorites.empty')|trans }}
         </span>
     {% endif %}
 </div>

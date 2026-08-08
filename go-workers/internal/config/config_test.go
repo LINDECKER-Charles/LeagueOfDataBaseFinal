@@ -38,3 +38,54 @@ func TestLoadFromEnv(t *testing.T) {
 		t.Errorf("RequestTimeout = %v, want 5s", cfg.RequestTimeout)
 	}
 }
+
+func TestLoadDerivesTheAllowlistDefaultFromTheDDragonBase(t *testing.T) {
+	t.Setenv("ALLOWED_HOSTS", "")
+	t.Setenv("DDRAGON_BASE", "")
+	cfg := Load()
+	if cfg.DDragonBase != DefaultDDragonBase {
+		t.Fatalf("DDragonBase = %q, want %q", cfg.DDragonBase, DefaultDDragonBase)
+	}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("the shipped defaults must validate, got %v", err)
+	}
+}
+
+func TestValidateRejectsAnEmptyAllowlist(t *testing.T) {
+	t.Setenv("ALLOWED_HOSTS", " , ")
+	if err := Load().Validate(); err == nil {
+		t.Fatal("an allowlist that filters down to nothing blocks every fetch: it must not start")
+	}
+}
+
+func TestValidateRejectsAPassthroughOutsideTheAllowlist(t *testing.T) {
+	t.Setenv("ALLOWED_HOSTS", "raw.communitydragon.org")
+	t.Setenv("DDRAGON_BASE", DefaultDDragonBase)
+	if err := Load().Validate(); err == nil {
+		t.Fatal("/versions and /languages would 502: the mismatch must fail at startup")
+	}
+}
+
+func TestValidateAcceptsAMirroredPassthrough(t *testing.T) {
+	t.Setenv("ALLOWED_HOSTS", "mirror.test")
+	t.Setenv("DDRAGON_BASE", "https://mirror.test/")
+	cfg := Load()
+	if cfg.DDragonBase != "https://mirror.test" {
+		t.Errorf("DDragonBase = %q, want the trailing slash trimmed", cfg.DDragonBase)
+	}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestInvalidNumbersAndDurationsFallBackToDefaults(t *testing.T) {
+	t.Setenv("MAX_URLS_PER_REQUEST", "abc")
+	t.Setenv("REQUEST_TIMEOUT", "15") // unit forgotten
+	cfg := Load()
+	if cfg.MaxURLsPerRequest != 512 {
+		t.Errorf("MaxURLsPerRequest = %d, want the 512 default", cfg.MaxURLsPerRequest)
+	}
+	if cfg.RequestTimeout != 15*time.Second {
+		t.Errorf("RequestTimeout = %v, want the 15s default", cfg.RequestTimeout)
+	}
+}

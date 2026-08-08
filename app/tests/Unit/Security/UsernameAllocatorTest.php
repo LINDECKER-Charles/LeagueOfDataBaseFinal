@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Security;
 use App\Entity\User;
 use App\Security\UsernameAllocator;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * OAuth username derivation: every outcome must satisfy User::USERNAME_PATTERN
@@ -17,7 +18,7 @@ final class UsernameAllocatorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->allocator = new UsernameAllocator();
+        $this->allocator = new UsernameAllocator(new AsciiSlugger());
     }
 
     public function testTransliteratesThePreferredHint(): void
@@ -38,7 +39,10 @@ final class UsernameAllocatorTest extends TestCase
 
     public function testFallsBackToDefaultWhenNoHintIsUsable(): void
     {
-        self::assertSame('Summoner', $this->allocator->allocate(['', '!!', '🎮🎮'], static fn (): bool => false));
+        self::assertSame(
+            'Summoner',
+            $this->allocator->allocate(['', '!!', '🎮🎮'], static fn (): bool => false),
+        );
     }
 
     public function testAppendsNumericSuffixesOnCollision(): void
@@ -47,18 +51,24 @@ final class UsernameAllocatorTest extends TestCase
 
         self::assertSame(
             'Ahri4',
-            $this->allocator->allocate(['Ahri'], static fn (string $c): bool => \in_array($c, $taken, true)),
+            $this->allocator->allocate(
+                ['Ahri'],
+                static fn (string $c): bool => \in_array($c, $taken, true),
+            ),
         );
     }
 
-    public function testLongHintsAreCappedAt24EvenWithSuffix(): void
+    public function testLongHintsAreCappedAtTheMaxLengthEvenWithSuffix(): void
     {
-        $base = str_repeat('a', 40);
+        $base = str_repeat('a', User::USERNAME_MAX_LENGTH + 16);
         $first = $this->allocator->allocate([$base], static fn (): bool => false);
-        $collided = $this->allocator->allocate([$base], static fn (string $c): bool => $c === $first);
+        $collided = $this->allocator->allocate(
+            [$base],
+            static fn (string $c): bool => $c === $first,
+        );
 
-        self::assertSame(24, mb_strlen($first));
-        self::assertSame(24, mb_strlen($collided));
+        self::assertSame(User::USERNAME_MAX_LENGTH, mb_strlen($first));
+        self::assertSame(User::USERNAME_MAX_LENGTH, mb_strlen($collided));
         self::assertStringEndsWith('2', $collided);
         self::assertMatchesRegularExpression(User::USERNAME_PATTERN, $collided);
     }

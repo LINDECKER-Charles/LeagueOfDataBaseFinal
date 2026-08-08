@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service\Audit;
 
+use App\Service\Storage\NdjsonDayStore;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
 
@@ -15,7 +16,7 @@ use League\Flysystem\FilesystemOperator;
  * at the edge (nginx `location ^~ /cdn/audit/`), exactly like `analytics/`; PHP
  * still reads it internally over the MinIO network.
  */
-final class AuditArchiveStore
+final class AuditArchiveStore implements AuditDayReader
 {
     private const PREFIX = 'audit';
     private const EXT = '.ndjson';
@@ -38,16 +39,8 @@ final class AuditArchiveStore
             return;
         }
 
-        foreach (explode("\n", $contents) as $line) {
-            $line = trim($line);
-            if ($line === '') {
-                continue;
-            }
-            $row = json_decode($line, true);
-            if (is_array($row)) {
-                yield $row;
-            }
-        }
+        // Same line format as the local tier — one decoder for both.
+        yield from NdjsonDayStore::decodeLines(explode("\n", $contents));
     }
 
     public function exists(string $date): bool
@@ -64,7 +57,7 @@ final class AuditArchiveStore
      *
      * @return list<string>
      */
-    public function dates(): array
+    public function days(): array
     {
         $dates = [];
         try {

@@ -11,7 +11,8 @@ final class Version20260717150000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Game mode on builds (item availability per DDragon map); existing builds default to Summoner\'s Rift.';
+        return 'Game mode on builds (item availability per DDragon map); existing builds default '
+            .'to Summoner\'s Rift.';
     }
 
     public function up(Schema $schema): void

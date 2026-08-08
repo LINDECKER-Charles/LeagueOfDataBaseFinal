@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { filterOptions, normalizeSearchText, type PickerEntry } from './filterOptions'
+import { normalizeSearchText } from '../search/normalizeSearchText'
+import { filterOptions, type PickerEntry } from './filterOptions'
 
 function entry(overrides: Partial<PickerEntry> & { id: string; name: string }): PickerEntry {
     return {
@@ -13,13 +14,6 @@ const AHRI = entry({ id: 'Ahri', name: 'Ahri' })
 const SERAPHINE = entry({ id: 'Seraphine', name: 'Séraphine' })
 const KAISA = entry({ id: 'Kaisa', name: "Kai'Sa" })
 const FLAT = [AHRI, SERAPHINE, KAISA]
-
-describe('normalizeSearchText', () => {
-    it('lowercases and strips accents', () => {
-        expect(normalizeSearchText('Séraphine')).toBe('seraphine')
-        expect(normalizeSearchText('MAÎTRE YI')).toBe('maitre yi')
-    })
-})
 
 describe('filterOptions', () => {
     it('returns every entry for an empty or blank query', () => {

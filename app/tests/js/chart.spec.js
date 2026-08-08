@@ -16,8 +16,10 @@ function renderServerSide(payload = JSON.stringify(MODEL)) {
     document.body.innerHTML = `
         <figure class="chart-fig" data-chart="${payload.replace(/"/g, '&quot;')}">
             <svg viewBox="0 0 760 240" class="chart" role="img" aria-label="Fréquentation">
-                <defs><clipPath id="cp-abc"><rect x="34" y="16" width="692" height="198"/></clipPath></defs>
-                <g class="c-plot" clip-path="url(#cp-abc)"><polyline points="34,100 380,20 726,180"/></g>
+                <defs><clipPath id="cp-abc">\
+<rect x="34" y="16" width="692" height="198"/></clipPath></defs>
+                <g class="c-plot" clip-path="url(#cp-abc)">\
+<polyline points="34,100 380,20 726,180"/></g>
                 <g class="c-xaxis"></g>
             </svg>
         </figure>`
@@ -26,7 +28,8 @@ function renderServerSide(payload = JSON.stringify(MODEL)) {
 }
 
 function press(key) {
-    document.querySelector('svg').dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
+    document.querySelector('svg')
+        .dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
 }
 
 beforeEach(() => {
@@ -49,7 +52,8 @@ describe('enhanceCharts', () => {
         const fig = renderServerSide()
         enhanceCharts()
 
-        expect(fig.querySelector('.c-plot').getAttribute('transform')).toBe('translate(0 0) scale(1 1)')
+        expect(fig.querySelector('.c-plot').getAttribute('transform'))
+            .toBe('translate(0 0) scale(1 1)')
         const ticks = [...fig.querySelectorAll('.c-xaxis text')].map((t) => t.textContent)
         expect(ticks[0]).toBe('07-15')
         expect(ticks.at(-1)).toBe('07-17')

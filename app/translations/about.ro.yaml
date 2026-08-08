@@ -1,5 +1,5 @@
 # Conținut editorial pentru /about, /about/data și /faq.
-# Id-urile faq.* sunt declarate în App\Controller\AboutController::FAQ_ENTRIES.
+# Id-urile faq.* sunt declarate în App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "Despre"
 
 index:

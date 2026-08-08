@@ -1,0 +1,72 @@
+{# Champion hero — cinematic centered splash, identity block and Riot's own
+   attack/defense/magic/difficulty gauges.
+   Contract: champion, champId, splashBase, centeredBase, selection. #}
+<section class="relative h-[62vh] min-h-[26rem] max-h-[46rem] w-full overflow-hidden">
+  {% if champId %}
+    {# The undocumented `centered/` variant frames the subject at any crop;
+       data-img-fallback falls back to the classic splash for champions missing it. #}
+    <img src="{{ centeredBase }}/{{ champId }}_0.jpg" alt=""
+         data-img-fallback="{{ splashBase }}/{{ champId }}_0.jpg"
+         loading="eager" fetchpriority="high" decoding="async"
+         class="absolute inset-0 h-full w-full object-cover object-[50%_18%]">
+  {% endif %}
+  <div class="splash-scrim absolute inset-0"></div>
+
+  <div class="absolute inset-x-0 bottom-0">
+    <div class="mx-auto max-w-7xl px-6 pb-9">
+      <p class="eyebrow mb-3">
+        {{ 'champion.list.title'|trans }}
+        <span class="mx-2 text-gold-deep" aria-hidden="true">◆</span>
+        <span class="normal-case tracking-normal font-mono text-[11px] text-text-muted">{{
+          selection.version }} · {{ selection.lang }}</span>
+      </p>
+      <h1 class="hero-name hero-name--epic text-gold-grad
+          drop-shadow-[0_2px_18px_rgba(1,10,19,0.9)]">
+        {{ champion.name ?? 'Champion' }}
+      </h1>
+      {% if champion.title is defined and champion.title %}
+        <p class="mt-2.5 font-spiegel text-lg text-text-muted sm:text-xl">{{
+          champion.title|capitalize }}</p>
+      {% endif %}
+
+      <div class="mt-5 flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
+        <div class="flex flex-wrap items-center gap-2">
+          {% for tag in champion.tags|default([]) %}<span
+            class="hx-chip">{{ tag }}</span>{% endfor %}
+          {% if champion.partype is defined and champion.partype %}
+            <span class="hx-chip text-text-dim">{{
+              'champion.detail.partype'|trans({'%partype%': champion.partype}) }}</span>
+          {% endif %}
+        </div>
+
+        {% if champion.info is defined %}
+          {% set gaugeDefs = [
+            { k: 'attack',     v: champion.info.attack|default(0),
+              label: 'champion.detail.profile.attack'|trans },
+            { k: 'defense',    v: champion.info.defense|default(0),
+              label: 'champion.detail.profile.defense'|trans },
+            { k: 'magic',      v: champion.info.magic|default(0),
+              label: 'champion.detail.profile.magic'|trans },
+            { k: 'difficulty', v: champion.info.difficulty|default(0),
+              label: 'champion.detail.profile.difficulty'|trans }
+          ] %}
+          <div class="flex flex-wrap gap-x-8 gap-y-3">
+            {% for g in gaugeDefs %}
+              <div>
+                <div class="mb-1.5 flex items-baseline justify-between gap-3">
+                  <span class="font-mono text-[10px] uppercase tracking-wider text-text-muted">{{
+                    g.label }}</span>
+                  <span class="font-beaufort text-xs text-gold-light">{{ g.v }}</span>
+                </div>
+                <div class="gauge gauge--{{ g.k }}" role="img"
+                     aria-label="{{ g.label }} : {{ g.v }}/10">
+                  {%- for i in 1..10 %}<i class="{{ i <= g.v ? 'on' }}"></i>{% endfor -%}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>

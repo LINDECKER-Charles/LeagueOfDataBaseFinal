@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Audit;
 
-use App\Service\Audit\AuditAction;
+use App\Service\Audit\Model\AuditAction;
 use App\Service\Audit\AuditArchiveStore;
-use App\Service\Audit\AuditEvent;
+use App\Service\Audit\Model\AuditEvent;
 use App\Service\Audit\AuditLogStore;
-use App\Service\Audit\AuditOutcome;
+use App\Service\Audit\Model\AuditOutcome;
 use App\Service\Audit\AuditRollupService;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -26,7 +26,9 @@ final class AuditRollupServiceTest extends TestCase
     {
         $this->dir = sys_get_temp_dir() . '/lodb_audit_' . bin2hex(random_bytes(6));
         $this->local = new AuditLogStore($this->dir);
-        $this->archive = new AuditArchiveStore(new Filesystem(new LocalFilesystemAdapter($this->dir . '/minio')));
+        $this->archive = new AuditArchiveStore(
+            new Filesystem(new LocalFilesystemAdapter($this->dir . '/minio')),
+        );
         $this->rollup = new AuditRollupService($this->local, $this->archive);
         $this->today = gmdate('Y-m-d');
         $this->yesterday = gmdate('Y-m-d', time() - 86400);
@@ -102,7 +104,9 @@ final class AuditRollupServiceTest extends TestCase
         $this->append($this->yesterday);
         $this->rollup->rollup(); // also archive it
 
-        $result = $this->rollup->purge(new \DateTimeImmutable($this->today, new \DateTimeZone('UTC')));
+        $result = $this->rollup->purge(
+            new \DateTimeImmutable($this->today, new \DateTimeZone('UTC')),
+        );
 
         self::assertContains($this->yesterday, $result['deleted']);
         self::assertNull($this->local->readRaw($this->yesterday));
@@ -118,7 +122,7 @@ final class AuditRollupServiceTest extends TestCase
         $this->rollup->purge(null, all: true);
 
         self::assertSame([], $this->local->days());
-        self::assertSame([], $this->archive->dates());
+        self::assertSame([], $this->archive->days());
     }
 
     public function testPurgeWithoutBoundsIsANoop(): void

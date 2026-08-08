@@ -6,9 +6,13 @@
   {% if count is defined and count is not null %}
     <span class="font-mono text-xs text-hex">{{ count }}</span>
   {% endif %}
-  <span aria-hidden="true" class="h-px flex-1" style="background:linear-gradient(90deg,var(--color-gold-deep),transparent);"></span>
-  <a href="{{ href }}" class="group inline-flex shrink-0 items-center gap-2 font-beaufort text-xs uppercase tracking-[0.11em] text-gold transition-colors hover:text-hex">
+  <span aria-hidden="true" class="h-px flex-1"
+        style="background:linear-gradient(90deg,var(--color-gold-deep),transparent);"></span>
+  <a href="{{ href }}" class="group inline-flex shrink-0 items-center gap-2 font-beaufort text-xs
+     uppercase tracking-[0.11em] text-gold transition-colors hover:text-hex">
     {{ link }}
-    <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1"
+         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
   </a>
 </div>

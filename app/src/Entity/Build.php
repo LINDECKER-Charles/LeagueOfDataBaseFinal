@@ -29,6 +29,12 @@ final class Build
     /** Fallback authoring locale; also backfills builds predating the language column. */
     public const DEFAULT_LANGUAGE = 'en_US';
 
+    /**
+     * Storage bound of the build title — the editor's own limit must reference it
+     * so an accepted name can never overflow the column at flush time.
+     */
+    public const NAME_MAX_LENGTH = 80;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -38,7 +44,7 @@ final class Build
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $owner = null;
 
-    #[ORM\Column(length: 80)]
+    #[ORM\Column(length: self::NAME_MAX_LENGTH)]
     private string $name = '';
 
     #[ORM\Column(length: 64)]

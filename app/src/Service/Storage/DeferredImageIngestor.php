@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *
  * Deferral is **opt-in and off by default**: image resolution is synchronous
  * unless a caller explicitly runs it inside {@see self::withDeferral()}. Only the
- * list/preview render ({@see \App\Service\API\PaginatesResources::paginate()})
+ * list/preview render ({@see \App\Service\API\Concern\PaginatesResources::paginate()})
  * tolerates placeholders — detail pages, pickers, search results and the build
  * view all need their images resolved in the same response, so they never opt in
  * and stay synchronous. This makes "resolve now" the safe default; forgetting to
@@ -28,7 +28,7 @@ final class DeferredImageIngestor
     private array $tasks = [];
 
     /** Whether the current resolution scope opted into deferral ({@see withDeferral}). */
-    private bool $deferralAllowed = false;
+    private bool $isDeferralAllowed = false;
 
     public function __construct(private readonly RequestStack $requestStack) {}
 
@@ -44,19 +44,22 @@ final class DeferredImageIngestor
      */
     public function withDeferral(callable $resolve): mixed
     {
-        $previous = $this->deferralAllowed;
-        $this->deferralAllowed = true;
+        $previous = $this->isDeferralAllowed;
+        $this->isDeferralAllowed = true;
         try {
             return $resolve();
         } finally {
-            $this->deferralAllowed = $previous;
+            $this->isDeferralAllowed = $previous;
         }
     }
 
-    /** Defer only when a caller opted in ({@see withDeferral}) AND within an HTTP request (CLI/warmup ingests inline). */
+    /**
+     * Defer only when a caller opted in ({@see withDeferral}) AND within an HTTP
+     * request (CLI/warmup ingests inline).
+     */
     public function shouldDefer(): bool
     {
-        return $this->deferralAllowed && $this->requestStack->getMainRequest() !== null;
+        return $this->isDeferralAllowed && $this->requestStack->getMainRequest() !== null;
     }
 
     public function defer(callable $task): void

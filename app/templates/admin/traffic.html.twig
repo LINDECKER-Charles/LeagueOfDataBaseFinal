@@ -1,11 +1,12 @@
-{% extends 'admin/_base.html.twig' %}
-{% import 'admin/_ui.html.twig' as ui %}
+{% extends 'admin/shell/_base.html.twig' %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
 
 {% block title %}Trafic · Admin · LODB{% endblock %}
 
 {% block admin_body %}
-    <div class="flex between wrap" style="margin-bottom: 1.5rem;">
-        {{ ui.page_head('Analytics', 'Trafic', 'Pages les plus consultées et rythme de fréquentation.') }}
+    <div class="page-toolbar">
+        {{ ui.page_head('Analytics', 'Trafic',
+            'Pages les plus consultées et rythme de fréquentation.') }}
         {{ ui.range_bar(range, ranges, 'admin_traffic') }}
     </div>
 

@@ -81,15 +81,17 @@ Les **limites chiffrées** sont des plafonds à respecter ; les **principes** so
 
 | Règle | Limite |
 |---|---|
-| Taille d'un fichier | ≤ 300 lignes (alerte), 500 maximum |
+| Taille d'un fichier | ≤ 300 lignes (alerte), 400 maximum |
+| Fichiers par dossier | ≤ 10 (au-delà, découper en sous-dossiers par domaine) |
 | Taille d'une fonction / méthode | ≤ 30 lignes |
-| Paramètres d'une méthode | ≤ 4 (au-delà, regrouper dans un objet/DTO) |
+| Paramètres d'une méthode | ≤ 3 (au-delà, regrouper dans un objet/DTO) |
 | Profondeur d'imbrication | ≤ 3 niveaux |
 | Complexité cyclomatique | ≤ 10 par fonction |
-| Longueur de ligne | ≤ 120 caractères |
+| Longueur de ligne | ≤ 100 caractères |
 
-> Seuils fichiers alignés sur les skills `archi-report` du projet (⚠️ 300 / 🔴 500).
-> **Exception paramètres** : les constructeurs à injection de dépendances Symfony sont exemptés de la règle des ≤ 4 (le conteneur assemble) ; regrouper seulement si la liste devient vraiment illisible.
+> Seuils alignés sur les conventions B-Hive. Le skill `archi-report` signale encore
+> ⚠️ 300 / 🔴 500 : le plafond qui fait foi ici est **400**.
+> **Exception paramètres** : les constructeurs à injection de dépendances Symfony sont exemptés de la règle des ≤ 3 (le conteneur assemble) ; regrouper seulement si la liste devient vraiment illisible.
 
 - **Un seul élément public par fichier**, nommé comme le fichier (classe PHP, composant Vue, module TS).
 - **Pas de nombres ni de chaînes magiques** — constantes nommées explicitant l'intention (ex. `INGEST_CHUNK_SIZE`, `WATCHDOG_IDLE`).
@@ -159,12 +161,12 @@ npm run build     # vite build
 
 ## Références
 
-- `docs/architecture-report.md` — état archi + refactos appliqués (DRY/SOLID/KISS).
-- `docs/architecture.md`, `docs/docker.md`, `docs/configuration.md`, `docs/PERFORMANCE-AUDIT.md`.
+- `docs/architecture/architecture-report.md` — état archi + refactos appliqués (DRY/SOLID/KISS).
+- `docs/architecture/architecture.md`, `docs/guides/docker.md`, `docs/guides/configuration.md`, `docs/audits/performance-audit.md`.
 
 ## commit
 
-Convention de commits (maintenue par /commit).
+Convention de commits (maintenue par /commit, initialisée par /b-hive-init).
 - Style : Conventional Commits — langue : fr (sujets sans accents, impératif, ≤ 80 car.)
 - Scopes (chemin → scope) :
   - `app/src/Service/Seo/**`, `app/src/Twig/SeoExtension.php`, `app/public/robots.txt` → `back/seo`
@@ -172,14 +174,29 @@ Convention de commits (maintenue par /commit).
   - `app/src/Controller/Admin/**`, `app/src/Service/Admin/**`, `app/templates/admin/**`, `app/public/admin/**` → `back/admin`
   - `app/src/Service/API/**` → `back/api`
   - `app/src/Service/Analytics/**` → `back/analytics`
+  - `app/src/Security/**` → `back/security`
+  - `app/src/Command/**` → `back/console`
+  - `app/migrations/**`, `app/src/Entity/**`, `app/src/Repository/**` → `back/db`
+  - `app/config/**` → `back/config`
   - `app/src/Controller/**` (hors Admin) → `back/<domaine>`
   - `app/templates/**`, `app/assets/**` → `front/<zone>`
   - `app/translations/**` → `i18n`
   - Lot touchant à la fois contrôleur + templates + traductions → `full-stack/<zone>`
   - `go-workers/**` → `fetcher`
+  - `go-api/**` → `api`
   - `compose*`, `docker/**`, `infra/**` → `infra`
+  - `tools/**` → `tools`
+  - `screenshot/**` → `docs/screenshots`
   - `.github/**` → `ci`
   - `docs/**` → `docs`
+  - config transverse racine (`tailwind.config.js`, `composer.json`, `package.json`, lockfiles) → `chore` (sans scope)
 - Règles de regroupement :
   - les tests (`app/tests/**`) voyagent avec le code testé, jamais en commit séparé ;
   - les entrées `docs/changelog/**` sont jointes au commit feature/fix qu'elles documentent.
+
+## Tests
+
+- **Toute feature s'accompagne de tests**, livrés avec elle (même branche, même commit/PR que le code testé).
+- **Uniquement le nécessaire pour tester la feature** : le comportement nominal et les cas limites qu'elle introduit. Pas de course au pourcentage de couverture, pas de tests redondants ; on ne teste ni le framework ni les bibliothèques tierces.
+- Un bon test échoue quand le **comportement** de la feature casse — pas quand son implémentation change.
+- Emplacements : PHPUnit dans `app/tests/Unit` (baseline verte, cf. Garde-fous) et `app/tests/Functional` ; Vitest dans `app/tests/js`.

@@ -7,6 +7,8 @@
  * Not a Vue island: it wires the plain <form> that HOSTS the islands, so it must
  * survive the islands replacing their own shells on mount.
  */
+import { PROFILE_CHANGED_EVENT } from './profileEvents'
+
 const DEBOUNCE_MS = 500
 const SAVED_LINGER_MS = 2500
 
@@ -17,6 +19,8 @@ interface SaveOutcome {
     skinInvalid?: boolean
     isPublicProfile?: boolean
 }
+
+type SaveResult = 'saved' | 'warned' | 'error'
 
 interface StatusLabels {
     saving: string
@@ -68,10 +72,16 @@ function enhance(form: HTMLFormElement): void {
     let clearSaved = 0
     const queueSave = (): void => {
         window.clearTimeout(timer)
-        timer = window.setTimeout(() => void save(form, status, labels, (t) => (clearSaved = t)), DEBOUNCE_MS)
+        timer = window.setTimeout(() => void saveThenSettle(), DEBOUNCE_MS)
     }
 
-    form.addEventListener('profile:changed', queueSave)
+    /* Only a clean save fades back to idle — warnings and errors stay on screen. */
+    async function saveThenSettle(): Promise<void> {
+        if ((await save(form, status, labels)) !== 'saved') return
+        clearSaved = window.setTimeout(() => setStatus(status, 'idle', ''), SAVED_LINGER_MS)
+    }
+
+    form.addEventListener(PROFILE_CHANGED_EVENT, queueSave)
 
     const visibility = form.querySelector<HTMLInputElement>('input[name="isPublicProfile"]')
     visibility?.addEventListener('change', () => {
@@ -81,12 +91,12 @@ function enhance(form: HTMLFormElement): void {
     })
 }
 
+/** Posts the form and paints the resulting status; the caller owns what follows. */
 async function save(
     form: HTMLFormElement,
     status: HTMLElement | null,
     labels: StatusLabels,
-    onSaved: (timer: number) => void,
-): Promise<void> {
+): Promise<SaveResult> {
     setStatus(status, 'saving', labels.saving)
     try {
         const response = await fetch(form.action, {
@@ -98,17 +108,18 @@ async function save(
         const data = (await response.json().catch(() => ({}))) as SaveOutcome
         if (!response.ok || !data.ok) {
             setStatus(status, 'error', data.error ?? labels.error)
-            return
+            return 'error'
         }
         const dropped = (data.invalidFavorites?.length ?? 0) > 0 || Boolean(data.skinInvalid)
         if (dropped) {
             setStatus(status, 'warned', labels.dropped)
-            return
+            return 'warned'
         }
         setStatus(status, 'saved', labels.saved)
-        onSaved(window.setTimeout(() => setStatus(status, 'idle', ''), SAVED_LINGER_MS))
+        return 'saved'
     } catch {
         setStatus(status, 'error', labels.error)
+        return 'error'
     }
 }
 
@@ -122,12 +133,19 @@ function syncVisibility(form: HTMLFormElement, isPublic: boolean): void {
 
     const state = card.querySelector<HTMLElement>('[data-visibility-state]')
     if (state) {
-        state.textContent = isPublic ? (card.dataset.statePublic ?? '') : (card.dataset.statePrivate ?? '')
+        state.textContent = isPublic
+            ? (card.dataset.statePublic ?? '')
+            : (card.dataset.statePrivate ?? '')
     }
-    card.querySelectorAll<HTMLElement>('[data-visibility-public-only]').forEach((el) => (el.hidden = !isPublic))
+    card.querySelectorAll<HTMLElement>('[data-visibility-public-only]')
+        .forEach((el) => (el.hidden = !isPublic))
 }
 
-function setStatus(status: HTMLElement | null, state: 'idle' | 'saving' | 'saved' | 'warned' | 'error', text: string): void {
+function setStatus(
+    status: HTMLElement | null,
+    state: 'idle' | 'saving' | 'saved' | 'warned' | 'error',
+    text: string,
+): void {
     if (!status) {
         return
     }

@@ -1,15 +1,25 @@
-{% extends 'admin/_base.html.twig' %}
-{% import 'admin/_ui.html.twig' as ui %}
+{% extends 'admin/shell/_base.html.twig' %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
 
 {% block title %}Stockage · Admin · LODB{% endblock %}
 
 {% block admin_body %}
-    <div class="flex between wrap" style="margin-bottom: 1.5rem;">
-        {{ ui.page_head('Infrastructure', 'Stockage objet', 'Poids et composition du bucket MinIO content-addressed (ddragon).') }}
-        <a class="btn ghost" href="{{ path('admin_storage', { refresh: 1 }) }}" title="Recalculer (ignore le cache 2 min)">Rafraîchir</a>
+    <div class="page-toolbar">
+        {{ ui.page_head(
+            'Infrastructure',
+            'Stockage objet',
+            'Poids et composition du bucket MinIO content-addressed (ddragon).'
+        ) }}
+        <a class="btn ghost" href="{{ path('admin_storage', { refresh: 1 }) }}"
+           title="Recalculer (ignore le cache 2 min)">Rafraîchir</a>
     </div>
 
     {# A deep S3 listing is the slowest report of the panel: it streams in after
        the shell instead of holding the whole page. #}
-    {{ ui.panel('storage', refresh ? { refresh: 1 } : {}, panels['storage']|default(null), 'cards') }}
+    {{ ui.panel(
+        'storage',
+        refresh ? { refresh: 1 } : {},
+        panels['storage']|default(null),
+        'cards'
+    ) }}
 {% endblock %}

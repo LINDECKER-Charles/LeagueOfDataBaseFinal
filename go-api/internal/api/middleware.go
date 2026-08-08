@@ -8,6 +8,7 @@ import (
 
 	"leagueofdatabase/go-api/internal/keys"
 	"leagueofdatabase/go-api/internal/quota"
+	"leagueofdatabase/go-api/internal/ratelimit"
 )
 
 type entryContextKey struct{}
@@ -18,131 +19,156 @@ func entryFromContext(ctx context.Context) *keys.Entry {
 	return entry
 }
 
+// The verdicts of the authentication/billing pipeline: each step decides,
+// withAuth renders — which is what makes the pipeline testable without a
+// ResponseWriter. Treated as immutable: never reassign a field.
+var (
+	failMissingKey = &apiError{
+		http.StatusUnauthorized, CodeUnauthorized,
+		"missing API key: use Authorization: Bearer <key> or X-Api-Key",
+	}
+	failMalformedKey = &apiError{
+		http.StatusUnauthorized, CodeUnauthorized, "malformed API key",
+	}
+	failUnknownKey = &apiError{
+		http.StatusUnauthorized, CodeUnauthorized, "unknown API key",
+	}
+	failRevokedKey = &apiError{
+		http.StatusForbidden, CodeForbidden, "API key is revoked or inactive",
+	}
+	failRateLimited = &apiError{
+		http.StatusTooManyRequests, CodeRateLimited,
+		"rate limit exceeded, retry after X-RateLimit-Reset",
+	}
+	failQuotaExceeded = &apiError{
+		http.StatusTooManyRequests, CodeQuotaExceeded,
+		"monthly quota exhausted and no credits left",
+	}
+	// failDependencyDown mirrors writeUnavailable: same envelope, same 503.
+	failDependencyDown = &apiError{
+		http.StatusServiceUnavailable, CodeInternal, "service temporarily unavailable",
+	}
+)
+
 // withAuth authenticates and rate-limits a /v1 handler. enforceQuota is a
 // documented orthogonal opt-out: /v1/usage stays reachable (and free) when the
 // quota is exhausted so clients can always inspect their consumption.
 func (s *Server) withAuth(enforceQuota bool, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		entry := s.resolveKey(w, r)
-		if entry == nil {
-			return
+		entry, fail := s.resolveKey(r.Context(), rawKeyFromRequest(r))
+		if fail == nil {
+			fail = s.applyRateLimit(w, entry)
 		}
-		if !s.applyRateLimit(w, entry) {
-			return
+		if fail == nil && enforceQuota {
+			fail = s.applyQuota(r.Context(), entry)
 		}
-		if enforceQuota && !s.applyQuota(r.Context(), w, entry) {
+		if fail != nil {
+			fail.write(w)
 			return
 		}
 		next(w, r.WithContext(context.WithValue(r.Context(), entryContextKey{}, entry)))
 	}
 }
 
-// resolveKey extracts, validates and resolves the API key, writing the error
-// response itself when authentication fails (nil return).
-func (s *Server) resolveKey(w http.ResponseWriter, r *http.Request) *keys.Entry {
-	raw := rawKeyFromRequest(r)
+// resolveKey validates the raw key and resolves it through the cache.
+func (s *Server) resolveKey(ctx context.Context, raw string) (*keys.Entry, *apiError) {
 	if raw == "" {
-		writeError(w, http.StatusUnauthorized, CodeUnauthorized, "missing API key: use Authorization: Bearer <key> or X-Api-Key")
-		return nil
+		return nil, failMissingKey
 	}
 	hash, err := keys.Hash(raw)
 	if err != nil {
-		writeError(w, http.StatusUnauthorized, CodeUnauthorized, "malformed API key")
-		return nil
+		return nil, failMalformedKey
 	}
 	entry := s.keyCache.Get(hash)
 	if entry == nil {
-		entry = s.loadKey(r.Context(), w, hash)
-		if entry == nil {
-			return nil
+		loaded, fail := s.loadKey(ctx, hash)
+		if fail != nil {
+			return nil, fail
 		}
+		entry = loaded
 	}
 	if entry.Invalid {
-		writeError(w, http.StatusUnauthorized, CodeUnauthorized, "unknown API key")
-		return nil
+		return nil, failUnknownKey
 	}
-	if !entry.Key.Usable() {
-		writeError(w, http.StatusForbidden, CodeForbidden, "API key is revoked or inactive")
-		return nil
+	if !entry.Usable() {
+		return nil, failRevokedKey
 	}
-	return entry
+	return entry, nil
 }
 
 // loadKey fills the cache from the database (positive or negative entry).
-func (s *Server) loadKey(ctx context.Context, w http.ResponseWriter, hash string) *keys.Entry {
+func (s *Server) loadKey(ctx context.Context, hash string) (*keys.Entry, *apiError) {
 	key, err := s.auth.KeyByHash(ctx, hash)
+	if isNotFound(err) {
+		s.keyCache.PutInvalid(hash)
+		return nil, failUnknownKey
+	}
 	if err != nil {
-		if isNotFound(err) {
-			s.keyCache.PutInvalid(hash)
-			writeError(w, http.StatusUnauthorized, CodeUnauthorized, "unknown API key")
-			return nil
-		}
 		s.log.Error("api key lookup failed", "error", err)
-		writeUnavailable(w)
-		return nil
+		return nil, failDependencyDown
 	}
 	if !key.Usable() {
 		// Cache the row itself (not a negative entry) so the verdict stays 403.
-		return s.keyCache.PutValid(hash, key, 0)
+		return s.keyCache.PutValid(hash, key, 0), nil
 	}
 	used, err := s.auth.MonthlyUsage(ctx, key.ID)
 	if err != nil {
 		s.log.Error("monthly usage lookup failed", "error", err, "api_key_id", key.ID)
-		writeUnavailable(w)
-		return nil
+		return nil, failDependencyDown
 	}
-	return s.keyCache.PutValid(hash, key, used)
+	return s.keyCache.PutValid(hash, key, used), nil
 }
 
-// applyRateLimit consumes a token and always sets the X-RateLimit-* headers.
-func (s *Server) applyRateLimit(w http.ResponseWriter, entry *keys.Entry) bool {
-	verdict := s.limiter.Allow(entry.Key.ID, entry.Key.RateLimitPerMin)
-	header := w.Header()
+// applyRateLimit consumes a token. It touches the writer only to advertise the
+// X-RateLimit-* state, which belongs to allowed responses as much as to refusals.
+func (s *Server) applyRateLimit(w http.ResponseWriter, entry *keys.Entry) *apiError {
+	verdict := s.limiter.Allow(entry.KeyID(), entry.RateLimitPerMin())
+	setRateLimitHeaders(w.Header(), verdict)
+	if !verdict.Allowed {
+		return failRateLimited
+	}
+	return nil
+}
+
+func setRateLimitHeaders(header http.Header, verdict ratelimit.Verdict) {
 	header.Set("X-RateLimit-Limit", strconv.Itoa(verdict.Limit))
 	header.Set("X-RateLimit-Remaining", strconv.Itoa(verdict.Remaining))
 	header.Set("X-RateLimit-Reset", strconv.FormatInt(verdict.Reset, 10))
-	if !verdict.Allowed {
-		writeError(w, http.StatusTooManyRequests, CodeRateLimited, "rate limit exceeded, retry after X-RateLimit-Reset")
-	}
-	return verdict.Allowed
 }
 
 // applyQuota charges the request to the monthly plan, then prepaid credits.
-func (s *Server) applyQuota(ctx context.Context, w http.ResponseWriter, entry *keys.Entry) bool {
-	switch quota.Evaluate(entry.MonthlyUsed(), entry.Key.MonthlyQuota, entry.Credits()) {
+func (s *Server) applyQuota(ctx context.Context, entry *keys.Entry) *apiError {
+	switch quota.Evaluate(entry.MonthlyUsed(), entry.MonthlyQuota(), entry.Credits()) {
 	case quota.AllowPlan:
 		s.chargeRequest(entry)
-		return true
+		return nil
 	case quota.AllowCredits:
-		return s.spendCredit(ctx, w, entry)
+		return s.spendCredit(ctx, entry)
 	default:
-		writeError(w, http.StatusTooManyRequests, CodeQuotaExceeded, "monthly quota exhausted and no credits left")
-		return false
+		return failQuotaExceeded
 	}
 }
 
 // spendCredit synchronously decrements one prepaid credit (billing-grade write,
 // unlike the batched request metering).
-func (s *Server) spendCredit(ctx context.Context, w http.ResponseWriter, entry *keys.Entry) bool {
-	balance, spent, err := s.auth.ConsumeCredit(ctx, entry.Key.ID)
+func (s *Server) spendCredit(ctx context.Context, entry *keys.Entry) *apiError {
+	balance, spent, err := s.auth.ConsumeCredit(ctx, entry.KeyID())
 	if err != nil {
-		s.log.Error("credit decrement failed", "error", err, "api_key_id", entry.Key.ID)
-		writeUnavailable(w)
-		return false
+		s.log.Error("credit decrement failed", "error", err, "api_key_id", entry.KeyID())
+		return failDependencyDown
 	}
 	if !spent {
 		entry.SetCredits(0)
-		writeError(w, http.StatusTooManyRequests, CodeQuotaExceeded, "monthly quota exhausted and no credits left")
-		return false
+		return failQuotaExceeded
 	}
 	entry.SetCredits(balance)
 	s.chargeRequest(entry)
-	return true
+	return nil
 }
 
 func (s *Server) chargeRequest(entry *keys.Entry) {
 	entry.CountRequest()
-	s.meter.Record(entry.Key.ID)
+	s.meter.Record(entry.KeyID())
 }
 
 // rawKeyFromRequest accepts Authorization: Bearer <key> or X-Api-Key: <key>.

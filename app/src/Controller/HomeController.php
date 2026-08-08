@@ -3,22 +3,24 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Dto\ClientData;
-
+use App\Service\API\AbstractManager;
 use App\Service\API\ChampionManager;
+use App\Service\API\DatasetRef;
 use App\Service\API\ItemManager;
 use App\Service\API\RuneManager;
 use App\Service\API\SummonerManager;
 use App\Service\Client\ClientManager;
+use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
 use App\Service\Tools\UrlGenerator;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 
-class HomeController extends AbstractController
+final class HomeController extends AbstractPageController
 {
     /**
      * Persistence window (days) for the signed patch+language preference cookie.
@@ -32,150 +34,79 @@ class HomeController extends AbstractController
     private const PREF_COOKIE_DAYS_EXTENDED = 365;
 
     public function __construct(
-        private readonly VersionManager $versionManager, 
-        private readonly ClientManager $clientManager,
+        VersionManager $versionManager,
+        ClientManager $clientManager,
+        PageContextResolver $pageContext,
+        RequestStack $requestStack,
         private readonly UrlGenerator $urlGenerator,
         private readonly ItemManager $itemManager,
         private readonly SummonerManager $summonerManager,
         private readonly ChampionManager $championManager,
         private readonly RuneManager $runeManager,
-    ){}
+    ) {
+        parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
+    }
 
-    /**
-     * Affiche la page « Work in progress ».
-     *
-     * Prépare les données transverses du client (versions, langues, libellés,
-     * locale courante, préférences de session) via ClientData::fromServices()
-     * puis rend le template Twig `home/working.html.twig`.
-     *
-     * @see ClientData::fromServices()
-     *
-     * @return \Symfony\Component\HttpFoundation\Response Réponse HTML.
-     * @throws \Twig\Error\Error Si le template ne peut pas être rendu.
-     */
     #[Route('/working-progress', name: 'app_working')]
     public function working(): Response
     {
-        return $this->render('home/working.html.twig', [
-            'client' => ClientData::fromServices($this->versionManager, $this->clientManager),
-        ]);
+        return $this->render('home/working.html.twig', ['client' => $this->clientData()]);
     }
 
     /**
-     * Traitement du formulaire de sélection version/langue.
+     * Version/language selection form handler.
      *
-     * Étapes :
-     *  1) Valide le token CSRF (`_token` avec l'ID 'setup_form').
-     *  2) Récupère les champs POST : `langue` (string), `version` (string), `remember` (bool).
-     *  3) Valide le couple (version, langue) via {@see App\Service\VersionManager::validateSelection()}.
-     *     - En cas d’erreurs : clear du FlashBag, ajout des messages d’erreur, redirection vers la page d’origine (Referer) avec fallback la home.
-     *  4) En cas de succès :
-     *     - Persiste toujours la sélection dans un cookie signé via {@see App\Service\ClientManager::makeRememberCookie()} ;
-     *       `remember` = true ne fait qu’étendre la durée ({@see self::PREF_COOKIE_DAYS_EXTENDED} vs {@see self::PREF_COOKIE_DAYS}).
-     *     - Écrit les préférences en session via {@see App\Service\ClientManager::setLocaleInSession()} et {@see App\Service\ClientManager::setVersionInSession()}.
-     *     - Clear du FlashBag puis ajout d’un flash 'success'.
-     *     - Redirection vers la page d’origine (Referer) avec fallback la home.
-     *
-     * Notes sécurité :
-     *  - Le Referer est contrôlé pour rester sur le même host ; sinon fallback la home.
-     *  - Le cookie “remember” assure l’intégrité via HMAC mais pas la confidentialité.
-     *
-     * @route   /setup-submit  name=app_setup_save  methods=POST
-     *
-     * @param  \Symfony\Component\HttpFoundation\Request $request Requête HTTP contenant le formulaire.
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse  Redirection vers la page d’origine ou la home.
+     * Security notes: the Referer is checked to stay on the same host (home page
+     * as fallback), and the "remember" cookie is HMAC-signed for integrity only —
+     * it carries no confidentiality guarantee.
      */
     #[Route('/setup-submit', name: 'app_setup_save', methods: ['POST'])]
     public function save(Request $request): RedirectResponse
     {
-        // On recupere les donnees
         $language = (string) $request->request->get('langue', '');
         $version  = (string) $request->request->get('version', '');
-        $remember = $request->request->getBoolean('remember');
+        $backUrl  = $this->urlGenerator->generateBackUrl();
 
-        //On les valides
         $report = $this->versionManager->validateSelection($version, $language);
-
-        $backUrl = $this->urlGenerator->generateBackUrl();
-
         if (!$report['ok']) {
-            $request->getSession()?->getFlashBag()->clear();
-            foreach ($report['errors'] as $field => $msg) {
-                $this->addFlash('error', sprintf('%s: %s', ucfirst($field), $msg));
-            }
-            return $this->redirect($backUrl);
+            return $this->rejectSelection($request, $report['errors'], $backUrl);
         }
 
-        // Applique la sélection à l'URL de retour : la version va dans le segment
-        // de chemin quand l'URL est versionnée (/{version}/…), sinon en query —
-        // sans quoi un ?version= serait masqué par l'ancien segment (path > query).
-        $backUrl = $this->urlGenerator->applySelection($backUrl, $version, $language);
-
-
-        // Succès : la sélection est une préférence fonctionnelle, on la persiste
-        // toujours dans le cookie signé (la langue n'a pas de porteur d'URL — sans
-        // ce cookie elle retomberait sur le défaut domaine à la session suivante,
-        // là où la version survit via l'URL). La case ne fait qu'étendre la durée.
-        $response = $this->redirect($backUrl);
-
-        $days = $remember ? self::PREF_COOKIE_DAYS_EXTENDED : self::PREF_COOKIE_DAYS;
-        $response->headers->setCookie(
-            $this->clientManager->makeRememberCookie($language, $version, $days)
+        // Apply the selection to the return URL: the version goes into the path
+        // segment when the URL is versioned (/{version}/…), as a query parameter
+        // otherwise — without this a ?version= would be shadowed by the previous
+        // segment (path wins over query).
+        $response = $this->redirect(
+            $this->urlGenerator->applySelection($backUrl, $version, $language)
         );
+        $response->headers->setCookie($this->preferenceCookie($request, $language, $version));
 
         $this->clientManager->setLocaleInSession($language);
         $this->clientManager->setVersionInSession($version);
 
-
-        // Petit feedback facultatif
         $request->getSession()?->getFlashBag()->clear();
         $this->addFlash('success', 'Preferences saved');
+
         return $response;
     }
 
-    /**
-     * Page d'accueil de l'application.
-     *
-     * Comportement :
-     * 1. Récupère les informations de session (version et langue courantes)
-     *    via {@see ClientManager::getSession()}.
-     * 2. Charge un aperçu limité de données :
-     *    - 4 sorts d'invocateur (page 1) via {@see SummonerManager::paginate()}.
-     *    - 4 items (page 1) via {@see ItemManager::paginate()}.
-     * 3. Construit un objet {@see ClientData} pour exposer les données globales
-     *    (versions disponibles, langues, locale courante, etc.).
-     * 4. Rend le template Twig `home/home.html.twig` avec les données préparées.
-     *
-     * Variables injectées dans la vue :
-     * - client    : objet {@see ClientData} contenant les métadonnées de version/langue.
-     * - summoners : tableau paginé contenant 4 sorts d'invocateur + images + meta.
-     * - items     : tableau paginé contenant 4 items + images + meta.
-     *
-     * @see SummonerManager::paginate()
-     * @see ItemManager::paginate()
-     * @see ClientData::fromServices()
-     *
-     * @return Response Page HTML de la home affichant les aperçus de Summoners et Items.
-     */
     #[Route('/', name: 'app_home')]
-    public function home(): Response{
-        $session = $this->clientManager->getSession();
-        $version = $session['version'];
-        $lang    = $session['lang'];
+    public function home(): Response
+    {
+        $dataset = DatasetRef::fromSelection($this->pageContext->selection());
 
         return $this->render('home/home.html.twig', [
-            'client'    => ClientData::fromServices($this->versionManager, $this->clientManager),
-            'champions' => $this->preview('champion',      fn () => $this->championManager->paginate($version, $lang, 4, 1)),
-            'items'     => $this->preview('item',          fn () => $this->itemManager->paginate($version, $lang, 4, 1)),
-            'summoners' => $this->preview('summoner',      fn () => $this->summonerManager->paginate($version, $lang, 4, 1)),
-            'runes'     => $this->preview('runesReforged', fn () => $this->runeManager->paginate($version, $lang, 4, 1)),
+            'client'    => $this->clientData(),
+            'champions' => $this->preview($this->championManager, $dataset),
+            'items'     => $this->preview($this->itemManager, $dataset),
+            'summoners' => $this->preview($this->summonerManager, $dataset),
+            'runes'     => $this->preview($this->runeManager, $dataset),
         ]);
     }
 
     /**
-     * Ancienne URL de la home. Redirection permanente : des PWA installées ont
-     * `/home` en start_url (manifest mis en cache) et des liens externes la
-     * référencent encore.
+     * Legacy home URL. Permanent redirect: installed PWAs still carry `/home` as
+     * their start_url (cached manifest) and external links still reference it.
      */
     #[Route('/home', name: 'app_home_legacy')]
     public function homeLegacy(): RedirectResponse
@@ -184,23 +115,58 @@ class HomeController extends AbstractController
     }
 
     /**
-     * Rend une preview de la home isolée : l'échec d'une ressource (panne
-     * transitoire de l'upstream) renvoie une section vide au lieu de faire tomber
-     * toute la page. L'absence légitime de données est déjà neutralisée en amont
-     * (jeu vide côté managers) ; ce garde-fou couvre les erreurs que la couche
-     * données propage volontairement. La forme vide conserve les clés attendues
-     * par le template (`<type>s`, `images`, `meta`) pour rester compatible
-     * strict_variables.
+     * Invalid selection: the visitor goes back where they came from with one flash
+     * per rejected field, and nothing is persisted.
      *
-     * @param callable():array<mixed> $fetch
+     * @param array<string, string> $errors
+     */
+    private function rejectSelection(
+        Request $request,
+        array $errors,
+        string $backUrl,
+    ): RedirectResponse {
+        $request->getSession()?->getFlashBag()->clear();
+        foreach ($errors as $field => $msg) {
+            $this->addFlash('error', sprintf('%s: %s', ucfirst($field), $msg));
+        }
+
+        return $this->redirect($backUrl);
+    }
+
+    /**
+     * The selection is a functional preference, so it is ALWAYS persisted in the
+     * signed cookie (language has no URL carrier — without this cookie it would
+     * fall back to the domain default on the next session, where the version
+     * survives through the URL). The "remember" checkbox only widens the lifetime.
+     */
+    private function preferenceCookie(Request $request, string $language, string $version): Cookie
+    {
+        $days = $request->request->getBoolean('remember')
+            ? self::PREF_COOKIE_DAYS_EXTENDED
+            : self::PREF_COOKIE_DAYS;
+
+        return $this->clientManager->makeRememberCookie($language, $version, $days);
+    }
+
+    /**
+     * Renders one home preview in isolation: a failing resource (transient
+     * upstream outage) yields an empty section instead of taking the whole page
+     * down. A legitimate absence of data is already neutralised upstream (empty
+     * set from the managers); this guard covers the errors the data layer
+     * deliberately propagates. The empty shape keeps the keys the template
+     * expects (`<type>s`, `images`, `meta`) so it stays compatible with
+     * strict_variables — derived from the manager so it can never drift.
+     *
      * @return array<mixed>
      */
-    private function preview(string $type, callable $fetch): array
+    private function preview(AbstractManager $manager, DatasetRef $dataset): array
     {
         try {
-            return $fetch();
+            // The loader pre-warms exactly this many images per resource, hence
+            // the shared constant rather than a literal on each side.
+            return $manager->paginate($dataset, PageContextResolver::HOME_PER_PAGE);
         } catch (\Throwable) {
-            return [$type . 's' => [], 'images' => [], 'meta' => []];
+            return [$manager->type() . 's' => [], 'images' => [], 'meta' => []];
         }
     }
 }

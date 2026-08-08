@@ -1,15 +1,22 @@
-{% extends 'admin/_base.html.twig' %}
-{% import 'admin/_ui.html.twig' as ui %}
+{% extends 'admin/shell/_base.html.twig' %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
 
 {% block title %}Surveillance · Admin · LODB{% endblock %}
 
 {% block admin_body %}
-    <div class="flex between wrap" style="margin-bottom: 1.5rem;">
-        {{ ui.page_head('Gestion', 'Surveillance', 'Santé des services internes, compteurs applicatifs et volumes — instantané mémorisé 30 s.') }}
+    <div class="page-toolbar">
+        {{ ui.page_head(
+            'Gestion',
+            'Surveillance',
+            'Santé des services internes, compteurs applicatifs et volumes'
+                ~ ' — instantané mémorisé 30 s.'
+        ) }}
         <a class="btn ghost" href="{{ path('admin_monitoring', { refresh: 1 }) }}">Rafraîchir</a>
     </div>
 
     {# The probes are live round trips to Postgres/MinIO/the Go services: a dead
        service must not stall the page it is meant to report on. #}
-    {{ ui.panel('monitoring', refresh ? { refresh: 1 } : {}, panels['monitoring']|default(null), 'cards') }}
+    {{ ui.panel(
+        'monitoring', refresh ? { refresh: 1 } : {}, panels['monitoring']|default(null), 'cards'
+    ) }}
 {% endblock %}

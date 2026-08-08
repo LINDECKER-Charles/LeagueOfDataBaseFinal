@@ -1,0 +1,84 @@
+/* ---------------------------------------------------------------------------
+   Builds — "my builds" list rows (.forge-row-*) plus the degraded-id marker
+   shared by every builds surface.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- Shared: honest degraded rendering of version-scoped ids ----------- */
+  .forge-ghost {
+    opacity: 0.45;
+    filter: saturate(0.2);
+  }
+
+  /* ---- My builds rows ----------------------------------------------------- */
+  .forge-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9rem 1.25rem;
+    padding: 1rem 1.25rem;
+  }
+  .forge-row__id {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+    flex: 1 1 16rem;
+  }
+  .forge-row__portrait {
+    position: relative;
+    flex: none;
+    width: 3.5rem;
+    height: 3.5rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 50%, transparent);
+    background: var(--color-void);
+  }
+  .forge-row__portrait img:not(.forge-row__keystone) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .forge-row__initials {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-beaufort);
+    font-size: 0.85rem;
+    color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  /* Keystone medallion pinned on the portrait corner — the row's rune signature. */
+  .forge-row__keystone {
+    position: absolute;
+    right: -0.55rem;
+    bottom: -0.55rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    border: 1px solid var(--color-gold-deep);
+    background: var(--color-hextech-black);
+  }
+  .forge-row__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+  }
+  .forge-row__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .forge-chip--public {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+  }
+  .forge-btn-sm {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.7rem;
+  }
+  .forge-btn-danger:hover {
+    color: var(--color-danger);
+    border-color: color-mix(in srgb, var(--color-danger) 60%, transparent);
+  }
+}

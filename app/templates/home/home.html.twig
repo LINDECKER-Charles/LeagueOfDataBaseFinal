@@ -1,14 +1,17 @@
 {# templates/home/home.html.twig #}
 {% extends 'base.html.twig' %}
 
+{# Single source for the rendered (version, lang): PageContextResolver — the
+   nav links, the patch chip and the SEO description all read the same value. #}
+{% set selection = page_selection() %}
+
 {% block title %}{{ 'home.title'|trans({}, 'seo') }}{% endblock %}
-{% block meta_description %}{{ 'home.description'|trans({'%version%': client.session.version ?? (client.versions|first)}, 'seo') }}{% endblock %}
+{% block meta_description %}{{ 'home.description'|trans(
+  {'%version%': selection.version}, 'seo'
+) }}{% endblock %}
 {% block img %}/preview/home.png{% endblock %}
 
 {% block body %}
-{% set navVersion = client.session.version ?? (client.versions|default([])|first) %}
-{% set navLang = client.session.locale ?? client.currentLocale ?? 'en_US' %}
-{% set patch = client.session.version ?? (client.versions|first) %}
 {# Champion portrait art is hotlinked from the DDragon CDN (assumed, like the
    champion detail hero) — never ingested into MinIO. #}
 {% set loadingBase = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading' %}
@@ -21,18 +24,20 @@
       <div class="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1">
         <span aria-hidden="true" class="text-gold">◆</span>
         <span class="eyebrow">Patch</span>
-        <span class="font-mono text-xs tracking-wide text-hex-bright">{{ patch }}</span>
+        <span class="font-mono text-xs tracking-wide text-hex-bright">{{ selection.version }}</span>
         <span aria-hidden="true" class="text-gold-deep">·</span>
-        <span class="font-beaufort text-[0.7rem] uppercase tracking-[0.26em] text-text-dim">Data Dragon</span>
+        <span class="font-beaufort text-[0.7rem] uppercase tracking-[0.26em]
+                     text-text-dim">Data Dragon</span>
         <span aria-hidden="true" class="text-gold-deep">·</span>
-        <span class="font-mono text-xs text-text-dim">{{ navLang }}</span>
+        <span class="font-mono text-xs text-text-dim">{{ selection.lang }}</span>
       </div>
 
-      <h1 class="mx-auto mt-4 max-w-[14ch] text-balance font-beaufort text-4xl uppercase leading-[1.02] tracking-wide text-gold-grad sm:text-6xl">
+      <h1 class="mx-auto mt-4 max-w-[14ch] text-balance font-beaufort text-4xl uppercase
+                 leading-[1.02] tracking-wide text-gold-grad sm:text-6xl">
         {{ 'homepage.title'|trans }}
       </h1>
       <p class="mx-auto mt-5 max-w-2xl text-pretty font-spiegel text-text-muted">
-        {{ 'homepage.hero.browse'|trans({'%version%': patch})|raw }}
+        {{ 'homepage.hero.browse'|trans({'%version%': selection.version})|raw }}
       </p>
 
       {# Dataset counts — derived from each preview's meta (full collection size). #}
@@ -43,11 +48,15 @@
         summoners: summoners.meta.totalItem|default(null)
       } %}
       <div class="mt-6 flex flex-wrap items-baseline justify-center gap-x-6 gap-y-2">
-        {% for key, label in { champions: 'homepage.champions.title', items: 'homepage.items.title', runes: 'homepage.runes.title', summoners: 'homepage.summoners.title' } %}
+        {% for key, label in {
+          champions: 'homepage.champions.title', items: 'homepage.items.title',
+          runes: 'homepage.runes.title', summoners: 'homepage.summoners.title'
+        } %}
           {% if counts[key] is not null %}
             <span class="inline-flex items-baseline gap-1.5">
               <span class="font-mono text-base text-hex">{{ counts[key] }}</span>
-              <span class="font-spiegel text-xs uppercase tracking-wider text-text-muted">{{ label|trans|lower }}</span>
+              <span class="font-spiegel text-xs uppercase tracking-wider
+                           text-text-muted">{{ label|trans|lower }}</span>
             </span>
           {% endif %}
         {% endfor %}
@@ -55,28 +64,42 @@
 
       {# Category portals — the gateway into each dataset #}
       {% set portals = [
-        { href: resource_path('app_champions', {}, navVersion, navLang), label: 'homepage.champions.title', cta: 'homepage.champions.see_all', count: counts.champions },
-        { href: resource_path('app_items', {}, navVersion, navLang),     label: 'homepage.items.title',     cta: 'homepage.items.see_all',     count: counts.items },
-        { href: resource_path('app_runes', {}, navVersion, navLang),     label: 'homepage.runes.title',     cta: 'homepage.runes.see_all',     count: counts.runes },
-        { href: resource_path('app_summoners', {}, navVersion, navLang), label: 'homepage.summoners.title', cta: 'homepage.summoners.see_all', count: counts.summoners }
+        { href: resource_path('app_champions', {}, selection.version, selection.lang),
+          label: 'homepage.champions.title', cta: 'homepage.champions.see_all',
+          count: counts.champions },
+        { href: resource_path('app_items', {}, selection.version, selection.lang),
+          label: 'homepage.items.title', cta: 'homepage.items.see_all',
+          count: counts.items },
+        { href: resource_path('app_runes', {}, selection.version, selection.lang),
+          label: 'homepage.runes.title', cta: 'homepage.runes.see_all',
+          count: counts.runes },
+        { href: resource_path('app_summoners', {}, selection.version, selection.lang),
+          label: 'homepage.summoners.title', cta: 'homepage.summoners.see_all',
+          count: counts.summoners }
       ] %}
       <div class="mt-10 grid grid-cols-1 gap-4 text-left sm:grid-cols-2 lg:grid-cols-4">
         {% for p in portals %}
-          <a href="{{ p.href }}" class="hextech-frame hextech-frame-hover hx-corners group flex flex-col gap-3.5 p-6">
+          <a href="{{ p.href }}"
+             class="hextech-frame hextech-frame-hover hx-corners group flex flex-col gap-3.5 p-6">
             <div class="flex items-start justify-between gap-3">
-              <span class="grid h-12 w-12 shrink-0 place-items-center border border-gold-deep/60 bg-abyss text-gold/80 transition-colors group-hover:text-gold">
-                {% include 'components/logo.html.twig' with { class: 'h-7 w-7' } %}
+              <span class="grid h-12 w-12 shrink-0 place-items-center border border-gold-deep/60
+                           bg-abyss text-gold/80 transition-colors group-hover:text-gold">
+                {% include 'components/ui/logo.html.twig' with { class: 'h-7 w-7' } %}
               </span>
               {% if p.count is not null %}
                 <span class="hx-chip border-blue-abyssal text-hex">{{ p.count }}</span>
               {% endif %}
             </div>
-            <span class="font-beaufort text-xl uppercase leading-tight tracking-wide text-gold-grad">
+            <span class="font-beaufort text-xl uppercase leading-tight tracking-wide
+                         text-gold-grad">
               {{ p.label|trans }}
             </span>
-            <span class="mt-auto inline-flex items-center gap-2 font-beaufort text-xs uppercase tracking-[0.14em] text-gold transition-colors group-hover:text-hex">
+            <span class="mt-auto inline-flex items-center gap-2 font-beaufort text-xs uppercase
+                         tracking-[0.14em] text-gold transition-colors group-hover:text-hex">
               {{ p.cta|trans }}
-              <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </span>
           </a>
         {% endfor %}
@@ -85,44 +108,66 @@
 
     {# CHAMPIONS PREVIEW — portrait cards (splash-forward) #}
     <section>
-      {% include 'home/_preview_header.html.twig' with { title: 'homepage.champions.title'|trans, href: resource_path('app_champions', {}, navVersion, navLang), link: 'homepage.champions.see_all'|trans, count: counts.champions } %}
+      {% include 'home/_preview_header.html.twig' with {
+        title: 'homepage.champions.title'|trans,
+        href: resource_path('app_champions', {}, selection.version, selection.lang),
+        link: 'homepage.champions.see_all'|trans,
+        count: counts.champions
+      } %}
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {% for key, c in champions.champions|slice(0, 4) %}
           {# Versioned square icon overlaid on the unversioned splash (null while cold). #}
           {% set champIcon = champions.images[loop.index0]|default(null) %}
-          <a href="{{ resource_path('app_champion', { name: key }, navVersion, navLang) }}"
+          <a href="{{ resource_path(
+               'app_champion', { name: key }, selection.version, selection.lang
+             ) }}"
              class="hextech-frame hextech-frame-hover group flex flex-col overflow-hidden">
             <div class="relative aspect-[4/5] overflow-hidden border-b border-gold-deep/50 bg-void">
-              <span aria-hidden="true" class="absolute inset-0 grid place-items-center font-beaufort text-5xl text-gold/15">{{ c.name|slice(0, 2)|upper }}</span>
-              <img src="{{ loadingBase }}/{{ key }}_0.jpg" alt="{{ c.name }}" loading="lazy" decoding="async"
-                   class="relative h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105">
+              <span aria-hidden="true" class="absolute inset-0 grid place-items-center
+                    font-beaufort text-5xl text-gold/15">{{ c.name|slice(0, 2)|upper }}</span>
+              <img src="{{ loadingBase }}/{{ key }}_0.jpg" alt="{{ c.name }}"
+                   loading="lazy" decoding="async"
+                   class="relative h-full w-full object-cover object-top transition-transform
+                          duration-500 group-hover:scale-105">
               {% if champIcon %}
-                <span class="absolute bottom-2 left-2 h-10 w-10 overflow-hidden border border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]">
+                <span class="absolute bottom-2 left-2 h-10 w-10 overflow-hidden border
+                             border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]">
                   <picture>
-                    {% if champIcon ends with '.png' %}<source srcset="/{{ champIcon|replace({'.png': '.webp'}) }}" type="image/webp">{% endif %}
-                    <img src="/{{ champIcon }}" alt="" width="40" height="40" loading="lazy" decoding="async" class="h-full w-full object-cover">
+                    {% include 'components/_webp_source.html.twig'
+                       with { src: '/' ~ champIcon } only %}
+                    <img src="/{{ champIcon }}" alt="" width="40" height="40"
+                         loading="lazy" decoding="async" class="h-full w-full object-cover">
                   </picture>
                 </span>
               {% endif %}
             </div>
             <div class="p-3">
-              <h3 class="truncate font-beaufort text-[15px] tracking-wide text-gold-grad" title="{{ c.name }}">{{ c.name }}</h3>
-              {% if c.title|default('') %}<p class="mt-0.5 line-clamp-2 font-spiegel text-xs text-text-muted">{{ c.title }}</p>{% endif %}
+              <h3 class="truncate font-beaufort text-[15px] tracking-wide text-gold-grad"
+                  title="{{ c.name }}">{{ c.name }}</h3>
+              {% if c.title|default('') %}<p class="mt-0.5 line-clamp-2 font-spiegel text-xs
+                text-text-muted">{{ c.title }}</p>{% endif %}
             </div>
           </a>
         {% else %}
-          {% include 'components/empty_state.html.twig' with { text: 'homepage.champions.no_data'|trans } %}
+          {% include 'components/ui/empty_state.html.twig' with {
+            text: 'homepage.champions.no_data'|trans
+          } %}
         {% endfor %}
       </div>
     </section>
 
     {# ITEMS PREVIEW #}
     <section>
-      {% include 'home/_preview_header.html.twig' with { title: 'homepage.items.title'|trans, href: resource_path('app_items', {}, navVersion, navLang), link: 'homepage.items.see_all'|trans, count: counts.items } %}
+      {% include 'home/_preview_header.html.twig' with {
+        title: 'homepage.items.title'|trans,
+        href: resource_path('app_items', {}, selection.version, selection.lang),
+        link: 'homepage.items.see_all'|trans,
+        count: counts.items
+      } %}
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {% for key, i in items.items %}
-          {% include 'components/entity_card.html.twig' with {
-            href: resource_path('app_item', { name: key }, navVersion, navLang),
+          {% include 'components/codex/entity_card.html.twig' with {
+            href: resource_path('app_item', { name: key }, selection.version, selection.lang),
             img: items.images[i.name]|default(null),
             name: i.name,
             sub: 'id ' ~ key,
@@ -134,11 +179,16 @@
 
     {# SUMMONERS PREVIEW #}
     <section>
-      {% include 'home/_preview_header.html.twig' with { title: 'homepage.summoners.title'|trans, href: resource_path('app_summoners', {}, navVersion, navLang), link: 'homepage.summoners.see_all'|trans, count: counts.summoners } %}
+      {% include 'home/_preview_header.html.twig' with {
+        title: 'homepage.summoners.title'|trans,
+        href: resource_path('app_summoners', {}, selection.version, selection.lang),
+        link: 'homepage.summoners.see_all'|trans,
+        count: counts.summoners
+      } %}
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {% for key, s in summoners.summoners %}
-          {% include 'components/entity_card.html.twig' with {
-            href: resource_path('app_summoner', { name: key }, navVersion, navLang),
+          {% include 'components/codex/entity_card.html.twig' with {
+            href: resource_path('app_summoner', { name: key }, selection.version, selection.lang),
             img: summoners.images[key]|default(null),
             name: s.name,
             sub: key,
@@ -150,11 +200,16 @@
 
     {# RUNES PREVIEW — circular tree marks #}
     <section>
-      {% include 'home/_preview_header.html.twig' with { title: 'homepage.runes.title'|trans, href: resource_path('app_runes', {}, navVersion, navLang), link: 'homepage.runes.see_all'|trans, count: counts.runes } %}
+      {% include 'home/_preview_header.html.twig' with {
+        title: 'homepage.runes.title'|trans,
+        href: resource_path('app_runes', {}, selection.version, selection.lang),
+        link: 'homepage.runes.see_all'|trans,
+        count: counts.runes
+      } %}
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {% for r in runes.runesReforgeds|slice(0, 4) %}
-          {% include 'components/entity_card.html.twig' with {
-            href: resource_path('app_rune', { name: r.key }, navVersion, navLang),
+          {% include 'components/codex/entity_card.html.twig' with {
+            href: resource_path('app_rune', { name: r.key }, selection.version, selection.lang),
             img: runes.images[r.key].icon ?? null,
             name: r.name,
             sub: 'key ' ~ r.key,
@@ -162,7 +217,9 @@
             img_round: true
           } %}
         {% else %}
-          {% include 'components/empty_state.html.twig' with { text: 'homepage.runes.no_data'|trans } %}
+          {% include 'components/ui/empty_state.html.twig' with {
+            text: 'homepage.runes.no_data'|trans
+          } %}
         {% endfor %}
       </div>
     </section>

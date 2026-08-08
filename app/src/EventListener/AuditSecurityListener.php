@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
-use App\Service\Audit\AuditAction;
+use App\Service\Audit\Model\AuditAction;
 use App\Service\Audit\AuditLogger;
-use App\Service\Audit\AuditOutcome;
+use App\Service\Audit\Model\AuditOutcome;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Event\LoginFailureEvent;

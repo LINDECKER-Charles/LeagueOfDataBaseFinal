@@ -26,7 +26,8 @@
 {% set features = ['codex', 'patches', 'languages', 'builds', 'trends', 'api', 'offline'] %}
 
 <section id="what">
-  {% include 'components/codex_header.html.twig' with { title: 'index.what.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'index.what.title'|trans({}, 'about') } %}
   <p>{{ 'index.what.body'|trans({}, 'about') }}</p>
 
   <div class="about-facts">
@@ -52,14 +53,16 @@
 <hr class="hx-rule">
 
 <section id="audience">
-  {% include 'components/codex_header.html.twig' with { title: 'index.audience.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'index.audience.title'|trans({}, 'about') } %}
   <p>{{ 'index.audience.body'|trans({}, 'about') }}</p>
 </section>
 
 <hr class="hx-rule">
 
 <section id="features">
-  {% include 'components/codex_header.html.twig' with { title: 'index.features.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'index.features.title'|trans({}, 'about') } %}
   {% for feature in features %}
     <h3>{{ ('index.features.' ~ feature ~ '.title')|trans({}, 'about') }}</h3>
     <p>{{ ('index.features.' ~ feature ~ '.body')|trans({}, 'about') }}</p>
@@ -69,7 +72,8 @@
 <hr class="hx-rule">
 
 <section id="data">
-  {% include 'components/codex_header.html.twig' with { title: 'index.data.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'index.data.title'|trans({}, 'about') } %}
   <p>{{ 'index.data.body'|trans({}, 'about') }}</p>
   <p><a href="{{ path('app_about_data') }}">{{ 'index.data.link'|trans({}, 'about') }}</a></p>
 </section>
@@ -77,16 +81,19 @@
 <hr class="hx-rule">
 
 <section id="who">
-  {% include 'components/codex_header.html.twig' with { title: 'index.who.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'index.who.title'|trans({}, 'about') } %}
   <p>{{ 'index.who.body'|trans({}, 'about') }}</p>
   <p>{{ 'index.who.opensource'|trans({}, 'about') }}
-    <a href="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+    <a href="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal"
+       target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
 </section>
 
 <hr class="hx-rule">
 
 <section id="more">
-  {% include 'components/codex_header.html.twig' with { title: 'index.more.title'|trans({}, 'about') } %}
+  {% include 'components/codex/codex_header.html.twig'
+     with { title: 'index.more.title'|trans({}, 'about') } %}
   <ul>
     <li><a href="{{ path('app_faq') }}">{{ 'faq.title'|trans({}, 'about') }}</a></li>
     <li><a href="{{ path('app_about_data') }}">{{ 'data.title'|trans({}, 'about') }}</a></li>

@@ -1,0 +1,65 @@
+/* ---------------------------------------------------------------------------
+   Brand & navigation accents — logo hover treatment, section divider, splash
+   scrim and the server-rendered chroma badge.
+--------------------------------------------------------------------------- */
+@utility nav-link {
+  @apply transition-colors duration-300 hover:text-hex
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0
+         focus-visible:ring-hex/40
+         motion-reduce:transition-none;
+}
+
+@utility brand-logo {
+  @apply transition-all duration-300 transform-gpu group-hover:scale-110;
+}
+
+@utility brand-title {
+  @apply transition-all duration-300;
+}
+
+.group:hover .brand-logo,
+.group:hover .brand-title {
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--color-gold) 45%, transparent));
+}
+
+/* Section divider — gold hairline with a centered hex diamond node.
+   Encodes a genuine break between content blocks (the page's connective tissue). */
+@utility hx-rule {
+  position: relative;
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent,
+    color-mix(in srgb, var(--color-gold) 55%, transparent), transparent);
+}
+.hx-rule::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--color-gold);
+  box-shadow: 0 0 10px -1px color-mix(in srgb, var(--color-gold) 70%, transparent);
+}
+
+/* Full-bleed splash hero scrim — lifts white display type off cinematic art. */
+@utility splash-scrim {
+  background:
+    linear-gradient(180deg, rgba(1, 10, 19, 0.15) 0%, rgba(1, 10, 19, 0.55) 55%,
+      rgba(10, 20, 40, 0.97) 100%),
+    linear-gradient(90deg, rgba(1, 10, 19, 0.75) 0%, transparent 45%);
+}
+
+/* Skin card corner badge — server-rendered marker that a skin has chromas
+   (count + diamond glyph). The interactive swatches/zoom are the chroma-strip
+   island; this stays visible without JS. */
+@utility chroma-badge {
+  @apply absolute right-1.5 top-1.5 inline-flex items-center gap-1 border border-gold-deep/70
+         bg-hextech-black/80 px-1.5 py-0.5 font-mono text-[11px] leading-none text-gold-bright;
+  backdrop-filter: blur(2px);
+}
+.chroma-badge svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}

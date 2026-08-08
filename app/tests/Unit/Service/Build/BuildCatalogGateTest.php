@@ -7,6 +7,7 @@ use App\Service\API\ChampionManager;
 use App\Service\API\ItemManager;
 use App\Service\API\RuneManager;
 use App\Service\Build\BuildCatalogGate;
+use App\Service\Build\BuildCatalogs;
 use App\Service\Build\BuildStructureValidator;
 use App\Service\Picker\GameMode;
 use App\Service\Picker\ItemOptionsProjector;
@@ -25,7 +26,8 @@ final class BuildCatalogGateTest extends TestCase
 
     protected function setUp(): void
     {
-        $hollow = static fn (string $class): object => (new \ReflectionClass($class))->newInstanceWithoutConstructor();
+        $hollow = static fn (string $class): object => (new \ReflectionClass($class))
+            ->newInstanceWithoutConstructor();
 
         $this->gate = new BuildCatalogGate(
             new BuildStructureValidator(),
@@ -36,8 +38,13 @@ final class BuildCatalogGateTest extends TestCase
         );
     }
 
-    /** @return array{runeTrees: array<mixed>, championIds: list<string>, itemData: array<int, array<string, mixed>>} */
-    private static function catalogs(): array
+    private static function catalogs(): BuildCatalogs
+    {
+        return BuildCatalogs::of(self::runeTrees(), ['Aatrox', 'Ahri'], self::items());
+    }
+
+    /** @return array<mixed> two 4-slot trees; ids mirror live Precision/Domination */
+    private static function runeTrees(): array
     {
         $tree = static fn (int $id, string $key, array $slots): array => [
             'id' => $id,
@@ -45,23 +52,41 @@ final class BuildCatalogGateTest extends TestCase
             'name' => $key,
             'slots' => array_map(
                 static fn (array $perkIds): array => [
-                    'runes' => array_map(static fn (int $p): array => ['id' => $p, 'key' => "p$p", 'name' => "P$p"], $perkIds),
+                    'runes' => array_map(
+                        static fn (int $p): array => ['id' => $p, 'key' => "p$p", 'name' => "P$p"],
+                        $perkIds,
+                    ),
                 ],
                 $slots,
             ),
         ];
 
         return [
-            'runeTrees' => [
-                $tree(8000, 'Precision', [[8005, 8008], [9101, 9111], [9104, 9105], [8014, 8017]]),
-                $tree(8100, 'Domination', [[8112, 8124], [8126, 8139], [8138, 8135], [8106, 8105]]),
+            $tree(8000, 'Precision', [[8005, 8008], [9101, 9111], [9104, 9105], [8014, 8017]]),
+            $tree(8100, 'Domination', [[8112, 8124], [8126, 8139], [8138, 8135], [8106, 8105]]),
+        ];
+    }
+
+    /**
+     * One item playable everywhere, one banned from the Howling Abyss (map 12),
+     * one with no maps flag at all.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private static function items(): array
+    {
+        return [
+            1055 => [
+                'name' => "Doran's Blade",
+                'gold' => ['purchasable' => true],
+                'maps' => [11 => true, 12 => true],
             ],
-            'championIds' => ['Aatrox', 'Ahri'],
-            'itemData' => [
-                1055 => ['name' => "Doran's Blade", 'gold' => ['purchasable' => true], 'maps' => [11 => true, 12 => true]],
-                3006 => ['name' => 'Berserker Greaves', 'gold' => ['purchasable' => true], 'maps' => [11 => true, 12 => false]],
-                2003 => ['name' => 'Health Potion', 'gold' => ['purchasable' => true]],
+            3006 => [
+                'name' => 'Berserker Greaves',
+                'gold' => ['purchasable' => true],
+                'maps' => [11 => true, 12 => false],
             ],
+            2003 => ['name' => 'Health Potion', 'gold' => ['purchasable' => true]],
         ];
     }
 
@@ -82,9 +107,15 @@ final class BuildCatalogGateTest extends TestCase
 
     public function testValidStructureOnItsModeYieldsNoError(): void
     {
-        self::assertSame([], $this->gate->evaluate(self::structure(), GameMode::SummonersRift, self::catalogs()));
+        self::assertSame(
+            [],
+            $this->gate->evaluate(self::structure(), GameMode::SummonersRift, self::catalogs()),
+        );
         // No maps flag at all (2003) stays available whatever the mode.
-        self::assertSame([], $this->gate->evaluate(self::structure(['2003']), GameMode::Arena, self::catalogs()));
+        self::assertSame(
+            [],
+            $this->gate->evaluate(self::structure(['2003']), GameMode::Arena, self::catalogs()),
+        );
     }
 
     public function testModeUnavailableItemsAreReportedByName(): void
@@ -124,6 +155,9 @@ final class BuildCatalogGateTest extends TestCase
         $errors = $this->gate->evaluate($structure, GameMode::Aram, self::catalogs());
 
         self::assertContains([BuildStructureValidator::ERROR_CHAMPION_UNKNOWN, []], $errors);
-        self::assertContains([BuildCatalogGate::ERROR_ITEM_MODE, ['%items%' => 'Berserker Greaves']], $errors);
+        self::assertContains(
+            [BuildCatalogGate::ERROR_ITEM_MODE, ['%items%' => 'Berserker Greaves']],
+            $errors,
+        );
     }
 }

@@ -37,7 +37,10 @@ final class SvgChartRendererTest extends TestCase
             ['date' => '2026-07-15', 'views' => 4],
             ['date' => '2026-07-16', 'views' => 9],
         ];
-        $chart = $this->charts->timeSeries($series, [['key' => 'views', 'label' => 'Vues', 'color' => 'var(--gold)']]);
+        $chart = $this->charts->timeSeries(
+            $series,
+            [['key' => 'views', 'label' => 'Vues', 'color' => 'var(--gold)']],
+        );
 
         self::assertStringContainsString('data-chart=', $chart);
         self::assertStringContainsString('<polyline', $chart);
@@ -57,7 +60,10 @@ final class SvgChartRendererTest extends TestCase
 
     public function testDonutEmptyWhenTotalZero(): void
     {
-        self::assertStringContainsString('Aucune donnée', $this->charts->donut([['name' => 'A', 'value' => 0, 'color' => 'x']]));
+        self::assertStringContainsString(
+            'Aucune donnée',
+            $this->charts->donut([['name' => 'A', 'value' => 0, 'color' => 'x']]),
+        );
     }
 
     public function testSparklineNeedsTwoPoints(): void
@@ -68,7 +74,11 @@ final class SvgChartRendererTest extends TestCase
 
     public function testTextIsEscaped(): void
     {
-        $svg = $this->charts->donut([['name' => 'A & <b>', 'value' => 1, 'color' => 'x']], 'x', 'y');
+        $svg = $this->charts->donut(
+            [['name' => 'A & <b>', 'value' => 1, 'color' => 'x']],
+            'x',
+            'y',
+        );
 
         self::assertStringNotContainsString('<b>', $svg);
         self::assertStringContainsString('&amp;', $svg);

@@ -15,6 +15,11 @@ use Symfony\Component\HttpFoundation\Request;
  */
 final class BuildSubmission
 {
+    /** Bounds of the native fields — owned here, the only place that enforces them. */
+    public const NAME_MIN = 3;
+    public const NAME_MAX = 80;
+    public const DESCRIPTION_MAX = 2000;
+
     public const ERROR_NAME_LENGTH = 'build.error.name.length';
     public const ERROR_DESCRIPTION_LENGTH = 'build.error.description.length';
     public const ERROR_MODE_UNKNOWN = 'build.error.mode.unknown';
@@ -36,8 +41,11 @@ final class BuildSubmission
      * @param string $fallbackLanguage authoring locale to assume when the form
      *                                 omits one — the caller's page context
      */
-    public static function fromRequest(Request $request, string $fallbackVersion, string $fallbackLanguage): self
-    {
+    public static function fromRequest(
+        Request $request,
+        string $fallbackVersion,
+        string $fallbackLanguage,
+    ): self {
         $description = trim((string) $request->request->get('description', ''));
         $decoded = json_decode((string) $request->request->get('structure', ''), true);
         $version = trim((string) $request->request->get('game_version', ''));
@@ -65,10 +73,10 @@ final class BuildSubmission
     {
         $errors = [];
         $nameLength = mb_strlen($this->name);
-        if ($nameLength < BuildStructureValidator::NAME_MIN || $nameLength > BuildStructureValidator::NAME_MAX) {
+        if ($nameLength < self::NAME_MIN || $nameLength > self::NAME_MAX) {
             $errors[] = self::ERROR_NAME_LENGTH;
         }
-        if ($this->description !== null && mb_strlen($this->description) > BuildStructureValidator::DESCRIPTION_MAX) {
+        if ($this->description !== null && mb_strlen($this->description) > self::DESCRIPTION_MAX) {
             $errors[] = self::ERROR_DESCRIPTION_LENGTH;
         }
         if ($this->structure === null) {

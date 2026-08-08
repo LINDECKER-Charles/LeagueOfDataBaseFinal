@@ -1,0 +1,235 @@
+/* Scoped styles of ResourceLoader.vue (the charging core owns its own, in
+   LoaderCore.vue). Split out of the SFC to keep the island readable: markup and
+   wiring in the component, its visual grammar here. */
+
+.hx-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    background: radial-gradient(130% 120% at 50% 28%,
+        rgba(10, 20, 40, 0.72), rgba(1, 10, 19, 0.94));
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    /* Visibility is a deterministic class toggle (no <Transition> leave to await). */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s var(--ease-hextech), visibility 0s linear 0.3s;
+}
+.hx-loader.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.35s var(--ease-hextech), visibility 0s linear 0s;
+}
+
+.hx-loader__panel {
+    width: 100%;
+    max-width: 26rem;
+    padding: 2.25rem 2rem 1.9rem;
+    text-align: center;
+    transform: translateY(10px) scale(0.985);
+    transition: transform 0.35s var(--ease-hextech);
+}
+.hx-loader.is-open .hx-loader__panel {
+    transform: none;
+}
+
+/* ---- Text ---- */
+.hx-loader__eyebrow {
+    margin-bottom: 0.6rem;
+}
+.hx-loader__title {
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 1.4rem;
+    color: var(--color-gold-bright);
+}
+.hx-loader__subtitle {
+    margin-top: 0.4rem;
+    font-family: var(--font-spiegel);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    min-height: 1.2em;
+}
+
+/* ---- Manifest ---- */
+.hx-manifest {
+    margin: 1.5rem 0 1rem;
+    list-style: none;
+    padding: 0;
+    text-align: left;
+}
+.hx-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0;
+}
+.hx-row__icon {
+    display: grid;
+    place-items: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    flex: none;
+    color: var(--color-gold);
+    border: 1px solid rgba(120, 90, 40, 0.5);
+    background: rgba(10, 20, 40, 0.6);
+}
+.hx-row__icon svg {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+.hx-row--fetching .hx-row__icon {
+    animation: hx-row-pulse 1.5s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.16s);
+}
+.hx-row--ready .hx-row__icon {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 20%, transparent);
+}
+.hx-row__label {
+    font-family: var(--font-spiegel);
+    font-size: 0.9rem;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+.hx-row__lead {
+    flex: 1;
+    align-self: flex-end;
+    height: 1px;
+    margin: 0 0.35rem 0.4rem;
+    border-bottom: 1px dotted rgba(120, 90, 40, 0.5);
+}
+.hx-row__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-hex);
+}
+.hx-row--ready .hx-row__status {
+    color: var(--color-gold-bright);
+}
+.hx-row__check {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+/* ---- Live streamed name ----
+   One resource at a time, on a single fixed line. Names arrive far faster than
+   anyone can read a scrolling list, so a lone prominent line stays legible at
+   any stream speed and can never clip or crush. */
+.hx-now {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 2.9rem;
+    margin: 0 0 1.2rem;
+    padding: 0.7rem 0.9rem;
+    text-align: left;
+    border: 1px solid rgba(120, 90, 40, 0.28);
+    background: rgba(4, 12, 24, 0.55);
+}
+.hx-now__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    border-radius: 1px;
+    transform: rotate(45deg);
+    background: var(--color-hex);
+    box-shadow: 0 0 8px 0 var(--color-hex);
+    transition: background 0.25s var(--ease-hextech), box-shadow 0.25s var(--ease-hextech);
+}
+.hx-now__dot--idle { background: var(--color-gold-deep); box-shadow: none; }
+.hx-now__dot--items { background: var(--color-gold); box-shadow: 0 0 8px 0 var(--color-gold); }
+.hx-now__dot--runes { background: var(--color-hex-bright);
+    box-shadow: 0 0 8px 0 var(--color-hex-bright); }
+.hx-now__dot--summoners { background: var(--color-gold-bright);
+    box-shadow: 0 0 8px 0 var(--color-gold-bright); }
+.hx-now__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-spiegel);
+    font-size: 1rem;
+    color: var(--color-gold-bright);
+    animation: hx-now-swap 0.28s var(--ease-hextech);
+}
+.hx-now__cat {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-hex);
+}
+
+/* ---- Determinate energy bar ---- */
+.hx-bar {
+    position: relative;
+    height: 4px;
+    overflow: hidden;
+    background: rgba(120, 90, 40, 0.18);
+    border: 1px solid rgba(120, 90, 40, 0.35);
+}
+.hx-bar__fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--color-gold), var(--color-hex-bright));
+    box-shadow: 0 0 10px -1px rgba(10, 200, 185, 0.7);
+    transition: width 0.35s var(--ease-hextech);
+}
+/* Before the total is known (dataset phase) sweep an indeterminate shimmer. */
+.hx-bar--indeterminate .hx-bar__fill {
+    width: 40% !important;
+    background: linear-gradient(90deg,
+        transparent, var(--color-gold), var(--color-hex), transparent);
+    animation: hx-bar-slide 1.3s var(--ease-hextech) infinite;
+    transition: none;
+}
+.hx-bar__pct {
+    margin-top: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    color: var(--color-hex);
+}
+
+/* ---- Keyframes ---- */
+@keyframes hx-row-pulse {
+    0%, 100% { border-color: rgba(120, 90, 40, 0.5); color: var(--color-gold); box-shadow: none; }
+    50% { border-color: var(--color-hex); color: var(--color-hex-bright);
+        box-shadow: 0 0 14px -2px rgba(10, 200, 185, 0.6); }
+}
+@keyframes hx-bar-slide {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(320%); }
+}
+@keyframes hx-now-swap {
+    from { opacity: 0.25; transform: translateY(3px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hx-row__icon,
+    .hx-now__name,
+    .hx-bar--indeterminate .hx-bar__fill { animation: none !important; }
+    .hx-loader,
+    .hx-loader.is-open { transition: opacity 0.15s linear, visibility 0s; }
+    .hx-loader__panel { transform: none !important; transition: none; }
+    .hx-bar__fill { transition: none; }
+    .hx-bar--indeterminate .hx-bar__fill { width: 100% !important; opacity: 0.6; }
+}

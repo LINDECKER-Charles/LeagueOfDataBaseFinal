@@ -26,15 +26,27 @@ type UsageWriter interface {
 type Recorder struct {
 	writer        UsageWriter
 	flushInterval time.Duration
+	flushTimeout  time.Duration
 	events        chan int
 	log           *slog.Logger
 }
 
-// New builds a recorder flushing to writer every flushInterval.
-func New(writer UsageWriter, flushInterval time.Duration, log *slog.Logger) *Recorder {
+// Options carries the two durations of the recorder. Grouped in a struct rather
+// than passed positionally: two adjacent time.Duration arguments are trivially
+// swappable at a call site, and they answer unrelated questions.
+type Options struct {
+	// FlushInterval is how often pending counters are written.
+	FlushInterval time.Duration
+	// FlushTimeout is the time budget of a single batch write.
+	FlushTimeout time.Duration
+}
+
+// New builds a recorder flushing to writer on the configured cadence.
+func New(writer UsageWriter, opts Options, log *slog.Logger) *Recorder {
 	return &Recorder{
 		writer:        writer,
-		flushInterval: flushInterval,
+		flushInterval: opts.FlushInterval,
+		flushTimeout:  opts.FlushTimeout,
 		events:        make(chan int, channelCapacity),
 		log:           log,
 	}
@@ -75,7 +87,7 @@ func (r *Recorder) flush(pending map[int]int64) map[int]int64 {
 	if len(pending) == 0 {
 		return pending
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), r.flushInterval*2)
+	ctx, cancel := context.WithTimeout(context.Background(), r.flushTimeout)
 	defer cancel()
 	if err := r.writer.AddUsage(ctx, pending); err != nil {
 		r.log.Error("metering flush failed, will retry", "error", err, "keys", len(pending))

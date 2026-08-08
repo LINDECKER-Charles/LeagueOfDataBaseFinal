@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Stripe;
 
-use App\Entity\ApiPlan;
+use App\Entity\Enum\ApiPlan;
+use App\Service\Donation\CompletedDonation;
 use App\Service\Donation\DonationLedger;
 use App\Service\PublicApi\ApiEntitlements;
+use App\Service\PublicApi\StripeSubscriptionRef;
 use App\Service\Stripe\CheckoutSessionCompletedHandler;
 use App\Service\Stripe\SubscriptionDeletedHandler;
 use PHPUnit\Framework\TestCase;
@@ -36,7 +38,7 @@ final class StripeEventHandlersTest extends TestCase
         $entitlements = $this->createMock(ApiEntitlements::class);
         $entitlements->expects(self::once())
             ->method('applyPlan')
-            ->with(42, ApiPlan::Monthly, 'cus_42', 'sub_42');
+            ->with(42, ApiPlan::Monthly, new StripeSubscriptionRef('cus_42', 'sub_42'));
 
         $event = self::checkoutEvent([
             'customer' => 'cus_42',
@@ -62,7 +64,9 @@ final class StripeEventHandlersTest extends TestCase
     public function testDonationCheckoutIsRecordedWithTheSignedInDonor(): void
     {
         $ledger = $this->createMock(DonationLedger::class);
-        $ledger->expects(self::once())->method('record')->with('cs_don', 500, 'eur', 7);
+        $ledger->expects(self::once())
+            ->method('record')
+            ->with(new CompletedDonation('cs_don', 500, 'eur', 7));
 
         $event = self::checkoutEvent([
             'id' => 'cs_don',
@@ -80,7 +84,9 @@ final class StripeEventHandlersTest extends TestCase
         // Sessions created before the `kind` discriminator existed must keep
         // routing to the donation branch — anonymously (no reference).
         $ledger = $this->createMock(DonationLedger::class);
-        $ledger->expects(self::once())->method('record')->with('cs_legacy', 1000, 'eur', null);
+        $ledger->expects(self::once())
+            ->method('record')
+            ->with(new CompletedDonation('cs_legacy', 1000, 'eur', null));
 
         $event = self::checkoutEvent([
             'id' => 'cs_legacy',
@@ -95,7 +101,9 @@ final class StripeEventHandlersTest extends TestCase
     public function testNonNumericClientReferenceIsTreatedAsAnonymous(): void
     {
         $ledger = $this->createMock(DonationLedger::class);
-        $ledger->expects(self::once())->method('record')->with('cs_1', 300, 'eur', null);
+        $ledger->expects(self::once())
+            ->method('record')
+            ->with(new CompletedDonation('cs_1', 300, 'eur', null));
 
         $event = self::checkoutEvent([
             'amount_total' => 300,
@@ -135,8 +143,10 @@ final class StripeEventHandlersTest extends TestCase
         );
     }
 
-    private function handler(ApiEntitlements $entitlements, DonationLedger $ledger): CheckoutSessionCompletedHandler
-    {
+    private function handler(
+        ApiEntitlements $entitlements,
+        DonationLedger $ledger,
+    ): CheckoutSessionCompletedHandler {
         return new CheckoutSessionCompletedHandler($entitlements, $ledger, new NullLogger());
     }
 

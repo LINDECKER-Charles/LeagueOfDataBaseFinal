@@ -7,7 +7,8 @@ ALIAS=local
 ENDPOINT=http://minio:9000
 BUCKET="${MINIO_BUCKET:-ddragon}"
 
-until mc alias set "$ALIAS" "$ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
+until mc alias set "$ALIAS" "$ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" \
+    >/dev/null 2>&1; do
     echo "waiting for minio to become ready..."
     sleep 2
 done

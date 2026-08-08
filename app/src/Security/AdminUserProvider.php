@@ -37,7 +37,9 @@ final class AdminUserProvider implements UserProviderInterface
     public function refreshUser(UserInterface $user): UserInterface
     {
         if (!$user instanceof InMemoryUser) {
-            throw new UnsupportedUserException(sprintf('Unsupported user class "%s".', $user::class));
+            throw new UnsupportedUserException(
+                sprintf('Unsupported user class "%s".', $user::class)
+            );
         }
 
         return $this->loadUserByIdentifier($user->getUserIdentifier());

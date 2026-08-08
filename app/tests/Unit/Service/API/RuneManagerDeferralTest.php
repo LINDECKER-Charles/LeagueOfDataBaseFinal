@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\API;
 
+use App\Service\API\DatasetRef;
 use App\Service\API\RuneManager;
 use App\Service\Storage\BlobStore;
 use App\Service\Storage\DeferredImageIngestor;
@@ -52,33 +53,58 @@ final class RuneManagerDeferralTest extends TestCase
         rmdir($this->dir);
     }
 
-    /** The rune-detail regression: a cold detail render must resolve icons inline, even under a request. */
+    /**
+     * The rune-detail regression: a cold detail render must resolve icons inline,
+     * even under a request.
+     */
     public function testDetailGetImagesResolvesColdIconsInlineWithinRequest(): void
     {
         $fs = $this->seedData();
         [$manager] = $this->manager($fs, $this->gatewayReturningBytes(), withRequest: true);
 
         // Not wrapped in withDeferral → detail context → must resolve now.
-        $images = $manager->getImages(self::VERSION, self::LANG, false, $this->tree());
+        $images = $manager->getImages($this->dataset(), false, $this->tree());
 
-        self::assertNotNull($images[self::TREE_KEY]['icon'] ?? null, 'cold detail icons must resolve inline');
-        self::assertTrue($fs->fileExists(self::MANIFEST), 'inline resolution persists the manifest immediately');
+        self::assertNotNull(
+            $images[self::TREE_KEY]['icon'] ?? null,
+            'cold detail icons must resolve inline',
+        );
+        self::assertTrue(
+            $fs->fileExists(self::MANIFEST),
+            'inline resolution persists the manifest immediately',
+        );
     }
 
-    /** The list render is the one opt-in: cold icons defer to the flush, showing placeholders first. */
+    /**
+     * The list render is the one opt-in: cold icons defer to the flush,
+     * showing placeholders first.
+     */
     public function testPaginateDefersColdIconsWithinRequest(): void
     {
         $fs = $this->seedData();
-        [$manager, $ingestor] = $this->manager($fs, $this->gatewayReturningBytes(), withRequest: true);
+        [$manager, $ingestor] = $this->manager(
+            $fs,
+            $this->gatewayReturningBytes(),
+            withRequest: true,
+        );
 
-        $result = $manager->paginate(self::VERSION, self::LANG, 0, 1);
+        $result = $manager->paginate($this->dataset(), 0, 1);
 
         self::assertArrayHasKey(self::TREE_KEY, $result['images']);
-        self::assertNull($result['images'][self::TREE_KEY]['icon'], 'list icons defer on a cold version (placeholder)');
-        self::assertFalse($fs->fileExists(self::MANIFEST), 'nothing ingested during the deferred render');
+        self::assertNull(
+            $result['images'][self::TREE_KEY]['icon'],
+            'list icons defer on a cold version (placeholder)',
+        );
+        self::assertFalse(
+            $fs->fileExists(self::MANIFEST),
+            'nothing ingested during the deferred render',
+        );
 
         $ingestor->flush();
-        self::assertTrue($fs->fileExists(self::MANIFEST), 'the queued batch warms the manifest after the response');
+        self::assertTrue(
+            $fs->fileExists(self::MANIFEST),
+            'the queued batch warms the manifest after the response',
+        );
     }
 
     /** CLI/warmup (no request): even the list path ingests inline in a single pass. */
@@ -87,9 +113,12 @@ final class RuneManagerDeferralTest extends TestCase
         $fs = $this->seedData();
         [$manager] = $this->manager($fs, $this->gatewayReturningBytes(), withRequest: false);
 
-        $result = $manager->paginate(self::VERSION, self::LANG, 0, 1);
+        $result = $manager->paginate($this->dataset(), 0, 1);
 
-        self::assertNotNull($result['images'][self::TREE_KEY]['icon'] ?? null, 'no request → ingest inline');
+        self::assertNotNull(
+            $result['images'][self::TREE_KEY]['icon'] ?? null,
+            'no request → ingest inline',
+        );
     }
 
     /**
@@ -102,9 +131,21 @@ final class RuneManagerDeferralTest extends TestCase
             $stack->push(new Request());
         }
         $ingestor = new DeferredImageIngestor($stack);
-        $manager = new RuneManager($go, $fs, new BlobStore($fs, new ImageTranscoder()), new ArrayAdapter(), $ingestor);
+        $manager = new RuneManager(
+            $go,
+            $fs,
+            new BlobStore($fs, new ImageTranscoder()),
+            new ArrayAdapter(),
+            $ingestor,
+        );
 
         return [$manager, $ingestor];
+    }
+
+    /** The seeded (version, language) pair the whole fixture is written under. */
+    private function dataset(): DatasetRef
+    {
+        return new DatasetRef(self::VERSION, self::LANG);
     }
 
     /** @return list<array<string,mixed>> */
@@ -117,7 +158,12 @@ final class RuneManagerDeferralTest extends TestCase
             'icon' => 'perk-images/Styles/7201_Precision.png',
             'slots' => [[
                 'runes' => [
-                    ['id' => 8005, 'key' => 'PressTheAttack', 'name' => 'Press the Attack', 'icon' => 'perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png'],
+                    [
+                        'id' => 8005,
+                        'key' => 'PressTheAttack',
+                        'name' => 'Press the Attack',
+                        'icon' => 'perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png',
+                    ],
                 ],
             ]],
         ]];
@@ -137,16 +183,26 @@ final class RuneManagerDeferralTest extends TestCase
     /** Echoes back every requested URL with dummy bytes so ingestion succeeds. */
     private function gatewayReturningBytes(): GoFetcherClient
     {
-        return new GoFetcherClient(new MockHttpClient(static function (string $method, string $url, array $options): MockResponse {
-            $urls = json_decode((string) $options['body'], true, flags: JSON_THROW_ON_ERROR)['urls'];
+        return new GoFetcherClient(new MockHttpClient(
+            static function (string $method, string $url, array $options): MockResponse {
+                $urls = json_decode(
+                    (string) $options['body'],
+                    true,
+                    flags: JSON_THROW_ON_ERROR,
+                )['urls'];
 
-            return new MockResponse(
-                json_encode(['results' => array_map(
-                    static fn (string $u): array => ['url' => $u, 'status' => 200, 'body_base64' => base64_encode('bytes:'.$u)],
-                    $urls,
-                )], JSON_THROW_ON_ERROR),
-                ['response_headers' => ['content-type' => 'application/json']],
-            );
-        }));
+                return new MockResponse(
+                    json_encode(['results' => array_map(
+                        static fn (string $u): array => [
+                            'url' => $u,
+                            'status' => 200,
+                            'body_base64' => base64_encode('bytes:'.$u),
+                        ],
+                        $urls,
+                    )], JSON_THROW_ON_ERROR),
+                    ['response_headers' => ['content-type' => 'application/json']],
+                );
+            },
+        ));
     }
 }

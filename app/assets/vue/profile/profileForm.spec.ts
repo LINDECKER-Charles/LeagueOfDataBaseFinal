@@ -59,7 +59,8 @@ describe('setupProfileForm', () => {
 
         expect(fetchMock).toHaveBeenCalledOnce()
         const [url, init] = fetchMock.mock.calls[0]!
-        expect(String(url)).toMatch(/\/profile$/) // form.action resolves to an absolute URL in jsdom
+        // form.action resolves to an absolute URL in jsdom
+        expect(String(url)).toMatch(/\/profile$/)
         expect((init as RequestInit).method).toBe('POST')
         expect((init as RequestInit).body).toBeInstanceOf(FormData)
         expect(form.querySelector('[data-autosave-status]')!.textContent).toBe('Saved')
@@ -94,5 +95,32 @@ describe('setupProfileForm', () => {
         const status = form.querySelector('[data-autosave-status]')!
         expect(status.textContent).toBe('Dropped')
         expect(status.classList.contains('is-warned')).toBe(true)
+    })
+
+    it('fades a clean save back to idle but keeps a warning on screen', async () => {
+        const form = buildForm()
+        mockFetch({ ok: true })
+        setupProfileForm()
+
+        form.dispatchEvent(new CustomEvent('profile:changed', { bubbles: true }))
+        await vi.advanceTimersByTimeAsync(600)
+        expect(form.querySelector('[data-autosave-status]')!.textContent).toBe('Saved')
+
+        await vi.advanceTimersByTimeAsync(3000)
+        const status = form.querySelector('[data-autosave-status]')!
+        expect(status.textContent).toBe('')
+        expect(status.classList.contains('is-saved')).toBe(false)
+    })
+
+    it('leaves a warning visible past the idle delay', async () => {
+        const form = buildForm()
+        mockFetch({ ok: true, skinInvalid: true })
+        setupProfileForm()
+
+        form.dispatchEvent(new CustomEvent('profile:changed', { bubbles: true }))
+        await vi.advanceTimersByTimeAsync(600)
+        await vi.advanceTimersByTimeAsync(3000)
+
+        expect(form.querySelector('[data-autosave-status]')!.textContent).toBe('Dropped')
     })
 })

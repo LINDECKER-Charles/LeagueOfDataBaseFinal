@@ -39,10 +39,33 @@ final class UserIdentityTest extends TestCase
         self::assertSame('Faker#KR1', $user->displayName());
     }
 
+    /**
+     * The length bounds are the contract shared by the pattern, the column and
+     * {@see \App\Security\UsernameAllocator}: they must stay in lockstep.
+     */
+    public function testUsernamePatternHonoursTheDeclaredBounds(): void
+    {
+        $pattern = User::USERNAME_PATTERN;
+
+        self::assertDoesNotMatchRegularExpression(
+            $pattern,
+            str_repeat('a', User::USERNAME_MIN_LENGTH - 1),
+        );
+        self::assertMatchesRegularExpression($pattern, str_repeat('a', User::USERNAME_MIN_LENGTH));
+        self::assertMatchesRegularExpression($pattern, str_repeat('a', User::USERNAME_MAX_LENGTH));
+        self::assertDoesNotMatchRegularExpression(
+            $pattern,
+            str_repeat('a', User::USERNAME_MAX_LENGTH + 1),
+        );
+    }
+
     #[DataProvider('provideValidTaglines')]
     public function testValidTaglinesPass(?string $tagline): void
     {
-        self::assertCount(0, $this->validator->validatePropertyValue(User::class, 'riotTagline', $tagline));
+        self::assertCount(
+            0,
+            $this->validator->validatePropertyValue(User::class, 'riotTagline', $tagline),
+        );
     }
 
     /** @return iterable<string, array{?string}> */

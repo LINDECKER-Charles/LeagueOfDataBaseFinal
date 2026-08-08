@@ -22,10 +22,6 @@ final readonly class AuthMailer
 {
     private const CONFIRM_ROUTE = 'app_verify_email';
     private const RESET_ROUTE = 'app_reset_password';
-    private const CONFIRM_SUBJECT = 'email.confirm.subject';
-    private const CONFIRM_TEMPLATE = 'email/confirmation';
-    private const RESET_SUBJECT = 'email.reset.subject';
-    private const RESET_TEMPLATE = 'email/reset_password';
 
     public function __construct(
         private MailerInterface $mailer,
@@ -46,7 +42,7 @@ final readonly class AuthMailer
             ['id' => $userId],
         );
 
-        $this->send($user, self::CONFIRM_SUBJECT, self::CONFIRM_TEMPLATE, [
+        $this->send($user, AuthMailTemplate::Confirmation, [
             'actionUrl' => $signature->getSignedUrl(),
             'expiresAtMessageKey' => $signature->getExpirationMessageKey(),
             'expiresAtMessageData' => $signature->getExpirationMessageData(),
@@ -61,7 +57,7 @@ final readonly class AuthMailer
             UrlGeneratorInterface::ABSOLUTE_URL,
         );
 
-        $this->send($user, self::RESET_SUBJECT, self::RESET_TEMPLATE, [
+        $this->send($user, AuthMailTemplate::PasswordReset, [
             'actionUrl' => $actionUrl,
             'expiresAtMessageKey' => $token->getExpirationMessageKey(),
             'expiresAtMessageData' => $token->getExpirationMessageData(),
@@ -69,12 +65,13 @@ final readonly class AuthMailer
     }
 
     /** @param array<string, mixed> $context */
-    private function send(User $user, string $subjectKey, string $template, array $context): void
+    private function send(User $user, AuthMailTemplate $mail, array $context): void
     {
+        $template = $mail->path();
         $email = (new TemplatedEmail())
             ->from(Address::create($this->sender))
             ->to(new Address($user->getEmail(), $user->displayName()))
-            ->subject($this->translator->trans($subjectKey))
+            ->subject($this->translator->trans($mail->subjectKey()))
             ->htmlTemplate($template.'.html.twig')
             ->textTemplate($template.'.txt.twig')
             ->context($context + ['user' => $user]);

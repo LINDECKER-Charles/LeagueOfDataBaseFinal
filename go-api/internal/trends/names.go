@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"leagueofdatabase/go-api/internal/store"
 )
 
 // nameResolutionLang is the dataset language used for display names — en_US is
@@ -18,7 +20,7 @@ const runesReforgedType = "runesReforged"
 
 // DatasetReader supplies stored Data Dragon JSON and the newest ingested version.
 type DatasetReader interface {
-	ReadDataset(ctx context.Context, version, lang, ddragonType string) ([]byte, error)
+	ReadDataset(ctx context.Context, ref store.DatasetRef) ([]byte, error)
 	LatestDataVersion(ctx context.Context) (string, error)
 }
 
@@ -40,11 +42,20 @@ type StoreNameResolver struct {
 }
 
 // NewStoreNameResolver builds the resolver; now is injectable for tests.
-func NewStoreNameResolver(reader DatasetReader, cacheTTL time.Duration, now func() time.Time) *StoreNameResolver {
+func NewStoreNameResolver(
+	reader DatasetReader,
+	cacheTTL time.Duration,
+	now func() time.Time,
+) *StoreNameResolver {
 	if now == nil {
 		now = time.Now
 	}
-	return &StoreNameResolver{reader: reader, cacheTTL: cacheTTL, now: now, cache: make(map[string]cachedNames)}
+	return &StoreNameResolver{
+		reader:   reader,
+		cacheTTL: cacheTTL,
+		now:      now,
+		cache:    make(map[string]cachedNames),
+	}
 }
 
 // Names implements NameResolver.
@@ -68,7 +79,11 @@ func (r *StoreNameResolver) load(ctx context.Context, ddragonType string) map[st
 	if err != nil {
 		return map[string]string{}
 	}
-	payload, err := r.reader.ReadDataset(ctx, version, nameResolutionLang, ddragonType)
+	payload, err := r.reader.ReadDataset(ctx, store.DatasetRef{
+		Version: version,
+		Lang:    nameResolutionLang,
+		Type:    ddragonType,
+	})
 	if err != nil {
 		return map[string]string{}
 	}
@@ -97,42 +112,46 @@ func parseDataMapNames(payload []byte) map[string]string {
 	return names
 }
 
+// runeEntry is the (id, key, name) triple a rune style and a perk share; a
+// style embeds it so its own identity is indexed exactly like its perks'.
+type runeEntry struct {
+	ID   int64  `json:"id"`
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
+
+type runeStyle struct {
+	runeEntry
+	Slots []struct {
+		Runes []runeEntry `json:"runes"`
+	} `json:"slots"`
+}
+
 // parseRuneNames indexes rune styles AND nested runes by both textual key and
 // numeric id, since detail pages may be addressed either way.
 func parseRuneNames(payload []byte) map[string]string {
-	var styles []struct {
-		ID    int64  `json:"id"`
-		Key   string `json:"key"`
-		Name  string `json:"name"`
-		Slots []struct {
-			Runes []struct {
-				ID   int64  `json:"id"`
-				Key  string `json:"key"`
-				Name string `json:"name"`
-			} `json:"runes"`
-		} `json:"slots"`
-	}
+	var styles []runeStyle
 	if json.Unmarshal(payload, &styles) != nil {
 		return map[string]string{}
 	}
 	names := make(map[string]string)
 	for _, style := range styles {
-		indexName(names, style.ID, style.Key, style.Name)
+		indexName(names, style.runeEntry)
 		for _, slot := range style.Slots {
 			for _, perk := range slot.Runes {
-				indexName(names, perk.ID, perk.Key, perk.Name)
+				indexName(names, perk)
 			}
 		}
 	}
 	return names
 }
 
-func indexName(names map[string]string, id int64, key, name string) {
-	if name == "" {
+func indexName(names map[string]string, entry runeEntry) {
+	if entry.Name == "" {
 		return
 	}
-	if key != "" {
-		names[key] = name
+	if entry.Key != "" {
+		names[entry.Key] = entry.Name
 	}
-	names[strconv.FormatInt(id, 10)] = name
+	names[strconv.FormatInt(entry.ID, 10)] = entry.Name
 }

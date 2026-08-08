@@ -26,7 +26,14 @@ final class ProfilePresenter
     public function memberSince(\DateTimeImmutable $createdAt, string $locale): string
     {
         try {
-            $formatter = new \IntlDateFormatter($locale, \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, null, null, 'LLLL yyyy');
+            $formatter = new \IntlDateFormatter(
+                $locale,
+                \IntlDateFormatter::NONE,
+                \IntlDateFormatter::NONE,
+                null,
+                null,
+                'LLLL yyyy'
+            );
             $formatted = $formatter->format($createdAt);
             if (\is_string($formatted) && $formatted !== '') {
                 return $formatted;

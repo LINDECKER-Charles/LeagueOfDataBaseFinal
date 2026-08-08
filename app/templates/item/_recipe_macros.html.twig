@@ -1,0 +1,84 @@
+{# Recipe rendering macros shared by the item detail page: a standalone linked
+   card (recipe_node) and the recursive crafting tree (tree_node). #}
+{# ---------------------------------------------------------------------------
+   Recipe node — a single linked item card (component or evolution). The whole
+   card is an <a>, so it is reachable and activable at the keyboard.
+--------------------------------------------------------------------------- #}
+{% macro recipe_node(node, version, lang) %}
+  <a href="{{ resource_path('app_item', { name: node.id }, version, lang) }}"
+     title="{{ node.name ?: node.id }}"
+     class="group/node hextech-frame hextech-frame-hover flex w-28 flex-col items-center gap-2 p-3
+            text-center transition-colors duration-300 focus-visible:outline-none
+            focus-visible:ring-2 focus-visible:ring-gold/40 sm:w-32">
+    <span class="relative h-12 w-12 shrink-0 overflow-hidden border border-gold-deep/50 bg-void">
+      {% if node.image %}
+        <picture>
+          {% include 'components/_webp_source.html.twig'
+             with { src: '/' ~ node.image } only %}
+          <img src="/{{ node.image }}" alt="{{ node.name ?: node.id }}" width="48" height="48"
+               loading="lazy" decoding="async"
+               class="absolute inset-0 h-full w-full object-contain transition-transform
+                      duration-500 group-hover/node:scale-110">
+        </picture>
+      {% else %}
+        <span class="grid h-full w-full place-items-center font-mono text-[10px]
+                     text-gold/50">{{ node.id }}</span>
+      {% endif %}
+    </span>
+    <span class="min-w-0 font-beaufort text-xs leading-tight tracking-wide text-text
+                 transition-colors
+                 group-hover/node:text-gold-bright">{{ node.name ?: node.id }}</span>
+    {% if node.gold is not null %}
+      <span class="font-mono text-[11px] text-gold">{{ node.gold }}</span>
+    {% endif %}
+  </a>
+{% endmacro %}
+
+{# ---------------------------------------------------------------------------
+   Recipe tree node — recursive. Renders one item card, then its components as a
+   nested list; the CSS (.recipe-tree) draws the connector lines. The root is the
+   current item (gold-lit, not a link); every descendant links to its own page.
+--------------------------------------------------------------------------- #}
+{% macro tree_node(node, version, lang, is_root) %}
+  {% import _self as recipe %}
+  <li>
+    <{{ is_root ? 'div' : 'a' }}
+       {% if not is_root %}href="{{
+         resource_path('app_item', { name: node.id }, version, lang)
+       }}"{% endif %}
+       title="{{ node.name ?: node.id }}"
+       class="recipe-node group/node {{ is_root ? 'recipe-node--root' : '' }}
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40">
+      <span class="recipe-node__icon">
+        {% if node.image %}
+          <picture>
+            {% include 'components/_webp_source.html.twig'
+               with { src: '/' ~ node.image } only %}
+            <img src="/{{ node.image }}" alt="{{ node.name ?: node.id }}" width="44" height="44"
+                 loading="lazy" decoding="async"
+                 class="h-full w-full object-contain transition-transform duration-500
+                        group-hover/node:scale-110">
+          </picture>
+        {% else %}
+          <span class="grid h-full w-full place-items-center font-mono text-[10px]
+                       text-gold/50">{{ node.id }}</span>
+        {% endif %}
+      </span>
+      <span class="recipe-node__name {{
+        is_root ? 'text-gold-bright' : 'group-hover/node:text-gold-bright'
+      }}">{{ node.name ?: node.id }}</span>
+      {% if node.gold is not null %}
+        <span class="recipe-node__gold">
+          {{ node.gold }}
+          {% if node.children is not empty and node.combine %}<em
+            class="recipe-node__combine">+{{ node.combine }}</em>{% endif %}
+        </span>
+      {% endif %}
+    </{{ is_root ? 'div' : 'a' }}>
+    {% if node.children is not empty %}
+      <ul>
+        {% for c in node.children %}{{ recipe.tree_node(c, version, lang, false) }}{% endfor %}
+      </ul>
+    {% endif %}
+  </li>
+{% endmacro %}

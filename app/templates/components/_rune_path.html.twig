@@ -1,0 +1,17 @@
+{# Rune tree → theme class. Keyed on the tree KEY (stable across locales, unlike
+   its name); the .path-* rules in detail.css set --path, which drives
+   .path-text / .path-border / .path-glow / .path-bar / .path-ambient.
+
+   Single source: the rune page and the shared build sheet both tint themselves
+   from it, so a tree Riot adds is declared once — not silently rendered as
+   "Precision" on whichever page was forgotten. #}
+{% macro theme_class(key) %}
+    {%- set classes = {
+        'Precision':   'path-precision',
+        'Domination':  'path-domination',
+        'Sorcery':     'path-sorcery',
+        'Resolve':     'path-resolve',
+        'Inspiration': 'path-inspiration'
+    } -%}
+    {{- classes[key]|default('path-precision') -}}
+{% endmacro %}

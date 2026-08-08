@@ -4,7 +4,8 @@
    and would otherwise bounce them through the login wall. Reuses the already
    localized labels (empty_cta / nav.register), so no new catalog keys. #}
 {% if app.user %}
-  <a href="{{ path('app_build_new') }}" class="hx-btn-gold">{{ 'community.trends.empty_cta'|trans }}</a>
+  <a href="{{ path('app_build_new') }}"
+     class="hx-btn-gold">{{ 'community.trends.empty_cta'|trans }}</a>
 {% else %}
   <a href="{{ path('app_register') }}" class="hx-btn-gold">{{ 'nav.register'|trans }}</a>
 {% endif %}

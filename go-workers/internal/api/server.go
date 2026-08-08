@@ -12,8 +12,6 @@ import (
 	"go-workers/internal/fetcher"
 )
 
-const ddragonBase = "https://ddragon.leagueoflegends.com"
-
 // URLFetcher is the subset of *fetcher.Fetcher the server needs (stubbable in tests).
 type URLFetcher interface {
 	Fetch(ctx context.Context, url string) (fetcher.Result, error)
@@ -22,13 +20,31 @@ type URLFetcher interface {
 // Server wires the HTTP API over a URLFetcher.
 type Server struct {
 	fetcher        URLFetcher
+	ddragonBase    string
 	maxConcurrency int
 	maxURLs        int
 }
 
+// Options groups what the server needs. Grouped in a struct rather than passed
+// positionally: the knobs are unrelated to one another and a bare argument list
+// would not say which is which at the call site.
+type Options struct {
+	Fetcher URLFetcher
+	// DDragonBase is the origin of the /versions and /languages passthroughs.
+	// It comes from the configuration so it cannot drift from the SSRF allowlist.
+	DDragonBase    string
+	MaxConcurrency int
+	MaxURLs        int
+}
+
 // NewServer builds the routed, request-logging HTTP handler.
-func NewServer(f URLFetcher, maxConcurrency, maxURLs int) http.Handler {
-	s := &Server{fetcher: f, maxConcurrency: maxConcurrency, maxURLs: maxURLs}
+func NewServer(opts Options) http.Handler {
+	s := &Server{
+		fetcher:        opts.Fetcher,
+		ddragonBase:    opts.DDragonBase,
+		maxConcurrency: opts.MaxConcurrency,
+		maxURLs:        opts.MaxURLs,
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.handleHealth)
 	mux.HandleFunc("GET /versions", s.handleVersions)

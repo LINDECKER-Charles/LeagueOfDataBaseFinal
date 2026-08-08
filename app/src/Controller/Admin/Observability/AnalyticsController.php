@@ -1,0 +1,76 @@
+<?php
+declare(strict_types=1);
+
+namespace App\Controller\Admin\Observability;
+
+use App\Controller\Admin\AbstractAdminController;
+use App\Service\Admin\AdminPanelCatalog;
+use App\Service\Admin\PanelContext;
+use App\Service\Analytics\AnalyticsReportService;
+use App\Service\Analytics\RollupService;
+use App\Service\Audit\Model\AuditAction;
+use App\Service\Audit\AuditLogger;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+
+/**
+ * Traffic (most-consulted pages) and audience (who visits) dashboards, plus the
+ * manual rollup trigger. ROLE_ADMIN via the /admin firewall.
+ */
+#[Route('/admin')]
+final class AnalyticsController extends AbstractAdminController
+{
+    public function __construct(
+        private readonly AnalyticsReportService $analytics,
+        private readonly AdminPanelCatalog $panels,
+    ) {}
+
+    #[Route('/traffic', name: 'admin_traffic', methods: ['GET'])]
+    public function traffic(Request $request): Response
+    {
+        return $this->render('admin/traffic.html.twig', $this->context($request, 'traffic'));
+    }
+
+    #[Route('/audience', name: 'admin_audience', methods: ['GET'])]
+    public function audience(Request $request): Response
+    {
+        return $this->render('admin/audience.html.twig', $this->context($request, 'audience'));
+    }
+
+    #[Route('/analytics/rollup', name: 'admin_analytics_rollup', methods: ['POST'])]
+    public function rollup(Request $request, RollupService $rollup, AuditLogger $audit): Response
+    {
+        if ($error = $this->csrfError($request, 'analytics_rollup', 'admin_dashboard')) {
+            return $error;
+        }
+
+        $result = $rollup->rollup(includeToday: true);
+        $audit->log(
+            AuditAction::AdminAnalyticsRollup,
+            metadata: ['rolled' => count($result['rolled'])],
+        );
+        $this->addFlash('success', sprintf(
+            'Consolidation terminée : %d journée(s) écrite(s) dans MinIO.',
+            count($result['rolled']),
+        ));
+
+        return $this->redirectToRoute('admin_dashboard');
+    }
+
+    /**
+     * The page renders the head and the range bar only; the report itself is the
+     * deferred `$panel` fragment.
+     *
+     * @return array<string, mixed>
+     */
+    private function context(Request $request, string $panel): array
+    {
+        $context = PanelContext::fromRequest($request);
+
+        return [
+            'range' => $this->analytics->normalizeRange($context->range),
+            'ranges' => $this->analytics->ranges(),
+        ] + $this->panels->pageContext($context, [$panel]);
+    }
+}

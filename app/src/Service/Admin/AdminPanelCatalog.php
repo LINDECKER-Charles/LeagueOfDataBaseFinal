@@ -5,7 +5,7 @@ namespace App\Service\Admin;
 
 use App\Service\Analytics\AnalyticsReportService;
 use App\Service\Analytics\GeoLocator;
-use App\Service\Analytics\StorageAnalyticsService;
+use App\Service\Analytics\Storage\StorageAnalyticsService;
 use Twig\Environment;
 
 /**
@@ -67,22 +67,36 @@ final class AdminPanelCatalog
      */
     public function pageContext(PanelContext $context, array $panels): array
     {
+        if (!$context->isSync) {
+            return ['sync' => false, 'refresh' => $context->shouldRefresh, 'panels' => []];
+        }
+
         $rendered = [];
-        foreach ($context->sync ? $panels : [] as $panel) {
+        foreach ($panels as $panel) {
             $rendered[$panel] = $this->render($panel, $context);
         }
 
-        return ['sync' => $context->sync, 'refresh' => $context->fresh, 'panels' => $rendered];
+        return ['sync' => true, 'refresh' => $context->shouldRefresh, 'panels' => $rendered];
     }
 
     /** @return array<string, mixed> */
     private function data(string $panel, PanelContext $context): array
     {
+        // A panel added to TEMPLATES but not here must fail with its own name, not
+        // with an \UnhandledMatchError raised deep inside a deferred fragment.
         return match ($panel) {
-            'overview-app', 'monitoring' => ['report' => $this->monitoring->report($context->fresh)],
+            'overview-app', 'monitoring' => [
+                'report' => $this->monitoring->report($context->shouldRefresh),
+            ],
             'overview-traffic', 'traffic' => $this->analyticsData($context),
-            'audience' => $this->analyticsData($context) + ['geo_available' => $this->geo->isAvailable()],
-            'overview-storage', 'storage' => ['report' => $this->storage->report($context->fresh)],
+            'audience' => $this->analyticsData($context)
+                + ['geo_available' => $this->geo->isAvailable()],
+            'overview-storage', 'storage' => [
+                'report' => $this->storage->report($context->shouldRefresh),
+            ],
+            default => throw new \InvalidArgumentException(
+                sprintf('Admin panel "%s" has a template but no data provider.', $panel)
+            ),
         };
     }
 
@@ -91,6 +105,9 @@ final class AdminPanelCatalog
     {
         $range = $this->analytics->normalizeRange($context->range);
 
-        return ['report' => $this->analytics->report($range, $context->fresh), 'range' => $range];
+        return [
+            'report' => $this->analytics->report($range, $context->shouldRefresh),
+            'range' => $range,
+        ];
     }
 }

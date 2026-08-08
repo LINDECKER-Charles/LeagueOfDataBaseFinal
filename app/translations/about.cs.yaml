@@ -1,5 +1,5 @@
 # Redakční obsah stránek /about, /about/data a /faq.
-# Identifikátory faq.* jsou deklarovány v App\Controller\AboutController::FAQ_ENTRIES.
+# Identifikátory faq.* jsou deklarovány v App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "O projektu"
 
 index:

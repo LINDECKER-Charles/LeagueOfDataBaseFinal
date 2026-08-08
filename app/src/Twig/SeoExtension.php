@@ -4,12 +4,12 @@ declare(strict_types=1);
 namespace App\Twig;
 
 use App\Service\Seo\CanonicalHost;
-use App\Service\Seo\ContentJsonLd;
-use App\Service\Seo\GameEntityJsonLd;
-use App\Service\Seo\JsonLdBuilder;
+use App\Service\Seo\JsonLd\ContentJsonLd;
+use App\Service\Seo\JsonLd\GameEntityJsonLd;
+use App\Service\Seo\JsonLd\JsonLdBuilder;
 use App\Service\Seo\OgLocale;
-use App\Service\Seo\SiteGraphContext;
-use App\Service\Seo\SiteGraphJsonLd;
+use App\Service\Seo\JsonLd\SiteGraphContext;
+use App\Service\Seo\JsonLd\SiteGraphJsonLd;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -125,18 +125,27 @@ final class SeoExtension extends AbstractExtension
 
         $version = $this->versionedRouteVersion();
         if ($version !== '') {
-            $suffix    = $this->translator->trans('versioned_suffix', ['%version%' => $version], 'seo');
+            $suffix    = $this->translator->trans(
+                'versioned_suffix',
+                ['%version%' => $version],
+                'seo',
+            );
             $pageTitle = $pageTitle === '' ? $suffix : $pageTitle . ' ' . $suffix;
         }
 
-        return $pageTitle === '' ? $this->siteName : $pageTitle . self::TITLE_SEPARATOR . $this->siteName;
+        return $pageTitle === ''
+            ? $this->siteName
+            : $pageTitle . self::TITLE_SEPARATOR . $this->siteName;
     }
 
     /** Version carried by a versioned resource route, else '' (clean/non-resource page). */
     private function versionedRouteVersion(): string
     {
         $request = $this->request();
-        if ($request === null || !str_ends_with((string) $request->attributes->get('_route'), self::VERSIONED_SUFFIX)) {
+        if (
+            $request === null
+            || !str_ends_with((string) $request->attributes->get('_route'), self::VERSIONED_SUFFIX)
+        ) {
             return '';
         }
 
@@ -175,7 +184,11 @@ final class SeoExtension extends AbstractExtension
     /** Canonical origin of a request (mirrors folded, non-default port kept). */
     private function origin(Request $request): string
     {
-        return $this->canonicalHost->origin($request->getScheme(), $request->getHost(), $request->getPort());
+        return $this->canonicalHost->origin(
+            $request->getScheme(),
+            $request->getHost(),
+            $request->getPort(),
+        );
     }
 
     private function request(): ?Request

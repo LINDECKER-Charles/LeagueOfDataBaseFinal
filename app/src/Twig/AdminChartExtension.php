@@ -39,6 +39,9 @@ final class AdminChartExtension extends AbstractExtension
         return [
             new TwigFilter('bytes', $this->format->bytes(...)),
             new TwigFilter('compact', $this->format->compact(...)),
+            // Canonical thousands-separated integer, shared with the SVG charts so
+            // an HTML table and its graph never disagree on the separator.
+            new TwigFilter('int', $this->format->integer(...)),
             new TwigFilter('pct', $this->percent(...)),
             new TwigFilter('euros', $this->euros(...)),
         ];

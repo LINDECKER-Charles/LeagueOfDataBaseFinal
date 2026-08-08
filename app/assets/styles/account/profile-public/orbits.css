@@ -1,0 +1,71 @@
+/* ---------------------------------------------------------------------------
+   Profile — suspended favorite orbs floating over the public hero, each with a
+   staggered idle drift. Decorative (pointer-events:none), reduced-motion aware.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* Suspended favorite orbs floating over the hero, each with a staggered idle
+     drift. Decorative (pointer-events:none), pure CSS, reduced-motion aware. */
+  .profile-orbits {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .profile-orb {
+    --orb-size: 3.6rem;
+    position: absolute;
+    width: var(--orb-size);
+    height: var(--orb-size);
+    animation: profile-float var(--float-dur, 7s) var(--ease-hextech) infinite;
+    animation-delay: var(--float-delay, 0s);
+    will-change: transform;
+  }
+  .profile-orb__disc {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 60%, transparent);
+    background: color-mix(in srgb, var(--color-void) 70%, transparent);
+    box-shadow:
+      0 12px 30px -12px rgba(0, 0, 0, 0.85),
+      0 0 22px -6px color-mix(in srgb, var(--color-hex) 55%, transparent);
+  }
+  .profile-orb__disc picture,
+  .profile-orb__disc img { width: 100%; height: 100%; }
+  .profile-orb__disc img { object-fit: cover; }
+  .profile-orb__initials {
+    font-family: var(--font-beaufort);
+    font-size: 1rem;
+    color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  .profile-orb--primary { --orb-size: 5.25rem; }
+  .profile-orb--primary .profile-orb__disc {
+    border-color: var(--color-gold);
+    box-shadow:
+      0 16px 40px -14px rgba(0, 0, 0, 0.9),
+      0 0 30px -6px color-mix(in srgb, var(--color-gold) 55%, transparent);
+  }
+  /* Scatter positions — kept clear of the centered name/meta block. */
+  .profile-orb--p1 { top: 16%; left: 7%;   --float-dur: 6.5s; --float-delay: 0s; }
+  .profile-orb--p2 { top: 22%; right: 8%;  --float-dur: 8s;   --float-delay: -1.4s; }
+  .profile-orb--p3 { bottom: 26%; left: 12%; --float-dur: 7.4s; --float-delay: -0.7s; }
+  .profile-orb--p4 { bottom: 20%; right: 13%; --float-dur: 6.9s; --float-delay: -2.1s; }
+  @media (width < 40rem) {
+    .profile-orb { --orb-size: 2.9rem; }
+    .profile-orb--primary { --orb-size: 3.9rem; }
+    .profile-orb--p1 { top: 8%; left: 5%; }
+    .profile-orb--p2 { top: 9%; right: 5%; }
+    .profile-orb--p3 { bottom: 30%; left: 6%; }
+    .profile-orb--p4 { bottom: 28%; right: 6%; }
+  }
+  @keyframes profile-float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-14px) rotate(2.5deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .profile-orb { animation: none; }
+  }
+}

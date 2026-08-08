@@ -63,7 +63,14 @@ final class ChampionSkins
      * The name is best-effort: an unreachable data layer leaves the URLs intact
      * and falls back to the champion id as the label.
      *
-     * @return ?array{id: string, championId: string, num: int, name: string, banner: string, splash: string}
+     * @return ?array{
+     *     id: string,
+     *     championId: string,
+     *     num: int,
+     *     name: string,
+     *     banner: string,
+     *     splash: string
+     * }
      */
     public function resolveBanner(?string $skinId, string $version, string $lang): ?array
     {
@@ -72,12 +79,13 @@ final class ChampionSkins
             return null;
         }
         [$championId, $num] = $parsed;
+        $named = $this->bestEffortOptions($championId, $version, $lang);
 
         return [
             'id'         => $skinId,
             'championId' => $championId,
             'num'        => $num,
-            'name'       => $this->resolveName($championId, $num, $version, $lang),
+            'name'       => $this->nameOfSkin($named, $num) ?? $championId,
             'banner'     => $this->art(self::CENTERED_BASE, $championId, $num),
             'splash'     => $this->art(self::SPLASH_BASE, $championId, $num),
         ];
@@ -109,18 +117,27 @@ final class ChampionSkins
      * champion's base splash, else nothing (caller falls back to the gradient).
      * `kind` lets the view avoid drawing the champion twice (background + orb).
      *
-     * @param ?array{banner: string, splash: string} $skinBanner already-resolved {@see resolveBanner()}
+     * @param ?array{banner: string, splash: string} $skinBanner already-resolved
+     *                                                           {@see resolveBanner()}
      * @return ?array{image: string, fallback: string, kind: string}
      */
     public function heroBackground(?array $skinBanner, ?string $championId): ?array
     {
         if ($skinBanner !== null) {
-            return ['image' => $skinBanner['banner'], 'fallback' => $skinBanner['splash'], 'kind' => 'skin'];
+            return [
+                'image' => $skinBanner['banner'],
+                'fallback' => $skinBanner['splash'],
+                'kind' => 'skin',
+            ];
         }
         if ($championId !== null && $championId !== '') {
             $art = $this->championArt($championId);
 
-            return ['image' => $art['centered'], 'fallback' => $art['splash'], 'kind' => 'champion'];
+            return [
+                'image' => $art['centered'],
+                'fallback' => $art['splash'],
+                'kind' => 'champion',
+            ];
         }
 
         return null;
@@ -162,19 +179,31 @@ final class ChampionSkins
         return [substr($skinId, 0, $separator), (int) substr($skinId, $separator + 1)];
     }
 
-    private function resolveName(string $championId, int $num, string $version, string $lang): string
+    /**
+     * Skin list for labelling only: a down data layer costs the human-readable
+     * name, never the art (which hotlinks straight from the id).
+     *
+     * @return list<array{id: string, num: int, name: string, image: string, banner: string}>
+     */
+    private function bestEffortOptions(string $championId, string $version, string $lang): array
     {
         try {
-            foreach ($this->options($championId, $version, $lang) as $option) {
-                if ($option['num'] === $num) {
-                    return $option['name'];
-                }
-            }
+            return $this->options($championId, $version, $lang);
         } catch (\Throwable) {
-            // Data layer down — the art still hotlinks; the id is an honest label.
+            return [];
+        }
+    }
+
+    /** @param list<array{num: int, name: string}> $options */
+    private function nameOfSkin(array $options, int $num): ?string
+    {
+        foreach ($options as $option) {
+            if ($option['num'] === $num) {
+                return $option['name'];
+            }
         }
 
-        return $championId;
+        return null;
     }
 
     private function skinName(mixed $rawName, string $championName): string

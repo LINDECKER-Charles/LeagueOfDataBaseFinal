@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\API;
 
+use App\Service\API\DatasetRef;
 use App\Service\API\RuneManager;
 use App\Service\Storage\BlobStore;
 use App\Service\Storage\DeferredImageIngestor;
@@ -63,7 +64,8 @@ final class RuneManagerWarmTest extends TestCase
             json_encode([self::TREE_ICON => 'cdn/blobs/tree.png'], JSON_THROW_ON_ERROR),
         );
 
-        $plan = $this->manager($fs, $this->noEgress())->collectPlan(self::VERSION, self::LANG, 0, 1);
+        $plan = $this->manager($fs, $this->noEgress())
+            ->collectPlan($this->dataset(), 0, 1);
 
         self::assertSame([
             self::TREE_ICON => 'Precision',
@@ -85,18 +87,20 @@ final class RuneManagerWarmTest extends TestCase
 
         $reported = [];
         $this->manager($fs, $this->gatewayReturningBytes())
-            ->ingest(self::VERSION, $entries, static function (string $name) use (&$reported): void {
-                $reported[] = $name;
-            });
+            ->ingest(
+                self::VERSION,
+                $entries,
+                static function (string $name) use (&$reported): void {
+                    $reported[] = $name;
+                }
+            );
 
         self::assertSame(['Precision', 'Press the Attack', 'Lethal Tempo'], $reported);
         // The manifest now records all three so a later render is warm.
-        $manifest = json_decode(
-            $fs->read(sprintf('manifest/%s/runesReforged.json', self::VERSION)),
-            true,
-            flags: JSON_THROW_ON_ERROR,
+        self::assertSame(
+            [self::TREE_ICON, self::PTA_ICON, self::LT_ICON],
+            array_keys($this->readManifest($fs)),
         );
-        self::assertSame([self::TREE_ICON, self::PTA_ICON, self::LT_ICON], array_keys($manifest));
     }
 
     public function testConcurrentIngestsMergeInsteadOfOverwritingManifest(): void
@@ -109,22 +113,48 @@ final class RuneManagerWarmTest extends TestCase
 
         // Worker 2 reads (and memoises) the still-empty manifest first — exactly
         // what the deferred render path does before kernel.terminate flushes.
-        $worker2->collectPlan(self::VERSION, self::LANG, 0, 1);
+        $worker2->collectPlan($this->dataset(), 0, 1);
 
         // Worker 1 then ingests and commits its entry to storage…
-        $worker1->ingest(self::VERSION, [self::PTA_ICON => 'Press the Attack'], static function (): void {});
+        $worker1->ingest(self::VERSION, [self::PTA_ICON => 'Press the Attack'], self::unreported());
         // …and only afterwards worker 2 ingests, from its stale empty snapshot.
-        $worker2->ingest(self::VERSION, [self::LT_ICON => 'Lethal Tempo'], static function (): void {});
+        $worker2->ingest(self::VERSION, [self::LT_ICON => 'Lethal Tempo'], self::unreported());
 
-        $manifest = json_decode(
+        $manifest = $this->readManifest($fs);
+
+        // The old blind overwrite dropped worker 1's entry; the merge keeps both.
+        self::assertArrayHasKey(
+            self::PTA_ICON,
+            $manifest,
+            "worker 1's entry must survive worker 2's concurrent ingest"
+        );
+        self::assertArrayHasKey(self::LT_ICON, $manifest);
+    }
+
+    /**
+     * The persisted image => blob map for the seeded version.
+     *
+     * @return array<string, string>
+     */
+    private function readManifest(Filesystem $fs): array
+    {
+        return json_decode(
             $fs->read(sprintf('manifest/%s/runesReforged.json', self::VERSION)),
             true,
             flags: JSON_THROW_ON_ERROR,
         );
+    }
 
-        // The old blind overwrite dropped worker 1's entry; the merge keeps both.
-        self::assertArrayHasKey(self::PTA_ICON, $manifest, "worker 1's entry must survive worker 2's concurrent ingest");
-        self::assertArrayHasKey(self::LT_ICON, $manifest);
+    /** The seeded (version, language) pair the whole fixture is written under. */
+    private function dataset(): DatasetRef
+    {
+        return new DatasetRef(self::VERSION, self::LANG);
+    }
+
+    /** An ingest progress callback for the tests that assert on storage, not on names. */
+    private static function unreported(): \Closure
+    {
+        return static function (): void {};
     }
 
     private function seedData(): Filesystem
@@ -139,8 +169,18 @@ final class RuneManagerWarmTest extends TestCase
                 'icon' => self::TREE_ICON,
                 'slots' => [[
                     'runes' => [
-                        ['id' => 8005, 'key' => 'PressTheAttack', 'name' => 'Press the Attack', 'icon' => self::PTA_ICON],
-                        ['id' => 8008, 'key' => 'LethalTempo', 'name' => 'Lethal Tempo', 'icon' => self::LT_ICON],
+                        [
+                            'id' => 8005,
+                            'key' => 'PressTheAttack',
+                            'name' => 'Press the Attack',
+                            'icon' => self::PTA_ICON,
+                        ],
+                        [
+                            'id' => 8008,
+                            'key' => 'LethalTempo',
+                            'name' => 'Lethal Tempo',
+                            'icon' => self::LT_ICON,
+                        ],
                     ],
                 ]],
             ]], JSON_THROW_ON_ERROR),
@@ -170,16 +210,26 @@ final class RuneManagerWarmTest extends TestCase
     /** Echoes back every requested URL with dummy bytes (icon path → base64 body). */
     private function gatewayReturningBytes(): GoFetcherClient
     {
-        return new GoFetcherClient(new MockHttpClient(static function (string $method, string $url, array $options): MockResponse {
-            $urls = json_decode((string) $options['body'], true, flags: JSON_THROW_ON_ERROR)['urls'];
+        return new GoFetcherClient(new MockHttpClient(
+            static function (string $method, string $url, array $options): MockResponse {
+                $urls = json_decode(
+                    (string) $options['body'],
+                    true,
+                    flags: JSON_THROW_ON_ERROR,
+                )['urls'];
 
-            return new MockResponse(
-                json_encode(['results' => array_map(
-                    static fn (string $u): array => ['url' => $u, 'status' => 200, 'body_base64' => base64_encode('bytes:'.$u)],
-                    $urls,
-                )], JSON_THROW_ON_ERROR),
-                ['response_headers' => ['content-type' => 'application/json']],
-            );
-        }));
+                return new MockResponse(
+                    json_encode(['results' => array_map(
+                        static fn (string $u): array => [
+                            'url' => $u,
+                            'status' => 200,
+                            'body_base64' => base64_encode('bytes:'.$u),
+                        ],
+                        $urls,
+                    )], JSON_THROW_ON_ERROR),
+                    ['response_headers' => ['content-type' => 'application/json']],
+                );
+            }
+        ));
     }
 }

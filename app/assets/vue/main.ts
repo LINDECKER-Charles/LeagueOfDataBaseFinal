@@ -15,20 +15,20 @@ interface Island {
 }
 
 const registry: Record<string, Island> = {
-    'toaster': { load: () => import('./components/Toaster.vue') },
-    'resource-loader': { load: () => import('./components/ResourceLoader.vue') },
-    'chroma-strip': { load: () => import('./components/ChromaStrip.vue') },
-    'skin-gallery': { load: () => import('./components/SkinGallery.vue') },
-    'resource-filter': { load: () => import('./components/ResourceFilter.vue') },
-    'load-time': { load: () => import('./components/LoadTimeBadge.vue') },
-    'ability-showcase': { load: () => import('./components/AbilityShowcase.vue') },
-    'stat-scaler': { load: () => import('./components/StatScaler.vue') },
-    'favorite-picker': { load: () => import('./components/FavoritePicker.vue') },
-    'skin-banner-picker': { load: () => import('./components/SkinBannerPicker.vue') },
-    'build-editor': { load: () => import('./components/BuildEditor.vue') },
-    'copy-link': { load: () => import('./components/CopyLink.vue') },
-    'password-checklist': { load: () => import('./components/PasswordChecklist.vue') },
-    'vote-score': { load: () => import('./components/VoteScore.vue') },
+    'toaster': { load: () => import('./components/ui/Toaster.vue') },
+    'resource-loader': { load: () => import('./components/catalog/ResourceLoader.vue') },
+    'chroma-strip': { load: () => import('./components/codex/ChromaStrip.vue') },
+    'skin-gallery': { load: () => import('./components/codex/SkinGallery.vue') },
+    'resource-filter': { load: () => import('./components/catalog/ResourceFilter.vue') },
+    'load-time': { load: () => import('./components/catalog/LoadTimeBadge.vue') },
+    'ability-showcase': { load: () => import('./components/codex/AbilityShowcase.vue') },
+    'stat-scaler': { load: () => import('./components/codex/StatScaler.vue') },
+    'favorite-picker': { load: () => import('./components/account/FavoritePicker.vue') },
+    'skin-banner-picker': { load: () => import('./components/account/SkinBannerPicker.vue') },
+    'build-editor': { load: () => import('./components/builds/BuildEditor.vue') },
+    'copy-link': { load: () => import('./components/ui/CopyLink.vue') },
+    'password-checklist': { load: () => import('./components/account/PasswordChecklist.vue') },
+    'vote-score': { load: () => import('./components/community/VoteScore.vue') },
 }
 
 // Live islands, so Turbo navigations can tear them down instead of leaking a

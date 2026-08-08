@@ -38,8 +38,12 @@ final class CheckoutSessionParams
      *
      * @return array<string, mixed> Ready-to-send Checkout Session create params
      */
-    public static function build(int $amountCents, string $productName, string $successUrl, string $cancelUrl): array
-    {
+    public static function build(
+        int $amountCents,
+        string $productName,
+        string $successUrl,
+        string $cancelUrl
+    ): array {
         return [
             'mode' => 'payment',
             'submit_type' => self::SUBMIT_TYPE,

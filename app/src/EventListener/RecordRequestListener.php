@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
-use App\Service\Analytics\EventStore;
+use App\Service\Analytics\Storage\EventStore;
 use App\Service\Analytics\RequestEventFactory;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
@@ -27,7 +27,10 @@ final class RecordRequestListener
 
     public function __invoke(TerminateEvent $event): void
     {
-        $requestEvent = $this->factory->fromRequestResponse($event->getRequest(), $event->getResponse());
+        $requestEvent = $this->factory->fromRequestResponse(
+            $event->getRequest(),
+            $event->getResponse(),
+        );
         if ($requestEvent !== null) {
             $this->store->append($requestEvent);
         }

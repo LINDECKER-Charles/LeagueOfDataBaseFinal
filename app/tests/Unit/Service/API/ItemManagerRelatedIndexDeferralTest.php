@@ -62,12 +62,25 @@ final class ItemManagerRelatedIndexDeferralTest extends TestCase
 
         $index = $manager->relatedIndex($this->items(), self::VERSION, self::LANG);
 
-        self::assertArrayHasKey('3078', $index, 'the evolution target is indexed by id regardless of icon warmth');
-        self::assertNull($index['3078']['image'], 'a cold evolution icon defers on a list render (placeholder)');
-        self::assertFalse($fs->fileExists(self::MANIFEST), 'nothing ingested during the deferred render');
+        self::assertArrayHasKey(
+            '3078',
+            $index,
+            'the evolution target is indexed by id regardless of icon warmth',
+        );
+        self::assertNull(
+            $index['3078']['image'],
+            'a cold evolution icon defers on a list render (placeholder)',
+        );
+        self::assertFalse(
+            $fs->fileExists(self::MANIFEST),
+            'nothing ingested during the deferred render',
+        );
 
         $ingestor->flush();
-        self::assertTrue($fs->fileExists(self::MANIFEST), 'the queued batch warms the manifest after the response');
+        self::assertTrue(
+            $fs->fileExists(self::MANIFEST),
+            'the queued batch warms the manifest after the response',
+        );
     }
 
     /** No request (CLI/warmup): even the list helper resolves inline in a single pass. */
@@ -79,7 +92,10 @@ final class ItemManagerRelatedIndexDeferralTest extends TestCase
         $index = $manager->relatedIndex($this->items(), self::VERSION, self::LANG);
 
         self::assertNotNull($index['3078']['image'] ?? null, 'no request → ingest inline');
-        self::assertTrue($fs->fileExists(self::MANIFEST), 'inline resolution persists the manifest immediately');
+        self::assertTrue(
+            $fs->fileExists(self::MANIFEST),
+            'inline resolution persists the manifest immediately',
+        );
     }
 
     /**
@@ -92,17 +108,30 @@ final class ItemManagerRelatedIndexDeferralTest extends TestCase
             $stack->push(new Request());
         }
         $ingestor = new DeferredImageIngestor($stack);
-        $manager = new ItemManager($this->gatewayReturningBytes(), $fs, new BlobStore($fs, new ImageTranscoder()), new ArrayAdapter(), $ingestor);
+        $manager = new ItemManager(
+            $this->gatewayReturningBytes(),
+            $fs,
+            new BlobStore($fs, new ImageTranscoder()),
+            new ArrayAdapter(),
+            $ingestor,
+        );
 
         return [$manager, $ingestor];
     }
 
-    /** Two items where the base builds INTO the finished one — relatedIndex resolves that target's icon. */
+    /**
+     * Two items where the base builds INTO the finished one — relatedIndex resolves
+     * that target's icon.
+     */
     private function items(): array
     {
         return [
             ['name' => 'Long Sword', 'image' => ['full' => '1036.png'], 'into' => ['3078']],
-            ['name' => 'Trinity Force', 'image' => ['full' => '3078.png'], 'gold' => ['total' => 3333]],
+            [
+                'name' => 'Trinity Force',
+                'image' => ['full' => '3078.png'],
+                'gold' => ['total' => 3333],
+            ],
         ];
     }
 
@@ -113,8 +142,16 @@ final class ItemManagerRelatedIndexDeferralTest extends TestCase
         $fs->write(
             sprintf('data/%s/%s/item.json', self::VERSION, self::LANG),
             json_encode(['type' => 'item', 'data' => [
-                '1036' => ['name' => 'Long Sword', 'image' => ['full' => '1036.png'], 'into' => ['3078']],
-                '3078' => ['name' => 'Trinity Force', 'image' => ['full' => '3078.png'], 'gold' => ['total' => 3333]],
+                '1036' => [
+                    'name' => 'Long Sword',
+                    'image' => ['full' => '1036.png'],
+                    'into' => ['3078'],
+                ],
+                '3078' => [
+                    'name' => 'Trinity Force',
+                    'image' => ['full' => '3078.png'],
+                    'gold' => ['total' => 3333],
+                ],
             ]], JSON_THROW_ON_ERROR),
         );
 
@@ -124,12 +161,24 @@ final class ItemManagerRelatedIndexDeferralTest extends TestCase
     /** Echoes back every requested URL with dummy bytes so ingestion succeeds. */
     private function gatewayReturningBytes(): GoFetcherClient
     {
-        return new GoFetcherClient(new MockHttpClient(static function (string $method, string $url, array $options): MockResponse {
-            $urls = json_decode((string) $options['body'], true, flags: JSON_THROW_ON_ERROR)['urls'];
+        return new GoFetcherClient(new MockHttpClient(static function (
+            string $method,
+            string $url,
+            array $options,
+        ): MockResponse {
+            $urls = json_decode(
+                (string) $options['body'],
+                true,
+                flags: JSON_THROW_ON_ERROR,
+            )['urls'];
 
             return new MockResponse(
                 json_encode(['results' => array_map(
-                    static fn (string $u): array => ['url' => $u, 'status' => 200, 'body_base64' => base64_encode('bytes:'.$u)],
+                    static fn (string $u): array => [
+                        'url' => $u,
+                        'status' => 200,
+                        'body_base64' => base64_encode('bytes:'.$u),
+                    ],
                     $urls,
                 )], JSON_THROW_ON_ERROR),
                 ['response_headers' => ['content-type' => 'application/json']],

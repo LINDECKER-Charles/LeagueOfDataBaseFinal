@@ -28,7 +28,7 @@ framework:
 
 # In dev the ddragon.cache pool lives in APCu (shared memory) instead of the
 # filesystem, so every manifest/dataset read stops hitting the slow bind-mounted
-# var/ (see docs/docker.md, A1). Single-node only: APCu is per-container, so prod
+# var/ (see docs/guides/docker.md, A1). Single-node only: APCu is per-container, so prod
 # keeps the filesystem backend above — a shared manifest is required the moment
 # php scales out, otherwise workers serve a stale copy (see the audit's A2).
 when@dev:

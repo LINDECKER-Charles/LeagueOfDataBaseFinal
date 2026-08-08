@@ -1,5 +1,5 @@
 # Редакционные тексты страниц /about, /about/data и /faq.
-# Идентификаторы faq.* объявлены в App\Controller\AboutController::FAQ_ENTRIES.
+# Идентификаторы faq.* объявлены в App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "О проекте"
 
 index:

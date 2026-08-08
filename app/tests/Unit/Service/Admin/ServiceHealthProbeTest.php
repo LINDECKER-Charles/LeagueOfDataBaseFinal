@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service\Admin;
 
 use App\Service\Admin\ServiceHealthProbe;
-use App\Service\Analytics\StorageAnalyticsService;
+use App\Service\Analytics\Storage\StorageAnalyticsService;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use League\Flysystem\DirectoryListing;
@@ -30,7 +30,7 @@ final class ServiceHealthProbeTest extends TestCase
     {
         $probe = $this->probe(http: new MockHttpClient(new MockResponse('ok')));
 
-        $result = $probe->http(self::API_URL);
+        $result = $probe->httpHealth(self::API_URL);
 
         self::assertSame(ServiceHealthProbe::STATUS_OK, $result['status']);
         self::assertNull($result['detail']);
@@ -41,7 +41,7 @@ final class ServiceHealthProbeTest extends TestCase
     {
         $probe = $this->probe(http: new MockHttpClient(new MockResponse('', ['http_code' => 503])));
 
-        $result = $probe->http(self::API_URL);
+        $result = $probe->httpHealth(self::API_URL);
 
         self::assertSame(ServiceHealthProbe::STATUS_DEGRADED, $result['status']);
         self::assertSame('HTTP 503', $result['detail']);
@@ -54,7 +54,7 @@ final class ServiceHealthProbeTest extends TestCase
             throw new TransportException('Connection refused for "http://go-api:8090/healthz".');
         });
 
-        $result = $this->probe(http: $refused)->http(self::API_URL);
+        $result = $this->probe(http: $refused)->httpHealth(self::API_URL);
 
         self::assertSame(ServiceHealthProbe::STATUS_DOWN, $result['status']);
         self::assertStringContainsString('Connection refused', (string) $result['detail']);
@@ -72,7 +72,9 @@ final class ServiceHealthProbeTest extends TestCase
 
     public function testDeadDatabaseReportsDownWithoutThrowing(): void
     {
-        $dead = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'path' => '/nonexistent/dir/lodb.sqlite']);
+        $dead = DriverManager::getConnection(
+            ['driver' => 'pdo_sqlite', 'path' => '/nonexistent/dir/lodb.sqlite'],
+        );
 
         $result = $this->probe(connection: $dead)->postgres();
 
@@ -91,9 +93,12 @@ final class ServiceHealthProbeTest extends TestCase
     public function testMinioFailureReportsDegraded(): void
     {
         $broken = $this->createStub(FilesystemOperator::class);
-        $broken->method('listContents')->willThrowException(new \RuntimeException('minio unreachable'));
+        $broken->method('listContents')
+            ->willThrowException(new \RuntimeException('minio unreachable'));
 
-        $result = $this->probe(storage: new StorageAnalyticsService($broken, new ArrayAdapter()))->minio();
+        $result = $this->probe(
+            storage: new StorageAnalyticsService($broken, new ArrayAdapter()),
+        )->minio();
 
         self::assertSame(ServiceHealthProbe::STATUS_DEGRADED, $result['status']);
         self::assertSame('minio unreachable', $result['detail']);
@@ -119,7 +124,9 @@ final class ServiceHealthProbeTest extends TestCase
         ?HttpClientInterface $http = null,
     ): ServiceHealthProbe {
         return new ServiceHealthProbe(
-            $connection ?? DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]),
+            $connection ?? DriverManager::getConnection(
+                ['driver' => 'pdo_sqlite', 'memory' => true],
+            ),
             $storage ?? $this->emptyStorage(),
             $http ?? new MockHttpClient(new MockResponse('ok')),
             self::FETCHER_URL,

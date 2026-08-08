@@ -1,34 +1,64 @@
 {# Deferred panel — object-storage summary. `report` is the
    StorageAnalyticsService payload (see App\Service\Admin\AdminPanelCatalog). #}
-{% import 'admin/_ui.html.twig' as ui %}
+{% import 'admin/shell/_ui.html.twig' as ui %}
 
 {% if not report.ok %}
     <p class="alert">Stockage indisponible : {{ report.error }}</p>
 {% else %}
     <div class="kpi-grid" style="margin-bottom: 1.15rem;">
-        {{ ui.kpi('Stockage', report.total.bytes|bytes, report.total.objects|number_format(0, '.', ' ') ~ ' objets', 'var(--series-2)', null) }}
-        {{ ui.kpi('Versions', report.coverage|length, 'jeux de données ingérés', 'var(--series-4)', null) }}
-        {{ ui.kpi('Couverture WebP', (report.blobs.webpCoverage * 100)|round ~ ' %', report.blobs.webpSiblings ~ ' / ' ~ report.blobs.sources ~ ' images', 'var(--series-5)', null) }}
+        {{ ui.kpi(
+            'Stockage',
+            report.total.bytes|bytes,
+            report.total.objects|number_format(0, '.', ' ') ~ ' objets',
+            'var(--series-2)',
+            null
+        ) }}
+        {{ ui.kpi(
+            'Versions',
+            report.coverage|length,
+            'jeux de données ingérés',
+            'var(--series-4)',
+            null
+        ) }}
+        {{ ui.kpi(
+            'Couverture WebP',
+            (report.blobs.webpCoverage * 100)|round ~ ' %',
+            report.blobs.webpSiblings ~ ' / ' ~ report.blobs.sources ~ ' images',
+            'var(--series-5)',
+            null
+        ) }}
     </div>
 
     <div class="grid cols-3">
         <section class="card">
-            <div class="card__head"><h2>Familles d'objets</h2><a class="chip" href="{{ path('admin_storage') }}">Détail →</a></div>
-            {{ ui.rank(report.families, { fmt: 'bytes', field: 'bytes', empty: 'Stockage vide.' }) }}
+            <div class="card__head"><h2>Familles d'objets</h2><a class="chip"
+               href="{{ path('admin_storage') }}">Détail →</a></div>
+            {{ ui.rank(
+                report.families,
+                { fmt: 'bytes', field: 'bytes', empty: 'Stockage vide.' }
+            ) }}
         </section>
         <section class="card">
             <div class="card__head"><h2>Déduplication</h2></div>
             <div class="stack">
-                <div><span class="k-label">Ratio réfs / blobs</span><span class="k-val" style="font-size:1.5rem;">{{ report.dedup.ratio|round(2) }}×</span></div>
-                <p class="dim" style="margin:0;font-size:0.82rem;">{{ report.dedup.logicalRefs|number_format(0,'.',' ') }} références logiques → {{ report.dedup.physicalBlobs|number_format(0,'.',' ') }} blobs physiques. Économie estimée ≈ {{ report.dedup.savedBytesApprox|bytes }}.</p>
+                <div><span class="k-label">Ratio réfs / blobs</span><span
+                      class="k-val k-val--sm">{{ report.dedup.ratio|round(2) }}×</span></div>
+                <p class="dim" style="margin:0;font-size:0.82rem;">{{
+                    report.dedup.logicalRefs|number_format(0,'.',' ') }} références logiques
+                    → {{ report.dedup.physicalBlobs|number_format(0,'.',' ') }} blobs
+                    physiques. Économie estimée ≈ {{ report.dedup.savedBytesApprox|bytes }}.</p>
             </div>
         </section>
         <section class="card">
             <div class="card__head"><h2>Santé</h2></div>
             <div class="stack">
-                <span class="badge {{ report.blobs.webpCoverage >= 0.95 ? 'good' : (report.blobs.webpCoverage >= 0.6 ? 'warn' : 'bad') }}">WebP {{ (report.blobs.webpCoverage * 100)|round }} %</span>
+                <span class="badge {{ report.blobs.webpCoverage >= 0.95
+                    ? 'good'
+                    : (report.blobs.webpCoverage >= 0.6 ? 'warn' : 'bad') }}">WebP {{
+                    (report.blobs.webpCoverage * 100)|round }} %</span>
                 <span class="badge good">{{ report.coverage|length }} version(s)</span>
-                <span class="badge warn">{{ report.total.objects|number_format(0,'.',' ') }} objets stockés</span>
+                <span class="badge warn">{{
+                    report.total.objects|number_format(0,'.',' ') }} objets stockés</span>
             </div>
         </section>
     </div>

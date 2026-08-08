@@ -3,6 +3,11 @@ declare(strict_types=1);
 
 namespace App\Service\Audit;
 
+use App\Service\Audit\Model\AuditAction;
+use App\Service\Audit\Model\AuditActor;
+use App\Service\Audit\Model\AuditEvent;
+use App\Service\Audit\Model\AuditOutcome;
+use App\Service\Audit\Model\AuditTarget;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -45,24 +50,31 @@ final class AuditLogger
      * security listener, where the token storage is not yet reliably populated
      * but the authenticated user is carried by the event.
      */
-    public function logAuth(AuditAction $action, UserInterface $actor, AuditOutcome $outcome = AuditOutcome::Success): void
-    {
+    public function logAuth(
+        AuditAction $action,
+        UserInterface $actor,
+        AuditOutcome $outcome = AuditOutcome::Success,
+    ): void {
         $this->record($this->actors->resolve($actor), $action, $outcome, null, []);
     }
 
     /**
-     * @param array{type: string, id: ?string, label: string} $actor
      * @param array<string, scalar|null> $metadata
      */
-    private function record(array $actor, AuditAction $action, AuditOutcome $outcome, ?AuditTarget $target, array $metadata): void
-    {
+    private function record(
+        AuditActor $actor,
+        AuditAction $action,
+        AuditOutcome $outcome,
+        ?AuditTarget $target,
+        array $metadata,
+    ): void {
         try {
             $request = $this->requestStack->getMainRequest();
             $this->store->append(new AuditEvent(
                 at: new \DateTimeImmutable('now', new \DateTimeZone('UTC')),
-                actorType: $actor['type'],
-                actorId: $actor['id'],
-                actorLabel: $actor['label'],
+                actorType: $actor->type,
+                actorId: $actor->id,
+                actorLabel: $actor->label,
                 action: $action,
                 outcome: $outcome,
                 targetType: $target?->type,

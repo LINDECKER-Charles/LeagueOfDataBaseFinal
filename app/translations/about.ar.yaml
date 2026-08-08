@@ -1,5 +1,5 @@
 # المحتوى التحريري لصفحات ‎/about و ‎/about/data و ‎/faq.
-# معرّفات faq.* معلَنة في App\Controller\AboutController::FAQ_ENTRIES.
+# معرّفات faq.* معلَنة في App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "حول"
 
 index:

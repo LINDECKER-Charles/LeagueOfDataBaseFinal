@@ -1,0 +1,101 @@
+{# Artifact aside — version-accurate icon + the level-scalable stat board.
+   The resource rows (mana & regen) only exist for champions that have one.
+   Contract: champion (with .stats), image, selection. #}
+{% set s = champion.stats %}
+{% set resourceLabel = champion.partype|default('') %}
+{% set statRows = [
+  { stat: 'attack_damage', label: 'stat.attack_damage'|trans,
+    base: s.attackdamage|default(0), growth: s.attackdamageperlevel|default(0),
+    kind: 'flat' },
+  { stat: 'attack_speed', label: 'stat.attack_speed'|trans,
+    base: s.attackspeed|default(0), growth: s.attackspeedperlevel|default(0),
+    kind: 'percent' },
+  { stat: 'health', label: 'stat.health'|trans,
+    base: s.hp|default(0), growth: s.hpperlevel|default(0),
+    kind: 'flat' },
+  { stat: 'health_regen', label: 'stat.health_regen'|trans,
+    base: s.hpregen|default(0), growth: s.hpregenperlevel|default(0),
+    kind: 'flat' },
+  { stat: 'armor', label: 'stat.armor'|trans,
+    base: s.armor|default(0), growth: s.armorperlevel|default(0),
+    kind: 'flat' },
+  { stat: 'magic_resist', label: 'stat.magic_resist'|trans,
+    base: s.spellblock|default(0), growth: s.spellblockperlevel|default(0),
+    kind: 'flat' }
+] %}
+{% if resourceLabel and (s.mp|default(0)) > 0 %}
+  {% set statRows = statRows|merge([
+    { stat: 'mana', label: resourceLabel,
+      base: s.mp|default(0), growth: s.mpperlevel|default(0), kind: 'flat' },
+    { stat: 'mana_regen', label: 'champion.detail.stats.resource_regen'|trans,
+      base: s.mpregen|default(0), growth: s.mpregenperlevel|default(0),
+      kind: 'flat' }
+  ]) %}
+{% endif %}
+{% set statRows = statRows|merge([
+  { stat: 'move_speed', label: 'stat.move_speed'|trans,
+    base: s.movespeed|default(0), growth: 0, kind: 'static' },
+  { stat: 'attack_range', label: 'stat.attack_range'|trans,
+    base: s.attackrange|default(0), growth: 0, kind: 'static' }
+]) %}
+
+<aside id="stats" class="mt-16 lg:mt-0 lg:sticky lg:top-[4.25rem]" data-reveal>
+  <div class="hextech-frame hx-corners p-6">
+    {# Version-accurate champion icon: unlike the splash (unversioned CDN),
+       the square icon is resolved per selected patch, so it reflects the
+       art of the version being viewed. #}
+    {% if image %}
+      <div class="mb-5 flex items-center gap-3 border-b border-gold-deep/40 pb-4">
+        <div class="relative h-14 w-14 shrink-0 overflow-hidden border
+             border-gold-deep/50 bg-void">
+          <picture>
+            {% include 'components/_webp_source.html.twig'
+               with { src: '/' ~ image } only %}
+            <img src="/{{ image }}" alt="{{ champion.name ?? '' }}" width="56" height="56"
+                 loading="lazy" decoding="async"
+                 class="absolute inset-0 h-full w-full object-cover">
+          </picture>
+        </div>
+        <div class="min-w-0">
+          <p class="truncate font-beaufort text-sm uppercase tracking-wide text-gold-bright"
+             title="{{ champion.name ?? '' }}">{{ champion.name ?? '' }}</p>
+          <p class="font-mono text-[11px] text-text-muted">{{
+            'champion.detail.icon_version'|trans({'%version%': selection.version}) }}</p>
+        </div>
+      </div>
+    {% endif %}
+    <h2 class="mb-5 font-beaufort text-sm uppercase tracking-[0.22em] text-gold">
+      {{ 'champion.detail.stats.title'|trans }}
+    </h2>
+
+    <div data-vue="stat-scaler"
+         data-props="{{ {
+           targetId: 'champion-stats',
+           labels: { level: 'champion.detail.level'|trans }
+         }|json_encode|e('html_attr') }}">{% include
+           'components/ui/skeleton.html.twig' with { kind: 'control' } only %}</div>
+
+    <div id="champion-stats" class="stat-board mt-2">
+      {% for row in statRows %}
+        <div class="stat-board__row" data-stat
+             data-base="{{ row.base }}" data-growth="{{ row.growth }}"
+             data-kind="{{ row.kind }}">
+          <span class="stat-board__label">
+            {%- set statIcon = stat_icon_url(row.stat) -%}
+            {%- if statIcon %}<img src="{{ statIcon }}" alt="" width="18" height="18"
+                loading="lazy" decoding="async" class="stat-icon">{% endif -%}
+            {{ row.label }}
+          </span>
+          <span>
+            <span class="stat-board__value" data-stat-value>{{ row.base }}</span>
+            {% if row.kind == 'flat' and row.growth > 0 %}
+              <span class="stat-board__growth">+{{ row.growth }}</span>
+            {% elseif row.kind == 'percent' and row.growth > 0 %}
+              <span class="stat-board__growth">+{{ row.growth }}%</span>
+            {% endif %}
+          </span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</aside>

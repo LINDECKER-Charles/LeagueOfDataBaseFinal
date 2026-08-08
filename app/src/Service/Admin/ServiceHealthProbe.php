@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service\Admin;
 
-use App\Service\Analytics\StorageAnalyticsService;
+use App\Service\Analytics\Storage\StorageAnalyticsService;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -29,22 +29,30 @@ final class ServiceHealthProbe
         private readonly Connection $connection,
         private readonly StorageAnalyticsService $storage,
         private readonly HttpClientInterface $httpClient,
-        #[Autowire(param: 'admin.go_fetcher_health_url')] private readonly string $goFetcherHealthUrl,
-        #[Autowire(param: 'admin.go_api_health_url')] private readonly string $goApiHealthUrl,
+        #[Autowire(param: 'admin.go_fetcher_health_url')]
+        private readonly string $goFetcherHealthUrl,
+        #[Autowire(param: 'admin.go_api_health_url')]
+        private readonly string $goApiHealthUrl,
     ) {}
 
-    /** @return array<string, array{status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>}> */
+    /**
+     * @return array<string, array{
+     *     status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>
+     * }>
+     */
     public function all(): array
     {
         return [
             'postgres' => $this->postgres(),
             'minio' => $this->minio(),
-            'go-fetcher' => $this->http($this->goFetcherHealthUrl),
-            'go-api' => $this->http($this->goApiHealthUrl),
+            'go-fetcher' => $this->httpHealth($this->goFetcherHealthUrl),
+            'go-api' => $this->httpHealth($this->goApiHealthUrl),
         ];
     }
 
-    /** @return array{status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>} */
+    /**
+     * @return array{status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>}
+     */
     public function postgres(): array
     {
         $start = microtime(true);
@@ -54,39 +62,50 @@ final class ServiceHealthProbe
             return $this->result(self::STATUS_DOWN, $start, $this->reason($e));
         }
 
-        return $this->result(self::STATUS_OK, $start, null, $this->postgresMeta());
+        return $this->healthy($start, $this->postgresMeta());
     }
 
-    /** @return array{status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>} */
+    /**
+     * @return array{status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>}
+     */
     public function minio(): array
     {
         $start = microtime(true);
         $report = $this->storage->report();
 
         if (($report['ok'] ?? false) !== true) {
-            return $this->result(self::STATUS_DEGRADED, $start, (string) ($report['error'] ?? 'rapport indisponible'));
+            return $this->result(
+                self::STATUS_DEGRADED,
+                $start,
+                (string) ($report['error'] ?? 'rapport indisponible')
+            );
         }
 
-        return $this->result(self::STATUS_OK, $start, null, [
+        return $this->healthy($start, [
             'objects' => (int) ($report['total']['objects'] ?? 0),
             'bytes' => (int) ($report['total']['bytes'] ?? 0),
         ]);
     }
 
-    /** @return array{status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>} */
-    public function http(string $url): array
+    /**
+     * @return array{status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>}
+     */
+    public function httpHealth(string $url): array
     {
         $start = microtime(true);
         try {
             $status = $this->httpClient
-                ->request('GET', $url, ['timeout' => self::HTTP_TIMEOUT_S, 'max_duration' => self::HTTP_TIMEOUT_S])
+                ->request('GET', $url, [
+                    'timeout' => self::HTTP_TIMEOUT_S,
+                    'max_duration' => self::HTTP_TIMEOUT_S,
+                ])
                 ->getStatusCode();
         } catch (\Throwable $e) {
             return $this->result(self::STATUS_DOWN, $start, $this->reason($e));
         }
 
         return $status === 200
-            ? $this->result(self::STATUS_OK, $start, null)
+            ? $this->healthy($start)
             : $this->result(self::STATUS_DEGRADED, $start, sprintf('HTTP %d', $status));
     }
 
@@ -103,7 +122,9 @@ final class ServiceHealthProbe
             // Not Postgres (or restricted) — liveness already established.
         }
         try {
-            $meta['databaseBytes'] = (int) $this->connection->fetchOne('SELECT pg_database_size(current_database())');
+            $meta['databaseBytes'] = (int) $this->connection->fetchOne(
+                'SELECT pg_database_size(current_database())'
+            );
         } catch (\Throwable) {
             // Same rationale as above.
         }
@@ -112,16 +133,29 @@ final class ServiceHealthProbe
     }
 
     /**
+     * A reachable service, carrying whatever facts the probe could collect.
+     *
      * @param array<string, mixed> $meta
      * @return array{status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>}
      */
-    private function result(string $status, float $start, ?string $detail, array $meta = []): array
+    private function healthy(float $start, array $meta = []): array
+    {
+        $result = $this->result(self::STATUS_OK, $start, null);
+        $result['meta'] = $meta;
+
+        return $result;
+    }
+
+    /**
+     * @return array{status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>}
+     */
+    private function result(string $status, float $start, ?string $detail): array
     {
         return [
             'status' => $status,
             'latencyMs' => (int) round((microtime(true) - $start) * 1000),
             'detail' => $detail,
-            'meta' => $meta,
+            'meta' => [],
         ];
     }
 

@@ -1,0 +1,111 @@
+{# Favorites editor — version pin, skin banner picker and the four favorite
+   sockets, all inside the autosaved profile form.
+   Contract: slotDefs, pickerSlots, favorites, user, versions, preferredVersion,
+   skinBanner, version, lang. #}
+<section class="profile-favorites">
+    <div class="codex-header mb-6">
+        <h2>{{ 'profile.favorites.title'|trans }}</h2>
+        {# Pin the patch the favorites resolve at, so one absent from the
+           browsing version neither disappears nor gets wiped on save. #}
+        <div class="profile-version">
+            <label class="profile-version__label" for="profile-version">{{
+                'profile.favorites.version_label'|trans }}</label>
+            <select id="profile-version" name="preferredVersion"
+                    form="profile-version-form"
+                    class="hx-select profile-version__select" data-version-select
+                    aria-label="{{ 'profile.favorites.version_label'|trans }}">
+                <option value="">{{ 'profile.favorites.version_auto'|trans }}</option>
+                {% for v in versions %}
+                    <option value="{{ v }}"
+                            {{ v == preferredVersion ? 'selected' }}>{{ v }}</option>
+                {% endfor %}
+            </select>
+            {# No-JS fallback: an explicit apply button submits the version form. #}
+            <button type="submit" form="profile-version-form"
+                    class="hx-btn profile-version__apply" data-version-hide>
+                {{ 'profile.favorites.version_apply'|trans }}
+            </button>
+        </div>
+    </div>
+
+    <div class="skin-field mb-6">
+        <span class="skin-field__label">{{ 'profile.slot.skin'|trans }}</span>
+        <div data-vue="skin-banner-picker" data-props="{{ {
+            fieldName: 'favoriteSkinId',
+            current: skinBanner ? {
+                id: skinBanner.id, name: skinBanner.name, banner: skinBanner.banner
+            } : null,
+            championsEndpoint: path('api_picker_champions'),
+            skinsEndpoint: path('api_picker_skins'),
+            version: version,
+            lang: lang,
+            labels: {
+                pick: 'profile.slot.skin'|trans,
+                change: 'profile.skin.change'|trans,
+                remove: 'profile.picker.remove'|trans,
+                empty: 'profile.skin.empty'|trans,
+                chooseChampion: 'profile.skin.choose_champion'|trans,
+                chooseSkin: 'profile.skin.choose_skin'|trans,
+                back: 'profile.skin.back'|trans,
+                close: 'filter.close'|trans,
+                search: 'profile.picker.search'|trans,
+                loading: 'profile.picker.loading'|trans,
+                error: 'profile.picker.error'|trans,
+                retry: 'profile.picker.retry'|trans,
+                noResults: 'filter.empty'|trans,
+            },
+        }|json_encode|e('html_attr') }}">
+            {# No-JS / pre-mount fallback: the stored id round-trips on a plain
+               submit. #}
+            <input type="hidden" name="favoriteSkinId"
+                   value="{{ user.favoriteSkinId ?? '' }}">
+        </div>
+    </div>
+
+    <div data-vue="favorite-picker" data-props="{{ {
+        slots: pickerSlots,
+        endpoints: {
+            champion: path('api_picker_champions'),
+            item: path('api_picker_items'),
+            rune: path('api_picker_runes'),
+            summoner: path('api_picker_summoners'),
+        },
+        version: version,
+        lang: lang,
+        labels: {
+            search: 'profile.picker.search'|trans,
+            remove: 'profile.picker.remove'|trans,
+            close: 'filter.close'|trans,
+            loading: 'profile.picker.loading'|trans,
+            error: 'profile.picker.error'|trans,
+            retry: 'profile.picker.retry'|trans,
+            noResults: 'filter.empty'|trans,
+            unavailable: 'profile.favorites.unavailable'|trans,
+        },
+    }|json_encode|e('html_attr') }}">
+        {# No-JS / pre-mount fallback: static sockets + hidden inputs so a plain
+           submit round-trips the stored favorites. Replaced when the island mounts. #}
+        <div class="socket-grid">
+            {% for def in slotDefs %}
+                {% include 'profile/_favorite_socket.html.twig' with {
+                    type_label: def.label,
+                    favorite: favorites[def.type],
+                } only %}
+            {% endfor %}
+        </div>
+        {% for def in slotDefs %}
+            <input type="hidden" name="{{ def.field }}"
+                   value="{{ favorites[def.type].storedId ?? '' }}">
+        {% endfor %}
+    </div>
+
+    <div class="mt-6 flex items-center justify-end gap-4">
+        <span class="autosave-status" data-autosave-status hidden aria-live="polite"
+              data-label-saving="{{ 'profile.autosave.saving'|trans }}"
+              data-label-saved="{{ 'profile.autosave.saved'|trans }}"
+              data-label-error="{{ 'profile.autosave.error'|trans }}"
+              data-label-dropped="{{ 'profile.autosave.dropped'|trans }}"></span>
+        <button type="submit" class="hx-btn"
+                data-autosave-hide>{{ 'profile.save'|trans }}</button>
+    </div>
+</section>

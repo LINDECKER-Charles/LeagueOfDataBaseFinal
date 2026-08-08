@@ -1,5 +1,5 @@
 # Treści redakcyjne stron /about, /about/data i /faq.
-# Identyfikatory faq.* są zadeklarowane w App\Controller\AboutController::FAQ_ENTRIES.
+# Identyfikatory faq.* są zadeklarowane w App\Controller\Editorial\AboutController::FAQ_ENTRIES.
 eyebrow: "O projekcie"
 
 index:

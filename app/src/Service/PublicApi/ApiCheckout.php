@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service\PublicApi;
 
-use App\Entity\ApiPlan;
+use App\Entity\Enum\ApiPlan;
 use App\Entity\User;
 use App\Service\Donation\StripeCheckout;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -48,10 +48,9 @@ final readonly class ApiCheckout
         );
 
         return $this->gateway->createSession(ApiCheckoutParams::pack(
-            (int) $user->getId(),
             $pack,
             $label,
-            $this->returnUrls(self::STATUS_PACK_SUCCESS),
+            $this->checkoutContext($user, self::STATUS_PACK_SUCCESS),
         ));
     }
 
@@ -64,21 +63,24 @@ final readonly class ApiCheckout
     {
         $label = $this->translator->trans(
             'product.plan',
-            ['%plan%' => $this->translator->trans('plan.' . $plan->value, [], self::TRANSLATION_DOMAIN)],
+            [
+                '%plan%' => $this->translator
+                    ->trans('plan.' . $plan->value, [], self::TRANSLATION_DOMAIN),
+            ],
             self::TRANSLATION_DOMAIN,
         );
 
         return $this->gateway->createSession(ApiCheckoutParams::plan(
-            (int) $user->getId(),
             $plan,
             $label,
-            $this->returnUrls(self::STATUS_PLAN_SUCCESS),
+            $this->checkoutContext($user, self::STATUS_PLAN_SUCCESS),
         ));
     }
 
-    private function returnUrls(string $successStatus): CheckoutReturnUrls
+    private function checkoutContext(User $user, string $successStatus): ApiCheckoutContext
     {
-        return new CheckoutReturnUrls(
+        return new ApiCheckoutContext(
+            (int) $user->getId(),
             $this->portalUrl($successStatus),
             $this->portalUrl(self::STATUS_CANCELLED),
         );

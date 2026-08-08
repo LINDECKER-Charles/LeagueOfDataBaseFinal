@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace App\Service\Seo;
 
+use App\Service\Seo\Inventory\InventorySnapshot;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
 /**
  * Builds `/llms.txt` — the llmstxt.org convention: a short, factual Markdown
  * brief telling an answer engine what this site is, what it holds right now and
@@ -18,31 +21,40 @@ namespace App\Service\Seo;
  */
 final class LlmsTxtBuilder
 {
-    /** Site sections worth naming, as path => what a reader finds there. */
+    /**
+     * Site sections worth naming, as route => what a reader finds there. Named by
+     * route rather than by literal path so a renamed route cannot leave this
+     * brief — read by answer engines, not by humans who would notice — pointing
+     * at 404s.
+     */
     private const SECTIONS = [
-        '/champions' => 'Every champion: abilities, base statistics, roles, skins and lore',
-        '/objects'   => 'Every item: gold cost, statistics, build path and map availability',
-        '/runes'     => 'Every rune path: keystones, slots and minor runes with effect text',
-        '/summoners' => 'Every summoner spell: cooldown, range, unlock level and game modes',
+        'app_champions' => 'Every champion: abilities, base statistics, roles, skins and lore',
+        'app_items'     => 'Every item: gold cost, statistics, build path and map availability',
+        'app_runes'     => 'Every rune path: keystones, slots and minor runes with effect text',
+        'app_summoners' => 'Every summoner spell: cooldown, range, unlock level and game modes',
     ];
 
     private const ABOUT_PAGES = [
-        '/about'      => 'What the project is, who it is for and what it can do',
-        '/about/data' => 'Upstream sources, refresh cadence, coverage and stated limits',
-        '/faq'        => 'Common questions, answered directly',
-        '/developers' => 'JSON REST API over the public profiles, shared builds and view trends',
-        '/changelog'  => 'Release history',
+        'app_about'      => 'What the project is, who it is for and what it can do',
+        'app_about_data' => 'Upstream sources, refresh cadence, coverage and stated limits',
+        'app_faq'        => 'Common questions, answered directly',
+        'app_developers' => 'JSON REST API over the public profiles, shared builds and view trends',
+        'app_changelog'  => 'Release history',
     ];
 
     /** Statements that keep an engine from over-claiming on the project's behalf. */
     private const CAVEATS = [
-        'Not affiliated with, or endorsed by, Riot Games. League of Legends and Riot Games are trademarks of Riot Games, Inc.',
-        'No win rates, pick rates, tier lists or match history: those come from live play data, which Data Dragon does not publish.',
-        'Values are read from the game files and served unmodified — the site is a reader, not an editor.',
+        'Not affiliated with, or endorsed by, Riot Games. League of Legends and Riot Games are '
+            . 'trademarks of Riot Games, Inc.',
+        'No win rates, pick rates, tier lists or match history: those come from live play data, '
+            . 'which Data Dragon does not publish.',
+        'Values are read from the game files and served unmodified — the site is a reader, '
+            . 'not an editor.',
         'Free to browse, no advertising, no account required; funded by voluntary donations.',
     ];
 
     public function __construct(
+        private readonly UrlGeneratorInterface $router,
         private readonly string $siteName,
     ) {}
 
@@ -98,14 +110,15 @@ final class LlmsTxtBuilder
     }
 
     /**
-     * @param array<string,string> $pages path => description
+     * @param array<string,string> $pages route => description
      * @return list<string>
      */
     private function section(string $title, array $pages, string $origin): array
     {
         $lines = ['## ' . $title, ''];
-        foreach ($pages as $path => $description) {
-            $lines[] = sprintf('- [%s](%s): %s', $origin . $path, $origin . $path, $description);
+        foreach ($pages as $route => $description) {
+            $url = $origin . $this->router->generate($route);
+            $lines[] = sprintf('- [%s](%s): %s', $url, $url, $description);
         }
         $lines[] = '';
 
@@ -121,8 +134,10 @@ final class LlmsTxtBuilder
             '- Read any historical patch: switch versions and the whole site renders as it was, '
                 . 'with permanent URLs of the form ' . $origin . '/{patch}/champion/{name}.',
             '- Read in 21 languages — every language Riot publishes game data in.',
-            '- Build and share item sets, vote on shared builds, and keep favourites (account required for these only).',
-            '- Query the site\'s own data (public profiles, shared builds, view trends) through a JSON REST API.',
+            '- Build and share item sets, vote on shared builds, and keep favourites '
+                . '(account required for these only).',
+            '- Query the site\'s own data (public profiles, shared builds, view trends) '
+                . 'through a JSON REST API.',
             '- Install it as a progressive web app; visited pages stay readable offline.',
             '',
         ];

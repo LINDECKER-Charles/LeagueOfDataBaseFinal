@@ -1,0 +1,48 @@
+/* ---------------------------------------------------------------------------
+   Profile — the danger zone (account deletion) and its danger-tinted button.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- Danger zone -------------------------------------------------------- */
+  .profile-danger {
+    border: 1px solid color-mix(in srgb, var(--color-danger) 40%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 5%, transparent);
+    padding: 1.5rem;
+  }
+  .profile-danger__title {
+    font-family: var(--font-beaufort);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-danger);
+  }
+  /* Ghost button, danger-tinted. Standalone (not stacked on hx-btn-ghost):
+     utilities would win the border/color war against a components-layer tint. */
+  .profile-danger__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: color-mix(in srgb, var(--color-danger) 80%, var(--color-text));
+    border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+    background: transparent;
+    transition: color 0.3s var(--ease-hextech), border-color 0.3s var(--ease-hextech),
+      background-color 0.3s var(--ease-hextech);
+  }
+  .profile-danger__btn:hover {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+    background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  }
+  .profile-danger__btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .profile-danger__btn, .picker-option, .picker-remove, .picker-close { transition: none; }
+  }
+}

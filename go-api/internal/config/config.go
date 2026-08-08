@@ -18,6 +18,12 @@ const (
 	DefaultMinioRegion   = "us-east-1"
 	DefaultMinioBucket   = "ddragon"
 
+	// DefaultPublicSiteURL is the origin third-party API clients must be sent to
+	// when a response carries a link into the website (build sharing). It mirrors
+	// seo.canonical_host (app/config/packages/seo.yaml); any environment served
+	// from another origin has to override it with PUBLIC_SITE_URL.
+	DefaultPublicSiteURL = "https://league-of-data-base.com"
+
 	// KeyCacheTTL bounds how long a validated (or rejected) API key is served
 	// from memory before the database is consulted again.
 	KeyCacheTTL = 60 * time.Second
@@ -28,6 +34,10 @@ const (
 	NamesCacheTTL = 30 * time.Minute
 	// MeterFlushInterval is the cadence of the batched api_usage upserts.
 	MeterFlushInterval = time.Second
+	// MeterFlushTimeout is the time budget of one api_usage batch write. It is
+	// deliberately independent of the cadence above: retuning how often we flush
+	// must not silently retune how long Postgres is allowed to answer.
+	MeterFlushTimeout = 5 * time.Second
 
 	ReadHeaderTimeout = 5 * time.Second
 	WriteTimeout      = 30 * time.Second
@@ -45,6 +55,8 @@ type Config struct {
 	MinioBucket    string
 	MinioAccessKey string
 	MinioSecretKey string
+	// PublicSiteURL is the website origin, without a trailing slash.
+	PublicSiteURL string
 }
 
 // Load reads configuration from the environment, applying safe defaults that
@@ -59,6 +71,10 @@ func Load() Config {
 		MinioBucket:    getenv("MINIO_BUCKET", DefaultMinioBucket),
 		MinioAccessKey: getenv("MINIO_ACCESS_KEY", ""),
 		MinioSecretKey: getenv("MINIO_SECRET_KEY", ""),
+		// Trimmed here so no call site has to guess whether it must add a slash.
+		PublicSiteURL: strings.TrimRight(
+			getenv("PUBLIC_SITE_URL", DefaultPublicSiteURL), "/",
+		),
 	}
 }
 
