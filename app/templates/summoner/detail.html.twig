@@ -46,18 +46,9 @@
 {% set costType  = summoner.costType|default(summoner.resource|default('')) %}
 {% set noCost    = costType is empty or costType|lower in ['no cost', 'nocost']
                    or costVal in [0, null] %}
-{# CLASSIC is Data Dragon's name for the standard Summoner's Rift queue — not
-   to be confused with JADE, the League of Legends Classic client. #}
-{% set modeLabels = {
-  'CLASSIC': "Summoner's Rift", 'ARAM': 'ARAM', 'CHERRY': 'Arena', 'BRAWL': 'Brawl',
-  'NEXUSBLITZ': 'Nexus Blitz', 'URF': 'URF', 'ONEFORALL': 'One for All',
-  'SWIFTPLAY': 'Swiftplay', 'ULTBOOK': 'Ultimate Spellbook',
-  'PRACTICETOOL': 'Practice Tool', 'TUTORIAL': 'Tutorial',
-  'JADE': 'edition.classic'|trans
-} %}
-{# Curated whitelist: DDragon lists internal/test modes (WIPMODEWIP, RUBY_TRIAL…)
-   alongside real queues — only named modes are displayed. #}
-{% set modes = summoner.modes|default([])|filter(m => modeLabels[m] is defined) %}
+{# Curated + labeled by game_mode_labels (GameModesExtension) — the single
+   whitelist shared with the list cards; internal dev ids are dropped. #}
+{% set modes = game_mode_labels(summoner.modes|default([])) %}
 
 <main class="relative overflow-x-clip px-6 py-14">
   {% include 'partials/main/gradient.html.twig' %}
@@ -173,8 +164,8 @@
           meta: modes|length
         } %}
         <div class="flex flex-wrap gap-2">
-          {% for m in modes %}
-            <span class="hx-chip">{{ modeLabels[m]|default(m|lower|capitalize) }}</span>
+          {% for label in modes %}
+            <span class="hx-chip">{{ label }}</span>
           {% endfor %}
         </div>
       </section>

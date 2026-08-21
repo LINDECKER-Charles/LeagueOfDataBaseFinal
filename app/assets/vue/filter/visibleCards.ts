@@ -1,3 +1,5 @@
+import { normalizeSearchText } from '../search/normalizeSearchText'
+
 /**
  * Pure visibility rule of the filtered resource grid: which cards match the
  * search + facet, how many pages that makes, and which cards the current page
@@ -8,7 +10,7 @@
 export const PAGE_SIZE_ALL = 0
 
 export interface FilterableCard {
-    /** Comparison haystack of the card (already lowercased). */
+    /** Comparison haystack of the card (already accent-folded + lowercased). */
     search: string
     tags: string[]
     /** Which game the entry belongs to ('modern' | 'classic'); absent = no such axis. */
@@ -37,7 +39,8 @@ export function selectVisibleCards<T extends FilterableCard>(
     cards: readonly T[],
     criteria: GridCriteria,
 ): GridSelection<T> {
-    const needle = criteria.query.trim().toLowerCase()
+    // Accent-folded like the pickers: "feerique" must find "féérique".
+    const needle = normalizeSearchText(criteria.query.trim())
     const edition = criteria.edition ?? null
     // Query AND edition AND (any selected tag): the edition is its own axis,
     // never one more tag — "Classic + Boots" must narrow, not widen.

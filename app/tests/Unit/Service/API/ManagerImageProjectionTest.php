@@ -17,15 +17,20 @@ use App\Service\API\SummonerManager;
 final class ManagerImageProjectionTest extends SeededManagerTestCase
 {
     /**
-     * POSITIONAL list, and entries without an image node are SKIPPED rather than
-     * padded with null — the skip rule ChampionOptionsProjector realigns against.
+     * Keyed by champion ID (never display name — "MonkeyKing" files "Wukong");
+     * an entry without an image node is simply ABSENT, a missing key reads as
+     * null downstream.
      */
-    public function testChampionImagesAreAPositionalListSkippingImagelessEntries(): void
+    public function testChampionImagesAreKeyedByIdSkippingImagelessEntries(): void
     {
         $images = $this->manager(ChampionManager::class)
             ->getImages($this->dataset());
 
-        self::assertSame(['cdn/karma.png', 'cdn/kayn.png', 'cdn/wukong.png'], $images);
+        self::assertSame([
+            'Karma'      => 'cdn/karma.png',
+            'Kayn'       => 'cdn/kayn.png',
+            'MonkeyKing' => 'cdn/wukong.png',
+        ], $images);
     }
 
     /**

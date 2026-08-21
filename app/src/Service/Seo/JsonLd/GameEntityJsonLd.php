@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Service\Seo\JsonLd;
 
+use App\Service\Tools\DdragonText;
+
 /**
  * Projects a Data Dragon entity onto a schema.org VideoGame node whose nested
  * character / gameItem carries the entity's *actual* values as PropertyValue
@@ -278,13 +280,18 @@ final class GameEntityJsonLd
     }
 
     /** Trims to a usable string, or null when there is nothing to say. */
+    /**
+     * Plain-text field for structured data: Data Dragon markup is dropped and
+     * its leaked template tokens stripped ({@see DdragonText}) — crawlers must
+     * never index "@Slow@" as part of an item description.
+     */
     private function text(mixed $value): ?string
     {
         if (!\is_string($value)) {
             return null;
         }
 
-        $trimmed = trim($value);
+        $trimmed = trim(strip_tags(DdragonText::clean($value)));
 
         return $trimmed === '' ? null : $trimmed;
     }

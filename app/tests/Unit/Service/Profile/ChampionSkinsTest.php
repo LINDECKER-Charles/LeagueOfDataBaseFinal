@@ -134,6 +134,28 @@ final class ChampionSkinsTest extends TestCase
         self::assertSame(self::CENTERED.'/Ahri_7.jpg', $banner['banner']);
     }
 
+    /**
+     * DDragon's `centered/` path is case-strict on Riot's internal spelling:
+     * plain "Fiddlesticks" answers 403 there, while splash/loading accept it.
+     */
+    public function testCenteredArtUsesRiotsInternalFiddlesticksCasing(): void
+    {
+        $skins = $this->skins(
+            new Filesystem(new LocalFilesystemAdapter($this->dir)),
+            $this->noEgress()
+        );
+
+        $art = $skins->championArt('Fiddlesticks');
+
+        self::assertSame(self::CENTERED.'/FiddleSticks_0.jpg', $art['centered']);
+        self::assertStringEndsWith('/splash/Fiddlesticks_0.jpg', $art['splash']);
+        self::assertStringEndsWith('/loading/Fiddlesticks_0.jpg', $art['loading']);
+
+        $banner = $skins->resolveBanner('Fiddlesticks_4', self::VERSION, self::LANG);
+        self::assertNotNull($banner);
+        self::assertSame(self::CENTERED.'/FiddleSticks_4.jpg', $banner['banner']);
+    }
+
     public function testResolveBannerRejectsNull(): void
     {
         $skins = $this->skins(

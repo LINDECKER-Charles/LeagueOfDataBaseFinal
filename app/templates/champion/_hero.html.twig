@@ -1,12 +1,12 @@
 {# Champion hero — cinematic centered splash, identity block and Riot's own
    attack/defense/magic/difficulty gauges.
-   Contract: champion, champId, splashBase, centeredBase, selection. #}
+   Contract: champion, champId, heroArt {centered, splash}, selection. #}
 <section class="relative h-[62vh] min-h-[26rem] max-h-[46rem] w-full overflow-hidden">
   {% if champId %}
     {# The undocumented `centered/` variant frames the subject at any crop;
        data-img-fallback falls back to the classic splash for champions missing it. #}
-    <img src="{{ centeredBase }}/{{ champId }}_0.jpg" alt=""
-         data-img-fallback="{{ splashBase }}/{{ champId }}_0.jpg"
+    <img src="{{ heroArt.centered }}" alt=""
+         data-img-fallback="{{ heroArt.splash }}"
          loading="eager" fetchpriority="high" decoding="async"
          class="absolute inset-0 h-full w-full object-cover object-[50%_18%]">
   {% endif %}
@@ -26,7 +26,7 @@
       </h1>
       {% if champion.title is defined and champion.title %}
         <p class="mt-2.5 font-spiegel text-lg text-text-muted sm:text-xl">{{
-          champion.title|capitalize }}</p>
+          champion.title|ucfirst }}</p>
       {% endif %}
 
       <div class="mt-5 flex flex-wrap items-end justify-between gap-x-10 gap-y-5">

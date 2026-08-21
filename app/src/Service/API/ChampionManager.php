@@ -253,21 +253,4 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
 
         return sprintf(self::CDRAGON_BASE.'/%s', $patch, $rel);
     }
-
-    /**
-     * POSITIONAL list: one resolved path (or null) per entry carrying both a name
-     * and an image node, in dataset order. Consumers realign it against the same
-     * skip rule ({@see \App\Service\Picker\ChampionOptionsProjector}).
-     */
-    protected function projectImages(array $data, array $resolved): array
-    {
-        $result = [];
-        foreach ($data as $entry) {
-            if (($entry['name'] ?? null) && ($image = $entry['image']['full'] ?? null)) {
-                $result[] = $resolved[$image] ?? null;
-            }
-        }
-
-        return $result;
-    }
 }

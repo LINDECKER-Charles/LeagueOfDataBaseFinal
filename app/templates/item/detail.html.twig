@@ -39,8 +39,8 @@
 
 {% block body %}
 {% set mapNames = {
-  '11': "Summoner's Rift", '12': 'ARAM', '21': 'Nexus Blitz', '30': 'Arena', '35': 'Brawl',
-  '453': 'Classic Rift'
+  '11': "Summoner's Rift", '12': 'ARAM', '21': 'Nexus Blitz', '30': 'Arena', '33': 'Swarm',
+  '35': 'Brawl', '453': 'Classic Rift'
 } %}
 
 {% set hasTree = recipeTree is defined
@@ -87,7 +87,9 @@
           </p>
           <h1 class="hero-name text-gold-grad">{{ item.name ?? 'Item' }}</h1>
           {% if item.plaintext is defined and item.plaintext %}
-            <p class="mt-2.5 max-w-[60ch] font-spiegel text-text-muted">{{ item.plaintext }}</p>
+            {# ddragon_text: some plaintexts leak unresolved @Var@ tokens (3349). #}
+            <p class="mt-2.5 max-w-[60ch] font-spiegel
+                      text-text-muted">{{ item.plaintext|ddragon_text }}</p>
           {% endif %}
           {% include 'components/codex/edition_counterpart.html.twig' with {
             edition: edition|default('modern'),
@@ -169,7 +171,8 @@
 
       {% include 'item/_aside.html.twig' with {
         item: item, availableMaps: availableMaps, hasTier: hasTier,
-        hasRestriction: hasRestriction, mapNames: mapNames
+        hasRestriction: hasRestriction, mapNames: mapNames,
+        championNames: championNames|default({})
       } only %}
     </div>
 

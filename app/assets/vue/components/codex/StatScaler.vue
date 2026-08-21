@@ -68,6 +68,10 @@ onMounted(() => {
             kind: (el.dataset.kind ?? 'flat') as StatCell['kind'],
         }]
     })
+    // A Turbo back/forward restore replays the board with the previously
+    // scaled numbers while this slider remounts at level 1: repaint once so
+    // the two always agree (a no-op on a fresh visit).
+    apply()
 })
 
 watch(level, apply)

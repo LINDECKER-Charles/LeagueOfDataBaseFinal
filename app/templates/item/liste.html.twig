@@ -76,7 +76,8 @@
                      with { label: 'item.list.categories'|trans } %}
                     {% block accordion_body %}
                       <div class="flex flex-wrap gap-1.5 px-4 pb-4">
-                        {% for t in tags %}<span class="hx-chip">{{ t }}</span>{% endfor %}
+                        {% for t in tags %}<span
+                          class="hx-chip">{{ t|tag_label }}</span>{% endfor %}
                       </div>
                     {% endblock %}
                   {% endembed %}
@@ -109,8 +110,10 @@
                   {% embed 'components/ui/card_accordion.html.twig'
                      with { label: 'item.list.description'|trans } %}
                     {% block accordion_body %}
+                      {# ddragon_text: strips the {{ Item_* }} / @Var@ tokens Data
+                         Dragon leaks in some descriptions and plaintexts. #}
                       <div class="px-4 pb-4 text-[13px] leading-snug
-                        text-text-muted">{{ desc|raw }}</div>
+                        text-text-muted">{{ desc|ddragon_text|raw }}</div>
                     {% endblock %}
                   {% endembed %}
                 {% endif %}

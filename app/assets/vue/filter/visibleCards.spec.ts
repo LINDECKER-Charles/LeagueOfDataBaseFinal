@@ -24,6 +24,14 @@ describe('selectVisibleCards — matching', () => {
         expect(select({ query: '  AHR ' }).matching.map((c) => c.search)).toEqual(['ahri'])
     })
 
+    it('folds accents on the needle, like the pickers', () => {
+        const cards = [card('charme feerique 1004', 'ManaRegen')]
+        const hit = selectVisibleCards(cards, {
+            query: 'féérique', tags: new Set<string>(), page: 1, pageSize: PAGE_SIZE_ALL,
+        })
+        expect(hit.matching).toHaveLength(1)
+    })
+
     it('ORs the facet tags and ANDs them with the query', () => {
         expect(select({ tags: new Set(['Tank', 'Mage']), pageSize: PAGE_SIZE_ALL }).matching)
             .toHaveLength(3)

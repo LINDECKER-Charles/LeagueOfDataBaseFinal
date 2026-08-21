@@ -47,7 +47,7 @@
         {% set champId = c.id|default(c.name) %}
         {# Versioned square icon (ingested per patch); overlaid on the unversioned
            splash so the art carries a version-accurate cue. Null while cold. #}
-        {% set champIcon = images[loop.index0]|default(null) %}
+        {% set champIcon = images[champId]|default(null) %}
         <a href="{{ resource_path('app_champion', { name: champId }, meta.version, meta.lang) }}"
            class="hextech-frame hextech-frame-hover group flex h-full flex-col overflow-hidden"
            data-search="{{ (c.name|default('') ~ ' ' ~ c.id|default(''))|lower }}"
@@ -77,7 +77,7 @@
             <h3 class="truncate font-beaufort text-[15px] tracking-wide text-gold-grad"
                 title="{{ c.name|default('') }}">{{ c.name|default('') }}</h3>
             {% if c.title|default('') %}<p class="mt-0.5 truncate font-spiegel text-xs
-              text-text-muted">{{ c.title|capitalize }}</p>{% endif %}
+              text-text-muted">{{ c.title|ucfirst }}</p>{% endif %}
             {% if c.tags is defined and c.tags is not empty %}
               <div class="mt-2.5 flex flex-wrap gap-1.5">
                 {% for t in c.tags %}<span class="hx-chip">{{ t }}</span>{% endfor %}

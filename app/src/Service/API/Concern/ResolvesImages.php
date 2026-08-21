@@ -24,14 +24,31 @@ trait ResolvesImages
     abstract protected function imageUrl(string $version, string $name): string;
 
     /**
-     * Project a data slice onto its resolved image paths. The shape is part of
-     * each manager's contract and differs per resource — see each implementation.
+     * Project a data slice onto its resolved image paths. Default shape: paths
+     * keyed by entry ID — the entry's own `id`, else the slice key (items file
+     * their id in the map key only). Entries without a display name or an image
+     * node are absent from the map: a missing key reads as null, and no
+     * consumer ever has to re-derive a positional skip rule (the pre-LoL
+     * Classic positional champion list forced exactly that on its pickers).
+     * Runes override with their nested tree shape.
      *
      * @param array<mixed> $data
      * @param array<string,string> $resolved image file name => cdn path
      * @return array<mixed>
      */
-    abstract protected function projectImages(array $data, array $resolved): array;
+    protected function projectImages(array $data, array $resolved): array
+    {
+        $result = [];
+        foreach ($data as $key => $entry) {
+            $image = $entry['image']['full'] ?? null;
+            if ($image === null || !($entry['name'] ?? null)) {
+                continue;
+            }
+            $result[(string) ($entry['id'] ?? $key)] = $resolved[$image] ?? null;
+        }
+
+        return $result;
+    }
 
     /**
      * Map every image of a data slice to its display name — the single source of
@@ -165,12 +182,14 @@ trait ResolvesImages
     }
 
     /**
-     * Split the wanted images into those the manifest already resolves and those
+     * Split the wanted images into those the manifest already settles and those
      * still to fetch — the one lookup shared by both resolution entrypoints.
+     * A null manifest entry is a SETTLED definitive absence (the CDN 403/404s
+     * this name for this version): it resolves to null without another fetch.
      *
      * @param array<string,string> $urlsByName name => ddragon url
-     * @return array{0: array<string,string>, 1: array<string,string>}
-     *         name => cdn path, then ddragon url => name
+     * @return array{0: array<string,?string>, 1: array<string,string>}
+     *         name => cdn path or null, then ddragon url => name
      */
     private function partitionAgainstManifest(
         string $version,
@@ -182,7 +201,7 @@ trait ResolvesImages
         $missing  = [];
 
         foreach ($urlsByName as $name => $url) {
-            if (!$force && isset($manifest[$name])) {
+            if (!$force && \array_key_exists($name, $manifest)) {
                 $result[$name] = $manifest[$name];
             } else {
                 $missing[$url] = $name;

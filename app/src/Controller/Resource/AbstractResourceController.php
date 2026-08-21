@@ -79,9 +79,8 @@ abstract class AbstractResourceController extends AbstractPageController
      * {@see \App\Service\API\Edition\Edition}): a "Flash" hit list is ambiguous
      * without it.
      *
-     * The image association is the caller's business because the managers do not
-     * agree on the shape of `getImages()` (positional list for champions, map
-     * keyed by id for items and summoners).
+     * The image association is the caller's business: champion/item/summoner
+     * images come back keyed by entry id, runes as their nested tree.
      *
      * @param callable(list<array<string,mixed>>, array<mixed>): array<int,?string> $imagesFor
      *        image URLs aligned on the matched rows

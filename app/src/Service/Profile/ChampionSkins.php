@@ -25,6 +25,14 @@ final class ChampionSkins
     /** DDragon names the base skin "default"; we surface the champion name instead. */
     private const BASE_SKIN_NAME = 'default';
 
+    /**
+     * The `centered/` CDN path is case-strict on Riot's INTERNAL champion
+     * spelling: `centered/Fiddlesticks_0.jpg` answers 403 while
+     * `centered/FiddleSticks_0.jpg` exists (`loading/` and `splash/` accept
+     * both). One known divergence today; extend the map if Riot adds another.
+     */
+    private const CENTERED_ART_IDS = ['Fiddlesticks' => 'FiddleSticks'];
+
     /** "{championId}_{skinNum}" — champion ids are alphanumeric, skin nums are small. */
     private const ID_PATTERN = '/^[A-Za-z0-9]+_\d{1,4}$/';
 
@@ -220,6 +228,10 @@ final class ChampionSkins
 
     private function art(string $base, string $championId, int $num): string
     {
+        if ($base === self::CENTERED_BASE) {
+            $championId = self::CENTERED_ART_IDS[$championId] ?? $championId;
+        }
+
         return sprintf('%s/%s_%d.jpg', $base, $championId, $num);
     }
 }

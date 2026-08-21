@@ -40,6 +40,9 @@
         {% set cd = s.cooldownBurn is defined and s.cooldownBurn
           ? s.cooldownBurn : (s.cooldown|default([])|join('/')) %}
         {% set modes = s.modes is defined and s.modes is iterable ? s.modes : [] %}
+        {# Same curated whitelist + labels as the detail page — DDragon's raw
+           list mixes in internal dev ids (WIPMODEWIP, RUBY_TRIAL_1…). #}
+        {% set modeChips = game_mode_labels(modes) %}
         {% set desc = s.description is defined ? s.description : (s.tooltip|default('')) %}
         {# Facet on real game modes only — drop Data Dragon's dev/tutorial/WIP ids.
            JADE (LoL Classic) is deliberately absent: the edition facet covers it. #}
@@ -72,14 +75,15 @@
               </div>
             </div>
 
-            {% if modes is not empty or desc %}
+            {% if modeChips is not empty or desc %}
               <div class="mt-auto">
-                {% if modes is not empty %}
+                {% if modeChips is not empty %}
                   {% embed 'components/ui/card_accordion.html.twig'
-                     with { label: 'summoner.card.modes'|trans, count: modes|length } %}
+                     with { label: 'summoner.card.modes'|trans, count: modeChips|length } %}
                     {% block accordion_body %}
                       <div class="flex flex-wrap gap-1.5 px-4 pb-4">
-                        {% for m in modes %}<span class="hx-chip">{{ m }}</span>{% endfor %}
+                        {% for label in modeChips %}<span
+                          class="hx-chip">{{ label }}</span>{% endfor %}
                       </div>
                     {% endblock %}
                   {% endembed %}

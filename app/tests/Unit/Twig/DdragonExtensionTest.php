@@ -27,6 +27,22 @@ final class DdragonExtensionTest extends TestCase
         self::assertSame('Heals for .', $this->extension->clean('Heals for @BaseHeal@.'));
     }
 
+    /** Twig's own `capitalize` would lowercase "Demacia" — ucfirst must not. */
+    public function testUcfirstTouchesOnlyTheFirstLetter(): void
+    {
+        self::assertSame('Force de Demacia', $this->extension->ucfirst('force de Demacia'));
+        self::assertSame('Épée darkin', $this->extension->ucfirst('épée darkin'));
+        self::assertSame('', $this->extension->ucfirst(null));
+    }
+
+    /** Same split as the ResourceFilter facet, so chips and facet agree. */
+    public function testTagLabelSplitsCamelCaseTokens(): void
+    {
+        self::assertSame('Critical Strike', $this->extension->tagLabel('CriticalStrike'));
+        self::assertSame('Nonboots Movement', $this->extension->tagLabel('NonbootsMovement'));
+        self::assertSame('ARAM', $this->extension->tagLabel('ARAM'));
+    }
+
     public function testPreservesRegularDdragonMarkup(): void
     {
         $html = '<mainText><stats><attention>+40</attention> '

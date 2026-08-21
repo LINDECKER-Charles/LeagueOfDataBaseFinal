@@ -7,6 +7,7 @@ use App\Service\API\Concern\ResolvesEditionCounterpart;
 use App\Service\API\Edition\Edition;
 use App\Service\API\Edition\EditionAwareInterface;
 use App\Service\API\Edition\ItemEditionRule;
+use App\Service\Tools\DdragonText;
 
 final class ItemManager extends AbstractManager implements
     CategoriesInterface,
@@ -33,6 +34,40 @@ final class ItemManager extends AbstractManager implements
     protected function imageUrl(string $version, string $name): string
     {
         return sprintf('%s/%s/img/item/%s', self::DDRAGON_CDN, $version, $name);
+    }
+
+    /**
+     * The browsable collection, cleaned of Riot's data debris in ONE place so
+     * the list, the search, the pager, the counts, the sitemap and the detail
+     * lookup all agree:
+     *  - UNNAMED entries are dropped (2008, 226660, 772139, 772140 on 16.16.1 —
+     *    empty name in every locale): not encyclopedia entries, their direct
+     *    detail URL 404s;
+     *  - self-declared placeholders are dropped too (7050 names itself
+     *    "Gangplank Placeholder" in every locale);
+     *  - marked-up names are reduced to the name proper (3901-3903 ship
+     *    "<rarityLegendary>Feu à volonté</rarityLegendary><br>…" as their name).
+     * Recipe/related lookups keep reading the raw map ({@see dataMap}),
+     * permissive by design.
+     *
+     * @param array<mixed> $raw
+     * @return array<mixed>
+     */
+    protected function paginationCollection(array $raw): array
+    {
+        $collection = [];
+        foreach (parent::paginationCollection($raw) as $id => $entry) {
+            $name = \is_array($entry) ? (string) ($entry['name'] ?? '') : '';
+            if ($name === '' || str_contains($name, 'Placeholder')) {
+                continue;
+            }
+            if (str_contains((string) $entry['name'], '<')) {
+                $entry['name'] = DdragonText::plainName((string) $entry['name']);
+            }
+            $collection[$id] = $entry;
+        }
+
+        return $collection;
     }
 
     /**
@@ -221,23 +256,4 @@ final class ItemManager extends AbstractManager implements
         ]);
     }
 
-    /**
-     * Keyed by item ID — the shape the item list/search/picker consumers index by.
-     * Never by display name: since LoL Classic, "Faerie Charm" is both 1004 and
-     * 771004, each with its own icon. The id comes from the map key (dataset
-     * slices) or from the entry itself (search hits, see projectSearchResult).
-     */
-    protected function projectImages(array $data, array $resolved): array
-    {
-        $result = [];
-        foreach ($data as $key => $entry) {
-            $image = $entry['image']['full'] ?? null;
-            if ($image === null || !($entry['name'] ?? null)) {
-                continue;
-            }
-            $result[(string) ($entry['id'] ?? $key)] = $resolved[$image] ?? null;
-        }
-
-        return $result;
-    }
 }
