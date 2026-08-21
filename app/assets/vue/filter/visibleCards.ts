@@ -11,11 +11,15 @@ export interface FilterableCard {
     /** Comparison haystack of the card (already lowercased). */
     search: string
     tags: string[]
+    /** Which game the entry belongs to ('modern' | 'classic'); absent = no such axis. */
+    edition?: string
 }
 
 export interface GridCriteria {
     query: string
     tags: ReadonlySet<string>
+    /** One edition to keep, or null/undefined for all of them. */
+    edition?: string | null
     page: number
     /** {@link PAGE_SIZE_ALL} or a positive page size. */
     pageSize: number
@@ -34,9 +38,13 @@ export function selectVisibleCards<T extends FilterableCard>(
     criteria: GridCriteria,
 ): GridSelection<T> {
     const needle = criteria.query.trim().toLowerCase()
+    const edition = criteria.edition ?? null
+    // Query AND edition AND (any selected tag): the edition is its own axis,
+    // never one more tag — "Classic + Boots" must narrow, not widen.
     const matching = cards.filter(
         (card) =>
             (needle === '' || card.search.includes(needle))
+            && (edition === null || card.edition === edition)
             && (criteria.tags.size === 0 || card.tags.some((tag) => criteria.tags.has(tag))),
     )
     const size = criteria.pageSize === PAGE_SIZE_ALL

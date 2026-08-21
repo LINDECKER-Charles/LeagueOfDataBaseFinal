@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller\Resource;
 
+use App\Service\API\DatasetRef;
+use App\Service\API\Edition\ItemEditionRule;
 use App\Service\API\ItemManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
@@ -86,9 +88,9 @@ final class ItemController extends AbstractResourceController
         return $this->searchResponse(
             $this->itemManager,
             $name,
-            // ItemManager::getImages keys its map by item NAME.
+            // ItemManager::getImages keys its map by item ID.
             static fn (array $rows, array $images): array => array_map(
-                static fn (array $row): ?string => $images[$row['name'] ?? ''] ?? null,
+                static fn (array $row): ?string => $images[(string) ($row['id'] ?? '')] ?? null,
                 $rows,
             ),
         );
@@ -113,12 +115,24 @@ final class ItemController extends AbstractResourceController
         $into = $item['into'] ?? [];
 
         return [
-            'item'       => $item,
-            'image'      => $this->itemManager->getImage($version, $name . '.png'),
-            'related'    => $this->itemManager->resolveRelated($into, $version, $lang),
+            'item'          => $item,
+            'image'         => $this->itemManager->getImage($version, $name . '.png'),
+            'related'       => $this->itemManager->resolveRelated($into, $version, $lang),
             // Full downward recipe tree (recursive components) rather than a single
             // level — the item's real crafting tree.
-            'recipeTree' => $this->itemManager->recipeTree($name, $version, $lang),
+            'recipeTree'    => $this->itemManager->recipeTree($name, $version, $lang),
+            // Which game this item belongs to, and its twin in the other one
+            // (1004 ↔ 771004) when the patch carries it. The availability
+            // plaque never trusts the raw maps flags ({@see ItemEditionRule}).
+            'edition'       => $this->itemManager->editionOf($name, $item)->value,
+            'availableMaps' => ItemEditionRule::claimableMapIds(
+                $name,
+                (array) ($item['maps'] ?? []),
+            ),
+            'counterpart'   => $this->itemManager->counterpart(
+                $name,
+                new DatasetRef($version, $lang),
+            ),
         ];
     }
 }

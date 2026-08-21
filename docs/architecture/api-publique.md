@@ -117,6 +117,16 @@ curl -H "Authorization: Bearer lodb_votrecle..." \
 `name` est résolu depuis les données Data Dragon les plus récentes et peut être omis si la
 résolution échoue (le champ `id` reste toujours présent).
 
+Pour `items` et `summoners`, chaque entrée porte en plus `edition` ∈ `modern` | `classic` :
+depuis League of Legends Classic, un objet ou un sort d'invocateur peut exister dans les deux
+jeux sous le **même nom** (`1004` / `771004` « Faerie Charm », `SummonerFlash` /
+`SummonerFlash_Jade`). Les deux jumeaux sont classés séparément ; seul `edition` permet de les
+distinguer sans interpréter l'id.
+
+```json
+{ "rank": 3, "id": "771004", "name": "Faerie Charm", "edition": "classic", "views": 42 }
+```
+
 ### `GET /v1/usage`
 
 Consommation de la clé appelante. Authentifié et soumis au rate limit, mais **jamais

@@ -28,14 +28,16 @@ final class ManagerImageProjectionTest extends SeededManagerTestCase
         self::assertSame(['cdn/karma.png', 'cdn/kayn.png', 'cdn/wukong.png'], $images);
     }
 
-    public function testItemImagesAreKeyedByDisplayName(): void
+    /**
+     * Keyed by item ID — never by display name, which the LoL Classic twin of an
+     * item shares (see {@see ManagerEditionTest} for the collision itself).
+     * PHP recasts the numeric keys to int, as the dataset map itself does.
+     */
+    public function testItemImagesAreKeyedByItemId(): void
     {
         $images = $this->manager(ItemManager::class)->getImages($this->dataset());
 
-        self::assertSame(
-            ['Long Sword' => 'cdn/longsword.png', 'Trinity Force' => 'cdn/trinity.png'],
-            $images,
-        );
+        self::assertSame([1036 => 'cdn/longsword.png', 3078 => 'cdn/trinity.png'], $images);
     }
 
     public function testSummonerImagesAreKeyedBySpellId(): void
@@ -61,16 +63,31 @@ final class ManagerImageProjectionTest extends SeededManagerTestCase
         );
     }
 
-    /** An explicit slice bypasses the dataset read and projects just that slice. */
+    /**
+     * An explicit slice bypasses the dataset read and projects just that slice.
+     * It is key-preserving (the page slice, the picker map): the id is the key.
+     */
     public function testAnExplicitSliceIsProjectedOnItsOwn(): void
     {
         $images = $this->manager(ItemManager::class)->getImages(
             $this->dataset(),
             false,
-            [['name' => 'Long Sword', 'image' => ['full' => '1036.png']]],
+            ['1036' => ['name' => 'Long Sword', 'image' => ['full' => '1036.png']]],
         );
 
-        self::assertSame(['Long Sword' => 'cdn/longsword.png'], $images);
+        self::assertSame([1036 => 'cdn/longsword.png'], $images);
+    }
+
+    /** Search hits are a plain list carrying their id inside (projectSearchResult). */
+    public function testASearchHitListIsKeyedByTheIdItCarries(): void
+    {
+        $images = $this->manager(ItemManager::class)->getImages(
+            $this->dataset(),
+            false,
+            [['id' => '3078', 'name' => 'Trinity Force', 'image' => ['full' => '3078.png']]],
+        );
+
+        self::assertSame([3078 => 'cdn/trinity.png'], $images);
     }
 
     /** The page slice carries its keys and its meta counters through pagination. */

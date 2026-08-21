@@ -91,4 +91,10 @@ describe('ItemArmory search', () => {
     it('lists the whole catalog for a blank query', () => {
         expect(names(mountArmory())).toHaveLength(ITEMS.length)
     })
+
+    it('matches on the item id — the only handle on a namesake pair', async () => {
+        const wrapper = mountArmory()
+        await wrapper.get('input[type="search"]').setValue('3020')
+        expect(names(wrapper)).toEqual(['Chaussures de Sorcier'])
+    })
 })
