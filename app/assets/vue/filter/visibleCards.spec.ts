@@ -38,6 +38,32 @@ describe('selectVisibleCards — matching', () => {
     })
 })
 
+describe('selectVisibleCards — edition axis', () => {
+    // Two "Boots" twins: the current one and its LoL Classic re-issue.
+    const TWINS: FilterableCard[] = [
+        { search: 'boots 1001', tags: ['Boots'], edition: 'modern' },
+        { search: 'boots 771001', tags: ['Boots'], edition: 'classic' },
+        { search: 'dagger 1042', tags: ['Damage'], edition: 'modern' },
+    ]
+    const pick = (criteria: Partial<Parameters<typeof selectVisibleCards>[1]>) =>
+        selectVisibleCards(TWINS, {
+            query: '', tags: new Set<string>(), page: 1, pageSize: PAGE_SIZE_ALL, ...criteria,
+        }).matching.map((c) => c.search)
+
+    it('keeps one edition only, ANDed with the tags — never one more OR-ed tag', () => {
+        expect(pick({ edition: 'classic' })).toEqual(['boots 771001'])
+        expect(pick({ edition: 'classic', tags: new Set(['Damage']) })).toEqual([])
+        expect(pick({ edition: 'modern', tags: new Set(['Boots']) })).toEqual(['boots 1001'])
+    })
+
+    it('keeps every edition when none is chosen, cards without one included', () => {
+        expect(pick({ edition: null })).toHaveLength(3)
+        expect(pick({})).toHaveLength(3)
+        expect(select({ edition: 'modern', pageSize: PAGE_SIZE_ALL }).matching)
+            .toHaveLength(0)
+    })
+})
+
 describe('selectVisibleCards — pagination', () => {
     it('slices the requested page', () => {
         expect(select({ page: 1 }).visible.map((c) => c.search)).toEqual(['aatrox', 'ahri'])

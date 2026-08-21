@@ -69,9 +69,10 @@ final class ResourceSearchResponseTest extends TestCase
 
         $response = $this->search(
             $manager,
-            // Keyed by name, like ItemManager — an unresolved row keeps a null image.
+            // Keyed by id, like the item/summoner managers — an unresolved row
+            // keeps a null image.
             static fn (array $rows, array $images): array => array_map(
-                static fn (array $row): ?string => $images[$row['name']] ?? null,
+                static fn (array $row): ?string => $images[$row['id']] ?? null,
                 $rows,
             ),
         );
@@ -79,6 +80,31 @@ final class ResourceSearchResponseTest extends TestCase
         self::assertSame([
             ['id' => 'Ahri', 'name' => 'Ahri', 'image' => '/img/ahri.png'],
             ['id' => 'Akali', 'name' => 'Akali', 'image' => null],
+        ], $this->decode($response));
+    }
+
+    /**
+     * A hit that knows its edition (item/summoner managers) keeps it in the
+     * payload — "Flash" twice is ambiguous otherwise — while anything else the
+     * manager attached to the row stays private.
+     */
+    public function testAnEditionCarriedByTheHitIsExposedAndNothingElseIs(): void
+    {
+        $manager = $this->createStub(CategoriesInterface::class);
+        $manager->method('searchByName')->willReturn([
+            ['id' => 'SummonerFlash', 'name' => 'Flash', 'edition' => 'modern', 'modes' => []],
+            ['id' => 'SummonerFlash_Jade', 'name' => 'Flash', 'edition' => 'classic', 'modes' => []],
+        ]);
+        $manager->method('getImages')->willReturn([]);
+
+        $response = $this->search($manager, static fn (array $rows): array => [null, null]);
+
+        self::assertSame([
+            ['id' => 'SummonerFlash', 'name' => 'Flash', 'image' => null, 'edition' => 'modern'],
+            [
+                'id' => 'SummonerFlash_Jade', 'name' => 'Flash', 'image' => null,
+                'edition' => 'classic',
+            ],
         ], $this->decode($response));
     }
 

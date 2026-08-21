@@ -43,12 +43,13 @@
           ? item.plaintext : (item.description|default('')) %}
         {% embed 'components/codex/entity_card.html.twig' with {
           href: resource_path('app_item', { name: id }, meta.version, meta.lang),
-          img: images[item.name]|default(null),
+          img: images[id]|default(null),
           name: item.name|default(''),
           sub: id,
           img_fit: 'contain',
           filter_text: (item.name|default('') ~ ' ' ~ id)|lower,
-          filter_tags: item.tags is defined and item.tags is iterable ? item.tags : []
+          filter_tags: item.tags is defined and item.tags is iterable ? item.tags : [],
+          edition: item_edition(id)
         } %}
           {% block card_body %}
             <div class="px-4 pb-3">

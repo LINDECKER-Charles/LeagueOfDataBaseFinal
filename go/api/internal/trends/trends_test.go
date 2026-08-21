@@ -75,14 +75,34 @@ func TestTopMergesDaysAndRanks(t *testing.T) {
 func TestTopFiltersByRequestedType(t *testing.T) {
 	svc, _ := newFixtureService(nil)
 	entries, _ := svc.Top(context.Background(), "items", 7)
-	if len(entries) != 2 {
-		t.Fatalf("expected 2 items, got %+v", entries)
+	if len(entries) != 3 {
+		t.Fatalf("expected 3 items, got %+v", entries)
 	}
 	// Both items total 9 views (1001: 7+2, 3006: 9) — equal views must be
 	// tie-broken deterministically by ascending id.
 	if entries[0].ID != "1001" || entries[0].Views != 9 ||
 		entries[1].ID != "3006" || entries[1].Views != 9 {
 		t.Fatalf("tie-break order wrong: %+v", entries)
+	}
+}
+
+// The classic twin of an item / spell ranks on its own id and is told apart
+// from its namesake by the edition field; champions carry no edition.
+func TestTopLabelsTheEditionOfTheTwoGameTypes(t *testing.T) {
+	svc, _ := newFixtureService(staticNames{"item": {"1001": "Boots", "771001": "Boots"}})
+	items, _ := svc.Top(context.Background(), "items", 7)
+	if items[0].Edition != editionModern || items[2].ID != "771001" ||
+		items[2].Edition != editionClassic || items[2].Name != "Boots" {
+		t.Fatalf("item editions wrong: %+v", items)
+	}
+	summoners, _ := svc.Top(context.Background(), "summoners", 7)
+	if len(summoners) != 2 || summoners[0].Edition != editionModern ||
+		summoners[1].ID != "SummonerFlash_Jade" || summoners[1].Edition != editionClassic {
+		t.Fatalf("summoner editions wrong: %+v", summoners)
+	}
+	champions, _ := svc.Top(context.Background(), "champions", 7)
+	if champions[0].Edition != "" {
+		t.Fatalf("champions carry no edition: %+v", champions)
 	}
 }
 

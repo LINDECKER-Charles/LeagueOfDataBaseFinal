@@ -5,11 +5,17 @@
    resolution the controller used — never re-derived from the session here. #}
 {% set selection = page_selection() %}
 
+{# The LoL Classic twin shares its name with the current spell: the edition is
+   part of the page identity (title, description) so the two never collapse. #}
+{% set isClassic = edition|default('modern') == 'classic' %}
+{% set seoName = (summoner.name ?? 'Summoner Spell')
+    ~ (isClassic ? ' (' ~ 'edition.classic'|trans ~ ')' : '') %}
+
 {% block title %}{{ seo_title(
-  'summoner.detail.title'|trans({'%name%': summoner.name ?? 'Summoner Spell'}, 'seo')
+  'summoner.detail.title'|trans({'%name%': seoName}, 'seo')
 ) }}{% endblock %}
 {% block meta_description %}{{ 'summoner.detail.description'|trans({
-  '%name%': summoner.name ?? 'Summoner Spell',
+  '%name%': seoName,
   '%version%': selection.version
 }, 'seo') }}{% endblock %}
 {% block img %}/preview/summoners.png{% endblock %}
@@ -19,11 +25,12 @@
     { name: 'header.navigation.home'|trans, url: seo_absolute(path('app_home')) },
     { name: 'header.navigation.summoner'|trans,
       url: seo_absolute(resource_path('app_summoners', {}, version|default(''), '')) },
-    { name: summoner.name ?? '', url: seo_canonical() }
+    { name: seoName, url: seo_canonical() }
   ])) }}
-  {# Cooldown / range / unlock level are the facts that distinguish spells. #}
+  {# Cooldown / range / unlock level are the facts that distinguish spells; the
+     entity name carries the same edition qualifier as the page title. #}
   {{ seo_jsonld(seo_summoner_spell(
-    summoner,
+    summoner|merge({ name: seoName }),
     image is defined and image ? seo_absolute('/' ~ image) : null,
     seo_canonical()
   )) }}
@@ -39,11 +46,14 @@
 {% set costType  = summoner.costType|default(summoner.resource|default('')) %}
 {% set noCost    = costType is empty or costType|lower in ['no cost', 'nocost']
                    or costVal in [0, null] %}
+{# CLASSIC is Data Dragon's name for the standard Summoner's Rift queue — not
+   to be confused with JADE, the League of Legends Classic client. #}
 {% set modeLabels = {
-  'CLASSIC': 'Classic', 'ARAM': 'ARAM', 'CHERRY': 'Arena', 'BRAWL': 'Brawl',
+  'CLASSIC': "Summoner's Rift", 'ARAM': 'ARAM', 'CHERRY': 'Arena', 'BRAWL': 'Brawl',
   'NEXUSBLITZ': 'Nexus Blitz', 'URF': 'URF', 'ONEFORALL': 'One for All',
   'SWIFTPLAY': 'Swiftplay', 'ULTBOOK': 'Ultimate Spellbook',
-  'PRACTICETOOL': 'Practice Tool', 'TUTORIAL': 'Tutorial'
+  'PRACTICETOOL': 'Practice Tool', 'TUTORIAL': 'Tutorial',
+  'JADE': 'edition.classic'|trans
 } %}
 {# Curated whitelist: DDragon lists internal/test modes (WIPMODEWIP, RUBY_TRIAL…)
    alongside real queues — only named modes are displayed. #}
@@ -61,11 +71,14 @@
              style="right: 50%; translate: 50% -50%; top: 8rem;">
       {% endif %}
 
-      <p class="eyebrow relative mb-7">
+      <p class="eyebrow relative mb-7 flex flex-wrap items-center justify-center">
         {{ 'summoner.list.title'|trans }}
         <span class="mx-2 text-gold-deep" aria-hidden="true">◆</span>
         <span class="normal-case tracking-normal font-mono text-[11px]
                      text-text-muted">{{ selection.version }} · {{ selection.lang }}</span>
+        {% include 'components/codex/edition_badge.html.twig' with {
+          edition: edition|default('modern'), class: 'ml-3'
+        } only %}
       </p>
 
       <div class="seal">
@@ -91,6 +104,16 @@
                        text-text-muted">{{ 'summoner.detail.fields.cooldown'|trans }}</span>
         </p>
       {% endif %}
+      <div class="relative">
+        {% include 'components/codex/edition_counterpart.html.twig' with {
+          edition: edition|default('modern'),
+          counterpart: counterpart|default(null),
+          route: 'app_summoner',
+          version: selection.version,
+          lang: selection.lang,
+          align: 'center'
+        } only %}
+      </div>
     </header>
 
     {# ================= Engraved plaques : significant data only ============ #}

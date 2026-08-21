@@ -168,10 +168,11 @@
         {% for key, i in items.items %}
           {% include 'components/codex/entity_card.html.twig' with {
             href: resource_path('app_item', { name: key }, selection.version, selection.lang),
-            img: items.images[i.name]|default(null),
+            img: items.images[key]|default(null),
             name: i.name,
             sub: 'id ' ~ key,
-            img_fit: 'contain'
+            img_fit: 'contain',
+            edition: item_edition(key)
           } %}
         {% endfor %}
       </div>
@@ -192,7 +193,8 @@
             img: summoners.images[key]|default(null),
             name: s.name,
             sub: key,
-            img_fit: 'contain'
+            img_fit: 'contain',
+            edition: summoner_edition(s)
           } %}
         {% endfor %}
       </div>

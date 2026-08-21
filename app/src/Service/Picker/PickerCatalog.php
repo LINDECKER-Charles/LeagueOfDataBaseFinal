@@ -107,13 +107,18 @@ final class PickerCatalog
         return [$data, $this->champions->getImages($dataset, false, array_values($data))];
     }
 
-    /** @return array{0: array<int|string, array<string, mixed>>, 1: array<string, ?string>} */
+    /**
+     * The item map is handed over WITH its keys: the images come back keyed by
+     * item id, which only the map keys carry (item entries have no id field).
+     *
+     * @return array{0: array<int|string, array<string, mixed>>, 1: array<string, ?string>}
+     */
     private function itemSet(string $version, string $lang): array
     {
         $data    = $this->items->getData($version, $lang)['data'] ?? [];
         $dataset = new DatasetRef($version, $lang);
 
-        return [$data, $this->items->getImages($dataset, false, array_values($data))];
+        return [$data, $this->items->getImages($dataset, false, $data)];
     }
 
     /** @return array{0: list<array<string, mixed>>, 1: array<string, mixed>} */

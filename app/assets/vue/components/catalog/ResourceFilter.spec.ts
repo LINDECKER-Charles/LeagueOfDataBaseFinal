@@ -28,21 +28,47 @@ const CHAMPIONS: [string, string][] = [
     ['amumu', 'Tank|Mage'],
 ]
 
+/** Items carry an edition: the LoL Classic twin of Boots shares its name. */
+const ITEMS: [string, string, string][] = [
+    ['boots 1001', 'Boots', 'modern'],
+    ['dagger 1042', 'Damage', 'modern'],
+    ['boots 771001', 'Boots', 'classic'],
+]
+
+const EDITIONS = { modern: 'Current', classic: 'LoL Classic' }
+const EDITION_ALL = 'Every edition'
+
 function renderGrid(): void {
     document.body.innerHTML = `<div id="grid">${CHAMPIONS
         .map(([name, tags]) => `<article data-search="${name}" data-tags="${tags}"></article>`)
         .join('')}</div>`
 }
 
+function renderItemGrid(): void {
+    document.body.innerHTML = `<div id="grid">${ITEMS
+        .map(([name, tags, edition]) =>
+            `<article data-search="${name}" data-tags="${tags}"
+                      data-edition="${edition}"></article>`)
+        .join('')}</div>`
+}
+
 async function mountFilter(pageSize: number) {
     const wrapper = mount(ResourceFilter, {
-        props: { gridId: 'grid', pageSize, pageSizes: [2, 4], labels: LABELS },
+        props: {
+            gridId: 'grid', pageSize, pageSizes: [2, 4],
+            labels: { ...LABELS, edition: 'Edition', editionAll: EDITION_ALL },
+            editions: EDITIONS,
+        },
         attachTo: document.body,
     })
     // The grid is scanned in onMounted: let the resulting render flush.
     await nextTick()
 
     return wrapper
+}
+
+function editionChips(wrapper: ReturnType<typeof mount>) {
+    return wrapper.findAll('[role="group"] .filter-chip--edition')
 }
 
 function visibleNames(): string[] {
@@ -94,6 +120,40 @@ describe('ResourceFilter', () => {
 
         expect(visibleNames()).toEqual(['ahri'])
         expect(wrapper.text()).toContain('1 results')
+    })
+
+    it('offers the edition switch only when the grid mixes editions', async () => {
+        renderGrid()
+        const single = await mountFilter(4)
+        expect(editionChips(single)).toHaveLength(0)
+        single.unmount()
+
+        renderItemGrid()
+        const wrapper = await mountFilter(4)
+
+        // Desktop row + mobile sheet each list "All" + the editions present.
+        expect(editionChips(wrapper)).toHaveLength(6)
+        expect(editionChips(wrapper).slice(0, 3).map((chip) => chip.text()))
+            .toEqual([EDITION_ALL, 'Current', 'LoL Classic'])
+    })
+
+    it('narrows to one edition, ANDed with the tag facet, and clears with the rest', async () => {
+        renderItemGrid()
+        const wrapper = await mountFilter(4)
+
+        await editionChips(wrapper)[2].trigger('click')
+        expect(visibleNames()).toEqual(['boots 771001'])
+        expect(editionChips(wrapper)[2].attributes('aria-pressed')).toBe('true')
+        // The edition counts as one active facet on the mobile trigger.
+        expect(wrapper.get('.filter-trigger b').text()).toBe('1')
+
+        const tagChips = wrapper.findAll('.filter-chip:not(.filter-chip--edition)')
+        await tagChips[1].trigger('click') // Damage
+        expect(visibleNames()).toEqual([])
+        expect(wrapper.text()).toContain('0 results')
+
+        await wrapper.get('.filter-clear').trigger('click')
+        expect(visibleNames()).toHaveLength(ITEMS.length)
     })
 
     it('restores every card and drops the ready flag on teardown', async () => {

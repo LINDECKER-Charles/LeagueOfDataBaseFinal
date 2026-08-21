@@ -23,6 +23,13 @@
     border-color: var(--color-gold);
     background: color-mix(in srgb, var(--color-gold) 16%, transparent);
 }
+/* Edition switch — the hextech cyan of the edition badge, so the control and
+   the mark it filters on read as one thing. */
+.filter-chip--edition.filter-chip--on {
+    color: var(--color-hex);
+    border-color: var(--color-blue-abyssal);
+    background: color-mix(in srgb, var(--color-hex) 12%, transparent);
+}
 .filter-clear {
     padding: 0.2rem 0.55rem;
     font-family: ui-monospace, monospace;

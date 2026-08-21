@@ -157,10 +157,10 @@ final class BuildImportController extends AbstractPageController
             $this->addFlash('warning', $this->translator->trans('build.import.runes_reset'));
         }
         if ($report['droppedItems'] !== []) {
-            $names = implode(', ', array_unique(array_map(
-                static fn (array $d): string => $d['name'],
-                $report['droppedItems'],
-            )));
+            // One mention per item id, not per name: an item dropped from several
+            // steps reads once, a classic twin is not folded into its namesake.
+            $byId  = array_column($report['droppedItems'], 'name', 'id');
+            $names = implode(', ', $byId);
             $this->addFlash(
                 'warning',
                 $this->translator->trans('build.import.items_dropped', ['%items%' => $names]),

@@ -3,11 +3,31 @@ declare(strict_types=1);
 
 namespace App\Service\API;
 
-final class ItemManager extends AbstractManager implements CategoriesInterface
+use App\Service\API\Concern\ResolvesEditionCounterpart;
+use App\Service\API\Edition\Edition;
+use App\Service\API\Edition\EditionAwareInterface;
+use App\Service\API\Edition\ItemEditionRule;
+
+final class ItemManager extends AbstractManager implements
+    CategoriesInterface,
+    EditionAwareInterface
 {
+    use ResolvesEditionCounterpart;
+
     public function type(): string
     {
         return 'item';
+    }
+
+    /** Items carry no edition field: the id range decides ({@see ItemEditionRule}). */
+    public function editionOf(string $id, array $entry): Edition
+    {
+        return ItemEditionRule::of($id);
+    }
+
+    protected function counterpartId(string $id): ?string
+    {
+        return ItemEditionRule::counterpartId($id);
     }
 
     protected function imageUrl(string $version, string $name): string
@@ -188,22 +208,34 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
         return is_scalar($name) && str_contains(mb_strtolower((string) $name), $needle);
     }
 
-    /** The item id lives in the map key; consumers expect it inside the entry. */
+    /**
+     * The item id lives in the map key; consumers expect it inside the entry.
+     * The edition rides along so a hit list can tell the classic twin apart from
+     * its current namesake.
+     */
     protected function projectSearchResult(array $entry, string|int $key): array
     {
-        return array_merge($entry, ['id' => $key]);
+        return array_merge($entry, [
+            'id'      => $key,
+            'edition' => ItemEditionRule::of((string) $key)->value,
+        ]);
     }
 
-    /** Keyed by display name — the shape the item list/search consumers index by. */
+    /**
+     * Keyed by item ID — the shape the item list/search/picker consumers index by.
+     * Never by display name: since LoL Classic, "Faerie Charm" is both 1004 and
+     * 771004, each with its own icon. The id comes from the map key (dataset
+     * slices) or from the entry itself (search hits, see projectSearchResult).
+     */
     protected function projectImages(array $data, array $resolved): array
     {
         $result = [];
-        foreach ($data as $entry) {
-            $name  = $entry['name'] ?? null;
+        foreach ($data as $key => $entry) {
             $image = $entry['image']['full'] ?? null;
-            if ($name && $image) {
-                $result[$name] = $resolved[$image] ?? null;
+            if ($image === null || !($entry['name'] ?? null)) {
+                continue;
             }
+            $result[(string) ($entry['id'] ?? $key)] = $resolved[$image] ?? null;
         }
 
         return $result;
