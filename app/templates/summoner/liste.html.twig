@@ -41,7 +41,8 @@
           ? s.cooldownBurn : (s.cooldown|default([])|join('/')) %}
         {% set modes = s.modes is defined and s.modes is iterable ? s.modes : [] %}
         {% set desc = s.description is defined ? s.description : (s.tooltip|default('')) %}
-        {# Facet on real game modes only — drop Data Dragon's dev/tutorial/WIP ids. #}
+        {# Facet on real game modes only — drop Data Dragon's dev/tutorial/WIP ids.
+           JADE (LoL Classic) is deliberately absent: the edition facet covers it. #}
         {% set realModes = '/^(CLASSIC|ARAM|URF|SNOWURF|ARSR|ONEFORALL|NEXUSBLITZ'
             ~ '|ASSASSINATE|KINGPORO|ULTBOOK|SWIFTPLAY|BRAWL|CHERRY)$/' %}
         {% set filterModes = modes|filter(m => m matches realModes) %}
@@ -52,7 +53,8 @@
           sub: s.id|default(''),
           img_fit: 'contain',
           filter_text: (s.name|default('') ~ ' ' ~ s.id|default(''))|lower,
-          filter_tags: filterModes
+          filter_tags: filterModes,
+          edition: summoner_edition(s)
         } %}
           {% block card_body %}
             <div class="px-4 pb-3">

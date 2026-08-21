@@ -6,10 +6,10 @@ import { formatTemplate } from '../../i18n/formatTemplate'
 
 /**
  * Client-side filter bar for a server-rendered resource grid. Vue owns only this
- * control bar (live search + multi-select tag facet + pagination); the grid stays
- * server-rendered so the rich per-type cards are preserved. Reading and painting
- * that grid lives in {@link useCardGrid}, the visibility rule in
- * {@link selectVisibleCards}; this SFC is binding and markup.
+ * control bar (live search + edition switch + multi-select tag facet +
+ * pagination); the grid stays server-rendered so the rich per-type cards are
+ * preserved. Reading and painting that grid lives in {@link useCardGrid}, the
+ * visibility rule in {@link selectVisibleCards}; this SFC is binding and markup.
  */
 interface Labels {
     results: string // carries "%count%"
@@ -21,6 +21,10 @@ interface Labels {
     all: string
     filters: string
     close: string
+    /** Caption of the edition switch — only needed when `editions` is given. */
+    edition?: string
+    /** "Every edition" choice of the switch; falls back to the pager's `all`. */
+    editionAll?: string
 }
 
 const props = withDefaults(
@@ -30,8 +34,14 @@ const props = withDefaults(
         pageSize?: number
         pageSizes?: number[]
         labels: Labels
+        /**
+         * Display label per edition value (`data-edition` on the cards), in the
+         * order the switch lists them. The switch only shows when the grid
+         * actually mixes more than one of them.
+         */
+        editions?: Record<string, string>
     }>(),
-    { placeholder: 'Search…', pageSize: 12, pageSizes: () => [12, 24, 48] },
+    { placeholder: 'Search…', pageSize: 12, pageSizes: () => [12, 24, 48], editions: () => ({}) },
 )
 
 const grid = useCardGrid(props.gridId)
@@ -39,6 +49,7 @@ const grid = useCardGrid(props.gridId)
 const facetTags = grid.tags
 const query = ref('')
 const selected = ref<Set<string>>(new Set())
+const edition = ref<string | null>(null)
 const page = ref(1)
 const size = ref(props.pageSize)
 
@@ -46,10 +57,21 @@ const selection = computed(() =>
     selectVisibleCards(grid.cards.value, {
         query: query.value,
         tags: selected.value,
+        edition: edition.value,
         page: page.value,
         pageSize: size.value,
     }),
 )
+const editionOptions = computed(() =>
+    Object.entries(props.editions)
+        .filter(([value]) => grid.editions.value.includes(value))
+        .map(([value, label]) => ({ value, label })),
+)
+const hasEditionSwitch = computed(() => editionOptions.value.length > 1)
+const editionAllLabel = computed(() => props.labels.editionAll ?? props.labels.all)
+/** Facet selections in force (tags + edition) — the mobile trigger's counter. */
+const activeFacets = computed(() => selected.value.size + (edition.value === null ? 0 : 1))
+const hasFilters = computed(() => query.value !== '' || activeFacets.value > 0)
 const resultLabel = computed(
     () => formatTemplate(props.labels.results, { count: selection.value.matching.length }),
 )
@@ -75,9 +97,14 @@ function toggleTag(tag: string): void {
     selected.value = next
     page.value = 1
 }
+function setEdition(value: string | null): void {
+    edition.value = value
+    page.value = 1
+}
 function clearAll(): void {
     query.value = ''
     selected.value = new Set()
+    edition.value = null
     page.value = 1
 }
 function movePage(delta: number): void {
@@ -161,32 +188,63 @@ watch(selection, paintCurrentPage)
             </div>
         </div>
 
+        <!-- Edition switch: its own axis (ANDed with the tags), a single choice. -->
+        <div v-if="hasEditionSwitch" class="hidden flex-wrap items-center gap-1.5 md:flex"
+             role="group" :aria-label="labels.edition">
+            <span class="mr-1 font-mono text-[11px] uppercase tracking-wider
+                         text-text-muted">{{ labels.edition }}</span>
+            <button type="button" class="filter-chip filter-chip--edition"
+                    :class="{ 'filter-chip--on': edition === null }"
+                    :aria-pressed="edition === null"
+                    @click="setEdition(null)">{{ editionAllLabel }}</button>
+            <button v-for="opt in editionOptions" :key="opt.value" type="button"
+                    class="filter-chip filter-chip--edition"
+                    :class="{ 'filter-chip--on': edition === opt.value }"
+                    :aria-pressed="edition === opt.value"
+                    @click="setEdition(opt.value)">{{ opt.label }}</button>
+        </div>
+
         <!-- Facets: inline chips from md up; a thumb-friendly bottom sheet below. -->
         <div v-if="facetTags.length" class="hidden flex-wrap items-center gap-1.5 md:flex">
             <button v-for="tag in facetTags" :key="tag" type="button"
                     class="filter-chip" :class="{ 'filter-chip--on': selected.has(tag) }"
                     :aria-pressed="selected.has(tag)"
                     @click="toggleTag(tag)">{{ humanizeTag(tag) }}</button>
-            <button v-if="query || selected.size" type="button" class="filter-clear"
+            <button v-if="hasFilters" type="button" class="filter-clear"
                     @click="clearAll">{{ labels.clear }}</button>
         </div>
 
-        <div v-if="facetTags.length" class="flex items-center gap-2 md:hidden">
+        <div v-if="facetTags.length || hasEditionSwitch" class="flex items-center gap-2 md:hidden">
             <button type="button" class="filter-trigger" @click="openSheet">
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"
                      stroke-linecap="round" aria-hidden="true">
                     <path d="M3 5h14M6 10h8M8.5 15h3" />
                 </svg>
                 {{ labels.filters }}
-                <b v-if="selected.size">{{ selected.size }}</b>
+                <b v-if="activeFacets">{{ activeFacets }}</b>
             </button>
-            <button v-if="query || selected.size" type="button" class="filter-clear"
+            <button v-if="hasFilters" type="button" class="filter-clear"
                     @click="clearAll">{{ labels.clear }}</button>
         </div>
 
         <dialog ref="sheet" class="filter-sheet" :aria-label="labels.filters" @click="onSheetClick">
             <div class="filter-sheet__handle" aria-hidden="true"></div>
             <p class="eyebrow mb-4">{{ labels.filters }}</p>
+            <div v-if="hasEditionSwitch" class="mb-4" role="group" :aria-label="labels.edition">
+                <p class="mb-2 font-mono text-[11px] uppercase tracking-wider
+                          text-text-muted">{{ labels.edition }}</p>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" class="filter-chip filter-chip--edition"
+                            :class="{ 'filter-chip--on': edition === null }"
+                            :aria-pressed="edition === null"
+                            @click="setEdition(null)">{{ editionAllLabel }}</button>
+                    <button v-for="opt in editionOptions" :key="opt.value" type="button"
+                            class="filter-chip filter-chip--edition"
+                            :class="{ 'filter-chip--on': edition === opt.value }"
+                            :aria-pressed="edition === opt.value"
+                            @click="setEdition(opt.value)">{{ opt.label }}</button>
+                </div>
+            </div>
             <div class="flex flex-wrap gap-2 overflow-y-auto">
                 <button v-for="tag in facetTags" :key="tag" type="button"
                         class="filter-chip" :class="{ 'filter-chip--on': selected.has(tag) }"
@@ -194,7 +252,7 @@ watch(selection, paintCurrentPage)
                         @click="toggleTag(tag)">{{ humanizeTag(tag) }}</button>
             </div>
             <div class="mt-5 flex items-center justify-between gap-3">
-                <button type="button" class="filter-clear" :disabled="!query && !selected.size"
+                <button type="button" class="filter-clear" :disabled="!hasFilters"
                         @click="clearAll">
                     {{ labels.clear }}
                 </button>

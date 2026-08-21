@@ -75,12 +75,15 @@ func SupportedTypes() []string {
 	return types
 }
 
-// Entry is one ranked entity.
+// Entry is one ranked entity. Edition ("modern" | "classic") is set for the
+// types that exist in both games (items, summoner spells): their classic twins
+// share the current entity's name, so the name alone does not identify a row.
 type Entry struct {
-	Rank  int    `json:"rank"`
-	ID    string `json:"id"`
-	Name  string `json:"name,omitempty"`
-	Views int64  `json:"views"`
+	Rank    int    `json:"rank"`
+	ID      string `json:"id"`
+	Name    string `json:"name,omitempty"`
+	Edition string `json:"edition,omitempty"`
+	Views   int64  `json:"views"`
 }
 
 // DailyReader supplies the raw JSON aggregate for one YYYY-MM-DD day.
@@ -220,6 +223,7 @@ func (s *Service) rank(ctx context.Context, views map[string]int64, ddragonType 
 	for i := range entries {
 		entries[i].Rank = i + 1
 		entries[i].Name = names[entries[i].ID]
+		entries[i].Edition = editionOf(ddragonType, entries[i].ID)
 	}
 	return entries
 }

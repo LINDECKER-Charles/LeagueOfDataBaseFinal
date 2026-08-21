@@ -34,8 +34,9 @@ interface CategoriesInterface
 
     /**
      * Resolved image paths of a data slice ($data empty = the whole resource).
-     * The SHAPE is per-resource — positional list for champions, keyed by name
-     * for items, by id for summoners — so callers must know their manager.
+     * The SHAPE is per-resource — positional list for champions, keyed by id for
+     * items and summoners — so callers must know their manager. Never keyed by
+     * display name: LoL Classic twins share it ("Faerie Charm" = 1004 and 771004).
      *
      * @param bool $force re-download even when the images are already stored
      * @param array<mixed> $data

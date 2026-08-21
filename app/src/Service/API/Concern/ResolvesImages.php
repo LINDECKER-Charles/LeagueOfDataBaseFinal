@@ -58,7 +58,11 @@ trait ResolvesImages
      * slice, which images it needs) is shared; only the returned shape is
      * per-resource ({@see projectImages}).
      *
-     * @param array<mixed> $data optional pre-sliced list; empty = the whole collection
+     * The whole collection is walked with its keys (the resource id for the
+     * `data`-map resources) so an id-keyed projection never has to recover them.
+     *
+     * @param array<mixed> $data optional pre-sliced collection (key-preserving);
+     *                           empty = the whole collection
      * @return array<mixed>
      */
     final public function getImages(
@@ -66,7 +70,7 @@ trait ResolvesImages
         bool $force = false,
         array $data = []
     ): array {
-        $data  = $data ?: $this->dataList($this->dataset($dataset));
+        $data  = $data ?: $this->paginationCollection($this->dataset($dataset));
         $names = array_keys($this->imageEntries($data));
 
         return $this->projectImages(

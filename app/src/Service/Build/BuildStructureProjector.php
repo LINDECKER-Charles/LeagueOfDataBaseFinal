@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Build;
 
+use App\Service\API\Edition\ItemEditionRule;
 use App\Service\Picker\GameMode;
 use App\Service\Picker\ItemOptionsProjector;
 
@@ -174,12 +175,18 @@ final class BuildStructureProjector
         return array_map(strval(...), array_values($ids));
     }
 
-    /** @param array<int|string, mixed> $itemData */
+    /**
+     * Readable label of a dropped item — id-qualified for a classic twin, whose
+     * bare name also belongs to a current item.
+     *
+     * @param array<int|string, mixed> $itemData
+     */
     private function itemName(array $itemData, string $id): string
     {
         $entry = $itemData[$id] ?? null;
+        $name  = is_array($entry) && isset($entry['name']) ? (string) $entry['name'] : $id;
 
-        return is_array($entry) && isset($entry['name']) ? (string) $entry['name'] : $id;
+        return ItemEditionRule::qualifiedName($id, $name);
     }
 
     /** Every id referenced by a rune page (styles + selections). @return list<int> */

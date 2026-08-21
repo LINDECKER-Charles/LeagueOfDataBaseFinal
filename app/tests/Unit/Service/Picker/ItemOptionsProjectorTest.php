@@ -104,7 +104,7 @@ final class ItemOptionsProjectorTest extends TestCase
     {
         $options = $this->projector->project(
             $this->data(),
-            ['Berserker Greaves' => 'cdn/blobs/3006.png'],
+            ['3006' => 'cdn/blobs/3006.png'],
         );
         $greaves = array_values(array_filter(
             $options,
@@ -176,6 +176,68 @@ final class ItemOptionsProjectorTest extends TestCase
         self::assertSame(
             [],
             $this->projector->unavailableOn($data, GameMode::SummonersRift, ['3006', '1001']),
+        );
+    }
+
+    /**
+     * The LoL Classic catalogue (77xxxx) is never offered: every build mode is a
+     * current-game queue, whatever item.json's maps flags claim (the classic
+     * twin of Boots is flagged on map 12, and this one even on map 11).
+     */
+    public function testClassicItemsAreExcludedFromEveryModeDespiteTheirMapFlags(): void
+    {
+        $data = $this->data() + [
+            771001 => [
+                'name' => 'Boots',
+                'image' => ['full' => '771001.png'],
+                'gold' => ['total' => 325, 'purchasable' => true],
+                'maps' => [11 => true, 12 => true, 453 => true],
+            ],
+        ];
+
+        foreach (GameMode::cases() as $mode) {
+            self::assertNotContains(
+                '771001',
+                array_column($this->projector->project($data, [], $mode), 'id'),
+                $mode->value,
+            );
+            self::assertFalse($this->projector->isPlayable($data, $mode, '771001'), $mode->value);
+        }
+        self::assertContains('1001', array_column($this->projector->project($data, []), 'id'));
+    }
+
+    /** A classic twin in the error list is id-qualified: its bare name is its namesake's. */
+    public function testUnavailableOnQualifiesAClassicTwinByItsId(): void
+    {
+        $data = $this->data() + [
+            771001 => [
+                'name' => 'Boots',
+                'gold' => ['total' => 325, 'purchasable' => true],
+                'maps' => [12 => true, 453 => true],
+            ],
+        ];
+
+        self::assertSame(
+            ['Boots [771001]'],
+            $this->projector->unavailableOn($data, GameMode::Aram, ['1001', '771001']),
+        );
+    }
+
+    /** Icons are looked up by id: the classic twin never borrows its namesake's. */
+    public function testResolveReadsTheIconOfTheExactId(): void
+    {
+        $data = $this->data() + [
+            771001 => ['name' => 'Boots', 'gold' => ['total' => 325, 'purchasable' => true]],
+        ];
+        $images = ['1001' => 'cdn/blobs/boots.png', '771001' => 'cdn/blobs/classic-boots.png'];
+
+        self::assertSame(
+            '/cdn/blobs/classic-boots.png',
+            $this->projector->resolve($data, $images, '771001')['image'],
+        );
+        self::assertSame(
+            '/cdn/blobs/boots.png',
+            $this->projector->resolve($data, $images, '1001')['image'],
         );
     }
 }

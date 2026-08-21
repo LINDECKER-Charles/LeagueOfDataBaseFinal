@@ -7,8 +7,11 @@ namespace App\Service\Picker;
  * Pure projection of the summoner-spell dataset into picker options.
  *
  * Only spells playable in CLASSIC (Summoner's Rift) are offered — ARAM/URF
- * exclusives would be noise in a favorite picker. Resolution stays
- * presence-based (unfiltered) so an already-stored favorite keeps rendering.
+ * exclusives would be noise in a favorite picker. The League of Legends Classic
+ * spells (JADE mode, `_Jade` ids) fall out of the same rule on purpose: they
+ * share their names with the current spells, and a favorite is a current-game
+ * fact. Resolution stays presence-based (unfiltered) so an already-stored
+ * favorite keeps rendering.
  */
 final class SummonerOptionsProjector
 {

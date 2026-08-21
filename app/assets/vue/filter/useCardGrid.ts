@@ -17,6 +17,8 @@ export interface CardGrid {
     cards: Ref<GridCard[]>
     /** Every facet tag present in the grid, alphabetically sorted. */
     tags: Ref<string[]>
+    /** Every edition present in the grid, in order of first appearance. */
+    editions: Ref<string[]>
     /** Read the grid; a no-op when no element carries the configured id. */
     scan: () => void
     /** Show exactly these cards and hide every other one. */
@@ -33,6 +35,7 @@ interface GridState {
     grid: Ref<HTMLElement | null>
     cards: Ref<GridCard[]>
     tags: Ref<string[]>
+    editions: Ref<string[]>
 }
 
 export function useCardGrid(gridId: string): CardGrid {
@@ -40,6 +43,7 @@ export function useCardGrid(gridId: string): CardGrid {
         grid: ref<HTMLElement | null>(null),
         cards: ref<GridCard[]>([]),
         tags: ref<string[]>([]),
+        editions: ref<string[]>([]),
     }
 
     // Leave the server-rendered grid exactly as it was found: a Turbo visit
@@ -52,6 +56,7 @@ export function useCardGrid(gridId: string): CardGrid {
     return {
         cards: state.cards,
         tags: state.tags,
+        editions: state.editions,
         scan: () => scanGrid(state, gridId),
         show: (visible) => showOnly(state.cards.value, visible),
         markReady: () => markGridReady(state.grid.value),
@@ -66,6 +71,7 @@ function scanGrid(state: GridState, gridId: string): void {
         el.querySelectorAll<HTMLElement>(':scope > [data-search]'),
     ).map(readCard)
     state.tags.value = collectTags(state.cards.value)
+    state.editions.value = collectEditions(state.cards.value)
 }
 
 function showOnly(cards: readonly GridCard[], visible: readonly GridCard[]): void {
@@ -82,15 +88,23 @@ function markGridReady(grid: HTMLElement | null): void {
 }
 
 function readCard(el: HTMLElement): GridCard {
-    return {
+    const card: GridCard = {
         el,
         search: (el.dataset.search ?? '').toLowerCase(),
         tags: (el.dataset.tags ?? '').split('|').filter(Boolean),
     }
+    if (el.dataset.edition) card.edition = el.dataset.edition
+    return card
 }
 
 function collectTags(cards: readonly GridCard[]): string[] {
     const universe = new Set<string>()
     cards.forEach((card) => card.tags.forEach((tag) => universe.add(tag)))
     return Array.from(universe).sort((a, b) => a.localeCompare(b))
+}
+
+function collectEditions(cards: readonly GridCard[]): string[] {
+    const universe = new Set<string>()
+    cards.forEach((card) => card.edition && universe.add(card.edition))
+    return Array.from(universe)
 }

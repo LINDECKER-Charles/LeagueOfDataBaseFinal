@@ -188,6 +188,20 @@ filter:
   all: "All"
   filters: "Filters"
   close: "Close"
+  edition: "Edition"
+
+# Which game an item / summoner spell belongs to: the current client, or
+# League of Legends Classic (Data Dragon ships both under the same names).
+edition:
+  all: "All"
+  modern: "Current"
+  classic: "LoL Classic"
+  classic_hint: "League of Legends Classic version"
+  classic_notice: "League of Legends Classic edition: its values differ from the current version."
+  counterpart:
+    modern: "See the current version"
+    classic: "See the LoL Classic version"
+
 base:
   title: "League of Data Base"
   description: "League of Data Base is a community-driven platform that provides detailed information, stats, and insights about League of Legends. Fast, reliable, and always up to date."
