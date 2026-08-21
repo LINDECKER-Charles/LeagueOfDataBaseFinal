@@ -61,9 +61,9 @@ graph TD
 **Rôle** : Gestion des données des champions
 - Hérite d'`AbstractManager`
 - Implémente `CategoriesInterface`
-- Méthodes spécialisées : `getByName()`, `searchByName()`, `getImages()` — la forme de
-  `getImages()` est propre à chaque manager (liste positionnelle pour les champions, map
-  **indexée par id** pour objets et sorts, arbre pour les runes)
+- Méthodes spécialisées : `getByName()`, `searchByName()`, `getImages()` — projection par
+  défaut **indexée par id** (champions, objets, sorts) ; seules les runes gardent leur
+  forme d'arbre
 
 #### ⚔️ ItemManager
 **Rôle** : Gestion des objets du jeu

@@ -57,8 +57,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
             :key="c.id"
             type="button"
             class="chroma-swatch"
-            :title="c.name"
-            :aria-label="c.name"
+            :title="chromaLabel(c)"
+            :aria-label="chromaLabel(c)"
             @click="open(i)"
         >
             <span
@@ -118,7 +118,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
                     <img
                         :key="current.id"
                         :src="current.image"
-                        :alt="current.name"
+                        :alt="chromaLabel(current)"
                         class="chroma-modal__art h-64 w-64 max-w-full object-contain"
                     />
 

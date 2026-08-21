@@ -98,13 +98,13 @@ final class PickerCatalog
         return $this->summonerProjector->resolve($data, $images, $id);
     }
 
-    /** @return array{0: array<string, array<string, mixed>>, 1: list<?string>} */
+    /** @return array{0: array<string, array<string, mixed>>, 1: array<string, ?string>} */
     private function championSet(string $version, string $lang): array
     {
         $data    = $this->champions->getData($version, $lang)['data'] ?? [];
         $dataset = new DatasetRef($version, $lang);
 
-        return [$data, $this->champions->getImages($dataset, false, array_values($data))];
+        return [$data, $this->champions->getImages($dataset, false, $data)];
     }
 
     /**

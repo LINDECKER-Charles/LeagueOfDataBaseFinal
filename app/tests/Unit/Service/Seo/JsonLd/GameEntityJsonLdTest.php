@@ -74,6 +74,26 @@ final class GameEntityJsonLdTest extends TestCase
         self::assertArrayNotHasKey('Purchasable', $map);
     }
 
+    /**
+     * Data Dragon leaks unresolved @Var@ / {{ Token }} placeholders and inline
+     * markup in some plaintexts (item 3349) — structured data must never
+     * surface them to crawlers.
+     */
+    public function testItemDescriptionDropsLeakedTokensAndMarkup(): void
+    {
+        $graph = $this->entities->item([
+            'name'      => 'Radiant Anomaly',
+            'plaintext' => 'Slows by @Slow@ and <status>reveals</status>'
+                .' the area {{ Item_Cooldown }}.',
+            'gold'      => ['total' => 0, 'purchasable' => false],
+        ], null, 'https://example.com/object/3349');
+
+        self::assertSame(
+            'Slows by and reveals the area .',
+            $graph['gameItem']['description'],
+        );
+    }
+
     public function testUnpurchasableItemSaysSoExplicitly(): void
     {
         $graph = $this->entities->item([

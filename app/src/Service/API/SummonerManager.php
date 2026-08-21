@@ -52,19 +52,4 @@ final class SummonerManager extends AbstractManager implements
 
         return $entries;
     }
-
-    /** Keyed by spell id ("SummonerFlash") — the shape the summoner views index by. */
-    protected function projectImages(array $data, array $resolved): array
-    {
-        $result = [];
-        foreach ($data as $entry) {
-            $id    = $entry['id'] ?? null;
-            $image = $entry['image']['full'] ?? null;
-            if ($id && $image) {
-                $result[$id] = $resolved[$image] ?? null;
-            }
-        }
-
-        return $result;
-    }
 }

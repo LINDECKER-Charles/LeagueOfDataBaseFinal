@@ -85,7 +85,8 @@ final class BuildViewAssembler
             $entry = $this->championManager->getData($version, $lang)['data'][$championId] ?? null;
             $image = $entry === null
                 ? null
-                : ($this->championManager->getImages($dataset, false, [$entry])[0] ?? null);
+                : ($this->championManager
+                    ->getImages($dataset, false, [$championId => $entry])[$championId] ?? null);
         } catch (\Throwable) {
             $entry = null;
             $image = null;

@@ -1,4 +1,5 @@
 import { onBeforeUnmount, ref, type Ref } from 'vue'
+import { normalizeSearchText } from '../search/normalizeSearchText'
 import type { FilterableCard } from './visibleCards'
 
 /**
@@ -90,7 +91,8 @@ function markGridReady(grid: HTMLElement | null): void {
 function readCard(el: HTMLElement): GridCard {
     const card: GridCard = {
         el,
-        search: (el.dataset.search ?? '').toLowerCase(),
+        // Accent-folded like the pickers, so the needle and haystack agree.
+        search: normalizeSearchText(el.dataset.search ?? ''),
         tags: (el.dataset.tags ?? '').split('|').filter(Boolean),
     }
     if (el.dataset.edition) card.edition = el.dataset.edition

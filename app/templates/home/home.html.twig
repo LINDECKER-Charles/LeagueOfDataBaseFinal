@@ -117,7 +117,7 @@
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {% for key, c in champions.champions|slice(0, 4) %}
           {# Versioned square icon overlaid on the unversioned splash (null while cold). #}
-          {% set champIcon = champions.images[loop.index0]|default(null) %}
+          {% set champIcon = champions.images[c.id|default(key)]|default(null) %}
           <a href="{{ resource_path(
                'app_champion', { name: key }, selection.version, selection.lang
              ) }}"
@@ -145,7 +145,7 @@
               <h3 class="truncate font-beaufort text-[15px] tracking-wide text-gold-grad"
                   title="{{ c.name }}">{{ c.name }}</h3>
               {% if c.title|default('') %}<p class="mt-0.5 line-clamp-2 font-spiegel text-xs
-                text-text-muted">{{ c.title }}</p>{% endif %}
+                text-text-muted">{{ c.title|ucfirst }}</p>{% endif %}
             </div>
           </a>
         {% else %}
@@ -214,7 +214,7 @@
             href: resource_path('app_rune', { name: r.key }, selection.version, selection.lang),
             img: runes.images[r.key].icon ?? null,
             name: r.name,
-            sub: 'key ' ~ r.key,
+            sub: r.key,
             img_scale: 0.72,
             img_round: true
           } %}
