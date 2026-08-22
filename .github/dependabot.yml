@@ -13,6 +13,9 @@
 #   updates stay as individual PRs because they need a review each.
 # - Docker base images ignore semver-major: php / node / golang / postgres majors are
 #   tied to code (composer platform, go.mod, CI matrices) and are upgraded by hand.
+# - npm /app ignores the typescript and @types/node majors: TS >= 7 is the native
+#   compiler without the JS API the Vue toolchain needs, and @types/node must track the
+#   Node runtime major (Dockerfile / CI). Both are bumped by hand.
 # - Commit prefix `build` follows the repo's Conventional Commits map (see CLAUDE.md).
 
 version: 2
@@ -55,6 +58,17 @@ updates:
     commit-message:
       prefix: build
       include: scope
+    ignore:
+      # typescript >= 7 is the native (Go) compiler: it no longer ships the JS API
+      # (lib/typescript.js) that @vue/compiler-sfc and vue-tsc rely on to resolve
+      # imported props types. Bumped by hand once the Vue toolchain follows.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      # @types/node's major is the Node major it describes. The runtime is Node 22
+      # (docker/php/Dockerfile node:22-alpine, _tests.yml setup-node 22): a newer major
+      # lets vue-tsc accept APIs absent at runtime. Bumped with the Node major.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-minor-patch:
         patterns: ["*"]
