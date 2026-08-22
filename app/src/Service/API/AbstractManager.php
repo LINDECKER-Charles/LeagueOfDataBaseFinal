@@ -7,6 +7,7 @@ use App\Service\API\Concern\IngestsImages;
 use App\Service\API\Concern\PaginatesResources;
 use App\Service\API\Concern\ResolvesEntries;
 use App\Service\API\Concern\ResolvesImages;
+use App\Service\API\Image\ImageStatusInterface;
 use App\Service\Storage\BlobStore;
 use App\Service\Storage\DeferredImageIngestor;
 use App\Service\Tools\GoFetcherClient;
@@ -33,7 +34,7 @@ use Symfony\Contracts\Cache\ItemInterface;
  * All Data Dragon egress goes through the Go fetch gateway ({@see GoFetcherClient}),
  * which fetches image batches in parallel.
  */
-abstract class AbstractManager implements WarmableManagerInterface
+abstract class AbstractManager implements WarmableManagerInterface, ImageStatusInterface
 {
     use IngestsImages;
     use PaginatesResources;

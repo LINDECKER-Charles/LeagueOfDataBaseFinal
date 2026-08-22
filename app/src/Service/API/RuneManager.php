@@ -112,6 +112,24 @@ final class RuneManager extends AbstractManager
         return $mapped;
     }
 
+    /**
+     * Runes across every slot of every tree — the figure the list header
+     * shows now that it renders one card per rune, not per tree.
+     *
+     * @param iterable<mixed> $trees
+     */
+    public static function countRunes(iterable $trees): int
+    {
+        $count = 0;
+        foreach ($trees as $tree) {
+            foreach ($tree['slots'] ?? [] as $slot) {
+                $count += \count($slot['runes'] ?? []);
+            }
+        }
+
+        return $count;
+    }
+
     /** Runes paginate the top-level list of trees, not a `['data']` map. */
     protected function paginationCollection(array $raw): array
     {

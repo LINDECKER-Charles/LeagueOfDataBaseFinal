@@ -1,18 +1,15 @@
-{# Client-side grid filter bar: live search + edition switch + multi-select tag
-   facet + pagination. The ResourceFilter island drives the sibling grid
-   `#{{ grid_id }}` (its cards carry data-search / data-tags / data-edition; the
-   edition switch only appears when the grid mixes the current game and LoL
-   Classic). Replaces the former server pagination + autocomplete on list pages.
-   Params: grid_id (required), page_size (optional). #}
-<div class="mb-8 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+{# Client-side grid filter bar: live search, per-category facets (schema from
+   facet_schema(), values as data-f-* on the cards), pagination — all mirrored
+   in the URL so a filtered list can be shared. The ResourceFilter island drives
+   the sibling grid `#{{ grid_id }}`.
+   Params: grid_id (required), facet_type (required — the schema's resource
+   type), page_size (optional). #}
+<div class="mb-8 flex flex-col gap-3">
   <div class="min-w-0 flex-1" data-vue="resource-filter" data-props="{{ {
         gridId: grid_id,
         placeholder: 'common.search'|trans,
         pageSize: page_size|default(12),
-        editions: {
-          modern: 'edition.modern'|trans,
-          classic: 'edition.classic'|trans
-        },
+        facets: facet_schema(facet_type),
         labels: {
           results: 'filter.results'|trans,
           empty: 'filter.empty'|trans,
@@ -23,8 +20,15 @@
           all: 'filter.all'|trans,
           filters: 'filter.filters'|trans,
           close: 'filter.close'|trans,
-          edition: 'filter.edition'|trans,
-          editionAll: 'edition.all'|trans
+          advanced: 'filter.advanced'|trans,
+          matchAny: 'filter.match_any'|trans,
+          matchAll: 'filter.match_all'|trans,
+          min: 'filter.min'|trans,
+          max: 'filter.max'|trans,
+          copy: 'filter.copy_link'|trans,
+          copied: 'filter.copied'|trans,
+          copyError: 'filter.copy_error'|trans,
+          active: 'filter.active'|trans
         }
       }|json_encode|e('html_attr') }}">{% include 'components/ui/skeleton.html.twig'
         with { kind: 'filter' } only %}</div>

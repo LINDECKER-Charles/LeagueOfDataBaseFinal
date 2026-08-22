@@ -32,8 +32,13 @@
       } %}
     </header>
 
-    {% include 'components/codex/list_filter.html.twig' with { grid_id: 'summoner-grid' } %}
+    {% include 'components/codex/list_filter.html.twig'
+       with { grid_id: 'summoner-grid', facet_type: 'summoner' } %}
 
+    <div data-img-scope="summoner" data-img-version="{{ meta.version }}"
+         data-img-batch="{{ image_status_batch() }}">
+    {% include 'components/codex/entity_card_image.html.twig'
+       with { as_template: true, img_fit: 'contain' } only %}
     <div id="summoner-grid"
          class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for s in summoners %}
@@ -44,19 +49,15 @@
            list mixes in internal dev ids (WIPMODEWIP, RUBY_TRIAL_1…). #}
         {% set modeChips = game_mode_labels(modes) %}
         {% set desc = s.description is defined ? s.description : (s.tooltip|default('')) %}
-        {# Facet on real game modes only — drop Data Dragon's dev/tutorial/WIP ids.
-           JADE (LoL Classic) is deliberately absent: the edition facet covers it. #}
-        {% set realModes = '/^(CLASSIC|ARAM|URF|SNOWURF|ARSR|ONEFORALL|NEXUSBLITZ'
-            ~ '|ASSASSINATE|KINGPORO|ULTBOOK|SWIFTPLAY|BRAWL|CHERRY)$/' %}
-        {% set filterModes = modes|filter(m => m matches realModes) %}
         {% embed 'components/codex/entity_card.html.twig' with {
           href: resource_path('app_summoner', { name: s.id|default('') }, meta.version, meta.lang),
           img: images[s.id|default('')]|default(null),
+          img_name: s.image.full|default(null),
           name: s.name|default(''),
           sub: s.id|default(''),
           img_fit: 'contain',
           filter_text: (s.name|default('') ~ ' ' ~ s.id|default(''))|lower,
-          filter_tags: filterModes,
+          facet_attrs: facet_attrs('summoner', s.id|default(''), s),
           edition: summoner_edition(s)
         } %}
           {% block card_body %}
@@ -104,6 +105,7 @@
       {% else %}
         {% include 'components/ui/empty_state.html.twig' %}
       {% endfor %}
+    </div>
     </div>
   </div>
 </main>

@@ -102,7 +102,7 @@ const secondaryGhosts = computed(
                             :aria-pressed="tree.id === draft.primaryStyleId"
                             @click="emit('primaryStyle', tree.id)"
                         >
-                            <img v-if="tree.icon" :src="tree.icon" alt="" loading="lazy"
+                            <img class="hx-img" v-if="tree.icon" :src="tree.icon" alt="" loading="lazy"
                                  decoding="async" />
                             {{ tree.name }}
                         </button>
@@ -133,7 +133,7 @@ const secondaryGhosts = computed(
                                     : perk.name"
                                 @click="emit('primaryPerk', slotIndex, perk.id)"
                             >
-                                <img v-if="perk.icon" :src="perk.icon" :alt="perk.name"
+                                <img class="hx-img" v-if="perk.icon" :src="perk.icon" :alt="perk.name"
                                      loading="lazy" decoding="async" />
                             </button>
                             <span
@@ -163,7 +163,7 @@ const secondaryGhosts = computed(
                             :aria-pressed="tree.id === draft.secondaryStyleId"
                             @click="emit('secondaryStyle', tree.id)"
                         >
-                            <img v-if="tree.icon" :src="tree.icon" alt="" loading="lazy"
+                            <img class="hx-img" v-if="tree.icon" :src="tree.icon" alt="" loading="lazy"
                                  decoding="async" />
                             {{ tree.name }}
                         </button>
@@ -207,7 +207,7 @@ const secondaryGhosts = computed(
                                         : perk.name"
                                     @click="emit('secondaryPerk', slotIndex, perk.id)"
                                 >
-                                    <img v-if="perk.icon" :src="perk.icon" :alt="perk.name"
+                                    <img class="hx-img" v-if="perk.icon" :src="perk.icon" :alt="perk.name"
                                          loading="lazy" decoding="async" />
                                 </button>
                             </div>

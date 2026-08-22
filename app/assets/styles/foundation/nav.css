@@ -140,6 +140,8 @@
 
   /* ---- Filter bottom sheet (mobile) — native <dialog> ---------------------- */
   .filter-sheet {
+    display: flex;
+    flex-direction: column;
     margin: auto auto 0;
     width: 100%;
     max-width: none;
@@ -150,7 +152,16 @@
     color: var(--color-text);
     padding: 0.75rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
   }
+  .filter-sheet:not([open]) { display: none; }
   .filter-sheet::backdrop { background: rgba(1, 10, 19, 0.6); backdrop-filter: blur(3px); }
+  /* Header and footer stay put; only the facets scroll (vertical pan only, so a
+     slider thumb drag is never mistaken for a page scroll). */
+  .filter-sheet__body { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; }
+  .filter-sheet__footer {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+  }
   .filter-sheet__handle {
     width: 2.5rem;
     height: 4px;
@@ -176,6 +187,5 @@
   /* ---- Touch ergonomics — thumb-sized controls on coarse pointers ---------- */
   @media (pointer: coarse) {
     .hx-btn, .hx-btn-ghost { min-height: 2.75rem; }
-    .filter-chip, .filter-clear, .pp-btn, .filter-nav { min-height: 2.5rem; min-width: 2.5rem; }
   }
 }

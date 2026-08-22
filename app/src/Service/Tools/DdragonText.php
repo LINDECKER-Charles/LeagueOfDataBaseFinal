@@ -23,6 +23,16 @@ final class DdragonText
     }
 
     /**
+     * Display form of a Data Dragon category tag: "CriticalStrike" reads
+     * "Critical Strike" — the same split on the card chips and in the list
+     * facet, so both agree. Matching keeps using the raw token.
+     */
+    public static function tagLabel(?string $tag): string
+    {
+        return preg_replace('/([a-z])([A-Z])/', '$1 $2', (string) $tag) ?? (string) $tag;
+    }
+
+    /**
      * A display NAME out of a field Riot sometimes ships as marked-up copy —
      * items 3901-3903 name themselves
      * "<rarityLegendary>Feu à volonté</rarityLegendary><br><subtitleLeft>…".

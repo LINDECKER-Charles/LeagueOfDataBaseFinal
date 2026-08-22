@@ -152,7 +152,7 @@ function initials(name: string): string {
             :aria-label="`${labels.pick} — ${display?.name ?? labels.empty}`"
             @click="open"
         >
-            <img v-if="display" class="skin-socket__art" :src="display.banner" alt=""
+            <img v-if="display" class="hx-img skin-socket__art" :src="display.banner" alt=""
                  loading="lazy" decoding="async" />
             <span class="skin-socket__scrim" aria-hidden="true"></span>
             <span class="skin-socket__body">
@@ -232,7 +232,7 @@ function initials(name: string): string {
                             <picture v-if="entry.image" class="picker-option__img">
                                 <source v-if="entry.image.endsWith('.png')"
                                         :srcset="webp(entry.image)" type="image/webp" />
-                                <img :src="entry.image" alt="" width="32" height="32"
+                                <img class="hx-img" :src="entry.image" alt="" width="32" height="32"
                                      loading="lazy" decoding="async" />
                             </picture>
                             <span v-else class="picker-option__img picker-option__img--initials"
@@ -255,7 +255,7 @@ function initials(name: string): string {
                         >
                             <img
                                 v-if="entry.banner"
-                                class="skin-tile__art"
+                                class="hx-img skin-tile__art"
                                 :src="entry.banner"
                                 :alt="entry.name"
                                 loading="lazy"

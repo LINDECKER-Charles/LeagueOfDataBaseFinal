@@ -3,6 +3,7 @@ import '../styles/app.css'
 
 import { createApp, type App, type Component } from 'vue'
 import { installEnhancements } from './fx/enhance'
+import { markImages } from './images/imageLifecycle'
 import { setupProfileForm } from './profile/profileForm'
 
 /**
@@ -90,6 +91,8 @@ async function mountIsland(el: HTMLElement): Promise<void> {
     const app = createApp(component, props)
     app.mount(el)
     mountedIslands.push({ app, host: el })
+    // Island-rendered images get their loading state like server-rendered ones.
+    markImages(el)
 }
 
 /**

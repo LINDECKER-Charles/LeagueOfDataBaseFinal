@@ -30,14 +30,10 @@ final class DdragonExtension extends AbstractExtension
         return DdragonText::clean($html);
     }
 
-    /**
-     * Display form of a Data Dragon category tag: "CriticalStrike" reads
-     * "Critical Strike" — the same split the ResourceFilter facet applies, so
-     * chips and facet agree. Matching keeps using the raw token.
-     */
+    /** Display form of a Data Dragon category tag ({@see DdragonText::tagLabel()}). */
     public function tagLabel(?string $tag): string
     {
-        return preg_replace('/([a-z])([A-Z])/', '$1 $2', (string) $tag) ?? (string) $tag;
+        return DdragonText::tagLabel($tag);
     }
 
     /** Uppercases the first letter only — everything after it stays intact. */

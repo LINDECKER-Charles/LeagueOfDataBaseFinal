@@ -66,7 +66,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
                 :style="{ background: chromaRamp(c.colors) }"
                 aria-hidden="true"
             />
-            <img
+            <img class="hx-img"
                 :src="c.image"
                 :alt="chromaLabel(c)"
                 loading="lazy"
@@ -119,7 +119,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
                         :key="current.id"
                         :src="current.image"
                         :alt="chromaLabel(current)"
-                        class="chroma-modal__art h-64 w-64 max-w-full object-contain"
+                        class="hx-img chroma-modal__art h-64 w-64 max-w-full object-contain"
                     />
 
                     <template v-if="chromas.length > 1">

@@ -68,7 +68,7 @@
                     sm:h-32 sm:w-32">
           {% if image %}
             <img src="/{{ image }}" alt="{{ item.name ?? 'Item' }}"
-                 class="h-full w-full object-contain">
+                 class="hx-img h-full w-full object-contain">
           {% else %}
             <span class="font-beaufort text-2xl
                          text-gold/70">{{ (item.name ?? '??')|slice(0, 2)|upper }}</span>

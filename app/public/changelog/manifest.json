@@ -1,6 +1,22 @@
 {
   "patches": [
     {
+      "id": "2026-08-22-jade",
+      "version": "2.2.0",
+      "codename": "Jade",
+      "date": "2026-08-22",
+      "type": "minor",
+      "title": "LeagueOfDataBase 2.2.0 — Jade",
+      "summary": "League of Legends Classic devient une édition à part entière — icônes justes, badge, filtre et lien vers le jumeau — tandis que chaque liste gagne des filtres avancés partageables par lien, que les runes se listent une à une et que les images annoncent leur chargement.",
+      "tags": [
+        { "kind": "feature", "label": "Édition LoL Classic" },
+        { "kind": "feature", "label": "Filtres avancés partageables" },
+        { "kind": "feature", "label": "Runes une à une & images en attente" },
+        { "kind": "bugfix", "label": "9 correctifs" }
+      ],
+      "stats": { "fixes": 9 }
+    },
+    {
       "id": "2026-08-09-heraut",
       "version": "2.1.2",
       "codename": "Héraut",

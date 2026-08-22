@@ -11,14 +11,14 @@
     <picture>
       {% include 'components/_webp_source.html.twig'
          with { src: '/' ~ champion.image } only %}
-      <img src="/{{ champion.image }}" alt="{{ champion.name }}"
+      <img class="hx-img" src="/{{ champion.image }}" alt="{{ champion.name }}"
            width="56" height="56" loading="lazy" decoding="async">
     </picture>
   {% else %}
     <span class="forge-row__initials">{{ champion.name|slice(0, 2)|upper }}</span>
   {% endif %}
   {% if keystone.icon %}
-    <img class="forge-row__keystone" src="/{{ keystone.icon }}"
+    <img class="hx-img forge-row__keystone" src="/{{ keystone.icon }}"
          alt="{{ keystone.name }}" width="26" height="26" loading="lazy" decoding="async">
   {% endif %}
 </span>

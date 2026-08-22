@@ -1,0 +1,79 @@
+/* ---------------------------------------------------------------------------
+   Image lifecycle — what an <img class="hx-img"> looks like while its bytes are
+   still in flight or never arrive, and the refreshable placeholder of an image
+   a cold list render deferred (settled in page by assets/vue/images/).
+
+   States are stamped by assets/vue/images/imageLifecycle.ts as `data-img-state`
+   (loading | loaded | error). Without JS no attribute is set and the image
+   renders exactly as before. The sweep reuses the island-skeleton gradient
+   (foundation/skeleton.css) so every "not there yet" surface reads the same.
+--------------------------------------------------------------------------- */
+
+.hx-img[data-img-state="loading"] {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-gold) 5%, transparent),
+    color-mix(in srgb, var(--color-gold) 13%, transparent),
+    color-mix(in srgb, var(--color-gold) 5%, transparent)
+  );
+  background-size: 200% 100%;
+  animation: hx-sk-sweep 1.6s linear infinite;
+}
+
+/* Failed art: keep the box (no layout shift), hide the alt text, mark it. */
+.hx-img[data-img-state="error"] {
+  color: transparent;
+  background:
+    radial-gradient(
+      circle at center,
+      color-mix(in srgb, var(--color-gold) 18%, transparent) 0 2px,
+      transparent 2.5px
+    )
+    center / 100% 100% no-repeat,
+    color-mix(in srgb, var(--color-void) 80%, transparent);
+}
+
+/* Pending slot — a deferred image: initials under a sweep, swapped for the real
+   <picture> once the poller finds it in storage, or settled as plain initials. */
+.hx-img-slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-beaufort);
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+}
+.hx-img-slot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-gold) 4%, transparent),
+    color-mix(in srgb, var(--color-gold) 14%, transparent),
+    color-mix(in srgb, var(--color-gold) 4%, transparent)
+  );
+  background-size: 200% 100%;
+  animation: hx-sk-sweep 1.6s linear infinite;
+}
+/* Settled without an image (definitive absence, or the poller gave up). */
+.hx-img-slot[data-img-state="absent"]::after {
+  display: none;
+}
+
+/* Definitive absence known at render time: the initials box. */
+.hx-img-initials {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-beaufort);
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hx-img[data-img-state="loading"],
+  .hx-img-slot::after {
+    animation: none;
+  }
+}

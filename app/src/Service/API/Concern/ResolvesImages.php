@@ -115,6 +115,44 @@ trait ResolvesImages
     }
 
     /**
+     * Read-only status of image names against the manifest: the settled ones
+     * (path, or null = definitive absence) and the ones still to fetch. Never
+     * ingests — the in-page refresh of a cold list polls this, so it has to
+     * stay a cheap manifest read with no egress.
+     *
+     * @param string[] $names
+     * @return array{images: array<string,?string>, pending: list<string>}
+     */
+    public function manifestStatus(string $version, array $names): array
+    {
+        $manifest = $this->loadManifest($version);
+        $images   = [];
+        $pending  = [];
+        foreach (array_unique($names) as $name) {
+            if (\array_key_exists($name, $manifest)) {
+                $images[$name] = $manifest[$name];
+            } else {
+                $pending[] = $name;
+            }
+        }
+
+        return ['images' => $images, 'pending' => $pending];
+    }
+
+    /**
+     * Queue the still-missing names for ingestion after the response — the
+     * last-attempt retry of the in-page refresh. The initial deferred flush may
+     * have failed on a transient gateway error, and nothing else would retry it
+     * before the next visit.
+     *
+     * @param string[] $names
+     */
+    public function warmLater(string $version, array $names): void
+    {
+        $this->withImageDeferral(fn (): array => $this->resolveImages($version, $names));
+    }
+
+    /**
      * Resolve image file names to public CDN paths for a version. Hits come from
      * the per-(version,type) manifest; misses are fetched in a single parallel
      * batch through the gateway, stored content-addressed (dedup) and recorded.

@@ -121,7 +121,7 @@
                                 <picture class="profile-build__portrait">
                                     {% include 'components/_webp_source.html.twig'
                                        with { src: build.championImage } only %}
-                                    <img src="{{ build.championImage }}"
+                                    <img class="hx-img" src="{{ build.championImage }}"
                                          alt="{{ build.championName ?? build.championId }}"
                                          width="48" height="48" loading="lazy" decoding="async">
                                 </picture>

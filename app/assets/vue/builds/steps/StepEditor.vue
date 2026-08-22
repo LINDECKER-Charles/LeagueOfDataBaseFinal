@@ -188,7 +188,7 @@ function itemTitle(itemId: string): string {
                                 @dragend="drag.end()"
                                 @dragover="drag.overItem(index, itemIndex, $event)"
                             >
-                                <img v-if="itemImage(itemId)"
+                                <img class="hx-img" v-if="itemImage(itemId)"
                                      :src="itemImage(itemId) ?? undefined"
                                      :alt="itemName(itemId)"
                                      loading="lazy" decoding="async" />

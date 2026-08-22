@@ -1,0 +1,93 @@
+{
+  "id": "2026-08-22-jade",
+  "version": "2.2.0",
+  "codename": "Jade",
+  "date": "2026-08-22",
+  "type": "minor",
+  "title": "LeagueOfDataBase 2.2.0 — Jade",
+  "summary": "League of Legends Classic devient une édition à part entière — icônes justes, badge, filtre et lien vers le jumeau — tandis que chaque liste gagne des filtres avancés partageables par lien, que les runes se listent une à une et que les images annoncent leur chargement.",
+  "intro": "Jade est le patch de League of Legends Classic. Depuis son arrivée, Riot publie deux « Charme féerique » et deux « Saut éclair » sous le même nom : le site les distingue désormais partout, avec la bonne icône, un badge, un filtre d'édition et un lien direct d'une version à l'autre. Dans la foulée, chaque liste de l'encyclopédie reçoit des filtres taillés pour sa catégorie — rôle, ressource, statistiques par plages, palier, prix, mode, voie, emplacement — que l'adresse de la page mémorise pour être partagée telle quelle. Les 62 runes s'affichent enfin une à une, et chaque image signale son chargement : sur un patch fraîchement ouvert, les icônes manquantes apparaissent d'elles-mêmes sans recharger. Le reste est un passage au peigne fin des 1080 fiches et des quatre listes, qui a débusqué une série de défauts d'affichage corrigés ici.",
+  "stats": { "fixes": 9, "cards": 4 },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❖",
+      "tag": "Classic",
+      "title": "League of Legends Classic reconnu comme une édition à part",
+      "description": "Depuis l'arrivée de LoL Classic, de nombreux objets et sorts d'invocateur existent en deux versions sous le même nom — « Charme féerique », « Saut éclair »… Chaque version affiche désormais sa propre icône dans la liste, sur l'accueil et dans les pickers de build ; les cartes et fiches Classic portent un badge LoL Classic, et la fiche propose un lien direct vers sa jumelle (« Voir la version actuelle » / « Voir la version LoL Classic »). Les listes d'objets et de sorts gagnent un sélecteur Édition (Toutes / Actuelle / LoL Classic), la navigation précédent / suivant signale un voisin Classic, et les objets Classic ne sont plus proposés ni importés dans les builds des modes actuels (Faille, ARAM, Nexus Blitz, Arène) — LoL Classic n'ayant pas de runes réforgées, il n'a pas de mode de build dédié. Les recherches et l'API publique /v1/trends annoncent l'édition de chaque résultat."
+    },
+    {
+      "kind": "feature",
+      "glyph": "◐",
+      "tag": "Filtres",
+      "title": "Filtres avancés par catégorie, partageables par lien",
+      "description": "Champions : rôle, ressource, portée (mêlée / distance), évaluations et statistiques de base au niveau 1 par plages. Objets : catégories en « au moins une » ou « toutes », édition, carte ou mode, palier (composant / épique / légendaire), achetables ou consommables, prix, et une plage par statistique. Sorts d'invocateur : mode, édition, niveau requis, temps de recharge. Les filtres principaux restent sous la main, les autres s'ouvrent dans un panneau Filtres avancés ; les filtres actifs s'affichent en puces retirables d'un clic, avec un bouton Copier le lien. L'adresse reflète la sélection : un lien partagé rouvre exactement les mêmes filtres, dans n'importe quelle langue et après un changement de patch."
+    },
+    {
+      "kind": "feature",
+      "glyph": "✶",
+      "tag": "Runes",
+      "title": "La liste des runes présente chaque rune, pas seulement les cinq voies",
+      "description": "Les 62 runes s'affichent une à une, filtrables par voie et par emplacement (clé de voûte, rangées 1 à 3), avec une recherche dans le nom et la description courte. Un bandeau des voies reste en tête, et chaque rune mène directement à sa place dans la page de sa voie."
+    },
+    {
+      "kind": "mana",
+      "glyph": "⚡",
+      "tag": "Images",
+      "title": "Les images annoncent leur chargement et les listes froides se complètent seules",
+      "description": "Toutes les images — icônes des cartes, portraits, splashs de skins, chromas, sorts, pickers — affichent un balayage doré tant qu'elles ne sont pas arrivées ; une image introuvable garde sa case avec une marque discrète au lieu d'une icône cassée. Sur une liste consultée pour la première fois sur un patch, les icônes que le serveur n'a pas encore en stock apparaissent comme des cases en attente et se remplissent d'elles-mêmes quelques secondes plus tard, sans recharger la page. Seules les cartes proches de l'écran sont interrogées : les centaines de cartes masquées par un filtre ne coûtent rien."
+    }
+  ],
+  "bugfixes": [
+    {
+      "id": "LDB-019",
+      "area": "Champions",
+      "text": "Fiddlesticks retrouve son art actuel partout : portrait de sa fiche, carte de la liste et de l'accueil, galerie de skins — Star Nemesis, Blood Moon et Flora Fatalis restaient vides — et vignettes du choix de bannière de profil. Depuis LoL Classic, le CDN de Riot servait son ancien épouvantail sous son nom public."
+    },
+    {
+      "id": "LDB-020",
+      "area": "Champions",
+      "text": "Les sorts n'affichent plus de portées fantaisistes — « Portée : 4294967295 » sur Janna, « 25000 » sur une trentaine de champions — : ces valeurs internes sont masquées."
+    },
+    {
+      "id": "LDB-021",
+      "area": "Champions",
+      "text": "Les titres ne sont plus dénaturés (« Épée des Darkin » restait « Épée des darkin »), les statistiques et le curseur de niveau restent synchronisés après un retour arrière, et les infobulles des chromas affichent le libellé de teinte."
+    },
+    {
+      "id": "LDB-022",
+      "area": "Objets",
+      "text": "Les quatre objets fantômes sans nom et le « Gangplank Placeholder » quittent la liste ; les trois améliorations de Gangplank affichent leur vrai nom (« Feu à volonté ») au lieu d'un balisage brut."
+    },
+    {
+      "id": "LDB-023",
+      "area": "Objets",
+      "text": "Plus de jetons non résolus ({{ Item_Cooldown }}, @Slow@) dans les descriptions des cartes et des fiches ; la map « Swarm » est nommée (fin des « Map 33 »), « Effigie épouvantail » cite « Fiddlesticks » et les catégories se lisent « Critical Strike » plutôt que « CriticalStrike »."
+    },
+    {
+      "id": "LDB-024",
+      "area": "Sorts",
+      "text": "Les modes de jeu affichent des noms lisibles et cohérents entre liste et fiche (fin des identifiants WIPMODEWIP, RUBY_TRIAL_1…) ; les sorts du Roi Poro et du Snow ARURF affichent enfin leur mode, et la Faille standard est libellée « Summoner's Rift » pour ne pas être confondue avec LoL Classic."
+    },
+    {
+      "id": "LDB-025",
+      "area": "Runes",
+      "text": "Les pages des patchs 7.22 à 8.7, dont les icônes ont disparu du CDN de Riot, s'affichent instantanément après la première visite au lieu de réinterroger le CDN à chaque vue ; l'accueil ne préfixe plus les runes d'un « key » parasite."
+    },
+    {
+      "id": "LDB-026",
+      "area": "Recherche",
+      "text": "La recherche des listes ignore les accents, comme les pickers de build : « feerique » trouve « Charme féerique »."
+    },
+    {
+      "id": "LDB-027",
+      "area": "Compte",
+      "text": "Vous restez connecté après une mise en ligne du site : les sessions, comme l'historique de fréquentation et le journal d'audit, survivent désormais aux déploiements."
+    }
+  ],
+  "balances": [],
+  "devNote": {
+    "body": "Jade est né d'un doublon : deux « Charme féerique » côte à côte avec la même icône, sans rien pour les départager. En tirant le fil, on a donné à League of Legends Classic sa place d'édition à part entière, puis on a passé les 1080 fiches au peigne fin — d'où cette moisson de correctifs. Les filtres avancés sont l'autre pièce maîtresse : ils vous laissent enfin croiser des critères chiffrés et partager une sélection par simple lien. Si un filtre vous manque ou qu'un jumeau Classic vous échappe encore, dites-le-nous.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

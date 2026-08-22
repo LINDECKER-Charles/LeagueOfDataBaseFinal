@@ -4,41 +4,19 @@ declare(strict_types=1);
 namespace App\Twig;
 
 use App\Service\API\Edition\SummonerEditionRule;
+use App\Service\Catalog\GameModeLabels;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * Player-facing labels of Data Dragon's summoner-spell game modes — the ONE
- * curated list shared by the summoner list cards and the detail plaques, which
- * used to keep two diverging copies. DDragon mixes real queues with internal
- * dev ids (WIPMODEWIP, RUBY_TRIAL_1…, TUTORIAL_MODULE_1, KIWI…): anything
- * outside this map is deliberately not displayed.
+ * Player-facing labels of Data Dragon's summoner-spell game modes on the
+ * summoner cards and detail plaques — the curated list itself lives in
+ * {@see GameModeLabels} (shared with the list facet); JADE, the League of
+ * Legends Classic client, is an edition and reads as its translated label.
  */
 final class GameModesExtension extends AbstractExtension
 {
-    /**
-     * Riot's persistent, named queues, product names as labels. CLASSIC is
-     * DDragon's id for the standard Summoner's Rift queue — not to be confused
-     * with JADE, the League of Legends Classic client (translated label).
-     */
-    private const MODE_LABELS = [
-        'CLASSIC'      => "Summoner's Rift",
-        'ARAM'         => 'ARAM',
-        'CHERRY'       => 'Arena',
-        'BRAWL'        => 'Brawl',
-        'NEXUSBLITZ'   => 'Nexus Blitz',
-        'URF'          => 'URF',
-        'SNOWURF'      => 'Snow ARURF',
-        'ONEFORALL'    => 'One for All',
-        'ULTBOOK'      => 'Ultimate Spellbook',
-        'SWIFTPLAY'    => 'Swiftplay',
-        'KINGPORO'     => 'Legend of the Poro King',
-        'ASSASSINATE'  => 'Blood Moon',
-        'PRACTICETOOL' => 'Practice Tool',
-        'TUTORIAL'     => 'Tutorial',
-    ];
-
     public function __construct(private readonly TranslatorInterface $translator) {}
 
     public function getFunctions(): array
@@ -60,7 +38,7 @@ final class GameModesExtension extends AbstractExtension
             $mode = (string) $mode;
             $label = $mode === SummonerEditionRule::CLASSIC_MODE
                 ? $this->translator->trans('edition.classic')
-                : (self::MODE_LABELS[$mode] ?? null);
+                : GameModeLabels::labelOf($mode);
             if ($label !== null) {
                 $labels[$mode] = $label;
             }

@@ -210,7 +210,7 @@ function onBackdropClick(event: MouseEvent): void {
                         @click="onAdd(item.id)"
                     >
                         <span class="armory-item__icon">
-                            <img
+                            <img class="hx-img"
                                 v-if="item.image"
                                 :src="item.image"
                                 alt=""

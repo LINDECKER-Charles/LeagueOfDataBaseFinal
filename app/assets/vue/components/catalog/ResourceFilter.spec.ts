@@ -1,169 +1,150 @@
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { FacetDefinition } from '../../filter/facets'
 import ResourceFilter from './ResourceFilter.vue'
 
 /**
- * Contract of the island with its server-rendered grid: it reads
- * `#grid > [data-search]`, paints exactly one page of the matching cards, and
- * restores the grid untouched on teardown (a Turbo visit reuses the same DOM).
+ * Contract of the island with its server-rendered grid and the page URL: it
+ * reads `#grid > [data-search]` and the `data-f-*` values, paints exactly one
+ * page of the matching cards, offers only the facets the grid carries, starts
+ * from the URL and writes the state back to it — and restores the grid
+ * untouched on teardown (a Turbo visit reuses the same DOM).
  */
 const LABELS = {
-    results: '%count% results',
-    empty: 'Nothing',
-    clear: 'Clear',
-    prev: 'Previous',
-    next: 'Next',
-    perPage: 'Per page',
-    all: 'All',
-    filters: 'Filters',
-    close: 'Close',
+    results: '%count% results', empty: 'Nothing', clear: 'Clear', prev: 'Previous', next: 'Next',
+    perPage: 'Per page', all: 'All', filters: 'Filters', close: 'Close', advanced: 'Advanced',
+    matchAny: 'Any', matchAll: 'All of', min: 'Min', max: 'Max', copy: 'Copy', copied: 'Copied',
+    copyError: 'Copy below', active: 'Active',
 }
 
-const CHAMPIONS: [string, string][] = [
-    ['aatrox', 'Fighter'],
-    ['ahri', 'Mage'],
-    ['akali', 'Assassin|Fighter'],
-    ['alistar', 'Tank'],
-    ['amumu', 'Tank|Mage'],
+const facet = (partial: Partial<FacetDefinition> & Pick<FacetDefinition, 'key' | 'kind'>): FacetDefinition => ({
+    label: partial.key, group: 'Category', options: [], primary: false, multiple: true, matchAll: false,
+    unit: null, step: 1, ...partial,
+})
+const FACETS = [
+    facet({ key: 'tag', kind: 'choice', primary: true, matchAll: true, options: [
+        { value: 'Boots', label: 'Boots' }, { value: 'Damage', label: 'Damage' }, { value: 'Vision', label: 'Vision' },
+    ] }),
+    facet({ key: 'edition', kind: 'choice', primary: true, multiple: false, options: [
+        { value: 'modern', label: 'Current' }, { value: 'classic', label: 'LoL Classic' },
+    ] }),
+    facet({ key: 'price', kind: 'range', group: 'Price' }),
+    facet({ key: 'consumable', kind: 'toggle', group: 'Availability' }),
 ]
 
 /** Items carry an edition: the LoL Classic twin of Boots shares its name. */
-const ITEMS: [string, string, string][] = [
-    ['boots 1001', 'Boots', 'modern'],
-    ['dagger 1042', 'Damage', 'modern'],
-    ['boots 771001', 'Boots', 'classic'],
+const ITEMS: [string, string, string, number][] = [
+    ['boots 1001', 'Boots', 'modern', 300],
+    ['dagger 1042', 'Damage', 'modern', 250],
+    ['boots 771001', 'Boots', 'classic', 300],
 ]
 
-const EDITIONS = { modern: 'Current', classic: 'LoL Classic' }
-const EDITION_ALL = 'Every edition'
-
 function renderGrid(): void {
-    document.body.innerHTML = `<div id="grid">${CHAMPIONS
-        .map(([name, tags]) => `<article data-search="${name}" data-tags="${tags}"></article>`)
-        .join('')}</div>`
-}
-
-function renderItemGrid(): void {
     document.body.innerHTML = `<div id="grid">${ITEMS
-        .map(([name, tags, edition]) =>
-            `<article data-search="${name}" data-tags="${tags}"
-                      data-edition="${edition}"></article>`)
+        .map(([name, tag, edition, price]) =>
+            `<article data-search="${name}" data-f-tag="${tag}" data-f-edition="${edition}" data-f-price="${price}"></article>`)
         .join('')}</div>`
 }
 
-async function mountFilter(pageSize: number) {
+async function mountFilter(pageSize = 2, facets = FACETS) {
     const wrapper = mount(ResourceFilter, {
-        props: {
-            gridId: 'grid', pageSize, pageSizes: [2, 4],
-            labels: { ...LABELS, edition: 'Edition', editionAll: EDITION_ALL },
-            editions: EDITIONS,
-        },
+        props: { gridId: 'grid', pageSize, pageSizes: [2, 4], facets, labels: LABELS },
         attachTo: document.body,
     })
     // The grid is scanned in onMounted: let the resulting render flush.
     await nextTick()
-
     return wrapper
 }
 
-function editionChips(wrapper: ReturnType<typeof mount>) {
-    return wrapper.findAll('[role="group"] .filter-chip--edition')
-}
-
-function visibleNames(): string[] {
-    return Array.from(document.querySelectorAll<HTMLElement>('#grid > [data-search]'))
+const visible = () =>
+    Array.from(document.querySelectorAll<HTMLElement>('#grid > article'))
         .filter((el) => el.style.display !== 'none')
-        .map((el) => el.dataset.search ?? '')
-}
+        .map((el) => el.dataset.search)
+
+const chip = (wrapper: ReturnType<typeof mount>, text: string) =>
+    wrapper.findAll('.filter-chip').find((b) => b.text() === text)!
+
+beforeEach(() => {
+    vi.useFakeTimers()
+    window.history.replaceState(null, '', '/objects')
+    renderGrid()
+})
 
 afterEach(() => {
+    vi.useRealTimers()
     document.body.innerHTML = ''
 })
 
 describe('ResourceFilter', () => {
-    it('paints the first page and flags the grid as JS-driven on mount', async () => {
-        renderGrid()
-        await mountFilter(2)
+    it('paints the first page and hands paint control to JS', async () => {
+        await mountFilter()
 
-        expect(visibleNames()).toEqual(['aatrox', 'ahri'])
-        expect(document.getElementById('grid')?.dataset.ready).toBe('true')
+        expect(visible()).toEqual(['boots 1001', 'dagger 1042'])
+        expect(document.getElementById('grid')!.dataset.ready).toBe('true')
     })
 
-    it('builds the facet universe from the cards, sorted and deduplicated', async () => {
-        renderGrid()
-        const wrapper = await mountFilter(2)
+    it('offers only the facets the grid carries', async () => {
+        const wrapper = await mountFilter()
 
-        expect(wrapper.findAll('.filter-chip').slice(0, 4).map((chip) => chip.text()))
-            .toEqual(['Assassin', 'Fighter', 'Mage', 'Tank'])
+        const chips = wrapper.findAll('.facet--inline .filter-chip').map((b) => b.text())
+        expect(chips).toEqual(['Boots', 'Damage', 'Current', 'LoL Classic'])
+        // A flag no card carries is not offered; the price range is (250 < 300).
+        expect(wrapper.find('.facet--toggle').exists()).toBe(false)
+        expect(wrapper.find('.filter-trigger[aria-expanded]').exists()).toBe(true)
     })
 
-    it('repaints on search and reports the match count', async () => {
-        renderGrid()
-        const wrapper = await mountFilter(2)
+    it('narrows by search and facets, ANDing the axes, and counts', async () => {
+        const wrapper = await mountFilter(4)
 
-        await wrapper.get('input[type="search"]').setValue('am')
-
-        expect(visibleNames()).toEqual(['amumu'])
+        await chip(wrapper, 'Boots').trigger('click')
+        expect(visible()).toEqual(['boots 1001', 'boots 771001'])
+        await chip(wrapper, 'LoL Classic').trigger('click')
+        expect(visible()).toEqual(['boots 771001'])
         expect(wrapper.text()).toContain('1 results')
+        expect(wrapper.find('.filter-trigger b').text()).toBe('2')
+    })
+
+    it('starts from the URL and writes the state back to it', async () => {
+        window.history.replaceState(null, '', '/objects?lang=fr_FR&tag=Damage&size=4')
+        const wrapper = await mountFilter()
+
+        expect(visible()).toEqual(['dagger 1042'])
+        await wrapper.find('input[type="search"]').setValue('dag')
+        await chip(wrapper, 'Boots').trigger('click')
+        vi.advanceTimersByTime(400)
+
+        expect(window.location.search).toBe('?lang=fr_FR&q=dag&tag=Boots%2CDamage&size=4')
+        // Chips read in the order the values were chosen; the URL is the sorted one.
+        expect(wrapper.find('.active-filters').text()).toContain('tag: Damage, Boots')
     })
 
     it('sends a stranded page back to the first one when the filter narrows', async () => {
-        renderGrid()
-        const wrapper = await mountFilter(2)
+        const wrapper = await mountFilter()
+        await wrapper.findAll('.filter-nav')[1].trigger('click')
+        expect(visible()).toEqual(['boots 771001'])
 
-        await wrapper.get('[aria-label="Next"]').trigger('click')
-        expect(visibleNames()).toEqual(['akali', 'alistar'])
-
-        await wrapper.get('input[type="search"]').setValue('a')
-        await wrapper.get('input[type="search"]').setValue('ah')
-
-        expect(visibleNames()).toEqual(['ahri'])
-        expect(wrapper.text()).toContain('1 results')
+        await wrapper.find('input[type="search"]').setValue('boots')
+        expect(visible()).toEqual(['boots 1001', 'boots 771001'])
     })
 
-    it('offers the edition switch only when the grid mixes editions', async () => {
-        renderGrid()
-        const single = await mountFilter(4)
-        expect(editionChips(single)).toHaveLength(0)
-        single.unmount()
-
-        renderItemGrid()
+    it('clears everything at once', async () => {
         const wrapper = await mountFilter(4)
+        await chip(wrapper, 'Boots').trigger('click')
+        await wrapper.find('input[type="search"]').setValue('771')
+        expect(visible()).toEqual(['boots 771001'])
 
-        // Desktop row + mobile sheet each list "All" + the editions present.
-        expect(editionChips(wrapper)).toHaveLength(6)
-        expect(editionChips(wrapper).slice(0, 3).map((chip) => chip.text()))
-            .toEqual([EDITION_ALL, 'Current', 'LoL Classic'])
+        await wrapper.find('.active-filters .filter-clear').trigger('click')
+
+        expect(visible()).toHaveLength(3)
+        expect(wrapper.find('.active-filters').exists()).toBe(false)
     })
 
-    it('narrows to one edition, ANDed with the tag facet, and clears with the rest', async () => {
-        renderItemGrid()
-        const wrapper = await mountFilter(4)
-
-        await editionChips(wrapper)[2].trigger('click')
-        expect(visibleNames()).toEqual(['boots 771001'])
-        expect(editionChips(wrapper)[2].attributes('aria-pressed')).toBe('true')
-        // The edition counts as one active facet on the mobile trigger.
-        expect(wrapper.get('.filter-trigger b').text()).toBe('1')
-
-        const tagChips = wrapper.findAll('.filter-chip:not(.filter-chip--edition)')
-        await tagChips[1].trigger('click') // Damage
-        expect(visibleNames()).toEqual([])
-        expect(wrapper.text()).toContain('0 results')
-
-        await wrapper.get('.filter-clear').trigger('click')
-        expect(visibleNames()).toHaveLength(ITEMS.length)
-    })
-
-    it('restores every card and drops the ready flag on teardown', async () => {
-        renderGrid()
-        const wrapper = await mountFilter(2)
-        expect(visibleNames()).toHaveLength(2)
-
+    it('restores the grid on teardown', async () => {
+        const wrapper = await mountFilter()
         wrapper.unmount()
 
-        expect(visibleNames()).toHaveLength(CHAMPIONS.length)
-        expect(document.getElementById('grid')?.dataset.ready).toBeUndefined()
+        expect(visible()).toHaveLength(3)
+        expect(document.getElementById('grid')!.dataset.ready).toBeUndefined()
     })
 })

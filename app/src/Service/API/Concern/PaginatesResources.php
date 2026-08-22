@@ -20,6 +20,12 @@ trait PaginatesResources
     /** @return array<mixed> */
     abstract protected function dataset(DatasetRef $ref): array;
 
+    /**
+     * @param string[] $names
+     * @return array{images: array<string,?string>, pending: list<string>}
+     */
+    abstract public function manifestStatus(string $version, array $names): array;
+
     /** DDragon resource type key ('champion', 'item', 'summoner', 'runesReforged'). */
     abstract public function type(): string;
 
@@ -31,7 +37,10 @@ trait PaginatesResources
      * slice keeps the original keys (resource id) — {@see slicePage} slices in
      * key-preserving mode.
      *
-     * @return array<string,mixed> {<type>s, images, meta}
+     * `pending` lists the image names a cold render deferred (refreshable
+     * placeholders), distinct from a null image (settled absence).
+     *
+     * @return array<string,mixed> {<type>s, images, pending, meta}
      */
     public function paginate(DatasetRef $dataset, int $perPage = 1, int $page = 1): array
     {
@@ -42,14 +51,18 @@ trait PaginatesResources
         // An out-of-range page is not an error here: fall back to the first one.
         $page       = $page > $pageCount ? 1 : $page;
 
-        $slice = $this->slicePage($perPage, $page <= 1 ? 0 : $perPage * ($page - 1), $collection);
+        $slice  = $this->slicePage($perPage, $page <= 1 ? 0 : $perPage * ($page - 1), $collection);
+        // Images first: a synchronous resolution settles the manifest this
+        // request reads `pending` from.
+        $images = $this->sliceImages($dataset, $slice);
 
         // The type-suffixed collection key and the `meta` key names are a public
         // contract the list controllers and templates read verbatim — renaming
         // them (or the stray french `nombrePage`) is a cross-cutting change.
         return [
             $this->type().'s' => $slice,
-            'images' => $this->sliceImages($dataset, $slice),
+            'images' => $images,
+            'pending' => $this->pendingImageNames($dataset->version, $slice),
             'meta' => [
                 'currentPage' => $page,
                 'nombrePage' => $pageCount,
@@ -74,6 +87,33 @@ trait PaginatesResources
         return $this->withImageDeferral(
             fn (): array => $this->getImages($dataset, false, $slice)
         );
+    }
+
+    /**
+     * The shape of {@see paginate()} with nothing in it — what a failed preview
+     * renders instead of taking the page down. Derived here so the template
+     * contract (`<type>s`, images, pending, meta) can never drift from it.
+     *
+     * @return array<string,mixed>
+     */
+    public function emptyPage(): array
+    {
+        return [$this->type().'s' => [], 'images' => [], 'pending' => [], 'meta' => []];
+    }
+
+    /**
+     * Image names of a slice the manifest does not settle yet — deferred by a
+     * cold list render, and refreshed in page once they land. Keyed by name
+     * so a template can test membership in O(1).
+     *
+     * @param array<mixed> $slice
+     * @return array<string,true>
+     */
+    private function pendingImageNames(string $version, array $slice): array
+    {
+        $names = array_keys($this->imageEntries($slice));
+
+        return array_fill_keys($this->manifestStatus($version, $names)['pending'], true);
     }
 
     /** 0 ("show all") — or a request above the total — collapses to the capped whole. */
