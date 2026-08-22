@@ -45,7 +45,7 @@ COPY app/ ./
 RUN composer dump-autoload --no-dev --optimize --classmap-authoritative
 
 ########################################################################
-# Stage 3 — Frontend assets (Webpack Encore today; swapped to Vite in Étape 2)
+# Stage 3 — Frontend assets (Vite)
 ########################################################################
 FROM node:22-alpine AS assets
 WORKDIR /app
