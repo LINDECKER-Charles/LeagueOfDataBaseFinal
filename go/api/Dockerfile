@@ -7,7 +7,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/go-api ./cmd/go-api
 
-FROM alpine:3.20
+FROM alpine:3.24
 RUN apk add --no-cache wget ca-certificates && adduser -D -H -u 10001 app
 COPY --from=build /out/go-api /usr/local/bin/go-api
 EXPOSE 8090
