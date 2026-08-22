@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Template;
 
+use App\Twig\Codex\ImageExtension;
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
@@ -22,6 +23,8 @@ final class SharedComponentsTest extends TestCase
     protected function setUp(): void
     {
         $this->twig = new Environment(new FilesystemLoader(__DIR__ . '/../../../templates'));
+        // The WebP rule the partial delegates to (its owner is PHP, see WebpSibling).
+        $this->twig->addExtension(new ImageExtension());
     }
 
     public function testWebpSourceIsDerivedFromAPngOriginal(): void
@@ -90,7 +93,7 @@ final class SharedComponentsTest extends TestCase
         self::assertStringContainsString('forge-ghost', $html);
         self::assertStringContainsString('src="/cdn/blobs/ahri.png"', $html);
         self::assertStringContainsString('srcset="/cdn/blobs/ahri.webp"', $html);
-        self::assertStringContainsString('class="forge-row__keystone"', $html);
+        self::assertStringContainsString('class="hx-img forge-row__keystone"', $html);
     }
 
     /** @param array<string, mixed> $context */

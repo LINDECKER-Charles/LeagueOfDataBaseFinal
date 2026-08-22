@@ -34,6 +34,10 @@
 
     {% include 'components/codex/list_filter.html.twig' with { grid_id: 'summoner-grid' } %}
 
+    <div data-img-scope="summoner" data-img-version="{{ meta.version }}"
+         data-img-batch="{{ image_status_batch() }}">
+    {% include 'components/codex/entity_card_image.html.twig'
+       with { as_template: true, img_fit: 'contain' } only %}
     <div id="summoner-grid"
          class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for s in summoners %}
@@ -52,6 +56,7 @@
         {% embed 'components/codex/entity_card.html.twig' with {
           href: resource_path('app_summoner', { name: s.id|default('') }, meta.version, meta.lang),
           img: images[s.id|default('')]|default(null),
+          img_name: s.image.full|default(null),
           name: s.name|default(''),
           sub: s.id|default(''),
           img_fit: 'contain',
@@ -104,6 +109,7 @@
       {% else %}
         {% include 'components/ui/empty_state.html.twig' %}
       {% endfor %}
+    </div>
     </div>
   </div>
 </main>

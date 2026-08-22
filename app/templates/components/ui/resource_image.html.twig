@@ -1,0 +1,27 @@
+{# One codex image box, in one of three states:
+   - src      → the resolved <picture> (WebP twin derived by _webp_source);
+   - pending  → a refreshable slot: initials under a sweep, settled in page by
+                assets/vue/images/pendingImages.ts from the enclosing
+                [data-img-scope]'s <template data-img-template> — this very
+                partial rendered with placeholders (resource_image_template);
+   - neither  → the initials box (image definitively absent).
+   Params: src (cdn path, no leading slash) | pending (bool) | name (image file
+   name = manifest key) | alt | initials | box_class (size + frame utilities) |
+   img_class | size (px) | img_style (optional) | webp (optional override). #}
+{%- set frame = 'relative shrink-0 overflow-hidden ' ~ box_class|default('') -%}
+{%- if src|default(null) -%}
+  <div class="{{ frame }}">
+    <picture>
+      {% include 'components/_webp_source.html.twig'
+         with { src: '/' ~ src, webp: webp|default(null) } only %}
+      <img src="/{{ src }}" alt="{{ alt|default('') }}" width="{{ size }}" height="{{ size }}"
+           loading="lazy" decoding="async" class="hx-img {{ img_class|default('') }}"
+           {%- if img_style|default(null) %} style="{{ img_style }}"{% endif %}>
+    </picture>
+  </div>
+{%- elseif pending|default(false) -%}
+  <div class="{{ frame }} hx-img-slot" data-img-pending data-img-name="{{ name }}"
+       data-img-alt="{{ alt|default('') }}">{{ initials|default('') }}</div>
+{%- else -%}
+  <div class="{{ frame }} hx-img-initials">{{ initials|default('') }}</div>
+{%- endif -%}

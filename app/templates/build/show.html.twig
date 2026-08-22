@@ -56,7 +56,7 @@
           <picture>
             {% include 'components/_webp_source.html.twig'
                with { src: '/' ~ vm.champion.image } only %}
-            <img src="/{{ vm.champion.image }}" alt="{{ vm.champion.name }}"
+            <img class="hx-img" src="/{{ vm.champion.image }}" alt="{{ vm.champion.name }}"
                  width="96" height="96" decoding="async">
           </picture>
         {% else %}
@@ -136,14 +136,14 @@
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-[1.35fr_1fr]">
         <article class="hextech-frame path-border p-6">
           <p class="bshare-tree path-text">
-            {% if primary.icon %}<img src="/{{ primary.icon }}"
+            {% if primary.icon %}<img class="hx-img" src="/{{ primary.icon }}"
               alt="" width="22" height="22">{% endif %}
             {{ primary.name }}
           </p>
           <div class="mt-5 flex items-center gap-4">
             <div class="keystone__icon {{ primary.keystone.missing ? 'forge-ghost' }}"
               {% if primary.keystone.missing %}title="{{ 'build.show.missing'|trans }}"{% endif %}>
-              {% if primary.keystone.icon %}<img src="/{{ primary.keystone.icon }}"
+              {% if primary.keystone.icon %}<img class="hx-img" src="/{{ primary.keystone.icon }}"
                 alt="">{% endif %}
             </div>
             <div class="min-w-0">
@@ -158,7 +158,7 @@
               <li class="flex items-center gap-3 {{ perk.missing ? 'forge-ghost' }}"
                   {% if perk.missing %}title="{{ 'build.show.missing'|trans }}"{% endif %}>
                 <span class="rune-medallion bshare-medallion">
-                  {% if perk.icon %}<img src="/{{ perk.icon }}" alt="">{% endif %}
+                  {% if perk.icon %}<img class="hx-img" src="/{{ perk.icon }}" alt="">{% endif %}
                 </span>
                 <span class="truncate text-sm text-text">{{ perk.name }}</span>
               </li>
@@ -168,7 +168,7 @@
 
         <article class="hextech-frame p-6">
           <p class="bshare-tree">
-            {% if secondary.icon %}<img src="/{{ secondary.icon }}"
+            {% if secondary.icon %}<img class="hx-img" src="/{{ secondary.icon }}"
               alt="" width="22" height="22">{% endif %}
             {{ secondary.name }}
           </p>
@@ -177,7 +177,7 @@
               <li class="flex items-center gap-3 {{ perk.missing ? 'forge-ghost' }}"
                   {% if perk.missing %}title="{{ 'build.show.missing'|trans }}"{% endif %}>
                 <span class="rune-medallion bshare-medallion">
-                  {% if perk.icon %}<img src="/{{ perk.icon }}" alt="">{% endif %}
+                  {% if perk.icon %}<img class="hx-img" src="/{{ perk.icon }}" alt="">{% endif %}
                 </span>
                 <span class="truncate text-sm text-text">{{ perk.name }}</span>
               </li>
@@ -216,7 +216,7 @@
                       <picture>
                         {% include 'components/_webp_source.html.twig'
                            with { src: '/' ~ item.image } only %}
-                        <img src="/{{ item.image }}" alt="{{ item.name }}"
+                        <img class="hx-img" src="/{{ item.image }}" alt="{{ item.name }}"
                              width="48" height="48" loading="lazy" decoding="async">
                       </picture>
                     {% else %}

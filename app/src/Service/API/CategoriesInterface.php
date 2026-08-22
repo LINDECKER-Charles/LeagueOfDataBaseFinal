@@ -61,6 +61,7 @@ interface CategoriesInterface
      * @param int $perPage items per page; 0, or a value above the total, shows everything
      * @return array{
      *     images: array<mixed>,
+     *     pending: array<string,true>,
      *     meta: array{
      *         currentPage: int,
      *         nombrePage: int,

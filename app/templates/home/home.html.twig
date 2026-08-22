@@ -113,10 +113,19 @@
         link: 'homepage.champions.see_all'|trans,
         count: counts.champions
       } %}
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      {% set overlayBox = 'absolute bottom-2 left-2 h-10 w-10 border border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]' %}
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4" data-img-scope="champion"
+           data-img-version="{{ selection.version }}" data-img-batch="{{ image_status_batch() }}">
+        {% include 'components/ui/resource_image_template.html.twig' with {
+          box_class: overlayBox, img_class: 'h-full w-full object-cover', size: 40
+        } only %}
         {% for key, c in champions.champions|slice(0, 4) %}
-          {# Versioned square icon overlaid on the unversioned splash (null while cold). #}
+          {# Versioned square icon overlaid on the unversioned splash (a refreshable
+             slot while cold — see components/ui/resource_image). #}
           {% set champIcon = champions.images[c.id|default(key)]|default(null) %}
+          {% set champIconName = c.image.full|default(null) %}
+          {% set champIconPending = champIcon is empty and champIconName is not empty
+            and champions.pending[champIconName] is defined %}
           <a href="{{ resource_path(
                'app_champion', { name: key }, selection.version, selection.lang
              ) }}"
@@ -126,18 +135,14 @@
                     font-beaufort text-5xl text-gold/15">{{ c.name|slice(0, 2)|upper }}</span>
               <img src="{{ champion_art(key, 'loading') }}" alt="{{ c.name }}"
                    loading="lazy" decoding="async"
-                   class="relative h-full w-full object-cover object-top transition-transform
-                          duration-500 group-hover:scale-105">
-              {% if champIcon %}
-                <span class="absolute bottom-2 left-2 h-10 w-10 overflow-hidden border
-                             border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]">
-                  <picture>
-                    {% include 'components/_webp_source.html.twig'
-                       with { src: '/' ~ champIcon } only %}
-                    <img src="/{{ champIcon }}" alt="" width="40" height="40"
-                         loading="lazy" decoding="async" class="h-full w-full object-cover">
-                  </picture>
-                </span>
+                   class="hx-img relative h-full w-full object-cover object-top
+                          transition-transform duration-500 group-hover:scale-105">
+              {% if champIcon or champIconPending %}
+                {% include 'components/ui/resource_image.html.twig' with {
+                  src: champIcon, pending: champIconPending, name: champIconName,
+                  alt: '', initials: '', box_class: overlayBox,
+                  img_class: 'h-full w-full object-cover', size: 40
+                } only %}
               {% endif %}
             </div>
             <div class="p-3">
@@ -163,11 +168,16 @@
         link: 'homepage.items.see_all'|trans,
         count: counts.items
       } %}
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" data-img-scope="item"
+           data-img-version="{{ selection.version }}" data-img-batch="{{ image_status_batch() }}">
+        {% include 'components/codex/entity_card_image.html.twig'
+           with { as_template: true, img_fit: 'contain' } only %}
         {% for key, i in items.items %}
           {% include 'components/codex/entity_card.html.twig' with {
             href: resource_path('app_item', { name: key }, selection.version, selection.lang),
             img: items.images[key]|default(null),
+            img_name: i.image.full|default(null),
+            pending: items.pending,
             name: i.name,
             sub: 'id ' ~ key,
             img_fit: 'contain',
@@ -185,11 +195,16 @@
         link: 'homepage.summoners.see_all'|trans,
         count: counts.summoners
       } %}
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" data-img-scope="summoner"
+           data-img-version="{{ selection.version }}" data-img-batch="{{ image_status_batch() }}">
+        {% include 'components/codex/entity_card_image.html.twig'
+           with { as_template: true, img_fit: 'contain' } only %}
         {% for key, s in summoners.summoners %}
           {% include 'components/codex/entity_card.html.twig' with {
             href: resource_path('app_summoner', { name: key }, selection.version, selection.lang),
             img: summoners.images[key]|default(null),
+            img_name: s.image.full|default(null),
+            pending: summoners.pending,
             name: s.name,
             sub: key,
             img_fit: 'contain',

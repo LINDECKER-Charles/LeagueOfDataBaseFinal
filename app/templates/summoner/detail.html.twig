@@ -75,7 +75,7 @@
       <div class="seal">
         <div class="seal__icon">
           {% if image %}
-            <img src="/{{ image }}" alt="{{ summoner.name ?? 'Summoner spell' }}">
+            <img class="hx-img" src="/{{ image }}" alt="{{ summoner.name ?? 'Summoner spell' }}">
           {% else %}
             <span class="grid h-full w-full place-items-center font-beaufort text-2xl text-gold/70">
               {{ (summoner.name ?? '??')|slice(0, 2)|upper }}

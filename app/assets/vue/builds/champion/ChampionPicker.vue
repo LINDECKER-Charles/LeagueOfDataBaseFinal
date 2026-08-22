@@ -72,7 +72,7 @@ function choose(id: string): void {
                     v-if="selected?.image"
                     :src="selected.image"
                     :alt="''"
-                    class="forge-selected"
+                    class="hx-img forge-selected"
                     decoding="async"
                 />
                 <span class="forge-champ-toggle__label">
@@ -129,7 +129,7 @@ function choose(id: string): void {
                             :title="champion.name"
                             @click="choose(champion.id)"
                         >
-                            <img
+                            <img class="hx-img"
                                 v-if="champion.image"
                                 :src="champion.image"
                                 :alt="''"

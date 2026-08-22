@@ -154,8 +154,8 @@ final class HomeController extends AbstractPageController
      * down. A legitimate absence of data is already neutralised upstream (empty
      * set from the managers); this guard covers the errors the data layer
      * deliberately propagates. The empty shape keeps the keys the template
-     * expects (`<type>s`, `images`, `meta`) so it stays compatible with
-     * strict_variables — derived from the manager so it can never drift.
+     * expects (`<type>s`, `images`, `pending`, `meta`) so it stays compatible
+     * with strict_variables — derived from the manager so it can never drift.
      *
      * @return array<mixed>
      */
@@ -166,7 +166,7 @@ final class HomeController extends AbstractPageController
             // the shared constant rather than a literal on each side.
             return $manager->paginate($dataset, PageContextResolver::HOME_PER_PAGE);
         } catch (\Throwable) {
-            return [$manager->type() . 's' => [], 'images' => [], 'meta' => []];
+            return $manager->emptyPage();
         }
     }
 }

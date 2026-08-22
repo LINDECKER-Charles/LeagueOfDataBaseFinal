@@ -40,13 +40,23 @@
 
     {% include 'components/codex/list_filter.html.twig' with { grid_id: 'champion-grid' } %}
 
+    {# Versioned square icon (ingested per patch), overlaid on the unversioned
+       splash so the art carries a version-accurate cue — a refreshable slot
+       while cold (see components/ui/resource_image). #}
+    {% set overlayBox = 'absolute bottom-2 left-2 h-10 w-10 border border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]' %}
+    <div data-img-scope="champion" data-img-version="{{ meta.version }}"
+         data-img-batch="{{ image_status_batch() }}">
+    {% include 'components/ui/resource_image_template.html.twig' with {
+      box_class: overlayBox, img_class: 'h-full w-full object-cover', size: 40
+    } only %}
     <div id="champion-grid"
          class="resource-grid grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {% for c in champions %}
         {% set champId = c.id|default(c.name) %}
-        {# Versioned square icon (ingested per patch); overlaid on the unversioned
-           splash so the art carries a version-accurate cue. Null while cold. #}
         {% set champIcon = images[champId]|default(null) %}
+        {% set champIconName = c.image.full|default(null) %}
+        {% set champIconPending = champIcon is empty and champIconName is not empty
+          and pending[champIconName] is defined %}
         <a href="{{ resource_path('app_champion', { name: champId }, meta.version, meta.lang) }}"
            class="hextech-frame hextech-frame-hover group flex h-full flex-col overflow-hidden"
            data-search="{{ (c.name|default('') ~ ' ' ~ c.id|default(''))|lower }}"
@@ -58,18 +68,14 @@
                          text-gold/12">{{ c.name|default('??')|slice(0, 2)|upper }}</span>
             <img src="{{ champion_art(champId, 'loading') }}" alt="{{ c.name|default('') }}"
                  loading="lazy" decoding="async"
-                 class="relative h-full w-full object-cover object-top transition-transform
+                 class="hx-img relative h-full w-full object-cover object-top transition-transform
                         duration-500 group-hover:scale-105">
-            {% if champIcon %}
-              <span class="absolute bottom-2 left-2 h-10 w-10 overflow-hidden border
-                           border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]">
-                <picture>
-                  {% include 'components/_webp_source.html.twig'
-                     with { src: '/' ~ champIcon } only %}
-                  <img src="/{{ champIcon }}" alt="" width="40" height="40" loading="lazy"
-                       decoding="async" class="h-full w-full object-cover">
-                </picture>
-              </span>
+            {% if champIcon or champIconPending %}
+              {% include 'components/ui/resource_image.html.twig' with {
+                src: champIcon, pending: champIconPending, name: champIconName,
+                alt: '', initials: '', box_class: overlayBox,
+                img_class: 'h-full w-full object-cover', size: 40
+              } only %}
             {% endif %}
           </div>
           <div class="flex flex-1 flex-col p-4">
@@ -99,6 +105,7 @@
       {% else %}
         {% include 'components/ui/empty_state.html.twig' %}
       {% endfor %}
+    </div>
     </div>
   </div>
 </main>

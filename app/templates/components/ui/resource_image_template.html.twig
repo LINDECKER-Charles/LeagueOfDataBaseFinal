@@ -1,0 +1,15 @@
+{# The markup a pending slot turns into once its image lands — rendered once
+   per [data-img-scope] so the poller clones it (src / alt / webp patched in)
+   and the <picture> shape stays owned by resource_image. Placeholders are
+   inert inside <template>: nothing is fetched.
+   Params: the visual params of resource_image (box_class, img_class, size,
+   img_style). #}
+<template data-img-template>{% include 'components/ui/resource_image.html.twig' with {
+  src: '__SRC__',
+  webp: '/__WEBP__',
+  alt: '',
+  box_class: box_class|default(''),
+  img_class: img_class|default(''),
+  size: size,
+  img_style: img_style|default(null)
+} only %}</template>

@@ -68,6 +68,7 @@ abstract class AbstractResourceController extends AbstractPageController
         return $this->render($template, [
             $collection => $data[$collection],
             'images'    => $data['images'],
+            'pending'   => $data['pending'],
             'meta'      => $data['meta'],
             'client'    => $this->clientData(),
         ] + ($extraVars === null ? [] : $extraVars($data, $version, $lang)));

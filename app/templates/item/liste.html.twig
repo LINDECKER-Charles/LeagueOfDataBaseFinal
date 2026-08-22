@@ -36,6 +36,10 @@
 
     {% include 'components/codex/list_filter.html.twig' with { grid_id: 'item-grid' } %}
 
+    <div data-img-scope="item" data-img-version="{{ meta.version }}"
+         data-img-batch="{{ image_status_batch() }}">
+    {% include 'components/codex/entity_card_image.html.twig'
+       with { as_template: true, img_fit: 'contain' } only %}
     <div id="item-grid"
          class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for id, item in items %}
@@ -44,6 +48,7 @@
         {% embed 'components/codex/entity_card.html.twig' with {
           href: resource_path('app_item', { name: id }, meta.version, meta.lang),
           img: images[id]|default(null),
+          img_name: item.image.full|default(null),
           name: item.name|default(''),
           sub: id,
           img_fit: 'contain',
@@ -97,7 +102,7 @@
                              title="{{ child.name|default(iid) }}">
                             {% if child and child.image %}<img src="/{{ child.image }}"
                               alt="{{ child.name }}" width="24" height="24" loading="lazy"
-                              decoding="async" class="h-6 w-6 object-contain">{% endif %}
+                              decoding="async" class="hx-img h-6 w-6 object-contain">{% endif %}
                             <span class="font-mono text-xs text-text-muted
                               group-hover/evo:text-hex">{{ child.name|default(iid) }}</span>
                           </a>
@@ -124,6 +129,7 @@
       {% else %}
         {% include 'components/ui/empty_state.html.twig' %}
       {% endfor %}
+    </div>
     </div>
   </div>
 </main>

@@ -16,6 +16,7 @@
 @import "./foundation/base.css";
 @import "./primitives/index.css";
 @import "./foundation/skeleton.css";
+@import "./foundation/images.css";
 @import "./codex/list.css";
 @import "./foundation/ddragon.css";
 @import "./foundation/prose.css";

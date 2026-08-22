@@ -1,6 +1,7 @@
 import { installConfirmSubmit } from './confirmSubmit'
 import { installContactDialog } from './contactDialog'
-import { installImageFallback } from './imageFallback'
+import { installImageLifecycle } from '../images/imageLifecycle'
+import { installPendingImages } from '../images/pendingImages'
 import { installReveal } from './reveal'
 import { installScrollspy } from './scrollspy'
 import { installSectionNav } from './sectionNav'
@@ -15,7 +16,8 @@ import { installSwitcherAutoClose } from './switchers'
 export function installEnhancements(): void {
     installReveal()
     installScrollspy()
-    installImageFallback()
+    installImageLifecycle()
+    installPendingImages()
     installSwitcherAutoClose()
     installSectionNav()
     installContactDialog()
