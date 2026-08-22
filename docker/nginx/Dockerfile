@@ -4,7 +4,7 @@
 ARG APP_IMAGE=lodb/app:latest
 FROM ${APP_IMAGE} AS app
 
-FROM nginx:1.27-alpine
+FROM nginx:1.30-alpine
 COPY docker/nginx/nginx.conf   /etc/nginx/nginx.conf
 COPY docker/nginx/snippets     /etc/nginx/snippets
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
