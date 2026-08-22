@@ -38,8 +38,9 @@
       } %}
     </header>
 
-    {% include 'components/codex/list_filter.html.twig'
+    {% embed 'components/codex/list_filter.html.twig'
        with { grid_id: 'champion-grid', facet_type: 'champion' } %}
+    {% block grid %}
 
     {# Versioned square icon (ingested per patch), overlaid on the unversioned
        splash so the art carries a version-accurate cue — a refreshable slot
@@ -108,6 +109,8 @@
       {% endfor %}
     </div>
     </div>
+    {% endblock %}
+    {% endembed %}
   </div>
 </main>
 {% endblock %}

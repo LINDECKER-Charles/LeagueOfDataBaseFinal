@@ -5,17 +5,22 @@ import type { FacetDefinition } from '../../filter/facets'
 import ResourceFilter from './ResourceFilter.vue'
 
 /**
- * Contract of the island with its server-rendered grid and the page URL: it
- * reads `#grid > [data-search]` and the `data-f-*` values, paints exactly one
- * page of the matching cards, offers only the facets the grid carries, starts
- * from the URL and writes the state back to it — and restores the grid
- * untouched on teardown (a Turbo visit reuses the same DOM).
+ * Contract of the island with its server-rendered grid, the layout slots and
+ * the page URL: it reads `#grid > [data-search]` and the `data-f-*` values,
+ * paints exactly one page of the matching cards, offers only the facets the
+ * grid carries (counted in context), fills the `-bar` / `-head` / `-empty`
+ * slots around the grid, starts from the URL and writes the state back to it
+ * — and restores the grid untouched on teardown (a Turbo visit reuses the
+ * same DOM).
  */
 const LABELS = {
-    results: '%count% results', empty: 'Nothing', clear: 'Clear', prev: 'Previous', next: 'Next',
-    perPage: 'Per page', all: 'All', filters: 'Filters', close: 'Close', advanced: 'Advanced',
-    matchAny: 'Any', matchAll: 'All of', min: 'Min', max: 'Max', copy: 'Copy', copied: 'Copied',
-    copyError: 'Copy below', active: 'Active',
+    results: '%count% results', resultsOne: '%count% result', page: 'page %page% / %count%',
+    gauge: 'Results', empty: 'Nothing',
+    emptyTitle: 'No results', emptyCta: 'Clear filters', clear: 'Clear', clearAll: 'Clear all',
+    prev: 'Previous', next: 'Next', perPage: 'Per page', all: 'All', filters: 'Filters',
+    showResults: 'Show %count% results', showResultsOne: 'Show %count% result',
+    matchMode: 'Combine', matchAny: 'Any', matchAll: 'All of',
+    min: 'Min', max: 'Max', copy: 'Copy', copied: 'Copied', copyError: 'Copy below', active: 'Active',
 }
 
 const facet = (partial: Partial<FacetDefinition> & Pick<FacetDefinition, 'key' | 'kind'>): FacetDefinition => ({
@@ -34,23 +39,32 @@ const FACETS = [
 ]
 
 /** Items carry an edition: the LoL Classic twin of Boots shares its name. */
-const ITEMS: [string, string, string, number][] = [
+const ITEMS: [string, string, string, number, boolean?][] = [
     ['boots 1001', 'Boots', 'modern', 300],
     ['dagger 1042', 'Damage', 'modern', 250],
     ['boots 771001', 'Boots', 'classic', 300],
 ]
+const POTION: (typeof ITEMS)[number] = ['potion 2003', 'Consumable', 'modern', 50, true]
 
-function renderGrid(): void {
-    document.body.innerHTML = `<div id="grid">${ITEMS
-        .map(([name, tag, edition, price]) =>
-            `<article data-search="${name}" data-f-tag="${tag}" data-f-edition="${edition}" data-f-price="${price}"></article>`)
-        .join('')}</div>`
+function renderLayout(items = ITEMS): void {
+    const cards = items
+        .map(([name, tag, edition, price, isConsumable]) =>
+            `<article data-search="${name}" data-f-tag="${tag}" data-f-edition="${edition}" data-f-price="${price}"`
+            + `${isConsumable ? ' data-f-consumable="1"' : ''}></article>`)
+        .join('')
+    document.body.innerHTML = `
+        <div id="grid-bar"></div>
+        <div id="grid-head"></div>
+        <div id="grid">${cards}</div>
+        <div id="grid-empty"></div>`
 }
 
 async function mountFilter(pageSize = 2, facets = FACETS) {
+    const host = document.createElement('aside')
+    document.body.prepend(host)
     const wrapper = mount(ResourceFilter, {
         props: { gridId: 'grid', pageSize, pageSizes: [2, 4], facets, labels: LABELS },
-        attachTo: document.body,
+        attachTo: host,
     })
     // The grid is scanned in onMounted: let the resulting render flush.
     await nextTick()
@@ -62,13 +76,21 @@ const visible = () =>
         .filter((el) => el.style.display !== 'none')
         .map((el) => el.dataset.search)
 
-const chip = (wrapper: ReturnType<typeof mount>, text: string) =>
-    wrapper.findAll('.filter-chip').find((b) => b.text() === text)!
+/** A chip reads "<label> <count>"; the console (wrapper root) holds the desktop set. */
+const chip = (wrapper: ReturnType<typeof mount>, label: string) =>
+    wrapper.findAll('.filter-console .filter-chip').find((b) => b.text().startsWith(label))!
+const chipText = (wrapper: ReturnType<typeof mount>) =>
+    wrapper.findAll('.filter-console .filter-chip').map((b) => b.text().replace(/\s+/g, ' '))
+const slot = (id: string) => document.getElementById(id)!
+const click = async (el: Element | null) => {
+    el!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await nextTick()
+}
 
 beforeEach(() => {
     vi.useFakeTimers()
     window.history.replaceState(null, '', '/objects')
-    renderGrid()
+    renderLayout()
 })
 
 afterEach(() => {
@@ -84,25 +106,44 @@ describe('ResourceFilter', () => {
         expect(document.getElementById('grid')!.dataset.ready).toBe('true')
     })
 
-    it('offers only the facets the grid carries', async () => {
+    it('offers only the facets the grid carries, counted, primary groups unfolded', async () => {
         const wrapper = await mountFilter()
 
-        const chips = wrapper.findAll('.facet--inline .filter-chip').map((b) => b.text())
-        expect(chips).toEqual(['Boots', 'Damage', 'Current', 'LoL Classic'])
-        // A flag no card carries is not offered; the price range is (250 < 300).
+        expect(chipText(wrapper)).toEqual(['Boots 2', 'Damage 1', 'Current 2', 'LoL Classic 1'])
+        // A flag no card carries is not offered: its group does not exist.
+        expect(wrapper.findAll('.filter-console .facet-group__name').map((g) => g.text()))
+            .toEqual(['Category', 'Price'])
         expect(wrapper.find('.facet--toggle').exists()).toBe(false)
-        expect(wrapper.find('.filter-trigger[aria-expanded]').exists()).toBe(true)
+        // The price range (250 < 300) waits folded in its non-primary group.
+        expect(wrapper.find('.filter-console .facet--range').exists()).toBe(false)
+        await wrapper.findAll('.filter-console .facet-group__title')[1].trigger('click')
+        expect(wrapper.find('.filter-console .facet--range').exists()).toBe(true)
     })
 
-    it('narrows by search and facets, ANDing the axes, and counts', async () => {
+    it('fills the bar, head and empty slots around the grid', async () => {
+        await mountFilter()
+
+        expect(slot('grid-bar').querySelector('.filter-trigger')).not.toBeNull()
+        expect(slot('grid-head').textContent).toContain('3')
+        expect(slot('grid-head').textContent).toContain('page 1 / 2')
+        expect(slot('grid-empty').querySelector('.filter-empty')).toBeNull()
+    })
+
+    it('narrows by search and facets, ANDing the axes, and recounts in context', async () => {
         const wrapper = await mountFilter(4)
 
         await chip(wrapper, 'Boots').trigger('click')
         expect(visible()).toEqual(['boots 1001', 'boots 771001'])
+        // Edition is counted among the Boots only; tags keep counting on their own axis.
+        expect(chipText(wrapper)).toEqual(['Boots 2', 'Damage 1', 'Current 1', 'LoL Classic 1'])
         await chip(wrapper, 'LoL Classic').trigger('click')
         expect(visible()).toEqual(['boots 771001'])
-        expect(wrapper.text()).toContain('1 results')
-        expect(wrapper.find('.filter-trigger b').text()).toBe('2')
+        // Nothing classic carries Damage: the chip stays visible but cannot be chosen.
+        expect(chipText(wrapper)).toEqual(['Boots 1', 'Damage 0', 'Current 1', 'LoL Classic 1'])
+        expect(chip(wrapper, 'Damage').attributes('disabled')).toBeDefined()
+        expect(slot('grid-head').querySelector('.filter-toolbar__count-n')!.textContent).toBe('1')
+        expect(slot('grid-bar').querySelector('.filter-trigger b')!.textContent).toBe('2')
+        expect(wrapper.find('.filter-gauge__value').text()).toBe('1 / 3')
     })
 
     it('starts from the URL and writes the state back to it', async () => {
@@ -110,34 +151,110 @@ describe('ResourceFilter', () => {
         const wrapper = await mountFilter()
 
         expect(visible()).toEqual(['dagger 1042'])
-        await wrapper.find('input[type="search"]').setValue('dag')
         await chip(wrapper, 'Boots').trigger('click')
+        await wrapper.find('.filter-console input[type="search"]').setValue('dag')
         vi.advanceTimersByTime(400)
 
         expect(window.location.search).toBe('?lang=fr_FR&q=dag&tag=Boots%2CDamage&size=4')
         // Chips read in the order the values were chosen; the URL is the sorted one.
-        expect(wrapper.find('.active-filters').text()).toContain('tag: Damage, Boots')
+        expect(slot('grid-head').querySelector('.active-filters')!.textContent).toContain('tag: Damage, Boots')
     })
 
     it('sends a stranded page back to the first one when the filter narrows', async () => {
         const wrapper = await mountFilter()
-        await wrapper.findAll('.filter-nav')[1].trigger('click')
+        await click(slot('grid-head').querySelectorAll('.filter-nav')[1])
         expect(visible()).toEqual(['boots 771001'])
 
-        await wrapper.find('input[type="search"]').setValue('boots')
+        await wrapper.find('.filter-console input[type="search"]').setValue('boots')
         expect(visible()).toEqual(['boots 1001', 'boots 771001'])
     })
 
-    it('clears everything at once', async () => {
+    it('shows the empty state and clears everything from it', async () => {
         const wrapper = await mountFilter(4)
         await chip(wrapper, 'Boots').trigger('click')
-        await wrapper.find('input[type="search"]').setValue('771')
-        expect(visible()).toEqual(['boots 771001'])
+        await wrapper.find('.filter-console input[type="search"]').setValue('dagger')
+        expect(visible()).toEqual([])
+        expect(slot('grid-empty').querySelector('.filter-empty__title')!.textContent).toBe('No results')
 
-        await wrapper.find('.active-filters .filter-clear').trigger('click')
+        await click(slot('grid-empty').querySelector('.filter-empty .hx-btn'))
 
         expect(visible()).toHaveLength(3)
-        expect(wrapper.find('.active-filters').exists()).toBe(false)
+        expect(slot('grid-head').querySelector('.active-filters')).toBeNull()
+        expect(slot('grid-empty').querySelector('.filter-empty')).toBeNull()
+    })
+
+    it('jumps to the search field on "/" unless the reader is already typing', async () => {
+        const wrapper = await mountFilter()
+        const input = wrapper.find<HTMLInputElement>('.filter-console input[type="search"]').element
+        // jsdom lays nothing out: stand in for a visible field.
+        Object.defineProperty(input, 'offsetParent', { value: document.body })
+
+        const event = new KeyboardEvent('keydown', { key: '/', cancelable: true })
+        window.dispatchEvent(event)
+        expect(document.activeElement).toBe(input)
+        expect(event.defaultPrevented).toBe(true)
+
+        const typed = new KeyboardEvent('keydown', { key: '/', cancelable: true })
+        window.dispatchEvent(typed)
+        expect(typed.defaultPrevented).toBe(false)
+    })
+
+    it('keeps a group unfolded once engaged, even after its last facet is cleared', async () => {
+        const wrapper = await mountFilter(4)
+        await wrapper.findAll('.filter-console .facet-group__title')[1].trigger('click')
+        const minField = wrapper.find<HTMLInputElement>('.filter-console .facet__field input')
+        // Fields commit on change only: typing never rewrites them under the reader.
+        await minField.setValue('300')
+        await minField.trigger('change')
+        expect(visible()).toEqual(['boots 1001', 'boots 771001'])
+        expect(wrapper.find('.filter-console .facet-group__badge').text()).toBe('1')
+
+        await wrapper.find('.filter-console .facet__reset').trigger('click')
+
+        expect(visible()).toHaveLength(3)
+        expect(wrapper.find('.filter-console .facet--range').exists()).toBe(true)
+    })
+
+    it('offers a flag as a counted switch', async () => {
+        renderLayout([...ITEMS, POTION])
+        const wrapper = await mountFilter(4)
+        await wrapper.findAll('.filter-console .facet-group__title')[2].trigger('click')
+        const toggle = wrapper.find('.filter-console .facet--toggle')
+        expect(toggle.text()).toContain('1')
+
+        await toggle.find('input').setValue(true)
+
+        expect(visible()).toEqual(['potion 2003'])
+        // No boots are consumable: the chip reads 0 and cannot be chosen.
+        expect(chip(wrapper, 'Boots').text()).toBe('Boots 0')
+        expect(chip(wrapper, 'Boots').attributes('disabled')).toBeDefined()
+    })
+
+    it('opens the sheet from the bar, reading the live count on its call to action', async () => {
+        await mountFilter(4)
+        const dialog = document.querySelector<HTMLDialogElement>('dialog.filter-sheet')!
+        dialog.showModal = vi.fn(() => dialog.setAttribute('open', ''))
+        dialog.close = vi.fn(() => dialog.removeAttribute('open'))
+
+        await click(slot('grid-bar').querySelector('.filter-trigger'))
+        expect(dialog.open).toBe(true)
+        expect(dialog.querySelector('.filter-sheet__done')!.textContent).toBe('Show 3 results')
+        expect((dialog.querySelector('.filter-sheet__clear') as HTMLButtonElement).disabled).toBe(true)
+
+        await click(Array.from(dialog.querySelectorAll('.filter-chip')).find((b) => b.textContent!.includes('Damage'))!)
+        expect(dialog.querySelector('.filter-sheet__done')!.textContent).toBe('Show 1 result')
+        expect((dialog.querySelector('.filter-sheet__clear') as HTMLButtonElement).disabled).toBe(false)
+
+        await click(dialog.querySelector('.filter-sheet__done'))
+        expect(dialog.open).toBe(false)
+        expect(visible()).toEqual(['dagger 1042'])
+    })
+
+    it('leaves an empty server-rendered grid to its own empty state', async () => {
+        renderLayout([])
+        await mountFilter()
+
+        expect(slot('grid-empty').querySelector('.filter-empty')).toBeNull()
     })
 
     it('restores the grid on teardown', async () => {
@@ -146,5 +263,6 @@ describe('ResourceFilter', () => {
 
         expect(visible()).toHaveLength(3)
         expect(document.getElementById('grid')!.dataset.ready).toBeUndefined()
+        expect(slot('grid-head').children).toHaveLength(0)
     })
 })

@@ -154,3 +154,24 @@ function collectUniverse(cards: readonly GridCard[]): FacetUniverse {
     }
     return universe
 }
+
+/** The facets the grid can actually be narrowed by — something to choose from. */
+export function offeredFacets(
+    schema: readonly FacetDefinition[],
+    universe: FacetUniverse,
+): FacetDefinition[] {
+    return schema.filter((facet) => isOffered(facet, universe))
+}
+
+function isOffered(facet: FacetDefinition, universe: FacetUniverse): boolean {
+    switch (facet.kind) {
+        case 'choice':
+            return (universe.present[facet.key]?.size ?? 0) > 0
+        case 'range': {
+            const bounds = universe.bounds[facet.key]
+            return bounds !== undefined && bounds.min < bounds.max
+        }
+        case 'toggle':
+            return (universe.flagged[facet.key] ?? 0) > 0
+    }
+}

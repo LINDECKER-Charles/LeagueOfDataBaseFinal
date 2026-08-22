@@ -49,8 +49,9 @@
       {% endfor %}
     </nav>
 
-    {% include 'components/codex/list_filter.html.twig'
+    {% embed 'components/codex/list_filter.html.twig'
        with { grid_id: 'rune-grid', facet_type: 'runesReforged' } %}
+    {% block grid %}
 
     <div data-img-scope="runesReforged" data-img-version="{{ meta.version }}"
          data-img-batch="{{ image_status_batch() }}">
@@ -94,6 +95,8 @@
       {% endfor %}
     </div>
     </div>
+    {% endblock %}
+    {% endembed %}
   </div>
 </main>
 {% endblock %}

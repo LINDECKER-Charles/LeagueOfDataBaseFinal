@@ -6,18 +6,16 @@ import {
     type FacetDefinition,
     type FacetState,
 } from '../../../filter/facets'
-import CopyLink from '../../ui/CopyLink.vue'
 
 /**
- * What is currently filtering the grid, as removable chips, plus the share
- * link of that exact state. Rendered only while something is engaged.
+ * What is currently filtering the grid, as removable chips above the results.
+ * Rendered only while something is engaged.
  */
 const props = defineProps<{
     schema: readonly FacetDefinition[]
     state: FacetState
     query: string
-    shareUrl: string
-    labels: { active: string; clear: string; copy: string; copied: string; copyError: string }
+    labels: { active: string; clearAll: string }
 }>()
 
 const emit = defineEmits<{
@@ -57,7 +55,7 @@ function describe(facet: FacetDefinition, state: FacetState): string | null {
 
 <template>
     <div class="active-filters" role="region" :aria-label="labels.active">
-        <span class="facet__label">{{ labels.active }}</span>
+        <span class="filter-marker filter-marker--on" aria-hidden="true"></span>
         <button v-if="query.trim() !== ''" type="button" class="active-filters__chip"
                 @click="emit('clearQuery')">
             <span>“{{ query.trim() }}”</span><i aria-hidden="true">×</i>
@@ -66,8 +64,6 @@ function describe(facet: FacetDefinition, state: FacetState): string | null {
                 @click="emit('clearFacet', chip.key)">
             <span>{{ chip.text }}</span><i aria-hidden="true">×</i>
         </button>
-        <button type="button" class="filter-clear" @click="emit('clearAll')">{{ labels.clear }}</button>
-        <CopyLink class="active-filters__share" :url="shareUrl"
-                  :labels="{ copy: labels.copy, copied: labels.copied, error: labels.copyError }" />
+        <button type="button" class="filter-clear" @click="emit('clearAll')">{{ labels.clearAll }}</button>
     </div>
 </template>

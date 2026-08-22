@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef, type Ref } from 'vue'
+import { computed, inject, provide, ref, type ComputedRef, type InjectionKey, type Ref } from 'vue'
 import {
     activeFacetCount,
     withChoiceMatchAll,
@@ -40,4 +40,21 @@ export function useFacetState(initial: FacetState): FacetStateStore {
         clearFacet: (key) => (facets.value = withSelection(facets.value, key, undefined)),
         clearAll: () => (facets.value = {}),
     }
+}
+
+/*
+ * The island owns one store that the rail, the mobile sheet and every facet
+ * control mutate. It is provided rather than threaded through three levels of
+ * emits: the facet controls are only ever rendered under a ResourceFilter.
+ */
+const FACET_STORE: InjectionKey<FacetStateStore> = Symbol('facetStore')
+
+export function provideFacetStore(store: FacetStateStore): void {
+    provide(FACET_STORE, store)
+}
+
+export function injectFacetStore(): FacetStateStore {
+    const store = inject(FACET_STORE)
+    if (!store) throw new Error('Facet controls must be rendered under a ResourceFilter island.')
+    return store
 }

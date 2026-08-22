@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatTemplate } from './formatTemplate'
+import { formatTemplate, splitTemplate } from './formatTemplate'
 
 describe('formatTemplate', () => {
     it('substitutes every placeholder of the template', () => {
@@ -17,5 +17,17 @@ describe('formatTemplate', () => {
 
     it('accepts strings as well as numbers', () => {
         expect(formatTemplate('Hello %name%', { name: 'Ahri' })).toBe('Hello Ahri')
+    })
+})
+
+describe('splitTemplate', () => {
+    it('returns the text on each side of the placeholder', () => {
+        expect(splitTemplate('%count% results', 'count')).toEqual({ before: '', after: ' results' })
+        expect(splitTemplate('Showing %count% of all', 'count'))
+            .toEqual({ before: 'Showing ', after: ' of all' })
+    })
+
+    it('keeps the whole text before an absent placeholder', () => {
+        expect(splitTemplate('Results', 'count')).toEqual({ before: 'Results', after: '' })
     })
 })

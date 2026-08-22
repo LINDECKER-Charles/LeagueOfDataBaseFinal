@@ -32,8 +32,9 @@
       } %}
     </header>
 
-    {% include 'components/codex/list_filter.html.twig'
+    {% embed 'components/codex/list_filter.html.twig'
        with { grid_id: 'summoner-grid', facet_type: 'summoner' } %}
+    {% block grid %}
 
     <div data-img-scope="summoner" data-img-version="{{ meta.version }}"
          data-img-batch="{{ image_status_batch() }}">
@@ -107,6 +108,8 @@
       {% endfor %}
     </div>
     </div>
+    {% endblock %}
+    {% endembed %}
   </div>
 </main>
 {% endblock %}

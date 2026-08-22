@@ -1,0 +1,272 @@
+/* ---------------------------------------------------------------------------
+   List filter layout — the frame the ResourceFilter island lives in
+   (components/codex/list_filter.html.twig): the two-column rail layout, the
+   sticky filter console, the mobile search bar, the results head, the empty
+   state and the mobile bottom sheet. The control vocabulary (chips, sliders,
+   groups) is in filter.css. Composes the Hextech tokens; no new palette.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ---- Rail layout — a grid with named areas, so the rail side and the
+     mobile bar are pure CSS: the DOM order never changes. ------------------- */
+  .filter-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "bar" "results";
+    gap: 1rem;
+    align-items: start;
+  }
+  /* The bar slot itself sticks (a sticky box only travels inside its parent,
+     and the slot is as tall as the bar): it pins under the top of the page,
+     clear of the status bar in the installed PWA. */
+  .filter-layout__bar {
+    grid-area: bar;
+    position: sticky;
+    top: env(safe-area-inset-top, 0);
+    z-index: 20;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-void) 97%, transparent), color-mix(in srgb, var(--color-void) 88%, transparent));
+    backdrop-filter: blur(8px);
+  }
+  .filter-layout__console { grid-area: console; display: none; }
+  .filter-layout__results { grid-area: results; display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+  .filter-layout__head { display: flex; flex-direction: column; gap: 1rem; }
+  /* Reserved heights keep the server-rendered grid still while the chunk loads. */
+  .filter-layout__bar { min-height: 4rem; }
+  .filter-layout__head:empty { min-height: 2rem; }
+  @media (width >= 64rem) {
+    .filter-layout {
+      grid-template-columns: 18.75rem minmax(0, 1fr);
+      grid-template-areas: "console results";
+      gap: 1.75rem;
+    }
+    .filter-layout[data-rail="right"] {
+      grid-template-columns: minmax(0, 1fr) 18.75rem;
+      grid-template-areas: "results console";
+    }
+    .filter-layout__bar { display: none; }
+    .filter-layout__console { display: block; position: sticky; top: 1rem; }
+  }
+
+  /* ---- Console (desktop rail) ----------------------------------------------- */
+  .filter-console {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 2rem);
+    background: linear-gradient(180deg, rgba(26, 38, 60, 0.94), rgba(10, 20, 40, 0.96));
+    border: 1px solid color-mix(in srgb, var(--color-gold) 42%, transparent);
+    clip-path: var(--hx-bevel);
+    box-shadow:
+      inset 0 1px 0 rgba(240, 230, 210, 0.06),
+      0 12px 44px -14px rgba(1, 10, 19, 0.85);
+  }
+  /* A cyan seam lights the rail's edge while something filters. */
+  .filter-console__glow {
+    position: absolute;
+    left: 0;
+    top: 1rem;
+    bottom: 1rem;
+    width: 2px;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(180deg, transparent, var(--color-hex), transparent);
+    transition: opacity 0.3s var(--ease-hextech);
+  }
+  .filter-console--engaged .filter-console__glow { opacity: 1; }
+  .filter-console__head,
+  .filter-sheet__head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .filter-console__head {
+    padding: 0.9rem 1rem 0.75rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+    background: color-mix(in srgb, var(--color-hextech-black) 35%, transparent);
+  }
+  .filter-console__title {
+    font-family: var(--font-beaufort);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--color-text);
+  }
+  .filter-console__clear { margin-left: auto; }
+  .filter-console__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 1rem;
+    scrollbar-width: thin;
+  }
+  .filter-console__foot {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+    background: color-mix(in srgb, var(--color-hextech-black) 35%, transparent);
+  }
+  .filter-console__share,
+  .filter-console__share .hx-btn-ghost { width: 100%; }
+  .filter-console__share .hx-btn-ghost { min-height: 2.25rem; padding: 0.3rem 0.75rem; font-size: 0.7rem; }
+
+  /* ---- Search field (rail and mobile bar) ------------------------------------ */
+  .filter-search { position: relative; display: block; min-width: 0; }
+  .filter-search__icon {
+    pointer-events: none;
+    position: absolute;
+    left: 0.7rem;
+    top: 50%;
+    width: 15px;
+    height: 15px;
+    translate: 0 -50%;
+    color: var(--color-text-muted);
+  }
+  .filter-search__input {
+    width: 100%;
+    padding: 0.55rem 2rem 0.55rem 2.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--color-text);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+    background: color-mix(in srgb, var(--color-hextech-black) 55%, transparent);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    transition: border-color 0.25s var(--ease-hextech), box-shadow 0.25s var(--ease-hextech);
+  }
+  .filter-search__input::placeholder { color: color-mix(in srgb, var(--color-text-muted) 70%, transparent); }
+  /* Inset: the bevel clip-path would swallow an outer ring or halo. */
+  .filter-search__input:focus {
+    outline: none;
+    border-color: var(--color-hex);
+    box-shadow: inset 0 0 0 1px var(--color-hex), inset 0 0 14px -4px color-mix(in srgb, var(--color-hex) 50%, transparent);
+  }
+  .filter-search__kbd {
+    position: absolute;
+    right: 0.6rem;
+    top: 50%;
+    translate: 0 -50%;
+    padding: 0 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-text-dim);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+  }
+  .filter-search--bar { flex: 1; }
+  .filter-search--bar .filter-search__input { min-height: 2.75rem; font-size: 0.875rem; padding-right: 0.75rem; }
+
+  /* ---- Result gauge ----------------------------------------------------------- */
+  .filter-gauge__head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+  .filter-gauge__value { margin-left: auto; font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-hex); }
+  .filter-gauge__track { margin-top: 0.35rem; height: 3px; background: color-mix(in srgb, var(--color-gold-deep) 35%, transparent); }
+  .filter-gauge__fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-gold-deep), var(--color-gold) 60%, var(--color-hex));
+    box-shadow: 0 0 8px color-mix(in srgb, var(--color-hex) 40%, transparent);
+    transition: width 0.3s var(--ease-hextech);
+  }
+
+  /* ---- Mobile bar — search + sheet trigger, inside the sticky bar slot -------- */
+  .filter-mobilebar { display: flex; gap: 0.5rem; padding: 0.6rem 0; }
+
+  /* ---- Results head ------------------------------------------------------------ */
+  .filter-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem 1rem;
+  }
+  .filter-toolbar__count { display: flex; align-items: baseline; gap: 0.5rem; margin: 0; }
+  .filter-toolbar__count-n { font-family: var(--font-mono); font-size: 1.05rem; line-height: 1; color: var(--color-hex); }
+  .filter-toolbar__count-text { font-size: 0.8rem; color: var(--color-text-muted); }
+  .filter-toolbar__count-text:empty { display: none; }
+  .filter-toolbar__dot { color: var(--color-gold-dark); }
+  .filter-toolbar__page { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-dim); }
+  .filter-toolbar__tools { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.9rem; }
+  .filter-toolbar__sizes { display: flex; align-items: center; gap: 0.5rem; }
+
+  /* ---- Empty state --------------------------------------------------------------- */
+  .filter-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 3.5rem 1.5rem;
+    text-align: center;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+    background: color-mix(in srgb, var(--color-hextech-black) 45%, transparent);
+    clip-path: var(--hx-bevel);
+  }
+  .filter-empty .filter-marker { width: 10px; height: 10px; }
+  .filter-empty__title {
+    margin: 0;
+    font-family: var(--font-beaufort);
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text);
+  }
+  .filter-empty__text { margin: 0; font-family: var(--font-mono); font-size: 0.78rem; color: var(--color-text-muted); }
+  .filter-empty .hx-btn { margin-top: 0.4rem; }
+
+  /* ---- Bottom sheet (mobile) — native <dialog> ---------------------------------- */
+  .filter-sheet {
+    display: flex;
+    flex-direction: column;
+    margin: auto auto 0;
+    width: 100%;
+    max-width: none;
+    max-height: 84dvh;
+    border: 0;
+    border-top: 1px solid var(--color-gold-deep);
+    background: linear-gradient(180deg, var(--color-panel), var(--color-hextech-black));
+    color: var(--color-text);
+    padding: 0.75rem 1.25rem calc(1rem + env(safe-area-inset-bottom));
+  }
+  .filter-sheet:not([open]) { display: none; }
+  .filter-sheet::backdrop { background: rgba(1, 10, 19, 0.6); backdrop-filter: blur(3px); }
+  .filter-sheet__handle {
+    width: 2.5rem;
+    height: 4px;
+    margin: 0 auto 0.75rem;
+    background: color-mix(in srgb, var(--color-gold) 50%, transparent);
+  }
+  .filter-sheet__head { margin-bottom: 0.6rem; }
+  /* Head and footer stay put; only the facets scroll (vertical pan only, so a
+     slider thumb drag is never mistaken for a page scroll). */
+  .filter-sheet__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; }
+  .filter-sheet__footer {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+  }
+  .filter-sheet__clear {
+    min-height: 2.75rem;
+    padding: 0.4rem 0.9rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-muted);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+    background: transparent;
+  }
+  .filter-sheet__clear:disabled { opacity: 0.4; cursor: not-allowed; }
+  .filter-sheet__done { flex: 1; min-height: 2.75rem; font-size: 0.78rem; letter-spacing: 0.14em; }
+  .filter-sheet__done:focus-visible { box-shadow: inset 0 0 0 2px var(--color-hex); }
+  /* iOS Safari zooms the viewport into any field under 16px. */
+  @media (pointer: coarse) {
+    .filter-search .filter-search__input { font-size: 1rem; }
+  }
+  @starting-style {
+    .filter-sheet[open] { translate: 0 100%; }
+  }
+  .filter-sheet[open] { translate: 0 0; transition: translate 0.35s var(--ease-hextech); }
+  @media (prefers-reduced-motion: reduce) {
+    .filter-sheet[open], .filter-console__glow, .filter-gauge__fill { transition: none; }
+  }
+}

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
     activeFacetCount,
+    countEngaged,
+    groupFacets,
+    isGroupOpenByDefault,
     matchesFacets,
     withChoiceMatchAll,
     withChoiceToggled,
@@ -78,11 +81,42 @@ describe('transitions', () => {
         expect(withToggle({ purchasable: true }, 'purchasable', false)).toEqual({})
     })
 
-    it('counts one per chosen value, one per range or toggle', () => {
+    it('counts engaged facets, whatever the number of chosen values', () => {
         expect(activeFacetCount({
             tag: { values: ['a', 'b'], all: false },
             price: { min: 0, max: 1 },
             purchasable: true,
-        })).toBe(4)
+        })).toBe(3)
+    })
+})
+
+describe('groupFacets', () => {
+    const grouped = [
+        facet({ key: 'role', kind: 'choice', group: 'Profile', primary: true }),
+        facet({ key: 'hp', kind: 'range', group: 'Stats' }),
+        facet({ key: 'range', kind: 'choice', group: 'Profile' }),
+        facet({ key: 'armor', kind: 'range', group: 'Stats' }),
+    ]
+
+    it('keeps the schema order of groups and of facets within them', () => {
+        expect(groupFacets(grouped).map((g) => [g.name, g.facets.map((f) => f.key)])).toEqual([
+            ['Profile', ['role', 'range']],
+            ['Stats', ['hp', 'armor']],
+        ])
+    })
+
+    it('counts the engaged facets of a group', () => {
+        const [profile, stats] = groupFacets(grouped)
+        const state = { role: { values: ['Tank'], all: false }, hp: { min: 500, max: 600 } }
+        expect(countEngaged(profile.facets, state)).toBe(1)
+        expect(countEngaged(stats.facets, state)).toBe(1)
+        expect(countEngaged(stats.facets, {})).toBe(0)
+    })
+
+    it('unfolds a group by default for a primary facet or an engaged one', () => {
+        const [profile, stats] = groupFacets(grouped)
+        expect(isGroupOpenByDefault(profile, {})).toBe(true)
+        expect(isGroupOpenByDefault(stats, {})).toBe(false)
+        expect(isGroupOpenByDefault(stats, { armor: { min: 20, max: 40 } })).toBe(true)
     })
 })

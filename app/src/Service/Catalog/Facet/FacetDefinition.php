@@ -21,8 +21,8 @@ final class FacetDefinition
      * @param list<Option> $options known values with their display labels, in
      *                              display order — the island only shows the
      *                              ones actually present in the grid
-     * @param bool $isPrimary shown inline above the grid (the others sit in
-     *                        the advanced panel)
+     * @param bool $isPrimary a main axis of the list: its group of the filter
+     *                        console starts unfolded (the others fold)
      * @param bool $isMultiple choice facets: several values (OR) vs one
      * @param bool $canMatchAll choice facets: offer the any/all switch
      * @param ?string $unit range facets: display suffix

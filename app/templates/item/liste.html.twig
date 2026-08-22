@@ -34,8 +34,9 @@
       } %}
     </header>
 
-    {% include 'components/codex/list_filter.html.twig'
+    {% embed 'components/codex/list_filter.html.twig'
        with { grid_id: 'item-grid', facet_type: 'item' } %}
+    {% block grid %}
 
     <div data-img-scope="item" data-img-version="{{ meta.version }}"
          data-img-batch="{{ image_status_batch() }}">
@@ -132,6 +133,8 @@
       {% endfor %}
     </div>
     </div>
+    {% endblock %}
+    {% endembed %}
   </div>
 </main>
 {% endblock %}
