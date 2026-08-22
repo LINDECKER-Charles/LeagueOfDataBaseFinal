@@ -1,0 +1,139 @@
+# Dependabot — weekly version updates for every manifest in the repo.
+#
+# Decisions:
+# - target-branch: dev. The pipeline is dev -> test -> main (ci.yml); main is reached
+#   only by the manual test -> main gate, so dependency PRs must land on dev. This file
+#   itself is only read from the default branch (main): it is inert until promoted.
+# - Security updates (if enabled in the repo settings) always target the default
+#   branch and, because target-branch is set, IGNORE every option below (prefix,
+#   groups, ignore) — they come with Dependabot's default titles.
+# - One weekly window (Monday 06:00 Europe/Paris) for every ecosystem, so all PRs
+#   arrive in a single batch.
+# - Minor + patch updates are grouped per ecosystem (one PR instead of N); major
+#   updates stay as individual PRs because they need a review each.
+# - Docker base images ignore semver-major: php / node / golang / postgres majors are
+#   tied to code (composer platform, go.mod, CI matrices) and are upgraded by hand.
+# - Commit prefix `build` follows the repo's Conventional Commits map (see CLAUDE.md).
+
+version: 2
+
+updates:
+  # ─────────────────────────────── Backend (Symfony) ──────────────────────────
+  - package-ecosystem: composer
+    directory: /app
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: dev
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      symfony:
+        patterns: ["symfony/*"]
+        update-types: [minor, patch]
+      composer-minor-patch:
+        patterns: ["*"]
+        exclude-patterns: ["symfony/*"]
+        update-types: [minor, patch]
+
+  # ─────────────────────────────── Front (Vite / Vue) ─────────────────────────
+  - package-ecosystem: npm
+    directories:
+      - /app
+      - /tools/screenshots
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: dev
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      npm-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # ─────────────────────────────── Go (fetcher / api) ─────────────────────────
+  - package-ecosystem: gomod
+    directories:
+      - /go/api
+      - /go/fetcher
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: dev
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      gomod-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # ─────────────────────────────── Docker base images ─────────────────────────
+  - package-ecosystem: docker
+    directories:
+      - /docker/php
+      - /docker/nginx
+      - /go/api
+      - /go/fetcher
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: dev
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # ─────────────────────────────── Compose service images ─────────────────────
+  - package-ecosystem: docker-compose
+    directories:
+      - /
+      - /infra/edge
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: dev
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # ─────────────────────────────── GitHub Actions ─────────────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: dev
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      actions-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]

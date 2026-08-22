@@ -14,6 +14,12 @@ name: CI/CD
 on:
   push:
     branches: [dev, main]
+  # PRs into dev (Dependabot included) only run the test suites: downstream jobs are
+  # guarded on refs/heads/dev, and a pull_request ref is refs/pull/<n>/merge.
+  # Dependabot-triggered runs only see Dependabot secrets, so ENV_TEST is empty there
+  # and _tests falls back to the committed .env.test defaults.
+  pull_request:
+    branches: [dev]
 
 permissions:
   contents: write   # merge-to-test pushes to the test branch
@@ -22,7 +28,7 @@ permissions:
 jobs:
   # ───────────────────────────────── dev path ────────────────────────────────
   tests:
-    if: github.ref == 'refs/heads/dev'
+    if: github.ref == 'refs/heads/dev' || github.event_name == 'pull_request'
     uses: ./.github/workflows/_tests.yml
     secrets:
       ENV_TEST: ${{ secrets.ENV_TEST }}
