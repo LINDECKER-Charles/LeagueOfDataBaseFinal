@@ -9,7 +9,7 @@ Merci de votre intérêt pour le projet ! Ce document est le point d'entrée **c
 
 ## Prérequis
 
-- **Docker** + **Docker Compose** — la stack complète (PHP 8.4 / Symfony 7.4, Go 1.25, MinIO) tourne en conteneurs ; rien à installer en local côté backend.
+- **Docker** + **Docker Compose** — la stack complète (PHP 8.5 / Symfony 7.4, Go 1.25, MinIO) tourne en conteneurs ; rien à installer en local côté backend.
 - **Node.js 20+** / **npm** — uniquement pour le dev et les garde-fous front (hors conteneur, depuis `app/`).
 - **Git**.
 
