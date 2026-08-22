@@ -17,7 +17,7 @@
     "devDependencies": {
         "@tailwindcss/vite": "^4.1.11",
         "@types/node": "^22.10.0",
-        "@vitejs/plugin-vue": "^5.2.1",
+        "@vitejs/plugin-vue": "^6.0.8",
         "@vue/test-utils": "^2.4.6",
         "jsdom": "^25.0.1",
         "playwright": "^1.62.1",
