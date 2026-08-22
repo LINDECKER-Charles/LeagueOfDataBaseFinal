@@ -44,7 +44,7 @@ publier, puis **archiver** les entrées traitées dans `docs/changelog/archived/
 
 | Couche | Techno |
 |---|---|
-| Backend | Symfony 7.4 LTS / PHP 8.4 (`app/`) |
+| Backend | Symfony 7.4 LTS / PHP 8.5 (`app/`) |
 | Fetch upstream | micro-service Go `go/fetcher/` (passerelle thin, allowlist SSRF) |
 | Stockage assets | MinIO S3 content-addressed (Flysystem + async-aws) |
 | Données utilisateur | PostgreSQL 17 + Doctrine ORM (comptes, favoris, builds) |

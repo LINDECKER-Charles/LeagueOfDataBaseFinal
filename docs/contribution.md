@@ -19,7 +19,7 @@ Nous sommes ravis que vous souhaitiez contribuer à **League of Database** ! Ce 
 
 ### 📋 Prérequis
 
-- **Docker** + **Docker Compose** — la stack complète (PHP 8.4 / Symfony 7.4, micro-service Go, MinIO) tourne en conteneurs. Rien à installer en local côté backend.
+- **Docker** + **Docker Compose** — la stack complète (PHP 8.5 / Symfony 7.4, micro-service Go, MinIO) tourne en conteneurs. Rien à installer en local côté backend.
 - **Node.js 20+** et **npm** — pour le développement front et les garde-fous (hors conteneur, depuis `app/`).
 - **Git** pour le contrôle de version.
 - Connaissance de base de **Symfony 7 / Twig** et des îlots **Vue 3 / TypeScript**.
@@ -154,7 +154,7 @@ We're excited that you want to contribute to **League of Database**! This guide 
 
 ### 📋 Prerequisites
 
-- **Docker** + **Docker Compose** — the full stack (PHP 8.4 / Symfony 7.4, Go micro-service, MinIO) runs in containers. Nothing to install locally for the backend.
+- **Docker** + **Docker Compose** — the full stack (PHP 8.5 / Symfony 7.4, Go micro-service, MinIO) runs in containers. Nothing to install locally for the backend.
 - **Node.js 20+** and **npm** — for frontend development and guardrails (outside the container, from `app/`).
 - **Git** for version control.
 - Basic knowledge of **Symfony 7 / Twig** and **Vue 3 / TypeScript** islands.
@@ -289,7 +289,7 @@ The tracker provides **guided forms** (bug / feature): see [`.github/ISSUE_TEMPL
 
 ### 📋 Prerrequisitos
 
-- **Docker** + **Docker Compose** — el stack completo (PHP 8.4 / Symfony 7.4, micro-servicio Go, MinIO) corre en contenedores. Nada que instalar localmente para el backend.
+- **Docker** + **Docker Compose** — el stack completo (PHP 8.5 / Symfony 7.4, micro-servicio Go, MinIO) corre en contenedores. Nada que instalar localmente para el backend.
 - **Node.js 20+** y **npm** — para el desarrollo frontend y los controles (fuera del contenedor, desde `app/`).
 - **Git** para control de versiones.
 - Conocimiento básico de **Symfony 7 / Twig** y de los islands **Vue 3 / TypeScript**.
