@@ -40,18 +40,15 @@ final class ImageTranscoder
             return null; // not a raster GD can decode (e.g. SVG)
         }
 
-        try {
-            imagepalettetotruecolor($image);
-            imagealphablending($image, false);
-            imagesavealpha($image, true);
+        // GdImage is freed by the GC since PHP 8.0; imagedestroy() is deprecated in 8.5.
+        imagepalettetotruecolor($image);
+        imagealphablending($image, false);
+        imagesavealpha($image, true);
 
-            ob_start();
-            $isEncoded = imagewebp($image, null, self::WEBP_QUALITY);
-            $encoded = ob_get_clean();
+        ob_start();
+        $isEncoded = imagewebp($image, null, self::WEBP_QUALITY);
+        $encoded = ob_get_clean();
 
-            return ($isEncoded && is_string($encoded) && $encoded !== '') ? $encoded : null;
-        } finally {
-            imagedestroy($image);
-        }
+        return ($isEncoded && is_string($encoded) && $encoded !== '') ? $encoded : null;
     }
 }

@@ -84,9 +84,6 @@ final class GenerateWebpVariantsCommandTest extends TestCase
 
         ob_start();
         imagepng($image);
-        $bytes = (string) ob_get_clean();
-        imagedestroy($image);
-
-        return $bytes;
+        return (string) ob_get_clean();
     }
 }
