@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import type { FacetDefinition } from '../../../filter/facets'
+import { injectFacetStore } from '../../../filter/useFacetState'
 
-/** One flag facet: a single pressed/unpressed chip ("purchasable only"). */
+/** One flag facet as a switch ("purchasable only") with the count it keeps. */
 defineProps<{
     facet: FacetDefinition
     isOn: boolean
-    /** How many cards carry the flag — shown so the reader knows what the switch keeps. */
+    /** How many cards in the current context carry the flag (facetCounts). */
     count: number
 }>()
 
-const emit = defineEmits<{ change: [isOn: boolean] }>()
+const store = injectFacetStore()
 </script>
 
 <template>
-    <div class="facet facet--toggle">
-        <button type="button" class="filter-chip" :class="{ 'filter-chip--on': isOn }"
-                :aria-pressed="isOn" @click="emit('change', !isOn)">
-            {{ facet.label }}
-            <span class="facet__count">{{ count }}</span>
-        </button>
-    </div>
+    <label class="facet facet--toggle" :class="{ 'facet--toggle-on': isOn }">
+        <input type="checkbox" class="hx-switch" :checked="isOn"
+               @change="store.setToggle(facet.key, ($event.target as HTMLInputElement).checked)">
+        <span class="facet__toggle-label">{{ facet.label }}</span>
+        <span class="facet__count">{{ count }}</span>
+    </label>
 </template>

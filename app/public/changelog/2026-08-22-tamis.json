@@ -1,0 +1,59 @@
+{
+  "id": "2026-08-22-tamis",
+  "version": "2.3.0",
+  "codename": "Tamis",
+  "date": "2026-08-22",
+  "type": "minor",
+  "title": "LeagueOfDataBase 2.3.0 — Tamis",
+  "summary": "Les listes de champions, d'objets, de runes et de sorts reçoivent une console de filtres qui reste à portée de main pendant le défilement, annonce pour chaque option le nombre de résultats qu'elle donnerait, et se replie sur mobile en une feuille qui compte les résultats en direct.",
+  "intro": "Tamis reprend les filtres livrés avec Jade et les installe là où on les cherche : dans un rail fixé à côté de la grille, qui suit le défilement et regroupe recherche, jauge de résultats et catégories repliables. Chaque puce affiche désormais combien de résultats elle rapporterait compte tenu des filtres déjà posés — une option qui ne laisserait rien reste visible mais grisée, fin des clics dans le vide. Les filtres engagés se rappellent au-dessus des résultats, une liste vide propose d'un clic d'effacer les filtres, et la touche / saute directement à la recherche. Sur téléphone, une barre de recherche reste épinglée en haut de page et ouvre une feuille dont le bouton principal indique en direct « Voir N résultats ». Trois défauts débusqués en chemin sont corrigés.",
+  "stats": {
+    "fixes": 3,
+    "cards": 4
+  },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "▦",
+      "tag": "Filtres",
+      "title": "Une console de filtres épinglée à côté des listes",
+      "description": "Sur grand écran, les filtres quittent la barre au-dessus de la grille pour un rail à droite des résultats, qui reste visible pendant le défilement. Il réunit la recherche (touche / pour y sauter), une jauge « n / total », et les catégories en sections repliables : les axes principaux — rôle, catégorie, voie, mode de jeu… — sont ouverts d'emblée, les statistiques par plages se déplient à la demande ; chaque section signale combien de ses filtres sont actifs. Les plages affichent leur valeur en surbrillance avec une croix pour les relâcher, les filtres booléens (achetable, consommable) deviennent des interrupteurs, et le lien de partage se copie depuis le pied de la console."
+    },
+    {
+      "kind": "mana",
+      "glyph": "◉",
+      "tag": "Filtres",
+      "title": "Chaque option annonce combien de résultats elle donnerait",
+      "description": "Les puces de filtre portent leur nombre de résultats, recalculé en tenant compte des autres filtres déjà posés : cocher « Tank » puis lire « Mana 37 » dit exactement ce que vous obtiendrez. Une option qui ne laisserait aucun résultat reste affichée mais grisée, et la bascule « au moins un / tous » des catégories d'objets ne disparaît plus tant qu'un mode « tous » est engagé. Les filtres actifs se rappellent en puces retirables au-dessus des résultats, et une liste vide propose directement d'effacer les filtres."
+    },
+    {
+      "kind": "mana",
+      "glyph": "◐",
+      "tag": "Mobile",
+      "title": "Recherche épinglée et feuille de filtres qui compte en direct",
+      "description": "Sur téléphone et tablette, une barre de recherche reste collée en haut de la page pendant le défilement, avec un bouton Filtres qui affiche le nombre de filtres actifs. Il ouvre une feuille par le bas — poignée, jauge de résultats, sections repliables — dont le bouton principal indique en direct « Voir N résultats » ; un bouton Effacer remet tout à zéro. Les champs restent à 16 px pour que l'écran ne zoome plus à la saisie, et le défilement de la feuille ne fait plus bouger la page derrière."
+    }
+  ],
+  "bugfixes": [
+    {
+      "id": "LDB-028",
+      "area": "Filtres",
+      "text": "La feuille de filtres mobile ne se ferme plus au moindre tap dans sa marge ou entre deux sections : seul un tap en dehors de la feuille (ou le bouton Voir les résultats) la referme."
+    },
+    {
+      "id": "LDB-029",
+      "area": "Navigation",
+      "text": "Une liste quittée avant la fin de son chargement puis rouverte par le bouton Retour pouvait rester sans filtres ni pagination ; elle se remet en place correctement."
+    },
+    {
+      "id": "LDB-030",
+      "area": "Filtres",
+      "text": "Les champs Min / Max des plages ne réécrivent plus la valeur pendant la saisie : taper « 6 » dans un champ borné à 250 ne le remplaçait plus par 250 à la première touche. La valeur est prise en compte en quittant le champ."
+    }
+  ],
+  "balances": [],
+  "devNote": {
+    "body": "Tamis est un patch d'ergonomie : les filtres existaient depuis Jade, mais ils coûtaient du défilement et beaucoup de clics pour rien. Les compter avant de cliquer, les garder sous la main, et surtout les rendre agréables au pouce sur téléphone, c'était le vrai chantier. Dites-nous si le rail à droite vous convient ou si vous le préférez à gauche — c'est un réglage que nous pouvons changer en une ligne.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

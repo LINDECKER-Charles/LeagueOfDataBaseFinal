@@ -16,10 +16,14 @@ export interface FilterableCard {
     values: CardValues
 }
 
-export interface GridCriteria {
+/** What narrows the grid: the search text and the engaged facets. */
+export interface FilterCriteria {
     query: string
     facets: FacetState
     schema: readonly FacetDefinition[]
+}
+
+export interface GridCriteria extends FilterCriteria {
     page: number
     /** {@link PAGE_SIZE_ALL} or a positive page size. */
     pageSize: number
@@ -33,18 +37,25 @@ export interface GridSelection<T> {
     visible: T[]
 }
 
-export function selectVisibleCards<T extends FilterableCard>(
+/** The cards the criteria keep — query AND every engaged facet, each its own axis. */
+export function matchingCards<T extends FilterableCard>(
     cards: readonly T[],
-    criteria: GridCriteria,
-): GridSelection<T> {
+    criteria: FilterCriteria,
+): T[] {
     // Accent-folded like the pickers: "feerique" must find "féérique".
     const needle = normalizeSearchText(criteria.query.trim())
-    // Query AND every engaged facet: each facet is its own axis.
-    const matching = cards.filter(
+    return cards.filter(
         (card) =>
             (needle === '' || card.search.includes(needle))
             && matchesFacets(card.values, criteria.facets, criteria.schema),
     )
+}
+
+export function selectVisibleCards<T extends FilterableCard>(
+    cards: readonly T[],
+    criteria: GridCriteria,
+): GridSelection<T> {
+    const matching = matchingCards(cards, criteria)
     const size = criteria.pageSize === PAGE_SIZE_ALL
         ? Math.max(1, matching.length)
         : criteria.pageSize

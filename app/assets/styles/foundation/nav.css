@@ -138,44 +138,6 @@
     .bottom-nav { display: none; }
   }
 
-  /* ---- Filter bottom sheet (mobile) — native <dialog> ---------------------- */
-  .filter-sheet {
-    display: flex;
-    flex-direction: column;
-    margin: auto auto 0;
-    width: 100%;
-    max-width: none;
-    max-height: 82dvh;
-    border: 0;
-    border-top: 1px solid var(--color-gold-deep);
-    background: linear-gradient(180deg, var(--color-panel), var(--color-hextech-black));
-    color: var(--color-text);
-    padding: 0.75rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
-  }
-  .filter-sheet:not([open]) { display: none; }
-  .filter-sheet::backdrop { background: rgba(1, 10, 19, 0.6); backdrop-filter: blur(3px); }
-  /* Header and footer stay put; only the facets scroll (vertical pan only, so a
-     slider thumb drag is never mistaken for a page scroll). */
-  .filter-sheet__body { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; }
-  .filter-sheet__footer {
-    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
-  }
-  .filter-sheet__handle {
-    width: 2.5rem;
-    height: 4px;
-    margin: 0 auto 0.9rem;
-    background: color-mix(in srgb, var(--color-gold) 50%, transparent);
-  }
-  @starting-style {
-    .filter-sheet[open] { translate: 0 100%; }
-  }
-  .filter-sheet[open] { translate: 0 0; transition: translate 0.35s var(--ease-hextech); }
-  @media (prefers-reduced-motion: reduce) {
-    .filter-sheet[open] { transition: none; }
-  }
-
   /* ---- Resource grid pre-hide — before the ResourceFilter island marks the grid
      [data-ready], render only the first page (12). Bounds initial paint on large
      lists (e.g. ~700 items) and removes the flash of every card collapsing to one

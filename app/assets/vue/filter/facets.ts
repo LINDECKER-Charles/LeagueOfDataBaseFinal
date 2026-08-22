@@ -19,7 +19,7 @@ export interface FacetDefinition {
     group: string
     /** Known values in display order; only those present in the grid are offered. */
     options: FacetOption[]
-    /** Inline above the grid (others sit in the advanced panel). */
+    /** A main axis of the list: its group starts unfolded. */
     primary: boolean
     /** Choice: several values (OR) rather than exactly one. */
     multiple: boolean
@@ -84,13 +84,12 @@ function matchesFacet(value: FacetValue | undefined, selection: FacetSelection):
         : selection.values.some((wanted) => value.includes(wanted))
 }
 
-/** How many engagements the state holds — the counter on the mobile trigger. */
+/**
+ * How many facets the state engages — the badge of the console and of the
+ * mobile trigger, which therefore sums the badges of the groups.
+ */
 export function activeFacetCount(state: FacetState): number {
-    let count = 0
-    for (const selection of Object.values(state)) {
-        count += isChoiceSelection(selection) ? selection.values.length : 1
-    }
-    return count
+    return Object.keys(state).length
 }
 
 /** The state with one value of a choice facet flipped; empty choices vanish. */
@@ -135,4 +134,31 @@ export function withSelection(
         next[key] = selection
     }
     return next
+}
+
+/** The facets of a list under their heading, in schema order. */
+export interface FacetGroup {
+    name: string
+    facets: FacetDefinition[]
+}
+
+export function groupFacets(facets: readonly FacetDefinition[]): FacetGroup[] {
+    const byGroup = new Map<string, FacetDefinition[]>()
+    for (const facet of facets) {
+        byGroup.set(facet.group, [...(byGroup.get(facet.group) ?? []), facet])
+    }
+    return [...byGroup].map(([name, group]) => ({ name, facets: group }))
+}
+
+/** How many of these facets the state engages — the badge on a group heading. */
+export function countEngaged(facets: readonly FacetDefinition[], state: FacetState): number {
+    return facets.filter((facet) => state[facet.key] !== undefined).length
+}
+
+/**
+ * A group unfolds on its own when it carries a primary facet (the list's main
+ * axes) or something already engaged (a shared link must show what filters).
+ */
+export function isGroupOpenByDefault(group: FacetGroup, state: FacetState): boolean {
+    return group.facets.some((facet) => facet.primary) || countEngaged(group.facets, state) > 0
 }

@@ -19,6 +19,7 @@
 @import "./foundation/images.css";
 @import "./codex/list.css";
 @import "./codex/filter.css";
+@import "./codex/filter-layout.css";
 @import "./foundation/ddragon.css";
 @import "./foundation/prose.css";
 @import "./codex/detail.css";

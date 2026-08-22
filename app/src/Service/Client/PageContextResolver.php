@@ -32,7 +32,7 @@ final class PageContextResolver implements PageSelectionInterface
      * Images the streaming loader pre-warms for a list page = the first client
      * page the visitor sees on arrival. List pages render the whole set in one
      * pass and the ResourceFilter island paginates it client-side (mirrors the
-     * `pageSize` default in components/list_filter.html.twig); warming that first
+     * `pageSize` default in components/codex/list_filter.html.twig); warming that first
      * visible page keeps every above-the-fold card off a placeholder, while the
      * rest lazy-load and warm through the deferred ingestor as the user scrolls
      * or paginates. Full-warming the whole set would only swap this cheap gate
