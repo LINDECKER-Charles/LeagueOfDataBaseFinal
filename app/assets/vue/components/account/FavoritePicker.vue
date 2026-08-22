@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { filterOptions, type PickerEntry } from '../../picker/filterOptions'
 import { usePickerCatalog, type SlotType } from '../../picker/usePickerCatalog'
 import { useFavoriteSockets, type SlotProp } from '../../picker/useFavoriteSockets'
@@ -37,8 +37,9 @@ const catalog = usePickerCatalog({
     lang: props.lang,
 })
 
-const { root, sockets, valueAt, assign, clear } =
-    useFavoriteSockets(props.slots, props.labels.unavailable)
+const root = useTemplateRef<HTMLElement>('root')
+const { sockets, valueAt, assign, clear } =
+    useFavoriteSockets(props.slots, props.labels.unavailable, root)
 
 const activeIndex = ref<number | null>(null)
 const query = ref('')
