@@ -41,10 +41,10 @@ updates:
         update-types: [minor, patch]
 
   # ─────────────────────────────── Front (Vite / Vue) ─────────────────────────
+  # One entry per npm project: a resolution failure in one must not take the other
+  # down (Dependabot runs one job per entry).
   - package-ecosystem: npm
-    directories:
-      - /app
-      - /tools/screenshots
+    directory: /app
     schedule:
       interval: weekly
       day: monday
@@ -52,6 +52,23 @@ updates:
       timezone: Europe/Paris
     target-branch: dev
     open-pull-requests-limit: 10
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      npm-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /tools/screenshots
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: dev
+    open-pull-requests-limit: 5
     commit-message:
       prefix: build
       include: scope
