@@ -25,7 +25,6 @@
 {% block body %}
 {# Champion portrait art is hotlinked from the DDragon CDN (assumed, like the
    champion detail hero) — not the ingested square icons. #}
-{% set loadingBase = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading' %}
 <main class="relative px-6 py-12">
   {% include 'partials/main/gradient.html.twig' %}
 
@@ -57,7 +56,7 @@
             <span aria-hidden="true"
                   class="absolute inset-0 grid place-items-center font-beaufort text-6xl
                          text-gold/12">{{ c.name|default('??')|slice(0, 2)|upper }}</span>
-            <img src="{{ loadingBase }}/{{ champId }}_0.jpg" alt="{{ c.name|default('') }}"
+            <img src="{{ champion_art(champId, 'loading') }}" alt="{{ c.name|default('') }}"
                  loading="lazy" decoding="async"
                  class="relative h-full w-full object-cover object-top transition-transform
                         duration-500 group-hover:scale-105">

@@ -14,7 +14,6 @@
 {% block body %}
 {# Champion portrait art is hotlinked from the DDragon CDN (assumed, like the
    champion detail hero) — never ingested into MinIO. #}
-{% set loadingBase = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading' %}
 <main class="relative px-6 py-14">
   {% include 'partials/main/gradient.html.twig' %}
   <div class="relative mx-auto flex max-w-7xl flex-col gap-16">
@@ -125,7 +124,7 @@
             <div class="relative aspect-[4/5] overflow-hidden border-b border-gold-deep/50 bg-void">
               <span aria-hidden="true" class="absolute inset-0 grid place-items-center
                     font-beaufort text-5xl text-gold/15">{{ c.name|slice(0, 2)|upper }}</span>
-              <img src="{{ loadingBase }}/{{ key }}_0.jpg" alt="{{ c.name }}"
+              <img src="{{ champion_art(key, 'loading') }}" alt="{{ c.name }}"
                    loading="lazy" decoding="async"
                    class="relative h-full w-full object-cover object-top transition-transform
                           duration-500 group-hover:scale-105">
