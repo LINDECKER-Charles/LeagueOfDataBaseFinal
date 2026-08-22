@@ -47,7 +47,7 @@ services:
       retries: 3
 
   caddy:
-    image: lucaslorentz/caddy-docker-proxy:2.9-alpine
+    image: lucaslorentz/caddy-docker-proxy:2.13-alpine
     restart: unless-stopped
     depends_on:
       dockerproxy:
