@@ -7,6 +7,7 @@ use App\Service\API\ChampionManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
+use App\Service\Profile\ChampionSkins;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +21,7 @@ final class ChampionController extends AbstractResourceController
         PageContextResolver $pageContext,
         RequestStack $requestStack,
         private readonly ChampionManager $championManager,
+        private readonly ChampionSkins $championSkins,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -69,6 +71,11 @@ final class ChampionController extends AbstractResourceController
         return $this->render('champion/detail.html.twig', [
             'champion'      => $champion,
             'image'         => $summary['image'],
+            // Hero art URLs come from the one owner of the CDN casing quirks
+            // (centered/FiddleSticks) rather than being rebuilt in Twig.
+            'heroArt'       => $this->championSkins->championArt(
+                (string) ($champion['id'] ?? $name),
+            ),
             'abilityImages' => $detail['abilityImages'],
             'chromas'       => $chromas,
             'version'       => $version,
@@ -87,9 +94,11 @@ final class ChampionController extends AbstractResourceController
         return $this->searchResponse(
             $this->championManager,
             $name,
-            // ChampionManager::getImages answers a positional list, already in
-            // match order — unlike the item/summoner managers, which key by name/id.
-            static fn (array $rows, array $images): array => array_values($images),
+            // ChampionManager::getImages keys its map by champion ID.
+            static fn (array $rows, array $images): array => array_map(
+                static fn (array $row): ?string => $images[(string) ($row['id'] ?? '')] ?? null,
+                $rows,
+            ),
         );
     }
 

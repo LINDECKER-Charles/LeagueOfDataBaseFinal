@@ -1,23 +1,52 @@
-{# Client-side grid filter bar: live search + multi-select tag facet + pagination.
-   The ResourceFilter island drives the sibling grid `#{{ grid_id }}` (its cards carry
-   data-search / data-tags). Replaces the former server pagination + autocomplete on
-   list pages. Params: grid_id (required), page_size (optional). #}
-<div class="mb-8 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-  <div class="min-w-0 flex-1" data-vue="resource-filter" data-props="{{ {
+{# Filtered list layout: a sticky filter console beside the grid on desktop, a
+   sticky search bar + bottom sheet below — live search, per-category facets
+   (schema from facet_schema(), values as data-f-* on the cards), pagination,
+   all mirrored in the URL so a filtered list can be shared.
+   The ResourceFilter island mounts in the console slot and teleports the rest
+   into the slots reserved around the grid (`#<grid_id>-bar`, `-head`, `-empty`).
+   Embed it and fill {% block grid %} with the `#<grid_id>` grid.
+   Params: grid_id (required), facet_type (required — the schema's resource
+   type), page_size (optional), rail ('left' | 'right', optional). #}
+<div class="filter-layout" data-rail="{{ rail|default('right') }}">
+  <div id="{{ grid_id }}-bar" class="filter-layout__bar"></div>
+  <aside class="filter-layout__console" aria-label="{{ 'filter.filters'|trans }}"
+         data-vue="resource-filter" data-props="{{ {
         gridId: grid_id,
         placeholder: 'common.search'|trans,
         pageSize: page_size|default(12),
+        facets: facet_schema(facet_type),
         labels: {
           results: 'filter.results'|trans,
+          resultsOne: 'filter.results_one'|trans,
+          page: 'filter.page'|trans,
+          gauge: 'filter.gauge'|trans,
           empty: 'filter.empty'|trans,
+          emptyTitle: 'filter.empty_title'|trans,
+          emptyCta: 'filter.empty_cta'|trans,
           clear: 'filter.clear'|trans,
+          clearAll: 'filter.clear_all'|trans,
           prev: 'filter.prev'|trans,
           next: 'filter.next'|trans,
           perPage: 'filter.per_page'|trans,
           all: 'filter.all'|trans,
           filters: 'filter.filters'|trans,
-          close: 'filter.close'|trans
+          showResults: 'filter.show_results'|trans,
+          showResultsOne: 'filter.show_results_one'|trans,
+          matchMode: 'filter.match_mode'|trans,
+          matchAny: 'filter.match_any'|trans,
+          matchAll: 'filter.match_all'|trans,
+          min: 'filter.min'|trans,
+          max: 'filter.max'|trans,
+          copy: 'filter.copy_link'|trans,
+          copied: 'filter.copied'|trans,
+          copyError: 'filter.copy_error'|trans,
+          active: 'filter.active'|trans
         }
       }|json_encode|e('html_attr') }}">{% include 'components/ui/skeleton.html.twig'
-        with { kind: 'filter' } only %}</div>
+        with { kind: 'console' } only %}</aside>
+  <div class="filter-layout__results">
+    <div id="{{ grid_id }}-head" class="filter-layout__head"></div>
+    {% block grid %}{% endblock %}
+    <div id="{{ grid_id }}-empty"></div>
+  </div>
 </div>

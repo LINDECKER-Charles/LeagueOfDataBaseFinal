@@ -131,7 +131,10 @@ final class GoFetcherClientTest extends TestCase
             'https://ddragon.leagueoflegends.com/c.png',
         ]);
 
-        self::assertSame(['https://ddragon.leagueoflegends.com/a.png' => 'A'], $out);
+        self::assertSame(['https://ddragon.leagueoflegends.com/a.png' => 'A'], $out['bytes']);
+        // c: clean upstream 404 → definitive absence. b: gateway error → transient,
+        // reported in neither channel so a later call retries it.
+        self::assertSame(['https://ddragon.leagueoflegends.com/c.png'], $out['absent']);
     }
 
     public function testFetchManySplitsLargeBatchesUnderTheGatewayLimit(): void
@@ -148,7 +151,7 @@ final class GoFetcherClientTest extends TestCase
 
         $out = (new GoFetcherClient($client))->fetchMany($urls);
 
-        self::assertCount(250, $out, 'every URL across all chunks is resolved');
+        self::assertCount(250, $out['bytes'], 'every URL across all chunks is resolved');
         self::assertSame([200, 50], $batchSizes, 'a >200 batch is split into <=200-URL requests');
     }
 

@@ -72,7 +72,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
                     :alt="skin.name"
                     loading="lazy"
                     decoding="async"
-                    class="h-36 w-full object-cover object-top"
+                    class="hx-img h-36 w-full object-cover object-top"
                 />
                 <span
                     v-if="skin.chromas.length"
@@ -116,7 +116,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
                         :key="current.num"
                         :src="current.splash"
                         :alt="current.name"
-                        class="skin-splash mx-auto max-h-[80vh] w-full rounded object-contain"
+                        class="hx-img skin-splash mx-auto max-h-[80vh] w-full rounded object-contain"
                     />
 
                     <button type="button" class="skin-close" aria-label="Close" @click="close">

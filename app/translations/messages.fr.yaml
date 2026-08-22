@@ -180,14 +180,106 @@ common:
 
 filter:
   results: "%count% résultats"
+  results_one: "%count% résultat"
+  page: "page %page% / %count%"
+  gauge: "Résultats"
   empty: "Aucun résultat ne correspond à vos filtres."
+  empty_title: "Aucun résultat"
+  empty_cta: "Effacer les filtres"
   clear: "Effacer"
+  clear_all: "Effacer tout"
   prev: "Précédent"
   next: "Suivant"
   per_page: "Par page"
   all: "Tout"
   filters: "Filtres"
   close: "Fermer"
+  show_results: "Voir %count% résultats"
+  show_results_one: "Voir %count% résultat"
+  edition: "Édition"
+  match_mode: "Cumul"
+  match_any: "Au moins un"
+  match_all: "Tous"
+  min: "Min"
+  max: "Max"
+  copy_link: "Copier le lien"
+  copied: "Lien copié"
+  copy_error: "Copiez le lien ci-dessous"
+  active: "Filtres actifs"
+
+# Filtres par catégorie des listes (App\Service\Catalog\Facet\Schema). Les
+# libellés issus des données (voies, ressources, niveaux) ne sont pas listés ici.
+facet:
+  group:
+    profile: "Profil"
+    ratings: "Évaluations"
+    base_stats: "Stats de base (niveau 1)"
+    identity: "Catégorie"
+    availability: "Disponibilité"
+    economy: "Prix"
+    stats: "Statistiques"
+  champion:
+    role: "Rôle"
+    roles:
+      fighter: "Combattant"
+      tank: "Tank"
+      mage: "Mage"
+      assassin: "Assassin"
+      marksman: "Tireur"
+      support: "Support"
+    resource: "Ressource"
+    resource_none: "Sans ressource"
+    range: "Portée"
+    ranges:
+      melee: "Mêlée"
+      ranged: "Distance"
+    difficulty: "Difficulté"
+    attack: "Attaque"
+    defense: "Défense"
+    magic: "Magie"
+  item:
+    tag: "Catégories"
+    edition: "Édition"
+    map: "Carte / mode"
+    tier: "Palier"
+    tiers:
+      component: "Composant"
+      epic: "Épique"
+      legendary: "Légendaire"
+    purchasable: "Achetables uniquement"
+    consumable: "Consommables uniquement"
+    price: "Prix total"
+  summoner:
+    mode: "Mode de jeu"
+    edition: "Édition"
+    level: "Niveau requis"
+    cooldown: "Temps de recharge"
+  rune:
+    path: "Voie"
+    slot: "Emplacement"
+    slot_keystone: "Clé de voûte"
+    slot_row: "Rangée %n%"
+
+# Ids de carte Data Dragon (App\Service\Catalog\GameMap).
+map:
+  "11": "Faille de l'invocateur"
+  "12": "Abîme hurlant (ARAM)"
+  "21": "Nexus Blitz"
+  "30": "Arène"
+  "33": "Nuée"
+  "35": "Baston"
+
+# Which game an item / summoner spell belongs to: the current client, or
+# League of Legends Classic (Data Dragon ships both under the same names).
+edition:
+  all: "Toutes"
+  modern: "Actuelle"
+  classic: "LoL Classic"
+  classic_hint: "Version League of Legends Classic"
+  classic_notice: "Édition League of Legends Classic : ses valeurs diffèrent de la version actuelle."
+  counterpart:
+    modern: "Voir la version actuelle"
+    classic: "Voir la version LoL Classic"
 
 base:
   title: "League of Data Base"

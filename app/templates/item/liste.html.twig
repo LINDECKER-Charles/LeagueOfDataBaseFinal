@@ -34,8 +34,14 @@
       } %}
     </header>
 
-    {% include 'components/codex/list_filter.html.twig' with { grid_id: 'item-grid' } %}
+    {% embed 'components/codex/list_filter.html.twig'
+       with { grid_id: 'item-grid', facet_type: 'item' } %}
+    {% block grid %}
 
+    <div data-img-scope="item" data-img-version="{{ meta.version }}"
+         data-img-batch="{{ image_status_batch() }}">
+    {% include 'components/codex/entity_card_image.html.twig'
+       with { as_template: true, img_fit: 'contain' } only %}
     <div id="item-grid"
          class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for id, item in items %}
@@ -43,12 +49,14 @@
           ? item.plaintext : (item.description|default('')) %}
         {% embed 'components/codex/entity_card.html.twig' with {
           href: resource_path('app_item', { name: id }, meta.version, meta.lang),
-          img: images[item.name]|default(null),
+          img: images[id]|default(null),
+          img_name: item.image.full|default(null),
           name: item.name|default(''),
           sub: id,
           img_fit: 'contain',
           filter_text: (item.name|default('') ~ ' ' ~ id)|lower,
-          filter_tags: item.tags is defined and item.tags is iterable ? item.tags : []
+          facet_attrs: facet_attrs('item', id, item),
+          edition: item_edition(id)
         } %}
           {% block card_body %}
             <div class="px-4 pb-3">
@@ -75,7 +83,8 @@
                      with { label: 'item.list.categories'|trans } %}
                     {% block accordion_body %}
                       <div class="flex flex-wrap gap-1.5 px-4 pb-4">
-                        {% for t in tags %}<span class="hx-chip">{{ t }}</span>{% endfor %}
+                        {% for t in tags %}<span
+                          class="hx-chip">{{ t|tag_label }}</span>{% endfor %}
                       </div>
                     {% endblock %}
                   {% endembed %}
@@ -95,7 +104,7 @@
                              title="{{ child.name|default(iid) }}">
                             {% if child and child.image %}<img src="/{{ child.image }}"
                               alt="{{ child.name }}" width="24" height="24" loading="lazy"
-                              decoding="async" class="h-6 w-6 object-contain">{% endif %}
+                              decoding="async" class="hx-img h-6 w-6 object-contain">{% endif %}
                             <span class="font-mono text-xs text-text-muted
                               group-hover/evo:text-hex">{{ child.name|default(iid) }}</span>
                           </a>
@@ -108,8 +117,10 @@
                   {% embed 'components/ui/card_accordion.html.twig'
                      with { label: 'item.list.description'|trans } %}
                     {% block accordion_body %}
+                      {# ddragon_text: strips the {{ Item_* }} / @Var@ tokens Data
+                         Dragon leaks in some descriptions and plaintexts. #}
                       <div class="px-4 pb-4 text-[13px] leading-snug
-                        text-text-muted">{{ desc|raw }}</div>
+                        text-text-muted">{{ desc|ddragon_text|raw }}</div>
                     {% endblock %}
                   {% endembed %}
                 {% endif %}
@@ -121,6 +132,9 @@
         {% include 'components/ui/empty_state.html.twig' %}
       {% endfor %}
     </div>
+    </div>
+    {% endblock %}
+    {% endembed %}
   </div>
 </main>
 {% endblock %}

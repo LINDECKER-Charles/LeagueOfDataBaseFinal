@@ -49,29 +49,37 @@ final class GoFetcherClient
     /**
      * Fetch many DDragon URLs in parallel.
      *
+     * `bytes` carries the successful bodies; `absent` the URLs the CDN answered
+     * 403/404 for — immutable absences the caller may persist so they are never
+     * asked for again. Transient failures (5xx, gateway error, undecodable
+     * body) appear in NEITHER: they stay unresolved and are naturally retried.
+     *
      * @param string[] $urls
-     * @return array<string,string> url => raw bytes (failed URLs are omitted)
+     * @return array{bytes: array<string,string>, absent: list<string>}
      */
     public function fetchMany(array $urls): array
     {
         $urls = array_values(array_unique($urls));
         if ($urls === []) {
-            return [];
+            return ['bytes' => [], 'absent' => []];
         }
 
         // Chunk so a resource with more images than the gateway allows per request
         // (e.g. items) still resolves in bounded batches instead of failing 413.
-        $out = [];
+        $bytes  = [];
+        $absent = [];
         foreach (array_chunk($urls, self::MAX_URLS_PER_BATCH) as $chunk) {
-            $out += $this->fetchBatch($chunk);
+            $batch   = $this->fetchBatch($chunk);
+            $bytes  += $batch['bytes'];
+            $absent  = array_merge($absent, $batch['absent']);
         }
 
-        return $out;
+        return ['bytes' => $bytes, 'absent' => $absent];
     }
 
     /**
      * @param string[] $urls  already unique, size <= MAX_URLS_PER_BATCH
-     * @return array<string,string> url => raw bytes (failed URLs are omitted)
+     * @return array{bytes: array<string,string>, absent: list<string>}
      */
     private function fetchBatch(array $urls): array
     {
@@ -86,20 +94,35 @@ final class GoFetcherClient
             );
         }
 
-        $out = [];
+        $bytes  = [];
+        $absent = [];
         foreach ($data['results'] ?? [] as $item) {
             if (!is_array($item) || !isset($item['url'])) {
                 continue;
             }
             // Batch policy: an unusable result is dropped, never fatal — one bad
             // image must not sink the whole ingest.
-            $bytes = $this->decodeBody($item);
-            if ($bytes !== null) {
-                $out[(string) $item['url']] = $bytes;
+            $body = $this->decodeBody($item);
+            if ($body !== null) {
+                $bytes[(string) $item['url']] = $body;
+            } elseif ($this->isDefinitiveAbsence($item)) {
+                $absent[] = (string) $item['url'];
             }
         }
 
-        return $out;
+        return ['bytes' => $bytes, 'absent' => $absent];
+    }
+
+    /**
+     * Same classification as {@see failure()}: a clean upstream 403/404, never
+     * a gateway-level error (those are transient by policy).
+     *
+     * @param array<string,mixed> $item
+     */
+    private function isDefinitiveAbsence(array $item): bool
+    {
+        return !isset($item['error'])
+            && \in_array((int) ($item['status'] ?? 0), [403, 404], true);
     }
 
     /**

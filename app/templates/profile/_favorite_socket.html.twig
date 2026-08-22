@@ -15,7 +15,7 @@
             <picture class="socket__portrait">
                 {% include 'components/_webp_source.html.twig'
                    with { src: current.image } only %}
-                <img src="{{ current.image }}" alt="{{ current.name }}"
+                <img class="hx-img" src="{{ current.image }}" alt="{{ current.name }}"
                      width="72" height="72" loading="lazy" decoding="async">
             </picture>
         {% else %}

@@ -3,14 +3,17 @@ declare(strict_types=1);
 
 namespace App\Service\Picker;
 
+use App\Service\API\Edition\Edition;
+use App\Service\API\Edition\ItemEditionRule;
+
 /**
  * Pure projection of the item dataset into picker options.
  *
  * Only "pickable" items are offered: purchasable, playable on the requested
  * game mode's map, not hidden from the shop, not champion-bound. Numeric JSON
  * map keys ("3006") arrive as PHP ints — every id is recast to string at the
- * boundary. Image resolution is name-keyed upstream, so a name collision
- * degrades to null (placeholder) rather than showing the wrong icon.
+ * boundary. Images are id-keyed upstream, so the LoL Classic twin of an item
+ * (same name, own icon) can never borrow the wrong icon.
  */
 final class ItemOptionsProjector
 {
@@ -19,15 +22,16 @@ final class ItemOptionsProjector
     /**
      * @param array<int|string, array<string, mixed>> $data   raw item.json "data" map
      *                                                        (key = item id)
-     * @param array<string, ?string>                  $images name-keyed
+     * @param array<int|string, ?string>              $images id-keyed
      *                                                        ItemManager::getImages() result
+     *                                                        (PHP recasts numeric keys to int)
      * @return list<array<string, mixed>>
      */
     public function project(array $data, array $images, GameMode $mode = GameMode::DEFAULT): array
     {
         $options = [];
         foreach ($data as $id => $entry) {
-            if (!\is_array($entry) || !$this->isPickable($entry, $mode)) {
+            if (!\is_array($entry) || !$this->isPickable((string) $id, $entry, $mode)) {
                 continue;
             }
             $options[] = $this->option((string) $id, $entry, $images);
@@ -42,7 +46,7 @@ final class ItemOptionsProjector
      * pretending it vanished.
      *
      * @param array<int|string, array<string, mixed>> $data
-     * @param array<string, ?string>                  $images
+     * @param array<int|string, ?string>              $images
      * @return ?array{id: string, name: string, image: ?string, type: string}
      */
     public function resolve(array $data, array $images, string $id): ?array
@@ -55,7 +59,7 @@ final class ItemOptionsProjector
         return [
             'id'    => $id,
             'name'  => (string) ($entry['name'] ?? $id),
-            'image' => $this->imageOf($entry, $images),
+            'image' => PickerFormat::imagePath($images[$id] ?? null),
             'type'  => self::TYPE,
         ];
     }
@@ -64,29 +68,33 @@ final class ItemOptionsProjector
      * Names of the given item ids that exist in the dataset but are NOT playable
      * on the mode's map — the readable payload of a mode-availability error.
      * Ids unknown to the dataset are skipped: their absence is a patch problem,
-     * reported separately by the structure validator.
+     * reported separately by the structure validator. One label per id: a
+     * classic twin is qualified by its id rather than folded into its namesake.
      *
      * @param array<int|string, array<string, mixed>> $data raw item.json "data" map
      * @param list<string>                            $itemIds
-     * @return list<string> unavailable item names, deduplicated, dataset order
+     * @return list<string> unavailable item labels, one per id, dataset order
      */
     public function unavailableOn(array $data, GameMode $mode, array $itemIds): array
     {
         $wanted = array_fill_keys(array_map(strval(...), $itemIds), true);
 
-        $names = [];
+        $labels = [];
         foreach ($data as $id => $entry) {
+            $id = (string) $id;
             if (
-                !isset($wanted[(string) $id])
+                !isset($wanted[$id])
                 || !\is_array($entry)
-                || $this->isOnMap($entry, $mode)
+                || $this->isAvailableOn($id, $entry, $mode)
             ) {
                 continue;
             }
-            $names[(string) ($entry['name'] ?? $id)] = true;
+            $labels[] = ItemEditionRule::qualifiedName($id, (string) ($entry['name'] ?? $id));
         }
 
-        return array_keys($names);
+        // Two current-game namesakes (Arena variants) would read as a stutter —
+        // one mention per label is enough for the player to act on.
+        return array_values(array_unique($labels));
     }
 
     /**
@@ -100,27 +108,33 @@ final class ItemOptionsProjector
     {
         $entry = $data[$id] ?? null;
 
-        return \is_array($entry) && $this->isOnMap($entry, $mode);
+        return \is_array($entry) && $this->isAvailableOn($id, $entry, $mode);
     }
 
     /** @param array<string, mixed> $entry */
-    private function isPickable(array $entry, GameMode $mode): bool
+    private function isPickable(string $id, array $entry, GameMode $mode): bool
     {
         return ($entry['gold']['purchasable'] ?? false) === true
-            && $this->isOnMap($entry, $mode)
+            && $this->isAvailableOn($id, $entry, $mode)
             && ($entry['hideFromAll'] ?? false) !== true
             && (string) ($entry['requiredChampion'] ?? '') === '';
     }
 
     /**
+     * Playable on the mode's map AND from the current game: every build mode is
+     * a current-game queue, so the LoL Classic catalogue is never offered —
+     * item.json flags most classic items on map 12 (ARAM) although they only
+     * exist in the classic client.
+     *
      * A missing "maps" flag means "not excluded" — older item.json versions
      * predate some maps and must not blank the whole catalog.
      *
      * @param array<string, mixed> $entry
      */
-    private function isOnMap(array $entry, GameMode $mode): bool
+    private function isAvailableOn(string $id, array $entry, GameMode $mode): bool
     {
-        return ($entry['maps'][$mode->mapId()] ?? true) !== false;
+        return ItemEditionRule::of($id) === Edition::Modern
+            && ($entry['maps'][$mode->mapId()] ?? true) !== false;
     }
 
     /**
@@ -128,8 +142,8 @@ final class ItemOptionsProjector
      * and renders the icon. Recipe data (from/into/depth) belongs to the item
      * detail page, which builds its craft tree from `recipeTree`, not from here.
      *
-     * @param array<string, mixed>   $entry
-     * @param array<string, ?string> $images
+     * @param array<string, mixed>       $entry
+     * @param array<int|string, ?string> $images
      * @return array{id: string, name: string, image: ?string, gold: int, tags: list<string>}
      */
     private function option(string $id, array $entry, array $images): array
@@ -137,20 +151,9 @@ final class ItemOptionsProjector
         return [
             'id'    => $id,
             'name'  => (string) ($entry['name'] ?? $id),
-            'image' => $this->imageOf($entry, $images),
+            'image' => PickerFormat::imagePath($images[$id] ?? null),
             'gold'  => (int) ($entry['gold']['total'] ?? 0),
             'tags'  => array_values(array_map(strval(...), (array) ($entry['tags'] ?? []))),
         ];
-    }
-
-    /**
-     * @param array<string, mixed>   $entry
-     * @param array<string, ?string> $images
-     */
-    private function imageOf(array $entry, array $images): ?string
-    {
-        $name = $entry['name'] ?? null;
-
-        return \is_string($name) ? PickerFormat::imagePath($images[$name] ?? null) : null;
     }
 }

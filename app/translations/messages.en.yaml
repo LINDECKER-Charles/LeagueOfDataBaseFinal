@@ -180,14 +180,107 @@ common:
 
 filter:
   results: "%count% results"
+  results_one: "%count% result"
+  page: "page %page% / %count%"
+  gauge: "Results"
   empty: "No results match your filters."
+  empty_title: "No results"
+  empty_cta: "Clear filters"
   clear: "Clear"
+  clear_all: "Clear all"
   prev: "Previous"
   next: "Next"
   per_page: "Per page"
   all: "All"
   filters: "Filters"
   close: "Close"
+  show_results: "Show %count% results"
+  show_results_one: "Show %count% result"
+  edition: "Edition"
+  match_mode: "Combine"
+  match_any: "Any"
+  match_all: "All"
+  min: "Min"
+  max: "Max"
+  copy_link: "Copy link"
+  copied: "Link copied"
+  copy_error: "Copy the link below"
+  active: "Active filters"
+
+# Per-category list filters (App\Service\Catalog\Facet\Schema). Option labels
+# that come from the data (paths, resource names, levels) are not listed here.
+facet:
+  group:
+    profile: "Profile"
+    ratings: "Ratings"
+    base_stats: "Base stats (level 1)"
+    identity: "Category"
+    availability: "Availability"
+    economy: "Price"
+    stats: "Stats"
+  champion:
+    role: "Role"
+    roles:
+      fighter: "Fighter"
+      tank: "Tank"
+      mage: "Mage"
+      assassin: "Assassin"
+      marksman: "Marksman"
+      support: "Support"
+    resource: "Resource"
+    resource_none: "No resource"
+    range: "Attack range"
+    ranges:
+      melee: "Melee"
+      ranged: "Ranged"
+    difficulty: "Difficulty"
+    attack: "Attack"
+    defense: "Defense"
+    magic: "Magic"
+  item:
+    tag: "Categories"
+    edition: "Edition"
+    map: "Map / mode"
+    tier: "Tier"
+    tiers:
+      component: "Component"
+      epic: "Epic"
+      legendary: "Legendary"
+    purchasable: "Purchasable only"
+    consumable: "Consumables only"
+    price: "Total price"
+  summoner:
+    mode: "Game mode"
+    edition: "Edition"
+    level: "Unlock level"
+    cooldown: "Cooldown"
+  rune:
+    path: "Path"
+    slot: "Slot"
+    slot_keystone: "Keystone"
+    slot_row: "Row %n%"
+
+# Data Dragon map ids (App\Service\Catalog\GameMap).
+map:
+  "11": "Summoner's Rift"
+  "12": "Howling Abyss (ARAM)"
+  "21": "Nexus Blitz"
+  "30": "Arena"
+  "33": "Swarm"
+  "35": "Brawl"
+
+# Which game an item / summoner spell belongs to: the current client, or
+# League of Legends Classic (Data Dragon ships both under the same names).
+edition:
+  all: "All"
+  modern: "Current"
+  classic: "LoL Classic"
+  classic_hint: "League of Legends Classic version"
+  classic_notice: "League of Legends Classic edition: its values differ from the current version."
+  counterpart:
+    modern: "See the current version"
+    classic: "See the LoL Classic version"
+
 base:
   title: "League of Data Base"
   description: "League of Data Base is a community-driven platform that provides detailed information, stats, and insights about League of Legends. Fast, reliable, and always up to date."

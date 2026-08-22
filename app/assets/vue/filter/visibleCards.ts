@@ -1,21 +1,29 @@
+import { normalizeSearchText } from '../search/normalizeSearchText'
+import { matchesFacets, type CardValues, type FacetDefinition, type FacetState } from './facets'
+
 /**
  * Pure visibility rule of the filtered resource grid: which cards match the
- * search + facet, how many pages that makes, and which cards the current page
- * shows. No Vue, no DOM — the island only binds the result.
+ * search + facets, how many pages that makes, and which cards the current
+ * page shows. No Vue, no DOM — the island only binds the result.
  */
 
 /** Sentinel page size: a single page holding every matching card. */
 export const PAGE_SIZE_ALL = 0
 
 export interface FilterableCard {
-    /** Comparison haystack of the card (already lowercased). */
+    /** Comparison haystack of the card (already accent-folded + lowercased). */
     search: string
-    tags: string[]
+    values: CardValues
 }
 
-export interface GridCriteria {
+/** What narrows the grid: the search text and the engaged facets. */
+export interface FilterCriteria {
     query: string
-    tags: ReadonlySet<string>
+    facets: FacetState
+    schema: readonly FacetDefinition[]
+}
+
+export interface GridCriteria extends FilterCriteria {
     page: number
     /** {@link PAGE_SIZE_ALL} or a positive page size. */
     pageSize: number
@@ -29,16 +37,25 @@ export interface GridSelection<T> {
     visible: T[]
 }
 
+/** The cards the criteria keep — query AND every engaged facet, each its own axis. */
+export function matchingCards<T extends FilterableCard>(
+    cards: readonly T[],
+    criteria: FilterCriteria,
+): T[] {
+    // Accent-folded like the pickers: "feerique" must find "féérique".
+    const needle = normalizeSearchText(criteria.query.trim())
+    return cards.filter(
+        (card) =>
+            (needle === '' || card.search.includes(needle))
+            && matchesFacets(card.values, criteria.facets, criteria.schema),
+    )
+}
+
 export function selectVisibleCards<T extends FilterableCard>(
     cards: readonly T[],
     criteria: GridCriteria,
 ): GridSelection<T> {
-    const needle = criteria.query.trim().toLowerCase()
-    const matching = cards.filter(
-        (card) =>
-            (needle === '' || card.search.includes(needle))
-            && (criteria.tags.size === 0 || card.tags.some((tag) => criteria.tags.has(tag))),
-    )
+    const matching = matchingCards(cards, criteria)
     const size = criteria.pageSize === PAGE_SIZE_ALL
         ? Math.max(1, matching.length)
         : criteria.pageSize

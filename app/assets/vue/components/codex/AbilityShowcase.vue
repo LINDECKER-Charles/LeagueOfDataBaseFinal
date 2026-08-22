@@ -101,7 +101,7 @@ function onRailKeydown(event: KeyboardEvent): void {
                 :tabindex="i === selected ? 0 : -1"
                 @click="selected = i"
             >
-                <img
+                <img class="hx-img"
                     v-if="ability.icon"
                     :src="ability.icon"
                     alt=""
@@ -185,7 +185,7 @@ function onRailKeydown(event: KeyboardEvent): void {
             </div>
             <div v-else-if="showPoster" class="kit__media">
                 <img
-                    class="kit__poster"
+                    class="hx-img kit__poster"
                     :src="media.poster(current.key)"
                     alt=""
                     decoding="async"
@@ -193,7 +193,7 @@ function onRailKeydown(event: KeyboardEvent): void {
                 />
             </div>
             <div v-else class="kit__media kit__media--idle">
-                <img v-if="current.icon" :src="current.icon" :alt="current.name" />
+                <img class="hx-img" v-if="current.icon" :src="current.icon" :alt="current.name" />
             </div>
 
             <div class="p-5 sm:p-6">

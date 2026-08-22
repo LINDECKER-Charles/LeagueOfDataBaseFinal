@@ -136,7 +136,7 @@ function initials(name: string): string {
                             :srcset="webp(s.display.image)"
                             type="image/webp"
                         />
-                        <img
+                        <img class="hx-img"
                             :src="s.display.image"
                             :alt="s.display.name"
                             width="72"
@@ -241,7 +241,7 @@ function initials(name: string): string {
                                 :srcset="webp(pickerEntry.image)"
                                 type="image/webp"
                             />
-                            <img
+                            <img class="hx-img"
                                 :src="pickerEntry.image"
                                 alt=""
                                 width="32"

@@ -61,19 +61,26 @@ graph TD
 **Rôle** : Gestion des données des champions
 - Hérite d'`AbstractManager`
 - Implémente `CategoriesInterface`
-- Méthodes spécialisées : `getByName()`, `searchByName()`, `getImages()`
+- Méthodes spécialisées : `getByName()`, `searchByName()`, `getImages()` — projection par
+  défaut **indexée par id** (champions, objets, sorts) ; seules les runes gardent leur
+  forme d'arbre
 
 #### ⚔️ ItemManager
 **Rôle** : Gestion des objets du jeu
 - Structure similaire au ChampionManager
-- Gestion des images et métadonnées des objets
+- Gestion des images et métadonnées des objets — `getImages()` indexé par **id**, jamais
+  par nom : les jumeaux League of Legends Classic partagent leur nom (`1004` / `771004`)
 - Support de la recherche et pagination
+- Édition (`Service/API/Edition`) : implémente `EditionAwareInterface` (`editionOf`,
+  `counterpart`) ; règle objet = id `^77\d{4}$` (les flags `maps` sont incohérents)
 
 #### 🔮 SummonerManager
 **Rôle** : Gestion des sorts d'invocateur
 - Premier manager implémenté
 - Modèle de référence pour les autres managers
 - Gestion complète du cycle de vie des données
+- Édition : implémente `EditionAwareInterface` ; sort Classic = mode `JADE`
+  (`SummonerFlash` ↔ `SummonerFlash_Jade`)
 
 #### 🎨 RuneManager
 **Rôle** : Gestion des runes reforgées

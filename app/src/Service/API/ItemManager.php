@@ -3,16 +3,71 @@ declare(strict_types=1);
 
 namespace App\Service\API;
 
-final class ItemManager extends AbstractManager implements CategoriesInterface
+use App\Service\API\Concern\ResolvesEditionCounterpart;
+use App\Service\API\Edition\Edition;
+use App\Service\API\Edition\EditionAwareInterface;
+use App\Service\API\Edition\ItemEditionRule;
+use App\Service\Tools\DdragonText;
+
+final class ItemManager extends AbstractManager implements
+    CategoriesInterface,
+    EditionAwareInterface
 {
+    use ResolvesEditionCounterpart;
+
     public function type(): string
     {
         return 'item';
     }
 
+    /** Items carry no edition field: the id range decides ({@see ItemEditionRule}). */
+    public function editionOf(string $id, array $entry): Edition
+    {
+        return ItemEditionRule::of($id);
+    }
+
+    protected function counterpartId(string $id): ?string
+    {
+        return ItemEditionRule::counterpartId($id);
+    }
+
     protected function imageUrl(string $version, string $name): string
     {
         return sprintf('%s/%s/img/item/%s', self::DDRAGON_CDN, $version, $name);
+    }
+
+    /**
+     * The browsable collection, cleaned of Riot's data debris in ONE place so
+     * the list, the search, the pager, the counts, the sitemap and the detail
+     * lookup all agree:
+     *  - UNNAMED entries are dropped (2008, 226660, 772139, 772140 on 16.16.1 —
+     *    empty name in every locale): not encyclopedia entries, their direct
+     *    detail URL 404s;
+     *  - self-declared placeholders are dropped too (7050 names itself
+     *    "Gangplank Placeholder" in every locale);
+     *  - marked-up names are reduced to the name proper (3901-3903 ship
+     *    "<rarityLegendary>Feu à volonté</rarityLegendary><br>…" as their name).
+     * Recipe/related lookups keep reading the raw map ({@see dataMap}),
+     * permissive by design.
+     *
+     * @param array<mixed> $raw
+     * @return array<mixed>
+     */
+    protected function paginationCollection(array $raw): array
+    {
+        $collection = [];
+        foreach (parent::paginationCollection($raw) as $id => $entry) {
+            $name = \is_array($entry) ? (string) ($entry['name'] ?? '') : '';
+            if ($name === '' || str_contains($name, 'Placeholder')) {
+                continue;
+            }
+            if (str_contains((string) $entry['name'], '<')) {
+                $entry['name'] = DdragonText::plainName((string) $entry['name']);
+            }
+            $collection[$id] = $entry;
+        }
+
+        return $collection;
     }
 
     /**
@@ -188,24 +243,17 @@ final class ItemManager extends AbstractManager implements CategoriesInterface
         return is_scalar($name) && str_contains(mb_strtolower((string) $name), $needle);
     }
 
-    /** The item id lives in the map key; consumers expect it inside the entry. */
+    /**
+     * The item id lives in the map key; consumers expect it inside the entry.
+     * The edition rides along so a hit list can tell the classic twin apart from
+     * its current namesake.
+     */
     protected function projectSearchResult(array $entry, string|int $key): array
     {
-        return array_merge($entry, ['id' => $key]);
+        return array_merge($entry, [
+            'id'      => $key,
+            'edition' => ItemEditionRule::of((string) $key)->value,
+        ]);
     }
 
-    /** Keyed by display name — the shape the item list/search consumers index by. */
-    protected function projectImages(array $data, array $resolved): array
-    {
-        $result = [];
-        foreach ($data as $entry) {
-            $name  = $entry['name'] ?? null;
-            $image = $entry['image']['full'] ?? null;
-            if ($name && $image) {
-                $result[$name] = $resolved[$image] ?? null;
-            }
-        }
-
-        return $result;
-    }
 }

@@ -151,7 +151,7 @@
                       <picture>
                         {% include 'components/_webp_source.html.twig'
                            with { src: '/' ~ item.image } only %}
-                        <img src="/{{ item.image }}" alt="" width="32" height="32"
+                        <img class="hx-img" src="/{{ item.image }}" alt="" width="32" height="32"
                              loading="lazy" decoding="async">
                       </picture>
                     {% else %}

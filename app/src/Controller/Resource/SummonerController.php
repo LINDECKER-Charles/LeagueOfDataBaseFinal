@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Resource;
 
+use App\Service\API\DatasetRef;
 use App\Service\API\SummonerManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
@@ -63,12 +64,19 @@ final class SummonerController extends AbstractResourceController
         }
 
         return $this->render('summoner/detail.html.twig', [
-            'summoner' => $summoner,
-            'image'    => $image,
-            'version'  => $version,
-            'lang'     => $lang,
-            'nav'      => $this->neighbors($this->summoners, $selection, $name),
-            'client'   => $this->clientData(),
+            'summoner'    => $summoner,
+            'image'       => $image,
+            'version'     => $version,
+            'lang'        => $lang,
+            'nav'         => $this->neighbors($this->summoners, $selection, $name),
+            // Which game this spell belongs to, and its twin in the other one
+            // (SummonerFlash ↔ SummonerFlash_Jade) when the patch carries it.
+            'edition'     => $this->summoners->editionOf($name, $summoner)->value,
+            'counterpart' => $this->summoners->counterpart(
+                $name,
+                DatasetRef::fromSelection($selection),
+            ),
+            'client'      => $this->clientData(),
         ]);
     }
 

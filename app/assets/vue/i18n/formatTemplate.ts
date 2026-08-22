@@ -10,3 +10,18 @@ export function formatTemplate(template: string, params: Record<string, string |
         template,
     )
 }
+
+/** The singular wording for exactly one, the plural one otherwise (no ICU on the client). */
+export function pluralTemplate(count: number, one: string, many: string): string {
+    return count === 1 ? one : many
+}
+
+/**
+ * The text around ONE placeholder, for markup that styles the value apart
+ * from its label ("<b>12</b> results"). A template without the placeholder
+ * keeps all its text before an empty value.
+ */
+export function splitTemplate(template: string, key: string): { before: string; after: string } {
+    const [before, ...rest] = template.split(`%${key}%`)
+    return { before, after: rest.join(`%${key}%`) }
+}

@@ -50,9 +50,14 @@ const categoryChips = computed(() =>
     ITEM_CATEGORY_KEYS.map((key) => ({ key, label: props.labels.categories[key] })),
 )
 
-// Haystacks are precomputed so typing only re-runs the includes().
+// Haystacks are precomputed so typing only re-runs the includes(). The id is
+// part of it, as in the favorite picker: namesake items (Arena variants) are
+// only told apart by it.
 const searchIndex = computed(() =>
-    (props.options ?? []).map((item) => ({ item, searchText: normalizeSearchText(item.name) })),
+    (props.options ?? []).map((item) => ({
+        item,
+        searchText: normalizeSearchText(`${item.name} ${item.id}`),
+    })),
 )
 
 const results = computed<ItemOption[]>(() => {
@@ -205,7 +210,7 @@ function onBackdropClick(event: MouseEvent): void {
                         @click="onAdd(item.id)"
                     >
                         <span class="armory-item__icon">
-                            <img
+                            <img class="hx-img"
                                 v-if="item.image"
                                 :src="item.image"
                                 alt=""

@@ -1,5 +1,6 @@
 {# Item aside — combat statistics, gold ledger, availability and categories.
-   Contract: item, availableMaps, hasTier, hasRestriction, mapNames. #}
+   Contract: item, availableMaps, hasTier, hasRestriction, mapNames,
+   championNames (internal champion id => localized display name). #}
       <aside class="mt-12 space-y-6 lg:mt-0 lg:sticky lg:top-6" data-reveal>
         {# Combat statistics — Data Dragon's structured `stats` block, iconified. #}
         {% set itemStats = item_stats(item.stats|default(null)) %}
@@ -57,10 +58,12 @@
                 }}</span>
               {% endif %}
               {% if item.requiredChampion is defined and item.requiredChampion %}
-                <span class="hx-chip border-gold/50 text-gold">{{ item.requiredChampion }}</span>
+                <span class="hx-chip border-gold/50 text-gold">{{
+                  championNames[item.requiredChampion]|default(item.requiredChampion) }}</span>
               {% endif %}
               {% if item.requiredAlly is defined and item.requiredAlly %}
-                <span class="hx-chip border-gold/50 text-gold">{{ item.requiredAlly }}</span>
+                <span class="hx-chip border-gold/50 text-gold">{{
+                  championNames[item.requiredAlly]|default(item.requiredAlly) }}</span>
               {% endif %}
               {% for id in availableMaps %}
                 <span class="hx-chip">{{ mapNames[id] ?? ('Map ' ~ id) }}</span>
@@ -75,7 +78,8 @@
             <h2 class="mb-4 font-beaufort text-xs uppercase tracking-[0.22em]
                        text-gold">{{ 'item.detail.categories'|trans }}</h2>
             <div class="flex flex-wrap gap-2">
-              {% for tag in item.tags %}<span class="hx-chip">{{ tag }}</span>{% endfor %}
+              {% for tag in item.tags %}<span
+                class="hx-chip">{{ tag|tag_label }}</span>{% endfor %}
             </div>
           </div>
         {% endif %}

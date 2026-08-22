@@ -160,8 +160,8 @@ abstract class SeededManagerTestCase extends TestCase
         }
     }
 
-    /** @return array<string, array<string,string>> */
-    private function manifests(): array
+    /** @return array<string, array<string,string>> image file => stored path, per type */
+    protected function manifests(): array
     {
         return [
             'champion' => [

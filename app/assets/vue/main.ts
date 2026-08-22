@@ -3,6 +3,7 @@ import '../styles/app.css'
 
 import { createApp, type App, type Component } from 'vue'
 import { installEnhancements } from './fx/enhance'
+import { markImages } from './images/imageLifecycle'
 import { setupProfileForm } from './profile/profileForm'
 
 /**
@@ -34,6 +35,9 @@ const registry: Record<string, Island> = {
 // Live islands, so Turbo navigations can tear them down instead of leaking a
 // detached Vue tree (a playing <video> keeps its audio alive until GC).
 const mountedIslands: { app: App; host: HTMLElement }[] = []
+// Shells whose chunk is still loading: a Turbo snapshot taken meanwhile must
+// not freeze their mount flag, or the restored page would never mount them.
+const pendingIslands = new Set<HTMLElement>()
 
 // Shells flagged `data-vue-lazy` sit below the fold behind a server-rendered
 // fallback or skeleton: their chunk waits until they approach the viewport, so
@@ -72,6 +76,7 @@ async function mountIsland(el: HTMLElement): Promise<void> {
         return
     }
     el.dataset.vueMounted = 'true'
+    pendingIslands.add(el)
 
     let props: Record<string, unknown> = {}
     try {
@@ -81,8 +86,10 @@ async function mountIsland(el: HTMLElement): Promise<void> {
     }
 
     const { default: component } = await island.load()
+    pendingIslands.delete(el)
     // The chunk may resolve after a Turbo visit swapped this shell away.
     if (!el.isConnected) {
+        delete el.dataset.vueMounted
         return
     }
     // Mounting clears the shell, so the server-rendered skeleton/fallback inside
@@ -90,6 +97,8 @@ async function mountIsland(el: HTMLElement): Promise<void> {
     const app = createApp(component, props)
     app.mount(el)
     mountedIslands.push({ app, host: el })
+    // Island-rendered images get their loading state like server-rendered ones.
+    markImages(el)
 }
 
 /**
@@ -106,6 +115,8 @@ function teardownIslands(): void {
         app.unmount()
         delete host.dataset.vueMounted
     }
+    pendingIslands.forEach((host) => delete host.dataset.vueMounted)
+    pendingIslands.clear()
 }
 
 function enhancePage(root: ParentNode = document): void {

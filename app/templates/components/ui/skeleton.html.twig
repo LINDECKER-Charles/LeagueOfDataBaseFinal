@@ -5,13 +5,13 @@
    layout from collapsing while the code-split chunk downloads (and while a lazy
    island waits for the viewport), so the mount shifts nothing.
 
-   Params: kind (filter | showcase | gallery | control). Shapes live in
+   Params: kind (console | showcase | gallery | control). Shapes live in
    assets/styles/foundation/skeleton.css. #}
 {% set kind = kind|default('control') %}
 <div class="hx-sk-{{ kind }}" aria-hidden="true">
-    {% if kind == 'filter' %}
+    {% if kind == 'console' %}
         <span class="hx-sk hx-sk-input"></span>
-        {% for i in 1..3 %}<span class="hx-sk hx-sk-chip"></span>{% endfor %}
+        {% for i in 1..3 %}<span class="hx-sk hx-sk-bar"></span>{% endfor %}
     {% elseif kind == 'showcase' %}
         <div class="hx-sk-rail">{% for i in 1..5 %}<span
             class="hx-sk hx-sk-tab"></span>{% endfor %}</div>

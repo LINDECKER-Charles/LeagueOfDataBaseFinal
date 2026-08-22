@@ -34,8 +34,6 @@
 
 {% block body %}
 {% set champId = champion.id ?? champion.key %}
-{% set splashBase = 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash' %}
-{% set centeredBase = 'https://ddragon.leagueoflegends.com/cdn/img/champion/centered' %}
 
 {# ---- Ability view-model: P + Q/W/E/R, shared by the showcase island and its
    no-JS fallback. Descriptions keep DDragon's localized markup (cleaned of
@@ -56,6 +54,12 @@
 {% for spell in champion.spells|default([]) %}
   {% set sImg = abilityImages[spell.image.full ?? '']|default(null) %}
   {% set ammo = (spell.maxammo|default(-1)) + 0 %}
+  {# DDragon range sentinels: "self" and huge values (25000+, incl. the uint32
+     "-1" 4294967295) are placeholders, not measurable ranges — Aatrox Q says
+     25000 while Jhin R says it too. No chip beats a made-up number. #}
+  {% set rawRange = spell.rangeBurn|default(null) %}
+  {% set range = rawRange and rawRange != 'self'
+      and (rawRange|split('/')|first + 0) < 25000 ? rawRange : null %}
   {% set abilities = abilities|merge([{
     key: slotKeys[loop.index0]|default('R'),
     name: spell.name,
@@ -63,7 +67,7 @@
     icon: sImg ? '/' ~ sImg : null,
     cooldown: spell.cooldownBurn|default(null),
     cost: spell.costBurn|default(null),
-    range: spell.rangeBurn|default(null),
+    range: range,
     maxrank: spell.maxrank|default(null),
     charges: ammo > 0 ? ammo : null
   }]) %}
@@ -79,7 +83,7 @@
       {% set skinData = skinData|merge([{
         num: skinNum,
         name: skin.name == 'default' ? champion.name : skin.name,
-        splash: splashBase ~ '/' ~ champId ~ '_' ~ skinNum ~ '.jpg',
+        splash: champion_art(champId, 'splash', skinNum),
         chromas: skinId ? (chromas[skinId] ?? []) : []
       }]) %}
     {% endif %}
@@ -94,7 +98,7 @@
   {# ================= Hero — cinematic centered splash ==================== #}
   {% include 'champion/_hero.html.twig' with {
     champion: champion, champId: champId,
-    splashBase: splashBase, centeredBase: centeredBase, selection: selection
+    heroArt: heroArt, selection: selection
   } only %}
 
   {# ================= Sticky in-page section nav =========================== #}

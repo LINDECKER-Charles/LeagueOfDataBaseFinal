@@ -37,7 +37,13 @@ final class RuneController extends AbstractResourceController
     )]
     public function runes(): Response
     {
-        return $this->listPage($this->runeManager, 'rune/liste.html.twig');
+        return $this->listPage(
+            $this->runeManager,
+            'rune/liste.html.twig',
+            static fn (array $data): array => [
+                'runeCount' => RuneManager::countRunes($data['runesReforgeds']),
+            ],
+        );
     }
 
     /**

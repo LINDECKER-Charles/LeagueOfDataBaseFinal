@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Profile;
 
+use App\Service\API\Champion\ChampionArt;
 use App\Service\API\ChampionManager;
 use App\Service\Profile\ChampionSkins;
 use App\Service\Storage\BlobStore;
@@ -134,6 +135,31 @@ final class ChampionSkinsTest extends TestCase
         self::assertSame(self::CENTERED.'/Ahri_7.jpg', $banner['banner']);
     }
 
+    /**
+     * Since LoL Classic the public "Fiddlesticks" spelling serves the pre-rework
+     * art (403 for post-rework skins): every art family must use Riot's
+     * internal spelling — the rule lives in ChampionArt, ChampionSkins only
+     * routes through it.
+     */
+    public function testEveryArtFamilyUsesRiotsInternalFiddlesticksSpelling(): void
+    {
+        $skins = $this->skins(
+            new Filesystem(new LocalFilesystemAdapter($this->dir)),
+            $this->noEgress()
+        );
+
+        $art = $skins->championArt('Fiddlesticks');
+
+        self::assertSame(self::CENTERED.'/FiddleSticks_0.jpg', $art['centered']);
+        self::assertSame(self::SPLASH.'/FiddleSticks_0.jpg', $art['splash']);
+        self::assertSame(self::LOADING.'/FiddleSticks_0.jpg', $art['loading']);
+
+        $banner = $skins->resolveBanner('Fiddlesticks_27', self::VERSION, self::LANG);
+        self::assertNotNull($banner);
+        self::assertSame(self::CENTERED.'/FiddleSticks_27.jpg', $banner['banner']);
+        self::assertSame(self::SPLASH.'/FiddleSticks_27.jpg', $banner['splash']);
+    }
+
     public function testResolveBannerRejectsNull(): void
     {
         $skins = $this->skins(
@@ -197,7 +223,7 @@ final class ChampionSkinsTest extends TestCase
 
     private function skins(Filesystem $fs, ?GoFetcherClient $go = null): ChampionSkins
     {
-        return new ChampionSkins($this->manager($fs, $go ?? $this->noEgress()));
+        return new ChampionSkins($this->manager($fs, $go ?? $this->noEgress()), new ChampionArt());
     }
 
     private function manager(Filesystem $fs, GoFetcherClient $go): ChampionManager

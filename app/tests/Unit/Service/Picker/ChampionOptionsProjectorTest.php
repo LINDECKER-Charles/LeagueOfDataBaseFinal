@@ -7,9 +7,8 @@ use App\Service\Picker\ChampionOptionsProjector;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The champion projector realigns the manager's POSITIONAL image list on ids
- * (consuming one slot per entry that has name + image, the manager's own rule)
- * and sorts options by name.
+ * The champion projector reads the manager's id-keyed image map (an imageless
+ * entry is simply absent from it) and sorts options by name.
  */
 final class ChampionOptionsProjectorTest extends TestCase
 {
@@ -30,7 +29,7 @@ final class ChampionOptionsProjectorTest extends TestCase
                 'name' => 'Zed',
                 'image' => ['full' => 'Zed.png'],
             ],
-            // No image node: the manager emits NO positional slot for this entry.
+            // No image node: absent from the manager's id-keyed image map.
             'Aatrox' => ['id' => 'Aatrox', 'key' => '266', 'name' => 'Aatrox'],
             'Ahri' => [
                 'id' => 'Ahri',
@@ -41,12 +40,12 @@ final class ChampionOptionsProjectorTest extends TestCase
         ];
     }
 
-    public function testProjectSortsByNameAndAlignsPositionalImages(): void
+    public function testProjectSortsByNameAndReadsImagesById(): void
     {
-        // Two positional slots only (Zed, Ahri) — Aatrox has no image entry.
+        // Aatrox has no image entry: absent key, null image.
         $options = $this->projector->project(
             $this->data(),
-            ['cdn/blobs/zed.png', 'cdn/blobs/ahri.png'],
+            ['Zed' => 'cdn/blobs/zed.png', 'Ahri' => 'cdn/blobs/ahri.png'],
         );
 
         self::assertSame(['Aatrox', 'Ahri', 'Zed'], array_column($options, 'name'));
@@ -59,8 +58,11 @@ final class ChampionOptionsProjectorTest extends TestCase
 
     public function testUnresolvedImageStaysNull(): void
     {
-        // Zed's slot resolved to null (ingestion deferred) — Ahri keeps its path.
-        $options = $this->projector->project($this->data(), [null, 'cdn/blobs/ahri.png']);
+        // Zed resolved to null (ingestion deferred) — Ahri keeps its path.
+        $options = $this->projector->project(
+            $this->data(),
+            ['Zed' => null, 'Ahri' => 'cdn/blobs/ahri.png'],
+        );
 
         self::assertSame(
             ['Aatrox' => null, 'Ahri' => '/cdn/blobs/ahri.png', 'Zed' => null],
@@ -72,7 +74,7 @@ final class ChampionOptionsProjectorTest extends TestCase
     {
         $resolved = $this->projector->resolve(
             $this->data(),
-            ['cdn/blobs/zed.png', 'cdn/blobs/ahri.png'],
+            ['Zed' => 'cdn/blobs/zed.png', 'Ahri' => 'cdn/blobs/ahri.png'],
             'Ahri',
         );
 

@@ -1,0 +1,22 @@
+{# Edition note of a detail page: what the classic twin is, and the link to the
+   same entity in the other game when the patch carries it (1004 ↔ 771004,
+   SummonerFlash ↔ SummonerFlash_Jade). Renders nothing for a current-game entity
+   without a classic twin. Params: edition, counterpart ({id, name, edition}|null),
+   route (detail route name), version, lang, align ('start'|'center'). #}
+{% set isClassic = edition|default('modern') == 'classic' %}
+{% if isClassic or counterpart|default(null) %}
+  <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2
+              {{ align|default('start') == 'center' ? 'justify-center' : '' }}">
+    {% if isClassic %}
+      <p class="font-mono text-xs text-text-muted">{{ 'edition.classic_notice'|trans }}</p>
+    {% endif %}
+    {% if counterpart|default(null) %}
+      <a href="{{ resource_path(route, { name: counterpart.id }, version, lang) }}"
+         class="inline-flex items-center gap-1.5 font-beaufort text-xs uppercase tracking-[0.15em]
+                text-hex transition-colors hover:text-hex-bright">
+        {{ ('edition.counterpart.' ~ counterpart.edition)|trans }}
+        <span aria-hidden="true">›</span>
+      </a>
+    {% endif %}
+  </div>
+{% endif %}

@@ -7,6 +7,8 @@
 {% block img %}/preview/runes.png{% endblock %}
 
 {% block structured_data %}
+  {# The five paths keep the structured data: they are the canonical pages
+     (a rune is an anchor on its path, and search engines ignore fragments). #}
   {% set seoItems = [] %}
   {% for runeTree in runesReforgeds|slice(0, 20) %}
     {% set seoItems = seoItems|merge([{
@@ -26,50 +28,75 @@
       {% include 'components/codex/section_header.html.twig' with {
         eyebrow: 'Data Dragon · ' ~ meta.version,
         title: 'rune.list.title'|trans,
-        count: meta.totalItem,
+        count: runeCount,
         count_label: 'rune.list.title'|trans|lower
       } %}
     </header>
 
-    {% include 'components/codex/list_filter.html.twig' with { grid_id: 'rune-grid' } %}
+    {# The five paths — the canonical pages every rune card points into. #}
+    <nav class="mb-6 flex flex-wrap gap-2.5" aria-label="{{ 'facet.rune.path'|trans }}">
+      {% for runeTree in runesReforgeds %}
+        {% set treeIcon = images[runeTree.key].icon ?? null %}
+        <a href="{{ resource_path('app_rune', { name: runeTree.key }, meta.version, meta.lang) }}"
+           class="hx-chip gap-2 py-1.5 text-xs normal-case tracking-normal transition-colors
+                  hover:border-gold hover:text-gold-bright">
+          {% if treeIcon %}
+            <img src="/{{ treeIcon }}" alt="" width="20" height="20" loading="lazy"
+                 decoding="async" class="hx-img h-5 w-5 rounded-full">
+          {% endif %}
+          {{ runeTree.name }}
+        </a>
+      {% endfor %}
+    </nav>
 
+    {% embed 'components/codex/list_filter.html.twig'
+       with { grid_id: 'rune-grid', facet_type: 'runesReforged' } %}
+    {% block grid %}
+
+    <div data-img-scope="runesReforged" data-img-version="{{ meta.version }}"
+         data-img-batch="{{ image_status_batch() }}">
+    {% include 'components/codex/entity_card_image.html.twig'
+       with { as_template: true, img_fit: 'contain' } only %}
     <div id="rune-grid"
          class="resource-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {% for runeTree in runesReforgeds %}
-        {# No facet here: one tree per card would make each its own tag (degenerate).
-           Search stays via filter_text; the tree icon is the circular "focus" glyph. #}
-        {% embed 'components/codex/entity_card.html.twig' with {
-          href: resource_path('app_rune', { name: runeTree.key }, meta.version, meta.lang),
-          img: images[runeTree.key].icon ?? null,
-          name: runeTree.name,
-          sub: runeTree.key,
-          img_scale: 0.72,
-          img_round: true,
-          footer_label: 'common.detail'|trans,
-          filter_text: (runeTree.name ~ ' ' ~ runeTree.key)|lower
-        } %}
-          {% block card_body %}
-            {% set slot0 = runeTree.slots[0].runes ?? [] %}
-            {% if slot0 is not empty %}
-              <div class="grid grid-cols-4 gap-2 px-4 pb-4">
-                {% for r in slot0 %}
-                  {% set runeIcon = images[runeTree.key].slots[0][r.key] ?? null %}
-                  {% if runeIcon %}
-                    <div class="aspect-square overflow-hidden border border-gold-deep/40
-                                bg-void/60">
-                      <img src="/{{ runeIcon }}" alt="{{ r.name }}"
-                           class="h-full w-full object-cover">
-                    </div>
-                  {% endif %}
-                {% endfor %}
-              </div>
-            {% endif %}
-          {% endblock %}
-        {% endembed %}
+        {% set pathHref = resource_path('app_rune', { name: runeTree.key }, meta.version, meta.lang) %}
+        {% for slotIndex, slot in runeTree.slots|default([]) %}
+          {% set slotLabel = slotIndex == 0
+            ? 'facet.rune.slot_keystone'|trans
+            : 'facet.rune.slot_row'|trans({'%n%': slotIndex}) %}
+          {% for r in slot.runes|default([]) %}
+            {# shortDesc carries Riot markup (<lol-uikit-tooltipped-keyword>…):
+               searchable text is the cleaned, tag-free copy. #}
+            {% set summary = r.shortDesc|default('')|ddragon_text %}
+            {% embed 'components/codex/entity_card.html.twig' with {
+              href: pathHref ~ '#rune-' ~ r.key,
+              img: images[runeTree.key].slots[slotIndex][r.key] ?? null,
+              img_name: r.icon|default(null),
+              name: r.name,
+              sub: runeTree.name ~ ' · ' ~ slotLabel,
+              img_fit: 'contain',
+              filter_text: (r.name ~ ' ' ~ r.key ~ ' ' ~ summary|striptags)|lower,
+              facet_attrs: facet_attrs(
+                'runesReforged', r.key, r|merge({ tree: runeTree.key, slot: slotIndex })
+              )
+            } %}
+              {% block card_body %}
+                {% if summary %}
+                  <div class="ddragon-rich px-4 pb-4 text-[13px] leading-snug
+                              text-text-muted">{{ summary|raw }}</div>
+                {% endif %}
+              {% endblock %}
+            {% endembed %}
+          {% endfor %}
+        {% endfor %}
       {% else %}
         {% include 'components/ui/empty_state.html.twig' %}
       {% endfor %}
     </div>
+    </div>
+    {% endblock %}
+    {% endembed %}
   </div>
 </main>
 {% endblock %}

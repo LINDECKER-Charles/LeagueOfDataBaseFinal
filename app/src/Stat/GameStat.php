@@ -74,6 +74,21 @@ enum GameStat: string
     }
 
     /**
+     * The item stat columns in display order — what a stat facet enumerates.
+     *
+     * @return list<array{stat: self, percent: bool}>
+     */
+    public static function itemStatColumns(): array
+    {
+        $columns = [];
+        foreach (self::ITEM_KEYS as [$stat, $percent]) {
+            $columns[] = ['stat' => $stat, 'percent' => $percent];
+        }
+
+        return $columns;
+    }
+
+    /**
      * Flatten a Data Dragon item `stats` block into ordered, non-zero rows.
      *
      * @param array<string,int|float>|null $stats

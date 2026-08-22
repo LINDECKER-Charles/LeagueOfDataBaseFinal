@@ -1,70 +1,81 @@
 import { describe, expect, it } from 'vitest'
-import { PAGE_SIZE_ALL, selectVisibleCards, type FilterableCard } from './visibleCards'
+import { normalizeSearchText } from '../search/normalizeSearchText'
+import type { FacetDefinition, FacetState } from './facets'
+import { PAGE_SIZE_ALL, selectVisibleCards, type FilterableCard, type GridCriteria } from './visibleCards'
 
-function card(search: string, ...tags: string[]): FilterableCard {
-    return { search, tags }
+const TAG: FacetDefinition = {
+    key: 'tag', kind: 'choice', label: 'Tag', group: 'g', options: [], primary: true,
+    multiple: true, matchAll: false, unit: null, step: 1,
 }
+const SCHEMA = [TAG]
+
+const card = (search: string, tags: string[] = []): FilterableCard => ({ search, values: { tag: tags } })
 
 const CARDS = [
-    card('aatrox', 'Fighter'),
-    card('ahri', 'Mage'),
-    card('akali', 'Assassin', 'Fighter'),
-    card('alistar', 'Tank'),
-    card('amumu', 'Tank', 'Mage'),
+    card('aatrox', ['Fighter']),
+    card('ahri', ['Mage']),
+    card('akali', ['Assassin', 'Fighter']),
+    card('alistar', ['Tank']),
+    card('amumu', ['Tank', 'Mage']),
 ]
 
-function select(criteria: Partial<Parameters<typeof selectVisibleCards>[1]> = {}) {
+function select(criteria: Partial<GridCriteria> = {}) {
     return selectVisibleCards(CARDS, {
-        query: '', tags: new Set<string>(), page: 1, pageSize: 2, ...criteria,
+        query: '', facets: {}, schema: SCHEMA, page: 1, pageSize: PAGE_SIZE_ALL, ...criteria,
     })
 }
 
+const tags = (...values: string[]): FacetState => ({ tag: { values, all: false } })
+
 describe('selectVisibleCards — matching', () => {
-    it('matches on the search haystack, case and padding insensitive', () => {
-        expect(select({ query: '  AHR ' }).matching.map((c) => c.search)).toEqual(['ahri'])
+    it('matches the query case-insensitively and ignores padding', () => {
+        expect(select({ query: '  AKA ' }).matching.map((c) => c.search)).toEqual(['akali'])
     })
 
-    it('ORs the facet tags and ANDs them with the query', () => {
-        expect(select({ tags: new Set(['Tank', 'Mage']), pageSize: PAGE_SIZE_ALL }).matching)
-            .toHaveLength(3)
-        expect(
-            select({ query: 'am', tags: new Set(['Tank']), pageSize: PAGE_SIZE_ALL }).matching
-                .map((c) => c.search),
-        ).toEqual(['amumu'])
+    it('folds accents so "feerique" finds "féérique"', () => {
+        // Haystacks arrive folded from useCardGrid; the needle is folded here.
+        const result = selectVisibleCards([card(normalizeSearchText('charme féérique'))], {
+            query: 'feerique', facets: {}, schema: SCHEMA, page: 1, pageSize: PAGE_SIZE_ALL,
+        })
+        expect(result.matching).toHaveLength(1)
     })
 
-    it('keeps everything when neither a query nor a tag is set', () => {
-        expect(select({ pageSize: PAGE_SIZE_ALL }).matching).toHaveLength(CARDS.length)
+    it('ORs the chosen values and ANDs them with the query', () => {
+        expect(select({ facets: tags('Tank', 'Mage') }).matching.map((c) => c.search))
+            .toEqual(['ahri', 'alistar', 'amumu'])
+        expect(select({ query: 'am', facets: tags('Tank') }).matching.map((c) => c.search))
+            .toEqual(['amumu'])
+    })
+
+    it('keeps every card when nothing is engaged', () => {
+        expect(select().matching).toHaveLength(5)
     })
 })
 
 describe('selectVisibleCards — pagination', () => {
     it('slices the requested page', () => {
-        expect(select({ page: 1 }).visible.map((c) => c.search)).toEqual(['aatrox', 'ahri'])
-        expect(select({ page: 3 }).visible.map((c) => c.search)).toEqual(['amumu'])
-        expect(select({ page: 2 }).pageCount).toBe(3)
+        const result = select({ page: 2, pageSize: 2 })
+        expect(result.pageCount).toBe(3)
+        expect(result.visible.map((c) => c.search)).toEqual(['akali', 'alistar'])
     })
 
-    it('collapses to a single page for the ALL sentinel', () => {
-        const all = select({ pageSize: PAGE_SIZE_ALL })
-        expect(all.pageCount).toBe(1)
-        expect(all.visible).toHaveLength(CARDS.length)
+    it('shows everything on a single page under the ALL sentinel', () => {
+        const result = select({ pageSize: PAGE_SIZE_ALL })
+        expect(result.pageCount).toBe(1)
+        expect(result.visible).toHaveLength(5)
     })
 
-    it('never reports fewer than one page, even with no result', () => {
-        const none = select({ query: 'zzz' })
-        expect(none.matching).toHaveLength(0)
-        expect(none.pageCount).toBe(1)
-        expect(none.visible).toEqual([])
+    it('never reports fewer than one page', () => {
+        expect(select({ query: 'zzz', pageSize: 2 }).pageCount).toBe(1)
     })
 
-    it('sends a page stranded past the last one back to the first', () => {
-        const stranded = select({ query: 'a', page: 9 })
-        expect(stranded.page).toBe(1)
-        expect(stranded.visible.map((c) => c.search)).toEqual(['aatrox', 'ahri'])
+    it('sends a stranded page back to the first one', () => {
+        const result = select({ page: 3, pageSize: 2, facets: tags('Tank') })
+        expect(result.page).toBe(1)
+        expect(result.visible.map((c) => c.search)).toEqual(['alistar', 'amumu'])
     })
 
     it('leaves an in-range page untouched', () => {
-        expect(select({ page: 2 }).page).toBe(2)
+        expect(select({ page: 2, pageSize: 2 }).page).toBe(2)
     })
 })

@@ -125,7 +125,12 @@ export function destinationForSwitch(version: string, lang: string, latest: stri
     const current = new URL(window.location.href)
     const rest = pathWithoutVersion(current.pathname)
 
+    // Everything else in the query (the list filters, notably) survives the
+    // switch; only the selection itself is rewritten.
     const params = new URLSearchParams()
+    for (const [name, value] of current.searchParams) {
+        if (name !== 'version' && name !== 'lang') params.set(name, value)
+    }
     if (lang) params.set('lang', lang)
     carryWarmParams(current, params)
 

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Service\Profile;
 
+use App\Service\API\Champion\ChampionArt;
+use App\Service\API\Champion\ChampionArtKind;
 use App\Service\API\ChampionManager;
 
 /**
@@ -18,17 +20,16 @@ use App\Service\API\ChampionManager;
  */
 final class ChampionSkins
 {
-    private const CENTERED_BASE = 'https://ddragon.leagueoflegends.com/cdn/img/champion/centered';
-    private const SPLASH_BASE = 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash';
-    private const LOADING_BASE = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading';
-
     /** DDragon names the base skin "default"; we surface the champion name instead. */
     private const BASE_SKIN_NAME = 'default';
 
     /** "{championId}_{skinNum}" — champion ids are alphanumeric, skin nums are small. */
     private const ID_PATTERN = '/^[A-Za-z0-9]+_\d{1,4}$/';
 
-    public function __construct(private readonly ChampionManager $champions) {}
+    public function __construct(
+        private readonly ChampionManager $champions,
+        private readonly ChampionArt $art,
+    ) {}
 
     /**
      * Skins of one champion, base first, for the banner picker. `image` is the
@@ -50,8 +51,8 @@ final class ChampionSkins
                 'id'     => $this->composeId($championId, $num),
                 'num'    => $num,
                 'name'   => $this->skinName($skin['name'] ?? null, $championName),
-                'image'  => $this->art(self::LOADING_BASE, $championId, $num),
-                'banner' => $this->art(self::CENTERED_BASE, $championId, $num),
+                'image'  => $this->art->url($championId, ChampionArtKind::Loading, $num),
+                'banner' => $this->art->url($championId, ChampionArtKind::Centered, $num),
             ];
         }
 
@@ -86,8 +87,8 @@ final class ChampionSkins
             'championId' => $championId,
             'num'        => $num,
             'name'       => $this->nameOfSkin($named, $num) ?? $championId,
-            'banner'     => $this->art(self::CENTERED_BASE, $championId, $num),
-            'splash'     => $this->art(self::SPLASH_BASE, $championId, $num),
+            'banner'     => $this->art->url($championId, ChampionArtKind::Centered, $num),
+            'splash'     => $this->art->url($championId, ChampionArtKind::Splash, $num),
         ];
     }
 
@@ -106,9 +107,9 @@ final class ChampionSkins
     public function championArt(string $championId): array
     {
         return [
-            'splash'   => $this->art(self::SPLASH_BASE, $championId, 0),
-            'centered' => $this->art(self::CENTERED_BASE, $championId, 0),
-            'loading'  => $this->art(self::LOADING_BASE, $championId, 0),
+            'splash'   => $this->art->url($championId, ChampionArtKind::Splash),
+            'centered' => $this->art->url($championId, ChampionArtKind::Centered),
+            'loading'  => $this->art->url($championId, ChampionArtKind::Loading),
         ];
     }
 
@@ -216,10 +217,5 @@ final class ChampionSkins
     private function composeId(string $championId, int $num): string
     {
         return $championId.'_'.$num;
-    }
-
-    private function art(string $base, string $championId, int $num): string
-    {
-        return sprintf('%s/%s_%d.jpg', $base, $championId, $num);
     }
 }

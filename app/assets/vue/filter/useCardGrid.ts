@@ -1,4 +1,6 @@
 import { onBeforeUnmount, ref, type Ref } from 'vue'
+import { normalizeSearchText } from '../search/normalizeSearchText'
+import type { CardValues, FacetDefinition, FacetValue } from './facets'
 import type { FilterableCard } from './visibleCards'
 
 /**
@@ -7,16 +9,33 @@ import type { FilterableCard } from './visibleCards'
  * imperatively. All the querySelector / dataset / inline-style knowledge lives
  * here; the island itself only decides WHICH cards are visible.
  */
+const CARD_SELECTOR = ':scope > [data-search]'
+const FACET_ATTRIBUTE_PREFIX = 'data-f-'
+const LIST_SEPARATOR = '|'
 
 /** A server-rendered card, paired with the element it was read from. */
 export interface GridCard extends FilterableCard {
     el: HTMLElement
 }
 
+export interface RangeBounds {
+    min: number
+    max: number
+}
+
+/** What the grid actually carries, per facet — the island offers nothing beyond it. */
+export interface FacetUniverse {
+    /** Choice facets: the tokens present in the grid. */
+    present: Record<string, Set<string>>
+    /** Range facets: the span of values present. */
+    bounds: Record<string, RangeBounds>
+    /** Toggle facets: how many cards are flagged. */
+    flagged: Record<string, number>
+}
+
 export interface CardGrid {
     cards: Ref<GridCard[]>
-    /** Every facet tag present in the grid, alphabetically sorted. */
-    tags: Ref<string[]>
+    universe: Ref<FacetUniverse>
     /** Read the grid; a no-op when no element carries the configured id. */
     scan: () => void
     /** Show exactly these cards and hide every other one. */
@@ -28,18 +47,17 @@ export interface CardGrid {
     markReady: () => void
 }
 
-/** The grid element once found, plus what was read out of it. */
 interface GridState {
     grid: Ref<HTMLElement | null>
     cards: Ref<GridCard[]>
-    tags: Ref<string[]>
+    universe: Ref<FacetUniverse>
 }
 
-export function useCardGrid(gridId: string): CardGrid {
+export function useCardGrid(gridId: string, schema: readonly FacetDefinition[]): CardGrid {
     const state: GridState = {
         grid: ref<HTMLElement | null>(null),
         cards: ref<GridCard[]>([]),
-        tags: ref<string[]>([]),
+        universe: ref<FacetUniverse>(emptyUniverse()),
     }
 
     // Leave the server-rendered grid exactly as it was found: a Turbo visit
@@ -51,21 +69,25 @@ export function useCardGrid(gridId: string): CardGrid {
 
     return {
         cards: state.cards,
-        tags: state.tags,
-        scan: () => scanGrid(state, gridId),
+        universe: state.universe,
+        scan: () => scanGrid(state, gridId, schema),
         show: (visible) => showOnly(state.cards.value, visible),
         markReady: () => markGridReady(state.grid.value),
     }
 }
 
-function scanGrid(state: GridState, gridId: string): void {
+function emptyUniverse(): FacetUniverse {
+    return { present: {}, bounds: {}, flagged: {} }
+}
+
+function scanGrid(state: GridState, gridId: string, schema: readonly FacetDefinition[]): void {
     const el = document.getElementById(gridId)
     if (!el) return
+    const kinds = new Map(schema.map((facet) => [facet.key, facet.kind]))
     state.grid.value = el
-    state.cards.value = Array.from(
-        el.querySelectorAll<HTMLElement>(':scope > [data-search]'),
-    ).map(readCard)
-    state.tags.value = collectTags(state.cards.value)
+    state.cards.value = Array.from(el.querySelectorAll<HTMLElement>(CARD_SELECTOR))
+        .map((card) => readCard(card, kinds))
+    state.universe.value = collectUniverse(state.cards.value)
 }
 
 function showOnly(cards: readonly GridCard[], visible: readonly GridCard[]): void {
@@ -81,16 +103,75 @@ function markGridReady(grid: HTMLElement | null): void {
     }
 }
 
-function readCard(el: HTMLElement): GridCard {
+function readCard(el: HTMLElement, kinds: ReadonlyMap<string, FacetDefinition['kind']>): GridCard {
+    const values: CardValues = {}
+    for (const attribute of Array.from(el.attributes)) {
+        if (!attribute.name.startsWith(FACET_ATTRIBUTE_PREFIX)) continue
+        const key = attribute.name.slice(FACET_ATTRIBUTE_PREFIX.length)
+        const value = parseValue(attribute.value, kinds.get(key))
+        if (value !== undefined) values[key] = value
+    }
     return {
         el,
-        search: (el.dataset.search ?? '').toLowerCase(),
-        tags: (el.dataset.tags ?? '').split('|').filter(Boolean),
+        // Accent-folded like the pickers, so the needle and haystack agree.
+        search: normalizeSearchText(el.dataset.search ?? ''),
+        values,
     }
 }
 
-function collectTags(cards: readonly GridCard[]): string[] {
-    const universe = new Set<string>()
-    cards.forEach((card) => card.tags.forEach((tag) => universe.add(tag)))
-    return Array.from(universe).sort((a, b) => a.localeCompare(b))
+/** A facet the schema does not know is ignored: the markup is never trusted over it. */
+function parseValue(raw: string, kind: FacetDefinition['kind'] | undefined): FacetValue | undefined {
+    switch (kind) {
+        case 'choice':
+            return raw.split(LIST_SEPARATOR).filter(Boolean)
+        case 'range': {
+            const number = Number(raw)
+            return Number.isFinite(number) ? number : undefined
+        }
+        case 'toggle':
+            return raw === '1' ? true : undefined
+        default:
+            return undefined
+    }
+}
+
+function collectUniverse(cards: readonly GridCard[]): FacetUniverse {
+    const universe = emptyUniverse()
+    for (const card of cards) {
+        for (const [key, value] of Object.entries(card.values)) {
+            if (Array.isArray(value)) {
+                const present = (universe.present[key] ??= new Set())
+                value.forEach((token) => present.add(token))
+            } else if (value === true) {
+                universe.flagged[key] = (universe.flagged[key] ?? 0) + 1
+            } else {
+                const bounds = universe.bounds[key]
+                universe.bounds[key] = bounds
+                    ? { min: Math.min(bounds.min, value), max: Math.max(bounds.max, value) }
+                    : { min: value, max: value }
+            }
+        }
+    }
+    return universe
+}
+
+/** The facets the grid can actually be narrowed by — something to choose from. */
+export function offeredFacets(
+    schema: readonly FacetDefinition[],
+    universe: FacetUniverse,
+): FacetDefinition[] {
+    return schema.filter((facet) => isOffered(facet, universe))
+}
+
+function isOffered(facet: FacetDefinition, universe: FacetUniverse): boolean {
+    switch (facet.kind) {
+        case 'choice':
+            return (universe.present[facet.key]?.size ?? 0) > 0
+        case 'range': {
+            const bounds = universe.bounds[facet.key]
+            return bounds !== undefined && bounds.min < bounds.max
+        }
+        case 'toggle':
+            return (universe.flagged[facet.key] ?? 0) > 0
+    }
 }

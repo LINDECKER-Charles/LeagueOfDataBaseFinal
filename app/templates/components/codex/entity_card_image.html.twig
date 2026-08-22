@@ -1,0 +1,26 @@
+{# The 56 px icon box of an entity card — the one place its frame/fit/scale
+   utilities are spelled out, so the card (resource_image) and the pending-image
+   template of its grid (resource_image_template, `as_template: true`) always
+   agree on the markup the poller swaps in.
+   Params: img, pending, img_name, name, initials, img_fit ('cover'|'contain'),
+   img_scale, img_round, as_template. #}
+{%- set box_class = 'h-14 w-14 border border-gold-deep/50 bg-void '
+  ~ (img_round|default(false) ? 'rounded-full shadow-[inset_0_0_0_1px_rgba(10,200,185,0.14)]' : '') -%}
+{%- set img_class = 'absolute inset-0 h-full w-full '
+  ~ (img_fit|default('cover') == 'contain' ? 'object-contain' : 'object-cover')
+  ~ ' transition-transform duration-500 group-hover:scale-110' -%}
+{%- set img_style = img_scale is defined ? 'transform: scale(' ~ img_scale ~ ');' : null -%}
+{%- if as_template|default(false) -%}
+  {% include 'components/ui/resource_image_template.html.twig' with {
+    box_class: box_class, img_class: img_class, size: 56, img_style: img_style
+  } only %}
+{%- else -%}
+  {% include 'components/ui/resource_image.html.twig' with {
+    src: img|default(null),
+    pending: pending|default(false),
+    name: img_name|default(''),
+    alt: name|default(''),
+    initials: initials|default(name|default('')|slice(0, 2)|upper),
+    box_class: box_class, img_class: img_class, size: 56, img_style: img_style
+  } only %}
+{%- endif -%}

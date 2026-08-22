@@ -57,8 +57,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
             :key="c.id"
             type="button"
             class="chroma-swatch"
-            :title="c.name"
-            :aria-label="c.name"
+            :title="chromaLabel(c)"
+            :aria-label="chromaLabel(c)"
             @click="open(i)"
         >
             <span
@@ -66,7 +66,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
                 :style="{ background: chromaRamp(c.colors) }"
                 aria-hidden="true"
             />
-            <img
+            <img class="hx-img"
                 :src="c.image"
                 :alt="chromaLabel(c)"
                 loading="lazy"
@@ -118,8 +118,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
                     <img
                         :key="current.id"
                         :src="current.image"
-                        :alt="current.name"
-                        class="chroma-modal__art h-64 w-64 max-w-full object-contain"
+                        :alt="chromaLabel(current)"
+                        class="hx-img chroma-modal__art h-64 w-64 max-w-full object-contain"
                     />
 
                     <template v-if="chromas.length > 1">

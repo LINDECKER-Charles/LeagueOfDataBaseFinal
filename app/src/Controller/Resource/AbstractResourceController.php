@@ -7,6 +7,7 @@ use App\Controller\AbstractPageController;
 use App\Service\API\AbstractManager;
 use App\Service\API\CategoriesInterface;
 use App\Service\API\DatasetRef;
+use App\Service\API\Edition\EditionAwareInterface;
 use App\Service\API\ResourceNotFoundException;
 use App\Service\Client\VersionManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -67,17 +68,20 @@ abstract class AbstractResourceController extends AbstractPageController
         return $this->render($template, [
             $collection => $data[$collection],
             'images'    => $data['images'],
+            'pending'   => $data['pending'],
             'meta'      => $data['meta'],
             'client'    => $this->clientData(),
         ] + ($extraVars === null ? [] : $extraVars($data, $version, $lang)));
     }
 
     /**
-     * Name-search endpoint of a resource → `[{id, name, image}]`.
+     * Name-search endpoint of a resource → `[{id, name, image}]`, plus `edition`
+     * for the resources that exist in both games (item, summoner — see
+     * {@see \App\Service\API\Edition\Edition}): a "Flash" hit list is ambiguous
+     * without it.
      *
-     * The image association is the caller's business because the managers do not
-     * agree on the shape of `getImages()` (positional list for champions, map
-     * keyed by name for items, by id for summoners).
+     * The image association is the caller's business: champion/item/summoner
+     * images come back keyed by entry id, runes as their nested tree.
      *
      * @param callable(list<array<string,mixed>>, array<mixed>): array<int,?string> $imagesFor
      *        image URLs aligned on the matched rows
@@ -104,7 +108,7 @@ abstract class AbstractResourceController extends AbstractPageController
                 'id'    => $row['id'] ?? null,
                 'name'  => $row['name'] ?? '',
                 'image' => $image,
-            ],
+            ] + array_intersect_key($row, ['edition' => true]),
             $rows,
             $imagesFor($rows, $manager->getImages($dataset, false, $rows)),
         ));
@@ -225,11 +229,14 @@ abstract class AbstractResourceController extends AbstractPageController
     /**
      * Immediate neighbours of an entry in its collection order — feeds the
      * previous/next navigation of the detail pages. Best-effort: any data error
-     * yields an empty navigation, never a broken page.
+     * yields an empty navigation, never a broken page. Edition-aware resources
+     * also label each neighbour with its edition: walking the classic range of
+     * the item list, every name repeats a current item's.
      *
      * @param array{version: string, lang: string} $selection page context the detail page
      *        was resolved against ({@see \App\Service\Client\PageContextResolver::selection()})
-     * @return array{prev: ?array{id: string, name: string}, next: ?array{id: string, name: string}}
+     * @return array{prev: ?array{id: string, name: string, edition: ?string},
+     *               next: ?array{id: string, name: string, edition: ?string}}
      */
     protected function neighbors(
         AbstractManager $manager,
@@ -250,8 +257,15 @@ abstract class AbstractResourceController extends AbstractPageController
             return ['prev' => null, 'next' => null];
         }
 
+        $dataset = DatasetRef::fromSelection($selection);
         $at = static fn (int $i): ?array => isset($ids[$i])
-            ? ['id' => (string) $ids[$i], 'name' => $index[$ids[$i]]]
+            ? [
+                'id'      => (string) $ids[$i],
+                'name'    => $index[$ids[$i]],
+                'edition' => $manager instanceof EditionAwareInterface
+                    ? $manager->editionOfId((string) $ids[$i], $dataset)->value
+                    : null,
+            ]
             : null;
 
         return ['prev' => $at($pos - 1), 'next' => $at($pos + 1)];

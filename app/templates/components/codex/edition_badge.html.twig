@@ -1,0 +1,8 @@
+{# Edition mark of an item / summoner spell. Only the LoL Classic edition is
+   flagged — the current game is the default and stays unlabelled, so the badge
+   reads as "this one is the classic twin". Params: edition ('modern'|'classic'),
+   class (optional extra utilities). #}
+{% if edition|default('modern') == 'classic' %}
+  <span class="hx-chip-hex shrink-0 {{ class|default('') }}"
+        title="{{ 'edition.classic_hint'|trans }}">{{ 'edition.classic'|trans }}</span>
+{% endif %}

@@ -17,7 +17,7 @@
              with { src: '/' ~ node.image } only %}
           <img src="/{{ node.image }}" alt="{{ node.name ?: node.id }}" width="48" height="48"
                loading="lazy" decoding="async"
-               class="absolute inset-0 h-full w-full object-contain transition-transform
+               class="hx-img absolute inset-0 h-full w-full object-contain transition-transform
                       duration-500 group-hover/node:scale-110">
         </picture>
       {% else %}
@@ -56,7 +56,7 @@
                with { src: '/' ~ node.image } only %}
             <img src="/{{ node.image }}" alt="{{ node.name ?: node.id }}" width="44" height="44"
                  loading="lazy" decoding="async"
-                 class="h-full w-full object-contain transition-transform duration-500
+                 class="hx-img h-full w-full object-contain transition-transform duration-500
                         group-hover/node:scale-110">
           </picture>
         {% else %}

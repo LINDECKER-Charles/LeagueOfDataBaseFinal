@@ -24,14 +24,31 @@ trait ResolvesImages
     abstract protected function imageUrl(string $version, string $name): string;
 
     /**
-     * Project a data slice onto its resolved image paths. The shape is part of
-     * each manager's contract and differs per resource — see each implementation.
+     * Project a data slice onto its resolved image paths. Default shape: paths
+     * keyed by entry ID — the entry's own `id`, else the slice key (items file
+     * their id in the map key only). Entries without a display name or an image
+     * node are absent from the map: a missing key reads as null, and no
+     * consumer ever has to re-derive a positional skip rule (the pre-LoL
+     * Classic positional champion list forced exactly that on its pickers).
+     * Runes override with their nested tree shape.
      *
      * @param array<mixed> $data
      * @param array<string,string> $resolved image file name => cdn path
      * @return array<mixed>
      */
-    abstract protected function projectImages(array $data, array $resolved): array;
+    protected function projectImages(array $data, array $resolved): array
+    {
+        $result = [];
+        foreach ($data as $key => $entry) {
+            $image = $entry['image']['full'] ?? null;
+            if ($image === null || !($entry['name'] ?? null)) {
+                continue;
+            }
+            $result[(string) ($entry['id'] ?? $key)] = $resolved[$image] ?? null;
+        }
+
+        return $result;
+    }
 
     /**
      * Map every image of a data slice to its display name — the single source of
@@ -58,7 +75,11 @@ trait ResolvesImages
      * slice, which images it needs) is shared; only the returned shape is
      * per-resource ({@see projectImages}).
      *
-     * @param array<mixed> $data optional pre-sliced list; empty = the whole collection
+     * The whole collection is walked with its keys (the resource id for the
+     * `data`-map resources) so an id-keyed projection never has to recover them.
+     *
+     * @param array<mixed> $data optional pre-sliced collection (key-preserving);
+     *                           empty = the whole collection
      * @return array<mixed>
      */
     final public function getImages(
@@ -66,7 +87,7 @@ trait ResolvesImages
         bool $force = false,
         array $data = []
     ): array {
-        $data  = $data ?: $this->dataList($this->dataset($dataset));
+        $data  = $data ?: $this->paginationCollection($this->dataset($dataset));
         $names = array_keys($this->imageEntries($data));
 
         return $this->projectImages(
@@ -91,6 +112,44 @@ trait ResolvesImages
         }
 
         return $resolved[$name];
+    }
+
+    /**
+     * Read-only status of image names against the manifest: the settled ones
+     * (path, or null = definitive absence) and the ones still to fetch. Never
+     * ingests — the in-page refresh of a cold list polls this, so it has to
+     * stay a cheap manifest read with no egress.
+     *
+     * @param string[] $names
+     * @return array{images: array<string,?string>, pending: list<string>}
+     */
+    public function manifestStatus(string $version, array $names): array
+    {
+        $manifest = $this->loadManifest($version);
+        $images   = [];
+        $pending  = [];
+        foreach (array_unique($names) as $name) {
+            if (\array_key_exists($name, $manifest)) {
+                $images[$name] = $manifest[$name];
+            } else {
+                $pending[] = $name;
+            }
+        }
+
+        return ['images' => $images, 'pending' => $pending];
+    }
+
+    /**
+     * Queue the still-missing names for ingestion after the response — the
+     * last-attempt retry of the in-page refresh. The initial deferred flush may
+     * have failed on a transient gateway error, and nothing else would retry it
+     * before the next visit.
+     *
+     * @param string[] $names
+     */
+    public function warmLater(string $version, array $names): void
+    {
+        $this->withImageDeferral(fn (): array => $this->resolveImages($version, $names));
     }
 
     /**
@@ -161,12 +220,14 @@ trait ResolvesImages
     }
 
     /**
-     * Split the wanted images into those the manifest already resolves and those
+     * Split the wanted images into those the manifest already settles and those
      * still to fetch — the one lookup shared by both resolution entrypoints.
+     * A null manifest entry is a SETTLED definitive absence (the CDN 403/404s
+     * this name for this version): it resolves to null without another fetch.
      *
      * @param array<string,string> $urlsByName name => ddragon url
-     * @return array{0: array<string,string>, 1: array<string,string>}
-     *         name => cdn path, then ddragon url => name
+     * @return array{0: array<string,?string>, 1: array<string,string>}
+     *         name => cdn path or null, then ddragon url => name
      */
     private function partitionAgainstManifest(
         string $version,
@@ -178,7 +239,7 @@ trait ResolvesImages
         $missing  = [];
 
         foreach ($urlsByName as $name => $url) {
-            if (!$force && isset($manifest[$name])) {
+            if (!$force && \array_key_exists($name, $manifest)) {
                 $result[$name] = $manifest[$name];
             } else {
                 $missing[$url] = $name;

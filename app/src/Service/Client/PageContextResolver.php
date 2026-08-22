@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * no shared HTTP-cache layer today — enabling one would mean carrying the locale
  * in the URL rather than the session, then adding s-maxage + ETag.
  */
-final class PageContextResolver
+final class PageContextResolver implements PageSelectionInterface
 {
     /** Home preview count per resource (mirrors {@see \App\Controller\HomeController::home()}). */
     public const HOME_PER_PAGE = 4;
@@ -32,7 +32,7 @@ final class PageContextResolver
      * Images the streaming loader pre-warms for a list page = the first client
      * page the visitor sees on arrival. List pages render the whole set in one
      * pass and the ResourceFilter island paginates it client-side (mirrors the
-     * `pageSize` default in components/list_filter.html.twig); warming that first
+     * `pageSize` default in components/codex/list_filter.html.twig); warming that first
      * visible page keeps every above-the-fold card off a placeholder, while the
      * rest lazy-load and warm through the deferred ingestor as the user scrolls
      * or paginates. Full-warming the whole set would only swap this cheap gate

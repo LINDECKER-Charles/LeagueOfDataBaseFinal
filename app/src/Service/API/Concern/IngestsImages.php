@@ -31,7 +31,7 @@ trait IngestsImages
      */
     private const INGEST_CHUNK_SIZE = 12;
 
-    /** @var array<string,array<string,string>> in-request manifest memo, keyed by storage key */
+    /** @var array<string,array<string,?string>> in-request manifest memo, keyed by storage key */
     private array $manifestCache = [];
 
     /**
@@ -52,7 +52,8 @@ trait IngestsImages
         $manifest = $this->loadManifest($dataset->version);
         $missing  = 0;
         foreach (array_keys($entries) as $image) {
-            if (!isset($manifest[$image])) {
+            // A null manifest entry is a SETTLED definitive absence — not missing.
+            if (!\array_key_exists($image, $manifest)) {
                 $missing++;
             }
         }
@@ -74,7 +75,7 @@ trait IngestsImages
         $manifest = $this->loadManifest($version);
         $missing  = []; // ddragon url => image name
         foreach (array_keys($entries) as $image) {
-            if (!isset($manifest[$image])) {
+            if (!\array_key_exists($image, $manifest)) {
                 $missing[$this->imageUrl($version, $image)] = $image;
             }
         }
@@ -95,12 +96,17 @@ trait IngestsImages
      * (dedup + WebP sibling) and record them in the manifest, in
      * {@see self::INGEST_CHUNK_SIZE}-sized batches: without $onStored (page
      * render, CLI warmup) the outcome is identical to a single pass; with it,
-     * each batch reports its stored names as it lands so the loader progresses
+     * each batch reports its settled names as it lands so the loader progresses
      * throughout the network phase instead of only at the end.
      *
+     * A definitive upstream absence (403/404 — e.g. the dead .dds icon paths of
+     * the 7.22-8.7 rune datasets) is SETTLED as a null manifest entry, so the
+     * page renders its placeholder instantly forever after instead of
+     * re-asking the CDN on every view. Transient failures stay unrecorded.
+     *
      * @param array<string,string> $missing    ddragon url => name
-     * @param (callable(string):void)|null $onStored invoked with each image name as it lands
-     * @return array<string,string> name => cdn path (only the ones fetched)
+     * @param (callable(string):void)|null $onStored invoked with each image name as it settles
+     * @return array<string,?string> name => cdn path (null = definitively absent)
      */
     private function ingestMissing(
         string $version,
@@ -110,13 +116,13 @@ trait IngestsImages
         $resolved = [];
 
         foreach (array_chunk($missing, self::INGEST_CHUNK_SIZE, true) as $chunk) {
-            $stored = $this->storeChunk($chunk, $onStored);
+            $settled = $this->settleChunk($chunk, $onStored);
 
             // Persist per batch so progress is durable and the manifest merge
             // (see saveManifest) happens against the freshest storage state.
-            if ($stored !== []) {
-                $this->saveManifest($version, $stored);
-                $resolved += $stored;
+            if ($settled !== []) {
+                $this->saveManifest($version, $settled);
+                $resolved += $settled;
             }
         }
 
@@ -124,33 +130,37 @@ trait IngestsImages
     }
 
     /**
-     * Fetch one batch in parallel and store whatever came back. Images the
-     * gateway could not deliver are simply absent from the result — a definitive
-     * upstream absence is not an error here.
+     * Fetch one batch in parallel; store what came back, record definitive
+     * absences as null. Transient failures appear in neither and are retried
+     * on a later render.
      *
      * @param array<string,string> $chunk ddragon url => name
      * @param (callable(string):void)|null $onStored
-     * @return array<string,string> name => cdn path
+     * @return array<string,?string> name => cdn path or null (absent upstream)
      */
-    private function storeChunk(array $chunk, ?callable $onStored): array
+    private function settleChunk(array $chunk, ?callable $onStored): array
     {
-        $stored     = [];
-        $bytesByUrl = $this->goFetcher->fetchMany(array_keys($chunk));
+        $settled = [];
+        ['bytes' => $bytesByUrl, 'absent' => $absentUrls] =
+            $this->goFetcher->fetchMany(array_keys($chunk));
 
         foreach ($chunk as $url => $name) {
-            if (!isset($bytesByUrl[$url])) {
+            if (isset($bytesByUrl[$url])) {
+                $settled[$name] = $this->blobStore->store($bytesByUrl[$url], $name);
+            } elseif (\in_array($url, $absentUrls, true)) {
+                $settled[$name] = null;
+            } else {
                 continue;
             }
-            $stored[$name] = $this->blobStore->store($bytesByUrl[$url], $name);
             if ($onStored !== null) {
                 $onStored($name);
             }
         }
 
-        return $stored;
+        return $settled;
     }
 
-    /** @return array<string,string> name => cdn path */
+    /** @return array<string,?string> name => cdn path (null = definitively absent) */
     private function loadManifest(string $version): array
     {
         $key = $this->manifestKey($version);
@@ -161,7 +171,7 @@ trait IngestsImages
         );
     }
 
-    /** @return array<string,string> name => cdn path */
+    /** @return array<string,?string> name => cdn path (null = definitively absent) */
     private function readManifest(string $key): array
     {
         try {
@@ -182,7 +192,8 @@ trait IngestsImages
      * entries) into a read-merge-write. The window isn't fully closed — read-modify-
      * write stays non-atomic on S3 — but entries no longer vanish between ingests.
      *
-     * @param array<string,string> $additions name => cdn path just stored
+     * @param array<string,?string> $additions name => cdn path just stored
+     *                                          (null = definitive absence)
      */
     private function saveManifest(string $version, array $additions): void
     {
