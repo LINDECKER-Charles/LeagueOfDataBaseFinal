@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * no shared HTTP-cache layer today — enabling one would mean carrying the locale
  * in the URL rather than the session, then adding s-maxage + ETag.
  */
-final class PageContextResolver
+final class PageContextResolver implements PageSelectionInterface
 {
     /** Home preview count per resource (mirrors {@see \App\Controller\HomeController::home()}). */
     public const HOME_PER_PAGE = 4;

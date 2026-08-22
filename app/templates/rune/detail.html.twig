@@ -81,7 +81,7 @@
           <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
             {% for r in keystoneSlot.runes %}
               {% set runeIcon = images[rune.key].slots[0][r.key] ?? null %}
-              <article class="hextech-frame path-border flex gap-5 p-6">
+              <article id="rune-{{ r.key }}" class="hextech-frame path-border flex gap-5 p-6">
                 <div class="keystone__icon">
                   {% if runeIcon %}<img class="hx-img" src="/{{ runeIcon }}" alt="">{% endif %}
                 </div>
@@ -112,7 +112,8 @@
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {% for r in slot.runes %}
                   {% set runeIcon = images[rune.key].slots[slotIndex][r.key] ?? null %}
-                  <article class="hextech-frame hextech-frame-hover group flex flex-col p-5">
+                  <article id="rune-{{ r.key }}"
+                           class="hextech-frame hextech-frame-hover group flex flex-col p-5">
                     <div class="flex items-center gap-3.5">
                       <div class="rune-medallion">
                         {% if runeIcon %}<img class="hx-img" src="/{{ runeIcon }}" alt="">{% endif %}

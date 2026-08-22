@@ -3,9 +3,10 @@
    Params: href, img, name, sub, initials, img_fit ('cover'|'contain'), img_scale, img_round,
    footer_href, footer_label
    img_round renders the icon as a circle (rune tree marks — the "focus" glyph).
-   Filtering (optional): filter_text (searchable string), filter_tags (list), edition
-   ('modern'|'classic') — read by the ResourceFilter island to search/facet the grid
-   client-side; the edition also marks the card (LoL Classic badge).
+   Filtering (optional): filter_text (searchable string) and facet_attrs (the
+   `data-f-*` attribute string of facet_attrs()) — read by the ResourceFilter
+   island to search/facet the grid client-side. edition ('modern'|'classic')
+   marks the card (LoL Classic badge).
    Cold images: img_name (image file name) + the `pending` map of the list render
    turn a missing `img` into a refreshable slot instead of plain initials. #}
 {% set img_pending = img|default(null) is empty
@@ -13,8 +14,7 @@
     and (pending|default({}))[img_name] is defined %}
 <section class="hextech-frame hextech-frame-hover group flex h-full flex-col overflow-hidden"
   {% if filter_text is defined %}data-search="{{ filter_text }}"{% endif %}
-  {% if filter_tags is defined %}data-tags="{{ filter_tags|join('|') }}"{% endif %}
-  {% if edition is defined %}data-edition="{{ edition }}"{% endif %}>
+  {% if facet_attrs is defined %}{{ facet_attrs|raw }}{% endif %}>
   <a href="{{ href|default('#') }}" class="flex items-center gap-3 px-4 pb-3 pt-4">
     {% include 'components/codex/entity_card_image.html.twig' with {
       img: img|default(null),

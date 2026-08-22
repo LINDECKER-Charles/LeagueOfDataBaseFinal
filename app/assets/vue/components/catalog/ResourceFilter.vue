@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import type { FacetDefinition } from '../../filter/facets'
 import { useCardGrid } from '../../filter/useCardGrid'
+import { useFacetState } from '../../filter/useFacetState'
+import { writeFilterUrl } from '../../filter/url/urlState'
+import { useUrlSync } from '../../filter/url/useUrlSync'
 import { PAGE_SIZE_ALL, selectVisibleCards } from '../../filter/visibleCards'
 import { formatTemplate } from '../../i18n/formatTemplate'
+import ActiveFilters from './facets/ActiveFilters.vue'
+import FacetChoice from './facets/FacetChoice.vue'
+import FacetPanel from './facets/FacetPanel.vue'
 
 /**
- * Client-side filter bar for a server-rendered resource grid. Vue owns only this
- * control bar (live search + edition switch + multi-select tag facet +
- * pagination); the grid stays server-rendered so the rich per-type cards are
- * preserved. Reading and painting that grid lives in {@link useCardGrid}, the
- * visibility rule in {@link selectVisibleCards}; this SFC is binding and markup.
+ * Client-side filter bar for a server-rendered resource grid. Vue owns only
+ * this control bar (live search, per-category facets, pagination); the grid
+ * stays server-rendered so the rich per-type cards are preserved. The state
+ * mirrors the URL both ways, so a filtered list is a link. Reading/painting
+ * the grid lives in useCardGrid, the visibility rule in selectVisibleCards,
+ * the facet transitions in useFacetState; this SFC is binding and markup.
  */
 interface Labels {
     results: string // carries "%count%"
@@ -21,10 +29,15 @@ interface Labels {
     all: string
     filters: string
     close: string
-    /** Caption of the edition switch — only needed when `editions` is given. */
-    edition?: string
-    /** "Every edition" choice of the switch; falls back to the pager's `all`. */
-    editionAll?: string
+    advanced: string
+    matchAny: string
+    matchAll: string
+    min: string
+    max: string
+    copy: string
+    copied: string
+    copyError: string
+    active: string
 }
 
 const props = withDefaults(
@@ -33,45 +46,41 @@ const props = withDefaults(
         placeholder?: string
         pageSize?: number
         pageSizes?: number[]
+        facets?: FacetDefinition[]
         labels: Labels
-        /**
-         * Display label per edition value (`data-edition` on the cards), in the
-         * order the switch lists them. The switch only shows when the grid
-         * actually mixes more than one of them.
-         */
-        editions?: Record<string, string>
     }>(),
-    { placeholder: 'Search…', pageSize: 12, pageSizes: () => [12, 24, 48], editions: () => ({}) },
+    { placeholder: 'Search…', pageSize: 12, pageSizes: () => [12, 24, 48], facets: () => [] },
 )
 
-const grid = useCardGrid(props.gridId)
-// Top-level alias: nested refs are NOT auto-unwrapped inside a plain object.
-const facetTags = grid.tags
-const query = ref('')
-const selected = ref<Set<string>>(new Set())
-const edition = ref<string | null>(null)
-const page = ref(1)
-const size = ref(props.pageSize)
+const schema = props.facets
+const grid = useCardGrid(props.gridId, schema)
+const url = useUrlSync({
+    schema,
+    defaultSize: props.pageSize,
+    current: () => ({ query: query.value, facets: store.facets.value, page: page.value, size: size.value }),
+})
+const query = ref(url.initial.query)
+const store = useFacetState(url.initial.facets)
+const page = ref(url.initial.page)
+const size = ref(url.initial.size)
+const isAdvancedOpen = ref(false)
+const universe = grid.universe
 
 const selection = computed(() =>
     selectVisibleCards(grid.cards.value, {
         query: query.value,
-        tags: selected.value,
-        edition: edition.value,
+        facets: store.facets.value,
+        schema,
         page: page.value,
         pageSize: size.value,
     }),
 )
-const editionOptions = computed(() =>
-    Object.entries(props.editions)
-        .filter(([value]) => grid.editions.value.includes(value))
-        .map(([value, label]) => ({ value, label })),
-)
-const hasEditionSwitch = computed(() => editionOptions.value.length > 1)
-const editionAllLabel = computed(() => props.labels.editionAll ?? props.labels.all)
-/** Facet selections in force (tags + edition) — the mobile trigger's counter. */
-const activeFacets = computed(() => selected.value.size + (edition.value === null ? 0 : 1))
-const hasFilters = computed(() => query.value !== '' || activeFacets.value > 0)
+
+/** Facets the grid can actually be narrowed by (something to choose from). */
+const offered = computed(() => schema.filter((facet) => isOffered(facet)))
+const primaryFacets = computed(() => offered.value.filter((facet) => facet.primary))
+const advancedFacets = computed(() => offered.value.filter((facet) => !facet.primary))
+const hasFilters = computed(() => query.value.trim() !== '' || store.activeCount.value > 0)
 const resultLabel = computed(
     () => formatTemplate(props.labels.results, { count: selection.value.matching.length }),
 )
@@ -79,6 +88,31 @@ const sizeOptions = computed(() => [
     ...props.pageSizes.map((v) => ({ value: v, label: String(v) })),
     { value: PAGE_SIZE_ALL, label: props.labels.all },
 ])
+const shareUrl = computed(() =>
+    window.location.origin + window.location.pathname + writeFilterUrl(
+        window.location.search,
+        { query: query.value, facets: store.facets.value, page: page.value, size: size.value },
+        schema,
+        props.pageSize,
+    ),
+)
+
+function isOffered(facet: FacetDefinition): boolean {
+    const u = universe.value
+    switch (facet.kind) {
+        case 'choice':
+            return (u.present[facet.key]?.size ?? 0) > 0
+        case 'range':
+            return u.bounds[facet.key] !== undefined && u.bounds[facet.key].min < u.bounds[facet.key].max
+        case 'toggle':
+            return (u.flagged[facet.key] ?? 0) > 0
+    }
+}
+
+function choiceSelection(key: string) {
+    const current = store.facets.value[key]
+    return current !== undefined && typeof current === 'object' && 'values' in current ? current : undefined
+}
 
 /** Repaint the grid, following the page reset the selection rule may have made. */
 function paintCurrentPage(): void {
@@ -90,37 +124,19 @@ function setSize(value: number): void {
     size.value = value
     page.value = 1
 }
-
-function toggleTag(tag: string): void {
-    const next = new Set(selected.value)
-    next.has(tag) ? next.delete(tag) : next.add(tag)
-    selected.value = next
-    page.value = 1
-}
-function setEdition(value: string | null): void {
-    edition.value = value
-    page.value = 1
-}
-function clearAll(): void {
-    query.value = ''
-    selected.value = new Set()
-    edition.value = null
-    page.value = 1
-}
 function movePage(delta: number): void {
     page.value = Math.min(selection.value.pageCount, Math.max(1, page.value + delta))
 }
-
-/** Split "CriticalStrike" → "Critical Strike" for display only (matching uses the raw tag). */
-function humanizeTag(tag: string): string {
-    return tag.replace(/([a-z])([A-Z])/g, '$1 $2')
+function clearAll(): void {
+    query.value = ''
+    store.clearAll()
+    page.value = 1
 }
 
 /* Mobile facet sheet — native <dialog> (top layer, inert background, Escape
    and Android-back dismissal for free). Filtering stays live; "close" is the
    only commit action. */
 const sheet = ref<HTMLDialogElement | null>(null)
-
 function openSheet(): void {
     sheet.value?.showModal()
 }
@@ -128,9 +144,7 @@ function closeSheet(): void {
     sheet.value?.close()
 }
 function onSheetClick(event: MouseEvent): void {
-    if (event.target === sheet.value) {
-        closeSheet() // backdrop click
-    }
+    if (event.target === sheet.value) closeSheet() // backdrop click
 }
 
 // Paint BEFORE handing control over, so the grid never flashes unpaginated.
@@ -141,6 +155,9 @@ onMounted(() => {
 })
 
 watch(selection, paintCurrentPage)
+// Any engagement resets the page; the URL follows every change (throttled).
+watch([query, store.facets, size], () => (page.value = 1))
+watch([query, store.facets, page, size], url.sync)
 </script>
 
 <template>
@@ -188,77 +205,56 @@ watch(selection, paintCurrentPage)
             </div>
         </div>
 
-        <!-- Edition switch: its own axis (ANDed with the tags), a single choice. -->
-        <div v-if="hasEditionSwitch" class="hidden flex-wrap items-center gap-1.5 md:flex"
-             role="group" :aria-label="labels.edition">
-            <span class="mr-1 font-mono text-[11px] uppercase tracking-wider
-                         text-text-muted">{{ labels.edition }}</span>
-            <button type="button" class="filter-chip filter-chip--edition"
-                    :class="{ 'filter-chip--on': edition === null }"
-                    :aria-pressed="edition === null"
-                    @click="setEdition(null)">{{ editionAllLabel }}</button>
-            <button v-for="opt in editionOptions" :key="opt.value" type="button"
-                    class="filter-chip filter-chip--edition"
-                    :class="{ 'filter-chip--on': edition === opt.value }"
-                    :aria-pressed="edition === opt.value"
-                    @click="setEdition(opt.value)">{{ opt.label }}</button>
+        <!-- Primary facets inline from md up; everything in a bottom sheet below. -->
+        <div v-if="offered.length" class="hidden flex-col gap-2 md:flex">
+            <FacetChoice v-for="facet in primaryFacets" :key="facet.key" :facet="facet" inline
+                         :selection="choiceSelection(facet.key)"
+                         :present="universe.present[facet.key] ?? new Set()"
+                         :labels="labels"
+                         @toggle="(value) => store.toggleChoice(facet, value)"
+                         @match-all="(all) => store.setMatchAll(facet.key, all)" />
+            <div class="flex flex-wrap items-center gap-2">
+                <button v-if="advancedFacets.length" type="button" class="filter-trigger"
+                        :aria-expanded="isAdvancedOpen" @click="isAdvancedOpen = !isAdvancedOpen">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"
+                         stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M6 10h8M8.5 15h3" /></svg>
+                    {{ labels.advanced }}
+                </button>
+            </div>
+            <FacetPanel v-if="isAdvancedOpen && advancedFacets.length" class="facet-panel--desktop"
+                        :facets="advancedFacets" :state="store.facets.value" :universe="universe"
+                        :labels="labels"
+                        @toggle-choice="store.toggleChoice" @match-all="store.setMatchAll"
+                        @range="store.setRange" @toggle="store.setToggle" />
         </div>
 
-        <!-- Facets: inline chips from md up; a thumb-friendly bottom sheet below. -->
-        <div v-if="facetTags.length" class="hidden flex-wrap items-center gap-1.5 md:flex">
-            <button v-for="tag in facetTags" :key="tag" type="button"
-                    class="filter-chip" :class="{ 'filter-chip--on': selected.has(tag) }"
-                    :aria-pressed="selected.has(tag)"
-                    @click="toggleTag(tag)">{{ humanizeTag(tag) }}</button>
-            <button v-if="hasFilters" type="button" class="filter-clear"
-                    @click="clearAll">{{ labels.clear }}</button>
-        </div>
-
-        <div v-if="facetTags.length || hasEditionSwitch" class="flex items-center gap-2 md:hidden">
+        <div v-if="offered.length" class="flex items-center gap-2 md:hidden">
             <button type="button" class="filter-trigger" @click="openSheet">
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"
-                     stroke-linecap="round" aria-hidden="true">
-                    <path d="M3 5h14M6 10h8M8.5 15h3" />
-                </svg>
+                     stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M6 10h8M8.5 15h3" /></svg>
                 {{ labels.filters }}
-                <b v-if="activeFacets">{{ activeFacets }}</b>
+                <b v-if="store.activeCount.value">{{ store.activeCount.value }}</b>
             </button>
-            <button v-if="hasFilters" type="button" class="filter-clear"
-                    @click="clearAll">{{ labels.clear }}</button>
         </div>
+
+        <ActiveFilters v-if="hasFilters" :schema="schema" :state="store.facets.value" :query="query"
+                       :share-url="shareUrl" :labels="labels"
+                       @clear-facet="store.clearFacet" @clear-query="query = ''" @clear-all="clearAll" />
 
         <dialog ref="sheet" class="filter-sheet" :aria-label="labels.filters" @click="onSheetClick">
             <div class="filter-sheet__handle" aria-hidden="true"></div>
-            <p class="eyebrow mb-4">{{ labels.filters }}</p>
-            <div v-if="hasEditionSwitch" class="mb-4" role="group" :aria-label="labels.edition">
-                <p class="mb-2 font-mono text-[11px] uppercase tracking-wider
-                          text-text-muted">{{ labels.edition }}</p>
-                <div class="flex flex-wrap gap-2">
-                    <button type="button" class="filter-chip filter-chip--edition"
-                            :class="{ 'filter-chip--on': edition === null }"
-                            :aria-pressed="edition === null"
-                            @click="setEdition(null)">{{ editionAllLabel }}</button>
-                    <button v-for="opt in editionOptions" :key="opt.value" type="button"
-                            class="filter-chip filter-chip--edition"
-                            :class="{ 'filter-chip--on': edition === opt.value }"
-                            :aria-pressed="edition === opt.value"
-                            @click="setEdition(opt.value)">{{ opt.label }}</button>
-                </div>
+            <p class="eyebrow mb-3">{{ labels.filters }}</p>
+            <div class="filter-sheet__body">
+                <FacetPanel :facets="offered" :state="store.facets.value" :universe="universe"
+                            :labels="labels" collapsed
+                            @toggle-choice="store.toggleChoice" @match-all="store.setMatchAll"
+                            @range="store.setRange" @toggle="store.setToggle" />
             </div>
-            <div class="flex flex-wrap gap-2 overflow-y-auto">
-                <button v-for="tag in facetTags" :key="tag" type="button"
-                        class="filter-chip" :class="{ 'filter-chip--on': selected.has(tag) }"
-                        :aria-pressed="selected.has(tag)"
-                        @click="toggleTag(tag)">{{ humanizeTag(tag) }}</button>
-            </div>
-            <div class="mt-5 flex items-center justify-between gap-3">
+            <div class="filter-sheet__footer">
                 <button type="button" class="filter-clear" :disabled="!hasFilters"
-                        @click="clearAll">
-                    {{ labels.clear }}
-                </button>
+                        @click="clearAll">{{ labels.clear }}</button>
                 <span class="font-mono text-xs text-text-muted">{{ resultLabel }}</span>
-                <button type="button" class="filter-done"
-                        @click="closeSheet">{{ labels.close }}</button>
+                <button type="button" class="filter-done" @click="closeSheet">{{ labels.close }}</button>
             </div>
         </dialog>
 
@@ -266,5 +262,3 @@ watch(selection, paintCurrentPage)
            class="py-6 text-center font-mono text-sm text-text-muted">{{ labels.empty }}</p>
     </div>
 </template>
-
-<style scoped src="./ResourceFilter.css"></style>

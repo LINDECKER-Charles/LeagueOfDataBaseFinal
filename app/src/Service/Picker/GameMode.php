@@ -3,15 +3,16 @@ declare(strict_types=1);
 
 namespace App\Service\Picker;
 
+use App\Service\Catalog\GameMap;
+
 /**
- * Game modes a build can target, each bound to the Data Dragon map id that
- * gates item availability in item.json ("maps": {"11": bool, ...}).
+ * Game modes a build can target, each bound to the Data Dragon map that gates
+ * item availability ({@see GameMap}, the one owner of those ids).
  *
- * Deliberately a FIXED list of the persistent, named modes: on current data
- * (16.14.1) item.json also carries map 22 (TFT, zero items) and maps 33/35
- * (Swarm/Brawl — event modes whose MapName is empty in DDragon's own map.json),
- * none of which offer a stable identity worth exposing to players. The enum
- * values are the persisted `builds.game_mode` strings — never rename them.
+ * Deliberately a FIXED subset of the persistent, named modes: Swarm and Brawl
+ * are event modes whose MapName is empty in DDragon's own map.json — fine to
+ * filter a list on, not a stable identity to build for. The enum values are
+ * the persisted `builds.game_mode` strings — never rename them.
  */
 enum GameMode: string
 {
@@ -25,11 +26,16 @@ enum GameMode: string
     /** DDragon map id used against the item.json "maps" availability flags. */
     public function mapId(): string
     {
+        return $this->map()->value;
+    }
+
+    public function map(): GameMap
+    {
         return match ($this) {
-            self::SummonersRift => '11',
-            self::Aram => '12',
-            self::NexusBlitz => '21',
-            self::Arena => '30',
+            self::SummonersRift => GameMap::SummonersRift,
+            self::Aram => GameMap::HowlingAbyss,
+            self::NexusBlitz => GameMap::NexusBlitz,
+            self::Arena => GameMap::Arena,
         };
     }
 

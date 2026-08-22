@@ -38,7 +38,8 @@
       } %}
     </header>
 
-    {% include 'components/codex/list_filter.html.twig' with { grid_id: 'champion-grid' } %}
+    {% include 'components/codex/list_filter.html.twig'
+       with { grid_id: 'champion-grid', facet_type: 'champion' } %}
 
     {# Versioned square icon (ingested per patch), overlaid on the unversioned
        splash so the art carries a version-accurate cue — a refreshable slot
@@ -60,7 +61,7 @@
         <a href="{{ resource_path('app_champion', { name: champId }, meta.version, meta.lang) }}"
            class="hextech-frame hextech-frame-hover group flex h-full flex-col overflow-hidden"
            data-search="{{ (c.name|default('') ~ ' ' ~ c.id|default(''))|lower }}"
-           data-tags="{{ c.tags|default([])|join('|') }}">
+           {{ facet_attrs('champion', champId, c) }}>
           <div class="relative aspect-[4/5] overflow-hidden border-b border-gold-deep/50 bg-void">
             <span aria-hidden="true" class="hatch-gold absolute inset-0"></span>
             <span aria-hidden="true"

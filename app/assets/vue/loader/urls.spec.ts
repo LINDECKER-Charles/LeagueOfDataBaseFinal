@@ -114,7 +114,13 @@ describe('destinationForSwitch', () => {
     it('keeps the reader on their page across the switch', () => {
         setLocation('/champions?numpage=4&itemperpage=48')
         expect(destinationForSwitch('15.14.1', 'fr_FR', LATEST))
-            .toBe('/15.14.1/champions?lang=fr_FR&numpage=4&itemperpage=48')
+            .toBe('/15.14.1/champions?numpage=4&itemperpage=48&lang=fr_FR')
+    })
+
+    it('carries the list filters across the switch and drops the old selection', () => {
+        setLocation('/15.14.1/objects?tag=Boots%2CArmor&price=0-3000&lang=en_US&version=15.14.1')
+        expect(destinationForSwitch(LATEST, 'fr_FR', LATEST))
+            .toBe('/objects?tag=Boots%2CArmor&price=0-3000&lang=fr_FR')
     })
 })
 

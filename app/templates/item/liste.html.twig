@@ -34,7 +34,8 @@
       } %}
     </header>
 
-    {% include 'components/codex/list_filter.html.twig' with { grid_id: 'item-grid' } %}
+    {% include 'components/codex/list_filter.html.twig'
+       with { grid_id: 'item-grid', facet_type: 'item' } %}
 
     <div data-img-scope="item" data-img-version="{{ meta.version }}"
          data-img-batch="{{ image_status_batch() }}">
@@ -53,7 +54,7 @@
           sub: id,
           img_fit: 'contain',
           filter_text: (item.name|default('') ~ ' ' ~ id)|lower,
-          filter_tags: item.tags is defined and item.tags is iterable ? item.tags : [],
+          facet_attrs: facet_attrs('item', id, item),
           edition: item_edition(id)
         } %}
           {% block card_body %}
