@@ -2,11 +2,11 @@
   "patches": [
     {
       "id": "2026-08-22-tamis",
-      "version": "2.3.0",
+      "version": "2.2.1",
       "codename": "Tamis",
       "date": "2026-08-22",
-      "type": "minor",
-      "title": "LeagueOfDataBase 2.3.0 — Tamis",
+      "type": "hotfix",
+      "title": "LeagueOfDataBase 2.2.1 — Tamis",
       "summary": "Les listes de champions, d'objets, de runes et de sorts reçoivent une console de filtres qui reste à portée de main pendant le défilement, annonce pour chaque option le nombre de résultats qu'elle donnerait, et se replie sur mobile en une feuille qui compte les résultats en direct.",
       "tags": [
         {
