@@ -5,7 +5,7 @@
 ########################################################################
 # Stage 1 — PHP base: runtime, extensions and config (shared)
 ########################################################################
-FROM php:8.4-fpm-alpine AS php_base
+FROM php:8.5-fpm-alpine AS php_base
 
 # Reliable multi-extension installer (intl/icu, opcache, zip, ...).
 # gd (with libwebp) powers WebP transcoding of DDragon images at ingestion.

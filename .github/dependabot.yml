@@ -100,6 +100,12 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # php / golang ship their yearly release as a semver-minor tag; both are tied to
+      # code (composer platform, go.mod, setup-* CI matrices) and are bumped by hand.
+      - dependency-name: php
+        update-types: ["version-update:semver-minor"]
+      - dependency-name: golang
+        update-types: ["version-update:semver-minor"]
 
   # ─────────────────────────────── Compose service images ─────────────────────
   - package-ecosystem: docker-compose

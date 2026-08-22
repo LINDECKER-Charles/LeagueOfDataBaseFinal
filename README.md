@@ -184,7 +184,7 @@ Interface **responsive** sur **Tailwind CSS 4** (du petit mobile 320 px à l'iPa
 |---|---|---|---|
 | <img src="docs/assets/icons/globe.svg" width="18" alt=""> | **Edge** | Caddy | Entrée publique, TLS automatique (déploiement) |
 | <img src="docs/assets/icons/server.svg" width="18" alt=""> | **Reverse proxy** | nginx | Front HTTP ; sert `/cdn` (MinIO), `/build`, `/fonts`, streaming SSE |
-| <img src="docs/assets/icons/layout-template.svg" width="18" alt=""> | **Backend** | Symfony 7.4 · PHP 8.4 (FPM) | Application, **sans base de données** — proxy sur Data Dragon |
+| <img src="docs/assets/icons/layout-template.svg" width="18" alt=""> | **Backend** | Symfony 7.4 · PHP 8.5 (FPM) | Application, **sans base de données** — proxy sur Data Dragon |
 | <img src="docs/assets/icons/git-branch.svg" width="18" alt=""> | **Microservice** | Go 1.25 | Passerelle de *fetch* : egress DDragon, garde SSRF, batch parallèle |
 | <img src="docs/assets/icons/palette.svg" width="18" alt=""> | **Frontend** | Twig + Vue 3 (TS) + Vite · Tailwind 4 | Coques Twig + îlots Vue montés dynamiquement |
 | <img src="docs/assets/icons/database.svg" width="18" alt=""> | **Stockage** | MinIO (S3) | Images adressées par contenu (SHA-256), déduplication native |
