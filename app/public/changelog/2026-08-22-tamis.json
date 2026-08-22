@@ -1,10 +1,10 @@
 {
   "id": "2026-08-22-tamis",
-  "version": "2.3.0",
+  "version": "2.2.1",
   "codename": "Tamis",
   "date": "2026-08-22",
-  "type": "minor",
-  "title": "LeagueOfDataBase 2.3.0 — Tamis",
+  "type": "hotfix",
+  "title": "LeagueOfDataBase 2.2.1 — Tamis",
   "summary": "Les listes de champions, d'objets, de runes et de sorts reçoivent une console de filtres qui reste à portée de main pendant le défilement, annonce pour chaque option le nombre de résultats qu'elle donnerait, et se replie sur mobile en une feuille qui compte les résultats en direct.",
   "intro": "Tamis reprend les filtres livrés avec Jade et les installe là où on les cherche : dans un rail fixé à côté de la grille, qui suit le défilement et regroupe recherche, jauge de résultats et catégories repliables. Chaque puce affiche désormais combien de résultats elle rapporterait compte tenu des filtres déjà posés — une option qui ne laisserait rien reste visible mais grisée, fin des clics dans le vide. Les filtres engagés se rappellent au-dessus des résultats, une liste vide propose d'un clic d'effacer les filtres, et la touche / saute directement à la recherche. Sur téléphone, une barre de recherche reste épinglée en haut de page et ouvre une feuille dont le bouton principal indique en direct « Voir N résultats ». Trois défauts débusqués en chemin sont corrigés.",
   "stats": {
