@@ -31,8 +31,6 @@ export interface FavoriteSocket {
 }
 
 export interface FavoriteSockets {
-    /** Island root, used to notify the surrounding profile form of a change. */
-    root: Ref<HTMLElement | null>
     sockets: ComputedRef<FavoriteSocket[]>
     valueAt: (index: number) => string
     assign: (index: number, entry: PickerEntry) => void
@@ -44,11 +42,17 @@ export interface FavoriteSockets {
  * what its hidden input submits. An unresolvable stored id round-trips
  * untouched so the server warns on save instead of the island silently
  * clearing it — hence the display and the value being tracked apart.
+ *
+ * `root` is the island element (template ref owned by the SFC); a change is
+ * announced to the surrounding profile form from there.
  */
-export function useFavoriteSockets(slots: SlotProp[], unavailable: string): FavoriteSockets {
+export function useFavoriteSockets(
+    slots: SlotProp[],
+    unavailable: string,
+    root: Readonly<Ref<HTMLElement | null>>,
+): FavoriteSockets {
     const values = ref<string[]>(slots.map((slot) => slot.storedId ?? slot.current?.id ?? ''))
     const displays = ref<(CurrentEntity | null)[]>(slots.map((slot) => slot.current))
-    const root = ref<HTMLElement | null>(null)
 
     const write = (index: number, value: string, display: CurrentEntity | null): void => {
         values.value[index] = value
@@ -57,7 +61,6 @@ export function useFavoriteSockets(slots: SlotProp[], unavailable: string): Favo
     }
 
     return {
-        root,
         sockets: computed(() => slots.map((slot, index) => describe({
             slot,
             index,

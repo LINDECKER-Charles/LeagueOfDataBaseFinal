@@ -11,7 +11,7 @@ export default defineConfig({
     ],
     build: {
         manifest: true,
-        rollupOptions: {
+        rolldownOptions: {
             input: {
                 app: './assets/vue/main.ts',
             },
