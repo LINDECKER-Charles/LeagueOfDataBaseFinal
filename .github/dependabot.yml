@@ -108,10 +108,11 @@ updates:
         update-types: ["version-update:semver-minor"]
 
   # ─────────────────────────────── Compose service images ─────────────────────
+  # infra/edge is deliberately NOT tracked: the shared edge proxy is converged to
+  # /opt/edge by every project on the VPS, so its image tag is frozen and bumped by
+  # hand across all copies at once.
   - package-ecosystem: docker-compose
-    directories:
-      - /
-      - /infra/edge
+    directory: /
     schedule:
       interval: weekly
       day: monday
