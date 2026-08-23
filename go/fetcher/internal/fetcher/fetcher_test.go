@@ -2,6 +2,7 @@ package fetcher
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,21 +16,30 @@ func TestAllowed(t *testing.T) {
 		Timeout:        time.Second,
 		MaxIdlePerHost: 16,
 	})
+	// The SENTINEL is the contract, not the message: a caller (the batch reporter)
+	// picks the log level from it, and a reworded error must not reclassify an event.
 	cases := []struct {
-		name    string
-		url     string
-		wantErr bool
+		name string
+		url  string
+		want error
 	}{
-		{"https allowed host", "https://ddragon.leagueoflegends.com/api/versions.json", false},
-		{"http scheme rejected", "http://ddragon.leagueoflegends.com/x", true},
-		{"foreign host rejected", "https://evil.example.com/x", true},
-		{"ftp scheme rejected", "ftp://ddragon.leagueoflegends.com/x", true},
-		{"garbage url rejected", "://nope", true},
+		{"https allowed host", "https://ddragon.leagueoflegends.com/api/versions.json", nil},
+		{"http scheme rejected", "http://ddragon.leagueoflegends.com/x", ErrSchemeNotAllowed},
+		{"foreign host rejected", "https://evil.example.com/x", ErrHostNotAllowed},
+		{"ftp scheme rejected", "ftp://ddragon.leagueoflegends.com/x", ErrSchemeNotAllowed},
+		{"garbage url rejected", "://nope", ErrInvalidURL},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := f.Allowed(tc.url); (err != nil) != tc.wantErr {
-				t.Fatalf("Allowed(%q) err=%v, wantErr=%v", tc.url, err, tc.wantErr)
+			err := f.Allowed(tc.url)
+			if tc.want == nil {
+				if err != nil {
+					t.Fatalf("Allowed(%q) err=%v, want nil", tc.url, err)
+				}
+				return
+			}
+			if !errors.Is(err, tc.want) {
+				t.Fatalf("Allowed(%q) err=%v, want %v", tc.url, err, tc.want)
 			}
 		})
 	}
@@ -58,8 +68,14 @@ func TestRedirectsAreReCheckedAgainstTheAllowlist(t *testing.T) {
 			if err != nil {
 				t.Fatalf("building request: %v", err)
 			}
-			if err := f.client.CheckRedirect(req, nil); (err != nil) != tc.wantErr {
+			err = f.client.CheckRedirect(req, nil)
+			if (err != nil) != tc.wantErr {
 				t.Fatalf("CheckRedirect(%q) err=%v, wantErr=%v", tc.target, err, tc.wantErr)
+			}
+			// A refused REDIRECT is its own event: an allow-listed origin trying to
+			// relay us elsewhere, not a caller that built a bad URL.
+			if tc.wantErr && !errors.Is(err, ErrRedirectNotAllowed) {
+				t.Fatalf("CheckRedirect(%q) err=%v, want ErrRedirectNotAllowed", tc.target, err)
 			}
 		})
 	}
@@ -70,8 +86,10 @@ func TestFetchRejectsOversizedBody(t *testing.T) {
 	srv, f := tlsServerAndFetcher(t, strings.Repeat("x", limit+1), limit)
 	defer srv.Close()
 
-	if _, err := f.Fetch(context.Background(), srv.URL+"/big"); err == nil {
-		t.Fatal("a response above the cap must be refused, not silently truncated")
+	_, err := f.Fetch(context.Background(), srv.URL+"/big")
+	if !errors.Is(err, ErrBodyTooLarge) {
+		t.Fatalf("err=%v, want ErrBodyTooLarge: an oversized body must be refused, "+
+			"not silently truncated", err)
 	}
 }
 

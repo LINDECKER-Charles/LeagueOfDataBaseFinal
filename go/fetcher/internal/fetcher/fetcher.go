@@ -4,12 +4,27 @@ package fetcher
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"slices"
 	"time"
+)
+
+// Refusal reasons, as sentinels. The caller classifies with errors.Is, never by
+// matching a message: the LEVEL of a log line must not depend on the wording of
+// an error, and a reworded message would silently reclassify an event.
+var (
+	ErrInvalidURL       = errors.New("invalid url")
+	ErrSchemeNotAllowed = errors.New("scheme not allowed")
+	ErrHostNotAllowed   = errors.New("host not allowed")
+	// Deliberately distinct from the three above: they say the caller built a bad
+	// URL, this one says an ALLOW-LISTED origin is trying to relay us somewhere
+	// else. Same guard, entirely different event.
+	ErrRedirectNotAllowed = errors.New("redirect target not allowed")
+	ErrBodyTooLarge       = errors.New("response exceeds the body cap")
 )
 
 // Result is the outcome of a single fetch.
@@ -70,7 +85,10 @@ func New(opts Options) *Fetcher {
 	// redirects on its own, so an allowed host answering 302 would carry the
 	// request anywhere. Re-checking every hop closes that SSRF bypass.
 	f.client.CheckRedirect = func(req *http.Request, _ []*http.Request) error {
-		return f.Allowed(req.URL.String())
+		if err := f.Allowed(req.URL.String()); err != nil {
+			return fmt.Errorf("%w: %w", ErrRedirectNotAllowed, err)
+		}
+		return nil
 	}
 	return f
 }
@@ -79,13 +97,13 @@ func New(opts Options) *Fetcher {
 func (f *Fetcher) Allowed(raw string) error {
 	u, err := url.Parse(raw)
 	if err != nil {
-		return fmt.Errorf("invalid url: %w", err)
+		return fmt.Errorf("%w: %w", ErrInvalidURL, err)
 	}
 	if u.Scheme != "https" {
-		return fmt.Errorf("scheme %q not allowed", u.Scheme)
+		return fmt.Errorf("%w: %q", ErrSchemeNotAllowed, u.Scheme)
 	}
 	if !slices.Contains(f.allowedHosts, u.Hostname()) {
-		return fmt.Errorf("host %q not allowed", u.Hostname())
+		return fmt.Errorf("%w: %q", ErrHostNotAllowed, u.Hostname())
 	}
 	return nil
 }
@@ -112,7 +130,7 @@ func (f *Fetcher) Fetch(ctx context.Context, raw string) (Result, error) {
 		return Result{}, fmt.Errorf("read body: %w", err)
 	}
 	if int64(len(body)) > f.maxBodyBytes {
-		return Result{}, fmt.Errorf("response exceeds %d bytes", f.maxBodyBytes)
+		return Result{}, fmt.Errorf("%w of %d bytes", ErrBodyTooLarge, f.maxBodyBytes)
 	}
 	return Result{
 		Body:        body,
