@@ -12,6 +12,7 @@ use App\Service\Client\VersionManager;
 use App\Service\Donation\CheckoutSessionParams;
 use App\Service\Donation\DonationTiers;
 use App\Service\Donation\StripeCheckout;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 use Stripe\Exception\ApiErrorException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -29,6 +30,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * record the donation and grant the supporter badge. Extends the page base
  * so pages provide the `client` view-model base.html.twig relies on.
  */
+#[WithMonologChannel('billing')]
 final class DonationController extends AbstractPageController
 {
     use ThrottlesByIp;
@@ -82,7 +84,7 @@ final class DonationController extends AbstractPageController
             );
         } catch (ApiErrorException $e) {
             // Gateway hiccup: no donor-identifying data in logs, generic flash for the user.
-            $this->logger->warning('stripe.checkout.session_failed', ['error' => $e->getMessage()]);
+            $this->logger->warning('stripe.checkout.session_failed', ['exception' => $e]);
 
             return $this->rejectToDonate('donate.error.gateway');
         }

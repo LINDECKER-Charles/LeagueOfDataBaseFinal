@@ -9,6 +9,7 @@ use App\Entity\Enum\ApiPlan;
 use App\Repository\ApiKeyRepository;
 use App\Service\PublicApi\ApiCheckout;
 use App\Service\PublicApi\ApiCreditPack;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 use Stripe\Exception\ApiErrorException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,6 +28,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * Renders no view: every action redirects, so it needs neither the page
  * view-model nor the DDragon context ({@see AbstractPageController}).
  */
+#[WithMonologChannel('billing')]
 final class ApiBillingController extends AbstractController
 {
     use ResolvesCurrentUser;
@@ -105,7 +107,7 @@ final class ApiBillingController extends AbstractController
             return new RedirectResponse($createSession(), Response::HTTP_SEE_OTHER);
         } catch (ApiErrorException $e) {
             // Gateway hiccup: nothing customer-identifying in logs, generic flash for the user.
-            $this->logger->warning('stripe.api.session_failed', ['error' => $e->getMessage()]);
+            $this->logger->warning('stripe.api.session_failed', ['exception' => $e]);
 
             return $this->backToPortalWithError('portal.flash.gateway');
         }

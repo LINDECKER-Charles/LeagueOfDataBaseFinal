@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Billing;
 
 use App\Service\Stripe\StripeEventHandlerInterface;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
@@ -22,6 +23,7 @@ use Symfony\Component\Routing\Attribute\Route;
  * StripeEventHandlerInterface services (API billing today, persisted donations
  * tomorrow); event types nobody handles are acknowledged silently.
  */
+#[WithMonologChannel('billing')]
 final class StripeWebhookController extends AbstractController
 {
     /**
@@ -39,6 +41,10 @@ final class StripeWebhookController extends AbstractController
     public function handle(Request $request): JsonResponse
     {
         if ($this->webhookSecret === '') {
+            // `critical`: this answers 503 to EVERY call, Stripe eventually disables
+            // the endpoint, and paid credits are never applied. Nothing self-heals.
+            $this->logger->critical('stripe.webhook.unconfigured');
+
             return new JsonResponse(
                 ['error' => 'webhook not configured'],
                 Response::HTTP_SERVICE_UNAVAILABLE
@@ -47,7 +53,11 @@ final class StripeWebhookController extends AbstractController
 
         try {
             $event = $this->verifiedEvent($request);
-        } catch (SignatureVerificationException | \UnexpectedValueException) {
+        } catch (SignatureVerificationException | \UnexpectedValueException $e) {
+            // Either a secret rotated on one side only — every event is being
+            // dropped — or somebody is posting forged payloads. Both warrant a look.
+            $this->logger->error('stripe.webhook.signature_invalid', ['exception' => $e]);
+
             return new JsonResponse(
                 ['error' => 'invalid payload or signature'],
                 Response::HTTP_BAD_REQUEST
@@ -84,10 +94,14 @@ final class StripeWebhookController extends AbstractController
     /** Infrastructure failure: non-2xx so Stripe redelivers the event. */
     private function handlerFailure(Event $event, \Throwable $e): JsonResponse
     {
+        // NOT a context key named `error`: the collector guesses `level` by regex on
+        // the raw line, so the word alone would reclassify the record. `exception`
+        // is the one accepted carrier — and it holds class, file:line and cause,
+        // which getMessage() alone throws away.
         $this->logger->error('stripe.webhook.handler_failed', [
             'event' => $event->id,
             'type' => $event->type,
-            'error' => $e->getMessage(),
+            'exception' => $e,
         ]);
 
         return new JsonResponse(
