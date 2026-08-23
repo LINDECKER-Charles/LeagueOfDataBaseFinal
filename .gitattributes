@@ -4,3 +4,13 @@
 # Shell scripts are executed inside Linux containers (bind-mounted): a CRLF
 # checkout on Windows breaks them at runtime, so force LF in the working tree.
 *.sh text eol=lf
+
+# Front-end sources are consumed by Linux-container toolchains, and CSS in
+# particular carries escaped line continuations inside string values (the SVG
+# data: URIs in assets/styles/primitives/controls.css). A CRLF checkout turns
+# `\` + CRLF into an invalid escape and Tailwind refuses to parse the sheet —
+# so a fresh clone on Windows could not build. Pin them to LF.
+*.css  text eol=lf
+*.ts   text eol=lf
+*.vue  text eol=lf
+*.twig text eol=lf
