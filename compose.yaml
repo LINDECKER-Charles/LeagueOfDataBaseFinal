@@ -4,6 +4,21 @@ name: lodb
 # (auto-merged by `docker compose`). Variable substitution reads the repo-root .env
 # (copy .env.example -> .env). See docs/guides/github-actions-secrets.md for the required secrets.
 
+# Bounded local log retention for every container of the stack.
+#
+# json-file is not a style choice: the host's collector reads container output
+# through the Docker Engine API, which can only replay logs for the json-file,
+# local and journald drivers. Any forwarding driver (syslog, fluentd, gelf, none)
+# makes a container unreadable there, and the loss is silent.
+#
+# Deliberately redundant with the host's /etc/docker/daemon.json: this repo does
+# not provision the VPS, so it cannot assume the daemon default is bounded.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   php:
     image: ${REGISTRY:-lodb}/app:${IMAGE_TAG:-latest}
@@ -59,6 +74,7 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "php", "-r", "exit(0);"]
       interval: 30s
@@ -78,6 +94,7 @@ services:
       php:
         condition: service_started
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
       interval: 30s
@@ -95,6 +112,7 @@ services:
       # Data Dragon exposes only a boolean `chromas` flag, no chroma assets.
       ALLOWED_HOSTS: ddragon.leagueoflegends.com,raw.communitydragon.org
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8085/healthz"]
       interval: 15s
@@ -131,6 +149,7 @@ services:
       minio-init:
         condition: service_completed_successfully
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8090/healthz"]
       interval: 15s
@@ -146,6 +165,7 @@ services:
     volumes:
       - minio_data:/data
     restart: unless-stopped
+    logging: *default-logging
     # No self-healthcheck: the minio server image is shell-less (no curl/mc).
     # Readiness is gated by minio-init, which retries `mc alias set` until the API answers.
 
@@ -162,10 +182,12 @@ services:
     volumes:
       - ./docker/minio/init.sh:/docker-entrypoint-init.sh:ro
     restart: "no"
+    logging: *default-logging
 
   mailer:
     image: axllent/mailpit:latest
     restart: unless-stopped
+    logging: *default-logging
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: "1"
       MP_SMTP_AUTH_ALLOW_INSECURE: "1"
@@ -179,6 +201,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 15s

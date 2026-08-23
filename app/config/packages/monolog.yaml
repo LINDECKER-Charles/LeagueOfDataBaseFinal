@@ -1,5 +1,10 @@
 monolog:
     channels:
+        - audit    # mirror of the legal audit journal (var/state/audit/events)
+        - billing  # money path: checkout, webhook, entitlements, donations
+        - catalog  # Data Dragon read path: resource pages, search, fetch gateway
+        - ingest   # writes into object storage: loader warm, deferred images
+        - mail     # outbound delivery
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
 
 when@dev:
@@ -40,23 +45,81 @@ when@test:
 when@prod:
     monolog:
         handlers:
-            main:
+            # Curated business events, always on, down to INFO. A successful money
+            # or ingest event is worth keeping even when nothing failed, and these
+            # channels carry no framework chatter — their volume is bounded by the
+            # number of log calls we wrote, not by traffic.
+            business:
+                type: stream
+                path: php://stderr
+                level: info
+                formatter: monolog.formatter.json
+                # process_psr_3_messages stays off: our event keys carry no
+                # {placeholder}, so an accidental interpolation shows up as a
+                # visible literal instead of silently rewriting the aggregation key.
+                process_psr_3_messages: false
+                channels: [audit, billing, catalog, ingest, mail]
+
+            # Always-on operational stream for everything else. NOTICE is the cut
+            # point: below it the framework channels alone would add ~7 records per
+            # request (http_client accounts for most of them). From NOTICE up every
+            # record is signal, and it leaves immediately instead of waiting for an
+            # unrelated error to unlock a buffer that is otherwise discarded.
+            # Business channels are excluded — `business` above already emits them,
+            # and a shared record would be written twice.
+            stderr:
+                type: stream
+                path: php://stderr
+                level: notice
+                formatter: monolog.formatter.json
+                # Same reason as `business`: monolog-bundle enables this processor by
+                # default on any non-nested handler, and it would silently rewrite an
+                # event key that accidentally contains a {placeholder}.
+                process_psr_3_messages: false
+                channels: ["!deprecation", "!audit", "!billing", "!catalog", "!ingest", "!mail"]
+
+            # Pre-error context, replayed only when a request actually fails. The
+            # filter below caps the replay at INFO so the handlers partition the
+            # levels (>= NOTICE above, < NOTICE here) and no record is ever written
+            # twice. passthru_level stays unset for a different reason: it would emit
+            # the INFO context on EVERY request, error or not, which is exactly the
+            # volume the buffer exists to avoid.
+            error_context:
                 type: fingers_crossed
                 action_level: error
-                handler: nested
+                handler: error_context_filter
                 excluded_http_codes: [404, 405]
-                buffer_size: 50 # How many messages should be saved? Prevent memory leaks
-            nested:
+                buffer_size: 100
+                channels: ["!event", "!deprecation", "!audit", "!billing", "!catalog", "!ingest", "!mail"]
+
+            # monolog-bundle removes any handler referenced through `handler:` from
+            # the channel map, so error_context cannot point at `stderr` directly —
+            # doing so would silently unregister the always-on stream above.
+            error_context_filter:
+                type: filter
+                min_level: debug
+                max_level: info
+                handler: error_context_stream
+
+            error_context_stream:
                 type: stream
                 path: php://stderr
                 level: debug
                 formatter: monolog.formatter.json
+                process_psr_3_messages: false
+
+            # Symfony logs deprecations at INFO on this channel. Pinned rather than
+            # left at DEBUG, and excluded from every handler above so a deprecation
+            # raised during a failing request is not replayed a second time.
+            deprecation:
+                type: stream
+                path: php://stderr
+                level: info
+                formatter: monolog.formatter.json
+                process_psr_3_messages: false
+                channels: [deprecation]
+
             console:
                 type: console
                 process_psr_3_messages: false
-                channels: ["!event", "!doctrine"]
-            deprecation:
-                type: stream
-                channels: [deprecation]
-                path: php://stderr
-                formatter: monolog.formatter.json
+                channels: ["!event", "!doctrine", "!deprecation"]

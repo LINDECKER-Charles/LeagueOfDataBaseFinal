@@ -19,6 +19,12 @@ name: lodb
 #   CADDY_DOMAINS         test.league-of-data-base.com | league-of-data-base.fr, .com
 #   IMAGE_TAG             staging | prod  (+ secrets)
 
+# Invariant: this overlay must NEVER override the `logging:` block compose.yaml
+# attaches to every service. The host's collector replays container output through
+# the Docker Engine API, which only supports the json-file, local and journald
+# drivers — swapping in a forwarding driver here would make the whole stack
+# invisible to Grafana with no error anywhere.
+
 services:
   nginx:
     # Reachable by the shared edge proxy over `edge`; still on `default` for the
