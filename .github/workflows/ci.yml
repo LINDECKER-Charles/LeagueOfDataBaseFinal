@@ -78,7 +78,6 @@ jobs:
       DEPLOY_PATH: ${{ secrets.STAGING_PATH }}
       SSH_USER: ${{ secrets.STAGING_SSH_USER }}
       ENV_FILE: ${{ secrets.ENV_STAGING }}
-      ACME_EMAIL: ${{ secrets.ACME_EMAIL }}
 
   # ──────────────────────────────── main path ────────────────────────────────
   promote:
@@ -100,4 +99,3 @@ jobs:
       DEPLOY_PATH: ${{ secrets.PROD_PATH }}
       SSH_USER: ${{ secrets.PROD_SSH_USER }}
       ENV_FILE: ${{ secrets.ENV_PROD }}
-      ACME_EMAIL: ${{ secrets.ACME_EMAIL }}
