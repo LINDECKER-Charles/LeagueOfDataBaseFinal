@@ -10,7 +10,9 @@ use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
 use App\Service\Tools\GoFetcherClient;
+use App\Tests\Unit\Support\RecordingLogger;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\DependencyInjection\Container;
@@ -45,6 +47,39 @@ final class ResourceSearchResponseTest extends TestCase
         self::assertArrayHasKey('error', $payload);
         self::assertStringNotContainsString('minio', $payload['error']);
         self::assertStringNotContainsString('10.0.0.4', $payload['error']);
+    }
+
+    /**
+     * The 503 body is deliberately neutral, so without a log line the outage is
+     * invisible server-side. `error`, not `warning`: this endpoint is only ever
+     * called by our own front-end, with a selection it already validated.
+     */
+    public function testADataLayerFailureIsReportedOnTheCatalogChannel(): void
+    {
+        $logger = new RecordingLogger();
+        $manager = $this->createStub(CategoriesInterface::class);
+        $manager->method('searchByName')
+            ->willThrowException($boom = new \RuntimeException('minio down'));
+
+        $this->search($manager, logger: $logger);
+
+        $record = $logger->only('catalog.search.unavailable');
+
+        self::assertSame(LogLevel::ERROR, $record['level']);
+        self::assertSame(self::VERSION, $record['context']['version']);
+        self::assertSame($boom, $record['context']['exception']);
+    }
+
+    /** A search that works must stay silent: volume is what makes a log a signal. */
+    public function testASuccessfulSearchLogsNothing(): void
+    {
+        $logger = new RecordingLogger();
+        $manager = $this->createStub(CategoriesInterface::class);
+        $manager->method('searchByName')->willReturn([]);
+
+        $this->search($manager, logger: $logger);
+
+        self::assertSame([], $logger->keys());
     }
 
     public function testNoMatchIsAnEmptyListNotAnError(): void
@@ -125,9 +160,12 @@ final class ResourceSearchResponseTest extends TestCase
         self::assertSame(20, $seen, 'the endpoints must not stream the whole dataset');
     }
 
-    private function search(CategoriesInterface $manager, ?callable $imagesFor = null): JsonResponse
-    {
-        return $this->controller()->search(
+    private function search(
+        CategoriesInterface $manager,
+        ?callable $imagesFor = null,
+        ?RecordingLogger $logger = null,
+    ): JsonResponse {
+        return $this->controller($logger)->search(
             $manager,
             'ah',
             $imagesFor ?? static fn (array $rows, array $images): array => array_values($images),
@@ -140,7 +178,7 @@ final class ResourceSearchResponseTest extends TestCase
         return json_decode((string) $response->getContent(), true, flags: JSON_THROW_ON_ERROR);
     }
 
-    private function controller(): object
+    private function controller(?RecordingLogger $logger = null): object
     {
         $stack = new RequestStack();
         $stack->push(Request::create(
@@ -155,6 +193,7 @@ final class ResourceSearchResponseTest extends TestCase
             $clients,
             new PageContextResolver($stack, $clients, $versions),
             $stack,
+            $logger ?? new NullLogger(),
         ) extends AbstractResourceController {
             public function search(
                 CategoriesInterface $manager,
@@ -187,6 +226,6 @@ final class ResourceSearchResponseTest extends TestCase
     {
         return new GoFetcherClient(new MockHttpClient(static function (): void {
             throw new \RuntimeException('the search endpoint must not touch the gateway');
-        }));
+        }), new NullLogger());
     }
 }

@@ -5,7 +5,10 @@ namespace App\Tests\Unit\Service\Tools;
 
 use App\Service\Tools\GoFetcherClient;
 use App\Service\Tools\UpstreamNotFoundException;
+use App\Tests\Unit\Support\RecordingLogger;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
@@ -28,7 +31,7 @@ final class GoFetcherClientTest extends TestCase
             'body_base64' => base64_encode('{"ok":true}'),
         ]]]));
 
-        $go = new GoFetcherClient($client);
+        $go = new GoFetcherClient($client, new NullLogger());
 
         self::assertSame('{"ok":true}', $go->fetch('https://ddragon.leagueoflegends.com/x.json'));
     }
@@ -41,7 +44,7 @@ final class GoFetcherClientTest extends TestCase
         ]]]));
 
         $this->expectException(\RuntimeException::class);
-        (new GoFetcherClient($client))->fetch('https://ddragon.leagueoflegends.com/x.json');
+        (new GoFetcherClient($client, new NullLogger()))->fetch('https://ddragon.leagueoflegends.com/x.json');
     }
 
     /**
@@ -75,7 +78,7 @@ final class GoFetcherClientTest extends TestCase
             'url' => 'https://ddragon.leagueoflegends.com/x.json',
             'status' => $status,
         ]]]));
-        (new GoFetcherClient($client))->fetch('https://ddragon.leagueoflegends.com/x.json');
+        (new GoFetcherClient($client, new NullLogger()))->fetch('https://ddragon.leagueoflegends.com/x.json');
     }
 
     /** 403 = the resource is permanently gone upstream → dedicated typed exception. */
@@ -100,7 +103,7 @@ final class GoFetcherClientTest extends TestCase
             'status' => 503,
         ]]]));
 
-        $go = new GoFetcherClient($client);
+        $go = new GoFetcherClient($client, new NullLogger());
         try {
             $go->fetch('https://ddragon.leagueoflegends.com/x.json');
             self::fail('expected an exception');
@@ -125,7 +128,7 @@ final class GoFetcherClientTest extends TestCase
             ],
         ]]));
 
-        $out = (new GoFetcherClient($client))->fetchMany([
+        $out = (new GoFetcherClient($client, new NullLogger()))->fetchMany([
             'https://ddragon.leagueoflegends.com/a.png',
             'https://ddragon.leagueoflegends.com/b.png',
             'https://ddragon.leagueoflegends.com/c.png',
@@ -149,7 +152,7 @@ final class GoFetcherClientTest extends TestCase
             $batchSizes[] = $size;
         });
 
-        $out = (new GoFetcherClient($client))->fetchMany($urls);
+        $out = (new GoFetcherClient($client, new NullLogger()))->fetchMany($urls);
 
         self::assertCount(250, $out['bytes'], 'every URL across all chunks is resolved');
         self::assertSame([200, 50], $batchSizes, 'a >200 batch is split into <=200-URL requests');
@@ -159,6 +162,88 @@ final class GoFetcherClientTest extends TestCase
     {
         $client = new MockHttpClient($this->json(['15.1.1', '15.0.1']));
 
-        self::assertSame(['15.1.1', '15.0.1'], (new GoFetcherClient($client))->versions());
+        self::assertSame(['15.1.1', '15.0.1'], (new GoFetcherClient($client, new NullLogger()))->versions());
+    }
+
+    /**
+     * `fetchBatch()` drops an unusable result on the floor, so a batch where
+     * NOTHING resolved is byte-for-byte identical to a batch that had nothing to
+     * do. `error`, per the level table: no image at all came back.
+     */
+    public function testABatchWhereNothingResolvedIsReportedAsAnError(): void
+    {
+        $logger = new RecordingLogger();
+        $client = new MockHttpClient($this->json(['results' => [
+            ['url' => 'https://ddragon.leagueoflegends.com/a.png', 'error' => 'upstream 502'],
+            ['url' => 'https://ddragon.leagueoflegends.com/b.png', 'status' => 503],
+        ]]));
+
+        (new GoFetcherClient($client, $logger))->fetchMany([
+            'https://ddragon.leagueoflegends.com/a.png',
+            'https://ddragon.leagueoflegends.com/b.png',
+        ]);
+
+        $record = $logger->only('catalog.fetch_batch.unresolved');
+
+        self::assertSame(LogLevel::ERROR, $record['level']);
+        self::assertSame(2, $record['context']['requested']);
+        self::assertSame(0, $record['context']['resolved']);
+        self::assertSame(2, $record['context']['unresolved']);
+    }
+
+    /** Partial: the visitor still gets images, the next visit retries the rest. */
+    public function testAPartiallyResolvedBatchIsOnlyAWarning(): void
+    {
+        $logger = new RecordingLogger();
+        $client = new MockHttpClient($this->json(['results' => [
+            [
+                'url' => 'https://ddragon.leagueoflegends.com/a.png',
+                'status' => 200,
+                'body_base64' => base64_encode('png'),
+            ],
+            ['url' => 'https://ddragon.leagueoflegends.com/b.png', 'status' => 503],
+        ]]));
+
+        (new GoFetcherClient($client, $logger))->fetchMany([
+            'https://ddragon.leagueoflegends.com/a.png',
+            'https://ddragon.leagueoflegends.com/b.png',
+        ]);
+
+        self::assertSame(LogLevel::WARNING, $logger->only('catalog.fetch_batch.unresolved')['level']);
+    }
+
+    /**
+     * A 403/404 is a DEFINITIVE absence the caller persists, not a failure: the
+     * runes of patches 7.22-8.7 would otherwise log on every single warm.
+     */
+    public function testADefinitiveAbsenceIsNotReportedAsUnresolved(): void
+    {
+        $logger = new RecordingLogger();
+        $client = new MockHttpClient($this->json(['results' => [
+            ['url' => 'https://ddragon.leagueoflegends.com/gone.dds', 'status' => 404],
+        ]]));
+
+        (new GoFetcherClient($client, $logger))->fetchMany([
+            'https://ddragon.leagueoflegends.com/gone.dds',
+        ]);
+
+        self::assertSame([], $logger->keys());
+    }
+
+    /** A batch that fully resolved must stay silent. */
+    public function testAFullyResolvedBatchLogsNothing(): void
+    {
+        $logger = new RecordingLogger();
+        $client = new MockHttpClient($this->json(['results' => [[
+            'url' => 'https://ddragon.leagueoflegends.com/a.png',
+            'status' => 200,
+            'body_base64' => base64_encode('png'),
+        ]]]));
+
+        (new GoFetcherClient($client, $logger))->fetchMany([
+            'https://ddragon.leagueoflegends.com/a.png',
+        ]);
+
+        self::assertSame([], $logger->keys());
     }
 }

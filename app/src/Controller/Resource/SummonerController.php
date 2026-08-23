@@ -8,6 +8,7 @@ use App\Service\API\SummonerManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,9 +21,16 @@ final class SummonerController extends AbstractResourceController
         ClientManager $clientManager,
         PageContextResolver $pageContext,
         RequestStack $requestStack,
+        LoggerInterface $catalogLogger,
         private readonly SummonerManager $summoners,
     ) {
-        parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
+        parent::__construct(
+            $versionManager,
+            $clientManager,
+            $pageContext,
+            $requestStack,
+            $catalogLogger,
+        );
     }
 
     /**
