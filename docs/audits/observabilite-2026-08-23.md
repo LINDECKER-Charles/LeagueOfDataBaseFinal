@@ -263,12 +263,19 @@ Les trois valeurs ont été testées dans l'image : `access.log =` (vide) fait *
 le démarrage** de php-fpm, la directive absente laisse le bruit, `/dev/null` est la
 seule qui fonctionne.
 
-> **À vérifier au premier déploiement.** L'avertissement `executing too slow` sort de
-> façon certaine. Le **backtrace**, lui, dépend de `ptrace` : master et worker tournent
-> sous le même uid et le worker est un descendant du master, donc il peut aboutir sans
-> `CAP_SYS_PTRACE` — mais en cas d'échec FPM émet une ligne `ERROR: failed to ptrace`
-> qui, elle, fera basculer `.level` en `error` via la regex de Vector. Regarder le flux
-> après la première requête lente réelle.
+> **Vérifié (23 août 2026), résultat : le backtrace n'aboutit pas.** L'avertissement
+> `executing too slow` sort bien. Le **backtrace**, lui, échoue : mesuré sur l'image `app`
+> construite — master et workers tous deux `www-data`, worker enfant direct du master —
+> `ptrace(ATTACH)` renvoie `EPERM`. Ce n'est pas l'uid qui bloque mais la **capability** :
+> Docker retire `CAP_SYS_PTRACE` par défaut. Une requête lente produit donc **deux** lignes,
+> le `WARNING` utile et un `ERROR: failed to ptrace(ATTACH)` que la regex de Vector classe
+> en `level=error` alors que rien n'est cassé.
+>
+> `cap_add: [SYS_PTRACE]` sur le service `php` supprime la ligne d'erreur **et** produit le
+> backtrace (vérifié aussi). Délibérément **non accordé** : élargir les capabilities d'un
+> conteneur exposé est une décision d'infrastructure, et le champ `level` est de toute façon
+> déclaré non actionnable (`../guides/logging.md`). À rouvrir le jour où le backtrace est
+> réellement nécessaire pour diagnostiquer un chemin lent.
 
 ---
 
