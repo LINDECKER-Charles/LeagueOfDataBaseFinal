@@ -30,8 +30,13 @@
   /* Damage / resource vocabulary */
   .ddragon-rich physicaldamage, .ddragon-rich scalead, .ddragon-rich ornnbonus,
   .ddragon-rich buffedstat { color: #f0a868; font-weight: 600; }
+  /* Pinned to a literal like every other entry in this vocabulary, and NOT to
+     --color-hex: magic damage is game data, so it must not follow the chrome
+     accent. Reading the accent worked only while that accent happened to be
+     hextech teal — under another identity it collided with the status/onhit
+     rule below, and two different game semantics rendered the same colour. */
   .ddragon-rich magicdamage, .ddragon-rich scaleap,
-  .ddragon-rich scalemana { color: var(--color-hex); font-weight: 600; }
+  .ddragon-rich scalemana { color: #0ac8b9; font-weight: 600; }
   .ddragon-rich truedamage { color: #f5e9c8; font-weight: 600; }
   .ddragon-rich healing, .ddragon-rich lifesteal, .ddragon-rich omnivamp,
   .ddragon-rich health, .ddragon-rich scalehealth,
@@ -77,7 +82,7 @@
     margin-bottom: 0.9rem;
     padding: 0.75rem 1rem;
     border-left: 2px solid var(--color-gold-deep);
-    background: rgba(1, 10, 19, 0.45);
+    background: color-mix(in srgb, var(--color-hextech-black) 45%, transparent);
     color: var(--color-text-muted);
   }
   .ddragon-rich stats attention { color: var(--color-gold-bright); }

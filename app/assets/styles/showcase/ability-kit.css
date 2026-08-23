@@ -54,8 +54,10 @@
 
   .kit__panel {
     border: 1px solid color-mix(in srgb, var(--color-gold) 32%, transparent);
-    background: linear-gradient(180deg, rgba(15, 27, 45, 0.92), rgba(9, 16, 22, 0.96));
-    box-shadow: 0 18px 60px -24px rgba(1, 10, 19, 0.9);
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel) 92%, transparent),
+      color-mix(in srgb, var(--color-abyss) 96%, transparent));
+    box-shadow: 0 18px 60px -24px color-mix(in srgb, var(--color-hextech-black) 90%, transparent);
   }
   .kit__media {
     position: relative;
@@ -93,7 +95,7 @@
     fill: var(--color-hex-bright);
     border: 1px solid color-mix(in srgb, var(--color-hex) 55%, transparent);
     border-radius: 50%;
-    background: rgba(9, 16, 22, 0.72);
+    background: color-mix(in srgb, var(--color-abyss) 72%, transparent);
     box-shadow: 0 0 32px -6px color-mix(in srgb, var(--color-hex) 70%, transparent);
     opacity: 0;
     scale: 0.9;
@@ -106,7 +108,9 @@
     scale: 1;
   }
   .kit__media-toggle:focus-visible { outline: none; }
-  .kit__media.is-paused .kit__media-toggle { background: rgba(1, 10, 19, 0.35); }
+  .kit__media.is-paused .kit__media-toggle {
+    background: color-mix(in srgb, var(--color-hextech-black) 35%, transparent);
+  }
   /* Sound toggle — pinned above the full-surface pause button so it stays
      clickable; muted by default, so it reads as a quiet opt-in until sound is on. */
   .kit__media-sound {
@@ -120,7 +124,7 @@
     padding: 0.55rem;
     border: 1px solid color-mix(in srgb, var(--color-hex) 45%, transparent);
     border-radius: 50%;
-    background: rgba(9, 16, 22, 0.72);
+    background: color-mix(in srgb, var(--color-abyss) 72%, transparent);
     color: var(--color-hex-bright);
     cursor: pointer;
     opacity: 0.6;

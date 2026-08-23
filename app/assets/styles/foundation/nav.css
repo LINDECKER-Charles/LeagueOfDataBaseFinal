@@ -11,7 +11,7 @@
     min-height: 2.75rem;
     padding: 0.4rem 0.9rem;
     border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
-    background: rgba(1, 10, 19, 0.6);
+    background: color-mix(in srgb, var(--color-hextech-black) 60%, transparent);
     font-family: var(--font-mono);
     font-size: 0.72rem;
     letter-spacing: 0.06em;
@@ -38,8 +38,10 @@
     width: min(20rem, calc(100vw - 2rem));
     padding: 1rem;
     border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
-    background: linear-gradient(180deg, rgba(15, 27, 45, 0.98), rgba(1, 10, 19, 0.98));
-    box-shadow: 0 22px 60px -18px rgba(1, 10, 19, 0.95);
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel) 98%, transparent),
+      color-mix(in srgb, var(--color-hextech-black) 98%, transparent));
+    box-shadow: 0 22px 60px -18px color-mix(in srgb, var(--color-hextech-black) 95%, transparent);
   }
 
   /* ---- Disclosure menus (Encyclopedia, account) — same <details> grammar ----

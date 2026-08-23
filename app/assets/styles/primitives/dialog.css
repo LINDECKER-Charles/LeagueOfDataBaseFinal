@@ -9,10 +9,10 @@
   color: var(--color-text);
   background: linear-gradient(180deg, var(--color-void), var(--color-hextech-black));
   border: 1px solid var(--color-gold-deep);
-  box-shadow: 0 30px 90px -24px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 30px 90px -24px color-mix(in srgb, var(--color-shadow) 85%, transparent);
 }
 .contact-dialog::backdrop {
-  background: rgba(1, 10, 19, 0.78);
+  background: color-mix(in srgb, var(--color-hextech-black) 78%, transparent);
   backdrop-filter: blur(2px);
 }
 .contact-dialog[open] {

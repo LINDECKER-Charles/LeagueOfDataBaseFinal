@@ -169,7 +169,7 @@
     margin-top: 1.5rem;
     padding: 1.25rem 1.4rem;
     border: 1px dashed color-mix(in srgb, var(--color-gold) 35%, transparent);
-    background: rgba(10, 20, 40, 0.5);
+    background: color-mix(in srgb, var(--color-void) 50%, transparent);
   }
   .donate-unavailable__title {
     font-family: var(--font-beaufort);
@@ -209,7 +209,9 @@
     inset: 0;
     transform: rotate(45deg);
     border: 1px solid color-mix(in srgb, var(--color-gold) 75%, transparent);
-    background: linear-gradient(180deg, rgba(26, 38, 60, 0.95), rgba(10, 20, 40, 0.95));
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel-raised) 95%, transparent),
+      color-mix(in srgb, var(--color-void) 95%, transparent));
   }
   .donate-seal::after {
     content: "";

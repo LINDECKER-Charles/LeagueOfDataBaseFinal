@@ -200,14 +200,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
     display: grid;
     place-items: center;
     color: var(--color-gold-bright);
-    background: rgba(4, 12, 24, 0.35);
+    background: color-mix(in srgb, var(--color-sink) 35%, transparent);
     opacity: 0;
     transition: opacity 0.2s var(--ease-hextech, ease);
 }
 .skin-tile__zoom svg {
     width: 2rem;
     height: 2rem;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+    filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--color-shadow) 70%, transparent));
 }
 .skin-tile:hover .skin-tile__zoom,
 .skin-tile:focus-visible .skin-tile__zoom {
@@ -215,7 +215,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 }
 
 .skin-splash {
-    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.6));
+    filter: drop-shadow(0 10px 30px color-mix(in srgb, var(--color-shadow) 60%, transparent));
     animation: skin-pop 0.24s var(--ease-hextech, ease);
 }
 
@@ -229,7 +229,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
     height: 2.2rem;
     color: var(--color-gold);
     border: 1px solid var(--color-gold-deep);
-    background: rgba(4, 12, 24, 0.72);
+    background: color-mix(in srgb, var(--color-sink) 72%, transparent);
     transition: color 0.2s ease, border-color 0.2s ease;
 }
 .skin-close:hover {
@@ -251,7 +251,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
     transform: translateY(-50%);
     color: var(--color-gold);
     border: 1px solid var(--color-gold-deep);
-    background: rgba(4, 12, 24, 0.72);
+    background: color-mix(in srgb, var(--color-sink) 72%, transparent);
     transition: color 0.2s ease, border-color 0.2s ease;
 }
 .skin-nav:hover {

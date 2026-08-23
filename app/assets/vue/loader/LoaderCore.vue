@@ -42,7 +42,8 @@
 .hx-core__glow {
     position: absolute;
     inset: -22%;
-    background: radial-gradient(closest-side, rgba(10, 200, 185, 0.4), transparent 70%);
+    background: radial-gradient(closest-side,
+        color-mix(in srgb, var(--color-hex) 40%, transparent), transparent 70%);
     filter: blur(6px);
     animation: hx-breathe-glow 3.2s ease-in-out infinite;
 }
@@ -61,11 +62,11 @@
     stroke-width: 2.5;
     stroke-linecap: round;
     stroke-dasharray: 22 78;
-    filter: drop-shadow(0 0 6px rgba(10, 200, 185, 0.7));
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-hex) 70%, transparent));
     animation: hx-sweep 1.6s linear infinite;
 }
 .hx-core__inner {
-    fill: rgba(10, 200, 185, 0.06);
+    fill: color-mix(in srgb, var(--color-hex) 6%, transparent);
     stroke: color-mix(in srgb, var(--color-gold) 30%, transparent);
     stroke-width: 1;
     transform-box: view-box;

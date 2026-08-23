@@ -7,7 +7,8 @@
     color: var(--color-text);
     font-family: var(--font-spiegel);
     background-image:
-      radial-gradient(1200px 600px at 50% -10%, rgba(3, 151, 171, 0.10), transparent 60%),
+      radial-gradient(1200px 600px at 50% -10%,
+        color-mix(in srgb, var(--color-hex-deep) 10%, transparent), transparent 60%),
       radial-gradient(900px 500px at 100% 0%,
         color-mix(in srgb, var(--color-gold) 6%, transparent), transparent 55%);
     background-attachment: fixed;

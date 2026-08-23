@@ -15,7 +15,11 @@
     gap: 0.9rem;
     padding: 0.7rem 0.9rem;
     border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
-    background: linear-gradient(180deg, rgba(15, 27, 45, 0.85), rgba(9, 16, 22, 0.92));
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-panel) 85%, transparent),
+      color-mix(in srgb, var(--color-abyss) 92%, transparent)
+    );
     transition: border-color 0.3s var(--ease-hextech), box-shadow 0.3s var(--ease-hextech);
   }
   .profile-build:hover {

@@ -27,9 +27,17 @@
     position: absolute;
     inset: 0;
     background:
-      linear-gradient(180deg, rgba(3, 8, 15, 0.15) 0%, rgba(3, 8, 15, 0.55) 55%,
-        rgba(3, 8, 15, 0.96) 100%),
-      radial-gradient(120% 90% at 50% 0%, transparent 42%, rgba(3, 8, 15, 0.5) 100%);
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-ink) 15%, transparent) 0%,
+        color-mix(in srgb, var(--color-ink) 55%, transparent) 55%,
+        color-mix(in srgb, var(--color-ink) 96%, transparent) 100%
+      ),
+      radial-gradient(
+        120% 90% at 50% 0%,
+        transparent 42%,
+        color-mix(in srgb, var(--color-ink) 50%, transparent) 100%
+      );
   }
   .profile-hero__body {
     position: relative;

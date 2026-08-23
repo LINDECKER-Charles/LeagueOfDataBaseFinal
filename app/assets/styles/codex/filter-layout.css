@@ -52,12 +52,15 @@
     display: flex;
     flex-direction: column;
     max-height: calc(100dvh - 2rem);
-    background: linear-gradient(180deg, rgba(26, 38, 60, 0.94), rgba(10, 20, 40, 0.96));
+    background:
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--color-panel-raised) 94%, transparent),
+        color-mix(in srgb, var(--color-void) 96%, transparent));
     border: 1px solid color-mix(in srgb, var(--color-gold) 42%, transparent);
     clip-path: var(--hx-bevel);
     box-shadow:
-      inset 0 1px 0 rgba(240, 230, 210, 0.06),
-      0 12px 44px -14px rgba(1, 10, 19, 0.85);
+      inset 0 1px 0 color-mix(in srgb, var(--color-gold-bright) 6%, transparent),
+      0 12px 44px -14px color-mix(in srgb, var(--color-hextech-black) 85%, transparent);
   }
   /* A cyan seam lights the rail's edge while something filters. */
   .filter-console__glow {
@@ -226,7 +229,10 @@
     padding: 0.75rem 1.25rem calc(1rem + env(safe-area-inset-bottom));
   }
   .filter-sheet:not([open]) { display: none; }
-  .filter-sheet::backdrop { background: rgba(1, 10, 19, 0.6); backdrop-filter: blur(3px); }
+  .filter-sheet::backdrop {
+    background: color-mix(in srgb, var(--color-hextech-black) 60%, transparent);
+    backdrop-filter: blur(3px);
+  }
   .filter-sheet__handle {
     width: 2.5rem;
     height: 4px;

@@ -14,7 +14,8 @@
     <header class="mb-10 flex items-center gap-5">
       <div class="hextech-frame relative grid h-16 w-16 shrink-0 place-items-center text-gold">
         <div class="absolute inset-0 opacity-40 blur-lg"
-             style="background: radial-gradient(closest-side, rgba(10,200,185,0.35), transparent);"
+             style="background: radial-gradient(closest-side,
+               color-mix(in srgb, var(--color-hex) 35%, transparent), transparent);"
         ></div>
         {% include 'components/ui/logo.html.twig' with { class: 'relative z-10 h-8 w-8' } %}
       </div>
