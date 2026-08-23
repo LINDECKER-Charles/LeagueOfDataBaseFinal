@@ -1,0 +1,219 @@
+/* ---------------------------------------------------------------------------
+   ZAUN — the City of Iron and Glass.
+
+   The undercity half of the same city Hextech already dresses. Piltover is lit
+   from the sky; Zaun is lit from the Sump, so the whole theme inverts where the
+   light comes from. Same token NAMES as the default identity — only the values
+   move — which is what lets one attribute repaint the entire app: Tailwind v4
+   compiles `bg-panel` to `background-color: var(--color-panel)` and `bg-gold/25`
+   to a `color-mix()` over the same variable, both read at paint time.
+
+   Three decisions carry the theme, and they are the ones to defend in review:
+
+   1. The surface ramp stays nearly neutral (S 8-14). That is not timidity: a
+      saturated green chrome would drain every Data Dragon item icon it frames,
+      and desaturation is precisely what separates Zaun from a Halloween
+      template. The green lives in hairlines, fills and states — never in a slab.
+
+   2. Chem green is BOTH the primary accent and the success colour (the GitHub
+      model). Zaun's identity colour is the one a UI reserves for validation, and
+      the alternative — Shimmer violet as primary — tops out at 4.25:1 on the
+      canvas, unusable for a link. Primary and success are told apart by SHAPE
+      (solid fill vs outline + icon), never by hue alone.
+
+   3. Shimmer violet is the secondary channel, and `--color-hex` deliberately
+      holds the LIGHTENED violet rather than the canonical one: every token that
+      can end up carrying text has to clear 4.5:1, and canonical Shimmer does
+      not. `--color-hex-deep` keeps the true hue, for fills only.
+
+   Accessibility floor, measured on --color-void #0A100E:
+     text 15.6:1 · text-muted 7.8:1 · text-dim 6.1:1 · gold 8.1:1 · hex 7.6:1
+   The two values that must never carry text: --color-hex-deep (4.25:1) and
+   --color-gold-deep (2.96:1). The focus ring uses --color-gold-light (12.7:1).
+--------------------------------------------------------------------------- */
+[data-theme="zaun"] {
+  /* --- Surfaces — Zaun's black is never neutral, it is always green-black --- */
+  --color-hextech-black: #030706;
+  --color-void: #0a100e;
+  --color-abyss: #060b0a;
+  --color-panel: #131b19;
+  --color-panel-2: #1d2825;
+  --color-panel-raised: #243230;
+  --color-ink: #020504;
+  --color-sink: #071110;
+  /* Cast shadows carry the city's own darkness, not a neutral black. */
+  --color-shadow: #010403;
+
+  /* --- Primary accent — chem green, on the ramp Hextech names "gold".
+     The low end oxidises rather than darkening: gold-deep is verdigris and
+     gold-dark is corroded brass. That warm floor is deliberate — it is what
+     keeps the palette out of the Matrix/terminal cliché. --- */
+  --color-gold: #3fbf6e;
+  --color-gold-bright: #d8f3e2;
+  --color-gold-light: #7be8a0;
+  --color-gold-rich: #2e9e5e;
+  --color-gold-deep: #1c6b45;
+  --color-gold-dark: #4a3a1c;
+  --color-gold-pale: #eafaf0;
+
+  /* --- Secondary accent — Shimmer, on the ramp Hextech names "hex" --- */
+  --color-hex: #c98be8;
+  --color-hex-deep: #a64fd0;
+  --color-hex-bright: #eedcfa;
+  --color-blue-steel: #3a4642;
+  --color-blue-abyssal: #3a2a55;
+
+  /* --- Feedback — rust, not pure red: the register stays oxidised.
+     --color-danger drops to 3.9:1 on panel-2, and form errors render exactly
+     there (inputs, dialogs), so error TEXT always reads --color-danger-light. */
+  --color-danger: #e0523b;
+  --color-danger-light: #f4796a;
+  --color-danger-strong: #b23a1e;
+
+  /* --- Text — off-white with a green cast; pure #fff floats off the ramp --- */
+  --color-text: #e3e9e2;
+  --color-text-muted: #9aa8a0;
+  --color-text-dim: #86948b;
+
+  /* --- Legacy aliases — retuned so older markup switches for free --- */
+  --color-test-500: #3fbf6e;
+  --color-black: #030706;
+  --color-blue-200: #c98be8;
+  --color-blue-850: #1d2825;
+  --color-blue-950: #0a100e;
+  --color-white: #e3e9e2;
+  --color-grey: #1b211e;
+  --color-grey-700: #3a4642;
+
+  /* --- Pre-composed glows (read from Tailwind arbitrary values) --- */
+  --hx-glow-accent: rgba(63, 191, 110, 0.5);
+  --hx-glow-accent-strong: rgba(63, 191, 110, 0.6);
+  --hx-shadow-soft: rgba(1, 4, 3, 0.78);
+  --hx-shadow-hard: rgba(1, 4, 3, 0.92);
+  --hx-ring-accent-2: rgba(166, 79, 208, 0.16);
+
+  /* --- Shape — Piltover cuts on the diagonal (a gem facet); Zaun cuts square
+     (a plate of sheet iron, notched). Same envelope, same clip-path cost,
+     opposite grammar: the difference reads instantly across a 700-card grid
+     without adding one pixel of ornament. The 180° rotational symmetry of the
+     original is preserved, so no existing component flips. --- */
+  --hx-bevel: polygon(
+    16px 0, 100% 0,
+    100% calc(100% - 16px), calc(100% - 8px) calc(100% - 16px),
+    calc(100% - 8px) calc(100% - 8px), calc(100% - 16px) calc(100% - 8px),
+    calc(100% - 16px) 100%, 0 100%,
+    0 16px, 8px 16px, 8px 8px, 16px 8px
+  );
+  --hx-bevel-sm: polygon(
+    12px 0, 100% 0,
+    100% calc(100% - 12px), calc(100% - 6px) calc(100% - 12px),
+    calc(100% - 6px) calc(100% - 6px), calc(100% - 12px) calc(100% - 6px),
+    calc(100% - 12px) 100%, 0 100%,
+    0 12px, 6px 12px, 6px 6px, 12px 6px
+  );
+  --hx-bevel-btn: polygon(
+    10px 0, 100% 0,
+    100% calc(100% - 10px), calc(100% - 5px) calc(100% - 10px),
+    calc(100% - 5px) calc(100% - 5px), calc(100% - 10px) calc(100% - 5px),
+    calc(100% - 10px) 100%, 0 100%,
+    0 10px, 5px 10px, 5px 5px, 10px 5px
+  );
+
+  /* --- Motion — mechanical register: hard attack, dead stop, no float.
+     Only the curve is themed. Re-timing every duration would either alter the
+     default identity (its transitions run 0.25s/0.3s/0.4s by intent) or mean
+     touching every declaration in the system for a marginal gain. --- */
+  --ease-hextech: cubic-bezier(0.2, 0.9, 0.1, 1);
+}
+
+/* ---------------------------------------------------------------------------
+   Structural overrides — the handful of places a value alone cannot reach.
+--------------------------------------------------------------------------- */
+
+/* The canvas. Piltover's light falls from the sky; Zaun's rises from the Sump,
+   so the dominant radial moves to the bottom edge and a faint Shimmer leak sits
+   top-right. The grain is not decoration: wide soft radials over a dark canvas
+   band visibly in 8-bit, and 3% of fractal noise is what hides the steps. */
+[data-theme="zaun"] body {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160'\
+ height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise'\
+ baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160'\
+ height='160' filter='url(%23n)' opacity='.032'/%3E%3C/svg%3E"),
+    radial-gradient(1100px 520px at 50% 104%,
+      color-mix(in srgb, var(--color-gold) 9%, transparent), transparent 62%),
+    radial-gradient(880px 460px at 96% -6%,
+      color-mix(in srgb, var(--color-hex-deep) 7%, transparent), transparent 58%);
+}
+
+/* Iridescence — "a sinister touch of sharpness and iridescence" is Zaun's own
+   canon, and it costs nothing here: the section divider crossfades chem green
+   into Shimmer instead of fading one accent out symmetrically. This is the ONE
+   place the two accents meet at full strength in the same element.
+   (`gold-rule` needs no override: its border-image already reads the token.) */
+[data-theme="zaun"] .hx-rule {
+  background: linear-gradient(90deg, transparent,
+    var(--color-gold) 30%, var(--color-hex-deep) 70%, transparent);
+}
+/* Its node stops being a gem facet and becomes a rivet head: square, seated
+   flat, no rotation — the same shape shift as the bevel, one element down. */
+[data-theme="zaun"] .hx-rule::after {
+  rotate: 0deg;
+  width: 6px;
+  height: 6px;
+  background: var(--color-gold-light);
+  box-shadow: 0 0 10px -1px color-mix(in srgb, var(--color-gold) 70%, transparent);
+}
+
+/* Ambient glow pulses instead of swelling: chem light in a pipe brightens, it
+   does not grow.
+
+   Both motion overrides below are scoped to `no-preference` rather than relying
+   on the base sheet's `reduce` rules to switch them off. They cannot: a theme
+   selector adds a compound to the base selector, so `[data-theme="zaun"]
+   .hx-breathe` outranks `.hx-breathe { animation: none }` even inside that media
+   query, and the theme would have quietly re-armed animation for the very users
+   who asked for none. Guarding here is what keeps the opt-out honest. */
+@keyframes zaun-breathe {
+  0%, 100% { opacity: 0.18; transform: translate(-50%, 0); }
+  50%      { opacity: 0.3; transform: translate(-50%, 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme="zaun"] .hx-breathe {
+    animation: zaun-breathe 4.5s ease-in-out infinite;
+  }
+
+  /* The reveal shortens and drops its travel — under a mechanical register a
+     dense catalogue must snap into place, not float. */
+  [data-theme="zaun"].js-reveal [data-reveal] {
+    transform: translateY(10px);
+  }
+  [data-theme="zaun"].js-reveal [data-reveal].reveal-in {
+    transition:
+      opacity 0.34s var(--ease-hextech),
+      transform 0.34s var(--ease-hextech);
+  }
+}
+
+/* Two data URIs cannot read a custom property (url() does not interpolate
+   var()), so the whole declaration is restated with the theme's own hues:
+   the select chevron in chem green, the checkbox tick in the theme's black. */
+[data-theme="zaun"] .hx-select {
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'>\
+<path d='M2 4l4 4 4-4' fill='none' stroke='%233fbf6e' stroke-width='1.5'\
+ stroke-linecap='round'/></svg>");
+}
+[data-theme="zaun"] .hx-check:checked {
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'>\
+<path d='M4 8l3 3 5-6' fill='none' stroke='%23030706' stroke-width='2.2'\
+ stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+
+/* Interaction feedback deliberately stays on the Shimmer channel — hover,
+   focus rings, active field borders and the switch's on-state all read
+   --color-hex, exactly as they read the cyan in the default identity. That
+   keeps two legible channels apart instead of collapsing everything into
+   green: chem green affirms (primary actions, success, hairlines), Shimmer
+   responds (you are here, this has focus). Both clear AA on every surface. */

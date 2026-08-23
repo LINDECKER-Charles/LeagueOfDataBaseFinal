@@ -83,6 +83,51 @@
     cursor: pointer;
   }
 
+  /* ---- Theme toggle (header) — the two-segment identity switch -------------
+     Borrows the switcher chip's chrome exactly (same hairline, same ground,
+     same height) so the header reads as one row of controls rather than a row
+     plus a widget. Both segments are always rendered: with only two identities,
+     a segmented control states what the alternative IS, where a single cycling
+     button would hide it behind a guess.
+     The pressed segment is FILLED, not merely tinted — two glyphs side by side
+     make a colour shift alone ambiguous about which one is live. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: stretch;
+    gap: 0.1rem;
+    min-height: 2.75rem;
+    padding: 0.2rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
+    background: color-mix(in srgb, var(--color-hextech-black) 60%, transparent);
+  }
+  .theme-toggle__option {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-dim);
+    transition:
+      color 0.25s var(--ease-hextech),
+      background-color 0.25s var(--ease-hextech);
+  }
+  .theme-toggle__option:hover { color: var(--color-gold-light); }
+  .theme-toggle__option:focus-visible {
+    outline: none;
+    /* Inset, like the rest of the header chrome: an outward ring would collide
+       with the container's own hairline one pixel away. */
+    box-shadow: inset 0 0 0 1px var(--color-hex);
+  }
+  .theme-toggle__option[aria-pressed="true"] {
+    color: var(--color-gold-bright);
+    background: color-mix(in srgb, var(--color-gold) 16%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 45%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .theme-toggle__option { transition: none; }
+  }
+
   /* ---- Bottom navigation (mobile) — thumb-first primary nav ---------------- */
   .bottom-nav {
     position: fixed;

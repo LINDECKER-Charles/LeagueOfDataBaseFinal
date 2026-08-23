@@ -1,0 +1,13 @@
+/* ---------------------------------------------------------------------------
+   Alternate identities.
+
+   The DEFAULT identity (Hextech / Piltover) is not here: it lives in
+   foundation/tokens.css, because it is the contract every other sheet is
+   written against. A file in this folder only restates the values that move.
+
+   Imported LAST in app.css and deliberately unlayered: Tailwind emits its own
+   variables into `@layer theme`, and an unlayered rule outranks any layered one
+   whatever its specificity — so a theme block wins without a specificity war,
+   and without recompiling a single utility.
+--------------------------------------------------------------------------- */
+@import "./zaun.css";

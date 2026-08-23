@@ -214,6 +214,8 @@ header:
     item: "アイテム"
     runes: "ルーン"
     summoner: "サモナースペル"
+  theme:
+    label: "表示テーマ"
 
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.

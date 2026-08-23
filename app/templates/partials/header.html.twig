@@ -135,6 +135,13 @@
         </div>
       </details>
 
+      {# Visual identity. Sits with the patch/language switcher rather than with
+         donate/account: it is a display preference, not an action. Under 640px
+         the bar has no room left for it without squeezing the brand out, so it
+         moves into the preferences popover below. #}
+      {% include 'components/ui/theme_toggle.html.twig'
+          with { class: 'hidden sm:inline-flex' } only %}
+
       {# Patch & language switcher — compact chip opening the real form #}
       <details class="switcher shrink-0">
         <summary aria-label="{{ 'header.switcher.label'|trans }}">
@@ -178,6 +185,15 @@
               <button type="submit" class="hx-btn ml-auto py-2">{{
                   'setup.form.submit'|trans }}</button>
             </div>
+          </div>
+
+          {# Small viewports only: the identity toggle has no room in the bar,
+             and this popover is already where display preferences live. Its
+             buttons are type="button", so they never submit this form. #}
+          <div class="mt-4 flex items-center justify-between gap-3 border-t
+                      border-gold-deep/40 pt-3 sm:hidden">
+            <span class="eyebrow">{{ 'header.theme.label'|trans }}</span>
+            {% include 'components/ui/theme_toggle.html.twig' only %}
           </div>
         </form>
       </details>

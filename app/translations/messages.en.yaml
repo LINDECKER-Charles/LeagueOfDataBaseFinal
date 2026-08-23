@@ -373,6 +373,8 @@ header:
     item: "Items"
     runes: "Runes"
     summoner: "Summoner Spells"
+  theme:
+    label: "Visual theme"
   switcher:
     label: "Patch & language"
 

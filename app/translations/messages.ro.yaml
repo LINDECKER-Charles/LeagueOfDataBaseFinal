@@ -214,6 +214,8 @@ header:
     item: "Obiecte"
     runes: "Rune"
     summoner: "Vrăji de Invocator"
+  theme:
+    label: "Temă vizuală"
 
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.

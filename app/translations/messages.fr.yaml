@@ -373,6 +373,8 @@ header:
     item: "Objets"
     runes: "Runes"
     summoner: "Sorts d’invocateur"
+  theme:
+    label: "Thème visuel"
   switcher:
     label: "Patch & langue"
 

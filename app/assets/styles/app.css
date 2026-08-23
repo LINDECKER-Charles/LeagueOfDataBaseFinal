@@ -35,3 +35,5 @@
 @import "./community/community.css";
 @import "./community/donate.css";
 @import "./changelog/index.css";
+/* Alternate identities LAST: unlayered overrides of the token contract. */
+@import "./theme/index.css";

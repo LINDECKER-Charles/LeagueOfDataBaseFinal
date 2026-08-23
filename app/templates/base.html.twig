@@ -1,5 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}">
+{# `data-theme` is rendered SERVER-SIDE from the lod_theme cookie: that is what
+   keeps the wrong identity from flashing. It could not be a deferred module (the
+   CSP ships script-src 'self', no inline, no nonce), and it never needs
+   re-rendering — Turbo's page renderer only syncs `lang`/`dir` on <html>, so the
+   attribute survives every visit. #}
+<html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}"
+      data-theme="{{ app_theme.current.value }}">
     <head>
         <meta charset="UTF-8">
         {% set default_title = 'base.title'|trans %}
@@ -56,7 +62,10 @@
               content="{% block twitter_image %}{{ seo_absolute(img) }}{% endblock %}">
 
         <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
-        <meta name="theme-color" content="{% block theme_color %}#010a13{% endblock %}">
+        {# Follows the resolved identity. Unlike <html>, Turbo DOES re-merge <meta>
+           on every visit, so this self-heals from the server after a toggle. #}
+        <meta name="theme-color"
+              content="{% block theme_color %}{{ app_theme.current.browserColor }}{% endblock %}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
         {# Effective DDragon selection, re-rendered every Turbo visit (NOT permanent

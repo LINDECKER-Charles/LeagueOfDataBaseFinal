@@ -1,0 +1,18 @@
+{# Identity crests for the theme toggle. Two marks, one idea: Piltover thinks in
+   arcane geometry (the hex and its gem facet), Zaun thinks in hardware (a valve
+   wheel on a pipe). Both are drawn on the header's icon grammar — 24px box,
+   currentColor stroke, 1.6 width — so they sit with the donate and account
+   glyphs instead of next to them. Params: theme ('hextech' | 'zaun'). #}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+  {% if theme == 'zaun' %}
+    {# Valve wheel: rim, axle, and four spokes that stop AT the rim. Spokes
+       crossing outside would read as a crosshair rather than as hardware. #}
+    <circle cx="12" cy="12" r="7.4"/>
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    <path d="M12 4.6v5.6M12 13.8v5.6M4.6 12h5.6M13.8 12h5.6"/>
+  {% else %}
+    <path d="M12 2.6 20.1 7.3v9.4L12 21.4 3.9 16.7V7.3z"/>
+    <path d="M12 8.1 15.4 12 12 15.9 8.6 12z" stroke-width="1.3"/>
+  {% endif %}
+</svg>

@@ -214,6 +214,8 @@ header:
     item: "Предметы"
     runes: "Руны"
     summoner: "Заклинания призывателя"
+  theme:
+    label: "Визуальная тема"
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.
 auth:

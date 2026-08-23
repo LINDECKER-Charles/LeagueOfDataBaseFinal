@@ -214,6 +214,8 @@ header:
     item: "物品"
     runes: "符文"
     summoner: "召喚師技能"
+  theme:
+    label: "視覺主題"
 
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.

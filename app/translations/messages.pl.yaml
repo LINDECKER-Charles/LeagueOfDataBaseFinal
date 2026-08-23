@@ -214,6 +214,8 @@ header:
     item: "Przedmioty"
     runes: "Runy"
     summoner: "Zaklęcia Przywoływacza"
+  theme:
+    label: "Motyw wizualny"
 
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.
