@@ -103,6 +103,28 @@ porte la règle PII (« Logs carry internal ids only — never customer identity
 - `getMessage()` seul perdrait la classe, le `fichier:ligne` et la cause, c'est-à-dire
   tout ce qui permet de dédupliquer deux occurrences.
 
+#### La seule exception : le canal `mail`
+
+`['exception' => $e]` écrit `$e->getMessage()` **verbatim**, et sur le chemin de remise
+ce message n'est pas le nôtre :
+
+- `SmtpTransport::assertResponseCode()` y recopie la réponse brute du relais, et un refus
+  renvoie l'adresse du destinataire telle quelle
+  (`550 5.1.1 <player@example.com>: Recipient address rejected`) ;
+- `EsmtpTransport` y met l'identifiant du `MAILER_DSN` en cas d'échec d'authentification.
+
+Une adresse — ou un identifiant d'authentification — atterrirait donc dans un index
+cherchable 90 jours. L'interdiction de donnée personnelle **prime sur** la convention de
+portage de l'exception : `App\Service\Mail\DeliveryFailure` remplace l'objet par
+`exception_class` + `exception_code` + `exception_at`. La classe sépare un relais mort
+d'un destinataire refusé, le `fichier:ligne` sépare la commande SMTP en cause ; seul le
+texte libre disparaît, et le relais le conserve de son côté.
+
+Le test qui garde cette règle doit s'exécuter sur ce que **Monolog** écrirait, pas sur un
+`json_encode()` du contexte : le message d'un `Throwable` est `protected`, donc
+`json_encode(new RuntimeException('x@y.z'))` rend `{}` alors que le normaliseur de Monolog
+le lit. Une assertion sur `json_encode` passe inconditionnellement et ne garde rien.
+
 ### Le plafond FPM : 8192 octets par ligne
 
 L'image php-fpm de base impose `log_limit = 8192` — le lot 1a le relève à 65536, mais

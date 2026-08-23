@@ -55,12 +55,14 @@ final readonly class ContactMailer
         } catch (\Throwable $e) {
             // Re-thrown unchanged: the controller still swallows it (the message is
             // already persisted for the /admin inbox), but the relay outage itself
-            // now leaves a trace. Internal id only — the visitor's address stays out.
+            // now leaves a trace. Internal id only — the visitor's address stays out,
+            // and so does the exception object, whose message is relay free text and
+            // would carry the MAILER_DSN username on an auth failure
+            // ({@see DeliveryFailure}).
             $this->logger->error('mail.send.failed', [
                 'kind' => 'contact_notification',
                 'message_id' => $message->getId(),
-                'exception' => $e,
-            ]);
+            ] + DeliveryFailure::context($e));
 
             throw $e;
         }

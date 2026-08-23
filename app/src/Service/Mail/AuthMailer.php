@@ -89,8 +89,9 @@ final readonly class AuthMailer
      * (registration swallows it behind a resend banner, the reset flow stays
      * silent so the outcome cannot probe which addresses exist).
      *
-     * Context carries the internal user id, never the address: a log line lives
-     * in a 90-day searchable index, outside the retention we declare.
+     * The internal user id travels, the address never does — and neither does
+     * the exception OBJECT, whose message is written by the relay and echoes the
+     * recipient back. {@see DeliveryFailure} carries the why.
      */
     private function deliver(TemplatedEmail $email, AuthMailTemplate $mail, User $user): void
     {
@@ -100,8 +101,7 @@ final readonly class AuthMailer
             $this->logger->error('mail.send.failed', [
                 'kind' => $mail->name,
                 'user_id' => $user->getId(),
-                'exception' => $e,
-            ]);
+            ] + DeliveryFailure::context($e));
 
             throw $e;
         }
