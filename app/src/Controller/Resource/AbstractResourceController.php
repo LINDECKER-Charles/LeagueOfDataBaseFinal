@@ -9,8 +9,12 @@ use App\Service\API\CategoriesInterface;
 use App\Service\API\DatasetRef;
 use App\Service\API\Edition\EditionAwareInterface;
 use App\Service\API\ResourceNotFoundException;
+use App\Service\Client\ClientManager;
+use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -38,6 +42,26 @@ abstract class AbstractResourceController extends AbstractPageController
      * {@see \App\Service\API\Concern\PaginatesResources::paginate()}.
      */
     private const ALL_ENTRIES = 0;
+
+    /**
+     * Catalog-channel logger. Injected through the ARGUMENT NAME, not
+     * `#[WithMonologChannel]`: `AttributeAutoconfigurationPass` reads
+     * `ReflectionClass::getAttributes()`, which does not walk the hierarchy, so the
+     * attribute on an abstract base has no effect on its subclasses. The name
+     * `$catalogLogger` is the alias `LoggerChannelPass` registers.
+     */
+    protected readonly LoggerInterface $catalogLogger;
+
+    public function __construct(
+        VersionManager $versionManager,
+        ClientManager $clientManager,
+        PageContextResolver $pageContext,
+        RequestStack $requestStack,
+        LoggerInterface $catalogLogger,
+    ) {
+        parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
+        $this->catalogLogger = $catalogLogger;
+    }
 
     /**
      * Full-collection list render, identical for the four resources: resolve the
@@ -95,7 +119,15 @@ abstract class AbstractResourceController extends AbstractPageController
 
         try {
             $rows = $manager->searchByName($name, $dataset, self::SEARCH_RESULT_LIMIT);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            // `error`, unlike the page redirect below: this endpoint is only ever
+            // called by our own front-end, with a selection it already validated.
+            $this->catalogLogger->error('catalog.search.unavailable', [
+                'version' => $dataset->version,
+                'lang' => $dataset->lang,
+                'exception' => $e,
+            ]);
+
             return $this->searchUnavailable($dataset);
         }
 
@@ -141,6 +173,14 @@ abstract class AbstractResourceController extends AbstractPageController
      */
     protected function redirectToHomeWithError(array $ctx, \Throwable $e): Response
     {
+        // `warning`, not `error`: the visitor keeps a usable page and the cause is
+        // usually a transient upstream outage. Volume is what makes this a signal.
+        $this->catalogLogger->warning('catalog.page.unavailable', [
+            'version' => $ctx['version'] ?? null,
+            'lang' => $ctx['lang'] ?? null,
+            'exception' => $e,
+        ]);
+
         $this->requestStack->getSession()->getFlashBag()->clear();
         $this->addFlash('error', $this->dataError($ctx, $e));
 

@@ -32,7 +32,7 @@ final class PageContextResolverLoaderStepsTest extends TestCase
 
         $noEgress = new GoFetcherClient(new MockHttpClient(static function (): void {
             throw new \RuntimeException('loaderSteps must not touch the gateway/session');
-        }));
+        }), new NullLogger());
         $version = new VersionManager($noEgress, new ArrayAdapter(), new NullLogger());
         $client = new ClientManager($stack, $version, 'secret', 'en_US');
 

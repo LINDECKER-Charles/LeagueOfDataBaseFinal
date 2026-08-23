@@ -7,6 +7,7 @@ use App\Entity\Donation;
 use App\Repository\DonationRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -15,6 +16,7 @@ use Psr\Log\LoggerInterface;
  * whose client_reference_id no longer matches an account is still recorded,
  * just unlinked (the money exists either way).
  */
+#[WithMonologChannel('billing')]
 final class DonationRecorder implements DonationLedger
 {
     public function __construct(

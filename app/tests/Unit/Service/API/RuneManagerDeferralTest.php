@@ -12,6 +12,7 @@ use App\Service\Tools\GoFetcherClient;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -130,7 +131,7 @@ final class RuneManagerDeferralTest extends TestCase
         if ($withRequest) {
             $stack->push(new Request());
         }
-        $ingestor = new DeferredImageIngestor($stack);
+        $ingestor = new DeferredImageIngestor($stack, new NullLogger());
         $manager = new RuneManager(
             $go,
             $fs,
@@ -203,6 +204,6 @@ final class RuneManagerDeferralTest extends TestCase
                     ['response_headers' => ['content-type' => 'application/json']],
                 );
             },
-        ));
+        ), new NullLogger());
     }
 }

@@ -83,3 +83,21 @@ when@test:
         test: true
         session:
             storage_factory_id: session.storage.factory.mock_file
+
+when@prod:
+    framework:
+        # Symfony logs any HttpException below 500 at ERROR on the `request`
+        # channel. With an always-on NOTICE+ handler, every crawler probe would
+        # otherwise land in a 90-day log store. INFO keeps them off the live
+        # stream while still replaying them as context around a real error.
+        exceptions:
+            Symfony\Component\HttpKernel\Exception\NotFoundHttpException:
+                log_level: info
+            Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException:
+                log_level: info
+            # The four IP rate limiters declared in this same file throw a 429, which
+            # ErrorListener also logs at ERROR. A throttled bot would otherwise write
+            # an ERROR record per attempt — the very noise this block exists to stop.
+            # NOTICE, not INFO: unlike a 404 this one is worth seeing on the stream.
+            Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException:
+                log_level: notice

@@ -13,6 +13,7 @@ use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
 use App\Service\Tools\UrlGenerator;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -43,6 +44,10 @@ final class HomeController extends AbstractPageController
         private readonly SummonerManager $summonerManager,
         private readonly ChampionManager $championManager,
         private readonly RuneManager $runeManager,
+        // Channel resolved by ARGUMENT NAME (LoggerChannelPass alias): a
+        // `#[WithMonologChannel]` attribute would work here too, but the whole
+        // catalog read path uses the same convention — see AbstractResourceController.
+        private readonly LoggerInterface $catalogLogger,
     ) {
         parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
     }
@@ -165,7 +170,17 @@ final class HomeController extends AbstractPageController
             // The loader pre-warms exactly this many images per resource, hence
             // the shared constant rather than a literal on each side.
             return $manager->paginate($dataset, PageContextResolver::HOME_PER_PAGE);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            // The page still answers 200 with the three other sections, so this is
+            // a degradation, not a failure — but an empty section is invisible to
+            // supervision without this line.
+            $this->catalogLogger->warning('catalog.home_preview.failed', [
+                'resource' => $manager->type(),
+                'version' => $dataset->version,
+                'lang' => $dataset->lang,
+                'exception' => $e,
+            ]);
+
             return $manager->emptyPage();
         }
     }

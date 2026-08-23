@@ -18,7 +18,8 @@ namespace App\Service\Storage;
  *
  * A subclass owns exactly two things: its typed `append()` signature, and its
  * failure policy — analytics swallows everything (it runs after the response is
- * flushed), audit lets its logger arbitrate.
+ * flushed), audit lets its logger arbitrate. {@see appendRow()} therefore raises
+ * {@see NdjsonWriteException} rather than deciding for them.
  */
 abstract class NdjsonDayStore
 {
@@ -123,24 +124,31 @@ abstract class NdjsonDayStore
     }
 
     /**
-     * Append one row to its day file. Silently drops the row when the directory
-     * can't be created or the payload can't be encoded — a log write must never
-     * be the reason the action it describes fails.
+     * Append one row to its day file.
+     *
+     * Reports a failed write instead of returning as if it had succeeded: the
+     * subclass owns the policy (analytics swallows, audit lets its logger
+     * arbitrate), and a store that cannot say "I did not write this" makes the
+     * loss of a legally retained trail undiscoverable.
      *
      * @param array<string, mixed> $row
+     * @throws NdjsonWriteException when the day file could not be appended to
      */
     protected function appendRow(array $row, string $date): void
     {
         if (!$this->ensureBaseDir()) {
-            return;
+            throw new NdjsonWriteException('cannot create the day directory: ' . $this->baseDir);
         }
 
         $line = json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if ($line === false) {
-            return;
+            throw new NdjsonWriteException('cannot encode the row: ' . json_last_error_msg());
         }
 
-        file_put_contents($this->dayPath($date), $line . "\n", FILE_APPEND | LOCK_EX);
+        $path = $this->dayPath($date);
+        if (@file_put_contents($path, $line . "\n", FILE_APPEND | LOCK_EX) === false) {
+            throw new NdjsonWriteException('cannot append to ' . $path);
+        }
     }
 
     private function ensureBaseDir(): bool

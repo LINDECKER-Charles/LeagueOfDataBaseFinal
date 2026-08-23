@@ -21,15 +21,29 @@ import (
 )
 
 func main() {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	log := newLogger()
 	cfg := config.Load()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	if err := run(ctx, cfg, log); err != nil {
-		log.Error("fatal", "error", err)
+		log.Error("api.startup.failed", "error", err)
 		os.Exit(1)
 	}
+}
+
+// newLogger emits JSON on STDOUT. The collector tags every line with the stream
+// it came from, so keeping application events on stdout leaves stderr as a
+// reliable "something escaped the logger" channel (runtime panics, the Go
+// runtime itself).
+func newLogger() *slog.Logger {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+	// Also re-points the stdlib log package, which third-party dependencies still
+	// use: no line of this process can escape as plain text.
+	slog.SetDefault(logger)
+	return logger
 }
 
 // run wires dependencies and blocks until shutdown completes.
@@ -51,7 +65,7 @@ func run(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 	meter := startMetering(recorder)
 
 	wired := wiring{cfg: cfg, db: db, s3: s3, recorder: recorder, log: log}
-	srv := newHTTPServer(cfg, wired.handler())
+	srv := newHTTPServer(cfg, wired.handler(), log)
 	go listen(srv, log)
 
 	<-ctx.Done()
@@ -91,20 +105,24 @@ func (w wiring) handler() http.Handler {
 	})
 }
 
-func newHTTPServer(cfg config.Config, handler http.Handler) *http.Server {
+func newHTTPServer(cfg config.Config, handler http.Handler, log *slog.Logger) *http.Server {
 	return &http.Server{
 		Addr:              cfg.Addr(),
 		Handler:           handler,
 		ReadHeaderTimeout: config.ReadHeaderTimeout,
 		WriteTimeout:      config.WriteTimeout,
 		IdleTimeout:       config.IdleTimeout,
+		// Without this, net/http writes handler panics and TLS errors as plain text
+		// outside the JSON stream, and a stack trace becomes as many events as it
+		// has lines.
+		ErrorLog: slog.NewLogLogger(log.Handler(), slog.LevelError),
 	}
 }
 
 func listen(srv *http.Server, log *slog.Logger) {
-	log.Info("go-api listening", "addr", srv.Addr)
+	log.Info("api.server.listening", "addr", srv.Addr)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Error("server error", "error", err)
+		log.Error("api.server.failed", "error", err)
 	}
 }
 
@@ -136,6 +154,6 @@ func shutdown(srv *http.Server, meter meterLoop, log *slog.Logger) error {
 	defer cancel()
 	err := srv.Shutdown(ctx)
 	meter.stopAndDrain()
-	log.Info("go-api stopped")
+	log.Info("api.server.stopped")
 	return err
 }

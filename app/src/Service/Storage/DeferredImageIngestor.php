@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Service\Storage;
 
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -22,6 +24,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * CLI has no request, so {@see self::shouldDefer()} is false there and the warmup
  * command still ingests synchronously in a single pass.
  */
+#[WithMonologChannel('ingest')]
 final class DeferredImageIngestor
 {
     /** @var list<callable():void> */
@@ -30,7 +33,10 @@ final class DeferredImageIngestor
     /** Whether the current resolution scope opted into deferral ({@see withDeferral}). */
     private bool $isDeferralAllowed = false;
 
-    public function __construct(private readonly RequestStack $requestStack) {}
+    public function __construct(
+        private readonly RequestStack $requestStack,
+        private readonly LoggerInterface $logger,
+    ) {}
 
     /**
      * Run a resolution routine in a scope where cold images may be deferred to
@@ -75,8 +81,12 @@ final class DeferredImageIngestor
         foreach ($tasks as $task) {
             try {
                 $task();
-            } catch (\Throwable) {
-                // A failed warm just leaves placeholders for the next visit to retry.
+            } catch (\Throwable $e) {
+                // Still swallowed — a failed warm just leaves placeholders for the
+                // next visit to retry — but no longer invisible: this runs on
+                // kernel.terminate, past the response, so it was the one failure
+                // path nothing could ever observe.
+                $this->logger->warning('ingest.deferred_task.failed', ['exception' => $e]);
             }
         }
     }

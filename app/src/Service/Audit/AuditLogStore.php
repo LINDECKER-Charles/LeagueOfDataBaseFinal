@@ -32,9 +32,10 @@ final class AuditLogStore extends NdjsonDayStore implements AuditDayReader
     }
 
     /**
-     * Append one recorded action. Unlike the analytics store this raises nothing
-     * of its own and swallows nothing extra: {@see AuditLogger} owns the "an
-     * audit write never breaks its own request" policy in one place.
+     * Append one recorded action. Unlike the analytics store it swallows nothing:
+     * a failed write propagates as {@see \App\Service\Storage\NdjsonWriteException}
+     * so {@see AuditLogger} can own the "an audit write never breaks its own
+     * request — but its loss is never silent" policy in one place.
      */
     public function append(AuditEvent $event): void
     {

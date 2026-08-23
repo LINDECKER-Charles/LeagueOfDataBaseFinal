@@ -14,6 +14,12 @@ FROM php:8.5-fpm-alpine AS php_base
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions intl opcache zip gd apcu pdo_pgsql
 
+# cgi-fcgi speaks FastCGI, the only protocol FPM answers on :9000 — no HTTP client
+# can reach ping.path, so the container healthcheck needs this binary. 36 KiB, one
+# musl dependency. Must live in php_base: the `app` stage has already switched to
+# USER www-data, where apk add fails.
+RUN apk add --no-cache fcgi
+
 # Application PHP configuration
 COPY docker/php/php.ini      /usr/local/etc/php/conf.d/zz-app.ini
 COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/zz-app.conf

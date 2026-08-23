@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Service\Mail;
 
 use App\Entity\User;
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
@@ -18,6 +20,7 @@ use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
  * Hextech template pair (HTML + text) so the controllers only decide *when* to
  * send, never *how*. Sent synchronously (see messenger.yaml routing).
  */
+#[WithMonologChannel('mail')]
 final readonly class AuthMailer
 {
     private const CONFIRM_ROUTE = 'app_verify_email';
@@ -28,6 +31,7 @@ final readonly class AuthMailer
         private VerifyEmailHelperInterface $verifyEmailHelper,
         private UrlGeneratorInterface $urlGenerator,
         private TranslatorInterface $translator,
+        private LoggerInterface $logger,
         private string $sender,
     ) {
     }
@@ -76,6 +80,30 @@ final readonly class AuthMailer
             ->textTemplate($template.'.txt.twig')
             ->context($context + ['user' => $user]);
 
-        $this->mailer->send($email);
+        $this->deliver($email, $mail, $user);
+    }
+
+    /**
+     * Delivery, plus the one thing the call sites cannot do: name the failure.
+     * The exception is RE-THROWN unchanged — each caller keeps its own policy
+     * (registration swallows it behind a resend banner, the reset flow stays
+     * silent so the outcome cannot probe which addresses exist).
+     *
+     * The internal user id travels, the address never does — and neither does
+     * the exception OBJECT, whose message is written by the relay and echoes the
+     * recipient back. {@see DeliveryFailure} carries the why.
+     */
+    private function deliver(TemplatedEmail $email, AuthMailTemplate $mail, User $user): void
+    {
+        try {
+            $this->mailer->send($email);
+        } catch (\Throwable $e) {
+            $this->logger->error('mail.send.failed', [
+                'kind' => $mail->name,
+                'user_id' => $user->getId(),
+            ] + DeliveryFailure::context($e));
+
+            throw $e;
+        }
     }
 }

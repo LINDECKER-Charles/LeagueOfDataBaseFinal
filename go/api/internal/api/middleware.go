@@ -19,6 +19,27 @@ func entryFromContext(ctx context.Context) *keys.Entry {
 	return entry
 }
 
+type callerContextKey struct{}
+
+// callerInfo is the one mutable cell the access log reads back after the
+// handler chain has run: authentication happens on a DERIVED request the
+// outermost middleware cannot observe. Written once, in the same goroutine that
+// reads it, so no synchronisation is needed.
+type callerInfo struct{ apiKeyID int }
+
+func withCaller(ctx context.Context, caller *callerInfo) context.Context {
+	return context.WithValue(ctx, callerContextKey{}, caller)
+}
+
+// nameCaller records WHICH key served the request, for the access line. The key
+// itself never travels — an id joins back to api_keys where it is legally held.
+func nameCaller(ctx context.Context, entry *keys.Entry) {
+	caller, ok := ctx.Value(callerContextKey{}).(*callerInfo)
+	if ok && entry != nil {
+		caller.apiKeyID = entry.KeyID()
+	}
+}
+
 // The verdicts of the authentication/billing pipeline: each step decides,
 // withAuth renders — which is what makes the pipeline testable without a
 // ResponseWriter. Treated as immutable: never reassign a field.
@@ -62,6 +83,7 @@ func (s *Server) withAuth(enforceQuota bool, next http.HandlerFunc) http.Handler
 		if fail == nil && enforceQuota {
 			fail = s.applyQuota(r.Context(), entry)
 		}
+		nameCaller(r.Context(), entry)
 		if fail != nil {
 			fail.write(w)
 			return

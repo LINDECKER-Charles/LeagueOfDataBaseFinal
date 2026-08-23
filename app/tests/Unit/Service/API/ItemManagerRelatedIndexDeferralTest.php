@@ -11,6 +11,7 @@ use App\Service\Tools\GoFetcherClient;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -107,7 +108,7 @@ final class ItemManagerRelatedIndexDeferralTest extends TestCase
         if ($withRequest) {
             $stack->push(new Request());
         }
-        $ingestor = new DeferredImageIngestor($stack);
+        $ingestor = new DeferredImageIngestor($stack, new NullLogger());
         $manager = new ItemManager(
             $this->gatewayReturningBytes(),
             $fs,
@@ -183,6 +184,6 @@ final class ItemManagerRelatedIndexDeferralTest extends TestCase
                 )], JSON_THROW_ON_ERROR),
                 ['response_headers' => ['content-type' => 'application/json']],
             );
-        }));
+        }), new NullLogger());
     }
 }

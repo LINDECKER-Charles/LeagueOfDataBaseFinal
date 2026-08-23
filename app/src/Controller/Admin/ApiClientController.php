@@ -10,6 +10,7 @@ use App\Service\Audit\Model\AuditAction;
 use App\Service\Audit\AuditLogger;
 use App\Service\Audit\Model\AuditTarget;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +22,7 @@ use Symfony\Component\Routing\Attribute\Route;
  * /admin firewall; mutations are CSRF-checked POSTs.
  */
 #[Route('/admin')]
+#[WithMonologChannel('billing')]
 final class ApiClientController extends AbstractAdminController
 {
     private const CREDIT_MIN = 1;

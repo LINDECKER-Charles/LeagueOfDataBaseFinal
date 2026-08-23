@@ -86,7 +86,7 @@ final class ImageStatusControllerTest extends TestCase
         $versions = new VersionManager(
             new GoFetcherClient(new MockHttpClient([
                 new MockResponse(json_encode([self::VERSION, '16.15.1'], JSON_THROW_ON_ERROR)),
-            ])),
+            ]), new NullLogger()),
             new ArrayAdapter(),
             new NullLogger(),
         );

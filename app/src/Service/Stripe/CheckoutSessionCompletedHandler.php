@@ -9,6 +9,7 @@ use App\Service\Donation\DonationLedger;
 use App\Service\PublicApi\ApiCheckoutParams;
 use App\Service\PublicApi\ApiEntitlements;
 use App\Service\PublicApi\StripeSubscriptionRef;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 use Stripe\Event;
 use Stripe\StripeObject;
@@ -21,6 +22,7 @@ use Stripe\StripeObject;
  * the donor's account when present. Never logs customer identity — session
  * id, amounts and internal ids only.
  */
+#[WithMonologChannel('billing')]
 final readonly class CheckoutSessionCompletedHandler implements StripeEventHandlerInterface
 {
     private const EVENT_TYPE = 'checkout.session.completed';

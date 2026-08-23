@@ -11,6 +11,7 @@ use App\Service\Tools\GoFetcherClient;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -109,7 +110,7 @@ final class AbstractManagerDataResolutionTest extends TestCase
             $fs,
             new BlobStore($fs, new ImageTranscoder()),
             new ArrayAdapter(),
-            new DeferredImageIngestor(new RequestStack()),
+            new DeferredImageIngestor(new RequestStack(), new NullLogger()),
         );
     }
 
@@ -145,13 +146,13 @@ final class AbstractManagerDataResolutionTest extends TestCase
                     ['response_headers' => ['content-type' => 'application/json']],
                 );
             },
-        ));
+        ), new NullLogger());
     }
 
     private function noEgress(): GoFetcherClient
     {
         return new GoFetcherClient(new MockHttpClient(static function (): void {
             throw new \RuntimeException('unexpected DDragon egress');
-        }));
+        }), new NullLogger());
     }
 }

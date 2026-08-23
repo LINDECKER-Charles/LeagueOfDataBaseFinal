@@ -19,6 +19,27 @@ name: lodb
 #   CADDY_DOMAINS         test.league-of-data-base.com | league-of-data-base.fr, .com
 #   IMAGE_TAG             staging | prod  (+ secrets)
 
+# Invariant: this overlay must NEVER override the `logging:` block compose.yaml
+# attaches to every service. The host's collector replays container output through
+# the Docker Engine API, which only supports the json-file, local and journald
+# drivers — swapping in a forwarding driver here would make the whole stack
+# invisible to Grafana with no error anywhere.
+
+# Memory limits live HERE, never in compose.yaml: that file is also the developer's,
+# where `composer install` and `npm ci` run in-container and a 1 GiB ceiling would
+# turn a dependency install into an OOM unrelated to production.
+#
+# Without a limit cAdvisor publishes container_spec_memory_limit_bytes = 0, which the
+# `> 0` guard of the infra alert rules discards: two of infra-vps' alerts
+# (ConteneurProcheDeSaLimiteMemoire, ConteneurMemoireSaturationPrevue) are
+# structurally inert until these values exist.
+#
+# Starting values, rule = 2 x the observed peak. Re-derive after a week of history:
+#   max_over_time(container_memory_working_set_bytes{stack=~"lodb-.*"}[7d])
+#
+# Deliberately NO `cpus` ceiling: set too low it throttles silently and fires
+# ConteneurCpuBride — slowness no host load graph ever shows.
+
 services:
   nginx:
     # Reachable by the shared edge proxy over `edge`; still on `default` for the
@@ -30,6 +51,11 @@ services:
     labels:
       caddy: ${CADDY_DOMAINS:?CADDY_DOMAINS is required (e.g. "example.fr, example.com")}
       caddy.reverse_proxy: "{{upstreams 80}}"
+    deploy:
+      resources:
+        limits:
+          # Static proxy + FastCGI pass: never holds a dataset in memory.
+          memory: 256m
 
   go-api:
     # Public paid API — reached through the SAME shared edge proxy as the site, but
@@ -42,6 +68,46 @@ services:
     labels:
       caddy: ${API_CADDY_DOMAINS:?API_CADDY_DOMAINS is required (e.g. "api.example.fr")}
       caddy.reverse_proxy: "{{upstreams 8090}}"
+    deploy:
+      resources:
+        limits:
+          # Reads one whole object per request; the largest measured is 1.3 MiB.
+          memory: 256m
+
+  php:
+    environment:
+      # Mailpit sits behind the `dev` profile (compose.yaml), so the base file's
+      # ${MAILER_DSN:-smtp://mailer:1025} default would resolve to an unreachable
+      # host on a served environment and drop every account email in silence.
+      # Required here instead: a missing relay fails the deploy, loudly.
+      MAILER_DSN: ${MAILER_DSN:?MAILER_DSN is required on a served environment}
+    deploy:
+      resources:
+        limits:
+          # memory_limit 256M x pm.max_children 20 is a ~5 GiB theoretical worst case;
+          # 1 GiB covers the real concurrency and turns a leak into a bounded OOM.
+          memory: 1g
+
+  go-fetcher:
+    deploy:
+      resources:
+        limits:
+          # MAX_CONCURRENCY 16 x DefaultMaxBodyBytes 32 MiB = 512 MiB, bounded but real.
+          memory: 768m
+
+  minio:
+    deploy:
+      resources:
+        limits:
+          # Per-object in-flight buffers + the write bursts of an ingestion run.
+          memory: 1g
+
+  postgres:
+    deploy:
+      resources:
+        limits:
+          # shared_buffers 128 MiB + connections.
+          memory: 512m
 
 networks:
   # Shared ingress fabric, created once per host by the 'infra-vps' infrastructure
