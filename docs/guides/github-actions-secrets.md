@@ -45,7 +45,8 @@ merge test→main (manuel)  ─▶ push main
 Son `.env` doit fixer `COMPOSE_PROJECT_NAME=lodb-staging`, `IMAGE_TAG=staging` et
 `CADDY_DOMAINS=test.league-of-data-base.com`. Le VPS peut être mutualisé avec la
 prod (et d'autres projets) : l'isolation vient du `COMPOSE_PROJECT_NAME` distinct
-et le TLS d'un **edge proxy partagé** (cf. `infra/edge`, section TLS ci-dessous).
+et le TLS d'un **edge proxy partagé**, fourni par le dépôt d'infrastructure `infra-vps`
+(section TLS ci-dessous).
 
 | Secret | Requis | Description |
 |---|:---:|---|
@@ -53,7 +54,7 @@ et le TLS d'un **edge proxy partagé** (cf. `infra/edge`, section TLS ci-dessous
 | `STAGING_HOST` | ✅ | Hôte staging (IP ou FQDN). `ssh-keyscan` + connexions SSH. |
 | `STAGING_PATH` | ✅ | Chemin absolu du projet sur le serveur (dossier des `compose.*.yaml`). Cible du `git pull origin test` et du `docker compose`. |
 | `STAGING_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
-| `ENV_STAGING` | ✅ | Dotenv staging **complet**. Poussé dans `${STAGING_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-staging`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=staging`, les secrets applicatifs (`APP_SECRET`, `MINIO_*`, `ADMIN_*`, `POSTGRES_PASSWORD`, `STRIPE_*` — cf. section base de données & Stripe) **et** `CADDY_DOMAINS=test.league-of-data-base.com`. `ACME_EMAIL` n'est **plus** ici (il vit dans le stack edge). |
+| `ENV_STAGING` | ✅ | Dotenv staging **complet**. Poussé dans `${STAGING_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-staging`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=staging`, les secrets applicatifs (`APP_SECRET`, `MINIO_*`, `ADMIN_*`, `POSTGRES_PASSWORD`, `STRIPE_*` — cf. section base de données & Stripe) **et** `CADDY_DOMAINS=test.league-of-data-base.com`. Aucun paramètre de l'edge (contact Let's Encrypt) ici : il vit dans `infra-vps`. |
 
 ---
 
@@ -68,7 +69,7 @@ Peut cohabiter avec staging sur le même VPS (projets Compose distincts + edge p
 | `PROD_HOST` | ✅ | Hôte prod (IP ou FQDN). `ssh-keyscan` + connexions SSH. |
 | `PROD_PATH` | ✅ | Chemin absolu du projet sur le serveur. Cible du `git pull origin main` et du `docker compose`. |
 | `PROD_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
-| `ENV_PROD` | ✅ | Dotenv prod **complet**. Poussé dans `${PROD_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-prod`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=prod`, les secrets applicatifs (dont `POSTGRES_PASSWORD` et `STRIPE_*` — cf. section suivante) **et** `CADDY_DOMAINS=league-of-data-base.fr, league-of-data-base.com`. `ACME_EMAIL` n'est **plus** ici (il vit dans le stack edge). |
+| `ENV_PROD` | ✅ | Dotenv prod **complet**. Poussé dans `${PROD_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-prod`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=prod`, les secrets applicatifs (dont `POSTGRES_PASSWORD` et `STRIPE_*` — cf. section suivante) **et** `CADDY_DOMAINS=league-of-data-base.fr, league-of-data-base.com`. Aucun paramètre de l'edge (contact Let's Encrypt) ici : il vit dans `infra-vps`. |
 
 ---
 
@@ -92,22 +93,20 @@ Ces variables sont des **lignes des dotenv** ci-dessus (pas des secrets GitHub d
 ## 🔒 TLS / reverse-proxy — edge partagé (caddy-docker-proxy)
 
 Les stacks app **ne publient plus** `80/443` et n'embarquent plus Caddy. Le point
-d'entrée TLS est un **edge proxy unique et global** au VPS (`infra/edge`), partagé
-par staging, prod et tout futur projet. Il détecte les domaines via des **labels**
+d'entrée TLS est un **edge proxy unique et global** au VPS, partagé par staging, prod
+et tout futur projet. Il est **déployé par le dépôt d'infrastructure `infra-vps`
+(privé)**, seul propriétaire de l'edge et des réseaux Docker externes `edge` /
+`observability` — jamais par ce dépôt. Il détecte les domaines via des **labels**
 sur le conteneur nginx et émet/renouvelle seul les certificats Let's Encrypt.
 Chaque stack app se contente de déclarer `CADDY_DOMAINS` (→ label) et de rejoindre
-le réseau externe `edge` (via `compose.deploy.yaml`). Détails et onboarding d'un
-nouveau projet : **`infra/edge/README.md`**.
+le réseau externe `edge` (via `compose.deploy.yaml`). Onboarding d'un nouveau projet :
+**`docs/guides/migration-edge-proxy.md`** (« la méthode »).
 
-**L'edge est auto-bootstrappé par la pipeline** (`_deploy.yml`) : à chaque déploiement,
-le job (re)converge — de façon idempotente — le réseau `edge`, les fichiers de l'edge
-(copiés du repo vers `/opt/edge`) et le proxy lui-même, **avant** de monter l'app. Un
-VPS neuf/reconstruit ne demande donc **aucune étape manuelle** pour l'edge ; il faut
-seulement fournir le secret `ACME_EMAIL` (contact Let's Encrypt) et pointer le DNS.
-
-| Secret | Requis | Description |
-|---|:---:|---|
-| `ACME_EMAIL` | ✅ | Contact Let's Encrypt du proxy edge. Partagé staging **et** prod (même VPS). Écrit par le job dans `/opt/edge/.env`. |
+**Ordre de déploiement** : `infra-vps` doit avoir convergé l'hôte **avant** tout projet
+applicatif. Le job `_deploy.yml` ne converge plus rien côté edge : il **vérifie** seulement
+que le réseau `edge` existe et **échoue explicitement** sinon (« deploy infra-vps before
+this project »). Aucun secret lié à l'edge n'est requis dans ce dépôt : le contact
+Let's Encrypt est configuré dans `infra-vps`.
 
 | Variable | Où | Staging | Prod |
 |---|---|---|---|
@@ -120,14 +119,16 @@ seulement fournir le secret `ACME_EMAIL` (contact Let's Encrypt) et pointer le D
 
 ### 🖥️ Prérequis serveur (one-shot)
 
-**Sur le VPS, une fois** (l'edge, lui, est monté automatiquement — cf. `infra/edge/README.md`) :
+**Sur le VPS, une fois** :
 
 1. Docker Engine + plugin `docker compose` installés.
-2. Ports **80/443** ouverts et DNS des domaines pointé (cf. ci-dessus).
-3. `docker login ghcr.io` persistant si les packages GHCR sont **privés** (PAT `read:packages`),
+2. **Déployer `infra-vps` d'abord** : edge (caddy-docker-proxy) + réseaux `edge` et
+   `observability`. Sans ça, le job de ce dépôt s'arrête sur l'assertion réseau.
+3. Ports **80/443** ouverts et DNS des domaines pointé (cf. ci-dessus).
+4. `docker login ghcr.io` persistant si les packages GHCR sont **privés** (PAT `read:packages`),
    sinon les rendre publics — sans ça `docker compose pull` échoue.
-4. Le `*_PATH` peut être vide : le job initialise le dépôt (`git init` + `reset`), pousse le `.env`,
-   bootstrappe l'edge, puis déploie. staging suit `test`, prod suit `main`.
+5. Le `*_PATH` peut être vide : le job initialise le dépôt (`git init` + `reset`), pousse le `.env`,
+   vérifie le réseau `edge`, puis déploie. staging suit `test`, prod suit `main`.
 
 ---
 
@@ -146,7 +147,7 @@ seulement fournir le secret `ACME_EMAIL` (contact Let's Encrypt) et pointer le D
   - `.env.staging` → secret **`ENV_STAGING`** → déploiement staging (`test.league-of-data-base.com`)
   - `.env.prod` → secret **`ENV_PROD`** → déploiement prod
   - ⚠️ `test` (env applicatif) ≠ `staging` (déploiement pré-prod) : deux choses distinctes, deux fichiers, deux secrets.
-- **`CADDY_DOMAINS`** est une **ligne** de ces dotenv (donc dans `ENV_STAGING` / `ENV_PROD`), jamais dans les workflows. **`ACME_EMAIL`** ne s'y trouve plus : il est dans le `.env` du stack edge partagé.
+- **`CADDY_DOMAINS`** est une **ligne** de ces dotenv (donc dans `ENV_STAGING` / `ENV_PROD`), jamais dans les workflows. Le contact Let's Encrypt de l'edge ne s'y trouve pas : il est géré par `infra-vps`.
 - **`ENV_*`** contiennent le fichier dotenv intégral (une variable par ligne), pas une valeur unique — coller le contenu complet du `.env` correspondant.
 - **Staging et prod ne diffèrent que par leur `.env`** (`COMPOSE_PROJECT_NAME`, `IMAGE_TAG`, `CADDY_DOMAINS`, secrets) : mêmes fichiers compose. Le `COMPOSE_PROJECT_NAME` distinct est ce qui les isole sur un VPS mutualisé.
 - **`*_SSH_KEY`** : copier l'intégralité du fichier clé, en-têtes `-----BEGIN … PRIVATE KEY-----` / `-----END … PRIVATE KEY-----` inclus.

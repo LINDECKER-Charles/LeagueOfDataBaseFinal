@@ -35,7 +35,7 @@ contributeur est [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
 | [configuration.md](guides/configuration.md) | Variables d'environnement et paramètres applicatifs |
 | [docker.md](guides/docker.md) | Référence des commandes de la stack Compose |
 | [github-actions-secrets.md](guides/github-actions-secrets.md) | Secrets GitHub Actions / GHCR, flux de promotion CI/CD |
-| [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Passage à l'edge proxy partagé (VPS mono-hôte multi-projets) |
+| [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
 | [oauth-google-setup.md](guides/oauth-google-setup.md) | Configuration « Sign in with Google » côté Google Cloud Console |
 | [legal-info.md](guides/legal-info.md) | Checklist des informations légales à trancher avant la prod |
 | [packaging-apk.md](guides/packaging-apk.md) | Distribution Android (TWA / APK) à partir de la PWA |

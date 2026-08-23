@@ -7,10 +7,11 @@ name: lodb
 #   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
 #
 # This host is multi-tenant: the public TLS entrypoint is a SINGLE shared edge
-# proxy (infra/edge — caddy-docker-proxy) that owns 80/443 for every project on
-# the VPS. This stack therefore publishes NO host port; it just declares its
-# domains as labels on nginx and joins the external `edge` network. Caddy reads
-# the labels, provisions Let's Encrypt certs and reverse-proxies to nginx:80.
+# proxy (caddy-docker-proxy) that owns 80/443 for every project on the VPS. It
+# is deployed once per host by the 'infra-vps' infrastructure repo — never by
+# this project. This stack therefore publishes NO host port; it just declares
+# its domains as labels on nginx and joins the external `edge` network. Caddy
+# reads the labels, provisions Let's Encrypt certs and reverse-proxies to nginx:80.
 #
 # staging vs prod differ ONLY by the host .env:
 #   COMPOSE_PROJECT_NAME  lodb-staging | lodb-prod  (distinct Compose projects →
@@ -43,8 +44,8 @@ services:
       caddy.reverse_proxy: "{{upstreams 8090}}"
 
 networks:
-  # Shared ingress fabric, created once on the host (`docker network create edge`,
-  # also ensured idempotently by the deploy job). Owned by no single stack.
+  # Shared ingress fabric, created once per host by the 'infra-vps' infrastructure
+  # repo. Owned by no single stack: the deploy job only asserts it exists.
   edge:
     external: true
     name: edge
