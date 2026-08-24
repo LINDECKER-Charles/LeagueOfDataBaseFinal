@@ -4,6 +4,21 @@ name: lodb
 # (auto-merged by `docker compose`). Variable substitution reads the repo-root .env
 # (copy .env.example -> .env). See docs/guides/github-actions-secrets.md for the required secrets.
 
+# Bounded local log retention for every container of the stack.
+#
+# json-file is not a style choice: the host's collector reads container output
+# through the Docker Engine API, which can only replay logs for the json-file,
+# local and journald drivers. Any forwarding driver (syslog, fluentd, gelf, none)
+# makes a container unreadable there, and the loss is silent.
+#
+# Deliberately redundant with the host's /etc/docker/daemon.json: this repo does
+# not provision the VPS, so it cannot assume the daemon default is bounded.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   php:
     image: ${REGISTRY:-lodb}/app:${IMAGE_TAG:-latest}
@@ -59,11 +74,21 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
-      test: ["CMD", "php", "-r", "exit(0);"]
+      # Answered by a CHILD process: a pass proves a worker accepted and ran a
+      # request, not merely that the master bound the socket. `php -r 'exit(0);'`
+      # only proved the CLI binary existed — the container stayed healthy with a
+      # dead FPM master. The body must be matched: cgi-fcgi also exits 0 on an
+      # FPM "File not found".
+      test: ["CMD-SHELL", "SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000 | grep -q pong"]
       interval: 30s
       timeout: 5s
       retries: 3
+      # The entrypoint warms the cache before exec'ing FPM. Without a start_period
+      # every probe of that window counts as a real failure, so the container flips
+      # to `unhealthy` at each deploy — exactly when the stack is being watched.
+      start_period: 30s
 
   nginx:
     image: ${REGISTRY:-lodb}/nginx:${IMAGE_TAG:-latest}
@@ -78,11 +103,13 @@ services:
       php:
         condition: service_started
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
   go-fetcher:
     image: ${REGISTRY:-lodb}/go-fetcher:${IMAGE_TAG:-latest}
@@ -95,11 +122,13 @@ services:
       # Data Dragon exposes only a boolean `chromas` flag, no chroma assets.
       ALLOWED_HOSTS: ddragon.leagueoflegends.com,raw.communitydragon.org
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8085/healthz"]
       interval: 15s
       timeout: 5s
       retries: 5
+      start_period: 5s
 
   go-api:
     image: ${REGISTRY:-lodb}/go-api:${IMAGE_TAG:-latest}
@@ -131,11 +160,13 @@ services:
       minio-init:
         condition: service_completed_successfully
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8090/healthz"]
       interval: 15s
       timeout: 5s
       retries: 5
+      start_period: 15s
 
   minio:
     image: minio/minio:latest
@@ -146,6 +177,7 @@ services:
     volumes:
       - minio_data:/data
     restart: unless-stopped
+    logging: *default-logging
     # No self-healthcheck: the minio server image is shell-less (no curl/mc).
     # Readiness is gated by minio-init, which retries `mc alias set` until the API answers.
 
@@ -162,10 +194,17 @@ services:
     volumes:
       - ./docker/minio/init.sh:/docker-entrypoint-init.sh:ro
     restart: "no"
+    logging: *default-logging
 
   mailer:
     image: axllent/mailpit:latest
+    # Dev-only SMTP sink. Kept out of every served environment: it accepts and
+    # swallows mail, so a staging/prod stack falling back to it would silently
+    # drop account emails instead of failing loudly. Enabled by COMPOSE_PROFILES=dev
+    # in the repo-root .env (see .env.example).
+    profiles: ["dev"]
     restart: unless-stopped
+    logging: *default-logging
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: "1"
       MP_SMTP_AUTH_ALLOW_INSECURE: "1"
@@ -179,11 +218,13 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 15s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
 volumes:
   minio_data:

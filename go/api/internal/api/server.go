@@ -16,6 +16,14 @@ import (
 	"lodb/go/api/internal/trends"
 )
 
+// healthPath is excluded from the access log: the container healthcheck probes
+// it every 15s — 5 760 lines a day, per stack, kept 90 days, saying nothing.
+const healthPath = "/healthz"
+
+// maxLoggedValueBytes bounds a caller-controlled value before it reaches a log
+// line, so one request cannot push a record past the collector's limits.
+const maxLoggedValueBytes = 256
+
 // AuthStore covers the key/quota persistence needed by the middleware.
 type AuthStore interface {
 	KeyByHash(ctx context.Context, hash string) (keys.APIKey, error)
@@ -79,7 +87,7 @@ func NewServer(d Deps) http.Handler {
 		siteBaseURL: d.SiteBaseURL, log: d.Log,
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", s.handleHealth)
+	mux.HandleFunc("GET "+healthPath, s.handleHealth)
 	mux.HandleFunc("GET /v1/profiles/{username}", s.withAuth(true, s.handleProfile))
 	mux.HandleFunc("GET /v1/champions/{championId}/builds", s.withAuth(true, s.handleChampionBuilds))
 	mux.HandleFunc("GET /v1/trends/{type}", s.withAuth(true, s.handleTrends))
@@ -118,11 +126,58 @@ func (s *Server) logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
-		next.ServeHTTP(rec, r)
-		s.log.Info("request",
-			"method", r.Method, "path", r.URL.Path,
-			"status", rec.status, "duration_ms", time.Since(start).Milliseconds())
+		// The authenticated key is resolved DEEPER in the chain, on a derived
+		// request this closure never sees. A holder installed on the way in is how
+		// the access line can name the caller on the way out.
+		caller := &callerInfo{}
+		next.ServeHTTP(rec, r.WithContext(withCaller(r.Context(), caller)))
+		if r.URL.Path == healthPath {
+			return
+		}
+		attrs := []slog.Attr{
+			slog.String("method", r.Method),
+			slog.String("path", safeValue(r.URL.Path)),
+			slog.Int("status", rec.status),
+			slog.Int64("duration_ms", time.Since(start).Milliseconds()),
+		}
+		// The internal id only. The key itself is a credential and never travels.
+		if caller.apiKeyID != 0 {
+			attrs = append(attrs, slog.Int("api_key_id", caller.apiKeyID))
+		}
+		s.log.LogAttrs(r.Context(), levelForStatus(rec.status), "http.request.served", attrs...)
 	})
+}
+
+// levelForStatus keeps the level tied to the outcome. Every request used to be
+// logged at INFO, 5xx included, which made the level column useless for spotting
+// a failing service.
+func levelForStatus(status int) slog.Level {
+	switch {
+	case status >= http.StatusInternalServerError:
+		return slog.LevelError
+	case status >= http.StatusBadRequest:
+		return slog.LevelWarn
+	default:
+		return slog.LevelInfo
+	}
+}
+
+// safeValue makes a caller-controlled string safe to journal.
+//
+// The collector builds ONE event per physical line: a value carrying a newline
+// would inject whole records, the rest of them level-less and key-less. slog's
+// JSON encoder escapes control characters today, but the sanitising belongs to
+// the value, not to whichever encoder happens to be wired underneath.
+func safeValue(value string) string {
+	if len(value) > maxLoggedValueBytes {
+		value = value[:maxLoggedValueBytes]
+	}
+	return strings.Map(func(r rune) rune {
+		if r < 0x20 || r == 0x7f {
+			return '_'
+		}
+		return r
+	}, value)
 }
 
 func isNotFound(err error) bool { return errors.Is(err, store.ErrNotFound) }

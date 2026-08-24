@@ -35,7 +35,9 @@ contributeur est [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
 | [configuration.md](guides/configuration.md) | Variables d'environnement et paramètres applicatifs |
 | [docker.md](guides/docker.md) | Référence des commandes de la stack Compose |
 | [github-actions-secrets.md](guides/github-actions-secrets.md) | Secrets GitHub Actions / GHCR, flux de promotion CI/CD |
-| [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Passage à l'edge proxy partagé (VPS mono-hôte multi-projets) |
+| [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
+| [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana : fonctionnement, ce qu'il ne faut surtout pas déclarer, requêtes LogsQL / PromQL, dépannage |
+| [logging.md](guides/logging.md) | Convention de journalisation applicative : clé d'événement, contexte, niveaux, canaux, interdictions |
 | [oauth-google-setup.md](guides/oauth-google-setup.md) | Configuration « Sign in with Google » côté Google Cloud Console |
 | [legal-info.md](guides/legal-info.md) | Checklist des informations légales à trancher avant la prod |
 | [packaging-apk.md](guides/packaging-apk.md) | Distribution Android (TWA / APK) à partir de la PWA |
@@ -47,6 +49,8 @@ contributeur est [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
 | [performance-audit.md](audits/performance-audit.md) | Audit de la chaîne de chargement DDragon et du cache |
 | [performance-fix-prompt.md](audits/performance-fix-prompt.md) | Plan de correction dérivé de l'audit ci-dessus |
 | [version-compatibility-audit.md](audits/version-compatibility-audit.md) | Compatibilité des versions Data Dragon — diagnostic et correctifs |
+| [observabilite-2026-08-23.md](audits/observabilite-2026-08-23.md) | Journalisation : les quatre verrous qui rendent l'app muette, et le plan d'implémentation en 5 lots |
+| [observabilite-fix-prompt.md](audits/observabilite-fix-prompt.md) | Mission d'implémentation dérivée du plan ci-dessus — un lot par session, garde-fous et pièges |
 
 > `report/` (métriques de conformité aux règles chiffrées de `CLAUDE.md`) est
 > **généré** par le skill `archi-report` et git-ignoré : ne pas l'éditer à la main.

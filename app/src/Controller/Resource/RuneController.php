@@ -8,6 +8,7 @@ use App\Service\API\RuneManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -19,9 +20,16 @@ final class RuneController extends AbstractResourceController
         ClientManager $clientManager,
         PageContextResolver $pageContext,
         RequestStack $requestStack,
+        LoggerInterface $catalogLogger,
         private readonly RuneManager $runeManager,
     ) {
-        parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
+        parent::__construct(
+            $versionManager,
+            $clientManager,
+            $pageContext,
+            $requestStack,
+            $catalogLogger,
+        );
     }
 
     /**

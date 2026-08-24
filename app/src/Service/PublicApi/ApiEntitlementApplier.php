@@ -8,6 +8,7 @@ use App\Entity\Enum\ApiPlan;
 use App\Repository\ApiKeyRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -17,6 +18,7 @@ use Psr\Log\LoggerInterface;
  * infrastructure failures bubble up so Stripe redelivers the event.
  * Logs carry internal ids only — never customer identity.
  */
+#[WithMonologChannel('billing')]
 final class ApiEntitlementApplier implements ApiEntitlements
 {
     public function __construct(

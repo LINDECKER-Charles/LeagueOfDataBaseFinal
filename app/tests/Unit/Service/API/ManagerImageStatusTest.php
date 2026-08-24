@@ -11,6 +11,7 @@ use App\Service\Storage\ImageTranscoder;
 use App\Service\Tools\GoFetcherClient;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpFoundation\Request;
@@ -96,11 +97,11 @@ final class ManagerImageStatusTest extends SeededManagerTestCase
         return new ItemManager(
             new GoFetcherClient(new MockHttpClient(static function (): void {
                 throw new \RuntimeException('unexpected DDragon egress');
-            })),
+            }), new NullLogger()),
             $fs,
             new BlobStore($fs, new ImageTranscoder()),
             new ArrayAdapter(),
-            new DeferredImageIngestor($requests),
+            new DeferredImageIngestor($requests, new NullLogger()),
         );
     }
 }

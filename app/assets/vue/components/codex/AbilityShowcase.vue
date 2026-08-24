@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 import { useAbilityMedia, type AbilitySlot } from '../../kit/useAbilityMedia'
 import { useVideoPlayback } from '../../kit/useVideoPlayback'
 
@@ -45,8 +45,9 @@ const props = defineProps<{
 }>()
 
 const media = useAbilityMedia(props.championKey)
-const { videoEl, isPaused, isMuted, progress, toggle, toggleMute, onPlay, onPause } =
-    useVideoPlayback()
+const videoEl = useTemplateRef<HTMLVideoElement>('videoEl')
+const { isPaused, isMuted, progress, toggle, toggleMute, onPlay, onPause } =
+    useVideoPlayback(videoEl)
 const selected = ref(0)
 const current = computed(() => props.abilities[selected.value] ?? props.abilities[0])
 

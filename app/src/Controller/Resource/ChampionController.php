@@ -8,6 +8,7 @@ use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
 use App\Service\Profile\ChampionSkins;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,10 +21,17 @@ final class ChampionController extends AbstractResourceController
         ClientManager $clientManager,
         PageContextResolver $pageContext,
         RequestStack $requestStack,
+        LoggerInterface $catalogLogger,
         private readonly ChampionManager $championManager,
         private readonly ChampionSkins $championSkins,
     ) {
-        parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
+        parent::__construct(
+            $versionManager,
+            $clientManager,
+            $pageContext,
+            $requestStack,
+            $catalogLogger,
+        );
     }
 
     /**

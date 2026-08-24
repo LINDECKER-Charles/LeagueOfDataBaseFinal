@@ -7,6 +7,8 @@ use App\Service\API\DatasetRef;
 use App\Service\API\WarmableManagerInterface;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +27,7 @@ use Symfony\Component\Routing\Annotation\Route;
  * session lock is released before streaming, so a multi-second warm never
  * starves the user's concurrent requests.
  */
+#[WithMonologChannel('ingest')]
 final class LoaderController extends AbstractController
 {
     /** @var array<string,WarmableManagerInterface> resource type => manager */
@@ -38,6 +41,7 @@ final class LoaderController extends AbstractController
         iterable $managers,
         private readonly PageContextResolver $pageContext,
         private readonly VersionManager $versionManager,
+        private readonly LoggerInterface $logger,
     ) {
         $byType = [];
         foreach ($managers as $manager) {
@@ -116,7 +120,7 @@ final class LoaderController extends AbstractController
             = $this->collectPlans($steps, $dataset);
 
         $this->emit('start', ['total' => $total, 'categories' => $categories]);
-        $stored = $this->ingest($plans, $dataset->version, $total);
+        $stored = $this->ingest($plans, $dataset, $total);
         $this->emit('done', ['stored' => $stored, 'total' => $total]);
     }
 
@@ -143,6 +147,13 @@ final class LoaderController extends AbstractController
             try {
                 $plan = $manager->collectPlan($dataset, $step['perPage'], $step['page']);
             } catch (\Throwable $e) {
+                // The SSE frame reaches the browser and nothing else: without this
+                // line a warm that never resolves anything is invisible server-side.
+                $this->logWarmFailure(
+                    ['phase' => 'plan', 'resource' => $step['type']],
+                    $dataset,
+                    $e,
+                );
                 $this->emit('error', ['category' => $step['type'], 'message' => $e->getMessage()]);
                 continue;
             }
@@ -160,7 +171,7 @@ final class LoaderController extends AbstractController
      * @param list<array{0: WarmableManagerInterface, 1: string, 2: array<mixed>}> $plans
      * @return int images actually stored (one progress frame each)
      */
-    private function ingest(array $plans, string $version, int $total): int
+    private function ingest(array $plans, DatasetRef $dataset, int $total): int
     {
         $stored = 0;
 
@@ -169,7 +180,7 @@ final class LoaderController extends AbstractController
             @\flush();
             try {
                 $manager->ingest(
-                    $version,
+                    $dataset->version,
                     $entries,
                     function (string $name) use (&$stored, $category, $total): void {
                         ++$stored;
@@ -182,11 +193,28 @@ final class LoaderController extends AbstractController
                     },
                 );
             } catch (\Throwable $e) {
+                $this->logWarmFailure(['phase' => 'ingest', 'resource' => $category], $dataset, $e);
                 $this->emit('error', ['category' => $category, 'message' => $e->getMessage()]);
             }
         }
 
         return $stored;
+    }
+
+    /**
+     * A warm step that could not complete. Both phases fail the same way from
+     * supervision's point of view — a resource the visitor will see unwarmed — so
+     * they share one event key and separate on `phase`.
+     *
+     * @param array{phase: string, resource: string} $step
+     */
+    private function logWarmFailure(array $step, DatasetRef $dataset, \Throwable $e): void
+    {
+        $this->logger->warning('ingest.loader.failed', $step + [
+            'version' => $dataset->version,
+            'lang' => $dataset->lang,
+            'exception' => $e,
+        ]);
     }
 
     /**

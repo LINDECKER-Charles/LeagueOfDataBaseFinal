@@ -4,9 +4,10 @@ import { ref, watch, onBeforeUnmount, type Ref } from 'vue'
  * Play/pause + mute toggle + playback progress for a looping, chrome-less
  * <video>. Progress is sampled on requestAnimationFrame only while the video
  * plays (timeupdate is too coarse for a smooth bar); the loop stops on pause so
- * an idle page schedules nothing. The element ref is expected to be recreated
- * per media swap (keyed <video>), which resets state via the watcher — and the
- * previous element is paused there so its looping audio cuts on slot change.
+ * an idle page schedules nothing. `videoEl` is the SFC's template ref on a
+ * keyed <video>: each media swap hands over a fresh element, which resets state
+ * via the watcher — and the previous element is paused there so its looping
+ * audio cuts on slot change.
  *
  * Mute is owned here as a property, not the `muted` content attribute: Vue only
  * patches the attribute (vuejs/core#3057), leaving the IDL property false, so a
@@ -15,7 +16,6 @@ import { ref, watch, onBeforeUnmount, type Ref } from 'vue'
  * sticky across slots.
  */
 export interface VideoPlayback {
-    videoEl: Ref<HTMLVideoElement | null>
     isPaused: Ref<boolean>
     isMuted: Ref<boolean>
     /** Playback position as a 0..1 fraction of duration. */
@@ -28,7 +28,7 @@ export interface VideoPlayback {
 
 /** Reactive surface + the two plain (non-reactive) bits of loop bookkeeping. */
 interface PlaybackState {
-    videoEl: Ref<HTMLVideoElement | null>
+    videoEl: Readonly<Ref<HTMLVideoElement | null>>
     isPaused: Ref<boolean>
     isMuted: Ref<boolean>
     progress: Ref<number>
@@ -36,9 +36,11 @@ interface PlaybackState {
     resumeOnVisible: boolean
 }
 
-export function useVideoPlayback(): VideoPlayback {
+export function useVideoPlayback(
+    videoEl: Readonly<Ref<HTMLVideoElement | null>>,
+): VideoPlayback {
     const state: PlaybackState = {
-        videoEl: ref(null),
+        videoEl,
         isPaused: ref(false),
         isMuted: ref(true),
         progress: ref(0),
@@ -53,7 +55,6 @@ export function useVideoPlayback(): VideoPlayback {
     onBeforeUnmount(() => teardown(state, onVisibilityChange))
 
     return {
-        videoEl: state.videoEl,
         isPaused: state.isPaused,
         isMuted: state.isMuted,
         progress: state.progress,

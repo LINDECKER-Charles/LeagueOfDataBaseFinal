@@ -182,7 +182,7 @@ Interface **responsive** sur **Tailwind CSS 4** (du petit mobile 320 px à l'iPa
 
 | | Couche | Technologie | Rôle |
 |---|---|---|---|
-| <img src="docs/assets/icons/globe.svg" width="18" alt=""> | **Edge** | Caddy | Entrée publique, TLS automatique (déploiement) |
+| <img src="docs/assets/icons/globe.svg" width="18" alt=""> | **Edge** | Caddy (dépôt d'infrastructure `infra-vps`) | Entrée publique partagée du VPS, TLS automatique — déployée avant ce projet, hors de ce dépôt |
 | <img src="docs/assets/icons/server.svg" width="18" alt=""> | **Reverse proxy** | nginx | Front HTTP ; sert `/cdn` (MinIO), `/build`, `/fonts`, streaming SSE |
 | <img src="docs/assets/icons/layout-template.svg" width="18" alt=""> | **Backend** | Symfony 7.4 · PHP 8.5 (FPM) | Application, **sans base de données** — proxy sur Data Dragon |
 | <img src="docs/assets/icons/git-branch.svg" width="18" alt=""> | **Microservice** | Go 1.25 | Passerelle de *fetch* : egress DDragon, garde SSRF, batch parallèle |
@@ -253,7 +253,6 @@ LeagueOfDataBaseFinal/
 │   └── api/                    # API REST v1 publique (payante)
 │       └── internal/{api,keys,quota,ratelimit,store,trends}/
 ├── docker/                     # Dockerfiles + confs (php, nginx, minio)
-├── infra/edge/                 # Caddy (déploiement)
 ├── screenshot/                 # Captures (Partie Design)
 └── docs/                       # Documentation détaillée
 ```

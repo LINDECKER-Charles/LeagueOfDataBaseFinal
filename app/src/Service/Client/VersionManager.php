@@ -4,10 +4,12 @@ declare(strict_types=1);
 namespace App\Service\Client;
 
 use App\Service\Tools\GoFetcherClient;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
+#[WithMonologChannel('catalog')]
 final class VersionManager implements VersionCatalogInterface
 {
     /**
@@ -111,9 +113,8 @@ final class VersionManager implements VersionCatalogInterface
                             && !str_starts_with($version, self::LEGACY_VERSION_PREFIX),
                     ));
                 } catch (\Throwable $e) {
-                    $this->logger->error('Erreur lors de la récupération des versions Riot', [
-                        'message' => $e->getMessage(),
-                    ]);
+                    $this->logger->error('catalog.versions.unavailable', ['exception' => $e]);
+
                     return [];
                 }
             }
@@ -150,9 +151,8 @@ final class VersionManager implements VersionCatalogInterface
                 try {
                     return $this->goFetcher->languages();
                 } catch (\Throwable $e) {
-                    $this->logger->error('Erreur lors de la récupération des langues Riot', [
-                        'message' => $e->getMessage(),
-                    ]);
+                    $this->logger->error('catalog.languages.unavailable', ['exception' => $e]);
+
                     return [];
                 }
             }

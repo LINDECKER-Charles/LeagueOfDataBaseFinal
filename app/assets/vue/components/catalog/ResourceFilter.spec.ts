@@ -202,7 +202,9 @@ describe('ResourceFilter', () => {
     it('keeps a group unfolded once engaged, even after its last facet is cleared', async () => {
         const wrapper = await mountFilter(4)
         await wrapper.findAll('.filter-console .facet-group__title')[1].trigger('click')
-        const minField = wrapper.find<HTMLInputElement>('.filter-console .facet__field input')
+        // The wrapper is already scoped to the console root: re-matching that root at the
+        // head of a descendant selector is what jsdom 30's engine mishandles (jsdom#4227).
+        const minField = wrapper.find<HTMLInputElement>('.facet__field input')
         // Fields commit on change only: typing never rewrites them under the reader.
         await minField.setValue('300')
         await minField.trigger('change')

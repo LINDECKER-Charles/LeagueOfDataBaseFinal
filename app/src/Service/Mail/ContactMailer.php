@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Service\Mail;
 
 use App\Entity\ContactMessage;
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
@@ -16,12 +18,14 @@ use Symfony\Component\Mime\Address;
  * (see messenger.yaml). An empty recipient disables the feature cleanly: the
  * message is still persisted for the /admin inbox, just not emailed.
  */
+#[WithMonologChannel('mail')]
 final readonly class ContactMailer
 {
     private const TEMPLATE = 'email/contact_notification';
 
     public function __construct(
         private MailerInterface $mailer,
+        private LoggerInterface $logger,
         private string $sender,
         private string $recipient,
     ) {}
@@ -46,7 +50,22 @@ final readonly class ContactMailer
             ->textTemplate(self::TEMPLATE.'.txt.twig')
             ->context(['message' => $message]);
 
-        $this->mailer->send($email);
+        try {
+            $this->mailer->send($email);
+        } catch (\Throwable $e) {
+            // Re-thrown unchanged: the controller still swallows it (the message is
+            // already persisted for the /admin inbox), but the relay outage itself
+            // now leaves a trace. Internal id only — the visitor's address stays out,
+            // and so does the exception object, whose message is relay free text and
+            // would carry the MAILER_DSN username on an auth failure
+            // ({@see DeliveryFailure}).
+            $this->logger->error('mail.send.failed', [
+                'kind' => 'contact_notification',
+                'message_id' => $message->getId(),
+            ] + DeliveryFailure::context($e));
+
+            throw $e;
+        }
     }
 
     private function subject(ContactMessage $message): string

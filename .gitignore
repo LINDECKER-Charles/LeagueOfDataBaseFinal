@@ -32,3 +32,6 @@ design
 
 # Rapports d'audit générés (knowledge-graph, archi, conventions)
 /docs/report/
+
+# Note locale de migration edge -> infra-vps (non versionnee)
+/docs/MIGRATION-INFRA-VPS.local.md

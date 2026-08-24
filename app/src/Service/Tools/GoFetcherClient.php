@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Service\Tools;
 
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -12,6 +14,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * over the wire so JSON and binary (images) share a single contract; the gateway
  * fetches batches in parallel.
  */
+#[WithMonologChannel('catalog')]
 final class GoFetcherClient
 {
     /**
@@ -21,7 +24,10 @@ final class GoFetcherClient
      */
     private const MAX_URLS_PER_BATCH = 200;
 
-    public function __construct(private readonly HttpClientInterface $http) {}
+    public function __construct(
+        private readonly HttpClientInterface $http,
+        private readonly LoggerInterface $logger,
+    ) {}
 
     /**
      * Fetch a single DDragon URL and return the raw body bytes.
@@ -110,7 +116,39 @@ final class GoFetcherClient
             }
         }
 
+        $this->reportUnresolved(\count($urls), \count($bytes), \count($absent));
+
         return ['bytes' => $bytes, 'absent' => $absent];
+    }
+
+    /**
+     * A dropped result leaves no trace in the returned shape, so a batch where
+     * every URL failed is indistinguishable from a batch that had nothing to do.
+     * Counts only — a list of URLs would blow past the FPM per-line cap.
+     *
+     * Nothing resolved at all is an outage of the read path (`error`); a partial
+     * batch is a degradation the next visit retries (`warning`).
+     */
+    private function reportUnresolved(int $requested, int $resolved, int $absent): void
+    {
+        $unresolved = $requested - $resolved - $absent;
+        if ($unresolved <= 0) {
+            return;
+        }
+
+        $context = [
+            'requested' => $requested,
+            'resolved' => $resolved,
+            'absent' => $absent,
+            'unresolved' => $unresolved,
+        ];
+        if ($resolved === 0) {
+            $this->logger->error('catalog.fetch_batch.unresolved', $context);
+
+            return;
+        }
+
+        $this->logger->warning('catalog.fetch_batch.unresolved', $context);
     }
 
     /**

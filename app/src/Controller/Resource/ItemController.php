@@ -10,6 +10,7 @@ use App\Service\API\ItemManager;
 use App\Service\Client\ClientManager;
 use App\Service\Client\PageContextResolver;
 use App\Service\Client\VersionManager;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,10 +23,17 @@ final class ItemController extends AbstractResourceController
         ClientManager $clientManager,
         PageContextResolver $pageContext,
         RequestStack $requestStack,
+        LoggerInterface $catalogLogger,
         private readonly ItemManager $itemManager,
         private readonly ChampionManager $championManager,
     ) {
-        parent::__construct($versionManager, $clientManager, $pageContext, $requestStack);
+        parent::__construct(
+            $versionManager,
+            $clientManager,
+            $pageContext,
+            $requestStack,
+            $catalogLogger,
+        );
     }
 
     /**

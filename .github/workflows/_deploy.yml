@@ -28,9 +28,6 @@ on:
       ENV_FILE:
         description: Full dotenv for this host, written to ${DEPLOY_PATH}/.env.
         required: true
-      ACME_EMAIL:
-        description: Let's Encrypt contact for the VPS-global edge proxy (infra/edge).
-        required: true
 
 permissions:
   contents: read
@@ -74,17 +71,16 @@ jobs:
             git fetch origin ${{ inputs.branch }}
             git checkout -B ${{ inputs.branch }} origin/${{ inputs.branch }}
             git reset --hard origin/${{ inputs.branch }}
-            # ── Edge proxy (VPS-global, idempotent self-heal) ────────────────────
-            # Single public TLS entrypoint shared by every project on the host.
-            # Ensured on each deploy so a fresh/rebuilt box needs zero manual step:
-            # the network, the stack files (from the repo, pinned to a stable path
-            # so the bind-mount source never flaps between staging/prod deploys) and
-            # the proxy itself are (re)converged before the app comes up.
-            docker network inspect edge >/dev/null 2>&1 || docker network create edge
-            mkdir -p /opt/edge
-            cp infra/edge/compose.yaml infra/edge/Caddyfile /opt/edge/
-            printf 'ACME_EMAIL=%s\n' '${{ secrets.ACME_EMAIL }}' > /opt/edge/.env
-            docker compose -f /opt/edge/compose.yaml --env-file /opt/edge/.env up -d
+            # ── Edge proxy (VPS-global) ──────────────────────────────────────────
+            # The edge (caddy-docker-proxy) and the shared 'edge' network are owned by
+            # the infra-vps repo, sole owner of the edge stack on the host. This job no
+            # longer converges anything there: it only asserts the network exists. A
+            # project must never be able to rewrite the infrastructure shared with the
+            # other projects.
+            docker network inspect edge >/dev/null 2>&1 || {
+              echo "Docker network 'edge' is missing — deploy infra-vps before this project." >&2
+              exit 1
+            }
             # Pull résilient : le registry casse parfois un layer en cours de copie
             # (connection reset by peer). Retry avec backoff avant d'abandonner, sinon
             # `up` retomberait sur un build local lourd des services à `build:`.
@@ -128,11 +124,20 @@ jobs:
                 curl -sS --max-time 10 -o /dev/null "https://${domain}/" || return 1
               done
             }
+            # Edge Caddy container, resolved from its Compose labels (project 'edge',
+            # service 'caddy'): no dependency on where infra-vps keeps its files.
+            edge_caddy() {
+              docker ps -q \
+                --filter label=com.docker.compose.project=edge \
+                --filter label=com.docker.compose.service=caddy
+            }
             if assert_tls; then
               echo "TLS OK for all public domains."
             else
               echo "TLS check failed — forcing edge to re-attempt certificate issuance…" >&2
-              docker compose -f /opt/edge/compose.yaml --env-file /opt/edge/.env restart caddy
+              caddy_id="$(edge_caddy)"
+              [ -n "$caddy_id" ] || { echo "Edge Caddy container not found — is infra-vps deployed?" >&2; exit 1; }
+              docker restart "$caddy_id" >/dev/null
               recovered=0
               for _ in $(seq 1 18); do   # up to ~90s: challenge solve is usually a few seconds
                 sleep 5
@@ -140,7 +145,7 @@ jobs:
               done
               if [ "$recovered" != 1 ]; then
                 echo "TLS still failing after edge reload. Check DNS (A -> this host), CAA, LE rate-limits:" >&2
-                docker compose -f /opt/edge/compose.yaml --env-file /opt/edge/.env logs --since 3m caddy 2>&1 \
+                docker logs --since 3m "$caddy_id" 2>&1 \
                   | grep -iE 'challenge failed|could not get certificate|rateLimited|unauthorized' >&2 || true
                 exit 1
               fi

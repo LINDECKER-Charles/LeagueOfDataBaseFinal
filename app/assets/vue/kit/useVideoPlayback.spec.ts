@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { defineComponent, nextTick } from 'vue'
+import { defineComponent, nextTick, shallowRef, type ShallowRef } from 'vue'
 import { useVideoPlayback, type VideoPlayback } from './useVideoPlayback'
 
 /** Fake <video> — the composable only reads/writes this surface. */
@@ -23,16 +23,23 @@ function flushRaf(): void {
     callbacks.forEach((cb) => cb(0))
 }
 
-function mountPlayback(): { playback: VideoPlayback; unmount: () => void } {
+interface Harness {
+    playback: VideoPlayback
+    videoEl: ShallowRef<HTMLVideoElement | null>
+    unmount: () => void
+}
+
+function mountPlayback(): Harness {
     let playback!: VideoPlayback
+    const videoEl = shallowRef<HTMLVideoElement | null>(null)
     const harness = defineComponent({
         setup() {
-            playback = useVideoPlayback()
+            playback = useVideoPlayback(videoEl)
             return () => null
         },
     })
     const wrapper = mount(harness)
-    return { playback, unmount: () => wrapper.unmount() }
+    return { playback, videoEl, unmount: () => wrapper.unmount() }
 }
 
 describe('useVideoPlayback', () => {
@@ -50,9 +57,9 @@ describe('useVideoPlayback', () => {
     })
 
     it('toggle() plays a paused video and pauses a playing one', () => {
-        const { playback } = mountPlayback()
+        const { playback, videoEl } = mountPlayback()
         const video = fakeVideo({ paused: true })
-        playback.videoEl.value = video
+        videoEl.value = video
 
         playback.toggle()
         expect(video.play).toHaveBeenCalledOnce()
@@ -63,9 +70,9 @@ describe('useVideoPlayback', () => {
     })
 
     it('tracks progress on animation frames while playing, stops after pause', () => {
-        const { playback } = mountPlayback()
+        const { playback, videoEl } = mountPlayback()
         const video = fakeVideo({ currentTime: 2.5 })
-        playback.videoEl.value = video
+        videoEl.value = video
 
         playback.onPlay()
         expect(playback.isPaused.value).toBe(false)
@@ -83,9 +90,9 @@ describe('useVideoPlayback', () => {
     })
 
     it('onPause() syncs the final position once', () => {
-        const { playback } = mountPlayback()
+        const { playback, videoEl } = mountPlayback()
         const video = fakeVideo({ paused: true, currentTime: 7.5 })
-        playback.videoEl.value = video
+        videoEl.value = video
 
         playback.onPause()
         expect(playback.progress.value).toBe(0.75)
@@ -93,8 +100,8 @@ describe('useVideoPlayback', () => {
     })
 
     it('keeps the last progress while duration is unknown', () => {
-        const { playback } = mountPlayback()
-        playback.videoEl.value = fakeVideo({ duration: NaN, currentTime: 3 })
+        const { playback, videoEl } = mountPlayback()
+        videoEl.value = fakeVideo({ duration: NaN, currentTime: 3 })
 
         playback.onPlay()
         flushRaf()
@@ -102,14 +109,14 @@ describe('useVideoPlayback', () => {
     })
 
     it('resets state and pauses the previous element when swapped (keyed re-render)', async () => {
-        const { playback } = mountPlayback()
+        const { playback, videoEl } = mountPlayback()
         const prev = fakeVideo({ paused: true, currentTime: 5 })
-        playback.videoEl.value = prev
+        videoEl.value = prev
         await nextTick() // flush so the next swap sees `prev` as the old value
         playback.onPause()
         expect(playback.progress.value).toBe(0.5)
 
-        playback.videoEl.value = fakeVideo()
+        videoEl.value = fakeVideo()
         await nextTick()
         expect(prev.pause).toHaveBeenCalledOnce()
         expect(playback.progress.value).toBe(0)
@@ -117,11 +124,11 @@ describe('useVideoPlayback', () => {
     })
 
     it('starts muted and enforces the sticky mute state on each swapped element', async () => {
-        const { playback } = mountPlayback()
+        const { playback, videoEl } = mountPlayback()
         expect(playback.isMuted.value).toBe(true)
 
         const first = fakeVideo({ muted: false })
-        playback.videoEl.value = first
+        videoEl.value = first
         await nextTick()
         expect(first.muted).toBe(true)
 
@@ -130,14 +137,14 @@ describe('useVideoPlayback', () => {
         expect(first.muted).toBe(false)
 
         const next = fakeVideo({ muted: true })
-        playback.videoEl.value = next
+        videoEl.value = next
         await nextTick()
         expect(next.muted).toBe(false)
     })
 
     it('cancels the frame loop on unmount', () => {
-        const { playback, unmount } = mountPlayback()
-        playback.videoEl.value = fakeVideo()
+        const { playback, videoEl, unmount } = mountPlayback()
+        videoEl.value = fakeVideo()
         playback.onPlay()
         flushRaf()
 
@@ -146,18 +153,18 @@ describe('useVideoPlayback', () => {
     })
 
     it('pauses the current video on unmount so detached audio stops', () => {
-        const { playback, unmount } = mountPlayback()
+        const { videoEl, unmount } = mountPlayback()
         const video = fakeVideo()
-        playback.videoEl.value = video
+        videoEl.value = video
 
         unmount()
         expect(video.pause).toHaveBeenCalled()
     })
 
     it('pauses a playing video when the tab hides and resumes it on return', () => {
-        const { playback } = mountPlayback()
+        const { videoEl } = mountPlayback()
         const video = fakeVideo({ paused: false })
-        playback.videoEl.value = video
+        videoEl.value = video
         const hidden = vi.spyOn(document, 'hidden', 'get')
 
         hidden.mockReturnValue(true)
@@ -171,9 +178,9 @@ describe('useVideoPlayback', () => {
     })
 
     it('does not resume a video the user paused before hiding the tab', () => {
-        const { playback } = mountPlayback()
+        const { videoEl } = mountPlayback()
         const video = fakeVideo({ paused: true })
-        playback.videoEl.value = video
+        videoEl.value = video
         const hidden = vi.spyOn(document, 'hidden', 'get')
 
         hidden.mockReturnValue(true)
