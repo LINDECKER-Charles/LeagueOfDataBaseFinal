@@ -46,8 +46,8 @@ const fmt = (ms: number | null): string => (ms == null ? '—' : `${Math.round(m
     font-size: 0.66rem;
     letter-spacing: 0.08em;
     color: var(--color-text-muted);
-    background: rgba(4, 12, 24, 0.82);
-    border: 1px solid rgba(120, 90, 40, 0.4);
+    background: color-mix(in srgb, var(--color-sink) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 40%, transparent);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     /* Diagnostic overlay: never intercept clicks on the content beneath it. */

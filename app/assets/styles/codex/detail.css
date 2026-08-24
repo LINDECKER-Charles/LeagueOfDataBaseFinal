@@ -36,7 +36,7 @@
     width: 9px; height: 9px;
     rotate: 45deg;
     border: 1px solid color-mix(in srgb, var(--color-gold) 35%, transparent);
-    background: rgba(1, 10, 19, 0.55);
+    background: color-mix(in srgb, var(--color-hextech-black) 55%, transparent);
   }
   .gauge i.on {
     background: var(--gauge, var(--color-gold));
@@ -45,7 +45,8 @@
   }
   .gauge--attack { --gauge: #f0a868; }
   .gauge--defense { --gauge: #3fb96f; }
-  .gauge--magic { --gauge: var(--color-hex); }
+  /* Game data, pinned like its siblings — see foundation/ddragon.css. */
+  .gauge--magic { --gauge: #0ac8b9; }
   .gauge--difficulty { --gauge: #c99bff; }
 
   /* ---- Sticky in-page section nav (scrollspy chips) ------------------------ */
@@ -209,7 +210,10 @@
     min-height: 4.25rem;
     padding: 0.85rem 1.15rem;
     border: 1px solid color-mix(in srgb, var(--color-gold) 30%, transparent);
-    background: linear-gradient(180deg, rgba(15, 27, 45, 0.7), rgba(9, 16, 22, 0.85));
+    background:
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--color-panel) 70%, transparent),
+        color-mix(in srgb, var(--color-abyss) 85%, transparent));
     transition: border-color 0.3s var(--ease-hextech), transform 0.3s var(--ease-hextech);
   }
   .pager__link:hover,
@@ -240,7 +244,7 @@
     min-height: 4.25rem;
     border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
     color: var(--color-gold);
-    background: rgba(1, 10, 19, 0.6);
+    background: color-mix(in srgb, var(--color-hextech-black) 60%, transparent);
     transition: border-color 0.3s var(--ease-hextech), color 0.3s var(--ease-hextech),
       box-shadow 0.3s var(--ease-hextech);
   }

@@ -30,7 +30,7 @@
     border: 1px solid color-mix(in srgb, var(--color-gold) 60%, transparent);
     background: color-mix(in srgb, var(--color-void) 70%, transparent);
     box-shadow:
-      0 12px 30px -12px rgba(0, 0, 0, 0.85),
+      0 12px 30px -12px color-mix(in srgb, var(--color-shadow) 85%, transparent),
       0 0 22px -6px color-mix(in srgb, var(--color-hex) 55%, transparent);
   }
   .profile-orb__disc picture,
@@ -45,7 +45,7 @@
   .profile-orb--primary .profile-orb__disc {
     border-color: var(--color-gold);
     box-shadow:
-      0 16px 40px -14px rgba(0, 0, 0, 0.9),
+      0 16px 40px -14px color-mix(in srgb, var(--color-shadow) 90%, transparent),
       0 0 30px -6px color-mix(in srgb, var(--color-gold) 55%, transparent);
   }
   /* Scatter positions — kept clear of the centered name/meta block. */

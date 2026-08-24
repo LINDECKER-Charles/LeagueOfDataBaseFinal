@@ -46,9 +46,12 @@
 /* Full-bleed splash hero scrim — lifts white display type off cinematic art. */
 @utility splash-scrim {
   background:
-    linear-gradient(180deg, rgba(1, 10, 19, 0.15) 0%, rgba(1, 10, 19, 0.55) 55%,
-      rgba(10, 20, 40, 0.97) 100%),
-    linear-gradient(90deg, rgba(1, 10, 19, 0.75) 0%, transparent 45%);
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-hextech-black) 15%, transparent) 0%,
+      color-mix(in srgb, var(--color-hextech-black) 55%, transparent) 55%,
+      color-mix(in srgb, var(--color-void) 97%, transparent) 100%),
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--color-hextech-black) 75%, transparent) 0%, transparent 45%);
 }
 
 /* Skin card corner badge — server-rendered marker that a skin has chromas

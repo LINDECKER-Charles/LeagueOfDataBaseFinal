@@ -21,7 +21,7 @@
     {# HERO #}
     <section class="text-center">
       <div class="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1">
-        <span aria-hidden="true" class="text-gold">◆</span>
+        <span aria-hidden="true" class="hx-pip text-gold">◆</span>
         <span class="eyebrow">Patch</span>
         <span class="font-mono text-xs tracking-wide text-hex-bright">{{ selection.version }}</span>
         <span aria-hidden="true" class="text-gold-deep">·</span>
@@ -113,7 +113,8 @@
         link: 'homepage.champions.see_all'|trans,
         count: counts.champions
       } %}
-      {% set overlayBox = 'absolute bottom-2 left-2 h-10 w-10 border border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]' %}
+      {% set overlayBox = 'absolute bottom-2 left-2 h-10 w-10 border border-gold/60 bg-void'
+        ~ ' shadow-[0_2px_10px_var(--hx-shadow-soft)]' %}
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4" data-img-scope="champion"
            data-img-version="{{ selection.version }}" data-img-batch="{{ image_status_batch() }}">
         {% include 'components/ui/resource_image_template.html.twig' with {

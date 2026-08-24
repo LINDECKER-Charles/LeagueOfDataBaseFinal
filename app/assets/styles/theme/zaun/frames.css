@@ -1,0 +1,129 @@
+/* ---------------------------------------------------------------------------
+   ZAUN — frames, surfaces, controls. THE SIGNATURE.
+
+   Zaun's buildings are "crafted from lattice ironwork, colored glass, and
+   chem-lights", so every panel in the app is built from those three things and
+   nothing else: an iron line that sweeps at two corners and stays cut at the
+   other two, a pane of tinted glass catching a raking light, and a chem glow
+   that only appears on interaction.
+
+   This is where the theme's boldness is spent, deliberately: the app is a
+   catalogue of ~700 cards, so restyling the card IS restyling the app. It costs
+   no extra DOM and no extra request — the whole plate is border-radius, two
+   gradients and a box-shadow, so it stays cheap at 700 instances.
+
+   The ornament budget is spent elsewhere (zaun-ornament.css) and stays OFF the
+   cards: a flourish repeated 700 times is wallpaper, not ornament.
+--------------------------------------------------------------------------- */
+
+/* ---- The plate ---------------------------------------------------------- */
+[data-theme="zaun"] .hextech-frame {
+  border-radius: var(--hx-iron-radius);
+  border-color: color-mix(in srgb, var(--color-gold-deep) 62%, transparent);
+  background:
+    /* colored glass: light rakes across the pane from the upper left */
+    linear-gradient(152deg,
+      color-mix(in srgb, var(--color-gold-bright) 6%, transparent) 0%,
+      transparent 36%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel-2) 94%, transparent),
+      color-mix(in srgb, var(--color-void) 97%, transparent));
+  box-shadow:
+    /* the came — the leaded lip a glass pane catches light on */
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold) 20%, transparent),
+    0 14px 40px -18px var(--color-shadow);
+}
+
+/* Chem-light only on contact. The default identity blooms outward on hover;
+   here the glow stays INSIDE the pane, because a bloom on every card of a
+   700-item grid is how a theme slides into generic cyberpunk. */
+[data-theme="zaun"] .hextech-frame-hover:hover {
+  border-color: color-mix(in srgb, var(--color-gold) 72%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold) 34%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--color-hex-deep) 26%, transparent),
+    inset 0 -28px 34px -30px var(--color-gold),
+    0 14px 40px -18px var(--color-shadow);
+}
+
+/* ---- Every other clipped surface follows the same grammar ---------------- */
+[data-theme="zaun"] .hx-plate {
+  border-radius: var(--hx-iron-radius-sm);
+  border-color: color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+  background:
+    linear-gradient(152deg,
+      color-mix(in srgb, var(--color-gold-bright) 4%, transparent) 0%,
+      transparent 40%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel) 88%, transparent),
+      color-mix(in srgb, var(--color-abyss) 94%, transparent));
+}
+
+[data-theme="zaun"] .switcher > summary,
+[data-theme="zaun"] .switcher__panel,
+[data-theme="zaun"] .theme-trigger,
+[data-theme="zaun"] .list-count,
+[data-theme="zaun"] .stat-cell,
+[data-theme="zaun"] .section-nav a {
+  border-radius: var(--hx-iron-radius-btn);
+}
+[data-theme="zaun"] .hx-chip,
+[data-theme="zaun"] .hx-chip-hex,
+[data-theme="zaun"] .edition-badge {
+  border-radius: var(--hx-iron-radius-chip);
+}
+[data-theme="zaun"] .switcher--nav > summary {
+  border-radius: 0;
+}
+
+/* ---- Controls — switch plates on a machine ------------------------------ */
+[data-theme="zaun"] .hx-btn,
+[data-theme="zaun"] .hx-btn-ghost,
+[data-theme="zaun"] .hx-btn-gold,
+[data-theme="zaun"] .hx-input,
+[data-theme="zaun"] .hx-select {
+  border-radius: var(--hx-iron-radius-btn);
+}
+[data-theme="zaun"] .hx-btn-gold {
+  /* clip-path released with the bevel token; the curve now lives on the border */
+  clip-path: none;
+}
+[data-theme="zaun"] .hx-check {
+  border-radius: 3px;
+}
+
+/* Inputs read as recessed wells rather than raised plates: the light that
+   rakes ACROSS a pane falls INTO a socket. */
+[data-theme="zaun"] .hx-input,
+[data-theme="zaun"] .hx-select {
+  background-color: color-mix(in srgb, var(--color-sink) 82%, transparent);
+  box-shadow: inset 0 2px 5px -3px var(--color-shadow);
+}
+
+/* ---- The remaining surfaces that read the bevel token directly ------------
+   Releasing --hx-bevel to `none` un-chamfers these on its own, so each one has
+   to be handed the sweep explicitly or it would simply go square. This list is
+   exhaustive: `grep 'hx-bevel' assets/styles` returns these plus the two
+   already restated above. */
+[data-theme="zaun"] .filter-console,
+[data-theme="zaun"] .filter-empty {
+  border-radius: var(--hx-iron-radius);
+}
+[data-theme="zaun"] .visibility-card,
+[data-theme="zaun"] .socket--empty,
+[data-theme="zaun"] .socket--unavailable,
+[data-theme="zaun"] .skin-socket--empty {
+  border-radius: var(--hx-iron-radius-sm);
+}
+
+/* The filter rail's own glass, matched to the plate so the console and the
+   cards it filters read as the same material. */
+[data-theme="zaun"] .filter-console {
+  background:
+    linear-gradient(152deg,
+      color-mix(in srgb, var(--color-gold-bright) 5%, transparent) 0%,
+      transparent 30%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel-raised) 94%, transparent),
+      color-mix(in srgb, var(--color-void) 97%, transparent));
+}

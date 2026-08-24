@@ -15,7 +15,11 @@
  *    private/transactional surfaces (auth, profile, builds, donation, Stripe
  *    webhooks), and the ability-video CDN (range streaming).
  */
-const VERSION = 'lodb-v2';
+// v3: pages cached before the theme feature carry no data-theme on <html> and a
+// fixed theme-color meta. The cache keys pages by URL and Symfony emits no
+// Vary: Cookie (adding one would wreck the offline cache for a session id), so
+// those stale pages would keep rendering the default identity until revalidated.
+const VERSION = 'lodb-v3';
 const PAGES = `${VERSION}-pages`;
 const ASSETS = `${VERSION}-assets`;
 const BLOBS = `${VERSION}-blobs`;

@@ -6,7 +6,9 @@
   /* ---- Step editor -------------------------------------------------------- */
   .forge-step {
     border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
-    background: linear-gradient(180deg, rgba(15, 27, 45, 0.85), rgba(9, 16, 22, 0.92));
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel) 85%, transparent),
+      color-mix(in srgb, var(--color-abyss) 92%, transparent));
     padding: 1rem 1.15rem;
     transition: opacity 0.2s var(--ease-hextech), box-shadow 0.2s var(--ease-hextech);
   }
@@ -35,7 +37,7 @@
   /* The grabbed element lifts slightly; the list keeps its footprint. */
   .forge-dragging {
     opacity: 0.5;
-    box-shadow: 0 10px 24px -10px rgba(1, 10, 19, 0.9);
+    box-shadow: 0 10px 24px -10px color-mix(in srgb, var(--color-hextech-black) 90%, transparent);
     transform: scale(0.985);
   }
   /* Hextech drop indicators: dashed rich-gold slot (items) / seam (steps). */

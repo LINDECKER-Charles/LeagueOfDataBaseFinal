@@ -10,7 +10,8 @@
     place-items: center;
     padding: 1.5rem;
     background: radial-gradient(130% 120% at 50% 28%,
-        rgba(10, 20, 40, 0.72), rgba(1, 10, 19, 0.94));
+        color-mix(in srgb, var(--color-void) 72%, transparent),
+        color-mix(in srgb, var(--color-hextech-black) 94%, transparent));
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     /* Visibility is a deterministic class toggle (no <Transition> leave to await). */
@@ -77,8 +78,8 @@
     height: 1.85rem;
     flex: none;
     color: var(--color-gold);
-    border: 1px solid rgba(120, 90, 40, 0.5);
-    background: rgba(10, 20, 40, 0.6);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+    background: color-mix(in srgb, var(--color-void) 60%, transparent);
 }
 .hx-row__icon svg {
     width: 1.05rem;
@@ -104,7 +105,7 @@
     align-self: flex-end;
     height: 1px;
     margin: 0 0.35rem 0.4rem;
-    border-bottom: 1px dotted rgba(120, 90, 40, 0.5);
+    border-bottom: 1px dotted color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
 }
 .hx-row__status {
     display: inline-flex;
@@ -137,8 +138,8 @@
     margin: 0 0 1.2rem;
     padding: 0.7rem 0.9rem;
     text-align: left;
-    border: 1px solid rgba(120, 90, 40, 0.28);
-    background: rgba(4, 12, 24, 0.55);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 28%, transparent);
+    background: color-mix(in srgb, var(--color-sink) 55%, transparent);
 }
 .hx-now__dot {
     width: 0.5rem;
@@ -181,15 +182,15 @@
     position: relative;
     height: 4px;
     overflow: hidden;
-    background: rgba(120, 90, 40, 0.18);
-    border: 1px solid rgba(120, 90, 40, 0.35);
+    background: color-mix(in srgb, var(--color-gold-deep) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 35%, transparent);
 }
 .hx-bar__fill {
     display: block;
     height: 100%;
     width: 0;
     background: linear-gradient(90deg, var(--color-gold), var(--color-hex-bright));
-    box-shadow: 0 0 10px -1px rgba(10, 200, 185, 0.7);
+    box-shadow: 0 0 10px -1px color-mix(in srgb, var(--color-hex) 70%, transparent);
     transition: width 0.35s var(--ease-hextech);
 }
 /* Before the total is known (dataset phase) sweep an indeterminate shimmer. */
@@ -210,9 +211,10 @@
 
 /* ---- Keyframes ---- */
 @keyframes hx-row-pulse {
-    0%, 100% { border-color: rgba(120, 90, 40, 0.5); color: var(--color-gold); box-shadow: none; }
+    0%, 100% { border-color: color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+        color: var(--color-gold); box-shadow: none; }
     50% { border-color: var(--color-hex); color: var(--color-hex-bright);
-        box-shadow: 0 0 14px -2px rgba(10, 200, 185, 0.6); }
+        box-shadow: 0 0 14px -2px color-mix(in srgb, var(--color-hex) 60%, transparent); }
 }
 @keyframes hx-bar-slide {
     0% { transform: translateX(-120%); }

@@ -7,10 +7,12 @@
     max-height: 88vh;
     padding: 0;
     border: 1px solid var(--color-gold-deep);
-    background: linear-gradient(180deg, rgba(15, 27, 45, 0.98), rgba(9, 16, 22, 0.99));
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel) 98%, transparent),
+      color-mix(in srgb, var(--color-abyss) 99%, transparent));
     color: var(--color-text);
     overflow: hidden;
-    box-shadow: 0 24px 60px -20px rgba(1, 10, 19, 0.9);
+    box-shadow: 0 24px 60px -20px color-mix(in srgb, var(--color-hextech-black) 90%, transparent);
   }
   /* Native <dialog> is display:none until [open]; flip to a flex column then so
      the header/tools/footer pin and only the body scrolls. */
@@ -20,7 +22,7 @@
     animation: armory-pop 0.18s var(--ease-hextech, ease);
   }
   .armory::backdrop {
-    background: rgba(4, 12, 24, 0.72);
+    background: color-mix(in srgb, var(--color-sink) 72%, transparent);
     backdrop-filter: blur(2px);
   }
   .armory__head {
@@ -50,7 +52,7 @@
     height: 2.2rem;
     color: var(--color-gold);
     border: 1px solid var(--color-gold-deep);
-    background: rgba(4, 12, 24, 0.6);
+    background: color-mix(in srgb, var(--color-sink) 60%, transparent);
     transition: color 0.2s ease, border-color 0.2s ease;
   }
   .armory__close:hover { color: var(--color-gold-bright); border-color: var(--color-gold); }
@@ -184,7 +186,7 @@
     gap: 1rem;
     padding: 0.85rem 1.25rem;
     border-top: 1px solid color-mix(in srgb, var(--color-gold) 18%, transparent);
-    background: rgba(9, 16, 22, 0.6);
+    background: color-mix(in srgb, var(--color-abyss) 60%, transparent);
   }
   .armory__count {
     font-family: var(--font-mono);
