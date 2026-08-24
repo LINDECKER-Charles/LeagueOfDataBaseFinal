@@ -40,7 +40,11 @@
   .skin-socket__scrim {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(3, 8, 15, 0.1), rgba(3, 8, 15, 0.85));
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-ink) 10%, transparent),
+      color-mix(in srgb, var(--color-ink) 85%, transparent)
+    );
   }
   .skin-socket--empty .skin-socket__scrim { display: none; }
   .skin-socket__body {
@@ -84,7 +88,7 @@
     font-size: 0.66rem;
     color: var(--color-hex-bright);
     border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
-    background: rgba(3, 8, 15, 0.4);
+    background: color-mix(in srgb, var(--color-ink) 40%, transparent);
     transition: color 0.25s var(--ease-hextech), border-color 0.25s var(--ease-hextech);
   }
   .skin-socket:hover .skin-socket__cta,
@@ -123,7 +127,11 @@
     font-family: var(--font-mono);
     font-size: 0.65rem;
     color: var(--color-gold-bright);
-    background: linear-gradient(180deg, transparent, rgba(3, 8, 15, 0.9));
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--color-ink) 90%, transparent)
+    );
   }
   .skin-tile:hover,
   .skin-tile:focus-visible { outline: none; border-color: var(--color-hex); }

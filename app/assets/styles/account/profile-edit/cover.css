@@ -23,8 +23,12 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(3, 8, 15, 0.72) 0%, rgba(3, 8, 15, 0.9) 55%,
-      var(--color-void) 100%);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-ink) 72%, transparent) 0%,
+      color-mix(in srgb, var(--color-ink) 90%, transparent) 55%,
+      var(--color-void) 100%
+    );
   }
 
   /* ---- /profile cover header (name + discreet floating favorites) --------- */

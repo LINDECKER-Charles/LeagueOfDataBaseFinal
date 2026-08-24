@@ -14,8 +14,8 @@
   or currentRoute starts with 'app_rune' or currentRoute starts with 'app_summoner' %}
 
 <header class="relative z-30 border-b border-gold-deep/40 bg-hextech-black/95 backdrop-blur">
-  <div class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r
-              from-transparent via-gold/60 to-transparent"></div>
+  <div class="header-seam pointer-events-none absolute inset-x-0 bottom-0 h-px
+              bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
 
   <div class="mx-auto flex h-16 max-w-[110rem] items-center justify-between gap-2
               px-4 sm:gap-4 sm:px-6">
@@ -134,6 +134,12 @@
           {% endif %}
         </div>
       </details>
+
+      {# Visual identity. Sits with the patch/language switcher rather than with
+         donate/account: it is a display preference, not an action. One trigger
+         at every viewport now that the options live in a dialog — the crest
+         alone fits the bar below lg. #}
+      {% include 'components/ui/theme_picker.html.twig' only %}
 
       {# Patch & language switcher — compact chip opening the real form #}
       <details class="switcher shrink-0">

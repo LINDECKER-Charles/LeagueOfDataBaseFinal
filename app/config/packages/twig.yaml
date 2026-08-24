@@ -3,6 +3,12 @@ twig:
     # The `app_version` global (navbar, footer, /changelog) is provided by
     # App\Twig\AppVersionExtension, derived from the newest published changelog
     # entry — the changelog is the single source of truth for the release number.
+    globals:
+        # The visual identity of the current request (App\Service\Client\Theme).
+        # Registered here rather than as a Twig extension so it also reaches the
+        # TwigBundle error pages, which extend base.html.twig but render outside
+        # any controller. Templates read `app_theme.current`.
+        app_theme: '@App\Service\Client\ThemeResolver'
 
 when@test:
     twig:

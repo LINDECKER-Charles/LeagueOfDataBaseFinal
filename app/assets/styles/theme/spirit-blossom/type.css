@@ -1,0 +1,130 @@
+/* ---------------------------------------------------------------------------
+   SPIRIT BLOSSOM — typography.
+
+   Shippori Mincho is a Japanese mincho, and its Latin is drawn by the same hand
+   that drew its kana: vertical stress, fine hairlines, and serifs that end in a
+   brush's cut rather than a Roman's chisel. That is the whole argument for it.
+
+   The kitsch trap in this universe is the brush font — the faux-Japanese
+   display faces that show up on every fan poster. Riot never uses one; the
+   event's own materials stay on the standard system faces and let the MOTIFS
+   carry the culture. A mincho respects that rule exactly: the brush is in the
+   letterform's history, not in a costume laid over it.
+
+   Latin only by unicode-range, like the other identities — including for
+   Japanese, where the browser falls through to the system mincho as it already
+   does today under Beaufort. Two static weights, not a variable axis: this
+   family ships 400 and 600 as separate files.
+
+   Shippori Mincho © The Shippori Mincho Project Authors, SIL Open Font License
+   1.1 — licence in public/fonts/shippori/OFL.txt.
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Shippori Mincho';
+  src: url('/fonts/shippori/latin-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Shippori Mincho';
+  src: url('/fonts/shippori/latin-600.woff2') format('woff2');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Shippori Mincho';
+  src: url('/fonts/shippori/latin-ext-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Shippori Mincho';
+  src: url('/fonts/shippori/latin-ext-600.woff2') format('woff2');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+[data-theme="spirit-blossom"] {
+  --font-beaufort: "Shippori Mincho", "Beaufort", "Times New Roman", serif;
+}
+
+/* This is the one identity that KEEPS wide tracking, and the exception is
+   deliberate. Wide caps read as Art Deco gilding when they are set in a gilded
+   roman on navy — that is Piltover, and every other theme here resets it. Set
+   in a fine mincho on indigo the same tracking reads as breath: a ceremonial
+   inscription rather than a jewellery case. It is opened further, not closed. */
+[data-theme="spirit-blossom"] h1,
+[data-theme="spirit-blossom"] h2,
+[data-theme="spirit-blossom"] h3,
+[data-theme="spirit-blossom"] .display {
+  letter-spacing: 0.09em;
+  font-weight: 400;
+}
+[data-theme="spirit-blossom"] .hero-name {
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+/* Labels stay on the display face and open further still. Where Zaun stamps
+   its labels and Noxus carves them, this one writes them. */
+[data-theme="spirit-blossom"] .eyebrow,
+[data-theme="spirit-blossom"] .codex-header h2,
+[data-theme="spirit-blossom"] .codex-header .codex-header__title {
+  letter-spacing: 0.32em;
+  font-weight: 400;
+}
+
+[data-theme="spirit-blossom"] .hx-btn,
+[data-theme="spirit-blossom"] .hx-btn-ghost,
+[data-theme="spirit-blossom"] .hx-btn-gold {
+  letter-spacing: 0.2em;
+  font-weight: 600;
+}
+
+/* The chrome is the exception to the exception. Headings and eyebrows can
+   breathe because their width is free; the wordmark and the navigation are
+   fixed strings inside a bar that has to hold them, and this identity's face is
+   the widest of the four. Left at 0.18em the wordmark lost its last word to
+   Tailwind's truncate, and at 768px the nav pushed the page 24px wide. Still
+   airier than the other three identities set them — 0.07em against 0.03em — but
+   measured against the bar rather than against the mood. */
+/* The wordmark is the one string that must never clip at all, so it takes the
+   same reset the other three identities apply. */
+[data-theme="spirit-blossom"] .brand-title {
+  letter-spacing: 0.03em;
+}
+[data-theme="spirit-blossom"] .nav-link,
+[data-theme="spirit-blossom"] .bottom-nav span,
+[data-theme="spirit-blossom"] .switcher__panel--menu a,
+[data-theme="spirit-blossom"] .switcher__panel--menu button {
+  letter-spacing: 0.07em;
+}
+
+/* Card titles are the exception to the exception: 700 names in a grid need
+   weight to hold at 15px, and a hairline mincho at 400 would dissolve. */
+[data-theme="spirit-blossom"] .hextech-frame h3 {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* The display gradient runs cyan into sakura — the spectral ribbon, in type. */
+[data-theme="spirit-blossom"] .text-gold-grad {
+  background-image: linear-gradient(180deg, var(--color-gold-pale) 4%,
+    var(--color-gold) 48%, var(--sb-sakura) 100%);
+}

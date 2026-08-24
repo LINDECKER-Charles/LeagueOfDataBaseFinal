@@ -6,6 +6,7 @@ import { installReveal } from './reveal'
 import { installScrollspy } from './scrollspy'
 import { installSectionNav } from './sectionNav'
 import { installSwitcherAutoClose } from './switchers'
+import { installTheme } from './theme'
 
 /**
  * Composition root of the progressive page effects, all Turbo-safe: each module
@@ -19,6 +20,7 @@ export function installEnhancements(): void {
     installImageLifecycle()
     installPendingImages()
     installSwitcherAutoClose()
+    installTheme()
     installSectionNav()
     installContactDialog()
     installConfirmSubmit()
