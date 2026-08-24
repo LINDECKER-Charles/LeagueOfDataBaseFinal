@@ -216,6 +216,7 @@ header:
     summoner: "소환사 주문"
   theme:
     label: "화면 테마"
+    close: "닫기"
 
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.

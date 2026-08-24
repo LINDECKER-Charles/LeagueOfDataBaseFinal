@@ -25,3 +25,131 @@
 @media (prefers-reduced-motion: reduce) {
   .contact-dialog[open] { animation: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   Theme picker — trigger in the bar, four identities in a <dialog>.
+
+   Everything here is drawn from the CURRENT identity's tokens, so the picker
+   arrives already wearing whatever the visitor is leaving. The only fixed
+   colours are inside the option cards, where each theme's own palette has to
+   show through regardless of which one is active — those come from
+   `--sw-*` variables the themes declare unscoped (see theme/<slug>/tokens.css).
+--------------------------------------------------------------------------- */
+.theme-trigger {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
+  background: color-mix(in srgb, var(--color-hextech-black) 60%, transparent);
+  color: var(--color-gold-light);
+  cursor: pointer;
+  transition: border-color 0.25s var(--ease-hextech), color 0.25s var(--ease-hextech);
+}
+.theme-trigger:hover { border-color: var(--color-gold); color: var(--color-gold-bright); }
+.theme-trigger:focus-visible { outline: none; border-color: var(--color-hex); }
+/* Crest only, at every viewport. The name was tried alongside it and dropped:
+   "Spirit Blossom" set in a wide mincho pushed the wordmark past the bar and
+   Tailwind's truncate ate its last word. Across four identities and 21 locales
+   that is a permanent layout hazard for a label the tooltip already carries and
+   the dialog spells out one click away. */
+
+.theme-dialog {
+  width: min(46rem, calc(100vw - 2rem));
+  margin: auto;
+  padding: 1.4rem;
+  color: var(--color-text);
+  background: linear-gradient(180deg, var(--color-void), var(--color-hextech-black));
+  border: 1px solid var(--color-gold-deep);
+  box-shadow: 0 30px 90px -24px color-mix(in srgb, var(--color-shadow) 85%, transparent);
+}
+.theme-dialog::backdrop {
+  background: color-mix(in srgb, var(--color-hextech-black) 78%, transparent);
+  backdrop-filter: blur(2px);
+}
+.theme-dialog[open] { animation: contact-dialog-in 0.2s var(--ease-hextech); }
+@media (prefers-reduced-motion: reduce) {
+  .theme-dialog[open] { animation: none; }
+}
+
+.theme-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+.theme-dialog__close {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.25s var(--ease-hextech);
+}
+.theme-dialog__close:hover { color: var(--color-gold-bright); }
+.theme-dialog__close:focus-visible { outline: none; color: var(--color-hex); }
+
+.theme-dialog__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.theme-card {
+  display: grid;
+  justify-items: start;
+  gap: 0.3rem;
+  padding: 0.9rem 0.9rem 0.8rem;
+  cursor: pointer;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+  /* The card sits on the option's OWN ground, so a visitor compares four
+     palettes rather than four labels. */
+  background: var(--sw-ground);
+  transition:
+    border-color 0.25s var(--ease-hextech),
+    box-shadow 0.25s var(--ease-hextech);
+}
+.theme-card:hover { border-color: color-mix(in srgb, var(--sw-a) 70%, transparent); }
+.theme-card:focus-visible { outline: none; border-color: var(--sw-a); }
+.theme-card[aria-pressed="true"] {
+  border-color: var(--sw-a);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sw-a) 45%, transparent);
+}
+.theme-card__crest { color: var(--sw-a); }
+.theme-card__name {
+  font-family: var(--font-beaufort);
+  font-size: 0.95rem;
+  color: var(--sw-text);
+}
+.theme-card__origin {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: color-mix(in srgb, var(--sw-text) 55%, transparent);
+}
+.theme-card__palette {
+  display: flex;
+  gap: 3px;
+  margin-top: 0.45rem;
+}
+.theme-card__palette i {
+  width: 1.15rem;
+  height: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--sw-text) 18%, transparent);
+}
+
+/* Hextech has no theme folder — it IS foundation/tokens.css — so its swatch is
+   declared here, next to the picker that needs it. */
+.theme-swatch--hextech {
+  --sw-ground: #0a1428;
+  --sw-a: #c8aa6e;
+  --sw-b: #0ac8b9;
+  --sw-c: #785a28;
+  --sw-text: #f0e6d2;
+}

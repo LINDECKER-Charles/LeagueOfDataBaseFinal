@@ -1,0 +1,123 @@
+/* ---------------------------------------------------------------------------
+   SPIRIT BLOSSOM — paper, wisp and ribbon.
+
+   Two findings shaped this palette, and both cut against the obvious reading.
+
+   First: the universe is not purple, it is INDIGO. Quantised across 32 official
+   splash arts, the single most frequent colour is #1E1E36 (1.89% of all pixels)
+   and the dark clusters sit at H240 — a blue-violet ground, not a lilac one.
+   Purple is what glows on top of it.
+
+   Second: 57% of the saturated pixels fall inside H225-270. Left alone, that
+   monochromy collapses an interface — link, active, selected and error all melt
+   into the same haze. The separation here is carried by LUMINOSITY, not hue:
+   the accent is a pale wisp-cyan at 12.6:1, the secondary a lightened akana
+   violet, and the error is the one value in the palette allowed to be warm.
+
+   That error colour is honest about itself: the universe supplies no red. Its
+   warm band tops out at broken tones under 3.7:1, all unusable as a signal. A
+   spectral rose was derived instead. Legibility beat canon, and it is the only
+   place in this file where it did.
+
+   Accessibility floor, measured on --color-void #12121e:
+     text 15.4:1 · text-muted 9.6:1 · text-dim 5.1:1 · gold 12.6:1 · hex 7.3:1
+   Never carries text: --color-hex-deep, the canonical akana violet (2.8:1).
+--------------------------------------------------------------------------- */
+[data-theme="spirit-blossom"] {
+  /* --- Surfaces — sumi ink through spirit indigo. The steps here are wide
+     (1.35 and 1.30 between levels, against Hextech's 1.06), which is what lets
+     this identity drop its borders and still read as layered. --- */
+  --color-hextech-black: #07070e;
+  --color-void: #12121e;
+  --color-abyss: #0c0c16;
+  --color-panel: #1e1e36;
+  --color-panel-2: #2a2a4e;
+  --color-panel-raised: #33335c;
+  --color-ink: #05050b;
+  --color-sink: #16162a;
+  --color-shadow: #04040a;
+
+  /* --- Primary accent — wisp cyan, on the ramp Hextech names "gold". The only
+     colour in this universe that is both canonical AND readable untouched:
+     Ahri's spirit flame, Thresh's lantern, Kindred's ribbons. --- */
+  --color-gold: #98d8f8;
+  --color-gold-bright: #eef6ff;
+  --color-gold-light: #c6e9fc;
+  --color-gold-rich: #3fb6de;
+  --color-gold-deep: #2a6f8e;
+  /* The one warm note, kept deliberately: patinated brass on the hardware of
+     Hwei, Ashe and Yone. Gold is a FALSE FRIEND here — it appears in 4 splashes
+     out of 32 and averages 0.02% of their surface. Making it structural would
+     be importing Hextech's identity and calling it Ionia. It stays a wire. */
+  --color-gold-dark: #5a4a2e;
+  --color-gold-pale: #f6fbff;
+
+  /* --- Secondary accent — akana flame, on the ramp Hextech names "hex".
+     --color-hex holds the LIGHTENED violet because that token carries text;
+     --color-hex-deep keeps the canonical one for fills only. --- */
+  --color-hex: #b78bea;
+  --color-hex-deep: #8b5cf6;
+  --color-hex-bright: #eedcfa;
+  --color-blue-steel: #424272;
+  --color-blue-abyssal: #36365a;
+
+  /* --- Feedback — derived, not canonical. Stated plainly above. --- */
+  --color-danger: #ff6b7a;
+  --color-danger-light: #ff9aa4;
+  --color-danger-strong: #c93a52;
+
+  /* --- Text — the white of this world tilts lilac; a pure #fff rings false --- */
+  --color-text: #e8e6f5;
+  --color-text-muted: #b9b5d6;
+  --color-text-dim: #9c98bd;
+
+  /* --- Legacy aliases --- */
+  --color-test-500: #98d8f8;
+  --color-black: #07070e;
+  --color-blue-200: #b78bea;
+  --color-blue-850: #2a2a4e;
+  --color-blue-950: #12121e;
+  --color-white: #e8e6f5;
+  --color-grey: #1a1a2c;
+  --color-grey-700: #424272;
+
+  /* --- Pre-composed glows --- */
+  --hx-glow-accent: rgba(152, 216, 248, 0.42);
+  --hx-glow-accent-strong: rgba(152, 216, 248, 0.55);
+  --hx-shadow-soft: rgba(4, 4, 10, 0.7);
+  --hx-shadow-hard: rgba(4, 4, 10, 0.88);
+  --hx-ring-accent-2: rgba(183, 139, 234, 0.18);
+
+  /* --- Sakura. Not a system token: nothing in the contract needs a third
+     accent, and forcing one into a token slot would have meant taking it from
+     danger or from the secondary. It lives here as a theme-local, used only on
+     the ribbon and the ambient bloom (see ornament.css). --- */
+  --sb-sakura: #e87bb4;
+
+  /* --- Shape — the votive tablet.
+     Piltover cuts its corners, Zaun bends two of them, Noxus leaves them square
+     and marks an edge. This identity arches: a wide radius on the two TOP
+     corners and almost none at the foot, the silhouette of an ema hung at a
+     shrine, or of a paper lantern. It is the only shape in the set that has an
+     up and a down, which suits the one identity built on light. --- */
+  --hx-bevel: none;
+  --hx-bevel-sm: none;
+  --hx-bevel-btn: none;
+  --sb-arch: 16px 16px 4px 4px;
+  --sb-arch-sm: 12px 12px 3px 3px;
+  --sb-arch-btn: 10px 10px 3px 3px;
+
+  /* --- Motion — drift. The canon register is 400-700ms and floating, which
+     would be unusable on a 700-card grid; this is the compromise: a long, soft
+     deceleration with no bounce, kept to the chrome. --- */
+  --ease-hextech: cubic-bezier(0.16, 0.8, 0.24, 1);
+}
+
+/* Palette preview for the theme picker — unscoped, see noxus/tokens.css. */
+.theme-swatch--spirit-blossom {
+  --sw-ground: #12121e;
+  --sw-a: #98d8f8;
+  --sw-b: #b78bea;
+  --sw-c: #e87bb4;
+  --sw-text: #e8e6f5;
+}

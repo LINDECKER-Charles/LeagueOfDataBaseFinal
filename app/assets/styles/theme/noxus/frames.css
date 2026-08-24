@@ -1,0 +1,97 @@
+/* ---------------------------------------------------------------------------
+   NOXUS — frames. THE SIGNATURE: the hoist bar.
+
+   Every other identity in this system says who it is at the CORNERS. Piltover
+   chamfers them into a gem facet, Zaun bends two of them into wrought iron.
+   Noxus leaves them alone — its corners are square and stay square — and puts
+   its mark on an EDGE instead: a crimson bar down the left side of every plate,
+   the binding a banner hangs from.
+
+   That is the whole anatomy, and it is deliberate. An empire does not shape
+   what it takes; it stamps it. Moving the identity from the corner to the
+   border also means the mark reads at a glance in a grid of 700 cards — a
+   vertical crimson stripe repeated down a column is legible where a 3px corner
+   detail is not.
+
+   Cost: one border-left and one inset shadow. No extra DOM, nothing to
+   rasterise, and crimson still covers only a few percent of the screen.
+--------------------------------------------------------------------------- */
+
+/* ---- The plate ---------------------------------------------------------- */
+[data-theme="noxus"] .hextech-frame {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-blue-steel) 70%, transparent);
+  border-left: 3px solid var(--color-hex-deep);
+  background:
+    /* hammered steel: a flat sheet lit from straight above, not raked */
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel-2) 96%, transparent),
+      color-mix(in srgb, var(--color-panel) 98%, transparent));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold) 14%, transparent),
+    0 10px 30px -16px var(--color-shadow);
+}
+
+/* Contact tightens the binding rather than lighting the plate. Nothing glows
+   in Noxus: the empire does not advertise, it asserts. */
+[data-theme="noxus"] .hextech-frame-hover:hover {
+  border-color: color-mix(in srgb, var(--color-gold) 55%, transparent);
+  border-left-color: var(--color-hex);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold) 30%, transparent),
+    inset 3px 0 14px -8px var(--color-hex-deep),
+    0 10px 30px -16px var(--color-shadow);
+}
+
+/* ---- Secondary surfaces — the same bar, quieter --------------------------- */
+[data-theme="noxus"] .hx-plate,
+[data-theme="noxus"] .filter-console {
+  border-radius: 0;
+  border-left: 2px solid color-mix(in srgb, var(--color-hex-deep) 80%, transparent);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--color-panel) 92%, transparent),
+    color-mix(in srgb, var(--color-abyss) 96%, transparent));
+}
+
+/* ---- Everything the bevel token used to shape ---------------------------- */
+/* Releasing --hx-bevel to `none` already squares these; the declarations below
+   only strip the softness the other identities add, so a theme switch from Zaun
+   leaves nothing rounded behind. */
+[data-theme="noxus"] .filter-empty,
+[data-theme="noxus"] .visibility-card,
+[data-theme="noxus"] .socket--empty,
+[data-theme="noxus"] .socket--unavailable,
+[data-theme="noxus"] .skin-socket--empty,
+[data-theme="noxus"] .switcher > summary,
+[data-theme="noxus"] .switcher__panel,
+[data-theme="noxus"] .theme-trigger,
+[data-theme="noxus"] .list-count,
+[data-theme="noxus"] .stat-cell,
+[data-theme="noxus"] .section-nav a,
+[data-theme="noxus"] .hx-chip,
+[data-theme="noxus"] .hx-chip-hex,
+[data-theme="noxus"] .hx-btn,
+[data-theme="noxus"] .hx-btn-ghost,
+[data-theme="noxus"] .hx-btn-gold,
+[data-theme="noxus"] .hx-input,
+[data-theme="noxus"] .hx-select,
+[data-theme="noxus"] .hx-check {
+  border-radius: 0;
+}
+[data-theme="noxus"] .hx-btn-gold {
+  clip-path: none;
+}
+
+/* The active section chip is marked the way the plates are: from the edge. */
+[data-theme="noxus"] .section-nav a[aria-current] {
+  border-color: transparent;
+  border-bottom: 2px solid var(--color-hex-deep);
+  background: color-mix(in srgb, var(--color-hex-deep) 12%, transparent);
+}
+
+/* Fields are cut into the steel, not laid on it. */
+[data-theme="noxus"] .hx-input,
+[data-theme="noxus"] .hx-select {
+  background-color: color-mix(in srgb, var(--color-sink) 88%, transparent);
+  box-shadow: inset 0 2px 4px -2px var(--color-shadow);
+}

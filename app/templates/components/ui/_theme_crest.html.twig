@@ -1,16 +1,37 @@
-{# Identity crests for the theme toggle. Two marks, one idea: Piltover thinks in
-   arcane geometry (the hex and its gem facet), Zaun thinks in hardware (a valve
-   wheel on a pipe). Both are drawn on the header's icon grammar — 24px box,
-   currentColor stroke, 1.6 width — so they sit with the donate and account
-   glyphs instead of next to them. Params: theme ('hextech' | 'zaun'). #}
+{# Identity crests. Four marks, one idea each — how the city thinks:
+
+     hextech         the hex crystal and its gem facet, drawn with a compass
+     zaun            a valve wheel: rim, axle, four spokes stopping at the rim
+     noxus           the crest's downward blade between two rising barbs
+     spirit-blossom  a five-petal blossom around a lit core
+
+   All on the header's icon grammar — 24px box, currentColor stroke, 1.6 width —
+   so they sit with the donate and account glyphs instead of next to them.
+   Params: theme (a Theme value), class. #}
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+     class="{{ class|default('h-4 w-4') }}">
   {% if theme == 'zaun' %}
-    {# Valve wheel: rim, axle, and four spokes that stop AT the rim. Spokes
-       crossing outside would read as a crosshair rather than as hardware. #}
+    {# Spokes crossing outside the rim would read as a crosshair, not hardware. #}
     <circle cx="12" cy="12" r="7.4"/>
     <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
     <path d="M12 4.6v5.6M12 13.8v5.6M4.6 12h5.6M13.8 12h5.6"/>
+  {% elseif theme == 'noxus' %}
+    {# The central blade is filled: an outline at 20px reads as a trident, and a
+       solid one reads as a weapon, which is the difference that matters. #}
+    <path d="M12 4.2 14.4 13 12 20.4 9.6 13Z" fill="currentColor" stroke-width="1.2"/>
+    <path d="M4.6 5c0 5.6 1.6 9 4.6 10.6"/>
+    <path d="M19.4 5c0 5.6-1.6 9-4.6 10.6"/>
+  {% elseif theme == 'spirit-blossom' %}
+    {# Petals as one repeated teardrop rather than five bespoke curves: at 20px
+       the silhouette is all that survives, and a regular one reads as a blossom
+       where an irregular one reads as a smudge. #}
+    <g stroke-width="1.35">
+      <path d="M12 12.2 9.2 8.5a3.5 3.5 0 1 1 5.6 0Z"/>
+      <path d="M12 12.2 16.4 10.9a3.5 3.5 0 1 1-1.7 5.3Z"/>
+      <path d="M12 12.2 7.6 10.9a3.5 3.5 0 1 0 1.7 5.3Z"/>
+    </g>
+    <circle cx="12" cy="12.2" r="1.5" fill="currentColor" stroke="none"/>
   {% else %}
     <path d="M12 2.6 20.1 7.3v9.4L12 21.4 3.9 16.7V7.3z"/>
     <path d="M12 8.1 15.4 12 12 15.9 8.6 12z" stroke-width="1.3"/>

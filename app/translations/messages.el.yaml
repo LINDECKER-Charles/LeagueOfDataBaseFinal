@@ -216,6 +216,7 @@ header:
     summoner: "Ξόρκια Επικαλεστή"
   theme:
     label: "Οπτικό θέμα"
+    close: "Κλείσιμο"
 
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.

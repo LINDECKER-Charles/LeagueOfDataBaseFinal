@@ -15,11 +15,11 @@
    Self-hosted, like every other face here: the CSP ships `font-src 'self'`, so
    a CDN link would simply be refused. Grenze © 2019 The Grenze Project Authors,
    SIL Open Font License 1.1 — the licence travels with the files in
-   public/fonts/Grenze-OFL.txt.
+   public/fonts/grenze/OFL.txt.
 --------------------------------------------------------------------------- */
 @font-face {
   font-family: 'Grenze';
-  src: url('/fonts/Grenze-latin.woff2') format('woff2');
+  src: url('/fonts/grenze/latin.woff2') format('woff2');
   font-weight: 200 900;
   font-style: normal;
   font-display: swap;
@@ -29,7 +29,7 @@
 }
 @font-face {
   font-family: 'Grenze';
-  src: url('/fonts/Grenze-latin-ext.woff2') format('woff2');
+  src: url('/fonts/grenze/latin-ext.woff2') format('woff2');
   font-weight: 200 900;
   font-style: normal;
   font-display: swap;
@@ -39,7 +39,7 @@
 }
 @font-face {
   font-family: 'Grenze';
-  src: url('/fonts/Grenze-vietnamese.woff2') format('woff2');
+  src: url('/fonts/grenze/vietnamese.woff2') format('woff2');
   font-weight: 200 900;
   font-style: normal;
   font-display: swap;

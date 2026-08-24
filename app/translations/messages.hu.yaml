@@ -216,6 +216,7 @@ header:
     summoner: "Idéző varázslatok"
   theme:
     label: "Vizuális téma"
+    close: "Bezárás"
 
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.

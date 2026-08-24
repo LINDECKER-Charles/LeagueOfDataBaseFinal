@@ -25,11 +25,14 @@ final class ThemeTest extends TestCase
     public static function cookieValues(): iterable
     {
         yield 'known default' => ['hextech', Theme::Hextech];
-        yield 'known alternate' => ['zaun', Theme::Zaun];
+        yield 'zaun' => ['zaun', Theme::Zaun];
+        yield 'noxus' => ['noxus', Theme::Noxus];
+        yield 'hyphenated slug' => ['spirit-blossom', Theme::SpiritBlossom];
         yield 'absent' => [null, Theme::Hextech];
         yield 'empty' => ['', Theme::Hextech];
-        yield 'unknown identity' => ['noxus', Theme::Hextech];
+        yield 'unknown identity' => ['demacia', Theme::Hextech];
         yield 'wrong case' => ['Zaun', Theme::Hextech];
+        yield 'underscored slug' => ['spirit_blossom', Theme::Hextech];
         yield 'injection attempt' => ['zaun"] body {display:none}', Theme::Hextech];
     }
 
@@ -63,6 +66,31 @@ final class ThemeTest extends TestCase
 
         self::assertSame($labels, array_unique($labels));
         self::assertNotContains('', $labels);
+    }
+
+    public function testEveryIdentityNamesWhereItComesFrom(): void
+    {
+        foreach (Theme::cases() as $theme) {
+            self::assertNotSame('', $theme->origin(), $theme->value);
+        }
+    }
+
+    /**
+     * The preload in base.html.twig is driven by this, so a slug that does not
+     * resolve to a real file would emit a 404 preload on every page of a theme.
+     */
+    public function testAlternateIdentitiesPreloadAnExistingDisplayFace(): void
+    {
+        self::assertNull(Theme::Hextech->displayFontUrl());
+
+        foreach (Theme::cases() as $theme) {
+            if ($theme === Theme::Hextech) {
+                continue;
+            }
+            $url = $theme->displayFontUrl();
+            self::assertNotNull($url, $theme->value);
+            self::assertFileExists(\dirname(__DIR__, 4) . '/public' . $url);
+        }
     }
 
     public function testResolverReadsTheCookieOfTheCurrentRequest(): void

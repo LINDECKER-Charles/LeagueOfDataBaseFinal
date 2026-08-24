@@ -1,0 +1,111 @@
+/* ---------------------------------------------------------------------------
+   NOXUS — the empire's plate.
+
+   The one thing to know before reading a value below: NOXUS IS NOT RED. The
+   official faction film and the region splash contain almost no red at all —
+   they are desaturated olives, khakis and slate (#283838, #C8C0A0, #586058).
+   Crimson is what the empire APPLIES: the banner, the drape, the seal, the
+   blood. A theme that floods the screen with it betrays the canon while
+   believing it serves it, and lands squarely in the black-and-blood-red
+   "gaming template" that this palette has to stay out of.
+
+   So crimson never becomes a surface here. It is a MARK — an applied edge, an
+   active indicator, a seal — and it covers a few percent of the screen. The
+   ground is hammered steel, and the readable accent is antique brass.
+
+   That brass is deliberately pushed browner than the canonical Noxian gold
+   (#c8a96a). Sampled honestly, that value sits one point away from Hextech's
+   own gold (#c8aa6e) — keeping it would have made the two identities look
+   alike where it matters most, on every hairline and every link.
+
+   Accessibility floor, measured on --color-void #0f1214:
+     text 14.9:1 · text-muted 7.4:1 · text-dim 5.4:1 · gold 7.3:1 · hex 6.4:1
+   Never carries text: --color-hex-deep, the Noxian crimson itself (3.1:1). It
+   fills, it borders, it marks — it does not speak.
+--------------------------------------------------------------------------- */
+[data-theme="noxus"] {
+  /* --- Surfaces — hammered steel under a grey sky, never neutral black --- */
+  --color-hextech-black: #08090b;
+  --color-void: #0f1214;
+  --color-abyss: #0a0c0d;
+  --color-panel: #161a1d;
+  --color-panel-2: #1e2427;
+  --color-panel-raised: #252c30;
+  --color-ink: #050607;
+  --color-sink: #0c0f11;
+  --color-shadow: #000000;
+
+  /* --- Primary accent — antique brass, on the ramp Hextech names "gold".
+     The only channel in this palette that both reads and belongs. --- */
+  --color-gold: #b8925a;
+  --color-gold-bright: #e9e3d7;
+  --color-gold-light: #d4b483;
+  --color-gold-rich: #9c7440;
+  --color-gold-deep: #5c4526;
+  --color-gold-dark: #3a2c18;
+  --color-gold-pale: #f4efe4;
+
+  /* --- Secondary accent — the applied crimson, on the ramp Hextech names
+     "hex". --color-hex holds a LIGHTENED rose because that token carries text
+     (links, hover, focus, field borders); --color-hex-deep keeps the true
+     Noxian crimson for fills and marks only. --- */
+  --color-hex: #e8697a;
+  --color-hex-deep: #c0203a;
+  --color-hex-bright: #f7d8dc;
+  --color-blue-steel: #3a4448;
+  --color-blue-abyssal: #4a1220;
+
+  /* --- Feedback — deliberately shifted OFF the brand crimson. When the
+     empire's own colour is already crimson, an error in the same hue reads as
+     branding rather than as a warning. Scarlet is hotter and lighter. --- */
+  --color-danger: #ff6b5e;
+  --color-danger-light: #ff9186;
+  --color-danger-strong: #8e1a12;
+
+  /* --- Text — bone on steel --- */
+  --color-text: #e9e3d7;
+  --color-text-muted: #9aa0a0;
+  --color-text-dim: #83898a;
+
+  /* --- Legacy aliases --- */
+  --color-test-500: #b8925a;
+  --color-black: #08090b;
+  --color-blue-200: #e8697a;
+  --color-blue-850: #1e2427;
+  --color-blue-950: #0f1214;
+  --color-white: #e9e3d7;
+  --color-grey: #1a1e21;
+  --color-grey-700: #3a4448;
+
+  /* --- Pre-composed glows (read from Tailwind arbitrary values) --- */
+  --hx-glow-accent: rgba(184, 146, 90, 0.45);
+  --hx-glow-accent-strong: rgba(184, 146, 90, 0.55);
+  --hx-shadow-soft: rgba(5, 6, 7, 0.8);
+  --hx-shadow-hard: rgba(5, 6, 7, 0.94);
+  --hx-ring-accent-2: rgba(192, 32, 58, 0.18);
+
+  /* --- Shape — the corners are not the story.
+     Piltover chamfers its corners, Zaun bends them. Noxus does neither: a
+     Noxian plate is square, and what identifies it is an EDGE — the crimson
+     hoist bar a banner hangs from, applied down its left side. The anatomy
+     moves from the corner to the border, which is why this theme releases the
+     bevel to `none` and adds no radius to replace it. Nothing here is soft.
+     See frames.css for the bar itself. --- */
+  --hx-bevel: none;
+  --hx-bevel-sm: none;
+  --hx-bevel-btn: none;
+
+  /* --- Motion — the weight of something heavy being set down: slow to start,
+     then it arrives and stops. No overshoot, no spring. --- */
+  --ease-hextech: cubic-bezier(0.45, 0, 0.15, 1);
+}
+
+/* Palette preview for the theme picker. Unscoped ON PURPOSE: the swatch has to
+   show Noxus's colours while another identity is the active one. */
+.theme-swatch--noxus {
+  --sw-ground: #0f1214;
+  --sw-a: #c0203a;
+  --sw-b: #b8925a;
+  --sw-c: #3a4448;
+  --sw-text: #e9e3d7;
+}

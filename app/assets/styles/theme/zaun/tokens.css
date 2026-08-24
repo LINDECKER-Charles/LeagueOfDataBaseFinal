@@ -227,3 +227,13 @@
    keeps two legible channels apart instead of collapsing everything into
    green: chem green affirms (primary actions, success, hairlines), Shimmer
    responds (you are here, this has focus). Both clear AA on every surface. */
+
+/* Palette preview for the theme picker. Unscoped ON PURPOSE: the swatch has to
+   show Zaun's colours while another identity is the active one. */
+.theme-swatch--zaun {
+  --sw-ground: #0a100e;
+  --sw-a: #3fbf6e;
+  --sw-b: #a64fd0;
+  --sw-c: #4a3a1c;
+  --sw-text: #e3e9e2;
+}

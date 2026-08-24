@@ -61,7 +61,7 @@
 
 [data-theme="zaun"] .switcher > summary,
 [data-theme="zaun"] .switcher__panel,
-[data-theme="zaun"] .theme-toggle,
+[data-theme="zaun"] .theme-trigger,
 [data-theme="zaun"] .list-count,
 [data-theme="zaun"] .stat-cell,
 [data-theme="zaun"] .section-nav a {

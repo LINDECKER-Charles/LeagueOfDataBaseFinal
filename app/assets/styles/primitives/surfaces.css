@@ -16,9 +16,11 @@
     background: radial-gradient(closest-side,
       color-mix(in srgb, var(--color-gold) 16%, transparent), transparent 70%);
   }
-  /* The backdrop ships both weaves (partials/main/gradient); the default
-     identity paints hexagons, a theme swaps which <rect> is visible. */
-  .weave-iron { display: none; }
+  /* The backdrop ships one weave per identity (partials/main/gradient); the
+     default paints hexagons and a theme swaps which <rect> is visible. */
+  .weave-iron,
+  .weave-chevron,
+  .weave-seigaiha { display: none; }
 
   .hx-ambient-vignette {
     background: radial-gradient(120% 80% at 50% 0%, transparent 55%,

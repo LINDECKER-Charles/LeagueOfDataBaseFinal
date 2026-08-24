@@ -375,6 +375,7 @@ header:
     summoner: "Sorts d’invocateur"
   theme:
     label: "Thème visuel"
+    close: "Fermer"
   switcher:
     label: "Patch & langue"
 

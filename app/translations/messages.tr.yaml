@@ -216,6 +216,7 @@ header:
     summoner: "Çağırıcı Büyüleri"
   theme:
     label: "Görsel tema"
+    close: "Kapat"
 
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.

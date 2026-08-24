@@ -93,6 +93,14 @@
               href="/fonts/BeaufortforLOL-Regular.woff2" crossorigin>
         <link rel="preload" as="font" type="font/woff2"
               href="/fonts/BeaufortforLOL-Bold.woff2" crossorigin>
+        {# An alternate identity swaps the display face, so preload ITS latin
+           subset too — otherwise every heading flashes in Beaufort first. Only
+           the active theme's, and only when it has one: Hextech's faces are the
+           three above. #}
+        {% if app_theme.current.displayFontUrl %}
+          <link rel="preload" as="font" type="font/woff2"
+                href="{{ app_theme.current.displayFontUrl }}" crossorigin>
+        {% endif %}
 
         {% block stylesheets %}
             {{ vite_entry_link_tags('app') }}

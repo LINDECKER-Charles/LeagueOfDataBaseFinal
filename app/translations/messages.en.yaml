@@ -375,6 +375,7 @@ header:
     summoner: "Summoner Spells"
   theme:
     label: "Visual theme"
+    close: "Close"
   switcher:
     label: "Patch & language"
 

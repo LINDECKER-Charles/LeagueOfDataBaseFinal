@@ -216,6 +216,7 @@ header:
     summoner: "Phép bổ trợ"
   theme:
     label: "Giao diện hiển thị"
+    close: "Đóng"
 
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.
