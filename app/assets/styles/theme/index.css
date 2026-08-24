@@ -3,11 +3,19 @@
 
    The DEFAULT identity (Hextech / Piltover) is not here: it lives in
    foundation/tokens.css, because it is the contract every other sheet is
-   written against. A file in this folder only restates the values that move.
+   written against. A folder here only restates what moves.
 
    Imported LAST in app.css and deliberately unlayered: Tailwind emits its own
    variables into `@layer theme`, and an unlayered rule outranks any layered one
-   whatever its specificity — so a theme block wins without a specificity war,
-   and without recompiling a single utility.
+   whatever its specificity — so a theme wins without a specificity war, and
+   without recompiling a single utility.
+
+   Split by what it takes to change an identity rather than to recolour one:
+   the palette and shape tokens, then the three things Zaun is built from —
+   type, iron-and-glass frames, and pipework ornament. Import order is cascade
+   order; frames before ornament, since ornament sits on top of the plate.
 --------------------------------------------------------------------------- */
 @import "./zaun.css";
+@import "./zaun-type.css";
+@import "./zaun-frames.css";
+@import "./zaun-ornament.css";

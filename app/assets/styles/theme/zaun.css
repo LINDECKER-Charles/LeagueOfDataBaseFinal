@@ -92,32 +92,42 @@
   --hx-shadow-hard: rgba(1, 4, 3, 0.92);
   --hx-ring-accent-2: rgba(166, 79, 208, 0.16);
 
-  /* --- Shape — Piltover cuts on the diagonal (a gem facet); Zaun cuts square
-     (a plate of sheet iron, notched). Same envelope, same clip-path cost,
-     opposite grammar: the difference reads instantly across a 700-card grid
-     without adding one pixel of ornament. The 180° rotational symmetry of the
-     original is preserved, so no existing component flips. --- */
-  --hx-bevel: polygon(
-    16px 0, 100% 0,
-    100% calc(100% - 16px), calc(100% - 8px) calc(100% - 16px),
-    calc(100% - 8px) calc(100% - 8px), calc(100% - 16px) calc(100% - 8px),
-    calc(100% - 16px) 100%, 0 100%,
-    0 16px, 8px 16px, 8px 8px, 16px 8px
-  );
-  --hx-bevel-sm: polygon(
-    12px 0, 100% 0,
-    100% calc(100% - 12px), calc(100% - 6px) calc(100% - 12px),
-    calc(100% - 6px) calc(100% - 6px), calc(100% - 12px) calc(100% - 6px),
-    calc(100% - 12px) 100%, 0 100%,
-    0 12px, 6px 12px, 6px 6px, 12px 6px
-  );
-  --hx-bevel-btn: polygon(
-    10px 0, 100% 0,
-    100% calc(100% - 10px), calc(100% - 5px) calc(100% - 10px),
-    calc(100% - 5px) calc(100% - 5px), calc(100% - 10px) calc(100% - 5px),
-    calc(100% - 10px) 100%, 0 100%,
-    0 10px, 5px 10px, 5px 5px, 10px 5px
-  );
+  /* --- Type — Grenze leads, Beaufort catches what Grenze cannot set.
+     COLLINS drew a custom face ("Iron & Glass") precisely because type is what
+     separates the two cities, so a theme that keeps Piltover's face is a
+     recolour, not an identity. Grenze is condensed, chiselled and sits at the
+     border of roman and blackletter — Victorian foundry nameplate against
+     Beaufort's wide, airy, gilded roman.
+     The @font-face declarations carry a unicode-range covering Latin only, so
+     the other scripts among the 21 locales fall through to Beaufort per
+     GLYPH, not per block. See zaun-type.css. --- */
+  --font-beaufort: "Grenze", "Beaufort", "Times New Roman", serif;
+
+  /* --- Shape — this is the axis the canon is loudest about, and it runs the
+     opposite way to intuition. Piltover is the GEOMETRIC city: Art Deco and
+     Streamline Moderne, "gilded symmetries and sleek, complex geometries" —
+     hence the gem-facet chamfer of the default identity. Zaun is the CURVED
+     one: COLLINS built it from "the fluid qualities of Art Nouveau and
+     whiplash curves […] sinuous and curvilinear, but with a sinister touch of
+     sharpness and iridescence."
+
+     So the chamfer gives way to a wrought-iron sweep: two opposite corners
+     grow a wide radius, the other two stay cut sharp. Asymmetric like the
+     "asymmetrical flourish ornaments" of Zaun's architecture, still 180°
+     rotationally symmetric so no existing component flips. A UNIFORM radius
+     would be wrong twice over — Zaun is Victorian and corroded, not SaaS.
+
+     clip-path is released because a clip cannot render a curved BORDER, and
+     the iron line around the plate is the whole point. See zaun-frames.css. */
+  --hx-bevel: none;
+  --hx-bevel-sm: none;
+  --hx-bevel-btn: none;
+  --hx-iron-radius: 22px 3px 22px 3px;
+  --hx-iron-radius-sm: 16px 2px 16px 2px;
+  --hx-iron-radius-btn: 12px 2px 12px 2px;
+  /* Chips are ~22px tall: the button sweep would eat half their height and
+     turn them into leaves. */
+  --hx-iron-radius-chip: 8px 2px 8px 2px;
 
   /* --- Motion — mechanical register: hard attack, dead stop, no float.
      Only the curve is themed. Re-timing every duration would either alter the
