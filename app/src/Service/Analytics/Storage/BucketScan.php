@@ -36,6 +36,8 @@ final class BucketScan
     public int $blobSourceBytes = 0;
     public int $blobWebpBytes = 0;
     public int $logicalRefs = 0;
+    public int $manifestBytes = 0;
+    public int $manifestLastModified = 0;
 
     /** @var array<string, array{objects: int, bytes: int}> */
     public array $families = [];
@@ -68,20 +70,38 @@ final class BucketScan
     {
         $path = $file->path();
         $bytes = $file->fileSize() ?? 0;
+        $at = $file->lastModified();
         $family = strstr($path, '/', true) ?: '/';
 
         $this->totalObjects++;
         $this->totalBytes += $bytes;
         $this->bump($this->families, $family, $bytes);
         $this->sizes[] = ['path' => $path, 'bytes' => $bytes];
-        $this->trackTimeline($file, $bytes);
+        $this->trackTimeline($at, $bytes);
 
         match ($family) {
             self::FAMILY_BLOBS => $this->consumeBlob($path, $bytes),
             self::FAMILY_DATA => $this->consumeData($path, $bytes),
-            self::FAMILY_MANIFEST => $this->consumeManifest($path, $bytes),
+            self::FAMILY_MANIFEST => $this->consumeManifest($path, $bytes, $at),
             default => null,
         };
+    }
+
+    /**
+     * Identity of the manifest set as this listing saw it: count, cumulated
+     * weight and freshest write. Reading every manifest is the costly half of the
+     * storage report (one object read each), so its result is memoised under this
+     * key — any manifest written since bumps the timestamp and the weight, so a
+     * stale value cannot survive an ingest.
+     */
+    public function manifestFingerprint(): string
+    {
+        return sprintf(
+            '%d-%d-%d',
+            count($this->manifestPaths),
+            $this->manifestBytes,
+            $this->manifestLastModified,
+        );
     }
 
     private function consumeBlob(string $path, int $bytes): void
@@ -115,11 +135,13 @@ final class BucketScan
         }
     }
 
-    private function consumeManifest(string $path, int $bytes): void
+    private function consumeManifest(string $path, int $bytes, ?int $at): void
     {
         $version = explode('/', $path)[1] ?? self::UNKNOWN;
         $this->bump($this->manifestVersion, $version, $bytes);
         $this->manifestPaths[] = $path;
+        $this->manifestBytes += $bytes;
+        $this->manifestLastModified = max($this->manifestLastModified, $at ?? 0);
     }
 
     /**
@@ -146,9 +168,8 @@ final class BucketScan
         $row['objects']++;
     }
 
-    private function trackTimeline(FileAttributes $file, int $bytes): void
+    private function trackTimeline(?int $at, int $bytes): void
     {
-        $at = $file->lastModified();
         $day = $at !== null ? gmdate('Y-m-d', $at) : 'unknown';
         $this->timeline[$day] ??= ['objects' => 0, 'bytes' => 0];
         $this->timeline[$day]['objects']++;

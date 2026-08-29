@@ -7,7 +7,9 @@ use App\Service\Admin\ServiceHealthProbe;
 use App\Service\Analytics\Storage\StorageAnalyticsService;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
+use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\DirectoryListing;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
@@ -82,25 +84,54 @@ final class ServiceHealthProbeTest extends TestCase
         self::assertNotNull($result['detail']);
     }
 
-    public function testMinioOkMirrorsTheStorageReport(): void
+    /**
+     * The probe must stay a liveness check: answering it with the storage report
+     * made every monitoring load pay a deep listing of the whole bucket.
+     */
+    public function testMinioLivenessNeverTriggersTheDeepStorageListing(): void
     {
-        $result = $this->probe()->minio();
+        $operator = $this->createMock(FilesystemOperator::class);
+        $operator->expects(self::once())
+            ->method('listContents')
+            ->with('', false)
+            ->willReturn(new DirectoryListing([new DirectoryAttributes('blobs')]));
+
+        $result = $this->probe(
+            operator: $operator,
+            storage: new StorageAnalyticsService($operator, new ArrayAdapter()),
+        )->minio();
 
         self::assertSame(ServiceHealthProbe::STATUS_OK, $result['status']);
-        self::assertSame(0, $result['meta']['objects']);
+        self::assertSame([], $result['meta']);
     }
 
-    public function testMinioFailureReportsDegraded(): void
+    public function testMinioReportsVolumesOnlyWhenTheStorageReportIsAlreadyWarm(): void
+    {
+        $operator = $this->createStub(FilesystemOperator::class);
+        $operator->method('listContents')->willReturn(new DirectoryListing([
+            new FileAttributes('blobs/a.png', 120),
+        ]));
+        $storage = new StorageAnalyticsService($operator, new ArrayAdapter());
+        $storage->report();
+
+        $result = $this->probe(operator: $operator, storage: $storage)->minio();
+
+        self::assertSame(1, $result['meta']['objects']);
+        self::assertSame(120, $result['meta']['bytes']);
+    }
+
+    public function testUnreachableMinioReportsDownWithoutThrowing(): void
     {
         $broken = $this->createStub(FilesystemOperator::class);
         $broken->method('listContents')
             ->willThrowException(new \RuntimeException('minio unreachable'));
 
         $result = $this->probe(
+            operator: $broken,
             storage: new StorageAnalyticsService($broken, new ArrayAdapter()),
         )->minio();
 
-        self::assertSame(ServiceHealthProbe::STATUS_DEGRADED, $result['status']);
+        self::assertSame(ServiceHealthProbe::STATUS_DOWN, $result['status']);
         self::assertSame('minio unreachable', $result['detail']);
     }
 
@@ -122,23 +153,27 @@ final class ServiceHealthProbeTest extends TestCase
         ?Connection $connection = null,
         ?StorageAnalyticsService $storage = null,
         ?HttpClientInterface $http = null,
+        ?FilesystemOperator $operator = null,
     ): ServiceHealthProbe {
+        $operator ??= $this->emptyOperator();
+
         return new ServiceHealthProbe(
             $connection ?? DriverManager::getConnection(
                 ['driver' => 'pdo_sqlite', 'memory' => true],
             ),
-            $storage ?? $this->emptyStorage(),
+            $operator,
+            $storage ?? new StorageAnalyticsService($operator, new ArrayAdapter()),
             $http ?? new MockHttpClient(new MockResponse('ok')),
             self::FETCHER_URL,
             self::API_URL,
         );
     }
 
-    private function emptyStorage(): StorageAnalyticsService
+    private function emptyOperator(): FilesystemOperator
     {
         $operator = $this->createStub(FilesystemOperator::class);
         $operator->method('listContents')->willReturn(new DirectoryListing([]));
 
-        return new StorageAnalyticsService($operator, new ArrayAdapter());
+        return $operator;
     }
 }

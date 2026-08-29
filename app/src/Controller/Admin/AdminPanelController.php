@@ -31,6 +31,7 @@ final class AdminPanelController extends AbstractController
         if (!$this->panels->has($panel)) {
             throw $this->createNotFoundException(sprintf('Unknown admin panel "%s".', $panel));
         }
+        $this->releaseSessionLock($request);
 
         // Reports are already memoised server-side; a stored fragment would only
         // let a stale panel survive a "Rafraîchir".
@@ -38,5 +39,21 @@ final class AdminPanelController extends AbstractController
             $this->panels->render($panel, PanelContext::fromRequest($request)),
             headers: ['Cache-Control' => 'no-store'],
         );
+    }
+
+    /**
+     * A page ships one request per panel *on purpose*, so they must actually
+     * resolve in parallel. PHP's native file session handler holds an exclusive
+     * lock for the whole request, which queued the fragments one behind the other
+     * — the very serialisation deferring them was meant to remove. Authentication
+     * is already resolved here and a fragment writes nothing, so the session is
+     * closed before the (slow) render; the firewall reopens it just long enough
+     * to store the token back at kernel.response.
+     */
+    private function releaseSessionLock(Request $request): void
+    {
+        if ($request->hasSession() && $request->getSession()->isStarted()) {
+            $request->getSession()->save();
+        }
     }
 }
