@@ -5,6 +5,7 @@ namespace App\Service\Analytics\Storage;
 
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
+use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -24,13 +25,16 @@ use Symfony\Contracts\Cache\ItemInterface;
 final class StorageAnalyticsService
 {
     private const CACHE_KEY = 'analytics.storage.report';
-    private const CACHE_TTL = 120;
+    /** Content-keyed, so it outlives the report it feeds — see countLogicalRefs(). */
+    private const REFS_CACHE_PREFIX = 'analytics.storage.refs.';
+    private const CACHE_TTL = 600;
+    private const REFS_CACHE_TTL = 86400;
     private const LARGEST_LIMIT = 15;
 
     public function __construct(
         private readonly FilesystemOperator $ddragonStorage,
         #[Autowire(service: 'ddragon.cache')]
-        private readonly CacheInterface $cache,
+        private readonly CacheInterface&CacheItemPoolInterface $cache,
     ) {}
 
     public function report(bool $fresh = false): array
@@ -46,6 +50,30 @@ final class StorageAnalyticsService
         });
     }
 
+    /**
+     * Bucket totals *if a report is already memoised*, never at the price of a
+     * deep listing. The health probe wants a cheap fact next to its liveness
+     * check, not the O(objects) report — see {@see \App\Service\Admin\ServiceHealthProbe}.
+     *
+     * @return array{objects: int, bytes: int}|null
+     */
+    public function cachedTotals(): ?array
+    {
+        $item = $this->cache->getItem(self::CACHE_KEY);
+        if (!$item->isHit()) {
+            return null;
+        }
+        $report = $item->get();
+        if (!is_array($report) || ($report['ok'] ?? false) !== true) {
+            return null;
+        }
+
+        return [
+            'objects' => (int) $report['total']['objects'],
+            'bytes' => (int) $report['total']['bytes'],
+        ];
+    }
+
     private function compute(): array
     {
         $scan = new BucketScan();
@@ -59,7 +87,7 @@ final class StorageAnalyticsService
                     $scan->consume($entry);
                 }
             }
-            $scan->logicalRefs = $this->countLogicalRefs($scan->manifestPaths);
+            $scan->logicalRefs = $this->countLogicalRefs($scan);
         } catch (\Throwable $e) {
             // Assembled from a *fresh* scan, not the partially filled one: half a
             // listing must not be presented as a complete report. Going through
@@ -78,9 +106,27 @@ final class StorageAnalyticsService
      * Image references declared across every manifest — the logical side of the
      * dedup ratio, against which the physical blob count is compared.
      *
+     * One object read per manifest: the dominant cost of the report, and pure
+     * function of manifest content. Memoised under the scan's fingerprint, so a
+     * recompute (`?refresh=1` included) re-reads them only once an ingest has
+     * actually touched a manifest.
+     */
+    private function countLogicalRefs(BucketScan $scan): int
+    {
+        return $this->cache->get(
+            self::REFS_CACHE_PREFIX . $scan->manifestFingerprint(),
+            function (ItemInterface $item) use ($scan): int {
+                $item->expiresAfter(self::REFS_CACHE_TTL);
+
+                return $this->readLogicalRefs($scan->manifestPaths);
+            },
+        );
+    }
+
+    /**
      * @param list<string> $manifestPaths
      */
-    private function countLogicalRefs(array $manifestPaths): int
+    private function readLogicalRefs(array $manifestPaths): int
     {
         $logical = 0;
         foreach ($manifestPaths as $key) {
