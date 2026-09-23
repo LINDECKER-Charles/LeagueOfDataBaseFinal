@@ -53,10 +53,7 @@ func run(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 		return err
 	}
 	defer db.Close()
-	s3, err := store.NewMinio(cfg)
-	if err != nil {
-		return err
-	}
+	storage := store.NewFiles(cfg.StorageDir)
 
 	recorder := metering.New(db, metering.Options{
 		FlushInterval: config.MeterFlushInterval,
@@ -64,7 +61,7 @@ func run(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 	}, log)
 	meter := startMetering(recorder)
 
-	wired := wiring{cfg: cfg, db: db, s3: s3, recorder: recorder, log: log}
+	wired := wiring{cfg: cfg, db: db, storage: storage, recorder: recorder, log: log}
 	srv := newHTTPServer(cfg, wired.handler(), log)
 	go listen(srv, log)
 
@@ -78,19 +75,19 @@ func run(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 type wiring struct {
 	cfg      config.Config
 	db       *store.Postgres
-	s3       *store.Minio
+	storage  *store.Files
 	recorder *metering.Recorder
 	log      *slog.Logger
 }
 
 // handler assembles the HTTP surface over the stores.
 func (w wiring) handler() http.Handler {
-	names := trends.NewStoreNameResolver(w.s3, config.NamesCacheTTL, nil)
+	names := trends.NewStoreNameResolver(w.storage, config.NamesCacheTTL, nil)
 	return api.NewServer(api.Deps{
 		Auth:    w.db,
 		Content: w.db,
 		Trends: trends.New(trends.Options{
-			Reader:   w.s3,
+			Reader:   w.storage,
 			Names:    names,
 			CacheTTL: config.TrendsCacheTTL,
 			Log:      w.log,
@@ -99,7 +96,7 @@ func (w wiring) handler() http.Handler {
 		Limiter:     ratelimit.New(nil),
 		Meter:       w.recorder,
 		PGPing:      w.db,
-		S3Ping:      w.s3,
+		StoragePing: w.storage,
 		SiteBaseURL: w.cfg.PublicSiteURL,
 		Log:         w.log,
 	})

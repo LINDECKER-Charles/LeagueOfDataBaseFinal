@@ -1,0 +1,156 @@
+/* ---------------------------------------------------------------------------
+   SPIRIT BLOSSOM — ornament: wisps, ribbons, and nothing hard.
+
+   Riot's own restraint is the rule followed here. The event's art director
+   describes the grammar as "floral shapes, volutes, clouds" — ABSTRACT forms —
+   and the studio never reaches for a torii, a lantern or a brush script in its
+   interface. Those are exactly the moves that turn this universe into pastiche,
+   and every one of them is refused below.
+
+   So the gem does not become a blossom (a five-petal flower is mush at 9px and
+   a cliché at any size). It becomes a WISP: a soft point of light with a halo
+   and no edge, which is what the spirits actually are.
+--------------------------------------------------------------------------- */
+
+/* ---- The canvas ----------------------------------------------------------- */
+/* The gate between worlds opens above and behind: a cold wisp-light high and
+   centred, a sakura bloom drifting in from one side. The grain matters more
+   here than anywhere else — this palette's gradients are the softest in the set
+   and would band visibly on a dark canvas without it. */
+[data-theme="spirit-blossom"] body {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160'\
+ height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise'\
+ baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160'\
+ height='160' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E"),
+    radial-gradient(1200px 620px at 50% -12%,
+      color-mix(in srgb, var(--color-gold) 11%, transparent), transparent 62%),
+    radial-gradient(820px 520px at 92% 18%,
+      color-mix(in srgb, var(--sb-sakura) 8%, transparent), transparent 58%);
+}
+
+/* ---- Rules become ribbons ------------------------------------------------- */
+/* A sumi stroke: nothing at the ends, weight in the middle, cyan bleeding into
+   sakura across it. One line, no shadow twin — this identity has no plumbing
+   and no banner rail to imitate. */
+[data-theme="spirit-blossom"] .hx-rule {
+  height: 2px;
+  background: linear-gradient(90deg, transparent,
+    color-mix(in srgb, var(--color-gold) 75%, transparent) 26%,
+    color-mix(in srgb, var(--sb-sakura) 70%, transparent) 74%, transparent);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-gold) 30%, transparent));
+}
+
+/* The node is a wisp hanging on the ribbon: a core with a halo, no border. */
+[data-theme="spirit-blossom"] .hx-rule::after {
+  rotate: 0deg;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    var(--color-gold-pale) 0 1.5px,
+    color-mix(in srgb, var(--color-gold) 80%, transparent) 1.5px 3px,
+    transparent 3.4px);
+  box-shadow: 0 0 14px 1px color-mix(in srgb, var(--color-gold) 45%, transparent);
+}
+
+[data-theme="spirit-blossom"] .codex-header::after {
+  height: 2px;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--color-gold) 60%, transparent),
+    color-mix(in srgb, var(--sb-sakura) 30%, transparent) 55%, transparent);
+}
+
+/* ---- Every gem becomes a wisp -------------------------------------------- */
+[data-theme="spirit-blossom"] .codex-header::before {
+  width: 10px;
+  height: 10px;
+  rotate: 0deg;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    var(--color-gold-pale) 0 1.6px,
+    color-mix(in srgb, var(--color-gold) 70%, transparent) 1.6px 3.2px,
+    transparent 3.6px);
+  box-shadow: 0 0 16px 1px color-mix(in srgb, var(--color-gold) 50%, transparent);
+}
+
+[data-theme="spirit-blossom"] .filter-marker,
+[data-theme="spirit-blossom"] .cl-node::before,
+[data-theme="spirit-blossom"] .slot-node i,
+[data-theme="spirit-blossom"] .ddragon-rich li::before {
+  transform: none;
+  rotate: 0deg;
+  border-radius: 50%;
+}
+[data-theme="spirit-blossom"] .cl-node::before {
+  box-shadow: 0 0 14px 1px color-mix(in srgb, var(--color-gold) 45%, transparent);
+}
+[data-theme="spirit-blossom"] .hx-pip {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  font-size: 0;
+  vertical-align: middle;
+  box-shadow: 0 0 8px currentColor;
+}
+
+[data-theme="spirit-blossom"] .socket__hex {
+  rotate: 0deg;
+  border-radius: 50%;
+}
+[data-theme="spirit-blossom"] .donate-tier__gem::before,
+[data-theme="spirit-blossom"] .donate-seal::before,
+[data-theme="spirit-blossom"] .donate-seal::after {
+  transform: none;
+  border-radius: 50%;
+}
+
+/* ---- No corners --------------------------------------------------------- */
+/* `hx-corners` brackets a panel with two etched Deco squares. Zaun answered it
+   with rivets and Noxus with a seal; this identity answers it with nothing at
+   all, and that is a statement rather than an omission — paper is not fastened
+   to anything, and the sheet is already lit along its top edge. */
+[data-theme="spirit-blossom"] .hx-corners::before,
+[data-theme="spirit-blossom"] .hx-corners::after {
+  content: none;
+}
+
+/* ---- Chrome edges -------------------------------------------------------- */
+[data-theme="spirit-blossom"] .header-seam {
+  background: linear-gradient(90deg, transparent,
+    color-mix(in srgb, var(--color-gold) 65%, transparent) 30%,
+    color-mix(in srgb, var(--sb-sakura) 55%, transparent) 70%, transparent);
+}
+[data-theme="spirit-blossom"] .bottom-nav::before {
+  background: linear-gradient(90deg, transparent,
+    color-mix(in srgb, var(--color-gold) 60%, transparent) 30%,
+    color-mix(in srgb, var(--sb-sakura) 50%, transparent) 70%, transparent);
+}
+
+/* ---- The weave ------------------------------------------------------------ */
+/* Seigaiha — the overlapping arcs that stand for waves and, in this universe's
+   own art, for stylised cloud. Abstract, which is the whole point: it carries
+   Ionia without drawing a single torii. */
+[data-theme="spirit-blossom"] .weave-hex { display: none; }
+[data-theme="spirit-blossom"] .weave-seigaiha { display: block; }
+
+/* Ambient light: the wisp breathes slower and softer than Piltover's hextech
+   core, and it does not swell — spirits glow, they do not inflate. */
+@keyframes sb-breathe {
+  0%, 100% { opacity: 0.16; transform: translate(-50%, 0); }
+  50%      { opacity: 0.34; transform: translate(-50%, 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme="spirit-blossom"] .hx-breathe {
+    animation: sb-breathe 9s ease-in-out infinite;
+  }
+}
+[data-theme="spirit-blossom"] .hx-ambient-glow--gold {
+  background: radial-gradient(closest-side,
+    color-mix(in srgb, var(--sb-sakura) 18%, transparent), transparent 70%);
+}
+[data-theme="spirit-blossom"] .hx-bar__fill {
+  background: linear-gradient(90deg, var(--color-gold), var(--sb-sakura));
+}

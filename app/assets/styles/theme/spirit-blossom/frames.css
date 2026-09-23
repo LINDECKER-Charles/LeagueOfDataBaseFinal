@@ -1,0 +1,108 @@
+/* ---------------------------------------------------------------------------
+   SPIRIT BLOSSOM — frames. THE SIGNATURE: there is no frame.
+
+   The other three identities all answer the same question — what is the line
+   around a panel made of? Piltover draws it in gold, Zaun bends it into iron,
+   Noxus stamps it with a crimson edge. This one refuses the question: a panel
+   here is a sheet of washi laid on the dark, and paper has no border. It has a
+   lit top edge where the spirit light catches it, and a shadow underneath.
+
+   That is not minimalism for its own sake. This universe's atmosphere is soft,
+   low-contrast and drifting, and its interface has to hold 700-row grids and
+   filter rails; the two fight each other directly. Removing linework instead of
+   adding ornament is what lets the softness survive the density.
+
+   It only works because the surface ramp is unusually wide here (steps of 1.35
+   and 1.30, against Hextech's 1.06): elevation is legible from VALUE alone, so
+   the border it replaces was never carrying the hierarchy.
+--------------------------------------------------------------------------- */
+
+/* ---- The sheet ---------------------------------------------------------- */
+[data-theme="spirit-blossom"] .hextech-frame {
+  border-radius: var(--sb-arch);
+  border-color: transparent;
+  background:
+    /* the light that catches the top of a hung sheet */
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-gold) 7%, transparent) 0%,
+      transparent 22%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel) 96%, transparent),
+      color-mix(in srgb, var(--color-panel) 99%, transparent));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold) 26%, transparent),
+    0 12px 34px -20px var(--color-shadow);
+}
+
+/* Contact does not outline the sheet — it lights it from behind, the way a
+   lantern brightens paper. This is the one identity allowed an outward bloom,
+   because it is the one whose whole language is light. */
+[data-theme="spirit-blossom"] .hextech-frame-hover:hover {
+  border-color: transparent;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-gold) 12%, transparent) 0%,
+      transparent 26%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel-2) 96%, transparent),
+      color-mix(in srgb, var(--color-panel) 99%, transparent));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold) 55%, transparent),
+    0 0 26px -10px color-mix(in srgb, var(--color-hex-deep) 45%, transparent),
+    0 12px 34px -20px var(--color-shadow);
+}
+
+/* ---- Secondary sheets ---------------------------------------------------- */
+[data-theme="spirit-blossom"] .hx-plate,
+[data-theme="spirit-blossom"] .filter-console {
+  border-radius: var(--sb-arch);
+  border-color: transparent;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--color-panel) 92%, transparent),
+    color-mix(in srgb, var(--color-abyss) 96%, transparent));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold) 20%, transparent),
+    0 12px 34px -22px var(--color-shadow);
+}
+
+/* ---- Everything the bevel token used to shape ---------------------------- */
+[data-theme="spirit-blossom"] .filter-empty,
+[data-theme="spirit-blossom"] .visibility-card,
+[data-theme="spirit-blossom"] .socket--empty,
+[data-theme="spirit-blossom"] .socket--unavailable,
+[data-theme="spirit-blossom"] .skin-socket--empty {
+  border-radius: var(--sb-arch-sm);
+}
+[data-theme="spirit-blossom"] .switcher > summary,
+[data-theme="spirit-blossom"] .switcher__panel,
+[data-theme="spirit-blossom"] .theme-trigger,
+[data-theme="spirit-blossom"] .list-count,
+[data-theme="spirit-blossom"] .stat-cell,
+[data-theme="spirit-blossom"] .section-nav a,
+[data-theme="spirit-blossom"] .hx-btn,
+[data-theme="spirit-blossom"] .hx-btn-ghost,
+[data-theme="spirit-blossom"] .hx-btn-gold,
+[data-theme="spirit-blossom"] .hx-input,
+[data-theme="spirit-blossom"] .hx-select {
+  border-radius: var(--sb-arch-btn);
+}
+[data-theme="spirit-blossom"] .hx-btn-gold {
+  clip-path: none;
+}
+[data-theme="spirit-blossom"] .hx-chip,
+[data-theme="spirit-blossom"] .hx-chip-hex,
+[data-theme="spirit-blossom"] .edition-badge {
+  border-radius: 8px 8px 3px 3px;
+}
+[data-theme="spirit-blossom"] .hx-check {
+  border-radius: 4px;
+}
+
+/* Fields are wells of still water: darker than the sheet, no inner shadow —
+   nothing in this identity is pressed into anything. */
+[data-theme="spirit-blossom"] .hx-input,
+[data-theme="spirit-blossom"] .hx-select {
+  background-color: color-mix(in srgb, var(--color-sink) 80%, transparent);
+  border-color: color-mix(in srgb, var(--color-blue-steel) 80%, transparent);
+  box-shadow: none;
+}

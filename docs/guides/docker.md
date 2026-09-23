@@ -13,9 +13,11 @@ Référence des commandes Docker / Docker Compose pour la stack **LODB**.
 | `nginx`      | Reverse proxy / front HTTP    | `8080` (`HTTP_PORT`) → app       |
 | `php`        | Application Symfony (FPM)     | interne                          |
 | `go-fetcher` | Worker Go (fetch DDragon)     | `8085`                           |
-| `minio`      | Stockage objet (S3)           | `9000` API · `9001` console      |
-| `minio-init` | Init bucket (one-shot)        | —                                |
 | `mailer`     | Mailpit (SMTP + UI de test)   | `8025` UI · `1025` SMTP          |
+
+Le stockage (images, datasets, manifestes, agrégats analytics, audit) n'est pas un
+service mais le volume nommé `storage`, monté sur `/srv/storage` : en lecture-écriture
+pour `php`, en **lecture seule** pour `nginx` (qui sert `/cdn/blobs/`) et `go-api`.
 
 Prérequis : copier `.env.example` → `.env` (voir `docs/guides/configuration.md`).
 
@@ -50,7 +52,8 @@ cd app && npm run build                                 # public/build (bind-mou
 >   diverger du runtime — relancer un `composer install` hôte si besoin.
 > - Le profiler (`var/cache/dev/profiler`) n'est plus lisible depuis l'hôte :
 >   passer par l'UI `/_profiler`.
-> - Reset : `docker compose down -v` (efface aussi MinIO), puis re-`composer install`.
+> - Reset : `docker compose down -v` (efface aussi le volume `storage`), puis
+>   re-`composer install`.
 
 ### APCu : dev uniquement
 
@@ -81,7 +84,7 @@ docker compose stop
 # Arrêter et supprimer conteneurs + réseau (garde les volumes)
 docker compose down
 
-# Down + suppression des volumes (⚠️ efface les données MinIO)
+# Down + suppression des volumes (⚠️ efface le stockage, Postgres et app_state)
 docker compose down -v
 
 # Down + suppression des images buildées localement
@@ -200,18 +203,21 @@ docker compose exec -u www-data php composer dump-autoload --optimize
 docker compose exec -T -u www-data php php vendor/bin/phpunit tests/Unit
 ```
 
-### MinIO (client `mc`)
+### Stockage (volume `storage`)
 
 ```bash
-# Ouvrir un mc jetable connecté au MinIO de la stack
-docker compose run --rm --entrypoint sh minio-init
+# Parcourir le stockage depuis php (seul service à le monter en écriture)
+docker compose exec php ls /srv/storage
+docker compose exec php ls /srv/storage/manifest
 
-# À l'intérieur : configurer l'alias puis lister/gérer les buckets
-mc alias set local http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
-mc ls local
-mc ls local/ddragon
-mc cp fichier.png local/ddragon/
+# Poids de chaque espace de clés (blobs, data, manifest, analytics, audit)
+docker run --rm -v lodb_storage:/s alpine du -sh /s/*
 ```
+
+> Chaque écriture de l'app passe par un fichier caché `.staging/` puis un `rename()`
+> atomique : nginx, `go-api` et les requêtes concurrentes ne lisent jamais un fichier
+> à moitié écrit. Un fichier qui traîne sous `.staging/` est le reste d'une écriture
+> interrompue, sans effet sur ce qui est servi.
 
 ---
 
@@ -246,19 +252,24 @@ docker compose config | grep -A5 environment
 docker volume ls
 docker volume ls --filter name=lodb
 
-# Inspecter le volume MinIO
-docker volume inspect lodb_minio_data
+# Inspecter le volume de stockage
+docker volume inspect lodb_storage
 
-# ⚠️ Supprimer le volume MinIO (reset complet du stockage objet)
+# ⚠️ Supprimer le volume de stockage (reset complet des images et datasets)
 docker compose down
-docker volume rm lodb_minio_data
+docker volume rm lodb_storage
 ```
+
+> Après un reset, le stockage se repeuple à la demande (ou d'un coup via
+> `app:ddragon:warmup` + `app:ddragon:webp`). Un ancien volume `lodb_minio_data`,
+> hérité de la stack MinIO, n'est plus monté par aucun service : il se supprime avec
+> `docker volume rm lodb_minio_data`.
 
 ### Volumes de données (à ne pas supprimer à la légère)
 
 | Volume | Monté sur | Contenu |
 |---|---|---|
-| `lodb_minio_data` | `minio:/data` | Bucket DDragon : images, datasets, manifestes, agrégats analytics |
+| `lodb_storage` | `php:/srv/storage` (rw) · `nginx`, `go-api` (ro) | Stockage DDragon : images, datasets, manifestes, agrégats analytics, audit |
 | `lodb_pgdata` | `postgres:/var/lib/postgresql/data` | Données utilisateur : comptes, favoris, builds |
 | `lodb_app_state` | `php:/var/www/html/var/state` | Events analytics, journal d'audit, sessions, base GeoLite2 |
 
@@ -278,11 +289,11 @@ docker network ls
 docker network inspect lodb_default
 
 # Tester la résolution DNS inter-services depuis php
-docker compose exec php sh -c "getent hosts go-fetcher minio nginx"
+docker compose exec php sh -c "getent hosts go-fetcher postgres nginx"
 ```
 
 > Les services se joignent par **nom** sur le réseau interne :
-> `http://go-fetcher:8085`, `http://minio:9000`, etc. (voir env du service `php`).
+> `http://go-fetcher:8085`, `postgres:5432`, etc. (voir env du service `php`).
 
 ---
 
@@ -311,7 +322,7 @@ docker system df
 docker compose ps
 docker compose logs --tail=50 <service>
 
-# "APP_SECRET is required" / "MINIO_ROOT_PASSWORD is required"
+# "APP_SECRET is required" / "ADMIN_PASSWORD is required"
 #   → variable manquante dans .env (voir docs/guides/configuration.md)
 docker compose config   # montre quelles substitutions échouent
 
@@ -333,6 +344,5 @@ docker compose up -d --remove-orphans
 | Service        | URL                     |
 |----------------|-------------------------|
 | Application    | http://localhost:8080   |
-| MinIO Console  | http://localhost:9001   |
 | Mailpit UI     | http://localhost:8025   |
 | Go fetcher     | http://localhost:8085/healthz |

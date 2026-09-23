@@ -18,10 +18,22 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Hextech design tokens — hexes follow Riot's LoL style guide (gold 1-7,
-   "hextech magic" blues, greys). Legacy class names (blue-950/850/200, gold,
-   grey-700, white…) are kept and tuned to the palette so old markup upgrades
-   for free; the newer tokens (void, panel, gold-*, hex-*, text-*) drive the UI.
+   Design tokens — THE THEME CONTRACT. Every colour the UI paints resolves
+   through one of these names, and nothing below this file may hardcode a hue:
+   swapping the values here (see ../theme/) re-skins the whole app, because
+   Tailwind v4 compiles `bg-panel` to `background-color: var(--color-panel)`
+   and `bg-gold/25` to `color-mix(… var(--color-gold) 25% …)` — both read at
+   paint time, not at build time.
+
+   The default values below are Hextech / Piltover: hexes follow Riot's LoL
+   style guide (gold 1-7, "hextech magic" blues, greys). Legacy class names
+   (blue-950/850/200, gold, grey-700, white…) are kept and tuned to the palette
+   so old markup upgrades for free; the newer tokens (void, panel, gold-*,
+   hex-*, text-*) drive the UI.
+
+   Deliberately NOT themed: the rune-path and damage-type colours (codex/detail,
+   foundation/ddragon). Those are game data — Riot's own identity for Precision
+   or true damage — not chrome, and a theme that repainted them would lie.
 --------------------------------------------------------------------------- */
 @theme {
   /* Surfaces */
@@ -30,6 +42,14 @@
   --color-abyss: #091016;
   --color-panel: #0f1b2d;
   --color-panel-2: #162033;
+  /* Top stop of every raised panel gradient (frames, filter rail, donate card). */
+  --color-panel-raised: #1a263c;
+  /* Deepest scrim, laid over cinematic art so display type stays readable. */
+  --color-ink: #03080f;
+  /* Recessed well — media chrome, inset controls, armory slots. */
+  --color-sink: #040c18;
+  /* Cast shadows. A token, not a literal: a theme may tint its own darkness. */
+  --color-shadow: #000000;
 
   /* Gold (style-guide gold-1 → gold-6) */
   --color-gold: #c8aa6e;
@@ -38,6 +58,8 @@
   --color-gold-rich: #c89b3c;
   --color-gold-deep: #785a28;
   --color-gold-dark: #463714;
+  /* Parchment highlight one step above gold-bright (display-type gradients). */
+  --color-gold-pale: #f5ecd8;
 
   /* Hextech cyan (blue-3/4/1) + structural deep blues (blue-5/6) */
   --color-hex: #0ac8b9;
@@ -82,8 +104,11 @@
   --ease-hextech: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Signature Hextech bevel — two opposite corners cut off. Declared outside @theme
-   (it generates no utility) but it is a design token all the same: every clipped
+/* Shape and effect tokens — declared outside @theme (they generate no utility)
+   but design tokens all the same, and part of the same contract: a theme swaps
+   them alongside the palette.
+
+   The signature bevel cuts two opposite corners off every clipped surface. Each
    surface must read the SAME shape, so it lives here and nowhere else. The admin
    panel keeps its own copy (--bevel in public/admin/css/foundation.css) — that
    sheet is served without the Vite build. */
@@ -97,6 +122,21 @@
     12px 0, 100% 0, 100% calc(100% - 12px),
     calc(100% - 12px) 100%, 0 100%, 0 12px
   );
+  /* Button bevel — the filled primary CTA cuts a shallower 9px bite. */
+  --hx-bevel-btn: polygon(
+    9px 0, 100% 0, 100% calc(100% - 9px),
+    calc(100% - 9px) 100%, 0 100%, 0 9px
+  );
+
+  /* Pre-composed glows. Tailwind's arbitrary-value grammar accepts neither
+     spaces nor commas, so `shadow-[…]` cannot call color-mix() — it CAN read a
+     var(), which is why these exist as flat values rather than at their call
+     sites. Themed like any other token. */
+  --hx-glow-accent: rgba(200, 170, 110, 0.65);
+  --hx-glow-accent-strong: rgba(200, 170, 110, 0.75);
+  --hx-shadow-soft: rgba(1, 10, 19, 0.75);
+  --hx-shadow-hard: rgba(1, 10, 19, 0.9);
+  --hx-ring-accent-2: rgba(10, 200, 185, 0.14);
 }
 
 @keyframes hx-breathe {

@@ -65,7 +65,9 @@
     text-align: center;
     border: 1px solid var(--color-gold-deep);
     background:
-      linear-gradient(180deg, rgba(22, 32, 51, 0.85), rgba(1, 10, 19, 0.92));
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--color-panel-2) 85%, transparent),
+        color-mix(in srgb, var(--color-hextech-black) 92%, transparent));
     transition: border-color 0.25s var(--ease-hextech, ease),
       transform 0.25s var(--ease-hextech, ease);
   }

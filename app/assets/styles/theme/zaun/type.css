@@ -1,0 +1,117 @@
+/* ---------------------------------------------------------------------------
+   ZAUN — typography.
+
+   Grenze is a variable face (200-900 from one file per subset), condensed with
+   chiselled wedge serifs and a blackletter tension in the joints. Set against
+   Beaufort it reads foundry nameplate against gilded roman, which is the split
+   COLLINS drew between the two cities.
+
+   Its unicode-range covers Latin only. That is not a limitation to apologise
+   for, it is the mechanism: on a Cyrillic, Greek, CJK, Thai or Arabic page the
+   browser never even fetches Grenze and Beaufort sets the text, glyph by glyph,
+   with no mixed-face seams inside a word. Vietnamese is included because it is
+   one of the 21 locales and its diacritics would otherwise split mid-word.
+
+   Self-hosted, like every other face here: the CSP ships `font-src 'self'`, so
+   a CDN link would simply be refused. Grenze © 2019 The Grenze Project Authors,
+   SIL Open Font License 1.1 — the licence travels with the files in
+   public/fonts/grenze/OFL.txt.
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Grenze';
+  src: url('/fonts/grenze/latin.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Grenze';
+  src: url('/fonts/grenze/latin-ext.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Grenze';
+  src: url('/fonts/grenze/vietnamese.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1,
+    U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329,
+    U+1EA0-1EF9, U+20AB;
+}
+
+/* Display type loses Piltover's Deco tracking. Wide letterspacing on caps is
+   an Art Deco signature — it is what makes the default identity read gilded and
+   ceremonial. Zaun sets its caps tight and heavy, the way a nameplate is cast. */
+[data-theme="zaun"] h1,
+[data-theme="zaun"] h2,
+[data-theme="zaun"] h3,
+[data-theme="zaun"] .display {
+  letter-spacing: 0.005em;
+  font-weight: 600;
+}
+
+/* The hero name is the loudest surface in the app: cast it. */
+[data-theme="zaun"] .hero-name {
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+/* Labels leave the display face entirely and become stamped, not engraved.
+   Grenze is condensed and chiselled — excellent at 3rem, mush at 0.7rem — and
+   Zaun labels things the way a workshop does: machine type on a metal tag.
+   This also keeps every small label on a face that covers all 21 locales. */
+[data-theme="zaun"] .eyebrow,
+[data-theme="zaun"] .codex-header h2,
+[data-theme="zaun"] .codex-header .codex-header__title {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+[data-theme="zaun"] .codex-header h2,
+[data-theme="zaun"] .codex-header .codex-header__title {
+  font-size: 0.78rem;
+}
+
+/* Buttons keep the display face — Grenze's condensed caps are exactly the
+   register of a switch plate — but drop the Deco tracking with everything else. */
+[data-theme="zaun"] .hx-btn,
+[data-theme="zaun"] .hx-btn-ghost,
+[data-theme="zaun"] .hx-btn-gold {
+  letter-spacing: 0.09em;
+  font-weight: 600;
+}
+
+/* The rest of the chrome. Wide-tracked caps are THE Art Deco tell, and the
+   default identity spends it everywhere: 0.15em on the primary nav, 0.18em on
+   the wordmark and the section chips, 0.14em in the menus and the bottom bar.
+   Leaving it in place would keep Piltover's voice speaking under Zaun's face,
+   which is why this reset matters more than it looks. The values are pulled in,
+   not zeroed: Grenze is condensed, and condensed caps at 0 tracking close up. */
+[data-theme="zaun"] .nav-link,
+[data-theme="zaun"] .brand-title,
+[data-theme="zaun"] .section-nav a,
+[data-theme="zaun"] .bottom-nav span,
+[data-theme="zaun"] .switcher__panel--menu a,
+[data-theme="zaun"] .switcher__panel--menu button {
+  letter-spacing: 0.05em;
+}
+
+/* Beaufort is a light face and Grenze is not: the parchment-to-gold display
+   gradient reads muddier under a heavier stroke, so its top stop is lifted.
+   `background-image`, never the `background` shorthand — the shorthand also
+   resets background-clip, and this utility is clipped to the glyphs. Setting it
+   here would paint the gradient over the whole box and swallow the text. */
+[data-theme="zaun"] .text-gold-grad {
+  background-image: linear-gradient(180deg, var(--color-gold-pale) 4%,
+    var(--color-gold-light) 46%, var(--color-gold) 100%);
+}

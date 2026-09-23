@@ -5,7 +5,9 @@
    Params: img, pending, img_name, name, initials, img_fit ('cover'|'contain'),
    img_scale, img_round, as_template. #}
 {%- set box_class = 'h-14 w-14 border border-gold-deep/50 bg-void '
-  ~ (img_round|default(false) ? 'rounded-full shadow-[inset_0_0_0_1px_rgba(10,200,185,0.14)]' : '') -%}
+  ~ (img_round|default(false)
+      ? 'rounded-full shadow-[inset_0_0_0_1px_var(--hx-ring-accent-2)]'
+      : '') -%}
 {%- set img_class = 'absolute inset-0 h-full w-full '
   ~ (img_fit|default('cover') == 'contain' ? 'object-contain' : 'object-cover')
   ~ ' transition-transform duration-500 group-hover:scale-110' -%}

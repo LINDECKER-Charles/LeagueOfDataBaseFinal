@@ -43,7 +43,7 @@ name: lodb
 services:
   nginx:
     # Reachable by the shared edge proxy over `edge`; still on `default` for the
-    # intra-stack link to php/minio. `{{upstreams 80}}` resolves this container's
+    # intra-stack link to php. `{{upstreams 80}}` resolves this container's
     # IP on the edge network (CADDY_INGRESS_NETWORKS=edge in the edge stack).
     networks:
       - default
@@ -54,7 +54,10 @@ services:
     deploy:
       resources:
         limits:
-          # Static proxy + FastCGI pass: never holds a dataset in memory.
+          # FastCGI pass + static files. The page cache of the blobs it serves from
+          # the storage volume is charged to this cgroup, and cAdvisor's working set
+          # (what ConteneurProcheDeSaLimiteMemoire reads) counts its active part —
+          # small here: ~17 MiB of blobs per Data Dragon version (2026-09).
           memory: 256m
 
   go-api:
@@ -94,13 +97,6 @@ services:
         limits:
           # MAX_CONCURRENCY 16 x DefaultMaxBodyBytes 32 MiB = 512 MiB, bounded but real.
           memory: 768m
-
-  minio:
-    deploy:
-      resources:
-        limits:
-          # Per-object in-flight buffers + the write bursts of an ingestion run.
-          memory: 1g
 
   postgres:
     deploy:

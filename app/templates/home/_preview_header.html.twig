@@ -1,7 +1,7 @@
 {# Home preview-section header — diamond marker + title + count + growing
    hairline + "see all" link. Params: title, href, link, count (optional) #}
 <div class="mb-6 flex flex-wrap items-center gap-3">
-  <span aria-hidden="true" class="text-[0.7rem] leading-none text-gold">◆</span>
+  <span aria-hidden="true" class="hx-pip text-[0.7rem] leading-none text-gold">◆</span>
   <h2 class="font-beaufort text-xl uppercase tracking-[0.12em] text-gold-bright">{{ title }}</h2>
   {% if count is defined and count is not null %}
     <span class="font-mono text-xs text-hex">{{ count }}</span>

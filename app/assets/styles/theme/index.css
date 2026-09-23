@@ -1,0 +1,27 @@
+/* ---------------------------------------------------------------------------
+   Alternate identities.
+
+   The DEFAULT identity (Hextech / Piltover) is not here: it lives in
+   foundation/tokens.css, because it is the contract every other folder is
+   written against. Each folder below only restates what moves.
+
+   Imported LAST in app.css and deliberately unlayered: Tailwind emits its own
+   variables into `@layer theme`, and an unlayered rule outranks any layered one
+   whatever its specificity — so a theme wins without a specificity war, and
+   without recompiling a single utility.
+
+   The four identities answer the same question — what is a panel's edge made
+   of? — four different ways, and that answer is what separates them far more
+   than their palettes do:
+
+     Hextech   cuts the corner into a gem facet   (Art Deco, drawn with a compass)
+     Zaun      bends two corners into wrought iron (Art Nouveau, whiplash curves)
+     Noxus     leaves the corners square and stamps an edge (the banner's hoist)
+     Spirit Blossom draws no edge at all — a lit sheet of paper on the dark
+
+   One folder per identity: five files each would burst the ten-per-folder
+   budget flat, and each identity is a domain in its own right.
+--------------------------------------------------------------------------- */
+@import "./zaun/index.css";
+@import "./noxus/index.css";
+@import "./spirit-blossom/index.css";

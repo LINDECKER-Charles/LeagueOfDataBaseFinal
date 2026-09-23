@@ -187,7 +187,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
     height: 2.5rem;
     padding: 0;
     border: 1px solid var(--color-gold-deep);
-    background: var(--color-void, #0a1428);
+    background: var(--color-void);
     cursor: pointer;
     transition:
         border-color 0.2s var(--ease-hextech, ease),
@@ -209,14 +209,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
     width: 1.85rem;
     height: 1.85rem;
     object-fit: contain;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+    filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--color-shadow) 60%, transparent));
 }
 .chroma-swatch:hover .chroma-swatch__ring {
     opacity: 0.45;
 }
 
 .chroma-modal__art {
-    filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
+    filter: drop-shadow(0 6px 18px color-mix(in srgb, var(--color-shadow) 55%, transparent));
     animation: chroma-pop 0.24s var(--ease-hextech, ease);
 }
 
@@ -230,7 +230,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
     transform: translateY(-50%);
     color: var(--color-gold);
     border: 1px solid var(--color-gold-deep);
-    background: rgba(4, 12, 24, 0.72);
+    background: color-mix(in srgb, var(--color-sink) 72%, transparent);
     transition: color 0.2s ease, border-color 0.2s ease;
 }
 .chroma-nav:hover {

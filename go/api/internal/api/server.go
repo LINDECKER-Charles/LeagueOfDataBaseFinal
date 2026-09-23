@@ -58,21 +58,21 @@ type Server struct {
 	limiter     *ratelimit.Limiter
 	meter       UsageMeter
 	pgPing      Pinger
-	s3Ping      Pinger
+	storagePing Pinger
 	siteBaseURL string
 	log         *slog.Logger
 }
 
 // Deps groups the server dependencies (constructor object, DI-style).
 type Deps struct {
-	Auth     AuthStore
-	Content  ContentStore
-	Trends   *trends.Service
-	KeyCache *keys.Cache
-	Limiter  *ratelimit.Limiter
-	Meter    UsageMeter
-	PGPing   Pinger
-	S3Ping   Pinger
+	Auth        AuthStore
+	Content     ContentStore
+	Trends      *trends.Service
+	KeyCache    *keys.Cache
+	Limiter     *ratelimit.Limiter
+	Meter       UsageMeter
+	PGPing      Pinger
+	StoragePing Pinger
 	// SiteBaseURL is the public origin of the website, used to render absolute
 	// links (build sharing) in responses served to third-party clients.
 	SiteBaseURL string
@@ -83,7 +83,7 @@ type Deps struct {
 func NewServer(d Deps) http.Handler {
 	s := &Server{
 		auth: d.Auth, content: d.Content, trends: d.Trends, keyCache: d.KeyCache,
-		limiter: d.Limiter, meter: d.Meter, pgPing: d.PGPing, s3Ping: d.S3Ping,
+		limiter: d.Limiter, meter: d.Meter, pgPing: d.PGPing, storagePing: d.StoragePing,
 		siteBaseURL: d.SiteBaseURL, log: d.Log,
 	}
 	mux := http.NewServeMux()

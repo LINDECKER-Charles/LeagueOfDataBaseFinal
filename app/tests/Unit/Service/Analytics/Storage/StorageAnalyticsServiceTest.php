@@ -40,6 +40,15 @@ final class StorageAnalyticsServiceTest extends TestCase
         return $operator;
     }
 
+    /** A one-manifest bucket, its weight and write time being the invalidation key. */
+    private function listingWithManifest(int $bytes, int $lastModified): DirectoryListing
+    {
+        return new DirectoryListing([
+            new FileAttributes('blobs/a.png', 100, null, $lastModified),
+            new FileAttributes('manifest/15.1.1/champion.json', $bytes, null, $lastModified),
+        ]);
+    }
+
     public function testTotalsAndFamilies(): void
     {
         $report = $this->service($this->populatedOperator())->report();
@@ -92,15 +101,61 @@ final class StorageAnalyticsServiceTest extends TestCase
         self::assertSame(['en_US', 'fr_FR'], $report['coverage'][0]['langs']);
     }
 
+    /**
+     * One object read per manifest is the dominant cost of the report. The count
+     * they yield is a pure function of their content, so a recompute — including
+     * the one behind "Rafraîchir" — must not pay for it again.
+     */
+    public function testManifestsAreReadOnceAcrossRecomputes(): void
+    {
+        $operator = $this->createMock(FilesystemOperator::class);
+        $operator->method('listContents')
+            ->willReturnCallback(fn (): DirectoryListing => $this->listingWithManifest(30, 1000));
+        $operator->expects(self::once())
+            ->method('read')
+            ->willReturn('{"a.png":"cdn/blobs/x.png","b.png":"cdn/blobs/y.png"}');
+
+        $service = $this->service($operator);
+        $service->report();
+
+        self::assertSame(2, $service->report(fresh: true)['dedup']['logicalRefs']);
+    }
+
+    public function testAManifestWriteInvalidatesTheMemoisedReferenceCount(): void
+    {
+        // Same manifest key, rewritten: heavier and freshly stamped.
+        $listings = [$this->listingWithManifest(30, 1000), $this->listingWithManifest(45, 2000)];
+        $reads = [
+            '{"a.png":"cdn/blobs/x.png","b.png":"cdn/blobs/y.png"}',
+            '{"a.png":"cdn/blobs/x.png","b.png":"cdn/blobs/y.png","c.png":"cdn/blobs/z.png"}',
+        ];
+        $operator = $this->createStub(FilesystemOperator::class);
+        $operator->method('listContents')->willReturnCallback(
+            static function () use (&$listings): DirectoryListing {
+                return array_shift($listings);
+            },
+        );
+        $operator->method('read')->willReturnCallback(
+            static function () use (&$reads): string {
+                return array_shift($reads);
+            },
+        );
+
+        $service = $this->service($operator);
+        $service->report();
+
+        self::assertSame(3, $service->report(fresh: true)['dedup']['logicalRefs']);
+    }
+
     public function testDegradesGracefullyWhenStorageUnavailable(): void
     {
         $operator = $this->createStub(FilesystemOperator::class);
-        $operator->method('listContents')->willThrowException(new \RuntimeException('minio down'));
+        $operator->method('listContents')->willThrowException(new \RuntimeException('storage down'));
 
         $report = $this->service($operator)->report();
 
         self::assertFalse($report['ok']);
-        self::assertSame('minio down', $report['error']);
+        self::assertSame('storage down', $report['error']);
         self::assertSame(['objects' => 0, 'bytes' => 0], $report['total']);
     }
 
@@ -112,7 +167,7 @@ final class StorageAnalyticsServiceTest extends TestCase
     public function testDegradedReportHasTheSameShapeAsANominalOne(): void
     {
         $broken = $this->createStub(FilesystemOperator::class);
-        $broken->method('listContents')->willThrowException(new \RuntimeException('minio down'));
+        $broken->method('listContents')->willThrowException(new \RuntimeException('storage down'));
 
         $degraded = $this->service($broken)->report();
         $nominal = $this->service($this->populatedOperator())->report();

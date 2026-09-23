@@ -1,0 +1,63 @@
+{# Theme picker — a trigger in the bar and a native <dialog> holding the four
+   identities.
+
+   It was a two-segment control while there were two identities. At four, a
+   segmented control stops being readable at a glance and stops having room to
+   say anything about what it is offering. A modal has that room: each option
+   shows its crest, its name, the city it comes from, and a strip of its own
+   palette — so the choice is made on what the theme LOOKS like, not on a word.
+
+   `showModal()` brings the focus trap, the Escape key, inertness of the page
+   behind and the ::backdrop for free; nothing here re-implements any of it.
+   `data-theme-option` is the contract with assets/vue/fx/theme.ts and
+   `data-theme-chrome` carries Theme::browserColor(), so the module never
+   duplicates a palette.
+
+   Without JavaScript the trigger does nothing and the served identity stays
+   complete — this gates presentation, never content. #}
+{% set currentTheme = app_theme.current %}
+
+<button type="button" class="theme-trigger" data-theme-open
+        aria-haspopup="dialog" aria-label="{{ 'header.theme.label'|trans }}"
+        title="{{ 'header.theme.label'|trans }} — {{ currentTheme.label }}">
+  {% include 'components/ui/_theme_crest.html.twig'
+      with { theme: currentTheme.value } only %}
+</button>
+
+<dialog class="theme-dialog" data-theme-dialog aria-labelledby="theme-dialog-title">
+  <div class="theme-dialog__head">
+    <h2 id="theme-dialog-title" class="eyebrow">{{ 'header.theme.label'|trans }}</h2>
+    <button type="button" class="theme-dialog__close" data-theme-close
+            aria-label="{{ 'header.theme.close'|trans }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+           stroke-linecap="round" aria-hidden="true" class="h-4 w-4">
+        <path d="M6 6l12 12M18 6L6 18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="theme-dialog__grid" role="group" aria-labelledby="theme-dialog-title">
+    {% for theme in app_theme.options %}
+      <button type="button"
+              class="theme-card theme-swatch--{{ theme.value }}"
+              data-theme-option="{{ theme.value }}"
+              data-theme-chrome="{{ theme.browserColor }}"
+              aria-pressed="{{ theme.value == currentTheme.value ? 'true' : 'false' }}">
+        <span class="theme-card__crest">
+          {% include 'components/ui/_theme_crest.html.twig'
+              with { theme: theme.value, class: 'h-5 w-5' } only %}
+        </span>
+        <span class="theme-card__name">{{ theme.label }}</span>
+        <span class="theme-card__origin">{{ theme.origin }}</span>
+        {# Decorative: the card already sits on the theme's ground, so the strip
+           shows the four colours laid ON it rather than repeating it. #}
+        <span class="theme-card__palette" aria-hidden="true">
+          <i style="background: var(--sw-a)"></i>
+          <i style="background: var(--sw-b)"></i>
+          <i style="background: var(--sw-c)"></i>
+          <i style="background: var(--sw-text)"></i>
+        </span>
+      </button>
+    {% endfor %}
+  </div>
+</dialog>

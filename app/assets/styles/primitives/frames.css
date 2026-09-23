@@ -6,12 +6,14 @@
 @utility hextech-frame {
   position: relative;
   background:
-    linear-gradient(180deg, rgba(26, 38, 60, 0.94), rgba(10, 20, 40, 0.94));
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel-raised) 94%, transparent),
+      color-mix(in srgb, var(--color-void) 94%, transparent));
   border: 1px solid color-mix(in srgb, var(--color-gold) 42%, transparent);
   clip-path: var(--hx-bevel);
   box-shadow:
-    inset 0 1px 0 rgba(240, 230, 210, 0.06),
-    0 12px 44px -14px rgba(1, 10, 19, 0.85);
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold-bright) 6%, transparent),
+    0 12px 44px -14px color-mix(in srgb, var(--color-hextech-black) 85%, transparent);
   transition: border-color 0.4s var(--ease-hextech), box-shadow 0.4s var(--ease-hextech);
 }
 
@@ -63,7 +65,8 @@
 /* Display-name treatment — parchment-to-gold gradient over Beaufort caps. */
 @utility text-gold-grad {
   background:
-    linear-gradient(180deg, #f5ecd8 8%, var(--color-gold) 60%, var(--color-gold-rich) 100%);
+    linear-gradient(180deg, var(--color-gold-pale) 8%, var(--color-gold) 60%,
+      var(--color-gold-rich) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

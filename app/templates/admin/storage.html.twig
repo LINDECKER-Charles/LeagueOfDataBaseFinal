@@ -7,14 +7,14 @@
     <div class="page-toolbar">
         {{ ui.page_head(
             'Infrastructure',
-            'Stockage objet',
-            'Poids et composition du bucket MinIO content-addressed (ddragon).'
+            'Stockage',
+            'Poids et composition du volume de stockage DDragon (content-addressed).'
         ) }}
         <a class="btn ghost" href="{{ path('admin_storage', { refresh: 1 }) }}"
-           title="Recalculer (ignore le cache 2 min)">Rafraîchir</a>
+           title="Recalculer (ignore le cache 10 min)">Rafraîchir</a>
     </div>
 
-    {# A deep S3 listing is the slowest report of the panel: it streams in after
+    {# A deep storage listing is the slowest report of the panel: it streams in after
        the shell instead of holding the whole page. #}
     {{ ui.panel(
         'storage',

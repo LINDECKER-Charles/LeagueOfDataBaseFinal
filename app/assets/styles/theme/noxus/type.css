@@ -1,0 +1,102 @@
+/* ---------------------------------------------------------------------------
+   NOXUS — typography.
+
+   Archivo is a variable grotesque (400-900 from one file per subset), wide and
+   heavy. Set at 800 in caps with the tracking pulled in, it stops reading as an
+   interface font and starts reading as a wall.
+
+   The obvious alternative was an inscriptional Roman — Cinzel, Marcellus, the
+   Trajan register. It was tried and rejected: carved Roman capitals on black
+   with crimson and gold is precisely the epic-fantasy costume this palette has
+   to avoid, and it would have sat in the same serif family as the other three
+   identities. Noxus in Arcane is austere, monumental, stone and steel — not
+   gothic. A brutal grotesque says empire without saying dragon.
+
+   Latin only, by unicode-range: the other scripts fall back to Beaufort glyph
+   by glyph, exactly as under Zaun. Self-hosted (the CSP ships `font-src
+   'self'`). Archivo © The Archivo Project Authors, SIL Open Font License 1.1 —
+   licence in public/fonts/archivo/OFL.txt.
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Archivo';
+  src: url('/fonts/archivo/latin.woff2') format('woff2');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Archivo';
+  src: url('/fonts/archivo/latin-ext.woff2') format('woff2');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+[data-theme="noxus"] {
+  --font-beaufort: "Archivo", "Beaufort", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Display type is set like a monument: heavy, tight, no air between letters.
+   Piltover's wide Deco tracking would make the same words read as jewellery. */
+[data-theme="noxus"] h1,
+[data-theme="noxus"] h2,
+[data-theme="noxus"] h3,
+[data-theme="noxus"] .display {
+  letter-spacing: -0.015em;
+  font-weight: 800;
+}
+[data-theme="noxus"] .hero-name {
+  letter-spacing: -0.035em;
+  font-weight: 900;
+}
+
+/* Labels stay on the display face rather than moving to mono as they do under
+   Zaun. That difference is the point: Zaun stamps its labels because it is a
+   workshop; Noxus carves them because it is a state. Heavy, small, tight. */
+[data-theme="noxus"] .eyebrow,
+[data-theme="noxus"] .codex-header h2,
+[data-theme="noxus"] .codex-header .codex-header__title {
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+[data-theme="noxus"] .codex-header h2,
+[data-theme="noxus"] .codex-header .codex-header__title {
+  font-size: 0.82rem;
+}
+
+[data-theme="noxus"] .hx-btn,
+[data-theme="noxus"] .hx-btn-ghost,
+[data-theme="noxus"] .hx-btn-gold {
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+/* The same Deco-tracking reset as every other identity — the chrome carries
+   0.14em-0.18em by default and it is the loudest thing Piltover leaves behind. */
+[data-theme="noxus"] .nav-link,
+[data-theme="noxus"] .brand-title,
+[data-theme="noxus"] .section-nav a,
+[data-theme="noxus"] .bottom-nav span,
+[data-theme="noxus"] .switcher__panel--menu a,
+[data-theme="noxus"] .switcher__panel--menu button {
+  letter-spacing: 0.03em;
+  font-weight: 700;
+}
+
+/* Card titles do not need to shout; 600 keeps a grid of 700 names readable. */
+[data-theme="noxus"] .hextech-frame h3 {
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+/* Bone to brass, not parchment to gold: the display gradient loses the yellow. */
+[data-theme="noxus"] .text-gold-grad {
+  background-image: linear-gradient(180deg, var(--color-gold-pale) 4%,
+    var(--color-gold-light) 52%, var(--color-gold-rich) 100%);
+}

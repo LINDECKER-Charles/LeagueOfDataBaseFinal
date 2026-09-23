@@ -14,7 +14,7 @@
         <a class="btn ghost" href="{{ path('admin_monitoring', { refresh: 1 }) }}">Rafraîchir</a>
     </div>
 
-    {# The probes are live round trips to Postgres/MinIO/the Go services: a dead
+    {# The probes are live round trips to Postgres/the storage/the Go services: a dead
        service must not stall the page it is meant to report on. #}
     {{ ui.panel(
         'monitoring', refresh ? { refresh: 1 } : {}, panels['monitoring']|default(null), 'cards'

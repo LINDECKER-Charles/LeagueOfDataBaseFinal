@@ -66,8 +66,8 @@ final class AdminAccessTest extends WebTestCase
 
         $client->request('GET', '/admin');
 
-        // Like the storage panel, the overview degrades gracefully when MinIO is
-        // unreachable (inline alert) and still answers 200.
+        // Like the storage panel, the overview degrades gracefully when the storage is
+        // unreadable (inline alert) and still answers 200.
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', "Vue d'ensemble");
     }
@@ -79,7 +79,7 @@ final class AdminAccessTest extends WebTestCase
 
         $client->request('GET', '/admin/storage');
 
-        // The panel is resilient: it returns 200 whether or not MinIO is reachable
+        // The panel is resilient: it returns 200 whether or not the storage is readable
         // (Storage\StorageAnalyticsService degrades to ok=false instead of 500).
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Stockage');

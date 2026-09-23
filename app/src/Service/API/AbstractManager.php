@@ -21,7 +21,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 /**
  * Base for the DDragon resource managers (champion, item, rune, summoner).
  *
- * Storage model (MinIO / object storage):
+ * Storage model (local storage volume, see flysystem.yaml):
  *  - JSON data : data/{version}/{lang}/{type}.json          (logical cache)
  *  - Images    : blobs/{sha256}.{ext}                        (content-addressed, deduped)
  *  - Manifest  : manifest/{version}/{type}.json  name => cdn (image lookup without re-download)
@@ -63,7 +63,7 @@ abstract class AbstractManager implements WarmableManagerInterface, ImageStatusI
     ) {}
 
     /**
-     * Fetch the resource's JSON for a version/language, cached in object storage.
+     * Fetch the resource's JSON for a version/language, cached in the storage.
      *
      * @return array<mixed>
      */
@@ -77,8 +77,8 @@ abstract class AbstractManager implements WarmableManagerInterface, ImageStatusI
      * the form every caller below the manager boundary uses.
      *
      * The dataset is immutable per {@see DatasetRef}: serve it from the
-     * in-request memo, then the cross-request cache, before ever touching object
-     * storage or the gateway. Avoids a MinIO round-trip + a full json_decode of
+     * in-request memo, then the cross-request cache, before ever touching the
+     * storage or the gateway. Avoids a disk read + a full json_decode of
      * the whole resource on every page render.
      *
      * @return array<mixed>
@@ -94,7 +94,7 @@ abstract class AbstractManager implements WarmableManagerInterface, ImageStatusI
     }
 
     /**
-     * Read the dataset from object storage, falling back to a one-time fetch
+     * Read the dataset from the storage, falling back to a one-time fetch
      * through the Go gateway (then persisted) when it is not yet stored.
      *
      * A definitive upstream absence (403/404) is not an error: either the
@@ -124,7 +124,7 @@ abstract class AbstractManager implements WarmableManagerInterface, ImageStatusI
     }
 
     /**
-     * Read a JSON payload from object storage, fetching it once through the
+     * Read a JSON payload from the storage, fetching it once through the
      * gateway (then persisting it) on a miss — the single spelling of "object
      * storage is the cache, the gateway is the origin".
      *
@@ -136,7 +136,7 @@ abstract class AbstractManager implements WarmableManagerInterface, ImageStatusI
         try {
             return json_decode($this->ddragonStorage->read($key), true) ?? [];
         } catch (UnableToReadFile) {
-            // Not in object storage yet → fetch once and persist.
+            // Not in the storage yet → fetch once and persist.
         }
 
         $data = $fetch();

@@ -14,7 +14,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Backfills the WebP sibling (blobs/<sha>.webp) for every image blob already in
- * object storage. New blobs get their WebP at ingestion ({@see \App\Service\Storage\BlobStore});
+ * the storage. New blobs get their WebP at ingestion ({@see \App\Service\Storage\BlobStore});
  * this command covers the ones stored before WebP existed. Idempotent.
  */
 #[AsCommand(

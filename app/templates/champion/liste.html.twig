@@ -45,7 +45,8 @@
     {# Versioned square icon (ingested per patch), overlaid on the unversioned
        splash so the art carries a version-accurate cue — a refreshable slot
        while cold (see components/ui/resource_image). #}
-    {% set overlayBox = 'absolute bottom-2 left-2 h-10 w-10 border border-gold/60 bg-void shadow-[0_2px_10px_rgba(1,10,19,0.75)]' %}
+    {% set overlayBox = 'absolute bottom-2 left-2 h-10 w-10 border border-gold/60 bg-void'
+      ~ ' shadow-[0_2px_10px_var(--hx-shadow-soft)]' %}
     <div data-img-scope="champion" data-img-version="{{ meta.version }}"
          data-img-batch="{{ image_status_batch() }}">
     {% include 'components/ui/resource_image_template.html.twig' with {

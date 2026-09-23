@@ -20,7 +20,7 @@
 <p align="center">
   <b>Explorateur web des données <a href="https://leagueoflegends.com">League of Legends</a></b> — champions, objets, runes et sorts d'invocateur,<br>
   pour <b>chaque version</b> et <b>chaque langue</b> du jeu. Backend Symfony <b>sans base de données</b> (proxy sur le CDN Data Dragon),<br>
-  passerelle Go et stockage objet adressé par contenu.
+  passerelle Go et stockage sur disque adressé par contenu.
 </p>
 
 ---
@@ -159,7 +159,7 @@ Interface **responsive** sur **Tailwind CSS 4** (du petit mobile 320 px à l'iPa
 <a id="ecran-5"></a>
 ### <img src="docs/assets/badges/n5.svg" width="30" align="top" alt="5."> Chargement temps réel
 
-> Avant une navigation, un overlay **Server-Sent Events** préchauffe les images de la page de destination et affiche une **barre déterminée** nommant chaque ressource à mesure qu'elle atterrit dans le stockage objet. La visite Turbo n'a lieu qu'une fois la page « chaude ».
+> Avant une navigation, un overlay **Server-Sent Events** préchauffe les images de la page de destination et affiche une **barre déterminée** nommant chaque ressource à mesure qu'elle atterrit dans le stockage. La visite Turbo n'a lieu qu'une fois la page « chaude ».
 
 <p align="center">
   <img src="screenshot/11-working.png" alt="Loader temps réel (SSE)" width="820">
@@ -183,16 +183,16 @@ Interface **responsive** sur **Tailwind CSS 4** (du petit mobile 320 px à l'iPa
 | | Couche | Technologie | Rôle |
 |---|---|---|---|
 | <img src="docs/assets/icons/globe.svg" width="18" alt=""> | **Edge** | Caddy (dépôt d'infrastructure `infra-vps`) | Entrée publique partagée du VPS, TLS automatique — déployée avant ce projet, hors de ce dépôt |
-| <img src="docs/assets/icons/server.svg" width="18" alt=""> | **Reverse proxy** | nginx | Front HTTP ; sert `/cdn` (MinIO), `/build`, `/fonts`, streaming SSE |
+| <img src="docs/assets/icons/server.svg" width="18" alt=""> | **Reverse proxy** | nginx | Front HTTP ; sert `/cdn/blobs` (depuis le disque), `/build`, `/fonts`, streaming SSE |
 | <img src="docs/assets/icons/layout-template.svg" width="18" alt=""> | **Backend** | Symfony 7.4 · PHP 8.5 (FPM) | Application, **sans base de données** — proxy sur Data Dragon |
-| <img src="docs/assets/icons/git-branch.svg" width="18" alt=""> | **Microservice** | Go 1.25 | Passerelle de *fetch* : egress DDragon, garde SSRF, batch parallèle |
+| <img src="docs/assets/icons/git-branch.svg" width="18" alt=""> | **Microservice** | Go 1.26 | Passerelle de *fetch* : egress DDragon, garde SSRF, batch parallèle |
 | <img src="docs/assets/icons/palette.svg" width="18" alt=""> | **Frontend** | Twig + Vue 3 (TS) + Vite · Tailwind 4 | Coques Twig + îlots Vue montés dynamiquement |
-| <img src="docs/assets/icons/database.svg" width="18" alt=""> | **Stockage** | MinIO (S3) | Images adressées par contenu (SHA-256), déduplication native |
+| <img src="docs/assets/icons/database.svg" width="18" alt=""> | **Stockage** | Volume Docker `storage` (Flysystem local) | Images adressées par contenu (SHA-256), datasets et manifestes ; écritures atomiques |
 | <img src="docs/assets/icons/life-buoy.svg" width="18" alt=""> | **Mail (dev)** | Mailpit | SMTP + UI de test |
 | <img src="docs/assets/icons/refresh-cw.svg" width="18" alt=""> | **DevOps** | Docker Compose · GitHub Actions → GHCR | Build, CI, images publiées |
 | <img src="docs/assets/icons/shield-check.svg" width="18" alt=""> | **Tests** | PHPUnit · `go test` · Vitest · Playwright | Backend, gateway, îlots Vue, captures |
 
-**Principe directeur :** aucune donnée n'est stockée en base. L'application se comporte comme un **cache intelligent multi-niveaux** devant le CDN Data Dragon de Riot, avec un stockage objet dédupliqué pour les binaires.
+**Principe directeur :** aucune donnée n'est stockée en base. L'application se comporte comme un **cache intelligent multi-niveaux** devant le CDN Data Dragon de Riot, avec un stockage de fichiers dédupliqué pour les binaires.
 
 ---
 
@@ -205,26 +205,26 @@ flowchart LR
     Caddy -->|HTTP interne| Nginx[nginx<br/>reverse proxy]
 
     Nginx -->|FastCGI| PHP[php-fpm<br/>Symfony 7.4]
-    Nginx -->|/cdn/ → bucket| MinIO[(MinIO<br/>stockage objet S3)]
+    Nginx -->|/cdn/blobs/ · lecture seule| Storage[(Volume storage<br/>/srv/storage)]
     Nginx -->|/build /fonts| Static[Assets statiques<br/>Vite build]
 
     PHP -->|POST /fetch · GET /versions| Go[go-fetcher<br/>passerelle Go]
-    PHP -->|read / write blobs+manifest+data| MinIO
+    PHP -->|read / write blobs+manifest+data| Storage
     PHP -.->|SMTP dev| Mail[Mailpit]
 
     Go -->|GET HTTPS · allowlist SSRF| DDragon[(Data Dragon<br/>+ CommunityDragon)]
 
     classDef ext fill:#1f2937,stroke:#4b5563,color:#e5e7eb
     classDef core fill:#0f766e,stroke:#134e4a,color:#ecfeff
-    class DDragon,MinIO ext
+    class DDragon,Storage ext
     class PHP,Go core
 ```
 
 **Points clés**
 
 - **Seul `go-fetcher` sort du réseau.** Symfony ne parle jamais directement à Riot : tout l'egress passe par la passerelle Go, qui applique une **allowlist SSRF** (`ddragon.leagueoflegends.com`, `raw.communitydragon.org`) et impose `https`.
-- **nginx sert les images directement depuis MinIO** via `location /cdn/` → `proxy_pass http://minio:9000/ddragon/`. Les clés étant des SHA-256 (contenu immuable), le cache est posé à `Cache-Control: public, immutable` sur **1 an**.
-- **Pas de base de données** : les seuls états persistés sont dans MinIO (JSON, blobs, manifestes).
+- **nginx sert les images directement depuis le disque** via `location /cdn/blobs/` → `alias /srv/storage/blobs/` (volume monté en lecture seule). Les clés étant des SHA-256 (contenu immuable), le cache est posé à `Cache-Control: public, immutable` sur **1 an**. Tout autre chemin `/cdn/*` répond 404 : seuls les blobs sont publics.
+- **Pas de base de données** : les seuls états persistés sont des fichiers du volume `storage` (JSON, blobs, manifestes). Chaque écriture passe par un fichier `.staging/` puis un `rename()` atomique — nginx et les requêtes concurrentes ne lisent jamais un fichier à moitié écrit.
 
 ---
 
@@ -252,7 +252,7 @@ LeagueOfDataBaseFinal/
 │   │   └── internal/{api,fetcher,config}/
 │   └── api/                    # API REST v1 publique (payante)
 │       └── internal/{api,keys,quota,ratelimit,store,trends}/
-├── docker/                     # Dockerfiles + confs (php, nginx, minio)
+├── docker/                     # Dockerfiles + confs (php, nginx)
 ├── screenshot/                 # Captures (Partie Design)
 └── docs/                       # Documentation détaillée
 ```
@@ -311,10 +311,10 @@ flowchart TD
     B -->|hit| Z[(retour)]
     B -->|miss| C{Cache cross-req<br/>ddragon.cache ?}
     C -->|hit| Z
-    C -->|miss| D{Objet MinIO<br/>data/version/lang/type.json ?}
+    C -->|miss| D{Fichier stocké<br/>data/version/lang/type.json ?}
     D -->|présent| E[json_decode] --> Z
     D -->|absent| F[go-fetcher · GET DDragon JSON]
-    F -->|200| G[persist MinIO + cache] --> Z
+    F -->|200| G[persist stockage + cache] --> Z
     F -->|403/404 UpstreamNotFound| H{lang == en_US ?}
     H -->|oui| I[dataset vide<br/>ressource antérieure au patch] --> G
     H -->|non| J[repli en_US<br/>langue absente sur ce patch] --> G
@@ -344,7 +344,7 @@ flowchart TD
         ING --> F[go-fetcher.fetchMany<br/>batch parallèle base64]
         F --> S[BlobStore.store bytes]
         S --> SHA["clé = blobs/&lt;sha256&gt;.ext"]
-        SHA --> W[write MinIO idempotent]
+        SHA --> W[écriture atomique idempotente]
         W --> WEBP[sibling .webp best-effort]
         W --> MAN[saveManifest : read-merge-write]
     end
@@ -353,7 +353,7 @@ flowchart TD
     MAN --> R
 ```
 
-**Trois espaces de clés dans MinIO :**
+**Trois espaces de clés dans le volume `storage` :**
 
 | Type | Clé | Rôle |
 |---|---|---|
@@ -361,7 +361,7 @@ flowchart TD
 | **Blobs** | `blobs/{sha256}.{ext}` (+ `.webp`) | Images **dédupliquées** par contenu |
 | **Manifeste** | `manifest/{version}/{type}.json` | `nom → chemin cdn` (lookup sans re-download) |
 
-> **Idempotence** : la clé *étant* le hash des octets, le `PUT` est idempotent — pas de `HeadObject` avant écriture (une image identique se réécrit à l'identique, sans surcoût de round-trip). Le sibling WebP garde son check car il protège un transcodage GD coûteux.
+> **Idempotence** : la clé *étant* le hash des octets, l'écriture est idempotente — pas de test d'existence avant écriture (une image identique se réécrit à l'identique). Le sibling WebP garde son check car il protège un transcodage GD coûteux.
 
 ---
 
@@ -410,7 +410,7 @@ sequenceDiagram
     participant L as LoaderController
     participant M as Manager(s)
     participant G as go-fetcher
-    participant S as MinIO
+    participant S as Stockage
 
     V->>N: GET /api/loader/prepare?path&version&lang&page
     N->>L: FastCGI (buffering off, timeout 3600s)
@@ -490,7 +490,7 @@ cp .env.example .env
 # 3. Pré-requis dev (le conteneur php bind-monte ./app)
 cd app && composer install && npm ci && npm run build && cd ..
 
-# 4. Lancer toute la stack (php-fpm, nginx, Go, MinIO, Mailpit)
+# 4. Lancer toute la stack (php-fpm, nginx, Go, Postgres, Mailpit)
 docker compose up -d --build
 ```
 
@@ -499,11 +499,11 @@ docker compose up -d --build
 | Service | URL |
 |---|---|
 | Application | http://localhost:8080 |
-| Console MinIO | http://localhost:9001 |
 | Mailpit (mails) | http://localhost:8025 |
 | Passerelle Go | http://localhost:8085/healthz |
 
 Front avec HMR (optionnel) : `cd app && npm run dev`.
+Contenu du stockage (volume `storage`) : `docker compose exec php ls /srv/storage`.
 Captures Playwright : `node tools/screenshots/capture.mjs` → [`screenshot/`](screenshot/).
 
 ---

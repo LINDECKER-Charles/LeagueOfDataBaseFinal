@@ -17,7 +17,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * container recreation every deploy performs — a legally retained trail must not
  * depend on a container's lifetime. Cross-host durability and survival across
  * `down -v` remain the rollup's job ({@see AuditRollupService}), which archives
- * closed days verbatim into MinIO — verbatim, not aggregated, because an audit
+ * closed days verbatim into the storage — verbatim, not aggregated, because an audit
  * trail must preserve every row.
  */
 final class AuditLogStore extends NdjsonDayStore implements AuditDayReader

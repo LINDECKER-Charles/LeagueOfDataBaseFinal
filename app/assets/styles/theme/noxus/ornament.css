@@ -1,0 +1,162 @@
+/* ---------------------------------------------------------------------------
+   NOXUS — ornament: blade points, banner bars, one seal.
+
+   Same discipline as the other identities: the gem facet has to die, and what
+   replaces it has to mean something. Piltover's diamond is a cut stone. Zaun's
+   answer was a rivet, because Zaun builds. Noxus's answer is a BLADE POINT,
+   because Noxus takes — a downward triangle, the shape of the crest and of
+   every weapon in the region's art.
+--------------------------------------------------------------------------- */
+
+/* ---- The canvas ----------------------------------------------------------- */
+/* Piltover is lit from its sky and Zaun from the Sump beneath it. Noxus is lit
+   like a parade ground: a flat, cold, high overcast, with the only warmth
+   coming off the banners at one edge. The grain is not decoration — wide soft
+   radials band visibly in 8-bit on a dark canvas, and it doubles as the tooth
+   of hammered steel. */
+[data-theme="noxus"] body {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160'\
+ height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise'\
+ baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160'\
+ height='160' filter='url(%23n)' opacity='.038'/%3E%3C/svg%3E"),
+    radial-gradient(1400px 460px at 50% -8%,
+      color-mix(in srgb, var(--color-blue-steel) 26%, transparent), transparent 68%),
+    radial-gradient(700px 620px at 4% 30%,
+      color-mix(in srgb, var(--color-hex-deep) 9%, transparent), transparent 60%);
+}
+
+/* ---- Rules become banner bars -------------------------------------------- */
+/* A brass hairline over a heavy crimson bar: the top rail a banner hangs from,
+   seen edge-on. Solid across its whole width — Noxus does not fade out. */
+[data-theme="noxus"] .hx-rule {
+  height: 3px;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--color-gold) 55%, transparent),
+      color-mix(in srgb, var(--color-gold) 55%, transparent)) 0 0 / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent,
+      color-mix(in srgb, var(--color-hex-deep) 85%, transparent) 12%,
+      color-mix(in srgb, var(--color-hex-deep) 85%, transparent) 88%,
+      transparent) 0 100% / 100% 2px no-repeat;
+}
+
+/* The node is the banner's swallowtail: a blade point hung from the rail. */
+[data-theme="noxus"] .hx-rule::after {
+  rotate: 0deg;
+  width: 14px;
+  height: 12px;
+  top: 0;
+  background: var(--color-hex-deep);
+  clip-path: polygon(0 0, 100% 0, 100% 55%, 50% 100%, 0 55%);
+  box-shadow: none;
+}
+
+[data-theme="noxus"] .codex-header::after {
+  height: 3px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-gold) 50%, transparent),
+      transparent 85%) 0 0 / 100% 1px no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, var(--color-hex-deep) 70%, transparent),
+      transparent 60%) 0 100% / 100% 2px no-repeat;
+}
+
+/* ---- Every gem becomes a blade point ------------------------------------- */
+[data-theme="noxus"] .codex-header::before {
+  width: 10px;
+  height: 12px;
+  rotate: 0deg;
+  background: var(--color-hex-deep);
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 50% 100%, 0 50%);
+  box-shadow: none;
+}
+
+[data-theme="noxus"] .filter-marker,
+[data-theme="noxus"] .cl-node::before,
+[data-theme="noxus"] .slot-node i,
+[data-theme="noxus"] .ddragon-rich li::before,
+[data-theme="noxus"] .hx-pip {
+  transform: none;
+  rotate: 0deg;
+  border-radius: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+[data-theme="noxus"] .hx-pip {
+  display: inline-block;
+  width: 7px;
+  height: 6px;
+  background: currentColor;
+  font-size: 0;
+  vertical-align: middle;
+}
+[data-theme="noxus"] .cl-node::before {
+  box-shadow: none;
+}
+
+/* Sockets and seals are struck, not seated: square housing, crimson core. */
+[data-theme="noxus"] .socket__hex {
+  rotate: 0deg;
+  border-radius: 0;
+  border-width: 2px;
+}
+[data-theme="noxus"] .donate-tier__gem::before,
+[data-theme="noxus"] .donate-seal::before,
+[data-theme="noxus"] .donate-seal::after {
+  transform: none;
+  border-radius: 0;
+}
+
+/* ---- One seal, top right -------------------------------------------------- */
+/* `hx-corners` bracketed a panel at two opposite corners with Deco squares.
+   Noxus replaces both with a SINGLE wax seal in the top-right — the mark an
+   authority leaves on a document it has approved. One mark, not two: the empire
+   signs once. */
+[data-theme="noxus"] .hx-corners::before {
+  width: 9px;
+  height: 9px;
+  top: 10px;
+  left: auto;
+  right: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%,
+    color-mix(in srgb, var(--color-hex) 90%, transparent) 0 2px,
+    var(--color-hex-deep) 2px);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow) 85%, transparent);
+}
+[data-theme="noxus"] .hx-corners::after {
+  content: none;
+}
+
+/* ---- Chrome edges --------------------------------------------------------- */
+[data-theme="noxus"] .header-seam {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--color-hex-deep) 70%, transparent),
+    color-mix(in srgb, var(--color-gold) 45%, transparent) 55%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color-shadow) 85%, transparent);
+}
+[data-theme="noxus"] .bottom-nav::before {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--color-hex-deep) 75%, transparent),
+    color-mix(in srgb, var(--color-gold) 40%, transparent) 60%, transparent);
+}
+
+/* ---- The weave ------------------------------------------------------------ */
+/* Chevron courses — scale armour, and the downward point of the crest repeated
+   into a field. Martial where Piltover is crystalline and Zaun is botanical. */
+[data-theme="noxus"] .weave-hex { display: none; }
+[data-theme="noxus"] .weave-chevron { display: block; }
+
+/* The ambient glow becomes a single low bank of light, like a sky over a
+   fortress: no breathing, no bloom. */
+[data-theme="noxus"] .hx-ambient-glow--cyan {
+  background: radial-gradient(closest-side,
+    color-mix(in srgb, var(--color-hex-deep) 16%, transparent), transparent 70%);
+}
+[data-theme="noxus"] .hx-ambient-glow--gold {
+  background: radial-gradient(closest-side,
+    color-mix(in srgb, var(--color-gold) 12%, transparent), transparent 70%);
+}
+[data-theme="noxus"] .hx-bar__fill {
+  background: linear-gradient(90deg, var(--color-hex-deep), var(--color-gold));
+}

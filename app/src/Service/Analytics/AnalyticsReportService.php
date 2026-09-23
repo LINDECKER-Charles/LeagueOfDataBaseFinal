@@ -11,7 +11,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * Assembles the traffic + audience report for a time range. Each day is sourced
- * either from its immutable MinIO aggregate (rolled-up past days) or, when that
+ * either from its immutable storage aggregate (rolled-up past days) or, when that
  * doesn't exist yet, by aggregating the local NDJSON on the fly — so the panel
  * is correct whether or not the rollup has ever run (today is always live).
  */
@@ -21,6 +21,9 @@ final class AnalyticsReportService
     private const RANGES = ['7d' => 7, '30d' => 30, '90d' => 90, 'all' => null];
     private const DEFAULT_RANGE = '30d';
     private const CACHE_TTL = 45;
+    /** Closed days never change: memoised far longer than the assembled report. */
+    private const DAILY_CACHE_PREFIX = 'analytics.daily.';
+    private const DAILY_CACHE_TTL = 604800;
 
     public function __construct(
         private readonly EventStore $events,
@@ -55,12 +58,16 @@ final class AnalyticsReportService
             $this->cache->delete($key);
         }
 
-        return $this->cache->get($key, function (ItemInterface $item) use ($range): array {
+        return $this->cache->get($key, function (ItemInterface $item) use ($range, $fresh): array {
             $item->expiresAfter(self::CACHE_TTL);
             $today = new \DateTimeImmutable('today', new \DateTimeZone('UTC'));
             $dates = $this->windowDates($range, $today);
             $dailies = array_map(
-                fn (string $date): array => $this->dailyFor($date, $today),
+                fn (string $date): array => $this->dailyFor(
+                    $date,
+                    $today->format('Y-m-d'),
+                    $fresh,
+                ),
                 $dates,
             );
 
@@ -102,18 +109,49 @@ final class AnalyticsReportService
     }
 
     /**
+     * A closed day is immutable — its events are all written and its storage
+     * aggregate, once rolled up, never changes — so it is memoised on its own.
+     * A 90-day window then costs one storage read per *newly closed* day
+     * instead of ninety on every recompute of the range. Today is always live.
+     *
      * @return array<string, mixed>
      */
-    private function dailyFor(string $date, \DateTimeImmutable $today): array
+    private function dailyFor(string $date, string $today, bool $fresh): array
     {
-        $isPast = $date < $today->format('Y-m-d');
-        if ($isPast) {
-            $rolled = $this->dailyStore->read($date);
-            if ($rolled !== null) {
-                return $rolled;
-            }
+        if ($date >= $today) {
+            return $this->aggregateLocalDay($date);
         }
 
+        $key = self::DAILY_CACHE_PREFIX . $date;
+        if ($fresh) {
+            $this->cache->delete($key);
+        }
+
+        return $this->cache->get($key, function (ItemInterface $item) use ($date): array {
+            $rolled = $this->dailyStore->read($date);
+            if ($rolled !== null) {
+                $item->expiresAfter(self::DAILY_CACHE_TTL);
+
+                return $rolled;
+            }
+
+            // Not rolled up yet — or the storage momentarily unreadable. The
+            // local NDJSON answers, but only a day that actually owns one is worth
+            // freezing: otherwise a transient outage would pin an empty day for a
+            // week.
+            $item->expiresAfter(
+                $this->events->hasDay($date) ? self::DAILY_CACHE_TTL : self::CACHE_TTL,
+            );
+
+            return $this->aggregateLocalDay($date);
+        });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function aggregateLocalDay(string $date): array
+    {
         return $this->aggregator->aggregateDay($date, $this->events->readDay($date));
     }
 }

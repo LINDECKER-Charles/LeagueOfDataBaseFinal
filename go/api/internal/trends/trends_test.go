@@ -146,7 +146,7 @@ func TestTopCachesPerTypeAndRange(t *testing.T) {
 	}
 }
 
-// emptyReader stands for a bucket where no rollup was ever published.
+// emptyReader stands for a storage where no rollup was ever published.
 type emptyReader struct{}
 
 func (emptyReader) ReadDaily(context.Context, string) ([]byte, error) {

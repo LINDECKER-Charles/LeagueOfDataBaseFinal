@@ -214,6 +214,9 @@ header:
     item: "Objetos"
     runes: "Runas"
     summoner: "Hechizos de Invocador"
+  theme:
+    label: "Tema visual"
+    close: "Cerrar"
 
 # Auth & profile: only the password-policy / summoner-identity / Google OAuth
 # keys are localised so far; other account strings fall back to English.

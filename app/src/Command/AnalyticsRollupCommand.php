@@ -12,13 +12,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Consolidates local NDJSON analytics days into durable MinIO aggregates. Run it
+ * Consolidates local NDJSON analytics days into durable storage aggregates. Run it
  * on a schedule (e.g. hourly with --include-today, or nightly) and/or on deploy;
  * the admin panel also exposes a manual trigger. Idempotent.
  */
 #[AsCommand(
     name: 'app:analytics:rollup',
-    description: 'Consolide les journées analytics locales (NDJSON) en agrégats MinIO immuables.'
+    description: 'Consolide les journées analytics locales (NDJSON) en agrégats immuables dans le stockage.'
 )]
 final class AnalyticsRollupCommand extends Command
 {

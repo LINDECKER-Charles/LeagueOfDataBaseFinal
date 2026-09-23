@@ -18,7 +18,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  *
  * The HTML pages need the Data Dragon datasets: the shared header builds its
  * navigation from the patch list, so *every* page of the site 500s without them
- * (CI runs PHP alone — no MinIO, no go-fetcher). Those cases skip rather than
+ * (CI runs PHP alone — empty storage, no go-fetcher). Those cases skip rather than
  * fail, so a red result here always means a real regression. /llms.txt is
  * exempt: it degrades to "patch unavailable" by design and must prove it.
  */
@@ -117,7 +117,7 @@ final class EditorialPagesTest extends WebTestCase
 
         if ($inventory->latestVersion() === '') {
             self::markTestSkipped(
-                'Data Dragon datasets unavailable (no MinIO/go-fetcher in this environment).',
+                'Data Dragon datasets unavailable (empty storage, no go-fetcher in this environment).',
             );
         }
     }

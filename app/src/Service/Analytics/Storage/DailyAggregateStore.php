@@ -7,9 +7,9 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
 
 /**
- * MinIO gateway for per-day analytics aggregates (analytics/daily/{Y-m-d}.json).
+ * Storage gateway for per-day analytics aggregates (analytics/daily/{Y-m-d}.json).
  * These are written once when a day is rolled up ({@see RollupService}) and are
- * immutable thereafter — never the S3 read-merge-write pattern — so the reader
+ * immutable thereafter — never the manifests' read-merge-write pattern — so the reader
  * can trust them and the local NDJSON for that day can be pruned.
  */
 final class DailyAggregateStore
@@ -54,7 +54,7 @@ final class DailyAggregateStore
     }
 
     /**
-     * Rolled-up dates present in MinIO, ascending — the report walks history
+     * Rolled-up dates present in the storage, ascending — the report walks history
      * forward, so this one is deliberately the opposite of the NDJSON tiers
      * (newest first, which is what a "most recent days" scan needs).
      *

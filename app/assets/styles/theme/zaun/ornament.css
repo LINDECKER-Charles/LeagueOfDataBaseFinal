@@ -1,0 +1,199 @@
+/* ---------------------------------------------------------------------------
+   ZAUN — ornament: pipework, valves, and one wrought-iron flourish.
+
+   Two rules govern everything here.
+
+   1. The gem facet dies. A rotated square is a cut stone, and cut stones are
+      Piltover's whole argument. Every marker in the app that was a diamond
+      becomes a RIVET or a VALVE — round, seated, hardware. That single
+      substitution changes more than any colour does, because the shape recurs
+      in section headers, filters, bullets, timelines and sockets.
+
+   2. Dividers become pipework. "Tangles of corroded pipework" is the most
+      repeated phrase in every description of Zaun, and a rule is the only
+      element in a page that is already a run of something. So a rule stops
+      being a fading hairline with a gem in the middle, and becomes a lit pipe
+      with a coupling flange.
+--------------------------------------------------------------------------- */
+
+/* ---- Rules become pipe runs --------------------------------------------- */
+/* Two hairlines: the top one catches the chem-light and iridesces green into
+   Shimmer, the bottom one is the pipe's shadow side. */
+[data-theme="zaun"] .hx-rule {
+  height: 3px;
+  background:
+    linear-gradient(90deg, transparent,
+      var(--color-gold) 22%, var(--color-hex-deep) 78%, transparent) 0 0 / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent,
+      color-mix(in srgb, var(--color-shadow) 70%, transparent) 20%,
+      color-mix(in srgb, var(--color-shadow) 70%, transparent) 80%,
+      transparent) 0 100% / 100% 1px no-repeat;
+}
+
+/* The node stops being a gem and becomes the coupling that joins two lengths. */
+[data-theme="zaun"] .hx-rule::after {
+  rotate: 0deg;
+  width: 22px;
+  height: 9px;
+  border-radius: 2px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--color-gold-light) 55%, transparent),
+    var(--color-gold-dark) 55%,
+    color-mix(in srgb, var(--color-shadow) 60%, var(--color-gold-dark)));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold-bright) 30%, transparent),
+    0 0 12px -3px color-mix(in srgb, var(--color-gold) 60%, transparent);
+}
+
+/* The section header's trailing hairline is the same run, seen in profile. */
+[data-theme="zaun"] .codex-header::after {
+  height: 3px;
+  background:
+    linear-gradient(90deg, var(--color-gold) 0%,
+      color-mix(in srgb, var(--color-hex-deep) 60%, transparent) 55%,
+      transparent) 0 0 / 100% 1px no-repeat,
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--color-shadow) 70%, transparent),
+      transparent 70%) 0 100% / 100% 1px no-repeat;
+}
+
+/* ---- Every gem becomes hardware ----------------------------------------- */
+/* The section marker is a valve seen head-on: rim, seat, spindle. */
+[data-theme="zaun"] .codex-header::before {
+  width: 11px;
+  height: 11px;
+  rotate: 0deg;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%,
+    var(--color-gold-light) 0 1.5px,
+    transparent 1.5px 3px,
+    var(--color-gold) 3px 4.5px,
+    transparent 4.5px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-gold) 60%, transparent),
+    0 0 10px -2px color-mix(in srgb, var(--color-gold) 70%, transparent);
+}
+
+/* Rivets: markers that were small rotated squares are now seated studs. */
+[data-theme="zaun"] .filter-marker,
+[data-theme="zaun"] .cl-node::before,
+[data-theme="zaun"] .slot-node i,
+[data-theme="zaun"] .ddragon-rich li::before {
+  transform: none;
+  rotate: 0deg;
+  border-radius: 50%;
+}
+[data-theme="zaun"] .cl-node::before {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold-bright) 45%, transparent),
+    0 0 10px -1px color-mix(in srgb, var(--color-gold) 70%, transparent);
+}
+
+/* The decorative separator between an eyebrow's parts is a literal ◆ in the
+   markup — a gem, and the single most Piltover mark in the app. It is carried
+   by `hx-pip`, a class that does nothing in the default identity (the glyph
+   renders as authored) and here collapses the character to zero and puts a
+   rivet in its place. The build pages keep their ◆: there it is not a
+   separator, it is the gold symbol, and gold is game data.
+   `font-size: 0` rather than a pseudo-element, so the span needs no ::before
+   and nothing has to be added to six templates twice. */
+[data-theme="zaun"] .hx-pip {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  font-size: 0;
+  vertical-align: middle;
+}
+
+/* The empty favourite socket was a hollow hex mount; it becomes a valve seat. */
+[data-theme="zaun"] .socket__hex {
+  rotate: 0deg;
+  border-radius: 50%;
+  border-width: 2px;
+}
+
+/* Donation gems become pressure seals — same anatomy, round housing. */
+[data-theme="zaun"] .donate-tier__gem::before,
+[data-theme="zaun"] .donate-seal::before,
+[data-theme="zaun"] .donate-seal::after {
+  transform: none;
+  border-radius: 50%;
+}
+
+/* ---- Bolts where the plate is not bent ---------------------------------- */
+/* The default identity brackets a panel at two opposite corners with etched
+   Deco squares. Under Zaun the ornament has already been spent: the plate's own
+   corners sweep, and that sweep IS the ironwork.
+   So `hx-corners` stops decorating and starts explaining. The iron radius bends
+   two corners and leaves the other two cut — and a cut corner is a corner that
+   had to be fastened. A rivet is seated on each of the two SHARP ones, which is
+   why they are top-right and bottom-left here rather than following the
+   original's diagonal. Hardware, reading as hardware.
+
+   An earlier pass put a wrought-iron whiplash flourish here instead. It was
+   dropped after looking at it: at 46px it read as a scribble, not as ironwork,
+   and the frame plus the lattice weave already carry Art Nouveau without
+   anyone having to draw a curl. */
+[data-theme="zaun"] .hx-corners::before,
+[data-theme="zaun"] .hx-corners::after {
+  width: 6px;
+  height: 6px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-gold-dark);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold-bright) 45%, transparent),
+    0 1px 2px color-mix(in srgb, var(--color-shadow) 80%, transparent);
+}
+[data-theme="zaun"] .hx-corners::before {
+  top: 9px;
+  left: auto;
+  right: 9px;
+}
+[data-theme="zaun"] .hx-corners::after {
+  bottom: 9px;
+  right: auto;
+  left: 9px;
+}
+
+/* ---- The chrome edges are girders, not hairlines ------------------------- */
+/* Same grammar as the rules, applied where the app's frame meets its content:
+   a lit brass line over its own shadow. It is what stops the header from
+   floating and gives the page a structure it hangs from. */
+[data-theme="zaun"] .header-seam {
+  background: linear-gradient(90deg, transparent,
+    var(--color-gold) 28%, var(--color-hex-deep) 72%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color-shadow) 80%, transparent);
+}
+[data-theme="zaun"] .bottom-nav::before {
+  background: linear-gradient(90deg, transparent,
+    var(--color-gold) 25%, var(--color-hex-deep) 75%, transparent);
+}
+
+/* ---- The weave ----------------------------------------------------------- */
+/* Hexagons are Piltover's crystal seen in plan. Zaun gets the grille its
+   buildings are actually made of. Geometry, not colour, is what had to change,
+   which is why this one lives in the markup (partials/main/gradient). */
+[data-theme="zaun"] .weave-hex { display: none; }
+[data-theme="zaun"] .weave-iron { display: block; }
+
+/* The ambient glow follows the same inversion as the canvas: Piltover is lit
+   from its sky, Zaun from the Sump beneath it. */
+[data-theme="zaun"] .hx-ambient-glow--cyan {
+  top: auto;
+  bottom: -28%;
+}
+
+/* ---- Iridescence on the moving parts ------------------------------------ */
+/* "A sinister touch of sharpness and iridescence" — the loader bar and the
+   ambient glows are the only surfaces that move, so they are where the sheen
+   belongs. Everywhere else it would be noise. */
+[data-theme="zaun"] .hx-bar__fill {
+  background: linear-gradient(90deg, var(--color-gold), var(--color-hex-deep));
+}
+[data-theme="zaun"] .hx-ambient-glow--gold {
+  background: radial-gradient(closest-side,
+    color-mix(in srgb, var(--color-hex-deep) 22%, transparent), transparent 70%);
+}

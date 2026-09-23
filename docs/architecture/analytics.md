@@ -2,7 +2,8 @@
 
 Sous-système d'analytics (trafic, audience, stockage) et refonte Hextech du panneau
 `/admin`. Sans base de données : le flux d'événements vit en NDJSON local, consolidé
-en agrégats immuables sur MinIO ; les métriques stockage dérivent du bucket lui-même.
+en agrégats immuables sur le volume `storage` ; les métriques stockage dérivent de ce
+volume lui-même.
 
 ## Vue d'ensemble
 
@@ -12,8 +13,8 @@ en agrégats immuables sur MinIO ; les métriques stockage dérivent du bucket l
 | Parsing | UA → navigateur/OS/appareil/bot ; referer → source ; IP → pays | `UserAgentParser`, `RefererClassifier`, `GeoLocator` |
 | Journal | Append-only NDJSON, 1 fichier/jour UTC | `Service/Analytics/EventStore` → `var/state/analytics/events/{Y-m-d}.ndjson` |
 | Agrégation | Events → agrégat journalier mergeable → rapport de plage | `AnalyticsAggregator`, `RangeReportBuilder`, `AnalyticsReportService` |
-| Durabilité | Consolidation NDJSON local → objets immuables MinIO | `RollupService`, `DailyAggregateStore`, cmd `app:analytics:rollup` |
-| Stockage | Analyse détaillée du bucket (familles, WebP, dédup, complétude) | `StorageAnalyticsService` |
+| Durabilité | Consolidation NDJSON local → fichiers immuables du volume `storage` | `RollupService`, `DailyAggregateStore`, cmd `app:analytics:rollup` |
+| Stockage | Analyse détaillée du stockage (familles, WebP, dédup, complétude) | `StorageAnalyticsService` |
 | Rendu | Charts SVG serveur (aucune dépendance front) | `Service/Analytics/Chart/SvgChartRenderer`, `Twig/AdminChartExtension` |
 | UI | Design system Hextech auto-contenu | `public/admin/admin.css`, `templates/admin/*` |
 
@@ -28,19 +29,20 @@ nom de route (`_route`) — plus robuste qu'un matching de chemin, exclut native
 `api_*`, `admin_*`, le setup et le SSE. La factory lit uniquement la requête et la
 query, **jamais la session**, pour ne pas forcer son démarrage.
 
-## Persistance — pas de read-merge-write S3
+## Persistance — pas de read-merge-write sur un fichier partagé
 
-Le manifeste documente que le RMW S3 est non atomique (course loader SSE ↔ flush
-terminate). Les vues de page sont haute fréquence : un objet mutable partagé
-hériterait de cette course. D'où :
+Le manifeste documente que son read-merge-write n'est pas atomique : chaque écriture
+l'est (fichier `.staging/` puis `rename()`), mais la séquence lecture → fusion →
+écriture reste exposée à la course loader SSE ↔ flush terminate. Les vues de page
+sont haute fréquence : un fichier mutable partagé hériterait de cette course. D'où :
 
 1. **Chemin chaud** — `EventStore::append()` = un `file_put_contents(FILE_APPEND | LOCK_EX)`
    local, atomique par ligne entre workers php-fpm, microsecondes, sans réseau.
 2. **Durabilité** — `app:analytics:rollup` plie les journées **closes** en agrégats
-   immuables `analytics/daily/{Y-m-d}.json` sur MinIO (écrits une seule fois, jamais
-   mutés). La journée courante reste toujours lue en direct depuis le NDJSON.
+   immuables `analytics/daily/{Y-m-d}.json` sur le volume `storage` (écrits une seule
+   fois, jamais mutés). La journée courante reste toujours lue en direct depuis le NDJSON.
 
-Le rapport (`AnalyticsReportService`) sait lire indifféremment l'agrégat MinIO (jours
+Le rapport (`AnalyticsReportService`) sait lire indifféremment l'agrégat stocké (jours
 consolidés) ou agréger le NDJSON à la volée (jours non encore consolidés) → le
 panneau est correct que le rollup ait tourné ou non.
 
@@ -85,10 +87,11 @@ pourrait plus écrire, et `EventStore::append()` avale cet échec en silence.
 - `visitorId` = HMAC(IP|UA, APP_SECRET) tronqué — identifiant pseudonyme stable pour
   le comptage des uniques ; le couple brut n'est pas dérivable de l'id seul.
 - **Les IP/UA bruts ne quittent jamais le NDJSON local.** Les agrégats journaliers
-  MinIO ne contiennent que des compteurs + `visitorId` pseudonymes (pas de PII).
-- **Défense en profondeur** : le bucket `ddragon` est en lecture anonyme (blobs =
-  CDN). nginx **refuse** `^~ /cdn/analytics/` (404) pour qu'aucun agrégat ne soit
-  atteignable depuis le web ; l'app les lit en interne (php→minio, hors nginx).
+  du stockage ne contiennent que des compteurs + `visitorId` pseudonymes (pas de PII).
+- **Défense en profondeur** : nginx ne publie du volume `storage` que `/cdn/blobs/`
+  (liste blanche) ; tout autre chemin `/cdn/*`, dont `analytics/` et `audit/`, répond
+  404, si bien qu'aucun agrégat n'est atteignable depuis le web. L'app les lit en
+  interne, directement sur le disque (hors nginx).
 - Robots exclus des métriques humaines (comptés à part).
 - ⚠️ Rétention : le NDJSON contient de la PII. Le purger (`--prune`) après rollup,
   ou planifier une purge des journées anciennes selon la politique de rétention.
@@ -115,13 +118,13 @@ Le fichier est déposé **une fois** : `var/state` est adossé au volume `app_st
 ## Analytics stockage
 
 `StorageAnalyticsService` fait **une** passe `listContents` deep (taille/date
-renvoyées sans HEAD) + une lecture bornée des manifestes, puis calcule : poids par
+lues au listing, sans appel par fichier) + une lecture bornée des manifestes, puis calcule : poids par
 famille (`blobs`/`data`/`manifest`/`analytics`), ventilation blobs par extension,
 **couverture WebP** (siblings / sources), **ratio de déduplication** (références
 logiques des manifestes → blobs physiques content-addressed), poids `data` par
-version/langue/type, plus gros objets, timeline d'ingestion (`lastModified`), et
+version/langue/type, plus gros fichiers, timeline d'ingestion (`lastModified`), et
 matrice de complétude version × langues. Résultat mémoïsé 120 s (`ddragon.cache`) ;
-dégrade en `ok=false` si MinIO est injoignable (jamais de 500). `?refresh=1` force.
+dégrade en `ok=false` si le stockage est illisible (jamais de 500). `?refresh=1` force.
 
 ## Panneau `/admin`
 

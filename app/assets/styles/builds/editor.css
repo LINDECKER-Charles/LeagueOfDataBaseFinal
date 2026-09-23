@@ -114,7 +114,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--color-text-muted);
-    background: rgba(1, 10, 19, 0.82);
+    background: color-mix(in srgb, var(--color-hextech-black) 82%, transparent);
   }
   .forge-champ--on {
     border-color: var(--color-gold);

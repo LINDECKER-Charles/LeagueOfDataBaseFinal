@@ -96,7 +96,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		Status: statusOK,
 		Dependencies: map[string]string{
 			"postgres": dependencyState(r.Context(), s.pgPing),
-			"minio":    dependencyState(r.Context(), s.s3Ping),
+			"storage":  dependencyState(r.Context(), s.storagePing),
 		},
 	})
 }

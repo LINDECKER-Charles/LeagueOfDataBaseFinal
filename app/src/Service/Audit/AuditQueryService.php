@@ -10,7 +10,7 @@ use App\Service\Audit\Model\AuditTarget;
 use App\Service\Audit\Model\PageWindow;
 
 /**
- * Read side of the audit journal. Merges the local (hot) and MinIO (archived)
+ * Read side of the audit journal. Merges the local (hot) and storage (archived)
  * tiers, newest first, and filters in memory. There is no index — CLAUDE.md
  * mandates file storage, not Postgres, for this data — so reads are a bounded
  * scan: days are walked newest-first and capped. That is acceptable for an

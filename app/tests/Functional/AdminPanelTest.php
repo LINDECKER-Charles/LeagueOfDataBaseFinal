@@ -12,7 +12,7 @@ use Symfony\Component\Security\Core\User\InMemoryUser;
  * instead of the reports, the fragment endpoint renders each panel bare, and the
  * `?sync=1` fallback inlines the same fragments for no-JavaScript clients.
  *
- * Every panel degrades gracefully (unreachable MinIO/Postgres yield an inline
+ * Every panel degrades gracefully (unreadable storage/unreachable Postgres yield an inline
  * alert, never a 500), so these assertions hold without a live stack.
  */
 final class AdminPanelTest extends WebTestCase

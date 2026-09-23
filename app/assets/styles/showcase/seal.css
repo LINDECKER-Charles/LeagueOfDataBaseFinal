@@ -35,7 +35,7 @@
     inset: 9px;
     border-radius: 50%;
     background: repeating-conic-gradient(
-      rgba(240, 230, 210, 0.4) 0deg 0.7deg,
+      color-mix(in srgb, var(--color-gold-bright) 40%, transparent) 0deg 0.7deg,
       transparent 0.7deg 30deg
     );
     -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px),
@@ -51,7 +51,7 @@
     border: 1px solid color-mix(in srgb, var(--color-gold) 55%, transparent);
     box-shadow:
       0 0 44px -8px color-mix(in srgb, var(--color-hex) 50%, transparent),
-      inset 0 0 24px rgba(1, 10, 19, 0.8);
+      inset 0 0 24px color-mix(in srgb, var(--color-hextech-black) 80%, transparent);
   }
   .seal__icon img { width: 100%; height: 100%; object-fit: cover; }
   @keyframes seal-turn { to { rotate: 360deg; } }

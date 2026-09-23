@@ -8,13 +8,12 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
 
 /**
- * MinIO durability tier for the audit journal (audit/{Y-m-d}.ndjson). Closed
+ * Storage durability tier for the audit journal (audit/{Y-m-d}.ndjson). Closed
  * local days are archived here verbatim by {@see AuditRollupService} — the raw
  * lines, never an aggregate, because "every action of user X" must survive.
  *
- * The `audit/` prefix lives in the same bucket as the DDragon CDN but is denied
- * at the edge (nginx `location ^~ /cdn/audit/`), exactly like `analytics/`; PHP
- * still reads it internally over the MinIO network.
+ * The `audit/` prefix shares the DDragon storage volume but is never web-facing:
+ * nginx only exposes `blobs/` (allow-list), exactly like `analytics/`.
  */
 final class AuditArchiveStore implements AuditDayReader
 {
@@ -53,7 +52,7 @@ final class AuditArchiveStore implements AuditDayReader
     }
 
     /**
-     * Archived dates present in MinIO, newest first.
+     * Archived dates present in the storage, newest first.
      *
      * @return list<string>
      */

@@ -16,13 +16,13 @@
             <form method="post" action="{{ path('admin_analytics_rollup') }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('analytics_rollup') }}">
                 <button type="submit" class="btn ghost"
-                        title="Consolider les journées locales en agrégats MinIO durables"
+                        title="Consolider les journées locales en agrégats durables dans le stockage"
                 >Consolider</button>
             </form>
         </div>
     </div>
 
-    {# Each section is a report of its own (probes, NDJSON scan, S3 listing): they
+    {# Each section is a report of its own (probes, NDJSON scan, storage listing): they
        stream in independently so a cold one never holds the others back. #}
     {{ ui.panel('overview-app', {}, panels['overview-app']|default(null), 'kpi') }}
 

@@ -1,14 +1,14 @@
 /* ---------------------------------------------------------------------------
    Interactive primitives — buttons, chips, form fields and the pure-CSS switch.
-   The two hover shadows below keep a raw rgba: they live inside a Tailwind
-   arbitrary value, whose grammar allows neither spaces nor commas — color-mix()
-   cannot be expressed there. Everywhere else the gold reads from --color-gold.
+   The two hover shadows below live inside a Tailwind arbitrary value, whose
+   grammar allows neither spaces nor commas — color-mix() cannot be expressed
+   there, so they read the pre-composed --hx-glow-accent tokens instead.
 --------------------------------------------------------------------------- */
 @utility hx-btn {
   @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-gold/70
          bg-gold/15 px-4 py-2.5 font-beaufort text-sm uppercase tracking-[0.15em]
          text-gold-bright transition-all duration-300
-         hover:border-gold hover:bg-gold/25 hover:shadow-[0_0_28px_-6px_rgba(200,170,110,0.65)]
+         hover:border-gold hover:bg-gold/25 hover:shadow-[0_0_28px_-6px_var(--hx-glow-accent)]
          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40
          motion-reduce:transition-none;
 }
@@ -26,12 +26,12 @@
   @apply inline-flex cursor-pointer items-center justify-center gap-2 border-0 px-5 py-2.5
          font-beaufort text-sm uppercase tracking-[0.15em] text-hextech-black
          transition-[filter,box-shadow] duration-300
-         hover:brightness-110 hover:shadow-[0_0_28px_-6px_rgba(200,170,110,0.75)]
+         hover:brightness-110 hover:shadow-[0_0_28px_-6px_var(--hx-glow-accent-strong)]
          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50
          motion-reduce:transition-none;
   background: linear-gradient(180deg, var(--color-gold-bright), var(--color-gold) 55%,
     var(--color-gold-rich));
-  clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+  clip-path: var(--hx-bevel-btn);
 }
 @utility hx-chip {
   @apply inline-flex items-center border border-gold-deep/50 bg-void/90 px-2.5 py-1
@@ -52,6 +52,7 @@
   /* Chevron baked in as a data URI (no extra request, stroke reads the gold hex
      by hand). Escaped newlines are erased by the CSS string parser: the value is
      one unbroken URL, only the source is wrapped. */
+  /* Frozen color: url() cannot read var() — a theme must override this whole declaration. */
   background-image: url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'>\
 <path d='M2 4l4 4 4-4' fill='none' stroke='%23c8aa6e' stroke-width='1.5'\
@@ -72,6 +73,7 @@
   &:checked {
     background-color: var(--color-hex);
     /* Checkmark data URI — wrapped with escaped newlines, same as hx-select. */
+    /* Frozen color: url() cannot read var() — a theme must override this whole declaration. */
     background-image: url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'>\
 <path d='M4 8l3 3 5-6' fill='none' stroke='%230a1428' stroke-width='2.2'\

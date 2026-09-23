@@ -16,7 +16,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * var/state is the volume-backed path (compose.yaml): it survives the container
  * recreation every deploy performs. Durability across hosts / `down -v` remains
  * the rollup's job ({@see RollupService}), which folds closed days into
- * immutable MinIO aggregates.
+ * immutable storage aggregates.
  */
 final class EventStore extends NdjsonDayStore
 {
