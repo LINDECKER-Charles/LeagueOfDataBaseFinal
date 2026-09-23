@@ -26,7 +26,7 @@ final class RollupServiceTest extends TestCase
         $this->dir = sys_get_temp_dir() . '/lodb_rollup_' . bin2hex(random_bytes(6));
         $this->events = new EventStore($this->dir);
         $this->dailyStore = new DailyAggregateStore(
-            new Filesystem(new LocalFilesystemAdapter($this->dir . '/minio'))
+            new Filesystem(new LocalFilesystemAdapter($this->dir . '/storage'))
         );
         $this->rollup = new RollupService(
             $this->events,

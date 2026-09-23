@@ -12,14 +12,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Archives closed local audit days into MinIO and enforces the CNIL retention
+ * Archives closed local audit days into the storage and enforces the CNIL retention
  * ceiling. Run on a schedule alongside {@see AnalyticsRollupCommand} (nightly
  * with --prune --enforce-retention); the admin panel also exposes a manual,
  * period-scoped purge. Idempotent.
  */
 #[AsCommand(
     name: 'app:audit:rollup',
-    description: 'Archive les journaux d\'audit locaux vers MinIO et applique la '
+    description: 'Archive les journaux d\'audit locaux vers le stockage et applique la '
         . 'rétention CNIL (6 mois).'
 )]
 final class AuditRollupCommand extends Command

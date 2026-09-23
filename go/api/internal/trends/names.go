@@ -30,8 +30,9 @@ type cachedNames struct {
 }
 
 // StoreNameResolver resolves entity display names from the datasets the site
-// already keeps in MinIO. Purely best-effort: any failure yields an empty map
-// (trends then simply omit the "name" field) and is retried after the TTL.
+// already keeps on the storage volume. Purely best-effort: any failure yields an
+// empty map (trends then simply omit the "name" field) and is retried after the
+// TTL.
 type StoreNameResolver struct {
 	reader   DatasetReader
 	cacheTTL time.Duration

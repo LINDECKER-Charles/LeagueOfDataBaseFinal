@@ -166,7 +166,7 @@ final class LoaderController extends AbstractController
     }
 
     /**
-     * Phase B — images, streamed as each one lands in object storage.
+     * Phase B — images, streamed as each one lands in the storage.
      *
      * @param list<array{0: WarmableManagerInterface, 1: string, 2: array<mixed>}> $plans
      * @return int images actually stored (one progress frame each)

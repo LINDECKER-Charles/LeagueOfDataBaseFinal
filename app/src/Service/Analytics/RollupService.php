@@ -7,7 +7,7 @@ use App\Service\Analytics\Storage\DailyAggregateStore;
 use App\Service\Analytics\Storage\EventStore;
 
 /**
- * Consolidates closed local NDJSON days into immutable MinIO aggregates
+ * Consolidates closed local NDJSON days into immutable storage aggregates
  * (analytics/daily/{date}.json) for durability and cheap historical reads. This
  * is the durability tier: the hot path only appends locally, and a container /
  * `down -v` would otherwise lose recent history — rolling up narrows that window.

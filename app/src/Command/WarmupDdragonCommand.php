@@ -15,13 +15,13 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
- * Pre-warms every DDragon manager's JSON + images into object storage so no
+ * Pre-warms every DDragon manager's JSON + images into the storage volume so no
  * user-facing request ever pays the cold Go-fetch cost. Run it on deploy and
  * whenever a new game version ships (defaults to the latest version only).
  */
 #[AsCommand(
     name: 'app:ddragon:warmup',
-    description: 'Pré-charge JSON + images DDragon (tous les managers) dans le stockage objet.'
+    description: 'Pré-charge JSON + images DDragon (tous les managers) dans le volume de stockage.'
 )]
 final class WarmupDdragonCommand extends Command
 {

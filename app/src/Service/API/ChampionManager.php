@@ -98,7 +98,7 @@ final class ChampionManager extends AbstractManager implements CategoriesInterfa
      * with a display name, its accent colours and a ready-to-hotlink swatch URL. A
      * chroma has no dedicated splash — this preview disc is its whole art.
      *
-     * Slimmed to that shape, then cached in object storage like {@see getDetail()};
+     * Slimmed to that shape, then cached in the storage like {@see getDetail()};
      * a miss goes once through the gateway. Best-effort: returns [] when unavailable
      * so the detail page never breaks on it, and a transient failure is left to
      * bubble (never persisted as empty).

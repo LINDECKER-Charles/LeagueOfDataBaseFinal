@@ -5,7 +5,7 @@ namespace App\Service\Analytics;
 
 /**
  * Folds raw NDJSON events into a per-day aggregate — the mergeable unit shared by
- * the live reader and the MinIO rollup. Pure and framework-free: it takes decoded
+ * the live reader and the storage rollup. Pure and framework-free: it takes decoded
  * event rows and returns plain arrays, so both the rollup command and the report
  * service (over local files) reuse the exact same counting logic.
  *

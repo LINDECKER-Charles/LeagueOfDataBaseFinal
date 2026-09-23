@@ -33,7 +33,7 @@ final class AuditQueryServiceTest extends TestCase
         $this->dir = sys_get_temp_dir() . '/lodb_auditq_' . bin2hex(random_bytes(6));
         $this->local = new AuditLogStore($this->dir);
         $this->archive = new AuditArchiveStore(
-            new Filesystem(new LocalFilesystemAdapter($this->dir . '/minio')),
+            new Filesystem(new LocalFilesystemAdapter($this->dir . '/storage')),
         );
         $this->query = new AuditQueryService($this->local, $this->archive);
     }

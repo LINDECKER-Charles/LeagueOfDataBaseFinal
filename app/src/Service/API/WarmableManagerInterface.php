@@ -7,7 +7,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
  * A DDragon resource manager whose datasets and images can be pre-warmed into
- * object storage ahead of any user request. Implementors are auto-tagged, so a
+ * the storage ahead of any user request. Implementors are auto-tagged, so a
  * new manager is picked up by {@see \App\Command\WarmupDdragonCommand} and by the
  * streaming loader ({@see \App\Controller\Resource\LoaderController}) for free.
  */

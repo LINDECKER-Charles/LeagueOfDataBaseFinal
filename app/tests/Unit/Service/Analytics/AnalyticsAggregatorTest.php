@@ -147,7 +147,7 @@ final class AnalyticsAggregatorTest extends TestCase
     /**
      * The daily aggregate is persisted, then merged by {@see RangeReportBuilder}
      * through COUNTER_BUCKETS: a bucket counted here but missing from that list
-     * would be written to MinIO and silently dropped from every report.
+     * would be written to the storage and silently dropped from every report.
      */
     public function testEveryCountedBucketIsDeclaredAsMergeable(): void
     {

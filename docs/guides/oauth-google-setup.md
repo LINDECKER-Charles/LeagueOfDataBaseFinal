@@ -86,7 +86,7 @@ sont des **secrets** : ne jamais les committer.
 | `OAUTH_GOOGLE_CLIENT_ID` | Client ID `…apps.googleusercontent.com` |
 | `OAUTH_GOOGLE_CLIENT_SECRET` | Client secret associé |
 
-Chaîne de propagation (identique à Stripe/MinIO) :
+Chaîne de propagation (identique à Stripe) :
 
 1. **`.env` à la racine du dépôt** (git-ignoré — celui lu par `docker compose`,
    pas `app/.env`) :

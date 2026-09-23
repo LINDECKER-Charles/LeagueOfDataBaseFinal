@@ -9,7 +9,7 @@ Merci de votre intérêt pour le projet ! Ce document est le point d'entrée **c
 
 ## Prérequis
 
-- **Docker** + **Docker Compose** — la stack complète (PHP 8.5 / Symfony 7.4, Go 1.25, MinIO) tourne en conteneurs ; rien à installer en local côté backend.
+- **Docker** + **Docker Compose** — la stack complète (PHP 8.5 / Symfony 7.4, Go 1.25, PostgreSQL) tourne en conteneurs ; rien à installer en local côté backend.
 - **Node.js 20+** / **npm** — uniquement pour le dev et les garde-fous front (hors conteneur, depuis `app/`).
 - **Git**.
 
@@ -20,7 +20,7 @@ git clone https://github.com/VOTRE_USERNAME/LeagueOfDataBaseFinal.git
 cd LeagueOfDataBaseFinal
 
 docker compose up -d --build
-# app :8080 · MinIO console :9001 · Mailpit :8025 · go-fetcher :8085/healthz
+# app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
 ```
 
 Détails : [`docs/guides/docker.md`](docs/guides/docker.md), [`docs/guides/configuration.md`](docs/guides/configuration.md).

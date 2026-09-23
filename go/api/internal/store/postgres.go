@@ -1,5 +1,6 @@
 // Package store contains the persistence adapters of go-api: Postgres for
-// user-facing data and metering, MinIO for analytics aggregates and datasets.
+// user-facing data and metering, the shared storage volume (Files) for the
+// analytics aggregates and Data Dragon datasets PHP writes.
 package store
 
 import (
@@ -11,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// ErrNotFound is the store-level sentinel for a missing row.
+// ErrNotFound is the store-level sentinel for a missing row or stored file.
 var ErrNotFound = errors.New("not found")
 
 const pingTimeout = 2 * time.Second

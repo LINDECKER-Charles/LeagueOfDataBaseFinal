@@ -6,7 +6,7 @@ namespace App\Service\Analytics\Storage;
 use League\Flysystem\FileAttributes;
 
 /**
- * Fold of one deep listing of the object bucket: every tally the storage report
+ * Fold of one deep listing of the DDragon storage: every tally the storage report
  * needs, accumulated in a single pass. Knowing how a content-addressed key is
  * read (families, blob extensions, data coordinates) lives here; turning the
  * tallies into a report is the caller's job

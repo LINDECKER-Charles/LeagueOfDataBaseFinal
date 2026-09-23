@@ -5,7 +5,7 @@ namespace App\Service\Audit;
 
 /**
  * Durability + retention for the audit journal. Archives closed local NDJSON
- * days into MinIO verbatim, and enforces the legal retention ceiling.
+ * days into the storage verbatim, and enforces the legal retention ceiling.
  *
  * Retention is fixed to the CNIL recommendation for security / connection logs:
  * six months. (Some security contexts justify twelve; this is the conservative
@@ -24,7 +24,7 @@ final class AuditRollupService
     ) {}
 
     /**
-     * Archive every closed local day (never today, still open) into MinIO.
+     * Archive every closed local day (never today, still open) into the storage.
      * Idempotent: an already-archived day is skipped unless it is still local
      * and unpruned. With $prune, the local copy is removed once safely archived.
      *
