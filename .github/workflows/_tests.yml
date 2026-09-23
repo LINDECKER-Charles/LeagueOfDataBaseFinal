@@ -81,7 +81,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.25'
+          go-version: '1.26'
+          check-latest: true
           # Chaque module vit dans go/<module>/ et fetcher n'a pas de go.sum
           # (deps stdlib) : cible go.mod pour la clé de cache, sinon setup-go
           # cherche à la racine du dépôt.

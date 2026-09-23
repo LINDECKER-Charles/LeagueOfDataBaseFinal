@@ -129,7 +129,7 @@ Les **limites chiffrées** sont des plafonds à respecter ; les **principes** so
 
 ### Go
 
-- Tester en conteneur (`golang:1.25`) — Go non installé en local. Passerelle thin : pas d'ingestion métier côté Go.
+- Tester en conteneur (`golang:1.26`) — Go non installé en local. Passerelle thin : pas d'ingestion métier côté Go.
 
 ## Commentaires
 
