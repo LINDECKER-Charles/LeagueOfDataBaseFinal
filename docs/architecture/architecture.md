@@ -198,26 +198,25 @@ sequenceDiagram
 
 ### Architecture du stockage
 
+Les données et images Data Dragon vivent en fichiers sur le volume Docker `storage`,
+monté sur `/srv/storage` (`STORAGE_DIR`) : en lecture-écriture pour `php` (Flysystem,
+adaptateur local), en lecture seule pour `nginx` et `go-api`.
+
 ```
-public/upload/
-├── {version}/
-│   ├── champion_img/           # Images des champions (communes à toutes les langues)
-│   ├── item_img/               # Images des objets (communes à toutes les langues)
-│   ├── summoner_img/           # Images des sorts d'invocateur (communes à toutes les langues)
-│   ├── rune_img/               # Images des runes (communes à toutes les langues)
-│   └── {lang}/                 # Données JSON spécifiques à chaque langue
-│       ├── champion.json
-│       ├── item.json
-│       ├── summoner.json
-│       └── rune.json
+/srv/storage/
+├── blobs/{sha256}.{ext}               # Images adressées par contenu (+ sibling .webp)
+├── data/{version}/{lang}/{type}.json  # Datasets Data Dragon
+├── manifest/{version}/{type}.json     # nom → chemin cdn (null = absence définitive)
+├── analytics/daily/{Y-m-d}.json       # Agrégats analytics (cf. analytics.md)
+└── audit/{Y-m-d}.ndjson               # Journal d'audit archivé (journées closes)
 ```
 
 ### Optimisations
 
-1. **Hard Links** : Évite la duplication d'images identiques entre versions
-2. **Stockage local** : Toutes les données sont stockées sur le serveur
-3. **Validation de version** : Vérification de la fraîcheur des données
-4. **Compression** : Optimisation des images téléchargées
+1. **Adressage par contenu** : une image identique entre versions n'est stockée qu'une fois (clé = SHA-256 des octets)
+2. **Écritures atomiques** : `AtomicWriteAdapter` écrit dans un fichier caché `.staging/` puis le `rename()` en place — nginx, `go-api` et les requêtes concurrentes ne lisent jamais un fichier partiel
+3. **Service direct par nginx** : `/cdn/blobs/` est un `alias` vers le disque (`Cache-Control: public, immutable`, 1 an) ; tout autre chemin `/cdn/*` répond 404
+4. **Manifeste en read-merge-write** : les ajouts concurrents (loader SSE ↔ flush `kernel.terminate`) ne s'écrasent pas
 
 ## 🔌 Intégration API
 
@@ -241,7 +240,7 @@ $data = $this->aPICaller->call(
 ## 👤 Comptes & contenus utilisateur
 
 Les contenus créés par les joueurs vivent dans **PostgreSQL 17** via **Doctrine ORM** —
-séparation stricte avec les données Data Dragon, qui restent hors base (MinIO).
+séparation stricte avec les données Data Dragon, qui restent hors base (volume `storage`).
 
 - **Entités** : `users` (identité, favoris par type de ressource) et `builds`
   (builds de champion ; colonnes **JSONB** pour les runes et les étapes d'objets).

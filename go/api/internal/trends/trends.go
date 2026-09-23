@@ -1,5 +1,5 @@
-// Package trends turns the per-day analytics aggregates stored in MinIO into
-// "most consulted entities" rankings for the public API.
+// Package trends turns the per-day analytics aggregates kept on the shared
+// storage volume into "most consulted entities" rankings for the public API.
 package trends
 
 import (
@@ -174,7 +174,7 @@ func (s *Service) Top(ctx context.Context, apiType string, rangeDays int) ([]Ent
 // Wire contract, owned by the PHP writer: each daily rollup carries an
 // "entities" object keyed "{ddragonType}:{entityId}" — see
 // App\Service\Analytics\AnalyticsAggregator (encoder) and DailyAggregateStore
-// (object path). Changing either side without the other yields empty rankings.
+// (file path). Changing either side without the other yields empty rankings.
 func (s *Service) mergeDays(
 	ctx context.Context,
 	ddragonType string,

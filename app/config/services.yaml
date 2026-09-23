@@ -13,6 +13,10 @@ parameters:
     admin.go_fetcher_health_url: '%env(GO_FETCHER_URL)%/healthz'
     admin.go_api_health_url: 'http://go-api:8090/healthz'
 
+    # Root of the DDragon storage. Compose points it at the `storage` volume
+    # (/srv/storage); a bare checkout (CI, tooling) falls back under var/.
+    env(STORAGE_DIR): '%kernel.project_dir%/var/storage'
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -31,16 +35,17 @@ services:
             $defaultLocale: 'en_US'
             $appSecret: '%kernel.secret%'
 
-    # S3 client for MinIO (path-style endpoint). Consumed by the flysystem "ddragon.storage".
-    ddragon.s3_client:
-        class: AsyncAws\S3\S3Client
+    # Local adapter behind the flysystem "ddragon.storage" (see flysystem.yaml).
+    # Lazy root creation: injecting the storage must never mkdir — the first write does.
+    ddragon.storage.local_adapter:
+        class: League\Flysystem\Local\LocalFilesystemAdapter
         arguments:
-            $configuration:
-                endpoint: '%env(MINIO_ENDPOINT)%'
-                accessKeyId: '%env(MINIO_ACCESS_KEY)%'
-                accessKeySecret: '%env(MINIO_SECRET_KEY)%'
-                region: '%env(MINIO_REGION)%'
-                pathStyleEndpoint: true
+            $location: '%env(STORAGE_DIR)%'
+            $lazyRootCreation: true
+
+    App\Service\Storage\AtomicWriteAdapter:
+        arguments:
+            $inner: '@ddragon.storage.local_adapter'
 
     # All Data Dragon egress flows through the Go fetch gateway (scoped HTTP client).
     App\Service\Tools\GoFetcherClient:

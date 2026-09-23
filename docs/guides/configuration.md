@@ -15,7 +15,9 @@ APP_SECRET=your-secret-key     # Clé secrète pour les sessions
 ### 🗄️ Base de données & nouvelles variables
 
 PostgreSQL 17 porte **uniquement les données utilisateur** (comptes, favoris, builds) ;
-les données et images Data Dragon restent sur MinIO. Défauts du compose de dev :
+les données et images Data Dragon restent hors base, en fichiers sur le volume `storage`
+(répertoire `STORAGE_DIR` : `/srv/storage` dans les conteneurs, posé par le compose ;
+`app/var/storage` par défaut hors Docker). Défauts du compose de dev :
 
 ```env
 # PostgreSQL — service `postgres` du compose (défauts dev, à surcharger hors dev)

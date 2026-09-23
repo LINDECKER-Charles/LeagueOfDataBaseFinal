@@ -54,7 +54,7 @@ et le TLS d'un **edge proxy partagé**, fourni par le dépôt d'infrastructure `
 | `STAGING_HOST` | ✅ | Hôte staging (IP ou FQDN). `ssh-keyscan` + connexions SSH. |
 | `STAGING_PATH` | ✅ | Chemin absolu du projet sur le serveur (dossier des `compose.*.yaml`). Cible du `git pull origin test` et du `docker compose`. |
 | `STAGING_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
-| `ENV_STAGING` | ✅ | Dotenv staging **complet**. Poussé dans `${STAGING_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-staging`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=staging`, les secrets applicatifs (`APP_SECRET`, `MINIO_*`, `ADMIN_*`, `POSTGRES_PASSWORD`, `STRIPE_*` — cf. section base de données & Stripe) **et** `CADDY_DOMAINS=test.league-of-data-base.com`. Aucun paramètre de l'edge (contact Let's Encrypt) ici : il vit dans `infra-vps`. |
+| `ENV_STAGING` | ✅ | Dotenv staging **complet**. Poussé dans `${STAGING_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-staging`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=staging`, les secrets applicatifs (`APP_SECRET`, `ADMIN_*`, `POSTGRES_PASSWORD`, `STRIPE_*` — cf. section base de données & Stripe) **et** `CADDY_DOMAINS=test.league-of-data-base.com`. Aucun paramètre de l'edge (contact Let's Encrypt) ici : il vit dans `infra-vps`. |
 
 ---
 
@@ -150,5 +150,6 @@ Let's Encrypt est configuré dans `infra-vps`.
 - **`CADDY_DOMAINS`** est une **ligne** de ces dotenv (donc dans `ENV_STAGING` / `ENV_PROD`), jamais dans les workflows. Le contact Let's Encrypt de l'edge ne s'y trouve pas : il est géré par `infra-vps`.
 - **`ENV_*`** contiennent le fichier dotenv intégral (une variable par ligne), pas une valeur unique — coller le contenu complet du `.env` correspondant.
 - **Staging et prod ne diffèrent que par leur `.env`** (`COMPOSE_PROJECT_NAME`, `IMAGE_TAG`, `CADDY_DOMAINS`, secrets) : mêmes fichiers compose. Le `COMPOSE_PROJECT_NAME` distinct est ce qui les isole sur un VPS mutualisé.
+- **Plus aucune variable `MINIO_*`** : le stockage Data Dragon est un volume Docker (`storage`), sans identifiants ni bucket. Les lignes `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` encore présentes dans `ENV_STAGING` / `ENV_PROD` ne sont plus lues et peuvent être retirées. L'ancien volume `<projet>_minio_data` reste sur l'hôte jusqu'à suppression manuelle (`docker volume rm lodb-staging_minio_data`, idem `lodb-prod_minio_data`).
 - **`*_SSH_KEY`** : copier l'intégralité du fichier clé, en-têtes `-----BEGIN … PRIVATE KEY-----` / `-----END … PRIVATE KEY-----` inclus.
 - Les secrets ne sont **jamais** affichés dans les logs (masqués par GitHub) ; leur mise à jour ne s'applique qu'aux exécutions suivantes.

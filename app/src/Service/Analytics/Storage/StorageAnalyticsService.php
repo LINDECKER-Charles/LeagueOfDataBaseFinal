@@ -11,8 +11,8 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 /**
- * Detailed object-storage analytics for the admin panel. A single deep listing
- * of the content-addressed bucket (blobs/ data/ manifest/ + the analytics/
+ * Detailed DDragon storage analytics for the admin panel. A single deep listing
+ * of the content-addressed storage (blobs/ data/ manifest/ + the analytics/
  * rollups) plus a bounded read of the manifests yields: per-family weight, blob
  * breakdown by extension, WebP coverage, the content-addressed dedup ratio
  * (logical image references vs physical blobs), per-version/lang/type data

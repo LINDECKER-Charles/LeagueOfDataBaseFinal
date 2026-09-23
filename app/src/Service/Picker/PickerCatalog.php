@@ -13,7 +13,7 @@ use App\Service\API\SummonerManager;
  * Thin façade between the DDragon managers (final, storage-bound) and the pure
  * projectors: it only fetches (data, images) per resource and delegates every
  * shape decision — which keeps the whole projection/resolution logic unit-
- * testable without object storage. Image resolution runs over the full set,
+ * testable without the storage. Image resolution runs over the full set,
  * exactly like the render-all list pages: warm manifests make it a map lookup,
  * a cold one defers ingestion after the response (placeholders now, warm next
  * visit). Upstream failures bubble — callers own the fallback policy.

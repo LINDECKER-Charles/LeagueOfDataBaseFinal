@@ -2,7 +2,7 @@
 # - php runs against the live ./app source; vendor/ and var/ are named volumes on
 #   the Linux VM (off the ./app 9p bind-mount) so file I/O isn't slow — see docs/guides/docker.md
 # - nginx uses the stock image + bind-mounted public/ and config
-# - MinIO console, Mailpit UI and the Go service ports are published for convenience
+# - Mailpit UI and the Go service ports are published for convenience
 #
 # Prerequisite for a fresh clone (once):
 #   docker compose up -d
@@ -27,9 +27,11 @@ services:
     # (var/cache/dev/profiler, var/cache/test, var/log/test.log). The FPM pool is
     # www-data and then cannot write them — the profiler throws after the response
     # headers are flushed, appending a 500 error page to every dev page. Non-recursive
-    # chown never healed that; keep the -R.
+    # chown never healed that; keep the -R. /srv/storage (the DDragon storage volume)
+    # gets the same treatment: a root-run `bin/console app:ddragon:warmup` would
+    # leave root-owned blobs/ or data/ directories the FPM pool can no longer write.
     user: root
-    command: sh -c "mkdir -p var/cache var/log && chown -R www-data:www-data var && chown www-data:www-data vendor && exec php-fpm"
+    command: sh -c "mkdir -p var/cache var/log && chown -R www-data:www-data var /srv/storage && chown www-data:www-data vendor && exec php-fpm"
     volumes:
       - ./app:/var/www/html
       - app_vendor:/var/www/html/vendor
@@ -60,11 +62,6 @@ services:
       # share_url is absolute: without this override the dev API would hand out
       # links into production. Staging sets it through the repo-root .env.staging.
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8080}
-
-  minio:
-    ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
 
   mailer:
     ports:

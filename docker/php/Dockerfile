@@ -20,6 +20,12 @@ RUN install-php-extensions intl opcache zip gd apcu pdo_pgsql
 # USER www-data, where apk add fails.
 RUN apk add --no-cache fcgi
 
+# /srv/storage is the mount point of the DDragon storage volume (compose.yaml).
+# Same rule as var/state below: it must exist owned by www-data, because Docker
+# copies a mount point's ownership from the image when it first populates an
+# empty named volume. In php_base so the dev image inherits it too.
+RUN mkdir -p /srv/storage && chown www-data:www-data /srv/storage
+
 # Application PHP configuration
 COPY docker/php/php.ini      /usr/local/etc/php/conf.d/zz-app.ini
 COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/zz-app.conf

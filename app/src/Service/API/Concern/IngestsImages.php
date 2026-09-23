@@ -184,7 +184,7 @@ trait IngestsImages
     /**
      * Merge freshly stored entries into the manifest.
      *
-     * Re-reads the manifest straight from object storage — bypassing both the
+     * Re-reads the manifest straight from the storage — bypassing both the
      * in-request memo and the cross-request pool, either of which would serve a
      * snapshot taken before a concurrent writer's PUT — then writes fresh+additions.
      * This turns the former blind full-file overwrite (where the SSE loader and the

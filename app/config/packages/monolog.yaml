@@ -3,7 +3,7 @@ monolog:
         - audit    # mirror of the legal audit journal (var/state/audit/events)
         - billing  # money path: checkout, webhook, entitlements, donations
         - catalog  # Data Dragon read path: resource pages, search, fetch gateway
-        - ingest   # writes into object storage: loader warm, deferred images
+        - ingest   # writes into the storage: loader warm, deferred images
         - mail     # outbound delivery
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
 

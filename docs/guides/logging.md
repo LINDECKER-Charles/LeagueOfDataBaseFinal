@@ -224,7 +224,7 @@ partir de `notice` ; les canaux métier, eux, sont émis dès `info` par le hand
 | `audit` | miroir du journal légal (`AuditLogger`), échec d'écriture de `AuditLogStore` |
 | `billing` | tout le chemin argent : checkout, webhook, entitlements, dons |
 | `catalog` | lecture Data Dragon : pages ressources, recherche, `GoFetcherClient`, `VersionManager` |
-| `ingest` | écritures vers MinIO : warm du loader, images différées |
+| `ingest` | écritures vers le stockage (volume `storage`) : warm du loader, images différées |
 | `mail` | remise sortante |
 | `app` (défaut) | le reste — n'apparaît en prod qu'à partir de `notice` |
 

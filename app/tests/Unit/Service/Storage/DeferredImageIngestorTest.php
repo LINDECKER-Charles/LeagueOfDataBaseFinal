@@ -94,7 +94,7 @@ final class DeferredImageIngestorTest extends TestCase
     {
         $logger = new RecordingLogger();
         $ingestor = new DeferredImageIngestor(new RequestStack(), $logger);
-        $boom = new \RuntimeException('minio refused the write');
+        $boom = new \RuntimeException('storage refused the write');
         $ingestor->defer(static function () use ($boom): void { throw $boom; });
 
         $ingestor->flush();

@@ -23,7 +23,7 @@ contributeur est [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
 |---|---|
 | [architecture.md](architecture/architecture.md) | Vue d'ensemble : services, flux, arborescence |
 | [architecture-report.md](architecture/architecture-report.md) | Rapport d'architecture — état avant/après refacto (DRY / SOLID / KISS) |
-| [analytics.md](architecture/analytics.md) | Analytics sans base de données (NDJSON local → agrégats MinIO) et panneau `/admin` |
+| [analytics.md](architecture/analytics.md) | Analytics sans base de données (NDJSON local → agrégats journaliers sur le volume de stockage) et panneau `/admin` |
 | [api-publique.md](architecture/api-publique.md) | API REST v1 payante servie par le micro-service Go `go-api` |
 | [responsive-mobile.md](architecture/responsive-mobile.md) | Stratégie responsive, breakpoints, composants mobile |
 

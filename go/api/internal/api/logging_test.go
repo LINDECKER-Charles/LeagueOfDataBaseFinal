@@ -38,7 +38,7 @@ func capturingServer(t *testing.T, auth *stubAuth) (http.Handler, func() []acces
 		Limiter:     ratelimit.New(nil),
 		Meter:       &countingMeter{},
 		PGPing:      okPinger{},
-		S3Ping:      okPinger{},
+		StoragePing: okPinger{},
 		SiteBaseURL: testSiteBaseURL,
 		Log:         slog.New(slog.NewJSONHandler(&buf, nil)),
 	})
@@ -100,7 +100,7 @@ func TestNoRawKeyEverReachesTheLogStream(t *testing.T) {
 		Limiter:     ratelimit.New(nil),
 		Meter:       &countingMeter{},
 		PGPing:      okPinger{},
-		S3Ping:      okPinger{},
+		StoragePing: okPinger{},
 		SiteBaseURL: testSiteBaseURL,
 		Log:         slog.New(slog.NewJSONHandler(&buf, nil)),
 	})

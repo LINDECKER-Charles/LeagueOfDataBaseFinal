@@ -13,7 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * Server-Sent Events endpoint that warms a destination page's DDragon images
@@ -166,7 +166,7 @@ final class LoaderController extends AbstractController
     }
 
     /**
-     * Phase B — images, streamed as each one lands in object storage.
+     * Phase B — images, streamed as each one lands in the storage.
      *
      * @param list<array{0: WarmableManagerInterface, 1: string, 2: array<mixed>}> $plans
      * @return int images actually stored (one progress frame each)

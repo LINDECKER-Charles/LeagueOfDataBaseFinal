@@ -16,7 +16,7 @@ framework:
 
         # Namespaced pools use the above "app" backend by default
         pools:
-            # Read-through cache in front of the MinIO object storage for the
+            # Read-through cache in front of the DDragon storage volume for the
             # DDragon datasets + image manifests. The data is immutable per
             # (version, lang), so a long TTL is safe; the manifest pool is
             # invalidated write-through on ingest. Filesystem here (guaranteed);

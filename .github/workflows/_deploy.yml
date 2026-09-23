@@ -96,12 +96,14 @@ jobs:
             # depends_on (service_healthy); no-op when nothing is pending.
             docker compose exec -T php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
             # Pré-chauffe (détaché → hors chemin critique) : JSON + images des 3 dernières
-            # versions dans MinIO, puis backfill WebP. Idempotent + best-effort.
+            # versions dans le volume storage, puis backfill WebP. Idempotent +
+            # best-effort — c'est aussi elle qui repeuple un volume storage vide.
             docker compose exec -d php php bin/console app:ddragon:warmup --limit=3
             docker compose exec -d php php bin/console app:ddragon:webp
-            # Durabilité observabilité : les journées CLOSES sont consolidées dans MinIO
-            # à chaque déploiement. Le volume app_state protège déjà les NDJSON de la
-            # recréation du conteneur ; ceci les met en plus hors de l'hôte.
+            # Observabilité : les journées CLOSES sont consolidées dans le volume storage
+            # à chaque déploiement (agrégats immuables, lecture d'historique bon marché).
+            # Le volume app_state protège déjà les NDJSON de la recréation du conteneur.
+            # Ni l'un ni l'autre ne sort de l'hôte : ce n'est pas une sauvegarde.
             # Volontairement SANS --include-today : le rollup écrase l'agrégat du jour,
             # et un jour encore ouvert n'a rien à gagner à être figé ici.
             # Best-effort : une consolidation ratée ne doit pas faire échouer un déploiement.

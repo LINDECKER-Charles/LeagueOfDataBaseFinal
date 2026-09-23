@@ -16,7 +16,7 @@
     <div class="kpi-grid">
         {{ ui.kpi('Journées locales', volume.local.days|number_format(0, '.', ' '),
             volume.local.bytes|bytes, 'var(--hex)', null) }}
-        {{ ui.kpi('Archivées (MinIO)', volume.archived.days|number_format(0, '.', ' '),
+        {{ ui.kpi('Archivées (stockage)', volume.archived.days|number_format(0, '.', ' '),
             volume.archived.bytes|bytes, 'var(--series-3)', null) }}
         {{ ui.kpi('Espace total', volume.totalBytes|bytes,
             volume.oldest ? 'depuis le ' ~ volume.oldest : null, 'var(--gold)', null) }}
@@ -75,7 +75,7 @@
         <h2 class="card-title">Purger les journaux</h2>
         <p class="dim">La rétention légale ({{ retentionLabel }}) est appliquée
             automatiquement. Cette purge manuelle libère de l'espace immédiatement — locale
-            <b>et</b> archive MinIO. Action irréversible.</p>
+            <b>et</b> archive du stockage. Action irréversible.</p>
         {% set purgeConfirm = 'Purger définitivement les journaux sélectionnés ? '
             ~ 'Cette action est irréversible.' %}
         <form method="post" action="{{ path('admin_logs_purge') }}"

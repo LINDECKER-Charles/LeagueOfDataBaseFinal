@@ -150,12 +150,12 @@ final class StorageAnalyticsServiceTest extends TestCase
     public function testDegradesGracefullyWhenStorageUnavailable(): void
     {
         $operator = $this->createStub(FilesystemOperator::class);
-        $operator->method('listContents')->willThrowException(new \RuntimeException('minio down'));
+        $operator->method('listContents')->willThrowException(new \RuntimeException('storage down'));
 
         $report = $this->service($operator)->report();
 
         self::assertFalse($report['ok']);
-        self::assertSame('minio down', $report['error']);
+        self::assertSame('storage down', $report['error']);
         self::assertSame(['objects' => 0, 'bytes' => 0], $report['total']);
     }
 
@@ -167,7 +167,7 @@ final class StorageAnalyticsServiceTest extends TestCase
     public function testDegradedReportHasTheSameShapeAsANominalOne(): void
     {
         $broken = $this->createStub(FilesystemOperator::class);
-        $broken->method('listContents')->willThrowException(new \RuntimeException('minio down'));
+        $broken->method('listContents')->willThrowException(new \RuntimeException('storage down'));
 
         $degraded = $this->service($broken)->report();
         $nominal = $this->service($this->populatedOperator())->report();

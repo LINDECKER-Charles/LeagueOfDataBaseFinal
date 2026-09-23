@@ -10,7 +10,7 @@ use Symfony\Component\HttpKernel\Event\TerminateEvent;
 /**
  * After the response is sent, flush any image ingestion a cold render deferred
  * ({@see DeferredImageIngestor}). The user already got a fast page; the images
- * land in object storage so the next visit is warm. php-fpm's
+ * land in the storage so the next visit is warm. php-fpm's
  * fastcgi_finish_request means this runs off the request's critical path.
  */
 #[AsEventListener(event: TerminateEvent::class)]

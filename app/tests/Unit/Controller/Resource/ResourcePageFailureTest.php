@@ -38,7 +38,7 @@ final class ResourcePageFailureTest extends TestCase
         $session = new Session(new MockArraySessionStorage());
         $controller = $this->controller(new NullLogger(), $session);
 
-        $response = $controller->fail(new \RuntimeException('minio down'));
+        $response = $controller->fail(new \RuntimeException('storage down'));
 
         self::assertSame(Response::HTTP_FOUND, $response->getStatusCode());
         self::assertSame('/', $response->headers->get('Location'));
@@ -52,7 +52,7 @@ final class ResourcePageFailureTest extends TestCase
     public function testAFailingPageIsReportedOnTheCatalogChannelAsAWarning(): void
     {
         $logger = new RecordingLogger();
-        $boom = new \RuntimeException('minio down');
+        $boom = new \RuntimeException('storage down');
 
         $this->controller($logger, new Session(new MockArraySessionStorage()))->fail($boom);
 
@@ -70,7 +70,7 @@ final class ResourcePageFailureTest extends TestCase
         $logger = new RecordingLogger();
 
         $this->controller($logger, new Session(new MockArraySessionStorage()))
-            ->fail(new \RuntimeException('minio down'));
+            ->fail(new \RuntimeException('storage down'));
 
         $context = $logger->only('catalog.page.unavailable')['context'];
 

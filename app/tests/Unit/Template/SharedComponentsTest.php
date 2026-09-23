@@ -38,7 +38,7 @@ final class SharedComponentsTest extends TestCase
     }
 
     /**
-     * MinIO only writes a WebP twin next to a PNG blob: deriving one for any
+     * The storage only holds a WebP twin next to a PNG blob: deriving one for any
      * other extension points the browser at a file that was never written.
      */
     public function testWebpSourceIsOmittedForANonPngOriginal(): void
