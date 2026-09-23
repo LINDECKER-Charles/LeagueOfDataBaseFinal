@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Detailed object-storage analytics (MinIO). The report — a deep bucket listing —
+ * Detailed DDragon storage analytics. The report — a deep storage listing —
  * is a deferred panel, so the page never waits on it. ROLE_ADMIN via the /admin
  * firewall.
  */

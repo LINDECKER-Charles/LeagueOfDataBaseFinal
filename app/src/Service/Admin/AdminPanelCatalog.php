@@ -12,7 +12,7 @@ use Twig\Environment;
  * Single source of truth for the admin's deferred panels: which template renders
  * a panel and which report it needs.
  *
- * Admin dashboards aggregate reports that each cost a cold round trip (S3 deep
+ * Admin dashboards aggregate reports that each cost a cold round trip (storage deep
  * listing, NDJSON scan, service probes), so the pages ship a shell plus one
  * skeleton per panel and the fragments resolve independently — see
  * {@see \App\Controller\Admin\AdminPanelController} and public/admin/js/panels.js.

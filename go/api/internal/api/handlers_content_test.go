@@ -1,8 +1,12 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
+	"log/slog"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -94,5 +98,33 @@ func TestTrendsRejectsUnsupportedRangeAndType(t *testing.T) {
 	assertStatus(t, badType, http.StatusNotFound)
 	if !strings.Contains(badType.Body.String(), "champions, items, runes, summoners") {
 		t.Fatalf("unexpected message: %s", badType.Body.String())
+	}
+}
+
+type downPinger struct{}
+
+func (downPinger) Ping(context.Context) error { return errors.New("not mounted") }
+
+// An unmounted storage volume is reported under "storage" while the probe stays
+// 200: the API keeps serving what Postgres alone can answer.
+func TestHealthReportsAnUnreachableStorageAsDegraded(t *testing.T) {
+	handler := NewServer(Deps{
+		PGPing:      okPinger{},
+		StoragePing: downPinger{},
+		Log:         slog.New(slog.DiscardHandler),
+	})
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, healthPath, nil))
+
+	assertStatus(t, rec, http.StatusOK)
+	var body healthResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{"postgres": depOK, "storage": depDegraded}
+	if len(body.Dependencies) != len(want) ||
+		body.Dependencies["postgres"] != want["postgres"] ||
+		body.Dependencies["storage"] != want["storage"] {
+		t.Fatalf("dependencies = %v, want %v", body.Dependencies, want)
 	}
 }

@@ -101,14 +101,14 @@ func usableKey() keys.APIKey {
 // testServer wires a Server over stubs, exercising the real routing/middleware.
 func testServer(auth *stubAuth, content *stubContent, meter UsageMeter) http.Handler {
 	return NewServer(Deps{
-		Auth:     auth,
-		Content:  content,
-		Trends:   trends.New(trends.Options{Reader: emptyDaily{}, Names: noNames{}}),
-		KeyCache: keys.NewCache(time.Minute, nil),
-		Limiter:  ratelimit.New(nil),
-		Meter:    meter,
-		PGPing:   okPinger{},
-		S3Ping:   okPinger{},
+		Auth:        auth,
+		Content:     content,
+		Trends:      trends.New(trends.Options{Reader: emptyDaily{}, Names: noNames{}}),
+		KeyCache:    keys.NewCache(time.Minute, nil),
+		Limiter:     ratelimit.New(nil),
+		Meter:       meter,
+		PGPing:      okPinger{},
+		StoragePing: okPinger{},
 
 		SiteBaseURL: testSiteBaseURL,
 

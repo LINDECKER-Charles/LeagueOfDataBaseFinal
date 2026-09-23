@@ -127,9 +127,9 @@ soit un `ErrorController` custom, soit des liens statiques (suffisant).
 - `/u/{username}` : profils publics indexables — vérifier qu'un profil vide
   n'est pas généré en masse (thin content) ; sinon `noindex` conditionnel.
 - `/working-progress` : garde son meta noindex, volontairement crawlable.
-- Trailing data : `app/public/upload/` (reliquat pré-MinIO) est servi
-  statiquement — ne pas laisser Google le découvrir via des liens morts
-  (aucun lien connu aujourd'hui ; à purger un jour).
+- Trailing data : `app/public/upload/` (reliquat de l'ancien stockage, antérieur
+  au stockage adressé par contenu) est servi statiquement — ne pas laisser Google
+  le découvrir via des liens morts (aucun lien connu aujourd'hui ; à purger un jour).
 
 ## Politique canonique (référence)
 

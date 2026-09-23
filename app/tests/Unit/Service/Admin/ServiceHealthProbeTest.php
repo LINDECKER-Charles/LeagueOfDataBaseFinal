@@ -86,9 +86,9 @@ final class ServiceHealthProbeTest extends TestCase
 
     /**
      * The probe must stay a liveness check: answering it with the storage report
-     * made every monitoring load pay a deep listing of the whole bucket.
+     * made every monitoring load pay a deep listing of the whole storage.
      */
-    public function testMinioLivenessNeverTriggersTheDeepStorageListing(): void
+    public function testStorageLivenessNeverTriggersTheDeepStorageListing(): void
     {
         $operator = $this->createMock(FilesystemOperator::class);
         $operator->expects(self::once())
@@ -99,13 +99,13 @@ final class ServiceHealthProbeTest extends TestCase
         $result = $this->probe(
             operator: $operator,
             storage: new StorageAnalyticsService($operator, new ArrayAdapter()),
-        )->minio();
+        )->storage();
 
         self::assertSame(ServiceHealthProbe::STATUS_OK, $result['status']);
         self::assertSame([], $result['meta']);
     }
 
-    public function testMinioReportsVolumesOnlyWhenTheStorageReportIsAlreadyWarm(): void
+    public function testStorageReportsVolumesOnlyWhenTheStorageReportIsAlreadyWarm(): void
     {
         $operator = $this->createStub(FilesystemOperator::class);
         $operator->method('listContents')->willReturn(new DirectoryListing([
@@ -114,32 +114,32 @@ final class ServiceHealthProbeTest extends TestCase
         $storage = new StorageAnalyticsService($operator, new ArrayAdapter());
         $storage->report();
 
-        $result = $this->probe(operator: $operator, storage: $storage)->minio();
+        $result = $this->probe(operator: $operator, storage: $storage)->storage();
 
         self::assertSame(1, $result['meta']['objects']);
         self::assertSame(120, $result['meta']['bytes']);
     }
 
-    public function testUnreachableMinioReportsDownWithoutThrowing(): void
+    public function testUnreadableStorageReportsDownWithoutThrowing(): void
     {
         $broken = $this->createStub(FilesystemOperator::class);
         $broken->method('listContents')
-            ->willThrowException(new \RuntimeException('minio unreachable'));
+            ->willThrowException(new \RuntimeException('storage unreadable'));
 
         $result = $this->probe(
             operator: $broken,
             storage: new StorageAnalyticsService($broken, new ArrayAdapter()),
-        )->minio();
+        )->storage();
 
         self::assertSame(ServiceHealthProbe::STATUS_DOWN, $result['status']);
-        self::assertSame('minio unreachable', $result['detail']);
+        self::assertSame('storage unreadable', $result['detail']);
     }
 
     public function testAllProbesEveryServiceUnderTheExpectedKeys(): void
     {
         $results = $this->probe(http: new MockHttpClient(new MockResponse('ok')))->all();
 
-        self::assertSame(['postgres', 'minio', 'go-fetcher', 'go-api'], array_keys($results));
+        self::assertSame(['postgres', 'storage', 'go-fetcher', 'go-api'], array_keys($results));
         foreach ($results as $result) {
             self::assertContains($result['status'], [
                 ServiceHealthProbe::STATUS_OK,

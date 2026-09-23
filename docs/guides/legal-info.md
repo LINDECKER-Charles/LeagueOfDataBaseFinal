@@ -52,7 +52,7 @@ Hostinger — si c'est une autre, inverse les deux dans `legal_info.yaml` (1 lig
   User-Agent en clair** et s'accumulent tant qu'aucune purge n'est lancée. Depuis le
   2026-08-09 ils sont adossés au volume `app_state` : ils **survivent aux déploiements**
   (auparavant la recréation du conteneur les effaçait — perte de données, pas une purge).
-- La consolidation vers MinIO (`analytics/daily/{date}.json`, agrégats **sans IP ni UA**)
+- La consolidation vers le volume de stockage (`analytics/daily/{date}.json`, agrégats **sans IP ni UA**)
   tourne **à chaque déploiement** sur les journées closes (`.github/workflows/_deploy.yml`),
   et reste déclenchable à la demande : commande `app:analytics:rollup` ou bouton admin.
   L'option `--prune`, qui supprime le NDJSON brut des journées consolidées, reste **opt-in

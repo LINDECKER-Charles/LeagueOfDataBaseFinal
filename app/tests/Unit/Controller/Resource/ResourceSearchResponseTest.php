@@ -38,14 +38,14 @@ final class ResourceSearchResponseTest extends TestCase
     {
         $manager = $this->createStub(CategoriesInterface::class);
         $manager->method('searchByName')
-            ->willThrowException(new \RuntimeException('minio: connection refused at 10.0.0.4'));
+            ->willThrowException(new \RuntimeException('go-fetcher: connection refused at 10.0.0.4'));
 
         $response = $this->search($manager);
         $payload = $this->decode($response);
 
         self::assertSame(Response::HTTP_SERVICE_UNAVAILABLE, $response->getStatusCode());
         self::assertArrayHasKey('error', $payload);
-        self::assertStringNotContainsString('minio', $payload['error']);
+        self::assertStringNotContainsString('go-fetcher', $payload['error']);
         self::assertStringNotContainsString('10.0.0.4', $payload['error']);
     }
 
@@ -59,7 +59,7 @@ final class ResourceSearchResponseTest extends TestCase
         $logger = new RecordingLogger();
         $manager = $this->createStub(CategoriesInterface::class);
         $manager->method('searchByName')
-            ->willThrowException($boom = new \RuntimeException('minio down'));
+            ->willThrowException($boom = new \RuntimeException('storage down'));
 
         $this->search($manager, logger: $logger);
 

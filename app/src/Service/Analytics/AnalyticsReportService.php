@@ -11,7 +11,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * Assembles the traffic + audience report for a time range. Each day is sourced
- * either from its immutable MinIO aggregate (rolled-up past days) or, when that
+ * either from its immutable storage aggregate (rolled-up past days) or, when that
  * doesn't exist yet, by aggregating the local NDJSON on the fly — so the panel
  * is correct whether or not the rollup has ever run (today is always live).
  */
@@ -109,9 +109,9 @@ final class AnalyticsReportService
     }
 
     /**
-     * A closed day is immutable — its events are all written and its MinIO
+     * A closed day is immutable — its events are all written and its storage
      * aggregate, once rolled up, never changes — so it is memoised on its own.
-     * A 90-day window then costs one object-storage read per *newly closed* day
+     * A 90-day window then costs one storage read per *newly closed* day
      * instead of ninety on every recompute of the range. Today is always live.
      *
      * @return array<string, mixed>
@@ -135,7 +135,7 @@ final class AnalyticsReportService
                 return $rolled;
             }
 
-            // Not rolled up yet — or object storage momentarily unreachable. The
+            // Not rolled up yet — or the storage momentarily unreadable. The
             // local NDJSON answers, but only a day that actually owns one is worth
             // freezing: otherwise a transient outage would pin an empty day for a
             // week.

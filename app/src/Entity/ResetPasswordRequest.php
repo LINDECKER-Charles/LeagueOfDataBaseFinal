@@ -10,7 +10,7 @@ use SymfonyCasts\Bundle\ResetPassword\Model\ResetPasswordRequestTrait;
 
 /**
  * Short-lived, single-use password-reset token (selector + hashed verifier).
- * User data, so it lives in Postgres alongside accounts/builds — never in MinIO.
+ * User data, so it lives in Postgres alongside accounts/builds — never in the DDragon storage.
  * The FK is ON DELETE CASCADE so deleting an account drops its pending requests.
  */
 #[ORM\Entity(repositoryClass: ResetPasswordRequestRepository::class)]

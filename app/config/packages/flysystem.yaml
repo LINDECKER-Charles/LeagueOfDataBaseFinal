@@ -1,7 +1,10 @@
-# DDragon object storage (MinIO / S3-compatible). The S3 client is defined in services.yaml.
+# DDragon storage: a local directory (the `storage` volume, shared read-only with
+# nginx and go-api). The atomic-write adapter wrapping the local one is defined in
+# services.yaml. Public visibility is required, not cosmetic: the local adapter
+# creates directories 0700 by default, which nginx (another uid) cannot traverse.
 flysystem:
     storages:
         ddragon.storage:
-            asyncaws:
-                client: 'ddragon.s3_client'
-                bucket: '%env(MINIO_BUCKET)%'
+            service: 'App\Service\Storage\AtomicWriteAdapter'
+            visibility: public
+            directory_visibility: public

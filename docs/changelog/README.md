@@ -44,9 +44,9 @@ dans archived/YYYY/ — la racine YYYY/ ne contient plus que le backlog de la pr
 | Scope      | Périmètre                                                      |
 |------------|----------------------------------------------------------------|
 | front      | Twig, îlots Vue, CSS Hextech, PWA, navigation Turbo            |
-| back       | Symfony/PHP : contrôleurs, managers, stockage MinIO, analytics |
+| back       | Symfony/PHP : contrôleurs, managers, stockage, analytics       |
 | fetcher    | Passerelle Go (egress Data Dragon / CommunityDragon)           |
-| infra      | Docker, CI/CD, Caddy, MinIO, configuration                     |
+| infra      | Docker, CI/CD, Caddy, volumes, configuration                   |
 | full-stack | Changement traversant plusieurs couches                        |
 
 ## Règles de rédaction

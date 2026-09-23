@@ -51,7 +51,7 @@ final class AnalyticsController extends AbstractAdminController
             metadata: ['rolled' => count($result['rolled'])],
         );
         $this->addFlash('success', sprintf(
-            'Consolidation terminée : %d journée(s) écrite(s) dans MinIO.',
+            'Consolidation terminée : %d journée(s) écrite(s) dans le stockage.',
             count($result['rolled']),
         ));
 

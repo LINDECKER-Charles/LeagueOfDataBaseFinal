@@ -8,7 +8,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
  * Resolves the in-page image refresh of a cold list: which of the requested
- * image names landed in object storage since the page was rendered. A manifest
+ * image names landed in the storage since the page was rendered. A manifest
  * read, never a fetch — except on the caller's last attempt, where the missing
  * names are re-queued for after the response ({@see ImageStatusInterface::warmLater}).
  */

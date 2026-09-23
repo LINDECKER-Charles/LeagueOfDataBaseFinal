@@ -35,7 +35,7 @@ abstract class NdjsonDayStore
     /**
      * Decode NDJSON lines, skipping blanks and unparseable rows. Public and
      * static because the archived tiers read the very same line format from
-     * object storage rather than from a day file.
+     * the storage rather than from a day file.
      *
      * @param iterable<string> $lines
      * @return iterable<array<string, mixed>>
@@ -166,7 +166,7 @@ abstract class NdjsonDayStore
      * to `iterable<string>` would only move the problem — something still has to
      * turn the handle into lines — and buys no testability: `decodeLines()` is
      * already the file-free seam, exercised directly by AuditArchiveStore, which
-     * feeds it `explode()`ed bytes from object storage.
+     * feeds it `explode()`ed bytes from the storage.
      *
      * @param resource $handle
      * @return iterable<string>

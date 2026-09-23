@@ -1,6 +1,6 @@
 {# Modern <source> of a <picture> over an ingested blob.
 
-   MinIO stores images content-addressed with a sibling WebP next to the PNG, so
+   The storage keeps images content-addressed with a sibling WebP next to the PNG, so
    the modern candidate is DERIVED from the original path, never carried in the
    payload — by the one owner of that rule, App\Service\Storage\WebpSibling
    (shared with the in-page image refresh endpoint), which answers null for

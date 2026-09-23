@@ -11,7 +11,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Health probes of the internal service mesh for the admin monitoring page:
- * Postgres (liveness + version + database size), MinIO (shallow bucket listing),
+ * Postgres (liveness + version + database size), the DDragon storage (shallow
+ * listing of its root),
  * go-fetcher and go-api (/healthz). Endpoints are Docker-internal ONLY — the
  * egress invariant (all external fetches go through the Go gateway) stays
  * intact. A probe never throws: any failure degrades to a `down` result
@@ -29,7 +30,7 @@ final class ServiceHealthProbe
     public function __construct(
         private readonly Connection $connection,
         private readonly FilesystemOperator $ddragonStorage,
-        private readonly StorageAnalyticsService $storage,
+        private readonly StorageAnalyticsService $storageAnalytics,
         private readonly HttpClientInterface $httpClient,
         #[Autowire(param: 'admin.go_fetcher_health_url')]
         private readonly string $goFetcherHealthUrl,
@@ -46,7 +47,7 @@ final class ServiceHealthProbe
     {
         return [
             'postgres' => $this->postgres(),
-            'minio' => $this->minio(),
+            'storage' => $this->storage(),
             'go-fetcher' => $this->httpHealth($this->goFetcherHealthUrl),
             'go-api' => $this->httpHealth($this->goApiHealthUrl),
         ];
@@ -70,14 +71,14 @@ final class ServiceHealthProbe
     /**
      * @return array{status: string, latencyMs: int, detail: ?string, meta: array<string, mixed>}
      */
-    public function minio(): array
+    public function storage(): array
     {
         $start = microtime(true);
         try {
             // A liveness probe, not an inventory: one shallow listing of the root
             // prefix, stopped at the first entry. Answering this question with the
             // storage report made every monitoring load pay a deep O(objects)
-            // listing of the whole bucket.
+            // listing of the whole storage.
             foreach ($this->ddragonStorage->listContents('', false) as $ignored) {
                 break;
             }
@@ -87,7 +88,7 @@ final class ServiceHealthProbe
 
         // Volumes are a bonus shown when the storage report happens to be warm;
         // the probe never computes one to fill this chip in.
-        return $this->healthy($start, $this->storage->cachedTotals() ?? []);
+        return $this->healthy($start, $this->storageAnalytics->cachedTotals() ?? []);
     }
 
     /**

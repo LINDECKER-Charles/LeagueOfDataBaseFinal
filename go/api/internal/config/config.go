@@ -14,9 +14,9 @@ const (
 	DefaultPort        = "8090"
 	DefaultDatabaseURL = "postgresql://lodb:lodb@postgres:5432/lodb"
 
-	DefaultMinioEndpoint = "http://minio:9000"
-	DefaultMinioRegion   = "us-east-1"
-	DefaultMinioBucket   = "ddragon"
+	// DefaultStorageDir is where the shared storage volume is mounted (read-only
+	// for go-api): the Data Dragon datasets and analytics aggregates PHP writes.
+	DefaultStorageDir = "/srv/storage"
 
 	// DefaultPublicSiteURL is the origin third-party API clients must be sent to
 	// when a response carries a link into the website (build sharing). It mirrors
@@ -30,7 +30,7 @@ const (
 	// TrendsCacheTTL bounds staleness of a computed trends ranking.
 	TrendsCacheTTL = 5 * time.Minute
 	// NamesCacheTTL bounds staleness of the id -> display-name maps resolved
-	// from the Data Dragon datasets stored in MinIO.
+	// from the Data Dragon datasets kept on the storage volume.
 	NamesCacheTTL = 30 * time.Minute
 	// MeterFlushInterval is the cadence of the batched api_usage upserts.
 	MeterFlushInterval = time.Second
@@ -47,30 +47,23 @@ const (
 
 // Config holds the environment-derived settings.
 type Config struct {
-	Host           string
-	Port           string
-	DatabaseURL    string
-	MinioEndpoint  string
-	MinioRegion    string
-	MinioBucket    string
-	MinioAccessKey string
-	MinioSecretKey string
+	Host        string
+	Port        string
+	DatabaseURL string
+	// StorageDir is the root of the storage volume (same layout as PHP's).
+	StorageDir string
 	// PublicSiteURL is the website origin, without a trailing slash.
 	PublicSiteURL string
 }
 
 // Load reads configuration from the environment, applying safe defaults that
-// match the compose network (postgres/minio service names).
+// match the compose stack (postgres service name, storage volume mount point).
 func Load() Config {
 	return Config{
-		Host:           getenv("HOST", "0.0.0.0"),
-		Port:           getenv("PORT", DefaultPort),
-		DatabaseURL:    getenv("DATABASE_URL", DefaultDatabaseURL),
-		MinioEndpoint:  getenv("MINIO_ENDPOINT", DefaultMinioEndpoint),
-		MinioRegion:    getenv("MINIO_REGION", DefaultMinioRegion),
-		MinioBucket:    getenv("MINIO_BUCKET", DefaultMinioBucket),
-		MinioAccessKey: getenv("MINIO_ACCESS_KEY", ""),
-		MinioSecretKey: getenv("MINIO_SECRET_KEY", ""),
+		Host:        getenv("HOST", "0.0.0.0"),
+		Port:        getenv("PORT", DefaultPort),
+		DatabaseURL: getenv("DATABASE_URL", DefaultDatabaseURL),
+		StorageDir:  getenv("STORAGE_DIR", DefaultStorageDir),
 		// Trimmed here so no call site has to guess whether it must add a slash.
 		PublicSiteURL: strings.TrimRight(
 			getenv("PUBLIC_SITE_URL", DefaultPublicSiteURL), "/",
@@ -80,20 +73,6 @@ func Load() Config {
 
 // Addr returns the host:port listen address.
 func (c Config) Addr() string { return c.Host + ":" + c.Port }
-
-// MinioHost returns the endpoint stripped of its scheme (minio-go wants a bare
-// host) and whether TLS should be used.
-func (c Config) MinioHost() (host string, secure bool) {
-	endpoint := c.MinioEndpoint
-	switch {
-	case strings.HasPrefix(endpoint, "https://"):
-		return strings.TrimPrefix(endpoint, "https://"), true
-	case strings.HasPrefix(endpoint, "http://"):
-		return strings.TrimPrefix(endpoint, "http://"), false
-	default:
-		return endpoint, false
-	}
-}
 
 func getenv(key, def string) string {
 	if v, ok := os.LookupEnv(key); ok && v != "" {

@@ -32,7 +32,7 @@ curl https://api.leagueofdatabase.example/healthz
 ```
 
 ```json
-{"status":"ok","dependencies":{"postgres":"ok","minio":"ok"}}
+{"status":"ok","dependencies":{"postgres":"ok","storage":"ok"}}
 ```
 
 ### `GET /v1/profiles/{username}`
@@ -242,8 +242,8 @@ Facturation gérée côté Symfony (`/profile/api`) via Stripe Checkout, `price_
 ## Notes d'implémentation (résumé)
 
 - Service Go autonome (`go/api/`, port 8090), lecture seule sur Postgres (`users`,
-  `builds`) et MinIO (agrégats `analytics/daily/*.json`, datasets Data Dragon pour les
-  noms). Schéma des tables `api_keys` / `api_usage` : `go/api/schema.sql` (migration
+  `builds`) et sur le volume `storage`, monté en lecture seule (`STORAGE_DIR`, lu via
+  `os.DirFS` : agrégats `analytics/daily/*.json`, datasets Data Dragon pour les noms). Schéma des tables `api_keys` / `api_usage` : `go/api/schema.sql` (migration
   Doctrine côté `app/`).
 - Clés validées mises en cache 60 s ; le compteur mensuel est décompté en mémoire entre
   deux rafraîchissements et le métrage est flushé en base par lots (~1 s) : un léger

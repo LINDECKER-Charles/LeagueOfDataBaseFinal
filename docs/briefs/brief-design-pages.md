@@ -343,7 +343,7 @@ barre de filtres · **grille de cartes** (`entity_card`) · **état vide** (serv
 | **Sorts d'invocateur** | id | **2 accordéons** : Modes compatibles (+ count) · Description | **Cooldown** + **Niveau invocateur** | modes de jeu (whitelistés) | non | ~16 |
 | **Runes** | key d'arbre | aperçu des **keystones du slot 0** | — | nom d'arbre *(1 tag/carte — facette quasi dégénérée)* | **oui** | 5 (1 carte = 1 arbre) |
 
-**Données & source** — Data Dragon (JSON en cache MinIO, images content-addressed + WebP), repli `en_US`.
+**Données & source** — Data Dragon (JSON en cache sur le volume de stockage, images content-addressed + WebP), repli `en_US`.
 
 **États** — Vide serveur (« Aucun résultat » + Retour / Accueil) · vide client (« Aucun résultat ne correspond
 à vos filtres ») · erreur data → **redirection accueil + flash** (jamais de page cassée).
@@ -451,8 +451,8 @@ l'affiche**.
 - **i18n obligatoire** : aucun texte en dur (21 locales).
 - **Résolution version/langue sans redirect** (query → session).
 - **`/build/` est réservé aux assets Vite** (nginx) — la vue de partage vit sur **`/b/{token}`**.
-- **Splash / skins champion** servis **directement depuis le CDN Data Dragon** (hotlink assumé), pas via MinIO.
-- **Données & images Data Dragon hors base** (MinIO) — Postgres = données utilisateur uniquement.
+- **Splash / skins champion** servis **directement depuis le CDN Data Dragon** (hotlink assumé), pas via le stockage local.
+- **Données & images Data Dragon hors base** (volume `storage`) — Postgres = données utilisateur uniquement.
 - **Îlots globaux** (loader SSE, toaster, badge load-time) montés une fois dans `base.html.twig` — ne pas dupliquer.
 - **Pas de `<Transition>` + `v-show` pour le loader** (toggle de classe CSS déterministe).
 
