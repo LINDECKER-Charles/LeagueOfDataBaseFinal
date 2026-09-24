@@ -41,7 +41,8 @@ Bloodborne Legendary Run (Angular + Capacitor + mises à jour Android).
 | [0009](adr/0009-identite-authentification-sessions.md) | **ASP.NET Core Identity** : cookie (web) + jetons (apps), migration transparente des hash, plus de session serveur |
 | [0010](adr/0010-observabilite-tests-ci.md) | **OpenTelemetry** + logs JSON + `/metrics` ; Testcontainers, fixtures Data Dragon, Playwright ; un seul contrat OpenAPI |
 
-Plan d'exécution et bascule : [`plan-migration.md`](plan-migration.md).
+Plan d'exécution et bascule : [`plan-migration.md`](plan-migration.md). Découpage en chantiers,
+conventions et ordre d'exécution : [`plan-implementation.md`](plan-implementation.md).
 
 ## Architecture cible
 
@@ -97,4 +98,6 @@ et deviennent des tests dès le lot 1 du plan.
       README.md          ← ce fichier : pourquoi, décisions, architecture, versions
       heritage.md        ← contournements hérités → réponse ; invariants à porter
       plan-migration.md  ← lots, critères de sortie, bascule, retour arrière, risques
+      plan-implementation.md ← chantiers, conventions, ordre d'exécution, couverture
+      implementation/    ← détail des chantiers, un fichier par lot
       adr/               ← une décision par fichier (contexte, décision, alternatives)

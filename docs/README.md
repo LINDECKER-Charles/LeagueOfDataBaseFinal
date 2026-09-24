@@ -29,6 +29,7 @@ n'a pas eu lieu, les sections ci-dessous décrivent la stack **en service**.
 | [README.md](reecriture/README.md) | Pourquoi, tableau des décisions, architecture et versions cibles |
 | [heritage.md](reecriture/heritage.md) | Contournements hérités → réponse, bugs latents, particularités Data Dragon, invariants à porter |
 | [plan-migration.md](reecriture/plan-migration.md) | Lots et critères de sortie, bascule, retour arrière, table des 301, risques |
+| [plan-implementation.md](reecriture/plan-implementation.md) | Chantiers de chaque lot, conventions de la nouvelle stack, ordre d'exécution, couverture ; détail par lot dans [implementation/](reecriture/implementation/) |
 | [adr/](reecriture/adr/) | Une décision par fichier : hôte, ingestion, stockage, SSR, front, coquilles, mises à jour, identité, observabilité |
 
 ## `architecture/` — comment ça marche
