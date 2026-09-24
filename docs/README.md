@@ -9,6 +9,7 @@ contributeur est [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
     docs/
       README.md          ← ce fichier
       contribution.md    ← guide contributeur détaillé (FR / EN / ES)
+      reecriture/        ← décisions de la réécriture .NET + Angular (ADR, plan)
       architecture/      ← comment le système fonctionne
       guides/            ← comment l'installer, le configurer, l'exploiter
       audits/            ← constats datés et plans de correction
@@ -16,6 +17,19 @@ contributeur est [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
       produit/           ← veille, SEO, communication
       changelog/         ← journal technique interne (une entrée par livraison)
       assets/            ← images et icônes utilisées par le README
+
+## `reecriture/` — réécriture .NET 10 + Angular
+
+Décisions actées le 2026-09-24 pour remplacer Symfony + Go + Vue par un hôte
+ASP.NET Core et un front Angular unique (web SSR, desktop, Android). Tant que la bascule
+n'a pas eu lieu, les sections ci-dessous décrivent la stack **en service**.
+
+| Doc | Contenu |
+|---|---|
+| [README.md](reecriture/README.md) | Pourquoi, tableau des décisions, architecture et versions cibles |
+| [heritage.md](reecriture/heritage.md) | Contournements hérités → réponse, bugs latents, particularités Data Dragon, invariants à porter |
+| [plan-migration.md](reecriture/plan-migration.md) | Lots et critères de sortie, bascule, retour arrière, table des 301, risques |
+| [adr/](reecriture/adr/) | Une décision par fichier : hôte, ingestion, stockage, SSR, front, coquilles, mises à jour, identité, observabilité |
 
 ## `architecture/` — comment ça marche
 
