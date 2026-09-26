@@ -17,6 +17,7 @@
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
     "@types/node": "^24.19.0",
+    "lighthouse": "^13.5.0",
     "typescript": "~6.0.3"
   }
 }
