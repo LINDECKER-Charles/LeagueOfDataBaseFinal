@@ -10,6 +10,7 @@
     <Project Path="tests/LoDb.Domain.Tests/LoDb.Domain.Tests.csproj" />
     <Project Path="tests/LoDb.Infrastructure.Tests/LoDb.Infrastructure.Tests.csproj" />
     <Project Path="tests/LoDb.Ingestion.Tests/LoDb.Ingestion.Tests.csproj" />
+    <Project Path="tests/LoDb.Parity/LoDb.Parity.csproj" />
     <Project Path="tests/LoDb.Testing/LoDb.Testing.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">

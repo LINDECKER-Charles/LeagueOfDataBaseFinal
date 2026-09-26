@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Not a *.Tests project: tests/Directory.Build.props leaves it alone, so the xUnit v3
+    executable is declared here. The comparison reads JSON files only and references no
+    project of the solution: both stacks are compared on what they write.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>
