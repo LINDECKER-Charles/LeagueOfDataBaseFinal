@@ -1,0 +1,380 @@
+{
+  "homepage": {
+    "title": "League of Data Base",
+    "meta": "歡迎來到 League of Data Base。探索 League of Legends 的召喚師技能與物品，查看 {{ version }} 版本的數值與詳細資料。",
+    "hero": {
+      "browse": "瀏覽 League of Legends <strong>召喚師技能</strong>與<strong>物品</strong>的詳細資訊，已更新至 {{ version }} 版本。",
+      "explore_summoners": "探索召喚師技能",
+      "explore_items": "探索物品",
+      "explore_champions": "探索英雄",
+      "explore_runes": "探索符文"
+    },
+    "summoners": {
+      "title": "召喚師技能",
+      "see_all": "查看所有技能"
+    },
+    "items": {
+      "title": "物品",
+      "see_all": "查看所有物品"
+    },
+    "champions": {
+      "title": "英雄",
+      "see_all": "查看所有英雄",
+      "no_data": "此版本暫無可用的英雄資料。",
+      "wip": "此區塊仍在建置中，很快就能瀏覽所有英雄。"
+    },
+    "runes": {
+      "title": "符文",
+      "wip": "此區塊仍在建置中，很快就能探索符文。",
+      "see_all": "查看所有符文"
+    }
+  },
+  "setup": {
+    "form": {
+      "version": "版本",
+      "language": "語言",
+      "remember": "記住我的選擇",
+      "submit": "送出"
+    }
+  },
+  "system": {
+    "under_construction": {
+      "title": "建置中",
+      "meta_description": "League of Data Base 目前正在建置中。我們正努力為您帶來 League of Legends 的詳細數值、深度分析與實用工具，敬請期待更新。",
+      "heading": "此頁面正在建置中",
+      "subheading": "我們正在符文之地中打造這項功能，敬請期待精彩內容。",
+      "info": "若您看到這個頁面，代表相關內容尚未上線。我們正在努力提升效能、資料準確度，並打造與 League Of Data Base 其餘部分一致的流暢使用體驗。",
+      "progress_label": "建置進度",
+      "back": "← 返回",
+      "summoners": "查看召喚師技能",
+      "footer": "急需這項功能嗎？歡迎與我們聯繫，或查看開發藍圖，更多更新即將推出。",
+      "meanwhile": "在此期間，您可以："
+    }
+  },
+  "item": {
+    "detail": {
+      "meta_description": "深入了解 League of Legends 中 {{ name }} 的所有資訊。數值、效果與出裝資訊已更新至 {{ version }} 版本。",
+      "version_locale": "版本：{{ version }} — 語言：{{ locale }}",
+      "price_total": "總價",
+      "price_base": "購買價格",
+      "price_sell": "出售價值",
+      "categories": "分類",
+      "evolutions": "可能的進化",
+      "stats": "數值",
+      "description": "描述",
+      "recipe": "配方",
+      "builds_from": "合成所需",
+      "tier": "第 {{ depth }} 層",
+      "availability": "可用性",
+      "back": "← 返回列表"
+    },
+    "list": {
+      "title": "物品",
+      "meta_description": "瀏覽 {{ version }} 版本中所有 League of Legends 物品。查看已更新至最新版本的詳細數值、價格與效果。",
+      "header": "物品",
+      "subtitle": "物品目錄",
+      "results_per_page": "每頁顯示筆數：",
+      "max": "MAX",
+      "ok": "OK",
+      "search_placeholder": "搜尋物品…",
+      "cost_total": "總價",
+      "cost_sell": "出售價值",
+      "categories": "分類",
+      "evolutions": "可能的進化",
+      "description": "描述"
+    }
+  },
+  "summoner": {
+    "detail": {
+      "meta_description": "探索 League of Legends 中召喚師技能 {{ name }} 的詳細資訊。數值與效果已更新至 {{ version }} 版本。",
+      "version_locale": "版本：{{ version }} — 語言：{{ locale }}",
+      "fields": {
+        "cooldown": "冷卻時間",
+        "maxammo": "充能次數",
+        "range": "使用範圍",
+        "cost": "消耗",
+        "summoner_level": "召喚師等級"
+      },
+      "unlocked_at": "在 {{ level }} 級解鎖",
+      "range_global": "全圖",
+      "no_cost": "無消耗",
+      "modes": "適用模式",
+      "description": "描述"
+    },
+    "card": {
+      "cooldown": "冷卻時間",
+      "level": "召喚師等級",
+      "modes": "適用模式",
+      "description": "描述"
+    },
+    "list": {
+      "title": "召喚師技能",
+      "subtitle": "召喚師技能目錄",
+      "count": "count 個技能"
+    }
+  },
+  "champion": {
+    "list": {
+      "title": "英雄",
+      "meta_description": "瀏覽所有 League of Legends 英雄，查看遊戲中每位英雄的詳細數值、技能與背景故事。",
+      "header": "英雄",
+      "subtitle": "英雄目錄",
+      "search_placeholder": "搜尋英雄…"
+    },
+    "detail": {
+      "meta_description": "探索 League of Legends 中的 {{ name }}，查看 {{ version }} 版本的數值、定位與詳細資料。",
+      "version_locale": "{{ version }} 版本 • {{ locale }}",
+      "partype": "資源：{{ partype }}",
+      "roles": "定位",
+      "abilities": "技能",
+      "passive": "被動",
+      "skins": "造型",
+      "cooldown": "冷卻時間",
+      "cost": "消耗",
+      "range": "射程",
+      "video_play": "播放影片",
+      "video_pause": "暫停影片",
+      "video_mute": "靜音",
+      "video_unmute": "取消靜音",
+      "tips_as": "使用技巧",
+      "tips_against": "對抗技巧",
+      "stats": {
+        "title": "基礎數值"
+      },
+      "profile": {
+        "title": "英雄簡介",
+        "attack": "攻擊",
+        "defense": "防禦",
+        "magic": "法術",
+        "difficulty": "難度"
+      },
+      "lore": {
+        "title": "背景故事"
+      }
+    }
+  },
+  "rune": {
+    "list": {
+      "title": "符文",
+      "meta_description": "瀏覽所有 League of Legends 符文，查看遊戲中每個符文的詳細數值與效果。",
+      "header": "符文",
+      "subtitle": "符文目錄",
+      "search_placeholder": "搜尋符文…"
+    },
+    "detail": {
+      "title": "符文：{{ name }}",
+      "meta_description": "探索 League of Legends 中符文 {{ name }} 的詳細資訊。數值與效果已更新至 {{ version }} 版本。",
+      "overview": "概覽",
+      "keystone": "基石符文",
+      "minor": "次級符文",
+      "slot_n": "欄位 {{ n }}"
+    },
+    "slot": "符文位"
+  },
+  "common": {
+    "back": "返回",
+    "search": "搜尋…",
+    "no_result": {
+      "text": "找不到符合您搜尋條件的結果。",
+      "back": "← 返回"
+    },
+    "detail": "查看詳情"
+  },
+  "base": {
+    "title": "League of Data Base",
+    "description": "League of Data Base 是一個由社群共同打造的平台，提供 League of Legends 的詳細資訊、數值與深度分析。快速、可靠，並隨時保持最新。"
+  },
+  "footer": {
+    "copyright": "© 2025 LINDECKER Charles / Hexanti",
+    "legal": "法律聲明",
+    "navigation": {
+      "title": "導覽",
+      "home": "首頁",
+      "champion": "英雄",
+      "item": "物品",
+      "runes": "符文",
+      "summoner": "召喚師技能",
+      "sitemap": "網站地圖"
+    },
+    "links": {
+      "title": "實用連結",
+      "lol": "League of Legends",
+      "riotapi": "Riot API",
+      "ddragon": "CDN Data Dragon",
+      "support": "Riot Support",
+      "opgg": "OP.GG"
+    },
+    "project": {
+      "title": "專案",
+      "version": "版本：{{ version }}",
+      "updated": "更新日期：17/07/2026"
+    },
+    "contact": {
+      "title": "聯絡方式",
+      "email": "電子郵件",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    }
+  },
+  "loader": {
+    "eyebrow": "Data Dragon",
+    "title": "召喚資料中",
+    "subtitle": "正在從符文之地擷取資源…",
+    "preparing": "正在準備資料…",
+    "status": {
+      "fetching": "擷取中",
+      "ready": "已就緒"
+    }
+  },
+  "pagination": {
+    "ok": "OK",
+    "more": "…"
+  },
+  "header": {
+    "navigation": {
+      "home": "首頁",
+      "champion": "英雄",
+      "item": "物品",
+      "runes": "符文",
+      "summoner": "召喚師技能"
+    },
+    "theme": {
+      "label": "視覺主題",
+      "close": "關閉"
+    }
+  },
+  "auth": {
+    "or": "或",
+    "google": {
+      "cta": "使用 Google 繼續",
+      "unavailable": "此伺服器未設定 Google 登入。",
+      "failed": "Google 登入失敗，請再試一次。"
+    },
+    "register": {
+      "password": "密碼",
+      "password_confirm": "確認密碼",
+      "password_mismatch": "兩次輸入的密碼不一致。",
+      "password_help": "至少 12 個字元，包含小寫字母、大寫字母、數字與特殊字元。"
+    },
+    "password": {
+      "rule_length": "至少 12 個字元",
+      "rule_lowercase": "至少一個小寫字母",
+      "rule_uppercase": "至少一個大寫字母",
+      "rule_digit": "至少一個數字",
+      "rule_special": "至少一個特殊字元",
+      "rule_match": "兩次密碼一致",
+      "too_common": "此密碼太常見，請選擇更獨特的密碼。"
+    },
+    "flash": {
+      "banned": "此帳號已被管理團隊停權。"
+    }
+  },
+  "profile": {
+    "identity": {
+      "title": "召喚師身分",
+      "username": "召喚師名稱",
+      "tag": "Riot 標籤",
+      "tag_help": "選填：Riot ID 中 # 之後的部分 — 如 GG#EUW，請填 EUW。",
+      "url_warning": "變更召喚師名稱也會變更公開個人頁的網址。",
+      "submit": "更新身分",
+      "username_taken": "此召喚師名稱已被使用。",
+      "username_invalid": "召喚師名稱無效：3-24 個字元（字母、數字、點、連字號、底線），需以字母或數字開頭。",
+      "tag_invalid": "Riot 標籤無效：3-5 個字母或數字。"
+    },
+    "password": {
+      "title": "設定密碼",
+      "help": "此帳號目前僅使用 Google 登入。設定密碼後也可以用電子郵件登入。",
+      "submit": "設定密碼"
+    },
+    "danger": {
+      "help_no_password": "刪除帳號無法復原：收藏與配裝將被清除。"
+    },
+    "flash": {
+      "identity_saved": "召喚師身分已更新。",
+      "password_set": "密碼已設定 — 現在也可以用電子郵件登入了。",
+      "password_exists": "此帳號已設定密碼。"
+    }
+  },
+  "build": {
+    "mode": {
+      "sr": "召喚峽谷",
+      "aram": "隨機單中 (ARAM)",
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "鬥魂競技場"
+    },
+    "editor": {
+      "ghost_mode": "在此遊戲模式中無法使用",
+      "context": {
+        "title": "遊戲環境",
+        "version": "版本",
+        "mode": "遊戲模式",
+        "mode_hint": "裝備的可用性取決於所選模式。已放置的裝備不會被移除，只會被標記。"
+      },
+      "dnd": {
+        "handle": "拖曳以重新排序",
+        "moved_step": "步驟已移至第 {{ position }} 位",
+        "moved_item": "裝備已移至第 {{ position }} 位",
+        "transferred": "裝備已移至步驟 {{ step }}",
+        "added": "裝備已加入步驟 {{ step }}",
+        "cancelled": "已取消移動"
+      }
+    },
+    "show": {
+      "mode": "遊戲模式",
+      "patch_current": "鑄造於版本 {{ version }}（目前 {{ current }}）"
+    },
+    "error": {
+      "version": {
+        "unknown": "未知的遊戲版本。"
+      },
+      "mode": {
+        "unknown": "未知的遊戲模式。"
+      },
+      "steps": {
+        "item_mode": "在所選遊戲模式中無法使用：{{ items }}"
+      }
+    }
+  },
+  "community": {
+    "nav": {
+      "trends": "熱門"
+    },
+    "trends": {
+      "eyebrow": "社群脈動",
+      "title": "熱門配裝",
+      "filter": {
+        "champion": "英雄",
+        "mode": "遊戲模式",
+        "all_champions": "全部英雄",
+        "all_modes": "全部模式",
+        "apply": "篩選"
+      },
+      "empty": "沒有符合此篩選條件的公開配裝 — 鍛造你自己的吧。",
+      "empty_cta": "鍛造我的配裝"
+    },
+    "vote": {
+      "up": "投票支持這套配裝",
+      "down": "投票反對這套配裝",
+      "score_label": "社群評分",
+      "login": "登入後投票",
+      "invalid": "無效的投票。"
+    },
+    "supporter": {
+      "badge": "支持者"
+    }
+  },
+  "stat": {
+    "attack_damage": "攻擊力",
+    "ability_power": "法術強度",
+    "attack_speed": "攻擊速度",
+    "crit_chance": "爆擊機率",
+    "life_steal": "生命竊取",
+    "health": "生命值",
+    "health_regen": "生命回復",
+    "armor": "護甲",
+    "magic_resist": "魔法抗性",
+    "mana": "法力",
+    "move_speed": "移動速度",
+    "attack_range": "攻擊距離"
+  }
+}

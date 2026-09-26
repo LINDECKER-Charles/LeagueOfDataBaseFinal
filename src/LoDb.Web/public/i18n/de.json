@@ -1,0 +1,380 @@
+{
+  "homepage": {
+    "title": "League of Data Base",
+    "meta": "Willkommen bei League of Data Base. Entdecke League of Legends Items und Beschwörerzauber mit Statistiken und Details für Patch {{ version }}.",
+    "hero": {
+      "browse": "Entdecke detaillierte Informationen zu <strong>Beschwörerzaubern</strong> und <strong>Items</strong> aus League of Legends. Aktualisiert für Patch {{ version }}.",
+      "explore_summoners": "Beschwörerzauber entdecken",
+      "explore_items": "Items entdecken",
+      "explore_champions": "Champions entdecken",
+      "explore_runes": "Runen entdecken"
+    },
+    "summoners": {
+      "title": "Beschwörerzauber",
+      "see_all": "Alle Zauber ansehen"
+    },
+    "items": {
+      "title": "Items",
+      "see_all": "Alle Items ansehen"
+    },
+    "champions": {
+      "title": "Champions",
+      "see_all": "Alle Champions ansehen",
+      "no_data": "Für diese Version sind keine Champions verfügbar.",
+      "wip": "Dieser Bereich befindet sich im Aufbau. Bald kannst du alle Champions durchstöbern."
+    },
+    "runes": {
+      "title": "Runen",
+      "wip": "Dieser Bereich befindet sich im Aufbau. Bald kannst du Runen entdecken.",
+      "see_all": "Alle Runen ansehen"
+    }
+  },
+  "setup": {
+    "form": {
+      "version": "Version",
+      "language": "Sprache",
+      "remember": "Angemeldet bleiben",
+      "submit": "Absenden"
+    }
+  },
+  "system": {
+    "under_construction": {
+      "title": "Im Aufbau",
+      "meta_description": "League of Data Base befindet sich derzeit im Aufbau. Wir arbeiten mit Hochdruck daran, dir detaillierte Statistiken, Einblicke und Tools für League of Legends zu bieten. Bleib gespannt auf Updates.",
+      "heading": "Diese Seite befindet sich im Aufbau",
+      "subheading": "Wir schmieden dieses Feature auf der Kluft. Schau bald wieder vorbei für etwas Episches.",
+      "info": "Wenn du diese Seite erreicht hast, ist der Inhalt noch nicht verfügbar. Wir arbeiten an Performance, Datengenauigkeit und einer reibungslosen UX, die zum Rest von League Of Data Base passt.",
+      "progress_label": "Baufortschritt",
+      "back": "← Zurück",
+      "summoners": "Beschwörerzauber ansehen",
+      "footer": "Brauchst du das bald? Schreib uns oder schau in die Roadmap. Weitere Updates folgen.",
+      "meanwhile": "In der Zwischenzeit kannst du:"
+    }
+  },
+  "item": {
+    "detail": {
+      "meta_description": "Entdecke alles über das Item {{ name }} in League of Legends. Statistiken, Effekte und Build-Informationen aktualisiert für Patch {{ version }}.",
+      "version_locale": "Version: {{ version }} — Sprache: {{ locale }}",
+      "price_total": "Gesamtkosten",
+      "price_base": "Kaufpreis",
+      "price_sell": "Verkaufswert",
+      "categories": "Kategorien",
+      "evolutions": "Mögliche Weiterentwicklungen",
+      "stats": "Statistiken",
+      "description": "Beschreibung",
+      "recipe": "Rezept",
+      "builds_from": "Besteht aus",
+      "tier": "Stufe {{ depth }}",
+      "availability": "Verfügbarkeit",
+      "back": "← Zurück zur Liste"
+    },
+    "list": {
+      "title": "Items",
+      "meta_description": "Durchstöbere alle League of Legends Items, die in Patch {{ version }} verfügbar sind. Finde detaillierte Statistiken, Kosten und Effekte, aktualisiert für die neueste Version.",
+      "header": "Items",
+      "subtitle": "Item-Katalog",
+      "results_per_page": "Ergebnisse pro Seite:",
+      "max": "MAX",
+      "ok": "OK",
+      "search_placeholder": "Nach einem Item suchen…",
+      "cost_total": "Gesamtkosten",
+      "cost_sell": "Verkaufswert",
+      "categories": "Kategorien",
+      "evolutions": "Mögliche Weiterentwicklungen",
+      "description": "Beschreibung"
+    }
+  },
+  "summoner": {
+    "detail": {
+      "meta_description": "Entdecke die Details des Beschwörerzaubers {{ name }} in League of Legends. Statistiken und Effekte aktualisiert für Patch {{ version }}.",
+      "version_locale": "Version: {{ version }} — Sprache: {{ locale }}",
+      "fields": {
+        "cooldown": "Abklingzeit",
+        "maxammo": "Anzahl der Ladungen",
+        "range": "Nutzungsreichweite",
+        "cost": "Kosten",
+        "summoner_level": "Beschwörerstufe"
+      },
+      "unlocked_at": "Freigeschaltet auf Stufe {{ level }}",
+      "range_global": "Global",
+      "no_cost": "Keine Kosten",
+      "modes": "Kompatible Modi",
+      "description": "Beschreibung"
+    },
+    "card": {
+      "cooldown": "Abklingzeit",
+      "level": "Beschwörerstufe",
+      "modes": "Kompatible Modi",
+      "description": "Beschreibung"
+    },
+    "list": {
+      "title": "Beschwörerzauber",
+      "subtitle": "Beschwörerzauber-Katalog",
+      "count": "count Zauber"
+    }
+  },
+  "champion": {
+    "list": {
+      "title": "Champions",
+      "meta_description": "Durchstöbere alle League of Legends Champions. Finde detaillierte Statistiken, Fähigkeiten und Hintergrundgeschichten zu jedem Champion im Spiel.",
+      "header": "Champions",
+      "subtitle": "Champion-Katalog",
+      "search_placeholder": "Nach einem Champion suchen…"
+    },
+    "detail": {
+      "meta_description": "Entdecke {{ name }} aus League of Legends mit Statistiken, Rollen und Details für Patch {{ version }}.",
+      "version_locale": "Patch {{ version }} • {{ locale }}",
+      "partype": "Ressource: {{ partype }}",
+      "roles": "Rollen",
+      "abilities": "Fähigkeiten",
+      "passive": "Passiv",
+      "skins": "Skins",
+      "cooldown": "Abklingzeit",
+      "cost": "Kosten",
+      "range": "Reichweite",
+      "video_play": "Video abspielen",
+      "video_pause": "Video pausieren",
+      "video_mute": "Ton stummschalten",
+      "video_unmute": "Ton einschalten",
+      "tips_as": "Beim Spielen",
+      "tips_against": "Gegen diesen Champion",
+      "stats": {
+        "title": "Basisstatistiken"
+      },
+      "profile": {
+        "title": "Champion-Profil",
+        "attack": "Angriff",
+        "defense": "Verteidigung",
+        "magic": "Magie",
+        "difficulty": "Schwierigkeit"
+      },
+      "lore": {
+        "title": "Hintergrundgeschichte"
+      }
+    }
+  },
+  "rune": {
+    "list": {
+      "title": "Runen",
+      "meta_description": "Durchstöbere alle League of Legends Runen. Finde detaillierte Statistiken und Effekte zu jeder Rune im Spiel.",
+      "header": "Runen",
+      "subtitle": "Runen-Katalog",
+      "search_placeholder": "Nach einer Rune suchen…"
+    },
+    "detail": {
+      "title": "Rune: {{ name }}",
+      "meta_description": "Entdecke die Details der Rune {{ name }} in League of Legends. Statistiken und Effekte aktualisiert für Patch {{ version }}.",
+      "overview": "Übersicht",
+      "keystone": "Schlüsselstein",
+      "minor": "Kleinere Runen",
+      "slot_n": "Slot {{ n }}"
+    },
+    "slot": "Slot"
+  },
+  "common": {
+    "back": "Zurück",
+    "search": "Suchen…",
+    "no_result": {
+      "text": "Keine Ergebnisse für deine Suche gefunden.",
+      "back": "← Zurück"
+    },
+    "detail": "Details ansehen"
+  },
+  "base": {
+    "title": "League of Data Base",
+    "description": "League of Data Base ist eine von der Community getragene Plattform, die detaillierte Informationen, Statistiken und Einblicke zu League of Legends bietet. Schnell, zuverlässig und immer aktuell."
+  },
+  "footer": {
+    "copyright": "© 2025 LINDECKER Charles / Hexanti",
+    "legal": "Impressum",
+    "navigation": {
+      "title": "Navigation",
+      "home": "Startseite",
+      "champion": "Champion",
+      "item": "Item",
+      "runes": "Runen",
+      "summoner": "Beschwörer",
+      "sitemap": "Sitemap"
+    },
+    "links": {
+      "title": "Nützliche Links",
+      "lol": "League of Legends",
+      "riotapi": "Riot API",
+      "ddragon": "CDN Data Dragon",
+      "support": "Riot Support",
+      "opgg": "OP.GG"
+    },
+    "project": {
+      "title": "Projekt",
+      "version": "Version: {{ version }}",
+      "updated": "Aktualisiert: 17/07/2026"
+    },
+    "contact": {
+      "title": "Kontakt",
+      "email": "E-Mail",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    }
+  },
+  "loader": {
+    "eyebrow": "Data Dragon",
+    "title": "Daten werden beschworen",
+    "subtitle": "Ressourcen werden aus der Kluft geladen…",
+    "preparing": "Daten werden vorbereitet…",
+    "status": {
+      "fetching": "lädt",
+      "ready": "bereit"
+    }
+  },
+  "pagination": {
+    "ok": "OK",
+    "more": "…"
+  },
+  "header": {
+    "navigation": {
+      "home": "Startseite",
+      "champion": "Champions",
+      "item": "Items",
+      "runes": "Runen",
+      "summoner": "Beschwörerzauber"
+    },
+    "theme": {
+      "label": "Visuelles Thema",
+      "close": "Schließen"
+    }
+  },
+  "auth": {
+    "or": "oder",
+    "google": {
+      "cta": "Mit Google fortfahren",
+      "unavailable": "Die Google-Anmeldung ist auf diesem Server nicht eingerichtet.",
+      "failed": "Die Google-Anmeldung ist fehlgeschlagen. Bitte versuche es erneut."
+    },
+    "register": {
+      "password": "Passwort",
+      "password_confirm": "Passwort bestätigen",
+      "password_mismatch": "Die beiden Passwörter stimmen nicht überein.",
+      "password_help": "Mindestens 12 Zeichen, mit Kleinbuchstabe, Großbuchstabe, Ziffer und Sonderzeichen."
+    },
+    "password": {
+      "rule_length": "Mindestens 12 Zeichen",
+      "rule_lowercase": "Mindestens ein Kleinbuchstabe",
+      "rule_uppercase": "Mindestens ein Großbuchstabe",
+      "rule_digit": "Mindestens eine Ziffer",
+      "rule_special": "Mindestens ein Sonderzeichen",
+      "rule_match": "Beide Passwörter stimmen überein",
+      "too_common": "Dieses Passwort ist zu verbreitet. Wähle ein persönlicheres."
+    },
+    "flash": {
+      "banned": "Dieses Konto wurde vom Moderationsteam gesperrt."
+    }
+  },
+  "profile": {
+    "identity": {
+      "title": "Beschwörer-Identität",
+      "username": "Beschwörername",
+      "tag": "Riot-Tag",
+      "tag_help": "Optional: der Teil nach dem # deiner Riot ID — für GG#EUW gib EUW ein.",
+      "url_warning": "Wenn du deinen Beschwörernamen änderst, ändert sich auch die Adresse deines öffentlichen Profils.",
+      "submit": "Identität aktualisieren",
+      "username_taken": "Dieser Beschwörername ist bereits vergeben.",
+      "username_invalid": "Ungültiger Beschwörername: 3–24 Zeichen (Buchstaben, Ziffern, Punkt, Bindestrich, Unterstrich), beginnend mit Buchstabe oder Ziffer.",
+      "tag_invalid": "Ungültiger Riot-Tag: 3 bis 5 Buchstaben oder Ziffern."
+    },
+    "password": {
+      "title": "Passwort festlegen",
+      "help": "Dein Konto meldet sich derzeit nur über Google an. Lege ein Passwort fest, um dich auch mit deiner E-Mail anzumelden.",
+      "submit": "Passwort festlegen"
+    },
+    "danger": {
+      "help_no_password": "Das Löschen deines Kontos ist endgültig: Favoriten und Builds werden gelöscht."
+    },
+    "flash": {
+      "identity_saved": "Beschwörer-Identität aktualisiert.",
+      "password_set": "Passwort festgelegt — du kannst dich jetzt auch mit deiner E-Mail anmelden.",
+      "password_exists": "Für dieses Konto ist bereits ein Passwort festgelegt."
+    }
+  },
+  "build": {
+    "mode": {
+      "sr": "Kluft der Beschwörer",
+      "aram": "ARAM",
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "Arena"
+    },
+    "editor": {
+      "ghost_mode": "In diesem Spielmodus nicht verfügbar",
+      "context": {
+        "title": "Spielkontext",
+        "version": "Patch",
+        "mode": "Spielmodus",
+        "mode_hint": "Die Verfügbarkeit der Gegenstände richtet sich nach dem gewählten Modus. Bereits platzierte Gegenstände werden nie entfernt, sondern markiert."
+      },
+      "dnd": {
+        "handle": "Ziehen zum Neuordnen",
+        "moved_step": "Schritt an Position {{ position }} verschoben",
+        "moved_item": "Gegenstand an Position {{ position }} verschoben",
+        "transferred": "Gegenstand zu Schritt {{ step }} verschoben",
+        "added": "Gegenstand zu Schritt {{ step }} hinzugefügt",
+        "cancelled": "Verschieben abgebrochen"
+      }
+    },
+    "show": {
+      "mode": "Spielmodus",
+      "patch_current": "Geschmiedet auf Patch {{ version }} — aktuell: {{ current }}"
+    },
+    "error": {
+      "version": {
+        "unknown": "Unbekannte Spielversion."
+      },
+      "mode": {
+        "unknown": "Unbekannter Spielmodus."
+      },
+      "steps": {
+        "item_mode": "Im gewählten Spielmodus nicht verfügbar: {{ items }}."
+      }
+    }
+  },
+  "community": {
+    "nav": {
+      "trends": "Trends"
+    },
+    "trends": {
+      "eyebrow": "Der Puls der Kluft",
+      "title": "Angesagte Builds",
+      "filter": {
+        "champion": "Champion",
+        "mode": "Spielmodus",
+        "all_champions": "Alle Champions",
+        "all_modes": "Alle Modi",
+        "apply": "Filtern"
+      },
+      "empty": "Kein öffentliches Build entspricht diesem Filter — schmiede dein eigenes.",
+      "empty_cta": "Mein Build schmieden"
+    },
+    "vote": {
+      "up": "Für dieses Build stimmen",
+      "down": "Gegen dieses Build stimmen",
+      "score_label": "Community-Wertung",
+      "login": "Zum Abstimmen anmelden",
+      "invalid": "Ungültige Stimme."
+    },
+    "supporter": {
+      "badge": "Unterstützer"
+    }
+  },
+  "stat": {
+    "attack_damage": "Angriffsschaden",
+    "ability_power": "Fähigkeitsstärke",
+    "attack_speed": "Angriffstempo",
+    "crit_chance": "Kritische Chance",
+    "life_steal": "Lebensraub",
+    "health": "Leben",
+    "health_regen": "Lebensregen.",
+    "armor": "Rüstung",
+    "magic_resist": "Magieresistenz",
+    "mana": "Mana",
+    "move_speed": "Lauftempo",
+    "attack_range": "Angriffsreichweite"
+  }
+}

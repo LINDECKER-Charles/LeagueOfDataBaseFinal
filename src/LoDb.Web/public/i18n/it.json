@@ -1,0 +1,380 @@
+{
+  "homepage": {
+    "title": "League of Data Base",
+    "meta": "Benvenuto su League of Data Base. Esplora oggetti e incantesimi da evocatore di League of Legends con statistiche e dettagli per la patch {{ version }}.",
+    "hero": {
+      "browse": "Consulta informazioni dettagliate su <strong>Incantesimi da Evocatore</strong> e <strong>Oggetti</strong> di League of Legends. Aggiornato per la patch {{ version }}.",
+      "explore_summoners": "Esplora gli Incantesimi da Evocatore",
+      "explore_items": "Esplora gli Oggetti",
+      "explore_champions": "Esplora i Campioni",
+      "explore_runes": "Esplora le Rune"
+    },
+    "summoners": {
+      "title": "Incantesimi da Evocatore",
+      "see_all": "Vedi tutti gli incantesimi"
+    },
+    "items": {
+      "title": "Oggetti",
+      "see_all": "Vedi tutti gli oggetti"
+    },
+    "champions": {
+      "title": "Campioni",
+      "see_all": "Vedi tutti i campioni",
+      "no_data": "Nessun campione disponibile per questa versione.",
+      "wip": "Questa sezione è in costruzione. Presto potrai sfogliare tutti i campioni."
+    },
+    "runes": {
+      "title": "Rune",
+      "wip": "Questa sezione è in costruzione. Presto potrai esplorare le rune.",
+      "see_all": "Vedi tutte le rune"
+    }
+  },
+  "setup": {
+    "form": {
+      "version": "Versione",
+      "language": "Lingua",
+      "remember": "Ricordami",
+      "submit": "Invia"
+    }
+  },
+  "system": {
+    "under_construction": {
+      "title": "In Costruzione",
+      "meta_description": "League of Data Base è attualmente in costruzione. Stiamo lavorando duramente per offrirti statistiche dettagliate, approfondimenti e strumenti per League of Legends. Resta sintonizzato per gli aggiornamenti.",
+      "heading": "Questa pagina è in costruzione",
+      "subheading": "Stiamo forgiando questa funzionalità nella Landa. Torna presto per qualcosa di epico.",
+      "info": "Se sei arrivato a questa pagina, il contenuto non è ancora disponibile. Stiamo lavorando su prestazioni, accuratezza dei dati e un'esperienza utente fluida che rispecchi il resto di League Of Data Base.",
+      "progress_label": "Avanzamento della build",
+      "back": "← Torna indietro",
+      "summoners": "Vedi gli Incantesimi da Evocatore",
+      "footer": "Ti serve presto? Contattaci o consulta la roadmap. Altri aggiornamenti in arrivo.",
+      "meanwhile": "Nel frattempo, puoi:"
+    }
+  },
+  "item": {
+    "detail": {
+      "meta_description": "Scopri tutto sull'oggetto {{ name }} in League of Legends. Statistiche, effetti e informazioni sulle build aggiornate per la patch {{ version }}.",
+      "version_locale": "Versione: {{ version }} — Lingua: {{ locale }}",
+      "price_total": "Costo totale",
+      "price_base": "Costo di acquisto",
+      "price_sell": "Valore di vendita",
+      "categories": "Categorie",
+      "evolutions": "Possibili evoluzioni",
+      "stats": "Statistiche",
+      "description": "Descrizione",
+      "recipe": "Ricetta",
+      "builds_from": "Composto da",
+      "tier": "Livello {{ depth }}",
+      "availability": "Disponibilità",
+      "back": "← Torna all'elenco"
+    },
+    "list": {
+      "title": "Oggetti",
+      "meta_description": "Sfoglia tutti gli oggetti di League of Legends disponibili nella patch {{ version }}. Trova statistiche dettagliate, costi ed effetti aggiornati all'ultima versione.",
+      "header": "Oggetti",
+      "subtitle": "Catalogo oggetti",
+      "results_per_page": "Risultati per pagina:",
+      "max": "MAX",
+      "ok": "OK",
+      "search_placeholder": "Cerca un oggetto…",
+      "cost_total": "Costo totale",
+      "cost_sell": "Valore di vendita",
+      "categories": "Categorie",
+      "evolutions": "Possibili evoluzioni",
+      "description": "Descrizione"
+    }
+  },
+  "summoner": {
+    "detail": {
+      "meta_description": "Esplora i dettagli dell'incantesimo da evocatore {{ name }} in League of Legends. Statistiche ed effetti aggiornati per la patch {{ version }}.",
+      "version_locale": "Versione: {{ version }} — Lingua: {{ locale }}",
+      "fields": {
+        "cooldown": "Tempo di ricarica",
+        "maxammo": "Numero di cariche",
+        "range": "Raggio d'uso",
+        "cost": "Costo",
+        "summoner_level": "Livello dell'evocatore"
+      },
+      "unlocked_at": "Sbloccato al livello {{ level }}",
+      "range_global": "Globale",
+      "no_cost": "Nessun costo",
+      "modes": "Modalità compatibili",
+      "description": "Descrizione"
+    },
+    "card": {
+      "cooldown": "Tempo di ricarica",
+      "level": "Livello dell'evocatore",
+      "modes": "Modalità compatibili",
+      "description": "Descrizione"
+    },
+    "list": {
+      "title": "Incantesimi da Evocatore",
+      "subtitle": "Catalogo Incantesimi da Evocatore",
+      "count": "conteggio incantesimi"
+    }
+  },
+  "champion": {
+    "list": {
+      "title": "Campioni",
+      "meta_description": "Sfoglia tutti i campioni di League of Legends. Trova statistiche dettagliate, abilità e lore per ogni campione del gioco.",
+      "header": "Campioni",
+      "subtitle": "Catalogo campioni",
+      "search_placeholder": "Cerca un campione…"
+    },
+    "detail": {
+      "meta_description": "Scopri {{ name }} di League of Legends, con statistiche, ruoli e dettagli per la patch {{ version }}.",
+      "version_locale": "Patch {{ version }} • {{ locale }}",
+      "partype": "Risorsa: {{ partype }}",
+      "roles": "Ruoli",
+      "abilities": "Abilità",
+      "passive": "Passiva",
+      "skins": "Skin",
+      "cooldown": "Tempo di recupero",
+      "cost": "Costo",
+      "range": "Gittata",
+      "video_play": "Riproduci il video",
+      "video_pause": "Metti in pausa il video",
+      "video_mute": "Disattiva audio",
+      "video_unmute": "Attiva audio",
+      "tips_as": "Giocando come",
+      "tips_against": "Giocando contro",
+      "stats": {
+        "title": "Statistiche Base"
+      },
+      "profile": {
+        "title": "Profilo del Campione",
+        "attack": "Attacco",
+        "defense": "Difesa",
+        "magic": "Magia",
+        "difficulty": "Difficoltà"
+      },
+      "lore": {
+        "title": "Lore"
+      }
+    }
+  },
+  "rune": {
+    "list": {
+      "title": "Rune",
+      "meta_description": "Sfoglia tutte le rune di League of Legends. Trova statistiche dettagliate ed effetti per ogni runa del gioco.",
+      "header": "Rune",
+      "subtitle": "Catalogo rune",
+      "search_placeholder": "Cerca una runa…"
+    },
+    "detail": {
+      "title": "Runa: {{ name }}",
+      "meta_description": "Scopri i dettagli della runa {{ name }} in League of Legends. Statistiche ed effetti aggiornati per la patch {{ version }}.",
+      "overview": "Panoramica",
+      "keystone": "Runa fondamentale",
+      "minor": "Rune minori",
+      "slot_n": "Slot {{ n }}"
+    },
+    "slot": "Slot"
+  },
+  "common": {
+    "back": "Indietro",
+    "search": "Cerca…",
+    "no_result": {
+      "text": "Nessun risultato trovato per la tua ricerca.",
+      "back": "← Indietro"
+    },
+    "detail": "Vedi dettagli"
+  },
+  "base": {
+    "title": "League of Data Base",
+    "description": "League of Data Base è una piattaforma gestita dalla community che offre informazioni dettagliate, statistiche e approfondimenti su League of Legends. Veloce, affidabile e sempre aggiornata."
+  },
+  "footer": {
+    "copyright": "© 2025 LINDECKER Charles / Hexanti",
+    "legal": "Note Legali",
+    "navigation": {
+      "title": "Navigazione",
+      "home": "Home",
+      "champion": "Campione",
+      "item": "Oggetto",
+      "runes": "Rune",
+      "summoner": "Evocatore",
+      "sitemap": "Mappa del sito"
+    },
+    "links": {
+      "title": "Link Utili",
+      "lol": "League of Legends",
+      "riotapi": "Riot API",
+      "ddragon": "CDN Data Dragon",
+      "support": "Riot Support",
+      "opgg": "OP.GG"
+    },
+    "project": {
+      "title": "Progetto",
+      "version": "Versione: {{ version }}",
+      "updated": "Aggiornato: 17/07/2026"
+    },
+    "contact": {
+      "title": "Contatti",
+      "email": "Email",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    }
+  },
+  "loader": {
+    "eyebrow": "Data Dragon",
+    "title": "Evocazione dati in corso",
+    "subtitle": "Recupero risorse dalla Landa…",
+    "preparing": "Preparazione dei dati…",
+    "status": {
+      "fetching": "recupero in corso",
+      "ready": "pronto"
+    }
+  },
+  "pagination": {
+    "ok": "OK",
+    "more": "…"
+  },
+  "header": {
+    "navigation": {
+      "home": "Home",
+      "champion": "Campioni",
+      "item": "Oggetti",
+      "runes": "Rune",
+      "summoner": "Incantesimi da Evocatore"
+    },
+    "theme": {
+      "label": "Tema visivo",
+      "close": "Chiudi"
+    }
+  },
+  "auth": {
+    "or": "oppure",
+    "google": {
+      "cta": "Continua con Google",
+      "unavailable": "L'accesso con Google non è configurato su questo server.",
+      "failed": "Accesso con Google non riuscito. Riprova."
+    },
+    "register": {
+      "password": "Password",
+      "password_confirm": "Conferma la password",
+      "password_mismatch": "Le due password non coincidono.",
+      "password_help": "Almeno 12 caratteri, con una minuscola, una maiuscola, una cifra e un carattere speciale."
+    },
+    "password": {
+      "rule_length": "Almeno 12 caratteri",
+      "rule_lowercase": "Almeno una minuscola",
+      "rule_uppercase": "Almeno una maiuscola",
+      "rule_digit": "Almeno una cifra",
+      "rule_special": "Almeno un carattere speciale",
+      "rule_match": "Le due password coincidono",
+      "too_common": "Questa password è troppo comune. Scegline una più personale."
+    },
+    "flash": {
+      "banned": "Questo account è stato sospeso dal team di moderazione."
+    }
+  },
+  "profile": {
+    "identity": {
+      "title": "Identità dell'evocatore",
+      "username": "Nome evocatore",
+      "tag": "Tag Riot",
+      "tag_help": "Facoltativo: la parte dopo il # del tuo Riot ID — per GG#EUW, inserisci EUW.",
+      "url_warning": "Cambiare il nome evocatore cambia anche l'indirizzo del tuo profilo pubblico.",
+      "submit": "Aggiorna identità",
+      "username_taken": "Questo nome evocatore è già in uso.",
+      "username_invalid": "Nome evocatore non valido: da 3 a 24 caratteri (lettere, cifre, punto, trattino, underscore), che inizi con lettera o cifra.",
+      "tag_invalid": "Tag Riot non valido: da 3 a 5 lettere o cifre."
+    },
+    "password": {
+      "title": "Imposta una password",
+      "help": "Il tuo account accede solo con Google. Imposta una password per entrare anche con la tua email.",
+      "submit": "Imposta la password"
+    },
+    "danger": {
+      "help_no_password": "L'eliminazione dell'account è definitiva: preferiti e build vengono cancellati."
+    },
+    "flash": {
+      "identity_saved": "Identità dell'evocatore aggiornata.",
+      "password_set": "Password impostata — ora puoi accedere anche con la tua email.",
+      "password_exists": "Questo account ha già una password."
+    }
+  },
+  "build": {
+    "mode": {
+      "sr": "Landa degli evocatori",
+      "aram": "ARAM",
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "Arena"
+    },
+    "editor": {
+      "ghost_mode": "Non disponibile in questa modalità di gioco",
+      "context": {
+        "title": "Contesto di gioco",
+        "version": "Patch",
+        "mode": "Modalità di gioco",
+        "mode_hint": "La disponibilità degli oggetti segue la modalità scelta. Gli oggetti già inseriti non vengono mai rimossi: vengono segnalati."
+      },
+      "dnd": {
+        "handle": "Trascina per riordinare",
+        "moved_step": "Fase spostata in posizione {{ position }}",
+        "moved_item": "Oggetto spostato in posizione {{ position }}",
+        "transferred": "Oggetto spostato nella fase {{ step }}",
+        "added": "Oggetto aggiunto alla fase {{ step }}",
+        "cancelled": "Spostamento annullato"
+      }
+    },
+    "show": {
+      "mode": "Modalità di gioco",
+      "patch_current": "Forgiata sulla patch {{ version }} — attuale: {{ current }}"
+    },
+    "error": {
+      "version": {
+        "unknown": "Versione di gioco sconosciuta."
+      },
+      "mode": {
+        "unknown": "Modalità di gioco sconosciuta."
+      },
+      "steps": {
+        "item_mode": "Non disponibile nella modalità di gioco scelta: {{ items }}."
+      }
+    }
+  },
+  "community": {
+    "nav": {
+      "trends": "Tendenze"
+    },
+    "trends": {
+      "eyebrow": "Il battito della Landa",
+      "title": "Build di tendenza",
+      "filter": {
+        "champion": "Campione",
+        "mode": "Modalità di gioco",
+        "all_champions": "Tutti i campioni",
+        "all_modes": "Tutte le modalità",
+        "apply": "Filtra"
+      },
+      "empty": "Nessuna build pubblica corrisponde a questo filtro: forgia la tua.",
+      "empty_cta": "Forgia la mia build"
+    },
+    "vote": {
+      "up": "Vota a favore di questa build",
+      "down": "Vota contro questa build",
+      "score_label": "Punteggio della community",
+      "login": "Accedi per votare",
+      "invalid": "Voto non valido."
+    },
+    "supporter": {
+      "badge": "Sostenitore"
+    }
+  },
+  "stat": {
+    "attack_damage": "Danno d'attacco",
+    "ability_power": "Potere magico",
+    "attack_speed": "Velocità d'attacco",
+    "crit_chance": "Colpo critico",
+    "life_steal": "Rubavita",
+    "health": "Salute",
+    "health_regen": "Rigen. salute",
+    "armor": "Armatura",
+    "magic_resist": "Res. magica",
+    "mana": "Mana",
+    "move_speed": "Velocità movim.",
+    "attack_range": "Gittata d'attacco"
+  }
+}

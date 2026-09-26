@@ -1,0 +1,380 @@
+{
+  "homepage": {
+    "title": "League of Data Base",
+    "meta": "Witamy w League of Data Base. Odkryj przedmioty i zaklęcia przywoływacza z League of Legends wraz ze statystykami i szczegółami dla wersji {{ version }}.",
+    "hero": {
+      "browse": "Przeglądaj szczegółowe informacje o <strong>Zaklęciach Przywoływacza</strong> i <strong>Przedmiotach</strong> z League of Legends. Zaktualizowane dla wersji {{ version }}.",
+      "explore_summoners": "Odkryj zaklęcia przywoływacza",
+      "explore_items": "Odkryj przedmioty",
+      "explore_champions": "Odkryj czempionów",
+      "explore_runes": "Odkryj runy"
+    },
+    "summoners": {
+      "title": "Zaklęcia Przywoływacza",
+      "see_all": "Zobacz wszystkie zaklęcia"
+    },
+    "items": {
+      "title": "Przedmioty",
+      "see_all": "Zobacz wszystkie przedmioty"
+    },
+    "champions": {
+      "title": "Czempioni",
+      "see_all": "Zobacz wszystkich czempionów",
+      "no_data": "Brak dostępnych czempionów dla tej wersji.",
+      "wip": "Ta sekcja jest w budowie. Wkrótce będziesz mógł przeglądać wszystkich czempionów."
+    },
+    "runes": {
+      "title": "Runy",
+      "wip": "Ta sekcja jest w budowie. Wkrótce będziesz mógł odkrywać runy.",
+      "see_all": "Zobacz wszystkie runy"
+    }
+  },
+  "setup": {
+    "form": {
+      "version": "Wersja",
+      "language": "Język",
+      "remember": "Zapamiętaj mnie",
+      "submit": "Zatwierdź"
+    }
+  },
+  "system": {
+    "under_construction": {
+      "title": "W budowie",
+      "meta_description": "League of Data Base jest obecnie w budowie. Ciężko pracujemy, aby dostarczyć Ci szczegółowe statystyki, analizy i narzędzia dla League of Legends. Bądź na bieżąco z aktualizacjami.",
+      "heading": "Ta strona jest w budowie",
+      "subheading": "Kujemy tę funkcję w Rozpadlinie. Zajrzyj tu wkrótce po coś epickiego.",
+      "info": "Jeśli trafiłeś na tę stronę, oznacza to, że treść nie została jeszcze udostępniona. Pracujemy nad wydajnością, dokładnością danych i płynnym UX dopasowanym do reszty League Of Data Base.",
+      "progress_label": "Postęp budowy",
+      "back": "← Wróć",
+      "summoners": "Zobacz zaklęcia przywoływacza",
+      "footer": "Potrzebujesz tego szybciej? Napisz do nas lub sprawdź plan rozwoju. Nadchodzą kolejne aktualizacje.",
+      "meanwhile": "W międzyczasie możesz:"
+    }
+  },
+  "item": {
+    "detail": {
+      "meta_description": "Poznaj wszystko o przedmiocie {{ name }} w League of Legends. Statystyki, efekty i informacje o buildach zaktualizowane dla wersji {{ version }}.",
+      "version_locale": "Wersja: {{ version }} — Język: {{ locale }}",
+      "price_total": "Całkowity koszt",
+      "price_base": "Koszt zakupu",
+      "price_sell": "Wartość sprzedaży",
+      "categories": "Kategorie",
+      "evolutions": "Możliwe ewolucje",
+      "stats": "Statystyki",
+      "description": "Opis",
+      "recipe": "Receptura",
+      "builds_from": "Tworzone z",
+      "tier": "Poziom {{ depth }}",
+      "availability": "Dostępność",
+      "back": "← Powrót do listy"
+    },
+    "list": {
+      "title": "Przedmioty",
+      "meta_description": "Przeglądaj wszystkie przedmioty League of Legends dostępne w wersji {{ version }}. Znajdź szczegółowe statystyki, koszty i efekty zaktualizowane dla najnowszej wersji.",
+      "header": "Przedmioty",
+      "subtitle": "Katalog przedmiotów",
+      "results_per_page": "Wyników na stronę:",
+      "max": "MAX",
+      "ok": "OK",
+      "search_placeholder": "Szukaj przedmiotu…",
+      "cost_total": "Całkowity koszt",
+      "cost_sell": "Wartość sprzedaży",
+      "categories": "Kategorie",
+      "evolutions": "Możliwe ewolucje",
+      "description": "Opis"
+    }
+  },
+  "summoner": {
+    "detail": {
+      "meta_description": "Poznaj szczegóły zaklęcia przywoływacza {{ name }} w League of Legends. Statystyki i efekty zaktualizowane dla wersji {{ version }}.",
+      "version_locale": "Wersja: {{ version }} — Język: {{ locale }}",
+      "fields": {
+        "cooldown": "Czas odnowienia",
+        "maxammo": "Liczba ładunków",
+        "range": "Zasięg użycia",
+        "cost": "Koszt",
+        "summoner_level": "Poziom przywoływacza"
+      },
+      "unlocked_at": "Odblokowane na poziomie {{ level }}",
+      "range_global": "Globalny",
+      "no_cost": "Bez kosztu",
+      "modes": "Kompatybilne tryby",
+      "description": "Opis"
+    },
+    "card": {
+      "cooldown": "Czas odnowienia",
+      "level": "Poziom przywoływacza",
+      "modes": "Kompatybilne tryby",
+      "description": "Opis"
+    },
+    "list": {
+      "title": "Zaklęcia Przywoływacza",
+      "subtitle": "Katalog zaklęć przywoływacza",
+      "count": "count zaklęć"
+    }
+  },
+  "champion": {
+    "list": {
+      "title": "Czempioni",
+      "meta_description": "Przeglądaj wszystkich czempionów League of Legends. Znajdź szczegółowe statystyki, umiejętności i historie dla każdego czempiona w grze.",
+      "header": "Czempioni",
+      "subtitle": "Katalog czempionów",
+      "search_placeholder": "Szukaj czempiona…"
+    },
+    "detail": {
+      "meta_description": "Poznaj {{ name }} z League of Legends, wraz ze statystykami, rolami i szczegółami dla wersji {{ version }}.",
+      "version_locale": "Wersja {{ version }} • {{ locale }}",
+      "partype": "Zasób: {{ partype }}",
+      "roles": "Role",
+      "abilities": "Umiejętności",
+      "passive": "Bierna",
+      "skins": "Skórki",
+      "cooldown": "Czas odnowienia",
+      "cost": "Koszt",
+      "range": "Zasięg",
+      "video_play": "Odtwórz wideo",
+      "video_pause": "Wstrzymaj wideo",
+      "video_mute": "Wycisz dźwięk",
+      "video_unmute": "Włącz dźwięk",
+      "tips_as": "Gdy grasz nim",
+      "tips_against": "Gdy grasz przeciw",
+      "stats": {
+        "title": "Statystyki podstawowe"
+      },
+      "profile": {
+        "title": "Profil czempiona",
+        "attack": "Atak",
+        "defense": "Obrona",
+        "magic": "Magia",
+        "difficulty": "Trudność"
+      },
+      "lore": {
+        "title": "Historia"
+      }
+    }
+  },
+  "rune": {
+    "list": {
+      "title": "Runy",
+      "meta_description": "Przeglądaj wszystkie runy League of Legends. Znajdź szczegółowe statystyki i efekty dla każdej runy w grze.",
+      "header": "Runy",
+      "subtitle": "Katalog run",
+      "search_placeholder": "Szukaj runy…"
+    },
+    "detail": {
+      "title": "Runa: {{ name }}",
+      "meta_description": "Poznaj szczegóły runy {{ name }} w League of Legends. Statystyki i efekty zaktualizowane dla wersji {{ version }}.",
+      "overview": "Przegląd",
+      "keystone": "Runa kluczowa",
+      "minor": "Runy pomniejsze",
+      "slot_n": "Slot {{ n }}"
+    },
+    "slot": "Slot"
+  },
+  "common": {
+    "back": "Wstecz",
+    "search": "Szukaj…",
+    "no_result": {
+      "text": "Nie znaleziono wyników dla Twojego wyszukiwania.",
+      "back": "← Wstecz"
+    },
+    "detail": "Zobacz szczegóły"
+  },
+  "base": {
+    "title": "League of Data Base",
+    "description": "League of Data Base to platforma tworzona przez społeczność, która dostarcza szczegółowych informacji, statystyk i analiz dotyczących League of Legends. Szybka, niezawodna i zawsze aktualna."
+  },
+  "footer": {
+    "copyright": "© 2025 LINDECKER Charles / Hexanti",
+    "legal": "Nota prawna",
+    "navigation": {
+      "title": "Nawigacja",
+      "home": "Strona główna",
+      "champion": "Czempion",
+      "item": "Przedmiot",
+      "runes": "Runy",
+      "summoner": "Przywoływacz",
+      "sitemap": "Mapa witryny"
+    },
+    "links": {
+      "title": "Przydatne linki",
+      "lol": "League of Legends",
+      "riotapi": "Riot API",
+      "ddragon": "CDN Data Dragon",
+      "support": "Riot Support",
+      "opgg": "OP.GG"
+    },
+    "project": {
+      "title": "Projekt",
+      "version": "Wersja: {{ version }}",
+      "updated": "Zaktualizowano: 17/07/2026"
+    },
+    "contact": {
+      "title": "Kontakt",
+      "email": "E-mail",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    }
+  },
+  "loader": {
+    "eyebrow": "Data Dragon",
+    "title": "Przywoływanie danych",
+    "subtitle": "Pobieranie zasobów z Rozpadliny…",
+    "preparing": "Przygotowywanie danych…",
+    "status": {
+      "fetching": "pobieranie",
+      "ready": "gotowe"
+    }
+  },
+  "pagination": {
+    "ok": "OK",
+    "more": "…"
+  },
+  "header": {
+    "navigation": {
+      "home": "Strona główna",
+      "champion": "Czempioni",
+      "item": "Przedmioty",
+      "runes": "Runy",
+      "summoner": "Zaklęcia Przywoływacza"
+    },
+    "theme": {
+      "label": "Motyw wizualny",
+      "close": "Zamknij"
+    }
+  },
+  "auth": {
+    "or": "lub",
+    "google": {
+      "cta": "Kontynuuj z Google",
+      "unavailable": "Logowanie przez Google nie jest skonfigurowane na tym serwerze.",
+      "failed": "Logowanie przez Google nie powiodło się. Spróbuj ponownie."
+    },
+    "register": {
+      "password": "Hasło",
+      "password_confirm": "Potwierdź hasło",
+      "password_mismatch": "Hasła nie są identyczne.",
+      "password_help": "Co najmniej 12 znaków, w tym mała litera, wielka litera, cyfra i znak specjalny."
+    },
+    "password": {
+      "rule_length": "Co najmniej 12 znaków",
+      "rule_lowercase": "Co najmniej jedna mała litera",
+      "rule_uppercase": "Co najmniej jedna wielka litera",
+      "rule_digit": "Co najmniej jedna cyfra",
+      "rule_special": "Co najmniej jeden znak specjalny",
+      "rule_match": "Hasła są identyczne",
+      "too_common": "To hasło jest zbyt popularne. Wybierz bardziej osobiste."
+    },
+    "flash": {
+      "banned": "To konto zostało zawieszone przez zespół moderacji."
+    }
+  },
+  "profile": {
+    "identity": {
+      "title": "Tożsamość przywoływacza",
+      "username": "Nazwa przywoływacza",
+      "tag": "Tag Riot",
+      "tag_help": "Opcjonalnie: część po # w Twoim Riot ID — dla GG#EUW wpisz EUW.",
+      "url_warning": "Zmiana nazwy przywoływacza zmienia też adres Twojego publicznego profilu.",
+      "submit": "Zaktualizuj tożsamość",
+      "username_taken": "Ta nazwa przywoływacza jest już zajęta.",
+      "username_invalid": "Nieprawidłowa nazwa przywoływacza: 3–24 znaki (litery, cyfry, kropka, myślnik, podkreślenie), zaczynając od litery lub cyfry.",
+      "tag_invalid": "Nieprawidłowy tag Riot: od 3 do 5 liter lub cyfr."
+    },
+    "password": {
+      "title": "Ustaw hasło",
+      "help": "Twoje konto loguje się tylko przez Google. Ustaw hasło, aby logować się także e-mailem.",
+      "submit": "Ustaw hasło"
+    },
+    "danger": {
+      "help_no_password": "Usunięcie konta jest nieodwracalne: ulubione i buildy zostaną skasowane."
+    },
+    "flash": {
+      "identity_saved": "Tożsamość przywoływacza zaktualizowana.",
+      "password_set": "Hasło ustawione — możesz teraz logować się także e-mailem.",
+      "password_exists": "To konto ma już ustawione hasło."
+    }
+  },
+  "build": {
+    "mode": {
+      "sr": "Summoner's Rift",
+      "aram": "ARAM",
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "Arena"
+    },
+    "editor": {
+      "ghost_mode": "Niedostępny w tym trybie gry",
+      "context": {
+        "title": "Kontekst gry",
+        "version": "Patch",
+        "mode": "Tryb gry",
+        "mode_hint": "Dostępność przedmiotów zależy od wybranego trybu. Umieszczone już przedmioty nigdy nie są usuwane — są oznaczane."
+      },
+      "dnd": {
+        "handle": "Przeciągnij, aby zmienić kolejność",
+        "moved_step": "Etap przeniesiony na pozycję {{ position }}",
+        "moved_item": "Przedmiot przeniesiony na pozycję {{ position }}",
+        "transferred": "Przedmiot przeniesiony do etapu {{ step }}",
+        "added": "Przedmiot dodany do etapu {{ step }}",
+        "cancelled": "Przenoszenie anulowane"
+      }
+    },
+    "show": {
+      "mode": "Tryb gry",
+      "patch_current": "Wykuty na patchu {{ version }} — aktualny: {{ current }}"
+    },
+    "error": {
+      "version": {
+        "unknown": "Nieznana wersja gry."
+      },
+      "mode": {
+        "unknown": "Nieznany tryb gry."
+      },
+      "steps": {
+        "item_mode": "Niedostępne w wybranym trybie gry: {{ items }}."
+      }
+    }
+  },
+  "community": {
+    "nav": {
+      "trends": "Trendy"
+    },
+    "trends": {
+      "eyebrow": "Puls społeczności",
+      "title": "Popularne buildy",
+      "filter": {
+        "champion": "Bohater",
+        "mode": "Tryb gry",
+        "all_champions": "Wszyscy bohaterowie",
+        "all_modes": "Wszystkie tryby",
+        "apply": "Filtruj"
+      },
+      "empty": "Żaden publiczny build nie pasuje do tego filtra — wykuj własny.",
+      "empty_cta": "Wykuj mój build"
+    },
+    "vote": {
+      "up": "Zagłosuj za tym buildem",
+      "down": "Zagłosuj przeciw temu buildowi",
+      "score_label": "Ocena społeczności",
+      "login": "Zaloguj się, aby głosować",
+      "invalid": "Nieprawidłowy głos."
+    },
+    "supporter": {
+      "badge": "Wspierający"
+    }
+  },
+  "stat": {
+    "attack_damage": "Obrażenia od ataku",
+    "ability_power": "Moc umiejętności",
+    "attack_speed": "Szybkość ataku",
+    "crit_chance": "Szansa na kryt.",
+    "life_steal": "Kradzież życia",
+    "health": "Zdrowie",
+    "health_regen": "Regen. zdrowia",
+    "armor": "Pancerz",
+    "magic_resist": "Odporność na magię",
+    "mana": "Mana",
+    "move_speed": "Szybkość ruchu",
+    "attack_range": "Zasięg ataku"
+  }
+}
