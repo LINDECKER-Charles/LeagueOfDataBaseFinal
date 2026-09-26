@@ -1,0 +1,37 @@
+<svg
+  class="block size-full"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.6"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  @switch (theme()) {
+    @case ('zaun') {
+      <!-- Spokes crossing outside the rim would read as a crosshair, not hardware. -->
+      <circle cx="12" cy="12" r="7.4" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      <path d="M12 4.6v5.6M12 13.8v5.6M4.6 12h5.6M13.8 12h5.6" />
+    }
+    @case ('noxus') {
+      <!-- A filled blade reads as a weapon at 20px, an outlined one as a trident. -->
+      <path d="M12 4.2 14.4 13 12 20.4 9.6 13Z" fill="currentColor" stroke-width="1.2" />
+      <path d="M4.6 5c0 5.6 1.6 9 4.6 10.6" />
+      <path d="M19.4 5c0 5.6-1.6 9-4.6 10.6" />
+    }
+    @case ('spirit-blossom') {
+      <!-- One repeated teardrop: at 20px a regular silhouette reads as a blossom. -->
+      <g stroke-width="1.35">
+        <path d="M12 12.2 9.2 8.5a3.5 3.5 0 1 1 5.6 0Z" />
+        <path d="M12 12.2 16.4 10.9a3.5 3.5 0 1 1-1.7 5.3Z" />
+        <path d="M12 12.2 7.6 10.9a3.5 3.5 0 1 0 1.7 5.3Z" />
+      </g>
+      <circle cx="12" cy="12.2" r="1.5" fill="currentColor" stroke="none" />
+    }
+    @default {
+      <path d="M12 2.6 20.1 7.3v9.4L12 21.4 3.9 16.7V7.3z" />
+      <path d="M12 8.1 15.4 12 12 15.9 8.6 12z" stroke-width="1.3" />
+    }
+  }
+</svg>

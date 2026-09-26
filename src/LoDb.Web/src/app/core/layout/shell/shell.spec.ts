@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideTransloco } from '@jsverse/transloco';
+import { of } from 'rxjs';
+import { RELEASE_VERSION } from './release-version';
 import { Shell } from './shell';
 
 // Slots given in a shuffled order: the envelope, not the caller, decides where they land.
@@ -19,37 +23,101 @@ import { Shell } from './shell';
 class ShellHost {}
 
 describe('Shell', () => {
-  function render(): HTMLElement {
-    const fixture = TestBed.createComponent(ShellHost);
-    fixture.detectChanges();
+  let lang: string;
+
+  function configure(version: string | null): void {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideTransloco({
+          config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
+          loader: class {
+            getTranslation = () => of({});
+          },
+        }),
+        { provide: RELEASE_VERSION, useValue: version },
+      ],
+    });
+  }
+
+  async function render(): Promise<HTMLElement> {
+    const fixture: ComponentFixture<ShellHost> = TestBed.createComponent(ShellHost);
+    await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('puts the context switcher then the account menu in the header', () => {
-    const header = render().querySelector('lodb-shell > header');
-
-    expect(Array.from(header?.children ?? [], (child) => child.id)).toEqual([
-      'switcher',
-      'account',
-    ]);
+  beforeEach(() => {
+    lang = document.documentElement.lang;
   });
 
-  it('puts the banner between the header and the page', () => {
-    const banner = render().querySelector('lodb-shell > #banner');
+  afterEach(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.removeAttribute('dir');
+  });
 
-    expect(banner?.previousElementSibling?.tagName).toBe('HEADER');
+  it('puts the account menu then the context switcher in the header', async () => {
+    configure(null);
+    const header = (await render()).querySelector('lodb-shell header');
+    const account = header?.querySelector('#account');
+    const switcher = header?.querySelector('#switcher');
+
+    expect(account).not.toBeNull();
+    expect(switcher).not.toBeNull();
+    expect(account?.compareDocumentPosition(switcher as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('puts the banner between the header and the page', async () => {
+    configure(null);
+    const banner = (await render()).querySelector('lodb-shell > #banner');
+
+    expect(banner?.previousElementSibling?.tagName).toBe('LODB-HEADER');
     expect(banner?.nextElementSibling?.tagName).toBe('MAIN');
   });
 
-  it('renders the page, and only the page, in main', () => {
-    const main = render().querySelector('lodb-shell > main');
+  it('renders the page, and only the page, in main', async () => {
+    configure(null);
+    const main = (await render()).querySelector('lodb-shell > main');
 
     expect(Array.from(main?.children ?? [], (child) => child.id)).toEqual(['page']);
   });
 
-  it('puts the contact entry in the footer', () => {
-    const footer = render().querySelector('lodb-shell > footer');
+  it('puts the contact entry in the footer', async () => {
+    configure(null);
+    const footer = (await render()).querySelector('lodb-shell footer');
 
     expect(footer?.querySelector('#contact')).not.toBeNull();
+  });
+
+  it('leaves out the release chip until a release version is provided', async () => {
+    configure(null);
+
+    expect((await render()).querySelector('.hx-version-chip')).toBeNull();
+  });
+
+  it('links the release chip to the changelog of the page locale', async () => {
+    document.documentElement.lang = 'fr';
+    configure('2.4.0');
+    const chip = (await render()).querySelector('.hx-version-chip');
+
+    expect(chip?.textContent?.trim()).toBe('v2.4.0');
+    expect(chip?.getAttribute('href')).toBe('/fr/changelog');
+  });
+
+  it('points every bottom bar destination under the page locale', async () => {
+    document.documentElement.lang = 'ar';
+    configure(null);
+    const links = (await render()).querySelectorAll('.bottom-nav a');
+
+    expect(Array.from(links, (link) => link.getAttribute('href'))).toEqual([
+      '/ar',
+      '/ar/champions',
+      '/ar/items',
+      '/ar/runes',
+      '/ar/summoners',
+      '/ar/trends',
+    ]);
+    expect(document.documentElement.dir).toBe('rtl');
   });
 });

@@ -40,13 +40,17 @@
     outline: none;
     border-color: var(--color-hex);
   }
-  /* The trailing svg is the disclosure chevron: a leading icon is neither resized nor flipped. */
-  .switcher > summary svg:last-child {
+  /* A menu holding the current page lights its summary, as a nav link would. */
+  .switcher.switcher--current > summary {
+    color: var(--color-gold-bright);
+  }
+  /* The disclosure chevron, named so a leading icon is neither resized nor flipped. */
+  .switcher__chevron {
     inline-size: 0.65rem;
     block-size: 0.65rem;
     transition: rotate 0.25s var(--ease-hextech);
   }
-  .switcher[open] > summary svg:last-child {
+  .switcher[open] > summary .switcher__chevron {
     rotate: 180deg;
   }
   .switcher__panel {
@@ -150,7 +154,7 @@
     outline: none;
     color: var(--color-hex);
   }
-  .bottom-nav svg {
+  .bottom-nav .hx-icon {
     inline-size: 1.35rem;
     block-size: 1.35rem;
   }
@@ -168,7 +172,7 @@
   .bottom-nav a[aria-current] {
     color: var(--color-gold-bright);
   }
-  .bottom-nav a[aria-current] svg {
+  .bottom-nav a[aria-current] .hx-icon {
     color: var(--color-gold);
     filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-gold) 80%, transparent));
   }
@@ -275,7 +279,7 @@
   .hx-toast {
     animation: none;
   }
-  .switcher > summary svg:last-child {
+  .switcher__chevron {
     transition: none;
   }
 }

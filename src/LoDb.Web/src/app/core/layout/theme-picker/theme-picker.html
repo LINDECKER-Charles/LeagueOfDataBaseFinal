@@ -1,0 +1,14 @@
+<button
+  type="button"
+  class="theme-trigger"
+  aria-haspopup="dialog"
+  [attr.aria-label]="'header.theme.label' | transloco"
+  [title]="('header.theme.label' | transloco) + ' — ' + currentLabel()"
+  (click)="open()"
+>
+  @for (theme of themes; track theme) {
+    <span class="theme-trigger__crest" [class]="crestClass(theme)">
+      <lodb-theme-crest class="block size-4" [theme]="theme" />
+    </span>
+  }
+</button>
