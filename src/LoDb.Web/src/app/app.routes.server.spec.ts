@@ -1,3 +1,4 @@
+import { ɵgetDocument as getDocument } from '@angular/core';
 import {
   RenderMode,
   ɵextractRoutesAndCreateRouteTree as extractRoutesAndCreateRouteTree,
@@ -128,7 +129,7 @@ describe('serverRoutes (ADR 0005)', () => {
     expect(prerendered.sort()).toEqual(expected.sort());
   });
 
-  it('leaves jsdom its DOM classes for the specs that run next in this worker', () => {
+  it('leaves jsdom its DOM classes and document for the specs that run next in this worker', () => {
     const element = document.createElement('p');
     const listener = vi.fn();
     element.addEventListener('ping', listener);
@@ -136,5 +137,6 @@ describe('serverRoutes (ADR 0005)', () => {
 
     expect(listener).toHaveBeenCalledOnce();
     expect(element).toBeInstanceOf(Node);
+    expect(getDocument()).toBe(document);
   });
 });

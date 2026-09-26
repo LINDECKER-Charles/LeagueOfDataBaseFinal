@@ -5,6 +5,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   mergeApplicationConfig,
+  ɵgetDocument as getDocument,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
@@ -170,7 +171,7 @@ describe('i18n catalogues in SSR', () => {
     expect(body.match(/>\s*(?:about|api)\.[a-z_.]+\s*</g)).toBeNull();
   });
 
-  it('leaves jsdom its DOM classes for the specs that run next in this worker', async () => {
+  it('leaves jsdom its DOM classes and document for the specs that run next in this worker', async () => {
     stubCatalogueFetch();
     await renderOnServer('/fr/');
 
@@ -181,6 +182,7 @@ describe('i18n catalogues in SSR', () => {
 
     expect(listener).toHaveBeenCalledOnce();
     expect(element).toBeInstanceOf(Node);
+    expect(getDocument()).toBe(document);
   });
 
   it('embeds the catalogues in the page, so the browser does not download them again', async () => {
