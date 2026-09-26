@@ -189,3 +189,97 @@ après le quota.
 | `node tools/next/v1-capture/capture.mjs --check`, première version des scénarios | un rejeu passé, le suivant en échec : 5 `X-RateLimit-Remaining` décalés d'un jeton dans `10-outage` (clé à 300/min) ; scénarios `01`, `05`, `09` et `10` passés sur des clés plus lentes, puis tout recapturé |
 | `node tools/next/v1-capture/capture.mjs --check` (deux rejeux après recapture) | code 0, `check passed: 10 group(s) identical to the references` à chaque fois |
 | `node --test 'tools/next/v1-capture/test/*.test.mjs'` | 37 tests réussis |
+
+## 8. Module `/v1` de LoDb (L6.3)
+
+- **Date** : 2026-09-27.
+- **Code** : `src/LoDb.Api/Modules/PublicApi/` ; document OpenAPI `public-v1`.
+- **Rejeu** : `tests/LoDb.Api.Tests/PublicApi/Contract/ContractTests.cs` rejoue les 10
+  groupes (173 requêtes, 11 actions) sur `seed/dataset.sql` chargé dans une base migrée
+  par EF (Testcontainers, `postgres:17-alpine`), les jours de `seed/daily.json` insérés
+  dans `analytics_daily` : une copie de la base et une API neuves par groupe, comme la
+  capture, horloge `FakeTimeProvider` à midi du jour de chargement ; une pause devient une
+  avance de cette horloge suivie d'un vidage du métrage, une étape `sql` est suivie
+  d'`IApiKeyCache.Invalidate` pour chaque clé modifiée.
+  Statut, en-têtes retenus et corps décodé sont comparés comme la capture les a
+  normalisés. Seuls les écarts de la table ci-dessous sont admis : chacun est écrit dans
+  `ContractDeviations.cs`, ou calculé par `BuildsOracle.cs` pour les pages de builds.
+
+### Traitement d'une requête
+
+- **Ordre** : chemin exact (sinon 404 texte) → clé → seau à jetons → quota puis crédit
+  (routes facturées) → handler, comme go-api. `X-RateLimit-*` sont posés dès que la clé
+  est connue : sur les 429 des deux sortes, sur les 400, 404 et 503 du handler, jamais sur
+  401, 403 ou une panne pendant la lecture de la clé.
+- **Clé** : `Authorization` commençant par `Bearer ` (sensible à la casse), sinon
+  `X-Api-Key`, première ligne rognée ; hors de `lodb_` suivi de 40 chiffres hexadécimaux
+  minuscules, 401 sans lecture de la base ; sinon recherche par SHA-256 dans `api_keys`.
+  La clé et sa consommation du mois sont gardées `LoDb:PublicApi:KeyCacheLifetime` (60 s)
+  dans la mémoire de l'instance (`HybridCache`, sans cache distribué), les clés inconnues
+  aussi (50 000 au plus, comme go-api).
+- **`IApiKeyCache.Invalidate(ApiKey)`** : appelé par qui modifie une clé, une fois la
+  transaction validée : L6.4 (portail : création, régénération, révocation), L6.5 (Stripe :
+  plan, crédits), L7.3 (admin). Il ouvre une nouvelle génération du cache et oublie les
+  clés inconnues : la requête suivante relit sa clé. Effet immédiat sur l'instance qui
+  appelle ; sur une autre instance, ou pour un changement fait hors de l'API (SQL), au
+  plus `KeyCacheLifetime`.
+- **Seau à jetons** : un par clé et par limite, en mémoire, rechargé en continu
+  (`rate_limit_per_min` jetons par minute, fraction comprise) : `X-RateLimit-Remaining`
+  et `-Reset` valent ceux de go-api à l'unité, y compris après les pauses des scénarios.
+  Un seau plein depuis un moment est libéré, le suivant repart plein, comme il l'aurait
+  été.
+- **Quota puis crédits** : un compteur par clé et par instance décompte le plan sous
+  verrou, puis un crédit est retiré en base de façon atomique
+  (`UPDATE … WHERE credits_balance > 0 RETURNING`) ; sinon `429 quota_exceeded`. Chaque
+  relecture de la clé reprend ses crédits et le plus grand des deux décomptes du mois (le
+  sien, qui inclut les requêtes pas encore écrites, et celui d'`api_usage`).
+- **Métrage** : une requête facturée admise laisse un événement dans un tampon de 4 096,
+  sans jamais attendre ; tampon plein : l'événement est perdu, compté, signalé par un
+  avertissement par vidage. Un consommateur agrège au fil de l'eau par clé et jour ;
+  chaque `LoDb:PublicApi:MeteringInterval` (1 s), un seul `INSERT … SELECT unnest(…)
+  ON CONFLICT DO UPDATE` ajoute les comptes à `api_usage`. Un échec garde les comptes pour
+  le vidage suivant ; un dernier vidage suit l'arrêt du serveur. `/v1/usage` est limité
+  par le seau mais ni facturé ni métré.
+- **Pannes** : base ou stockage → `503 internal` `service temporarily unavailable` ; toute
+  autre erreur → `500 internal` `internal error`, cause journalisée, jamais montrée.
+
+### Points laissés à L6.3
+
+- **404 et 405 en texte** : gardés à l'identique (corps, `Allow: GET, HEAD`,
+  `X-Content-Type-Options: nosniff`, CORS sous `/v1/`) : pas d'écart.
+- **Builds des comptes bannis** : retirés, comme sur le site (écart 5).
+- **Chemin avec `//`** : 404 texte, pas de redirection (écart 6).
+
+### Écarts retenus
+
+| # | go-api | `/v1` de LoDb | Référence rejouée |
+|---|---|---|---|
+| 1 | Clé révoquée, désactivée, supprimée ou régénérée : ancienne réponse pendant 60 s | Refus dès `IApiKeyCache.Invalidate` : 403, ou 401 pour une clé supprimée ou dont le hash a changé | `09-key-cache/revoked-still-served` attend `revoked-refused` |
+| 2 | Clé inconnue gardée 60 s après sa création | Servie dès `Invalidate` | `created-still-unknown` attend `created-served` |
+| 3 | Recharge de crédits et changement de plan pris en compte après 60 s | Immédiats ; une nouvelle limite ouvre un seau neuf et plein | `topped-up-still-refused` et `upgraded-old-limit` attendent `topped-up-served` et `upgraded-new-limit` |
+| 4 | Profil banni servi en 200 | `404 not_found`, comme un profil inconnu | `03-profiles/banned` |
+| 5 | Builds des comptes bannis listés et comptés | Retirés de `data` et de `total` | pages de `04-builds` : l'oracle, bannis compris, redonne chaque page de go-api, puis sert d'attendu sans eux |
+| 6 | `//` redirigé (307) vers le chemin nettoyé | 404 texte avec CORS, sans `X-RateLimit-*` | `04-builds/missing-champion-segment` |
+| 7 | Tendances lues dans les fichiers du stockage : base arrêtée, 200 | Lues dans `analytics_daily` : base arrêtée, `503 internal` | `10-outage/trends-database-down` |
+| 8 | Stockage absent : 200 et `entries: []` | `503 internal` dès qu'un nom est à résoudre (catalogue absent du stockage) | `10-outage/trends-storage-down` |
+| 9 | Noms tirés du dataset le plus récent du stockage | Noms du dernier catalogue promu en `en_US`, tels que le catalogue les enregistre ; avant toute ingestion, noms omis | hors références (le rejeu nomme depuis `seed/storage`) ; `CatalogTrendNamesTests` |
+| 10 | Classement gardé 5 min par type et fenêtre, à cheval sur minuit | Gardé 5 min par type, fenêtre et jour UTC : la fenêtre change à minuit | hors références |
+| 11 | Jour d'`api_usage` : `CURRENT_DATE` au moment du vidage | Jour UTC de la requête, à l'horloge de l'application | hors références ; `MeteringTests` |
+| 12 | Comptes d'une clé supprimée : l'insertion échoue, le lot entier est rejoué à chaque vidage | Comptes de la clé abandonnés, ceux des autres écrits | hors références ; `MeteringTests` |
+| 13 | Offset `(page-1)*per_page` en entier 64 bits : une page immense le fait déborder, 503 s'il devient négatif | Toute page au-delà de la dernière : `data: []` en 200, sans lecture | hors références ; `PaginationTests` |
+| 14 | Événement perdu (tampon plein) : un avertissement par événement | Un avertissement par vidage avec le nombre perdu, et une métrique | hors références |
+| 15 | Une seule instance | Seaux, compteurs de quota et cache de clés par instance : avec N instances, la limite par minute est multipliée par N et le quota peut être dépassé des requêtes faites entre deux relectures de la clé | hors références |
+| 16 | JSON d'`encoding/json` | Même JSON une fois décodé, octets différents : `<`, `>`, `&`, `'`, `+` et `"` échappés en `\u00XX` à hexadécimal majuscule (Go n'échappe ainsi que `<`, `>` et `&`, en minuscules, et écrit `\"`) ; non-ASCII écrit tel quel, comme Go | toutes (corps comparés décodés) |
+| 17 | `/healthz` et `/` de go-api | Santé du socle (`/healthz`, `/readyz`), hors contrat : seule l'absence des en-têtes CORS de `/v1` y est vérifiée | `08-routing/healthz*`, `options-healthz`, `put-healthz`, `root` ; `10-outage/healthz-*` |
+
+`share_url` garde l'origine de production par défaut ; elle se règle par
+`LoDb:PublicApi:SiteOrigin` (`PUBLIC_SITE_URL` de go-api), vérifiée au démarrage.
+
+### Vérifications
+
+| Commande | Résultat |
+|---|---|
+| `dotnet test tests/LoDb.Api.Tests` (classe `ContractTests`) | 10 groupes identiques aux références, écarts ci-dessus exceptés ; retirer un écart de `ContractDeviations.cs` fait échouer son groupe |
+| `dotnet test tests/LoDb.Api.Tests` (espace `PublicApi`) | révocation immédiate, seau à jetons, ordre clé → seau → quota, quota puis crédits sous concurrence, métrage, document `public-v1`, noms du catalogue |
+| `dotnet test tests/LoDb.Api.Tests` (suite entière) | 1 048 tests réussis sur 1 049. L'échec, `Hosting/ProblemDetailsTests.UnknownRouteOutsideTheAppApiKeepsAnEmptyBody` (L0.1, hors du périmètre de L6.3), attend un 404 sans corps sur `/v1/unknown`, qui reçoit désormais le 404 texte de go-api (`08-routing/unknown-v1-route-no-key`) : ce test est à pointer sur un chemin hors de `/api` et de `/v1` |
+| `dotnet build LoDb.slnx -c Release` | réussi, 0 avertissement, 0 erreur |
