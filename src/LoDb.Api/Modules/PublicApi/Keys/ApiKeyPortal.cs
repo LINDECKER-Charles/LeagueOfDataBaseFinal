@@ -2,6 +2,7 @@ using LoDb.Api.Hosting;
 using LoDb.Api.Modules.Audit.Http;
 using LoDb.Api.Modules.PublicApi.Keys.Reference;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Modules.PublicApi.Keys;
 
@@ -28,6 +29,11 @@ internal static class ApiKeyPortal
         services.TryAddScoped<OwnedKeys>();
         services.TryAddScoped<ApiKeyEndpoints>();
         services.TryAddScoped<ReferenceEndpoint>();
+        services.AddOptions<ReferenceOptions>()
+            .BindConfiguration(ReferenceOptions.SectionName)
+            .ValidateOnStart();
+        services.TryAddEnumerable(ServiceDescriptor
+            .Singleton<IValidateOptions<ReferenceOptions>, ReferenceOptionsValidator>());
         return services;
     }
 

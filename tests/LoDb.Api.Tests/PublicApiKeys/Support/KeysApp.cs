@@ -82,7 +82,9 @@ public sealed class KeysApp : IAsyncDisposable
         return browser;
     }
 
-    /// <summary>What <c>/v1/usage</c> answers to <paramref name="secret"/>, as a key holder.</summary>
+    /// <summary>
+    /// What <c>/v1/usage</c> answers to <paramref name="secret"/>, as a key holder.
+    /// </summary>
     public async Task<HttpResponseMessage> AskV1Async(string secret)
     {
         using var client = _host.CreateClient();

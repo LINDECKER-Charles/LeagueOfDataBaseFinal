@@ -26,7 +26,9 @@ internal sealed class OwnedKeys(
 {
     private const string Ellipsis = "…";
 
-    /// <summary>Issues a free key named <paramref name="name"/> to <paramref name="userId"/>.</summary>
+    /// <summary>
+    /// Issues a free key named <paramref name="name"/> to <paramref name="userId"/>.
+    /// </summary>
     /// <returns>The key and its secret; null when the account already has an active key.</returns>
     public async Task<KeyIssue?> CreateAsync(
         int userId,

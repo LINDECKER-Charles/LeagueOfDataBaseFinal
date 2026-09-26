@@ -44,7 +44,8 @@ public sealed class OverviewTests(PostgresContainerFixture postgres)
         Assert.Equal(monthUse, key.GetProperty("usedThisMonth").GetInt64());
         Assert.Equal(500 - monthUse, key.GetProperty("remainingThisMonth").GetInt64());
         var days = key.GetProperty("usage").EnumerateArray()
-            .Select(static day => DateOnly.Parse(ApiJson.Text(day, "day")!, CultureInfo.InvariantCulture))
+            .Select(static day =>
+                DateOnly.Parse(ApiJson.Text(day, "day")!, CultureInfo.InvariantCulture))
             .ToList();
         Assert.Equal(days.OrderByDescending(static day => day), days);
         Assert.Equal(today.AddDays(-30), days[^1]);
@@ -73,7 +74,9 @@ public sealed class OverviewTests(PostgresContainerFixture postgres)
                 free.GetProperty("ratePerMinute").GetInt32(),
                 reference.GetProperty("creditsRatePerMinute").GetInt32()));
         Assert.Equal(["small", "medium", "large"], Codes(reference, "packs"));
-        Assert.Equal(["monthly", "monthly_plus", "annual", "annual_plus"], Codes(reference, "plans"));
+        Assert.Equal(
+            ["monthly", "monthly_plus", "annual", "annual_plus"],
+            Codes(reference, "plans"));
     }
 
     public async ValueTask InitializeAsync() => _app = await KeysApp.StartAsync(postgres);

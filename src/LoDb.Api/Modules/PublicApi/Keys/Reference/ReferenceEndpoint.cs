@@ -12,11 +12,13 @@ namespace LoDb.Api.Modules.PublicApi.Keys.Reference;
 /// public.
 /// </summary>
 /// <remarks>
-/// <c>/v1</c> is served by this host on the site's origin (nginx routes it), which
-/// <c>LoDb:PublicApi:SiteOrigin</c> sets for the <c>share_url</c> of the builds already: the
-/// documentation states the same origin instead of the legacy stack's hard-coded one.
+/// The base URL is the configured one (<see cref="ReferenceOptions.BaseUrl"/>), else the
+/// site's origin, which nginx routes <c>/v1</c> on as well: never the legacy stack's
+/// hard-coded one.
 /// </remarks>
-internal sealed class ReferenceEndpoint(IOptions<PublicApiOptions> options)
+internal sealed class ReferenceEndpoint(
+    IOptions<PublicApiOptions> site,
+    IOptions<ReferenceOptions> reference)
 {
     public const string Path = ApiPaths.App + "/public-api/reference";
 
@@ -32,7 +34,7 @@ internal sealed class ReferenceEndpoint(IOptions<PublicApiOptions> options)
 
     public Ok<PublicApiReference> Read() => TypedResults.Ok(new PublicApiReference
     {
-        BaseUrl = options.Value.SiteOrigin.TrimEnd('/'),
+        BaseUrl = BaseUrl(),
         KeyPrefix = ApiKeySecrets.Prefix,
         FreePlan = new FreePlanTerms
         {
@@ -43,4 +45,12 @@ internal sealed class ReferenceEndpoint(IOptions<PublicApiOptions> options)
         Packs = ApiPacks.All,
         Plans = ApiPlans.Subscriptions,
     });
+
+    // An origin, written without its trailing slash so that a path appends to it.
+    private string BaseUrl()
+    {
+        var configured = reference.Value.BaseUrl;
+        var origin = string.IsNullOrWhiteSpace(configured) ? site.Value.SiteOrigin : configured;
+        return origin.Trim().TrimEnd('/');
+    }
 }

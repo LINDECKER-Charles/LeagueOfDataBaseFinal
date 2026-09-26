@@ -85,7 +85,9 @@ public sealed class KeyRulesTests(PostgresContainerFixture postgres)
             await App.AuditAsync(),
             static entry => entry.Action == AuditAction.ApiKeyCreate);
         Assert.Equal((AuditActorType.User, (int?)owner.Id), (entry.ActorType, entry.ActorId));
-        Assert.Equal((AuditTargetType.ApiKey, key.KeyPrefix + "…"), (entry.TargetType, entry.Target));
+        Assert.Equal(
+            (AuditTargetType.ApiKey, key.KeyPrefix + "…"),
+            (entry.TargetType, entry.Target));
     }
 
     [Fact]
