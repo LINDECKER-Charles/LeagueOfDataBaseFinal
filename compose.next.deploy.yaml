@@ -1,0 +1,76 @@
+# Deployment overlay of compose.next.yaml for a served environment (next, later prod),
+# applied WITHOUT compose.next.override.yaml:
+#
+#   COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml docker compose up -d
+#
+# The host's .env (secret ENV_NEXT, template .env.next.example) sets COMPOSE_PROJECT_NAME
+# (lodb-next), the images, the public hosts and the secrets. Like compose.deploy.yaml, it
+# publishes no host port: the shared edge (caddy-docker-proxy, owned by infra-vps) reads
+# the labels of nginx and reaches it over the external `edge` network.
+#
+# Invariant: this overlay never overrides the `logging:` blocks of compose.next.yaml
+# (json-file is what the host's collector can read).
+#
+# Memory limits: rule = 2 x the observed peak (docs/reecriture/rapports/memoire.md). The
+# values below are provisional, from the local stack of L0.3 (hello page, empty base);
+# L8.1 re-derives them from the E2E peaks and a week of next's history.
+# No `cpus` ceiling: set too low, it throttles silently.
+
+services:
+  api:
+    image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/api:${IMAGE_TAG:?IMAGE_TAG is required}
+    environment:
+      ConnectionStrings__LoDb: >-
+        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment}
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+
+  web-ssr:
+    image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/web-ssr:${IMAGE_TAG:?IMAGE_TAG is required}
+    environment:
+      # The public hosts of CADDY_DOMAINS, comma-separated: any other Host is refused.
+      LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:?LODB_ALLOWED_HOSTS is required (the public hosts)}
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  nginx:
+    image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/nginx:${IMAGE_TAG:?IMAGE_TAG is required}
+    environment:
+      LODB_CANONICAL_HOST: ${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
+      # Subnet of the external `edge` network: the only peer allowed to state the client
+      # address (docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}').
+      LODB_EDGE_CIDR: ${LODB_EDGE_CIDR:?LODB_EDGE_CIDR is required (subnet of the edge network)}
+      LODB_NOINDEX: ${LODB_NOINDEX:-0}
+    networks:
+      - default
+      - edge
+    labels:
+      # Two sites on the same container: the site and the API subdomain. Caddy keeps the
+      # Host header, which is how nginx tells them apart (sites/api.conf).
+      caddy_0: ${CADDY_DOMAINS:?CADDY_DOMAINS is required (e.g. "next.example.com")}
+      caddy_0.reverse_proxy: "{{upstreams 80}}"
+      caddy_1: ${API_CADDY_DOMAINS:?API_CADDY_DOMAINS is required (e.g. "api.next.example.com")}
+      caddy_1.reverse_proxy: "{{upstreams 80}}"
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment}
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+networks:
+  # Shared ingress network, created once per host by infra-vps; the deploy job only
+  # asserts that it exists.
+  edge:
+    external: true
+    name: edge

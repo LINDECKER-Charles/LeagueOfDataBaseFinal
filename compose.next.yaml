@@ -1,0 +1,138 @@
+# Stack lodb-next: the .NET + Angular rewrite (plan, §5.4). It shares nothing with the
+# legacy stack (compose.yaml): own project, images, volumes and host ports.
+#
+# Local (integration stack, from the repository root):
+#   docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build
+# Served environment (next, then prod), without the dev overlay:
+#   COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml docker compose up -d
+#
+# Every interpolated variable has a local default here; compose.next.deploy.yaml makes the
+# secrets and the public hosts mandatory. Reference: .env.next.example.
+
+# json-file is imposed, not a style choice: the host's collector replays container output
+# through the Docker Engine API, which only supports json-file, local and journald
+# (docs/guides/observabilite.md). Bounded here because this repo does not provision the
+# daemon's defaults.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/next/api/Dockerfile
+      args:
+        APP_REVISION: ${APP_REVISION:-dev}
+    environment:
+      ConnectionStrings__LoDb: >-
+        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb}
+      # X-Forwarded-* are trusted from the private ranges: only nginx and web-ssr reach
+      # this port on a served host (no host port, not on the edge network). The stack's
+      # own subnet is picked by Docker, so it cannot be named more precisely here.
+      LoDb__Hosting__KnownProxyNetworks__0: 10.0.0.0/8
+      LoDb__Hosting__KnownProxyNetworks__1: 172.16.0.0/12
+      LoDb__Hosting__KnownProxyNetworks__2: 192.168.0.0/16
+      LoDb__Storage__Root: /srv/storage
+      # Empty: traces stay local (log correlation) until infra-vps exposes a collector.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    volumes:
+      # DDragon storage: the API is its only writer; nginx serves blobs/ read-only.
+      - storage:/srv/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      # Exec form: the chiseled image has no shell. The command opens no port and asks
+      # /healthz, which checks no dependency (a database outage must not restart the API).
+      test: ["CMD", "dotnet", "LoDb.Api.dll", "healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web-ssr:
+    build:
+      context: .
+      dockerfile: docker/next/web-ssr/Dockerfile
+      args:
+        APP_REVISION: ${APP_REVISION:-dev}
+    # Node ignores SIGTERM as PID 1: tini forwards it, so a stop takes no 10 s timeout.
+    init: true
+    environment:
+      PORT: "4000"
+      LODB_API_ORIGIN: http://api:8080
+      # Hosts the renders accept (Host or trusted X-Forwarded-Host); others get a 400.
+      LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      # Set by nginx (snippets/proxy-headers.conf); Angular ignores them unless listed.
+      LODB_TRUST_PROXY_HEADERS: x-forwarded-proto,x-forwarded-host,x-forwarded-for
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:4000/healthz').then((r) => process.exit(r.ok ? 0 : 1),
+          () => process.exit(1))
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/next/nginx/Dockerfile
+      args:
+        APP_REVISION: ${APP_REVISION:-dev}
+    environment:
+      LODB_CANONICAL_HOST: ${LODB_CANONICAL_HOST:-localhost}
+      LODB_EDGE_CIDR: ${LODB_EDGE_CIDR:-127.0.0.1/32}
+      LODB_NOINDEX: ${LODB_NOINDEX:-0}
+    volumes:
+      - storage:/srv/storage:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      web-ssr:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${LODB_DB_NAME:-lodb}
+      POSTGRES_USER: ${LODB_DB_USER:-lodb}
+      POSTGRES_PASSWORD: ${LODB_DB_PASSWORD:-lodb}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  # Created by the api container first (depends_on order), which seeds it with its own
+  # /srv/storage: the volume is then owned by the API's non-root user.
+  storage:
+  pgdata:
