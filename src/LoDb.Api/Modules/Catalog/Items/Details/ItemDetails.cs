@@ -1,0 +1,73 @@
+using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.Catalog.Shared;
+using LoDb.Domain.Editions;
+using LoDb.Domain.Text;
+
+namespace LoDb.Api.Modules.Catalog.Items.Details;
+
+/// <summary>
+/// <c>GET /api/catalog/{version}/{lang}/items/{id}</c>: the card, then the description, the
+/// recipe, the upgrades and the champion the item is bound to, every image resolved.
+/// </summary>
+internal sealed record ItemDetails
+{
+    public required string Version { get; init; }
+
+    public required string Language { get; init; }
+
+    public string? ContentLanguage { get; init; }
+
+    /// <summary>The page the routing redirects a stale or slugless URL to.</summary>
+    public required string CanonicalPath { get; init; }
+
+    /// <summary>The facts of the list's card, the edition and its twin among them.</summary>
+    public required ItemCard Profile { get; init; }
+
+    /// <summary>Riot's rich text, unresolved template tokens removed.</summary>
+    public required string Description { get; init; }
+
+    /// <summary>
+    /// The map ids the item's availability line claims: the Classic Rift (453) alone for a
+    /// Classic item, never for a current one (UP 6).
+    /// </summary>
+    public required IReadOnlyList<int> AvailableMaps { get; init; }
+
+    /// <summary>The champion only who may buy it (Kalista's Black Spear).</summary>
+    public EntityLink? RequiredChampion { get; init; }
+
+    /// <summary>The ally the item needs in the team (Ornn's upgrades).</summary>
+    public EntityLink? RequiredAlly { get; init; }
+
+    /// <summary>The item and its components, recursively.</summary>
+    public RecipeStep? Recipe { get; init; }
+
+    public required IReadOnlyList<EntityLink> Upgrades { get; init; }
+
+    public static ItemDetails Of(ItemPage page, ImageSet images)
+    {
+        ArgumentNullException.ThrowIfNull(page);
+        ArgumentNullException.ThrowIfNull(images);
+        var catalog = page.Catalog;
+        var item = page.Item;
+        var profile = ItemCard.Of(item, catalog, images);
+        return new ItemDetails
+        {
+            Version = catalog.Version.Value,
+            Language = catalog.Language.Code,
+            ContentLanguage = catalog.Items.ContentLanguage?.Code,
+            CanonicalPath = profile.CanonicalPath,
+            Profile = profile,
+            Description = DdragonText.Clean(item.Description),
+            AvailableMaps = ItemEdition.ClaimableMapIds(item.Id, item.Maps),
+            RequiredChampion = page.RequiredChampion is { } bound
+                ? EntityLink.Of(bound, catalog, images)
+                : null,
+            RequiredAlly = page.RequiredAlly is { } ally
+                ? EntityLink.Of(ally, catalog, images)
+                : null,
+            Recipe = page.Recipe is { } recipe ? RecipeStep.Of(recipe, page, images) : null,
+            Upgrades =
+                [.. page.Upgrades.Select(upgrade => EntityLink.Of(upgrade, catalog, images))],
+        };
+    }
+}
