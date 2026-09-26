@@ -4,5 +4,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/LoDb.Ingestion/LoDb.Ingestion.csproj" />
+    <ProjectReference Include="../LoDb.Testing/LoDb.Testing.csproj" />
   </ItemGroup>
 </Project>
