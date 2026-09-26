@@ -1119,6 +1119,625 @@
         }
       }
     },
+    "/api/account/me": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "The signed-in account, if any, with a fresh XSRF token cookie.",
+        "operationId": "getAccountSession",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSession"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/login": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Opens a session with an e-mail or a username and a password.",
+        "operationId": "signIn",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/logout": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Closes the session.",
+        "operationId": "signOut",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/token": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Signs an app in with an e-mail or a username and a password.",
+        "operationId": "createAccountToken",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/refresh": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Trades a refresh token for a new bearer token and refresh token.",
+        "operationId": "refreshAccountToken",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/register": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Creates an account, signs it in and sends its verification e-mail.",
+        "operationId": "registerAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/verify-email": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Verifies an e-mail with the parameters of the link sent to it.",
+        "operationId": "verifyEmail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailVerification"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/verify-email/resend": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Sends the verification e-mail of the signed-in account again.",
+        "operationId": "resendVerificationEmail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ResendVerificationRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/forgot-password": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Sends a link setting a new password, if an account uses the e-mail.",
+        "operationId": "requestPasswordReset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/reset-password": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Sets a new password with the parameters of the link sent by e-mail.",
+        "operationId": "resetPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/google/start": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Sends the browser to Google, to come back signed in.",
+        "operationId": "startGoogleSignIn",
+        "parameters": [
+          {
+            "name": "ReturnUrl",
+            "in": "query",
+            "description": "The page to come back to: a path of the site, or a URL of its origin. The profile page\notherwise.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Locale",
+            "in": "query",
+            "description": "Locale of the pages to come back to, such as `fr`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "RememberMe",
+            "in": "query",
+            "description": "Keeps the session for 30 days rather than until the browser closes.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Found"
+          }
+        }
+      }
+    },
+    "/api/account/google/app/exchange": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Signs an app in with the code of a Google sign-in, redeemed here.",
+        "operationId": "exchangeGoogleCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleExchangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/client-policy": {
       "get": {
         "tags": [
@@ -1177,6 +1796,113 @@
           }
         },
         "description": "The looping preview of one ability, in two formats and with its still frame."
+      },
+      "AccessTokenResponse": {
+        "required": [
+          "accessToken",
+          "expiresIn",
+          "refreshToken"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
+      "AccountSession": {
+        "required": [
+          "user"
+        ],
+        "type": "object",
+        "properties": {
+          "user": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The signed-in account; null for a visitor.",
+                "$ref": "#/components/schemas/AccountUser"
+              }
+            ]
+          }
+        },
+        "description": "The session of the caller: its account, or none. The sign-in and the registration answer\nit too, so that a front needs no second call."
+      },
+      "AccountUser": {
+        "required": [
+          "id",
+          "username",
+          "email",
+          "riotTagline",
+          "emailVerified",
+          "hasPassword",
+          "isSupporter",
+          "twoFactorEnabled",
+          "multiFactor",
+          "roles"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "riotTagline": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Riot tag line shown after the username, such as `EUW`."
+          },
+          "emailVerified": {
+            "type": "boolean",
+            "description": "Whether the e-mail is verified, which some actions require."
+          },
+          "hasPassword": {
+            "type": "boolean",
+            "description": "False for an account created through Google, which signs in there."
+          },
+          "isSupporter": {
+            "type": "boolean"
+          },
+          "twoFactorEnabled": {
+            "type": "boolean",
+            "description": "Whether a sign-in with the password also asks for an authenticator code."
+          },
+          "multiFactor": {
+            "type": "boolean",
+            "description": "Whether this session was opened with a second factor, which the admin area requires."
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Roles of the account, such as `Admin`."
+          }
+        },
+        "description": "The signed-in account, as the fronts show it."
       },
       "AppPolicy": {
         "required": [
@@ -1856,6 +2582,19 @@
         "type": "string",
         "description": "Game an item or a summoner spell belongs to: today's League of Legends, or LoL Classic."
       },
+      "EmailVerification": {
+        "required": [
+          "alreadyVerified"
+        ],
+        "type": "object",
+        "properties": {
+          "alreadyVerified": {
+            "type": "boolean",
+            "description": "Whether an earlier click of the link verified it: a link stays valid for its hour."
+          }
+        },
+        "description": "A verified e-mail."
+      },
       "EntityLink": {
         "required": [
           "id",
@@ -1891,6 +2630,33 @@
           }
         },
         "description": "Another entry a page links to: a recipe component, an upgrade, a bound champion."
+      },
+      "ForgotPasswordRequest": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The e-mail of the account, whatever the case."
+          },
+          "locale": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Locale of the e-mail; the fallback locale when unset.",
+                "$ref": "#/components/schemas/UiLocale"
+              }
+            ]
+          }
+        },
+        "description": "Body of `POST /api/account/forgot-password`."
       },
       "GameMode": {
         "enum": [
@@ -1937,6 +2703,45 @@
         ],
         "type": "string",
         "description": "The game attributes the encyclopedia surfaces (champion base stats, item stat blocks)."
+      },
+      "GoogleExchangeRequest": {
+        "required": [
+          "code",
+          "codeVerifier",
+          "redirectUri"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The authorization code Google handed to the redirect URI."
+          },
+          "codeVerifier": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The PKCE verifier whose challenge the app sent to Google."
+          },
+          "redirectUri": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The redirect URI the app sent to Google, as sent."
+          },
+          "clientId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Google client the app signed in with; the web client when unset."
+          }
+        },
+        "description": "Body of `POST /api/account/google/app/exchange`: what an app got from a Google\nsign-in in the system browser, with PKCE."
       },
       "ImageStatus": {
         "enum": [
@@ -2326,6 +3131,47 @@
         },
         "description": "An interface locale and the Data Dragon language its pages read by default."
       },
+      "LoginRequest": {
+        "required": [
+          "identifier",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The e-mail or the username, whatever the case."
+          },
+          "password": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rememberMe": {
+            "type": "boolean",
+            "description": "Keeps the session for 30 days rather than until the browser closes."
+          },
+          "twoFactorCode": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The code of the authenticator app, sent again with the password once a sign-in was\nanswered `two-factor-required`."
+          },
+          "recoveryCode": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "A recovery code, in place of the authenticator's."
+          }
+        },
+        "description": "Body of `POST /api/account/login`."
+      },
       "PlatformPolicy": {
         "required": [
           "platform"
@@ -2430,6 +3276,117 @@
           }
         },
         "description": "An item of a recipe tree, with the components it is built from."
+      },
+      "RefreshTokenRequest": {
+        "required": [
+          "refreshToken"
+        ],
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The refresh token of the last token response."
+          }
+        },
+        "description": "Body of `POST /api/account/refresh`."
+      },
+      "RegisterRequest": {
+        "required": [
+          "email",
+          "username",
+          "password",
+          "acceptTerms"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Stored lowercase; at most 180 characters."
+          },
+          "username": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "3 to 24 letters, digits, `_`, `.` or `-`, starting with a letter or a digit."
+          },
+          "password": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "12 characters or more, with a lowercase, an uppercase, a digit, a symbol."
+          },
+          "acceptTerms": {
+            "type": "boolean",
+            "description": "Acceptance of the terms of use, without which no account is created."
+          },
+          "locale": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Locale of the verification e-mail; the fallback locale when unset.",
+                "$ref": "#/components/schemas/UiLocale"
+              }
+            ]
+          }
+        },
+        "description": "Body of `POST /api/account/register`."
+      },
+      "ResendVerificationRequest": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Locale of the e-mail; the fallback locale when unset.",
+                "$ref": "#/components/schemas/UiLocale"
+              }
+            ]
+          }
+        },
+        "description": "Body of `POST /api/account/verify-email/resend`."
+      },
+      "ResetPasswordRequest": {
+        "required": [
+          "userId",
+          "token",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "description": "The `user` parameter of the link.",
+            "format": "int32"
+          },
+          "token": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The `token` parameter of the link, as it is."
+          },
+          "password": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The new password, under the rules of a new account."
+          }
+        },
+        "description": "Body of `POST /api/account/reset-password`."
       },
       "ResourceType": {
         "enum": [
@@ -3182,6 +4139,43 @@
         },
         "description": "`GET /api/pickers/summoners`: the summoner spells of the standard Summoner's Rift\nqueue (Data Dragon's CLASSIC mode), by name. Classic twins and event spells are left out."
       },
+      "TokenRequest": {
+        "required": [
+          "identifier",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The e-mail or the username, whatever the case."
+          },
+          "password": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "twoFactorCode": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The code of the authenticator app, sent again with the password once a sign-in was\nanswered `two-factor-required`."
+          },
+          "recoveryCode": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "A recovery code, in place of the authenticator's."
+          }
+        },
+        "description": "Body of `POST /api/account/token`, the sign-in of the apps."
+      },
       "UiLocale": {
         "enum": [
           "ar",
@@ -3208,6 +4202,28 @@
         ],
         "type": "string",
         "description": "Interface locale of the site, carried as the first URL segment (`/{locale}/…`)."
+      },
+      "VerifyEmailRequest": {
+        "required": [
+          "userId",
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "description": "The `user` parameter of the link.",
+            "format": "int32"
+          },
+          "token": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The `token` parameter of the link, as it is."
+          }
+        },
+        "description": "Body of `POST /api/account/verify-email`: the parameters of the link."
       }
     }
   },
@@ -3220,6 +4236,9 @@
     },
     {
       "name": "Pickers"
+    },
+    {
+      "name": "Account"
     },
     {
       "name": "ClientPolicy"
