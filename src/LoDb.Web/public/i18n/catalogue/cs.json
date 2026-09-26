@@ -1,0 +1,12 @@
+{
+  "pages": "Stránky",
+  "loading": "Načítání seznamu…",
+  "pending": {
+    "title": "Tento patch se připravuje",
+    "text": "Jeho data stále přicházejí: seznam se brzy doplní."
+  },
+  "failed": {
+    "title": "Seznam se nepodařilo načíst",
+    "text": "Zkuste to znovu za chvíli."
+  }
+}

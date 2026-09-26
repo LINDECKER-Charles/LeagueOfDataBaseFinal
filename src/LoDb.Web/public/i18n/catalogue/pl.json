@@ -1,0 +1,12 @@
+{
+  "pages": "Strony",
+  "loading": "Wczytywanie listy…",
+  "pending": {
+    "title": "Ta łatka jest przygotowywana",
+    "text": "Jej dane wciąż napływają: lista wkrótce uzupełni się sama."
+  },
+  "failed": {
+    "title": "Nie udało się wczytać listy",
+    "text": "Spróbuj ponownie za chwilę."
+  }
+}
