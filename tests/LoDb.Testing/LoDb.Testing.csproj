@@ -13,4 +13,12 @@
   <ItemGroup>
     <ProjectReference Include="../../src/LoDb.Api/LoDb.Api.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Doctrine schema frozen by tools/next/schema/. -->
+    <EmbeddedResource
+      Include="../fixtures/schema/doctrine-schema.sql" LogicalName="doctrine-schema.sql" />
+    <EmbeddedResource
+      Include="../fixtures/schema/doctrine-versions.txt" LogicalName="doctrine-versions.txt" />
+  </ItemGroup>
 </Project>
