@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "Buildjeid betöltése…",
+    "failed": "Nem sikerült betölteni a buildjeidet.",
+    "delete_failed": "Nem sikerült törölni a buildet. Próbáld újra."
+  },
+  "delete": {
+    "title": "Build törlése",
+    "cancel": "Mégse"
+  },
+  "editor": {
+    "saving": "Mentés…",
+    "errors_title": "Nem sikerült menteni a buildet"
+  },
+  "errors": {
+    "generic": "Hiba történt. Próbáld újra.",
+    "signed_out": "A munkameneted lejárt. Jelentkezz be újra a build mentéséhez.",
+    "email_unverified": "Erősítsd meg az e-mail-címedet a build mentéséhez.",
+    "not_found": "Ez a build már nem létezik."
+  }
+}

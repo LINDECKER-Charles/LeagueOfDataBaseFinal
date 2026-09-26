@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "正在加载你的出装…",
+    "failed": "无法加载你的出装。",
+    "delete_failed": "无法删除出装，请重试。"
+  },
+  "delete": {
+    "title": "删除出装",
+    "cancel": "取消"
+  },
+  "editor": {
+    "saving": "正在保存…",
+    "errors_title": "无法保存出装"
+  },
+  "errors": {
+    "generic": "出了点问题，请重试。",
+    "signed_out": "你的会话已过期。请重新登录以保存此出装。",
+    "email_unverified": "请验证你的电子邮件地址以保存出装。",
+    "not_found": "此出装已不存在。"
+  }
+}

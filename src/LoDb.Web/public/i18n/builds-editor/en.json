@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "Loading your builds…",
+    "failed": "Your builds couldn't be loaded.",
+    "delete_failed": "The build couldn't be deleted. Please try again."
+  },
+  "delete": {
+    "title": "Delete the build",
+    "cancel": "Cancel"
+  },
+  "editor": {
+    "saving": "Saving…",
+    "errors_title": "The build couldn't be saved"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "signed_out": "Your session has ended. Sign in again to save this build.",
+    "email_unverified": "Verify your email address to save a build.",
+    "not_found": "This build no longer exists."
+  }
+}

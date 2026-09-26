@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "Memuat build kamu…",
+    "failed": "Build kamu tidak dapat dimuat.",
+    "delete_failed": "Build tidak dapat dihapus. Coba lagi."
+  },
+  "delete": {
+    "title": "Hapus build",
+    "cancel": "Batal"
+  },
+  "editor": {
+    "saving": "Menyimpan…",
+    "errors_title": "Build tidak dapat disimpan"
+  },
+  "errors": {
+    "generic": "Terjadi kesalahan. Coba lagi.",
+    "signed_out": "Sesimu telah berakhir. Masuk lagi untuk menyimpan build ini.",
+    "email_unverified": "Verifikasi alamat email kamu untuk menyimpan build.",
+    "not_found": "Build ini sudah tidak ada."
+  }
+}

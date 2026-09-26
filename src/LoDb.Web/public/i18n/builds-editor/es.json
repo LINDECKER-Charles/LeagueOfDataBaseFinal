@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "Cargando tus builds…",
+    "failed": "No se pudieron cargar tus builds.",
+    "delete_failed": "No se pudo eliminar la build. Inténtalo de nuevo."
+  },
+  "delete": {
+    "title": "Eliminar la build",
+    "cancel": "Cancelar"
+  },
+  "editor": {
+    "saving": "Guardando…",
+    "errors_title": "No se pudo guardar la build"
+  },
+  "errors": {
+    "generic": "Algo salió mal. Inténtalo de nuevo.",
+    "signed_out": "Tu sesión ha caducado. Vuelve a iniciar sesión para guardar esta build.",
+    "email_unverified": "Verifica tu dirección de correo electrónico para guardar una build.",
+    "not_found": "Esta build ya no existe."
+  }
+}

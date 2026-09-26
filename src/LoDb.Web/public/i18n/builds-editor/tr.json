@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "Buildlerin yükleniyor…",
+    "failed": "Buildlerin yüklenemedi.",
+    "delete_failed": "Build silinemedi. Lütfen tekrar dene."
+  },
+  "delete": {
+    "title": "Build'i sil",
+    "cancel": "İptal"
+  },
+  "editor": {
+    "saving": "Kaydediliyor…",
+    "errors_title": "Build kaydedilemedi"
+  },
+  "errors": {
+    "generic": "Bir şeyler ters gitti. Lütfen tekrar dene.",
+    "signed_out": "Oturumunun süresi doldu. Bu build'i kaydetmek için yeniden giriş yap.",
+    "email_unverified": "Build kaydetmek için e-posta adresini doğrula.",
+    "not_found": "Bu build artık mevcut değil."
+  }
+}

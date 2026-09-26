@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "Se încarcă build-urile tale…",
+    "failed": "Build-urile tale nu au putut fi încărcate.",
+    "delete_failed": "Build-ul nu a putut fi șters. Încearcă din nou."
+  },
+  "delete": {
+    "title": "Șterge build-ul",
+    "cancel": "Anulează"
+  },
+  "editor": {
+    "saving": "Se salvează…",
+    "errors_title": "Build-ul nu a putut fi salvat"
+  },
+  "errors": {
+    "generic": "Ceva nu a mers bine. Încearcă din nou.",
+    "signed_out": "Sesiunea ta a expirat. Conectează-te din nou pentru a salva acest build.",
+    "email_unverified": "Verifică-ți adresa de e-mail pentru a salva un build.",
+    "not_found": "Acest build nu mai există."
+  }
+}
