@@ -1,6 +1,7 @@
 # Parité PHP ↔ .NET des données Data Dragon — lot 1 (L1.8)
 
-- **Date** : 2026-09-26, run `lot1` collecté à 07:23 UTC.
+- **Date** : 2026-09-26, run `lot1` collecté à 07:23 UTC, puis ré-exporté à 07:59 UTC par la
+  vérification du lot, après la correction G1 (fusion `e80af38`).
 - **Branche** : `docs/reecriture-dotnet-angular`. La stack `lodb-next` a été reconstruite
   sur `2a712e6` ; l'outil est en `4ff9df8` (collecte) et `e85cf2c` (comparaison).
 - **Poste** : macOS arm64, .NET SDK 10.0.400, Node 26.5, Docker 29.8.0.
@@ -11,8 +12,8 @@ Critère visé ([lot 1](../implementation/lot-01-donnees-data-dragon.md#l18--par
 parité des datasets et manifestes normalisés sur les 10 dernières versions × 5 langues,
 plus les versions pièges, avec un rapport sans écart non classé.
 
-**Résultat** : 12 240 écarts, tous classés. Aucun n'est un défaut de la nouvelle stack.
-Deux règles couvrent 308 défauts de l'ancienne stack que la nouvelle corrige
+**Résultat** : 12 260 écarts, tous classés. Aucun n'est un défaut de la nouvelle stack.
+Trois règles couvrent 328 défauts de l'ancienne stack que la nouvelle corrige
 volontairement ; trois règles couvrent 11 932 écarts attendus, tous dus au stockage
 paresseux de l'ancienne stack.
 
@@ -59,7 +60,9 @@ apparié par rang.
 | Ingestion | `ingest --version <v> --languages …` pour chaque version piège | 33 à 44 s chacune ; 8.7.1 en code 1 (même cause), les autres en 0 |
 | Reprise | `ingest --version <v> --languages …` pour 16.14.1, 16.11.1 et 8.7.1 | code 0, 1 image réglée par version (`LissandraQ.png`, `1111.png`, `EkkoQ.png`) |
 | Collecte | `node tools/next/parity/collect.mjs --run=tools/next/parity/.runs/lot1` | 68 s : 75 exports par côté, 15 répertoires de manifestes, lignes `ddragon_asset` |
-| Comparaison | `LODB_PARITY_RUN=$PWD/tools/next/parity/.runs/lot1 dotnet test --project tests/LoDb.Parity/LoDb.Parity.csproj` | 50 tests réussis sur 50 (dont les 2 du run) |
+| Comparaison | `LODB_PARITY_RUN=$PWD/tools/next/parity/.runs/lot1 dotnet test --project tests/LoDb.Parity/LoDb.Parity.csproj` | 50 tests réussis sur 50 (dont les 2 du run) ; 12 240 écarts |
+| Ré-export (vérification) | `node tools/next/parity/collect.mjs --steps=export --run=tools/next/parity/.runs/lot1 --versions=<15 versions> --langs=<5 langues>` | 66 s : 75 exports par côté, `lodb-next` reconstruite sur `e80af38` |
+| Comparaison (vérification) | même commande | 55 tests réussis sur 55 ; 12 260 écarts, 0 non classé |
 
 Avant `details`, 16.19.1 avait déjà été ingérée par la veille de patchs de `lodb-next`, en
 28 langues et sans intervention. `ingest --latest 10` l'a donc trouvée prête.
@@ -108,7 +111,7 @@ retombent sur `en_US`, à l'identique. Les autres couples sont comparés dans le
 | `legacy-image-not-fetched` | attendu | 200 | 11 |
 | `legacy-debris-images-not-warmed` | attendu | 40 | 11 |
 | `name-trimmed` | défaut ancien corrigé | 10 | 10 |
-| `legacy-translated-placeholder-listed` | défaut ancien corrigé | à mesurer | à mesurer |
+| `legacy-translated-placeholder-listed` | défaut ancien corrigé | 20 | 10 |
 | *non classés* | — | 0 | — |
 | *défauts de la nouvelle stack* | — | 0 | — |
 
@@ -148,8 +151,8 @@ L'ancienne stack ne récupère que les images des entrées listées dans la prem
 warmup (`en_US`). Toutes les autres attendent une page qui les demande. `pending` n'est pas
 un verdict : le contenu est comparé par les manifestes, sous la règle suivante.
 
-La règle couvre aussi 7050 en `ar_AE` et `zh_CN`, listé dans ces deux langues. En `en_US`,
-il ne l'est pas, et le warmup ne l'a donc pas pris (voir § 5, premier point).
+La règle couvre aussi 7050 en `ar_AE` et `zh_CN`, que l'ancienne stack liste dans ces deux
+langues. En `en_US`, elle ne le liste pas, et le warmup ne l'a donc pas pris (voir § 5, premier point).
 
 ### `legacy-debris-images-not-warmed` — attendu
 
@@ -172,13 +175,11 @@ retirés.
 ### `legacy-translated-placeholder-listed` — défaut de l'ancienne stack, corrigé
 
 Objet 7050, champ `listed`, `ar_AE` et `zh_CN` : `true` → `false`. Règle ajoutée par la
-correction G1 du [jalon du lot 1](jalons/lot-01.md), après la mesure : le run `lot1`
-stocké contient l'export .NET d'avant correction, où 7050 est encore listé dans ces deux
-langues. L'écart n'y figure donc pas. D'après l'export de l'ancienne stack de ce run, il
-doit en apparaître 20 : 7050 porte `Placeholder` dans son nom `en_US` de 16.10.1 à
-16.19.1, et seuls `ar_AE` et `zh_CN` le traduisent (`fr_FR` et `ko_KR` gardent le mot).
-Ré-exporter les deux côtés et rejouer la comparaison (§ 6) revient à la vérification du
-lot, qui reporte le décompte dans le tableau ci-dessus.
+correction G1 du [jalon du lot 1](jalons/lot-01.md), et mesurée par la vérification du
+lot sur le run `lot1` ré-exporté : 20 écarts, 7050 en `ar_AE` et en `zh_CN` de 16.10.1 à
+16.19.1. C'est le décompte attendu : 7050 porte `Placeholder` dans son nom `en_US` sur ces
+10 versions, et seuls `ar_AE` et `zh_CN` le traduisent (`fr_FR` et `ko_KR` gardent le mot).
+Les autres règles gardent leur décompte.
 
 Data Dragon traduit le mot `Placeholder` du nom en `ar_AE` (`نائب غانغ بلانك`) et en
 `zh_CN` (`普朗克 占位`). L'ancienne stack le cherche dans le nom traduit
