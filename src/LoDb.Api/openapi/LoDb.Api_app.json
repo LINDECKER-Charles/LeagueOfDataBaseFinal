@@ -1738,6 +1738,595 @@
         }
       }
     },
+    "/api/profile": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "The signed-in account's profile, favorites on its pinned version.",
+        "operationId": "getOwnProfile",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/preview": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "The public card of the signed-in account, shown even while private.",
+        "operationId": "previewOwnProfile",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/favorites": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Saves the favorites and the skin, checked on the pinned version.",
+        "operationId": "saveFavorites",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveFavoritesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FavoritesSaved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/visibility": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Shows the public card to visitors, or hides it behind a 404.",
+        "operationId": "setProfileVisibility",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/profile/version": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Pins the favorites to a version, or unpins them.",
+        "operationId": "setPreferredVersion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferredVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/identity": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Renames the account and sets its Riot tag line.",
+        "operationId": "setProfileIdentity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/password": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Sets a password on an account that has none.",
+        "operationId": "setFirstPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/delete": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Erases the signed-in account once confirmed, and signs it out.",
+        "operationId": "deleteOwnAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profiles/{username}": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "The public card of a profile; one 404 for an unknown, private or banned one.",
+        "operationId": "getPublicProfile",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/client-policy": {
       "get": {
         "tags": [
@@ -1929,6 +2518,14 @@
           "null",
           "string"
         ]
+      },
+      "BackdropKind": {
+        "enum": [
+          "skin",
+          "champion"
+        ],
+        "type": "string",
+        "description": "What a profile's backdrop shows, so a page does not draw the champion twice."
       },
       "CatalogImage": {
         "required": [
@@ -2574,6 +3171,46 @@
         },
         "description": "The same-named item or summoner spell of the other game (UP 6): \"Faerie Charm\" is both\n1004 and the Classic 771004."
       },
+      "DeleteAccountRequest": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The account's password, for the `password` confirmation."
+          },
+          "confirmation": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The phrase of UiLocale? DeleteAccountRequest.Locale, for the `phrase` confirmation."
+          },
+          "locale": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The locale of the page, whose phrase is expected; the fallback locale when unset.",
+                "$ref": "#/components/schemas/UiLocale"
+              }
+            ]
+          }
+        },
+        "description": "Body of `POST /api/profile/delete`: the confirmation the account's\n`deletionConfirmation` asks for; the other fields are ignored."
+      },
+      "DeletionConfirmation": {
+        "enum": [
+          "phrase",
+          "password",
+          "none"
+        ],
+        "type": "string",
+        "description": "What an account types to confirm its erasure, one of three variants."
+      },
       "Edition": {
         "enum": [
           "modern",
@@ -2630,6 +3267,144 @@
           }
         },
         "description": "Another entry a page links to: a recipe component, an upgrade, a bound champion."
+      },
+      "FavoriteBoard": {
+        "required": [
+          "champion",
+          "item",
+          "rune",
+          "summoner"
+        ],
+        "type": "object",
+        "properties": {
+          "champion": {
+            "$ref": "#/components/schemas/FavoriteView"
+          },
+          "item": {
+            "$ref": "#/components/schemas/FavoriteView"
+          },
+          "rune": {
+            "$ref": "#/components/schemas/FavoriteView"
+          },
+          "summoner": {
+            "$ref": "#/components/schemas/FavoriteView"
+          }
+        },
+        "description": "The four favorite slots of a profile, resolved on one patch."
+      },
+      "FavoriteIds": {
+        "type": "object",
+        "properties": {
+          "champion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "item": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rune": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "summoner": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "The ids of the four favorite slots, as stored or as submitted."
+      },
+      "FavoriteSlot": {
+        "enum": [
+          "champion",
+          "item",
+          "rune",
+          "summoner"
+        ],
+        "type": "string",
+        "description": "The four favorite slots of a profile, each backed by a `users` column."
+      },
+      "FavoritesSaved": {
+        "required": [
+          "favorites",
+          "skin",
+          "rejected",
+          "isSkinRejected"
+        ],
+        "type": "object",
+        "properties": {
+          "favorites": {
+            "description": "The ids now stored, unavailable ones kept included.",
+            "$ref": "#/components/schemas/FavoriteIds"
+          },
+          "skin": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rejected": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FavoriteSlot"
+            },
+            "description": "The slots whose id the pinned version lacks, or too long: they are now empty."
+          },
+          "isSkinRejected": {
+            "type": "boolean",
+            "description": "Whether the skin sent was malformed, and the skin slot is now empty."
+          }
+        },
+        "description": "What a favorite save stored, and what it had to drop."
+      },
+      "FavoriteStatus": {
+        "enum": [
+          "empty",
+          "resolved",
+          "unavailable"
+        ],
+        "type": "string",
+        "description": "What a favorite slot shows."
+      },
+      "FavoriteView": {
+        "required": [
+          "storedId",
+          "status",
+          "current"
+        ],
+        "type": "object",
+        "properties": {
+          "storedId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The id stored, whatever the patch: a form sends it back to keep an unavailable\nfavorite, never the null of ResolvedFavorite? FavoriteView.Current."
+          },
+          "status": {
+            "$ref": "#/components/schemas/FavoriteStatus"
+          },
+          "current": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The favorite on the resolved patch; null unless FavoriteStatus FavoriteView.Status is resolved.",
+                "$ref": "#/components/schemas/ResolvedFavorite"
+              }
+            ]
+          }
+        },
+        "description": "A favorite slot: what is stored, and how the resolved patch shows it."
       },
       "ForgotPasswordRequest": {
         "required": [
@@ -2742,6 +3517,30 @@
           }
         },
         "description": "Body of `POST /api/account/google/app/exchange`: what an app got from a Google\nsign-in in the system browser, with PKCE."
+      },
+      "IdentityRequest": {
+        "required": [
+          "username",
+          "riotTagline"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "3 to 24 letters, digits, `_`, `.` or `-`, starting with a letter or a\ndigit; unique whatever its case."
+          },
+          "riotTagline": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Riot tag line, 3 to 5 letters or digits; null or blank for none."
+          }
+        },
+        "description": "Body of `PUT /api/profile/identity`: the summoner name shown everywhere."
       },
       "ImageStatus": {
         "enum": [
@@ -3172,6 +3971,75 @@
         },
         "description": "Body of `POST /api/account/login`."
       },
+      "OwnerProfile": {
+        "required": [
+          "username",
+          "riotTagline",
+          "maskedEmail",
+          "memberSince",
+          "hasPassword",
+          "deletionConfirmation",
+          "isPublic",
+          "preferredVersion",
+          "showcase",
+          "backdrop"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "riotTagline": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Riot tag line shown after the username, such as `EUW`."
+          },
+          "maskedEmail": {
+            "type": "string",
+            "description": "The e-mail with its local part masked, such as `c***@outlook.fr`."
+          },
+          "memberSince": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "hasPassword": {
+            "type": "boolean",
+            "description": "False for an account created through Google, which may then set one."
+          },
+          "deletionConfirmation": {
+            "description": "What the account types to confirm its erasure.",
+            "$ref": "#/components/schemas/DeletionConfirmation"
+          },
+          "isPublic": {
+            "type": "boolean",
+            "description": "Whether the public card, `/u/{username}`, is shown to visitors."
+          },
+          "preferredVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The version the favorites are pinned to; null to follow the one browsed."
+          },
+          "showcase": {
+            "$ref": "#/components/schemas/ProfileShowcase"
+          },
+          "backdrop": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The favorite champion's art, never the skin: the skin is what the public card shows off.",
+                "$ref": "#/components/schemas/ProfileBackdrop"
+              }
+            ]
+          }
+        },
+        "description": "The profile as its owner manages it, `/{locale}/account/profile`."
+      },
       "PlatformPolicy": {
         "required": [
           "platform"
@@ -3197,6 +4065,22 @@
           }
         },
         "description": "What one app must run, and what it may update to."
+      },
+      "PreferredVersionRequest": {
+        "required": [
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "A version Data Dragon lists, such as 16.19.1; null or blank to follow the version\nbrowsed."
+          }
+        },
+        "description": "Body of `PUT /api/profile/version`."
       },
       "ProblemDetails": {
         "type": "object",
@@ -3233,6 +4117,176 @@
             ]
           }
         }
+      },
+      "ProfileBackdrop": {
+        "required": [
+          "image",
+          "fallback",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string",
+            "description": "The centered splash.",
+            "format": "uri"
+          },
+          "fallback": {
+            "type": "string",
+            "description": "The wide splash, shown when the centered one fails to load.",
+            "format": "uri"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/BackdropKind"
+          }
+        },
+        "description": "The art behind a profile's header; a page without one draws its gradient."
+      },
+      "ProfileBuildCard": {
+        "required": [
+          "shareToken",
+          "name",
+          "championId",
+          "championName",
+          "championImage",
+          "gameVersion",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "shareToken": {
+            "type": "string",
+            "description": "The token of its `/b/{token}` link."
+          },
+          "name": {
+            "type": "string"
+          },
+          "championId": {
+            "type": "string"
+          },
+          "championName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Null when the profile's patch lacks the champion: the card shows initials."
+          },
+          "championImage": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "gameVersion": {
+            "type": "string",
+            "description": "The patch the build is pinned to."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "A public build on the card, its champion resolved on the profile's patch."
+      },
+      "ProfileShowcase": {
+        "required": [
+          "version",
+          "language",
+          "isCatalogAvailable",
+          "favorites",
+          "skin"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The version the favorites resolved on; null when no catalog could be read."
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Data Dragon language of the names; null when no catalog could be read."
+          },
+          "isCatalogAvailable": {
+            "type": "boolean",
+            "description": "False when the catalog could not be read: the favorites then show as unavailable for\nthat reason, not because the patch lacks them."
+          },
+          "favorites": {
+            "$ref": "#/components/schemas/FavoriteBoard"
+          },
+          "skin": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SkinBanner"
+              }
+            ]
+          }
+        },
+        "description": "What a profile curates, resolved on its patch: the four favorites and the skin banner."
+      },
+      "PublicProfile": {
+        "required": [
+          "username",
+          "riotTagline",
+          "isSupporter",
+          "isPublic",
+          "memberSince",
+          "showcase",
+          "backdrop",
+          "builds"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "riotTagline": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Riot tag line shown after the username, such as `EUW`."
+          },
+          "isSupporter": {
+            "type": "boolean",
+            "description": "Whether the account supports the site, which the card shows with a badge."
+          },
+          "isPublic": {
+            "type": "boolean",
+            "description": "Always true for a visitor; false on the preview of a private profile."
+          },
+          "memberSince": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "showcase": {
+            "$ref": "#/components/schemas/ProfileShowcase"
+          },
+          "backdrop": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The favorite skin, else the favorite champion; null for neither.",
+                "$ref": "#/components/schemas/ProfileBackdrop"
+              }
+            ]
+          },
+          "builds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProfileBuildCard"
+            },
+            "description": "The builds the owner published, most recently updated first; empty until the builds\nmodule plugs its source in."
+          }
+        },
+        "description": "The public card of a profile, `/u/{username}`: the same answer for the visitors and\nfor the owner's preview, so the preview is the page, not an approximation."
       },
       "RecipeStep": {
         "required": [
@@ -3387,6 +4441,27 @@
           }
         },
         "description": "Body of `POST /api/account/reset-password`."
+      },
+      "ResolvedFavorite": {
+        "required": [
+          "id",
+          "name",
+          "image"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name in the language asked for."
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          }
+        },
+        "description": "A favorite as the resolved patch shows it."
       },
       "ResourceType": {
         "enum": [
@@ -3714,6 +4789,56 @@
         },
         "description": "A rune path and its runes, slot by slot, keystones first."
       },
+      "SaveFavoritesRequest": {
+        "required": [
+          "champion",
+          "item",
+          "rune",
+          "summoner",
+          "skin"
+        ],
+        "type": "object",
+        "properties": {
+          "champion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "A champion id, such as `Ahri`."
+          },
+          "item": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rune": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The id of a rune or of a rune path, such as `8112`."
+          },
+          "summoner": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "A summoner spell id, such as `SummonerFlash`."
+          },
+          "skin": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "A skin as `{championId}_{number}`, such as `Ahri_7`."
+          },
+          "ids": {
+            "$ref": "#/components/schemas/FavoriteIds"
+          }
+        },
+        "description": "Body of `PUT /api/profile/favorites`: every slot, stated. Null or blank clears a slot;\nto keep a favorite the patch lacks, send back its `storedId`."
+      },
       "SearchResultHit": {
         "required": [
           "type",
@@ -3781,6 +4906,61 @@
           }
         },
         "description": "`GET /api/catalog/{version}/{lang}/search`: the hits, resource by resource in the\norder champions, items, runes, summoners, each in the upstream order and capped."
+      },
+      "SetPasswordRequest": {
+        "required": [
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The first password of an account created through Google, under the rules of a new\naccount; the form checks its confirmation."
+          }
+        },
+        "description": "Body of `PUT /api/profile/password`."
+      },
+      "SkinBanner": {
+        "required": [
+          "id",
+          "championId",
+          "number",
+          "name",
+          "banner",
+          "splash"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The stored id, such as `Ahri_7`."
+          },
+          "championId": {
+            "type": "string"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "description": "The skin's name on the resolved patch; the champion id when unknown there."
+          },
+          "banner": {
+            "type": "string",
+            "description": "The centered splash, the banner itself.",
+            "format": "uri"
+          },
+          "splash": {
+            "type": "string",
+            "description": "The wide splash, shown when the centered one fails to load.",
+            "format": "uri"
+          }
+        },
+        "description": "The favorite skin of a profile, its art hotlinked from the id alone (UP 8): a catalog that\ncannot be read only costs its name, which falls back to the champion id."
       },
       "SkinOption": {
         "required": [
@@ -4224,6 +5404,19 @@
           }
         },
         "description": "Body of `POST /api/account/verify-email`: the parameters of the link."
+      },
+      "VisibilityRequest": {
+        "required": [
+          "isPublic"
+        ],
+        "type": "object",
+        "properties": {
+          "isPublic": {
+            "type": "boolean",
+            "description": "Whether visitors see the public card; a private one answers them 404."
+          }
+        },
+        "description": "Body of `PUT /api/profile/visibility`."
       }
     }
   },
@@ -4239,6 +5432,9 @@
     },
     {
       "name": "Account"
+    },
+    {
+      "name": "Profile"
     },
     {
       "name": "ClientPolicy"

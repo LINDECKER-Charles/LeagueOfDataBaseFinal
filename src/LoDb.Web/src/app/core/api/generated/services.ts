@@ -5,4 +5,5 @@ export { MetaService } from './services/meta.service';
 export { CatalogService } from './services/catalog.service';
 export { PickersService } from './services/pickers.service';
 export { AccountService } from './services/account.service';
+export { ProfileService } from './services/profile.service';
 export { ClientPolicyService } from './services/client-policy.service';
