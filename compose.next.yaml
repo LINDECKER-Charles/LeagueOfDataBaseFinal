@@ -21,7 +21,7 @@ x-logging: &default-logging
 
 services:
   api:
-    build:
+    build: &api-build
       context: .
       dockerfile: docker/next/api/Dockerfile
       args:
@@ -29,7 +29,7 @@ services:
     environment:
       # Gss Encryption Mode=Disable: Npgsql would otherwise probe GSS and the chiseled
       # image, which has no libgssapi_krb5, writes non-JSON lines to stderr.
-      ConnectionStrings__LoDb: >-
+      ConnectionStrings__LoDb: &lodb-connection >-
         Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable
       # X-Forwarded-* are trusted from the private ranges: only nginx and web-ssr reach
       # this port on a served host (no host port, not on the edge network). The stack's
@@ -46,6 +46,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -56,6 +58,21 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+
+  # One-shot: the API's image brings the database to the latest migration (a database
+  # created by Doctrine is marked at the baseline first), then exits. The API starts only
+  # once it has succeeded: a schema it refuses stays untouched and keeps the API down.
+  # Every run after the first applies nothing.
+  migrate:
+    build: *api-build
+    command: ["migrate"]
+    environment:
+      ConnectionStrings__LoDb: *lodb-connection
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    logging: *default-logging
 
   web-ssr:
     build:
