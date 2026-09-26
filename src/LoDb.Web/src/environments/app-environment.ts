@@ -10,7 +10,8 @@ export interface AppEnvironment {
   /**
    * Whether the build may show a payment: donations and API credit checkouts. False in the
    * store build of the apps (ADR 0007): Play only sells digital goods through its own
-   * billing. The API keeps its payment endpoints for the web.
+   * billing. The API keeps its payment endpoints for the web. The app reads it through the
+   * PAYMENTS_ENABLED token (payments-enabled.ts).
    */
   readonly payments: boolean;
 }

@@ -3,7 +3,9 @@ import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Provisional API key portal, `/{locale}/account/api`, rendered in the browser only (L3.1).
- * The developer portal chantier (L6.4) replaces it and keeps api-portal.routes.ts.
+ * The developer portal chantier (L6.4) replaces it and keeps api-portal.routes.ts; its credit
+ * checkout shows only where the build allows payments (`PAYMENTS_ENABLED`, false in the
+ * store build of the apps, ADR 0007), the keys themselves everywhere.
  */
 @Component({
   selector: 'lodb-api-portal-page',
