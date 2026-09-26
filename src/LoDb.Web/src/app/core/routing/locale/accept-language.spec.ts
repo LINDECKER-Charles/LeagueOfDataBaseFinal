@@ -73,13 +73,13 @@ describe('redirectToPreferredLocale', () => {
     const request = new Request('http://localhost/', { headers: { 'Accept-Language': 'ko' } });
     TestBed.configureTestingModule({ providers: [{ provide: REQUEST, useValue: request }] });
 
-    expect(redirect()).toBe('/ko/');
+    expect(redirect()).toBe('/ko');
   });
 
   it("reads the browser's languages otherwise", () => {
     const document = { defaultView: { navigator: { languages: ['it-IT', 'en'] } } };
     TestBed.configureTestingModule({ providers: [{ provide: DOCUMENT, useValue: document }] });
 
-    expect(redirect()).toBe('/it/');
+    expect(redirect()).toBe('/it');
   });
 });
