@@ -1,0 +1,15 @@
+.art {
+  filter: drop-shadow(0 6px 18px color-mix(in srgb, var(--color-shadow) 55%, transparent));
+  animation: pop 0.24s var(--ease-hextech);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .art {
+    animation: none;
+  }
+}

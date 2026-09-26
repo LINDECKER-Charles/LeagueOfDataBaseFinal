@@ -1,0 +1,95 @@
+<div class="rail" role="tablist" [attr.aria-label]="'champion.detail.abilities' | transloco">
+  @for (panel of panels(); track panel.ability.slot; let index = $index) {
+    <button
+      #tab
+      type="button"
+      role="tab"
+      class="tab"
+      [class.is-active]="index === selected()"
+      [id]="tabId(panel.ability.slot)"
+      [attr.aria-controls]="panelId(panel.ability.slot)"
+      [attr.aria-selected]="index === selected()"
+      [attr.aria-label]="panel.key + ' — ' + panel.ability.name"
+      [tabIndex]="index === selected() ? 0 : -1"
+      (click)="select(index)"
+      (keydown)="onKeydown($event)"
+    >
+      <lodb-catalogue-image
+        class="tab__icon"
+        [image]="panel.ability.image"
+        [name]="panel.ability.name"
+        [size]="iconSize"
+      />
+      <span class="key tab__key" [attr.data-key]="panel.key">{{ panel.key }}</span>
+    </button>
+  }
+</div>
+
+<article class="panel mt-5">
+  @if (current(); as shown) {
+    <lodb-ability-media
+      [ability]="shown.ability"
+      [clip]="shown.clip"
+      (failed)="markUnavailable(shown.ability.slot)"
+    />
+  }
+  @for (panel of panels(); track panel.ability.slot; let index = $index) {
+    <div
+      class="p-5 sm:p-6"
+      role="tabpanel"
+      [id]="panelId(panel.ability.slot)"
+      [attr.aria-labelledby]="tabId(panel.ability.slot)"
+      [hidden]="index !== selected()"
+    >
+      <div class="mb-3 flex flex-wrap items-center gap-2.5">
+        <span class="key" [attr.data-key]="panel.key">{{ panel.key }}</span>
+        <h3 class="font-beaufort text-lg tracking-wide text-gold-bright uppercase">
+          {{ panel.ability.name }}
+        </h3>
+        @if (panel.ability.slot === 'passive') {
+          <span class="font-mono text-[10px] tracking-wider text-hex uppercase">
+            {{ 'champion.detail.passive' | transloco }}
+          </span>
+        }
+      </div>
+
+      @if (panel.chips.length > 0) {
+        <div class="mb-4 flex flex-wrap gap-x-5 gap-y-1.5">
+          @for (chip of panel.chips; track chip.label) {
+            <span class="figure">
+              {{ chip.label | transloco }} <b>{{ chip.value }}</b>
+              @if (chip.unit) {
+                {{ chip.unit }}
+              }
+            </span>
+          }
+        </div>
+      }
+
+      <div
+        class="ddragon-rich text-sm text-text-muted"
+        [innerHTML]="panel.ability.description | ddragonHtml"
+      ></div>
+
+      <!-- Riot's CDN only hosts the latest clip: older patches may differ from it. -->
+      @if (panel.clip) {
+        <p
+          class="mt-4 flex items-start gap-1.5 border-t border-gold-deep/30 pt-3 text-[11px] leading-snug text-text-dim"
+        >
+          <svg
+            class="mt-px size-3 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 11v5M12 8h.01" stroke-linecap="round" />
+          </svg>
+          <span>{{ 'champion.detail.video_notice' | transloco }}</span>
+        </p>
+      }
+    </div>
+  }
+</article>
