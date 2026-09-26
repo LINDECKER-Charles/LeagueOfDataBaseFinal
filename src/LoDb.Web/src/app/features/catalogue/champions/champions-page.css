@@ -1,0 +1,14 @@
+/*
+ * The count plate. In the components layer, like the design system: the identities
+ * (styles/theme) restyle `.list-count` with unlayered rules, which then win as they should.
+ */
+@layer components {
+  .list-count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--color-blue-abyssal);
+    background: color-mix(in srgb, var(--color-hextech-black) 50%, transparent);
+  }
+}
