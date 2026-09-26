@@ -9,14 +9,15 @@
     bg-gold/15 px-4 py-2.5 font-beaufort text-sm tracking-[0.15em] text-gold-bright uppercase
     transition-all duration-300 hover:border-gold hover:bg-gold/25
     hover:shadow-[0_0_28px_-6px_var(--hx-glow-accent)] focus-visible:ring-2
-    focus-visible:ring-gold/40 focus-visible:outline-none motion-reduce:transition-none;
+    focus-visible:ring-gold/40 focus-visible:outline-none disabled:cursor-not-allowed
+    disabled:opacity-50 motion-reduce:transition-none;
 }
 @utility hx-btn-ghost {
   @apply inline-flex cursor-pointer items-center justify-center gap-2 border
     border-gold-deep/40 bg-transparent px-4 py-2.5 font-beaufort text-sm tracking-[0.15em]
     text-text-muted uppercase transition-all duration-300 hover:border-hex/60 hover:text-hex
     focus-visible:ring-2 focus-visible:ring-hex/40 focus-visible:outline-none
-    motion-reduce:transition-none;
+    disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none;
 }
 /* Filled-gold primary: the strongest call to action (dark text on a parchment-to-gold face). */
 @utility hx-btn-gold {
@@ -24,7 +25,8 @@
     font-beaufort text-sm tracking-[0.15em] text-hextech-black uppercase
     transition-[filter,box-shadow] duration-300 hover:brightness-110
     hover:shadow-[0_0_28px_-6px_var(--hx-glow-accent-strong)] focus-visible:ring-2
-    focus-visible:ring-gold/50 focus-visible:outline-none motion-reduce:transition-none;
+    focus-visible:ring-gold/50 focus-visible:outline-none disabled:cursor-not-allowed
+    disabled:opacity-50 motion-reduce:transition-none;
   background: linear-gradient(
     180deg,
     var(--color-gold-bright),
