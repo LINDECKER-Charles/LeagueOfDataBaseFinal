@@ -39,4 +39,31 @@ Tailles d'image (arm64) : `lodb-api` 245 Mo, `lodb-web-ssr` 352 Mo, `lodb-nginx`
 
 ## Pics des E2E
 
-À compléter par les jalons (date, lot, commande, pic par service).
+Chaque jalon ajoute une ligne par service : date, lot, commande, pic.
+
+### Lot 0 — jalon (2026-09-26)
+
+Contexte : stack d'intégration reconstruite sans cache depuis `dd0450c`, conteneurs
+recréés juste avant la mesure, base et volume `storage` vides. Relevés
+`docker stats --no-stream` en boucle pendant la suite. La suite ne dure que 1,1 s (2 tests,
+2 échantillons) : le pic retenu vient donc d'un second passage, plus long, de la même
+suite.
+
+Commandes :
+
+- `npm --prefix tests/LoDb.E2E test` : 2 tests réussis ;
+- `npm --prefix tests/LoDb.E2E test -- --repeat-each=30` : 60 tests, 8,4 s, 25
+  échantillons.
+
+| Service | Avant la suite | Pic (2 tests) | Pic (60 tests) | Limite provisoire |
+|---|---:|---:|---:|---:|
+| `api` | 37 Mio | 38 Mio | 45 Mio | 384m |
+| `web-ssr` | 26 Mio | 50 Mio | 69 Mio | 512m |
+| `nginx` | 13 Mio | 13 Mio | 16 Mio | 64m |
+| `postgres` | 28 Mio | 28 Mio | 29 Mio | 512m |
+| `mailpit` (dev seulement) | 9 Mio | 9 Mio | 9 Mio | — |
+
+Lecture : tous les pics restent sous les relevés de L0.3, qui mesuraient 800 requêtes
+concurrentes sur des conteneurs démarrés depuis plus longtemps. Les limites provisoires ne
+changent pas. La suite E2E ne sollicite presque pas la stack tant qu'elle ne compte que le
+test de fumée : ce relevé ne vaut pas mesure de charge.
