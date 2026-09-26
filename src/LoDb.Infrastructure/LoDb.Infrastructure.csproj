@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <!-- Data Protection, Identity stores and hosting abstractions come from ASP.NET Core. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../LoDb.Domain/LoDb.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
