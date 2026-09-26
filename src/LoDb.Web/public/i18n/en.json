@@ -1,6 +1,925 @@
 {
+  "homepage": {
+    "title": "League of Data Base",
+    "meta": "Welcome to League of Data Base. Explore League of Legends items and summoner spells with stats and details for patch {{ version }}.",
+    "hero": {
+      "browse": "Browse detailed information about <strong>Summoner Spells</strong> and <strong>Items</strong> from League of Legends. Updated for patch {{ version }}.",
+      "explore_summoners": "Explore Summoners",
+      "explore_items": "Explore Items",
+      "explore_champions": "Explore Champions",
+      "explore_runes": "Explore Runes"
+    },
+    "summoners": {
+      "title": "Summoner Spells",
+      "see_all": "See all spells"
+    },
+    "items": {
+      "title": "Items",
+      "see_all": "See all items"
+    },
+    "champions": {
+      "title": "Champions",
+      "see_all": "See all champions",
+      "no_data": "No champions available for this version.",
+      "wip": "This section is under construction. Soon you’ll be able to browse all champions."
+    },
+    "runes": {
+      "title": "Runes",
+      "wip": "This section is under construction. Soon you’ll be able to explore runes.",
+      "see_all": "See all runes"
+    }
+  },
+  "setup": {
+    "form": {
+      "version": "Version",
+      "language": "Language",
+      "remember": "Remember me",
+      "submit": "Submit"
+    }
+  },
+  "system": {
+    "under_construction": {
+      "title": "Under Construction",
+      "meta_description": "League of Data Base is currently under construction. We are working hard to bring you detailed stats, insights, and tools for League of Legends. Stay tuned for updates.",
+      "heading": "This page is under construction",
+      "subheading": "We’re forging this feature in the Rift. Check back soon for something epic.",
+      "info": "If you reached this page, the content isn’t shipped yet. We’re working on performance, data accuracy and a smooth UX that matches the rest of League Of Data Base.",
+      "progress_label": "Build progress",
+      "back": "← Go back",
+      "summoners": "See Summoner Spells",
+      "footer": "Need this soon? Ping us or check the roadmap. More updates are coming.",
+      "meanwhile": "Meanwhile, you can:"
+    }
+  },
+  "item": {
+    "detail": {
+      "meta_description": "Discover everything about the item {{ name }} in League of Legends. Stats, effects, and build information updated for patch {{ version }}.",
+      "version_locale": "Version: {{ version }} — Language: {{ locale }}",
+      "price_total": "Total cost",
+      "price_base": "Purchase cost",
+      "price_sell": "Sell value",
+      "gold_ledger": "Gold ledger",
+      "not_purchasable": "Not sold in shop",
+      "categories": "Categories",
+      "evolutions": "Possible evolutions",
+      "stats": "Statistics",
+      "description": "Description",
+      "recipe": "Recipe",
+      "builds_from": "Builds from",
+      "tier": "Tier {{ depth }}",
+      "availability": "Availability",
+      "back": "← Back to list"
+    },
+    "list": {
+      "title": "Items",
+      "meta_description": "Browse all League of Legends items available in patch {{ version }}. Find detailed stats, costs, and effects updated for the latest version.",
+      "header": "Items",
+      "subtitle": "Item catalog",
+      "results_per_page": "Results per page:",
+      "max": "MAX",
+      "ok": "OK",
+      "search_placeholder": "Search for an item…",
+      "cost_total": "Total cost",
+      "cost_sell": "Sell value",
+      "categories": "Categories",
+      "evolutions": "Possible evolutions",
+      "description": "Description"
+    }
+  },
+  "summoner": {
+    "detail": {
+      "meta_description": "Explore the details of the summoner spell {{ name }} in League of Legends. Stats and effects updated for patch {{ version }}.",
+      "version_locale": "Version: {{ version }} — Language: {{ locale }}",
+      "fields": {
+        "cooldown": "Cooldown",
+        "maxammo": "Number of charges",
+        "range": "Usage range",
+        "cost": "Cost",
+        "summoner_level": "Summoner level"
+      },
+      "unlocked_at": "Unlocked at level {{ level }}",
+      "range_global": "Global",
+      "no_cost": "No cost",
+      "modes": "Compatible modes",
+      "description": "Description"
+    },
+    "card": {
+      "cooldown": "Cooldown",
+      "level": "Summoner level",
+      "modes": "Compatible modes",
+      "description": "Description"
+    },
+    "list": {
+      "title": "Summoner Spells",
+      "subtitle": "Summoner Spells Catalog",
+      "count": "count spells"
+    }
+  },
+  "champion": {
+    "list": {
+      "title": "Champions",
+      "meta_description": "Browse all League of Legends champions. Find detailed stats, abilities, and lore for each champion in the game.",
+      "header": "Champions",
+      "subtitle": "Champion catalog",
+      "search_placeholder": "Search for a champion…"
+    },
+    "detail": {
+      "meta_description": "Discover {{ name }} from League of Legends, with stats, roles and details for patch {{ version }}.",
+      "version_locale": "Patch {{ version }} • {{ locale }}",
+      "partype": "Resource: {{ partype }}",
+      "roles": "Roles",
+      "abilities": "Abilities",
+      "passive": "Passive",
+      "skins": "Skins",
+      "chromas_available": "{{ count }} chromas available",
+      "cooldown": "Cooldown",
+      "cost": "Cost",
+      "range": "Range",
+      "video_play": "Play video",
+      "video_pause": "Pause video",
+      "video_mute": "Mute sound",
+      "video_unmute": "Unmute sound",
+      "video_notice": "Ability videos show the latest version of the spells; they may differ on older patches.",
+      "icon_version": "Patch {{ version }} icon",
+      "charges": "Charges",
+      "ranks": "Ranks",
+      "tips": "Tips",
+      "tips_as": "Playing as",
+      "tips_against": "Playing against",
+      "level": "Level {{ level }}",
+      "stats": {
+        "title": "Base Statistics",
+        "resource_regen": "Resource regen"
+      },
+      "profile": {
+        "title": "Champion Profile",
+        "attack": "Attack",
+        "defense": "Defense",
+        "magic": "Magic",
+        "difficulty": "Difficulty"
+      },
+      "lore": {
+        "title": "Lore"
+      }
+    }
+  },
+  "rune": {
+    "list": {
+      "title": "Runes",
+      "meta_description": "Browse all League of Legends runes. Find detailed stats and effects for each rune in the game.",
+      "header": "Runes",
+      "subtitle": "Rune catalog",
+      "search_placeholder": "Search for a rune…"
+    },
+    "detail": {
+      "title": "Rune: {{ name }}",
+      "meta_description": "Discover the details of the rune {{ name }} in League of Legends. Stats and effects updated for patch {{ version }}.",
+      "overview": "Overview",
+      "keystone": "Keystone",
+      "minor": "Minor runes",
+      "slot_n": "Slot {{ n }}",
+      "full_description": "Full description"
+    },
+    "slot": "Slot"
+  },
+  "detail": {
+    "nav": {
+      "label": "Entity navigation",
+      "sections": "Page sections",
+      "previous": "Previous",
+      "next": "Next",
+      "back_to_list": "Back to list"
+    }
+  },
+  "common": {
+    "back": "Back",
+    "search": "Search…",
+    "no_result": {
+      "text": "No results found for your search.",
+      "back": "← Back"
+    },
+    "detail": "See details"
+  },
+  "filter": {
+    "results": "{count, plural, one {# result} other {# results}}",
+    "page": "page {{ page }} / {{ count }}",
+    "gauge": "Results",
+    "empty": "No results match your filters.",
+    "empty_title": "No results",
+    "empty_cta": "Clear filters",
+    "clear": "Clear",
+    "clear_all": "Clear all",
+    "prev": "Previous",
+    "next": "Next",
+    "per_page": "Per page",
+    "all": "All",
+    "filters": "Filters",
+    "close": "Close",
+    "show_results": "{count, plural, one {Show # result} other {Show # results}}",
+    "edition": "Edition",
+    "match_mode": "Combine",
+    "match_any": "Any",
+    "match_all": "All",
+    "min": "Min",
+    "max": "Max",
+    "copy_link": "Copy link",
+    "copied": "Link copied",
+    "copy_error": "Copy the link below",
+    "active": "Active filters"
+  },
+  "facet": {
+    "group": {
+      "profile": "Profile",
+      "ratings": "Ratings",
+      "base_stats": "Base stats (level 1)",
+      "identity": "Category",
+      "availability": "Availability",
+      "economy": "Price",
+      "stats": "Stats"
+    },
+    "champion": {
+      "role": "Role",
+      "roles": {
+        "fighter": "Fighter",
+        "tank": "Tank",
+        "mage": "Mage",
+        "assassin": "Assassin",
+        "marksman": "Marksman",
+        "support": "Support"
+      },
+      "resource": "Resource",
+      "resource_none": "No resource",
+      "range": "Attack range",
+      "ranges": {
+        "melee": "Melee",
+        "ranged": "Ranged"
+      },
+      "difficulty": "Difficulty",
+      "attack": "Attack",
+      "defense": "Defense",
+      "magic": "Magic"
+    },
+    "item": {
+      "tag": "Categories",
+      "edition": "Edition",
+      "map": "Map / mode",
+      "tier": "Tier",
+      "tiers": {
+        "component": "Component",
+        "epic": "Epic",
+        "legendary": "Legendary"
+      },
+      "purchasable": "Purchasable only",
+      "consumable": "Consumables only",
+      "price": "Total price"
+    },
+    "summoner": {
+      "mode": "Game mode",
+      "edition": "Edition",
+      "level": "Unlock level",
+      "cooldown": "Cooldown"
+    },
+    "rune": {
+      "path": "Path",
+      "slot": "Slot",
+      "slot_keystone": "Keystone",
+      "slot_row": "Row {{ n }}"
+    }
+  },
+  "map": {
+    "11": "Summoner's Rift",
+    "12": "Howling Abyss (ARAM)",
+    "21": "Nexus Blitz",
+    "30": "Arena",
+    "33": "Swarm",
+    "35": "Brawl"
+  },
+  "edition": {
+    "all": "All",
+    "modern": "Current",
+    "classic": "LoL Classic",
+    "classic_hint": "League of Legends Classic version",
+    "classic_notice": "League of Legends Classic edition: its values differ from the current version.",
+    "counterpart": {
+      "modern": "See the current version",
+      "classic": "See the LoL Classic version"
+    }
+  },
   "base": {
     "title": "League of Data Base",
     "description": "League of Data Base is a community-driven platform that provides detailed information, stats, and insights about League of Legends. Fast, reliable, and always up to date."
+  },
+  "footer": {
+    "copyright": "© 2025 LINDECKER Charles / Hexanti",
+    "legal": "Legal Notice",
+    "legal_title": "Legal",
+    "navigation": {
+      "title": "Navigation",
+      "home": "Home",
+      "champion": "Champion",
+      "item": "Item",
+      "runes": "Runes",
+      "summoner": "Summoner",
+      "sitemap": "Sitemap"
+    },
+    "links": {
+      "title": "Useful Links",
+      "lol": "League of Legends",
+      "riotapi": "Riot API",
+      "ddragon": "CDN Data Dragon",
+      "support": "Riot Support",
+      "opgg": "OP.GG"
+    },
+    "project": {
+      "title": "Project",
+      "version": "Version: {{ version }}",
+      "updated": "Updated: 17/07/2026"
+    },
+    "contact": {
+      "title": "Contact",
+      "email": "Email",
+      "github": "GitHub",
+      "repo": "Source code",
+      "linkedin": "LinkedIn"
+    }
+  },
+  "contact": {
+    "form": {
+      "cta": "Contact us",
+      "eyebrow": "Contact form",
+      "title": "A question, a bug, a project?",
+      "intro": "Bug report, suggestion, review or business enquiry: drop us a line and we'll reply by email.",
+      "category": "Topic",
+      "category_bug": "Bug / issue",
+      "category_feedback": "Suggestion / feedback",
+      "category_review": "Review",
+      "category_commercial": "Business enquiry",
+      "name": "Name",
+      "email": "Email",
+      "subject": "Subject",
+      "message": "Message",
+      "submit": "Send",
+      "cancel": "Cancel",
+      "close": "Close"
+    },
+    "flash": {
+      "sent": "Thanks! Your message has been sent — we'll get back to you soon.",
+      "throttled": "Too many messages sent. Please try again in a little while.",
+      "error": "Something went wrong. Please check the form and try again."
+    },
+    "error": {
+      "category": "Please pick a topic.",
+      "email": "Please enter a valid email address.",
+      "message": "Please write your message.",
+      "message_short": "Your message is too short (10 characters minimum).",
+      "message_long": "Your message is too long (5000 characters maximum)."
+    }
+  },
+  "loader": {
+    "eyebrow": "Data Dragon",
+    "title": "Summoning data",
+    "subtitle": "Fetching resources from the Rift…",
+    "preparing": "Preparing datasets…",
+    "status": {
+      "fetching": "fetching",
+      "ready": "ready"
+    }
+  },
+  "perf": {
+    "title": "Load time",
+    "server": "Server",
+    "client": "Client"
+  },
+  "pagination": {
+    "ok": "OK",
+    "more": "…"
+  },
+  "header": {
+    "navigation": {
+      "home": "Home",
+      "champion": "Champions",
+      "item": "Items",
+      "runes": "Runes",
+      "summoner": "Summoner Spells"
+    },
+    "theme": {
+      "label": "Visual theme",
+      "close": "Close"
+    },
+    "switcher": {
+      "label": "Patch & language"
+    }
+  },
+  "nav": {
+    "short": {
+      "home": "Home",
+      "champions": "Champions",
+      "items": "Items",
+      "runes": "Runes",
+      "summoners": "Spells"
+    },
+    "codex": "Encyclopedia",
+    "account": "Account",
+    "login": "Sign in",
+    "register": "Create account",
+    "profile": "My profile",
+    "builds": "My builds",
+    "donate": "Donate",
+    "changelog": "What's new"
+  },
+  "changelog": {
+    "eyebrow": "Changelog",
+    "title": "Release history",
+    "lede": "Every version of LeagueOfDataBase, from the original encyclopedia to today — new features, improvements and fixes, newest first.",
+    "current": "Current version",
+    "empty": "No release published yet.",
+    "meta": {
+      "title": "Changelog",
+      "description": "The full version history of LeagueOfDataBase — new features, improvements and fixes, release by release."
+    },
+    "type": {
+      "major": "Major",
+      "minor": "Update",
+      "hotfix": "Hotfix"
+    },
+    "section": {
+      "fixes": "Fixes"
+    }
+  },
+  "auth": {
+    "eyebrow": "Summoner gate",
+    "or": "or",
+    "google": {
+      "cta": "Continue with Google",
+      "unavailable": "Google sign-in is not set up on this server.",
+      "failed": "Google sign-in failed. Please try again."
+    },
+    "login": {
+      "title": "Sign in",
+      "identifier": "Email or summoner name",
+      "password": "Password",
+      "remember": "Keep me signed in",
+      "submit": "Enter the archive",
+      "no_account": "No account yet?",
+      "forgot": "Forgot your password?"
+    },
+    "register": {
+      "title": "Create account",
+      "email": "Email",
+      "username": "Summoner name",
+      "username_help": "3-24 characters: letters, digits, dot, dash, underscore; starts with a letter or digit.",
+      "password": "Password",
+      "password_confirm": "Confirm password",
+      "password_mismatch": "The two passwords do not match.",
+      "password_help": "At least 12 characters, with a lowercase letter, an uppercase letter, a digit and a special character.",
+      "terms": "I accept the terms of use",
+      "submit": "Forge my account",
+      "have_account": "Already enrolled?"
+    },
+    "password": {
+      "rule_length": "At least 12 characters",
+      "rule_lowercase": "At least one lowercase letter",
+      "rule_uppercase": "At least one uppercase letter",
+      "rule_digit": "At least one digit",
+      "rule_special": "At least one special character",
+      "rule_match": "Both passwords match",
+      "too_common": "This password is too common. Choose a more personal one."
+    },
+    "flash": {
+      "registered": "Welcome, summoner — your account is ready.",
+      "verify_sent": "A confirmation email is on its way. Check your inbox.",
+      "too_many_attempts": "Too many attempts from your connection. Please wait a few minutes before trying again.",
+      "verify_success": "Your email address is confirmed. Have fun, summoner.",
+      "verify_error": "This confirmation link is invalid or has expired.",
+      "verify_already": "Your email address is already confirmed.",
+      "reset_sent": "If an account matches that address, a reset email has just been sent.",
+      "reset_success": "Your password has been reset. You can now sign in.",
+      "reset_error": "This reset link is invalid or has expired. Please request a new one.",
+      "banned": "This account has been suspended by the moderation team."
+    },
+    "verify": {
+      "banner": "Confirm your email address to unlock build creation.",
+      "banner_cta": "Resend the email",
+      "resend_done": "Confirmation email resent.",
+      "resend_throttled": "An email was already sent recently — wait a few minutes before trying again.",
+      "gate_build": "Confirm your email address before creating a build.",
+      "gate_api": "Confirm your email address before generating an API key."
+    },
+    "reset": {
+      "request_title": "Forgot password",
+      "request_lede": "Enter your account email: if it exists, we'll send you a reset link.",
+      "email": "Email",
+      "submit_request": "Send the link",
+      "back_to_login": "Back to sign in",
+      "check_email_title": "Check your inbox",
+      "check_email_lede": "If an account matches that address, a reset email has just been sent. Remember to check your spam folder.",
+      "reset_title": "New password",
+      "submit_reset": "Reset password",
+      "invalid_token": "This reset link is invalid or has expired."
+    },
+    "logout": "Sign out",
+    "profile_stub": {
+      "placeholder": "Your summoner profile is being forged — favourites and builds arrive soon."
+    }
+  },
+  "legal": {
+    "eyebrow": "Legal",
+    "updated": "Last updated",
+    "toc": "Contents",
+    "notice": {
+      "title": "Legal Notice"
+    },
+    "privacy": {
+      "title": "Privacy Policy"
+    },
+    "terms": {
+      "title": "Terms of Use"
+    },
+    "cookies": {
+      "title": "Cookie Policy"
+    }
+  },
+  "profile": {
+    "eyebrow": "Summoner profile",
+    "identity": {
+      "email": "Email",
+      "member_since": "Member since",
+      "title": "Summoner identity",
+      "username": "Summoner name",
+      "tag": "Riot tag",
+      "tag_help": "Optional: the part after the # of your Riot ID — for GG#EUW, enter EUW.",
+      "url_warning": "Changing your summoner name also changes the address of your public profile.",
+      "submit": "Update identity",
+      "username_taken": "This summoner name is already taken.",
+      "username_invalid": "Invalid summoner name: 3-24 characters (letters, digits, dot, dash, underscore), starting with a letter or digit.",
+      "tag_invalid": "Invalid Riot tag: 3 to 5 letters or digits."
+    },
+    "password": {
+      "title": "Set a password",
+      "help": "Your account currently signs in with Google only. Set a password to also sign in with your email.",
+      "submit": "Set the password"
+    },
+    "visibility": {
+      "label": "Profile visibility",
+      "help": "Make your profile public — anyone with the link sees your favorites and public builds. Private by default.",
+      "view_public": "View my public page",
+      "state_public": "Public",
+      "state_private": "Private"
+    },
+    "builds": {
+      "label": "Builds",
+      "manage": "Manage my builds"
+    },
+    "favorites": {
+      "title": "Favorites",
+      "empty": "Choose",
+      "unavailable": "Unavailable on this patch",
+      "version_label": "Version",
+      "version_auto": "Current version",
+      "version_apply": "Apply"
+    },
+    "slot": {
+      "champion": "Champion",
+      "item": "Item",
+      "rune": "Rune",
+      "summoner": "Summoner spell",
+      "skin": "Skin banner"
+    },
+    "save": "Save changes",
+    "autosave": {
+      "saving": "Saving…",
+      "saved": "Saved",
+      "error": "Save failed — retry",
+      "dropped": "Saved — a favorite was unavailable"
+    },
+    "picker": {
+      "search": "Search…",
+      "remove": "Remove this favorite",
+      "loading": "Loading…",
+      "error": "Couldn't load the list.",
+      "retry": "Retry"
+    },
+    "skin": {
+      "change": "Change skin",
+      "empty": "Choose a banner skin",
+      "choose_champion": "Choose a champion",
+      "choose_skin": "Choose a skin",
+      "back": "Back"
+    },
+    "preview": {
+      "button": "Preview public profile",
+      "badge": "Preview",
+      "note_public": "This is exactly how your public profile appears to others.",
+      "note_private": "Preview only — your profile is private, so no one else can see it yet.",
+      "back": "Back to editor"
+    },
+    "danger": {
+      "title": "Danger zone",
+      "help": "Deleting your account is permanent: favorites and builds are erased. Confirm with your password.",
+      "help_no_password": "Deleting your account is permanent: favorites and builds are erased.",
+      "password": "Current password",
+      "confirm_phrase": "DELETE MY ACCOUNT",
+      "confirm_label": "To confirm, type {{ phrase }}",
+      "delete": "Delete my account"
+    },
+    "flash": {
+      "saved": "Profile updated.",
+      "identity_saved": "Summoner identity updated.",
+      "password_set": "Password set — you can now sign in with your email too.",
+      "password_exists": "A password is already set on this account.",
+      "favorite_unavailable": "The {{ slot }} favorite doesn't exist on this patch — it was removed.",
+      "skin_unavailable": "The skin banner couldn't be set and was cleared.",
+      "wrong_password": "Incorrect password — the account was not deleted.",
+      "wrong_phrase": "The confirmation phrase doesn't match — the account was not deleted.",
+      "deleted": "Your account has been deleted. Farewell, summoner.",
+      "csrf": "Session expired, please try again."
+    },
+    "public": {
+      "eyebrow": "Summoner card",
+      "description": "{{ username }}'s summoner card — favorites and public builds on League Of Data Base.",
+      "builds_count": "Public builds",
+      "builds_title": "Public builds",
+      "no_builds": "No public builds yet."
+    }
+  },
+  "donate": {
+    "eyebrow": "Offering to the Forge",
+    "title": "Support League Of Data Base",
+    "intro": "Your donation covers hosting costs and keeps the encyclopedia fast, free and ad-free.",
+    "pledge": "No in-game advantage, no perks — only our gratitude.",
+    "tiers": {
+      "legend": "Choose an offering"
+    },
+    "tier": {
+      "spark": "Spark",
+      "gem": "Gemstone",
+      "crest": "Crest",
+      "relic": "Relic"
+    },
+    "custom": {
+      "label": "Free amount",
+      "placeholder": "e.g. 7.50",
+      "hint": "Between {{ min }} € and {{ max }} € — a free amount overrides the selected tier."
+    },
+    "submit": "Donate with Stripe",
+    "product_name": "Donation — League Of Data Base",
+    "unavailable": {
+      "title": "Donations coming soon",
+      "body": "The payment gateway is not enabled yet. Come back soon — the encyclopedia stays free either way."
+    },
+    "legal": {
+      "secure": "Secure payment by Stripe — no card data ever reaches this site",
+      "secure_short": "secure payment",
+      "privacy": "Privacy policy",
+      "terms": "Terms of use"
+    },
+    "error": {
+      "csrf": "Your session expired, please try again.",
+      "unavailable": "Donations are not available right now.",
+      "invalid_amount": "Invalid amount — enter between 1 € and 500 €.",
+      "gateway": "The payment service is unreachable, please try again later.",
+      "throttled": "Too many payment attempts. Please wait a moment before trying again."
+    },
+    "success": {
+      "eyebrow": "Offering received",
+      "title": "Thank you, Summoner",
+      "body": "Your support keeps the forge lit — every donation goes to hosting and keeps the encyclopedia free for everyone.",
+      "receipt": "Stripe sends your receipt by email.",
+      "back": "Back to the encyclopedia"
+    },
+    "cancel": {
+      "eyebrow": "Offering withdrawn",
+      "title": "Donation cancelled",
+      "body": "Nothing was charged. The encyclopedia stays free and open, with or without a donation.",
+      "retry": "Try again",
+      "back": "Back to home"
+    }
+  },
+  "build": {
+    "mode": {
+      "sr": "Summoner's Rift",
+      "aram": "ARAM",
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "Arena"
+    },
+    "list": {
+      "eyebrow": "The armory",
+      "title": "My builds",
+      "empty": "You haven't forged any build yet.",
+      "new": "New build",
+      "cta_first": "Forge my first build",
+      "edit": "Edit",
+      "delete": "Delete",
+      "delete_confirm": "Delete this build permanently?",
+      "public": "Public",
+      "private": "Private",
+      "updated": "Updated on {{ date }}"
+    },
+    "import": {
+      "to": "Import to patch",
+      "action": "Import",
+      "hint": "Copy this build onto another patch, keeping what still exists there",
+      "done": "Build imported to patch {{ version }} — review it and save.",
+      "champion_missing": "This champion doesn't exist on the chosen patch — pick one before saving.",
+      "runes_reset": "The runes couldn't be carried to this patch — reconfigure them.",
+      "items_dropped": "Items unavailable on this patch were dropped: {{ items }}."
+    },
+    "editor": {
+      "eyebrow": "The forge",
+      "title_create": "Forge a build",
+      "title_edit": "Edit build",
+      "identity": "Identity",
+      "name": "Build name",
+      "name_placeholder": "e.g. Lethality carry",
+      "description": "Description",
+      "public": "Public build — listed on your public profile",
+      "submit_create": "Forge the build",
+      "submit_update": "Save changes",
+      "back": "Back to my builds",
+      "nojs": "The interactive editor requires JavaScript.",
+      "loading": "Loading catalog…",
+      "error": "Catalog unavailable.",
+      "retry": "Retry",
+      "ghost": "Unavailable on this patch",
+      "ghost_mode": "Not available in this game mode",
+      "counter": "{{ count }} / {{ max }}",
+      "context": {
+        "title": "Game context",
+        "version": "Patch",
+        "mode": "Game mode",
+        "language": "Authoring language",
+        "mode_hint": "Item availability follows the selected mode. Items already placed are never removed — they are flagged instead."
+      },
+      "dnd": {
+        "handle": "Drag to reorder",
+        "moved_step": "Step moved to position {{ position }}",
+        "moved_item": "Item moved to position {{ position }}",
+        "transferred": "Item moved to step {{ step }}",
+        "added": "Item added to step {{ step }}",
+        "cancelled": "Move cancelled"
+      },
+      "champion": {
+        "title": "Champion",
+        "search": "Search a champion…",
+        "empty": "No champion matches.",
+        "selected": "Chosen champion",
+        "open": "Choose a champion",
+        "close": "Close list"
+      },
+      "runes": {
+        "title": "Runes",
+        "primary": "Primary path",
+        "secondary": "Secondary path",
+        "keystone": "Keystone",
+        "slot": "Row {{ n }}",
+        "secondary_hint": "Pick 2 runes from 2 different rows."
+      },
+      "steps": {
+        "title": "Purchase order",
+        "add": "Add a step",
+        "remove": "Remove step",
+        "move_up": "Move up",
+        "move_down": "Move down",
+        "label": "Step label",
+        "note": "Note (optional)",
+        "search_item": "Search an item…",
+        "item_empty": "No item matches.",
+        "remove_item": "Remove item",
+        "gold": "Step cost",
+        "preset": {
+          "start": "Start",
+          "first_back": "First back",
+          "core": "Core",
+          "situational": "Situational",
+          "final": "Final"
+        }
+      },
+      "armory": {
+        "title": "Armory",
+        "add_cta": "Add item",
+        "done": "Done",
+        "close": "Close the armory",
+        "added": "{{ count }} added",
+        "in_step": "{{ count }} in this step",
+        "full": "Step full",
+        "categories": {
+          "all": "All",
+          "attack": "Attack",
+          "magic": "Magic",
+          "defense": "Defense",
+          "mobility": "Mobility",
+          "utility": "Utility"
+        }
+      }
+    },
+    "show": {
+      "by": "By {{ name }}",
+      "patch": "Forged on patch {{ version }}",
+      "patch_current": "Forged on patch {{ version }} — current: {{ current }}",
+      "mode": "Game mode",
+      "runes": "Runes",
+      "keystone": "Keystone",
+      "order": "Purchase order",
+      "step_cost": "Step cost",
+      "total": "Total cost",
+      "missing": "Unavailable on this patch",
+      "meta_fallback": "Runes and item order for {{ champion }}.",
+      "copy": "Copy link",
+      "copied": "Copied!",
+      "copy_error": "Copy manually:"
+    },
+    "flash": {
+      "created": "Build forged!",
+      "updated": "Build updated.",
+      "deleted": "Build deleted."
+    },
+    "error": {
+      "csrf": "Expired form, try again.",
+      "name": {
+        "length": "Build name must be 3–80 characters."
+      },
+      "description": {
+        "length": "Description is limited to 2000 characters."
+      },
+      "structure": {
+        "invalid": "Invalid build structure."
+      },
+      "champion": {
+        "unknown": "Unknown champion on this patch."
+      },
+      "catalog_unavailable": "Catalogs unavailable, try again shortly.",
+      "version": {
+        "unknown": "Unknown game version."
+      },
+      "mode": {
+        "unknown": "Unknown game mode."
+      },
+      "language": {
+        "unknown": "Unknown language."
+      },
+      "runes": {
+        "primary_style": "Invalid primary rune path.",
+        "primary_selection_count": "Pick exactly 4 primary runes.",
+        "primary_selection_slot": "Each primary rune must come from its own row.",
+        "secondary_style": "Invalid secondary rune path.",
+        "secondary_same_style": "Secondary path must differ from the primary.",
+        "secondary_selection_count": "Pick exactly 2 secondary runes.",
+        "secondary_selection_slot": "Secondary runes must be minor runes of the secondary path.",
+        "secondary_same_slot": "The 2 secondary runes must come from different rows."
+      },
+      "steps": {
+        "count": "Between 1 and 10 steps.",
+        "label": "Each step needs a label (40 characters max).",
+        "note": "Step notes are limited to 300 characters.",
+        "items_count": "Each step holds 1 to 8 items.",
+        "item_unknown": "An item is unknown on this patch.",
+        "item_mode": "Not available in the selected game mode: {{ items }}.",
+        "total_items": "40 items maximum across all steps."
+      }
+    }
+  },
+  "community": {
+    "nav": {
+      "trends": "Trends"
+    },
+    "trends": {
+      "eyebrow": "The Rift's pulse",
+      "title": "Trending builds",
+      "filter": {
+        "champion": "Champion",
+        "mode": "Game mode",
+        "language": "Language",
+        "all_champions": "All champions",
+        "all_modes": "All modes",
+        "all_languages": "All languages",
+        "apply": "Filter"
+      },
+      "empty": "No public build matches this filter — forge yours.",
+      "empty_cta": "Forge my build"
+    },
+    "vote": {
+      "up": "Upvote this build",
+      "down": "Downvote this build",
+      "score_label": "Community score",
+      "login": "Sign in to vote",
+      "invalid": "Invalid vote."
+    },
+    "supporter": {
+      "badge": "Supporter"
+    }
+  },
+  "stat": {
+    "attack_damage": "Attack damage",
+    "ability_power": "Ability power",
+    "attack_speed": "Attack speed",
+    "crit_chance": "Critical strike",
+    "life_steal": "Life steal",
+    "health": "Health",
+    "health_regen": "Health regen",
+    "armor": "Armor",
+    "magic_resist": "Magic resist",
+    "mana": "Mana",
+    "move_speed": "Move speed",
+    "attack_range": "Attack range"
   }
 }

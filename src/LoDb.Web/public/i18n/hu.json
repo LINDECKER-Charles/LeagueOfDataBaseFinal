@@ -1,0 +1,380 @@
+{
+  "homepage": {
+    "title": "League of Data Base",
+    "meta": "Üdvözlünk a League of Data Base oldalán. Fedezd fel a League of Legends tárgyait és idéző varázslatait statisztikákkal és részletekkel a(z) {{ version }} patchhez.",
+    "hero": {
+      "browse": "Böngéssz részletes információkat a League of Legends <strong>Idéző varázslatairól</strong> és <strong>Tárgyairól</strong>. Frissítve a(z) {{ version }} patchhez.",
+      "explore_summoners": "Idéző varázslatok felfedezése",
+      "explore_items": "Tárgyak felfedezése",
+      "explore_champions": "Bajnokok felfedezése",
+      "explore_runes": "Rúnák felfedezése"
+    },
+    "summoners": {
+      "title": "Idéző varázslatok",
+      "see_all": "Összes varázslat megtekintése"
+    },
+    "items": {
+      "title": "Tárgyak",
+      "see_all": "Összes tárgy megtekintése"
+    },
+    "champions": {
+      "title": "Bajnokok",
+      "see_all": "Összes bajnok megtekintése",
+      "no_data": "Nincs elérhető bajnok ehhez a verzióhoz.",
+      "wip": "Ez a rész még fejlesztés alatt áll. Hamarosan böngészheted majd az összes bajnokot."
+    },
+    "runes": {
+      "title": "Rúnák",
+      "wip": "Ez a rész még fejlesztés alatt áll. Hamarosan felfedezheted majd a rúnákat.",
+      "see_all": "Összes rúna megtekintése"
+    }
+  },
+  "setup": {
+    "form": {
+      "version": "Verzió",
+      "language": "Nyelv",
+      "remember": "Emlékezz rám",
+      "submit": "Küldés"
+    }
+  },
+  "system": {
+    "under_construction": {
+      "title": "Fejlesztés alatt",
+      "meta_description": "A League of Data Base jelenleg fejlesztés alatt áll. Keményen dolgozunk azon, hogy részletes statisztikákat, elemzéseket és eszközöket kínáljunk a League of Legendshez. Kövesd a frissítéseket.",
+      "heading": "Ez az oldal fejlesztés alatt áll",
+      "subheading": "Ezt a funkciót éppen a Riften kovácsoljuk. Nézz vissza hamarosan valami epikusért.",
+      "info": "Ha idáig jutottál, a tartalom még nincs kész. A teljesítményen, az adatok pontosságán és egy zökkenőmentes felhasználói élményen dolgozunk, amely illeszkedik a League Of Data Base többi részéhez.",
+      "progress_label": "Fejlesztés állapota",
+      "back": "← Vissza",
+      "summoners": "Idéző varázslatok megtekintése",
+      "footer": "Sürgősen szükséged van rá? Írj nekünk, vagy nézd meg a fejlesztési tervet. Több frissítés is érkezik.",
+      "meanwhile": "Addig is megteheted a következőket:"
+    }
+  },
+  "item": {
+    "detail": {
+      "meta_description": "Fedezz fel mindent a(z) {{ name }} tárgyról a League of Legendsben. Statisztikák, hatások és build információk frissítve a(z) {{ version }} patchhez.",
+      "version_locale": "Verzió: {{ version }} — Nyelv: {{ locale }}",
+      "price_total": "Teljes ár",
+      "price_base": "Vásárlási ár",
+      "price_sell": "Eladási érték",
+      "categories": "Kategóriák",
+      "evolutions": "Lehetséges fejlődések",
+      "stats": "Statisztikák",
+      "description": "Leírás",
+      "recipe": "Recept",
+      "builds_from": "Összetevők",
+      "tier": "{{ depth }}. szint",
+      "availability": "Elérhetőség",
+      "back": "← Vissza a listához"
+    },
+    "list": {
+      "title": "Tárgyak",
+      "meta_description": "Böngéssz az összes League of Legends tárgy között, amely elérhető a(z) {{ version }} patchben. Találj részletes statisztikákat, árakat és hatásokat, frissítve a legújabb verzióhoz.",
+      "header": "Tárgyak",
+      "subtitle": "Tárgykatalógus",
+      "results_per_page": "Találatok oldalanként:",
+      "max": "MAX",
+      "ok": "OK",
+      "search_placeholder": "Tárgy keresése…",
+      "cost_total": "Teljes ár",
+      "cost_sell": "Eladási érték",
+      "categories": "Kategóriák",
+      "evolutions": "Lehetséges fejlődések",
+      "description": "Leírás"
+    }
+  },
+  "summoner": {
+    "detail": {
+      "meta_description": "Fedezd fel a(z) {{ name }} idéző varázslat részleteit a League of Legendsben. Statisztikák és hatások frissítve a(z) {{ version }} patchhez.",
+      "version_locale": "Verzió: {{ version }} — Nyelv: {{ locale }}",
+      "fields": {
+        "cooldown": "Visszatöltési idő",
+        "maxammo": "Töltetek száma",
+        "range": "Hatótávolság",
+        "cost": "Költség",
+        "summoner_level": "Idéző szint"
+      },
+      "unlocked_at": "Feloldva a(z) {{ level }}. szinten",
+      "range_global": "Globális",
+      "no_cost": "Nincs költség",
+      "modes": "Kompatibilis módok",
+      "description": "Leírás"
+    },
+    "card": {
+      "cooldown": "Visszatöltési idő",
+      "level": "Idéző szint",
+      "modes": "Kompatibilis módok",
+      "description": "Leírás"
+    },
+    "list": {
+      "title": "Idéző varázslatok",
+      "subtitle": "Idéző varázslatok katalógusa",
+      "count": "count varázslat"
+    }
+  },
+  "champion": {
+    "list": {
+      "title": "Bajnokok",
+      "meta_description": "Böngéssz az összes League of Legends bajnok között. Találj részletes statisztikákat, képességeket és történetet minden játékban szereplő bajnokhoz.",
+      "header": "Bajnokok",
+      "subtitle": "Bajnokkatalógus",
+      "search_placeholder": "Bajnok keresése…"
+    },
+    "detail": {
+      "meta_description": "Fedezd fel {{ name }} bajnokot a League of Legendsből, statisztikákkal, szerepkörökkel és részletekkel a(z) {{ version }} patchhez.",
+      "version_locale": "{{ version }} patch • {{ locale }}",
+      "partype": "Erőforrás: {{ partype }}",
+      "roles": "Szerepek",
+      "abilities": "Képességek",
+      "passive": "Passzív",
+      "skins": "Kinézetek",
+      "cooldown": "Újratöltődés",
+      "cost": "Költség",
+      "range": "Hatótávolság",
+      "video_play": "Videó lejátszása",
+      "video_pause": "Videó szüneteltetése",
+      "video_mute": "Hang némítása",
+      "video_unmute": "Hang bekapcsolása",
+      "tips_as": "Amikor vele játszol",
+      "tips_against": "Amikor ellene játszol",
+      "stats": {
+        "title": "Alapstatisztikák"
+      },
+      "profile": {
+        "title": "Bajnok profil",
+        "attack": "Támadás",
+        "defense": "Védekezés",
+        "magic": "Mágia",
+        "difficulty": "Nehézség"
+      },
+      "lore": {
+        "title": "Történet"
+      }
+    }
+  },
+  "rune": {
+    "list": {
+      "title": "Rúnák",
+      "meta_description": "Böngéssz az összes League of Legends rúna között. Találj részletes statisztikákat és hatásokat minden játékban szereplő rúnához.",
+      "header": "Rúnák",
+      "subtitle": "Rúnakatalógus",
+      "search_placeholder": "Rúna keresése…"
+    },
+    "detail": {
+      "title": "Rúna: {{ name }}",
+      "meta_description": "Fedezd fel a(z) {{ name }} rúna részleteit a League of Legendsben. Statisztikák és hatások frissítve a(z) {{ version }} patchhez.",
+      "overview": "Áttekintés",
+      "keystone": "Fő rúna",
+      "minor": "Kisebb rúnák",
+      "slot_n": "{{ n }}. hely"
+    },
+    "slot": "Hely"
+  },
+  "common": {
+    "back": "Vissza",
+    "search": "Keresés…",
+    "no_result": {
+      "text": "Nincs találat a keresésedre.",
+      "back": "← Vissza"
+    },
+    "detail": "Részletek megtekintése"
+  },
+  "base": {
+    "title": "League of Data Base",
+    "description": "A League of Data Base egy közösség által vezérelt platform, amely részletes információkat, statisztikákat és elemzéseket nyújt a League of Legendsről. Gyors, megbízható és mindig naprakész."
+  },
+  "footer": {
+    "copyright": "© 2025 LINDECKER Charles / Hexanti",
+    "legal": "Jogi nyilatkozat",
+    "navigation": {
+      "title": "Navigáció",
+      "home": "Kezdőlap",
+      "champion": "Bajnok",
+      "item": "Tárgy",
+      "runes": "Rúnák",
+      "summoner": "Idéző",
+      "sitemap": "Oldaltérkép"
+    },
+    "links": {
+      "title": "Hasznos linkek",
+      "lol": "League of Legends",
+      "riotapi": "Riot API",
+      "ddragon": "CDN Data Dragon",
+      "support": "Riot Support",
+      "opgg": "OP.GG"
+    },
+    "project": {
+      "title": "Projekt",
+      "version": "Verzió: {{ version }}",
+      "updated": "Frissítve: 17/07/2026"
+    },
+    "contact": {
+      "title": "Kapcsolat",
+      "email": "Email",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    }
+  },
+  "loader": {
+    "eyebrow": "Data Dragon",
+    "title": "Adatok idézése",
+    "subtitle": "Erőforrások lekérése a Riftről…",
+    "preparing": "Adatok előkészítése…",
+    "status": {
+      "fetching": "letöltés",
+      "ready": "kész"
+    }
+  },
+  "pagination": {
+    "ok": "OK",
+    "more": "…"
+  },
+  "header": {
+    "navigation": {
+      "home": "Kezdőlap",
+      "champion": "Bajnokok",
+      "item": "Tárgyak",
+      "runes": "Rúnák",
+      "summoner": "Idéző varázslatok"
+    },
+    "theme": {
+      "label": "Vizuális téma",
+      "close": "Bezárás"
+    }
+  },
+  "auth": {
+    "or": "vagy",
+    "google": {
+      "cta": "Folytatás Google-fiókkal",
+      "unavailable": "A Google-bejelentkezés nincs beállítva ezen a szerveren.",
+      "failed": "A Google-bejelentkezés nem sikerült. Próbáld újra."
+    },
+    "register": {
+      "password": "Jelszó",
+      "password_confirm": "Jelszó megerősítése",
+      "password_mismatch": "A két jelszó nem egyezik.",
+      "password_help": "Legalább 12 karakter, kisbetűvel, nagybetűvel, számjeggyel és speciális karakterrel."
+    },
+    "password": {
+      "rule_length": "Legalább 12 karakter",
+      "rule_lowercase": "Legalább egy kisbetű",
+      "rule_uppercase": "Legalább egy nagybetű",
+      "rule_digit": "Legalább egy számjegy",
+      "rule_special": "Legalább egy speciális karakter",
+      "rule_match": "A két jelszó egyezik",
+      "too_common": "Ez a jelszó túl gyakori. Válassz egyedibbet."
+    },
+    "flash": {
+      "banned": "Ezt a fiókot a moderátorcsapat felfüggesztette."
+    }
+  },
+  "profile": {
+    "identity": {
+      "title": "Idéző-identitás",
+      "username": "Idézőnév",
+      "tag": "Riot-címke",
+      "tag_help": "Opcionális: a Riot ID # utáni része — a GG#EUW esetén írd be: EUW.",
+      "url_warning": "Az idézőnév megváltoztatása a nyilvános profilod címét is megváltoztatja.",
+      "submit": "Identitás frissítése",
+      "username_taken": "Ez az idézőnév már foglalt.",
+      "username_invalid": "Érvénytelen idézőnév: 3–24 karakter (betűk, számjegyek, pont, kötőjel, aláhúzás), betűvel vagy számjeggyel kezdődik.",
+      "tag_invalid": "Érvénytelen Riot-címke: 3–5 betű vagy számjegy."
+    },
+    "password": {
+      "title": "Jelszó beállítása",
+      "help": "A fiókod jelenleg csak Google-lal jelentkezik be. Állíts be jelszót, hogy e-maillel is bejelentkezhess.",
+      "submit": "Jelszó beállítása"
+    },
+    "danger": {
+      "help_no_password": "A fiók törlése végleges: a kedvencek és buildek törlődnek."
+    },
+    "flash": {
+      "identity_saved": "Idéző-identitás frissítve.",
+      "password_set": "Jelszó beállítva — mostantól e-maillel is bejelentkezhetsz.",
+      "password_exists": "Ehhez a fiókhoz már tartozik jelszó."
+    }
+  },
+  "build": {
+    "mode": {
+      "sr": "Idézők szurdoka",
+      "aram": "ARAM",
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "Aréna"
+    },
+    "editor": {
+      "ghost_mode": "Ebben a játékmódban nem érhető el",
+      "context": {
+        "title": "Játékkörnyezet",
+        "version": "Patch",
+        "mode": "Játékmód",
+        "mode_hint": "A tárgyak elérhetősége a kiválasztott módtól függ. A már elhelyezett tárgyak sosem törlődnek — csak megjelölést kapnak."
+      },
+      "dnd": {
+        "handle": "Húzd az átrendezéshez",
+        "moved_step": "Lépés a(z) {{ position }}. helyre került",
+        "moved_item": "Tárgy a(z) {{ position }}. helyre került",
+        "transferred": "Tárgy a(z) {{ step }}. lépésbe került",
+        "added": "Tárgy hozzáadva a(z) {{ step }}. lépéshez",
+        "cancelled": "Áthelyezés megszakítva"
+      }
+    },
+    "show": {
+      "mode": "Játékmód",
+      "patch_current": "A(z) {{ version }} patchen készült — jelenlegi: {{ current }}"
+    },
+    "error": {
+      "version": {
+        "unknown": "Ismeretlen játékverzió."
+      },
+      "mode": {
+        "unknown": "Ismeretlen játékmód."
+      },
+      "steps": {
+        "item_mode": "A kiválasztott játékmódban nem érhető el: {{ items }}."
+      }
+    }
+  },
+  "community": {
+    "nav": {
+      "trends": "Trendek"
+    },
+    "trends": {
+      "eyebrow": "A közösség pulzusa",
+      "title": "Felkapott buildek",
+      "filter": {
+        "champion": "Hős",
+        "mode": "Játékmód",
+        "all_champions": "Minden hős",
+        "all_modes": "Minden mód",
+        "apply": "Szűrés"
+      },
+      "empty": "Egy nyilvános build sem felel meg ennek a szűrőnek — kovácsold ki a sajátod.",
+      "empty_cta": "Saját build kovácsolása"
+    },
+    "vote": {
+      "up": "Szavazás e build mellett",
+      "down": "Szavazás e build ellen",
+      "score_label": "Közösségi pontszám",
+      "login": "Szavazáshoz jelentkezz be",
+      "invalid": "Érvénytelen szavazat."
+    },
+    "supporter": {
+      "badge": "Támogató"
+    }
+  },
+  "stat": {
+    "attack_damage": "Támadóerő",
+    "ability_power": "Képességerő",
+    "attack_speed": "Támadási sebesség",
+    "crit_chance": "Kritikus esély",
+    "life_steal": "Életlopás",
+    "health": "Életerő",
+    "health_regen": "Életregen.",
+    "armor": "Páncél",
+    "magic_resist": "Varázsellenállás",
+    "mana": "Manna",
+    "move_speed": "Mozgási sebesség",
+    "attack_range": "Támadási táv"
+  }
+}

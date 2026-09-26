@@ -1,0 +1,380 @@
+{
+  "homepage": {
+    "title": "League of Data Base",
+    "meta": "Bem-vindo ao League of Data Base. Explore itens e feitiços de invocador de League of Legends com estatísticas e detalhes do patch {{ version }}.",
+    "hero": {
+      "browse": "Veja informações detalhadas sobre <strong>Feitiços de Invocador</strong> e <strong>Itens</strong> de League of Legends. Atualizado para o patch {{ version }}.",
+      "explore_summoners": "Explorar Feitiços de Invocador",
+      "explore_items": "Explorar Itens",
+      "explore_champions": "Explorar Campeões",
+      "explore_runes": "Explorar Runas"
+    },
+    "summoners": {
+      "title": "Feitiços de Invocador",
+      "see_all": "Ver todos os feitiços"
+    },
+    "items": {
+      "title": "Itens",
+      "see_all": "Ver todos os itens"
+    },
+    "champions": {
+      "title": "Campeões",
+      "see_all": "Ver todos os campeões",
+      "no_data": "Nenhum campeão disponível para esta versão.",
+      "wip": "Esta seção está em construção. Em breve você poderá navegar por todos os campeões."
+    },
+    "runes": {
+      "title": "Runas",
+      "wip": "Esta seção está em construção. Em breve você poderá explorar as runas.",
+      "see_all": "Ver todas as runas"
+    }
+  },
+  "setup": {
+    "form": {
+      "version": "Versão",
+      "language": "Idioma",
+      "remember": "Lembrar de mim",
+      "submit": "Enviar"
+    }
+  },
+  "system": {
+    "under_construction": {
+      "title": "Em Construção",
+      "meta_description": "League of Data Base está atualmente em construção. Estamos trabalhando muito para trazer estatísticas detalhadas, insights e ferramentas para League of Legends. Fique de olho nas atualizações.",
+      "heading": "Esta página está em construção",
+      "subheading": "Estamos forjando este recurso na Fenda. Volte em breve para conferir algo épico.",
+      "info": "Se você chegou a esta página, o conteúdo ainda não foi lançado. Estamos trabalhando na performance, na precisão dos dados e em uma UX fluida que combine com o resto do League Of Data Base.",
+      "progress_label": "Progresso da construção",
+      "back": "← Voltar",
+      "summoners": "Ver Feitiços de Invocador",
+      "footer": "Precisa disso logo? Fale conosco ou consulte o roadmap. Mais atualizações estão a caminho.",
+      "meanwhile": "Enquanto isso, você pode:"
+    }
+  },
+  "item": {
+    "detail": {
+      "meta_description": "Descubra tudo sobre o item {{ name }} em League of Legends. Estatísticas, efeitos e informações de build atualizadas para o patch {{ version }}.",
+      "version_locale": "Versão: {{ version }} — Idioma: {{ locale }}",
+      "price_total": "Custo total",
+      "price_base": "Custo de compra",
+      "price_sell": "Valor de venda",
+      "categories": "Categorias",
+      "evolutions": "Possíveis evoluções",
+      "stats": "Estatísticas",
+      "description": "Descrição",
+      "recipe": "Receita",
+      "builds_from": "Composto por",
+      "tier": "Nível {{ depth }}",
+      "availability": "Disponibilidade",
+      "back": "← Voltar à lista"
+    },
+    "list": {
+      "title": "Itens",
+      "meta_description": "Navegue por todos os itens de League of Legends disponíveis no patch {{ version }}. Encontre estatísticas, custos e efeitos detalhados atualizados para a versão mais recente.",
+      "header": "Itens",
+      "subtitle": "Catálogo de itens",
+      "results_per_page": "Resultados por página:",
+      "max": "MAX",
+      "ok": "OK",
+      "search_placeholder": "Buscar um item…",
+      "cost_total": "Custo total",
+      "cost_sell": "Valor de venda",
+      "categories": "Categorias",
+      "evolutions": "Possíveis evoluções",
+      "description": "Descrição"
+    }
+  },
+  "summoner": {
+    "detail": {
+      "meta_description": "Explore os detalhes do feitiço de invocador {{ name }} em League of Legends. Estatísticas e efeitos atualizados para o patch {{ version }}.",
+      "version_locale": "Versão: {{ version }} — Idioma: {{ locale }}",
+      "fields": {
+        "cooldown": "Recarga",
+        "maxammo": "Número de cargas",
+        "range": "Alcance de uso",
+        "cost": "Custo",
+        "summoner_level": "Nível do invocador"
+      },
+      "unlocked_at": "Desbloqueado no nível {{ level }}",
+      "range_global": "Global",
+      "no_cost": "Sem custo",
+      "modes": "Modos compatíveis",
+      "description": "Descrição"
+    },
+    "card": {
+      "cooldown": "Recarga",
+      "level": "Nível do invocador",
+      "modes": "Modos compatíveis",
+      "description": "Descrição"
+    },
+    "list": {
+      "title": "Feitiços de Invocador",
+      "subtitle": "Catálogo de Feitiços de Invocador",
+      "count": "count feitiços"
+    }
+  },
+  "champion": {
+    "list": {
+      "title": "Campeões",
+      "meta_description": "Navegue por todos os campeões de League of Legends. Encontre estatísticas detalhadas, habilidades e lore de cada campeão do jogo.",
+      "header": "Campeões",
+      "subtitle": "Catálogo de campeões",
+      "search_placeholder": "Buscar um campeão…"
+    },
+    "detail": {
+      "meta_description": "Descubra {{ name }} de League of Legends, com estatísticas, papéis e detalhes do patch {{ version }}.",
+      "version_locale": "Patch {{ version }} • {{ locale }}",
+      "partype": "Recurso: {{ partype }}",
+      "roles": "Funções",
+      "abilities": "Habilidades",
+      "passive": "Passiva",
+      "skins": "Skins",
+      "cooldown": "Tempo de recarga",
+      "cost": "Custo",
+      "range": "Alcance",
+      "video_play": "Reproduzir o vídeo",
+      "video_pause": "Pausar o vídeo",
+      "video_mute": "Silenciar som",
+      "video_unmute": "Ativar som",
+      "tips_as": "Ao jogar como",
+      "tips_against": "Ao enfrentar",
+      "stats": {
+        "title": "Estatísticas Base"
+      },
+      "profile": {
+        "title": "Perfil do Campeão",
+        "attack": "Ataque",
+        "defense": "Defesa",
+        "magic": "Magia",
+        "difficulty": "Dificuldade"
+      },
+      "lore": {
+        "title": "História"
+      }
+    }
+  },
+  "rune": {
+    "list": {
+      "title": "Runas",
+      "meta_description": "Navegue por todas as runas de League of Legends. Encontre estatísticas e efeitos detalhados de cada runa do jogo.",
+      "header": "Runas",
+      "subtitle": "Catálogo de runas",
+      "search_placeholder": "Buscar uma runa…"
+    },
+    "detail": {
+      "title": "Runa: {{ name }}",
+      "meta_description": "Descubra os detalhes da runa {{ name }} em League of Legends. Estatísticas e efeitos atualizados para o patch {{ version }}.",
+      "overview": "Visão geral",
+      "keystone": "Runa fundamental",
+      "minor": "Runas menores",
+      "slot_n": "Compartimento {{ n }}"
+    },
+    "slot": "Slot"
+  },
+  "common": {
+    "back": "Voltar",
+    "search": "Buscar…",
+    "no_result": {
+      "text": "Nenhum resultado encontrado para sua busca.",
+      "back": "← Voltar"
+    },
+    "detail": "Ver detalhes"
+  },
+  "base": {
+    "title": "League of Data Base",
+    "description": "League of Data Base é uma plataforma mantida pela comunidade que fornece informações detalhadas, estatísticas e insights sobre League of Legends. Rápida, confiável e sempre atualizada."
+  },
+  "footer": {
+    "copyright": "© 2025 LINDECKER Charles / Hexanti",
+    "legal": "Aviso Legal",
+    "navigation": {
+      "title": "Navegação",
+      "home": "Início",
+      "champion": "Campeão",
+      "item": "Item",
+      "runes": "Runas",
+      "summoner": "Invocador",
+      "sitemap": "Mapa do site"
+    },
+    "links": {
+      "title": "Links Úteis",
+      "lol": "League of Legends",
+      "riotapi": "Riot API",
+      "ddragon": "CDN Data Dragon",
+      "support": "Riot Support",
+      "opgg": "OP.GG"
+    },
+    "project": {
+      "title": "Projeto",
+      "version": "Versão: {{ version }}",
+      "updated": "Atualizado: 17/07/2026"
+    },
+    "contact": {
+      "title": "Contato",
+      "email": "Email",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    }
+  },
+  "loader": {
+    "eyebrow": "Data Dragon",
+    "title": "Invocando dados",
+    "subtitle": "Buscando recursos na Fenda…",
+    "preparing": "Preparando dados…",
+    "status": {
+      "fetching": "buscando",
+      "ready": "pronto"
+    }
+  },
+  "pagination": {
+    "ok": "OK",
+    "more": "…"
+  },
+  "header": {
+    "navigation": {
+      "home": "Início",
+      "champion": "Campeões",
+      "item": "Itens",
+      "runes": "Runas",
+      "summoner": "Feitiços de Invocador"
+    },
+    "theme": {
+      "label": "Tema visual",
+      "close": "Fechar"
+    }
+  },
+  "auth": {
+    "or": "ou",
+    "google": {
+      "cta": "Continuar com o Google",
+      "unavailable": "O login com o Google não está configurado neste servidor.",
+      "failed": "Falha no login com o Google. Tente novamente."
+    },
+    "register": {
+      "password": "Senha",
+      "password_confirm": "Confirme a senha",
+      "password_mismatch": "As duas senhas não coincidem.",
+      "password_help": "Pelo menos 12 caracteres, com uma minúscula, uma maiúscula, um dígito e um caractere especial."
+    },
+    "password": {
+      "rule_length": "Pelo menos 12 caracteres",
+      "rule_lowercase": "Pelo menos uma letra minúscula",
+      "rule_uppercase": "Pelo menos uma letra maiúscula",
+      "rule_digit": "Pelo menos um dígito",
+      "rule_special": "Pelo menos um caractere especial",
+      "rule_match": "As duas senhas coincidem",
+      "too_common": "Esta senha é muito comum. Escolha uma mais pessoal."
+    },
+    "flash": {
+      "banned": "Esta conta foi suspensa pela equipe de moderação."
+    }
+  },
+  "profile": {
+    "identity": {
+      "title": "Identidade de invocador",
+      "username": "Nome de invocador",
+      "tag": "Tag Riot",
+      "tag_help": "Opcional: a parte depois do # do seu Riot ID — para GG#EUW, digite EUW.",
+      "url_warning": "Mudar seu nome de invocador também muda o endereço do seu perfil público.",
+      "submit": "Atualizar identidade",
+      "username_taken": "Este nome de invocador já está em uso.",
+      "username_invalid": "Nome de invocador inválido: de 3 a 24 caracteres (letras, dígitos, ponto, hífen, sublinhado), começando com letra ou dígito.",
+      "tag_invalid": "Tag Riot inválida: de 3 a 5 letras ou dígitos."
+    },
+    "password": {
+      "title": "Definir uma senha",
+      "help": "Sua conta entra apenas com o Google. Defina uma senha para entrar também com seu e-mail.",
+      "submit": "Definir a senha"
+    },
+    "danger": {
+      "help_no_password": "A exclusão da conta é definitiva: favoritos e builds são apagados."
+    },
+    "flash": {
+      "identity_saved": "Identidade de invocador atualizada.",
+      "password_set": "Senha definida — agora você também pode entrar com seu e-mail.",
+      "password_exists": "Esta conta já tem uma senha definida."
+    }
+  },
+  "build": {
+    "mode": {
+      "sr": "Summoner's Rift",
+      "aram": "ARAM",
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "Arena"
+    },
+    "editor": {
+      "ghost_mode": "Indisponível neste modo de jogo",
+      "context": {
+        "title": "Contexto de jogo",
+        "version": "Patch",
+        "mode": "Modo de jogo",
+        "mode_hint": "A disponibilidade dos itens segue o modo escolhido. Itens já colocados nunca são removidos: eles são sinalizados."
+      },
+      "dnd": {
+        "handle": "Arraste para reordenar",
+        "moved_step": "Etapa movida para a posição {{ position }}",
+        "moved_item": "Item movido para a posição {{ position }}",
+        "transferred": "Item movido para a etapa {{ step }}",
+        "added": "Item adicionado à etapa {{ step }}",
+        "cancelled": "Movimento cancelado"
+      }
+    },
+    "show": {
+      "mode": "Modo de jogo",
+      "patch_current": "Forjada no patch {{ version }} — atual: {{ current }}"
+    },
+    "error": {
+      "version": {
+        "unknown": "Versão de jogo desconhecida."
+      },
+      "mode": {
+        "unknown": "Modo de jogo desconhecido."
+      },
+      "steps": {
+        "item_mode": "Indisponível no modo de jogo escolhido: {{ items }}."
+      }
+    }
+  },
+  "community": {
+    "nav": {
+      "trends": "Tendências"
+    },
+    "trends": {
+      "eyebrow": "O pulso do Rift",
+      "title": "Builds em alta",
+      "filter": {
+        "champion": "Campeão",
+        "mode": "Modo de jogo",
+        "all_champions": "Todos os campeões",
+        "all_modes": "Todos os modos",
+        "apply": "Filtrar"
+      },
+      "empty": "Nenhuma build pública corresponde a este filtro — forje a sua.",
+      "empty_cta": "Forjar minha build"
+    },
+    "vote": {
+      "up": "Votar a favor desta build",
+      "down": "Votar contra esta build",
+      "score_label": "Pontuação da comunidade",
+      "login": "Entre para votar",
+      "invalid": "Voto inválido."
+    },
+    "supporter": {
+      "badge": "Apoiador"
+    }
+  },
+  "stat": {
+    "attack_damage": "Dano de ataque",
+    "ability_power": "Poder de habilidade",
+    "attack_speed": "Vel. de ataque",
+    "crit_chance": "Chance de crítico",
+    "life_steal": "Roubo de vida",
+    "health": "Vida",
+    "health_regen": "Regen. de vida",
+    "armor": "Armadura",
+    "magic_resist": "Resist. mágica",
+    "mana": "Mana",
+    "move_speed": "Vel. de movim.",
+    "attack_range": "Alcance de ataque"
+  }
+}
