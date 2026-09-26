@@ -1,6 +1,6 @@
 @let current = view();
 @let page = current.page;
-<main class="relative px-6 py-12">
+<div class="relative px-6 py-12">
   <div aria-hidden="true" class="trends-ambient pointer-events-none absolute inset-0"></div>
 
   <div class="relative mx-auto max-w-5xl">
@@ -45,4 +45,4 @@
       <lodb-trends-pager [page]="page.page" [pages]="page.pages" />
     }
   </div>
-</main>
+</div>

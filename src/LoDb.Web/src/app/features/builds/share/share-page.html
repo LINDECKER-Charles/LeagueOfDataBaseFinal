@@ -1,7 +1,7 @@
 @let current = build();
 @let champion = current.champion;
 @let missing = 'build.show.missing' | transloco;
-<main class="relative px-6 py-12" [class]="pathClass()">
+<div class="relative px-6 py-12" [class]="pathClass()">
   <div aria-hidden="true" class="path-ambient pointer-events-none absolute inset-0"></div>
 
   <div class="relative mx-auto max-w-4xl">
@@ -75,4 +75,4 @@
     <lodb-share-runes [runes]="current.runes" />
     <lodb-share-order [steps]="current.steps" [totalGold]="current.totalGold" />
   </div>
-</main>
+</div>
