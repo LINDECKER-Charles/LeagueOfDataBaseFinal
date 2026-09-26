@@ -48,3 +48,6 @@ TestResults/
 /src/LoDb.Web/dist/
 /src/LoDb.Web/.angular/
 /src/LoDb.Web/coverage/
+
+# Parity runs (L1.8): exports and manifests of both stacks, regenerated on demand
+/tools/next/parity/.runs/
