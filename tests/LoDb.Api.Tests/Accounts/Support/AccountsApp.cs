@@ -1,8 +1,10 @@
+using System.Globalization;
 using System.Text.Json;
 using LoDb.Infrastructure.Outbox;
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Infrastructure.Persistence.Audit;
 using LoDb.Testing;
+using MailKit.Security;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -15,8 +17,8 @@ namespace LoDb.Api.Tests.Accounts.Support;
 
 /// <summary>
 /// The API over a database of its own, with the doubles of the accounts: the e-mail outbox
-/// records what it is given, Google answers from <see cref="FakeGoogle"/>, and the clock only
-/// moves when a test advances it.
+/// records what it is given, unless a relay is given, Google answers from
+/// <see cref="FakeGoogle"/>, and the clock only moves when a test advances it.
 /// </summary>
 /// <remarks>
 /// One per test: the rate limits live in the host, the lockouts and throttles in the
@@ -33,19 +35,22 @@ public sealed class AccountsApp : IAsyncDisposable
 
     private const string Accounts = "LoDb:Accounts:";
     private const string Google = Accounts + "Google:";
+    private const string Mail = "LoDb:Mail:";
 
     private readonly TestDatabase _database;
     private readonly ApiFactory _factory;
     private readonly WebApplicationFactory<Program> _host;
+    private readonly bool _realOutbox;
 
-    private AccountsApp(TestDatabase database, bool withGoogle)
+    private AccountsApp(TestDatabase database, bool withGoogle, SmtpSink? relay)
     {
         _database = database;
+        _realOutbox = relay is not null;
         _factory = new ApiFactory
         {
             PostgresConnectionString = database.ConnectionString,
             Clock = Clock,
-            Settings = Settings(withGoogle),
+            Settings = Settings(withGoogle, relay),
         };
         _host = _factory.WithWebHostBuilder(
             builder => builder.ConfigureTestServices(AddDoubles));
@@ -56,6 +61,7 @@ public sealed class AccountsApp : IAsyncDisposable
     /// <summary>Starts at the real time, so that the cookies it dates stay in the future.</summary>
     public FakeTimeProvider Clock { get; } = new(TimeProvider.System.GetUtcNow());
 
+    /// <summary>What is queued; nothing when the real outbox sends to a relay.</summary>
     public RecordingOutbox Outbox { get; } = new();
 
     public FakeGoogle GoogleServer { get; } = new();
@@ -66,13 +72,18 @@ public sealed class AccountsApp : IAsyncDisposable
 
     /// <param name="postgres">The server the database of the host is created on.</param>
     /// <param name="withGoogle">Whether the Google clients are configured.</param>
+    /// <param name="relay">
+    /// The relay the real outbox of lot L4.3 sends to, when a test calls its dispatcher; the
+    /// worker, whose wait follows the host's clock, takes no part once started.
+    /// </param>
     public static async Task<AccountsApp> StartAsync(
         PostgresContainerFixture postgres,
-        bool withGoogle = true)
+        bool withGoogle = true,
+        SmtpSink? relay = null)
     {
         var database = await postgres.CreateDatabaseAsync(Cancellation);
         await database.MigrateAsync(Cancellation);
-        return new AccountsApp(database, withGoogle);
+        return new AccountsApp(database, withGoogle, relay);
     }
 
     /// <summary>A browser on the site: it keeps its cookies and follows no redirect.</summary>
@@ -178,7 +189,7 @@ public sealed class AccountsApp : IAsyncDisposable
         await _database.DisposeAsync();
     }
 
-    private static Dictionary<string, string?> Settings(bool withGoogle)
+    private static Dictionary<string, string?> Settings(bool withGoogle, SmtpSink? relay)
     {
         var settings = new Dictionary<string, string?>
         {
@@ -194,12 +205,23 @@ public sealed class AccountsApp : IAsyncDisposable
             settings[Google + "AppClients:1:ClientSecret"] = DesktopClientSecret;
         }
 
+        if (relay is not null)
+        {
+            settings[Mail + "Host"] = SmtpSink.Host;
+            settings[Mail + "Port"] = relay.Port.ToString(CultureInfo.InvariantCulture);
+            settings[Mail + "Security"] = nameof(SecureSocketOptions.None);
+        }
+
         return settings;
     }
 
     private void AddDoubles(IServiceCollection services)
     {
-        services.AddSingleton<IEmailOutbox>(Outbox);
+        if (!_realOutbox)
+        {
+            services.AddSingleton<IEmailOutbox>(Outbox);
+        }
+
         services.Configure<GoogleOptions>(
             GoogleDefaults.AuthenticationScheme,
             options => options.BackchannelHttpHandler = GoogleServer);
