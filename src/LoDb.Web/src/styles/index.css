@@ -1,0 +1,5 @@
+/*
+ * Global stylesheet, the only entry declared in angular.json. L3.2 fills it with the Hextech
+ * design system (Tailwind v4 through @tailwindcss/postcss, configured by .postcssrc.json)
+ * and the four themes keyed on the `data-theme` attribute set by src/index.html.
+ */

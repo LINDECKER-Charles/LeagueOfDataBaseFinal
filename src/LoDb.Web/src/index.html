@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>League of Data Base</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      // Paints the chosen identity before the first frame: the SSR HTML never depends on the
+      // theme. Inline and ES5 because it runs before any bundle, so the CSP must admit it.
+      // Mirror of src/app/core/theme/theme-from-cookie.ts, whose spec runs this very script.
+      (function () {
+        var themes = ['hextech', 'zaun', 'noxus', 'spirit-blossom'];
+        var prefix = 'lod_theme=';
+        var theme = themes[0];
+        var entries = [];
+        try {
+          entries = document.cookie.split(';');
+        } catch (unreadable) {
+          // Sandboxed documents throw on cookie access: the default theme still applies.
+        }
+        for (var i = 0; i < entries.length; i++) {
+          var entry = entries[i].trim();
+          if (entry.indexOf(prefix) === 0) {
+            var value = entry.slice(prefix.length);
+            theme = themes.indexOf(value) === -1 ? theme : value;
+            break;
+          }
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+  </head>
+  <body>
+    <lodb-root></lodb-root>
+  </body>
+</html>
