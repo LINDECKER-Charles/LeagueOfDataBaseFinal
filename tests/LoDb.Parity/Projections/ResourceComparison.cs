@@ -7,8 +7,8 @@ namespace LoDb.Parity.Projections;
 /// <summary>One resource of a <see cref="ProjectionPair"/>, compared.</summary>
 internal sealed class ResourceComparison
 {
-    // The legacy export leaves out the canonical path, which the legacy stack builds
-    // differently (heritage, § 5), and says whether it holds a champion's detail.
+    // The legacy export leaves out the canonical path, a new URL scheme (ADR 0005) the legacy
+    // stack has no equivalent of, and says whether it holds a champion's detail.
     private static readonly string[] NotProjected = ["path", "detail"];
 
     // Only stored by the legacy stack when a detail page is visited.
