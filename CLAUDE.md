@@ -9,6 +9,11 @@ Encyclopédie League of Legends servie depuis les données **Data Dragon** (+ Co
 Ce répertoire est le **journal technique interne** : source de vérité de tout ce qui a été
 touché, jamais filtré. Aucune entrée = changement invisible.
 
+> **Exception : la nouvelle stack** (`src/`, `tests/`, `docker/next/`, `compose.next*`,
+> `tools/next/`). Elle ne crée **aucune** entrée pendant la reconstruction : ces entrées
+> décrivent ce qui arrive en prod, et celles de la bascule sont rédigées au lot 8 (L8.3).
+> Voir la section « Nouvelle stack » plus bas.
+
 ### Quand créer une entrée
 
 - ✅ Nouvelle feature (UI, API, devops visible côté joueur)
@@ -51,6 +56,10 @@ publier, puis **archiver** les entrées traitées dans `docs/changelog/archived/
 | Front | Twig + îlots Vite / Vue 3 / TS / PrimeVue, navigation Turbo Drive |
 | Design system | « Hextech » dans `app/assets/styles/app.css` |
 | i18n | 21 locales, catalogues `messages.<loc>.yaml`, locale UI = langue Data Dragon |
+
+Ce tableau, les invariants et les règles par langage qui suivent décrivent la stack **en
+service**. La réécriture .NET 10 + Angular 22, en cours de construction, a sa propre
+section en fin de fichier : « Nouvelle stack (réécriture) ».
 
 ## Architecture — invariants à respecter
 
@@ -203,3 +212,189 @@ Convention de commits (maintenue par /commit, initialisée par /b-hive-init).
 - **Uniquement le nécessaire pour tester la feature** : le comportement nominal et les cas limites qu'elle introduit. Pas de course au pourcentage de couverture, pas de tests redondants ; on ne teste ni le framework ni les bibliothèques tierces.
 - Un bon test échoue quand le **comportement** de la feature casse — pas quand son implémentation change.
 - Emplacements : PHPUnit dans `app/tests/Unit` (baseline verte, cf. Garde-fous) et `app/tests/Functional` ; Vitest dans `app/tests/js`.
+
+## Nouvelle stack (réécriture)
+
+Réécriture en .NET 10 + Angular 22, construite **à côté** de la stack en service, sur la
+branche d'intégration `docs/reecriture-dotnet-angular`, jusqu'à la bascule (lot 8). Le
+fond fait foi dans [`docs/reecriture/`](docs/reecriture/README.md) (`heritage.md`, `adr/`) ;
+le [plan](docs/reecriture/plan-implementation.md) fixe chantiers, périmètres, fichiers
+partagés (§7.3) et jalons (§8). Commandes : [`dev-next.md`](docs/guides/dev-next.md).
+
+- **L'ancienne stack est en lecture seule** : `app/`, `go/`, `docker/nginx/`,
+  `docker/php/`, `compose.yaml`, `compose.override.yaml`, `compose.deploy.yaml` et les
+  workflows existants. Elle sert de référence de comportement ; ses règles (sections
+  ci-dessus) restent valables pour elle seule.
+- Les règles de code communes (limites, nommage, fonctions, un élément public par
+  fichier, commentaires en anglais) s'appliquent au nouveau code ; pas les garde-fous PHP.
+
+### Arborescence
+
+```
+LoDb.slnx  global.json  Directory.Build.props  Directory.Packages.props  .editorconfig
+compose.next.yaml  compose.next.override.yaml (dev)  compose.next.deploy.yaml  .env.next.example
+docker/next/{api,web-ssr,nginx}/     images lodb-api, lodb-web-ssr, lodb-nginx
+  nginx/sites/ (site, sous-domaine api.)  server.d/ (inclus dans le server du site)  snippets/
+src/LoDb.Domain/          pur, sans I/O : versions, langues, éditions, chemins canoniques
+src/LoDb.Ingestion/       Egress/ Ddragon/ Pipeline/ Catalog/ …
+src/LoDb.Infrastructure/  Persistence/ Storage/ Jobs/ Outbox/ Audit/ Analytics/ DataProtection/
+src/LoDb.Api/             Program.cs Hosting/ Cli/<Zone>/ Workers/<Zone>/ Modules/<M>/ openapi/
+src/LoDb.Web/             workspace Angular : src/app/{core,ui,features}  src/server/  public/i18n/
+tests/LoDb.*.Tests/  tests/LoDb.Testing/ (ApiFactory, PostgresContainerFixture)  tests/LoDb.E2E/
+tools/next/               scripts (contrat, i18n, parité, bascule)
+docs/reecriture/rapports/ rapports des chantiers et des jalons
+```
+
+Références : `Api` → `Ingestion` → `Infrastructure` → `Domain`. Les 14 modules
+(`Add<Module>`/`Map<Module>`) et les 11 zones (`AddLoDb<Zone>`) sont pré-enregistrés :
+**`Program.cs` ne change plus**, chaque chantier ne remplit que son fichier.
+
+### Invariants (ADR)
+
+- **Un seul hôte `LoDb.Api`** (ADR 0002) sert `/api`, `/v1`, `/webhooks` et les tâches de
+  fond. L'egress Data Dragon et CommunityDragon passe par le client nommé `ddragon` et son
+  allow-list (https, deux hôtes, chaque redirection re-vérifiée, plafond de taille).
+  403/404 = **absence définitive**, rendue comme une valeur ; 5xx/timeout = transitoire,
+  jamais persisté.
+- **`Add*` et `Map*` ne font aucune I/O et ne lèvent rien** : la génération OpenAPI
+  exécute `Program` sans configuration. Sous-commandes : `ICliCommand` sous
+  `Cli/<Zone>/` ; tâches de fond : `BackgroundService` sous `Workers/<Zone>/`. Toutes deux
+  sont découvertes par convention. `LoDb:Workers:Enabled=false` coupe toutes les tâches.
+- **Tâches périodiques** (ADR 0003) : `PeriodicTimer` + verrou consultatif Postgres, files
+  `Channel<T>` bornées, **une ligne de synthèse par lot**, jamais une par URL.
+- **Stockage** (ADR 0004) : blobs derrière `IBlobStore`, adressés par contenu, écrits de
+  façon **atomique** (temporaire sur le même volume, puis `File.Move`) ; nginx ne sert que
+  `/cdn/blobs/`. Manifeste, analytics, audit et clés Data Protection en Postgres (`absent`
+  = absence définitive). Rien qui empêche N instances, **aucune session serveur**.
+- **Objets et sorts indexés par id, jamais par nom** (jumeaux Classic), comme aujourd'hui.
+- **SSR** (ADR 0005) : le serveur ne lit **aucun cookie** et ne détient **aucun secret**.
+  La locale est en préfixe d'URL (`/{locale}/…`, 21 locales). L'id fait foi, le slug est
+  décoratif (301 vers la canonique). Le thème passe par un script inline, et `www.` et
+  `.fr` sont redirigés par nginx.
+- **Front** (ADR 0006) : il ne consomme que le **client généré** depuis OpenAPI, sans
+  copie manuelle des contrats (locales, motif de version, types). Aucun
+  `if (platform)` hors de `core/platform/`, aucun kit UI, pas de NgRx.
+- **Persistance** : une seule migration EF par lot, écrite par le chantier de schéma
+  (L1.4, L4.1, L6.2), seul à toucher entités et configurations. Migrations **additives**
+  jusqu'à la phase *contract*, car l'ancienne stack tourne sur le même schéma.
+- **Identité** (ADR 0009) : hash argon2id PHC, lisibles par `password_verify` de PHP.
+- **Observabilité** (ADR 0010) : logs JSON d'**une ligne par enregistrement** avec
+  `trace_id`, `EventName` en `domaine.sujet.resultat`, **aucune clé de contexte `error`**,
+  aucune donnée personnelle. `/metrics` est servi sur 9464, **jamais routé ni publié**.
+  `/healthz` ne dépend de rien ; `/readyz` vérifie Postgres et le stockage.
+- **Apps** (ADR 0007, 0008) : Photino derrière `IDesktopShell`, versions épinglées ;
+  Capacitor 8 et live update signé ; `X-LoDb-Client` et `426` : l'API décide.
+- **Artefacts générés** (`openapi/*.json`, `core/api/generated/`, `package-lock.json`) :
+  jamais édités à la main ni committés par un chantier ; l'intégration les régénère.
+
+### Conventions (plan §4)
+
+**C#.** `net10.0`, `Nullable`, `TreatWarningsAsErrors`, `AnalysisLevel`
+`latest-recommended`, espaces de noms au niveau du fichier (`LoDb.<Projet>.<Dossier>`).
+
+- Classes `sealed` par défaut, `record` pour les DTO et les objets valeur, membres
+  `required`, constructeurs primaires pour l'injection.
+- Aucun état statique mutable : `TimeProvider` injecté, jamais `DateTime.UtcNow` ;
+  `CancellationToken` sur toute méthode asynchrone.
+- `[LoggerMessage]`, exception passée en objet ; exceptions typées pour le transitoire,
+  l'absence définitive est une valeur.
+- `/api` en ProblemDetails, `/v1` garde `{error:{code,message}}` et le snake_case de go-api.
+- Minimal APIs (`MapGroup` par module, `TypedResults`) ; options `LoDb` validées au
+  démarrage ; versions NuGet dans `Directory.Packages.props` seul, jamais flottantes.
+
+**TypeScript / Angular.** Composants standalone, signals, zoneless, `OnPush`,
+`inject()`, `input()`/`output()`, blocs `@if`/`@for`/`@defer`. TypeScript et templates
+stricts, pas de `any`.
+
+- Un composant = présentation + câblage mince ; l'orchestration vit dans des services et
+  des fonctions pures.
+- ESLint bloquant : `@capacitor/*` et `@capawesome/*` seulement sous `core/platform/` ;
+  une feature n'importe que `core/`, `ui/` et elle-même.
+- Styles : jetons Hextech, rien en dur, propriétés logiques (RTL), champs de saisie à
+  16 px au moins.
+- Tests Vitest en `*.spec.ts`, à côté du code. Une feature met ses E2E dans
+  `tests/LoDb.E2E/specs/<feature>/`, ses nouvelles clés i18n dans `public/i18n/<feature>/`.
+
+**Commits.** Conventional Commits en français, sujet à l'infinitif et sans accents,
+**72 caractères au plus**. Les tests vont dans le même commit, sans aucune ligne
+d'attribution. `git add` se fait par chemins explicites. Carte des scopes :
+
+| Chemin | Scope |
+|---|---|
+| `src/LoDb.Domain/**` | `back/domain` |
+| `src/LoDb.Ingestion/**` | `back/ingestion` |
+| `src/LoDb.Infrastructure/Persistence/**` | `back/db` |
+| `src/LoDb.Infrastructure/**` (autres) | `back/infrastructure` |
+| `src/LoDb.Api/Modules/<Module>/**` | `back/<module>` (minuscules) |
+| `src/LoDb.Api/**` (autres) | `back/host` |
+| `src/LoDb.Web/src/app/features/<feature>/**` | `front/<feature>` |
+| `src/LoDb.Web/src/app/{core,ui}/**`, `src/styles/**` | `front/core`, `front/ui` |
+| `src/LoDb.Web/public/i18n/**` | `i18n` |
+| `src/LoDb.Web/android/**` | `android` |
+| `src/LoDb.Desktop/**` | `desktop` |
+| `tests/LoDb.E2E/**` | `e2e` |
+| `tests/LoDb.Parity/**`, `tests/fixtures/**` | scope du code testé |
+| `docker/next/**`, `compose.next*` | `infra` |
+| `tools/next/**` | `tools` |
+
+Les autres chemins (`.github/**`, `docs/**`…) gardent la carte de la section « commit ».
+
+### Garde-fous (plan §6.2)
+
+```bash
+dotnet build LoDb.slnx -c Release            # 0 avertissement
+dotnet test LoDb.slnx                        # Testcontainers : Docker démarré
+npm ci --prefix src/LoDb.Web
+npm --prefix src/LoDb.Web run lint           # puis typecheck, test, build:web, build:shell
+npm --prefix src/LoDb.Web run api:generate   # contrat (L2.2 ; bouchon avant)
+docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build
+npm --prefix tests/LoDb.E2E test             # stack démarrée (LODB_E2E_BASE_URL sinon)
+```
+
+- **Stack d'intégration `lodb-next`**, une seule instance, depuis la racine : 18080 nginx,
+  18081 API, 18082 SSR, 15432 Postgres, 18025 Mailpit. Emplacements `lodb-next-e1` et
+  `-e2` (181xx/182xx), lancés depuis un worktree et supprimés (`down -v`) avant de rendre.
+- **Ne jamais toucher** aux conteneurs `chewb-*`, `laforce-*` et `grafana/mcp-grafana`,
+  ni à leurs ports (3307, 33306, 21200 à 21213). Le port 9464 n'est jamais publié.
+- Métriques : lues depuis le réseau de la stack (`wget http://api:9464/metrics` dans le
+  conteneur nginx, commande complète dans `dev-next.md`).
+- Validation des workflows : image `rhysd/actionlint` sur `.github/workflows/next-*.yml`.
+- Chaque jalon consigne son rapport dans `docs/reecriture/rapports/jalons/lot-NN.md`, et
+  les pics mémoire des E2E dans `docs/reecriture/rapports/memoire.md`.
+
+### Pièges du lot 0 (ne pas « corriger » par erreur)
+
+- `dotnet test` compile en **Debug**, le build du plan en **Release** : les deux coexistent.
+  `bin/` et `obj/` ne sont ignorés que sous `/src` et `/tests` (`app/bin/` est suivi).
+- Documents OpenAPI : `dotnet build src/LoDb.Api -p:LoDbGenerateOpenApi=true` écrit
+  `openapi/LoDb.Api_app.json` et `LoDb.Api_public-v1.json`. Ces noms sont imposés par le
+  SDK. `MapOpenApi` n'est actif qu'en Development.
+- **npm 12** bloque les scripts d'installation (`allowScripts`) d'`esbuild`, `lmdb`,
+  `@parcel/watcher` et `msgpackr-extract`. Les binaires viennent des paquets optionnels de
+  plateforme. Si l'image `web-ssr` échoue au build, c'est la première piste.
+- **`autoCsp` est incompatible avec le SSR** en Angular 22 : retiré, nonce en L3.11.
+  `withFetch` et `withIncrementalHydration` sont omis (dépréciés, défaut en v22).
+- Variables Compose préfixées **`LODB_`** : Compose lit aussi le `.env` racine de
+  l'ancienne stack. En dev, les images s'appellent `<projet>-<service>` : un emplacement
+  n'écrase donc pas les images de l'intégration.
+- nginx : sous-domaine reconnu par `server_name ~^api\.` (`API_CADDY_DOMAINS` commence
+  par `api.`) ; CORP `same-origin` sauf `/cdn/blobs/` en `cross-origin` (coquille
+  Android) ; `access_log off` voulu (l'edge journalise) ; `sites/*.conf` passe par
+  `envsubst`, filtré sur `^LODB_`.
+- SSR : `LODB_TRUST_PROXY_HEADERS` obligatoire derrière nginx (sinon `X-Forwarded-*`
+  ignorés), `LODB_ALLOWED_HOSTS` liste les hôtes acceptés, `/` renvoie un 302 vers `/en/`
+  jusqu'à L3.1 ; `public/` ne contient ni `media/` ni script racine nommé comme un bundle
+  (cache `immutable`).
+- `/readyz` se lit sur l'API (18081 ou `api:8080`) ; demandé à nginx, il part au SSR (404).
+- Constats du jalon 0, **à corriger à la source, jamais à filtrer**
+  ([rapport](docs/reecriture/rapports/jalons/lot-00.md)) :
+  - Npgsql écrit deux lignes natives `libgssapi_krb5.so.2` hors JSON au premier accès à
+    Postgres (image *chiseled*) ;
+  - le SSR écrit en multi-ligne les erreurs de rendu (`console.error` de l'`ErrorHandler`
+    d'Angular).
+- L'avertissement « clés Data Protection éphémères » de l'API est attendu jusqu'à L4.1.
+- `src/LoDb.Web/` compte déjà 11 fichiers à sa racine, `package-lock.json` compris : la
+  limite de 10 par dossier y est à trancher avant L3.2 (`.postcssrc.json`).
+- L'ancienne stack (projet `lodb`) peut tourner depuis le checkout principal : on ne la
+  recrée jamais depuis un autre dossier (label `com.docker.compose.project.working_dir`).
+  Ses commandes console gardent `-u www-data`.

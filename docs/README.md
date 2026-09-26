@@ -31,6 +31,10 @@ n'a pas eu lieu, les sections ci-dessous décrivent la stack **en service**.
 | [plan-migration.md](reecriture/plan-migration.md) | Lots et critères de sortie, bascule, retour arrière, table des 301, risques |
 | [plan-implementation.md](reecriture/plan-implementation.md) | Chantiers de chaque lot, conventions de la nouvelle stack, ordre d'exécution, couverture ; détail par lot dans [implementation/](reecriture/implementation/) |
 | [adr/](reecriture/adr/) | Une décision par fichier : hôte, ingestion, stockage, SSR, front, coquilles, mises à jour, identité, observabilité |
+| [rapports/](reecriture/rapports/) | Rapports produits pendant la construction : relevés mémoire de la stack ([memoire.md](reecriture/rapports/memoire.md)), rapports de jalon par lot ([jalons/](reecriture/rapports/jalons/), dont [lot 0](reecriture/rapports/jalons/lot-00.md)) |
+
+Pour développer sur la nouvelle stack : guide [dev-next.md](guides/dev-next.md) et section
+« Nouvelle stack (réécriture) » de [`../CLAUDE.md`](../CLAUDE.md).
 
 ## `architecture/` — comment ça marche
 
@@ -49,6 +53,7 @@ n'a pas eu lieu, les sections ci-dessous décrivent la stack **en service**.
 | [setup.md](guides/setup.md) | Prérequis, installation détaillée, dépannage |
 | [configuration.md](guides/configuration.md) | Variables d'environnement et paramètres applicatifs |
 | [docker.md](guides/docker.md) | Référence des commandes de la stack Compose |
+| [dev-next.md](guides/dev-next.md) | Nouvelle stack `lodb-next` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
 | [github-actions-secrets.md](guides/github-actions-secrets.md) | Secrets GitHub Actions / GHCR, flux de promotion CI/CD |
 | [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
 | [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana : fonctionnement, ce qu'il ne faut surtout pas déclarer, requêtes LogsQL / PromQL, dépannage |
