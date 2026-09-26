@@ -1,0 +1,17 @@
+{
+  "loading": "Memuat kunci API Anda…",
+  "retry": "Coba lagi",
+  "error": {
+    "load": "Kunci API Anda tidak dapat dimuat.",
+    "failed": "Tindakan gagal, silakan coba lagi."
+  },
+  "raw": {
+    "done": "Sudah saya salin"
+  },
+  "create": {
+    "verify": "Verifikasi email saya"
+  },
+  "actions": {
+    "revoke_help": "Menonaktifkan kunci seketika: API menolaknya mulai permintaan berikutnya."
+  }
+}

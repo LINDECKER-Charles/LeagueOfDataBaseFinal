@@ -1,0 +1,17 @@
+{
+  "loading": "正在載入 API 金鑰…",
+  "retry": "重試",
+  "error": {
+    "load": "無法載入 API 金鑰。",
+    "failed": "操作失敗，請再試一次。"
+  },
+  "raw": {
+    "done": "我已複製"
+  },
+  "create": {
+    "verify": "驗證我的電子郵件"
+  },
+  "actions": {
+    "revoke_help": "立即停用金鑰：API 從下一個請求起即拒絕它。"
+  }
+}
