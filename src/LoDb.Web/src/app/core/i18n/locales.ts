@@ -1,29 +1,11 @@
-/**
- * The 21 site locales, in their URL form (ADR 0005). Provisional: L2.2 replaces this list
- * with the array generated from the API contract, so it is never maintained twice.
- */
-export const LOCALES = [
-  'ar',
-  'cs',
-  'de',
-  'el',
-  'en',
-  'es',
-  'fr',
-  'hu',
-  'id',
-  'it',
-  'ja',
-  'ko',
-  'pl',
-  'pt',
-  'ro',
-  'ru',
-  'th',
-  'tr',
-  'vi',
-  'zh-hans',
-  'zh-hant',
-] as const;
+import type { UiLocale } from '../api/generated/models/ui-locale';
+import { UI_LOCALE } from '../api/generated/models/ui-locale-array';
 
-export type Locale = (typeof LOCALES)[number];
+/** A site locale, in its URL form (ADR 0005). */
+export type Locale = UiLocale;
+
+/**
+ * The 21 site locales, generated from the API contract (`UiLocale` in LoDb.Domain), so the
+ * list is never maintained twice (plan, section 5.3).
+ */
+export const LOCALES: readonly Locale[] = UI_LOCALE;
