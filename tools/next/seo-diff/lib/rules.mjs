@@ -18,6 +18,11 @@ function isText(value) {
   return typeof value === 'string' && !PAGE_KEY.test(value);
 }
 
+// `fr_FR`, as Data Dragon writes a language, to its BCP 47 tag `fr-FR`.
+function languageTagOf(code) {
+  return code.replace('_', '-');
+}
+
 function indexOf(path = '', collection) {
   const match = path.match(new RegExp(`${collection}\\[(\\d+)\\]`));
   return match === null ? null : Number(match[1]);
@@ -102,16 +107,18 @@ export const RULES = [
   },
   {
     id: 'dataset-languages',
-    kind: 'defect',
+    kind: 'correction',
     reason:
-      "`Dataset.inLanguage` liste les 21 locales du site au lieu des 28 langues de Data Dragon " +
-      "(la prod les écrivait au format `fr_FR`, hors BCP 47). Écart au « JSON-LD conservé à " +
-      "l'identique » de l'ADR 0005, à trancher par L3.10 " +
-      '(`features/editorial/about/about-data-page.ts`) : langues Data Dragon en BCP 47.',
+      '`Dataset.inLanguage` liste les mêmes langues de Data Dragon, dans le même ordre, mais en ' +
+      'BCP 47 comme le veut schema.org (`fr-FR`) : la prod écrivait le code de Data Dragon ' +
+      "(`fr_FR`). Seul le format change : le nœud `Dataset` reste celui de la prod (ADR 0005, " +
+      "« JSON-LD conservé à l'identique »).",
     applies: (field, difference, pair) =>
       field === 'fields' &&
       pair.nextKey === 'page:about/data' &&
-      difference.path.startsWith('Dataset.inLanguage['),
+      difference.path.startsWith('Dataset.inLanguage[') &&
+      typeof difference.prod === 'string' &&
+      languageTagOf(difference.prod) === difference.next,
   },
 ];
 

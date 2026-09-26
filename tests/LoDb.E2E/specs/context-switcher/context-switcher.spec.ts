@@ -7,6 +7,8 @@ interface Meta {
 }
 
 const PREFERENCES_COOKIE = "lod_prefs";
+// Every internal navigation sends its page-view beacon: telemetry, not a preference.
+const ANALYTICS_PATH = "/api/analytics/";
 
 async function olderVersion(request: APIRequestContext): Promise<string> {
   const meta = (await (await request.get("/api/meta")).json()) as Meta;
@@ -18,12 +20,24 @@ function switcher(page: Page) {
   return page.locator("lodb-context-switcher");
 }
 
+// A completed navigation folds the panel (lodbDisclosure): the first one may end after the
+// options have loaded, so the panel is reopened until it stays open.
+async function ensureOpen(page: Page): Promise<void> {
+  const panel = switcher(page).locator("details");
+  await expect(async () => {
+    if ((await panel.getAttribute("open")) === null) {
+      await switcher(page).locator("summary").click();
+    }
+    await expect(panel).toHaveAttribute("open", "", { timeout: 1_000 });
+  }).toPass();
+}
+
 // Opens the panel once the browser has loaded the options.
 async function openSwitcher(page: Page): Promise<void> {
   await expect(
     switcher(page).locator("#switcher-version option"),
   ).not.toHaveCount(0);
-  await switcher(page).locator("summary").click();
+  await ensureOpen(page);
 }
 
 async function apply(page: Page): Promise<void> {
@@ -66,7 +80,10 @@ test.describe("context switcher", () => {
     const older = await olderVersion(request);
     const posts: string[] = [];
     page.on("request", (sent) => {
-      if (sent.method() === "POST") {
+      if (
+        sent.method() === "POST" &&
+        !new URL(sent.url()).pathname.startsWith(ANALYTICS_PATH)
+      ) {
         posts.push(sent.url());
       }
     });
@@ -107,8 +124,11 @@ test.describe("context switcher", () => {
     await page.goto("/en/runes");
 
     await openSwitcher(page);
+    const remember = switcher(page).locator("#switcher-remember");
+    await expect(remember).toBeVisible();
+    await remember.check();
     await switcher(page).locator("#switcher-version").selectOption(older);
-    await switcher(page).locator("#switcher-remember").check();
+    await expect(switcher(page).locator("#switcher-version")).toHaveValue(older);
     await apply(page);
     await expect.poll(() => pathAndQuery(page)).toBe(`/en/${older}/runes`);
 
