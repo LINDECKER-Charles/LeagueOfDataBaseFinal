@@ -27,8 +27,10 @@ services:
       args:
         APP_REVISION: ${APP_REVISION:-dev}
     environment:
+      # Gss Encryption Mode=Disable: Npgsql would otherwise probe GSS and the chiseled
+      # image, which has no libgssapi_krb5, writes non-JSON lines to stderr.
       ConnectionStrings__LoDb: >-
-        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb}
+        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable
       # X-Forwarded-* are trusted from the private ranges: only nginx and web-ssr reach
       # this port on a served host (no host port, not on the edge network). The stack's
       # own subnet is picked by Docker, so it cannot be named more precisely here.
@@ -98,6 +100,8 @@ services:
       LODB_CANONICAL_HOST: ${LODB_CANONICAL_HOST:-localhost}
       LODB_EDGE_CIDR: ${LODB_EDGE_CIDR:-127.0.0.1/32}
       LODB_NOINDEX: ${LODB_NOINDEX:-0}
+      # Silences the plain-text start-up lines of the image's docker-entrypoint.sh.
+      NGINX_ENTRYPOINT_QUIET_LOGS: "1"
     volumes:
       - storage:/srv/storage:ro
     depends_on:

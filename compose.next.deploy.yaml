@@ -20,8 +20,9 @@ services:
   api:
     image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/api:${IMAGE_TAG:?IMAGE_TAG is required}
     environment:
+      # Same string as compose.next.yaml, GSS disabled (no libgssapi_krb5 in the image).
       ConnectionStrings__LoDb: >-
-        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment}
+        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment};Gss Encryption Mode=Disable
     deploy:
       resources:
         limits:
