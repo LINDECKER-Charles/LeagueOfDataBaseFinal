@@ -1,0 +1,3228 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "LoDb.Api | app",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/meta": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Versions, languages, locales and game modes.",
+        "operationId": "getMeta",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogMeta"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/{version}/{lang}/champions": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Champion cards and their facet values; images may be placeholders.",
+        "operationId": "listChampions",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChampionList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/{version}/{lang}/champions/{id}": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "A champion's page, its images resolved.",
+        "operationId": "getChampion",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChampionDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/{version}/{lang}/items": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Item cards and their facet values; images may be placeholders.",
+        "operationId": "listItems",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/{version}/{lang}/items/{id}": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "An item's page, its images resolved.",
+        "operationId": "getItem",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/{version}/{lang}/runes": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Rune cards, paginated over the runes, and every path.",
+        "operationId": "listRunes",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuneList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/{version}/{lang}/runes/{id}": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "A rune path's page, its images resolved.",
+        "operationId": "getRuneTree",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuneTreeDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/{version}/{lang}/summoners": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Summoner spell cards and their facet values; images may be pending.",
+        "operationId": "listSummoners",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummonerList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/{version}/{lang}/summoners/{id}": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "A summoner spell's page, its image resolved.",
+        "operationId": "getSummoner",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummonerDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/{version}/{lang}/search": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Entries whose name, or id, holds the query; images resolved.",
+        "operationId": "searchCatalog",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pickers/champions": {
+      "get": {
+        "tags": [
+          "Pickers"
+        ],
+        "summary": "Every champion, by name.",
+        "operationId": "pickChampions",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChampionPicker"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pickers/items": {
+      "get": {
+        "tags": [
+          "Pickers"
+        ],
+        "summary": "The items a build of the mode may carry, by name.",
+        "operationId": "pickItems",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemPicker"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pickers/runes": {
+      "get": {
+        "tags": [
+          "Pickers"
+        ],
+        "summary": "Every rune path, slot by slot.",
+        "operationId": "pickRunes",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunePicker"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pickers/summoners": {
+      "get": {
+        "tags": [
+          "Pickers"
+        ],
+        "summary": "The summoner spells of Summoner's Rift, by name.",
+        "operationId": "pickSummoners",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummonerPicker"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pickers/skins": {
+      "get": {
+        "tags": [
+          "Pickers"
+        ],
+        "summary": "A champion's skins, their art hotlinked; none for an unknown one.",
+        "operationId": "pickSkins",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "champion",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinPicker"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/client-policy": {
+      "get": {
+        "tags": [
+          "ClientPolicy"
+        ],
+        "summary": "Minimum and latest version of each app.",
+        "operationId": "getClientPolicy",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppPolicy"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AbilitySlot": {
+        "enum": [
+          "passive",
+          "q",
+          "w",
+          "e",
+          "r"
+        ],
+        "type": "string",
+        "description": "The five abilities of a champion, in the order of its page."
+      },
+      "AbilityVideo": {
+        "required": [
+          "webm",
+          "mp4",
+          "poster"
+        ],
+        "type": "object",
+        "properties": {
+          "webm": {
+            "type": "string",
+            "format": "uri"
+          },
+          "mp4": {
+            "type": "string",
+            "format": "uri"
+          },
+          "poster": {
+            "type": "string",
+            "description": "The frame shown before the video plays (JPEG).",
+            "format": "uri"
+          }
+        },
+        "description": "The looping preview of one ability, in two formats and with its still frame."
+      },
+      "AppPolicy": {
+        "required": [
+          "platforms"
+        ],
+        "type": "object",
+        "properties": {
+          "platforms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformPolicy"
+            }
+          }
+        },
+        "description": "`GET /api/client-policy`: the policy of every app, one entry each."
+      },
+      "AttackRangeClass": {
+        "enum": [
+          "melee",
+          "ranged",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "CatalogImage": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ImageStatus"
+          },
+          "url": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`/cdn/blobs/{sha256}.{ext}`; null for a placeholder."
+          },
+          "webpUrl": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`/cdn/blobs/{sha256}.webp`; null for a placeholder or a non-PNG."
+          }
+        },
+        "description": "An image as a client renders it: its blob and WebP sibling, or a placeholder."
+      },
+      "CatalogMeta": {
+        "required": [
+          "versions",
+          "readyVersions",
+          "versionPattern",
+          "languages",
+          "languagePattern",
+          "defaultLanguage",
+          "locales",
+          "fallbackLocale",
+          "gameModes",
+          "defaultGameMode"
+        ],
+        "type": "object",
+        "properties": {
+          "latest": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The version the site and the apps open on; null until the first ingestion completes."
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Every version Data Dragon lists, newest first, the long tail included."
+          },
+          "readyVersions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The versions ingested ahead of any visit, newest first."
+          },
+          "versionPattern": {
+            "type": "string",
+            "description": "Regular expression a version matches, anchors excluded."
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Every Data Dragon language, such as en_US."
+          },
+          "languagePattern": {
+            "type": "string",
+            "description": "Regular expression a language matches, anchors excluded."
+          },
+          "defaultLanguage": {
+            "type": "string",
+            "description": "The language every version ships, which the others fall back to."
+          },
+          "locales": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocaleLanguage"
+            },
+            "description": "The interface locales and the Data Dragon language each one reads."
+          },
+          "fallbackLocale": {
+            "description": "The locale of a visitor whose preference matches none.",
+            "$ref": "#/components/schemas/UiLocale"
+          },
+          "gameModes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GameModeMap"
+            },
+            "description": "The modes a build targets, each with the map that gates its items."
+          },
+          "defaultGameMode": {
+            "$ref": "#/components/schemas/GameMode"
+          }
+        },
+        "description": "Everything the front lists without hard-coding it: versions, languages, locales, modes."
+      },
+      "ChampionAbility": {
+        "required": [
+          "slot",
+          "name",
+          "description",
+          "image"
+        ],
+        "type": "object",
+        "properties": {
+          "slot": {
+            "$ref": "#/components/schemas/AbilitySlot"
+          },
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Data Dragon spell id, such as AhriQ; null for the passive."
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "Riot's rich text, unresolved template tokens removed."
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "cooldown": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Per-rank cooldown, such as \"7/6.5/6/5.5/5\"."
+          },
+          "cost": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "range": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Per-rank range; null when missing or a placeholder value."
+          },
+          "maxRank": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "charges": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "video": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The preview, which may not exist: the page falls back to the icon.",
+                "$ref": "#/components/schemas/AbilityVideo"
+              }
+            ]
+          }
+        },
+        "description": "The passive or a spell of a champion, with its preview video."
+      },
+      "ChampionArt": {
+        "required": [
+          "splash",
+          "loading",
+          "centered"
+        ],
+        "type": "object",
+        "properties": {
+          "splash": {
+            "type": "string",
+            "format": "uri"
+          },
+          "loading": {
+            "type": "string",
+            "format": "uri"
+          },
+          "centered": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "description": "The three arts of a skin, hotlinked from Data Dragon rather than ingested (UP 8)."
+      },
+      "ChampionCard": {
+        "required": [
+          "id",
+          "key",
+          "name",
+          "title",
+          "canonicalPath",
+          "image",
+          "tags",
+          "resource",
+          "stats"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Public id, such as MonkeyKing: the page and the art are keyed by it."
+          },
+          "key": {
+            "type": "string",
+            "description": "Numeric key, such as 62."
+          },
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "canonicalPath": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Roles, as Data Dragon names them (\"Mage\")."
+          },
+          "resource": {
+            "type": "string",
+            "description": "Language-independent resource token (\"mana\", \"energy\", \"none\")."
+          },
+          "partype": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The resource as the catalog's language names it."
+          },
+          "attackRange": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AttackRangeClass"
+              }
+            ]
+          },
+          "ratings": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ChampionRatings"
+              }
+            ]
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChampionStat"
+            }
+          }
+        },
+        "description": "A champion as the list shows it, with the values its facets filter on: roles, resource,\nrange, ratings and base stats."
+      },
+      "ChampionChroma": {
+        "required": [
+          "id",
+          "name",
+          "label",
+          "colors",
+          "swatch"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "description": "The colour family the swatch reads as (\"Ruby\"), \"Chroma\" when unknown."
+          },
+          "colors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Hex colours, such as #D33528."
+          },
+          "swatch": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "description": "A chroma of a skin, its swatch hotlinked from CommunityDragon (UP 9)."
+      },
+      "ChampionDetails": {
+        "required": [
+          "version",
+          "language",
+          "canonicalPath",
+          "profile",
+          "blurb",
+          "allyTips",
+          "enemyTips",
+          "abilities",
+          "art",
+          "skins"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "contentLanguage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canonicalPath": {
+            "type": "string",
+            "description": "The page the routing redirects a stale or slugless URL to."
+          },
+          "profile": {
+            "description": "The facts of the list's card.",
+            "$ref": "#/components/schemas/ChampionCard"
+          },
+          "blurb": {
+            "type": "string"
+          },
+          "lore": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "allyTips": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enemyTips": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "abilities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChampionAbility"
+            },
+            "description": "The passive, then the spells in their Q, W, E, R order."
+          },
+          "art": {
+            "description": "The base skin's art.",
+            "$ref": "#/components/schemas/ChampionArt"
+          },
+          "skins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChampionSkin"
+            }
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the\nabilities and the skins, every image resolved and every art hotlinked."
+      },
+      "ChampionFacets": {
+        "required": [
+          "tags",
+          "resources"
+        ],
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "The facet options the data decides, over the whole list; the fixed ones (range classes)\nare enums of the contract."
+      },
+      "ChampionList": {
+        "required": [
+          "version",
+          "language",
+          "total",
+          "facets",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "contentLanguage": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The language the entries are written in, en_US after a fallback."
+          },
+          "total": {
+            "type": "integer",
+            "description": "Entries of the whole list, whatever the page.",
+            "format": "int32"
+          },
+          "page": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "size": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "facets": {
+            "$ref": "#/components/schemas/ChampionFacets"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChampionCard"
+            }
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/champions`."
+      },
+      "ChampionOption": {
+        "required": [
+          "id",
+          "key",
+          "name",
+          "image"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string",
+            "description": "Numeric id the game uses (\"103\")."
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          }
+        },
+        "description": "A champion the favorite and build pickers offer."
+      },
+      "ChampionPicker": {
+        "required": [
+          "version",
+          "language",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChampionOption"
+            }
+          }
+        },
+        "description": "`GET /api/pickers/champions`: every champion, by name."
+      },
+      "ChampionRatings": {
+        "required": [
+          "attack",
+          "defense",
+          "magic",
+          "difficulty"
+        ],
+        "type": "object",
+        "properties": {
+          "attack": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "defense": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "magic": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "difficulty": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "Riot's 0-10 ratings of a champion (`info` in the dataset)."
+      },
+      "ChampionSkin": {
+        "required": [
+          "id",
+          "number",
+          "name",
+          "art",
+          "chromas"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Data Dragon skin id, such as 103001."
+          },
+          "number": {
+            "type": "integer",
+            "description": "Number of the skin's art, 0 for the base skin.",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name: the base skin reads as the champion."
+          },
+          "art": {
+            "$ref": "#/components/schemas/ChampionArt"
+          },
+          "chromas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChampionChroma"
+            }
+          }
+        },
+        "description": "A skin of the champion, chroma entries left out, with its art and chromas."
+      },
+      "ChampionStat": {
+        "required": [
+          "stat",
+          "base"
+        ],
+        "type": "object",
+        "properties": {
+          "stat": {
+            "$ref": "#/components/schemas/GameStat"
+          },
+          "base": {
+            "type": "number",
+            "format": "double"
+          },
+          "perLevel": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Gain per level, as Data Dragon writes it (a percentage for the attack speed); null for\nthe stats that do not grow.",
+            "format": "double"
+          }
+        },
+        "description": "A base stat of a champion at level 1, and what it gains per level."
+      },
+      "ClientPlatform": {
+        "enum": [
+          "desktop",
+          "android"
+        ],
+        "type": "string",
+        "description": "The apps the policy governs; the web, always current, is none of them."
+      },
+      "CounterpartLink": {
+        "required": [
+          "id",
+          "name",
+          "edition"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "edition": {
+            "$ref": "#/components/schemas/Edition"
+          },
+          "canonicalPath": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Its page; null when this catalog does not carry the twin."
+          }
+        },
+        "description": "The same-named item or summoner spell of the other game (UP 6): \"Faerie Charm\" is both\n1004 and the Classic 771004."
+      },
+      "Edition": {
+        "enum": [
+          "modern",
+          "classic"
+        ],
+        "type": "string",
+        "description": "Game an item or a summoner spell belongs to: today's League of Legends, or LoL Classic."
+      },
+      "EntityLink": {
+        "required": [
+          "id",
+          "name",
+          "canonicalPath",
+          "image"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "canonicalPath": {
+            "type": "string",
+            "description": "Its page, such as `items/1036-long-sword`, under the locale prefix."
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "edition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "For an item, which game it belongs to; twins share their name.",
+                "$ref": "#/components/schemas/Edition"
+              }
+            ]
+          }
+        },
+        "description": "Another entry a page links to: a recipe component, an upgrade, a bound champion."
+      },
+      "GameMode": {
+        "enum": [
+          "sr",
+          "aram",
+          "nexus_blitz",
+          "arena"
+        ],
+        "type": "string",
+        "description": "Game modes a build can target, each bound to the map that gates its items."
+      },
+      "GameModeMap": {
+        "required": [
+          "mode",
+          "map"
+        ],
+        "type": "object",
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/GameMode"
+          },
+          "map": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "A game mode and the Data Dragon map id that gates its items."
+      },
+      "GameStat": {
+        "enum": [
+          "attack_damage",
+          "ability_power",
+          "attack_speed",
+          "crit_chance",
+          "life_steal",
+          "health",
+          "health_regen",
+          "armor",
+          "magic_resist",
+          "mana",
+          "mana_regen",
+          "move_speed",
+          "attack_range"
+        ],
+        "type": "string",
+        "description": "The game attributes the encyclopedia surfaces (champion base stats, item stat blocks)."
+      },
+      "ImageStatus": {
+        "enum": [
+          "present",
+          "absent",
+          "pending"
+        ],
+        "type": "string",
+        "description": "What an image resolves to."
+      },
+      "ItemCard": {
+        "required": [
+          "id",
+          "name",
+          "canonicalPath",
+          "image",
+          "edition",
+          "summary",
+          "gold",
+          "tags",
+          "maps",
+          "consumable",
+          "stats"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "canonicalPath": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "edition": {
+            "description": "Which game the item belongs to: 1004 and 771004 share a name.",
+            "$ref": "#/components/schemas/Edition"
+          },
+          "counterpart": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The same-named item of the other game, when there is one.",
+                "$ref": "#/components/schemas/CounterpartLink"
+              }
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "description": "The one-line description, template tokens removed."
+          },
+          "gold": {
+            "$ref": "#/components/schemas/ItemGold"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "maps": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "Data Dragon ids of the named maps the item is available on."
+          },
+          "tier": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ItemTier"
+              }
+            ]
+          },
+          "consumable": {
+            "type": "boolean"
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemStat"
+            }
+          }
+        },
+        "description": "An item as the list shows it, with the values its facets filter on: tags, edition, maps,\ntier, price, stats."
+      },
+      "ItemDetails": {
+        "required": [
+          "version",
+          "language",
+          "canonicalPath",
+          "profile",
+          "description",
+          "availableMaps",
+          "upgrades"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "contentLanguage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canonicalPath": {
+            "type": "string",
+            "description": "The page the routing redirects a stale or slugless URL to."
+          },
+          "profile": {
+            "description": "The facts of the list's card, the edition and its twin among them.",
+            "$ref": "#/components/schemas/ItemCard"
+          },
+          "description": {
+            "type": "string",
+            "description": "Riot's rich text, unresolved template tokens removed."
+          },
+          "availableMaps": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "The map ids the item's availability line claims: the Classic Rift (453) alone for a\nClassic item, never for a current one (UP 6)."
+          },
+          "requiredChampion": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The champion only who may buy it (Kalista's Black Spear).",
+                "$ref": "#/components/schemas/EntityLink"
+              }
+            ]
+          },
+          "requiredAlly": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The ally the item needs in the team (Ornn's upgrades).",
+                "$ref": "#/components/schemas/EntityLink"
+              }
+            ]
+          },
+          "recipe": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The item and its components, recursively.",
+                "$ref": "#/components/schemas/RecipeStep"
+              }
+            ]
+          },
+          "upgrades": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntityLink"
+            }
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/items/{id}`: the card, then the description, the\nrecipe, the upgrades and the champion the item is bound to, every image resolved."
+      },
+      "ItemFacets": {
+        "required": [
+          "tags"
+        ],
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Every tag the listed items carry, as Data Dragon names them."
+          }
+        },
+        "description": "The facet options the data decides, over the whole list; the fixed ones (editions, tiers,\nmaps, stats) are enums of the contract or of `/api/meta`."
+      },
+      "ItemGold": {
+        "required": [
+          "base",
+          "total",
+          "sell",
+          "isPurchasable"
+        ],
+        "type": "object",
+        "properties": {
+          "base": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sell": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isPurchasable": {
+            "type": "boolean"
+          }
+        },
+        "description": "Price of an item: int ItemGold.Base is the combine cost on top of the components,\nint ItemGold.Total the full price."
+      },
+      "ItemList": {
+        "required": [
+          "version",
+          "language",
+          "total",
+          "facets",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "contentLanguage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "size": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "facets": {
+            "$ref": "#/components/schemas/ItemFacets"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemCard"
+            }
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/items`: the items of the encyclopedia, Classic\nones included and debris left out, in the upstream order."
+      },
+      "ItemOption": {
+        "required": [
+          "id",
+          "name",
+          "image",
+          "gold",
+          "tags"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "gold": {
+            "type": "integer",
+            "description": "Total cost, the figure a build sums.",
+            "format": "int32"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Raw Data Dragon tags, the picker's filter."
+          }
+        },
+        "description": "An item the build editor offers in a mode."
+      },
+      "ItemPicker": {
+        "required": [
+          "version",
+          "language",
+          "mode",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "mode": {
+            "description": "The mode served: an absent or unknown one falls back to the default.",
+            "$ref": "#/components/schemas/GameMode"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemOption"
+            }
+          }
+        },
+        "description": "`GET /api/pickers/items`: the items a build of the mode may carry, by name. Classic\nitems, those the mode's map lacks, unpurchasable, hidden and champion-bound ones are left\nout (bool ItemPlayability.IsPickable(Item item, GameMode mode))."
+      },
+      "ItemStat": {
+        "required": [
+          "stat",
+          "isPercent",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "stat": {
+            "$ref": "#/components/schemas/GameStat"
+          },
+          "isPercent": {
+            "type": "boolean",
+            "description": "Whether double ItemStat.Value is a fraction to read as a percentage."
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "description": "One non-zero row of an item stat block."
+      },
+      "ItemTier": {
+        "enum": [
+          "component",
+          "epic",
+          "legendary",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "LocaleLanguage": {
+        "required": [
+          "locale",
+          "language"
+        ],
+        "type": "object",
+        "properties": {
+          "locale": {
+            "$ref": "#/components/schemas/UiLocale"
+          },
+          "language": {
+            "type": "string"
+          }
+        },
+        "description": "An interface locale and the Data Dragon language its pages read by default."
+      },
+      "PlatformPolicy": {
+        "required": [
+          "platform"
+        ],
+        "type": "object",
+        "properties": {
+          "platform": {
+            "$ref": "#/components/schemas/ClientPlatform"
+          },
+          "minimumVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Below it the app must update before use; null while there is no floor."
+          },
+          "latestVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The newest release; null while none is published."
+          }
+        },
+        "description": "What one app must run, and what it may update to."
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RecipeStep": {
+        "required": [
+          "id",
+          "name",
+          "canonicalPath",
+          "image",
+          "gold",
+          "combine",
+          "components"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "canonicalPath": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "gold": {
+            "type": "integer",
+            "description": "Total cost of the item.",
+            "format": "int32"
+          },
+          "combine": {
+            "type": "integer",
+            "description": "What completing it costs on top of its components.",
+            "format": "int32"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeStep"
+            }
+          }
+        },
+        "description": "An item of a recipe tree, with the components it is built from."
+      },
+      "ResourceType": {
+        "enum": [
+          "champions",
+          "items",
+          "runes",
+          "summoners"
+        ],
+        "type": "string",
+        "description": "The four Data Dragon resources the site catalogues, each with its own pages and paths."
+      },
+      "RuneCard": {
+        "required": [
+          "id",
+          "key",
+          "name",
+          "image",
+          "shortDesc",
+          "tree",
+          "slot",
+          "canonicalPath"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "shortDesc": {
+            "type": "string",
+            "description": "Riot's rich text, unresolved template tokens removed."
+          },
+          "tree": {
+            "type": "string",
+            "description": "Key of its path, such as Precision."
+          },
+          "slot": {
+            "type": "string",
+            "description": "Its row: \"keystone\", then \"row1\" to \"row3\"."
+          },
+          "canonicalPath": {
+            "type": "string",
+            "description": "The page of its path: runes have none of their own."
+          }
+        },
+        "description": "A rune as the list shows it, with the values its facets filter on: its path and its row."
+      },
+      "RuneEntry": {
+        "required": [
+          "id",
+          "key",
+          "name",
+          "image",
+          "shortDesc",
+          "longDesc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "shortDesc": {
+            "type": "string",
+            "description": "Riot's rich text, unresolved template tokens removed."
+          },
+          "longDesc": {
+            "type": "string",
+            "description": "Riot's rich text, unresolved template tokens removed."
+          }
+        },
+        "description": "A rune on its path's page, with both of its descriptions."
+      },
+      "RuneList": {
+        "required": [
+          "version",
+          "language",
+          "total",
+          "trees",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "contentLanguage": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Null when the version ships no rune path at all."
+          },
+          "total": {
+            "type": "integer",
+            "description": "Runes of the whole list, whatever the page.",
+            "format": "int32"
+          },
+          "page": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "size": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "trees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuneTreeCard"
+            },
+            "description": "Every path, whatever the page: the path facet and its links."
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuneCard"
+            }
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/runes`: the runes of every path, path by path and\nrow by row; empty before 7.22.1, which shipped the first rune paths (UP 1)."
+      },
+      "RuneOption": {
+        "required": [
+          "id",
+          "key",
+          "name",
+          "image",
+          "shortDesc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "shortDesc": {
+            "type": "string",
+            "description": "Riot's rich text, unresolved template tokens removed."
+          }
+        },
+        "description": "A rune the build editor offers, in its slot."
+      },
+      "RunePicker": {
+        "required": [
+          "version",
+          "language",
+          "trees"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "trees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuneTreeOption"
+            }
+          }
+        },
+        "description": "`GET /api/pickers/runes`: every rune path in the upstream order; none before 7.22.1."
+      },
+      "RuneRow": {
+        "required": [
+          "slot",
+          "runes"
+        ],
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "string",
+            "description": "\"keystone\", then \"row1\" to \"row3\"."
+          },
+          "runes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuneEntry"
+            }
+          }
+        },
+        "description": "A row of a rune path: the keystones, then three rows of minor runes."
+      },
+      "RuneTreeCard": {
+        "required": [
+          "id",
+          "key",
+          "name",
+          "canonicalPath",
+          "image"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Path id, such as 8000.",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string",
+            "description": "Language-independent key, such as Precision: the list filters on it."
+          },
+          "name": {
+            "type": "string"
+          },
+          "canonicalPath": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          }
+        },
+        "description": "A rune path: a facet of the rune list, and a page of its own."
+      },
+      "RuneTreeDetails": {
+        "required": [
+          "version",
+          "language",
+          "canonicalPath",
+          "profile",
+          "slots"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "contentLanguage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canonicalPath": {
+            "type": "string",
+            "description": "The page the routing redirects a stale or slugless URL to."
+          },
+          "profile": {
+            "$ref": "#/components/schemas/RuneTreeCard"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuneRow"
+            }
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/runes/{id}`: a rune path and its rows, every image\nresolved."
+      },
+      "RuneTreeOption": {
+        "required": [
+          "id",
+          "key",
+          "name",
+          "image",
+          "slots"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RuneOption"
+              }
+            },
+            "description": "The runes of each slot, in the upstream order."
+          }
+        },
+        "description": "A rune path and its runes, slot by slot, keystones first."
+      },
+      "SearchResultHit": {
+        "required": [
+          "type",
+          "id",
+          "name",
+          "canonicalPath",
+          "image"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ResourceType"
+          },
+          "id": {
+            "type": "string",
+            "description": "The id its detail endpoint takes."
+          },
+          "name": {
+            "type": "string"
+          },
+          "canonicalPath": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "edition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "For an item or a summoner spell, which game it belongs to.",
+                "$ref": "#/components/schemas/Edition"
+              }
+            ]
+          }
+        },
+        "description": "An entry the search found, enough to show it and link to its page."
+      },
+      "SearchResults": {
+        "required": [
+          "version",
+          "language",
+          "query",
+          "hits"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string",
+            "description": "The query as typed, trimmed."
+          },
+          "hits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchResultHit"
+            }
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/search`: the hits, resource by resource in the\norder champions, items, runes, summoners, each in the upstream order and capped."
+      },
+      "SkinOption": {
+        "required": [
+          "id",
+          "number",
+          "name",
+          "image",
+          "banner"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id a profile stores: champion id and skin number (\"Ahri_1\")."
+          },
+          "number": {
+            "type": "integer",
+            "description": "Number of the skin's art, 0 for the base skin.",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name: the base skin reads as the champion."
+          },
+          "image": {
+            "type": "string",
+            "description": "The loading-screen portrait, the picker's thumbnail.",
+            "format": "uri"
+          },
+          "banner": {
+            "type": "string",
+            "description": "The centered splash, the profile's banner.",
+            "format": "uri"
+          }
+        },
+        "description": "A skin the profile banner picker offers, its art hotlinked (UP 8)."
+      },
+      "SkinPicker": {
+        "required": [
+          "version",
+          "language",
+          "skins"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "champion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The champion served; null when the one asked for is unknown."
+          },
+          "skins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinOption"
+            }
+          }
+        },
+        "description": "`GET /api/pickers/skins?champion=`: the skins of a champion, chromas left out. A\nmissing or unknown champion gives no skins rather than an error: the banner picker then\nshows an empty choice instead of a broken dialog."
+      },
+      "SummonerCard": {
+        "required": [
+          "id",
+          "key",
+          "name",
+          "canonicalPath",
+          "image",
+          "edition",
+          "description",
+          "cooldown",
+          "modes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Data Dragon id, such as SummonerFlash or its Classic twin SummonerFlash_Jade."
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "canonicalPath": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "edition": {
+            "$ref": "#/components/schemas/Edition"
+          },
+          "counterpart": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The same-named spell of the other game, when there is one.",
+                "$ref": "#/components/schemas/CounterpartLink"
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "Riot's rich text, unresolved template tokens removed."
+          },
+          "cooldown": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "Cooldown per rank, in seconds."
+          },
+          "summonerLevel": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Summoner level that unlocks the spell.",
+            "format": "int32"
+          },
+          "modes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummonerMode"
+            }
+          }
+        },
+        "description": "A summoner spell as the list shows it, with the values its facets filter on: modes,\nedition, level and cooldown."
+      },
+      "SummonerDetails": {
+        "required": [
+          "version",
+          "language",
+          "canonicalPath",
+          "profile",
+          "cost",
+          "range",
+          "globalRange"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "contentLanguage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canonicalPath": {
+            "type": "string",
+            "description": "The page the routing redirects a stale or slugless URL to."
+          },
+          "profile": {
+            "description": "The facts of the list's card, the edition and its twin among them.",
+            "$ref": "#/components/schemas/SummonerCard"
+          },
+          "cost": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "costType": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "What the cost is paid in, when Data Dragon says."
+          },
+          "range": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "Range per rank; see bool SummonerDetails.GlobalRange."
+          },
+          "globalRange": {
+            "type": "boolean",
+            "description": "Whether the range is Data Dragon's \"whole map\" sentinel."
+          },
+          "charges": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/summoners/{id}`: the card, then the cost, range\nand charges, the image resolved."
+      },
+      "SummonerFacets": {
+        "required": [
+          "modes",
+          "levels"
+        ],
+        "type": "object",
+        "properties": {
+          "modes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The filterable modes some spell allows, in the facet's display order."
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "The unlock levels, ascending."
+          }
+        },
+        "description": "The facet options the data decides, over the whole list."
+      },
+      "SummonerList": {
+        "required": [
+          "version",
+          "language",
+          "total",
+          "facets",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "contentLanguage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "size": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "facets": {
+            "$ref": "#/components/schemas/SummonerFacets"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummonerCard"
+            }
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/summoners`: every summoner spell, Classic twins\nincluded, in the upstream order."
+      },
+      "SummonerMode": {
+        "required": [
+          "code",
+          "facetable"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Data Dragon mode, such as CLASSIC or JADE (LoL Classic)."
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "English display name; null for a mode shown by its edition instead."
+          },
+          "facetable": {
+            "type": "boolean",
+            "description": "Whether the list's mode facet offers it."
+          }
+        },
+        "description": "A queue a summoner spell is allowed in, as its plaque shows it."
+      },
+      "SummonerOption": {
+        "required": [
+          "id",
+          "key",
+          "name",
+          "image"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string",
+            "description": "Numeric id the game uses (\"4\")."
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          }
+        },
+        "description": "A summoner spell the build editor offers."
+      },
+      "SummonerPicker": {
+        "required": [
+          "version",
+          "language",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummonerOption"
+            }
+          }
+        },
+        "description": "`GET /api/pickers/summoners`: the summoner spells of the standard Summoner's Rift\nqueue (Data Dragon's CLASSIC mode), by name. Classic twins and event spells are left out."
+      },
+      "UiLocale": {
+        "enum": [
+          "ar",
+          "cs",
+          "de",
+          "el",
+          "en",
+          "es",
+          "fr",
+          "hu",
+          "id",
+          "it",
+          "ja",
+          "ko",
+          "pl",
+          "pt",
+          "ro",
+          "ru",
+          "th",
+          "tr",
+          "vi",
+          "zh-hans",
+          "zh-hant"
+        ],
+        "type": "string",
+        "description": "Interface locale of the site, carried as the first URL segment (`/{locale}/…`)."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Meta"
+    },
+    {
+      "name": "Catalog"
+    },
+    {
+      "name": "Pickers"
+    },
+    {
+      "name": "ClientPolicy"
+    }
+  ]
+}

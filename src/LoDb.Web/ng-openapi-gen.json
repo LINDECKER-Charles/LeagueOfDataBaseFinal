@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/ng-openapi-gen/ng-openapi-gen-schema.json",
+  "input": "../LoDb.Api/openapi/LoDb.Api_app.json",
+  "output": "src/app/core/api/generated",
+  "templates": "src/app/core/api/templates",
+  "services": true,
+  "promises": false,
+  "apiService": false,
+  "enumStyle": "alias",
+  "enumArray": true,
+  "ignoreUnusedModels": true,
+  "removeStaleFiles": true,
+  "endOfLineStyle": "lf",
+  "silent": true
+}
