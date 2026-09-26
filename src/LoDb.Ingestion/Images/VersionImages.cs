@@ -75,13 +75,21 @@ public static class VersionImages
             .DistinctBy(static image => (image.ManifestType, image.File)),
     ];
 
+    /// <summary>
+    /// The image a dataset field names, or <see langword="null"/> for a key the manifest
+    /// cannot hold: not a Data Dragon image name, skipped rather than thrown, so that one odd
+    /// entry never blocks a whole version.
+    /// </summary>
+    internal static DdragonImage? ImageOf(DdragonImageKind kind, string? file) =>
+        !string.IsNullOrWhiteSpace(file) && file.Length <= DdragonImage.MaxFileLength
+            ? new DdragonImage(kind, file)
+            : null;
+
     private static void Add(List<DdragonImage> images, DdragonImageKind kind, string? file)
     {
-        // A key the manifest cannot hold is not a Data Dragon image name: skipped, not thrown,
-        // so that one odd entry never blocks a whole version.
-        if (!string.IsNullOrWhiteSpace(file) && file.Length <= DdragonImage.MaxFileLength)
+        if (ImageOf(kind, file) is { } image)
         {
-            images.Add(new DdragonImage(kind, file));
+            images.Add(image);
         }
     }
 }
