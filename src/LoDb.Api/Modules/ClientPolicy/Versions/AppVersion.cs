@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
-namespace LoDb.Api.Modules.ClientPolicy;
+namespace LoDb.Api.Modules.ClientPolicy.Versions;
 
 /// <summary>An app's release number: three numbers, as the release tags write it (1.2.3).</summary>
 internal static class AppVersion
