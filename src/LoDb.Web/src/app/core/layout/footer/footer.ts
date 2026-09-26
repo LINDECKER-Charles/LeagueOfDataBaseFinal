@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
 import { Icon } from '../../../ui/media/icon';
 import { Logo } from '../../../ui/media/logo';
 import { PageDirection } from '../direction/page-direction';
@@ -14,11 +14,14 @@ import { SITE_LINKS } from './site-links';
 /**
  * Site footer: brand and copyright, site map, outside links, release, legal pages, contact
  * links with the `contact` slot under them, then Riot's legal disclaimer, which Riot's
- * policy words in English and is kept verbatim in every locale.
+ * policy words in English and is kept verbatim in every locale. The site map labels some
+ * pages from the `about` and `api` catalogue scopes, loaded here since the footer sits
+ * outside the pages that provide them.
  */
 @Component({
   selector: 'lodb-footer',
   imports: [Icon, Logo, RouterLink, TranslocoPipe],
+  providers: [provideTranslocoScope('about', 'api')],
   templateUrl: './footer.html',
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,

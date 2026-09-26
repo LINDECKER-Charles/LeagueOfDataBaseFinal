@@ -10,12 +10,14 @@ import { TestBed } from '@angular/core/testing';
 import {
   type BootstrapContext,
   bootstrapApplication,
+  Meta,
   provideClientHydration,
 } from '@angular/platform-browser';
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 import { provideRouter, RouterOutlet } from '@angular/router';
 import { type Translation, TranslocoPipe } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
+import { Shell } from '../../layout/shell/shell';
 import { activateLocale } from '../activate-locale';
 import { provideI18n } from '../provide-i18n';
 import { TranslocoHttpLoader } from './transloco-http-loader';
@@ -24,6 +26,18 @@ import { TranslocoHttpLoader } from './transloco-http-loader';
 const CATALOGUES: Record<string, Translation> = {
   '/i18n/en.json': { base: { title: 'Hello', tagline: 'Only in English' } },
   '/i18n/fr.json': { base: { title: 'Bonjour' } },
+  '/i18n/about/en.json': {
+    index: { title: 'About' },
+    data: { title: 'Our data' },
+    faq: { title: 'FAQ' },
+  },
+  '/i18n/about/fr.json': {
+    index: { title: 'À propos' },
+    data: { title: 'Nos données' },
+    faq: { title: 'Foire aux questions' },
+  },
+  '/i18n/api/en.json': { nav: { developers: 'Developers' } },
+  '/i18n/api/fr.json': { nav: { developers: 'Développeurs' } },
 };
 // Angular's default, which the render keeps and TestBed does not.
 const SERVER_APP_ID = 'ng';
@@ -38,6 +52,14 @@ const DOCUMENT_HTML =
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class TitlePage {}
+
+@Component({
+  selector: 'lodb-chrome-page',
+  imports: [Shell],
+  template: '<lodb-shell><p>Page</p></lodb-shell>',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class ChromePage {}
 
 @Component({
   selector: 'lodb-root',
@@ -66,10 +88,15 @@ function browserConfig(): ApplicationConfig {
     providers: [
       provideRouter([
         { path: ':locale', resolve: { locale: activateLocale }, component: TitlePage },
+        { path: ':locale/chrome', resolve: { locale: activateLocale }, component: ChromePage },
       ]),
       provideHttpClient(),
       provideClientHydration(),
       provideI18n(),
+      // The chrome's theme sets a meta tag. Meta builds it through the global DOM adapter,
+      // which Vitest pins to jsdom's, then inserts it in the render's domino document: the
+      // two do not mix, and the tag is not what these specs check.
+      { provide: Meta, useValue: { updateTag: () => null } },
     ],
   };
 }
@@ -124,6 +151,20 @@ describe('i18n catalogues in SSR', () => {
     expect(html).toMatch(/<h1>Bonjour<\/h1>\s*<p>Only in English<\/p>/);
     const fetched = fetch.mock.calls.map(([input]) => new URL(String(input)).pathname);
     expect(fetched.sort()).toEqual(['/i18n/en.json', '/i18n/fr.json']);
+  });
+
+  it('renders the header and footer with the labels of their catalogue scopes', async () => {
+    stubCatalogueFetch();
+    // The stubbed root catalogues lack the chrome's own labels, which is not the point here.
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    const body = bodyOf(await renderOnServer('/fr/chrome'));
+
+    expect(body).toContain('Développeurs');
+    expect(body).toContain('À propos');
+    expect(body).toContain('Nos données');
+    expect(body).toContain('Foire aux questions');
+    expect(body.match(/>\s*(?:about|api)\.[a-z_.]+\s*</g)).toBeNull();
   });
 
   it('embeds the catalogues in the page, so the browser does not download them again', async () => {
