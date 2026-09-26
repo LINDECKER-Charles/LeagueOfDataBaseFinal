@@ -1,0 +1,50 @@
+@let build = row();
+<lodb-vote-score [buildId]="build.id" [vote]="vote()" />
+
+<a class="trend-row__id" [routerLink]="['/b', build.shareToken]">
+  <span class="trend-row__portrait" [class.forge-ghost]="build.champion.missing">
+    <lodb-image
+      class="size-full"
+      [src]="portrait()"
+      [alt]="build.champion.name"
+      [width]="56"
+      [height]="56"
+      [initials]="initials()"
+      imgClass="object-cover"
+    />
+    @if (keystone(); as icon) {
+      <img
+        class="hx-img trend-row__keystone"
+        [src]="icon"
+        [alt]="build.keystone.name"
+        width="26"
+        height="26"
+        loading="lazy"
+        decoding="async"
+      />
+    }
+  </span>
+  <span class="min-w-0">
+    <span class="block truncate font-beaufort text-lg tracking-wide text-gold-grad">{{
+      build.name
+    }}</span>
+    <span class="block truncate font-mono text-xs text-text-muted">{{ build.champion.name }}</span>
+  </span>
+</a>
+
+<div class="trend-row__meta">
+  <p class="trend-row__author"><lodb-owner-credit [owner]="build.owner" /></p>
+  <p class="trend-row__chips">
+    <span lodbChip>{{ modeKey() | transloco }}</span>
+    <span lodbChip>{{ build.gameVersion }}</span>
+    <span lodbChip>{{ language() }}</span>
+  </p>
+</div>
+
+@if (build.items.length > 0) {
+  <ul class="trend-row__items" aria-hidden="true">
+    @for (item of build.items; track $index) {
+      <li><lodb-build-item [item]="item" excerpt /></li>
+    }
+  </ul>
+}

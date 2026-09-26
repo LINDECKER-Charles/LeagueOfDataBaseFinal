@@ -1,0 +1,66 @@
+/*
+ * The net score of a build between its two arrows: the one number ever shown, never the
+ * count of each vote. The arrow of the reader's own vote lights up, cyan or red.
+ */
+@layer components {
+  :host {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .vote-arrow {
+    display: grid;
+    place-items: center;
+    inline-size: 1.9rem;
+    block-size: 1.5rem;
+    color: var(--color-text-dim);
+    transition:
+      color 0.2s var(--ease-hextech),
+      filter 0.2s var(--ease-hextech);
+  }
+  .vote-arrow svg {
+    inline-size: 0.85rem;
+    block-size: 0.85rem;
+  }
+  .vote-arrow:hover,
+  .vote-arrow:focus-visible {
+    color: var(--color-gold-bright);
+  }
+  .vote-arrow--on-up,
+  .vote-arrow--on-up:hover,
+  .vote-arrow--on-up:focus-visible {
+    color: var(--color-hex);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-hex) 70%, transparent));
+  }
+  .vote-arrow--on-down,
+  .vote-arrow--on-down:hover,
+  .vote-arrow--on-down:focus-visible {
+    color: var(--color-danger);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-danger) 70%, transparent));
+  }
+  .vote-arrow[disabled] {
+    opacity: 0.5;
+    cursor: wait;
+  }
+
+  .vote-score {
+    min-inline-size: 2.2rem;
+    font-family: var(--font-beaufort);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+  .vote-score--positive {
+    color: var(--color-gold);
+  }
+  .vote-score--negative {
+    color: var(--color-text-muted);
+  }
+  .vote-score--zero {
+    color: var(--color-text-dim);
+  }
+}

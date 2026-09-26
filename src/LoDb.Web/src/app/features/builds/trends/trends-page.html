@@ -1,0 +1,48 @@
+@let current = view();
+@let page = current.page;
+<div class="relative px-6 py-12">
+  <div aria-hidden="true" class="trends-ambient pointer-events-none absolute inset-0"></div>
+
+  <div class="relative mx-auto max-w-5xl">
+    <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="eyebrow">{{ 'community.trends.eyebrow' | transloco }}</p>
+        <h1
+          class="mt-2 font-beaufort text-3xl font-bold tracking-wide text-gold-grad uppercase sm:text-4xl"
+        >
+          {{ 'community.trends.title' | transloco }}
+        </h1>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <span lodbChip data-total>{{ 'filter.results' | transloco: { count: page.total } }}</span>
+        <lodb-forge-cta [locale]="current.locale" />
+      </div>
+    </header>
+    <hr class="hx-rule mb-8" />
+
+    <lodb-trend-filters
+      [filters]="page.filters"
+      [champions]="page.championOptions"
+      [languages]="page.languageOptions"
+      [modes]="current.modes"
+      [action]="action()"
+    />
+
+    @if (rows().length === 0) {
+      <div class="hextech-frame mt-8 p-10 text-center" data-empty>
+        <p class="eyebrow mb-3">{{ 'community.trends.title' | transloco }}</p>
+        <p class="mx-auto max-w-md text-sm text-text-muted">
+          {{ 'community.trends.empty' | transloco }}
+        </p>
+        <div class="mt-6"><lodb-forge-cta [locale]="current.locale" /></div>
+      </div>
+    } @else {
+      <ol class="trend-list mt-8">
+        @for (entry of rows(); track entry.row.id) {
+          <li><lodb-trend-row [row]="entry.row" [vote]="entry.vote" /></li>
+        }
+      </ol>
+      <lodb-trends-pager [page]="page.page" [pages]="page.pages" />
+    }
+  </div>
+</div>

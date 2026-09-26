@@ -1,0 +1,46 @@
+@if (pages() > 1) {
+  <nav
+    class="trends-pager"
+    [attr.aria-label]="'filter.page' | transloco: { page: page(), count: pages() }"
+  >
+    @if (previous(); as params) {
+      <a
+        class="trends-pager__link"
+        rel="prev"
+        [routerLink]="[]"
+        [queryParams]="params"
+        queryParamsHandling="merge"
+      >
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+          <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+        {{ 'filter.prev' | transloco }}
+      </a>
+    } @else {
+      <span class="trends-pager__link trends-pager__link--off" aria-hidden="true">
+        {{ 'filter.prev' | transloco }}
+      </span>
+    }
+    <span class="trends-pager__position">
+      {{ 'filter.page' | transloco: { page: page(), count: pages() } }}
+    </span>
+    @if (next(); as params) {
+      <a
+        class="trends-pager__link"
+        rel="next"
+        [routerLink]="[]"
+        [queryParams]="params"
+        queryParamsHandling="merge"
+      >
+        {{ 'filter.next' | transloco }}
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+          <path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+      </a>
+    } @else {
+      <span class="trends-pager__link trends-pager__link--off" aria-hidden="true">
+        {{ 'filter.next' | transloco }}
+      </span>
+    }
+  </nav>
+}
