@@ -45,7 +45,7 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
         using var second = await VerifyAsync(reader, link.UserId, link.Token);
 
         Assert.Equal(HttpStatusCode.Accepted, resend.StatusCode);
-        Assert.Equal(new Uri("https://localhost/de/verify-email"), link.Page);
+        Assert.Equal(new Uri("https://localhost/de/account/verify-email"), link.Page);
         Assert.Equal(account.Id, link.UserId);
         Assert.False(await AlreadyVerifiedAsync(first));
         Assert.True(await AlreadyVerifiedAsync(second));

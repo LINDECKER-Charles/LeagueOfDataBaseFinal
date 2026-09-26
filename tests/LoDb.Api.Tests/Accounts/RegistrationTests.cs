@@ -49,9 +49,10 @@ public sealed class RegistrationTests(PostgresContainerFixture postgres)
             ("nouveau@example.test", EmailTemplate.ConfirmEmail, UiLocale.Fr),
             (mail.Recipient, mail.Template, mail.Locale));
         var link = EmailLink.Of(mail);
-        Assert.Equal(new Uri("https://localhost/fr/verify-email"), link.Page);
+        Assert.Equal(new Uri("https://localhost/fr/account/verify-email"), link.Page);
         Assert.Equal(user.GetProperty("id").GetInt32(), link.UserId);
-        Assert.Equal("60", mail.Model["expiresInMinutes"]);
+        Assert.Equal("60", mail.Model[EmailModelKeys.ExpiresInMinutes]);
+        Assert.Equal("Nouveau_7", mail.Model[EmailModelKeys.UserName]);
     }
 
     [Fact]

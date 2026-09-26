@@ -4,7 +4,6 @@ using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Outbox;
 using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebUtilities;
 
 namespace LoDb.Api.Modules.Accounts.Links;
 
@@ -13,8 +12,8 @@ namespace LoDb.Api.Modules.Accounts.Links;
 /// the one that sets a new password. Both live an hour.
 /// </summary>
 /// <remarks>
-/// The model of the templates holds <c>username</c>, <c>displayName</c> (the username and its
-/// Riot tag line), <c>actionUrl</c> and <c>expiresInMinutes</c>.
+/// The model holds the keys of <see cref="EmailModelKeys"/> the templates read: the username,
+/// the link and its lifetime in minutes.
 /// </remarks>
 internal sealed partial class AccountMail(
     UserManager<User> users,
@@ -22,11 +21,10 @@ internal sealed partial class AccountMail(
     IServiceProvider services,
     ILogger<AccountMail> logger)
 {
-    private const string UsernameKey = "username";
-    private const string DisplayNameKey = "displayName";
-    private const string ActionUrlKey = "actionUrl";
-    private const string ExpiresInMinutesKey = "expiresInMinutes";
-    private const char TaglineSeparator = '#';
+    // Whole minutes in invariant digits, as the templates read them.
+    private static readonly string LifetimeMinutes =
+        ((int)AuthenticationSetup.EmailTokenLifetime.TotalMinutes)
+            .ToString(CultureInfo.InvariantCulture);
 
     /// <summary>Queues the link verifying the e-mail of <paramref name="user"/>.</summary>
     /// <returns>Whether it is queued: not without an outbox or a site origin.</returns>
@@ -98,31 +96,17 @@ internal sealed partial class AccountMail(
 
     private static Dictionary<string, string?> Model(Letter letter, string site) => new()
     {
-        [UsernameKey] = letter.Account.UserName,
-        [DisplayNameKey] = DisplayName(letter.Account),
-        [ActionUrlKey] = Link(letter, site),
-        [ExpiresInMinutesKey] = AuthenticationSetup.EmailTokenLifetime.TotalMinutes
-            .ToString(CultureInfo.InvariantCulture),
+        [EmailModelKeys.UserName] = letter.Account.UserName,
+        [EmailModelKeys.ActionUrl] = site + Link(letter),
+        [EmailModelKeys.ExpiresInMinutes] = LifetimeMinutes,
     };
 
-    private static string DisplayName(User user) =>
-        user.RiotTagline is { Length: > 0 } tagline
-            ? $"{user.UserName}{TaglineSeparator}{tagline}"
-            : user.UserName ?? string.Empty;
-
-    private static string Link(Letter letter, string site)
+    private static string Link(Letter letter)
     {
-        var page = letter.Template == EmailTemplate.ConfirmEmail
-            ? FrontPages.VerifyEmail
-            : FrontPages.ResetPassword;
-        return QueryHelpers.AddQueryString(
-            site + FrontPages.Path(letter.Locale, page),
-            new Dictionary<string, string?>
-            {
-                [FrontPages.UserParameter] =
-                    letter.Account.Id.ToString(CultureInfo.InvariantCulture),
-                [FrontPages.TokenParameter] = EmailTokens.Encode(letter.Token),
-            });
+        var token = EmailTokens.Encode(letter.Token);
+        return letter.Template == EmailTemplate.ConfirmEmail
+            ? FrontPages.VerifyEmailLink(letter.Locale, letter.Account.Id, token)
+            : FrontPages.ResetPasswordLink(letter.Locale, letter.Account.Id, token);
     }
 
     [LoggerMessage(

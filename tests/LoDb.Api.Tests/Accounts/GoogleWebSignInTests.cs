@@ -135,7 +135,7 @@ public sealed class GoogleWebSignInTests(PostgresContainerFixture postgres)
 
         var target = await SignInWithGoogleAsync(browser, "locale=de");
 
-        Assert.Equal("/de/login?error=google-email-unverified", target);
+        Assert.Equal("/de/account/login?error=google-email-unverified", target);
         Assert.Null(await browser.SignedInAsAsync());
         Assert.Null((await App.FindAsync(AccountSeed.Name)).GoogleId);
         var refusal = Assert.Single(await App.AuditAsync());
@@ -191,17 +191,17 @@ public sealed class GoogleWebSignInTests(PostgresContainerFixture postgres)
 
         var target = await SignInWithGoogleAsync(browser, "locale=en");
 
-        Assert.Equal($"/en/login?error={error}", target);
+        Assert.Equal($"/en/account/login?error={error}", target);
         Assert.Null(await browser.SignedInAsAsync());
     }
 
     [Theory]
     [InlineData("/en/items?tier=legendary", "/en/items?tier=legendary")]
     [InlineData("https://localhost/en/runes", "/en/runes")]
-    [InlineData("https://evil.example/phish", "/en/profile")]
-    [InlineData("//evil.example/phish", "/en/profile")]
-    [InlineData("/\\evil.example/phish", "/en/profile")]
-    [InlineData("javascript:alert(1)", "/en/profile")]
+    [InlineData("https://evil.example/phish", "/en/account/profile")]
+    [InlineData("//evil.example/phish", "/en/account/profile")]
+    [InlineData("/\\evil.example/phish", "/en/account/profile")]
+    [InlineData("javascript:alert(1)", "/en/account/profile")]
     public async Task BrowserOnlyReturnsToAPageOfTheSite(string returnUrl, string expected)
     {
         App.GoogleServer.Account = NewAccount();
@@ -225,7 +225,7 @@ public sealed class GoogleWebSignInTests(PostgresContainerFixture postgres)
 
         Assert.Equal(HttpStatusCode.Found, callback.StatusCode);
         Assert.Equal(
-            "/fr/login?error=google-cancelled",
+            "/fr/account/login?error=google-cancelled",
             callback.Headers.Location?.OriginalString);
         Assert.Empty(App.GoogleServer.Exchanges);
     }
@@ -239,7 +239,9 @@ public sealed class GoogleWebSignInTests(PostgresContainerFixture postgres)
         using var callback = await browser.GetAsync(
             $"/api/account/google/callback?code=stolen&state={state}");
 
-        Assert.Equal("/en/login?error=google-failed", callback.Headers.Location?.OriginalString);
+        Assert.Equal(
+            "/en/account/login?error=google-failed",
+            callback.Headers.Location?.OriginalString);
         Assert.Null(await browser.SignedInAsAsync());
     }
 
@@ -272,7 +274,7 @@ public sealed class GoogleWebSignInTests(PostgresContainerFixture postgres)
 
         Assert.Equal(HttpStatusCode.Found, start.StatusCode);
         Assert.Equal(
-            "/it/login?error=google-unavailable",
+            "/it/account/login?error=google-unavailable",
             start.Headers.Location?.OriginalString);
     }
 
