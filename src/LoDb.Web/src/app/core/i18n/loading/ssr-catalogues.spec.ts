@@ -101,6 +101,26 @@ function browserConfig(): ApplicationConfig {
   };
 }
 
+// The render emulates a DOM by writing domino's classes over the globals (Event, Node…), and
+// Vitest runs the spec files of a worker in one global scope: the specs that run next would
+// build domino events for jsdom elements, which jsdom refuses to dispatch. Put the classes
+// back. Vitest serves jsdom's through accessors, so their values are read and written back
+// through them, which also restores the jsdom window behind.
+async function keepingGlobals<T>(render: () => Promise<T>): Promise<T> {
+  const classes = Object.entries(Object.getOwnPropertyDescriptors(globalThis))
+    .filter(([name]) => /^[A-Z]/.test(name))
+    .map(([name, descriptor]) => [name, descriptor.get?.call(globalThis) ?? descriptor.value]);
+  try {
+    return await render();
+  } finally {
+    for (const [name, value] of classes) {
+      if (Reflect.get(globalThis, name) !== value) {
+        Reflect.set(globalThis, name, value);
+      }
+    }
+  }
+}
+
 // Merged in the order of app.config.server.ts, which matters: the transfer cache must key a
 // request before the server's own root interceptor makes its URL absolute, or the browser,
 // which requests the relative URL, would never find it.
@@ -112,7 +132,9 @@ async function renderOnServer(url: string): Promise<string> {
     });
     const bootstrap = (context: BootstrapContext) =>
       bootstrapApplication(Root, serverConfig, context);
-    return await renderApplication(bootstrap, { document: DOCUMENT_HTML, url });
+    return await keepingGlobals(() =>
+      renderApplication(bootstrap, { document: DOCUMENT_HTML, url }),
+    );
   } finally {
     // The browser app of the next test runs in this same process, unlike a real server.
     Reflect.set(globalThis, 'ngServerMode', undefined);
@@ -165,6 +187,19 @@ describe('i18n catalogues in SSR', () => {
     expect(body).toContain('Nos données');
     expect(body).toContain('Foire aux questions');
     expect(body.match(/>\s*(?:about|api)\.[a-z_.]+\s*</g)).toBeNull();
+  });
+
+  it('leaves jsdom its DOM classes for the specs that run next in this worker', async () => {
+    stubCatalogueFetch();
+    await renderOnServer('/fr/');
+
+    const element = document.createElement('p');
+    const listener = vi.fn();
+    element.addEventListener('ping', listener);
+    element.dispatchEvent(new Event('ping'));
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(element).toBeInstanceOf(Node);
   });
 
   it('embeds the catalogues in the page, so the browser does not download them again', async () => {
