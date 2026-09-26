@@ -15,16 +15,22 @@ LABEL org.opencontainers.image.title="lodb-nginx" \
 
 # The image's entrypoint renders /etc/nginx/templates/*.conf into /etc/nginx/sites/. The
 # filter keeps envsubst away from nginx's own $variables. Defaults suit a local stack; a
-# served environment sets all three (compose.next.deploy.yaml).
+# served environment sets the first three (compose.next.deploy.yaml). LODB_REVISION, first
+# part of the page cache's key, defaults to the image's revision (compose.next.yaml sets it).
 ENV APP_REVISION=${APP_REVISION} \
     NGINX_ENVSUBST_TEMPLATE_SUFFIX=.conf \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/sites \
     NGINX_ENVSUBST_FILTER=^LODB_ \
     LODB_CANONICAL_HOST=localhost \
     LODB_EDGE_CIDR=127.0.0.1/32 \
-    LODB_NOINDEX=0
+    LODB_NOINDEX=0 \
+    LODB_REVISION=${APP_REVISION}
 
-RUN rm -f /etc/nginx/conf.d/default.conf && mkdir -p /etc/nginx/sites
+# /var/cache/nginx/pages holds the page cache (nginx.conf); created here so that the volume
+# mounted on it (compose.next.yaml) starts owned by the workers' user.
+RUN rm -f /etc/nginx/conf.d/default.conf \
+ && mkdir -p /etc/nginx/sites /var/cache/nginx/pages \
+ && chown nginx:nginx /var/cache/nginx/pages
 COPY docker/next/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY docker/next/nginx/sites/     /etc/nginx/templates/
 COPY docker/next/nginx/server.d/  /etc/nginx/server.d/
