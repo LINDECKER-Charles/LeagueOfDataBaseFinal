@@ -5,6 +5,8 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { provideTransloco, type Translation } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { PageOutcome } from '../../core/routing/outcome/page-outcome';
+import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
+import { Seo } from '../../core/seo/seo';
 import { ErrorPage } from './error-page';
 
 const SEO: Translation = {
@@ -27,6 +29,7 @@ function outcomeOf(outcomes: Record<string, PageOutcome>): ResolveFn<PageOutcome
 async function visit(url: string, outcomes: Record<string, PageOutcome> = {}) {
   TestBed.configureTestingModule({
     providers: [
+      { provide: CANONICAL_ORIGIN, useValue: 'https://league-of-data-base.com' },
       provideRouter([
         {
           path: '**',
@@ -48,9 +51,10 @@ async function visit(url: string, outcomes: Record<string, PageOutcome> = {}) {
       }),
     ],
   });
+  const apply = vi.spyOn(TestBed.inject(Seo), 'apply');
   const harness = await RouterTestingHarness.create(url);
   await harness.fixture.whenStable();
-  return harness;
+  return { harness, apply };
 }
 
 function headingOf(harness: RouterTestingHarness): string | undefined {
@@ -59,6 +63,10 @@ function headingOf(harness: RouterTestingHarness): string | undefined {
 
 function linkOf(harness: RouterTestingHarness): string | null | undefined {
   return harness.routeNativeElement?.querySelector('a')?.getAttribute('href');
+}
+
+function headElements(selector: string): Element[] {
+  return [...document.head.querySelectorAll(`[data-lodb-seo]${selector}`)];
 }
 
 describe('ErrorPage', () => {
@@ -71,12 +79,13 @@ describe('ErrorPage', () => {
   afterEach(() => {
     document.documentElement.lang = lang;
     document.documentElement.removeAttribute('dir');
+    headElements('').forEach((element) => element.remove());
   });
 
   it('says the page is missing and leads back to the home of its locale', async () => {
     document.documentElement.lang = 'fr';
 
-    const harness = await visit('/fr/nowhere');
+    const { harness } = await visit('/fr/nowhere');
 
     expect(headingOf(harness)).toBe('Page not found');
     expect(linkOf(harness)).toBe('/fr');
@@ -85,7 +94,7 @@ describe('ErrorPage', () => {
   it.each([HttpStatusCode.InternalServerError, HttpStatusCode.ServiceUnavailable] as const)(
     'says a %s went wrong',
     async (status) => {
-      const harness = await visit('/down', { '/down': { ...BROKEN, status } });
+      const { harness } = await visit('/down', { '/down': { ...BROKEN, status } });
 
       expect(headingOf(harness)).toBe('Something went wrong');
       expect(linkOf(harness)).toBe('/en');
@@ -96,14 +105,14 @@ describe('ErrorPage', () => {
     const location = '/en/items/1036-long-sword';
     const moved: PageOutcome = { kind: 'redirect', status: 301, location };
 
-    const harness = await visit('/en/items/1036', { '/en/items/1036': moved });
+    const { harness } = await visit('/en/items/1036', { '/en/items/1036': moved });
 
     expect(headingOf(harness)).toBeUndefined();
     expect(linkOf(harness)).toBe(location);
   });
 
   it('follows the outcome of its route when the router reuses it', async () => {
-    const harness = await visit('/nowhere', { '/broken': BROKEN });
+    const { harness } = await visit('/nowhere', { '/broken': BROKEN });
     const page = harness.routeDebugElement?.componentInstance;
 
     await harness.navigateByUrl('/broken');
@@ -111,5 +120,36 @@ describe('ErrorPage', () => {
 
     expect(harness.routeDebugElement?.componentInstance).toBe(page);
     expect(headingOf(harness)).toBe('Something went wrong');
+  });
+
+  it('writes a noindex head, with neither canonical nor alternates', async () => {
+    document.documentElement.lang = 'fr';
+
+    const { apply } = await visit('/fr/nowhere');
+
+    expect(apply).toHaveBeenLastCalledWith({
+      kind: 'error',
+      locale: 'fr',
+      title: 'Page not found',
+    });
+    expect(document.title).toBe('Page not found — League Of Data Base');
+    expect(headElements('meta[name="robots"]')[0]?.getAttribute('content')).toBe(
+      'noindex, nofollow',
+    );
+    expect(headElements('link[rel="canonical"], link[rel="alternate"]')).toEqual([]);
+  });
+
+  it('titles its head after the outcome it answers', async () => {
+    const { harness, apply } = await visit('/nowhere', { '/broken': BROKEN });
+
+    await harness.navigateByUrl('/broken');
+    await harness.fixture.whenStable();
+
+    expect(apply).toHaveBeenLastCalledWith({
+      kind: 'error',
+      locale: 'en',
+      title: 'Something went wrong',
+    });
+    expect(document.title).toBe('Something went wrong — League Of Data Base');
   });
 });
