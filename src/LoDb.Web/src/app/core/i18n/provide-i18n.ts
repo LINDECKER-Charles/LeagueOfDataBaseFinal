@@ -3,7 +3,7 @@ import { provideTransloco } from '@jsverse/transloco';
 import { provideTranslocoMessageformat } from '@jsverse/transloco-messageformat';
 import { DEFAULT_LOCALE } from './default-locale';
 import { LOCALES } from './locales';
-import { TranslocoHttpLoader } from './transloco-http-loader';
+import { TranslocoHttpLoader } from './loading/transloco-http-loader';
 
 /**
  * Transloco with ICU messages. A missing key falls back to its `en` translation rather than
