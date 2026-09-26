@@ -1,18 +1,31 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
+import type { PublicProfile } from '../../core/api/generated/models/public-profile';
+import { injectRouteData } from '../../core/routing/inject-route-data';
+import { ProfileBuilds } from './card/profile-builds';
+import { ProfileHero } from './card/profile-hero';
+import { applyProfileHead } from './head/apply-profile-head';
 
 /**
- * Provisional public profile, `/{locale}/u/{username}` (L3.1). The profile chantier (L4.6)
- * replaces it and keeps profile.routes.ts.
+ * The public profile, `/{locale}/u/{username}`: the summoner card its owner chose to show,
+ * its favorites over the skin's splash and the builds it published, resolved by the route
+ * (`resolvePublicProfile`) and rendered on the server without an account, for the visitors
+ * and the search engines alike.
  */
 @Component({
   selector: 'lodb-profile-page',
-  imports: [TranslocoPipe],
-  template: `<div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-    <h1 class="font-beaufort text-3xl tracking-wide text-gold-grad uppercase">
-      {{ 'profile.public.eyebrow' | transloco }}
-    </h1>
-  </div>`,
+  imports: [ProfileBuilds, ProfileHero],
+  template: `
+    @let card = profile();
+    <lodb-profile-hero [profile]="card" />
+    <lodb-profile-builds [builds]="card.builds" />
+  `,
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProfilePage {}
+export class ProfilePage {
+  protected readonly profile = injectRouteData<PublicProfile>('profile');
+
+  constructor() {
+    applyProfileHead(this.profile);
+  }
+}
