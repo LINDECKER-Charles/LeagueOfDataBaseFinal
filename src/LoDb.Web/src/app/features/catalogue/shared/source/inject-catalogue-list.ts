@@ -15,6 +15,7 @@ import { parseFilterUrl } from '../url/parse-filter-url';
 import { searchOf } from '../url/search-of';
 import type { CatalogueListSource } from './catalogue-list-source';
 import { DEFAULT_PAGE_SIZE } from './default-page-size';
+import { scopedFetch } from './scoped-fetch';
 import { statusOf } from './status-of';
 
 interface Scope {
@@ -82,17 +83,14 @@ export function injectCatalogueList<R extends ResourceType>(
     fetch(opening, at).pipe(tap((outcome) => markTransient(outcome, response)));
   const inBrowser = (at: Scope) =>
     isWhole ? withOneRetry(() => fetch(opening, at)) : fetch(opening, at);
-  const first = rxResource({
-    params: () => scope(),
-    stream: ({ params }) => (isBrowser ? inBrowser(params) : onServer(params)),
-  });
+  const first = scopedFetch(scope, (at) => (isBrowser ? inBrowser(at) : onServer(at)));
   const whole = rxResource({
     params: () => (isBrowser && !isWhole ? scope() : undefined),
     stream: ({ params }) => withOneRetry(() => fetch({}, params)),
   });
-  const firstPage = computed(() => listOf(first.value()));
+  const firstPage = computed(() => listOf(first()));
   const dataset = computed(() => (isBrowser && isWhole ? firstPage() : listOf(whole.value())));
   const list = computed(() => dataset() ?? firstPage());
-  const status = computed(() => statusOf(whole.value() ?? first.value()));
-  return { firstPage, slice, dataset, list, status };
+  const status = computed(() => statusOf(whole.value() ?? first()));
+  return { firstPage, slice, defaultSize, dataset, list, status };
 }

@@ -1,5 +1,5 @@
-import type { FilterUrlSpec } from './filter-url-spec';
-import type { FilterUrlState } from './filter-url-state';
+import type { FilterUrlSpec } from '../filter-url-spec';
+import type { FilterUrlState } from '../filter-url-state';
 
 /** How FilterUrlSync reads a list's state, and hands it back what a navigation carried. */
 export interface FilterUrlBinding {

@@ -1,9 +1,9 @@
 import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { facetOf } from '../testing/facet-of';
-import type { FilterUrlSpec } from './filter-url-spec';
-import type { FilterUrlState } from './filter-url-state';
+import { facetOf } from '../../testing/facet-of';
+import type { FilterUrlSpec } from '../filter-url-spec';
+import type { FilterUrlState } from '../filter-url-state';
 import { FilterUrlSync } from './filter-url-sync';
 import { TrailingThrottle } from './trailing-throttle';
 

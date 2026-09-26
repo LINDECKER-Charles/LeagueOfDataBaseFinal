@@ -13,6 +13,8 @@ export interface CatalogueListSource<L> {
   readonly firstPage: Signal<L | null>;
   /** Which page that is. */
   readonly slice: PageSlice;
+  /** Page size of the list when its URL sets none. */
+  readonly defaultSize: number;
   /** The whole list; in the browser only, null until it arrives. */
   readonly dataset: Signal<L | null>;
   /** The most complete list known: the whole one, else the first page. */

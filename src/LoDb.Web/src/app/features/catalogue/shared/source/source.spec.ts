@@ -71,6 +71,23 @@ describe('injectCatalogueList', () => {
     expect(source.list()).toBe('whole');
   });
 
+  it('holds an answer already at hand before the first render, for hydration', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([{ path: '**', children: [] }]),
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        {
+          provide: CatalogueLists,
+          useValue: { fetch: (_: string, r: ListRequest) => of(ready(r)) },
+        },
+      ],
+    });
+    await TestBed.inject(Router).navigateByUrl('/en/items');
+    const context = signal<PageContext | undefined>(CONTEXT);
+    const source = TestBed.runInInjectionContext(() => injectCatalogueList('items', context));
+    expect(source.firstPage()).toBe('page 1');
+  });
+
   it('asks once when the URL already names the whole list', async () => {
     const { source, requests } = await sourceAt('/en/items?size=all', 'browser');
     expect(requests).toEqual([{ version: '16.19.1', lang: 'en_US' }]);

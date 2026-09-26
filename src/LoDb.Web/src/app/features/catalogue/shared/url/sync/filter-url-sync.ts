@@ -4,13 +4,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import type { FilterUrlBinding } from './filter-url-binding';
-import type { FilterUrlSpec } from './filter-url-spec';
-import type { FilterUrlState } from './filter-url-state';
-import { parseFilterUrl } from './parse-filter-url';
-import { pathOf } from './path-of';
-import { searchOf } from './search-of';
+import type { FilterUrlSpec } from '../filter-url-spec';
+import type { FilterUrlState } from '../filter-url-state';
+import { parseFilterUrl } from '../parse-filter-url';
+import { pathOf } from '../path-of';
+import { searchOf } from '../search-of';
 import { TrailingThrottle } from './trailing-throttle';
-import { writeFilterUrl } from './write-filter-url';
+import { writeFilterUrl } from '../write-filter-url';
 
 /**
  * Safari refuses more than 100 history rewrites per 30 s, and a slider drag alone would
