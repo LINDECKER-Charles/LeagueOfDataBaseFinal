@@ -33,7 +33,7 @@ public sealed class ProblemDetailsTests
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync(
-            new Uri("/v1/unknown", UriKind.Relative),
+            new Uri("/unknown", UriKind.Relative),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
