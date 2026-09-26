@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "Deine Builds werden geladen…",
+    "failed": "Deine Builds konnten nicht geladen werden.",
+    "delete_failed": "Der Build konnte nicht gelöscht werden. Bitte versuche es erneut."
+  },
+  "delete": {
+    "title": "Build löschen",
+    "cancel": "Abbrechen"
+  },
+  "editor": {
+    "saving": "Wird gespeichert…",
+    "errors_title": "Der Build konnte nicht gespeichert werden"
+  },
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "signed_out": "Deine Sitzung ist abgelaufen. Melde dich erneut an, um diesen Build zu speichern.",
+    "email_unverified": "Bestätige deine E-Mail-Adresse, um einen Build zu speichern.",
+    "not_found": "Dieser Build existiert nicht mehr."
+  }
+}

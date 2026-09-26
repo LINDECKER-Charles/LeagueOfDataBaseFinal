@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "Wczytywanie twoich buildów…",
+    "failed": "Nie udało się wczytać twoich buildów.",
+    "delete_failed": "Nie udało się usunąć buildu. Spróbuj ponownie."
+  },
+  "delete": {
+    "title": "Usuń build",
+    "cancel": "Anuluj"
+  },
+  "editor": {
+    "saving": "Zapisywanie…",
+    "errors_title": "Nie udało się zapisać buildu"
+  },
+  "errors": {
+    "generic": "Coś poszło nie tak. Spróbuj ponownie.",
+    "signed_out": "Twoja sesja wygasła. Zaloguj się ponownie, aby zapisać ten build.",
+    "email_unverified": "Potwierdź swój adres e-mail, aby zapisać build.",
+    "not_found": "Ten build już nie istnieje."
+  }
+}

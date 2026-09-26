@@ -1,0 +1,87 @@
+<button
+  type="button"
+  class="champ-toggle"
+  aria-controls="lodb-champion-list"
+  [attr.aria-expanded]="isOpen()"
+  (click)="toggle()"
+>
+  <span class="champ-toggle__id">
+    @if (selected(); as champion) {
+      <lodb-image
+        class="champ-selected"
+        imgClass="object-cover"
+        [src]="imageSource(champion.image)"
+        [width]="44"
+        [height]="44"
+        [initials]="initialsOf(champion.name)"
+      />
+    }
+    <span class="champ-toggle__label">
+      <span class="font-mono text-xs tracking-wide text-text-dim">
+        {{
+          (championId() ? 'build.editor.champion.selected' : 'build.editor.champion.title')
+            | transloco
+        }}
+      </span>
+      @if (championId()) {
+        <span class="font-beaufort text-base tracking-wide text-gold-bright uppercase">
+          {{ selected()?.name ?? championId() }}
+        </span>
+      }
+    </span>
+    @if (isGhost()) {
+      <span class="hx-chip champ-ghost">{{ 'build.editor.ghost' | transloco }}</span>
+    }
+  </span>
+  <span class="champ-toggle__action">
+    {{ (isOpen() ? 'build.editor.champion.close' : 'build.editor.champion.open') | transloco }}
+    <svg class="champ-toggle__chevron" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" />
+    </svg>
+  </span>
+</button>
+
+<div id="lodb-champion-list" class="space-y-4" [hidden]="!isOpen()">
+  <input
+    #search
+    type="search"
+    class="hx-input"
+    autocomplete="off"
+    [placeholder]="'build.editor.champion.search' | transloco"
+    [attr.aria-label]="'build.editor.champion.search' | transloco"
+    (input)="query.set(search.value)"
+  />
+  <lodb-catalog-state [status]="champions.status()" (retry)="champions.retry()">
+    @if (shown().length > 0) {
+      <div
+        class="champ-grid"
+        role="listbox"
+        [attr.aria-label]="'build.editor.champion.title' | transloco"
+      >
+        @for (champion of shown(); track champion.id) {
+          <button
+            type="button"
+            role="option"
+            class="champ"
+            [class.champ--on]="champion.id === championId()"
+            [attr.aria-selected]="champion.id === championId()"
+            [title]="champion.name"
+            (click)="choose(champion.id)"
+          >
+            <lodb-image
+              class="size-full"
+              imgClass="object-cover"
+              [src]="imageSource(champion.image)"
+              [width]="52"
+              [height]="52"
+              [initials]="initialsOf(champion.name)"
+            />
+            <span class="champ__name">{{ champion.name }}</span>
+          </button>
+        }
+      </div>
+    } @else {
+      <p class="font-mono text-xs text-text-dim">{{ 'build.editor.champion.empty' | transloco }}</p>
+    }
+  </lodb-catalog-state>
+</div>

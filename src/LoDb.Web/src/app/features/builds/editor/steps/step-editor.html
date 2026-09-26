@@ -1,0 +1,195 @@
+<datalist id="lodb-step-presets">
+  @for (preset of presets; track preset) {
+    <option [value]="'build.editor.steps.preset.' + preset | transloco"></option>
+  }
+</datalist>
+
+<ol class="steps" cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="drag.dropStep($event)">
+  @for (step of order().steps; track $index; let i = $index, first = $first, last = $last) {
+    <li
+      class="forge-step"
+      cdkDrag
+      [cdkDragStartDelay]="startDelay"
+      (cdkDragStarted)="drag.startStep(i)"
+    >
+      <div class="forge-step__head">
+        <span
+          class="forge-drag-handle"
+          cdkDragHandle
+          aria-hidden="true"
+          [title]="'build.editor.dnd.handle' | transloco"
+          >⣿</span
+        >
+        <span class="forge-hint">{{ i + 1 }}.</span>
+        <input
+          #label
+          type="text"
+          class="hx-input forge-step__label"
+          list="lodb-step-presets"
+          [maxLength]="limits.maxLabelLength"
+          [value]="step.label"
+          [placeholder]="'build.editor.steps.label' | transloco"
+          [attr.aria-label]="'build.editor.steps.label' | transloco"
+          (input)="editing.editStep(i, { label: label.value })"
+        />
+        <span class="hx-chip" [title]="'build.editor.steps.gold' | transloco">
+          {{ order().stepGold(i, goldOf) }} ◆
+        </span>
+        <span class="forge-step__tools">
+          <button
+            type="button"
+            class="forge-icon-btn"
+            [disabled]="first"
+            [attr.aria-label]="'build.editor.steps.move_up' | transloco"
+            [title]="'build.editor.steps.move_up' | transloco"
+            (click)="editing.shiftStep(i, -1)"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            class="forge-icon-btn"
+            [disabled]="last"
+            [attr.aria-label]="'build.editor.steps.move_down' | transloco"
+            [title]="'build.editor.steps.move_down' | transloco"
+            (click)="editing.shiftStep(i, 1)"
+          >
+            ↓
+          </button>
+          <button
+            type="button"
+            class="forge-icon-btn forge-icon-btn--danger"
+            [disabled]="!order().canRemoveStep()"
+            [attr.aria-label]="'build.editor.steps.remove' | transloco"
+            [title]="'build.editor.steps.remove' | transloco"
+            (click)="editing.deleteStep(i)"
+          >
+            ×
+          </button>
+        </span>
+      </div>
+
+      <textarea
+        #note
+        rows="2"
+        class="hx-input forge-step__note"
+        [maxLength]="limits.maxNoteLength"
+        [value]="step.note ?? ''"
+        [placeholder]="'build.editor.steps.note' | transloco"
+        [attr.aria-label]="'build.editor.steps.note' | transloco"
+        (input)="editing.editStep(i, { note: note.value })"
+      ></textarea>
+
+      <div class="forge-step__items">
+        <ul
+          class="forge-items"
+          cdkDropList
+          cdkDropListOrientation="mixed"
+          [id]="listId(i)"
+          [cdkDropListData]="i"
+          [cdkDropListConnectedTo]="listIds()"
+          [cdkDropListEnterPredicate]="drag.canEnter"
+          (cdkDropListDropped)="drag.dropItem($event)"
+        >
+          @for (itemId of step.items; track $index; let j = $index, firstItem = $first) {
+            @let item = itemOf(itemId);
+            @let ghostKey = ghostKeyOf(itemId);
+            @let name = item?.name ?? itemId;
+            <li
+              class="forge-slot"
+              cdkDrag
+              [cdkDragData]="{ step: i, index: j }"
+              [cdkDragStartDelay]="startDelay"
+              (cdkDragStarted)="drag.startItem({ step: i, index: j })"
+            >
+              <span
+                class="forge-item"
+                [class.forge-item--ghost]="ghostKey !== null"
+                [title]="ghostKey === null ? name : name + ' — ' + (ghostKey | transloco)"
+              >
+                <lodb-image
+                  class="size-full"
+                  imgClass="object-cover"
+                  [src]="item ? imageSource(item.image) : null"
+                  [alt]="name"
+                  [width]="48"
+                  [height]="48"
+                  [initials]="initialsOf(name)"
+                />
+              </span>
+              <span class="forge-slot__tools">
+                <button
+                  type="button"
+                  class="forge-icon-btn"
+                  [disabled]="firstItem"
+                  [attr.aria-label]="'build.editor.steps.move_up' | transloco"
+                  [title]="'build.editor.steps.move_up' | transloco"
+                  (click)="editing.shiftItem({ step: i, index: j }, -1)"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  class="forge-icon-btn"
+                  [disabled]="j === step.items.length - 1"
+                  [attr.aria-label]="'build.editor.steps.move_down' | transloco"
+                  [title]="'build.editor.steps.move_down' | transloco"
+                  (click)="editing.shiftItem({ step: i, index: j }, 1)"
+                >
+                  ›
+                </button>
+                <button
+                  type="button"
+                  class="forge-icon-btn forge-icon-btn--danger"
+                  [attr.aria-label]="('build.editor.steps.remove_item' | transloco) + ' ' + name"
+                  [title]="'build.editor.steps.remove_item' | transloco"
+                  (click)="editing.deleteItem({ step: i, index: j })"
+                >
+                  ×
+                </button>
+              </span>
+            </li>
+          }
+        </ul>
+        <button
+          type="button"
+          class="forge-additem"
+          [disabled]="!order().canAddItem(i)"
+          (click)="openArmory(i)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            aria-hidden="true"
+          >
+            <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+          </svg>
+          <span class="forge-additem__label">{{ 'build.editor.armory.add_cta' | transloco }}</span>
+        </button>
+      </div>
+
+      <p class="forge-hint">
+        {{
+          'build.editor.counter'
+            | transloco: { count: step.items.length, max: limits.maxItemsPerStep }
+        }}
+      </p>
+    </li>
+  }
+</ol>
+
+<div class="forge-steps__foot">
+  <button
+    lodbButton="ghost"
+    type="button"
+    [disabled]="!order().canAddStep()"
+    (click)="editing.appendStep()"
+  >
+    {{ 'build.editor.steps.add' | transloco }}
+  </button>
+  <span class="forge-hint">
+    {{ 'build.editor.counter' | transloco: { count: order().steps.length, max: limits.maxSteps } }}
+  </span>
+</div>

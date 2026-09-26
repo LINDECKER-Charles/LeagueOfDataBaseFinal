@@ -1,0 +1,155 @@
+/*
+ * The rune board, in the game client's grammar: a picked rune glows, the others of its row
+ * fade; once both secondary picks are made, the free rows read as unavailable (a click still
+ * swaps the oldest pick out). `--path`, set by a tree's class, tints what the tree owns; the
+ * rune path pages have their copy of the colours (rune-detail.css).
+ */
+@layer components {
+  .path-precision {
+    --path: #c8aa6e;
+  }
+  .path-domination {
+    --path: #d44242;
+  }
+  .path-sorcery {
+    --path: #9faafc;
+  }
+  .path-resolve {
+    --path: #a1d586;
+  }
+  .path-inspiration {
+    --path: #49aab9;
+  }
+
+  .rune-hint {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--color-text-dim);
+  }
+
+  .rune-trees {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .rune-tree {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-block-size: 2.75rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 35%, transparent);
+    background: color-mix(in srgb, var(--color-void) 70%, transparent);
+    font-family: var(--font-beaufort);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition:
+      color 0.25s var(--ease-hextech),
+      border-color 0.25s var(--ease-hextech);
+  }
+  .rune-tree:hover {
+    color: var(--color-hex);
+    border-color: color-mix(in srgb, var(--color-hex) 55%, transparent);
+  }
+  .rune-tree:focus-visible {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 1px;
+  }
+  .rune-tree--on {
+    color: var(--path, var(--color-gold-bright));
+    border-color: var(--path, var(--color-gold));
+    box-shadow: 0 0 16px -6px var(--path, var(--color-gold));
+  }
+  .rune-tree__icon {
+    inline-size: 1.35rem;
+    block-size: 1.35rem;
+  }
+
+  .rune-slot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block: 0.8rem;
+    border-block-end: 1px solid color-mix(in srgb, var(--color-gold) 14%, transparent);
+    transition: opacity 0.25s var(--ease-hextech);
+  }
+  .rune-slot:last-child {
+    border-block-end: 0;
+  }
+  .rune-slot__name {
+    flex: 0 0 6.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-dim);
+  }
+
+  .rune-perk {
+    flex: none;
+    inline-size: 3rem;
+    block-size: 3rem;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+    background: var(--color-hextech-black);
+    cursor: pointer;
+    transition:
+      border-color 0.25s var(--ease-hextech),
+      filter 0.25s var(--ease-hextech),
+      box-shadow 0.25s var(--ease-hextech);
+  }
+  .rune-perk--big {
+    inline-size: 3.9rem;
+    block-size: 3.9rem;
+  }
+  .rune-perk:focus-visible {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 2px;
+  }
+  .rune-slot--picked .rune-perk:not(.rune-perk--on) {
+    filter: grayscale(0.85) brightness(0.75);
+  }
+  .rune-perk--on {
+    border-color: var(--path, var(--color-gold));
+    box-shadow:
+      0 0 18px -4px var(--path, var(--color-gold)),
+      inset 0 0 0 1px var(--path, var(--color-gold));
+  }
+  .rune-slot--locked {
+    opacity: 0.45;
+  }
+  .rune-slot--locked .rune-perk {
+    filter: grayscale(0.9) brightness(0.7);
+  }
+
+  .rune-ghost {
+    opacity: 0.45;
+    filter: saturate(0.2);
+  }
+
+  /* A phone gives the row's name its own line, so the runes read as one clean grid. */
+  @media (max-width: 640px) {
+    .rune-slot {
+      gap: 0.55rem 0.7rem;
+      padding-block: 0.7rem;
+    }
+    .rune-slot__name {
+      flex: 0 0 100%;
+    }
+    .rune-perk {
+      inline-size: 2.9rem;
+      block-size: 2.9rem;
+    }
+    .rune-perk--big {
+      inline-size: 3.4rem;
+      block-size: 3.4rem;
+    }
+  }
+}

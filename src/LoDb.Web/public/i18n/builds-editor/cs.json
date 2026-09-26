@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "Načítání vašich buildů…",
+    "failed": "Vaše buildy se nepodařilo načíst.",
+    "delete_failed": "Build se nepodařilo smazat. Zkuste to znovu."
+  },
+  "delete": {
+    "title": "Smazat build",
+    "cancel": "Zrušit"
+  },
+  "editor": {
+    "saving": "Ukládání…",
+    "errors_title": "Build se nepodařilo uložit"
+  },
+  "errors": {
+    "generic": "Něco se pokazilo. Zkuste to znovu.",
+    "signed_out": "Vaše relace vypršela. Přihlaste se znovu, abyste mohli tento build uložit.",
+    "email_unverified": "Pro uložení buildu ověřte svou e-mailovou adresu.",
+    "not_found": "Tento build již neexistuje."
+  }
+}

@@ -1,0 +1,189 @@
+/*
+ * The item armory: the step it fills, a search, the category chips, the grid of items and a
+ * footer that stays at the bottom of the scrolling panel. The dialog frame gives the pane,
+ * the heading and the close control.
+ */
+@layer components {
+  .armory {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .armory__target {
+    overflow: hidden;
+    margin-block-start: -0.6rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.95rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-gold-bright);
+  }
+  .armory__cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .armory__cat {
+    min-block-size: 2.25rem;
+    padding: 0.25rem 0.7rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-gold-deep);
+    background: color-mix(in srgb, var(--color-void) 60%, transparent);
+    cursor: pointer;
+    transition:
+      color 0.2s var(--ease-hextech),
+      border-color 0.2s var(--ease-hextech),
+      background-color 0.2s var(--ease-hextech);
+  }
+  .armory__cat:hover {
+    color: var(--color-hex);
+    border-color: color-mix(in srgb, var(--color-hex) 55%, transparent);
+  }
+  .armory__cat:focus-visible,
+  .armory-item:focus-visible,
+  .armory__done:focus-visible {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 1px;
+  }
+  .armory__cat[aria-pressed='true'] {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+    background: color-mix(in srgb, var(--color-gold) 16%, transparent);
+  }
+
+  .armory__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+    gap: 0.6rem;
+  }
+  .armory-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-inline-size: 0;
+    padding: 0.5rem 0.35rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 22%, transparent);
+    background: color-mix(in srgb, var(--color-void) 55%, transparent);
+    cursor: pointer;
+    transition:
+      border-color 0.18s var(--ease-hextech),
+      background-color 0.18s var(--ease-hextech),
+      transform 0.18s var(--ease-hextech);
+  }
+  .armory-item:hover:not(:disabled) {
+    border-color: var(--color-gold);
+    transform: translateY(-2px);
+  }
+  .armory-item:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .armory-item--placed {
+    border-color: color-mix(in srgb, var(--color-gold) 55%, transparent);
+    background: color-mix(in srgb, var(--color-gold) 10%, transparent);
+  }
+  .armory-item__icon {
+    position: relative;
+    inline-size: 3rem;
+    block-size: 3rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+    background: var(--color-void);
+  }
+  .armory-item__badge {
+    position: absolute;
+    inset-inline-end: -0.4rem;
+    inset-block-start: -0.4rem;
+    display: grid;
+    place-items: center;
+    min-inline-size: 1.15rem;
+    block-size: 1.15rem;
+    padding: 0 0.25rem;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    line-height: 1;
+    color: var(--color-hextech-black);
+    background: var(--color-gold);
+    box-shadow: 0 0 0 1px var(--color-hextech-black);
+  }
+  .armory-item__name {
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.66rem;
+    text-align: center;
+    color: var(--color-text);
+  }
+  .armory-item__gold {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--color-gold-light);
+  }
+
+  /* The panel scrolls: the footer sticks to its bottom edge, over the panel's padding. */
+  .armory__foot {
+    position: sticky;
+    inset-block-end: -1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-inline: -1.4rem;
+    margin-block-end: -1.4rem;
+    padding: 0.85rem 1.4rem;
+    border-block-start: 1px solid color-mix(in srgb, var(--color-gold) 18%, transparent);
+    background: var(--color-hextech-black);
+  }
+  .armory__count {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-dim);
+  }
+  .armory__count--full {
+    color: color-mix(in srgb, var(--color-danger) 85%, var(--color-text-dim));
+  }
+  .armory__done {
+    flex: none;
+    min-block-size: 2.75rem;
+    padding: 0.4rem 1.4rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-gold-bright);
+    border: 1px solid var(--color-gold);
+    background: color-mix(in srgb, var(--color-gold) 18%, transparent);
+    cursor: pointer;
+    transition: background-color 0.2s var(--ease-hextech);
+  }
+  .armory__done:hover {
+    background: color-mix(in srgb, var(--color-gold) 28%, transparent);
+  }
+
+  @media (max-width: 639.98px) {
+    .armory__grid {
+      grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+    }
+    .armory-item__icon {
+      inline-size: 3.25rem;
+      block-size: 3.25rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .armory-item,
+    .armory__cat {
+      transition: none;
+    }
+    .armory-item:hover:not(:disabled) {
+      transform: none;
+    }
+  }
+}

@@ -1,0 +1,6 @@
+const INITIALS_LENGTH = 2;
+
+/** What stands in for an absent portrait or icon: the first two letters of the name. */
+export function initialsOf(name: string): string {
+  return [...name].slice(0, INITIALS_LENGTH).join('').toUpperCase();
+}

@@ -1,0 +1,21 @@
+{
+  "list": {
+    "loading": "Đang tải các build của bạn…",
+    "failed": "Không thể tải các build của bạn.",
+    "delete_failed": "Không thể xóa build. Vui lòng thử lại."
+  },
+  "delete": {
+    "title": "Xóa build",
+    "cancel": "Hủy"
+  },
+  "editor": {
+    "saving": "Đang lưu…",
+    "errors_title": "Không thể lưu build"
+  },
+  "errors": {
+    "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "signed_out": "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để lưu build này.",
+    "email_unverified": "Hãy xác minh địa chỉ email để lưu build.",
+    "not_found": "Build này không còn tồn tại."
+  }
+}
