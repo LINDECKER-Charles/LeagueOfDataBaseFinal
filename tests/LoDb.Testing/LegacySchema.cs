@@ -19,6 +19,9 @@ public static class LegacySchema
     public static IReadOnlyList<string> DoctrineVersions { get; } =
         ReadResource("doctrine-versions.txt").Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
+    /// <summary><c>tools/next/db/anonymize.sql</c>.</summary>
+    public static string AnonymizeSql { get; } = ReadResource("anonymize.sql");
+
     private static string ReadResource(string name)
     {
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name)
