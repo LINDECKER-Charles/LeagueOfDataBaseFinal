@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="../../src/LoDb.Infrastructure/LoDb.Infrastructure.csproj" />
+    <ProjectReference Include="../LoDb.Testing/LoDb.Testing.csproj" />
   </ItemGroup>
 </Project>
