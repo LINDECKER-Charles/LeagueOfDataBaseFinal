@@ -5,6 +5,16 @@
       references it directly: they give this output the API's content root and deps file.
     -->
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <!-- The php:8.5-cli container of the cross-check of the password hashes. -->
+    <PackageReference Include="Testcontainers" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Hashes made by PHP and the script that checks ours, shared with their generator. -->
+    <None
+      Include="../fixtures/hashes/*"
+      LinkBase="fixtures/hashes"
+      CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
