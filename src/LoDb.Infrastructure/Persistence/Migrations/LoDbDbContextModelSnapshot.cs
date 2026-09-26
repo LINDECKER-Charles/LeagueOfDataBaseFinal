@@ -22,6 +22,42 @@ namespace LoDb.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Accounts.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("normalized_name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_identity_roles");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_identity_roles_normalized_name");
+
+                    b.ToTable("identity_roles", (string)null);
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Accounts.User", b =>
                 {
                     b.Property<int>("Id")
@@ -30,6 +66,11 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("access_failed_count");
 
                     b.Property<string>("BanReason")
                         .HasMaxLength(255)
@@ -43,6 +84,11 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasColumnName("banned_at")
                         .HasDefaultValueSql("NULL");
 
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text")
+                        .HasColumnName("concurrency_stamp");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp(0) without time zone")
                         .HasColumnName("created_at");
@@ -52,6 +98,11 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasMaxLength(180)
                         .HasColumnType("character varying(180)")
                         .HasColumnName("email");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_verified");
 
                     b.Property<string>("FavoriteChampionId")
                         .HasMaxLength(64)
@@ -104,12 +155,28 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_supporter");
 
-                    b.Property<bool>("IsVerified")
+                    b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("is_verified");
+                        .HasDefaultValue(true)
+                        .HasColumnName("lockout_enabled");
 
-                    b.Property<string>("Password")
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lockout_end");
+
+                    b.Property<string>("NormalizedEmail")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("normalized_email")
+                        .HasComputedColumnSql("upper((email)::text)", true);
+
+                    b.Property<string>("NormalizedUserName")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("normalized_username")
+                        .HasComputedColumnSql("upper((username)::text)", true);
+
+                    b.Property<string>("PasswordHash")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("password");
@@ -131,7 +198,16 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasColumnType("json")
                         .HasColumnName("roles");
 
-                    b.Property<string>("Username")
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text")
+                        .HasColumnName("security_stamp");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("two_factor_enabled");
+
+                    b.Property<string>("UserName")
                         .IsRequired()
                         .HasMaxLength(24)
                         .HasColumnType("character varying(24)")
@@ -144,7 +220,102 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("uniq_1483a5e976f5c865");
 
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("ix_users_normalized_email");
+
+                    b.HasIndex("NormalizedUserName")
+                        .HasDatabaseName("ix_users_normalized_username");
+
                     b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Audit.AuditLogEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Actor")
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)")
+                        .HasColumnName("actor");
+
+                    b.Property<int?>("ActorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("actor_id");
+
+                    b.Property<string>("ActorType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("actor_type");
+
+                    b.Property<string>("Ip")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip");
+
+                    b.Property<string>("Meta")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("meta");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("outcome");
+
+                    b.Property<string>("Route")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("route");
+
+                    b.Property<string>("Target")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("target");
+
+                    b.Property<string>("TargetId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("target_id");
+
+                    b.Property<string>("TargetType")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("target_type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_audit_log");
+
+                    b.HasIndex("OccurredAt")
+                        .HasDatabaseName("ix_audit_log_occurred_at");
+
+                    b.HasIndex("Action", "OccurredAt")
+                        .HasDatabaseName("ix_audit_log_action");
+
+                    b.HasIndex("ActorId", "OccurredAt")
+                        .HasDatabaseName("ix_audit_log_actor");
+
+                    b.ToTable("audit_log", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_audit_log_actor_type", "actor_type IN ('user', 'admin', 'anonymous')");
+
+                            t.HasCheckConstraint("ck_audit_log_outcome", "outcome IN ('success', 'failure', 'denied')");
+                        });
                 });
 
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Billing.Donation", b =>
@@ -511,6 +682,85 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Outbox.EmailOutboxMessage", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempts");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("LastAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_attempt_at");
+
+                    b.Property<string>("LastErrorCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("last_error_code");
+
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("locale");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("model");
+
+                    b.Property<DateTimeOffset>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
+
+                    b.Property<string>("Recipient")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)")
+                        .HasColumnName("recipient");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Template")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("template");
+
+                    b.HasKey("Id")
+                        .HasName("pk_email_outbox");
+
+                    b.HasIndex("NextAttemptAt")
+                        .HasDatabaseName("ix_email_outbox_pending")
+                        .HasFilter("status = 'pending'");
+
+                    b.ToTable("email_outbox", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_email_outbox_attempts", "attempts >= 0");
+
+                            t.HasCheckConstraint("ck_email_outbox_status", "status IN ('pending', 'sent', 'dead')");
+                        });
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.PublicApi.ApiKey", b =>
                 {
                     b.Property<int>("Id")
@@ -661,6 +911,74 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                     b.ToTable("periodic_job", (string)null);
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("text")
+                        .HasColumnName("friendly_name");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("text")
+                        .HasColumnName("xml");
+
+                    b.HasKey("Id")
+                        .HasName("pk_data_protection_keys");
+
+                    b.ToTable("data_protection_keys", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer")
+                        .HasColumnName("role_id");
+
+                    b.HasKey("UserId", "RoleId")
+                        .HasName("pk_identity_user_roles");
+
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("ix_identity_user_roles_role_id");
+
+                    b.ToTable("identity_user_roles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("LoginProvider")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("login_provider");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text")
+                        .HasColumnName("value");
+
+                    b.HasKey("UserId", "LoginProvider", "Name")
+                        .HasName("pk_identity_user_tokens");
+
+                    b.ToTable("identity_user_tokens", (string)null);
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Billing.Donation", b =>
                 {
                     b.HasOne("LoDb.Infrastructure.Persistence.Accounts.User", "User")
@@ -738,6 +1056,33 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_f47e0aa08be312b3");
 
                     b.Navigation("ApiKey");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+                {
+                    b.HasOne("LoDb.Infrastructure.Persistence.Accounts.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_identity_user_roles_identity_roles_role_id");
+
+                    b.HasOne("LoDb.Infrastructure.Persistence.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_identity_user_roles_users_user_id");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+                {
+                    b.HasOne("LoDb.Infrastructure.Persistence.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_identity_user_tokens_users_user_id");
                 });
 #pragma warning restore 612, 618
         }

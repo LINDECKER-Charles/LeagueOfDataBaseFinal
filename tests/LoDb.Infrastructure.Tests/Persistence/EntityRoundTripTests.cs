@@ -25,7 +25,7 @@ public sealed class EntityRoundTripTests(PostgresContainerFixture postgres)
     {
         var user = NewUser("round");
         user.Roles = ["ROLE_ADMIN", "ROLE_USER"];
-        user.Password = "$2y$13$abcdefghijklmnopqrstuuv8Ma1b6Qx9O2Hqf9p1nq5e1V6h3pF4S";
+        user.PasswordHash = "$2y$13$abcdefghijklmnopqrstuuv8Ma1b6Qx9O2Hqf9p1nq5e1V6h3pF4S";
         user.IsPublicProfile = true;
         user.FavoriteChampionId = "Ahri";
         user.FavoriteItemId = "3089";
@@ -37,9 +37,14 @@ public sealed class EntityRoundTripTests(PostgresContainerFixture postgres)
         user.IsBanned = true;
         user.BannedAt = At.AddDays(1);
         user.BanReason = "Spam";
-        user.IsVerified = true;
+        user.EmailConfirmed = true;
         user.FavoriteSkinId = "Ahri_1";
         user.PreferredVersion = "16.19.1";
+        user.SecurityStamp = "3SQKM6YQJ3BFMUKZHQ2WXDZB5JWRJ6XK";
+        user.LockoutEnd = At.AddMinutes(15).AddTicks(1_234_560);
+        user.LockoutEnabled = false;
+        user.AccessFailedCount = 3;
+        user.TwoFactorEnabled = true;
 
         await AssertRoundTripsAsync(user);
         Assert.Equal(
@@ -187,7 +192,7 @@ public sealed class EntityRoundTripTests(PostgresContainerFixture postgres)
     private static User NewUser(string name) => new()
     {
         Email = $"{name}@example.test",
-        Username = name,
+        UserName = name,
         Roles = [],
         CreatedAt = At,
     };

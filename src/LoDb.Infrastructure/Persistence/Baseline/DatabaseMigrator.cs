@@ -12,9 +12,16 @@ namespace LoDb.Infrastructure.Persistence.Baseline;
 /// created by Doctrine, to the latest migration without replaying the legacy schema.
 /// </summary>
 /// <remarks>
+/// <para>
 /// A database that is neither empty nor exactly the Doctrine schema is refused untouched.
 /// The check and the marking run in one transaction, under an advisory lock: two
 /// concurrent runs never mark twice nor refuse the other's work.
+/// </para>
+/// <para>
+/// <c>migrate</c> runs whole under a session advisory lock. EF locks its history in each
+/// migration's transaction but lists the pending migrations once, so two runs with two
+/// migrations pending would both apply the second.
+/// </para>
 /// </remarks>
 public sealed partial class DatabaseMigrator(
     LoDbDbContext db,
@@ -23,34 +30,37 @@ public sealed partial class DatabaseMigrator(
 {
     private const int LoggedDifferences = 20;
     private static readonly long MarkLockKey = PostgresDistributedLock.KeyOf("db:baseline");
+    private static readonly long MigrateLockKey = PostgresDistributedLock.KeyOf("db:migrate");
 
     /// <summary>
     /// Marks the baseline if the database holds the Doctrine schema, then applies every
-    /// pending migration. Idempotent.
+    /// pending migration. Idempotent; concurrent runs wait for each other.
     /// </summary>
     public async Task<MigrationReport> MigrateAsync(CancellationToken cancellationToken)
     {
-        var started = timeProvider.GetTimestamp();
-        var (baseline, differences) = await EnsureBaselineAsync(
-            createHistoryWhenEmpty: true,
-            cancellationToken);
-        if (baseline is BaselineOutcome.UnexpectedSchema)
+        var database = db.Database;
+        await database.OpenConnectionAsync(cancellationToken);
+        try
         {
-            LogRefused("migrate", "unexpected-schema", differences);
-            return new MigrationReport(baseline, [], differences);
+            await database.ExecuteSqlAsync(
+                $"SELECT pg_advisory_lock({MigrateLockKey})",
+                cancellationToken);
+            try
+            {
+                return await MigrateExclusivelyAsync(cancellationToken);
+            }
+            finally
+            {
+                // Before the connection goes back to the pool, which would keep the lock.
+                await database.ExecuteSqlAsync(
+                    $"SELECT pg_advisory_unlock({MigrateLockKey})",
+                    CancellationToken.None);
+            }
         }
-
-        var pending = (await db.Database.GetPendingMigrationsAsync(cancellationToken)).ToList();
-        await db.Database.MigrateAsync(cancellationToken);
-        var current = db.Database.GetMigrations().Last();
-        var durationMs = (long)timeProvider.GetElapsedTime(started).TotalMilliseconds;
-        LogMigrated(
-            logger,
-            pending.Count,
-            baseline is BaselineOutcome.Marked,
-            current,
-            durationMs);
-        return new MigrationReport(baseline, pending, []);
+        finally
+        {
+            await database.CloseConnectionAsync();
+        }
     }
 
     /// <summary>
@@ -77,6 +87,32 @@ public sealed partial class DatabaseMigrator(
         }
 
         return new MigrationReport(baseline, [], differences);
+    }
+
+    private async Task<MigrationReport> MigrateExclusivelyAsync(
+        CancellationToken cancellationToken)
+    {
+        var started = timeProvider.GetTimestamp();
+        var (baseline, differences) = await EnsureBaselineAsync(
+            createHistoryWhenEmpty: true,
+            cancellationToken);
+        if (baseline is BaselineOutcome.UnexpectedSchema)
+        {
+            LogRefused("migrate", "unexpected-schema", differences);
+            return new MigrationReport(baseline, [], differences);
+        }
+
+        var pending = (await db.Database.GetPendingMigrationsAsync(cancellationToken)).ToList();
+        await db.Database.MigrateAsync(cancellationToken);
+        var current = db.Database.GetMigrations().Last();
+        var durationMs = (long)timeProvider.GetElapsedTime(started).TotalMilliseconds;
+        LogMigrated(
+            logger,
+            pending.Count,
+            baseline is BaselineOutcome.Marked,
+            current,
+            durationMs);
+        return new MigrationReport(baseline, pending, []);
     }
 
     // One line for the whole refusal: the count, then the first differences.

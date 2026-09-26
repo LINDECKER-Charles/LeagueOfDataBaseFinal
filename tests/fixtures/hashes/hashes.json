@@ -1,0 +1,254 @@
+{
+    "php": "8.5.11",
+    "sodium": "1.0.18",
+    "passwords": {
+        "ascii": "Corr3ct-horse-Battery!",
+        "accents": "Épée légère — 2026",
+        "emoji": "💎💎💎💎💎💎💎💎💎💎💎💎",
+        "long": "Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!Aa1!",
+        "nul": "Before\u0000After-2026",
+        "max": "Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?Zz9?"
+    },
+    "cases": [
+        {
+            "format": "bcrypt",
+            "password": "ascii",
+            "hash": "$2y$13$Sx6YwqOwrFl0CEL.fFj39eeAXJTyP2wc1aoL5t5oqW/2gf2pN6VIC"
+        },
+        {
+            "format": "bcrypt",
+            "password": "accents",
+            "hash": "$2y$13$vev7pqSdopkD2q/U4IIyDOjq6e7GjADwqfeTJ9A6MSTktLn4bYvDO"
+        },
+        {
+            "format": "bcrypt",
+            "password": "emoji",
+            "hash": "$2y$13$bYEKPwyQAKaN5fZcbfoewOwlfEKpQYrDmJiYC8KtAeEi0qQB2Udoq"
+        },
+        {
+            "format": "bcrypt",
+            "password": "long",
+            "hash": "$2y$13$PRU9SPBWhK1p8YvCw8Jls.nT9gT.tQspBpKLWHkmUEcbRlbstFQ8K"
+        },
+        {
+            "format": "bcrypt",
+            "password": "nul",
+            "hash": "$2y$13$0ixbvS/1Mpnyw99afoYANe9yiC3vEtuSHLppeTd.rOob8jpEr.mIa"
+        },
+        {
+            "format": "bcrypt",
+            "password": "max",
+            "hash": "$2y$13$W3HTL1Kwp0BL/j0RujEbt.6cP0ZM4Eahd6Z3N008V0tZLJ8bKBkrW"
+        },
+        {
+            "format": "bcrypt-cost4",
+            "password": "ascii",
+            "hash": "$2y$04$witRu9s4kX650b52eOX2BOu2pfTGpOE7Pijom5v4U2myhBxOsJ4Ei"
+        },
+        {
+            "format": "bcrypt-cost4",
+            "password": "accents",
+            "hash": "$2y$04$Qj0Nd1OtSApYIPCGpWW34.XpIuy/YTyVJqn9DaE1AZtjgZCjkMLVW"
+        },
+        {
+            "format": "bcrypt-cost4",
+            "password": "emoji",
+            "hash": "$2y$04$21FG.VCtAFEELKOOg0XXJe8KGY0ZuR5QZ2JK4ktkXfpQLHSa27Gz."
+        },
+        {
+            "format": "bcrypt-cost4",
+            "password": "long",
+            "hash": "$2y$04$z2yjc2tHyXbzOZJISsbIduBnm39oPyK9m3cUOSPntAt5EYzMLfpT."
+        },
+        {
+            "format": "bcrypt-cost4",
+            "password": "nul",
+            "hash": "$2y$04$pMXWSWLexCvdOVZKRTaj1uhvhHnOnm019sxxgJU/FocKQXk2mhQ0O"
+        },
+        {
+            "format": "bcrypt-cost4",
+            "password": "max",
+            "hash": "$2y$04$9MF1lJfbLXMFhmGzNksuz.QPxlSMQSZX70zsEgQJcSufefmMVmWLu"
+        },
+        {
+            "format": "bcrypt-2a",
+            "password": "ascii",
+            "hash": "$2a$10$v/ObdJCUP3kCZLcRoEna..3yVgdY.91QYPqePcqfiun3k3w4YSazu"
+        },
+        {
+            "format": "bcrypt-2a",
+            "password": "accents",
+            "hash": "$2a$10$TLcpSfJtw3segVk43cNzw.ln8nFvx4hx/u6Rp1q0xLHlRO.VmAf.2"
+        },
+        {
+            "format": "bcrypt-2a",
+            "password": "emoji",
+            "hash": "$2a$10$5GodEEbFYdlCZ4GiluJIFOGmQ1nWJdL5RZpVwGVgJIFZOxuUVF/DO"
+        },
+        {
+            "format": "bcrypt-2a",
+            "password": "long",
+            "hash": "$2a$10$1zQyQ.9BWeWziS2DOm0nQ.yYc57cX8lCgcXiopnmEfeAddF4xmbXS"
+        },
+        {
+            "format": "bcrypt-2a",
+            "password": "nul",
+            "hash": "$2a$10$nySIS.DeFWd7F9RYhJf.TeXdr9Ya8K5WB46xawNmMxL6.lAnSNaR2"
+        },
+        {
+            "format": "bcrypt-2a",
+            "password": "max",
+            "hash": "$2a$10$EeR1nqNMVQmI06bkXDttCe4zc7QSbtENEa4QY3COxwG0xnMXAp1L6"
+        },
+        {
+            "format": "argon2id-sodium",
+            "password": "ascii",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$v5d9/QwgzOs4TqpTm6S6Aw$GeZC/9N8AffdM0kzOkLGud9rrFjBf2wApvHKjn9wEMM"
+        },
+        {
+            "format": "argon2id-sodium",
+            "password": "accents",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$nHWyBoIcqAAUNjB3j5/8Ig$dj6SER5+7lRpirsw7kfqYCh6qmWxzHrRNHYUAhIJl/0"
+        },
+        {
+            "format": "argon2id-sodium",
+            "password": "emoji",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$lfcAxgTdGaqF063PN03bXQ$vgKDyC7QHv54O/qn8o6199qre+u+60cR1g0sZ2xK2ew"
+        },
+        {
+            "format": "argon2id-sodium",
+            "password": "long",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$klIs75fT+m46aYBRMdOPow$5wwq+cx0XWbXJutVirZOxKijFPlCX9tbEQ756sp6a4c"
+        },
+        {
+            "format": "argon2id-sodium",
+            "password": "nul",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$ai8aWqyYuMAfYLLyZqf4pg$PzbQA36NLXyaF+qvhOp26fh390YsBCkEAq/F0+LdrT8"
+        },
+        {
+            "format": "argon2id-sodium",
+            "password": "max",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$fEkkklCFbU1uvbkRd1L0tg$NRqVHLdyX7k3gM9HuvYLdPiDB5X08uTd4gnsePKB9vo"
+        },
+        {
+            "format": "argon2id",
+            "password": "ascii",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$Q3lvRGUvM3o2SEhaQVNCTw$/pVB8DTNf8pKS/z4LNdpgVfwz0Dft9huBXcgGKSkmfo"
+        },
+        {
+            "format": "argon2id",
+            "password": "accents",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$S29KOG5DeXg5OVJleWFmZg$heNpSCTFM7c3z5lJgq1F74d31/czWW5akkjL92jKtQM"
+        },
+        {
+            "format": "argon2id",
+            "password": "emoji",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$aEouOUxYQ0ZOend1akFsVQ$jFcEvKrjgheXNt+tzeFo1svE6jWEqF/vyzW6cJehBJk"
+        },
+        {
+            "format": "argon2id",
+            "password": "long",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$NlpzU1RiOHhteGxtTmF6Zg$aLeulf02aopABjQbQRP4dxMVlPB8+/9+2pxFvOlAb6w"
+        },
+        {
+            "format": "argon2id",
+            "password": "nul",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$UDdxRUNXZkJ2WjREUERwMg$StS6XY8EKnRcle/pGLK7jAaoz3bDqsHMNrUbSKRyMIA"
+        },
+        {
+            "format": "argon2id",
+            "password": "max",
+            "hash": "$argon2id$v=19$m=65536,t=4,p=1$Y0pRVHRFOW5mVEdweTlURA$UPjs50NXGl+OQfGodGcGOG7I0EVwTbWFKPjrdDSdxYQ"
+        },
+        {
+            "format": "argon2i",
+            "password": "ascii",
+            "hash": "$argon2i$v=19$m=65536,t=4,p=1$amNhL1pwWVF0OW9VbFNmUg$jr2A35nOrQz0vnQrEVaX120yohaNjKc0F8+SXuqFUgc"
+        },
+        {
+            "format": "argon2i",
+            "password": "accents",
+            "hash": "$argon2i$v=19$m=65536,t=4,p=1$T29UbFFWWkJtQ3NvVFhraw$KJQsr6gzDX5hbrJ1dVCpmM2t3jBJQxeSgkXusKUjiLw"
+        },
+        {
+            "format": "argon2i",
+            "password": "emoji",
+            "hash": "$argon2i$v=19$m=65536,t=4,p=1$ajVWV1cuSldNcFdHd1RDbw$gqv9yRcdTLz84QOmXl/b+jessPom1WPJQ2o2mIyPoNI"
+        },
+        {
+            "format": "argon2i",
+            "password": "long",
+            "hash": "$argon2i$v=19$m=65536,t=4,p=1$ajRxZkJFNGZjVlF0TFMyTw$CFE4beXLI/iT9bOtdtZDrHQg7aRwgB9DL61+FtcBPfg"
+        },
+        {
+            "format": "argon2i",
+            "password": "nul",
+            "hash": "$argon2i$v=19$m=65536,t=4,p=1$ZVNGOFJETWFRUkZqZ1poMQ$4RpVpxuLpQNZWTE6JrX7GZH0MXl3Q4DuIea+d5QB5Eg"
+        },
+        {
+            "format": "argon2i",
+            "password": "max",
+            "hash": "$argon2i$v=19$m=65536,t=4,p=1$SEtvbm5mVUtLaEs0U2xXNg$J9tkioMvymd5T/tftDx4/yL5mNzvsmFZK9O/O1pkkok"
+        },
+        {
+            "format": "argon2id-weak",
+            "password": "ascii",
+            "hash": "$argon2id$v=19$m=10,t=3,p=1$d2dlLlFIcDA1ZFJOZ0ljSA$TtlR/8soZcxZTh6ooNLFF7EjEJCTn5TAF3HuGmfQI2w"
+        },
+        {
+            "format": "argon2id-weak",
+            "password": "accents",
+            "hash": "$argon2id$v=19$m=10,t=3,p=1$M1Y5TVJYZXQ0RkRuenMwTw$AA0PfjKS8CA7cVLyFU1t7NIIFjVJ5bf6dZ6JbKYu8Vg"
+        },
+        {
+            "format": "argon2id-weak",
+            "password": "emoji",
+            "hash": "$argon2id$v=19$m=10,t=3,p=1$cmdDcnp3UUpwbEM5WG5LVw$O6ViRix6yb4dIAm20AVBeIkaM0NSzqXUQfkS3Xd/AdY"
+        },
+        {
+            "format": "argon2id-weak",
+            "password": "long",
+            "hash": "$argon2id$v=19$m=10,t=3,p=1$bDNUTkFSZnp4amFMaUJOZg$z6EZqUzvAxVeuJCPbbqoQ9ar4SESDag9JxRMv+M6stU"
+        },
+        {
+            "format": "argon2id-weak",
+            "password": "nul",
+            "hash": "$argon2id$v=19$m=10,t=3,p=1$TmtWcnA1TVlrekNCWlBxeg$lIODh4iTD5PIwuqJ0bIs2LMIYzuHKZ6zxVM43JVXnnE"
+        },
+        {
+            "format": "argon2id-weak",
+            "password": "max",
+            "hash": "$argon2id$v=19$m=10,t=3,p=1$ZnBnMEhkL1FoUVJKZUs0Rg$HmWAdVIJyY1cXo3dYxXjdAGypiJCfgCkGhgYIpU1yJg"
+        },
+        {
+            "format": "argon2id-lanes2",
+            "password": "ascii",
+            "hash": "$argon2id$v=19$m=19456,t=2,p=2$SVMxbVpnbWVXbkdEelV0cA$Ud2kz5ICPCBZWwkXXhbi741mZk1EAZ5HaeTlMLqfRmE"
+        },
+        {
+            "format": "argon2id-lanes2",
+            "password": "accents",
+            "hash": "$argon2id$v=19$m=19456,t=2,p=2$cEcvT0YzZkZta0RPanF0Rw$zXAFzGvxhCwH1+1Qm8QnunIXpfNalmUToVef9m5VIRk"
+        },
+        {
+            "format": "argon2id-lanes2",
+            "password": "emoji",
+            "hash": "$argon2id$v=19$m=19456,t=2,p=2$RFNuMDYxZ1MzMFdOOEFmQQ$ZNH+ZFsV1xz3ZwJ0tmmNsyBtTRCen8LxvIcBToOtGBM"
+        },
+        {
+            "format": "argon2id-lanes2",
+            "password": "long",
+            "hash": "$argon2id$v=19$m=19456,t=2,p=2$SVcwQklzTlRtZ3FkYzlodQ$KBfPvQhZptKZueHg509ZairqOpU9iZcJtM/++J00wjU"
+        },
+        {
+            "format": "argon2id-lanes2",
+            "password": "nul",
+            "hash": "$argon2id$v=19$m=19456,t=2,p=2$QnJ0TUtIM0FPbTJyTVBtUw$eHDwvbFX8SeQHrY3Vy0nxw+ce0pOTLkXeHh6vaAhuIk"
+        },
+        {
+            "format": "argon2id-lanes2",
+            "password": "max",
+            "hash": "$argon2id$v=19$m=19456,t=2,p=2$VE1nUHFtekc0RWhNeXl1RA$XUBkc/77Ut4AljIeTILXlAC0GvyUo5CQnOkO6SoZfGE"
+        }
+    ]
+}

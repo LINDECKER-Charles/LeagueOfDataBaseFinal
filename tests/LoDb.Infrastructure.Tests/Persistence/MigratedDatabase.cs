@@ -15,6 +15,9 @@ public abstract class MigratedDatabase(PostgresContainerFixture postgres) : IAsy
     protected TestDatabase Database =>
         _database ?? throw new InvalidOperationException("The database is not created yet.");
 
+    /// <summary>The server of <see cref="Database"/>, for a test that needs another one.</summary>
+    protected PostgresContainerFixture Server => postgres;
+
     public async ValueTask InitializeAsync()
     {
         _database = await postgres.CreateDatabaseAsync(Cancellation);
