@@ -1,0 +1,18 @@
+Subject: Confirm your email address · LeagueOfDataBase
+
+League of Legends codex
+LEAGUE OF DATABASE
+========================================
+
+Welcome, Faker
+
+Confirm your email address to fully activate your account and unlock build creation.
+
+Confirm my address :
+https://lodb.test/account/link?token=a&sig=b
+
+This link expires in 1 hour. If you didn't create this account, just ignore this email.
+
+--
+You're receiving this email because an account was created with this address on LeagueOfDataBase.
+© LeagueOfDataBase — an independent project, not affiliated with Riot Games.

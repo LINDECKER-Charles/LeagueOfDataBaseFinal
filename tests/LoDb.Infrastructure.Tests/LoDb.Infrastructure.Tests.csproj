@@ -3,4 +3,9 @@
     <ProjectReference Include="../../src/LoDb.Infrastructure/LoDb.Infrastructure.csproj" />
     <ProjectReference Include="../LoDb.Testing/LoDb.Testing.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- The reviewed renderings of the e-mail templates, read by EmailSnapshotTests. -->
+    <None Update="Outbox/Snapshots/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

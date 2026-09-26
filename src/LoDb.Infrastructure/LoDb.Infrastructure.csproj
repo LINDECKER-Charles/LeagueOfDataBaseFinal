@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="MailKit" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
@@ -24,6 +25,18 @@
     <!-- Read at run time by `migrate` and `baseline mark-applied`, in the API image too. -->
     <EmbeddedResource Include="Persistence/Baseline/*.sql" LogicalName="%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence/Baseline/*.txt" LogicalName="%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      The e-mail templates and their texts, read by the outbox when it sends. A text catalog
+      is named after its locale alone (en.json): "email.fr.json" would be taken for a French
+      satellite resource and leave the main assembly.
+    -->
+    <EmbeddedResource
+      Include="Outbox/Templates/*" LogicalName="outbox.templates.%(Filename)%(Extension)" />
+    <EmbeddedResource
+      Include="Outbox/Texts/*.json" LogicalName="outbox.texts.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
