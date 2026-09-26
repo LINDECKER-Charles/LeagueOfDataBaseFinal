@@ -5,7 +5,8 @@ namespace LoDb.Infrastructure.Tests.Persistence;
 
 /// <summary>
 /// <c>tools/next/db/anonymize.sql</c> leaves no personal data, keeps the structure and the
-/// row counts, and stops on any text column it has not reviewed.
+/// row counts, empties the secrets, and stops on any text column it has not reviewed; with or
+/// without the tables of the new stack.
 /// </summary>
 public sealed class AnonymizationTests(PostgresContainerFixture postgres)
     : MigratedDatabase(postgres)
@@ -19,7 +20,8 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
     private const string Marker = "zqx";
     private const string MarkedIp = "198.51.100.77";
 
-    private const string Seed = """
+    // Rows of the Doctrine tables, those of a dump taken before the new stack migrates.
+    private const string LegacySeed = """
         INSERT INTO users (id, email, username, roles, password, created_at, google_id,
                            riot_tagline, ban_reason, favorite_champion_id, is_banned)
         VALUES
@@ -66,15 +68,49 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
         INSERT INTO reset_password_request (id, selector, hashed_token, requested_at,
                                             expires_at, user_id)
         VALUES (1, 'zqxsel', 'zqxtoken', now(), now(), 1);
+        """;
+
+    // Rows of the tables of the new stack: Data Dragon (lot 1), then Identity, the key ring,
+    // the outbox and the journal (lot 4).
+    private const string NewStackSeed = """
         INSERT INTO ddragon_version (version, status, discovered_at, updated_at)
         VALUES ('16.19.1', 'ready', now(), now());
         INSERT INTO ddragon_asset (version, type, key, status, recorded_at)
         VALUES ('16.19.1', 'champion', 'Hwei', 'absent', now());
         INSERT INTO periodic_job (name, last_started_at) VALUES ('ddragon-watch', now());
+        UPDATE users SET security_stamp = 'ZQXSTAMP', two_factor_enabled = true,
+            access_failed_count = 3, lockout_end = now(),
+            concurrency_stamp = '5c0e2f4e-8f3b-4c1d-9a7e-2b6d1f0c3a91'
+        WHERE id = 1;
+        INSERT INTO identity_roles (id, name, normalized_name, concurrency_stamp)
+        VALUES (1, 'Admin', 'ADMIN', '0b7d6c2a-1e4f-4a3b-8c9d-5e6f7a8b9c0d');
+        INSERT INTO identity_user_roles (user_id, role_id) VALUES (1, 1);
+        INSERT INTO identity_user_tokens (user_id, login_provider, name, value)
+        VALUES (1, '[AspNetUserStore]', 'AuthenticatorKey', 'ZQXSECRET');
+        INSERT INTO data_protection_keys (friendly_name, xml)
+        VALUES ('key-zqx', '<key id="zqx" />');
+        INSERT INTO email_outbox (recipient, template, locale, model, status, next_attempt_at,
+                                  created_at)
+        VALUES ('zqx.alice@zqxmail.test', 'confirm_email', 'fr', '{"userName": "zqxalice"}',
+                'pending', now(), now());
+        INSERT INTO audit_log (occurred_at, actor_type, actor_id, actor, action, outcome,
+                               target_type, target_id, target, ip, route, meta)
+        VALUES
+            (now(), 'user', 1, 'zqxalice', 'build.create', 'success', 'build', '1',
+             'zqx secret build', '198.51.100.77', '/api/builds', '{"champion": "Ahri"}'),
+            (now(), 'anonymous', NULL, NULL, 'user.login_failed', 'failure', NULL, NULL, NULL,
+             '198.51.100.77', '/api/account/login', '{"identifier": "zqx.bob@zqxmail.test"}'),
+            (now(), 'admin', 3, 'zqxcarol', 'admin.user_ban', 'success', 'user', '2', 'zqxbob',
+             NULL, '/api/admin/users/{id}/ban', NULL);
         """;
 
+    private const string Seed = LegacySeed + "\n" + NewStackSeed;
+
     private static readonly string[] EmptiedTables =
-        ["messenger_messages", "reset_password_request"];
+    [
+        "data_protection_keys", "email_outbox", "identity_user_tokens", "messenger_messages",
+        "reset_password_request",
+    ];
 
     [Fact]
     public async Task NoPersonalDataIsLeft()
@@ -86,7 +122,7 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
 
         await AnonymizeAsync(PasswordHash);
 
-        Assert.Equal(14, marked.Values.Sum());
+        Assert.Equal(20, marked.Values.Sum());
         Assert.All(await MarkedRowsAsync(), static table => Assert.Equal(0, table.Value));
         Assert.Equal(
             counts.ToDictionary(
@@ -140,6 +176,54 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
                 Cancellation));
     }
 
+    [Fact]
+    public async Task NewStackValuesStayUsable()
+    {
+        await Database.ExecuteAsync(Seed, Cancellation);
+
+        await AnonymizeAsync(PasswordHash);
+
+        Assert.Equal(
+            ["USER1|USER1@EXAMPLE.INVALID|NULL|f|0|NULL|5c0e2f4e-8f3b-4c1d-9a7e-2b6d1f0c3a91"],
+            await Database.QueryAsync(
+                """
+                SELECT concat_ws('|', normalized_username, normalized_email,
+                    coalesce(security_stamp, 'NULL'), two_factor_enabled, access_failed_count,
+                    coalesce(lockout_end::text, 'NULL'), concurrency_stamp)
+                FROM users WHERE id = 1
+                """,
+                Cancellation));
+        Assert.Equal(
+            [
+                "user|user1|build.create|Build 1|192.0.2.1|/api/builds|NULL",
+                "anonymous|NULL|user.login_failed|NULL|192.0.2.1|/api/account/login|NULL",
+                "admin|user3|admin.user_ban|user2|NULL|/api/admin/users/{id}/ban|NULL",
+            ],
+            await Database.QueryAsync(
+                """
+                SELECT concat_ws('|', actor_type, coalesce(actor, 'NULL'), action,
+                    coalesce(target, 'NULL'), coalesce(ip, 'NULL'), route,
+                    coalesce(meta::text, 'NULL'))
+                FROM audit_log ORDER BY id
+                """,
+                Cancellation));
+    }
+
+    [Fact]
+    public async Task DumpWithoutTheNewStackIsAnonymizedToo()
+    {
+        await using var legacy = await Server.CreateDatabaseAsync(Cancellation);
+        await legacy.CreateDoctrineSchemaAsync(Cancellation);
+        await legacy.ExecuteAsync(LegacySeed, Cancellation);
+        var marked = await MarkedRowsAsync(legacy);
+
+        await AnonymizeAsync(legacy, PasswordHash);
+
+        Assert.DoesNotContain("audit_log", await legacy.TablesAsync(Cancellation));
+        Assert.Equal(14, marked.Values.Sum());
+        Assert.All(await MarkedRowsAsync(legacy), static table => Assert.Equal(0, table.Value));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -160,7 +244,7 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
     [Theory]
     [InlineData("ALTER TABLE users ADD COLUMN nickname varchar(32)", "users.nickname")]
     [InlineData("ALTER TABLE builds ADD COLUMN notes jsonb", "builds.notes")]
-    [InlineData("CREATE TABLE audit_log (id integer, detail text)", "audit_log.detail")]
+    [InlineData("CREATE TABLE analytics_event (id integer, detail text)", "analytics_event.detail")]
     public async Task UnreviewedColumnStopsBeforeAnyChange(string alteration, string column)
     {
         await Database.ExecuteAsync(Seed, Cancellation);
@@ -184,9 +268,11 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
         await AnonymizeAsync(PasswordHash);
     }
 
-    private async Task AnonymizeAsync(string? passwordHash)
+    private Task AnonymizeAsync(string? passwordHash) => AnonymizeAsync(Database, passwordHash);
+
+    private static async Task AnonymizeAsync(TestDatabase database, string? passwordHash)
     {
-        await using var connection = await Database.DataSource.OpenConnectionAsync(Cancellation);
+        await using var connection = await database.DataSource.OpenConnectionAsync(Cancellation);
         await using var transaction = await connection.BeginTransactionAsync(Cancellation);
         if (passwordHash is not null)
         {
@@ -206,19 +292,24 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
         await transaction.CommitAsync(Cancellation);
     }
 
+    private Task<Dictionary<string, long>> MarkedRowsAsync() => MarkedRowsAsync(Database);
+
     // Per table, the rows whose text still holds a marker.
-    private Task<Dictionary<string, long>> MarkedRowsAsync() =>
+    private static Task<Dictionary<string, long>> MarkedRowsAsync(TestDatabase database) =>
         PerTableAsync(
+            database,
             $"count(*) FILTER (WHERE t::text ILIKE '%{Marker}%' OR t::text LIKE '%{MarkedIp}%')");
 
-    private Task<Dictionary<string, long>> RowCountsAsync() => PerTableAsync("count(*)");
+    private Task<Dictionary<string, long>> RowCountsAsync() => PerTableAsync(Database, "count(*)");
 
-    private async Task<Dictionary<string, long>> PerTableAsync(string aggregate)
+    private static async Task<Dictionary<string, long>> PerTableAsync(
+        TestDatabase database,
+        string aggregate)
     {
         var result = new Dictionary<string, long>(StringComparer.Ordinal);
-        foreach (var table in await Database.TablesAsync(Cancellation))
+        foreach (var table in await database.TablesAsync(Cancellation))
         {
-            var value = await Database.QueryAsync(
+            var value = await database.QueryAsync(
                 $"SELECT {aggregate} FROM \"{table}\" AS t",
                 Cancellation);
             result[table] = long.Parse(value[0], null);

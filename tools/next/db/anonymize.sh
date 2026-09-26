@@ -12,7 +12,9 @@
 # dumped, and the container is removed with its data. Every account with a password gets
 # LODB_ANON_PASSWORD (bcrypt); for a dump that goes to next, pick a strong one and share
 # it like a secret, since it opens every account there. Row counts are printed before and
-# after: only messenger_messages and reset_password_request change (emptied).
+# after: only the queues, the tokens and the key ring change (emptied): messenger_messages
+# and reset_password_request, then email_outbox, identity_user_tokens and
+# data_protection_keys once the new stack has migrated the database (lot 4).
 set -euo pipefail
 
 readonly IMAGE=postgres:17-alpine

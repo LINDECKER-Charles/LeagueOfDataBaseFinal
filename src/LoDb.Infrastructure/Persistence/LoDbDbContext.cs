@@ -1,10 +1,13 @@
 using LoDb.Infrastructure.Persistence.Accounts;
+using LoDb.Infrastructure.Persistence.Audit;
 using LoDb.Infrastructure.Persistence.Billing;
 using LoDb.Infrastructure.Persistence.Builds;
 using LoDb.Infrastructure.Persistence.Contact;
 using LoDb.Infrastructure.Persistence.Ddragon;
+using LoDb.Infrastructure.Persistence.Outbox;
 using LoDb.Infrastructure.Persistence.PublicApi;
 using LoDb.Infrastructure.Persistence.Scheduling;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Infrastructure.Persistence;
@@ -17,7 +20,8 @@ namespace LoDb.Infrastructure.Persistence;
 /// Only the schema chantiers (L1.4, L4.1, L6.2) change entities, configurations and
 /// migrations, one migration per lot; migrations stay additive until the contract phase.
 /// </remarks>
-public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options) : DbContext(options)
+public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
+    : DbContext(options), IDataProtectionKeyContext
 {
     public DbSet<User> Users => Set<User>();
 
@@ -38,6 +42,12 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options) : DbC
     public DbSet<DdragonVersion> DdragonVersions => Set<DdragonVersion>();
 
     public DbSet<PeriodicJobState> PeriodicJobs => Set<PeriodicJobState>();
+
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
+    public DbSet<EmailOutboxMessage> EmailOutbox => Set<EmailOutboxMessage>();
+
+    public DbSet<AuditLogEntry> AuditLog => Set<AuditLogEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -11,9 +11,11 @@ namespace LoDb.Infrastructure.Tests.Persistence;
 public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
 {
     private const string Lot1 = "20260926022150_Lot1DataDragon";
+    private const string Lot4 = "20260926091745_Lot4Accounts";
     private const string EfHistory = "__EFMigrationsHistory";
 
-    private static readonly string[] AllMigrations = [DoctrineBaseline.MigrationId, Lot1];
+    private static readonly string[] AllMigrations =
+        [DoctrineBaseline.MigrationId, Lot1, Lot4];
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -69,11 +71,9 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
         var report = await database.MigrateAsync(Cancellation);
 
         Assert.Equal(BaselineOutcome.Marked, report.Baseline);
-        Assert.Equal([Lot1], report.Applied);
+        Assert.Equal([Lot1, Lot4], report.Applied);
         Assert.Equal(AllMigrations, await database.AppliedMigrationsAsync(Cancellation));
-        Assert.Equal(
-            LegacySchema.DoctrineSchema,
-            await database.DumpSchemaAsync(TestDatabase.NewTables, Cancellation));
+        await BaselineSchemaTests.AssertOnlyAdditionsAsync(database);
     }
 
     [Fact]

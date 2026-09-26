@@ -118,7 +118,7 @@ public sealed class LegacyUtcTimestampsTests(PostgresContainerFixture postgres)
     private static User NewUser(DateTimeOffset createdAt) => new()
     {
         Email = "utc@example.test",
-        Username = "utc",
+        UserName = "utc",
         Roles = [],
         CreatedAt = createdAt,
     };

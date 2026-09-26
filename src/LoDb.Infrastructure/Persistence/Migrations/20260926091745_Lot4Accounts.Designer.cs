@@ -3,6 +3,7 @@ using System;
 using LoDb.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LoDb.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(LoDbDbContext))]
-    partial class LoDbDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260926091745_Lot4Accounts")]
+    partial class Lot4Accounts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
