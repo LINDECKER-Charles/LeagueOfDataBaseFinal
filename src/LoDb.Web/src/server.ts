@@ -7,7 +7,9 @@ import {
 import express from 'express';
 import { join, relative } from 'node:path';
 import type { SsrRequestContext } from './app/core/http/ssr-request-context';
-import { DEFAULT_LOCALE } from './app/core/i18n/default-locale';
+import { negotiateLocale } from './app/core/routing/locale/negotiate-locale';
+import { parseAcceptLanguage } from './app/core/routing/locale/parse-accept-language';
+import { CACHE_CONTROL } from './app/core/routing/response/cache-control';
 import { createLogger } from './server/create-logger';
 import { failureHandler } from './server/failure-handler';
 import { readServerSettings } from './server/read-server-settings';
@@ -41,9 +43,12 @@ app.get('/healthz', (_request, response) => {
 
 app.use(requestLogging(logger));
 
-// Provisional: L3.1 negotiates the locale from Accept-Language (ADR 0005).
-app.get('/', (_request, response) => {
-  response.redirect(302, `/${DEFAULT_LOCALE}/`);
+// `/` has no page of its own: a 302 to the locale the browser prefers (ADR 0005). The
+// answer depends on Accept-Language, and a redirect only lives a minute in a shared cache.
+app.get('/', (request, response) => {
+  const locale = negotiateLocale(parseAcceptLanguage(request.get('Accept-Language')));
+  response.set({ 'Cache-Control': CACHE_CONTROL.transient, Vary: 'Accept-Language' });
+  response.redirect(302, `/${locale}/`);
 });
 
 app.use(
