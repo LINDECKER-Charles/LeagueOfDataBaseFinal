@@ -1,0 +1,633 @@
+{
+    "range": "all",
+    "from": "2026-07-14",
+    "to": "2026-07-16",
+    "days": 3,
+    "totals": {
+        "views": 53,
+        "botViews": 6,
+        "uniqueVisitors": 8,
+        "returningVisitors": 8,
+        "pagesTracked": 14
+    },
+    "series": [
+        {
+            "date": "2026-07-14",
+            "views": 16,
+            "visitors": 6,
+            "botViews": 2
+        },
+        {
+            "date": "2026-07-15",
+            "views": 17,
+            "visitors": 6,
+            "botViews": 2
+        },
+        {
+            "date": "2026-07-16",
+            "views": 20,
+            "visitors": 8,
+            "botViews": 2
+        }
+    ],
+    "byType": [
+        {
+            "name": "runesReforged",
+            "count": 15,
+            "pct": 28.30188679245283
+        },
+        {
+            "name": "champion",
+            "count": 13,
+            "pct": 24.528301886792452
+        },
+        {
+            "name": "summoner",
+            "count": 10,
+            "pct": 18.867924528301888
+        },
+        {
+            "name": "item",
+            "count": 9,
+            "pct": 16.9811320754717
+        },
+        {
+            "name": "home",
+            "count": 6,
+            "pct": 11.320754716981133
+        }
+    ],
+    "byKind": [
+        {
+            "name": "detail",
+            "count": 24,
+            "pct": 45.28301886792453
+        },
+        {
+            "name": "list",
+            "count": 23,
+            "pct": 43.39622641509434
+        },
+        {
+            "name": "home",
+            "count": 6,
+            "pct": 11.320754716981133
+        }
+    ],
+    "byRoute": [
+        {
+            "name": "app_runes",
+            "count": 10,
+            "pct": 18.867924528301888
+        },
+        {
+            "name": "app_champion",
+            "count": 9,
+            "pct": 16.9811320754717
+        },
+        {
+            "name": "app_home",
+            "count": 6,
+            "pct": 11.320754716981133
+        },
+        {
+            "name": "app_rune",
+            "count": 5,
+            "pct": 9.433962264150944
+        },
+        {
+            "name": "app_summoners",
+            "count": 5,
+            "pct": 9.433962264150944
+        },
+        {
+            "name": "app_item",
+            "count": 5,
+            "pct": 9.433962264150944
+        },
+        {
+            "name": "app_summoner",
+            "count": 5,
+            "pct": 9.433962264150944
+        },
+        {
+            "name": "app_items",
+            "count": 4,
+            "pct": 7.547169811320755
+        },
+        {
+            "name": "app_champions",
+            "count": 4,
+            "pct": 7.547169811320755
+        }
+    ],
+    "status": [
+        {
+            "name": "200",
+            "count": 50,
+            "pct": 94.33962264150944
+        },
+        {
+            "name": "404",
+            "count": 3,
+            "pct": 5.660377358490567
+        }
+    ],
+    "topPages": [
+        {
+            "name": "/runes",
+            "count": 10,
+            "pct": 18.867924528301888
+        },
+        {
+            "name": "/",
+            "count": 6,
+            "pct": 11.320754716981133
+        },
+        {
+            "name": "/summoners",
+            "count": 5,
+            "pct": 9.433962264150944
+        },
+        {
+            "name": "/objects",
+            "count": 4,
+            "pct": 7.547169811320755
+        },
+        {
+            "name": "/rune/Domination",
+            "count": 4,
+            "pct": 7.547169811320755
+        },
+        {
+            "name": "/object/1004",
+            "count": 4,
+            "pct": 7.547169811320755
+        },
+        {
+            "name": "/champion/Ahri",
+            "count": 4,
+            "pct": 7.547169811320755
+        },
+        {
+            "name": "/champions",
+            "count": 4,
+            "pct": 7.547169811320755
+        },
+        {
+            "name": "/champion/Foo",
+            "count": 3,
+            "pct": 5.660377358490567
+        },
+        {
+            "name": "/summoner/SummonerFlash",
+            "count": 3,
+            "pct": 5.660377358490567
+        },
+        {
+            "name": "/champion/Aatrox",
+            "count": 2,
+            "pct": 3.7735849056603774
+        },
+        {
+            "name": "/summoner/SummonerHeal",
+            "count": 2,
+            "pct": 3.7735849056603774
+        },
+        {
+            "name": "/rune/Precision",
+            "count": 1,
+            "pct": 1.8867924528301887
+        },
+        {
+            "name": "/object/3078",
+            "count": 1,
+            "pct": 1.8867924528301887
+        }
+    ],
+    "topEntities": [
+        {
+            "name": "runesReforged:Domination",
+            "count": 4,
+            "pct": 16.666666666666664
+        },
+        {
+            "name": "item:1004",
+            "count": 4,
+            "pct": 16.666666666666664
+        },
+        {
+            "name": "champion:Ahri",
+            "count": 4,
+            "pct": 16.666666666666664
+        },
+        {
+            "name": "champion:Foo",
+            "count": 3,
+            "pct": 12.5
+        },
+        {
+            "name": "summoner:SummonerFlash",
+            "count": 3,
+            "pct": 12.5
+        },
+        {
+            "name": "champion:Aatrox",
+            "count": 2,
+            "pct": 8.333333333333332
+        },
+        {
+            "name": "summoner:SummonerHeal",
+            "count": 2,
+            "pct": 8.333333333333332
+        },
+        {
+            "name": "runesReforged:Precision",
+            "count": 1,
+            "pct": 4.166666666666666
+        },
+        {
+            "name": "item:3078",
+            "count": 1,
+            "pct": 4.166666666666666
+        }
+    ],
+    "byHour": [
+        2,
+        3,
+        5,
+        5,
+        2,
+        4,
+        1,
+        3,
+        5,
+        0,
+        3,
+        1,
+        2,
+        0,
+        0,
+        5,
+        1,
+        1,
+        0,
+        2,
+        2,
+        1,
+        1,
+        4
+    ],
+    "byWeekday": [
+        0,
+        16,
+        17,
+        20,
+        0,
+        0,
+        0
+    ],
+    "heatmap": [
+        [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ],
+        [
+            1,
+            1,
+            2,
+            2,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            2
+        ],
+        [
+            0,
+            0,
+            1,
+            2,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            3,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            2
+        ],
+        [
+            1,
+            2,
+            2,
+            1,
+            2,
+            2,
+            0,
+            1,
+            4,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+        ],
+        [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ],
+        [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ],
+        [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ]
+    ],
+    "locale": [
+        {
+            "name": "ko",
+            "count": 20,
+            "pct": 37.735849056603776
+        },
+        {
+            "name": "fr",
+            "count": 19,
+            "pct": 35.84905660377358
+        },
+        {
+            "name": "en",
+            "count": 14,
+            "pct": 26.41509433962264
+        }
+    ],
+    "lang": [
+        {
+            "name": "en_US",
+            "count": 18,
+            "pct": 40.909090909090914
+        },
+        {
+            "name": "ko_KR",
+            "count": 14,
+            "pct": 31.818181818181817
+        },
+        {
+            "name": "fr_FR",
+            "count": 12,
+            "pct": 27.27272727272727
+        }
+    ],
+    "browser": [
+        {
+            "name": "Chrome",
+            "count": 35,
+            "pct": 66.0377358490566
+        },
+        {
+            "name": "Safari",
+            "count": 9,
+            "pct": 16.9811320754717
+        },
+        {
+            "name": "Firefox",
+            "count": 9,
+            "pct": 16.9811320754717
+        }
+    ],
+    "os": [
+        {
+            "name": "Windows",
+            "count": 21,
+            "pct": 39.62264150943396
+        },
+        {
+            "name": "Android",
+            "count": 14,
+            "pct": 26.41509433962264
+        },
+        {
+            "name": "iOS",
+            "count": 9,
+            "pct": 16.9811320754717
+        },
+        {
+            "name": "macOS",
+            "count": 9,
+            "pct": 16.9811320754717
+        }
+    ],
+    "device": [
+        {
+            "name": "desktop",
+            "count": 30,
+            "pct": 56.60377358490566
+        },
+        {
+            "name": "tablet",
+            "count": 14,
+            "pct": 26.41509433962264
+        },
+        {
+            "name": "mobile",
+            "count": 9,
+            "pct": 16.9811320754717
+        }
+    ],
+    "refSource": [
+        {
+            "name": "internal",
+            "count": 13,
+            "pct": 24.528301886792452
+        },
+        {
+            "name": "social",
+            "count": 11,
+            "pct": 20.754716981132077
+        },
+        {
+            "name": "direct",
+            "count": 10,
+            "pct": 18.867924528301888
+        },
+        {
+            "name": "search",
+            "count": 10,
+            "pct": 18.867924528301888
+        },
+        {
+            "name": "external",
+            "count": 9,
+            "pct": 16.9811320754717
+        }
+    ],
+    "topReferers": [
+        {
+            "name": "league-of-data-base.com",
+            "count": 13,
+            "pct": 30.23255813953488
+        },
+        {
+            "name": "www.reddit.com",
+            "count": 11,
+            "pct": 25.581395348837212
+        },
+        {
+            "name": "www.google.com",
+            "count": 10,
+            "pct": 23.25581395348837
+        },
+        {
+            "name": "some-blog.example",
+            "count": 9,
+            "pct": 20.930232558139537
+        }
+    ],
+    "country": [
+        {
+            "name": "France",
+            "code": "FR",
+            "count": 18,
+            "pct": 45
+        },
+        {
+            "name": "South Korea",
+            "code": "KR",
+            "count": 15,
+            "pct": 37.5
+        },
+        {
+            "name": "United States",
+            "code": "US",
+            "count": 7,
+            "pct": 17.5
+        }
+    ]
+}
