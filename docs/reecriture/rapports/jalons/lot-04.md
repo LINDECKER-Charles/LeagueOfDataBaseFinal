@@ -299,3 +299,81 @@ répétition est une opération hôte (lot 8, plan §11).
 - **Lots 5 à 7** : la connexion par mot de passe et le cookie de session sont éprouvés sur
   la stack ; `tools/next/accounts/legacy-logins.mjs` montre comment insérer un compte
   hérité en SQL pour un test de stack.
+
+## 7. Vérification
+
+- **Date** : 2026-09-26.
+- **Fusions** (sans conflit, fichiers disjoints) : `wt/corr-l4-catalogue` (G3 `f6bdbbe`,
+  G2 `bd7ef3d`), fusion `0e1d6d3` ; `wt/corr-l4-transverse` (G1 `7013e16`, G5 `ef082ae`,
+  G4 `efd9deb`), fusion `414729d`. Aucune autre branche `wt/corr-l4-*`.
+- **Générés** : `api:generate` ne change rien ; aucune dépendance n'a bougé, les deux
+  lockfiles restent tels quels. Le dépôt n'a toujours aucun hook de commit.
+- **Stack** : `lodb-next` reconstruite depuis la racine sur `414729d` (seule l'image
+  `web-ssr` change ; 5 services `healthy`), base toujours à `20260926091745_Lot4Accounts`.
+
+### 7.1 Commandes et résultats
+
+| Étape | Commande | Résultat |
+|---|---|---|
+| Contrat | `npm --prefix src/LoDb.Web run api:generate` | aucun changement |
+| Dérive | `npm --prefix src/LoDb.Web run api:check` | sortie 0 |
+| Build .NET | `dotnet build LoDb.slnx -c Release` | 0 avertissement, 0 erreur, 12 projets |
+| Tests .NET | `dotnet test LoDb.slnx` | 1 997 tests : 1 995 réussis, 2 ignorés (parité sans `LODB_PARITY_RUN`) |
+| Front | `lint`, `typecheck` | OK |
+| Front | `test` | 141 fichiers, 1 308 tests réussis |
+| Front | `build:web` | OK, 168 pages prérendues ; bundle initial 638,96 ko |
+| Front | `build:shell`, `build:shell:store` | OK ; 638,31 ko et 638,35 ko |
+| Stack | `docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build` | 5 services `healthy` |
+| E2E | `npm --prefix tests/LoDb.E2E run typecheck` | OK |
+| E2E, passage 1 | `npm --prefix tests/LoDb.E2E test` | **134 réussis sur 134** (132 + les 2 tests ajoutés par G1 et G3) |
+| E2E, passages 2 et 3 | idem, enchaînés | 133/134 puis 132/134 : inscription refusée (§ 7.3) |
+| E2E, passage 4 | idem, après `restart api` | **134 réussis sur 134** |
+| E2E, compte | `npm --prefix tests/LoDb.E2E test -- specs/account specs/profile` | 9 réussis sur 9 |
+| E2E (mesure) | `npm --prefix tests/LoDb.E2E test -- specs/catalogue specs/champions specs/summoners specs/home --repeat-each=5` | 110 réussis sur 110 |
+| Critère | `node tools/next/accounts/legacy-logins.mjs` | **48 cas sur 48** |
+
+Aucun compte `e2e_*` ni `jalon4_*` ne reste dans la base de la stack.
+
+### 7.2 Échecs initiaux
+
+| Groupe | État | Preuve |
+|---|---|---|
+| G1 — tiroir de filtres sur téléphone | **corrigé** | `filters.spec.ts` (« bottom sheet » et le nouveau cas 360 × 560) réussit à chaque passage et 5 fois de suite |
+| G2 — clavier des visionneuses | **corrigé** | `champions.spec.ts -g "skins once scrolled"` réussit ; `skins.spec.ts` et `chromas.spec.ts` émettent la touche depuis l'élément qui a le focus |
+| G3 — `?lang=` du pager et des cartes | **corrigé** | `curl …/en/champions/Annie?lang=en_GB` : `pager__hub` vaut `/en/champions?lang=en_GB` (200), aucun `%3F` dans la page ; nouveau test E2E de la variante régionale réussi |
+| G4 — cibles des specs E2E | **corrigé** | `specs/account`, `specs/profile`, `summoners -g "named modes"`, `home -g "four portals"` réussissent ; les comptes sont supprimés même en cas d'échec |
+| G5 — paiements de la variante store | **corrigé** | `payments-enabled.spec.ts` : `/en/donate` répond 404 avec l'environnement store simulé ; liens de don masqués (`header.spec.ts`, `footer.spec.ts`) ; `build:shell:store` OK ; la variante web sert toujours `/en/donate` (200) |
+
+Aucun échec initial ne persiste.
+
+### 7.3 Constat nouveau, sans défaut du produit
+
+Les passages 2 et 3, lancés à la suite du premier, échouent au formulaire d'inscription
+(`specs/account/register.spec.ts`, `specs/profile/profile.spec.ts`), avec l'alerte « Too
+many attempts from your connection ». C'est la politique `registration`
+(`src/LoDb.Api/Hosting/RateLimitingPolicies.cs` : 5 inscriptions par adresse sur une heure
+glissante, en mémoire, comme l'ancienne stack). Chaque passage complet fait 2 inscriptions,
+donc le troisième passage d'une heure dépasse la limite. Après `docker compose … restart
+api`, qui remet le compteur à zéro, le passage 4 et le passage ciblé réussissent en entier.
+
+À suivre (jalons suivants) : ne pas enchaîner plus de deux passages complets par heure sur
+la même instance de l'API, ou la redémarrer entre deux séries.
+
+### 7.4 Points encore ouverts
+
+- `src/LoDb.Web/.prettierignore` n'ignore toujours pas `/android` (G5) : fichier hors du
+  périmètre des sous-agents et de cette vérification, à ajouter par son propriétaire.
+  `lint` passe aujourd'hui avec `src/LoDb.Web/android` présent.
+- `PAYMENTS_ENABLED` vit dans `src/environments/payments-enabled.ts`, que `features/*` ne
+  peut pas importer : L6.4 et L6.5 devront le déplacer vers `core` (par exemple
+  `core/payments`).
+- Les points du § 4 restent ouverts (bundle initial à 638,96 ko pour 500 ko, i18n, parité
+  côté API, assetlinks, desktop hors macOS).
+
+### 7.5 Critère de sortie
+
+**État : vérifié en local**, le 2026-09-26, sur `414729d` et la stack reconstruite : 48 cas
+sur 48 (connexion, hash réécrit à `$argon2id$v=19$m=19456,t=2,p=1$` ou conservé,
+reconnexion, refus du mauvais mot de passe en 401, `password_verify()` et
+`NativePasswordHasher` de Symfony dans `php:8.5-cli` sans réseau), pour les huit formats
+bcrypt et argon2 du § 5. Le lot 4 est terminé.
