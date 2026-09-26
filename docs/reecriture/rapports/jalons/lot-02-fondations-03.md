@@ -228,3 +228,130 @@ Vérifier par une dizaine de passages complets.
 lien répond 200), G2 (canonique, 21 hreflang et `x-default` sur `/en/`), G3 (aucune clé
 brute dans le HTML de `/en/`, `/fr/` et `/en/about`), G4 (dix passages de `test` verts).
 Puis les suites complètes, `check-urls.sh` et tous les E2E.
+
+## 6. Vérification
+
+- **Date** : 2026-09-26, sur la branche `docs/reecriture-dotnet-angular`, depuis la racine.
+- **Stack** : `lodb-next` reconstruite sur `796d9d4` (`up -d --build`). Les images `api`,
+  `migrate`, `web-ssr` et `nginx` ont été reconstruites, et les 5 services sont `healthy`.
+  `migrate` n'a rien appliqué : la base est déjà à `20260926091745_Lot4Accounts`.
+
+### 6.1 Fusion des corrections
+
+| Branche | Commit | Fusion | Contenu |
+|---|---|---|---|
+| `wt/corr-l2f-g1-comptes` | `f052fc1` | `a203b28` | G1 : modèle écrit avec `EmailModelKeys`, `FrontPages` sur `/{locale}/account/…`, test de livraison réelle (`AccountEmailDeliveryTests`, `SmtpSink`) |
+| `wt/corr-l2f-g2-seo` | `889c785` | `6513852` | G2 : `Seo.apply` dans l'accueil, la page d'erreur et la page éditoriale ; E2E `specs/seo/head.spec.ts` |
+| `wt/corr-l2f-g3g4-chrome` | `19aec23`, `3035abb` | `a62568c` | G3 : `provideTranslocoScope` sur l'en-tête (`api`) et le pied de page (`about`, `api`) ; G4 : `keepingGlobals()` dans le spec SSR |
+
+Aucun conflit : les trois branches partent de `b9747b7` et ne partagent aucun fichier.
+Aucun ajout aux fichiers partagés, aucune dépendance npm modifiée. `api:generate` ne
+change rien : pas de `package-lock.json` ni de contrat à committer. Le dépôt n'a aucun hook
+de commit : rien à rejouer sur les fichiers fusionnés.
+
+Deux corrections d'intégration pour G4 :
+
+- `a72cc7c` : la branche G3/G4 signalait une seconde source hors de son périmètre.
+  `app.routes.server.spec.ts` rend lui aussi sur la plateforme serveur et remplace les
+  classes DOM du worker. `keepingGlobals()` devient un utilitaire de test commun,
+  `core/testing/keeping-globals.ts`, utilisé par les deux specs SSR. Chacun a un cas de
+  non-régression. En contre-épreuve, sans l'enveloppe, le nouveau cas échoue.
+- `796d9d4` : en un seul worker (`ng test --runner-config` avec `fileParallelism: false,
+  maxWorkers: 1`), 6 passages sur 6 échouaient encore, de 3 à 41 cas par passage, dans
+  `editorial-page`, `home-page`, `error-page`, `disclosure`, `media`, `tabs`, `surfaces`,
+  `controls`, `accordion`, `navigation` et `locale-home`. Tous tombaient sur
+  `TypeError: root not a node` (domino, `processTextNodeMarkersBeforeHydration`).
+  `platform-server` confie son document domino à Angular (`ɵsetDocument`), et rien ne
+  rendait ensuite celui de jsdom. `keepingGlobals()` le restaure maintenant. Après
+  correction, 6 passages sur 6 sont verts en un seul worker. En contre-épreuve, sans la
+  restauration, les deux cas de non-régression échouent.
+
+### 6.2 Commandes et résultats
+
+| Étape | Commande | Résultat |
+|---|---|---|
+| Contrat | `npm --prefix src/LoDb.Web run api:generate` | aucun fichier modifié |
+| Dérive | `npm --prefix src/LoDb.Web run api:check` | sortie 0, « the API contract matches the committed documents and client » |
+| Outil du contrat | `node --test "tools/next/api/**/*.test.mjs"` | 2 réussis sur 2 |
+| Build .NET | `dotnet build LoDb.slnx -c Release` | 0 avertissement, 0 erreur |
+| Tests .NET | `dotnet test LoDb.slnx` | 1 748 tests : 1 746 réussis, 2 ignorés (parité sans `LODB_PARITY_RUN`), 0 échec |
+| Front | `npm --prefix src/LoDb.Web run lint` | sortie 0 (ESLint, Prettier, 9/9 tests des règles d'architecture) |
+| Front | `npm --prefix src/LoDb.Web run typecheck` | sortie 0 |
+| Front | `npm --prefix src/LoDb.Web run test`, 10 fois | 10 passages à 674/674 (56 fichiers) |
+| Front, un seul worker | `ng test --watch=false --runner-config <fileParallelism: false, maxWorkers: 1>`, 6 fois | 6 passages à 674/674 |
+| Front | `npm --prefix src/LoDb.Web run build:web` | sortie 0, 168 pages prérendues ; budget initial 575,18 ko pour 500 ko (avertissement, § 4) |
+| Front | `npm --prefix src/LoDb.Web run build:shell` | sortie 0 ; même avertissement de budget |
+| Stack | `docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build` | 5 services `healthy` |
+| E2E | `npm --prefix tests/LoDb.E2E run typecheck` | sortie 0 |
+| E2E | `npm --prefix tests/LoDb.E2E test`, 2 fois | 30 réussis sur 30, deux fois (legacy 5, public 2, routing 12, seo 11 dont `head.spec.ts` 4) |
+| Routage | `bash tools/next/routing/check-urls.sh` | 44 URLs sur 44 conformes, « Every URL answers as ADR 0005 says. » |
+
+### 6.3 Échecs initiaux
+
+| Échec | État | Preuve |
+|---|---|---|
+| G1 — e-mails de compte morts, liens hors grammaire | **corrigé** | voir ci-dessous |
+| G2 — ni canonique ni hreflang sur `/en/` | **corrigé** | voir ci-dessous |
+| G3 — clés i18n brutes dans le chrome | **corrigé** | voir ci-dessous |
+| G4 — `disclosure.spec.ts` intermittent | **corrigé** | 10 passages parallèles et 6 passages en un seul worker verts, après `a72cc7c` et `796d9d4` (§ 6.1) |
+
+**G1**, sur la stack :
+
+- `POST /api/account/register` (`verif-g1@example.test`, locale `fr`) répond 201.
+  `email_outbox` passe à l'id 2 : `confirm_email|sent|1 essai|sans code d'erreur`, avec un
+  modèle `{"userName": "verifg1", "actionUrl": "http://localhost/fr/account/verify-email?user=2&token=…", "expiresInMinutes": "60"}`.
+- Mailpit reçoit « Confirmez votre adresse e-mail · LeagueOfDataBase », avec un lien dans le
+  texte et deux dans le HTML.
+- Le lien, rejoué sur `:18080`, rend `/fr/account/verify-email?user=2&token=…` en 200
+  (`text/html`). Son jeton, envoyé à `POST /api/account/verify-email`
+  (`{userId, token}`), répond 200 `{"alreadyVerified":false}`.
+- `POST /api/account/forgot-password` répond 202. L'outbox passe à l'id 3,
+  `reset_password|sent`, et Mailpit reçoit « Réinitialisation de votre mot de passe ».
+- Le lien `/fr/account/reset-password/{jeton}?user=2` répond 200, avec
+  `X-Robots-Tag: noindex` et `Cache-Control: private, no-store`. Son jeton, envoyé à
+  `POST /api/account/reset-password`, répond 204.
+
+**G2** : `curl -s http://localhost:18080/en/` donne une `canonical`
+(`http://localhost/en/`), 22 `hreflang` (21 locales et `x-default`) et
+`robots: index, follow`. `/en/nowhere/at/all` répond 404 avec
+`robots: noindex, nofollow`, sans canonique, titre « Page not found — League Of Data
+Base ». `/en/about` (prérendue) a une canonique, 22 `hreflang` et le titre « About League
+Of Data Base — League Of Data Base ».
+
+**G3** : aucune clé `about.*` ni `api.*` brute dans le HTML de `/en/`, `/fr/`,
+`/en/about`, `/fr/about` et `/de/faq` (0 occurrence). En `fr`, le chrome affiche « À propos
+de League Of Data Base », « Données et sources », « Questions fréquentes » et « API ».
+
+### 6.4 Critères
+
+| Critère | État | Preuve |
+|---|---|---|
+| Lot 2 — contrat OpenAPI stable | vérifié | `api:generate` ne modifie rien ; `LoDb.Api_public-v1.json` inchangé (dernière modification `9af9315`, avant ce jalon) |
+| Lot 2 — client généré commité | vérifié | `api:check` vert, client `core/api/generated/` identique à la régénération |
+| Lot 2 — contrôle de dérive actif | vérifié | `api:check` sortie 0 ; job `contract` de `.github/workflows/next-ci.yml` (`api:check`) |
+| Table d'URLs de L3.1 rejouée | vérifié | `check-urls.sh` 44/44 ; E2E `specs/routing` 12/12 |
+| Traductions présentes dans le HTML SSR | vérifié | G3 ci-dessus ; `<html lang="fr">` sur `/fr/` |
+| Canonique et hreflang sur `/en/` | vérifié | G2 ci-dessus ; E2E `specs/seo/head.spec.ts` 4/4 |
+| Sitemaps et `robots.txt` servis par nginx | vérifié | `/robots.txt`, `/llms.txt`, `/sitemap.xml`, `/sitemaps/en/latest.xml` (1 093 `<loc>`), `/sitemaps/fr/16.18.1.xml` : 200 ; E2E `specs/seo` 11/11 |
+| Redirections héritées en un saut | vérifié | `/16.18.1/object/1004?lang=de_DE` → 301 `/de/16.18.1/items/1004-faerie-charm` → 200 ; E2E `specs/legacy` 5/5 |
+| Coquille `<lodb-shell>` rendue | vérifié | `<lodb-shell … class="hx-shell flex min-h-dvh …">` dans le HTML SSR de `/en/` et `/fr/` ; E2E `specs/public` 2/2 |
+
+Le lot 2 et les fondations du lot 3 (L3.1 à L3.4) sont vérifiés.
+
+### 6.5 Constats de la vérification
+
+- **Corps de requête invalide → 500** : un JSON mal formé ou incomplet sur
+  `/api/account/register` ou `/api/account/verify-email` répond 500 au lieu de 400.
+  L'exception `BadHttpRequestException` (« JSON deserialization … was missing required
+  properties ») sort par `UseExceptionHandler` sans être traduite en problème 400. Aucun
+  critère de ce jalon n'en dépend. À traiter dans l'hébergement de l'API
+  (`Hosting/HostingRegistration.cs`) ou avec le front d'auth L4.6, qui s'appuiera sur des
+  400 lisibles.
+- **Origine canonique** : les pages rendues par requête annoncent `http://localhost/…`, les
+  pages prérendues `https://league-of-data-base.com/…`. C'est le constat « origine absolue »
+  du § 4, à fixer par L8.1.
+- **Données de test dans `lodb-next`** : compte `verifg1` (id 2), vérifié, mot de passe
+  réinitialisé ; messages d'outbox 2 et 3 `sent` ; deux e-mails dans Mailpit. Ils
+  s'ajoutent à `jalonl2` (id 1, message 1 `dead`). Un `down -v` les efface.
+- **Pages de compte du front** : `verify-email` et `reset-password/:token` ne lisent encore ni
+  `user` ni `token` (signalé par G1). Elles reviennent au front d'auth, L4.6.
