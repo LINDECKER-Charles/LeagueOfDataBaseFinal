@@ -1,0 +1,66 @@
+/*
+ * The "strategy scroll" of a shared build, tinted by its primary path: each `.path-*` class
+ * sets `--path`, which the seal, the eyebrow, the keystone ring and the timeline's diamonds
+ * read. Ghosts, entries the build's patch lacks, are dimmed in place.
+ */
+@layer components {
+  .path-precision {
+    --path: #c8aa6e;
+  }
+  .path-domination {
+    --path: #d44242;
+  }
+  .path-sorcery {
+    --path: #9faafc;
+  }
+  .path-resolve {
+    --path: #a1d586;
+  }
+  .path-inspiration {
+    --path: #49aab9;
+  }
+  .path-text {
+    color: var(--path, var(--color-gold));
+  }
+  .path-glow {
+    box-shadow: 0 0 26px -8px var(--path, var(--color-gold));
+  }
+  .path-ambient {
+    background: radial-gradient(
+      70rem 32rem at 50% -6rem,
+      color-mix(in srgb, var(--path, var(--color-gold)) 13%, transparent),
+      transparent 70%
+    );
+  }
+
+  .bshare-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+  }
+  .bshare-portrait {
+    position: relative;
+    flex: none;
+    inline-size: 6rem;
+    block-size: 6rem;
+    border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent);
+    background: var(--color-void);
+    /* The hexagonal seal, the focus shape of the codex. */
+    clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  }
+  .bshare-desc {
+    margin-block-start: 1.5rem;
+    max-inline-size: 60ch;
+    font-family: var(--font-spiegel);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    white-space: pre-line;
+    color: var(--color-text-muted);
+  }
+
+  .forge-ghost {
+    opacity: 0.45;
+    filter: saturate(0.2);
+  }
+}

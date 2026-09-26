@@ -1,0 +1,35 @@
+<div class="codex-header">
+  <h2>{{ 'build.show.order' | transloco }}</h2>
+  <span class="codex-header__meta">{{ steps().length }} × ◆</span>
+</div>
+
+<ol class="bsteps">
+  @for (step of steps(); track $index) {
+    <li class="bsteps-node">
+      <span class="bsteps-marker" aria-hidden="true"></span>
+      <article class="hextech-frame p-5">
+        <header class="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 class="font-beaufort text-base tracking-wide text-gold-bright uppercase">
+            {{ step.label }}
+          </h3>
+          <span class="hx-chip" [title]="'build.show.step_cost' | transloco"
+            >{{ step.gold }} ◆</span
+          >
+        </header>
+        @if (step.note) {
+          <p class="mt-2 font-spiegel text-sm text-text-muted italic">{{ step.note }}</p>
+        }
+        <ul class="mt-4 flex flex-wrap gap-2.5">
+          @for (item of step.items; track $index) {
+            <li><lodb-build-item [item]="item" /></li>
+          }
+        </ul>
+      </article>
+    </li>
+  }
+</ol>
+
+<div class="hx-plate mt-8">
+  <span class="hx-plate__label">{{ 'build.show.total' | transloco }}</span>
+  <span class="hx-plate__value">{{ totalGold() }} ◆</span>
+</div>

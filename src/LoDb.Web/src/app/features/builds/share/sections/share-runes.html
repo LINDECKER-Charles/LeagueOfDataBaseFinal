@@ -1,0 +1,77 @@
+@let missing = 'build.show.missing' | transloco;
+<div class="codex-header">
+  <h2>{{ 'build.show.runes' | transloco }}</h2>
+  <span class="codex-header__meta">{{ primary().name }} + {{ secondary().name }}</span>
+</div>
+
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-[1.35fr_1fr]">
+  <article class="hextech-frame path-border p-6" data-rune-path="primary">
+    <p class="bshare-tree path-text">
+      @if (primary().icon; as icon) {
+        <img class="hx-img" [src]="icon" alt="" width="22" height="22" />
+      }
+      {{ primary().name }}
+    </p>
+    <div class="mt-5 flex items-center gap-4">
+      @let key = keystone();
+      <div
+        class="keystone__icon"
+        [class.forge-ghost]="key.missing"
+        [attr.title]="key.missing ? missing : null"
+      >
+        @if (key.icon; as icon) {
+          <img class="hx-img" [src]="icon" alt="" />
+        }
+      </div>
+      <div class="min-w-0">
+        <p class="font-mono text-[11px] tracking-wider text-text-dim uppercase">
+          {{ 'build.show.keystone' | transloco }}
+        </p>
+        <p class="keystone__name font-beaufort text-lg tracking-wide text-gold-bright uppercase">
+          {{ key.name }}
+        </p>
+      </div>
+    </div>
+    <ul class="mt-5 space-y-2.5">
+      @for (perk of minors(); track $index) {
+        <li
+          class="bshare-perk flex items-center gap-3"
+          [class.forge-ghost]="perk.missing"
+          [attr.title]="perk.missing ? missing : null"
+        >
+          <span class="rune-medallion bshare-medallion">
+            @if (perk.icon; as icon) {
+              <img class="hx-img" [src]="icon" alt="" />
+            }
+          </span>
+          <span class="truncate text-sm text-text">{{ perk.name }}</span>
+        </li>
+      }
+    </ul>
+  </article>
+
+  <article class="hextech-frame p-6" data-rune-path="secondary">
+    <p class="bshare-tree">
+      @if (secondary().icon; as icon) {
+        <img class="hx-img" [src]="icon" alt="" width="22" height="22" />
+      }
+      {{ secondary().name }}
+    </p>
+    <ul class="mt-5 space-y-2.5">
+      @for (perk of secondaryPerks(); track $index) {
+        <li
+          class="bshare-perk flex items-center gap-3"
+          [class.forge-ghost]="perk.missing"
+          [attr.title]="perk.missing ? missing : null"
+        >
+          <span class="rune-medallion bshare-medallion">
+            @if (perk.icon; as icon) {
+              <img class="hx-img" [src]="icon" alt="" />
+            }
+          </span>
+          <span class="truncate text-sm text-text">{{ perk.name }}</span>
+        </li>
+      }
+    </ul>
+  </article>
+</div>

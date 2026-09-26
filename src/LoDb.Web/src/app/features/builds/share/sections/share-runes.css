@@ -1,0 +1,58 @@
+/*
+ * The rune page of a shared build: the path's name in small capitals, the keystone in a ring
+ * tinted by the path (`--path`, set by the page), the other runes in small medallions.
+ */
+@layer components {
+  .bshare-tree {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--color-gold);
+  }
+  .path-text {
+    color: var(--path, var(--color-gold));
+  }
+  .path-border {
+    border-color: color-mix(in srgb, var(--path, var(--color-gold)) 45%, transparent);
+  }
+
+  .keystone__icon {
+    flex: none;
+    inline-size: 4.5rem;
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent);
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        closest-side,
+        color-mix(in srgb, var(--path, var(--color-gold)) 24%, transparent),
+        transparent 80%
+      ),
+      var(--color-hextech-black);
+  }
+  .keystone__icon img,
+  .rune-medallion img {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .rune-medallion {
+    flex: none;
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+    border-radius: 50%;
+    background: var(--color-hextech-black);
+  }
+  .bshare-medallion {
+    inline-size: 2.4rem;
+  }
+
+  .forge-ghost {
+    opacity: 0.45;
+    filter: saturate(0.2);
+  }
+}
