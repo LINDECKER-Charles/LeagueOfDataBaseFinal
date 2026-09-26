@@ -14,9 +14,9 @@ import { CODEX_ENTRIES } from './codex-entries';
 /**
  * Slim Hextech bar: brand and release chip, the primary navigation from md up (the bottom
  * bar carries it below), then the cluster that stays on every viewport: donate, the
- * `account` slot, the theme picker and the `switcher` slot. Under 460px the brand shortens
- * to its initials and under 400px the release chip goes, so a 320px screen never scrolls
- * sideways.
+ * `account` slot, the theme picker and the `switcher` slot. The brand shortens to its
+ * initials wherever the row is crowded: under 460px, and from md to lg where the navigation
+ * joins it. Under 400px the release chip goes, so a 320px screen never scrolls sideways.
  */
 @Component({
   selector: 'lodb-header',

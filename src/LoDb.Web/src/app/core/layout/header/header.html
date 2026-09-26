@@ -10,11 +10,13 @@
     <div class="flex min-w-0 items-center gap-2 sm:gap-3">
       <a [routerLink]="link('')" class="brand-link group flex min-w-0 items-center gap-3">
         <span class="brand-logo shrink-0 text-gold"><lodb-logo class="size-8 sm:size-9" /></span>
+        <!-- A Latin name, laid out left to right in every page. -->
         <span
           class="brand-title truncate font-beaufort text-base tracking-[0.18em] text-gold-bright uppercase sm:text-lg"
+          dir="ltr"
         >
-          <span class="hidden min-[460px]:inline">League Of Data Base</span>
-          <span class="min-[460px]:hidden">LoDB</span>
+          <span class="hidden min-[460px]:max-md:inline lg:inline">League Of Data Base</span>
+          <span class="min-[460px]:max-md:hidden lg:hidden">LoDB</span>
         </span>
       </a>
       @if (version; as release) {
