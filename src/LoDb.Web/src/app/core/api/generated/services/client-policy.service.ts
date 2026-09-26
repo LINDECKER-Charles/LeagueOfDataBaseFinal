@@ -24,7 +24,7 @@ export class ClientPolicyService extends BaseService {
   static readonly GetClientPolicyPath = '/api/client-policy';
 
   /**
-   * Minimum and latest version of each app.
+   * Minimum and latest version of each app, and Android's live bundle.
    *
    *
    *
@@ -39,7 +39,7 @@ export class ClientPolicyService extends BaseService {
   }
 
   /**
-   * Minimum and latest version of each app.
+   * Minimum and latest version of each app, and Android's live bundle.
    *
    *
    *

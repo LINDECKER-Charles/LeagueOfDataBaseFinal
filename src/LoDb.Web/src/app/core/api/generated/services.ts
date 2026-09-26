@@ -4,10 +4,14 @@
 export { MetaService } from './services/meta.service';
 export { CatalogService } from './services/catalog.service';
 export { PickersService } from './services/pickers.service';
+export { DonationsService } from './services/donations.service';
+export { BillingService } from './services/billing.service';
 export { ContactService } from './services/contact.service';
+export { ClientPolicyService } from './services/client-policy.service';
 export { AccountService } from './services/account.service';
 export { ProfileService } from './services/profile.service';
 export { BuildsService } from './services/builds.service';
 export { TrendsService } from './services/trends.service';
+export { AdminAnalyticsService } from './services/admin-analytics.service';
 export { AdminAuditService } from './services/admin-audit.service';
-export { ClientPolicyService } from './services/client-policy.service';
+export { AdminClientPolicyService } from './services/admin-client-policy.service';

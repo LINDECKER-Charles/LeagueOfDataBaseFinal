@@ -1119,6 +1119,311 @@
         }
       }
     },
+    "/api/donations/options": {
+      "get": {
+        "tags": [
+          "Donations"
+        ],
+        "summary": "Lists the donation tiers, and whether donations are open.",
+        "operationId": "getDonationOptions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DonationOptions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/donations/checkout": {
+      "post": {
+        "tags": [
+          "Donations"
+        ],
+        "summary": "Opens the Stripe checkout of a donation.",
+        "operationId": "openDonationCheckout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DonationCheckoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing/offers": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Lists the credit packs and plans of the public API on sale.",
+        "operationId": "getBillingOffers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingOffers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing/checkout/pack": {
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Opens the Stripe checkout of a credit pack for the caller's API key.",
+        "operationId": "openPackCheckout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PackCheckoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing/checkout/plan": {
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Opens the Stripe checkout of a subscription for the caller's API key.",
+        "operationId": "openPlanCheckout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanCheckoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/contact": {
       "post": {
         "tags": [
@@ -1166,6 +1471,27 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/client-policy": {
+      "get": {
+        "tags": [
+          "ClientPolicy"
+        ],
+        "summary": "Minimum and latest version of each app, and Android's live bundle.",
+        "operationId": "getClientPolicy",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppPolicy"
                 }
               }
             }
@@ -3081,6 +3407,107 @@
         }
       }
     },
+    "/api/admin/analytics/report": {
+      "get": {
+        "tags": [
+          "AdminAnalytics"
+        ],
+        "summary": "The audience of the site over a period ending today (UTC).",
+        "operationId": "getAnalyticsReport",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/analytics/rollup": {
+      "post": {
+        "tags": [
+          "AdminAnalytics"
+        ],
+        "summary": "Writes the daily aggregates now, today's included.",
+        "operationId": "rollupAnalytics",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RollupReceipt"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/audit": {
       "get": {
         "tags": [
@@ -3495,20 +3922,80 @@
         }
       }
     },
-    "/api/client-policy": {
-      "get": {
+    "/api/admin/client-policy/{platform}": {
+      "put": {
         "tags": [
-          "ClientPolicy"
+          "AdminClientPolicy"
         ],
-        "summary": "Minimum and latest version of each app.",
-        "operationId": "getClientPolicy",
+        "summary": "Replaces the minimum, latest version and bundle of one app.",
+        "operationId": "publishClientPolicy",
+        "parameters": [
+          {
+            "name": "platform",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AppPolicy"
+                  "$ref": "#/components/schemas/PlatformPolicy"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -3661,6 +4148,367 @@
         },
         "description": "The signed-in account, as the fronts show it."
       },
+      "AnalyticsCountry": {
+        "required": [
+          "name",
+          "code",
+          "count",
+          "pct"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "English name, or the code when none was known."
+          },
+          "code": {
+            "type": "string",
+            "description": "ISO 3166 alpha-2 code."
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pct": {
+            "type": "number",
+            "description": "Percentage of the views that have a country.",
+            "format": "double"
+          }
+        },
+        "description": "A country of the audience, with its count and its share."
+      },
+      "AnalyticsDay": {
+        "required": [
+          "date",
+          "views",
+          "visitors",
+          "botViews"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "views": {
+            "type": "integer",
+            "description": "Views of people.",
+            "format": "int64"
+          },
+          "visitors": {
+            "type": "integer",
+            "description": "Distinct visitors of the day.",
+            "format": "int32"
+          },
+          "botViews": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "One day of the series of a report."
+      },
+      "AnalyticsRank": {
+        "required": [
+          "name",
+          "count",
+          "pct"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The key: a type, a path, `champion:Ahri`, a browser…"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pct": {
+            "type": "number",
+            "description": "Percentage of the whole breakdown, the keys past a top included.",
+            "format": "double"
+          }
+        },
+        "description": "A key of a breakdown, with its count and its share of the breakdown's total."
+      },
+      "AnalyticsReport": {
+        "required": [
+          "range",
+          "from",
+          "to",
+          "days",
+          "totals",
+          "series",
+          "byType",
+          "byKind",
+          "byRoute",
+          "status",
+          "topPages",
+          "topEntities",
+          "byHour",
+          "byWeekday",
+          "heatmap",
+          "locale",
+          "lang",
+          "browser",
+          "os",
+          "device",
+          "refSource",
+          "topReferers",
+          "country"
+        ],
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string",
+            "description": "`7d`, `30d`, `90d` or `all`."
+          },
+          "from": {
+            "type": "string",
+            "description": "First day of the period, in UTC.",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "description": "Last day of the period: today, in UTC.",
+            "format": "date"
+          },
+          "days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/AnalyticsTotals"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsDay"
+            },
+            "description": "Every day of the period, in order, those without a view included."
+          },
+          "byType": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Views by type: `home`, `champion`, `item`…"
+          },
+          "byKind": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Views by kind of page: `home`, `list`, `detail`."
+          },
+          "byRoute": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Views by legacy route name, such as `app_champion`."
+          },
+          "status": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Views by HTTP status."
+          },
+          "topPages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "The 20 most viewed paths."
+          },
+          "topEntities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "The 20 most viewed entities, keyed `{type}:{key}`."
+          },
+          "byHour": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Views by UTC hour, 24 values."
+          },
+          "byWeekday": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Views by UTC weekday, Monday first, 7 values."
+          },
+          "heatmap": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            },
+            "description": "Views by weekday (rows, Monday first) and UTC hour (columns)."
+          },
+          "locale": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Views by interface locale."
+          },
+          "lang": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Views by Data Dragon language."
+          },
+          "browser": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            }
+          },
+          "os": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            }
+          },
+          "device": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Views by device: `desktop`, `mobile`, `tablet`…"
+          },
+          "refSource": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Views by source: `direct`, `internal`, `search`, `social`,\n`external`."
+          },
+          "topReferers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "The 15 hosts that referred the most views, the site itself included."
+          },
+          "country": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsCountry"
+            },
+            "description": "Views by country, for the views that have one."
+          }
+        },
+        "description": "The traffic and audience of a period, as the legacy admin's report\n(`RangeReportBuilder`): what was viewed, when, by whom and from where."
+      },
+      "AnalyticsTotals": {
+        "required": [
+          "views",
+          "botViews",
+          "uniqueVisitors",
+          "returningVisitors",
+          "pagesTracked"
+        ],
+        "type": "object",
+        "properties": {
+          "views": {
+            "type": "integer",
+            "description": "Views of people; robots are only counted in long AnalyticsTotals.BotViews.",
+            "format": "int64"
+          },
+          "botViews": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "uniqueVisitors": {
+            "type": "integer",
+            "description": "Distinct visitors of the period: the union of the days', not their sum.",
+            "format": "int32"
+          },
+          "returningVisitors": {
+            "type": "integer",
+            "description": "Visitors seen on two days of the period or more.",
+            "format": "int32"
+          },
+          "pagesTracked": {
+            "type": "integer",
+            "description": "Distinct pages viewed.",
+            "format": "int32"
+          }
+        },
+        "description": "The totals of a report's period."
+      },
+      "ApiPackTerms": {
+        "required": [
+          "code",
+          "priceCents",
+          "requests"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "`small`, `medium` or `large`, as the portal posts it."
+          },
+          "priceCents": {
+            "type": "integer",
+            "description": "Price, in euro cents.",
+            "format": "int64"
+          },
+          "requests": {
+            "type": "integer",
+            "description": "Requests added to the balance of the key, valid twelve months.",
+            "format": "int64"
+          }
+        },
+        "description": "A credit pack of the public API, the legacy `ApiCreditPack`."
+      },
+      "ApiPlanTerms": {
+        "required": [
+          "code",
+          "monthlyQuota",
+          "ratePerMinute",
+          "priceCents",
+          "interval"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The code `api_keys.plan` stores and a session's metadata carries."
+          },
+          "monthlyQuota": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ratePerMinute": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "priceCents": {
+            "type": "integer",
+            "description": "Price of one period, in euro cents.",
+            "format": "int64"
+          },
+          "interval": {
+            "type": "string",
+            "description": "Stripe's billing interval: `month` or `year`."
+          }
+        },
+        "description": "A plan of the public API sold as a subscription, the legacy `ApiPlan`."
+      },
       "AppPolicy": {
         "required": [
           "platforms"
@@ -3671,7 +4519,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PlatformPolicy"
-            }
+            },
+            "description": "Every app, in the order of ClientPlatform."
           }
         },
         "description": "`GET /api/client-policy`: the policy of every app, one entry each."
@@ -3953,6 +4802,40 @@
         "type": "string",
         "description": "What a profile's backdrop shows, so a page does not draw the champion twice."
       },
+      "BillingOffers": {
+        "required": [
+          "available",
+          "currency",
+          "packs",
+          "plans"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "description": "False while payments are closed: the portal then sells nothing."
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO 4217 code, lowercase as Stripe writes it: `eur`."
+          },
+          "packs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiPackTerms"
+            },
+            "description": "The credit packs, from the smallest."
+          },
+          "plans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiPlanTerms"
+            },
+            "description": "The subscriptions, from the cheapest."
+          }
+        },
+        "description": "What the public API sells: credit packs and subscriptions, priced in euros."
+      },
       "BuildDraft": {
         "required": [
           "name",
@@ -4103,6 +4986,47 @@
           }
         },
         "description": "The canonical structure of a build, as stored: its champion, its rune page and its\npurchase order."
+      },
+      "BundleRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The id the live update plugin knows it by: letters, digits, . _ -."
+          },
+          "url": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Absolute https URL of the zip, such as a GitHub Release asset."
+          },
+          "checksum": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "SHA-256 of the zip, 64 lowercase hexadecimal digits."
+          },
+          "signature": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "RSA signature of the zip, in base64."
+          },
+          "minimumNativeVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Oldest native shell the bundle runs on, such as 1.3.0."
+          }
+        },
+        "description": "The live update bundle of a publication; every field is required."
       },
       "CatalogImage": {
         "required": [
@@ -4746,6 +5670,20 @@
         },
         "description": "A build's champion on the patch it renders on; a ghost when the patch lacks it."
       },
+      "CheckoutCreated": {
+        "required": [
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Stripe's payment page, which the client navigates to.",
+            "format": "uri"
+          }
+        },
+        "description": "An opened Checkout session."
+      },
       "ClientPlatform": {
         "enum": [
           "desktop",
@@ -4875,6 +5813,66 @@
         ],
         "type": "string",
         "description": "What an account types to confirm its erasure, one of three variants."
+      },
+      "DonationCheckoutRequest": {
+        "type": "object",
+        "properties": {
+          "amountCents": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "A tier or a free amount, in euro cents, from 100 to 50,000.",
+            "format": "int64"
+          },
+          "locale": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Code of the locale of the page, such as `fr`, which Stripe's page names the\ndonation in and the donor comes back to; English if unknown."
+          }
+        },
+        "description": "Body of `POST /api/donations/checkout`."
+      },
+      "DonationOptions": {
+        "required": [
+          "available",
+          "presets",
+          "minCents",
+          "maxCents",
+          "currency"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "description": "False while payments are closed: the page then says donations are coming."
+          },
+          "presets": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The tiers, in cents, from the smallest."
+          },
+          "minCents": {
+            "type": "integer",
+            "description": "The smallest free amount, in cents.",
+            "format": "int64"
+          },
+          "maxCents": {
+            "type": "integer",
+            "description": "The largest free amount, in cents.",
+            "format": "int64"
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO 4217 code, lowercase as Stripe writes it: `eur`."
+          }
+        },
+        "description": "What the donation page offers."
       },
       "DroppedItem": {
         "required": [
@@ -5783,6 +6781,39 @@
         },
         "description": "An item of a build's purchase order; a ghost when the patch lacks it."
       },
+      "LiveUpdateBundle": {
+        "required": [
+          "id",
+          "url",
+          "checksum",
+          "signature",
+          "minimumNativeVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The bundle's id, as the live update plugin names it."
+          },
+          "url": {
+            "type": "string",
+            "description": "Where the app downloads the zip of the shell build."
+          },
+          "checksum": {
+            "type": "string",
+            "description": "SHA-256 of the zip, in lowercase hexadecimal."
+          },
+          "signature": {
+            "type": "string",
+            "description": "RSA signature of the zip, in base64, checked by the app before use."
+          },
+          "minimumNativeVersion": {
+            "type": "string",
+            "description": "Oldest native shell the bundle runs on."
+          }
+        },
+        "description": "The live update bundle the Android app must run (ADR 0008): withdrawing a faulty one is\npublishing the policy again with another bundle, or with none."
+      },
       "LocaleLanguage": {
         "required": [
           "locale",
@@ -5995,6 +7026,26 @@
         },
         "description": "The author of a build, as a shared page or the trends credit them."
       },
+      "PackCheckoutRequest": {
+        "type": "object",
+        "properties": {
+          "pack": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`small`, `medium` or `large`."
+          },
+          "locale": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Code of the locale of the portal, such as `fr`; English if unknown."
+          }
+        },
+        "description": "Body of `POST /api/billing/checkout/pack`."
+      },
       "PerkView": {
         "required": [
           "id",
@@ -6036,6 +7087,26 @@
         },
         "description": "A rune a build picked, looked up in the path it was picked in; a ghost when that path\nlacks it on the patch, or when the slot holds no pick."
       },
+      "PlanCheckoutRequest": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`monthly`, `monthly_plus`, `annual` or `annual_plus`."
+          },
+          "locale": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Code of the locale of the portal, such as `fr`; English if unknown."
+          }
+        },
+        "description": "Body of `POST /api/billing/checkout/plan`."
+      },
       "PlatformPolicy": {
         "required": [
           "platform"
@@ -6050,7 +7121,7 @@
               "null",
               "string"
             ],
-            "description": "Below it the app must update before use; null while there is no floor."
+            "description": "Below it the app must update first (426); null while there is no floor."
           },
           "latestVersion": {
             "type": [
@@ -6058,6 +7129,25 @@
               "string"
             ],
             "description": "The newest release; null while none is published."
+          },
+          "bundle": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Android only: the current live update bundle; null while there is none.",
+                "$ref": "#/components/schemas/LiveUpdateBundle"
+              }
+            ]
+          },
+          "publishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When the policy was last published; null while it never was.",
+            "format": "date-time"
           }
         },
         "description": "What one app must run, and what it may update to."
@@ -6283,6 +7373,37 @@
           }
         },
         "description": "The public card of a profile, `/u/{username}`: the same answer for the visitors and\nfor the owner's preview, so the preview is the page, not an approximation."
+      },
+      "PublishPolicyRequest": {
+        "type": "object",
+        "properties": {
+          "minimumVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Below it the API answers 426; null for no floor."
+          },
+          "latestVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The newest release; null while none is out."
+          },
+          "bundle": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Android only: the live update bundle; null withdraws the current one.",
+                "$ref": "#/components/schemas/BundleRequest"
+              }
+            ]
+          }
+        },
+        "description": "Body of `PUT /api/admin/client-policy/{platform}`, and what `client-policy\npublish` reads from its options: the whole policy of one app, which replaces the one\npublished before. Versions are three numbers (1.2.3)."
       },
       "PurgeReceipt": {
         "required": [
@@ -6519,6 +7640,23 @@
         ],
         "type": "string",
         "description": "The four Data Dragon resources the site catalogues, each with its own pages and paths."
+      },
+      "RollupReceipt": {
+        "required": [
+          "days"
+        ],
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "The days whose aggregate was written, in order, today last if it was."
+          }
+        },
+        "description": "What an on-demand rollup wrote."
       },
       "RuneCard": {
         "required": [
@@ -8049,7 +9187,16 @@
       "name": "Pickers"
     },
     {
+      "name": "Donations"
+    },
+    {
+      "name": "Billing"
+    },
+    {
       "name": "Contact"
+    },
+    {
+      "name": "ClientPolicy"
     },
     {
       "name": "Account"
@@ -8064,10 +9211,13 @@
       "name": "Trends"
     },
     {
+      "name": "AdminAnalytics"
+    },
+    {
       "name": "AdminAudit"
     },
     {
-      "name": "ClientPolicy"
+      "name": "AdminClientPolicy"
     }
   ]
 }

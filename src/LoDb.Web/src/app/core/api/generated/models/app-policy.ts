@@ -7,5 +7,9 @@ import { PlatformPolicy } from '../models/platform-policy';
  * `GET /api/client-policy`: the policy of every app, one entry each.
  */
 export interface AppPolicy {
+
+  /**
+   * Every app, in the order of ClientPlatform.
+   */
   platforms: Array<PlatformPolicy>;
 }
