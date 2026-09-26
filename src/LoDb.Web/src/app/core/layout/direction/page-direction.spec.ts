@@ -1,14 +1,10 @@
 import { Directionality } from '@angular/cdk/bidi';
 import { TestBed } from '@angular/core/testing';
-import { TranslocoService, type TranslocoEvents } from '@jsverse/transloco';
+import { type Event, NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { LOCALES } from '../../i18n/locales';
 import { PageDirection } from './page-direction';
 import { textDirection } from './text-direction';
-
-function languageChange(langName: string): TranslocoEvents {
-  return { type: 'langChanged', payload: { langName, scope: null } };
-}
 
 describe('textDirection', () => {
   it('reads Arabic right to left', () => {
@@ -23,15 +19,21 @@ describe('textDirection', () => {
 });
 
 describe('PageDirection', () => {
-  let events: Subject<TranslocoEvents>;
+  let events: Subject<Event>;
 
   function pageDirection(lang: string): PageDirection {
     document.documentElement.lang = lang;
-    events = new Subject<TranslocoEvents>();
+    events = new Subject<Event>();
     TestBed.configureTestingModule({
-      providers: [{ provide: TranslocoService, useValue: { events$: events } }],
+      providers: [{ provide: Router, useValue: { events } }],
     });
     return TestBed.inject(PageDirection);
+  }
+
+  // The locale resolver writes <html lang> during the navigation, before it ends.
+  function navigateTo(lang: string): void {
+    document.documentElement.lang = lang;
+    events.next(new NavigationEnd(1, `/${lang}`, `/${lang}`));
   }
 
   afterEach(() => {
@@ -55,29 +57,25 @@ describe('PageDirection', () => {
     expect(document.documentElement.dir).toBe('ltr');
   });
 
-  it('follows a language change and tells the CDK once', () => {
+  it('follows the locale of each completed navigation and tells the CDK once', () => {
     const page = pageDirection('fr');
     const changes: string[] = [];
     TestBed.inject(Directionality).change.subscribe((direction) => changes.push(direction));
 
-    events.next(languageChange('ar'));
-    events.next(languageChange('ar'));
-    events.next(languageChange('de'));
+    navigateTo('ar');
+    navigateTo('ar');
+    navigateTo('de');
 
     expect(page.locale()).toBe('de');
     expect(document.documentElement.dir).toBe('ltr');
     expect(changes).toEqual(['rtl', 'ltr']);
   });
 
-  it('ignores other events and languages outside the site locales', () => {
+  it('waits for the navigation to end', () => {
     const page = pageDirection('en');
 
-    events.next({
-      type: 'translationLoadSuccess',
-      wasFailure: false,
-      payload: { langName: 'ar', scope: null },
-    });
-    events.next(languageChange('he'));
+    document.documentElement.lang = 'ar';
+    events.next(new NavigationStart(1, '/ar'));
 
     expect(page.locale()).toBe('en');
     expect(document.documentElement.dir).toBe('ltr');
