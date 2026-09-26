@@ -1,0 +1,119 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm",
+    "analytics": false,
+    "schematicCollections": ["angular-eslint"]
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "lodb-web": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "changeDetection": "OnPush",
+          "style": "css"
+        }
+      },
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "lodb",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/web",
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": ["src/styles/index.css"],
+            "allowedCommonJsDependencies": ["@messageformat/core"]
+          },
+          "configurations": {
+            "web": {
+              "server": "src/main.server.ts",
+              "outputMode": "server",
+              "ssr": {
+                "entry": "src/server.ts"
+              },
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "shell": {
+              "outputPath": "dist/shell",
+              "outputMode": "static",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.shell.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "server": "src/main.server.ts",
+              "outputMode": "server",
+              "ssr": {
+                "entry": "src/server.ts"
+              },
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "web"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "web": {
+              "buildTarget": "lodb-web:build:web"
+            },
+            "development": {
+              "buildTarget": "lodb-web:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
+          }
+        }
+      }
+    }
+  }
+}

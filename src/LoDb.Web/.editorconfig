@@ -1,0 +1,16 @@
+# TypeScript, HTML, CSS and JSON rules of the Angular workspace. Deliberately not `root`:
+# the repository-level .editorconfig still applies to anything it does not override here.
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 100
+
+[*.ts]
+quote_type = single
+
+[*.md]
+max_line_length = off
+trim_trailing_whitespace = false

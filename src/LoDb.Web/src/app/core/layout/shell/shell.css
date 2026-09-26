@@ -1,0 +1,10 @@
+/* Structure only: L3.2 brings the Hextech envelope, its tokens and the responsive layout. */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
+}
+
+.shell-main {
+  flex: 1;
+}
