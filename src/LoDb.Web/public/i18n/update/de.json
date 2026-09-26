@@ -1,0 +1,13 @@
+{
+  "banner_label": "Anwendungsupdate",
+  "banner_ready": "Ein Update ist bereit.",
+  "restart": "Neu starten",
+  "later": "Später",
+  "restart_failed": "Der Neustart ist fehlgeschlagen. Schließe die Anwendung und öffne sie erneut.",
+  "required_title": "Update erforderlich",
+  "required_body": "Diese Version von League of Data Base wird nicht mehr unterstützt. Aktualisiere sie, um die Anwendung weiter zu nutzen.",
+  "required_versions": "Deine Version: {{ current }} — erforderlich: {{ minimum }} oder neuer",
+  "restart_now": "Neu starten und aktualisieren",
+  "downloading": "Update wird heruntergeladen…",
+  "waiting": "Das Update wird automatisch heruntergeladen. Lass die Anwendung geöffnet."
+}
