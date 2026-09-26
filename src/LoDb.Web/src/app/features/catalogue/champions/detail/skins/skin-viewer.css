@@ -1,0 +1,15 @@
+.splash {
+  filter: drop-shadow(0 10px 30px color-mix(in srgb, var(--color-shadow) 60%, transparent));
+  animation: pop 0.24s var(--ease-hextech);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash {
+    animation: none;
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "Закрыть",
+    "previous": "Назад",
+    "next": "Далее",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "Цветовые схемы: {{ skin }}"
+  }
+}

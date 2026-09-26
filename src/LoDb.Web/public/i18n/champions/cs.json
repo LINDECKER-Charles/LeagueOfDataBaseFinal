@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "Zavřít",
+    "previous": "Předchozí",
+    "next": "Další",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "Chromy skinu {{ skin }}"
+  }
+}

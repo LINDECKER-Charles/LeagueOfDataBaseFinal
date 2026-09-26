@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "ปิด",
+    "previous": "ก่อนหน้า",
+    "next": "ถัดไป",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "โครมาของ {{ skin }}"
+  }
+}

@@ -1,0 +1,136 @@
+/* A 16:9 stage; the clip, its poster and the controls lie on top of each other. */
+:host {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--color-hextech-black);
+  border-block-end: 1px solid color-mix(in srgb, var(--color-gold) 25%, transparent);
+}
+video,
+.poster {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/* Click-to-pause: an invisible full-surface button keeps the video itself chrome-less; its
+   glyph surfaces on hover, on focus, and while paused. */
+.toggle {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.25s var(--ease-hextech);
+}
+.toggle__glyph {
+  inline-size: 3.2rem;
+  block-size: 3.2rem;
+  padding: 0.85rem;
+  fill: var(--color-hex-bright);
+  border: 1px solid color-mix(in srgb, var(--color-hex) 55%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-abyss) 72%, transparent);
+  box-shadow: 0 0 32px -6px color-mix(in srgb, var(--color-hex) 70%, transparent);
+  opacity: 0;
+  scale: 0.9;
+  transition:
+    opacity 0.25s var(--ease-hextech),
+    scale 0.25s var(--ease-hextech);
+}
+.toggle:hover .toggle__glyph,
+.toggle:focus-visible .toggle__glyph,
+:host(.is-paused) .toggle__glyph {
+  opacity: 1;
+  scale: 1;
+}
+.toggle:focus-visible {
+  outline: none;
+}
+:host(.is-paused) .toggle {
+  background: color-mix(in srgb, var(--color-hextech-black) 35%, transparent);
+}
+
+/* Sound: above the pause surface, a quiet opt-in until the sound is on. */
+.sound {
+  position: absolute;
+  inset-block-start: 0.7rem;
+  inset-inline-end: 0.7rem;
+  display: grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--color-hex) 45%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-abyss) 72%, transparent);
+  color: var(--color-hex-bright);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.25s var(--ease-hextech);
+}
+.sound:hover,
+.sound:focus-visible,
+.sound.is-active {
+  opacity: 1;
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-hex) 85%, transparent);
+}
+.sound.is-active {
+  box-shadow: 0 0 22px -6px color-mix(in srgb, var(--color-hex) 70%, transparent);
+}
+.sound svg {
+  inline-size: 100%;
+  block-size: 100%;
+  fill: currentColor;
+}
+.sound__wave {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Loop progress under the frame, driven by scaleX: no layout work per frame. */
+.progress {
+  position: absolute;
+  inset: auto 0 0;
+  block-size: 3px;
+  background: color-mix(in srgb, var(--color-gold) 18%, transparent);
+}
+.progress__fill {
+  display: block;
+  block-size: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: linear-gradient(90deg, var(--color-hex), var(--color-hex-bright));
+  will-change: transform;
+}
+.progress__fill:dir(rtl) {
+  transform-origin: right;
+}
+
+/* No clip: the ability's icon in a quiet arcane glow. */
+:host(.idle) {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(
+      24rem 14rem at 50% 60%,
+      color-mix(in srgb, var(--color-hex) 14%, transparent),
+      transparent 70%
+    ),
+    var(--color-hextech-black);
+}
+.icon {
+  inline-size: 7rem;
+  block-size: 7rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 50%, transparent);
+  box-shadow: 0 0 44px -8px color-mix(in srgb, var(--color-hex) 55%, transparent);
+}

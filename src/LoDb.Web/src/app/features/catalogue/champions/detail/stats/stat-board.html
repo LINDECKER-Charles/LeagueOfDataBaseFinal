@@ -1,0 +1,58 @@
+<div class="mb-5 flex items-center gap-3 border-b border-gold-deep/40 pb-4">
+  <lodb-catalogue-image
+    class="size-14 border border-gold-deep/50 bg-void"
+    [image]="profile().image"
+    [name]="profile().name"
+    [size]="iconSize"
+  />
+  <div class="min-w-0">
+    <p
+      class="truncate font-beaufort text-sm tracking-wide text-gold-bright uppercase"
+      [title]="profile().name"
+    >
+      {{ profile().name }}
+    </p>
+    <p class="font-mono text-[11px] text-text-muted">
+      {{ 'champion.detail.icon_version' | transloco: { version: version() } }}
+    </p>
+  </div>
+</div>
+
+<h2 class="mb-5 font-beaufort text-sm tracking-[0.22em] text-gold uppercase">
+  {{ 'champion.detail.stats.title' | transloco }}
+</h2>
+
+@let levelLabel = 'champion.detail.level' | transloco: { level: level() };
+<div class="level mb-2">
+  <div class="mb-1 flex items-baseline justify-between">
+    <span class="font-mono text-[10px] tracking-[0.14em] text-text-dim uppercase">
+      {{ levelLabel }}
+    </span>
+    <span class="font-beaufort text-sm text-gold">{{ level() }} / {{ maxLevel }}</span>
+  </div>
+  <input
+    type="range"
+    [min]="minLevel"
+    [max]="maxLevel"
+    step="1"
+    [value]="level()"
+    [attr.aria-label]="levelLabel"
+    (input)="onLevel($event)"
+  />
+</div>
+
+<dl class="mt-2">
+  @for (row of rows(); track row.stat) {
+    <div class="row">
+      <dt class="row__label">{{ row.text ?? (row.label | transloco) }}</dt>
+      <dd>
+        <span class="row__value">{{ row.value }}</span>
+        @if (row.growth > 0 && row.kind === 'flat') {
+          <span class="row__growth">+{{ row.growth }}</span>
+        } @else if (row.growth > 0 && row.kind === 'percent') {
+          <span class="row__growth">+{{ row.growth }}%</span>
+        }
+      </dd>
+    </div>
+  }
+</dl>

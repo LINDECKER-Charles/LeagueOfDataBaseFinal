@@ -1,0 +1,101 @@
+/* The spell rail: the selected cast is the page's single brightest teal moment. */
+.rail {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding-block-end: 0.9rem;
+}
+.tab {
+  position: relative;
+  flex: none;
+  inline-size: 3.6rem;
+  block-size: 3.6rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+  background: var(--color-void);
+  cursor: pointer;
+  transition:
+    border-color 0.25s var(--ease-hextech),
+    box-shadow 0.25s var(--ease-hextech);
+}
+.tab__icon {
+  inline-size: 100%;
+  block-size: 100%;
+  filter: saturate(0.4) brightness(0.62);
+  transition: filter 0.25s var(--ease-hextech);
+}
+.tab:hover .tab__icon,
+.tab:focus-visible .tab__icon,
+.tab.is-active .tab__icon {
+  filter: none;
+}
+.tab:focus-visible {
+  outline: none;
+  border-color: var(--color-hex);
+}
+.tab.is-active {
+  border-color: var(--color-hex);
+  box-shadow: 0 0 24px -6px color-mix(in srgb, var(--color-hex) 80%, transparent);
+}
+.tab__key {
+  position: absolute;
+  inset-block-end: -0.7rem;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+}
+.tab__key:dir(rtl) {
+  translate: 50% 0;
+}
+/* Small phones: the rail fits without a scroll box, which would clip the hanging keys. */
+@media (max-width: 374px) {
+  .rail {
+    gap: 0.55rem;
+  }
+  .tab {
+    inline-size: 3rem;
+    block-size: 3rem;
+  }
+}
+
+.panel {
+  border: 1px solid color-mix(in srgb, var(--color-gold) 32%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-panel) 92%, transparent),
+    color-mix(in srgb, var(--color-abyss) 96%, transparent)
+  );
+  box-shadow: 0 18px 60px -24px color-mix(in srgb, var(--color-hextech-black) 90%, transparent);
+}
+
+/* The key badge: P / Q / W / E / R, a real cast sequence. */
+.key {
+  display: grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border: 1px solid var(--color-gold-deep);
+  background: var(--color-void);
+  font-family: var(--font-beaufort);
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--color-gold-bright);
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+.key[data-key='P'] {
+  color: var(--color-hex-bright);
+  border-color: var(--color-hex-deep);
+}
+
+.figure {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+.figure b {
+  font-weight: 600;
+  color: var(--color-hex-bright);
+  font-variant-numeric: tabular-nums;
+}

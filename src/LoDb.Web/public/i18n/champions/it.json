@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "Chiudi",
+    "previous": "Precedente",
+    "next": "Successivo",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "Chroma di {{ skin }}"
+  }
+}

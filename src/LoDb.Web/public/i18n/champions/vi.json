@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "Đóng",
+    "previous": "Trước",
+    "next": "Tiếp",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "Đa sắc của {{ skin }}"
+  }
+}

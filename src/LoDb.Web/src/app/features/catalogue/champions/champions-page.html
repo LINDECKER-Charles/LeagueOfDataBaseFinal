@@ -1,0 +1,42 @@
+<div class="relative px-6 py-12">
+  <div class="relative mx-auto max-w-[110rem]">
+    <header class="mb-8 flex flex-wrap items-end justify-between gap-5">
+      <div class="flex items-center gap-4">
+        <div class="hextech-frame relative grid size-14 shrink-0 place-items-center text-gold">
+          <div class="hx-logo-halo absolute inset-0 opacity-40 blur-lg"></div>
+          <lodb-logo class="relative z-10 size-7" />
+        </div>
+        <div>
+          <p class="eyebrow mb-1.5">Data Dragon · {{ context().version }}</p>
+          <h1 class="font-beaufort text-3xl tracking-wide text-gold-grad uppercase sm:text-4xl">
+            {{ 'champion.list.title' | transloco }}
+          </h1>
+        </div>
+      </div>
+      @if (total(); as count) {
+        <p class="list-count">
+          <span class="font-mono text-xl leading-none text-hex">{{ count }}</span>
+          <span class="font-spiegel text-xs tracking-wider text-text-dim uppercase">
+            {{ 'champion.list.title' | transloco | lowercase }}
+          </span>
+        </p>
+      }
+    </header>
+
+    <lodb-catalogue-list
+      [source]="list"
+      [adapter]="adapter"
+      [schema]="schema()"
+      [searchLabel]="'champion.list.search_placeholder' | transloco"
+      [label]="'champion.list.title' | transloco"
+    >
+      <lodb-champion-card
+        *lodbCatalogueCard="let card of list; let index = index"
+        [card]="card"
+        [href]="href(card)"
+        [locale]="context().locale"
+        [eager]="index < eagerCards"
+      />
+    </lodb-catalogue-list>
+  </div>
+</div>
