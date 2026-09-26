@@ -1,12 +1,30 @@
 import { expect, test } from '../../support/test';
-import { deleteAccount, newAccount, register, signIn, signOut } from './accounts';
+import {
+  deleteAccount,
+  discardAccount,
+  newAccount,
+  register,
+  signIn,
+  signOut,
+  type TestAccount,
+} from './accounts';
 import { accountLinkIn, lastMailTo } from './mailbox';
 
 const BANNER = 'Confirm your email address to unlock build creation.';
 
+// The account of the journey, deleted even when a step fails: no run leaves one behind.
+let created: TestAccount | undefined;
+
+test.afterEach(async ({ playwright, baseURL }) => {
+  if (created) {
+    await discardAccount(playwright.request, baseURL, created);
+    created = undefined;
+  }
+});
+
 // One account for the whole journey: the API limits how many are created in a row.
 test('registers, confirms the e-mail, signs out and back in', async ({ page, request }) => {
-  const account = newAccount('reg');
+  const account = (created = newAccount('reg'));
 
   await test.step('registers and lands on the profile, asked to confirm', async () => {
     await register(page, account);
