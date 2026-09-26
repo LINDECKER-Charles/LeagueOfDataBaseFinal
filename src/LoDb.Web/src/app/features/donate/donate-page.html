@@ -1,0 +1,104 @@
+<div class="donate-page">
+  <header class="codex-header">
+    <p class="codex-header__title">{{ 'donate.eyebrow' | transloco }}</p>
+    <span class="codex-header__meta">stripe · {{ 'donate.legal.secure_short' | transloco }}</span>
+  </header>
+
+  <section lodbFrame="ornate" class="donate-panel">
+    <p class="eyebrow">{{ 'donate.eyebrow' | transloco }}</p>
+    <h1 class="mt-2 font-beaufort text-3xl font-bold tracking-wide text-gold-grad uppercase">
+      {{ 'donate.title' | transloco }}
+    </h1>
+    <p class="mt-4 text-text-muted">{{ 'donate.intro' | transloco }}</p>
+    <p class="mt-2 text-sm text-text-dim">{{ 'donate.pledge' | transloco }}</p>
+    <hr class="mt-6 hx-rule" />
+
+    @if (options().available) {
+      <form
+        class="donate-form mt-6"
+        novalidate
+        [attr.aria-busy]="busy() ? true : null"
+        (submit)="submit($event)"
+      >
+        <fieldset class="donate-tiers-fieldset">
+          <legend class="donate-legend">{{ 'donate.tiers.legend' | transloco }}</legend>
+          <div class="donate-tiers">
+            @for (tier of tiers(); track tier.cents) {
+              <label lodbFrame="interactive" class="donate-tier">
+                <input
+                  type="radio"
+                  name="preset"
+                  class="donate-tier__input"
+                  [value]="tier.cents"
+                  [checked]="tier.cents === chosen()"
+                  (change)="chosen.set(tier.cents)"
+                />
+                <span class="donate-tier__gem" aria-hidden="true"></span>
+                <span class="donate-tier__amount"
+                  >{{ tier.euros }}<span class="donate-tier__currency">€</span></span
+                >
+                @if (tier.name; as name) {
+                  <span class="donate-tier__label">{{ name | transloco }}</span>
+                }
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        <div class="donate-custom">
+          <label for="donate-amount" class="donate-legend">
+            {{ 'donate.custom.label' | transloco }}
+          </label>
+          <div class="donate-custom__field">
+            <input
+              lodbField
+              id="donate-amount"
+              type="text"
+              name="amount"
+              class="donate-custom__input"
+              inputmode="decimal"
+              autocomplete="off"
+              maxlength="6"
+              aria-describedby="donate-amount-hint"
+              [placeholder]="'donate.custom.placeholder' | transloco"
+              [value]="amount()"
+              [attr.aria-invalid]="error() === 'donate.error.invalid_amount' ? true : null"
+              (input)="type($event)"
+            />
+            <span class="donate-custom__unit" aria-hidden="true">€</span>
+          </div>
+          <p id="donate-amount-hint" class="donate-custom__hint">
+            {{ 'donate.custom.hint' | transloco: bounds() }}
+          </p>
+        </div>
+
+        @if (error(); as message) {
+          <p class="donate-error" role="alert">{{ message | transloco: bounds() }}</p>
+        }
+
+        <button lodbButton="gold" type="submit" class="mt-6 w-full" [disabled]="busy()">
+          {{ (busy() ? 'donate.busy' : 'donate.submit') | transloco }}
+        </button>
+      </form>
+    } @else {
+      <div class="donate-unavailable" role="status">
+        <p class="donate-unavailable__title">{{ 'donate.unavailable.title' | transloco }}</p>
+        <p class="donate-unavailable__body">{{ 'donate.unavailable.body' | transloco }}</p>
+        <button lodbButton type="button" class="mt-5 w-full" disabled>
+          {{ 'donate.submit' | transloco }}
+        </button>
+      </div>
+    }
+
+    <p class="donate-legal gold-hairline">
+      {{ 'donate.legal.secure' | transloco }} —
+      <a class="nav-link text-gold" [routerLink]="link('legal/privacy')">{{
+        'donate.legal.privacy' | transloco
+      }}</a>
+      ·
+      <a class="nav-link text-gold" [routerLink]="link('legal/terms')">{{
+        'donate.legal.terms' | transloco
+      }}</a>
+    </p>
+  </section>
+</div>

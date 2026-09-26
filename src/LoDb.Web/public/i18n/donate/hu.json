@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Áldozat a kovácsműhelynek",
+  "title": "Támogasd a League Of Data Base-t",
+  "intro": "Az adományod fedezi a tárhely költségeit, és gyorsan, ingyenesen, reklámok nélkül tartja az enciklopédiát.",
+  "pledge": "Semmi játékbeli előny, semmi kiváltság — csak a hálánk.",
+  "tiers": {
+    "legend": "Válassz egy áldozatot"
+  },
+  "tier": {
+    "spark": "Szikra",
+    "gem": "Drágakő",
+    "crest": "Címer",
+    "relic": "Ereklye"
+  },
+  "custom": {
+    "label": "Szabad összeg",
+    "placeholder": "pl. 7,50",
+    "hint": "{{ min }} € és {{ max }} € között — a szabad összeg felülírja a kiválasztott szintet."
+  },
+  "submit": "Adományozás Stripe-pal",
+  "busy": "A biztonságos fizetés megnyitása…",
+  "unavailable": {
+    "title": "Az adományozás hamarosan elérhető",
+    "body": "A fizetési rendszer még nincs bekapcsolva. Nézz vissza hamarosan — az enciklopédia így is ingyenes marad."
+  },
+  "legal": {
+    "secure": "Biztonságos fizetés a Stripe-on keresztül — semmilyen kártyaadat nem jut el erre az oldalra",
+    "secure_short": "biztonságos fizetés",
+    "privacy": "Adatvédelmi irányelvek",
+    "terms": "Felhasználási feltételek"
+  },
+  "error": {
+    "csrf": "A munkamenet lejárt. Töltsd újra az oldalt, és próbáld újra.",
+    "unavailable": "Az adományozás jelenleg nem érhető el.",
+    "invalid_amount": "Érvénytelen összeg — {{ min }} € és {{ max }} € közötti értéket adj meg.",
+    "gateway": "A fizetési szolgáltatás nem érhető el, próbáld újra később.",
+    "throttled": "Túl sok fizetési kísérlet. Várj egy kicsit, mielőtt újra próbálkozol."
+  },
+  "success": {
+    "eyebrow": "Áldozat elfogadva",
+    "title": "Köszönjük, Idéző",
+    "body": "A támogatásod ég tartja a kovácsműhely tüzét — minden adomány a tárhelyre megy, és mindenkinek ingyenes marad az enciklopédia.",
+    "receipt": "A Stripe e-mailben küldi el a nyugtádat.",
+    "back": "Vissza az enciklopédiához"
+  },
+  "cancel": {
+    "eyebrow": "Áldozat visszavonva",
+    "title": "Adomány megszakítva",
+    "body": "Semmit sem terheltünk. Az enciklopédia ingyenes és nyitott marad, adománnyal vagy anélkül.",
+    "retry": "Újrapróbálás",
+    "back": "Vissza a kezdőlapra"
+  }
+}

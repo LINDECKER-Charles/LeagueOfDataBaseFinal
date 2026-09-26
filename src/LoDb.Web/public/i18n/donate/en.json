@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Offering to the Forge",
+  "title": "Support League Of Data Base",
+  "intro": "Your donation covers hosting costs and keeps the encyclopedia fast, free and ad-free.",
+  "pledge": "No in-game advantage, no perks — only our gratitude.",
+  "tiers": {
+    "legend": "Choose an offering"
+  },
+  "tier": {
+    "spark": "Spark",
+    "gem": "Gemstone",
+    "crest": "Crest",
+    "relic": "Relic"
+  },
+  "custom": {
+    "label": "Free amount",
+    "placeholder": "e.g. 7.50",
+    "hint": "Between {{ min }} € and {{ max }} € — a free amount overrides the selected tier."
+  },
+  "submit": "Donate with Stripe",
+  "busy": "Opening the secure payment page…",
+  "unavailable": {
+    "title": "Donations coming soon",
+    "body": "The payment gateway is not enabled yet. Come back soon — the encyclopedia stays free either way."
+  },
+  "legal": {
+    "secure": "Secure payment by Stripe — no card data ever reaches this site",
+    "secure_short": "secure payment",
+    "privacy": "Privacy policy",
+    "terms": "Terms of use"
+  },
+  "error": {
+    "csrf": "Your session expired, please reload the page and try again.",
+    "unavailable": "Donations are not available right now.",
+    "invalid_amount": "Invalid amount — enter between {{ min }} € and {{ max }} €.",
+    "gateway": "The payment service is unreachable, please try again later.",
+    "throttled": "Too many payment attempts. Please wait a moment before trying again."
+  },
+  "success": {
+    "eyebrow": "Offering received",
+    "title": "Thank you, Summoner",
+    "body": "Your support keeps the forge lit — every donation goes to hosting and keeps the encyclopedia free for everyone.",
+    "receipt": "Stripe sends your receipt by email.",
+    "back": "Back to the encyclopedia"
+  },
+  "cancel": {
+    "eyebrow": "Offering withdrawn",
+    "title": "Donation cancelled",
+    "body": "Nothing was charged. The encyclopedia stays free and open, with or without a donation.",
+    "retry": "Try again",
+    "back": "Back to home"
+  }
+}

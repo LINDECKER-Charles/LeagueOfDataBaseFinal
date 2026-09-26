@@ -33,6 +33,7 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+    <PackageReference Include="Stripe.net" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +41,10 @@
     <EmbeddedResource
       Include="Modules/Accounts/Security/Policy/common-passwords.txt"
       LogicalName="common-passwords.txt" />
+    <!-- Names of the products a Stripe Checkout page shows, by locale. -->
+    <EmbeddedResource
+      Include="Modules/Billing/Catalog/product-names.json"
+      LogicalName="billing-product-names.json" />
   </ItemGroup>
 
   <ItemGroup>

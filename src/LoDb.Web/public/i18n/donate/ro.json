@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Ofrandă pentru forjă",
+  "title": "Susține League Of Data Base",
+  "intro": "Donația ta acoperă costurile de găzduire și păstrează enciclopedia rapidă, gratuită și fără reclame.",
+  "pledge": "Niciun avantaj în joc, niciun privilegiu — doar recunoștința noastră.",
+  "tiers": {
+    "legend": "Alege o ofrandă"
+  },
+  "tier": {
+    "spark": "Scânteie",
+    "gem": "Gemă",
+    "crest": "Blazon",
+    "relic": "Relicvă"
+  },
+  "custom": {
+    "label": "Sumă liberă",
+    "placeholder": "ex. 7,50",
+    "hint": "Între {{ min }} € și {{ max }} € — suma liberă înlocuiește nivelul selectat."
+  },
+  "submit": "Donează prin Stripe",
+  "busy": "Se deschide plata securizată…",
+  "unavailable": {
+    "title": "Donațiile vin în curând",
+    "body": "Sistemul de plată nu este încă activat. Revino curând — enciclopedia rămâne gratuită oricum."
+  },
+  "legal": {
+    "secure": "Plată securizată prin Stripe — nicio dată de card nu ajunge pe acest site",
+    "secure_short": "plată securizată",
+    "privacy": "Politica de confidențialitate",
+    "terms": "Condiții de utilizare"
+  },
+  "error": {
+    "csrf": "Sesiunea a expirat. Reîncarcă pagina și încearcă din nou.",
+    "unavailable": "Donațiile nu sunt disponibile momentan.",
+    "invalid_amount": "Sumă invalidă — introdu între {{ min }} € și {{ max }} €.",
+    "gateway": "Serviciul de plată nu poate fi accesat, încearcă din nou mai târziu.",
+    "throttled": "Prea multe încercări de plată. Așteaptă puțin înainte de a încerca din nou."
+  },
+  "success": {
+    "eyebrow": "Ofrandă primită",
+    "title": "Mulțumim, invocatorule",
+    "body": "Sprijinul tău ține forja aprinsă — fiecare donație merge către găzduire și păstrează enciclopedia gratuită pentru toți.",
+    "receipt": "Stripe îți trimite chitanța prin e-mail.",
+    "back": "Înapoi la enciclopedie"
+  },
+  "cancel": {
+    "eyebrow": "Ofrandă retrasă",
+    "title": "Donație anulată",
+    "body": "Nu s-a debitat nimic. Enciclopedia rămâne gratuită și deschisă, cu sau fără donație.",
+    "retry": "Încearcă din nou",
+    "back": "Înapoi la pagina principală"
+  }
+}
