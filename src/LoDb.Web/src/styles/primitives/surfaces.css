@@ -94,7 +94,9 @@
     text-transform: uppercase;
     letter-spacing: 0.24em;
     color: var(--color-gold);
-    white-space: nowrap;
+    /* One line wherever it fits; a title wider than its column wraps, balanced, never out. */
+    text-wrap: balance;
+    overflow-wrap: break-word;
   }
   .codex-header .codex-header__meta {
     font-family: var(--font-mono);
@@ -105,11 +107,16 @@
   }
   /*
    * A header carrying both a title and a meta would force a minimum width wider than a phone,
-   * both being nowrap on one flex line: the meta wraps onto its own line under the hairline.
+   * the meta being nowrap on the title's flex line: the meta wraps onto its own line under the
+   * hairline. A long title stays on the diamond's line, capped so it wraps there instead.
    */
   @media (max-width: 480px) {
     .codex-header {
       flex-wrap: wrap;
+    }
+    .codex-header h2,
+    .codex-header .codex-header__title {
+      max-inline-size: calc(100% - 3rem);
     }
     .codex-header .codex-header__meta {
       order: 1;

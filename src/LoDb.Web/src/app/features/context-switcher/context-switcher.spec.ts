@@ -131,6 +131,21 @@ describe('ContextSwitcher', () => {
     expect(host.querySelector('summary')?.textContent).toContain(OLDER);
   });
 
+  // The patch leaves the chip on narrow screens (heritage H6): its name still carries both.
+  it('names the chip after the patch and the language it shows', async () => {
+    configure('browser');
+    const fixture = await openOn(`/fr/${OLDER}/champions`);
+    const summary = (): string | null =>
+      (fixture.nativeElement as HTMLElement).querySelector('summary')?.getAttribute('aria-label') ??
+      null;
+
+    expect(summary()).toMatch(/ — FR$/);
+
+    await loaded(fixture);
+
+    expect(summary()).toContain(` — ${OLDER}, FR`);
+  });
+
   it('navigates to the rewritten path without remembering by default', async () => {
     configure('browser');
     const fixture = await openOn('/fr/items?page=2');
