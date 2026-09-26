@@ -276,3 +276,131 @@ du jalon 1.
 **Verdict** : critère du lot 3 **non vérifié**. À corriger : G1 à G6 ; puis la
 vérification relance la stack, tous les E2E (après `docker restart lodb-next-api-1` tant
 que G5 n'est pas corrigé), la diff SEO et Lighthouse.
+
+## Vérification
+
+- **Date** : 2026-09-27.
+- **Branche** : `docs/reecriture-dotnet-angular`. Fusions (sans conflit) :
+  `wt/corr-l3-mise-en-page` (`1528972`, G1 et G2) en `15dd16d`, puis
+  `wt/corr-l3-seo-e2e-nginx` (`9a8c148`, G3, G4 premier temps, G6) en `3cb8ec9`.
+  Aucune branche de correction pour G5 : il touche des fichiers des lots 4 et 5.
+- **Régénération** : rien à régénérer. Ni `Modules/Seo`, ni `Modules/Legacy`, ni une
+  dépendance n'ont changé ; `api:check` le confirme (sortie 0) et aucun lockfile ne bouge.
+- **Hooks** : le dépôt n'en a aucun (ni `core.hooksPath`, ni husky, ni lefthook) : rien à
+  rejouer après la fusion.
+- **Stack** : `lodb-next` reconstruite depuis la racine sur `3cb8ec9`, 5 services
+  `healthy`, `nginx -t` OK. Les scripts `/build/*.js` partent maintenant en
+  `Content-Encoding: gzip`.
+
+### Piège du cache de pages en local
+
+Au premier passage, 3 tests de la sonde de 320 px échouaient encore, avec la même
+sortie qu'au jalon (`div.flex.shrink-0.items-center [24, 333]`, 333 px). Cause : le
+volume `pages-cache` survit à la reconstruction et la clé du cache garde la même
+révision. Le `.env` racine fixe `IMAGE_TAG=latest`, qui l'emporte sur `APP_REVISION`
+dans `LODB_REVISION` (`compose.next.yaml`). nginx servait donc l'ancien HTML :
+`/en/16.18.1/champions` (`s-maxage=604800`) en `HIT` sans la correction de G1, `/ar/` et
+`/ar/champions` en copie périmée pendant `stale-while-revalidate`. La stack a été
+relancée avec la révision du commit, le mécanisme prévu pour changer la clé sans
+purge :
+
+```bash
+export APP_REVISION=$(git rev-parse --short=12 HEAD) IMAGE_TAG=$(git rev-parse --short=12 HEAD)
+docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build
+```
+
+Ensuite, `LODB_REVISION=3cb8ec9b64e0` et les trois pages répondent en `MISS` avec le
+nouvel en-tête. Les prochains jalons doivent reconstruire ainsi, sinon ils mesurent le
+HTML de la révision précédente.
+
+### Commandes et résultats
+
+| Étape | Commande | Résultat |
+|---|---|---|
+| Build .NET | `dotnet build LoDb.slnx -c Release` | 0 avertissement, 0 erreur |
+| Tests .NET | `dotnet test LoDb.slnx` | 2 835 tests : 2 833 réussis, 0 échec, 2 ignorés (parité sans `LODB_PARITY_RUN`), 2 min 54 s |
+| Front | `npm --prefix src/LoDb.Web run lint` / `typecheck` | OK / OK |
+| Front | `npm --prefix src/LoDb.Web run test` | 193 fichiers, 1 704 tests réussis |
+| Front | `npm --prefix src/LoDb.Web run build:web` | OK, 168 pages prérendues ; bundle initial **649,55 ko** pour 500 ko (avertissement) |
+| Front | `npm --prefix src/LoDb.Web run build:shell` | OK ; bundle initial 649,06 ko (avertissement) |
+| Dérive | `npm --prefix src/LoDb.Web run api:check` | sortie 0 |
+| E2E | `npm --prefix tests/LoDb.E2E run typecheck` | OK |
+| E2E (1) | `docker restart lodb-next-api-1`, puis `npm --prefix tests/LoDb.E2E test` (cache périmé) | 264 tests : 254 réussis, 9 échecs, 1 ignoré |
+| E2E (2) | révision du commit (ci-dessus), `docker restart lodb-next-api-1`, puis `npm --prefix tests/LoDb.E2E test` | 264 tests : **256 réussis, 7 échecs**, 1 ignoré (52 s) ; aucun échec dans les specs du lot 3 |
+| E2E | `npm --prefix tests/LoDb.E2E test -- specs/context-switcher`, deux fois | 4 sur 4, puis 4 sur 4 |
+| Accessibilité | `npm --prefix tests/LoDb.E2E test -- specs/public/accessibility.spec.ts` (et dans les deux passages complets) | **26 sur 26** |
+| Diff SEO | `node --test 'tools/next/seo-diff/test/*.test.mjs'` | 17 tests réussis |
+| Diff SEO | `node tools/next/seo-diff/diff.mjs --stack lodb-next` | sortie 0 : 42 pages, **0 écart non expliqué, 0 défaut** ([rapport](../diff-seo.md)) |
+| Lighthouse | `node --test 'tools/next/lighthouse/test/*.test.mjs'` | 5 tests réussis |
+| Lighthouse | `node tools/next/lighthouse/run.mjs --stack lodb-next` | sortie 1 : **5 pages sur 5 hors budget** ([rapport](../lighthouse.md)) |
+
+Mémoire au repos, après la suite : `api` à 441 Mio (`docker stats --no-stream`), toujours
+au-dessus de la limite provisoire de 384m.
+
+### Échecs initiaux
+
+| Groupe | État | Preuve |
+|---|---|---|
+| G1 — en-tête à 320 px | **corrigé** | sonde de 320 px verte sur toutes les pages publiques, archives, 404 et RTL (passage 2) |
+| G2 — titre de `/en/about` | **corrigé** | `fit /en/about in the width` vert |
+| G3 — balise d'analytics comptée comme POST ; `remembers the choice` intermittent | **corrigé** | `specs/context-switcher` vert dans les deux passages complets et deux fois seul |
+| G4 — compression des scripts (premier temps) | **corrigé** | `Content-Encoding: gzip` sur `/build/main-*.js` ; plus aucun gros script non compressé dans Lighthouse |
+| G4 — budgets Lighthouse | **persistant** | voir ci-dessous |
+| G5 — quota d'inscriptions | **persistant** (hors fichiers du lot 3) | voir ci-dessous |
+| G6 — `Dataset.inLanguage` | **corrigé** | 28 langues de Data Dragon en BCP 47 ; `dataset-languages` requalifiée en correction ; 0 défaut dans la diff |
+
+**G4, persistant.** Sortie de `run.mjs` : `lighthouse: 5 pages, 5 over budget`.
+
+| Page | Perf. (jalon → vérif.) | LCP (jalon → vérif.) | Budget manqué |
+|---|---:|---:|:---|
+| Accueil | 63-69 → 87 | 5,1-7,4 s → 3,3 s | Performance, LCP |
+| Liste des champions | → 85 | → 3,5 s | Performance, LCP |
+| Champion (Annie) | → 73 | → 5,5 s | Performance, LCP |
+| Objet (Infinity Edge) | → 86 | → 3,4 s | Performance, LCP |
+| À propos (prérendue) | → 92 | → 2,7 s | LCP |
+
+Accessibilité (98 à 100), SEO (100) et CLS (au plus 0,011) tiennent. Pistes relevées :
+`unused-javascript` (43 à 48 Kio par page), FCP de 2,6 à 3,2 s (un aller et retour du
+bundle initial de 649 ko, 161 ko en gzip) ; sur Annie, `total-byte-weight` de 4 187 Kio
+et `image-delivery-insight` de 286 Kio (la prod pèse 3 902 Kio sur la même page). Le
+second temps de G4 reste à faire : alléger le bundle initial (routes paresseuses,
+dépendances chargées au démarrage, `app.config.ts` et `core/`), puis l'image de fond de
+la fiche champion. Les budgets et le profil de mesure ne sont pas relâchés.
+
+**G5, persistant.** Passage 2 : `trends.spec.ts:86` échoue dans `register`
+(`accounts.ts:35`) : `Expected pattern: /\/en\/account\/profile$/ · Received string:
+"http://localhost:18080/en/account/register"`, alerte « Too many attempts » dans
+`error-context.md`, alors que `api` venait d'être redémarré. La correction (compte
+partagé par worker dans `tests/LoDb.E2E/support/`, utilisé par les specs des lots 4 et 5)
+ou un quota configurable en local (décision de L4.2) reste à faire.
+
+### Échecs hors lot 3 (passage 2)
+
+Toujours présents, mêmes sorties qu'au § 3 : `builds-share/private.spec.ts:16` et
+`public.spec.ts:30` (picker sans `version` ni `lang`), `builds-editor.spec.ts:43`
+(`toHaveValue("16.19.1")` : champ Patch introuvable), `trends.spec.ts:22` (canonique
+sans port), `trends.spec.ts:58` (`Game mode` vaut `""` au lieu de `arena`),
+`trends.spec.ts:86` (G5).
+
+Nouveau et **intermittent** : `trends.spec.ts:39` (« keeps its filters in the URL »),
+`Expected pattern: /\/en\/trends\?mode=aram$/ · Received string:
+"http://localhost:18080/en/trends"`. Il passe au passage 1 et seul
+(`npm --prefix tests/LoDb.E2E test -- specs/trends/trends.spec.ts:39` : 1 réussi). À
+reprendre avec les autres échecs de L5.3.
+
+Reste signalé par la correction de G1, hors échec : de `md` à environ 950 px, la puce de
+version peut encore comprimer la marque, et le titre complet reste tronqué de `lg` à
+environ 1 150 px. À revoir avec la mise en page de l'en-tête sur tablette.
+
+### Critère de sortie local du lot 3
+
+| Élément | État | Preuve |
+|---|---|---|
+| Diff SEO sur un échantillon face à la prod | **tenu** : 42 URLs, 0 écart non expliqué, 0 défaut | [`diff-seo.md`](../diff-seo.md) |
+| E2E verts | **tenu pour le lot 3** : toutes ses specs passent (passage 2 et relances). Les 7 échecs restants relèvent des lots 4 et 5 | ci-dessus |
+| Accessibilité verte | **tenu** : axe 26 sur 26, Lighthouse accessibilité 98 à 100 | ci-dessus, [`lighthouse.md`](../lighthouse.md) |
+| Budgets Lighthouse sur la stack locale | **non tenu** : performance 73 à 92 et LCP 2,7 à 5,5 s, 5 pages sur 5 hors budget | [`lighthouse.md`](../lighthouse.md) |
+
+**Verdict** : critère du lot 3 **bloqué** par les budgets Lighthouse (G4, second temps :
+bundle initial de 649 ko pour 500 ko, poids de la fiche champion). Tous les autres
+éléments sont vérifiés. G4 et G5 passent aux blocages du jalon suivant.
