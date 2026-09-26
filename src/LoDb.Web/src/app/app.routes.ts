@@ -1,4 +1,6 @@
-import type { Route, Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import type { CanMatchFn, Route, Routes } from '@angular/router';
+import { PAYMENTS_ENABLED } from '../environments/payments-enabled';
 import { activateLocale } from './core/i18n/activate-locale';
 import { localeGuard } from './core/i18n/locale-guard';
 import { redirectToPreferredLocale } from './core/routing/locale/redirect-to-preferred-locale';
@@ -17,6 +19,10 @@ const devRoutes: Routes =
         },
       ]
     : [];
+
+// The store build of the apps shows no payment (ADR 0007): its donation URL is a 404. The
+// lazy chunk is still emitted; only the route is withheld.
+const paymentsOnly: CanMatchFn = () => inject(PAYMENTS_ENABLED);
 
 const loadErrorPage = () => import('./features/errors/error-page').then((m) => m.ErrorPage);
 
@@ -97,6 +103,7 @@ const localeRoutes: Routes = [
   },
   {
     path: 'donate',
+    canMatch: [paymentsOnly],
     loadChildren: () => import('./features/donate/donate.routes').then((m) => m.DONATE_ROUTES),
   },
   {

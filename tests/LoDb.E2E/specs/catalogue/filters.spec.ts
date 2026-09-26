@@ -8,6 +8,7 @@ const LIST_ROOT = 'lodb-catalogue-list';
 const CARD = `${LIST_ROOT} .grid__cell`;
 const RAIL_SEARCH = 'lodb-filter-console input[type=search]';
 const MOBILE = { width: 390, height: 844 };
+const SHORT_PHONE = { width: 360, height: 560 };
 
 function queryOf(page: Page): URLSearchParams {
   return new URL(page.url()).searchParams;
@@ -95,5 +96,25 @@ test.describe('catalogue filters', () => {
     await sheet.locator('.sheet__done').click();
     await expect(sheet).toBeHidden();
     await expect(page.locator('lodb-active-filters .active__chip')).toHaveCount(1);
+  });
+
+  // A short phone makes the facets outgrow the sheet: its panel must scroll, footer in view.
+  test('keeps the sheet footer on screen when the facets outgrow it', async ({ page }) => {
+    await page.setViewportSize(SHORT_PHONE);
+    await openList(page);
+
+    await page.locator(`${LIST_ROOT} .bar__trigger`).click();
+
+    const sheet = page.getByRole('dialog');
+    const panel = sheet.locator('.hx-dialog-panel');
+    await expect(panel).toBeVisible();
+    const overflow = await panel.evaluate((node) => node.scrollHeight - node.clientHeight);
+    expect(overflow).toBeGreaterThan(0);
+    const box = await panel.boundingBox();
+    expect(box?.height ?? Infinity).toBeLessThanOrEqual(SHORT_PHONE.height);
+    await expect(sheet.locator('.sheet__done')).toBeInViewport();
+    await panel.evaluate((node) => node.scrollTo({ top: node.scrollHeight }));
+    await sheet.locator('.sheet__done').click();
+    await expect(sheet).toBeHidden();
   });
 });

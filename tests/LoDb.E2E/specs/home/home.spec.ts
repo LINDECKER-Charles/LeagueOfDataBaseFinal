@@ -47,9 +47,10 @@ test.describe("home", () => {
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(portals(page)).toHaveCount(RESOURCES.length);
-    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(
-      RESOURCES.length,
-    );
+    // The footer has headings of its own: only the page's are counted.
+    await expect(
+      page.getByRole("main").getByRole("heading", { level: 2 }),
+    ).toHaveCount(RESOURCES.length);
     await page.waitForLoadState("networkidle");
     expect(consoleErrors).toEqual([]);
   });

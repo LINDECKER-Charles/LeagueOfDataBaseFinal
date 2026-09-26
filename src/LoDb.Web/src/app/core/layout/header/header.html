@@ -97,17 +97,19 @@
 
     <!-- Icon-only donate below lg: the label is carried by aria-label at every width. -->
     <div class="flex shrink-0 items-center gap-2 sm:gap-3">
-      <a
-        lodbButton="ghost"
-        class="shrink-0 px-2.5 py-2 md:px-3.5"
-        [routerLink]="link('donate')"
-        routerLinkActive="border-gold/60 text-gold-bright"
-        ariaCurrentWhenActive="page"
-        [attr.aria-label]="'nav.donate' | transloco"
-      >
-        <lodb-icon name="heart" class="size-4" />
-        <span class="hidden lg:inline">{{ 'nav.donate' | transloco }}</span>
-      </a>
+      @if (payments) {
+        <a
+          lodbButton="ghost"
+          class="shrink-0 px-2.5 py-2 md:px-3.5"
+          [routerLink]="link('donate')"
+          routerLinkActive="border-gold/60 text-gold-bright"
+          ariaCurrentWhenActive="page"
+          [attr.aria-label]="'nav.donate' | transloco"
+        >
+          <lodb-icon name="heart" class="size-4" />
+          <span class="hidden lg:inline">{{ 'nav.donate' | transloco }}</span>
+        </a>
+      }
       <ng-content select="[lodbSlot=account]" />
       <lodb-theme-picker />
       <ng-content select="[lodbSlot=switcher]" />

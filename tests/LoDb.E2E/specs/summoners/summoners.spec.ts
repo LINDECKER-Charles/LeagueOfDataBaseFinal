@@ -5,10 +5,16 @@ interface Meta {
   readonly latest: string | null;
 }
 
+interface Mode {
+  readonly code: string;
+  readonly label?: string | null;
+}
+
 interface Spell {
   readonly canonicalPath: string;
   readonly profile: {
     readonly name: string;
+    readonly modes: readonly Mode[];
     readonly counterpart?: { readonly canonicalPath?: string | null } | null;
   };
 }
@@ -17,6 +23,8 @@ const LIST = '/en/summoners';
 const CARD = 'lodb-catalogue-list .grid__cell';
 // Flash is allowed in every mode, and has a LoL Classic twin.
 const FLASH = 'SummonerFlash';
+// A mode without a label of its own is named by its edition (the LoL Classic client).
+const CLASSIC_LABEL = 'LoL Classic';
 
 // The spell as /en/ shows it: the latest version, in en_US.
 async function spellOf(request: APIRequestContext, id: string): Promise<Spell> {
@@ -52,7 +60,15 @@ test.describe('summoner spell pages as crawlers read them', () => {
     expect(await page.locator('.hx-plate').count()).toBeGreaterThan(0);
     const modes = await page.locator('[data-testid="modes"] li').allTextContents();
     expect(modes.length).toBeGreaterThan(0);
-    expect(modes.some((mode) => /^[A-Z0-9_]+$/.test(mode.trim()))).toBe(false);
+    // ARAM or URF are names in capitals: only a code the API names otherwise is a raw key.
+    const labels = spell.profile.modes.map((mode) => mode.label ?? CLASSIC_LABEL);
+    const rawKeys = spell.profile.modes
+      .filter((mode) => mode.label !== mode.code)
+      .map((mode) => mode.code);
+    for (const mode of modes.map((text) => text.trim())) {
+      expect(labels).toContain(mode);
+      expect(rawKeys).not.toContain(mode);
+    }
   });
 });
 

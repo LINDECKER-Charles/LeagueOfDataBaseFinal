@@ -1,13 +1,21 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
-import { deleteAccount, newAccount, register } from '../account/accounts';
+import {
+  deleteAccount,
+  discardAccount,
+  newAccount,
+  register,
+  type TestAccount,
+} from '../account/accounts';
 
 const CHAMPION = 'Ahri';
 
-// Each change of the editor is saved on its own, a moment after it is made.
+// Each change of the editor is saved on its own, a moment after it is made. The path is
+// compared without the query: the editor sends `?version=` along.
 function saved(page: Page, path: string) {
   return page.waitForResponse(
-    (response) => response.url().endsWith(path) && response.request().method() === 'PUT',
+    (response) =>
+      new URL(response.url()).pathname === path && response.request().method() === 'PUT',
   );
 }
 
@@ -26,9 +34,19 @@ async function setPublic(page: Page, isPublic: boolean): Promise<void> {
   expect((await save).ok()).toBe(true);
 }
 
+// The account of the journey, deleted even when a step fails: no run leaves one behind.
+let created: TestAccount | undefined;
+
+test.afterEach(async ({ playwright, baseURL }) => {
+  if (created) {
+    await discardAccount(playwright.request, baseURL, created);
+    created = undefined;
+  }
+});
+
 // The editor, the owner's preview and the page anyone reads, for one account.
 test('makes a profile public, previews it and shows it to anyone', async ({ page, request }) => {
-  const account = newAccount('card');
+  const account = (created = newAccount('card'));
   const publicPath = `/en/u/${account.username}`;
   await register(page, account);
 

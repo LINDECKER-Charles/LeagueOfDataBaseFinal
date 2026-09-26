@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { type APIRequest, expect, type Page } from '@playwright/test';
 
 /** An account the suite creates, unique to its run. */
 export interface TestAccount {
@@ -11,6 +11,7 @@ export interface TestAccount {
 const PASSWORD = 'Hextech-Forge-2046!';
 // The random part keeps two runs, or two workers, from sharing a name.
 const RANDOM_LENGTH = 4;
+const UNAUTHORIZED = 401;
 
 /** A new account; `purpose` (a few letters) says which spec made it, in the database too. */
 export function newAccount(purpose: string): TestAccount {
@@ -41,10 +42,14 @@ export async function signIn(page: Page, identifier: string, password: string): 
   await page.getByRole('button', { name: 'Enter the archive' }).click();
 }
 
-/** Signs out through the account menu of the header. */
+/**
+ * Signs out through the account menu of the header. The profile editor has a "Sign out" of
+ * its own: the button is looked for inside the menu only.
+ */
 export async function signOut(page: Page): Promise<void> {
-  await page.locator('lodb-account-menu summary').click();
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  const menu = page.locator('lodb-account-menu');
+  await menu.locator('summary').click();
+  await menu.getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/en\/?$/);
 }
 
@@ -55,4 +60,38 @@ export async function deleteAccount(page: Page, account: TestAccount): Promise<v
   await page.getByRole('button', { name: 'Delete my account' }).click();
   await expect(page).toHaveURL(/\/en\/?$/);
   await expect(page.getByText('Your account has been deleted. Farewell, summoner.')).toBeVisible();
+}
+
+/**
+ * Deletes the account through the API, whatever page a failed journey was left on: the
+ * clean-up of a spec that creates an account. An account already deleted is left alone.
+ */
+export async function discardAccount(
+  api: APIRequest,
+  baseURL: string | undefined,
+  account: TestAccount,
+): Promise<void> {
+  // The API refuses an unsafe request without the site's origin, and a session without its
+  // XSRF token, which the sign-in issues as a cookie.
+  const origin = new URL(baseURL ?? '').origin;
+  const session = await api.newContext({ baseURL, extraHTTPHeaders: { Origin: origin } });
+  try {
+    const login = await session.post('/api/account/login', {
+      data: { identifier: account.email, password: account.password, rememberMe: false },
+    });
+    // Refused credentials: the journey got as far as deleting the account itself.
+    if (login.status() === UNAUTHORIZED) {
+      return;
+    }
+    expect(login.ok(), `the clean-up signs ${account.username} in`).toBe(true);
+    const { cookies } = await session.storageState();
+    const xsrf = cookies.find((cookie) => cookie.name === 'XSRF-TOKEN')?.value ?? '';
+    const deleted = await session.post('/api/profile/delete', {
+      data: { password: account.password },
+      headers: { 'X-XSRF-TOKEN': xsrf },
+    });
+    expect(deleted.status(), `the clean-up deletes ${account.username}`).toBe(204);
+  } finally {
+    await session.dispose();
+  }
 }
