@@ -1,0 +1,359 @@
+{
+  "group": "10-outage",
+  "title": "Database stopped, then storage gone: 503 internal where the database is needed",
+  "source": {
+    "service": "go-api",
+    "goApiTree": "0b2172d52a4e9786470909b8616f41395ed3d431"
+  },
+  "exchanges": [
+    {
+      "id": "warm-key-cache",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:free}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "9",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "free",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 0,
+          "rate_limit_per_min": 10
+        }
+      }
+    },
+    {
+      "id": "stop-database",
+      "action": "stopDatabase"
+    },
+    {
+      "id": "healthz-database-down",
+      "note": "always 200, the outage is in the body",
+      "request": {
+        "method": "GET",
+        "path": "/healthz"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": {
+          "status": "ok",
+          "dependencies": {
+            "postgres": "degraded",
+            "storage": "ok"
+          }
+        }
+      }
+    },
+    {
+      "id": "profile-database-down",
+      "note": "cached key: X-RateLimit-* present",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "X-Api-Key": "{{key:free}}"
+        }
+      },
+      "response": {
+        "status": 503,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "8",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "internal",
+            "message": "service temporarily unavailable"
+          }
+        }
+      }
+    },
+    {
+      "id": "builds-database-down",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds",
+        "headers": {
+          "X-Api-Key": "{{key:free}}"
+        }
+      },
+      "response": {
+        "status": 503,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "7",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "internal",
+            "message": "service temporarily unavailable"
+          }
+        }
+      }
+    },
+    {
+      "id": "usage-database-down",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:free}}"
+        }
+      },
+      "response": {
+        "status": 503,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "6",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "internal",
+            "message": "service temporarily unavailable"
+          }
+        }
+      }
+    },
+    {
+      "id": "trends-database-down",
+      "note": "trends only read the storage volume",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:free}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "5",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "uncached-key-database-down",
+      "note": "the key lookup fails: 503 without X-RateLimit-*",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:monthly}}"
+        }
+      },
+      "response": {
+        "status": 503,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "internal",
+            "message": "service temporarily unavailable"
+          }
+        }
+      }
+    },
+    {
+      "id": "unknown-key-database-down",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:unknown}}"
+        }
+      },
+      "response": {
+        "status": 503,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "internal",
+            "message": "service temporarily unavailable"
+          }
+        }
+      }
+    },
+    {
+      "id": "malformed-key-database-down",
+      "note": "rejected before any lookup",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "lodb_0123"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "malformed API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "no-key-database-down",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage"
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "missing API key: use Authorization: Bearer <key> or X-Api-Key"
+          }
+        }
+      }
+    },
+    {
+      "id": "hide-storage",
+      "action": "hideStorage"
+    },
+    {
+      "id": "healthz-all-down",
+      "request": {
+        "method": "GET",
+        "path": "/healthz"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": {
+          "status": "ok",
+          "dependencies": {
+            "postgres": "degraded",
+            "storage": "degraded"
+          }
+        }
+      }
+    },
+    {
+      "id": "trends-storage-down",
+      "note": "go-api answers 200 with no entries; L6.3 answers 503 internal",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/items",
+        "headers": {
+          "X-Api-Key": "{{key:free}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "4",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "items",
+          "range": "7d",
+          "entries": []
+        }
+      }
+    }
+  ]
+}

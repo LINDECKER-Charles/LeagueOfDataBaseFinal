@@ -1,0 +1,231 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.18.1",
+  "data": {
+    "Aatrox": {
+      "version": "16.18.1",
+      "id": "Aatrox",
+      "key": "266",
+      "name": "Aatrox",
+      "title": "the Darkin Blade"
+    },
+    "Ahri": {
+      "version": "16.18.1",
+      "id": "Ahri",
+      "key": "103",
+      "name": "Ahri",
+      "title": "the Nine-Tailed Fox"
+    },
+    "Akali": {
+      "version": "16.18.1",
+      "id": "Akali",
+      "key": "84",
+      "name": "Akali",
+      "title": "the Rogue Assassin"
+    },
+    "Akshan": {
+      "version": "16.18.1",
+      "id": "Akshan",
+      "key": "166",
+      "name": "Akshan",
+      "title": "the Rogue Sentinel"
+    },
+    "Alistar": {
+      "version": "16.18.1",
+      "id": "Alistar",
+      "key": "12",
+      "name": "Alistar",
+      "title": "the Minotaur"
+    },
+    "Ambessa": {
+      "version": "16.18.1",
+      "id": "Ambessa",
+      "key": "799",
+      "name": "Ambessa",
+      "title": "Matriarch of War"
+    },
+    "Amumu": {
+      "version": "16.18.1",
+      "id": "Amumu",
+      "key": "32",
+      "name": "Amumu",
+      "title": "the Sad Mummy"
+    },
+    "Anivia": {
+      "version": "16.18.1",
+      "id": "Anivia",
+      "key": "34",
+      "name": "Anivia",
+      "title": "the Cryophoenix"
+    },
+    "Annie": {
+      "version": "16.18.1",
+      "id": "Annie",
+      "key": "1",
+      "name": "Annie",
+      "title": "the Dark Child"
+    },
+    "Aphelios": {
+      "version": "16.18.1",
+      "id": "Aphelios",
+      "key": "523",
+      "name": "Aphelios",
+      "title": "the Weapon of the Faithful"
+    },
+    "Ashe": {
+      "version": "16.18.1",
+      "id": "Ashe",
+      "key": "22",
+      "name": "Ashe",
+      "title": "the Frost Archer"
+    },
+    "AurelionSol": {
+      "version": "16.18.1",
+      "id": "AurelionSol",
+      "key": "136",
+      "name": "Aurelion Sol",
+      "title": "The Star Forger"
+    },
+    "Aurora": {
+      "version": "16.18.1",
+      "id": "Aurora",
+      "key": "893",
+      "name": "Aurora",
+      "title": "the Witch Between Worlds"
+    },
+    "Azir": {
+      "version": "16.18.1",
+      "id": "Azir",
+      "key": "268",
+      "name": "Azir",
+      "title": "the Emperor of the Sands"
+    },
+    "Bard": {
+      "version": "16.18.1",
+      "id": "Bard",
+      "key": "432",
+      "name": "Bard",
+      "title": "the Wandering Caretaker"
+    },
+    "Belveth": {
+      "version": "16.18.1",
+      "id": "Belveth",
+      "key": "200",
+      "name": "Bel'Veth",
+      "title": "the Empress of the Void"
+    },
+    "Blitzcrank": {
+      "version": "16.18.1",
+      "id": "Blitzcrank",
+      "key": "53",
+      "name": "Blitzcrank",
+      "title": "the Great Steam Golem"
+    },
+    "Brand": {
+      "version": "16.18.1",
+      "id": "Brand",
+      "key": "63",
+      "name": "Brand",
+      "title": "the Burning Vengeance"
+    },
+    "Braum": {
+      "version": "16.18.1",
+      "id": "Braum",
+      "key": "201",
+      "name": "Braum",
+      "title": "the Heart of the Freljord"
+    },
+    "Briar": {
+      "version": "16.18.1",
+      "id": "Briar",
+      "key": "233",
+      "name": "Briar",
+      "title": "the Restrained Hunger"
+    },
+    "Caitlyn": {
+      "version": "16.18.1",
+      "id": "Caitlyn",
+      "key": "51",
+      "name": "Caitlyn",
+      "title": "the Sheriff of Piltover"
+    },
+    "Camille": {
+      "version": "16.18.1",
+      "id": "Camille",
+      "key": "164",
+      "name": "Camille",
+      "title": "the Steel Shadow"
+    },
+    "Cassiopeia": {
+      "version": "16.18.1",
+      "id": "Cassiopeia",
+      "key": "69",
+      "name": "Cassiopeia",
+      "title": "the Serpent's Embrace"
+    },
+    "Chogath": {
+      "version": "16.18.1",
+      "id": "Chogath",
+      "key": "31",
+      "name": "Cho'Gath",
+      "title": "the Terror of the Void"
+    },
+    "Corki": {
+      "version": "16.18.1",
+      "id": "Corki",
+      "key": "42",
+      "name": "Corki",
+      "title": "the Daring Bombardier"
+    },
+    "Darius": {
+      "version": "16.18.1",
+      "id": "Darius",
+      "key": "122",
+      "name": "Darius",
+      "title": "the Hand of Noxus"
+    },
+    "Diana": {
+      "version": "16.18.1",
+      "id": "Diana",
+      "key": "131",
+      "name": "Diana",
+      "title": "Scorn of the Moon"
+    },
+    "DrMundo": {
+      "version": "16.18.1",
+      "id": "DrMundo",
+      "key": "36",
+      "name": "Dr. Mundo",
+      "title": "the Madman of Zaun"
+    },
+    "Jinx": {
+      "version": "16.18.1",
+      "id": "Jinx",
+      "key": "222",
+      "name": "Jinx",
+      "title": "the Loose Cannon"
+    },
+    "MonkeyKing": {
+      "version": "16.18.1",
+      "id": "MonkeyKing",
+      "key": "62",
+      "name": "Wukong",
+      "title": "the Monkey King"
+    },
+    "Teemo": {
+      "version": "16.18.1",
+      "id": "Teemo",
+      "key": "17",
+      "name": "Teemo",
+      "title": "the Swift Scout"
+    },
+    "Zed": {
+      "version": "16.18.1",
+      "id": "Zed",
+      "key": "238",
+      "name": "Zed",
+      "title": "the Master of Shadows"
+    }
+  }
+}

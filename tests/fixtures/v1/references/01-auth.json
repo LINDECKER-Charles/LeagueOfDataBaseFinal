@@ -1,0 +1,1214 @@
+{
+  "group": "01-auth",
+  "title": "Every route against every authentication case, then the header parsing edge cases",
+  "source": {
+    "service": "go-api",
+    "goApiTree": "0b2172d52a4e9786470909b8616f41395ed3d431"
+  },
+  "exchanges": [
+    {
+      "id": "profiles-no-key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer"
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "missing API key: use Authorization: Bearer <key> or X-Api-Key"
+          }
+        }
+      }
+    },
+    {
+      "id": "profiles-malformed",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "Authorization": "Bearer lodb_0123"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "malformed API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "profiles-unknown",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "Authorization": "Bearer {{key:unknown}}"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "unknown API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "profiles-revoked",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "Authorization": "Bearer {{key:revoked}}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "forbidden",
+            "message": "API key is revoked or inactive"
+          }
+        }
+      }
+    },
+    {
+      "id": "profiles-inactive",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "X-Api-Key": "{{key:inactive}}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "forbidden",
+            "message": "API key is revoked or inactive"
+          }
+        }
+      }
+    },
+    {
+      "id": "profiles-bearer",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "Authorization": "Bearer {{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "59",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "PublicPlayer",
+          "created_at": "2026-07-01T09:12:00Z",
+          "favorites": {
+            "champion_id": "Ahri",
+            "item_id": "3006",
+            "rune_id": "8112",
+            "summoner_id": "SummonerFlash"
+          },
+          "public_builds": 57
+        }
+      }
+    },
+    {
+      "id": "profiles-x-api-key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "58",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "PublicPlayer",
+          "created_at": "2026-07-01T09:12:00Z",
+          "favorites": {
+            "champion_id": "Ahri",
+            "item_id": "3006",
+            "rune_id": "8112",
+            "summoner_id": "SummonerFlash"
+          },
+          "public_builds": 57
+        }
+      }
+    },
+    {
+      "id": "builds-no-key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Ahri/builds?per_page=1"
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "missing API key: use Authorization: Bearer <key> or X-Api-Key"
+          }
+        }
+      }
+    },
+    {
+      "id": "builds-malformed",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Ahri/builds?per_page=1",
+        "headers": {
+          "X-Api-Key": "lodb_0123"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "malformed API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "builds-unknown",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Ahri/builds?per_page=1",
+        "headers": {
+          "X-Api-Key": "{{key:unknown}}"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "unknown API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "builds-revoked",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Ahri/builds?per_page=1",
+        "headers": {
+          "X-Api-Key": "{{key:revoked}}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "forbidden",
+            "message": "API key is revoked or inactive"
+          }
+        }
+      }
+    },
+    {
+      "id": "builds-inactive",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Ahri/builds?per_page=1",
+        "headers": {
+          "Authorization": "Bearer {{key:inactive}}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "forbidden",
+            "message": "API key is revoked or inactive"
+          }
+        }
+      }
+    },
+    {
+      "id": "builds-bearer",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Ahri/builds?per_page=1",
+        "headers": {
+          "Authorization": "Bearer {{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "57",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Ahri",
+          "data": [
+            {
+              "name": "Ahri mid burst",
+              "description": "<b>Burst</b> & \"roam\" — combo E→Q, 100% <script>safe</script>",
+              "game_version": "16.18.1",
+              "runes": {
+                "shards": [
+                  5008,
+                  5008,
+                  5001
+                ],
+                "primary": {
+                  "perks": [
+                    8139,
+                    8138,
+                    8135
+                  ],
+                  "style": 8100,
+                  "keystone": 8112
+                },
+                "secondary": {
+                  "perks": [
+                    8313,
+                    8345
+                  ],
+                  "style": 8300
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "1056",
+                    "2003",
+                    "2003"
+                  ],
+                  "label": "Start"
+                },
+                {
+                  "note": null,
+                  "items": [
+                    "6655",
+                    "3020",
+                    "4645"
+                  ],
+                  "label": "Core"
+                },
+                {
+                  "items": [],
+                  "label": "Empty"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/ahrimidburst",
+              "created_at": "2026-07-20T18:40:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 1,
+            "per_page": 1,
+            "total": 3,
+            "total_pages": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "builds-x-api-key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Ahri/builds?per_page=1",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "56",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Ahri",
+          "data": [
+            {
+              "name": "Ahri mid burst",
+              "description": "<b>Burst</b> & \"roam\" — combo E→Q, 100% <script>safe</script>",
+              "game_version": "16.18.1",
+              "runes": {
+                "shards": [
+                  5008,
+                  5008,
+                  5001
+                ],
+                "primary": {
+                  "perks": [
+                    8139,
+                    8138,
+                    8135
+                  ],
+                  "style": 8100,
+                  "keystone": 8112
+                },
+                "secondary": {
+                  "perks": [
+                    8313,
+                    8345
+                  ],
+                  "style": 8300
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "1056",
+                    "2003",
+                    "2003"
+                  ],
+                  "label": "Start"
+                },
+                {
+                  "note": null,
+                  "items": [
+                    "6655",
+                    "3020",
+                    "4645"
+                  ],
+                  "label": "Core"
+                },
+                {
+                  "items": [],
+                  "label": "Empty"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/ahrimidburst",
+              "created_at": "2026-07-20T18:40:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 1,
+            "per_page": 1,
+            "total": 3,
+            "total_pages": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "trends-no-key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/summoners"
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "missing API key: use Authorization: Bearer <key> or X-Api-Key"
+          }
+        }
+      }
+    },
+    {
+      "id": "trends-malformed",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/summoners",
+        "headers": {
+          "Authorization": "Bearer lodb_0123"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "malformed API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "trends-unknown",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/summoners",
+        "headers": {
+          "Authorization": "Bearer {{key:unknown}}"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "unknown API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "trends-revoked",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/summoners",
+        "headers": {
+          "X-Api-Key": "{{key:revoked}}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "forbidden",
+            "message": "API key is revoked or inactive"
+          }
+        }
+      }
+    },
+    {
+      "id": "trends-inactive",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/summoners",
+        "headers": {
+          "X-Api-Key": "{{key:inactive}}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "forbidden",
+            "message": "API key is revoked or inactive"
+          }
+        }
+      }
+    },
+    {
+      "id": "trends-bearer",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/summoners",
+        "headers": {
+          "Authorization": "Bearer {{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "55",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "summoners",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "SummonerFlash",
+              "name": "Flash",
+              "edition": "modern",
+              "views": 6
+            },
+            {
+              "rank": 2,
+              "id": "SummonerFlash_Jade",
+              "name": "Flash",
+              "edition": "classic",
+              "views": 6
+            },
+            {
+              "rank": 3,
+              "id": "SummonerDot",
+              "name": "Ignite",
+              "edition": "modern",
+              "views": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "trends-x-api-key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/summoners",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "54",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "summoners",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "SummonerFlash",
+              "name": "Flash",
+              "edition": "modern",
+              "views": 6
+            },
+            {
+              "rank": 2,
+              "id": "SummonerFlash_Jade",
+              "name": "Flash",
+              "edition": "classic",
+              "views": 6
+            },
+            {
+              "rank": 3,
+              "id": "SummonerDot",
+              "name": "Ignite",
+              "edition": "modern",
+              "views": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "usage-no-key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage"
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "missing API key: use Authorization: Bearer <key> or X-Api-Key"
+          }
+        }
+      }
+    },
+    {
+      "id": "usage-malformed",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "lodb_0123"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "malformed API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "usage-unknown",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:unknown}}"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "unknown API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "usage-revoked",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:revoked}}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "forbidden",
+            "message": "API key is revoked or inactive"
+          }
+        }
+      }
+    },
+    {
+      "id": "usage-inactive",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:inactive}}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "forbidden",
+            "message": "API key is revoked or inactive"
+          }
+        }
+      }
+    },
+    {
+      "id": "usage-bearer",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "53",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "credits",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 5000,
+          "rate_limit_per_min": 60
+        }
+      }
+    },
+    {
+      "id": "usage-x-api-key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "52",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "credits",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 5000,
+          "rate_limit_per_min": 60
+        }
+      }
+    },
+    {
+      "id": "malformed-wrong-prefix",
+      "note": "lodx_ instead of lodb_",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "lodx_926c7f2bd824ee97f7e1dc8fa56863b5b9633f40"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "malformed API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "malformed-uppercase-hex",
+      "note": "the secret must be lowercase hex",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "lodb_926C7F2BD824EE97F7E1DC8FA56863B5B9633F40"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "malformed API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "malformed-too-long",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}0"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "malformed API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "malformed-non-hex",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "lodb_gggggggggggggggggggggggggggggggggggggggg"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "malformed API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "bearer-lowercase-scheme",
+      "note": "the Bearer prefix is case-sensitive: no Bearer, no X-Api-Key, so the key is missing",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "bearer {{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "missing API key: use Authorization: Bearer <key> or X-Api-Key"
+          }
+        }
+      }
+    },
+    {
+      "id": "bearer-extra-spaces",
+      "note": "the value after 'Bearer ' is trimmed",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer    {{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "51",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "credits",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 5000,
+          "rate_limit_per_min": 60
+        }
+      }
+    },
+    {
+      "id": "bearer-empty",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer "
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "missing API key: use Authorization: Bearer <key> or X-Api-Key"
+          }
+        }
+      }
+    },
+    {
+      "id": "x-api-key-padded",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "  {{key:credits}}  "
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "50",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "credits",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 5000,
+          "rate_limit_per_min": 60
+        }
+      }
+    },
+    {
+      "id": "bearer-wins-over-x-api-key",
+      "note": "a Bearer header is used even when X-Api-Key holds a valid key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer lodb_0123",
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "malformed API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "basic-falls-back-to-x-api-key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Basic dXNlcjpwYXNz",
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "49",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "credits",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 5000,
+          "rate_limit_per_min": 60
+        }
+      }
+    },
+    {
+      "id": "query-string-key-ignored",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage?api_key={{key:credits}}"
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "missing API key: use Authorization: Bearer <key> or X-Api-Key"
+          }
+        }
+      }
+    },
+    {
+      "id": "unknown-key-again",
+      "note": "same verdict once the rejection is cached",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:unknown}}"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "unknown API key"
+          }
+        }
+      }
+    }
+  ]
+}
