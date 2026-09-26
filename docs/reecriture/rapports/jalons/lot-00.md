@@ -208,3 +208,63 @@ section « Pics des E2E ».
 **Critère du lot 0 : en échec**, sur le seul volet des journaux. Les corrections de G1 et G2
 suffisent ; G3 ne corrige que la documentation. La vérification doit relancer les
 commandes de reproduction de G1 et G2, puis le tableau du §1.
+
+## 6. Vérification
+
+- **Date** : 2026-09-26.
+- **Branche** : `docs/reecriture-dotnet-angular`, sur `c950b52` (corrections fusionnées).
+- **Fusions** : `wt/corr-l0-g1` (`c36686c`, G1) en `7b4dfa7`, puis `wt/corr-l0-g2`
+  (`92e8426`, G2) en `c950b52`. Fichiers disjoints : aucun conflit. Aucune autre branche
+  `wt/corr-l0-*`.
+- **Stack** : `lodb-next` reconstruite depuis la racine (`up -d --build --wait`) ; les
+  conteneurs portent bien les corrections (`Gss Encryption Mode=Disable` dans l'environnement
+  de `api`, `NGINX_ENTRYPOINT_QUIET_LOGS=1` dans celui de `nginx`, `ssr.render.failed` dans
+  `/app/server/main.server.mjs`).
+
+### 6.1 Commandes et résultats
+
+| Étape | Commande | Résultat |
+|---|---|---|
+| Lockfiles | `npm install --prefix src/LoDb.Web` et `npm install --prefix tests/LoDb.E2E` | aucune dérive, aucun `package.json` modifié par les corrections : rien à committer |
+| Build .NET | `dotnet build LoDb.slnx -c Release` | 0 avertissement, 0 erreur |
+| Tests .NET | `dotnet test LoDb.slnx` | 81 réussis sur 81 |
+| Front | `npm --prefix src/LoDb.Web run lint` | OK (9/9 tests des règles d'architecture) |
+| Front | `npm --prefix src/LoDb.Web run typecheck` | OK |
+| Front | `npm --prefix src/LoDb.Web run test` | 13 fichiers, 156 tests réussis (3 nouveaux : `ssr-error-handler.spec.ts`) |
+| Front | `npm --prefix src/LoDb.Web run build:web` / `build:shell` | OK |
+| Contrat, i18n | `npm --prefix src/LoDb.Web run api:check` / `i18n:report` | bouchons, sortie 0 (L2.2, L3.3) |
+| Stack | `docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build --wait` | 5 services en `healthy` |
+| E2E | `npm --prefix tests/LoDb.E2E test` | 2 réussis sur 2 (1,1 s) |
+| E2E | `npm --prefix tests/LoDb.E2E run typecheck` | OK |
+
+Le dépôt n'a aucun hook de commit : rien à rejouer après les fusions. Le lint et le
+formatage du front couvrent les fichiers fusionnés.
+
+### 6.2 Échecs du §2
+
+| Groupe | État | Preuve |
+|---|---|---|
+| G1 — lignes natives de l'API | **corrigé** | reproduction rejouée : `restart api`, `/readyz` 200 (`postgres` et `storage` en `Healthy`) ; `logs --since 1m api \| grep -v '^{'` ne sort rien ; 14 lignes, toutes JSON, aucune mention de `gssapi` |
+| G2 — trace multi-ligne du SSR | **corrigé** | reproduction rejouée : `/nimporte-quoi` et `/readyz` sur 18080 restent en 404 ; `logs --since 1m web-ssr \| grep -v '^{'` ne sort rien ; chaque erreur donne une ligne `{"level":"error",…,"exception":{"class":"Error","code":4002},"msg":"ssr.render.failed"}`, sans l'URL demandée |
+| G3 — `autoCsp` dans le plan | **persistant** | hors du périmètre des corrections et de la vérification (`docs/reecriture/implementation/`) ; `grep -rn -i autocsp docs/reecriture/implementation` donne toujours `lot-00-socle.md:96` et `lot-03-web-public.md:340`. Sans effet sur le critère ; à corriger avant L3.11 |
+
+Balayage complet depuis la reconstruction (`logs --since <démarrage>`) : `api` 14 lignes,
+`web-ssr` 16 lignes, toutes JSON et analysables par `jq` ; `nginx` 0 ligne (entrypoint
+silencieux, pas de journal d'accès).
+
+Les points ouverts du §3 restent ouverts, en particulier la décision humaine sur les
+fichiers de configuration à la racine de `src/LoDb.Web/`, à prendre avant L3.2.
+
+### 6.3 Critère de sortie local du lot 0
+
+| Volet | État | Preuve |
+|---|---|---|
+| Suites vertes | **vérifié** | §6.1 : .NET 81/81, front complet, E2E 2/2 |
+| `/en/` rendu en SSR par `lodb-next` | **vérifié** | `curl http://localhost:18080/en/` : 200 `text/html`, `<html lang="en"`, `ng-server-context="ssr"`, `<lodb-shell` ; test de fumée vert |
+| `/healthz` | **vérifié** | API : 200 `{"status":"Healthy"}` sur 18081 et depuis le réseau (`wget http://api:8080/healthz` dans `nginx`) ; nginx : 200 `ok` |
+| `/readyz` | **vérifié** | 200, `postgres` et `storage` en `Healthy`, sur 18081 et depuis le réseau |
+| `lodb_build_info` | **vérifié** | `exec -T nginx wget -qO- http://api:9464/metrics` : `lodb_build_info{otel_scope_name="LoDb.Api",revision="dev",version="0.1.0"} 1` ; `/metrics` en 404 sur 18080 et 18081 ; 9464 non publié |
+| Logs JSON d'une ligne par enregistrement | **vérifié** | G1 et G2 corrigés ; balayage ci-dessus sans aucune ligne hors JSON |
+
+**Critère du lot 0 : vérifié.** Reste G3, correction de documentation hors périmètre,
+transmise au jalon suivant.
