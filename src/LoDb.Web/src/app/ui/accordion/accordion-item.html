@@ -1,0 +1,32 @@
+<div role="heading" [attr.aria-level]="level()">
+  <button
+    type="button"
+    class="flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 px-4 py-2.5 text-start font-mono text-[11px] tracking-wider text-text-muted uppercase transition-colors hover:text-hex focus-visible:text-hex focus-visible:outline-none disabled:cursor-default disabled:opacity-50"
+    [id]="item.id + '-header'"
+    [attr.aria-expanded]="item.expanded"
+    [attr.aria-controls]="item.id + '-body'"
+    [disabled]="item.disabled"
+    (click)="item.toggle()"
+  >
+    <span>
+      {{ heading() }}
+      @if (count() !== undefined) {
+        <span class="text-hex">({{ count() }})</span>
+      }
+    </span>
+    <lodb-icon
+      name="chevron"
+      class="size-3.5 transition-transform motion-reduce:transition-none"
+      [class.rotate-180]="item.expanded"
+    />
+  </button>
+</div>
+<div
+  role="region"
+  class="px-4 pb-4"
+  [id]="item.id + '-body'"
+  [attr.aria-labelledby]="item.id + '-header'"
+  [hidden]="!item.expanded"
+>
+  <ng-content />
+</div>

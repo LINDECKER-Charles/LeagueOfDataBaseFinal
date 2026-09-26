@@ -120,7 +120,7 @@
     box-shadow: 0 0 22px -6px color-mix(in srgb, var(--color-hex) 50%, transparent);
     outline: none;
   }
-  .pager__hub svg {
+  .pager__hub .hx-icon {
     inline-size: 1.15rem;
     block-size: 1.15rem;
     rotate: 45deg;
