@@ -67,3 +67,38 @@ Lecture : tous les pics restent sous les relevés de L0.3, qui mesuraient 800 re
 concurrentes sur des conteneurs démarrés depuis plus longtemps. Les limites provisoires ne
 changent pas. La suite E2E ne sollicite presque pas la stack tant qu'elle ne compte que le
 test de fumée : ce relevé ne vaut pas mesure de charge.
+
+### Lot 1 — jalon (2026-09-26)
+
+Contexte : stack d'intégration reconstruite depuis `2a712e6`, conteneurs démarrés à
+07:03 UTC. Avant la mesure, la veille de patchs avait ingéré 16.19.1 en 28 langues
+(2 009 images, 1 750 WebP), puis 14 processus `ingest` et 75 `catalog export` avaient
+tourné dans le conteneur `api` pour la parité. Base et volume `storage` chargés (15
+versions). Relevés `docker stats --no-stream` en boucle, 6 échantillons sur les deux
+passages.
+
+Commandes :
+
+- `npm --prefix tests/LoDb.E2E test` : 2 tests réussis ;
+- `npm --prefix tests/LoDb.E2E test -- --repeat-each=30` : 60 tests, 8,8 s.
+
+| Service | Avant la suite | Pic (2 + 60 tests) | Limite provisoire |
+|---|---:|---:|---:|
+| `api` | 369 Mio | 370 Mio | 384m |
+| `web-ssr` | 70 Mio | 205 Mio | 512m |
+| `nginx` | 14 Mio | 15 Mio | 64m |
+| `postgres` | 36 Mio | 37 Mio | 512m |
+| `mailpit` (dev seulement) | 20 Mio | 21 Mio | — |
+
+Lecture :
+
+- `api` n'est pas sollicité par les E2E, mais il reste à 369 Mio après l'ingestion
+  complète, **à 15 Mio de la limite de déploiement**. Côté métriques du processus (port
+  9464) : 309 Mio de working set, dont 151 Mio engagés par le GC ; le tas des gros
+  objets retient 66 Mio après la dernière collecte. Le reste est natif (SkiaSharp,
+  runtime). En dev, aucune limite ne s'applique : le GC n'a aucune raison de rendre la
+  mémoire. Le comportement sous 384m reste à mesurer (G2 du
+  [jalon 1](jalons/lot-01.md)) avant L8.1.
+- `web-ssr` monte à 205 Mio sur 60 rendus, contre 69 Mio au jalon 0. Le front a grandi
+  depuis : le bundle initial fait 549 ko, au-delà du budget d'avertissement de 500 ko. La
+  limite de 512m tient.

@@ -398,3 +398,21 @@ npm --prefix tests/LoDb.E2E test             # stack démarrée (LODB_E2E_BASE_U
 - L'ancienne stack (projet `lodb`) peut tourner depuis le checkout principal : on ne la
   recrée jamais depuis un autre dossier (label `com.docker.compose.project.working_dir`).
   Ses commandes console gardent `-u www-data`.
+
+### Pièges du lot 1 (ne pas « corriger » par erreur)
+
+- Parité (L1.8) : `tools/next/parity/` collecte, `tests/LoDb.Parity` compare. Un nouvel
+  écart reçoit une règle de `ParityRules.cs`, argumentée dans
+  `docs/reecriture/rapports/parite-lot-1.md`, jamais un filtre dans la comparaison. Sans
+  `LODB_PARITY_RUN`, les 2 tests du run sont ignorés.
+- L'ancienne stack ne stocke détails, icônes de sorts et chromas qu'à la visite d'une page
+  détail, et son warmup ne prend que les images listées en première langue. Une image
+  `pending` de son côté n'est donc pas un écart.
+- `app:ddragon:warmup` sur l'échantillon de parité dépasse 256 Mo en dev : lancer
+  `php -d memory_limit=2G bin/console …`, toujours en `-u www-data`.
+- `ingest` sort en 1 si une image reste sans verdict (503 transitoire, rien de persisté) :
+  relancer `ingest --version` de la version citée. Un `ingest --languages …` n'écrit pas
+  `ddragon_version` : seule une ingestion toutes langues fait avancer l'état.
+- 7050 « Gangplank Placeholder » est traduit en `ar_AE` et `zh_CN`. Il y reste listé dans
+  les deux stacks : c'est un défaut commun, G1 du
+  [jalon 1](docs/reecriture/rapports/jalons/lot-01.md).
