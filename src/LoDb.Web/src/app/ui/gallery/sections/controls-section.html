@@ -1,0 +1,49 @@
+<header class="codex-header mb-6">
+  <h2>Controls</h2>
+  <span class="codex-header__meta">lodbButton · lodbChip · lodbField</span>
+</header>
+
+<div class="flex flex-wrap items-center gap-3">
+  <button type="button" lodbButton>Primary</button>
+  <button type="button" lodbButton="ghost">Ghost</button>
+  <button type="button" lodbButton="gold">Gold</button>
+  <button type="button" lodbButton disabled>Disabled</button>
+  <button type="button" lodbButton="ghost">
+    <lodb-icon name="heart" class="size-4" />
+    With icon
+  </button>
+</div>
+
+<div class="mt-6 flex flex-wrap items-center gap-2">
+  <span lodbChip>Mage</span>
+  <span lodbChip>Assassin</span>
+  <span lodbChip="live">GET</span>
+  <span lodbChip="live">Current</span>
+</div>
+
+<form class="mt-8 grid gap-5 md:grid-cols-2" (submit)="$event.preventDefault()">
+  <label class="flex flex-col gap-1.5 text-sm">
+    <span class="text-text-muted">Search a champion</span>
+    <input lodbField type="search" placeholder="Ahri, Jinx, Thresh…" />
+  </label>
+  <label class="flex flex-col gap-1.5 text-sm">
+    <span class="text-text-muted">Patch</span>
+    <select lodbField>
+      <option>16.1.1</option>
+      <option>15.24.1</option>
+      <option>15.23.1</option>
+    </select>
+  </label>
+  <label class="flex flex-col gap-1.5 text-sm md:col-span-2">
+    <span class="text-text-muted">Message</span>
+    <textarea lodbField rows="3" class="resize-y"></textarea>
+  </label>
+  <label class="flex cursor-pointer items-center gap-2 text-sm text-text-muted">
+    <input type="checkbox" lodbField checked />
+    Remember my choice
+  </label>
+  <label class="flex cursor-pointer items-center gap-3 text-sm text-text-muted">
+    <input type="checkbox" lodbField="switch" checked />
+    Show legacy items
+  </label>
+</form>

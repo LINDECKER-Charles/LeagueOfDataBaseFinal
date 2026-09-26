@@ -1,0 +1,22 @@
+<lodb-backdrop />
+
+<div class="mx-auto max-w-6xl px-4 pt-10 pb-6 sm:px-6">
+  <p class="eyebrow mb-2">Design system · dev only</p>
+  <h1 class="font-beaufort text-3xl tracking-wide text-gold-grad uppercase sm:text-4xl">
+    Hextech gallery
+  </h1>
+  <p class="mt-3 max-w-2xl text-sm text-text-muted">
+    Every primitive in the painted theme and the page direction. Switch the identity with the crest
+    in the header; open <code class="font-mono text-hex">/ar/dev/gallery</code> for right-to-left.
+  </p>
+</div>
+
+<lodb-section-nav label="Gallery sections" [sections]="sections" />
+
+<div class="mx-auto flex max-w-6xl flex-col gap-16 px-4 py-10 sm:px-6">
+  <lodb-gallery-foundations id="foundations" />
+  <lodb-gallery-controls id="controls" lodbReveal />
+  <lodb-gallery-surfaces id="surfaces" lodbReveal />
+  <lodb-gallery-overlays id="overlays" lodbReveal />
+  <lodb-gallery-structure id="structure" lodbReveal />
+</div>
