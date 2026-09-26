@@ -1,0 +1,82 @@
+<div class="relative isolate px-4 py-14 sm:px-6">
+  <lodb-backdrop />
+  <div class="relative mx-auto flex max-w-7xl flex-col gap-16">
+    <section class="text-center">
+      <p class="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1">
+        <span aria-hidden="true" class="hx-pip text-gold">◆</span>
+        <span class="eyebrow">{{ 'home.patch' | transloco }}</span>
+        @if (data().context; as context) {
+          <span class="font-mono text-xs tracking-wide text-hex-bright">{{ context.version }}</span>
+          <span aria-hidden="true" class="text-gold-deep">·</span>
+          <span class="font-beaufort text-[0.7rem] tracking-[0.26em] text-text-dim uppercase"
+            >Data Dragon</span
+          >
+          <span aria-hidden="true" class="text-gold-deep">·</span>
+          <span class="font-mono text-xs text-text-dim">{{ context.language }}</span>
+        }
+      </p>
+
+      <h1
+        class="mx-auto mt-4 max-w-[14ch] font-beaufort text-4xl leading-[1.02] tracking-wide text-balance text-gold-grad uppercase sm:text-6xl"
+      >
+        {{ 'homepage.title' | transloco }}
+      </h1>
+      <p
+        class="mx-auto mt-5 max-w-2xl font-spiegel text-pretty text-text-muted"
+        [innerHTML]="'homepage.hero.browse' | transloco: { version: version() }"
+      ></p>
+
+      <p class="mt-6 flex flex-wrap items-baseline justify-center gap-x-6 gap-y-2">
+        @for (section of portals(); track section.resource) {
+          @if (section.total !== null) {
+            <span class="inline-flex items-baseline gap-1.5">
+              <span class="font-mono text-base text-hex">{{ section.total }}</span>
+              <span class="font-spiegel text-xs tracking-wider text-text-muted uppercase">{{
+                texts[section.resource].title | transloco
+              }}</span>
+            </span>
+          }
+        }
+      </p>
+
+      <ul class="mt-10 grid grid-cols-1 gap-4 text-start sm:grid-cols-2 lg:grid-cols-4">
+        @for (section of portals(); track section.resource) {
+          <li>
+            <a
+              lodbFrame="interactive"
+              class="hx-corners group flex h-full flex-col gap-3.5 p-6"
+              [routerLink]="section.list.path"
+              [queryParams]="section.list.query"
+            >
+              <span class="flex items-start justify-between gap-3">
+                <span
+                  class="grid size-12 shrink-0 place-items-center border border-gold-deep/60 bg-abyss text-gold/80 transition-colors group-hover:text-gold"
+                >
+                  <lodb-icon class="size-7" [name]="texts[section.resource].icon" />
+                </span>
+                @if (section.total !== null) {
+                  <span lodbChip>{{ section.total }}</span>
+                }
+              </span>
+              <span
+                class="font-beaufort text-xl leading-tight tracking-wide text-gold-grad uppercase"
+              >
+                {{ texts[section.resource].title | transloco }}
+              </span>
+              <span
+                class="mt-auto inline-flex items-center gap-2 font-beaufort text-xs tracking-[0.14em] text-gold uppercase transition-colors group-hover:text-hex"
+              >
+                {{ texts[section.resource].seeAll | transloco }}
+                <lodb-see-all-arrow />
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+
+    @for (preview of previews(); track preview.section.resource) {
+      <lodb-preview-section [section]="preview.section" [look]="preview.look" />
+    }
+  </div>
+</div>

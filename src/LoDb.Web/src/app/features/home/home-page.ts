@@ -1,39 +1,91 @@
-import { ChangeDetectionStrategy, Component, PendingTasks, effect, inject } from '@angular/core';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  PendingTasks,
+  computed,
+  effect,
+  inject,
+} from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { provideTranslocoScope, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
+import type { ResourceType } from '../../core/api/generated/models/resource-type';
+import type { Locale } from '../../core/i18n/locales';
 import { PageDirection } from '../../core/layout/direction/page-direction';
+import { injectRouteData } from '../../core/routing/inject-route-data';
 import { Seo } from '../../core/seo/seo';
+import { Chip } from '../../ui/controls/chip';
+import { Icon } from '../../ui/media/icon';
+import { Backdrop } from '../../ui/surfaces/backdrop';
+import { Frame } from '../../ui/surfaces/frame';
+import type { HomeData } from './data/home-data';
+import type { CardLook } from './sections/card-look';
+import { PreviewSection } from './sections/preview-section';
+import { RESOURCE_TEXTS } from './sections/resource-texts';
+import { SeeAllArrow } from './sections/see-all-arrow';
+
+/** The Transloco scope of the home's own texts (`public/i18n/home/`). */
+const HOME_SCOPE = 'home';
+const SEO_SCOPE = 'seo';
+
+// The portals follow the header's codex; the previews keep the legacy home's order.
+const PORTAL_ORDER: readonly ResourceType[] = ['champions', 'items', 'runes', 'summoners'];
+const PREVIEWS: readonly { readonly resource: ResourceType; readonly look: CardLook }[] = [
+  { resource: 'champions', look: 'portrait' },
+  { resource: 'items', look: 'tile' },
+  { resource: 'summoners', look: 'tile' },
+  { resource: 'runes', look: 'round' },
+];
 
 /**
- * Provisional home page (L3.1): it proves the route, the locale and the server render end to
- * end, and writes the home's head (canonical `/{locale}/`, 21 alternates and `x-default`).
- * The home chantier (L3.9) replaces it, keeps home.routes.ts and its call to {@link Seo}.
+ * The home, `/{locale}/`: a hero naming the version and language it reads, the size of each
+ * list, four portals into the catalogue and a preview of each resource, all resolved by the
+ * route (`resolveHome`). Its head is the site's own: canonical `/{locale}/` whatever the
+ * query, 21 alternates and `x-default`, the SEO title and description of the legacy home.
  */
 @Component({
   selector: 'lodb-home-page',
-  imports: [TranslocoPipe],
-  template: `<div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-    <h1 class="font-beaufort text-3xl tracking-wide text-gold-grad uppercase">
-      {{ 'homepage.title' | transloco }}
-    </h1>
-  </div>`,
+  imports: [Backdrop, Chip, Frame, Icon, PreviewSection, RouterLink, SeeAllArrow, TranslocoPipe],
+  providers: [provideTranslocoScope(HOME_SCOPE)],
+  templateUrl: './home-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePage {
+  protected readonly data = injectRouteData<HomeData>('home');
+  protected readonly texts = RESOURCE_TEXTS;
+  protected readonly version = computed(() => this.data().context?.version ?? '');
+  protected readonly portals = computed(() => {
+    const { sections } = this.data();
+    return PORTAL_ORDER.map((resource) => sections[resource]);
+  });
+  protected readonly previews = computed(() => {
+    const { sections } = this.data();
+    return PREVIEWS.map(({ resource, look }) => ({ section: sections[resource], look }));
+  });
+
+  private readonly seo = inject(Seo);
+  private readonly transloco = inject(TranslocoService);
+
   constructor() {
-    const seo = inject(Seo);
-    const transloco = inject(TranslocoService);
     const tasks = inject(PendingTasks);
     const page = inject(PageDirection);
-    // The router reuses the page from one locale's home to another's.
+    // The router reuses the page from one locale's home to another's, and on `?version=`.
     effect(() => {
       const locale = page.locale();
-      tasks.run(async () => {
-        await firstValueFrom(transloco.load(locale)).catch(() => undefined);
-        // The heading is the whole document title: no site name appended.
-        const title = transloco.translate('homepage.title', {}, locale);
-        await seo.apply({ title, path: '', titleFormat: 'raw', locale });
-      });
+      const version = this.data().context?.version ?? null;
+      tasks.run(() => this.writeHead(locale, version));
     });
+  }
+
+  private async writeHead(locale: Locale, version: string | null): Promise<void> {
+    const scoped = `${SEO_SCOPE}/${locale}`;
+    await firstValueFrom(this.transloco.load(scoped)).catch(() => undefined);
+    // The SEO title is the whole document title: no site name appended.
+    const title = this.transloco.translate('home.title', {}, scoped);
+    const description =
+      version === null
+        ? {}
+        : { description: this.transloco.translate('home.description', { version }, scoped) };
+    await this.seo.apply({ title, path: '', titleFormat: 'raw', locale, ...description });
   }
 }
