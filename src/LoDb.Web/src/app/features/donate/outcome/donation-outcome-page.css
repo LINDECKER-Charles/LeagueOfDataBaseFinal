@@ -1,0 +1,84 @@
+/*
+ * The return from Stripe: one centred panel under a seal, lit and breathing after a
+ * donation, dormant after a cancel. Layered with the design system, so a utility or a theme
+ * (which turns the seal round or square) still has the last say.
+ */
+@layer components {
+  .donate-outcome-page {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    max-width: 34rem;
+    margin-inline: auto;
+    padding: clamp(3rem, 9vh, 6.5rem) 1rem;
+  }
+
+  .donate-outcome {
+    width: 100%;
+    padding: 1.75rem 1.5rem;
+    text-align: center;
+  }
+
+  .donate-seal {
+    position: relative;
+    display: inline-block;
+    width: 3.25rem;
+    height: 3.25rem;
+    margin-top: 0.5rem;
+  }
+
+  .donate-seal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: rotate(45deg);
+    border: 1px solid color-mix(in srgb, var(--color-gold) 75%, transparent);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-panel-raised) 95%, transparent),
+      color-mix(in srgb, var(--color-void) 95%, transparent)
+    );
+  }
+
+  .donate-seal::after {
+    content: '';
+    position: absolute;
+    inset: 30%;
+    transform: rotate(45deg);
+    border: 1px solid color-mix(in srgb, var(--color-hex) 40%, transparent);
+    background: color-mix(in srgb, var(--color-hex) 18%, transparent);
+  }
+
+  .donate-seal--lit::after {
+    background: var(--color-hex);
+    box-shadow: 0 0 24px -2px color-mix(in srgb, var(--color-hex) 80%, transparent);
+    animation: donate-seal-breathe 5s ease-in-out infinite;
+  }
+
+  @keyframes donate-seal-breathe {
+    0%,
+    100% {
+      box-shadow: 0 0 16px -4px color-mix(in srgb, var(--color-hex) 55%, transparent);
+    }
+
+    50% {
+      box-shadow: 0 0 30px -2px color-mix(in srgb, var(--color-hex) 95%, transparent);
+    }
+  }
+
+  @media (min-width: 640px) {
+    .donate-outcome-page {
+      padding-inline: 1.5rem;
+    }
+
+    .donate-outcome {
+      padding: 2.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .donate-seal--lit::after {
+      animation: none;
+    }
+  }
+}
