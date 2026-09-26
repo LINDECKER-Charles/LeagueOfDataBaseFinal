@@ -1,0 +1,46 @@
+<ul class="recipe-tree">
+  <ng-container *ngTemplateOutlet="branch; context: { $implicit: tree() }" />
+</ul>
+
+<ng-template #branch let-node>
+  <li>
+    @if (node.canonicalPath === null) {
+      <div class="recipe-node recipe-node--root" [title]="node.name">
+        <ng-container *ngTemplateOutlet="face; context: { $implicit: node }" />
+      </div>
+    } @else {
+      <a
+        class="recipe-node"
+        [routerLink]="linkOf(context(), node.canonicalPath)"
+        [title]="node.name"
+        [attr.data-id]="node.id"
+      >
+        <ng-container *ngTemplateOutlet="face; context: { $implicit: node }" />
+      </a>
+    }
+    @if (node.components.length > 0) {
+      <ul>
+        @for (component of node.components; track $index) {
+          <ng-container *ngTemplateOutlet="branch; context: { $implicit: component }" />
+        }
+      </ul>
+    }
+  </li>
+</ng-template>
+
+<ng-template #face let-node>
+  <lodb-catalogue-image
+    class="recipe-node__icon"
+    imgClass="object-contain"
+    [image]="node.image"
+    [name]="node.name"
+    [size]="iconSize"
+  />
+  <span class="recipe-node__name">{{ node.name }}</span>
+  <span class="recipe-node__gold">
+    {{ node.gold }}
+    @if (node.combine !== null) {
+      <em class="recipe-node__combine">+{{ node.combine }}</em>
+    }
+  </span>
+</ng-template>

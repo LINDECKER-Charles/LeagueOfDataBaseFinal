@@ -1,0 +1,135 @@
+/*
+ * The component dependency as a top-down connector tree (the item, its components, the base
+ * items): classic CSS-tree connectors drawn by pseudo-elements. `safe center` lets a wide tree
+ * scroll from its start instead of clipping it. Logical sides, so the tree mirrors in RTL.
+ */
+.recipe-tree,
+.recipe-tree ul {
+  --recipe-line: color-mix(in srgb, var(--color-gold-deep) 85%, transparent);
+  display: flex;
+  justify-content: safe center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recipe-tree ul {
+  position: relative;
+  padding-block-start: 1.5rem;
+}
+.recipe-tree li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 0.5rem 0;
+}
+/* The two halves of the horizontal connector above each node. */
+.recipe-tree li::before,
+.recipe-tree li::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 50%;
+  inline-size: 50%;
+  block-size: 1.5rem;
+  border-block-start: 1px solid var(--recipe-line);
+}
+.recipe-tree li::after {
+  inset-inline: 50% auto;
+  border-inline-start: 1px solid var(--recipe-line);
+}
+.recipe-tree li:only-child::before,
+.recipe-tree li:only-child::after {
+  display: none;
+}
+.recipe-tree li:only-child {
+  padding-block-start: 1.5rem;
+}
+.recipe-tree li:first-child::before,
+.recipe-tree li:last-child::after {
+  border: 0 none;
+}
+.recipe-tree li:last-child::before {
+  border-inline-end: 1px solid var(--recipe-line);
+}
+/* The drop from a parent down to its components' connector. */
+.recipe-tree ul ul::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  inline-size: 0;
+  block-size: 1.5rem;
+  border-inline-start: 1px solid var(--recipe-line);
+}
+
+.recipe-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  inline-size: 6.5rem;
+  padding: 0.55rem;
+  text-align: center;
+  border: 1px solid var(--color-gold-deep);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-panel-2) 85%, transparent),
+    color-mix(in srgb, var(--color-hextech-black) 92%, transparent)
+  );
+  transition:
+    border-color 0.25s var(--ease-hextech),
+    transform 0.25s var(--ease-hextech);
+}
+a.recipe-node:hover,
+a.recipe-node:focus-visible {
+  border-color: var(--color-gold);
+  transform: translateY(-2px);
+}
+a.recipe-node:focus-visible {
+  outline: 1px solid var(--color-hex);
+  outline-offset: 2px;
+}
+.recipe-node--root {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 26px -8px color-mix(in srgb, var(--color-gold) 55%, transparent);
+}
+.recipe-node__icon {
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold-deep) 65%, transparent);
+  background: var(--color-void);
+}
+.recipe-node__name {
+  font-family: var(--font-beaufort);
+  font-size: 0.72rem;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+  transition: color 0.25s var(--ease-hextech);
+}
+.recipe-node--root .recipe-node__name,
+a.recipe-node:hover .recipe-node__name {
+  color: var(--color-gold-bright);
+}
+.recipe-node__gold {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--color-gold);
+}
+.recipe-node__combine {
+  margin-inline-start: 0.15rem;
+  font-style: normal;
+  color: var(--color-text-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recipe-node,
+  .recipe-node__name {
+    transition: none;
+  }
+  a.recipe-node:hover,
+  a.recipe-node:focus-visible {
+    transform: none;
+  }
+}
