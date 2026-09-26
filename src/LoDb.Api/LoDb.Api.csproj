@@ -35,6 +35,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The legacy stack's list of common passwords, refused by the password policy. -->
+    <EmbeddedResource
+      Include="Modules/Accounts/Security/Policy/common-passwords.txt"
+      LogicalName="common-passwords.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../LoDb.Ingestion/LoDb.Ingestion.csproj" />
   </ItemGroup>
 
