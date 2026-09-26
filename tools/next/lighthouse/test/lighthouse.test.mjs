@@ -15,8 +15,8 @@ function request(url, resourceType, transferSize) {
   return { url, resourceType, resourceSize: 5000, transferSize };
 }
 
-function lhrOf({ performance = 0.95, lcp = 2000, cls = 0.01 } = {}) {
-  const audits = [
+function auditsOf({ lcp, cls }) {
+  return [
     audit('first-contentful-paint', 0.9, { numericValue: 1500 }),
     audit('largest-contentful-paint', 0.9, { numericValue: lcp }),
     audit('total-blocking-time', 1, { numericValue: 40 }),
@@ -36,6 +36,10 @@ function lhrOf({ performance = 0.95, lcp = 2000, cls = 0.01 } = {}) {
       },
     }),
   ];
+}
+
+function lhrOf({ performance = 0.95, lcp = 2000, cls = 0.01 } = {}) {
+  const audits = auditsOf({ lcp, cls });
   const refs = (ids) => ids.map((id) => ({ id, weight: 1 }));
   return {
     requestedUrl: `${ORIGIN}/en/`,
