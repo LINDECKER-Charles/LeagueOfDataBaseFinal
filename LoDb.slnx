@@ -1,12 +1,14 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/LoDb.Api/LoDb.Api.csproj" />
+    <Project Path="src/LoDb.Desktop/LoDb.Desktop.csproj" />
     <Project Path="src/LoDb.Domain/LoDb.Domain.csproj" />
     <Project Path="src/LoDb.Infrastructure/LoDb.Infrastructure.csproj" />
     <Project Path="src/LoDb.Ingestion/LoDb.Ingestion.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/LoDb.Api.Tests/LoDb.Api.Tests.csproj" />
+    <Project Path="tests/LoDb.Desktop.Tests/LoDb.Desktop.Tests.csproj" />
     <Project Path="tests/LoDb.Domain.Tests/LoDb.Domain.Tests.csproj" />
     <Project Path="tests/LoDb.Infrastructure.Tests/LoDb.Infrastructure.Tests.csproj" />
     <Project Path="tests/LoDb.Ingestion.Tests/LoDb.Ingestion.Tests.csproj" />
