@@ -1,0 +1,19 @@
+/*
+ * The words of the contact form: what refused it, and the message under a refused field.
+ * Layered with the design system, so a utility or a theme still has the last say.
+ */
+@layer components {
+  .contact-error {
+    border: 1px solid color-mix(in srgb, var(--color-danger) 55%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+    color: var(--color-text);
+  }
+
+  /* Small red text needs the light danger tone to stay readable on the dark canvas. */
+  .contact-field-error {
+    font-size: 0.78rem;
+    color: var(--color-danger-light);
+  }
+}

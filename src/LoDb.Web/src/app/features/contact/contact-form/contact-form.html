@@ -1,0 +1,110 @@
+<lodb-dialog
+  [heading]="'contact.form.title' | transloco"
+  [headingId]="headingId"
+  [closeLabel]="'contact.form.close' | transloco"
+>
+  <form class="flex flex-col gap-4" novalidate (submit)="submit($event)">
+    <p class="eyebrow">{{ 'contact.form.eyebrow' | transloco }}</p>
+    <p class="text-sm text-text-muted">{{ 'contact.form.intro' | transloco }}</p>
+    @if (error(); as message) {
+      <p class="contact-error" role="alert">{{ message | transloco }}</p>
+    }
+
+    <!-- Honeypot: off screen for people, tempting to robots. -->
+    <div class="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+      <label>
+        Website
+        <input type="text" name="website" tabindex="-1" autocomplete="off" />
+      </label>
+    </div>
+
+    <label class="flex flex-col gap-1.5 text-sm">
+      <span class="text-text-muted">{{ 'contact.form.category' | transloco }}</span>
+      <select
+        lodbField
+        name="category"
+        required
+        [attr.aria-invalid]="errors()['category'] ? true : null"
+      >
+        @for (category of categories; track category.code) {
+          <option [value]="category.code">{{ category.label | transloco }}</option>
+        }
+      </select>
+      @if (errors()['category']; as message) {
+        <span class="contact-field-error" role="alert">{{ message | transloco }}</span>
+      }
+    </label>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <label class="flex flex-col gap-1.5 text-sm">
+        <span class="text-text-muted">{{ 'contact.form.name' | transloco }}</span>
+        <input
+          lodbField
+          type="text"
+          name="name"
+          maxlength="120"
+          autocomplete="name"
+          [attr.aria-invalid]="errors()['name'] ? true : null"
+        />
+        @if (errors()['name']; as message) {
+          <span class="contact-field-error" role="alert">{{ message | transloco }}</span>
+        }
+      </label>
+      <label class="flex flex-col gap-1.5 text-sm">
+        <span class="text-text-muted">{{ 'contact.form.email' | transloco }} *</span>
+        <input
+          lodbField
+          type="email"
+          name="email"
+          required
+          maxlength="255"
+          autocomplete="email"
+          [attr.aria-invalid]="errors()['email'] ? true : null"
+        />
+        @if (errors()['email']; as message) {
+          <span class="contact-field-error" role="alert">{{ message | transloco }}</span>
+        }
+      </label>
+    </div>
+
+    <label class="flex flex-col gap-1.5 text-sm">
+      <span class="text-text-muted">{{ 'contact.form.subject' | transloco }}</span>
+      <input
+        lodbField
+        type="text"
+        name="subject"
+        maxlength="160"
+        [attr.aria-invalid]="errors()['subject'] ? true : null"
+      />
+      @if (errors()['subject']; as message) {
+        <span class="contact-field-error" role="alert">{{ message | transloco }}</span>
+      }
+    </label>
+
+    <label class="flex flex-col gap-1.5 text-sm">
+      <span class="text-text-muted">{{ 'contact.form.message' | transloco }} *</span>
+      <textarea
+        lodbField
+        name="message"
+        required
+        minlength="10"
+        maxlength="5000"
+        rows="5"
+        class="resize-y"
+        [attr.aria-invalid]="errors()['message'] ? true : null"
+      ></textarea>
+      @if (errors()['message']; as message) {
+        <span class="contact-field-error" role="alert">{{ message | transloco }}</span>
+      }
+    </label>
+
+    <div class="flex items-center justify-end gap-3 pt-1">
+      <button lodbButton="ghost" type="button" (click)="ref.close()">
+        {{ 'contact.form.cancel' | transloco }}
+      </button>
+      <button lodbButton="gold" type="submit" [disabled]="busy()">
+        {{ 'contact.form.submit' | transloco }}
+      </button>
+    </div>
+  </form>
+</lodb-dialog>
