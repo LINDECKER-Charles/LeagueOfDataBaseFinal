@@ -1,3 +1,4 @@
+import { LocationStrategy } from '@angular/common';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { type ApplicationConfig, inject, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideClientHydration } from '@angular/platform-browser';
@@ -18,6 +19,7 @@ import { provideI18n } from './core/i18n/provide-i18n';
 import { PLATFORM } from './core/platform/platform';
 import { providePlatform } from './core/platform/provide-platform';
 import { handleNavigationError } from './core/routing/failure/handle-navigation-error';
+import { LocaleHomeLocationStrategy } from './core/routing/locale/locale-home-location-strategy';
 import { provideUpdates } from './core/update/provide-updates';
 import { updateInterceptor } from './core/update/update-interceptor';
 
@@ -33,6 +35,7 @@ import { updateInterceptor } from './core/update/update-interceptor';
  * error page fails too resolves false instead of rejecting. Component input binding stays
  * off: pages read their data with `injectRouteData`. A new page starts at its top, history
  * restores its position; a filter that rewrites its query navigates with `scroll: 'manual'`.
+ * The address of a locale's home keeps its trailing slash (`LocaleHomeLocationStrategy`).
  *
  * `provideAuth`, `provideNavigationBeacon`, `provideUpdates` and the `auth` and `update`
  * interceptors are registered empty, for L4.5, L7.1 and L9.0 to fill in their own folders.
@@ -49,6 +52,7 @@ export const appConfig: ApplicationConfig = {
       withNavigationErrorHandler(handleNavigationError),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
     ),
+    { provide: LocationStrategy, useClass: LocaleHomeLocationStrategy },
     provideHttpClient(
       withInterceptors([
         clientHeaderInterceptor,
