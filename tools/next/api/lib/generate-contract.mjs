@@ -22,14 +22,14 @@ function generateDocuments(paths) {
   documents.forEach((file) => rmSync(file, { force: true }));
   // Program runs without a real host: storage only needs a writable root, and no
   // background task may start (plan, section 5.1).
-  const storageRoot = mkdtempSync(join(tmpdir(), 'lodb-openapi-'));
+  const scratch = mkdtempSync(join(tmpdir(), 'lodb-openapi-'));
   try {
-    run('dotnet', buildArguments(paths), {
+    run('dotnet', buildArguments(paths, join(scratch, 'documents.cache')), {
       cwd: paths.repoRoot,
-      env: { ...process.env, LoDb__Storage__Root: storageRoot, LoDb__Workers__Enabled: 'false' },
+      env: { ...process.env, LoDb__Storage__Root: scratch, LoDb__Workers__Enabled: 'false' },
     });
   } finally {
-    rmSync(storageRoot, { recursive: true, force: true });
+    rmSync(scratch, { recursive: true, force: true });
   }
   const missing = documents.filter((file) => !existsSync(file));
   if (missing.length > 0) {
@@ -37,8 +37,20 @@ function generateDocuments(paths) {
   }
 }
 
-function buildArguments(paths) {
-  return ['build', paths.apiProject, '-c', 'Release', '-nologo', '-p:LoDbGenerateOpenApi=true'];
+/**
+ * The SDK's generation target is incremental: it is skipped when the assembly is not newer
+ * than its file list in obj/, as after a plain build. A fresh file list forces it.
+ */
+function buildArguments(paths, fileList) {
+  return [
+    'build',
+    paths.apiProject,
+    '-c',
+    'Release',
+    '-nologo',
+    '-p:LoDbGenerateOpenApi=true',
+    `-p:_OpenApiDocumentsCache=${fileList}`,
+  ];
 }
 
 function generateClient(paths) {
