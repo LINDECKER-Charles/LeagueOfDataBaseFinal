@@ -23,16 +23,24 @@ namespace LoDb.Api.Modules.Catalog.Http;
 /// keeps the case its domain documents: kebab-case for the locales, which is their URL
 /// segment; snake_case for the stats, the vocabulary of the translation keys; the persisted
 /// codes for the game modes; camelCase otherwise.
+/// Numbers are strict: the web defaults also read them from strings, which the OpenAPI
+/// document then declares as <c>[integer, string]</c> and the client as <c>number | string</c>,
+/// although the API only ever writes numbers.
 /// </remarks>
 internal static class CatalogJson
 {
     public static IServiceCollection AddCatalogJson(this IServiceCollection services)
     {
         services.ConfigureHttpJsonOptions(static options =>
-            AddConverters(options.SerializerOptions.Converters));
+        {
+            options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+            AddConverters(options.SerializerOptions.Converters);
+        });
         services.Configure<OpenApiOptions>(
             OpenApiDocuments.App,
-            static options => options.AddSchemaTransformer<GameModeSchemaTransformer>());
+            static options => options
+                .AddSchemaTransformer<GameModeSchemaTransformer>()
+                .AddSchemaTransformer<StringEnumSchemaTransformer>());
         return services;
     }
 
