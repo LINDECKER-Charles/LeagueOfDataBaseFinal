@@ -180,3 +180,76 @@ Les relevés du jalon (API après ingestion, pics des E2E) sont consignés dans
 **Critère du lot 1 : vérifié.** G1 et G2 ne bloquent pas le critère. G1 est à corriger
 avant que le lot 3 ne serve la liste des objets en `ar_AE` et `zh_CN`. G2 doit être mesuré
 avant L8.1.
+
+## 6. Vérification
+
+- **Date** : 2026-09-26, 07:55 à 08:05 UTC.
+- **Branche** : `docs/reecriture-dotnet-angular`. Une seule branche de correction :
+  `wt/corr-l1-g1-objet-7050` (dernier commit `2049279`), fusionnée sans conflit en
+  `e80af38`. Le décompte de parité est reporté en `8a1caf5`. G2 n'a pas de branche.
+- **Stacks** : `lodb-next` reconstruite depuis la racine sur `e80af38` (17 s, 5 services
+  `healthy`, `api` recréée). L'ancienne stack a été démarrée depuis la racine pour le
+  ré-export, puis arrêtée (`docker compose stop`, 6 conteneurs en `Exited (0)`).
+
+### Commandes et résultats
+
+| Étape | Commande | Résultat |
+|---|---|---|
+| Lockfiles | `npm install --prefix src/LoDb.Web` et `npm install --prefix tests/LoDb.E2E` | aucune dépendance modifiée par la correction, aucune dérive |
+| Build .NET | `dotnet build LoDb.slnx -c Release` (puis `--no-incremental`) | 0 avertissement, 0 erreur |
+| Tests .NET | `dotnet test LoDb.slnx` | 1 023 tests : 1 021 réussis, 2 ignorés (run de parité, sans `LODB_PARITY_RUN`) |
+| Front | `npm --prefix src/LoDb.Web run lint` / `typecheck` | OK (9/9 règles d'architecture) / OK |
+| Front | `npm --prefix src/LoDb.Web run test` | 28 fichiers, 260 tests réussis |
+| Front | `npm --prefix src/LoDb.Web run build:web` / `build:shell` | OK ; même avertissement de budget (549,20 ko, § 3) |
+| Stack | `docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build` | 5 services en `healthy` |
+| E2E | `npm --prefix tests/LoDb.E2E test` / `run typecheck` | 2 réussis sur 2 / OK |
+| Parité, ré-export | `node tools/next/parity/collect.mjs --steps=export --run=tools/next/parity/.runs/lot1 --versions=<les 15 du run> --langs=en_US,fr_FR,ko_KR,ar_AE,zh_CN` | 66 s, 75 exports par côté ; run d'avant conservé sous `.runs/lot1-jalon` (ignoré par Git) |
+| Parité, comparaison | `LODB_PARITY_RUN=$PWD/tools/next/parity/.runs/lot1 dotnet test --project tests/LoDb.Parity/LoDb.Parity.csproj` | 55 réussis sur 55 ; 12 260 écarts, 0 non classé, 0 défaut de la nouvelle stack |
+
+Le dépôt n'a aucun hook de commit : rien à rejouer après la fusion.
+
+### Échecs du jalon
+
+**G1 — corrigé.** La reproduction du § 2, rejouée sur `lodb-next` reconstruite, sort :
+
+```
+{"id":"7050","name":"Gangplank Placeholder","listed":false}
+{"id":"7050","name":"普朗克 占位","listed":false}
+{"id":"7050","name":"نائب غانغ بلانك","listed":false}
+```
+
+Dans la parité, l'écart attendu apparaît : 20 écarts `listed` `true` → `false`, sur 7050
+en `ar_AE` et en `zh_CN`, de 16.10.1 à 16.19.1. Ils sont tous classés sous la nouvelle
+règle `legacy-translated-placeholder-listed` (`LegacyDefect`). Les autres groupes gardent
+leur décompte : le total passe de 12 240 à 12 260, `LegacyDefect` de 308 à 328, et
+`Expected` reste à 11 932. Détail : [`parite-lot-1.md`](../parite-lot-1.md) § 4.
+
+**G2 — persistant, non traité.** Aucune branche de correction. La mesure sous 384m exige un
+emplacement `lodb-next-e1` et une décision sur la limite ou sur `GCHeapHardLimit`. Ni l'une
+ni l'autre n'a été faite. Relevé de la vérification, sur l'API juste recréée, donc sans
+valeur probante sur le pic :
+
+```
+lodb-next-api-1 62.02MiB / 11.67GiB
+dotnet_gc_last_collection_heap_size_bytes{…,gc_heap_generation="loh"} 6443184
+dotnet_process_memory_working_set_bytes{otel_scope_name="System.Runtime"} 141000704
+```
+
+Le seuil du § 2 reste à tenir avant L8.1 : aucun `OOMKilled` sous 384m, et un pic consigné
+dans [`memoire.md`](../memoire.md).
+
+### Critère de sortie, revérifié
+
+La correction ne touche que la lecture du catalogue (`CatalogSnapshot`, export, recherche).
+L'ingestion n'est pas modifiée (`ItemDebris` n'est appelé que depuis le catalogue) : les
+volets « patch ingéré sans intervention », « toutes les langues » et « WebP » gardent la
+preuve du § 5 sans nouvelle ingestion.
+
+| Volet | État | Preuve |
+|---|---|---|
+| Suites vertes | **vérifié** | tableau ci-dessus : .NET 1 021/1 021 hors 2 ignorés, front complet, E2E 2/2 |
+| Parité, 75 couples version × langue | **vérifié** | 12 260 écarts, 0 non classé, 0 défaut de la nouvelle stack ; les couples touchés par G1 (`ar_AE`, `zh_CN` × 16.10.1–16.19.1) sont ré-exportés et comparés |
+| Patch complet, langues, images, WebP | **vérifié** (§ 5, inchangé) | pipeline d'ingestion non modifié par la correction |
+
+**Critère du lot 1 : vérifié.** G1 est corrigé. G2 reste ouvert, sans effet sur le
+critère, et doit être mesuré avant L8.1.
