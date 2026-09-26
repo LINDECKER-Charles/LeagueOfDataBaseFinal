@@ -1,0 +1,78 @@
+/*
+ * The path's constellation: keystones and rows strung on a spine of light, tinted by the
+ * `--path` colour of the page. In the components layer, as the legacy sheet was, so the
+ * identities' ornaments (theme/*) still reshape the row markers.
+ */
+@layer components {
+  :host {
+    position: relative;
+  }
+  :host::before {
+    content: '';
+    position: absolute;
+    inset-block: 0.5rem 0;
+    inset-inline-start: 50%;
+    inline-size: 1px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent),
+      color-mix(in srgb, var(--path, var(--color-gold)) 22%, transparent) 70%,
+      transparent
+    );
+  }
+
+  .slot-node {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    padding-block: 2.25rem 1.5rem;
+  }
+  .slot-node span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 45%, transparent);
+    background: var(--color-hextech-black);
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--path, var(--color-gold));
+  }
+  .slot-node i {
+    inline-size: 7px;
+    block-size: 7px;
+    rotate: 45deg;
+    background: var(--path, var(--color-gold));
+    box-shadow: 0 0 10px var(--path, var(--color-gold));
+  }
+
+  .path-border {
+    border-color: color-mix(in srgb, var(--path, var(--color-gold)) 55%, transparent);
+  }
+
+  .keystone__icon {
+    align-self: flex-start;
+    inline-size: 5.75rem;
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent);
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        closest-side,
+        color-mix(in srgb, var(--path, var(--color-gold)) 24%, transparent),
+        transparent 80%
+      ),
+      var(--color-hextech-black);
+    box-shadow: 0 0 34px -8px var(--path, var(--color-gold));
+  }
+  .rune-medallion {
+    inline-size: 3rem;
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+    border-radius: 50%;
+    background: var(--color-hextech-black);
+  }
+}
