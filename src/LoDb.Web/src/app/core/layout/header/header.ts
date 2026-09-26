@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
 import { Button } from '../../../ui/controls/button';
 import { Icon } from '../../../ui/media/icon';
 import { Logo } from '../../../ui/media/logo';
@@ -17,6 +17,8 @@ import { CODEX_ENTRIES } from './codex-entries';
  * `account` slot, the theme picker and the `switcher` slot. The brand shortens to its
  * initials wherever the row is crowded: under 460px, and from md to lg where the navigation
  * joins it. Under 400px the release chip goes, so a 320px screen never scrolls sideways.
+ * The developers entry is labelled from the `api` catalogue scope, loaded here since the
+ * header sits outside the pages that provide it.
  */
 @Component({
   selector: 'lodb-header',
@@ -30,6 +32,7 @@ import { CODEX_ENTRIES } from './codex-entries';
     ThemePicker,
     TranslocoPipe,
   ],
+  providers: [provideTranslocoScope('api')],
   templateUrl: './header.html',
   host: { class: 'relative z-30 block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
