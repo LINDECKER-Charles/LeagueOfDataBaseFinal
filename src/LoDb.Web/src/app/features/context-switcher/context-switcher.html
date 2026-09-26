@@ -1,0 +1,75 @@
+<details #panel class="switcher" lodbDisclosure>
+  <summary [attr.aria-label]="'header.switcher.label' | transloco">
+    <span>{{ current()?.version ?? ('contextSwitcher.patch' | transloco) }}</span>
+    <span class="text-gold-deep" aria-hidden="true">·</span>
+    <span>{{ languageCode() }}</span>
+    <lodb-icon name="chevron" class="switcher__chevron" />
+  </summary>
+
+  <form class="switcher__panel" (submit)="apply($event)">
+    <p class="eyebrow mb-3">{{ 'header.switcher.label' | transloco }}</p>
+    <div class="flex flex-col gap-2.5" [attr.aria-busy]="meta() === null && !unavailable()">
+      <label for="switcher-version" class="sr-only">{{ 'setup.form.version' | transloco }}</label>
+      <select
+        id="switcher-version"
+        lodbField
+        class="w-full"
+        [disabled]="meta() === null"
+        (change)="pickVersion($event)"
+      >
+        @for (option of versions(); track option.version) {
+          <option [value]="option.version" [selected]="option.version === version()">
+            {{ option.version }}
+            @if (option.latest) {
+              ({{ 'contextSwitcher.latest' | transloco }})
+            }
+          </option>
+        }
+      </select>
+
+      <label for="switcher-language" class="sr-only">{{ 'setup.form.language' | transloco }}</label>
+      <select
+        id="switcher-language"
+        lodbField
+        class="w-full"
+        [disabled]="meta() === null"
+        (change)="pickLanguage($event)"
+      >
+        @for (option of languages(); track option.key) {
+          <option
+            [value]="option.key"
+            [attr.lang]="option.tag"
+            [selected]="option.key === language()"
+          >
+            {{ option.label }}
+          </option>
+        }
+      </select>
+
+      @if (unavailable()) {
+        <p class="text-xs text-text-muted" role="status">
+          {{ 'contextSwitcher.unavailable' | transloco }}
+        </p>
+      }
+
+      <div class="mt-1 flex items-center gap-3">
+        <label
+          for="switcher-remember"
+          class="flex cursor-pointer items-center gap-2 text-xs text-text-muted select-none"
+        >
+          <input
+            id="switcher-remember"
+            type="checkbox"
+            lodbField
+            [checked]="remember()"
+            (change)="toggleRemember($event)"
+          />
+          <span>{{ 'setup.form.remember' | transloco }}</span>
+        </label>
+        <button lodbButton type="submit" class="ms-auto py-2" [disabled]="meta() === null">
+          {{ 'setup.form.submit' | transloco }}
+        </button>
+      </div>
+    </div>
+  </form>
+</details>
