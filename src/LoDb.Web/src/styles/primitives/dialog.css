@@ -11,6 +11,8 @@
 
   .hx-dialog {
     inline-size: min(46rem, calc(100vw - 2rem));
+  }
+  .hx-dialog .hx-dialog-panel {
     max-block-size: calc(100dvh - 2rem);
   }
   .hx-dialog .cdk-dialog-container {
@@ -20,21 +22,27 @@
   /* Bottom sheet: full width, anchored to the bottom edge, clear of the home indicator. */
   .hx-sheet {
     inline-size: 100%;
-    max-block-size: 85dvh;
   }
   .hx-sheet .cdk-dialog-container {
     animation: hx-sheet-in 0.25s var(--ease-hextech);
   }
   .hx-sheet .hx-dialog-panel {
+    max-block-size: 85dvh;
     border-inline: 0;
     border-block-end: 0;
     padding-block-end: max(1.4rem, env(safe-area-inset-bottom));
   }
 
-  /* The frame every dialog body sits in (ui/dialog's lodb-dialog). */
+  /*
+   * The frame every dialog body sits in (ui/dialog's lodb-dialog). Its height cap lives on the
+   * panel, per pane class above, never on the pane: the CDK's `max-height: 100%` sits in a later
+   * layer and beats any pane class, and the panel's parent is the dialog component's host, not
+   * the CDK container, so an inherited cap would be `none`. Capped, the panel scrolls and a
+   * sticky footer stays on screen however tall the body grows.
+   */
   .hx-dialog-panel {
     display: block;
-    max-block-size: inherit;
+    max-block-size: 100dvh;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 1.4rem;
