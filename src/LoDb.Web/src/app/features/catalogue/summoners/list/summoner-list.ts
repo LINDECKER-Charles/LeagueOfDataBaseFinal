@@ -1,5 +1,6 @@
 import { LowerCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import type { UrlTree } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { SummonerCard } from '../../../../core/api/generated/models/summoner-card';
 import type { PageContext } from '../../../../core/context/page-context';
@@ -7,12 +8,12 @@ import { injectRouteData } from '../../../../core/routing/inject-route-data';
 import { Accordion } from '../../../../ui/accordion/accordion';
 import { AccordionItem } from '../../../../ui/accordion/accordion-item';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
-import { injectListHead } from '../../items/codex/head/inject-list-head';
-import { ListHeading } from '../../items/codex/heading/list-heading';
-import { RichText } from '../../items/codex/rich-text/rich-text';
-import { injectTranslate } from '../../items/codex/texts/inject-translate';
+import { injectListHead } from '../../shared/codex/head/inject-list-head';
+import { ListHeading } from '../../shared/codex/heading/list-heading';
+import { RichText } from '../../shared/codex/rich-text/rich-text';
+import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
+import { injectTranslate } from '../../shared/codex/texts/inject-translate';
 import { EntityCard } from '../../shared/cards/entity-card';
-import { catalogueHref } from '../../shared/links/catalogue-href';
 import { CatalogueCardTemplate } from '../../shared/list/catalogue-card-template';
 import { CatalogueList } from '../../shared/list/catalogue-list';
 import { injectCatalogueList } from '../../shared/source/inject-catalogue-list';
@@ -56,6 +57,7 @@ export class SummonerList {
   protected readonly cooldownText = cooldownTextOf;
 
   private readonly translate = injectTranslate();
+  private readonly linkOf = injectCatalogueLink();
 
   protected readonly schema = computed(() => {
     const list = this.list.list() ?? this.list.firstPage();
@@ -79,8 +81,7 @@ export class SummonerList {
     return modeLabelsOf(card.modes, this.translate()('edition.classic'));
   }
 
-  // No `?lang=`: lodb-entity-card takes its link as a string, which the router would escape.
-  protected hrefOf(context: PageContext, card: SummonerCard): string {
-    return catalogueHref(context, card.canonicalPath);
+  protected hrefOf(context: PageContext, card: SummonerCard): UrlTree {
+    return this.linkOf(context, card.canonicalPath);
   }
 }

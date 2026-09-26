@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, booleanAttribute, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, type UrlTree } from '@angular/router';
 import type { CatalogImage } from '../../../../core/api/generated/models/catalog-image';
 import type { Edition } from '../../../../core/api/generated/models/edition';
 import { FRAME_STYLES } from '../../../../ui/surfaces/frame-styles';
@@ -49,8 +49,11 @@ const ICON_SIZE = 56;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EntityCard {
-  /** Root-relative URL of the entry's page (catalogueHref). */
-  readonly href = input.required<string>();
+  /**
+   * The entry's page (injectCatalogueLink): a UrlTree, since a string would reach the router
+   * with the `?lang=` it carries escaped (`%3F`).
+   */
+  readonly href = input.required<UrlTree>();
   readonly image = input.required<CatalogImage>();
   readonly name = input.required<string>();
   /** One line under the name: a champion's title, an item's price. */

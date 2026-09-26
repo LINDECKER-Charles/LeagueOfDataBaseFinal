@@ -3,7 +3,7 @@ import type { ItemTier } from '../../../../../core/api/generated/models/item-tie
 import { defineFacet } from '../../../shared/facets/define-facet';
 import type { FacetDefinition } from '../../../shared/facets/model/facet-definition';
 import type { FacetOption } from '../../../shared/facets/model/facet-option';
-import type { Translate } from '../../codex/texts/translate';
+import type { Translate } from '../../../shared/codex/texts/translate';
 import { ITEM_STAT_COLUMNS } from '../../stats/item-stat-columns';
 import { itemStatKey } from '../../stats/item-stat-key';
 import { ITEM_MAPS } from './item-maps';

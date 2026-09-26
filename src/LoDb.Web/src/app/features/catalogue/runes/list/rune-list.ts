@@ -7,10 +7,10 @@ import type { RuneTreeCard } from '../../../../core/api/generated/models/rune-tr
 import type { PageContext } from '../../../../core/context/page-context';
 import { injectRouteData } from '../../../../core/routing/inject-route-data';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
-import { injectListHead } from '../../items/codex/head/inject-list-head';
-import { ListHeading } from '../../items/codex/heading/list-heading';
-import { injectCatalogueLink } from '../../items/codex/links/inject-catalogue-link';
-import { injectTranslate } from '../../items/codex/texts/inject-translate';
+import { injectListHead } from '../../shared/codex/head/inject-list-head';
+import { ListHeading } from '../../shared/codex/heading/list-heading';
+import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
+import { injectTranslate } from '../../shared/codex/texts/inject-translate';
 import { CatalogueImage } from '../../shared/cards/catalogue-image';
 import { CatalogueCardTemplate } from '../../shared/list/catalogue-card-template';
 import { CatalogueList } from '../../shared/list/catalogue-list';

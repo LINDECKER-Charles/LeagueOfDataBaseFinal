@@ -1,5 +1,5 @@
 import type { RuneTreeCard } from '../../../../core/api/generated/models/rune-tree-card';
-import type { Translate } from '../../items/codex/texts/translate';
+import type { Translate } from '../../shared/codex/texts/translate';
 import { defineFacet } from '../../shared/facets/define-facet';
 import type { FacetDefinition } from '../../shared/facets/model/facet-definition';
 import { RUNE_SLOTS } from '../paths/rune-slots';

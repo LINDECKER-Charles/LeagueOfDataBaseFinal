@@ -85,6 +85,18 @@ test.describe('champion pages as crawlers read them', () => {
     await expect(page.locator('#abilities img.poster')).toHaveCount(1);
     await expect(page.locator('lodb-skin-gallery')).toHaveCount(0);
   });
+
+  test('links back to the list in the regional variant it was read in', async ({
+    page,
+    request,
+  }) => {
+    await page.goto(`${DETAIL}?lang=en_GB`);
+
+    const hub = page.locator('lodb-pager a.pager__hub');
+    await expect(hub).toHaveAttribute('href', `${LIST}?lang=en_GB`);
+    const response = await request.get((await hub.getAttribute('href')) ?? '');
+    expect(response.status()).toBe(200);
+  });
 });
 
 test.describe('champion page in the browser', () => {

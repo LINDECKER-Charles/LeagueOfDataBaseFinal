@@ -1,6 +1,11 @@
+import type { UrlTree } from '@angular/router';
+
 /** A neighbour or the hub of a pager: where it leads and what it is called. */
 export interface PagerLink {
-  /** Absolute path of the page, locale prefix included. */
-  readonly url: string;
+  /**
+   * The page, locale prefix included: a UrlTree when the link carries a query or a fragment,
+   * which a string would reach the router with escaped (`%3F`), or else a plain path.
+   */
+  readonly url: string | UrlTree;
   readonly name: string;
 }

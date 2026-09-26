@@ -1,11 +1,10 @@
 import { type Signal, computed } from '@angular/core';
 import type { ResourceType } from '../../../../../core/api/generated/models/resource-type';
-import type { PageContext } from '../../../../../core/context/page-context';
 import type { PagerLink } from '../../../../../ui/navigation/pager-link';
-import type { ListByResource } from '../../../shared/data/list-by-resource';
-import { catalogueHref } from '../../../shared/links/catalogue-href';
-import { injectCatalogueNeighbours } from '../../../shared/pager/inject-catalogue-neighbours';
-import type { NeighbourQuery } from '../../../shared/pager/neighbour-query';
+import type { ListByResource } from '../../data/list-by-resource';
+import { injectCatalogueNeighbours } from '../../pager/inject-catalogue-neighbours';
+import type { NeighbourQuery } from '../../pager/neighbour-query';
+import { injectCatalogueLink } from '../links/inject-catalogue-link';
 import type { DetailPagerLinks } from './detail-pager-links';
 
 type CardOf<R extends ResourceType> = ListByResource[R]['entries'][number];
@@ -18,11 +17,6 @@ export interface DetailPagerSource<R extends ResourceType> {
   readonly keyOf: (card: CardOf<R>) => string;
 }
 
-// Without `?lang=`: lodb-pager takes its links as strings, which the router would escape.
-function linkOf(context: PageContext, card: { name: string; canonicalPath: string }): PagerLink {
-  return { url: catalogueHref(context, card.canonicalPath), name: card.name };
-}
-
 /**
  * The previous and next entries of a detail page in its list's order, and the list itself,
  * for lodb-pager. The neighbours arrive in the browser only (injectCatalogueNeighbours).
@@ -32,13 +26,18 @@ export function injectDetailPager<R extends ResourceType>(
 ): Signal<DetailPagerLinks> {
   const at = computed(source.at);
   const neighbours = injectCatalogueNeighbours(source.resource, at, source.keyOf);
+  const linkTo = injectCatalogueLink();
   return computed(() => {
     const { context } = at();
     const { previous, next } = neighbours();
+    const linkOf = (card: { name: string; canonicalPath: string }): PagerLink => ({
+      url: linkTo(context, card.canonicalPath),
+      name: card.name,
+    });
     return {
-      previous: previous && linkOf(context, previous),
-      next: next && linkOf(context, next),
-      hub: catalogueHref(context, source.resource),
+      previous: previous && linkOf(previous),
+      next: next && linkOf(next),
+      hub: linkTo(context, source.resource),
     };
   });
 }

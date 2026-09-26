@@ -60,7 +60,7 @@ const EN = {
 @Component({ template: '' })
 class Blank {}
 
-async function visit(details: ChampionDetails) {
+async function visit(details: ChampionDetails, url = '/en/champions/Annie') {
   const apply = vi.fn<(page: SeoPage) => Promise<void>>().mockResolvedValue(undefined);
   const entries = ['Ahri', 'Annie', 'Brand'].map(cardOf);
   const entry: CatalogueEntry<ChampionDetails> = { context: CONTEXT, details };
@@ -88,7 +88,7 @@ async function visit(details: ChampionDetails) {
       },
     ],
   });
-  const harness = await RouterTestingHarness.create('/en/champions/Annie');
+  const harness = await RouterTestingHarness.create(url);
   await harness.fixture.whenStable();
   return { harness, apply, host: harness.routeNativeElement as HTMLElement };
 }
@@ -160,6 +160,17 @@ describe('ChampionPage', () => {
     expect(hrefs).toEqual(
       expect.arrayContaining(['/en/champions/Ahri', '/en/champions', '/en/champions/Brand']),
     );
+  });
+
+  it('keeps the regional variant in the pager, query unescaped', async () => {
+    const { host } = await visit(detailsOf(), '/en/champions/Annie?lang=en_GB');
+    const hrefs = [...host.querySelectorAll('lodb-pager a')].map((a) => a.getAttribute('href'));
+
+    expect(hrefs).toEqual([
+      '/en/champions/Ahri?lang=en_GB',
+      '/en/champions?lang=en_GB',
+      '/en/champions/Brand?lang=en_GB',
+    ]);
   });
 
   it('writes the head of the champion', async () => {

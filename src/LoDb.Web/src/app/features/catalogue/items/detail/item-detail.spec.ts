@@ -10,8 +10,8 @@ import type { PageContext } from '../../../../core/context/page-context';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import { CatalogueLists } from '../../shared/data/catalogue-lists';
-import { CatalogueHead } from '../codex/head/catalogue-head';
-import type { CatalogueTexts } from '../codex/head/catalogue-texts';
+import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
+import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { ItemDetail } from './item-detail';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };

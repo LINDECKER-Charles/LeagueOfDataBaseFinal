@@ -1,5 +1,6 @@
 import { LowerCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import type { UrlTree } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { ItemCard } from '../../../../core/api/generated/models/item-card';
 import type { PageContext } from '../../../../core/context/page-context';
@@ -8,14 +9,14 @@ import { Accordion } from '../../../../ui/accordion/accordion';
 import { AccordionItem } from '../../../../ui/accordion/accordion-item';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { EntityCard } from '../../shared/cards/entity-card';
-import { catalogueHref } from '../../shared/links/catalogue-href';
 import { CatalogueCardTemplate } from '../../shared/list/catalogue-card-template';
 import { CatalogueList } from '../../shared/list/catalogue-list';
 import { injectCatalogueList } from '../../shared/source/inject-catalogue-list';
-import { injectListHead } from '../codex/head/inject-list-head';
-import { ListHeading } from '../codex/heading/list-heading';
-import { RichText } from '../codex/rich-text/rich-text';
-import { injectTranslate } from '../codex/texts/inject-translate';
+import { injectListHead } from '../../shared/codex/head/inject-list-head';
+import { ListHeading } from '../../shared/codex/heading/list-heading';
+import { RichText } from '../../shared/codex/rich-text/rich-text';
+import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
+import { injectTranslate } from '../../shared/codex/texts/inject-translate';
 import { itemFacetsOf } from './facets/item-facets-of';
 import { tagLabelOf } from './facets/tag-label-of';
 import { ITEM_CARD_ADAPTER } from './item-card-adapter';
@@ -54,6 +55,7 @@ export class ItemList {
   protected readonly tagLabel = tagLabelOf;
 
   private readonly translate = injectTranslate();
+  private readonly linkOf = injectCatalogueLink();
 
   protected readonly schema = computed(() =>
     itemFacetsOf(this.list.list()?.facets.tags ?? [], this.translate()),
@@ -72,8 +74,7 @@ export class ItemList {
     });
   }
 
-  // No `?lang=`: lodb-entity-card takes its link as a string, which the router would escape.
-  protected hrefOf(context: PageContext, card: ItemCard): string {
-    return catalogueHref(context, card.canonicalPath);
+  protected hrefOf(context: PageContext, card: ItemCard): UrlTree {
+    return this.linkOf(context, card.canonicalPath);
   }
 }

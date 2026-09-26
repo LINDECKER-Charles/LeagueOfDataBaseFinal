@@ -3,7 +3,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { Reveal } from '../../../../../ui/motion/reveal';
 import { Frame } from '../../../../../ui/surfaces/frame';
 import { CatalogueImage } from '../../../shared/cards/catalogue-image';
-import { RichText } from '../../../items/codex/rich-text/rich-text';
+import { RichText } from '../../../shared/codex/rich-text/rich-text';
 import type { Constellation } from './constellation';
 
 /** Box of a keystone's icon, in CSS pixels. */

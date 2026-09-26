@@ -1,7 +1,7 @@
 import type { Edition } from '../../../../core/api/generated/models/edition';
 import type { SummonerCard } from '../../../../core/api/generated/models/summoner-card';
 import type { SummonerFacets } from '../../../../core/api/generated/models/summoner-facets';
-import type { Translate } from '../../items/codex/texts/translate';
+import type { Translate } from '../../shared/codex/texts/translate';
 import { defineFacet } from '../../shared/facets/define-facet';
 import type { FacetDefinition } from '../../shared/facets/model/facet-definition';
 import type { FacetOption } from '../../shared/facets/model/facet-option';

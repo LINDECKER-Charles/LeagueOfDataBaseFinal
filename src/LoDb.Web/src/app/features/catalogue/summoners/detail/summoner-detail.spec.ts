@@ -8,8 +8,8 @@ import type { SummonerDetails } from '../../../../core/api/generated/models/summ
 import type { PageContext } from '../../../../core/context/page-context';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import type { SeoPage } from '../../../../core/seo/seo-page';
-import { CatalogueHead } from '../../items/codex/head/catalogue-head';
-import type { CatalogueTexts } from '../../items/codex/head/catalogue-texts';
+import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
+import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { CatalogueLists } from '../../shared/data/catalogue-lists';
 import { SummonerDetail } from './summoner-detail';
 

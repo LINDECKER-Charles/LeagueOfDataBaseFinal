@@ -2,8 +2,8 @@ import type { ItemDetails } from '../../../../core/api/generated/models/item-det
 import { itemJsonLd } from '../../../../core/seo/json-ld/game/item-json-ld';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
-import type { CatalogueTexts } from '../codex/head/catalogue-texts';
-import { detailTrail } from '../codex/head/detail-trail';
+import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
+import { detailTrail } from '../../shared/codex/head/detail-trail';
 
 /**
  * The head of an item page. A LoL Classic twin shares its name with the current item, so its

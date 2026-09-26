@@ -1,5 +1,5 @@
 import type { SummonerDetails } from '../../../../../core/api/generated/models/summoner-details';
-import type { Translate } from '../../../items/codex/texts/translate';
+import type { Translate } from '../../../shared/codex/texts/translate';
 import { summonerPlaquesOf } from './summoner-plaques-of';
 
 const t: Translate = (key, params) => (params ? `${key} ${JSON.stringify(params)}` : key);

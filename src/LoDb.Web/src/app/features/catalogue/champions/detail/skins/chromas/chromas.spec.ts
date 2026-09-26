@@ -126,4 +126,22 @@ describe('lodb-chroma-strip', () => {
     expect(art()?.getAttribute('src')).toBe('https://cdn.test/3.png');
     expect(viewer.textContent).toContain('3 / 3');
   });
+
+  it('steps with the arrow keys pressed where the focus lands, the dialog container', async () => {
+    const fixture = await render();
+    swatches(fixture)[0]?.click();
+    await fixture.whenStable();
+    const art = () => document.querySelector('lodb-chroma-viewer img.art')?.getAttribute('src');
+    const press = async (key: string) => {
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      document.activeElement?.dispatchEvent(event);
+      await fixture.whenStable();
+    };
+
+    expect(document.activeElement?.localName).toBe('cdk-dialog-container');
+    await press('ArrowRight');
+    expect(art()).toBe('https://cdn.test/2.png');
+    await press('End');
+    expect(art()).toBe('https://cdn.test/3.png');
+  });
 });

@@ -1,6 +1,7 @@
 import { Directionality } from '@angular/cdk/bidi';
-import { DIALOG_DATA } from '@angular/cdk/dialog';
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoPipe, provideTranslocoScope } from '@jsverse/transloco';
 import { DialogFrame } from '../../../../../../ui/overlays/dialog-frame';
 import { tabIndexAfter } from '../../../../../../ui/tabs/tab-index-after';
@@ -18,7 +19,6 @@ import type { ChromaViewerData } from './chroma-viewer-data';
   templateUrl: './chroma-viewer.html',
   styleUrl: './chroma-viewer.css',
   providers: [provideTranslocoScope('champions')],
-  host: { '(keydown)': 'onKeydown($event)' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChromaViewer {
@@ -31,11 +31,21 @@ export class ChromaViewer {
   protected readonly chroma = computed(() => this.data.chromas[this.index()]);
   private readonly direction = inject(Directionality);
 
+  constructor() {
+    // The dialog's container, not this host, holds the focus once open: its keys reach the
+    // overlay's stream, whichever element inside has the focus.
+    inject(DialogRef)
+      .keydownEvents.pipe(takeUntilDestroyed())
+      .subscribe((event) => {
+        this.onKeydown(event);
+      });
+  }
+
   protected step(move: 'previous' | 'next'): void {
     this.index.update((index) => tabIndexAfter(move, index, this.count));
   }
 
-  protected onKeydown(event: KeyboardEvent): void {
+  private onKeydown(event: KeyboardEvent): void {
     const at = { index: this.index(), count: this.count };
     const index = viewerIndexAfter(event.key, this.direction.value, at);
     if (index !== null) {

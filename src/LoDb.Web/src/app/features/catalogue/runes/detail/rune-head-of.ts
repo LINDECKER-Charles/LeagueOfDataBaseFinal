@@ -2,8 +2,8 @@ import type { RuneTreeDetails } from '../../../../core/api/generated/models/rune
 import { runePathJsonLd } from '../../../../core/seo/json-ld/game/rune-path-json-ld';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import type { SeoPage } from '../../../../core/seo/seo-page';
-import type { CatalogueTexts } from '../../items/codex/head/catalogue-texts';
-import { detailTrail } from '../../items/codex/head/detail-trail';
+import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
+import { detailTrail } from '../../shared/codex/head/detail-trail';
 
 /** The head of a rune path page; its preview is the path's own mark, as on the legacy site. */
 export function runeHeadOf(entry: CatalogueEntry<RuneTreeDetails>, texts: CatalogueTexts): SeoPage {
