@@ -4,6 +4,7 @@ import {
 } from '@angular/ssr';
 import bootstrap from '../main.server';
 import { LOCALES } from './core/i18n/locales';
+import { keepingGlobals } from './core/testing/keeping-globals';
 
 type Extraction = Awaited<ReturnType<typeof extractRoutesAndCreateRouteTree>>;
 
@@ -15,24 +16,27 @@ const PRIVATE = 'private, no-store';
 // What the build does before prerendering, through the private entry point it uses itself:
 // app.routes.ts crossed with app.routes.server.ts into the tree the server matches requests
 // against. An Angular upgrade that moves it breaks this spec rather than the render modes.
+// It renders on the server platform, which overwrites the DOM classes of the worker.
 async function extractRoutes(): Promise<Extraction> {
   Reflect.set(globalThis, 'ngServerMode', true);
   try {
-    return await extractRoutesAndCreateRouteTree({
-      url: new URL('http://localhost/'),
-      manifest: {
-        baseHref: '/',
-        bootstrap: async () => bootstrap,
-        assets: {
-          'index.server.html': {
-            size: DOCUMENT_HTML.length,
-            hash: 'spec',
-            text: async () => DOCUMENT_HTML,
+    return await keepingGlobals(() =>
+      extractRoutesAndCreateRouteTree({
+        url: new URL('http://localhost/'),
+        manifest: {
+          baseHref: '/',
+          bootstrap: async () => bootstrap,
+          assets: {
+            'index.server.html': {
+              size: DOCUMENT_HTML.length,
+              hash: 'spec',
+              text: async () => DOCUMENT_HTML,
+            },
           },
         },
-      },
-      invokeGetPrerenderParams: true,
-    });
+        invokeGetPrerenderParams: true,
+      }),
+    );
   } finally {
     Reflect.set(globalThis, 'ngServerMode', undefined);
   }
@@ -122,5 +126,15 @@ describe('serverRoutes (ADR 0005)', () => {
 
     const expected = LOCALES.flatMap((locale) => EDITORIAL.map((path) => `/${locale}/${path}`));
     expect(prerendered.sort()).toEqual(expected.sort());
+  });
+
+  it('leaves jsdom its DOM classes for the specs that run next in this worker', () => {
+    const element = document.createElement('p');
+    const listener = vi.fn();
+    element.addEventListener('ping', listener);
+    element.dispatchEvent(new Event('ping'));
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(element).toBeInstanceOf(Node);
   });
 });

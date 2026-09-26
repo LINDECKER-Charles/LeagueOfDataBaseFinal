@@ -18,6 +18,7 @@ import { provideRouter, RouterOutlet } from '@angular/router';
 import { type Translation, TranslocoPipe } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { Shell } from '../../layout/shell/shell';
+import { keepingGlobals } from '../../testing/keeping-globals';
 import { activateLocale } from '../activate-locale';
 import { provideI18n } from '../provide-i18n';
 import { TranslocoHttpLoader } from './transloco-http-loader';
@@ -99,26 +100,6 @@ function browserConfig(): ApplicationConfig {
       { provide: Meta, useValue: { updateTag: () => null } },
     ],
   };
-}
-
-// The render emulates a DOM by writing domino's classes over the globals (Event, Node…), and
-// Vitest runs the spec files of a worker in one global scope: the specs that run next would
-// build domino events for jsdom elements, which jsdom refuses to dispatch. Put the classes
-// back. Vitest serves jsdom's through accessors, so their values are read and written back
-// through them, which also restores the jsdom window behind.
-async function keepingGlobals<T>(render: () => Promise<T>): Promise<T> {
-  const classes = Object.entries(Object.getOwnPropertyDescriptors(globalThis))
-    .filter(([name]) => /^[A-Z]/.test(name))
-    .map(([name, descriptor]) => [name, descriptor.get?.call(globalThis) ?? descriptor.value]);
-  try {
-    return await render();
-  } finally {
-    for (const [name, value] of classes) {
-      if (Reflect.get(globalThis, name) !== value) {
-        Reflect.set(globalThis, name, value);
-      }
-    }
-  }
 }
 
 // Merged in the order of app.config.server.ts, which matters: the transfer cache must key a
