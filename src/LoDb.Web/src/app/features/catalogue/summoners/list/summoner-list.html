@@ -1,0 +1,81 @@
+<div class="relative isolate px-4 py-12 sm:px-6">
+  <lodb-backdrop />
+  <div class="relative mx-auto max-w-[110rem]">
+    @if (context(); as current) {
+      <lodb-list-heading
+        [version]="current.version"
+        [title]="'summoner.list.title' | transloco"
+        [count]="list.list()?.total ?? list.firstPage()?.total ?? null"
+        [countLabel]="'summoner.list.title' | transloco | lowercase"
+      />
+
+      <lodb-catalogue-list
+        [source]="list"
+        [adapter]="adapter"
+        [schema]="schema()"
+        [searchLabel]="'summoners.search_placeholder' | transloco"
+        [label]="'summoner.list.title' | transloco"
+      >
+        <lodb-entity-card
+          *lodbCatalogueCard="let card of list; index as position"
+          [href]="hrefOf(current, card)"
+          [image]="card.image"
+          [name]="card.name"
+          [caption]="card.id"
+          [edition]="card.edition"
+          [eager]="position < eagerCards"
+          fit="contain"
+        >
+          <div class="grid grid-cols-2 gap-2 px-4 pb-3">
+            <p class="stat-cell">
+              <span class="block font-mono text-[10px] tracking-wider text-text-muted uppercase">
+                {{ 'summoner.card.cooldown' | transloco }}
+              </span>
+              <span class="mt-0.5 block font-beaufort text-hex-bright">
+                {{ cooldownText(card.cooldown) }}
+              </span>
+            </p>
+            <p class="stat-cell">
+              <span class="block font-mono text-[10px] tracking-wider text-text-muted uppercase">
+                {{ 'summoner.card.level' | transloco }}
+              </span>
+              <span class="mt-0.5 block font-beaufort text-text">{{
+                card.summonerLevel ?? 0
+              }}</span>
+            </p>
+          </div>
+
+          @let modes = modesOf(card);
+          @if (modes.length > 0 || card.description) {
+            <lodb-accordion class="mt-auto" multi>
+              @if (modes.length > 0) {
+                <lodb-accordion-item
+                  [heading]="'summoner.card.modes' | transloco"
+                  [count]="modes.length"
+                  [level]="4"
+                >
+                  <div class="flex flex-wrap gap-1.5">
+                    @for (label of modes; track label) {
+                      <span class="hx-chip">{{ label }}</span>
+                    }
+                  </div>
+                </lodb-accordion-item>
+              }
+              @if (card.description) {
+                <lodb-accordion-item
+                  [heading]="'summoner.card.description' | transloco"
+                  [level]="4"
+                >
+                  <lodb-rich-text
+                    class="text-[13px] leading-snug text-text-muted"
+                    [text]="card.description"
+                  />
+                </lodb-accordion-item>
+              }
+            </lodb-accordion>
+          }
+        </lodb-entity-card>
+      </lodb-catalogue-list>
+    }
+  </div>
+</div>

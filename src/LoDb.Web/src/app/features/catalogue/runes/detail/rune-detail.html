@@ -1,0 +1,46 @@
+@let current = entry();
+@let context = current.context;
+@let path = current.details.profile;
+<div class="relative px-6 py-14" [class]="theme()">
+  <lodb-backdrop />
+  <div aria-hidden="true" class="path-ambient pointer-events-none absolute inset-0"></div>
+
+  <article class="relative mx-auto max-w-6xl">
+    <header class="relative mb-14 flex flex-col gap-8 sm:flex-row sm:items-center">
+      <lodb-catalogue-image
+        class="path-emblem path-glow"
+        [image]="path.image"
+        [name]="path.name"
+        [size]="emblemSize"
+        imgClass="object-contain p-5"
+        eager
+      />
+      <div class="min-w-0">
+        <p [class]="hero.eyebrow + ' path-text'">
+          {{ 'rune.list.title' | transloco }}
+          <span class="hx-pip mx-2 opacity-60" aria-hidden="true">◆</span>
+          <span class="font-mono text-[11px] tracking-normal text-text-muted normal-case">
+            {{ context.version }} · {{ context.language }}
+          </span>
+        </p>
+        <h1 [class]="hero.name + ' path-text path-shine'">{{ path.name }}</h1>
+        <div class="mt-4 h-px w-48 max-w-full path-bar"></div>
+      </div>
+    </header>
+
+    @if (constellation(); as stars) {
+      <lodb-rune-constellation [constellation]="stars" />
+    } @else {
+      <p class="py-16 text-center font-spiegel text-text-muted">
+        {{ 'runes.empty' | transloco }}
+      </p>
+    }
+
+    <lodb-pager
+      class="mt-16"
+      [previous]="pager().previous"
+      [next]="pager().next"
+      [hub]="pager().hub"
+    />
+  </article>
+</div>

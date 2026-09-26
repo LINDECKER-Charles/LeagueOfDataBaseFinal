@@ -1,0 +1,130 @@
+@let current = entry();
+@let context = current.context;
+@let details = current.details;
+@let item = details.profile;
+<div class="relative overflow-x-clip px-6 py-14">
+  <lodb-backdrop />
+  <article class="relative mx-auto max-w-6xl">
+    <header class="relative isolate mb-14">
+      @if (item.image.status === 'present' && item.image.url) {
+        <img [class]="hero.echo" [src]="item.image.url" alt="" aria-hidden="true" />
+      }
+      <div class="relative flex flex-col gap-8 sm:flex-row sm:items-center">
+        <div lodbFrame="ornate" class="grid size-28 shrink-0 place-items-center p-3 sm:size-32">
+          <lodb-catalogue-image
+            class="size-full"
+            [image]="item.image"
+            [name]="item.name"
+            [size]="heroIconSize"
+            imgClass="object-contain"
+            eager
+          />
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <p [class]="hero.eyebrow">
+            {{ 'item.list.title' | transloco }}
+            <span class="hx-pip mx-2 text-gold-deep" aria-hidden="true">◆</span>
+            <span class="me-3 font-mono text-[11px] tracking-normal text-text-muted normal-case">
+              {{ context.version }} · {{ context.language }}
+            </span>
+            <lodb-edition-badge [edition]="item.edition" />
+          </p>
+          <h1 [class]="hero.name + ' text-gold-grad'">{{ item.name }}</h1>
+          @if (item.summary) {
+            <lodb-rich-text
+              class="mt-2.5 max-w-[60ch] font-spiegel text-text-muted"
+              [text]="item.summary"
+            />
+          }
+          <lodb-edition-counterpart
+            [edition]="item.edition"
+            [counterpart]="item.counterpart"
+            [context]="context"
+          />
+        </div>
+
+        <div class="shrink-0 sm:ps-4 sm:text-end">
+          <p class="font-mono text-[10px] tracking-[0.2em] text-text-dim uppercase">
+            {{ 'item.detail.price_total' | transloco }}
+          </p>
+          <p class="mt-1 font-beaufort text-5xl leading-none text-gold-grad" data-testid="price">
+            {{ item.gold.total }}
+          </p>
+          @if (!item.gold.isPurchasable) {
+            <p class="mt-1.5 font-mono text-[10px] tracking-wider text-text-dim uppercase">
+              {{ 'item.detail.not_purchasable' | transloco }}
+            </p>
+          }
+        </div>
+      </div>
+    </header>
+
+    @if (tree() || details.upgrades.length > 0) {
+      <section class="mb-16" lodbReveal aria-labelledby="item-recipe">
+        <header class="codex-header mb-6">
+          <h2 id="item-recipe">{{ 'item.detail.recipe' | transloco }}</h2>
+        </header>
+        @if (tree(); as root) {
+          <p class="mb-5 text-center eyebrow">{{ 'item.detail.builds_from' | transloco }}</p>
+          <lodb-recipe-tree [tree]="root" [context]="context" />
+        }
+        @if (details.upgrades.length > 0) {
+          <div
+            class="flex flex-col items-center gap-4"
+            [class]="tree() ? 'mt-10 border-t border-gold-deep/30 pt-8' : ''"
+          >
+            <p class="eyebrow">{{ 'item.detail.evolutions' | transloco }}</p>
+            <ul class="flex flex-wrap items-start justify-center gap-3" data-testid="upgrades">
+              @for (upgrade of details.upgrades; track upgrade.id) {
+                <li>
+                  <a
+                    class="group/node flex w-28 flex-col items-center gap-2 p-3 text-center hextech-frame hextech-frame-hover transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:outline-none sm:w-32"
+                    [routerLink]="linkOf(context, upgrade.canonicalPath)"
+                    [title]="upgrade.name"
+                  >
+                    <lodb-catalogue-image
+                      class="size-12 border border-gold-deep/50 bg-void"
+                      [image]="upgrade.image"
+                      [name]="upgrade.name"
+                      [size]="upgradeIconSize"
+                      imgClass="object-contain transition-transform duration-500 group-hover/node:scale-110"
+                    />
+                    <span
+                      class="min-w-0 font-beaufort text-xs leading-tight tracking-wide text-text transition-colors group-hover/node:text-gold-bright"
+                    >
+                      {{ upgrade.name }}
+                    </span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </section>
+    }
+
+    <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start lg:gap-12">
+      <div>
+        @if (details.description) {
+          <section lodbReveal aria-labelledby="item-description">
+            <header class="codex-header mb-6">
+              <h2 id="item-description">{{ 'item.detail.description' | transloco }}</h2>
+            </header>
+            <div lodbFrame="ornate" class="p-7 sm:p-8">
+              <lodb-rich-text class="max-w-[68ch]" [text]="details.description" />
+            </div>
+          </section>
+        }
+      </div>
+      <lodb-item-aside class="mt-12 lg:mt-0" [details]="details" [context]="context" />
+    </div>
+
+    <lodb-pager
+      class="mt-16"
+      [previous]="pager().previous"
+      [next]="pager().next"
+      [hub]="pager().hub"
+    />
+  </article>
+</div>

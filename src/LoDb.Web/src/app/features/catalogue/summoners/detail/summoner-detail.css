@@ -1,0 +1,64 @@
+/*
+ * The invocation seal: a conic gold and arcane ring hollowed by a mask, graduated like an
+ * instrument. In the components layer, as the legacy sheet was, so utilities still win.
+ */
+@layer components {
+  .seal {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: min(15rem, 62vw);
+    aspect-ratio: 1;
+  }
+  .seal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    border-radius: 50%;
+    background: conic-gradient(
+      var(--color-hex),
+      var(--color-hex-deep) 25%,
+      var(--color-gold-deep) 50%,
+      var(--color-gold) 75%,
+      var(--color-hex)
+    );
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: seal-turn 48s linear infinite;
+  }
+  /* Graduation ticks: the seal reads as an instrument, not a badge. */
+  .seal::after {
+    content: '';
+    position: absolute;
+    inset: 9px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(
+      color-mix(in srgb, var(--color-gold-bright) 40%, transparent) 0deg 0.7deg,
+      transparent 0.7deg 30deg
+    );
+    mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+  }
+  .seal__icon {
+    inline-size: 64%;
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 55%, transparent);
+    border-radius: 50%;
+    box-shadow:
+      0 0 44px -8px color-mix(in srgb, var(--color-hex) 50%, transparent),
+      inset 0 0 24px color-mix(in srgb, var(--color-hextech-black) 80%, transparent);
+  }
+
+  @keyframes seal-turn {
+    to {
+      rotate: 360deg;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .seal::before {
+      animation: none;
+    }
+  }
+}

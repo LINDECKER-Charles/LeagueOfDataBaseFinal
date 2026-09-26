@@ -1,0 +1,33 @@
+.panel-title {
+  margin-block-end: 1rem;
+  font-family: var(--font-beaufort);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--color-gold);
+}
+/* The engraved stat board: one ruled row per stat, the value in cyan figures. */
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.15rem;
+  border-block-end: 1px solid color-mix(in srgb, var(--color-gold) 14%, transparent);
+}
+.stat-row:last-child {
+  border-block-end: 0;
+}
+.stat-row__label {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-muted);
+}
+.stat-row__value {
+  font-family: var(--font-beaufort);
+  font-size: 1rem;
+  color: var(--color-hex-bright);
+  font-variant-numeric: tabular-nums;
+}

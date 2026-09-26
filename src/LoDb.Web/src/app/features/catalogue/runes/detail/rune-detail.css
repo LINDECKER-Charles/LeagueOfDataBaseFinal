@@ -1,0 +1,59 @@
+/*
+ * A rune path page bathes in its path's colour: `--path`, set by the path's class, tints the
+ * hero, the ambient light and the constellation below (rune-constellation.css).
+ */
+@layer components {
+  .path-precision {
+    --path: #c8aa6e;
+  }
+  .path-domination {
+    --path: #d44242;
+  }
+  .path-sorcery {
+    --path: #9faafc;
+  }
+  .path-resolve {
+    --path: #a1d586;
+  }
+  .path-inspiration {
+    --path: #49aab9;
+  }
+
+  .path-text {
+    color: var(--path, var(--color-gold));
+  }
+  .path-shine {
+    text-shadow: 0 0 34px color-mix(in srgb, var(--path, var(--color-gold)) 45%, transparent);
+  }
+  .path-glow {
+    box-shadow: 0 0 26px -8px var(--path, var(--color-gold));
+  }
+  .path-bar {
+    background: linear-gradient(to right, var(--path, var(--color-gold)), transparent);
+  }
+  .path-bar:dir(rtl) {
+    background: linear-gradient(to left, var(--path, var(--color-gold)), transparent);
+  }
+  .path-ambient {
+    background: radial-gradient(
+      70rem 32rem at 50% -6rem,
+      color-mix(in srgb, var(--path, var(--color-gold)) 13%, transparent),
+      transparent 70%
+    );
+  }
+
+  .path-emblem {
+    align-self: flex-start;
+    inline-size: 7.5rem;
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent);
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        closest-side,
+        color-mix(in srgb, var(--path, var(--color-gold)) 24%, transparent),
+        transparent 80%
+      ),
+      var(--color-hextech-black);
+  }
+}
