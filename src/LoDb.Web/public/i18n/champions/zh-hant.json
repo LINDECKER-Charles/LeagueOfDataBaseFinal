@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "關閉",
+    "previous": "上一個",
+    "next": "下一個",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "{{ skin }}的炫彩"
+  }
+}
