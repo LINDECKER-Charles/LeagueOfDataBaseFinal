@@ -14,6 +14,10 @@ services:
     environment:
       # Serves the OpenAPI documents (MapOpenApi is Development-only).
       ASPNETCORE_ENVIRONMENT: Development
+      # The e-mail outbox (L4.3) sends to the stack's mailpit; an empty host turns it off.
+      LoDb__Mail__Host: mailpit
+      LoDb__Mail__Port: "1025"
+      LoDb__Mail__Security: None
 
   web-ssr:
     ports:
