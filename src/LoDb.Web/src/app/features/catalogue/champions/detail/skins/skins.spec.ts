@@ -120,8 +120,10 @@ describe('lodb-skin-gallery', () => {
     return viewer() as HTMLElement;
   }
 
+  // From the focused element, as a reader's key: the dialog's container, not the viewer.
   async function press(fixture: ComponentFixture<Host>, key: string): Promise<void> {
-    viewer()?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    const focused = document.activeElement;
+    focused?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
     await fixture.whenStable();
   }
 
@@ -178,6 +180,7 @@ describe('lodb-skin-gallery', () => {
   it('steps with the arrow keys, and reaches the first skin with Home', async () => {
     const fixture = await render();
     await openTile(fixture, 0);
+    expect(document.activeElement?.localName).toBe('cdk-dialog-container');
 
     await press(fixture, 'ArrowLeft');
     expect(counter()).toBe('3 / 3');
