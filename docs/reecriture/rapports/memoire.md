@@ -127,3 +127,35 @@ Lecture : `web-ssr` passe de 205 à 338 Mio. Les E2E rendent désormais les page
 prérendues, les 404 et les pages de compte, et la navigation charge les routes
 paresseuses. La limite de 512m tient, avec 174 Mio de marge. `api` reste sous son relevé
 du jalon 1 : ses conteneurs sont neufs, sans ingestion lourde depuis leur démarrage.
+
+### Lot 4 — jalon (2026-09-26)
+
+Contexte : stack d'intégration reconstruite depuis `292e641` (vague D intégrée : pages
+champions, objets, runes, sorts, compte et profil), conteneurs `api`, `web-ssr` et
+`nginx` redémarrés juste avant la mesure ; base chargée (16.19.1 ingérée), deux passages
+E2E complets derrière la base. Relevés `docker stats --no-stream` en boucle pendant les
+deux commandes, 43 échantillons.
+
+Commandes :
+
+- `npm --prefix tests/LoDb.E2E test` : 132 tests, 126 réussis, 6 échecs (voir le
+  [jalon 4](jalons/lot-04.md)) ;
+- `npm --prefix tests/LoDb.E2E test -- specs/champions specs/items specs/runes
+  specs/summoners specs/catalogue specs/home specs/public specs/seo --repeat-each=5` :
+  200 tests, 1,5 min (les specs de compte et de profil, qui inscrivent des comptes, sont
+  exclues de la répétition).
+
+| Service | Avant la suite | Pic (132 + 200 tests) | Limite provisoire |
+|---|---:|---:|---:|
+| `api` | 93 Mio | 292 Mio | 384m |
+| `web-ssr` | 26 Mio | 214 Mio | 512m |
+| `nginx` | 13 Mio | 16 Mio | 64m |
+| `postgres` | 49 Mio | 62 Mio | 512m |
+| `mailpit` (dev seulement) | 27 Mio | 31 Mio | — |
+
+Lecture : `web-ssr` reste sous le pic du jalon 2 (214 contre 338 Mio), alors qu'il rend
+désormais les listes et les détails du catalogue. Ses conteneurs sont neufs et nginx sert
+une part des pages depuis son cache. `api` monte de 93 à 292 Mio : il sert les listes
+complètes du catalogue, les connexions (argon2id, 19 Mio par hachage) et les favoris.
+Il reste à 92 Mio de la limite de 384m, et le comportement sous cette limite reste à
+mesurer avant L8.1 (G2 du jalon 1).

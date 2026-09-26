@@ -351,6 +351,7 @@ docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml u
 npm --prefix tests/LoDb.E2E test             # stack démarrée (LODB_E2E_BASE_URL sinon)
 npm --prefix src/LoDb.Web run api:check      # dérive du contrat (job contract de next-ci)
 bash tools/next/routing/check-urls.sh        # grammaire d'URL de l'ADR 0005, stack démarrée
+node tools/next/accounts/legacy-logins.mjs   # critère du lot 4 (hash hérités), stack démarrée
 ```
 
 - **Stack d'intégration `lodb-next`**, une seule instance, depuis la racine : 18080 nginx,
@@ -461,3 +462,32 @@ bash tools/next/routing/check-urls.sh        # grammaire d'URL de l'ADR 0005, st
   `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin` (L8.1).
 - `disclosure.spec.ts` échoue parfois en suite complète (`parameter 1 is not of type
   'Event'`), jamais seul : c'est G4 du jalon 2. Relancer n'est pas une correction.
+
+### Pièges du lot 4 et de la vague D (ne pas « corriger » par erreur)
+
+- **Critère du lot 4** : `node tools/next/accounts/legacy-logins.mjs`, stack démarrée.
+  Un hash argon2id **plus fort** que la cible (m ≥ 19456, t ≥ 2, p = 1) est conservé, pas
+  réécrit : c'est voulu (`Argon2Passwords.IsTarget`). Un compte hérité s'insère sans les
+  colonnes Identity (`security_stamp` `NULL`) ; la connexion doit les remplir.
+- **Dialogues CDK** : le focus initial est sur `cdk-dialog-container`
+  (`autoFocus: 'dialog'`), ancêtre du composant ouvert. Un `host: {'(keydown)'}` n'y
+  entend donc rien : écouter `DialogRef.keydownEvents`. Un test unitaire qui émet la
+  touche sur l'hôte ne prouve rien (G2 du [jalon 4](docs/reecriture/rapports/jalons/lot-04.md)).
+  Un dialogue plus haut que l'écran doit rester défilable jusqu'à son pied (G1).
+- **Liens du catalogue** : jamais une chaîne avec `?` ou `#` passée à `[routerLink]`, qui
+  les encode (`%3F`, 404). Passer une `UrlTree` (`injectCatalogueLink`) ; G3 du jalon 4.
+- **Specs E2E** : comparer le chemin d'une réponse (`new URL(url).pathname`), jamais
+  `url.endsWith(...)`, que la query `?version=` fait échouer. Limiter les comptes de titres
+  ou de boutons à `main` ou au composant visé : le pied de page a ses `h2`, l'éditeur de
+  profil son propre bouton « Sign out ». Un parcours qui crée un compte le supprime
+  aussi en cas d'échec.
+- **Variante store** (L10.1) : `environment.payments` n'a d'effet que là où le code le
+  lit. esbuild émet le chunk des dons même quand `payments` vaut `false` : on retire le
+  paiement par le routage et les liens. `cap sync` ne tourne que dans le conteneur
+  (`tools/next/android/build-debug.sh`) ; sur l'hôte, il copie le bundle dans
+  `android/…/assets/public`, et `prettier --check .` échoue.
+- `npm install --prefix src/LoDb.Web` tire `@capacitor/ios` et `@capacitor/keyboard` par
+  `@aparajita/capacitor-secure-storage` : c'est attendu, il n'y a pas de plateforme iOS.
+- **Desktop** : `dotnet test` compte `LoDb.Desktop.Tests`, qui n'ouvre aucune fenêtre ;
+  `--smoke` ne sort pas du poste. Photino n'est référencé que par
+  `Shell/Photino/PhotinoShell.cs`, et un test le vérifie.
