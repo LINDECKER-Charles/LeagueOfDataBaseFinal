@@ -1,11 +1,19 @@
-<header class="shell-header">
-  <ng-content select="[lodbSlot=switcher]" />
-  <ng-content select="[lodbSlot=account]" />
-</header>
+<lodb-header>
+  <ng-container ngProjectAs="[lodbSlot=account]">
+    <ng-content select="[lodbSlot=account]" />
+  </ng-container>
+  <ng-container ngProjectAs="[lodbSlot=switcher]">
+    <ng-content select="[lodbSlot=switcher]" />
+  </ng-container>
+</lodb-header>
 <ng-content select="[lodbSlot=banner]" />
-<main class="shell-main">
+<main class="flex-1">
   <ng-content />
 </main>
-<footer class="shell-footer">
-  <ng-content select="[lodbSlot=contact]" />
-</footer>
+<lodb-footer>
+  <ng-container ngProjectAs="[lodbSlot=contact]">
+    <ng-content select="[lodbSlot=contact]" />
+  </ng-container>
+</lodb-footer>
+<lodb-bottom-nav />
+<lodb-toaster />

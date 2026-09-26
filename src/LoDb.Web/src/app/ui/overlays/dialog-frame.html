@@ -1,0 +1,12 @@
+<div class="hx-dialog-panel__head">
+  <h2 class="eyebrow" [id]="headingId()">{{ heading() }}</h2>
+  <button
+    type="button"
+    class="hx-dialog-panel__close"
+    [attr.aria-label]="closeLabel()"
+    (click)="close()"
+  >
+    <lodb-icon name="close" class="size-4" />
+  </button>
+</div>
+<ng-content />

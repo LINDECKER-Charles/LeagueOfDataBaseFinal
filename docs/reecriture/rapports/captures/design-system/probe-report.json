@@ -1,0 +1,154 @@
+{
+  "baseUrl": "http://127.0.0.1:4312",
+  "date": "2026-09-26T02:36:12.542Z",
+  "results": [
+    {
+      "name": "hextech · ltr · 320px",
+      "failures": []
+    },
+    {
+      "name": "hextech · ltr · 390px",
+      "failures": []
+    },
+    {
+      "name": "hextech · ltr · 768px",
+      "failures": []
+    },
+    {
+      "name": "hextech · ltr · 1440px",
+      "failures": []
+    },
+    {
+      "name": "hextech · rtl · 320px",
+      "failures": []
+    },
+    {
+      "name": "hextech · rtl · 390px",
+      "failures": []
+    },
+    {
+      "name": "hextech · rtl · 768px",
+      "failures": []
+    },
+    {
+      "name": "hextech · rtl · 1440px",
+      "failures": []
+    },
+    {
+      "name": "zaun · ltr · 320px",
+      "failures": []
+    },
+    {
+      "name": "zaun · ltr · 390px",
+      "failures": []
+    },
+    {
+      "name": "zaun · ltr · 768px",
+      "failures": []
+    },
+    {
+      "name": "zaun · ltr · 1440px",
+      "failures": []
+    },
+    {
+      "name": "zaun · rtl · 320px",
+      "failures": []
+    },
+    {
+      "name": "zaun · rtl · 390px",
+      "failures": []
+    },
+    {
+      "name": "zaun · rtl · 768px",
+      "failures": []
+    },
+    {
+      "name": "zaun · rtl · 1440px",
+      "failures": []
+    },
+    {
+      "name": "noxus · ltr · 320px",
+      "failures": []
+    },
+    {
+      "name": "noxus · ltr · 390px",
+      "failures": []
+    },
+    {
+      "name": "noxus · ltr · 768px",
+      "failures": []
+    },
+    {
+      "name": "noxus · ltr · 1440px",
+      "failures": []
+    },
+    {
+      "name": "noxus · rtl · 320px",
+      "failures": []
+    },
+    {
+      "name": "noxus · rtl · 390px",
+      "failures": []
+    },
+    {
+      "name": "noxus · rtl · 768px",
+      "failures": []
+    },
+    {
+      "name": "noxus · rtl · 1440px",
+      "failures": []
+    },
+    {
+      "name": "spirit-blossom · ltr · 320px",
+      "failures": []
+    },
+    {
+      "name": "spirit-blossom · ltr · 390px",
+      "failures": []
+    },
+    {
+      "name": "spirit-blossom · ltr · 768px",
+      "failures": []
+    },
+    {
+      "name": "spirit-blossom · ltr · 1440px",
+      "failures": []
+    },
+    {
+      "name": "spirit-blossom · rtl · 320px",
+      "failures": []
+    },
+    {
+      "name": "spirit-blossom · rtl · 390px",
+      "failures": []
+    },
+    {
+      "name": "spirit-blossom · rtl · 768px",
+      "failures": []
+    },
+    {
+      "name": "spirit-blossom · rtl · 1440px",
+      "failures": []
+    },
+    {
+      "name": "themePickerFailures · hextech · ltr · 390px",
+      "failures": []
+    },
+    {
+      "name": "mirroredTabsFailures · hextech · rtl · 1440px",
+      "failures": []
+    },
+    {
+      "name": "rtlDialog · hextech · rtl · 320px",
+      "failures": []
+    },
+    {
+      "name": "ltrDialog · hextech · ltr · 320px",
+      "failures": []
+    },
+    {
+      "name": "accents #c8aa6e #3fbf6e #b8925a #98d8f8",
+      "failures": []
+    }
+  ]
+}

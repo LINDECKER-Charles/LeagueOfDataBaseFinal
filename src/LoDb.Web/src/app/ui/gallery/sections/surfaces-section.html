@@ -1,0 +1,68 @@
+<header class="codex-header mb-6">
+  <h2>Surfaces</h2>
+  <span class="codex-header__meta">lodbFrame · lodb-card · lodb-skeleton · lodb-image</span>
+</header>
+
+<div class="grid gap-5 md:grid-cols-3">
+  <lodb-card eyebrow="Plain" heading="Information panel">
+    <p class="text-sm text-text-muted">Gold hairline, bevelled corners, soft drop.</p>
+  </lodb-card>
+  <lodb-card eyebrow="Interactive" heading="Card as a link" frame="interactive">
+    <p class="text-sm text-text-muted">Lit cyan on hover.</p>
+  </lodb-card>
+  <lodb-card eyebrow="Ornate" heading="Weighted block" frame="ornate">
+    <p class="text-sm text-text-muted">Etched corner brackets.</p>
+  </lodb-card>
+</div>
+
+<section lodbFrame class="mt-5 p-5">
+  <p class="eyebrow mb-2">lodbFrame on a section</p>
+  <p class="text-sm text-text-muted">The frame directive puts the same panel on any block.</p>
+</section>
+
+<div class="mt-10 grid gap-5 md:grid-cols-2" aria-busy="true">
+  <div class="flex flex-col gap-3">
+    <lodb-skeleton shape="title" />
+    <lodb-skeleton />
+    <lodb-skeleton />
+    <lodb-skeleton shape="bar" />
+  </div>
+  <div class="grid grid-cols-[auto_1fr] gap-3">
+    <lodb-skeleton shape="circle" />
+    <lodb-skeleton shape="tile" />
+    <lodb-skeleton shape="block" class="col-span-2" />
+  </div>
+</div>
+
+<div class="mt-10 flex flex-wrap items-end gap-6">
+  <figure class="flex flex-col items-center gap-2">
+    <lodb-image
+      class="hextech-frame size-16"
+      [src]="art"
+      alt="Sample art"
+      [width]="64"
+      [height]="64"
+    />
+    <figcaption class="font-mono text-[10px] text-text-dim">loaded</figcaption>
+  </figure>
+  <figure class="flex flex-col items-center gap-2">
+    <lodb-image
+      class="hextech-frame size-16"
+      src="/cdn/missing/Ahri.jpg"
+      alt="Missing art"
+      [width]="64"
+      [height]="64"
+    />
+    <figcaption class="font-mono text-[10px] text-text-dim">error</figcaption>
+  </figure>
+  <figure class="flex flex-col items-center gap-2">
+    <lodb-image
+      class="hextech-frame size-16"
+      [src]="null"
+      initials="AH"
+      [width]="64"
+      [height]="64"
+    />
+    <figcaption class="font-mono text-[10px] text-text-dim">absent</figcaption>
+  </figure>
+</div>

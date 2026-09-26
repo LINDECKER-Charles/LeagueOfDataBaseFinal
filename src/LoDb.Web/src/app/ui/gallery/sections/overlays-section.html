@@ -1,0 +1,15 @@
+<header class="codex-header mb-6">
+  <h2>Overlays</h2>
+  <span class="codex-header__meta">DialogService · ToastService</span>
+</header>
+
+<div class="flex flex-wrap gap-3">
+  <button type="button" lodbButton (click)="openDialog()">Open dialog</button>
+  <button type="button" lodbButton="ghost" (click)="openSheet()">Open bottom sheet</button>
+</div>
+
+<div class="mt-5 flex flex-wrap gap-3">
+  @for (kind of kinds; track kind) {
+    <button type="button" lodbButton="ghost" (click)="toast(kind)">Toast {{ kind }}</button>
+  }
+</div>
