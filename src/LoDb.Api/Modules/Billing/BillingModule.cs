@@ -28,8 +28,6 @@ internal static class BillingModule
         services.AddOptions<BillingOptions>()
             .Bind(configuration.GetSection(BillingOptions.SectionName));
         services.TryAddSingleton(TimeProvider.System);
-        // The public API's own cache, once it registers one, wins over this stand-in.
-        services.TryAddSingleton<IApiKeyCache, NoApiKeyCache>();
         services.TryAddScoped<BillingEffects>();
         services.TryAddScoped<CreditExpiry>();
         AddCheckout(services);

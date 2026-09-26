@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using LoDb.Api.Modules.Billing.Keys;
+using LoDb.Api.Modules.PublicApi;
 using LoDb.Infrastructure.Persistence.PublicApi;
 
 namespace LoDb.Api.Tests.Billing.Support;

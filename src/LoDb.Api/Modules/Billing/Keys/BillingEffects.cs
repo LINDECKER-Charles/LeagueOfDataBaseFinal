@@ -1,3 +1,4 @@
+using LoDb.Api.Modules.PublicApi;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence.PublicApi;
 
