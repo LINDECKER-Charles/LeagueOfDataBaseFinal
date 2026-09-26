@@ -54,7 +54,8 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "deployUrl": "/build/"
             },
             "shell": {
               "outputPath": "dist/shell",
