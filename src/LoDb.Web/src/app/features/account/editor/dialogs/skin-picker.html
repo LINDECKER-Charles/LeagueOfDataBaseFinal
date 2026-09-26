@@ -1,0 +1,70 @@
+<lodb-dialog
+  [heading]="champion()?.name ?? ('profile.skin.choose_champion' | transloco)"
+  [headingId]="headingId"
+  [closeLabel]="'filter.close' | transloco"
+>
+  <div class="picker">
+    @if (champion() !== null) {
+      <button type="button" class="picker-back" (click)="back(search)">
+        <lodb-icon name="chevron" class="picker-back__icon size-4" />
+        {{ 'profile.skin.back' | transloco }}
+      </button>
+    }
+    <input
+      #search
+      type="search"
+      class="hx-input picker-search"
+      autocomplete="off"
+      [placeholder]="'profile.picker.search' | transloco"
+      [attr.aria-label]="'profile.picker.search' | transloco"
+      (input)="query.set(search.value)"
+    />
+    <lodb-picker-body [status]="status()" (retry)="fetch()">
+      @if (champion() === null) {
+        @for (entry of shownChampions(); track entry.id) {
+          <button type="button" class="picker-option" (click)="open(entry, search)">
+            <lodb-image
+              class="picker-option__img"
+              [src]="entry.image"
+              [width]="32"
+              [height]="32"
+              [initials]="initialsOf(entry.name)"
+              imgClass="object-cover"
+            />
+            <span class="picker-option__name">{{ entry.name }}</span>
+          </button>
+        }
+      } @else {
+        <p class="sr-only" aria-live="polite">{{ 'profile.skin.choose_skin' | transloco }}</p>
+        <div class="skin-grid">
+          @for (skin of shownSkins(); track skin.id) {
+            <button
+              type="button"
+              class="skin-tile"
+              [attr.aria-current]="skin.id === data.current ? 'true' : null"
+              (click)="pick(skin)"
+            >
+              <img
+                class="hx-img skin-tile__art"
+                [src]="skin.banner"
+                alt=""
+                width="320"
+                height="180"
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="skin-tile__name">{{ skin.name }}</span>
+            </button>
+          }
+        </div>
+      }
+    </lodb-picker-body>
+    @if (data.current !== null) {
+      <div class="picker-foot">
+        <button type="button" class="picker-remove" (click)="ref.close(null)">
+          {{ 'profile.picker.remove' | transloco }}
+        </button>
+      </div>
+    }
+  </div>
+</lodb-dialog>

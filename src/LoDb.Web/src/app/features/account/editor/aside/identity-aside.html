@@ -1,0 +1,27 @@
+<div class="hx-plate">
+  <span class="hx-plate__label">{{ 'profile.identity.email' | transloco }}</span>
+  <span class="hx-plate__value profile-identity__mono">{{ maskedEmail() }}</span>
+</div>
+<div class="hx-plate">
+  <span class="hx-plate__label">{{ 'profile.identity.member_since' | transloco }}</span>
+  <span class="hx-plate__value">{{ since() }}</span>
+</div>
+<lodb-visibility-card
+  [isPublic]="isPublic()"
+  [username]="username()"
+  (changed)="visibility.emit($event)"
+/>
+<div class="hx-plate">
+  <span class="hx-plate__label">{{ 'profile.builds.label' | transloco }}</span>
+  <a class="profile-identity__link nav-link" [routerLink]="link('account/builds')">
+    {{ 'profile.builds.manage' | transloco }}
+    <span class="rtl:-scale-x-100" aria-hidden="true">→</span>
+  </a>
+</div>
+<div class="hx-plate">
+  <span class="hx-plate__label">{{ 'api.portal.profile_link.label' | transloco }}</span>
+  <a class="profile-identity__link nav-link" [routerLink]="link('account/api')">
+    {{ 'api.portal.profile_link.manage' | transloco }}
+    <span class="rtl:-scale-x-100" aria-hidden="true">→</span>
+  </a>
+</div>

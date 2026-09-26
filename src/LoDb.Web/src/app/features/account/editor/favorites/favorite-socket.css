@@ -1,0 +1,88 @@
+/*
+ * A favorite's socket. One signature: the hollow mount of an empty socket, which lights up
+ * cyan under the pointer. In the components layer, so that the theme folders, which give the
+ * mount and the empty frames their own shapes, and the utilities keep their say.
+ */
+@layer components {
+  .socket {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    inline-size: 100%;
+    min-block-size: 7.75rem;
+    padding: 0.85rem 0.6rem;
+    text-align: center;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  .socket:focus-visible {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 2px;
+  }
+  .socket--empty,
+  .socket--unavailable {
+    border: 1px dashed color-mix(in srgb, var(--color-gold-deep) 40%, transparent);
+    background: color-mix(in srgb, var(--color-void) 45%, transparent);
+    clip-path: var(--hx-bevel);
+  }
+  .socket--unavailable {
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  }
+  .socket__type {
+    font-family: var(--font-beaufort);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    color: var(--color-gold);
+  }
+  .socket__portrait {
+    inline-size: 3.4rem;
+    block-size: 3.4rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 60%, transparent);
+    background: var(--color-void);
+  }
+  .socket__name {
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-beaufort);
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    color: var(--color-gold-bright);
+  }
+  .socket__name--muted {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-muted);
+  }
+  .socket__hex {
+    inline-size: 2.6rem;
+    block-size: 2.6rem;
+    rotate: 45deg;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    transition:
+      border-color 0.45s var(--ease-hextech),
+      box-shadow 0.45s var(--ease-hextech);
+  }
+  .socket:hover .socket__hex,
+  .socket:focus-visible .socket__hex {
+    border-color: var(--color-hex);
+    box-shadow:
+      0 0 18px -4px color-mix(in srgb, var(--color-hex) 55%, transparent),
+      inset 0 0 12px -6px color-mix(in srgb, var(--color-hex) 45%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .socket__hex {
+      transition: none;
+    }
+  }
+}

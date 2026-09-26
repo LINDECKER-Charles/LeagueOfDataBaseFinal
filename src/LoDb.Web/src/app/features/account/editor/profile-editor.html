@@ -1,0 +1,60 @@
+@switch (status()) {
+  @case ('loading') {
+    <p class="px-6 py-24 text-center font-mono text-sm text-text-muted" role="status">
+      {{ 'account.editor.loading' | transloco }}
+    </p>
+  }
+  @case ('failed') {
+    <div class="flex flex-col items-center gap-4 px-6 py-24 text-center" role="alert">
+      <p class="text-text-muted">{{ 'account.editor.load_error' | transloco }}</p>
+      <button lodbButton="ghost" type="button" (click)="retry()">
+        {{ 'profile.picker.retry' | transloco }}
+      </button>
+    </div>
+  }
+}
+@if (profile(); as profile) {
+  <div class="profile-perso">
+    @if (profile.backdrop; as backdrop) {
+      <div class="profile-perso__backdrop" aria-hidden="true">
+        <img
+          #art
+          [src]="backdrop.image"
+          alt=""
+          width="1280"
+          height="720"
+          decoding="async"
+          (error)="fallBack(art, backdrop.fallback)"
+        />
+      </div>
+    }
+    <div class="relative z-10 mx-auto max-w-6xl">
+      <lodb-profile-cover [name]="name()" [favorites]="form.favorites()" />
+      <div class="profile-layout">
+        <lodb-identity-aside
+          [maskedEmail]="profile.maskedEmail"
+          [createdAt]="profile.memberSince"
+          [username]="profile.username"
+          [isPublic]="form.isPublic()"
+          (visibility)="form.setPublic($event)"
+        />
+        <lodb-favorites-panel
+          [versions]="versions()"
+          [preferredVersion]="profile.preferredVersion"
+          [busy]="pinning()"
+          (pin)="pin($event)"
+        />
+      </div>
+      <lodb-identity-panel
+        class="mt-14"
+        [username]="profile.username"
+        [riotTagline]="profile.riotTagline"
+        (saved)="reload()"
+      />
+      @if (!profile.hasPassword) {
+        <lodb-password-panel class="mt-14" (saved)="reload()" />
+      }
+      <lodb-danger-panel class="mt-14" [confirmation]="profile.deletionConfirmation" />
+    </div>
+  </div>
+}

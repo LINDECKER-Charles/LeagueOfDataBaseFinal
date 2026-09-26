@@ -1,0 +1,105 @@
+/*
+ * The skin banner: its art behind a scrim, its name, and what a click does. In the components
+ * layer, so that the theme folders, which shape the empty frame, and the utilities keep
+ * their say.
+ */
+@layer components {
+  .skin-socket {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    inline-size: 100%;
+    min-block-size: 5.5rem;
+    padding: 0.75rem 1rem;
+    overflow: hidden;
+    text-align: start;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  .skin-socket:focus-visible {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 2px;
+  }
+  .skin-socket--empty {
+    border: 1px dashed color-mix(in srgb, var(--color-gold-deep) 40%, transparent);
+    background: color-mix(in srgb, var(--color-void) 45%, transparent);
+    clip-path: var(--hx-bevel);
+  }
+  .skin-socket__art {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: 50% 25%;
+  }
+  .skin-socket__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-ink) 10%, transparent),
+      color-mix(in srgb, var(--color-ink) 85%, transparent)
+    );
+  }
+  .skin-socket__body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-inline-size: 0;
+  }
+  .skin-socket__type {
+    font-family: var(--font-beaufort);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: var(--color-gold);
+  }
+  .skin-socket__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-beaufort);
+    font-size: 1.05rem;
+    color: var(--color-gold-bright);
+  }
+  .skin-socket__name--muted {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+  }
+  .skin-socket__cta {
+    position: relative;
+    z-index: 1;
+    flex: none;
+    padding: 0.35rem 0.7rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-hex-bright);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    background: color-mix(in srgb, var(--color-ink) 40%, transparent);
+    transition:
+      color 0.25s var(--ease-hextech),
+      border-color 0.25s var(--ease-hextech);
+  }
+  .skin-socket:hover .skin-socket__cta,
+  .skin-socket:focus-visible .skin-socket__cta {
+    color: var(--color-hex);
+    border-color: var(--color-hex);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skin-socket__cta {
+      transition: none;
+    }
+  }
+}
