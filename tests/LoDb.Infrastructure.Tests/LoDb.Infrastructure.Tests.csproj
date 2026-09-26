@@ -7,5 +7,7 @@
   <ItemGroup>
     <!-- The reviewed renderings of the e-mail templates, read by EmailSnapshotTests. -->
     <None Update="Outbox/Snapshots/**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The legacy stack's analytics on a sample (Analytics/Legacy/generate.php). -->
+    <None Include="Analytics/Legacy/**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

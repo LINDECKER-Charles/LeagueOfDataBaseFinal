@@ -8,6 +8,8 @@
   <ItemGroup>
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="MailKit" />
+    <!-- The GeoLite2 Country database of the analytics (LoDb:Analytics:GeoIpDatabase). -->
+    <PackageReference Include="MaxMind.GeoIP2" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
