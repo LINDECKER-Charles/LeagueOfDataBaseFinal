@@ -349,6 +349,8 @@ npm --prefix src/LoDb.Web run lint           # puis typecheck, test, build:web, 
 npm --prefix src/LoDb.Web run api:generate   # contrat (L2.2 ; bouchon avant)
 docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build
 npm --prefix tests/LoDb.E2E test             # stack démarrée (LODB_E2E_BASE_URL sinon)
+npm --prefix src/LoDb.Web run api:check      # dérive du contrat (job contract de next-ci)
+bash tools/next/routing/check-urls.sh        # grammaire d'URL de l'ADR 0005, stack démarrée
 ```
 
 - **Stack d'intégration `lodb-next`**, une seule instance, depuis la racine : 18080 nginx,
@@ -416,3 +418,46 @@ npm --prefix tests/LoDb.E2E test             # stack démarrée (LODB_E2E_BASE_U
 - 7050 « Gangplank Placeholder » est traduit en `ar_AE` et `zh_CN`. Il y reste listé dans
   les deux stacks : c'est un défaut commun, G1 du
   [jalon 1](docs/reecriture/rapports/jalons/lot-01.md).
+
+### Pièges des fondations du lot 3 et du lot 4 (ne pas « corriger » par erreur)
+
+- **Issues de navigation rendues en place** (L3.1) : 301, 302, 404 et 5xx s'affichent à
+  l'URL demandée (`PageResponse` écrit statut, `Location` et cache dans `RESPONSE_INIT`).
+  Jamais d'`UrlTree` de redirection côté serveur. `/{locale}/account`, `/{locale}/u` et
+  `/b` ont une route 404 explicite (`bareNotFound`) : le routeur accepte sinon un montage
+  paresseux vide, qui répond 200. À retirer seulement si une page prend ce chemin.
+- Les routes en `RenderMode.Client` (compte, `/admin`) ne peuvent pas poser de statut :
+  un chemin de compte inconnu répond 200, puis affiche la 404 dans le navigateur.
+- Les pages lisent leurs données par `injectRouteData(clé)`. La liaison des entrées de
+  composant par le routeur reste coupée : une query forgée remplirait des entrées.
+- `app.routes.server.spec.ts` passe par `ɵextractRoutesAndCreateRouteTree`, une entrée
+  privée d'Angular : une montée de version peut la déplacer.
+- Points d'accroche de `app.config.ts` : chaque propriétaire remplit son dossier
+  (`core/auth`, `core/analytics`, `core/update`), et les composants provisoires des
+  emplacements, sans toucher `app.config.ts` ni `app.html`.
+- **SEO** : une page ne touche jamais au `<head>`. Elle appelle
+  `inject(Seo).apply(SeoPage)`, et le service ajoute le `siteGraph`. Une page qui oublie
+  cet appel n'a ni canonique ni hreflang : c'est G2 du
+  [jalon 2](docs/reecriture/rapports/jalons/lot-02-fondations-03.md).
+- **Scopes i18n** : une clé `about.*`, `api.*` ou `seo.*` n'est traduite que si le
+  composant, ou l'un de ses ancêtres, fournit son scope (`provideTranslocoScope`). Sinon
+  la clé brute sort dans le HTML, sans erreur (G3 du même jalon). La galerie a ses propres
+  chaînes : elle ne prouve rien.
+- **E-mails** : le modèle d'un `EmailMessage` s'écrit avec les constantes
+  `EmailModelKeys`, jamais en littéral. Un modèle incomplet part en `dead` dès le premier
+  essai (`model.invalid`, log `outbox.message.dead`). Les liens que l'API envoie vers le
+  front suivent la grammaire de L3.1 (`/{locale}/account/…`).
+- L'outbox n'envoie rien sans `LoDb:Mail:Host` : c'est voulu (tests, `api:generate`).
+  La surcouche locale vise `mailpit:1025`, et les e-mails se lisent sur
+  http://localhost:18025.
+- Autorisation (L4.2) : jamais `AllowAnonymous`, car les politiques portent le garde
+  XSRF et `Origin`. Bannir, c'est `IsBanned` plus `UpdateSecurityStampAsync`.
+- nginx (`server.d/legacy-redirects.conf`) envoie à `/api/legacy` les premiers segments
+  de l'ancien site. Tout nouveau chemin hors locale doit être vérifié contre cette liste.
+  `server.d/seo.conf` possède `/sitemap.xml`, `/sitemaps/`, `/robots.txt` et
+  `/llms.txt`.
+- En local, les URLs absolues perdent le port (`http://localhost/…`), car nginx transmet
+  `Host: $host`. Ce n'est pas un défaut de l'API : l'origine canonique se fixe par
+  `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin` (L8.1).
+- `disclosure.spec.ts` échoue parfois en suite complète (`parameter 1 is not of type
+  'Event'`), jamais seul : c'est G4 du jalon 2. Relancer n'est pas une correction.

@@ -102,3 +102,28 @@ Lecture :
 - `web-ssr` monte à 205 Mio sur 60 rendus, contre 69 Mio au jalon 0. Le front a grandi
   depuis : le bundle initial fait 549 ko, au-delà du budget d'avertissement de 500 ko. La
   limite de 512m tient.
+
+### Lot 2 et fondations du lot 3 — jalon (2026-09-26)
+
+Contexte : stack d'intégration reconstruite depuis `300e218` (L3.1, L3.4, L3.12, L4.2 et
+L4.3 intégrées), conteneurs `api`, `web-ssr` et `nginx` recréés juste avant la mesure ;
+base chargée (16.19.1 ingérée). Relevés `docker stats --no-stream` en boucle pendant les
+deux passages, 10 échantillons.
+
+Commandes :
+
+- `npm --prefix tests/LoDb.E2E test` : 26 tests réussis ;
+- `npm --prefix tests/LoDb.E2E test -- --repeat-each=10` : 260 tests, 18 s.
+
+| Service | Avant la suite | Pic (26 + 260 tests) | Limite provisoire |
+|---|---:|---:|---:|
+| `api` | 282 Mio | 299 Mio | 384m |
+| `web-ssr` | 213 Mio | 338 Mio | 512m |
+| `nginx` | 14 Mio | 17 Mio | 64m |
+| `postgres` | 46 Mio | 47 Mio | 512m |
+| `mailpit` (dev seulement) | 33 Mio | 35 Mio | — |
+
+Lecture : `web-ssr` passe de 205 à 338 Mio. Les E2E rendent désormais les pages
+prérendues, les 404 et les pages de compte, et la navigation charge les routes
+paresseuses. La limite de 512m tient, avec 174 Mio de marge. `api` reste sous son relevé
+du jalon 1 : ses conteneurs sont neufs, sans ingestion lourde depuis leur démarrage.
