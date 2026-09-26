@@ -1,0 +1,44 @@
+<lodb-editorial-frame [eyebrow]="'legal.eyebrow' | transloco" [heading]="heading() | transloco">
+  <div lodbLead class="hx-plate max-w-max">
+    <span class="hx-plate__label">{{ 'legal.updated' | transloco }}</span>
+    <time class="hx-plate__value" [attr.datetime]="info.effectiveDate">{{
+      info.effectiveDate
+    }}</time>
+  </div>
+  <div class="flex flex-col gap-10" [attr.lang]="textLanguage()">
+    <lodb-section-nav [sections]="contents()" [label]="'legal.toc' | transloco" />
+    <div class="hx-prose flex flex-col gap-10">
+      @let fr = language() === 'fr';
+      @switch (page()) {
+        @case ('notice') {
+          @if (fr) {
+            <lodb-notice-fr [info]="info" [locale]="locale()" />
+          } @else {
+            <lodb-notice-en [info]="info" [locale]="locale()" />
+          }
+        }
+        @case ('privacy') {
+          @if (fr) {
+            <lodb-privacy-fr [info]="info" [locale]="locale()" />
+          } @else {
+            <lodb-privacy-en [info]="info" [locale]="locale()" />
+          }
+        }
+        @case ('terms') {
+          @if (fr) {
+            <lodb-terms-fr [info]="info" [locale]="locale()" />
+          } @else {
+            <lodb-terms-en [info]="info" [locale]="locale()" />
+          }
+        }
+        @case ('cookies') {
+          @if (fr) {
+            <lodb-cookies-fr [info]="info" [locale]="locale()" />
+          } @else {
+            <lodb-cookies-en [info]="info" [locale]="locale()" />
+          }
+        }
+      }
+    </div>
+  </div>
+</lodb-editorial-frame>
