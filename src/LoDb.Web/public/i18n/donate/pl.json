@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Dar dla kuźni",
+  "title": "Wesprzyj League Of Data Base",
+  "intro": "Twoja darowizna pokrywa koszty hostingu i sprawia, że encyklopedia pozostaje szybka, darmowa i bez reklam.",
+  "pledge": "Żadnej przewagi w grze, żadnych przywilejów — tylko nasza wdzięczność.",
+  "tiers": {
+    "legend": "Wybierz dar"
+  },
+  "tier": {
+    "spark": "Iskra",
+    "gem": "Klejnot",
+    "crest": "Herb",
+    "relic": "Relikwia"
+  },
+  "custom": {
+    "label": "Dowolna kwota",
+    "placeholder": "np. 7,50",
+    "hint": "Od {{ min }} € do {{ max }} € — dowolna kwota zastępuje wybrany poziom."
+  },
+  "submit": "Wpłać przez Stripe",
+  "busy": "Otwieranie bezpiecznej płatności…",
+  "unavailable": {
+    "title": "Darowizny już wkrótce",
+    "body": "Bramka płatności nie jest jeszcze włączona. Wróć niedługo — encyklopedia i tak pozostaje darmowa."
+  },
+  "legal": {
+    "secure": "Bezpieczna płatność przez Stripe — żadne dane karty nie trafiają na tę stronę",
+    "secure_short": "bezpieczna płatność",
+    "privacy": "Polityka prywatności",
+    "terms": "Warunki korzystania"
+  },
+  "error": {
+    "csrf": "Sesja wygasła. Odśwież stronę i spróbuj ponownie.",
+    "unavailable": "Darowizny są w tej chwili niedostępne.",
+    "invalid_amount": "Nieprawidłowa kwota — wpisz od {{ min }} € do {{ max }} €.",
+    "gateway": "Usługa płatności jest niedostępna, spróbuj ponownie później.",
+    "throttled": "Zbyt wiele prób płatności. Odczekaj chwilę, zanim spróbujesz ponownie."
+  },
+  "success": {
+    "eyebrow": "Dar przyjęty",
+    "title": "Dziękujemy, przywoływaczu",
+    "body": "Twoje wsparcie podtrzymuje ogień w kuźni — każda darowizna idzie na hosting i utrzymuje encyklopedię darmową dla wszystkich.",
+    "receipt": "Stripe wyśle Ci potwierdzenie e-mailem.",
+    "back": "Wróć do encyklopedii"
+  },
+  "cancel": {
+    "eyebrow": "Dar wycofany",
+    "title": "Darowizna anulowana",
+    "body": "Nic nie zostało pobrane. Encyklopedia pozostaje darmowa i otwarta, z darowizną lub bez.",
+    "retry": "Spróbuj ponownie",
+    "back": "Wróć na stronę główną"
+  }
+}

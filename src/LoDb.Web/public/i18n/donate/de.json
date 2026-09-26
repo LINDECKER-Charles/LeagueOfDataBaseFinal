@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Opfergabe an die Schmiede",
+  "title": "League Of Data Base unterstützen",
+  "intro": "Deine Spende deckt die Hostingkosten und hält die Enzyklopädie schnell, kostenlos und werbefrei.",
+  "pledge": "Kein Vorteil im Spiel, keine Extras — nur unser Dank.",
+  "tiers": {
+    "legend": "Wähle eine Opfergabe"
+  },
+  "tier": {
+    "spark": "Funke",
+    "gem": "Edelstein",
+    "crest": "Wappen",
+    "relic": "Relikt"
+  },
+  "custom": {
+    "label": "Freier Betrag",
+    "placeholder": "z. B. 7,50",
+    "hint": "Zwischen {{ min }} € und {{ max }} € — ein freier Betrag ersetzt die gewählte Stufe."
+  },
+  "submit": "Mit Stripe spenden",
+  "busy": "Sichere Zahlungsseite wird geöffnet …",
+  "unavailable": {
+    "title": "Spenden bald verfügbar",
+    "body": "Das Zahlungssystem ist noch nicht aktiviert. Schau bald wieder vorbei — die Enzyklopädie bleibt so oder so kostenlos."
+  },
+  "legal": {
+    "secure": "Sichere Zahlung über Stripe — keine Kartendaten erreichen diese Seite",
+    "secure_short": "sichere Zahlung",
+    "privacy": "Datenschutzerklärung",
+    "terms": "Nutzungsbedingungen"
+  },
+  "error": {
+    "csrf": "Deine Sitzung ist abgelaufen. Lade die Seite neu und versuche es erneut.",
+    "unavailable": "Spenden sind gerade nicht möglich.",
+    "invalid_amount": "Ungültiger Betrag — gib zwischen {{ min }} € und {{ max }} € ein.",
+    "gateway": "Der Zahlungsdienst ist nicht erreichbar, bitte versuche es später erneut.",
+    "throttled": "Zu viele Zahlungsversuche. Bitte warte einen Moment, bevor du es erneut versuchst."
+  },
+  "success": {
+    "eyebrow": "Opfergabe erhalten",
+    "title": "Danke, Beschwörer",
+    "body": "Deine Unterstützung hält die Schmiede am Glühen — jede Spende fließt ins Hosting und hält die Enzyklopädie für alle kostenlos.",
+    "receipt": "Stripe schickt dir deine Quittung per E-Mail.",
+    "back": "Zurück zur Enzyklopädie"
+  },
+  "cancel": {
+    "eyebrow": "Opfergabe zurückgezogen",
+    "title": "Spende abgebrochen",
+    "body": "Es wurde nichts abgebucht. Die Enzyklopädie bleibt kostenlos und offen, mit oder ohne Spende.",
+    "retry": "Erneut versuchen",
+    "back": "Zurück zur Startseite"
+  }
+}

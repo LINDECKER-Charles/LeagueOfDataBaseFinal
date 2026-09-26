@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Ofrenda a la forja",
+  "title": "Apoyar League Of Data Base",
+  "intro": "Tu donación cubre los gastos de alojamiento y mantiene la enciclopedia rápida, gratuita y sin anuncios.",
+  "pledge": "Sin ventajas en el juego ni privilegios: solo nuestra gratitud.",
+  "tiers": {
+    "legend": "Elige una ofrenda"
+  },
+  "tier": {
+    "spark": "Chispa",
+    "gem": "Gema",
+    "crest": "Blasón",
+    "relic": "Reliquia"
+  },
+  "custom": {
+    "label": "Importe libre",
+    "placeholder": "p. ej. 7,50",
+    "hint": "Entre {{ min }} € y {{ max }} €: el importe libre sustituye al nivel seleccionado."
+  },
+  "submit": "Donar con Stripe",
+  "busy": "Abriendo el pago seguro…",
+  "unavailable": {
+    "title": "Donaciones muy pronto",
+    "body": "La pasarela de pago aún no está activada. Vuelve pronto: la enciclopedia sigue siendo gratuita pase lo que pase."
+  },
+  "legal": {
+    "secure": "Pago seguro con Stripe: ningún dato de tarjeta llega a este sitio",
+    "secure_short": "pago seguro",
+    "privacy": "Política de privacidad",
+    "terms": "Condiciones de uso"
+  },
+  "error": {
+    "csrf": "Tu sesión ha caducado. Recarga la página y vuelve a intentarlo.",
+    "unavailable": "Las donaciones no están disponibles en este momento.",
+    "invalid_amount": "Importe no válido: introduce entre {{ min }} € y {{ max }} €.",
+    "gateway": "El servicio de pago no responde, inténtalo de nuevo más tarde.",
+    "throttled": "Demasiados intentos de pago. Espera un momento antes de volver a intentarlo."
+  },
+  "success": {
+    "eyebrow": "Ofrenda recibida",
+    "title": "Gracias, invocador",
+    "body": "Tu apoyo mantiene encendida la forja: cada donación se destina al alojamiento y mantiene la enciclopedia gratuita para todos.",
+    "receipt": "Stripe te envía el recibo por correo electrónico.",
+    "back": "Volver a la enciclopedia"
+  },
+  "cancel": {
+    "eyebrow": "Ofrenda retirada",
+    "title": "Donación cancelada",
+    "body": "No se ha cobrado nada. La enciclopedia sigue siendo gratuita y abierta, con o sin donación.",
+    "retry": "Volver a intentarlo",
+    "back": "Volver al inicio"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Oferenda à forja",
+  "title": "Apoie o League Of Data Base",
+  "intro": "Sua doação cobre os custos de hospedagem e mantém a enciclopédia rápida, gratuita e sem anúncios.",
+  "pledge": "Nenhuma vantagem no jogo, nenhum privilégio: apenas a nossa gratidão.",
+  "tiers": {
+    "legend": "Escolha uma oferenda"
+  },
+  "tier": {
+    "spark": "Centelha",
+    "gem": "Gema",
+    "crest": "Brasão",
+    "relic": "Relíquia"
+  },
+  "custom": {
+    "label": "Valor livre",
+    "placeholder": "ex.: 7,50",
+    "hint": "Entre {{ min }} € e {{ max }} €: o valor livre substitui o nível selecionado."
+  },
+  "submit": "Doar com Stripe",
+  "busy": "Abrindo o pagamento seguro…",
+  "unavailable": {
+    "title": "Doações em breve",
+    "body": "O sistema de pagamento ainda não está ativado. Volte em breve: a enciclopédia continua gratuita de qualquer forma."
+  },
+  "legal": {
+    "secure": "Pagamento seguro pela Stripe: nenhum dado de cartão chega a este site",
+    "secure_short": "pagamento seguro",
+    "privacy": "Política de privacidade",
+    "terms": "Termos de uso"
+  },
+  "error": {
+    "csrf": "Sua sessão expirou. Recarregue a página e tente novamente.",
+    "unavailable": "As doações não estão disponíveis no momento.",
+    "invalid_amount": "Valor inválido: informe entre {{ min }} € e {{ max }} €.",
+    "gateway": "O serviço de pagamento está inacessível, tente novamente mais tarde.",
+    "throttled": "Tentativas de pagamento demais. Aguarde um momento antes de tentar novamente."
+  },
+  "success": {
+    "eyebrow": "Oferenda recebida",
+    "title": "Obrigado, invocador",
+    "body": "Seu apoio mantém a forja acesa: cada doação vai para a hospedagem e mantém a enciclopédia gratuita para todos.",
+    "receipt": "A Stripe envia o seu recibo por e-mail.",
+    "back": "Voltar à enciclopédia"
+  },
+  "cancel": {
+    "eyebrow": "Oferenda retirada",
+    "title": "Doação cancelada",
+    "body": "Nada foi cobrado. A enciclopédia continua gratuita e aberta, com ou sem doação.",
+    "retry": "Tentar novamente",
+    "back": "Voltar ao início"
+  }
+}
