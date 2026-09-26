@@ -11,6 +11,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build:web": "ng build --configuration web",
+    "postbuild:web": "node src/sw/bundle-worker.mjs",
     "build:shell": "ng build --configuration shell",
     "serve:ssr": "node dist/web/server/server.mjs",
     "lint": "ng lint && prettier --check . && node --test \"lint/**/*.test.mjs\"",
