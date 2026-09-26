@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <!-- Background services, HTTP clients and options come from the ASP.NET Core framework. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../LoDb.Infrastructure/LoDb.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

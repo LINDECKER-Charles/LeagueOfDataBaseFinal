@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Shared test library: the in-memory API host, the PostgreSQL container and the fake clock
+    (Microsoft.Extensions.TimeProvider.Testing), for every test project of the solution.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="xunit.v3.extensibility.core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/LoDb.Api/LoDb.Api.csproj" />
+  </ItemGroup>
+</Project>

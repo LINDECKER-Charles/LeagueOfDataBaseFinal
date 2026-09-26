@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <!--
+      Also referenced by LoDb.Testing, but its build targets only run in the project that
+      references it directly: they give this output the API's content root and deps file.
+    -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/LoDb.Api/LoDb.Api.csproj" />
+    <ProjectReference Include="../LoDb.Testing/LoDb.Testing.csproj" />
+  </ItemGroup>
+</Project>
