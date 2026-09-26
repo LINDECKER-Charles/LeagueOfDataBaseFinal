@@ -17,7 +17,9 @@ import { CODEX_ENTRIES } from './codex-entries';
  * bar carries it below), then the cluster that stays on every viewport: donate (unless the
  * build shows no payment, ADR 0007), the `account` slot, the theme picker and the `switcher`
  * slot. The brand shortens to its initials wherever the row is crowded: under 460px, and
- * from md to lg where the navigation joins it. Under 400px the release chip goes, so a 320px screen never scrolls sideways.
+ * from md to lg where the navigation joins it. Under 460px the release chip goes, and under
+ * 400px the brand keeps its emblem alone, its name read by assistive technology only; with
+ * the switcher showing its language alone under lg, a 320px screen never scrolls sideways.
  * The developers entry is labelled from the `api` catalogue scope, loaded here since the
  * header sits outside the pages that provide it.
  */

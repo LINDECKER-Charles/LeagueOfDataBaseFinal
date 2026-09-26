@@ -92,6 +92,11 @@ export class ContextSwitcher {
   protected readonly languageCode = computed(() =>
     this.page.locale().split(LOCALE_SUBTAG_SEPARATOR, 1)[0].toUpperCase(),
   );
+  /** The context the chip stands for, in its accessible name even where the patch is hidden. */
+  protected readonly shown = computed(() => {
+    const version = this.current()?.version;
+    return version === undefined ? this.languageCode() : `${version}, ${this.languageCode()}`;
+  });
 
   constructor() {
     if (isPlatformBrowser(inject(PLATFORM_ID))) {
