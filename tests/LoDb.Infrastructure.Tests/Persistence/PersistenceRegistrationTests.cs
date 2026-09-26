@@ -1,6 +1,8 @@
 using LoDb.Infrastructure.Jobs;
 using LoDb.Infrastructure.Locks;
 using LoDb.Infrastructure.Persistence;
+using LoDb.Infrastructure.Persistence.Analytics;
+using LoDb.Infrastructure.Persistence.Analytics.Partitions;
 using LoDb.Infrastructure.Persistence.Baseline;
 using LoDb.Infrastructure.Persistence.Ddragon;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +33,8 @@ public sealed class PersistenceRegistrationTests
         Assert.NotNull(provider.GetRequiredService<DatabaseMigrator>());
         Assert.NotNull(provider.GetRequiredService<IDdragonAssetStore>());
         Assert.NotNull(provider.GetRequiredService<IDdragonVersionStore>());
+        Assert.NotNull(provider.GetRequiredService<IAnalyticsPartitions>());
+        Assert.NotNull(provider.GetRequiredService<IAnalyticsEventWriter>());
         Assert.IsType<PostgresDistributedLock>(provider.GetRequiredService<IDistributedLock>());
         Assert.NotNull(provider.GetRequiredService<IJobSchedule>());
         Assert.NotNull(provider.GetRequiredService<JobMetrics>());

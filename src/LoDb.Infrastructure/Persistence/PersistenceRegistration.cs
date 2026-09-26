@@ -1,3 +1,5 @@
+using LoDb.Infrastructure.Persistence.Analytics;
+using LoDb.Infrastructure.Persistence.Analytics.Partitions;
 using LoDb.Infrastructure.Persistence.Baseline;
 using LoDb.Infrastructure.Persistence.Ddragon;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +28,8 @@ public static class PersistenceRegistration
             options.UseLoDb(provider.GetRequiredService<NpgsqlDataSource>()));
         services.TryAddSingleton<IDdragonAssetStore, DdragonAssetStore>();
         services.TryAddSingleton<IDdragonVersionStore, DdragonVersionStore>();
+        services.TryAddSingleton<IAnalyticsPartitions, AnalyticsPartitions>();
+        services.TryAddSingleton<IAnalyticsEventWriter, AnalyticsEventWriter>();
         services.TryAddScoped<DatabaseMigrator>();
         return services;
     }

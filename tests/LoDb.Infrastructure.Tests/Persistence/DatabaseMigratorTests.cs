@@ -1,5 +1,8 @@
+using LoDb.Infrastructure.Persistence.Analytics.Partitions;
 using LoDb.Infrastructure.Persistence.Baseline;
 using LoDb.Testing;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace LoDb.Infrastructure.Tests.Persistence;
 
@@ -12,10 +15,11 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
 {
     private const string Lot1 = "20260926022150_Lot1DataDragon";
     private const string Lot4 = "20260926091745_Lot4Accounts";
+    private const string Lot6 = "20260926185409_Lot6BillingAnalyticsApps";
     private const string EfHistory = "__EFMigrationsHistory";
 
     private static readonly string[] AllMigrations =
-        [DoctrineBaseline.MigrationId, Lot1, Lot4];
+        [DoctrineBaseline.MigrationId, Lot1, Lot4, Lot6];
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -71,7 +75,7 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
         var report = await database.MigrateAsync(Cancellation);
 
         Assert.Equal(BaselineOutcome.Marked, report.Baseline);
-        Assert.Equal([Lot1, Lot4], report.Applied);
+        Assert.Equal([Lot1, Lot4, Lot6], report.Applied);
         Assert.Equal(AllMigrations, await database.AppliedMigrationsAsync(Cancellation));
         await BaselineSchemaTests.AssertOnlyAdditionsAsync(database);
     }
@@ -157,6 +161,38 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
                 report.Baseline,
                 new[] { BaselineOutcome.Marked, BaselineOutcome.AlreadyApplied }));
         Assert.Equal(AllMigrations, await database.AppliedMigrationsAsync(Cancellation));
+    }
+
+    [Fact]
+    public async Task Lot6RollsBackToLot4WithItsPartitions()
+    {
+        await using var database = await postgres.CreateDatabaseAsync(Cancellation);
+        await database.CreateDoctrineSchemaAsync(Cancellation);
+        await database.MigrateAsync(Cancellation);
+        var lot4Schema = await DumpAtAsync(database, Lot4);
+        await database.MigrateAsync(Cancellation);
+        var day = new DateOnly(2026, 9, 26);
+        await new AnalyticsPartitions(database.DataSource).CreateAsync(day, day, Cancellation);
+
+        var rolledBack = await DumpAtAsync(database, Lot4);
+
+        Assert.Equal(lot4Schema, rolledBack);
+        Assert.DoesNotContain(
+            AnalyticsPartitionNames.Of(day),
+            await database.TablesAsync(Cancellation));
+    }
+
+    // Brings the database to the given migration, up or down, and dumps its schema.
+    private static async Task<IReadOnlyList<string>> DumpAtAsync(
+        TestDatabase database,
+        string migration)
+    {
+        await using (var context = database.CreateContext())
+        {
+            await context.GetService<IMigrator>().MigrateAsync(migration, Cancellation);
+        }
+
+        return await database.DumpSchemaAsync([EfHistory], Cancellation);
     }
 
     private static async Task<MigrationReport> MarkAsync(TestDatabase database)
