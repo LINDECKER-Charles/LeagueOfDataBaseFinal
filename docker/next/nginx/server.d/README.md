@@ -11,5 +11,6 @@ Reserved files (plan, §7.3):
 | `seo.conf` | L3.4 (sitemaps, robots.txt, llms.txt routed to the API) |
 | `legacy-redirects.conf` | L3.12 (301 of the old URLs) |
 | `analytics.conf` | L7.1 (internal target of the page-view mirror) |
+| `hardening.conf` | L3.11 (client timeouts, dotfiles) |
 
 What goes inside a `location` belongs in `../snippets/` instead.
