@@ -1,0 +1,66 @@
+<div class="list" [class.list--rail-end]="rail() === 'end'">
+  <div class="list__bar">
+    <div class="bar">
+      <lodb-filter-search class="bar__search" [label]="searchLabel()" />
+      @if (filter.offered().length > 0) {
+        <button type="button" class="bar__trigger" (click)="openFilters()">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M3 5h14M6 10h8M8.5 15h3" stroke="currentColor" stroke-width="1.6" />
+          </svg>
+          {{ 'filter.filters' | transloco }}
+          @if (filter.activeCount() > 0) {
+            <b class="bar__count">{{ filter.activeCount() }}</b>
+          }
+        </button>
+      }
+    </div>
+  </div>
+
+  <aside class="list__console">
+    <lodb-filter-console [searchLabel]="searchLabel()" />
+  </aside>
+
+  <section class="list__results" [attr.aria-label]="label()">
+    <lodb-filter-toolbar />
+    @if (filter.isEngaged()) {
+      <lodb-active-filters />
+    }
+    @if (notice(); as kind) {
+      <div class="notice" role="status">
+        <p class="notice__title">{{ 'catalogue.' + kind + '.title' | transloco }}</p>
+        <p class="notice__text">{{ 'catalogue.' + kind + '.text' | transloco }}</p>
+      </div>
+    }
+    @let view = filter.view();
+    @if (view.isSkeleton) {
+      @if (notice() === null) {
+        <ul class="grid" [class.grid--stack]="layout() === 'stack'" aria-busy="true">
+          <li class="sr-only">{{ 'catalogue.loading' | transloco }}</li>
+          @for (slot of skeletonSlots(); track $index) {
+            <li><lodb-skeleton shape="tile" /></li>
+          }
+        </ul>
+      }
+    } @else if (view.visible.length === 0 && filter.isEngaged()) {
+      <div class="empty">
+        <span class="empty__mark" aria-hidden="true"></span>
+        <p class="empty__title">{{ 'filter.empty_title' | transloco }}</p>
+        <p class="empty__text">{{ 'filter.empty' | transloco }}</p>
+        <button type="button" lodbButton (click)="filter.clearAll()">
+          {{ 'filter.empty_cta' | transloco }}
+        </button>
+      </div>
+    } @else {
+      <ul class="grid" [class.grid--stack]="layout() === 'stack'">
+        @for (card of view.visible; track filter.keyOf(card); let index = $index) {
+          <li class="grid__cell">
+            <ng-container
+              [ngTemplateOutlet]="cardTemplate().template"
+              [ngTemplateOutletContext]="{ $implicit: card, index }"
+            />
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>

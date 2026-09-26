@@ -1,0 +1,25 @@
+/* The vocabulary every facet shares: its label, its head and its counts. */
+.facet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-inline-size: 0;
+}
+.facet__label,
+.facet__hint {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--color-text-dim);
+}
+.facet__head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.facet__count {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+}

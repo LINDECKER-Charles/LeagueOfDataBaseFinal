@@ -1,0 +1,12 @@
+{
+  "pages": "Seiten",
+  "loading": "Liste wird geladen…",
+  "pending": {
+    "title": "Dieser Patch wird vorbereitet",
+    "text": "Seine Daten treffen noch ein: Die Liste vervollständigt sich in Kürze."
+  },
+  "failed": {
+    "title": "Die Liste konnte nicht geladen werden",
+    "text": "Versuche es gleich noch einmal."
+  }
+}

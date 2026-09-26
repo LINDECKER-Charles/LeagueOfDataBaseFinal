@@ -1,0 +1,81 @@
+@if (bounds(); as span) {
+  <div class="facet" role="group" [attr.aria-label]="facet().label">
+    <div class="facet__head">
+      <span class="facet__label">{{ facet().label }}</span>
+      <span class="facet__readout" [class.facet__readout--on]="isActive()" aria-live="polite">
+        {{ format(low()) }} – {{ format(high()) }}
+      </span>
+      @if (isActive()) {
+        <button
+          type="button"
+          class="facet__reset"
+          [attr.aria-label]="'filter.clear' | transloco"
+          (click)="filter.clearFacet(facet().key)"
+        >
+          ×
+        </button>
+      }
+    </div>
+    <div class="range" [class.range--low-on-top]="lowOnTop()">
+      <span class="range__track" aria-hidden="true">
+        <span
+          class="range__fill"
+          [style.inset-inline-start.%]="lowPercent()"
+          [style.inset-inline-end.%]="100 - highPercent()"
+        ></span>
+      </span>
+      <input
+        type="range"
+        class="range__input range__input--low"
+        [min]="span.min"
+        [max]="span.max"
+        [step]="facet().step"
+        [value]="low()"
+        [attr.aria-label]="facet().label + ' · ' + ('filter.min' | transloco)"
+        [attr.aria-valuetext]="format(low())"
+        (input)="moveLow(lowThumb.valueAsNumber)"
+        (change)="commit()"
+        #lowThumb
+      />
+      <input
+        type="range"
+        class="range__input range__input--high"
+        [min]="span.min"
+        [max]="span.max"
+        [step]="facet().step"
+        [value]="high()"
+        [attr.aria-label]="facet().label + ' · ' + ('filter.max' | transloco)"
+        [attr.aria-valuetext]="format(high())"
+        (input)="moveHigh(highThumb.valueAsNumber)"
+        (change)="commit()"
+        #highThumb
+      />
+    </div>
+    <div class="fields">
+      <label class="field">
+        <span>{{ 'filter.min' | transloco }}</span>
+        <input
+          type="number"
+          [min]="span.min"
+          [max]="span.max"
+          [step]="facet().step"
+          [value]="low()"
+          (change)="moveLow(lowField.valueAsNumber); commit()"
+          #lowField
+        />
+      </label>
+      <label class="field">
+        <span>{{ 'filter.max' | transloco }}</span>
+        <input
+          type="number"
+          [min]="span.min"
+          [max]="span.max"
+          [step]="facet().step"
+          [value]="high()"
+          (change)="moveHigh(highField.valueAsNumber); commit()"
+          #highField
+        />
+      </label>
+    </div>
+  </div>
+}

@@ -1,0 +1,12 @@
+{
+  "pages": "Trang",
+  "loading": "Đang tải danh sách…",
+  "pending": {
+    "title": "Bản cập nhật này đang được chuẩn bị",
+    "text": "Dữ liệu vẫn đang về: danh sách sẽ sớm được bổ sung đầy đủ."
+  },
+  "failed": {
+    "title": "Không thể tải danh sách",
+    "text": "Hãy thử lại sau giây lát."
+  }
+}

@@ -1,0 +1,138 @@
+/* Grid areas, so the rail side and the mobile bar are pure CSS: the DOM order never moves. */
+.list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'bar' 'results';
+  gap: 1rem;
+  align-items: start;
+}
+/* The slot itself sticks: a sticky box only travels inside its parent. */
+.list__bar {
+  grid-area: bar;
+  position: sticky;
+  inset-block-start: env(safe-area-inset-top, 0);
+  z-index: 20;
+  min-block-size: 4rem;
+  background: color-mix(in srgb, var(--color-void) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+.list__console {
+  grid-area: console;
+  display: none;
+}
+.list__results {
+  grid-area: results;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-inline-size: 0;
+}
+@media (width >= 64rem) {
+  .list {
+    grid-template-columns: 18.75rem minmax(0, 1fr);
+    grid-template-areas: 'console results';
+    gap: 1.75rem;
+  }
+  .list--rail-end {
+    grid-template-columns: minmax(0, 1fr) 18.75rem;
+    grid-template-areas: 'results console';
+  }
+  .list__bar {
+    display: none;
+  }
+  .list__console {
+    display: block;
+    position: sticky;
+    inset-block-start: 1rem;
+  }
+}
+.bar {
+  display: flex;
+  gap: 0.5rem;
+  padding-block: 0.6rem;
+}
+.bar__search {
+  flex: 1;
+}
+.bar__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-block-size: 2.75rem;
+  padding-inline: 1rem;
+  font-family: var(--font-beaufort);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-gold-bright);
+  border: 1px solid color-mix(in srgb, var(--color-gold) 55%, transparent);
+  background: color-mix(in srgb, var(--color-gold) 10%, transparent);
+  cursor: pointer;
+}
+.bar__trigger svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+.bar__count {
+  display: grid;
+  place-items: center;
+  min-inline-size: 1.25rem;
+  block-size: 1.25rem;
+  padding-inline: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-hextech-black);
+  background: var(--color-gold);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.grid--stack {
+  grid-template-columns: minmax(0, 1fr);
+}
+.grid__cell {
+  min-inline-size: 0;
+}
+.notice,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+  background: color-mix(in srgb, var(--color-hextech-black) 45%, transparent);
+  clip-path: var(--hx-bevel);
+}
+.empty {
+  padding-block: 3.5rem;
+}
+.notice__title,
+.empty__title {
+  margin: 0;
+  font-family: var(--font-beaufort);
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text);
+}
+.notice__text,
+.empty__text {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+.empty__mark {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  rotate: 45deg;
+  border: 1px solid var(--color-gold-deep);
+}

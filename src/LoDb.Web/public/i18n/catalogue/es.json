@@ -1,0 +1,12 @@
+{
+  "pages": "Páginas",
+  "loading": "Cargando la lista…",
+  "pending": {
+    "title": "Este parche se está preparando",
+    "text": "Sus datos aún están llegando: la lista se completará en breve."
+  },
+  "failed": {
+    "title": "No se pudo cargar la lista",
+    "text": "Inténtalo de nuevo en un momento."
+  }
+}

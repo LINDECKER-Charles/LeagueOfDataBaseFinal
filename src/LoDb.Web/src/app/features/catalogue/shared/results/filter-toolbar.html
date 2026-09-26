@@ -1,0 +1,47 @@
+<div class="toolbar">
+  <p class="toolbar__count" aria-live="polite">
+    <span class="toolbar__results">
+      {{ 'filter.results' | transloco: { count: filter.view().matching } }}
+    </span>
+    <span class="toolbar__dot" aria-hidden="true">·</span>
+    <span class="toolbar__page">
+      {{ 'filter.page' | transloco: { page: filter.view().page, count: filter.view().pageCount } }}
+    </span>
+  </p>
+  <div class="toolbar__tools">
+    <div class="toolbar__sizes">
+      <span class="toolbar__label">{{ 'filter.per_page' | transloco }}</span>
+      <div class="segments" role="group" [attr.aria-label]="'filter.per_page' | transloco">
+        @for (size of sizes; track size) {
+          <button
+            type="button"
+            class="segment"
+            [attr.aria-pressed]="filter.state().size === size"
+            (click)="filter.setSize(size)"
+          >
+            {{ size === all ? ('filter.all' | transloco) : size }}
+          </button>
+        }
+      </div>
+    </div>
+    @if (filter.view().pageCount > 1) {
+      <nav class="toolbar__pager" [attr.aria-label]="'catalogue.pages' | transloco">
+        @for (step of steps(); track step.rel) {
+          @if (step.page !== null) {
+            <a
+              class="nav"
+              [href]="step.href"
+              [attr.rel]="step.rel"
+              [attr.aria-label]="step.label | transloco"
+              (click)="go($event, step.page)"
+            >
+              <span aria-hidden="true">{{ step.glyph }}</span>
+            </a>
+          } @else {
+            <span class="nav nav--off" aria-hidden="true">{{ step.glyph }}</span>
+          }
+        }
+      </nav>
+    }
+  </div>
+</div>

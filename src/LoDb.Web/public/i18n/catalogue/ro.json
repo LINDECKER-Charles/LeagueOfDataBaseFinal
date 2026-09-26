@@ -1,0 +1,12 @@
+{
+  "pages": "Pagini",
+  "loading": "Se încarcă lista…",
+  "pending": {
+    "title": "Acest patch este în pregătire",
+    "text": "Datele sale încă sosesc: lista se va completa în curând."
+  },
+  "failed": {
+    "title": "Lista nu a putut fi încărcată",
+    "text": "Încearcă din nou peste un moment."
+  }
+}
