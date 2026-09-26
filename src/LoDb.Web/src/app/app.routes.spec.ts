@@ -34,7 +34,11 @@ import { RunesPage } from './features/catalogue/runes/runes-page';
 import { SummonersPage } from './features/catalogue/summoners/summoners-page';
 import { DevelopersPage } from './features/developers/developers-page';
 import { DonatePage } from './features/donate/donate-page';
-import { EditorialPage } from './features/editorial/editorial-page';
+import { AboutDataPage } from './features/editorial/about/about-data-page';
+import { AboutPage } from './features/editorial/about/about-page';
+import { FaqPage } from './features/editorial/about/faq-page';
+import { ChangelogPage } from './features/editorial/changelog/changelog-page';
+import { LegalPage } from './features/editorial/legal/legal-page';
 import { ErrorPage } from './features/errors/error-page';
 import { HomePage } from './features/home/home-page';
 import { ProfilePage } from './features/profile/profile-page';
@@ -142,14 +146,14 @@ const PUBLIC_PAGES: Page[] = [
 ];
 
 const EDITORIAL_PAGES: Page[] = [
-  { url: '/en/about', page: EditorialPage, heading: 'about.index.title' },
-  { url: '/fr/about/data', page: EditorialPage, heading: 'about.data.title' },
-  { url: '/de/faq', page: EditorialPage, heading: 'about.faq.title' },
-  { url: '/ar/changelog', page: EditorialPage, heading: 'changelog.title' },
-  { url: '/en/legal/notice', page: EditorialPage, heading: 'legal.notice.title' },
-  { url: '/en/legal/privacy', page: EditorialPage, heading: 'legal.privacy.title' },
-  { url: '/en/legal/terms', page: EditorialPage, heading: 'legal.terms.title' },
-  { url: '/en/legal/cookies', page: EditorialPage, heading: 'legal.cookies.title' },
+  { url: '/en/about', page: AboutPage, heading: 'about.index.title' },
+  { url: '/fr/about/data', page: AboutDataPage, heading: 'about.data.title' },
+  { url: '/de/faq', page: FaqPage, heading: 'about.faq.title' },
+  { url: '/ar/changelog', page: ChangelogPage, heading: 'changelog.title' },
+  { url: '/en/legal/notice', page: LegalPage, heading: 'legal.notice.title' },
+  { url: '/en/legal/privacy', page: LegalPage, heading: 'legal.privacy.title' },
+  { url: '/en/legal/terms', page: LegalPage, heading: 'legal.terms.title' },
+  { url: '/en/legal/cookies', page: LegalPage, heading: 'legal.cookies.title' },
 ];
 
 const PRIVATE_PAGES: Page[] = [
@@ -191,7 +195,7 @@ describe('routes (ADR 0005)', () => {
     },
   );
 
-  it.each([...EDITORIAL_PAGES, { url: '/en', page: HomePage }])(
+  it.each(EDITORIAL_PAGES)(
     'renders $url without asking the API, so it prerenders without one',
     async ({ url }) => {
       expect((await visit(url)).requested).toEqual([]);
