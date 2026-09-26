@@ -8,7 +8,7 @@
   "apiService": false,
   "enumStyle": "alias",
   "enumArray": true,
-  "ignoreUnusedModels": true,
+  "ignoreUnusedModels": false,
   "removeStaleFiles": true,
   "endOfLineStyle": "lf",
   "silent": true

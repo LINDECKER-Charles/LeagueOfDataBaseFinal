@@ -113,6 +113,7 @@ export type { SharedBuild } from './models/shared-build';
 export type { SkinBanner } from './models/skin-banner';
 export type { SkinOption } from './models/skin-option';
 export type { SkinPicker } from './models/skin-picker';
+export type { StepBody } from './models/step-body';
 export type { StepView } from './models/step-view';
 export type { StructureBody } from './models/structure-body';
 export type { SummonerCard } from './models/summoner-card';
