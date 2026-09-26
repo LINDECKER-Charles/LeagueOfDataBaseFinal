@@ -1,0 +1,22 @@
+{
+  "description": "Raw test API keys referenced by scenarios as {{key:<alias>}}. Test-only values: lodb_ + sha1('lodb-v1-capture:<alias>'). dataset.sql stores their SHA-256 (unknown is never inserted, late_key only by a scenario step).",
+  "keys": {
+    "free": "lodb_7a6835c3c34394b61bc291aa6f0029a8da1b9983",
+    "credits": "lodb_926c7f2bd824ee97f7e1dc8fa56863b5b9633f40",
+    "monthly": "lodb_44c474aa7cbe09a36ce12501971d9b71565706e5",
+    "monthly_plus": "lodb_4f8c091149898ec90c0a64643840af0cbc27a664",
+    "annual": "lodb_c8241cc9d3e77d45febe46700796bef87721f92b",
+    "annual_plus": "lodb_ad1024994ed559c60f94bb9452dd3e25087ecb1d",
+    "revoked": "lodb_e5ee0102a58efd37b67ef3f4701ad9912d057965",
+    "inactive": "lodb_92bbd45f4999281f0dda604e75888875f308183b",
+    "quota_edge": "lodb_2ca3c551d5d510261bc2aec8997aa3691c86cdff",
+    "quota_exhausted": "lodb_ae3a5b818cc5c3ca0717a998a9d06619b59c82d8",
+    "burst": "lodb_888259fa700538c7b878c961b3a8a590382ca18b",
+    "billing": "lodb_77cf19eadba147aa83013d52d72d9d2bd2bf050c",
+    "revocation_target": "lodb_474ffe4fc4a4205c752b7327359df917d7c5586e",
+    "top_up": "lodb_06e5edac2a35a99490a5c4d72b642e99fb2eb912",
+    "previous_month": "lodb_f02cafc60962c5cffa3ee75936820091108f912c",
+    "unknown": "lodb_ecb48a9ce9dc7c5df84ac054e6b69c65a80bdc06",
+    "late_key": "lodb_a64458100b5ca54919143780b628f6ed4a1faed3"
+  }
+}

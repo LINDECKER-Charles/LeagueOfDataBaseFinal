@@ -1,0 +1,950 @@
+{
+  "group": "06-limits",
+  "title": "Rate limit burst, then quota -> credits -> quota_exceeded",
+  "source": {
+    "service": "go-api",
+    "goApiTree": "0b2172d52a4e9786470909b8616f41395ed3d431"
+  },
+  "exchanges": [
+    {
+      "id": "burst#1",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "9",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "burst#2",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "8",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "burst#3",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "7",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "burst#4",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "6",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "burst#5",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "5",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "burst#6",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "4",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "burst#7",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "3",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "burst#8",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "2",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "burst#9",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "burst#10",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "0",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "burst#11",
+      "note": "10 per minute: the 11th request of the burst is refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "0",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "rate_limited",
+            "message": "rate limit exceeded, retry after X-RateLimit-Reset"
+          }
+        }
+      }
+    },
+    {
+      "id": "burst-usage",
+      "note": "/v1/usage is rate-limited too",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "0",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "rate_limited",
+            "message": "rate limit exceeded, retry after X-RateLimit-Reset"
+          }
+        }
+      }
+    },
+    {
+      "id": "burst-invalid-route-params",
+      "note": "the limiter runs before the handler validates anything",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=0",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "0",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "rate_limited",
+            "message": "rate limit exceeded, retry after X-RateLimit-Reset"
+          }
+        }
+      }
+    },
+    {
+      "id": "burst-options",
+      "request": {
+        "method": "OPTIONS",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:burst}}"
+        }
+      },
+      "response": {
+        "status": 204,
+        "headers": {
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        }
+      }
+    },
+    {
+      "id": "quota-chain#1",
+      "note": "499/500 used and 2 credits: plan, credit, credit, then quota_exceeded",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "X-Api-Key": "{{key:quota_edge}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "59",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "PublicPlayer",
+          "created_at": "2026-07-01T09:12:00Z",
+          "favorites": {
+            "champion_id": "Ahri",
+            "item_id": "3006",
+            "rune_id": "8112",
+            "summoner_id": "SummonerFlash"
+          },
+          "public_builds": 57
+        }
+      }
+    },
+    {
+      "id": "quota-chain#2",
+      "note": "499/500 used and 2 credits: plan, credit, credit, then quota_exceeded",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "X-Api-Key": "{{key:quota_edge}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "58",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "PublicPlayer",
+          "created_at": "2026-07-01T09:12:00Z",
+          "favorites": {
+            "champion_id": "Ahri",
+            "item_id": "3006",
+            "rune_id": "8112",
+            "summoner_id": "SummonerFlash"
+          },
+          "public_builds": 57
+        }
+      }
+    },
+    {
+      "id": "quota-chain#3",
+      "note": "499/500 used and 2 credits: plan, credit, credit, then quota_exceeded",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "X-Api-Key": "{{key:quota_edge}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "57",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "PublicPlayer",
+          "created_at": "2026-07-01T09:12:00Z",
+          "favorites": {
+            "champion_id": "Ahri",
+            "item_id": "3006",
+            "rune_id": "8112",
+            "summoner_id": "SummonerFlash"
+          },
+          "public_builds": 57
+        }
+      }
+    },
+    {
+      "id": "quota-chain#4",
+      "note": "499/500 used and 2 credits: plan, credit, credit, then quota_exceeded",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "X-Api-Key": "{{key:quota_edge}}"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "56",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "quota_exceeded",
+            "message": "monthly quota exhausted and no credits left"
+          }
+        }
+      }
+    },
+    {
+      "id": "wait-for-metering",
+      "action": "sleep",
+      "ms": 1500
+    },
+    {
+      "id": "quota-chain-usage",
+      "note": "requests paid by credits are metered too",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:quota_edge}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "56",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "free",
+          "monthly_quota": 500,
+          "used_this_month": 502,
+          "remaining_this_month": 0,
+          "credits_balance": 0,
+          "rate_limit_per_min": 60
+        }
+      }
+    },
+    {
+      "id": "exhausted-no-credits",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/items",
+        "headers": {
+          "Authorization": "Bearer {{key:quota_exhausted}}"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "9",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "quota_exceeded",
+            "message": "monthly quota exhausted and no credits left"
+          }
+        }
+      }
+    },
+    {
+      "id": "exhausted-invalid-params",
+      "note": "the quota is checked before the parameters",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=0",
+        "headers": {
+          "Authorization": "Bearer {{key:quota_exhausted}}"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "8",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "quota_exceeded",
+            "message": "monthly quota exhausted and no credits left"
+          }
+        }
+      }
+    },
+    {
+      "id": "exhausted-usage",
+      "note": "/v1/usage stays reachable on an exhausted key",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:quota_exhausted}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "7",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "free",
+          "monthly_quota": 500,
+          "used_this_month": 500,
+          "remaining_this_month": 0,
+          "credits_balance": 0,
+          "rate_limit_per_min": 10
+        }
+      }
+    }
+  ]
+}
