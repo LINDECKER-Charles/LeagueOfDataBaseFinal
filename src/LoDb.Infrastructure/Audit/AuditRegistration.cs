@@ -1,5 +1,7 @@
+using LoDb.Infrastructure.Audit.Journal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace LoDb.Infrastructure.Audit;
 
@@ -14,5 +16,12 @@ public static class AuditRegistration
 {
     public static IServiceCollection AddLoDbAudit(
         this IServiceCollection services,
-        IConfiguration configuration) => services;
+        IConfiguration configuration)
+    {
+        // The journal reads the actor, the address and the route of the current request.
+        services.AddHttpContextAccessor();
+        services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton<IAuditLog, AuditLog>();
+        return services;
+    }
 }
