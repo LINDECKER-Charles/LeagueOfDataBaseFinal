@@ -1,0 +1,26 @@
+.sheet__head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-block-end: 0.6rem;
+}
+.sheet__head .gauge {
+  margin-inline-start: auto;
+}
+/* Vertical pan only, so a slider drag is never taken for a scroll. */
+.sheet__body {
+  touch-action: pan-y;
+}
+.sheet__foot {
+  position: sticky;
+  inset-block-end: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+  background: var(--color-panel);
+}
+.sheet__done {
+  flex: 1;
+}

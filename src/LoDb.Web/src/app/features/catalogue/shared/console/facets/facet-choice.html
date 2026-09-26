@@ -1,0 +1,41 @@
+<div class="facet" role="group" [attr.aria-label]="facet().label">
+  <span class="facet__label">{{ facet().label }}</span>
+  <div class="facet__chips">
+    @for (row of rows(); track row.value) {
+      <button
+        type="button"
+        class="chip"
+        [class.chip--on]="row.isOn"
+        [attr.aria-pressed]="row.isOn"
+        [disabled]="row.isDisabled"
+        (click)="filter.toggleChoice(facet(), row.value)"
+      >
+        {{ row.label }}
+        <span class="chip__count">{{ row.count }}</span>
+      </button>
+    }
+  </div>
+  @if (showsMatchMode()) {
+    <div class="mode">
+      <span class="facet__hint">{{ 'filter.match_mode' | transloco }}</span>
+      <span class="mode__switch" role="group" [attr.aria-label]="'filter.match_mode' | transloco">
+        <button
+          type="button"
+          class="mode__option"
+          [attr.aria-pressed]="!matchesAll()"
+          (click)="filter.setMatchAll(facet().key, false)"
+        >
+          {{ 'filter.match_any' | transloco }}
+        </button>
+        <button
+          type="button"
+          class="mode__option"
+          [attr.aria-pressed]="matchesAll()"
+          (click)="filter.setMatchAll(facet().key, true)"
+        >
+          {{ 'filter.match_all' | transloco }}
+        </button>
+      </span>
+    </div>
+  }
+</div>

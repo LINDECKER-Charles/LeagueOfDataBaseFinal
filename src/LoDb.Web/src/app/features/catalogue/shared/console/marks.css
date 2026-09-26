@@ -1,0 +1,60 @@
+/* Marks shared by the console, the sheet and the results head. */
+/* The engaged diamond: hollow at rest, lit cyan once something filters. */
+.marker {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  flex: none;
+  rotate: 45deg;
+  border: 1px solid var(--color-gold);
+  background: var(--color-gold);
+}
+.marker--on {
+  border-color: var(--color-hex);
+  background: var(--color-hex);
+}
+.badge {
+  display: grid;
+  place-items: center;
+  min-inline-size: 1.15rem;
+  block-size: 1.15rem;
+  padding-inline: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--color-hextech-black);
+  background: var(--color-gold);
+}
+.title {
+  font-family: var(--font-beaufort);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-text);
+}
+.clear {
+  padding: 0.15rem 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--color-text-dim);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.clear:hover {
+  color: var(--color-gold-bright);
+}
+.clear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.gauge {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-hex);
+}
+@media (pointer: coarse) {
+  .clear {
+    min-block-size: 2.5rem;
+    min-inline-size: 2.5rem;
+  }
+}

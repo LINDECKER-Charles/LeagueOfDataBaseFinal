@@ -1,18 +1,9 @@
+import { defineFacet } from '../facets/define-facet';
 import type { FacetDefinition } from '../facets/model/facet-definition';
 
-/** A facet definition for specs: the key and the kind, every other field at its default. */
+/** A facet definition for specs: its key and kind, labelled by its key. */
 export function facetOf(
   partial: Partial<FacetDefinition> & Pick<FacetDefinition, 'key' | 'kind'>,
 ): FacetDefinition {
-  return {
-    label: partial.key,
-    group: 'g',
-    options: [],
-    primary: false,
-    multiple: true,
-    matchAll: false,
-    unit: null,
-    step: 1,
-    ...partial,
-  };
+  return defineFacet({ label: partial.key, group: 'g', ...partial });
 }
