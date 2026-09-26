@@ -32,9 +32,9 @@ ajouter une règle argumentée dans `tools/next/seo-diff/lib/rules.mjs` et relan
 | Description | 38 | 4 | 0 | 0 |
 | Canonique | 42 | 0 | 0 | 0 |
 | Types JSON-LD | 42 | 0 | 0 | 0 |
-| Champs JSON-LD | 29 | 12 | 1 | 0 |
+| Champs JSON-LD | 29 | 13 | 0 | 0 |
 
-**Verdict** : 0 écart(s) non expliqué(s), 1 défaut(s) consigné(s) pour le jalon du lot 3.
+**Verdict** : 0 écart(s) non expliqué(s), 0 défaut(s) consigné(s) pour le jalon du lot 3.
 
 ## Résultats par URL
 
@@ -77,7 +77,7 @@ ajouter une règle argumentée dans `tools/next/seo-diff/lib/rules.mjs` et relan
 | `/object/3031?lang=ko_KR` | `/ko/items/3031-infinity-edge` | = | ≈ [locale-in-url](#locale-in-url) | ≈ [locale-in-url](#locale-in-url) | = | = | ≈ [locale-in-url](#locale-in-url) |
 | `/champion/Ahri?lang=en_GB` | `/en/champions/Ahri?lang=en_GB` | = | = | = | = | = | = |
 | `/about` | `/en/about` | = | = | = | = | = | = |
-| `/about/data` | `/en/about/data` | = | = | ≈ [prerendered-data-page](#prerendered-data-page) | = | = | ⚠ [prerendered-data-page](#prerendered-data-page), [dataset-languages](#dataset-languages) |
+| `/about/data` | `/en/about/data` | = | = | ≈ [prerendered-data-page](#prerendered-data-page) | = | = | ≈ [prerendered-data-page](#prerendered-data-page), [dataset-languages](#dataset-languages) |
 | `/faq` | `/en/faq` | = | = | = | = | = | = |
 | `/changelog` | `/en/changelog` | = | = | = | = | = | = |
 | `/legal/notice` | `/en/legal/notice` | = | = | = | = | = | = |
@@ -142,9 +142,9 @@ ajouter une règle argumentée dans `tools/next/seo-diff/lib/rules.mjs` et relan
 
 ### `dataset-languages`
 
-**défaut** — `Dataset.inLanguage` liste les 21 locales du site au lieu des 28 langues de Data Dragon (la prod les écrivait au format `fr_FR`, hors BCP 47). Écart au « JSON-LD conservé à l'identique » de l'ADR 0005, à trancher par L3.10 (`features/editorial/about/about-data-page.ts`) : langues Data Dragon en BCP 47.
+**correction** — `Dataset.inLanguage` liste les mêmes langues de Data Dragon, dans le même ordre, mais en BCP 47 comme le veut schema.org (`fr-FR`) : la prod écrivait le code de Data Dragon (`fr_FR`). Seul le format change : le nœud `Dataset` reste celui de la prod (ADR 0005, « JSON-LD conservé à l'identique »).
 
-- `/about/data` — Champs JSON-LD `Dataset.inLanguage[0]` : `ar_AE` → `ar` (et 27 autre(s))
+- `/about/data` — Champs JSON-LD `Dataset.inLanguage[0]` : `ar_AE` → `ar-AE` (et 27 autre(s))
 
 ## Écarts non expliqués
 
