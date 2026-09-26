@@ -1,4 +1,6 @@
 using LoDb.Infrastructure.Persistence.Accounts;
+using LoDb.Infrastructure.Persistence.Analytics;
+using LoDb.Infrastructure.Persistence.Apps;
 using LoDb.Infrastructure.Persistence.Audit;
 using LoDb.Infrastructure.Persistence.Billing;
 using LoDb.Infrastructure.Persistence.Builds;
@@ -48,6 +50,16 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
     public DbSet<EmailOutboxMessage> EmailOutbox => Set<EmailOutboxMessage>();
 
     public DbSet<AuditLogEntry> AuditLog => Set<AuditLogEntry>();
+
+    public DbSet<StripeEvent> StripeEvents => Set<StripeEvent>();
+
+    public DbSet<ApiCreditGrant> ApiCreditGrants => Set<ApiCreditGrant>();
+
+    public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
+
+    public DbSet<AnalyticsDaily> AnalyticsDaily => Set<AnalyticsDaily>();
+
+    public DbSet<ClientPolicyEntry> ClientPolicies => Set<ClientPolicyEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

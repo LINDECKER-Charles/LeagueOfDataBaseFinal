@@ -104,7 +104,32 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
              NULL, '/api/admin/users/{id}/ban', NULL);
         """;
 
-    private const string Seed = LegacySeed + "\n" + NewStackSeed;
+    // Rows of the tables of lot 6: webhooks, grants, one day of analytics, the app policy.
+    private const string Lot6Seed = """
+        INSERT INTO stripe_event (id, type, status, created_at, processed_at)
+        VALUES ('evt_zqx1', 'checkout.session.completed', 'processed', now(), now());
+        INSERT INTO api_credit_grants (api_key_id, source, requests, purchased_at, expires_at,
+                                       stripe_session_id)
+        VALUES (1, 'purchase', 5000, now(), now() + interval '12 months', 'cs_live_zqxgrant'),
+               (3, 'migration', 40, now(), now() + interval '12 months', NULL);
+        CREATE TABLE analytics_event_20260926 PARTITION OF analytics_event
+            FOR VALUES FROM ('2026-09-26T00:00:00Z') TO ('2026-09-27T00:00:00Z');
+        INSERT INTO analytics_event (occurred_at, origin, route, path, type, kind, entity,
+            status, locale, ip, visitor, user_agent, browser, os, device, is_bot,
+            referer_host, referer_source, country, country_name)
+        VALUES ('2026-09-26T10:00:00Z', 'page', 'champion-detail', '/fr/champions/Ahri',
+            'champion', 'detail', 'Ahri', 200, 'fr', '198.51.100.77', 'zqxvisitor',
+            'zqx agent', 'Firefox', 'Linux', 'desktop', false, 'www.google.com', 'search',
+            'FR', 'France');
+        INSERT INTO analytics_daily (day, source, totals, buckets, visitors, country_names,
+                                     updated_at)
+        VALUES ('2026-09-25', 'import', '{"views": 2}', '{"entities": {"champion:Ahri": 2}}',
+                '["zqxvisitor", "other"]', '{"FR": "France"}', now());
+        INSERT INTO client_policy (platform, minimum_version, latest_version, published_at)
+        VALUES ('desktop', '1.0.0', '1.2.0', now());
+        """;
+
+    private const string Seed = LegacySeed + "\n" + NewStackSeed + "\n" + Lot6Seed;
 
     private static readonly string[] EmptiedTables =
     [
@@ -122,7 +147,8 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
 
         await AnonymizeAsync(PasswordHash);
 
-        Assert.Equal(20, marked.Values.Sum());
+        // The view of lot 6 counts twice: in analytics_event and in its partition.
+        Assert.Equal(25, marked.Values.Sum());
         Assert.All(await MarkedRowsAsync(), static table => Assert.Equal(0, table.Value));
         Assert.Equal(
             counts.ToDictionary(
@@ -210,6 +236,47 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task Lot6ValuesStayUsable()
+    {
+        await Database.ExecuteAsync(Seed, Cancellation);
+
+        await AnonymizeAsync(PasswordHash);
+
+        Assert.Equal(
+            ["t|checkout.session.completed|processed"],
+            await Database.QueryAsync(
+                "SELECT concat_ws('|', id ~ '^evt_anon_[0-9a-f]{24}$', type, status)"
+                + " FROM stripe_event",
+                Cancellation));
+        Assert.Equal(
+            ["purchase|t", "migration|NULL"],
+            await Database.QueryAsync(
+                """
+                SELECT concat_ws('|', source, CASE
+                    WHEN stripe_session_id IS NULL THEN 'NULL'
+                    WHEN stripe_session_id = 'cs_anon_grant_' || id THEN 't' END)
+                FROM api_credit_grants ORDER BY id
+                """,
+                Cancellation));
+        Assert.Equal(
+            ["192.0.2.1|Anonymized|t|t|/fr/champions/Ahri|www.google.com"],
+            await Database.QueryAsync(
+                """
+                SELECT concat_ws('|', e.ip, e.user_agent, e.visitor ~ '^[0-9a-f]{64}$',
+                    e.visitor = d.visitors ->> 0 AND d.visitors ->> 1 <> 'other',
+                    e.path, e.referer_host)
+                FROM analytics_event e CROSS JOIN analytics_daily d
+                """,
+                Cancellation));
+        Assert.Equal(
+            ["desktop|1.0.0|1.2.0"],
+            await Database.QueryAsync(
+                "SELECT concat_ws('|', platform, minimum_version, latest_version)"
+                + " FROM client_policy",
+                Cancellation));
+    }
+
+    [Fact]
     public async Task DumpWithoutTheNewStackIsAnonymizedToo()
     {
         await using var legacy = await Server.CreateDatabaseAsync(Cancellation);
@@ -244,7 +311,8 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
     [Theory]
     [InlineData("ALTER TABLE users ADD COLUMN nickname varchar(32)", "users.nickname")]
     [InlineData("ALTER TABLE builds ADD COLUMN notes jsonb", "builds.notes")]
-    [InlineData("CREATE TABLE analytics_event (id integer, detail text)", "analytics_event.detail")]
+    [InlineData("CREATE TABLE telemetry (id integer, detail text)", "telemetry.detail")]
+    [InlineData("ALTER TABLE analytics_event ADD COLUMN note text", "analytics_event.note")]
     public async Task UnreviewedColumnStopsBeforeAnyChange(string alteration, string column)
     {
         await Database.ExecuteAsync(Seed, Cancellation);
