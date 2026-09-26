@@ -15,57 +15,62 @@ export interface Overflow {
   readonly offenders: readonly string[];
 }
 
+/** An element that sticks out of the box laying it out, and by how many pixels. */
+interface Sticking {
+  readonly name: string;
+  readonly left: number;
+  readonly right: number;
+  readonly excess: number;
+}
+
+// Runs in the page, self-contained: each element that sticks out of the box laying it out (a
+// `display: contents` host has none), in either direction, a right to left page overflowing
+// on the left. Left out: hidden elements, fixed ones (they follow the viewport) and the content
+// of a clipping or scrolling ancestor, which cannot widen the page.
+function stickingOut(): Sticking[] {
+  const style = (element: Element) => getComputedStyle(element);
+  const container = (element: Element): Element | null => {
+    let up = element.parentElement;
+    while (up !== null && style(up).display === 'contents') up = up.parentElement;
+    return up;
+  };
+  const clipped = (element: Element): boolean => {
+    for (let up = element.parentElement; up !== null; up = up.parentElement) {
+      if (style(up).overflowX !== 'visible') return true;
+    }
+    return false;
+  };
+  return [...document.body.querySelectorAll('*')].flatMap((element) => {
+    const parent = container(element);
+    const box = element.getBoundingClientRect();
+    const outer = parent?.getBoundingClientRect();
+    const excess =
+      outer === undefined ? 0 : Math.max(box.right - outer.right, outer.left - box.left);
+    // Rendered only: the panel of a closed <details> keeps a box it never paints.
+    if (box.width === 0 || excess <= 0.5 || !element.checkVisibility()) return [];
+    if (style(element).position === 'fixed' || clipped(element)) return [];
+    const classes = [...element.classList].slice(0, 3).join('.');
+    const name = classes === '' ? element.localName : `${element.localName}.${classes}`;
+    return [{ name, left: box.left, right: box.right, excess }];
+  });
+}
+
 /**
  * Measures the page against the device width. On a phone (`isMobile`) the browser widens the
  * layout viewport instead of scrolling, so the effective width is the larger of innerWidth
- * and scrollWidth, compared with the width of the device. When the page is too wide, the
- * culprits are the elements that stick out of their parent, in either direction (a right to
- * left page overflows on the left). Left out: hidden elements, fixed ones (they follow the
- * viewport) and the content of a clipping or scrolling ancestor, which cannot widen the page.
+ * and scrollWidth, compared with the width of the device. A page too wide names the elements
+ * that stick out the most.
  */
 export async function overflowOf(page: Page, deviceWidth: number): Promise<Overflow> {
-  return page.evaluate(
-    ([limit, max]) => {
-      const width = Math.max(window.innerWidth, document.documentElement.scrollWidth);
-      if (width <= limit) return { width, offenders: [] };
-      const clipped = (element: Element): boolean => {
-        for (let up = element.parentElement; up !== null; up = up.parentElement) {
-          if (getComputedStyle(up).overflowX !== 'visible') return true;
-        }
-        return false;
-      };
-      // The parent that lays the element out: a `display: contents` host has no box.
-      const container = (element: Element): Element | null => {
-        let up = element.parentElement;
-        while (up !== null && getComputedStyle(up).display === 'contents') up = up.parentElement;
-        return up;
-      };
-      const excess = (element: Element): number => {
-        const parent = container(element);
-        const box = element.getBoundingClientRect();
-        if (parent === null || box.width === 0) return 0;
-        const outer = parent.getBoundingClientRect();
-        return Math.max(box.right - outer.right, outer.left - box.left);
-      };
-      const named = (element: Element): string => {
-        const box = element.getBoundingClientRect();
-        const classes = [...element.classList].slice(0, 3).join('.');
-        const name = classes === '' ? element.localName : `${element.localName}.${classes}`;
-        return `${name} [${Math.round(box.left)}, ${Math.round(box.right)}]`;
-      };
-      const offenders = [...document.body.querySelectorAll('*')]
-        // Rendered only: the panel of a closed <details> keeps a box it never paints.
-        .filter((element) => element.checkVisibility())
-        .filter((element) => getComputedStyle(element).position !== 'fixed')
-        .map((element) => ({ element, excess: excess(element) }))
-        .filter((entry) => entry.excess > 0.5 && !clipped(entry.element))
-        .sort((a, b) => b.excess - a.excess)
-        .slice(0, max)
-        .map((entry) => named(entry.element));
-      return { width, offenders };
-    },
-    [deviceWidth, MAX_OFFENDERS] as const,
+  const width = await page.evaluate(() =>
+    Math.max(window.innerWidth, document.documentElement.scrollWidth),
   );
+  if (width <= deviceWidth) return { width, offenders: [] };
+  const offenders = (await page.evaluate(stickingOut))
+    .sort((a, b) => b.excess - a.excess)
+    .slice(0, MAX_OFFENDERS)
+    .map((entry) => `${entry.name} [${Math.round(entry.left)}, ${Math.round(entry.right)}]`);
+  return { width, offenders };
 }
 
 /** The form fields whose font would make iOS zoom, as `tag[name]: size`. */
