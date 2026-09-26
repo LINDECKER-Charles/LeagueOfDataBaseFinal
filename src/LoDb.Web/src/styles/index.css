@@ -1,5 +1,26 @@
 /*
- * Global stylesheet, the only entry declared in angular.json. L3.2 fills it with the Hextech
- * design system (Tailwind v4 through @tailwindcss/postcss, configured by .postcssrc.json)
- * and the four themes keyed on the `data-theme` attribute set by src/index.html.
+ * Global stylesheet, the only entry declared in angular.json: the Hextech design system on
+ * Tailwind v4 (through @tailwindcss/postcss, configured by .postcssrc.json) and the four
+ * identities keyed on the `data-theme` attribute of <html>.
+ *
+ * Every design-system class lives here, never in a component stylesheet: a theme is an
+ * unlayered override imported last, and only a global rule can be overridden that way.
+ * Classes are scanned from src/app only (the public folder holds fonts and catalogues).
+ *
+ * The import order IS the cascade order.
  */
+@import 'tailwindcss' source('../app');
+
+@import './foundation/tokens.css';
+@import './foundation/fonts.css';
+@import './foundation/base.css';
+@import './foundation/motion.css';
+@import './primitives/index.css';
+@import './foundation/skeleton.css';
+@import './foundation/images.css';
+@import './foundation/ddragon.css';
+@import './foundation/prose.css';
+@import './layout/chrome.css';
+
+/* Alternate identities LAST: unlayered overrides of the token contract. */
+@import './theme/index.css';

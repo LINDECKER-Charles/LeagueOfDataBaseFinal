@@ -1,0 +1,61 @@
+/*
+ * Skeletons (ui/skeleton): placeholders of a `@defer` block or of data in flight. Their job is
+ * twofold: no empty hole while the content arrives, and a reserved size so its arrival shifts
+ * nothing. The sweep is shared with the image lifecycle (images.css), so every "not there yet"
+ * surface reads the same. Layered as components, so a utility still resizes a placeholder.
+ */
+@keyframes hx-sk-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@layer components {
+  .hx-sk {
+    display: block;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 16%, transparent);
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-gold) 5%, transparent),
+      color-mix(in srgb, var(--color-gold) 13%, transparent),
+      color-mix(in srgb, var(--color-gold) 5%, transparent)
+    );
+    background-size: 200% 100%;
+    animation: hx-sk-sweep 1.6s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hx-sk {
+      animation: none;
+    }
+  }
+
+  .hx-sk-line {
+    block-size: 0.85rem;
+    inline-size: 100%;
+  }
+  .hx-sk-title {
+    block-size: 1.6rem;
+    inline-size: 60%;
+  }
+  .hx-sk-bar {
+    block-size: 2.5rem;
+    inline-size: 100%;
+  }
+  .hx-sk-block {
+    aspect-ratio: 16 / 9;
+    inline-size: 100%;
+  }
+  .hx-sk-tile {
+    block-size: 9rem;
+    inline-size: 100%;
+  }
+  .hx-sk-circle {
+    block-size: 3rem;
+    inline-size: 3rem;
+    border-radius: 50%;
+  }
+}

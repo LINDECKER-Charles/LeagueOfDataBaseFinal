@@ -1,0 +1,115 @@
+/*
+ * Design tokens: THE THEME CONTRACT. Every colour the UI paints resolves through one of these
+ * names and nothing else may hardcode a hue. Swapping the values (styles/theme/) re-skins the
+ * whole app, because Tailwind v4 compiles `bg-panel` to `var(--color-panel)` and `bg-gold/25`
+ * to a color-mix() over the same variable: both are read at paint time, not at build time.
+ *
+ * The defaults are Hextech / Piltover, on Riot's LoL style guide (gold 1-7, hextech blues).
+ * Tailwind's own palette is dropped (`--color-*: initial`) so a utility such as `bg-red-500`
+ * simply does not exist: a colour outside the contract cannot slip into a template.
+ *
+ * Deliberately NOT themed: rune paths, damage types and rarities (foundation/ddragon.css).
+ * They are game data, Riot's own identity for Precision or true damage, not chrome.
+ */
+@theme {
+  --color-*: initial;
+
+  /* Surfaces */
+  --color-hextech-black: #010a13;
+  --color-void: #0a1428;
+  --color-abyss: #091016;
+  --color-panel: #0f1b2d;
+  --color-panel-2: #162033;
+  /* Top stop of every raised panel gradient. */
+  --color-panel-raised: #1a263c;
+  /* Deepest scrim, laid over cinematic art so display type stays readable. */
+  --color-ink: #03080f;
+  /* Recessed well: media chrome, inset controls. */
+  --color-sink: #040c18;
+  /* Cast shadows. A token, not a literal: a theme may tint its own darkness. */
+  --color-shadow: #000000;
+
+  /* Gold (style-guide gold-1 to gold-6) */
+  --color-gold: #c8aa6e;
+  --color-gold-bright: #f0e6d2;
+  --color-gold-light: #cdbe91;
+  --color-gold-rich: #c89b3c;
+  --color-gold-deep: #785a28;
+  --color-gold-dark: #463714;
+  /* Parchment highlight one step above gold-bright (display-type gradients). */
+  --color-gold-pale: #f5ecd8;
+
+  /* Hextech cyan (blue-3/4/1) and structural deep blues (blue-5/6) */
+  --color-hex: #0ac8b9;
+  --color-hex-deep: #0397ab;
+  --color-hex-bright: #cdfafa;
+  --color-blue-steel: #005a82;
+  --color-blue-abyssal: #0a323c;
+
+  /* Feedback: a sober red that sits inside the gold/cyan palette instead of shouting. */
+  --color-danger: #c24b4b;
+  /* Small red TEXT on the dark canvas: --color-danger only reaches ~3:1 there. */
+  --color-danger-light: #d47c7c;
+  /* Saturated crimson for threat accents (rules, borders), never for text. */
+  --color-danger-strong: #be1e37;
+
+  /* Text. text-dim is tuned to WCAG AA 4.5:1 on the canvas for small labels. */
+  --color-text: #f0e6d2;
+  --color-text-muted: #a09b8c;
+  --color-text-dim: #8f8d82;
+
+  /* Fonts */
+  --font-beaufort: 'Beaufort', 'Times New Roman', serif;
+  --font-spiegel: 'Spiegel', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', monospace;
+
+  /* Motion */
+  --ease-hextech: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/*
+ * Shape and effect tokens: outside @theme because they generate no utility, but part of the
+ * same contract, swapped by a theme alongside the palette.
+ *
+ * The signature bevel cuts two opposite corners off every clipped surface; each surface must
+ * read the SAME shape, so it lives here and nowhere else. The cut is point-symmetric, so it
+ * needs no mirror in right-to-left pages.
+ */
+:root {
+  --hx-bevel: polygon(
+    14px 0,
+    100% 0,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    0 100%,
+    0 14px
+  );
+  /* Tighter cut for compact surfaces, where the 14px bite would eat the padding. */
+  --hx-bevel-sm: polygon(
+    12px 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%,
+    0 12px
+  );
+  /* The filled primary call to action cuts a shallower 9px bite. */
+  --hx-bevel-btn: polygon(
+    9px 0,
+    100% 0,
+    100% calc(100% - 9px),
+    calc(100% - 9px) 100%,
+    0 100%,
+    0 9px
+  );
+
+  /*
+   * Pre-composed glows. Tailwind's arbitrary-value grammar accepts neither spaces nor commas,
+   * so `shadow-[…]` cannot call color-mix(); it CAN read a var(), hence these flat values.
+   */
+  --hx-glow-accent: rgba(200, 170, 110, 0.65);
+  --hx-glow-accent-strong: rgba(200, 170, 110, 0.75);
+  --hx-shadow-soft: rgba(1, 10, 19, 0.75);
+  --hx-shadow-hard: rgba(1, 10, 19, 0.9);
+  --hx-ring-accent-2: rgba(10, 200, 185, 0.14);
+}

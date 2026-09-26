@@ -1,0 +1,216 @@
+/*
+ * Dialog and bottom sheet over the CDK overlay (ui/dialog), and the theme picker drawn in them.
+ * The CDK gives the focus trap, Escape and the inert page; this sheet only skins the pane:
+ * `hx-backdrop` is the backdrop class, `hx-dialog` and `hx-sheet` the pane classes.
+ */
+@layer components {
+  .hx-backdrop {
+    background: color-mix(in srgb, var(--color-hextech-black) 78%, transparent);
+    backdrop-filter: blur(2px);
+  }
+
+  .hx-dialog {
+    inline-size: min(46rem, calc(100vw - 2rem));
+    max-block-size: calc(100dvh - 2rem);
+  }
+  .hx-dialog .cdk-dialog-container {
+    animation: hx-dialog-in 0.2s var(--ease-hextech);
+  }
+
+  /* Bottom sheet: full width, anchored to the bottom edge, clear of the home indicator. */
+  .hx-sheet {
+    inline-size: 100%;
+    max-block-size: 85dvh;
+  }
+  .hx-sheet .cdk-dialog-container {
+    animation: hx-sheet-in 0.25s var(--ease-hextech);
+  }
+  .hx-sheet .hx-dialog-panel {
+    border-inline: 0;
+    border-block-end: 0;
+    padding-block-end: max(1.4rem, env(safe-area-inset-bottom));
+  }
+
+  /* The frame every dialog body sits in (ui/dialog's lodb-dialog). */
+  .hx-dialog-panel {
+    display: block;
+    max-block-size: inherit;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1.4rem;
+    color: var(--color-text);
+    background: linear-gradient(180deg, var(--color-void), var(--color-hextech-black));
+    border: 1px solid var(--color-gold-deep);
+    box-shadow: 0 30px 90px -24px color-mix(in srgb, var(--color-shadow) 85%, transparent);
+  }
+  .hx-dialog-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block-end: 1.1rem;
+  }
+  .hx-dialog-panel__close {
+    display: grid;
+    place-items: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    margin-inline-end: -0.6rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color 0.25s var(--ease-hextech);
+  }
+  .hx-dialog-panel__close:hover {
+    color: var(--color-gold-bright);
+  }
+  .hx-dialog-panel__close:focus-visible {
+    outline: none;
+    color: var(--color-hex);
+  }
+
+  /*
+   * Theme picker: a trigger in the bar, four identities in a dialog. Everything is drawn from
+   * the CURRENT identity's tokens, so the picker arrives wearing what the visitor is leaving.
+   * The only fixed colours are the option cards', where each theme's own palette shows through
+   * whichever is active: the `--sw-*` variables every theme declares unscoped.
+   */
+  .theme-trigger {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 2.75rem;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
+    background: color-mix(in srgb, var(--color-hextech-black) 60%, transparent);
+    color: var(--color-gold-light);
+    cursor: pointer;
+    transition:
+      border-color 0.25s var(--ease-hextech),
+      color 0.25s var(--ease-hextech);
+  }
+  .theme-trigger:hover {
+    border-color: var(--color-gold);
+    color: var(--color-gold-bright);
+  }
+  .theme-trigger:focus-visible {
+    outline: none;
+    border-color: var(--color-hex);
+  }
+  /*
+   * The trigger renders all four crests and the stylesheet shows the painted identity's, so
+   * the server HTML never depends on the theme (the inline script sets `data-theme`).
+   */
+  .theme-trigger__crest {
+    display: none;
+  }
+  :root:not([data-theme='zaun'], [data-theme='noxus'], [data-theme='spirit-blossom'])
+    .theme-trigger__crest--hextech,
+  [data-theme='zaun'] .theme-trigger__crest--zaun,
+  [data-theme='noxus'] .theme-trigger__crest--noxus,
+  [data-theme='spirit-blossom'] .theme-trigger__crest--spirit-blossom {
+    display: block;
+  }
+
+  .theme-dialog__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.75rem;
+  }
+  .theme-card {
+    display: grid;
+    justify-items: start;
+    gap: 0.3rem;
+    padding: 0.9rem 0.9rem 0.8rem;
+    cursor: pointer;
+    text-align: start;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    /* The card sits on the option's OWN ground: four palettes compared, not four labels. */
+    background: var(--sw-ground);
+    transition:
+      border-color 0.25s var(--ease-hextech),
+      box-shadow 0.25s var(--ease-hextech);
+  }
+  .theme-card:hover {
+    border-color: color-mix(in srgb, var(--sw-a) 70%, transparent);
+  }
+  .theme-card:focus-visible {
+    outline: none;
+    border-color: var(--sw-a);
+  }
+  .theme-card[aria-pressed='true'] {
+    border-color: var(--sw-a);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sw-a) 45%, transparent);
+  }
+  .theme-card__crest {
+    color: var(--sw-a);
+  }
+  .theme-card__name {
+    font-family: var(--font-beaufort);
+    font-size: 0.95rem;
+    color: var(--sw-text);
+  }
+  .theme-card__origin {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: color-mix(in srgb, var(--sw-text) 55%, transparent);
+  }
+  .theme-card__palette {
+    display: flex;
+    gap: 3px;
+    margin-block-start: 0.45rem;
+  }
+  .theme-card__palette i {
+    inline-size: 1.15rem;
+    block-size: 0.4rem;
+    border: 1px solid color-mix(in srgb, var(--sw-text) 18%, transparent);
+  }
+  .theme-card__palette i:nth-child(1) {
+    background: var(--sw-a);
+  }
+  .theme-card__palette i:nth-child(2) {
+    background: var(--sw-b);
+  }
+  .theme-card__palette i:nth-child(3) {
+    background: var(--sw-c);
+  }
+  .theme-card__palette i:nth-child(4) {
+    background: var(--sw-text);
+  }
+
+  /* Hextech has no theme folder, it IS foundation/tokens.css: its swatch lives by the picker. */
+  .theme-swatch--hextech {
+    --sw-ground: #0a1428;
+    --sw-a: #c8aa6e;
+    --sw-b: #0ac8b9;
+    --sw-c: #785a28;
+    --sw-text: #f0e6d2;
+  }
+}
+
+@keyframes hx-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hx-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hx-dialog .cdk-dialog-container,
+  .hx-sheet .cdk-dialog-container {
+    animation: none;
+  }
+}
