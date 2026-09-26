@@ -1,0 +1,47 @@
+/*
+ * The editor's page: the favorite champion dimmed behind it all, then the side column and
+ * the favorites side by side from a laptop up. In the components layer, so that the
+ * utilities keep their say.
+ */
+@layer components {
+  .profile-perso {
+    position: relative;
+    overflow: hidden;
+    padding: 3rem 1.5rem;
+  }
+  .profile-perso__backdrop {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .profile-perso__backdrop img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: 50% 16%;
+    opacity: 0.16;
+    filter: blur(2px) saturate(0.85);
+  }
+  .profile-perso__backdrop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-ink) 72%, transparent) 0%,
+      color-mix(in srgb, var(--color-ink) 90%, transparent) 55%,
+      var(--color-void) 100%
+    );
+  }
+
+  .profile-layout {
+    display: grid;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (width >= 64rem) {
+    .profile-layout {
+      grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "invalid": "Giá trị này không hợp lệ.",
+    "required": "Trường này là bắt buộc.",
+    "email_invalid": "Hãy nhập một địa chỉ email hợp lệ.",
+    "email_too_long": "Địa chỉ email này quá dài.",
+    "email_taken": "Địa chỉ email này đã được một tài khoản khác sử dụng.",
+    "terms_required": "Bạn phải chấp nhận điều khoản sử dụng.",
+    "password_too_long": "Mật khẩu này quá dài.",
+    "invalid_credentials": "Tên đăng nhập hoặc mật khẩu không đúng.",
+    "invalid_two_factor": "Mã này không đúng hoặc đã hết hạn.",
+    "locked": "Quá nhiều lần thử thất bại: tài khoản này bị khóa trong vài phút.",
+    "google_cancelled": "Đăng nhập bằng Google đã bị hủy.",
+    "google_email_unverified": "Google chưa xác minh địa chỉ email này nên không thể dùng nó để đăng nhập.",
+    "google_two_factor": "Tài khoản này dùng xác thực hai yếu tố: hãy đăng nhập bằng email và mật khẩu của bạn.",
+    "sign_out": "Đăng xuất thất bại. Vui lòng thử lại."
+  },
+  "two_factor": {
+    "lede": "Nhập mã 6 chữ số từ ứng dụng xác thực của bạn.",
+    "code": "Mã xác thực",
+    "recovery_code": "Mã khôi phục",
+    "use_recovery": "Dùng mã khôi phục thay thế",
+    "use_app": "Dùng ứng dụng xác thực thay thế"
+  },
+  "password": {
+    "met": "(đã đạt)",
+    "unmet": "(chưa đạt)"
+  },
+  "verify": {
+    "title": "Xác nhận email",
+    "verifying": "Đang xác nhận địa chỉ email của bạn…",
+    "pending": "Một liên kết xác nhận đã được gửi đến {{ email }}. Hãy mở liên kết để xác nhận địa chỉ, hoặc yêu cầu liên kết mới.",
+    "sign_in": "Đăng nhập để nhận liên kết xác nhận mới.",
+    "continue": "Tiếp tục"
+  },
+  "editor": {
+    "loading": "Đang tải hồ sơ của bạn…",
+    "load_error": "Không thể tải hồ sơ của bạn.",
+    "version_error": "Không thể đổi phiên bản của mục yêu thích."
+  }
+}

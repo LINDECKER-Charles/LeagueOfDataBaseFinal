@@ -1,0 +1,37 @@
+@switch (view()) {
+  @case ('login') {
+    @defer (on immediate) {
+      <lodb-login-view />
+    }
+  }
+  @case ('register') {
+    @defer (on immediate) {
+      <lodb-register-view />
+    }
+  }
+  @case ('verify-email') {
+    @defer (on immediate) {
+      <lodb-verify-email-view />
+    }
+  }
+  @case ('forgot-password') {
+    @defer (on immediate) {
+      <lodb-forgot-password-view />
+    }
+  }
+  @case ('reset-password') {
+    @defer (on immediate) {
+      <lodb-reset-password-view />
+    }
+  }
+  @case ('profile') {
+    @defer (on immediate) {
+      <lodb-profile-editor />
+    }
+  }
+  @case ('preview') {
+    @defer (on immediate) {
+      <lodb-profile-preview />
+    }
+  }
+}

@@ -1,0 +1,108 @@
+/*
+ * The favorite and skin pickers: a search, the options of the list and the removal of the
+ * current choice, in the Hextech dialog. In the components layer, so that the theme folders
+ * and the utilities keep their say.
+ */
+@layer components {
+  .picker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .picker-search {
+    inline-size: 100%;
+  }
+
+  .picker-remove {
+    min-block-size: 2.75rem;
+    padding: 0.4rem 1.1rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    cursor: pointer;
+    transition:
+      border-color 0.25s var(--ease-hextech),
+      background-color 0.25s var(--ease-hextech);
+    color: var(--color-danger-light);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  }
+  .picker-remove:hover {
+    border-color: var(--color-danger);
+    background: color-mix(in srgb, var(--color-danger) 16%, transparent);
+  }
+  .picker-remove:focus-visible {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 2px;
+  }
+
+  .picker-option {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-block-size: 2.75rem;
+    padding: 0.45rem 0.6rem;
+    text-align: start;
+    font: inherit;
+    color: var(--color-text);
+    cursor: pointer;
+    border-block-end: 1px solid color-mix(in srgb, var(--color-gold-deep) 18%, transparent);
+    transition:
+      background-color 0.2s var(--ease-hextech),
+      color 0.2s var(--ease-hextech);
+  }
+  .picker-option:hover,
+  .picker-option:focus-visible {
+    outline: none;
+    background: color-mix(in srgb, var(--color-hex) 10%, transparent);
+    color: var(--color-hex-bright);
+  }
+  .picker-option[aria-current='true'] {
+    background: color-mix(in srgb, var(--color-gold) 14%, transparent);
+    color: var(--color-gold-bright);
+  }
+  /* A rune path heads its runes and stays in view while they scroll. */
+  .picker-option--group {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+    background: var(--color-panel);
+    font-family: var(--font-beaufort);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--color-gold);
+    border-block-end-color: color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+  }
+  .picker-option--indent {
+    padding-inline-start: 2rem;
+  }
+  .picker-option__img {
+    inline-size: 2rem;
+    block-size: 2rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+    background: var(--color-void);
+  }
+  .picker-option__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.95rem;
+  }
+
+  .picker-foot {
+    display: flex;
+    justify-content: flex-end;
+    padding-block-start: 0.9rem;
+    border-block-start: 1px solid color-mix(in srgb, var(--color-gold-deep) 35%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .picker-option,
+    .picker-remove {
+      transition: none;
+    }
+  }
+}

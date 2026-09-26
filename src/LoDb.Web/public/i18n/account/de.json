@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "invalid": "Dieser Wert ist ungültig.",
+    "required": "Dieses Feld ist erforderlich.",
+    "email_invalid": "Gib eine gültige E-Mail-Adresse ein.",
+    "email_too_long": "Diese E-Mail-Adresse ist zu lang.",
+    "email_taken": "Diese E-Mail-Adresse wird bereits von einem Konto verwendet.",
+    "terms_required": "Du musst die Nutzungsbedingungen akzeptieren.",
+    "password_too_long": "Dieses Passwort ist zu lang.",
+    "invalid_credentials": "Kennung oder Passwort falsch.",
+    "invalid_two_factor": "Dieser Code ist falsch oder abgelaufen.",
+    "locked": "Zu viele Fehlversuche: Dieses Konto ist für einige Minuten gesperrt.",
+    "google_cancelled": "Die Google-Anmeldung wurde abgebrochen.",
+    "google_email_unverified": "Google hat diese E-Mail-Adresse nicht bestätigt, daher kann sie nicht zur Anmeldung dienen.",
+    "google_two_factor": "Dieses Konto nutzt die Zwei-Faktor-Authentifizierung: Melde dich mit deiner E-Mail-Adresse und deinem Passwort an.",
+    "sign_out": "Die Abmeldung ist fehlgeschlagen. Bitte versuche es erneut."
+  },
+  "two_factor": {
+    "lede": "Gib den 6-stelligen Code aus deiner Authenticator-App ein.",
+    "code": "Authentifizierungscode",
+    "recovery_code": "Wiederherstellungscode",
+    "use_recovery": "Stattdessen einen Wiederherstellungscode verwenden",
+    "use_app": "Stattdessen meine Authenticator-App verwenden"
+  },
+  "password": {
+    "met": "(erfüllt)",
+    "unmet": "(nicht erfüllt)"
+  },
+  "verify": {
+    "title": "E-Mail-Bestätigung",
+    "verifying": "Deine E-Mail-Adresse wird bestätigt…",
+    "pending": "Ein Bestätigungslink wurde an {{ email }} gesendet. Öffne ihn, um deine Adresse zu bestätigen, oder fordere einen neuen an.",
+    "sign_in": "Melde dich an, um einen neuen Bestätigungslink zu erhalten.",
+    "continue": "Weiter"
+  },
+  "editor": {
+    "loading": "Dein Profil wird geladen…",
+    "load_error": "Dein Profil konnte nicht geladen werden.",
+    "version_error": "Die Version deiner Favoriten konnte nicht geändert werden."
+  }
+}

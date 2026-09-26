@@ -1,0 +1,33 @@
+/*
+ * The ribbon over the owner's preview of its public card: what is shown, to whom, and the
+ * way back to the editor.
+ */
+@layer components {
+  .preview-ribbon {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    border-block-end: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+    background: color-mix(in srgb, var(--color-gold-deep) 16%, var(--color-void));
+  }
+  .preview-ribbon__text {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+  .preview-ribbon__badge {
+    padding: 0.2rem 0.6rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.66rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-void);
+    background: var(--color-gold);
+  }
+}

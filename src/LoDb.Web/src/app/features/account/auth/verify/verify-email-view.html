@@ -1,0 +1,50 @@
+<lodb-auth-card [heading]="'account.verify.title' | transloco">
+  @switch (outcome()) {
+    @case ('verifying') {
+      <p class="mt-6 text-sm text-text-muted" role="status">
+        {{ 'account.verify.verifying' | transloco }}
+      </p>
+    }
+    @case ('verified') {
+      <p class="auth-notice mt-6" role="status">{{ 'auth.flash.verify_success' | transloco }}</p>
+    }
+    @case ('already') {
+      <p class="auth-notice mt-6" role="status">{{ 'auth.flash.verify_already' | transloco }}</p>
+    }
+    @case ('invalid') {
+      <p class="auth-error mt-6" role="alert">{{ 'auth.flash.verify_error' | transloco }}</p>
+    }
+    @case ('failed') {
+      <p class="auth-error mt-6" role="alert">{{ 'account.errors.generic' | transloco }}</p>
+    }
+  }
+
+  @if (outcome() !== 'verifying') {
+    @if (done()) {
+      @if (outcome() === 'waiting') {
+        <p class="auth-notice mt-6" role="status">{{ 'auth.flash.verify_already' | transloco }}</p>
+      }
+      <a lodbButton class="mt-6 w-full" [routerLink]="next()">
+        {{ 'account.verify.continue' | transloco }}
+      </a>
+    } @else if (user(); as account) {
+      <p class="mt-6 text-sm text-text-muted">
+        {{ 'account.verify.pending' | transloco: { email: account.email } }}
+      </p>
+      <button
+        lodbButton
+        type="button"
+        class="mt-6 w-full"
+        [disabled]="sending()"
+        (click)="resend()"
+      >
+        {{ 'auth.verify.banner_cta' | transloco }}
+      </button>
+    } @else if (status() === 'anonymous') {
+      <p class="mt-6 text-sm text-text-muted">{{ 'account.verify.sign_in' | transloco }}</p>
+      <a lodbButton class="mt-6 w-full" [routerLink]="login()" [queryParams]="loginQuery()">
+        {{ 'auth.login.title' | transloco }}
+      </a>
+    }
+  }
+</lodb-auth-card>

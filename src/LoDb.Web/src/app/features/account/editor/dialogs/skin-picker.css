@@ -1,0 +1,94 @@
+/*
+ * The second step of the skin picker: the way back to the champions, and the skins of the
+ * one chosen as a grid of splash tiles.
+ */
+@layer components {
+  .picker-back {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 0.4rem;
+    min-block-size: 2.75rem;
+    padding-inline: 0.2rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color 0.25s var(--ease-hextech);
+  }
+  .picker-back:hover,
+  .picker-back:focus-visible {
+    outline: none;
+    color: var(--color-gold-bright);
+  }
+  /* The chevron points down: turned a quarter, it points back, whatever the direction. */
+  .picker-back__icon {
+    rotate: 90deg;
+  }
+  .picker-back:dir(rtl) .picker-back__icon {
+    rotate: -90deg;
+  }
+
+  .skin-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    padding-block: 0.75rem;
+  }
+  @media (width >= 30rem) {
+    .skin-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .skin-tile {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+    background: var(--color-void);
+    transition: border-color 0.2s var(--ease-hextech);
+  }
+  .skin-tile:hover,
+  .skin-tile:focus-visible {
+    outline: none;
+    border-color: var(--color-hex);
+  }
+  .skin-tile[aria-current='true'] {
+    border-color: var(--color-gold);
+    box-shadow: inset 0 0 0 1px var(--color-gold);
+  }
+  .skin-tile__art {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+  .skin-tile__name {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    padding: 0.3rem 0.4rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--color-gold-bright);
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--color-ink) 90%, transparent)
+    );
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .picker-back,
+    .skin-tile {
+      transition: none;
+    }
+  }
+}

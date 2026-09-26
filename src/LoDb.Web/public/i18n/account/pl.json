@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Coś poszło nie tak. Spróbuj ponownie.",
+    "invalid": "Ta wartość jest nieprawidłowa.",
+    "required": "To pole jest wymagane.",
+    "email_invalid": "Wpisz prawidłowy adres e-mail.",
+    "email_too_long": "Ten adres e-mail jest za długi.",
+    "email_taken": "Ten adres e-mail jest już używany przez inne konto.",
+    "terms_required": "Musisz zaakceptować warunki korzystania.",
+    "password_too_long": "To hasło jest za długie.",
+    "invalid_credentials": "Nieprawidłowy identyfikator lub hasło.",
+    "invalid_two_factor": "Ten kod jest nieprawidłowy lub wygasł.",
+    "locked": "Zbyt wiele nieudanych prób: to konto jest zablokowane na kilka minut.",
+    "google_cancelled": "Logowanie przez Google zostało anulowane.",
+    "google_email_unverified": "Google nie zweryfikował tego adresu e-mail, więc nie można go użyć do logowania.",
+    "google_two_factor": "To konto korzysta z uwierzytelniania dwuskładnikowego: zaloguj się adresem e-mail i hasłem.",
+    "sign_out": "Wylogowanie nie powiodło się. Spróbuj ponownie."
+  },
+  "two_factor": {
+    "lede": "Wpisz 6-cyfrowy kod z aplikacji uwierzytelniającej.",
+    "code": "Kod uwierzytelniający",
+    "recovery_code": "Kod odzyskiwania",
+    "use_recovery": "Użyj kodu odzyskiwania",
+    "use_app": "Użyj aplikacji uwierzytelniającej"
+  },
+  "password": {
+    "met": "(spełniony)",
+    "unmet": "(niespełniony)"
+  },
+  "verify": {
+    "title": "Potwierdzenie adresu e-mail",
+    "verifying": "Potwierdzanie adresu e-mail…",
+    "pending": "Link potwierdzający został wysłany na adres {{ email }}. Otwórz go, aby potwierdzić adres, lub poproś o nowy.",
+    "sign_in": "Zaloguj się, aby otrzymać nowy link potwierdzający.",
+    "continue": "Dalej"
+  },
+  "editor": {
+    "loading": "Wczytywanie profilu…",
+    "load_error": "Nie udało się wczytać profilu.",
+    "version_error": "Nie udało się zmienić wersji ulubionych."
+  }
+}

@@ -1,0 +1,46 @@
+<lodb-dialog
+  [heading]="'profile.slot.' + data.slot | transloco"
+  [headingId]="headingId"
+  [closeLabel]="'filter.close' | transloco"
+>
+  <div class="picker">
+    <input
+      #search
+      type="search"
+      class="hx-input picker-search"
+      autocomplete="off"
+      [placeholder]="'profile.picker.search' | transloco"
+      [attr.aria-label]="'profile.picker.search' | transloco"
+      (input)="query.set(search.value)"
+    />
+    <lodb-picker-body [status]="status()" (retry)="fetch()">
+      @for (entry of shown(); track entry.id) {
+        <button
+          type="button"
+          class="picker-option"
+          [class.picker-option--group]="entry.isGroup"
+          [class.picker-option--indent]="entry.groupId !== undefined"
+          [attr.aria-current]="entry.id === data.current ? 'true' : null"
+          (click)="ref.close(entry)"
+        >
+          <lodb-image
+            class="picker-option__img"
+            [src]="entry.image"
+            [width]="32"
+            [height]="32"
+            [initials]="initialsOf(entry.name)"
+            imgClass="object-cover"
+          />
+          <span class="picker-option__name">{{ entry.name }}</span>
+        </button>
+      }
+    </lodb-picker-body>
+    @if (data.current !== null) {
+      <div class="picker-foot">
+        <button type="button" class="picker-remove" (click)="ref.close(null)">
+          {{ 'profile.picker.remove' | transloco }}
+        </button>
+      </div>
+    }
+  </div>
+</lodb-dialog>
