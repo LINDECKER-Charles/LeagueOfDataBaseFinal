@@ -9,6 +9,7 @@ WORKDIR /source/src/LoDb.Web
 COPY src/LoDb.Web/package.json src/LoDb.Web/package-lock.json ./
 RUN --mount=type=cache,id=lodb-npm,target=/root/.npm \
     npm ci --no-audit --no-fund
+COPY app/public/changelog/ /source/app/public/changelog/
 COPY src/LoDb.Web/ ./
 RUN npm run build:web
 

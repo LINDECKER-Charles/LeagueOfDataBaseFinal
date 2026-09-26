@@ -3,6 +3,9 @@
 *
 
 !src/LoDb.Web/
+# The published changelog, read by the build through the committed symlink
+# src/app/features/editorial/changelog/published (L3.10).
+!app/public/changelog/
 
 # Installed and built inside the image, never copied from the host (other platform).
 src/LoDb.Web/node_modules/
