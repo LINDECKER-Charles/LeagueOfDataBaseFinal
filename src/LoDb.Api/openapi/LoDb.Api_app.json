@@ -1119,6 +1119,60 @@
         }
       }
     },
+    "/api/contact": {
+      "post": {
+        "tags": [
+          "Contact"
+        ],
+        "summary": "Sends a message to the team of the site.",
+        "operationId": "sendContactMessage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/account/me": {
       "get": {
         "tags": [
@@ -2327,6 +2381,1120 @@
         }
       }
     },
+    "/api/builds": {
+      "get": {
+        "tags": [
+          "Builds"
+        ],
+        "summary": "The signed-in account's builds, champion and keystone on the patch.",
+        "operationId": "listMyBuilds",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MyBuildRow"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Builds"
+        ],
+        "summary": "Saves a new build, pinned to the patch and the mode it was checked on.",
+        "operationId": "createBuild",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditableBuild"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/builds/{id}": {
+      "get": {
+        "tags": [
+          "Builds"
+        ],
+        "summary": "A build of the signed-in account, as stored, ghosts included.",
+        "operationId": "getBuild",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditableBuild"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Builds"
+        ],
+        "summary": "Replaces a build, pinned again to the patch and the mode checked.",
+        "operationId": "updateBuild",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The language of the editor, in which a refusal names the items.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditableBuild"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Builds"
+        ],
+        "summary": "Removes a build of the signed-in account, and its votes.",
+        "operationId": "deleteBuild",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/builds/{id}/import": {
+      "get": {
+        "tags": [
+          "Builds"
+        ],
+        "summary": "A build carried over to another patch as a draft, and what it lost.",
+        "operationId": "previewBuildImport",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/builds/{id}/vote": {
+      "post": {
+        "tags": [
+          "Builds"
+        ],
+        "summary": "Votes a public build up or down; the same vote again withdraws it.",
+        "operationId": "voteBuild",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoteState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/share/{token}": {
+      "get": {
+        "tags": [
+          "Builds"
+        ],
+        "summary": "A build by the token of its link, rendered on its own patch.",
+        "operationId": "getSharedBuild",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedBuild"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trends": {
+      "get": {
+        "tags": [
+          "Trends"
+        ],
+        "summary": "The public builds, best scored first, filtered and paged.",
+        "operationId": "listTrends",
+        "parameters": [
+          {
+            "name": "champion",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendsPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/audit": {
+      "get": {
+        "tags": [
+          "AdminAudit"
+        ],
+        "summary": "A page of the audit journal, newest first, filtered.",
+        "operationId": "readAuditJournal",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "outcome",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/audit/users/{userId}": {
+      "get": {
+        "tags": [
+          "AdminAudit"
+        ],
+        "summary": "A page of what one account did or underwent, newest first.",
+        "operationId": "readUserAuditActivity",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "outcome",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserActivity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/audit/volume": {
+      "get": {
+        "tags": [
+          "AdminAudit"
+        ],
+        "summary": "How many entries the journal holds, their span and size.",
+        "operationId": "readAuditVolume",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditVolume"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/audit/vocabulary": {
+      "get": {
+        "tags": [
+          "AdminAudit"
+        ],
+        "summary": "Actions and their groups, outcomes, actor and target types.",
+        "operationId": "readAuditVocabulary",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditVocabularyView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/audit/purge": {
+      "post": {
+        "tags": [
+          "AdminAudit"
+        ],
+        "summary": "Deletes the journal before a day, past the retention, or whole.",
+        "operationId": "purgeAuditJournal",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurgeReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/client-policy": {
       "get": {
         "tags": [
@@ -2519,6 +3687,264 @@
           "string"
         ]
       },
+      "AuditActionView": {
+        "required": [
+          "name",
+          "category"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Dotted code, such as `user.login`."
+          },
+          "category": {
+            "type": "string",
+            "description": "auth, account, build, apikey or admin."
+          }
+        },
+        "description": "An action of the closed set and the group the filter files it under."
+      },
+      "AuditEntryView": {
+        "required": [
+          "id",
+          "occurredAt",
+          "actorType",
+          "action",
+          "category",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actorType": {
+            "type": "string",
+            "description": "`user`, `admin` or `anonymous`."
+          },
+          "actorId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Id of the acting account; null for an anonymous actor.",
+            "format": "int32"
+          },
+          "actor": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Username of the actor at the time."
+          },
+          "action": {
+            "type": "string",
+            "description": "Dotted action code, such as `user.login`."
+          },
+          "category": {
+            "type": "string",
+            "description": "Group of the action: auth, account, build, apikey or admin."
+          },
+          "outcome": {
+            "type": "string",
+            "description": "`success`, `failure` or `denied`."
+          },
+          "targetType": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`user`, `build`, `apikey` or `api_client`."
+          },
+          "targetId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "target": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Readable name of the target at the time."
+          },
+          "ip": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Client address of the request, as the legacy admin showed it."
+          },
+          "route": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Route of the request: a pattern, or a legacy route name for imported entries."
+          },
+          "meta": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "description": "Details of the action; null when there are none."
+          }
+        },
+        "description": "One entry of the audit journal, as the admin reads it."
+      },
+      "AuditPage": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntryView"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "description": "The page, from 1.",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "Whether the next page holds entries."
+          }
+        },
+        "description": "A page of the journal, newest first."
+      },
+      "AuditSubjectView": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "username": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "The account whose activity is shown."
+      },
+      "AuditVocabularyView": {
+        "required": [
+          "actions",
+          "categories",
+          "outcomes",
+          "actorTypes",
+          "targetTypes"
+        ],
+        "type": "object",
+        "properties": {
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditActionView"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outcomes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actorTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "targetTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "The codes the journal stores and its filters take: the admin front labels them, and never\nholds its own copy of the closed sets."
+      },
+      "AuditVolume": {
+        "required": [
+          "entries",
+          "totalBytes",
+          "retentionMonths",
+          "retentionCutoff"
+        ],
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "oldest": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Time of the oldest entry; null when the journal is empty.",
+            "format": "date-time"
+          },
+          "newest": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Time of the newest entry; null when the journal is empty.",
+            "format": "date-time"
+          },
+          "totalBytes": {
+            "type": "integer",
+            "description": "Size of the table with its indexes, in bytes.",
+            "format": "int64"
+          },
+          "retentionMonths": {
+            "type": "integer",
+            "description": "How long the daily retention keeps an entry: 6 months.",
+            "format": "int32"
+          },
+          "retentionCutoff": {
+            "type": "string",
+            "description": "The first instant the retention keeps now.",
+            "format": "date-time"
+          }
+        },
+        "description": "What the journal holds, and what the retention keeps of it."
+      },
       "BackdropKind": {
         "enum": [
           "skin",
@@ -2526,6 +3952,157 @@
         ],
         "type": "string",
         "description": "What a profile's backdrop shows, so a page does not draw the champion twice."
+      },
+      "BuildDraft": {
+        "required": [
+          "name",
+          "isPublic",
+          "gameVersion",
+          "gameMode",
+          "language",
+          "structure"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isPublic": {
+            "type": "boolean",
+            "description": "Always false: an import is a new build its author has not published yet."
+          },
+          "gameVersion": {
+            "type": "string",
+            "description": "The patch the draft was projected on."
+          },
+          "gameMode": {
+            "$ref": "#/components/schemas/GameMode"
+          },
+          "language": {
+            "type": "string"
+          },
+          "structure": {
+            "$ref": "#/components/schemas/BuildStructure"
+          }
+        },
+        "description": "An unsaved build the editor opens: the fields it submits to `POST /api/builds` once\nits author has reviewed them."
+      },
+      "BuildRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "3 to 80 characters once trimmed."
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "At most 2000 characters once trimmed; a blank one is no description."
+          },
+          "isPublic": {
+            "type": "boolean",
+            "description": "Whether the trends list the build and anyone may vote on it; its link works either way."
+          },
+          "gameVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The patch the build is pinned to, one Data Dragon lists; the latest when blank."
+          },
+          "gameMode": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The mode whose map gates the items; Summoner's Rift when absent.",
+                "$ref": "#/components/schemas/GameMode"
+              }
+            ]
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Data Dragon language the build is written in; the call's `lang`, else en_US,\nwhen blank."
+          },
+          "structure": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The champion, the rune page and the purchase order; required.",
+                "$ref": "#/components/schemas/StructureBody"
+              }
+            ]
+          }
+        },
+        "description": "A build as the editor submits it, to create one or to replace one."
+      },
+      "BuildStep": {
+        "required": [
+          "label",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Null when the step has none."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Data Dragon item ids in purchase order; the same id may repeat."
+          }
+        },
+        "description": "A step of the purchase order: a label, an optional note and item ids."
+      },
+      "BuildStructure": {
+        "required": [
+          "championId",
+          "runes",
+          "steps"
+        ],
+        "type": "object",
+        "properties": {
+          "championId": {
+            "type": "string",
+            "description": "The Data Dragon champion id, such as `MonkeyKing`; empty when unset."
+          },
+          "runes": {
+            "$ref": "#/components/schemas/RunePage"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildStep"
+            }
+          }
+        },
+        "description": "The canonical structure of a build, as stored: its champion, its rune page and its\npurchase order."
       },
       "CatalogImage": {
         "required": [
@@ -3136,6 +4713,39 @@
         },
         "description": "A base stat of a champion at level 1, and what it gains per level."
       },
+      "ChampionView": {
+        "required": [
+          "id",
+          "name",
+          "image",
+          "missing"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "The champion's name; its id for a ghost, which the patch does not name."
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Null for a ghost."
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "missing": {
+            "type": "boolean",
+            "description": "Whether the patch lacks the champion: the build keeps it, and the page flags it."
+          }
+        },
+        "description": "A build's champion on the patch it renders on; a ghost when the patch lacks it."
+      },
       "ClientPlatform": {
         "enum": [
           "desktop",
@@ -3143,6 +4753,61 @@
         ],
         "type": "string",
         "description": "The apps the policy governs; the web, always current, is none of them."
+      },
+      "ContactRequest": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "bug, feedback, review or commercial."
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Name of the visitor, optional, 120 characters at most."
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Address the team replies to, 255 characters at most."
+          },
+          "subject": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Subject, optional, 160 characters at most."
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The message, from 10 to 5,000 characters once trimmed."
+          },
+          "locale": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Code of the locale of the page the visitor wrote from, such as `fr`; an unknown\none is dropped, as it only informs the team."
+          },
+          "website": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Honeypot, hidden from people: filled in, the message is acknowledged as sent and\ndropped, so that a robot learns nothing."
+          }
+        },
+        "description": "Body of `POST /api/contact`."
       },
       "CounterpartLink": {
         "required": [
@@ -3210,6 +4875,90 @@
         ],
         "type": "string",
         "description": "What an account types to confirm its erasure, one of three variants."
+      },
+      "DroppedItem": {
+        "required": [
+          "step",
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "step": {
+            "type": "integer",
+            "description": "The index of its step in the source build, from 0.",
+            "format": "int32"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "Its name on the target patch, classic items qualified by their id; the id itself when\nthe target patch lacks it."
+          }
+        },
+        "description": "An item an import left out: gone from the target patch or off the mode's map."
+      },
+      "EditableBuild": {
+        "required": [
+          "id",
+          "name",
+          "isPublic",
+          "gameVersion",
+          "gameMode",
+          "language",
+          "shareToken",
+          "structure",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isPublic": {
+            "type": "boolean"
+          },
+          "gameVersion": {
+            "type": "string",
+            "description": "The patch the build is pinned to; the editor loads its catalog."
+          },
+          "gameMode": {
+            "$ref": "#/components/schemas/GameMode"
+          },
+          "language": {
+            "type": "string",
+            "description": "The Data Dragon language the build is written in."
+          },
+          "shareToken": {
+            "type": "string",
+            "description": "The token of its `/b/{token}` link."
+          },
+          "structure": {
+            "description": "The champion, rune page and purchase order as stored, ghosts included: an id the patch\nlacks stays until its owner replaces it.",
+            "$ref": "#/components/schemas/BuildStructure"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "A build as its owner edits it: what the editor fills its form with, pinned to the patch\nand the mode it was saved for."
       },
       "Edition": {
         "enum": [
@@ -3518,6 +5267,51 @@
         },
         "description": "Body of `POST /api/account/google/app/exchange`: what an app got from a Google\nsign-in in the system browser, with PKCE."
       },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
       "IdentityRequest": {
         "required": [
           "username",
@@ -3550,6 +5344,48 @@
         ],
         "type": "string",
         "description": "What an image resolves to."
+      },
+      "ImportPreview": {
+        "required": [
+          "draft",
+          "report"
+        ],
+        "type": "object",
+        "properties": {
+          "draft": {
+            "$ref": "#/components/schemas/BuildDraft"
+          },
+          "report": {
+            "$ref": "#/components/schemas/ImportReport"
+          }
+        },
+        "description": "A build carried over to another patch, and what the carrying changed."
+      },
+      "ImportReport": {
+        "required": [
+          "championMissing",
+          "runesReset",
+          "droppedItems"
+        ],
+        "type": "object",
+        "properties": {
+          "championMissing": {
+            "type": "boolean",
+            "description": "Whether the target patch lacks the champion; its id is kept, so the build shows it as\na ghost until the author picks another."
+          },
+          "runesReset": {
+            "type": "boolean",
+            "description": "Whether the rune page was blanked because one of its ids is gone."
+          },
+          "droppedItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DroppedItem"
+            },
+            "description": "The items left out, in step order."
+          }
+        },
+        "description": "What an import to another patch had to change, for the author to review."
       },
       "ItemCard": {
         "required": [
@@ -3914,6 +5750,39 @@
           "string"
         ]
       },
+      "ItemView": {
+        "required": [
+          "id",
+          "name",
+          "image",
+          "missing"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "The item's name; its id for a ghost."
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "gold": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Its total cost; null for a ghost, which counts for nothing in a total.",
+            "format": "int32"
+          },
+          "missing": {
+            "type": "boolean"
+          }
+        },
+        "description": "An item of a build's purchase order; a ghost when the patch lacks it."
+      },
       "LocaleLanguage": {
         "required": [
           "locale",
@@ -3970,6 +5839,64 @@
           }
         },
         "description": "Body of `POST /api/account/login`."
+      },
+      "MyBuildRow": {
+        "required": [
+          "id",
+          "shareToken",
+          "name",
+          "gameVersion",
+          "gameMode",
+          "language",
+          "isPublic",
+          "createdAt",
+          "updatedAt",
+          "champion",
+          "keystone"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "shareToken": {
+            "type": "string",
+            "description": "The token of its `/b/{token}` link."
+          },
+          "name": {
+            "type": "string"
+          },
+          "gameVersion": {
+            "type": "string",
+            "description": "The patch the build is pinned to."
+          },
+          "gameMode": {
+            "$ref": "#/components/schemas/GameMode"
+          },
+          "language": {
+            "type": "string",
+            "description": "The Data Dragon language the build is written in."
+          },
+          "isPublic": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "champion": {
+            "$ref": "#/components/schemas/ChampionView"
+          },
+          "keystone": {
+            "$ref": "#/components/schemas/PerkView"
+          }
+        },
+        "description": "A build in its owner's list, its champion and keystone on the patch browsed."
       },
       "OwnerProfile": {
         "required": [
@@ -4039,6 +5966,75 @@
           }
         },
         "description": "The profile as its owner manages it, `/{locale}/account/profile`."
+      },
+      "OwnerView": {
+        "required": [
+          "username",
+          "isSupporter",
+          "hasPublicProfile"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "riotTagline": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isSupporter": {
+            "type": "boolean",
+            "description": "Whether the author supports the site: the badge beside their name."
+          },
+          "hasPublicProfile": {
+            "type": "boolean",
+            "description": "Whether their name links to a public profile that answers."
+          }
+        },
+        "description": "The author of a build, as a shared page or the trends credit them."
+      },
+      "PerkView": {
+        "required": [
+          "id",
+          "name",
+          "icon",
+          "missing"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The rune's id; 0 for a slot without a pick.",
+            "format": "int32"
+          },
+          "key": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Null for a ghost."
+          },
+          "name": {
+            "type": "string",
+            "description": "The rune's name; its id for a ghost."
+          },
+          "icon": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "shortDesc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Null for a ghost."
+          },
+          "missing": {
+            "type": "boolean"
+          }
+        },
+        "description": "A rune a build picked, looked up in the path it was picked in; a ghost when that path\nlacks it on the patch, or when the slot holds no pick."
       },
       "PlatformPolicy": {
         "required": [
@@ -4287,6 +6283,57 @@
           }
         },
         "description": "The public card of a profile, `/u/{username}`: the same answer for the visitors and\nfor the owner's preview, so the preview is the page, not an approximation."
+      },
+      "PurgeReceipt": {
+        "required": [
+          "scope",
+          "deleted"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "description": "retention, before or all."
+          },
+          "before": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "First instant kept; null when everything went.",
+            "format": "date-time"
+          },
+          "deleted": {
+            "type": "integer",
+            "description": "Entries deleted; the entry recording the purge is not one of them.",
+            "format": "int32"
+          }
+        },
+        "description": "What a purge deleted."
+      },
+      "PurgeRequest": {
+        "required": [
+          "scope"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`retention` (what the daily retention would delete now), `before` (every\nentry before DateOnly? PurgeRequest.Before) or `all`."
+          },
+          "before": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "First UTC day kept, required by the `before` scope.",
+            "format": "date"
+          }
+        },
+        "description": "Body of `POST /api/admin/audit/purge`."
       },
       "RecipeStep": {
         "required": [
@@ -4641,6 +6688,163 @@
         },
         "description": "A rune the build editor offers, in its slot."
       },
+      "RunePage": {
+        "required": [
+          "primaryStyleId",
+          "primarySelections",
+          "secondaryStyleId",
+          "secondarySelections"
+        ],
+        "type": "object",
+        "properties": {
+          "primaryStyleId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "primarySelections": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "The picks of slots 0 to 3 of the primary tree, the keystone first."
+          },
+          "secondaryStyleId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "secondarySelections": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "Two picks of distinct minor rows of the secondary tree."
+          }
+        },
+        "description": "A rune page as stored: a primary tree with its keystone and three minors, a secondary tree\nwith two minors, every id a Data Dragon perk or style id."
+      },
+      "RunePageInput": {
+        "type": "object",
+        "properties": {
+          "primaryStyleId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Null when absent or not an integer.",
+            "format": "int32"
+          },
+          "primarySelections": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": [
+                "null",
+                "integer"
+              ],
+              "format": "int32"
+            },
+            "description": "Null when absent or not a list; an entry is null when it is not an integer."
+          },
+          "secondaryStyleId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Null when absent or not an integer.",
+            "format": "int32"
+          },
+          "secondarySelections": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": [
+                "null",
+                "integer"
+              ],
+              "format": "int32"
+            },
+            "description": "Null when absent or not a list; an entry is null when it is not an integer."
+          }
+        },
+        "description": "A rune page as submitted or stored, read leniently."
+      },
+      "RunePageView": {
+        "required": [
+          "primary",
+          "keystone",
+          "minors",
+          "secondary",
+          "secondaryPerks"
+        ],
+        "type": "object",
+        "properties": {
+          "primary": {
+            "$ref": "#/components/schemas/RunePathView"
+          },
+          "keystone": {
+            "description": "The pick of the primary path's first row.",
+            "$ref": "#/components/schemas/PerkView"
+          },
+          "minors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerkView"
+            },
+            "description": "The picks of the primary path's three other rows, in row order."
+          },
+          "secondary": {
+            "$ref": "#/components/schemas/RunePathView"
+          },
+          "secondaryPerks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerkView"
+            },
+            "description": "The picks of the secondary path, as the build stores them."
+          }
+        },
+        "description": "A build's rune page on the patch it renders on."
+      },
+      "RunePathView": {
+        "required": [
+          "id",
+          "name",
+          "icon",
+          "missing"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The path's id; 0 when the build picked none.",
+            "format": "int32"
+          },
+          "key": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Null for a ghost."
+          },
+          "name": {
+            "type": "string",
+            "description": "The path's name; its id for a ghost."
+          },
+          "icon": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "missing": {
+            "type": "boolean"
+          }
+        },
+        "description": "A rune path a build picked; a ghost when the patch lacks it."
+      },
       "RunePicker": {
         "required": [
           "version",
@@ -4923,6 +7127,110 @@
         },
         "description": "Body of `PUT /api/profile/password`."
       },
+      "SharedBuild": {
+        "required": [
+          "id",
+          "shareToken",
+          "name",
+          "isPublic",
+          "gameVersion",
+          "gameMode",
+          "language",
+          "createdAt",
+          "updatedAt",
+          "patchMismatch",
+          "owner",
+          "champion",
+          "runes",
+          "steps",
+          "totalGold"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "shareToken": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isPublic": {
+            "type": "boolean",
+            "description": "A private build is unlisted: its link works, but nobody may vote on it."
+          },
+          "gameVersion": {
+            "type": "string",
+            "description": "The patch the build is pinned to, and rendered on."
+          },
+          "gameMode": {
+            "$ref": "#/components/schemas/GameMode"
+          },
+          "language": {
+            "type": "string",
+            "description": "The Data Dragon language the build is written in."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currentVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The version the visitor browses, the latest unless they name one; null when Data\nDragon could not tell it."
+          },
+          "patchMismatch": {
+            "type": "boolean",
+            "description": "Whether the build's patch is not the one browsed: the page says so."
+          },
+          "owner": {
+            "$ref": "#/components/schemas/OwnerView"
+          },
+          "champion": {
+            "$ref": "#/components/schemas/ChampionView"
+          },
+          "runes": {
+            "$ref": "#/components/schemas/RunePageView"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StepView"
+            }
+          },
+          "totalGold": {
+            "type": "integer",
+            "description": "The cost of the whole purchase order, ghosts left out.",
+            "format": "int32"
+          },
+          "vote": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The votes of a public build; null for a private one.",
+                "$ref": "#/components/schemas/VoteState"
+              }
+            ]
+          }
+        },
+        "description": "A build as its `/b/{token}` page shows it, rendered on its own patch: what its\nauthor saw, ghosts included."
+      },
       "SkinBanner": {
         "required": [
           "id",
@@ -5027,6 +7335,102 @@
           }
         },
         "description": "`GET /api/pickers/skins?champion=`: the skins of a champion, chromas left out. A\nmissing or unknown champion gives no skins rather than an error: the banner picker then\nshows an empty choice instead of a broken dialog."
+      },
+      "StepBody": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "1 to 40 characters once trimmed."
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "At most 300 characters once trimmed; a blank one is no note."
+          },
+          "items": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Item ids of the build's patch, in purchase order; duplicates allowed."
+          }
+        },
+        "description": "A step of a submitted purchase order."
+      },
+      "StepView": {
+        "required": [
+          "label",
+          "items",
+          "gold"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemView"
+            },
+            "description": "In purchase order, duplicates and ghosts kept."
+          },
+          "gold": {
+            "type": "integer",
+            "description": "The cost of the step's items, ghosts left out.",
+            "format": "int32"
+          }
+        },
+        "description": "A step of a build's purchase order, priced on the patch it renders on."
+      },
+      "StructureBody": {
+        "type": "object",
+        "properties": {
+          "championId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "A champion id of the build's patch, such as MonkeyKing."
+          },
+          "runes": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Four picks of the primary path, one per row, the keystone first; two of the secondary\npath, in two rows other than the keystones'.",
+                "$ref": "#/components/schemas/RunePageInput"
+              }
+            ]
+          },
+          "steps": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/StepBody"
+            },
+            "description": "1 to 10 steps, 1 to 8 items each, 40 items in all."
+          }
+        },
+        "description": "The champion, rune page and purchase order of a submitted build, in the shape the build\nstores them; the rules, not the binding, judge what is missing."
       },
       "SummonerCard": {
         "required": [
@@ -5356,6 +7760,164 @@
         },
         "description": "Body of `POST /api/account/token`, the sign-in of the apps."
       },
+      "TrendRow": {
+        "required": [
+          "id",
+          "shareToken",
+          "name",
+          "gameVersion",
+          "gameMode",
+          "language",
+          "createdAt",
+          "score",
+          "owner",
+          "champion",
+          "keystone",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "shareToken": {
+            "type": "string",
+            "description": "The token of its `/b/{token}` link."
+          },
+          "name": {
+            "type": "string"
+          },
+          "gameVersion": {
+            "type": "string",
+            "description": "The patch the build is pinned to."
+          },
+          "gameMode": {
+            "$ref": "#/components/schemas/GameMode"
+          },
+          "language": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "score": {
+            "type": "integer",
+            "description": "Up votes minus down votes.",
+            "format": "int32"
+          },
+          "myVote": {
+            "type": "integer",
+            "description": "1 or -1 for the caller's vote; 0 without one, or for a visitor.",
+            "format": "int32"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/OwnerView"
+          },
+          "champion": {
+            "$ref": "#/components/schemas/ChampionView"
+          },
+          "keystone": {
+            "$ref": "#/components/schemas/PerkView"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemView"
+            },
+            "description": "The first items of the purchase order, ghosts included."
+          }
+        },
+        "description": "A build of the trends: its author, score, champion, keystone and first items."
+      },
+      "TrendsFilter": {
+        "type": "object",
+        "properties": {
+          "champion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "A champion id; the builds of any champion when null."
+          },
+          "mode": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GameMode"
+              }
+            ]
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "A Data Dragon language builds are written in."
+          }
+        },
+        "description": "The filters the trends apply, as understood: an unknown mode or language is no filter,\nas the legacy page ignored them."
+      },
+      "TrendsPage": {
+        "required": [
+          "rows",
+          "total",
+          "page",
+          "pages",
+          "perPage",
+          "filters",
+          "championOptions",
+          "languageOptions"
+        ],
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendRow"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "How many builds match the filters, on every page.",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pages": {
+            "type": "integer",
+            "description": "At least 1, even without any build.",
+            "format": "int32"
+          },
+          "perPage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/TrendsFilter"
+          },
+          "championOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChampionOption"
+            },
+            "description": "The champions of the public builds, by name."
+          },
+          "languageOptions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The languages of the public builds, by code."
+          }
+        },
+        "description": "A page of the trends, with the filters it applied and the facets to change them."
+      },
       "UiLocale": {
         "enum": [
           "ar",
@@ -5382,6 +7944,29 @@
         ],
         "type": "string",
         "description": "Interface locale of the site, carried as the first URL segment (`/{locale}/…`)."
+      },
+      "UserActivity": {
+        "required": [
+          "activity"
+        ],
+        "type": "object",
+        "properties": {
+          "subject": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The account as stored now; null once deleted, its trail staying.",
+                "$ref": "#/components/schemas/AuditSubjectView"
+              }
+            ]
+          },
+          "activity": {
+            "$ref": "#/components/schemas/AuditPage"
+          }
+        },
+        "description": "The activity of one account: the account, if it still exists, and a page."
       },
       "VerifyEmailRequest": {
         "required": [
@@ -5417,6 +8002,39 @@
           }
         },
         "description": "Body of `PUT /api/profile/visibility`."
+      },
+      "VoteRequest": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`up` or `down`; the direction the caller already voted withdraws the vote."
+          }
+        },
+        "description": "A vote on a public build."
+      },
+      "VoteState": {
+        "required": [
+          "score",
+          "myVote"
+        ],
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "integer",
+            "description": "Up votes minus down votes.",
+            "format": "int32"
+          },
+          "myVote": {
+            "type": "integer",
+            "description": "1 or -1 for the caller's vote; 0 without one, or for a visitor.",
+            "format": "int32"
+          }
+        },
+        "description": "The votes on a public build: the net score only, and the caller's own vote."
       }
     }
   },
@@ -5431,10 +8049,22 @@
       "name": "Pickers"
     },
     {
+      "name": "Contact"
+    },
+    {
       "name": "Account"
     },
     {
       "name": "Profile"
+    },
+    {
+      "name": "Builds"
+    },
+    {
+      "name": "Trends"
+    },
+    {
+      "name": "AdminAudit"
     },
     {
       "name": "ClientPolicy"

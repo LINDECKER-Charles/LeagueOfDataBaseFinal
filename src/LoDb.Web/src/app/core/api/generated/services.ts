@@ -4,6 +4,10 @@
 export { MetaService } from './services/meta.service';
 export { CatalogService } from './services/catalog.service';
 export { PickersService } from './services/pickers.service';
+export { ContactService } from './services/contact.service';
 export { AccountService } from './services/account.service';
 export { ProfileService } from './services/profile.service';
+export { BuildsService } from './services/builds.service';
+export { TrendsService } from './services/trends.service';
+export { AdminAuditService } from './services/admin-audit.service';
 export { ClientPolicyService } from './services/client-policy.service';
