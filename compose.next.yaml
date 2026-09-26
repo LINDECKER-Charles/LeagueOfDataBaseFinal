@@ -38,6 +38,8 @@ services:
       LoDb__Hosting__KnownProxyNetworks__1: 172.16.0.0/12
       LoDb__Hosting__KnownProxyNetworks__2: 192.168.0.0/16
       LoDb__Storage__Root: /srv/storage
+      # Empty: contact messages are stored but no notification is sent (L7.5).
+      LoDb__Contact__Recipient: ${CONTACT_RECIPIENT:-}
       # Empty: traces stay local (log correlation) until infra-vps exposes a collector.
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     volumes:
