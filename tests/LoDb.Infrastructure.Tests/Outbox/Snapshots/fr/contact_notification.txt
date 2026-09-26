@@ -1,0 +1,21 @@
+Subject: [Contact · Bug / anomalie] Page blanche
+
+LEAGUE OF DATABASE
+Nouveau message de contact
+========================================
+
+Catégorie : Bug / anomalie
+Expéditeur : Visiteur
+E-mail : visitor@example.com
+Sujet : Page blanche
+Reçu le : 26/09/2026 08:15 UTC · fr
+
+----------------------------------------
+La page des runes reste blanche.
+Merci !
+----------------------------------------
+
+Répondre : visitor@example.com
+
+--
+Envoyé depuis le formulaire de contact du pied de page. Retrouvez ce message dans l'espace d'administration.
