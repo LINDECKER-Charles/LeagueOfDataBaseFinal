@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
-import { LOCALES } from '../../../core/i18n/locales';
 import { PageDirection } from '../../../core/layout/direction/page-direction';
 import { localePath } from '../../../core/layout/shell/locale-path';
 import { injectRouteData } from '../../../core/routing/inject-route-data';
@@ -9,6 +8,7 @@ import { breadcrumbList } from '../../../core/seo/json-ld/site/breadcrumb-list';
 import { dataset } from '../../../core/seo/json-ld/site/dataset';
 import { applyEditorialHead } from '../shared/apply-editorial-head';
 import { EditorialFrame } from '../shared/editorial-frame';
+import { DATA_DRAGON_LANGUAGES } from './data-dragon-languages';
 import { InventoryCounters } from './inventory/inventory-counters';
 import type { InventoryFact } from './inventory/inventory-fact';
 import { InventoryFacts } from './inventory/inventory-facts';
@@ -64,7 +64,7 @@ export class AboutDataPage {
             name: translate('editorial.data.dataset_name'),
             url: urls.canonical,
             description,
-            languages: LOCALES,
+            languages: DATA_DRAGON_LANGUAGES,
             keywords: DATASET_KEYWORDS,
             creatorId: `${urls.origin}/#organization`,
           }),
