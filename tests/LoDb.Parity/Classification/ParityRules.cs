@@ -26,6 +26,18 @@ public static class ParityRules
         },
         new()
         {
+            Id = "legacy-translated-placeholder-listed",
+            Class = DeviationClass.LegacyDefect,
+            Justification = "Data Dragon translates the placeholder marker of an item named "
+                + "\"... Placeholder\" in en_US (7050 in ar_AE and zh_CN); the legacy stack "
+                + "looks for it in the translated name and lists the item. The new stack reads "
+                + "it in the en_US name, as the item type (heritage 5.13, UP 10).",
+            Matches = static d => d.Site.Resource == "items" && d.Kind == DeviationKind.Value
+                && d.Field == "listed" && d.Legacy == "true" && d.Next == "false"
+                && Is(d, DeviationTags.Placeholder),
+        },
+        new()
+        {
             Id = "name-trimmed",
             Class = DeviationClass.LegacyDefect,
             Justification = "The new stack trims every display name (DdragonText.PlainName); the "

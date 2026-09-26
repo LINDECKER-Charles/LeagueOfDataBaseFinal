@@ -54,9 +54,10 @@ public sealed class ParityRun
         foreach (var version in Sample.Versions)
         {
             var tags = new KeyTags();
+            var placeholders = PlaceholdersOf(version);
             foreach (var language in Sample.Languages)
             {
-                var pair = ProjectionsOf(version, language);
+                var pair = ProjectionsOf(version, language) with { Placeholders = placeholders };
                 tags.Add(pair.Next);
                 tags.AddLegacyDetails(pair.Legacy);
                 Coverage.Add(CoverageOf(pair));
@@ -89,6 +90,15 @@ public sealed class ParityRun
         Legacy = Read<JsonObject>($"legacy/export/{version}/{language}.json"),
         Next = Read<JsonObject>($"next/export/{version}/{language}.json"),
     };
+
+    // Read from the new en_US export; none when the run left en_US out of its sample.
+    private IReadOnlySet<string> PlaceholdersOf(string version)
+    {
+        var english = $"next/export/{version}/en_US.json";
+        return File.Exists(Path.Combine(directory, english))
+            ? EntryTags.PlaceholdersOf(Read<JsonObject>(english))
+            : new HashSet<string>();
+    }
 
     private IReadOnlyList<Deviation> Manifests(string version, string type, KeyTags tags)
     {

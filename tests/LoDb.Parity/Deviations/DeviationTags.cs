@@ -18,6 +18,12 @@ public static class DeviationTags
     /// <summary>A passive or ability icon, stored by the legacy stack on a detail visit.</summary>
     public const string Ability = "ability";
 
+    /// <summary>
+    /// An item whose en_US name declares it a placeholder, whatever the language its name is
+    /// translated into.
+    /// </summary>
+    public const string Placeholder = "placeholder";
+
     /// <summary>A dataset Data Dragon lacks in the requested language (fallback).</summary>
     public const string Fallback = "fallback";
 }

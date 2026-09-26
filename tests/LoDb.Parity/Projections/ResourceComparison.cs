@@ -18,11 +18,17 @@ internal sealed class ResourceComparison
     private readonly (string? Legacy, string? Next) contents;
     private readonly (KeyedList Legacy, KeyedList Next) entries;
     private readonly bool fallback;
+    private readonly IReadOnlySet<string> placeholders;
     private readonly List<Deviation> found = [];
 
-    public ResourceComparison(DeviationSite site, JsonNode? legacy, JsonNode? next)
+    public ResourceComparison(
+        DeviationSite site,
+        JsonNode? legacy,
+        JsonNode? next,
+        IReadOnlySet<string> placeholders)
     {
         this.site = site;
+        this.placeholders = placeholders;
         contents = (Language(legacy), Language(next));
         entries = (KeyedList.Of(Entries(legacy)), KeyedList.Of(Entries(next)));
         fallback = contents.Legacy != site.Language || contents.Next != site.Language;
@@ -91,7 +97,7 @@ internal sealed class ResourceComparison
 
     private void CompareEntry(string id, JsonObject legacy, JsonObject next)
     {
-        var tags = EntryTags.Of(legacy, next, fallback);
+        var tags = TagsOf(id, legacy, next);
         var comparer = new NodeComparer(site with { Entry = id }, tags);
         foreach (var field in FieldsOf(legacy, next))
         {
@@ -125,6 +131,14 @@ internal sealed class ResourceComparison
             Kind = kind,
             Legacy = sides.Legacy is null ? null : JsonValues.Render(sides.Legacy),
             Next = sides.Next is null ? null : JsonValues.Render(sides.Next),
-            Tags = EntryTags.Of(sides.Legacy, sides.Next, fallback),
+            Tags = TagsOf(id, sides.Legacy, sides.Next),
         });
+
+    private IReadOnlySet<string> TagsOf(string id, JsonObject? legacy, JsonObject? next)
+    {
+        var tags = EntryTags.Of(legacy, next, fallback);
+        return placeholders.Contains(id)
+            ? new HashSet<string>(tags, StringComparer.Ordinal) { DeviationTags.Placeholder }
+            : tags;
+    }
 }
