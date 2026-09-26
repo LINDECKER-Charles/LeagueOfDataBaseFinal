@@ -1,0 +1,171 @@
+name: next deploy
+
+# Manual deployment of the `next` environment (stack lodb-next) over SSH, with the same
+# mechanics as the legacy _deploy.yml: the host checks the branch out for its compose files,
+# receives its .env from a secret, then pulls the images pushed by next-build.yml (tag
+# IMAGE_TAG of ENV_NEXT, normally `next`). Nothing is built on the host.
+#
+# Order: pull, migrations in an ephemeral container (service `migrate`, from L1.4) BEFORE
+# `up -d`, so new code never serves an old schema; then a smoke test.
+#
+# Secrets (docs/guides/github-actions-secrets.md, section "Nouvelle stack"):
+# NEXT_SSH_KEY, NEXT_HOST, NEXT_PATH, NEXT_SSH_USER (optional, root), ENV_NEXT.
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch the host checks out for its compose files.
+        required: true
+        type: string
+        default: docs/reecriture-dotnet-angular
+
+permissions:
+  contents: read
+
+# Two deployments of the same host never overlap; a queued one waits for the running one.
+concurrency:
+  group: next-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: next
+    env:
+      SSH_TARGET: ${{ secrets.NEXT_SSH_USER || 'root' }}@${{ secrets.NEXT_HOST }}
+      NEXT_HOST: ${{ secrets.NEXT_HOST }}
+      NEXT_PATH: ${{ secrets.NEXT_PATH }}
+      BRANCH: ${{ inputs.branch }}
+      REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+    steps:
+      # The input reaches a remote shell: only plain branch names go through.
+      - name: Validate the branch name
+        run: |
+          if [[ ! "$BRANCH" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+            echo "Invalid branch name: $BRANCH" >&2
+            exit 1
+          fi
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.NEXT_SSH_KEY }}
+
+      - name: Known hosts
+        run: ssh-keyscan -H "$NEXT_HOST" >> ~/.ssh/known_hosts
+
+      - name: Push env to host (from ENV_NEXT)
+        env:
+          ENV_NEXT: ${{ secrets.ENV_NEXT }}
+        run: |
+          # Expanded on the runner on purpose (SC2029), already quoted for the remote shell.
+          remote_path="$(printf '%q' "$NEXT_PATH")"
+          # shellcheck disable=SC2029
+          ssh "$SSH_TARGET" "mkdir -p $remote_path"
+          # shellcheck disable=SC2029
+          printf '%s\n' "$ENV_NEXT" | ssh "$SSH_TARGET" "cat > $remote_path/.env"
+
+      - name: Deploy (pull, migrate, up, smoke test)
+        run: |
+          # The remote script receives its inputs as variables, expanded on the runner on
+          # purpose (SC2029) and quoted for the remote shell; the script is sent verbatim.
+          remote_env="NEXT_PATH=$(printf '%q' "$NEXT_PATH")"
+          remote_env="$remote_env BRANCH=$(printf '%q' "$BRANCH")"
+          remote_env="$remote_env REPO_URL=$(printf '%q' "$REPO_URL")"
+          # shellcheck disable=SC2029
+          ssh "$SSH_TARGET" "$remote_env bash -s" <<'EOSSH'
+            set -euo pipefail
+            cd "$NEXT_PATH"
+
+            # Idempotent init: the directory already holds the .env pushed just before.
+            if [ ! -d .git ]; then
+              git init -q
+              git remote add origin "$REPO_URL"
+            fi
+            git fetch origin "$BRANCH"
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+            git reset --hard "origin/$BRANCH"
+
+            # Deployment overlay, WITHOUT compose.next.override.yaml (dev conveniences).
+            export COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml
+            # Without it the project would be named after the directory and could clobber
+            # another stack of the host.
+            grep -q '^COMPOSE_PROJECT_NAME=' .env || {
+              echo "COMPOSE_PROJECT_NAME is missing from ENV_NEXT (expected lodb-next)." >&2
+              exit 1
+            }
+            # The edge and its network belong to infra-vps; this job only asserts them.
+            docker network inspect edge >/dev/null 2>&1 || {
+              echo "Docker network 'edge' is missing — deploy infra-vps before this project." >&2
+              exit 1
+            }
+
+            # The registry sometimes resets a layer mid-copy: retry with backoff.
+            for attempt in 1 2 3 4 5; do
+              if docker compose pull; then break; fi
+              if [ "$attempt" = 5 ]; then
+                echo "docker compose pull failed after 5 attempts." >&2
+                exit 1
+              fi
+              echo "pull failed (attempt $attempt), retrying in $((attempt * 10))s…" >&2
+              sleep $((attempt * 10))
+            done
+
+            # Migrations before the traffic switches: fail-fast, the old containers keep
+            # serving if they fail. The service exists from L1.4 on.
+            if docker compose config --services | grep -qx migrate; then
+              docker compose run --rm migrate
+            fi
+
+            # --wait: the job fails if a probe does not turn healthy.
+            docker compose up -d --remove-orphans --wait --wait-timeout 180
+            docker image prune -f
+
+            # Smoke test inside the stack: nginx, the API's readiness, a page rendered by
+            # the SSR server for the canonical host.
+            docker compose exec -T nginx wget -qO /dev/null http://127.0.0.1/healthz
+            docker compose exec -T nginx wget -qO- http://api:8080/readyz
+            echo
+            docker compose exec -T nginx sh -c \
+              'wget -qO /dev/null --header "Host: $LODB_CANONICAL_HOST" http://127.0.0.1/en/'
+
+            # Public TLS check and edge certificate self-heal, as in _deploy.yml: a domain
+            # whose issuance failed earlier stays in back-off until the edge reloads.
+            domains() {
+              grep -E "^$1=" .env | cut -d= -f2- | tr -d '"' | tr ',' ' '
+            }
+            assert_tls() {
+              for domain in $(domains CADDY_DOMAINS) $(domains API_CADDY_DOMAINS); do
+                # No -f/-k: success means the handshake and the certificate check passed.
+                curl -sS --max-time 10 -o /dev/null "https://${domain}/healthz" || return 1
+              done
+            }
+            edge_caddy() {
+              docker ps -q \
+                --filter label=com.docker.compose.project=edge \
+                --filter label=com.docker.compose.service=caddy
+            }
+            if assert_tls; then
+              echo "TLS OK for all public domains."
+              exit 0
+            fi
+            echo "TLS check failed — forcing the edge to retry certificate issuance…" >&2
+            caddy_id="$(edge_caddy)"
+            if [ -z "$caddy_id" ]; then
+              echo "Edge Caddy container not found — is infra-vps deployed?" >&2
+              exit 1
+            fi
+            docker restart "$caddy_id" >/dev/null
+            for _ in $(seq 1 18); do
+              sleep 5
+              if assert_tls; then
+                echo "TLS recovered after edge reload."
+                exit 0
+              fi
+            done
+            echo "TLS still failing after edge reload. Check DNS, CAA, LE rate limits:" >&2
+            docker logs --since 3m "$caddy_id" 2>&1 \
+              | grep -iE 'challenge failed|could not get certificate|rateLimited|unauthorized' >&2 \
+              || true
+            exit 1
+          EOSSH

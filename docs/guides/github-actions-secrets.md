@@ -153,3 +153,62 @@ Let's Encrypt est configuré dans `infra-vps`.
 - **Plus aucune variable `MINIO_*`** : le stockage Data Dragon est un volume Docker (`storage`), sans identifiants ni bucket. Les lignes `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` encore présentes dans `ENV_STAGING` / `ENV_PROD` ne sont plus lues et peuvent être retirées. L'ancien volume `<projet>_minio_data` reste sur l'hôte jusqu'à suppression manuelle (`docker volume rm lodb-staging_minio_data`, idem `lodb-prod_minio_data`).
 - **`*_SSH_KEY`** : copier l'intégralité du fichier clé, en-têtes `-----BEGIN … PRIVATE KEY-----` / `-----END … PRIVATE KEY-----` inclus.
 - Les secrets ne sont **jamais** affichés dans les logs (masqués par GitHub) ; leur mise à jour ne s'applique qu'aux exécutions suivantes.
+
+---
+
+## 🆕 Nouvelle stack (`lodb-next`, réécriture .NET + Angular)
+
+Workflows propres à la réécriture, indépendants de `ci.yml` et des `_*.yml` ci-dessus :
+
+| Fichier | Rôle |
+|---|---|
+| `next-ci.yml` | Déclenché par `push` (branche d'intégration `docs/reecriture-dotnet-angular`, `dev`, `main`) et `pull_request`, filtré sur les chemins de la nouvelle stack. Jobs parallèles : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-next` + Playwright). |
+| `next-build.yml` | Réutilisable, appelé par `next-ci.yml` sur `push` de la branche d'intégration une fois les jobs bloquants verts : images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}` taguées `:<sha>` + `:next`, label OCI et `APP_REVISION` = SHA. |
+| `next-deploy.yml` | Manuel (`workflow_dispatch`, entrée `branch`) : déploie l'environnement `next` par SSH. `pull`, puis service éphémère `migrate` (dès L1.4) **avant** `up -d --wait`, puis smoke test (nginx, `/readyz`, `/en/`, TLS public avec relance de l'edge). |
+
+```
+push docs/reecriture-dotnet-angular ─▶ next-ci (dotnet, front, contract, e2e ; i18n informatif)
+                                    ─▶ next-build (GHCR :<sha> + :next)
+Actions ▸ next deploy ▸ Run workflow ─▶ hôte next : pull ─▶ migrate ─▶ up -d ─▶ smoke test
+```
+
+Les jobs de CI et de build n'utilisent aucun secret (seulement `GITHUB_TOKEN`). Le job de
+déploiement tourne dans l'environnement GitHub `next`, créé à la première exécution : ses
+secrets peuvent y être déclarés (ou en secrets de dépôt) et des règles de protection
+ajoutées.
+
+### Secrets du déploiement `next`
+
+| Secret | Requis | Description |
+|---|:---:|---|
+| `NEXT_SSH_KEY` | ✅ | Clé privée SSH (PEM complet) chargée dans `ssh-agent`. Clé publique dans les `authorized_keys` de l'hôte. |
+| `NEXT_HOST` | ✅ | Hôte `next` (IP ou FQDN), le même VPS que staging et prod le cas échéant. |
+| `NEXT_PATH` | ✅ | Chemin absolu du projet sur l'hôte, **distinct** de `STAGING_PATH` et `PROD_PATH` (chaque dossier a son `.env`). Le job y initialise le dépôt et suit la branche passée en entrée. |
+| `NEXT_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
+| `ENV_NEXT` | ✅ | Dotenv `next` **complet**, écrit dans `${NEXT_PATH}/.env`. Modèle : `.env.next.example`. |
+
+### Lignes de `ENV_NEXT`
+
+| Variable | Description |
+|---|---|
+| `COMPOSE_PROJECT_NAME` | `lodb-next`. Le job refuse de déployer sans elle (isolation des stacks du VPS). |
+| `REGISTRY`, `IMAGE_TAG` | `ghcr.io/<owner>/lodb` et `next` (images poussées par `next-build.yml`). |
+| `CADDY_DOMAINS` | Domaine du site `next` (label Caddy `caddy_0`). |
+| `API_CADDY_DOMAINS` | Sous-domaine de l'API publique, qui **doit commencer par `api.`** (nginx le reconnaît à ce préfixe). Label `caddy_1`. |
+| `LODB_CANONICAL_HOST` | Hôte cible des 301 `www.` et `.fr`. |
+| `LODB_ALLOWED_HOSTS` | Hôtes acceptés par le serveur SSR, séparés par des virgules (ceux de `CADDY_DOMAINS`). |
+| `LODB_EDGE_CIDR` | Sous-réseau du réseau Docker `edge`, seul pair cru sur `X-Forwarded-For` : `docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}'`. |
+| `LODB_NOINDEX` | `1` sur `next` : `X-Robots-Tag: noindex, nofollow` sur toutes les réponses. |
+| `LODB_DB_PASSWORD` | Mot de passe du Postgres propre à `next`, fort et unique. `LODB_DB_NAME` et `LODB_DB_USER` valent `lodb` par défaut. |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Optionnel : collecteur de traces, quand `infra-vps` en expose un. |
+
+### Avant le premier déploiement de `next`
+
+1. Les prérequis serveur ci-dessus (edge `infra-vps`, `docker login ghcr.io` si les
+   packages sont privés) valent aussi pour `next` ; DNS de `CADDY_DOMAINS` **et** de
+   `API_CADDY_DOMAINS` pointés vers l'hôte.
+2. La branche d'intégration doit être poussée (l'hôte la récupère) et avoir produit des
+   images `:next` (un `push` avec `next-ci.yml` vert).
+3. Les packages GHCR `lodb/api` et `lodb/web-ssr` sont nouveaux : leur visibilité se règle
+   comme celle des autres. `lodb/nginx` est partagé avec l'ancienne stack, qui n'utilise
+   jamais le tag `next`.

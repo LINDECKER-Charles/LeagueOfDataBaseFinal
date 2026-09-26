@@ -1,0 +1,22 @@
+{
+  "name": "lodb-e2e",
+  "version": "0.0.0",
+  "description": "End-to-end tests of LeagueOfDataBase, run against a started lodb-next stack.",
+  "private": true,
+  "license": "CC-BY-NC-4.0",
+  "type": "module",
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "browsers:install": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.19.0",
+    "typescript": "~6.0.3"
+  }
+}

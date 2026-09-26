@@ -174,3 +174,94 @@ updates:
       actions-minor-patch:
         patterns: ["*"]
         update-types: [minor, patch]
+
+  # ─────────────────────────────── New stack (.NET + Angular) ──────────────────
+  # The rewrite's manifests only exist on its integration branch until the cutover, hence
+  # this target-branch instead of dev (L8 moves these entries to dev with the rest).
+  # ADR 0005: updates of the SSR server's dependencies are applied first.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: docs/reecriture-dotnet-angular
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      nuget-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /src/LoDb.Web
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: docs/reecriture-dotnet-angular
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: build
+      include: scope
+    ignore:
+      # Angular pins its supported TypeScript range: bumped with the Angular major.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      # @types/node tracks the runtime major (node:24 in docker/next/web-ssr, CI Node 24).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # The framework moves as one: a split Angular update does not install.
+      angular:
+        patterns: ["@angular/*", "@angular-devkit/*", "angular-eslint"]
+      npm-minor-patch:
+        patterns: ["*"]
+        exclude-patterns: ["@angular/*", "@angular-devkit/*", "angular-eslint"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /tests/LoDb.E2E
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: docs/reecriture-dotnet-angular
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    ignore:
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+    groups:
+      npm-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directories:
+      - /docker/next/api
+      - /docker/next/web-ssr
+      - /docker/next/nginx
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    target-branch: docs/reecriture-dotnet-angular
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    ignore:
+      # .NET and Node majors are tied to global.json, the CI and the code: bumped by hand.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
