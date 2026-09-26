@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../../src/LoDb.Ingestion/LoDb.Ingestion.csproj" />
   </ItemGroup>
 </Project>
