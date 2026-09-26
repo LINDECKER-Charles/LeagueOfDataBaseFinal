@@ -1,0 +1,6 @@
+{
+  "data": {
+    "dataset_name": "League of Legends game data",
+    "description": "Where League Of Data Base data comes from: Riot's official Data Dragon export and Community Dragon, how often it is refreshed and what it does not cover."
+  }
+}

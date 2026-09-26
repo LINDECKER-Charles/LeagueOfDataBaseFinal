@@ -1,0 +1,128 @@
+<section id="editeur">
+  <h2>1. Éditeur du site</h2>
+  <p>
+    Le site <strong>{{ info().siteName }}</strong
+    >, accessible à l'adresse <a href="{{ info().siteUrl }}">{{ info().siteUrl }}</a
+    >, est édité par :
+  </p>
+  <ul>
+    <li><strong>Nom :</strong> {{ info().publisherName }}</li>
+    <li><strong>Statut :</strong> {{ info().publisherStatus }}</li>
+    @if (info().publisherAddress) {
+      <li><strong>Adresse :</strong> {{ info().publisherAddress }}</li>
+    } @else {
+      <li>
+        <strong>Adresse :</strong> non publiée — éditeur non professionnel (article 6, III-2 de la
+        loi n° 2004-575 « LCEN »). L'identité et les coordonnées de l'éditeur ont été communiquées à
+        l'hébergeur.
+      </li>
+    }
+    <li>
+      <strong>Email :</strong>
+      <a href="mailto:{{ info().publisherEmail }}">{{ info().publisherEmail }}</a>
+    </li>
+    <li><strong>SIRET :</strong> {{ info().siret }}</li>
+  </ul>
+  <p><strong>Directeur de la publication :</strong> {{ info().publicationDirector }}.</p>
+</section>
+
+<hr class="hx-rule" />
+
+<section id="hebergement">
+  <h2>2. Hébergement</h2>
+  <p>Le site est hébergé par :</p>
+  <ul>
+    <li><strong>Hébergeur :</strong> {{ info().hostName }}</li>
+    <li><strong>Adresse :</strong> {{ info().hostAddress }}</li>
+    <li><strong>Téléphone :</strong> {{ info().hostPhone }}</li>
+  </ul>
+  <p>
+    L'entité contractante des services Hostinger est, selon ses conditions générales, Hostinger
+    International Ltd, 61 Lordou Vironos str., 6023 Larnaca, Chypre.
+  </p>
+</section>
+
+<hr class="hx-rule" />
+
+<section id="propriete-intellectuelle">
+  <h2>3. Propriété intellectuelle</h2>
+  <p>
+    Le code source de {{ info().siteName }} est publié sous licence
+    <a
+      href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr"
+      target="_blank"
+      rel="noopener noreferrer"
+      >Creative Commons BY-NC 4.0</a
+    >
+    (attribution, usage non commercial). Il est consultable sur
+    <a
+      href="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal"
+      target="_blank"
+      rel="noopener noreferrer"
+      >GitHub</a
+    >.
+  </p>
+  <p>
+    Les données de jeu, noms, illustrations, icônes et autres contenus relatifs à
+    <em>League of Legends</em> proviennent des services publics de Riot Games (Data Dragon,
+    CommunityDragon) et demeurent la propriété exclusive de <strong>Riot Games, Inc.</strong> Leur
+    présence sur ce site ne confère aucun droit de réutilisation : toute exploitation de ces
+    contenus reste soumise aux conditions de Riot Games.
+  </p>
+  <p>
+    La structure du site, ses textes originaux et son identité visuelle propre sont protégés par le
+    droit d'auteur. Toute reproduction non autorisée, en dehors du cadre de la licence CC BY-NC 4.0
+    applicable au code, est interdite.
+  </p>
+</section>
+
+<hr class="hx-rule" />
+
+<section id="riot">
+  <h2>4. Avertissement Riot Games</h2>
+  <p>
+    {{ info().siteName }} est un projet de fan, gratuit et non commercial, sans lien juridique avec
+    Riot Games. Conformément à la politique « Legal Jibber Jabber » de Riot Games :
+  </p>
+  <blockquote class="hx-corners border border-gold-deep/50 bg-void/70 p-5">
+    <p>
+      {{ info().siteName }} n'est pas approuvé par Riot Games et ne reflète pas les opinions ou
+      points de vue de Riot Games ni de quiconque participant officiellement à la production ou à la
+      gestion des propriétés de Riot Games. Riot Games et toutes les propriétés associées sont des
+      marques commerciales ou des marques déposées de Riot Games, Inc.
+    </p>
+    <p lang="en">
+      <em
+        >Version originale — “{{ info().siteName }} isn't endorsed by Riot Games and doesn't reflect
+        the views or opinions of Riot Games or anyone officially involved in producing or managing
+        Riot Games properties. Riot Games, and all associated properties are trademarks or
+        registered trademarks of Riot Games, Inc.”</em
+      >
+    </p>
+  </blockquote>
+</section>
+
+<hr class="hx-rule" />
+
+<section id="donnees">
+  <h2>5. Données personnelles et cookies</h2>
+  <p>
+    Les traitements de données personnelles mis en œuvre par le site sont décrits dans la
+    <a [routerLink]="link('legal/privacy')">politique de confidentialité</a>. Les cookies et
+    stockages locaux utilisés sont détaillés dans la
+    <a [routerLink]="link('legal/cookies')">politique de cookies</a>. Les conditions d'utilisation
+    du service figurent dans les
+    <a [routerLink]="link('legal/terms')">conditions générales d'utilisation</a>.
+  </p>
+</section>
+
+<hr class="hx-rule" />
+
+<section id="contact">
+  <h2>6. Contact</h2>
+  <p>
+    Pour toute question relative au site, à son contenu ou pour signaler un contenu illicite :
+    <a href="mailto:{{ info().publisherEmail }}">{{ info().publisherEmail }}</a
+    >.
+  </p>
+</section>

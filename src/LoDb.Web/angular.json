@@ -30,6 +30,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "*.json",
+                "input": "src/app/features/editorial/changelog/published",
+                "output": "changelog"
               }
             ],
             "styles": ["src/styles/index.css"],

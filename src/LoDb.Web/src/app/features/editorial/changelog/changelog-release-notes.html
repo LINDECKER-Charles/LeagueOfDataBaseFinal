@@ -1,0 +1,50 @@
+@let entry = release();
+@if (entry.intro) {
+  <p class="intro">{{ entry.intro }}</p>
+}
+@if (entry.features.length > 0) {
+  <ul class="features" role="list">
+    @for (feature of entry.features; track $index) {
+      <li class="feature" [class.feature--mana]="feature.kind === 'mana'">
+        <span class="feature__glyph" aria-hidden="true">{{ feature.glyph }}</span>
+        <div>
+          <p class="feature__title">
+            {{ feature.title }}
+            @if (feature.tag) {
+              <span class="feature__tag">{{ feature.tag }}</span>
+            }
+          </p>
+          <p class="feature__description">{{ feature.description }}</p>
+        </div>
+      </li>
+    }
+  </ul>
+}
+@if (entry.fixes.length > 0) {
+  <div class="fixes">
+    <p class="eyebrow fixes__label" [attr.lang]="labelLanguage()">
+      {{ 'changelog.section.fixes' | transloco }}
+    </p>
+    <ul class="fixes__list" role="list">
+      @for (fix of entry.fixes; track $index) {
+        <li class="fix">
+          @if (fix.id) {
+            <span class="fix__id">{{ fix.id }}</span>
+          }
+          @if (fix.area) {
+            <span class="fix__area">{{ fix.area }}</span>
+          }
+          <span>{{ fix.text }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+}
+@if (entry.devNote; as note) {
+  <figure class="note">
+    <blockquote class="note__body">{{ note.body }}</blockquote>
+    @if (note.signature) {
+      <figcaption class="note__signature">— {{ note.signature }}</figcaption>
+    }
+  </figure>
+}
