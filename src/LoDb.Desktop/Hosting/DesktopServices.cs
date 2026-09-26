@@ -3,6 +3,7 @@ using LoDb.Desktop.Bridge;
 using LoDb.Desktop.Lifecycle;
 using LoDb.Desktop.Proxy;
 using LoDb.Desktop.Shell;
+using LoDb.Desktop.Updates;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace LoDb.Desktop.Hosting;
@@ -23,8 +24,9 @@ internal static class DesktopServices
         services.AddDesktopBridge();
         services.AddDesktopShell();
 
-        // Updates/ (L9.4) adds its registration on the line above this one; the default
-        // below then stays out, and development builds keep reporting "no update".
+        // Updates/ (L9.4) registers Velopack on the line below; the default after it then
+        // stays out, and a build Velopack did not install keeps reporting "no update".
+        services.AddDesktopUpdates();
         services.TryAddSingleton<IDesktopUpdates, NoDesktopUpdates>();
         return services;
     }
