@@ -1,4 +1,9 @@
-<!-- L3.1 plugs the slot components here (lodbSlot="switcher", "account", "banner", "contact"). -->
 <lodb-shell>
+  <lodb-account-menu lodbSlot="account" />
+  <lodb-context-switcher lodbSlot="switcher" />
+  <lodb-verify-email-banner lodbSlot="banner" />
+  <lodb-update-banner lodbSlot="banner" />
   <router-outlet />
+  <lodb-contact-dialog lodbSlot="contact" />
 </lodb-shell>
+<lodb-update-screen />

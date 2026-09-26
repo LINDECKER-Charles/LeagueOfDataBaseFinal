@@ -1,0 +1,23 @@
+@let answer = outcome();
+<div class="mx-auto flex max-w-2xl flex-col items-center gap-4 px-6 py-20 text-center">
+  @switch (answer.kind) {
+    @case ('redirect') {
+      <a class="text-gold-bright underline" [href]="answer.location">{{ answer.location }}</a>
+    }
+    @case ('not-found') {
+      <p class="eyebrow">{{ 'seo.error.404.eyebrow' | transloco }}</p>
+      <h1 class="font-beaufort text-3xl tracking-wide text-gold-grad uppercase sm:text-4xl">
+        {{ 'seo.error.404.title' | transloco }}
+      </h1>
+      <p class="text-text-muted">{{ 'seo.error.404.body' | transloco }}</p>
+      <a lodbButton [routerLink]="home()">{{ 'seo.error.404.back_home' | transloco }}</a>
+    }
+    @default {
+      <h1 class="font-beaufort text-3xl tracking-wide text-gold-grad uppercase sm:text-4xl">
+        {{ 'seo.error.generic.title' | transloco }}
+      </h1>
+      <p class="text-text-muted">{{ 'seo.error.generic.body' | transloco }}</p>
+      <a lodbButton [routerLink]="home()">{{ 'seo.error.404.back_home' | transloco }}</a>
+    }
+  }
+</div>
