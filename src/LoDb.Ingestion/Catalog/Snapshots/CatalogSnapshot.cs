@@ -60,10 +60,10 @@ public sealed class CatalogSnapshot
         Items = new(datasets.Items, static item => item.Id);
         Runes = new(datasets.Runes, static tree => KeyOf(tree.Id));
         Summoners = new(datasets.Summoners, static spell => spell.Id);
-        ListedItems = [.. Items.Entries.Where(static item => !ItemDebris.IsDebris(item))];
         runes = LocateRunes(Runes.Entries);
         var source = english ?? this;
         englishItemNames = NamesOf(source.Items.Entries, static item => (item.Id, item.Name));
+        ListedItems = [.. Items.Entries.Where(IsListed)];
         englishTreeNames = NamesOf(
             source.Runes.Entries,
             static tree => (KeyOf(tree.Id), tree.Name));
@@ -90,6 +90,16 @@ public sealed class CatalogSnapshot
     public CatalogResource<RuneTree> Runes { get; }
 
     public CatalogResource<SummonerSpell> Summoners { get; }
+
+    /// <summary>
+    /// Whether the item belongs to the encyclopedia: not debris, its placeholder marker read
+    /// from its en_US name, which Data Dragon translates in some languages (UP 10).
+    /// </summary>
+    public bool IsListed(Item item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return !ItemDebris.IsDebris(item, englishItemNames.GetValueOrDefault(item.Id));
+    }
 
     /// <summary>A rune of any path, by rune id.</summary>
     public RuneLocation? FindRune(int id) => runes.GetValueOrDefault(id);

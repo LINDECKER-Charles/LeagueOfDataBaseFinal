@@ -108,6 +108,7 @@ retombent sur `en_US`, à l'identique. Les autres couples sont comparés dans le
 | `legacy-image-not-fetched` | attendu | 200 | 11 |
 | `legacy-debris-images-not-warmed` | attendu | 40 | 11 |
 | `name-trimmed` | défaut ancien corrigé | 10 | 10 |
+| `legacy-translated-placeholder-listed` | défaut ancien corrigé | à mesurer | à mesurer |
 | *non classés* | — | 0 | — |
 | *défauts de la nouvelle stack* | — | 0 | — |
 
@@ -168,15 +169,43 @@ affiché. L'ancienne stack ne réduit que les noms balisés : elle garde l'espac
 qu'elle affiche. La règle n'accepte que des noms égaux une fois les blancs de bord
 retirés.
 
+### `legacy-translated-placeholder-listed` — défaut de l'ancienne stack, corrigé
+
+Objet 7050, champ `listed`, `ar_AE` et `zh_CN` : `true` → `false`. Règle ajoutée par la
+correction G1 du [jalon du lot 1](jalons/lot-01.md), après la mesure : le run `lot1`
+stocké contient l'export .NET d'avant correction, où 7050 est encore listé dans ces deux
+langues. L'écart n'y figure donc pas. D'après l'export de l'ancienne stack de ce run, il
+doit en apparaître 20 : 7050 porte `Placeholder` dans son nom `en_US` de 16.10.1 à
+16.19.1, et seuls `ar_AE` et `zh_CN` le traduisent (`fr_FR` et `ko_KR` gardent le mot).
+Ré-exporter les deux côtés et rejouer la comparaison (§ 6) revient à la vérification du
+lot, qui reporte le décompte dans le tableau ci-dessus.
+
+Data Dragon traduit le mot `Placeholder` du nom en `ar_AE` (`نائب غانغ بلانك`) et en
+`zh_CN` (`普朗克 占位`). L'ancienne stack le cherche dans le nom traduit
+(`ItemManager::paginationCollection`) et liste donc l'objet dans ces langues. La nouvelle
+stack le cherche dans le nom `en_US` du même id et de la même version, comme pour le type
+([heritage](../heritage.md) § 5.13, UP 10). Le test du nom vide reste fait sur le nom
+localisé.
+
+La règle est étroite. Elle ne vise que le champ `listed` d'un objet, `true` dans
+l'ancienne stack et `false` dans la nouvelle, et exige l'étiquette `placeholder`. Le run
+pose cette étiquette sur un objet dont le nom, dans l'export `en_US` de la nouvelle stack
+pour la même version, contient `Placeholder`. Elle ne couvre donc pas un objet que la
+nouvelle stack cacherait pour une autre raison (un nom fait de jetons, par exemple), ni un
+placeholder qu'elle listerait (`false` → `true`). Ces deux cas sont testés
+(`ParityRulesTests`). Sans export `en_US` dans le run, aucune entrée n'est étiquetée et
+l'écart reste non classé.
+
 ## 5. Observations hors écart
 
 - **Défaut commun, 7050 « Gangplank Placeholder »**. Les deux stacks écartent les
   « placeholders » par le mot `Placeholder` dans le nom. Or ce nom est traduit en `ar_AE`
   (`نائب غانغ بلانك`) et en `zh_CN` (`普朗克 占位`). L'objet reste donc listé dans ces
   langues, des deux côtés, à l'encontre de ce que disent les deux sources (« in every
-  locale »). Ce n'est pas un écart de parité. C'est un point à corriger dans la nouvelle
-  stack : le décider sur le nom `en_US` de l'id, comme le type (heritage § 5.13). Il est
-  repris au jalon du lot 1.
+  locale »). Au moment de la mesure, ce n'est pas un écart de parité. La nouvelle stack
+  le décide désormais sur le nom `en_US` de l'id, comme le type (heritage § 5.13) :
+  correction G1 du jalon du lot 1. L'écart qui en résulte relève de la règle
+  `legacy-translated-placeholder-listed` (§ 4).
 - **503 transitoires de Data Dragon**. Sur 3 des 15 versions, une image sur environ 2 000
   n'a pas eu de verdict après quatre essais en 5 s environ. L'ingestion l'a laissée sans verdict,
   n'a rien persisté, et `ingest` a rendu le code 1, comme prévu. Rejouée, chacune a été

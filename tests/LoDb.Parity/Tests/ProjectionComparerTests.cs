@@ -92,13 +92,52 @@ public sealed class ProjectionComparerTests
             deviation.Tags.Order(StringComparer.Ordinal));
     }
 
-    private static IReadOnlyList<Deviation> Compare(JsonObject legacy, JsonObject next) =>
+    [Fact]
+    public void AnItemNamedAPlaceholderInEnglishIsTaggedInEveryLanguage()
+    {
+        var english = Projection(items: Entries(
+            """{"id":"7050","name":"Gangplank Placeholder"}""",
+            """{"id":"3078","name":"Trinity Force"}"""));
+        const string Legacy = """{"id":"7050","name":"普朗克 占位","listed":true}""";
+        const string Ordinary = """{"id":"3078","name":"三相之力","listed":true}""";
+
+        var found = Compare(
+            Projection(items: Entries(Legacy, Ordinary)),
+            Projection(items: Entries(
+                Legacy.Replace("true", "false", StringComparison.Ordinal),
+                Ordinary.Replace("true", "false", StringComparison.Ordinal))),
+            EntryTags.PlaceholdersOf(english));
+
+        Assert.Equal(["7050"], EntryTags.PlaceholdersOf(english));
+        Assert.Equal(2, found.Count);
+        Assert.Contains(DeviationTags.Placeholder, found.Single(d => d.Site.Entry == "7050").Tags);
+        Assert.DoesNotContain(
+            DeviationTags.Placeholder,
+            found.Single(d => d.Site.Entry == "3078").Tags);
+    }
+
+    [Fact]
+    public void PlaceholderIdsOnlyTagItems()
+    {
+        var found = Compare(
+            Projection(champions: Entries("""{"id":"7050","name":"a"}""")),
+            Projection(champions: Entries("""{"id":"7050","name":"b"}""")),
+            new HashSet<string> { "7050" });
+
+        Assert.DoesNotContain(DeviationTags.Placeholder, Assert.Single(found).Tags);
+    }
+
+    private static IReadOnlyList<Deviation> Compare(
+        JsonObject legacy,
+        JsonObject next,
+        IReadOnlySet<string>? placeholders = null) =>
         ProjectionComparer.Compare(new ProjectionPair
         {
             Version = "16.19.1",
             Language = "fr_FR",
             Legacy = legacy,
             Next = next,
+            Placeholders = placeholders ?? new HashSet<string>(),
         });
 
     private static string Entries(params string[] entries) =>

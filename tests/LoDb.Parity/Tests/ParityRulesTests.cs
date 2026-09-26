@@ -15,6 +15,13 @@ public sealed class ParityRulesTests
                 Tags = Tags(DeviationTags.Detailed, DeviationTags.Fallback),
             }
         },
+        {
+            "legacy-translated-placeholder-listed",
+            Projection("items", "listed", ("true", "false")) with
+            {
+                Tags = Tags(DeviationTags.Unlisted, DeviationTags.Placeholder),
+            }
+        },
         { "name-trimmed", Projection("items", "name", ("\"过载 \"", "\"过载\"")) },
         { "legacy-image-not-fetched", Projection("items", "image", ("pending", "present /x.png")) },
         {
@@ -33,6 +40,16 @@ public sealed class ParityRulesTests
         Projection("champions", "passive", ("null", "{}")) with
         {
             Tags = Tags(DeviationTags.Detailed),
+        },
+        // An item the new stack hides though its en_US name declares no placeholder.
+        Projection("items", "listed", ("true", "false")) with
+        {
+            Tags = Tags(DeviationTags.Unlisted),
+        },
+        // The new stack lists a placeholder the legacy one hides: a new defect.
+        Projection("items", "listed", ("false", "true")) with
+        {
+            Tags = Tags(DeviationTags.Unlisted, DeviationTags.Placeholder),
         },
         Projection("items", "name", ("\"过载\"", "\"超载\"")),
         // The new stack has no verdict where the legacy one has: a new defect.

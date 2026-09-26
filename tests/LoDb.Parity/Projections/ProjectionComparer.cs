@@ -8,6 +8,8 @@ namespace LoDb.Parity.Projections;
 /// </summary>
 public static class ProjectionComparer
 {
+    private static readonly IReadOnlySet<string> NoPlaceholders = new HashSet<string>();
+
     public static IReadOnlyList<string> Resources { get; } =
         ["champions", "items", "runes", "summoners"];
 
@@ -24,8 +26,12 @@ public static class ProjectionComparer
                     Language = pair.Language,
                     Resource = resource,
                 };
-                return new ResourceComparison(site, pair.Legacy[resource], pair.Next[resource])
-                    .Deviations();
+                var placeholders = resource == "items" ? pair.Placeholders : NoPlaceholders;
+                return new ResourceComparison(
+                    site,
+                    pair.Legacy[resource],
+                    pair.Next[resource],
+                    placeholders).Deviations();
             }),
         ];
     }

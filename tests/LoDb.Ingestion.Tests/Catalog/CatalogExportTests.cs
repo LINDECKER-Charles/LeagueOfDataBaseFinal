@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Nodes;
+using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Storage.Blobs;
 using LoDb.Ingestion.Catalog;
@@ -89,6 +90,23 @@ public sealed class CatalogExportTests
             """{"id":"1004","edition":"modern"}""",
             classicCharm["counterpart"]?.ToJsonString());
         Assert.Equal((false, (string?)null), Listing(Entry(projection, "items", "7050")));
+    }
+
+    [Theory]
+    [InlineData("zh_CN")]
+    [InlineData("ar_AE")]
+    public async Task Up10ATranslatedPlaceholderIsNotListed(string language)
+    {
+        var catalog = await CatalogFixtures.LatestAsync(DdragonLanguage.Parse(language));
+
+        var projection = await ProjectAsync(catalog, new StubResolver(), ColdDemand.StoredOnly);
+
+        var items = projection["items"]!["entries"]!.AsArray();
+        Assert.Equal((false, (string?)null), Listing(Entry(projection, "items", "7050")));
+        Assert.Equal(
+            catalog.ListedItems.Select(static item => item.Id),
+            items.Where(static item => (bool?)item!["listed"] == true)
+                .Select(static item => (string?)item!["id"]));
     }
 
     [Fact]

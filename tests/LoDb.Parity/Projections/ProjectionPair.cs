@@ -12,4 +12,10 @@ public sealed record ProjectionPair
     public required JsonObject Legacy { get; init; }
 
     public required JsonObject Next { get; init; }
+
+    /// <summary>
+    /// The items whose en_US name declares a placeholder, read from the new en_US projection
+    /// of the version: a translated name no longer says so (ar_AE, zh_CN).
+    /// </summary>
+    public IReadOnlySet<string> Placeholders { get; init; } = new HashSet<string>();
 }

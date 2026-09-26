@@ -6,6 +6,9 @@ namespace LoDb.Parity.Projections;
 /// <summary>The <see cref="DeviationTags"/> an entry gives the deviations found in it.</summary>
 public static class EntryTags
 {
+    // The marker the new stack reads in the en_US name (ItemDebris).
+    private const string PlaceholderMarker = "Placeholder";
+
     /// <summary>Tags of an entry seen on either side, and of its dataset.</summary>
     public static IReadOnlySet<string> Of(JsonObject? legacy, JsonObject? next, bool fallback)
     {
@@ -18,6 +21,18 @@ public static class EntryTags
             || Is(next, "edition", "classic"));
         return tags;
     }
+
+    /// <summary>
+    /// The ids of the items an en_US projection names as placeholders, for
+    /// <see cref="ProjectionPair.Placeholders"/>.
+    /// </summary>
+    public static IReadOnlySet<string> PlaceholdersOf(JsonObject? english) =>
+        (english?["items"]?["entries"]?.AsArray() ?? [])
+            .Where(static entry => entry?["name"] is JsonValue name
+                && name.TryGetValue<string>(out var text)
+                && text.Contains(PlaceholderMarker, StringComparison.Ordinal))
+            .Select(static entry => entry!["id"]!.ToString())
+            .ToHashSet(StringComparer.Ordinal);
 
     private static void AddWhen(HashSet<string> tags, string tag, bool condition)
     {

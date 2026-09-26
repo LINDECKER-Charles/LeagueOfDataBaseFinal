@@ -15,7 +15,40 @@ public sealed class ItemDebrisTests
     {
         var item = ItemSamples.Named(id, ItemDebris.DisplayName(name));
 
-        Assert.True(ItemDebris.IsDebris(item));
+        Assert.True(ItemDebris.IsDebris(item, item.Name));
+    }
+
+    [Theory]
+    [InlineData("普朗克 占位")]
+    [InlineData("نائب غانغ بلانك")]
+    public void Up10ATranslatedPlaceholderIsDebrisByItsEnglishName(string name)
+    {
+        var item = ItemSamples.Named("7050", name);
+
+        Assert.True(ItemDebris.IsDebris(item, "Gangplank Placeholder"));
+    }
+
+    [Fact]
+    public void AnOrdinaryItemIsNotDebrisInAnyLanguage()
+    {
+        var item = ItemSamples.Named("3078", "三相之力");
+
+        Assert.False(ItemDebris.IsDebris(item, "Trinity Force"));
+    }
+
+    [Fact]
+    public void Up10AnUnnamedLocalizedItemIsDebrisWhateverItsEnglishName()
+    {
+        var item = ItemSamples.Named("2008", ItemDebris.DisplayName(" "));
+
+        Assert.True(ItemDebris.IsDebris(item, "Trinity Force"));
+    }
+
+    [Fact]
+    public void WithoutAnEnglishNameThePlaceholderIsReadInTheItemName()
+    {
+        Assert.True(ItemDebris.IsDebris(ItemSamples.Named("7050", "Gangplank Placeholder"), null));
+        Assert.False(ItemDebris.IsDebris(ItemSamples.Named("7050", "普朗克 占位"), null));
     }
 
     [Fact]
@@ -27,7 +60,7 @@ public sealed class ItemDebrisTests
         var name = ItemDebris.DisplayName(arenaName);
 
         Assert.Equal("Feu à volonté", name);
-        Assert.False(ItemDebris.IsDebris(ItemSamples.Named("3901", name)));
+        Assert.False(ItemDebris.IsDebris(ItemSamples.Named("3901", name), "Fire at Will"));
     }
 
     [Theory]
@@ -39,7 +72,7 @@ public sealed class ItemDebrisTests
     {
         var item = ItemSamples.Named("9999", ItemDebris.DisplayName(rawName));
 
-        Assert.True(ItemDebris.IsDebris(item));
+        Assert.True(ItemDebris.IsDebris(item, item.Name));
     }
 
     [Theory]
@@ -51,6 +84,6 @@ public sealed class ItemDebrisTests
         var name = ItemDebris.DisplayName(rawName);
 
         Assert.Equal(expected, name);
-        Assert.False(ItemDebris.IsDebris(ItemSamples.Named("1036", name)));
+        Assert.False(ItemDebris.IsDebris(ItemSamples.Named("1036", name), name));
     }
 }
