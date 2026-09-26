@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "문제가 발생했습니다. 다시 시도해 주세요.",
+    "invalid": "유효하지 않은 값입니다.",
+    "required": "필수 항목입니다.",
+    "email_invalid": "올바른 이메일 주소를 입력하세요.",
+    "email_too_long": "이메일 주소가 너무 깁니다.",
+    "email_taken": "이미 다른 계정에서 사용 중인 이메일 주소입니다.",
+    "terms_required": "이용 약관에 동의해야 합니다.",
+    "password_too_long": "비밀번호가 너무 깁니다.",
+    "invalid_credentials": "아이디 또는 비밀번호가 올바르지 않습니다.",
+    "invalid_two_factor": "코드가 올바르지 않거나 만료되었습니다.",
+    "locked": "실패한 시도가 너무 많아 이 계정이 몇 분간 잠겼습니다.",
+    "google_cancelled": "Google 로그인이 취소되었습니다.",
+    "google_email_unverified": "Google에서 확인되지 않은 이메일 주소라 로그인에 사용할 수 없습니다.",
+    "google_two_factor": "이 계정은 2단계 인증을 사용합니다. 이메일과 비밀번호로 로그인하세요.",
+    "sign_out": "로그아웃하지 못했습니다. 다시 시도해 주세요."
+  },
+  "two_factor": {
+    "lede": "인증 앱에 표시된 6자리 코드를 입력하세요.",
+    "code": "인증 코드",
+    "recovery_code": "복구 코드",
+    "use_recovery": "복구 코드 사용하기",
+    "use_app": "인증 앱 사용하기"
+  },
+  "password": {
+    "met": "(충족)",
+    "unmet": "(미충족)"
+  },
+  "verify": {
+    "title": "이메일 확인",
+    "verifying": "이메일 주소를 확인하는 중…",
+    "pending": "{{ email }}(으)로 확인 링크를 보냈습니다. 링크를 열어 주소를 확인하거나 새 링크를 요청하세요.",
+    "sign_in": "새 확인 링크를 받으려면 로그인하세요.",
+    "continue": "계속"
+  },
+  "editor": {
+    "loading": "프로필을 불러오는 중…",
+    "load_error": "프로필을 불러오지 못했습니다.",
+    "version_error": "즐겨찾기 버전을 변경하지 못했습니다."
+  }
+}

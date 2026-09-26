@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Algo deu errado. Tente novamente.",
+    "invalid": "Este valor não é válido.",
+    "required": "Este campo é obrigatório.",
+    "email_invalid": "Informe um endereço de e-mail válido.",
+    "email_too_long": "Este endereço de e-mail é longo demais.",
+    "email_taken": "Já existe uma conta com este endereço de e-mail.",
+    "terms_required": "Você precisa aceitar os termos de uso.",
+    "password_too_long": "Esta senha é longa demais.",
+    "invalid_credentials": "Identificador ou senha incorretos.",
+    "invalid_two_factor": "Este código está incorreto ou expirou.",
+    "locked": "Tentativas malsucedidas demais: esta conta está bloqueada por alguns minutos.",
+    "google_cancelled": "O login com o Google foi cancelado.",
+    "google_email_unverified": "O Google não verificou este endereço de e-mail, por isso ele não pode ser usado para entrar.",
+    "google_two_factor": "Esta conta usa autenticação em dois fatores: entre com seu e-mail e sua senha.",
+    "sign_out": "Não foi possível sair. Tente novamente."
+  },
+  "two_factor": {
+    "lede": "Digite o código de 6 dígitos do seu aplicativo autenticador.",
+    "code": "Código de autenticação",
+    "recovery_code": "Código de recuperação",
+    "use_recovery": "Usar um código de recuperação",
+    "use_app": "Usar meu aplicativo autenticador"
+  },
+  "password": {
+    "met": "(atendido)",
+    "unmet": "(não atendido)"
+  },
+  "verify": {
+    "title": "Confirmação de e-mail",
+    "verifying": "Confirmando seu endereço de e-mail…",
+    "pending": "Um link de confirmação foi enviado para {{ email }}. Abra-o para confirmar seu endereço ou peça um novo.",
+    "sign_in": "Entre para receber um novo link de confirmação.",
+    "continue": "Continuar"
+  },
+  "editor": {
+    "loading": "Carregando seu perfil…",
+    "load_error": "Não foi possível carregar seu perfil.",
+    "version_error": "Não foi possível mudar a versão dos seus favoritos."
+  }
+}
