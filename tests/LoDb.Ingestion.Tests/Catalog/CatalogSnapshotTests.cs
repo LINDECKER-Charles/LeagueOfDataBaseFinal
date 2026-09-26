@@ -1,3 +1,4 @@
+using LoDb.Domain.Catalog;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog.Snapshots;
@@ -45,6 +46,26 @@ public sealed class CatalogSnapshotTests
             debris => Assert.DoesNotContain(debris, listed));
         Assert.Equal("Fire at Will", catalog.Items.Find("3901")?.Name);
         Assert.NotNull(catalog.Items.Find("7050"));
+    }
+
+    [Theory]
+    [InlineData("zh_CN", "普朗克")]
+    [InlineData("ar_AE", "غانغ")]
+    public async Task Up10ATranslatedPlaceholderIsLeftOutByItsEnglishName(
+        string language,
+        string query)
+    {
+        var catalog = await CatalogFixtures.LatestAsync(DdragonLanguage.Parse(language));
+        var placeholder = catalog.Items.Find("7050")!;
+
+        var hits = catalog.Search(SearchQuery.Parse(query), [ResourceType.Items], 10);
+
+        Assert.DoesNotContain("Placeholder", placeholder.Name, StringComparison.Ordinal);
+        Assert.False(catalog.IsListed(placeholder));
+        Assert.DoesNotContain(placeholder, catalog.ListedItems);
+        Assert.Equal(13, catalog.ListedItems.Count);
+        Assert.Empty(hits);
+        Assert.True(catalog.IsListed(catalog.Items.Find("3078")!));
     }
 
     [Fact]

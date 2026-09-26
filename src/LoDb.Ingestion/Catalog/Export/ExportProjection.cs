@@ -105,7 +105,7 @@ internal sealed class ExportProjection(CatalogSnapshot catalog, ImageResolution 
         ["path"] = catalog.PathOf(item).Value,
         ["edition"] = Token(item.Edition),
         ["counterpart"] = Twin(item.Counterpart),
-        ["listed"] = !ItemDebris.IsDebris(item),
+        ["listed"] = catalog.IsListed(item),
         ["tier"] = OptionalToken(ItemTiers.Of(item)),
         ["stats"] = ArrayOf(ItemStats.Of(item.Stats), Stat),
         ["image"] = Image(DdragonImageKind.Item, item.Image),

@@ -17,7 +17,8 @@ public sealed class ItemDatasetTests
     {
         var items = await ReadAsync("en_US");
 
-        var debris = items.Where(ItemDebris.IsDebris).Select(static item => item.Id);
+        var debris = items.Where(static item => ItemDebris.IsDebris(item, item.Name))
+            .Select(static item => item.Id);
 
         Assert.Equal(
             ["2008", "226660", "7050", "772139", "772140"],
