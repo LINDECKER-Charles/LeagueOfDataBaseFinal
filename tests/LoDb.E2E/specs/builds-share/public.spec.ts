@@ -1,0 +1,109 @@
+import type { Browser, Page } from '@playwright/test';
+import { readHead, typesOf } from '../../support/head';
+import { expect, test } from '../../support/test';
+import { discardAccount, newAccount, type TestAccount } from '../account/accounts';
+import { createBuild, verifiedAccount } from './builds';
+
+// The build speaks French, whatever the visitor's browser or `?lang=` asks for.
+const LANGUAGE = 'fr_FR';
+
+// The account of the journey, deleted even when a step fails: no run leaves one behind.
+let created: TestAccount | undefined;
+
+test.afterEach(async ({ playwright, baseURL }) => {
+  if (created) {
+    await discardAccount(playwright.request, baseURL, created);
+    created = undefined;
+  }
+});
+
+async function newVisitor(browser: Browser, baseURL: string | undefined, javaScriptEnabled = true) {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled });
+  return context.newPage();
+}
+
+function voteScore(page: Page) {
+  return page.locator('.bshare-head .vote-score');
+}
+
+// The owner and a visitor, around one public build.
+test('shares a public build, unlisted, in its own language, with its score', async ({
+  page,
+  request,
+  browser,
+  baseURL,
+  consoleErrors,
+}) => {
+  test.slow();
+  const account = (created = newAccount('bshare'));
+  const owner = await newVisitor(browser, baseURL);
+  await verifiedAccount(owner, request, account);
+  const build = await createBuild(owner, {
+    name: 'Shared scroll',
+    isPublic: true,
+    language: LANGUAGE,
+    gameMode: 'aram',
+  });
+  const path = `/b/${build.shareToken}`;
+
+  await test.step('serves an unlisted page without structured data', async () => {
+    const response = await request.get(path);
+    expect(response.status()).toBe(200);
+    expect(response.headers()['x-robots-tag']).toContain('noindex');
+    const crawler = await newVisitor(browser, baseURL, false);
+    await crawler.goto(path);
+    const head = await readHead(crawler);
+    expect(head.robots).toContain('noindex');
+    expect(head.canonicals).toEqual([]);
+    expect(typesOf(head.jsonLd).size).toBe(0);
+    expect(head.title).toContain('Shared scroll');
+    await expect(crawler.locator('html')).toHaveAttribute('lang', 'fr');
+    await crawler.context().close();
+  });
+
+  await test.step('speaks the build’s language, even when ?lang= names others', async () => {
+    await page.goto(`${path}?lang=en_US`);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
+    await expect(page.locator('.bshare-head h1')).toHaveText('Shared scroll');
+    await expect(page.locator('[data-mode]')).toHaveText('ARAM');
+    await expect(page.locator('[data-version]')).toContainText(build.gameVersion);
+    await expect(page.locator('.bshare-head')).toContainText(`Par ${account.username}`);
+    await expect(page.locator('.bsteps-node .bshare-item')).toHaveCount(2);
+  });
+
+  await test.step('sends a visitor to sign in before voting', async () => {
+    await page.goto(path);
+    await expect(voteScore(page)).toHaveText('0');
+    const login = page.getByRole('link', { name: 'Connectez-vous pour voter' }).first();
+    await expect(login).toHaveAttribute(
+      'href',
+      `/fr/account/login?returnUrl=${encodeURIComponent(path)}`,
+    );
+  });
+
+  await test.step('copies the link of the page', async () => {
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.getByRole('button', { name: 'Copier le lien' }).click();
+    await expect(page.getByRole('button', { name: 'Copié !' })).toBeVisible();
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toBe(`${new URL(page.url()).origin}${path}`);
+  });
+
+  await test.step('lets a signed-in reader vote, keeps the vote, and withdraws it', async () => {
+    await owner.goto(path);
+    const up = owner.getByRole('button', { name: 'Voter pour ce build' });
+    await up.click();
+    await expect(voteScore(owner)).toHaveText('+1');
+    await expect(up).toHaveAttribute('aria-pressed', 'true');
+    // The server renders the score for nobody; the reader's own vote comes back after it.
+    await owner.reload();
+    await expect(up).toHaveAttribute('aria-pressed', 'true');
+    await expect(voteScore(owner)).toHaveText('+1');
+    await up.click();
+    await expect(voteScore(owner)).toHaveText('0');
+    await expect(up).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  await owner.context().close();
+  expect(consoleErrors).toEqual([]);
+});
