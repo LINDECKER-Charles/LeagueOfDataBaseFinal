@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { activeSection } from './active-section';
@@ -36,6 +36,17 @@ class NavigationHost {
     { id: 'abilities', label: 'Abilities' },
     { id: 'skins', label: 'Skins' },
   ];
+}
+
+@Component({
+  imports: [Pager],
+  template: `<lodb-pager [next]="next" [hub]="hub" />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class RegionalPagerHost {
+  private readonly router = inject(Router);
+  readonly next = { url: this.router.parseUrl('/en/champions/akali?lang=en_GB'), name: 'Akali' };
+  readonly hub = this.router.parseUrl('/en/champions?lang=en_GB');
 }
 
 describe('navigation primitives', () => {
@@ -87,5 +98,16 @@ describe('navigation primitives', () => {
 
     expect(cells.map((cell) => cell.className)).toEqual(['pager__link', 'pager__hub', '']);
     expect(all(fixture, '[rel=prev]')[0]?.getAttribute('href')).toBe('/en/champions/aatrox');
+  });
+
+  it('carries the regional variant of UrlTree links, query unescaped', async () => {
+    const fixture = TestBed.createComponent(RegionalPagerHost);
+    await fixture.whenStable();
+    const hrefs = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.pager a'));
+
+    expect(hrefs.map((link) => link.getAttribute('href'))).toEqual([
+      '/en/champions?lang=en_GB',
+      '/en/champions/akali?lang=en_GB',
+    ]);
   });
 });

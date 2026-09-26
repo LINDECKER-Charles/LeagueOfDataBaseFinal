@@ -12,8 +12,8 @@ import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogu
 import { injectRouteData } from '../../../../core/routing/inject-route-data';
 import { Pager } from '../../../../ui/navigation/pager';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
-import { CatalogueHead } from '../../items/codex/head/catalogue-head';
-import { HERO_STYLES } from '../../items/codex/hero/hero-styles';
+import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
+import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
 import { CatalogueImage } from '../../shared/cards/catalogue-image';
 import { pathThemeOf } from '../paths/path-theme-of';
 import { constellationOf } from './constellation/constellation-of';

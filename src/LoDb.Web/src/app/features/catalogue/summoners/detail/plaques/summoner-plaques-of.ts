@@ -1,5 +1,5 @@
 import type { SummonerDetails } from '../../../../../core/api/generated/models/summoner-details';
-import type { Translate } from '../../../items/codex/texts/translate';
+import type { Translate } from '../../../shared/codex/texts/translate';
 import type { Plaque } from './plaque';
 
 // Data Dragon's ways of saying a spell costs nothing.

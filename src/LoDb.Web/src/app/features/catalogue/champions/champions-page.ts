@@ -1,12 +1,12 @@
 import { LowerCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import type { UrlTree } from '@angular/router';
 import { TranslocoPipe, translateSignal } from '@jsverse/transloco';
 import type { ChampionCard as Card } from '../../../core/api/generated/models/champion-card';
 import type { PageContext } from '../../../core/context/page-context';
 import { injectRouteData } from '../../../core/routing/inject-route-data';
 import { Logo } from '../../../ui/media/logo';
-import { catalogueHref } from '../shared/links/catalogue-href';
+import { injectCatalogueLink } from '../shared/codex/links/inject-catalogue-link';
 import { CatalogueCardTemplate } from '../shared/list/catalogue-card-template';
 import { CatalogueList } from '../shared/list/catalogue-list';
 import { injectCatalogueList } from '../shared/source/inject-catalogue-list';
@@ -38,7 +38,7 @@ export class ChampionsPage {
   protected readonly adapter = CHAMPION_CARD_ADAPTER;
   protected readonly eagerCards = EAGER_CARDS;
   protected readonly total = computed(() => this.list.list()?.total ?? null);
-  private readonly router = inject(Router);
+  private readonly linkOf = injectCatalogueLink();
   private readonly labels = translateSignal(FACET_LABEL_KEYS);
   protected readonly schema = computed(() => {
     const labels = this.labels();
@@ -57,7 +57,7 @@ export class ChampionsPage {
     });
   }
 
-  protected href(card: Card): string {
-    return catalogueHref(this.context(), card.canonicalPath, this.router.url);
+  protected href(card: Card): UrlTree {
+    return this.linkOf(this.context(), card.canonicalPath);
   }
 }

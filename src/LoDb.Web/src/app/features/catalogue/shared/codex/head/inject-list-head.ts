@@ -1,6 +1,6 @@
 import { effect, inject, untracked } from '@angular/core';
 import type { SeoPage } from '../../../../../core/seo/seo-page';
-import { catalogueListSeo } from '../../../shared/seo/catalogue-list-seo';
+import { catalogueListSeo } from '../../seo/catalogue-list-seo';
 import { CatalogueHead } from './catalogue-head';
 import type { CatalogueTexts } from './catalogue-texts';
 import type { ListHead } from './list-head';

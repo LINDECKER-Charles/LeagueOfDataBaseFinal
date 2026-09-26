@@ -9,8 +9,8 @@ import type { RuneTreeDetails } from '../../../../core/api/generated/models/rune
 import type { PageContext } from '../../../../core/context/page-context';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import type { SeoPage } from '../../../../core/seo/seo-page';
-import { CatalogueHead } from '../../items/codex/head/catalogue-head';
-import type { CatalogueTexts } from '../../items/codex/head/catalogue-texts';
+import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
+import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { CatalogueLists } from '../../shared/data/catalogue-lists';
 import type { ListRequest } from '../../shared/data/list-request';
 import { RuneDetail } from './rune-detail';

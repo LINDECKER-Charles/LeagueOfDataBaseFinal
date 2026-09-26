@@ -9,8 +9,8 @@ import { RouterLink } from '@angular/router';
 import type { RuneCard as RuneCardModel } from '../../../../core/api/generated/models/rune-card';
 import type { PageContext } from '../../../../core/context/page-context';
 import { FRAME_STYLES } from '../../../../ui/surfaces/frame-styles';
-import { injectCatalogueLink } from '../../items/codex/links/inject-catalogue-link';
-import { RichText } from '../../items/codex/rich-text/rich-text';
+import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
+import { RichText } from '../../shared/codex/rich-text/rich-text';
 import { CatalogueImage } from '../../shared/cards/catalogue-image';
 
 /** Box of the rune's icon, in CSS pixels, as lodb-entity-card draws it. */
@@ -18,8 +18,7 @@ const ICON_SIZE = 56;
 
 /**
  * A rune of the list: lodb-entity-card's face, linking into its path's page at the rune's own
- * card. Runes have no page; the anchor is what lodb-entity-card, which takes its link as a
- * string, could not carry through the router.
+ * card, since runes have no page; its description sits under the face.
  */
 @Component({
   selector: 'lodb-rune-card',

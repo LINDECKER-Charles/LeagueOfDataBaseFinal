@@ -4,7 +4,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import type { ItemDetails } from '../../../../../core/api/generated/models/item-details';
 import type { PageContext } from '../../../../../core/context/page-context';
 import { Frame } from '../../../../../ui/surfaces/frame';
-import { injectCatalogueLink } from '../../codex/links/inject-catalogue-link';
+import { injectCatalogueLink } from '../../../shared/codex/links/inject-catalogue-link';
 import { tagLabelOf } from '../../list/facets/tag-label-of';
 import { formatItemStat } from '../../stats/format-item-stat';
 import { mapLabelKey } from './map-label-key';

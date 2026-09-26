@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, type UrlTree } from '@angular/router';
 import type { PageContext } from '../../../../../core/context/page-context';
-import { catalogueHref } from '../../../shared/links/catalogue-href';
+import { catalogueHref } from '../../links/catalogue-href';
 
 /**
  * Builds the link of a catalogue page, `path` being its `canonicalPath` or a list's, and

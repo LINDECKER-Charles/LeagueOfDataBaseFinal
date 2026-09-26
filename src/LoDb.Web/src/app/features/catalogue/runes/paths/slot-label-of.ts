@@ -1,4 +1,4 @@
-import type { Translate } from '../../items/codex/texts/translate';
+import type { Translate } from '../../shared/codex/texts/translate';
 import { rowNumberOf } from './row-number-of';
 
 /** The name of a row of a rune path: "Keystone", then "Row 1" to "Row 3". */

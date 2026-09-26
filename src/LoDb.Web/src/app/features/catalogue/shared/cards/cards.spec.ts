@@ -1,6 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { CatalogImage } from '../../../../core/api/generated/models/catalog-image';
@@ -18,7 +18,7 @@ describe('initialsOf', () => {
 @Component({
   imports: [EntityCard],
   template: `<lodb-entity-card
-    href="/en/items/1036-long-sword"
+    [href]="href"
     name="Long Sword"
     caption="350"
     [image]="image()"
@@ -26,6 +26,7 @@ describe('initialsOf', () => {
   />`,
 })
 class Host {
+  readonly href = inject(Router).parseUrl('/en/items/1036-long-sword?lang=en_GB');
   readonly image = signal<CatalogImage>({ status: 'present', url: '/cdn/blobs/a.png' });
   readonly edition = signal<Edition>('modern');
 }
@@ -51,7 +52,9 @@ describe('lodb-entity-card', () => {
 
   it('links the entry, with its art, its name and its caption', async () => {
     const { element } = await render();
-    expect(element.querySelector('a')?.getAttribute('href')).toBe('/en/items/1036-long-sword');
+    expect(element.querySelector('a')?.getAttribute('href')).toBe(
+      '/en/items/1036-long-sword?lang=en_GB',
+    );
     expect(element.querySelector('img')?.getAttribute('src')).toBe('/cdn/blobs/a.png');
     expect(element.querySelector('h3')?.textContent?.trim()).toBe('Long Sword');
     expect(element.textContent).toContain('350');

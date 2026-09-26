@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { PageContext } from '../../../../../core/context/page-context';
 import { CatalogueImage } from '../../../shared/cards/catalogue-image';
-import { injectCatalogueLink } from '../../codex/links/inject-catalogue-link';
+import { injectCatalogueLink } from '../../../shared/codex/links/inject-catalogue-link';
 import type { RecipeNode } from './recipe-node';
 
 /** Box of a node's icon, in CSS pixels. */

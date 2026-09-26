@@ -2,8 +2,8 @@ import type { SummonerDetails } from '../../../../core/api/generated/models/summ
 import { summonerSpellJsonLd } from '../../../../core/seo/json-ld/game/summoner-spell-json-ld';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import type { SeoPage } from '../../../../core/seo/seo-page';
-import type { CatalogueTexts } from '../../items/codex/head/catalogue-texts';
-import { detailTrail } from '../../items/codex/head/detail-trail';
+import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
+import { detailTrail } from '../../shared/codex/head/detail-trail';
 
 /**
  * The head of a summoner spell page. A LoL Classic twin shares its name with the current

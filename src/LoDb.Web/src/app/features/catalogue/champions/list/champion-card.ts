@@ -5,6 +5,7 @@ import {
   computed,
   input,
 } from '@angular/core';
+import type { UrlTree } from '@angular/router';
 import type { ChampionCard as Card } from '../../../../core/api/generated/models/champion-card';
 import { EntityCard } from '../../shared/cards/entity-card';
 import { capitalize } from '../text/capitalize';
@@ -33,8 +34,8 @@ import { capitalize } from '../text/capitalize';
 })
 export class ChampionCard {
   readonly card = input.required<Card>();
-  /** Root-relative URL of the champion's page (catalogueHref). */
-  readonly href = input.required<string>();
+  /** The champion's page (injectCatalogueLink). */
+  readonly href = input.required<UrlTree>();
   readonly locale = input.required<string>();
   /** Above the fold: its icon loads at once. */
   readonly eager = input(false, { transform: booleanAttribute });

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, type UrlTree } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Icon } from '../media/icon';
 import type { PagerLink } from './pager-link';
@@ -18,6 +18,9 @@ import type { PagerLink } from './pager-link';
 export class Pager {
   readonly previous = input<PagerLink | null>(null);
   readonly next = input<PagerLink | null>(null);
-  /** The list the entity belongs to; its name is not shown, the hub is labelled generically. */
-  readonly hub = input.required<string>();
+  /**
+   * The list the entity belongs to; its name is not shown, the hub is labelled generically.
+   * A UrlTree when it carries a query, as PagerLink's `url`.
+   */
+  readonly hub = input.required<string | UrlTree>();
 }
