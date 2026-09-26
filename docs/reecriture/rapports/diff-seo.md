@@ -2,9 +2,9 @@
 
 - **Date** : 2026-09-26.
 - **Prod** : https://league-of-data-base.com, lue en GET seul, sans cookie, une requête à la fois.
-- **Réécriture** : http://localhost:18180 (emplacement e1), dernière version 16.19.1.
+- **Réécriture** : http://localhost:18080 (lodb-next), dernière version 16.19.1.
 - **Échantillon** : 42 URLs de la prod (`tools/next/seo-diff/lib/sample.mjs`).
-- **Commande** : `node tools/next/seo-diff/diff.mjs --next http://localhost:18180 --stack "emplacement e1"`.
+- **Commande** : `node tools/next/seo-diff/diff.mjs --stack lodb-next`.
 
 Chaque URL de la prod est demandée à la prod, puis à la réécriture sous sa forme héritée :
 la 301 de L3.12 désigne la page comparée. Rapport généré : ne pas le modifier à la main,

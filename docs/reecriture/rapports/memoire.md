@@ -159,3 +159,41 @@ une part des pages depuis son cache. `api` monte de 93 à 292 Mio : il sert les 
 complètes du catalogue, les connexions (argon2id, 19 Mio par hachage) et les favoris.
 Il reste à 92 Mio de la limite de 384m, et le comportement sous cette limite reste à
 mesurer avant L8.1 (G2 du jalon 1).
+
+### Lot 3 — jalon (2026-09-26)
+
+Contexte : stack d'intégration reconstruite depuis `ebe34c7` (vagues E et F intégrées :
+lot 3 complet, builds, tendances, dons, `/v1`, analytics, politique client), conteneurs
+`api`, `web-ssr` et `nginx` recréés juste avant la mesure, migration
+`20260926185409_Lot6BillingAnalyticsApps` appliquée ; base chargée (16.19.1 et versions
+antérieures ingérées). Relevés `docker stats --no-stream` en boucle pendant les E2E,
+87 échantillons. `api` est redémarré (`docker restart`) après la première suite pour
+vider le limiteur d'inscriptions en mémoire (G5 du [jalon 3](jalons/lot-03.md)).
+
+Commandes :
+
+- `npm --prefix tests/LoDb.E2E test` : 264 tests, 226 réussis, 37 échecs, 1 ignoré ;
+- `npm --prefix tests/LoDb.E2E test -- specs/context-switcher specs/builds-editor
+  specs/builds-share specs/trends` : 15 tests, relance ciblée ;
+- `npm --prefix tests/LoDb.E2E test -- specs/builds-editor`, après redémarrage d'`api`.
+
+| Service | Avant la suite | Pic (264 tests) | Pic (relances) | Limite provisoire |
+|---|---:|---:|---:|---:|
+| `api` | 123 Mio | 541 Mio | 571 Mio | 384m |
+| `web-ssr` | 33 Mio | 300 Mio | 177 Mio | 512m |
+| `nginx` | 14 Mio | 18 Mio | 18 Mio | 64m |
+| `postgres` | 41 Mio | 46 Mio | 46 Mio | 512m |
+| `mailpit` (dev seulement) | 35 Mio | 39 Mio | 39 Mio | — |
+
+Lecture :
+
+- **`api` dépasse sa limite provisoire** : 541 Mio pendant la suite complète, 571 Mio
+  après les relances, contre 292 Mio au jalon 4. Les E2E exercent désormais les builds
+  (sélecteurs, éditeur, partage, tendances), les dons, l'API publique et la balise
+  d'analytics, en plus des inscriptions argon2id. Sans limite en dev, le GC n'a aucune
+  raison de rendre la mémoire. Sous `384m`, le comportement n'est toujours pas mesuré
+  (G2 du [jalon 1](jalons/lot-01.md)) : c'est à trancher avant L8.1, soit par une mesure
+  sous limite, soit par une limite relevée.
+- `web-ssr` monte à 300 Mio, sous le pic du jalon 2 (338 Mio) ; la limite de 512m tient.
+- Le second passage complet, lancé après un nouveau redémarrage d'`api` et l'arrêt des
+  relevés, ne figure pas dans ce tableau ; il ne change pas la liste des échecs.

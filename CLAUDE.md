@@ -352,6 +352,8 @@ npm --prefix tests/LoDb.E2E test             # stack démarrée (LODB_E2E_BASE_U
 npm --prefix src/LoDb.Web run api:check      # dérive du contrat (job contract de next-ci)
 bash tools/next/routing/check-urls.sh        # grammaire d'URL de l'ADR 0005, stack démarrée
 node tools/next/accounts/legacy-logins.mjs   # critère du lot 4 (hash hérités), stack démarrée
+node tools/next/seo-diff/diff.mjs --stack lodb-next   # critère du lot 3, prod en GET seul
+node tools/next/lighthouse/run.mjs --stack lodb-next  # budgets du lot 3, stack démarrée
 ```
 
 - **Stack d'intégration `lodb-next`**, une seule instance, depuis la racine : 18080 nginx,
@@ -491,3 +493,33 @@ node tools/next/accounts/legacy-logins.mjs   # critère du lot 4 (hash hérités
 - **Desktop** : `dotnet test` compte `LoDb.Desktop.Tests`, qui n'ouvre aucune fenêtre ;
   `--smoke` ne sort pas du poste. Photino n'est référencé que par
   `Shell/Photino/PhotinoShell.cs`, et un test le vérifie.
+
+### Pièges du jalon 3 (ne pas « corriger » par erreur)
+
+Constats du [jalon 3](docs/reecriture/rapports/jalons/lot-03.md).
+
+- **Quota d'inscriptions** : 5 par heure et par adresse (`RateLimitingPolicies`), et
+  toute la suite E2E arrive par nginx sous une seule adresse. Le limiteur vit en mémoire :
+  entre deux passages complets, lancer `docker restart lodb-next-api-1`. Une spec qui
+  crée un compte réutilise le compte du parcours, ou celui de son worker. Ne jamais
+  relever le quota pour faire passer les tests (G5).
+- **Sonde de 320 px** (`specs/public/layout.spec.ts`) : l'en-tête n'a que 288 px utiles.
+  Tout ajout au groupe d'actions (dons, compte, thème, sélecteur de contexte) se vérifie
+  à 320 px, en `ar` compris. Un `white-space: nowrap` sur un titre doit pouvoir passer à la
+  ligne sur téléphone (G1, G2).
+- **Balise d'analytics** : chaque navigation interne envoie `POST /api/analytics/view`
+  (L7.1). Une spec qui compte les POST exclut `/api/analytics/` (G3).
+- **Compression** : le SSR sert les bundles en `text/javascript`. `gzip_types` de
+  `docker/next/nginx/nginx.conf` doit lister ce type (et `application/manifest+json`),
+  sinon Lighthouse perd environ 1,7 s en 4G lente (G4). Vérifier par `curl -D - -H
+  'Accept-Encoding: gzip'` sur un `/build/*.js`. Un budget Lighthouse ne se relâche jamais.
+- **Rapports générés** : `diff-seo.md` et `lighthouse.md` ne s'écrivent que par leurs
+  outils. Un écart SEO nouveau reçoit une règle argumentée dans
+  `tools/next/seo-diff/lib/rules.mjs`, et on relance l'outil. Ne jamais passer `--json`
+  ni `--out` vers `/tmp` pour une exécution committée : la commande est écrite dans le
+  rapport.
+- **Sélecteurs de build** : `/api/pickers/*` exige `version` et `lang` (400
+  `invalid-version` sinon). Aucune session ne les fournit.
+- `api` dépasse 384m pendant la suite E2E complète (541 Mio en dev, sans limite) : ce
+  n'est pas une fuite prouvée. On le mesure sous limite avant L8.1, sans rien forcer
+  dans le code.
