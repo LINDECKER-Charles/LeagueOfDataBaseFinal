@@ -3,6 +3,7 @@ using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.DataProtection;
 using LoDb.Infrastructure.Jobs;
 using LoDb.Infrastructure.Outbox;
+using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +20,7 @@ public sealed class ZoneRegistrationTests
     private static readonly IConfiguration Empty = new ConfigurationBuilder().Build();
 
     public static TheoryData<string> Zones =>
-        ["Storage", "Jobs", "Outbox", "Audit", "DataProtection", "Analytics"];
+        ["Storage", "Persistence", "Jobs", "Outbox", "Audit", "DataProtection", "Analytics"];
 
     [Theory]
     [MemberData(nameof(Zones))]
@@ -36,6 +37,7 @@ public sealed class ZoneRegistrationTests
         zone switch
         {
             "Storage" => services.AddLoDbStorage(Empty),
+            "Persistence" => services.AddLoDbPersistence(Empty),
             "Jobs" => services.AddLoDbJobs(Empty),
             "Outbox" => services.AddLoDbOutbox(Empty),
             "Audit" => services.AddLoDbAudit(Empty),
