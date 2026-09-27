@@ -39,6 +39,8 @@
     "@capacitor/browser": "^8.0.4",
     "@capacitor/core": "^8.5.2",
     "@capacitor/share": "^8.0.2",
+    "@capawesome/capacitor-app-update": "^8.0.5",
+    "@capawesome/capacitor-live-update": "^8.4.4",
     "@jsverse/transloco": "^8.4.0",
     "@jsverse/transloco-messageformat": "^8.4.0",
     "express": "^5.2.1",
