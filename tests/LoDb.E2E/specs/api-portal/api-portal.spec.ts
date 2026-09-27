@@ -1,8 +1,9 @@
 import { expectNoAccessibilityViolations } from '../../support/accessibility';
 import { readHead } from '../../support/head';
+import { createMember, signInMember } from '../../support/member-account';
 import { expect, test } from '../../support/test';
-import { discardAccount, newAccount, register, type TestAccount } from '../account/accounts';
-import { PORTAL, shownSecret, usageStatus, verifyEmail } from './portal';
+import { discardAccount, type TestAccount } from '../account/accounts';
+import { PORTAL, shownSecret, usageStatus } from './portal';
 
 const OK = 200;
 const FORBIDDEN = 403;
@@ -19,7 +20,8 @@ const OFFERS = {
 // A service worker would answer the calls before the page's routes see them.
 test.use({ serviceWorkers: 'block' });
 
-// The account of the journey, deleted even when a step fails: no run leaves one behind.
+// The account of the journey, deleted even when a step fails: no run leaves one behind. It is
+// created by the CLI: the registration form's quota is account/register.spec.ts's.
 let created: TestAccount | undefined;
 
 test.afterEach(async ({ playwright, baseURL }) => {
@@ -36,9 +38,9 @@ test('sends a visitor to the sign-in, which brings them back', async ({ page }) 
   expect(new URL(page.url()).searchParams.get('returnUrl')).toBe(PORTAL);
 });
 
-test('asks an account to verify its e-mail before it issues a key', async ({ page }) => {
-  created = newAccount('apig');
-  await register(page, created);
+test('asks an account to verify its e-mail before it issues a key', async ({ page, baseURL }) => {
+  created = createMember('apig', { verified: false });
+  await signInMember(page, baseURL, created);
 
   await page.goto(`${PORTAL}?status=cancelled`);
 
@@ -61,11 +63,11 @@ test('asks an account to verify its e-mail before it issues a key', async ({ pag
 test('issues, regenerates and revokes a key, which /v1 follows at once', async ({
   page,
   request,
+  baseURL,
   consoleErrors,
 }) => {
-  created = newAccount('apik');
-  await register(page, created);
-  await verifyEmail(page, request, created.email);
+  created = createMember('apik', { verified: true });
+  await signInMember(page, baseURL, created);
   await page.goto(PORTAL);
   let secret = '';
 
@@ -109,10 +111,9 @@ test('issues, regenerates and revokes a key, which /v1 follows at once', async (
   expect(consoleErrors).toEqual([]);
 });
 
-test('buys a credit pack through Stripe, in the page locale', async ({ page, request }) => {
-  created = newAccount('apip');
-  await register(page, created);
-  await verifyEmail(page, request, created.email);
+test('buys a credit pack through Stripe, in the page locale', async ({ page, baseURL }) => {
+  created = createMember('apip', { verified: true });
+  await signInMember(page, baseURL, created);
   // Stripe is a double: the API's offers and checkout are answered by the page's routes.
   const sent: unknown[] = [];
   await page.route('**/api/billing/offers', (route) => route.fulfill({ json: OFFERS }));

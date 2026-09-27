@@ -1,7 +1,5 @@
-import { type APIRequestContext, expect, type Page } from '@playwright/test';
+import { expect, type Page, type Response } from '@playwright/test';
 import { metaOf } from '../../support/catalog';
-import { register, type TestAccount } from '../account/accounts';
-import { accountLinkIn, lastMailTo } from '../account/mailbox';
 
 /** What the suite asks of a build it creates; the rest is taken from the pickers. */
 export interface BuildOptions {
@@ -49,22 +47,6 @@ const CREATED = 201;
 const PICKER_LANGUAGE = 'en_US';
 // Two items with a price: the purchase order shows them, and its total is not nil.
 const ITEMS = 2;
-
-/**
- * Registers the account and confirms its address through the e-mail: the API creates builds
- * for a verified account only. The page is left signed in.
- */
-export async function verifiedAccount(
-  page: Page,
-  request: APIRequestContext,
-  account: TestAccount,
-): Promise<void> {
-  await register(page, account);
-  await page.goto(accountLinkIn(await lastMailTo(request, account.email), 'verify-email'));
-  await expect(
-    page.getByText('Your email address is confirmed. Have fun, summoner.'),
-  ).toBeVisible();
-}
 
 // The headers of an unsafe request of the page's session: the site's origin and the XSRF
 // token the sign-in issued as a cookie.
@@ -134,4 +116,16 @@ export async function createBuild(page: Page, options: BuildOptions): Promise<Cr
   expect(response.status(), `the API creates ${options.name}`).toBe(CREATED);
   const build = (await response.json()) as CreatedBuild & { structure: { championId: string } };
   return { ...build, championId: build.structure.championId };
+}
+
+/**
+ * The answer to the next vote of the page on `build`. The score shows a vote at once, before
+ * the API has it: a reload before this answer cancels the request, and the vote is lost.
+ */
+export function voteSaved(page: Page, build: CreatedBuild): Promise<Response> {
+  const path = `/api/builds/${build.id}/vote`;
+  return page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === path && response.request().method() === 'POST',
+  );
 }

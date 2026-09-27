@@ -1,20 +1,19 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { discardAccount, newAccount, register, type TestAccount } from '../specs/account/accounts';
-import { accountLinkIn, lastMailTo } from '../specs/account/mailbox';
+import { discardAccount, type TestAccount } from '../specs/account/accounts';
+import { createMember, signInMember } from './member-account';
 import { expect, test as base } from './test';
 
 export { expect } from './test';
 
-/** The verified account of a worker, and the session its registration opened. */
+/** The verified account of a worker, and the session its sign-in opened. */
 interface WorkerAccount extends TestAccount {
   readonly session: Awaited<ReturnType<BrowserContext['storageState']>>;
 }
 
 interface MemberFixtures {
   /**
-   * A page in a context of its own, signed in as the worker's account, on its profile as a
-   * registration leaves it. The account is reset after the test: no build, no favorite, a
-   * private card.
+   * A page in a context of its own, signed in as the worker's account, on its profile. The
+   * account is reset after the test: no build, no favorite, a private card.
    */
   readonly member: Page;
 }
@@ -23,27 +22,22 @@ interface WorkerFixtures {
   readonly workerAccount: WorkerAccount;
 }
 
-const CONFIRMED = 'Your email address is confirmed.';
 const PROFILE = '/en/account/profile';
 const NO_FAVORITES = { champion: null, item: null, rune: null, summoner: null, skin: null };
 const NO_CONTENT = 204;
-// The registration waits for the verification e-mail, which the outbox sends in the
-// background: more than a test's default 30 seconds may pass.
-const REGISTRATION_TIMEOUT_MS = 90_000;
+// The CLI starts a .NET host in the API container, then the sign-in: more than a test's
+// default 30 seconds may pass on a loaded machine.
+const SETUP_TIMEOUT_MS = 90_000;
 
-// Registers the account and confirms its address through the e-mail: the API creates builds
-// for a verified account only. Returns the session the registration opened.
-async function registerVerified(
+// Signs the account in, in a context of its own, and returns the session it opened.
+async function signedInSession(
   browser: Browser,
   baseURL: string | undefined,
   account: TestAccount,
 ) {
   const context = await browser.newContext({ baseURL });
   try {
-    const page = await context.newPage();
-    await register(page, account);
-    await page.goto(accountLinkIn(await lastMailTo(page.request, account.email), 'verify-email'));
-    await expect(page.getByText(CONFIRMED)).toBeVisible();
+    await signInMember(await context.newPage(), baseURL, account);
     return await context.storageState();
   } finally {
     await context.close();
@@ -82,22 +76,23 @@ async function resetAccount(page: Page, baseURL: string | undefined): Promise<vo
 
 /**
  * The suite's `test`, plus one verified account per worker, shared by the journeys that do
- * not try the registration itself. The API allows 5 registrations an hour from an address:
- * one per worker keeps a run within it. The account is deleted when the worker ends.
+ * not try the registration itself. The API allows 5 registrations an hour from an address,
+ * which a run of 4 workers, each restarted after a failure, would exceed: the account is
+ * created by the CLI, not the form (createMember). It is deleted when the worker ends.
  */
 export const test = base.extend<MemberFixtures, WorkerFixtures>({
   workerAccount: [
     async ({ browser, playwright }, use, workerInfo) => {
       const { baseURL } = workerInfo.project.use;
-      const account = newAccount('wrk');
+      const account = createMember('wrk', { verified: true });
       try {
-        const session = await registerVerified(browser, baseURL, account);
+        const session = await signedInSession(browser, baseURL, account);
         await use({ ...account, session });
       } finally {
         await discardAccount(playwright.request, baseURL, account);
       }
     },
-    { scope: 'worker', timeout: REGISTRATION_TIMEOUT_MS },
+    { scope: 'worker', timeout: SETUP_TIMEOUT_MS },
   ],
   member: async ({ browser, baseURL, workerAccount }, use) => {
     const context = await browser.newContext({ baseURL, storageState: workerAccount.session });

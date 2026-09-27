@@ -1,4 +1,5 @@
 import type { APIRequestContext, BrowserContext, Page } from "@playwright/test";
+import { hydrated } from "../../support/hydration";
 import { expect, test } from "../../support/test";
 
 interface Meta {
@@ -20,28 +21,27 @@ function switcher(page: Page) {
   return page.locator("lodb-context-switcher");
 }
 
-// A completed navigation folds the panel (lodbDisclosure): the first one may end after the
-// options have loaded, so the panel is reopened until it stays open.
-async function ensureOpen(page: Page): Promise<void> {
-  const panel = switcher(page).locator("details");
-  await expect(async () => {
-    if ((await panel.getAttribute("open")) === null) {
-      await switcher(page).locator("summary").click();
-    }
-    await expect(panel).toHaveAttribute("open", "", { timeout: 1_000 });
-  }).toPass();
+function panelOf(page: Page) {
+  return switcher(page).locator("details");
 }
 
-// Opens the panel once the browser has loaded the options.
+// Opens the panel once the app drives the switcher. A completed navigation folds the panel
+// (lodbDisclosure): the initial one only ends before the app first settles, which hydrated()
+// waits for, and the options the browser loads are there by then.
 async function openSwitcher(page: Page): Promise<void> {
+  await hydrated(switcher(page));
   await expect(
     switcher(page).locator("#switcher-version option"),
   ).not.toHaveCount(0);
-  await ensureOpen(page);
+  await expect(panelOf(page)).not.toHaveAttribute("open");
+  await switcher(page).locator("summary").click();
+  await expect(panelOf(page)).toHaveAttribute("open", "");
 }
 
+// Sends the choice, then waits for the navigation it starts to end: its end folds the panel.
 async function apply(page: Page): Promise<void> {
   await switcher(page).getByRole("button").click();
+  await expect(panelOf(page)).not.toHaveAttribute("open");
 }
 
 async function preferencesCookie(

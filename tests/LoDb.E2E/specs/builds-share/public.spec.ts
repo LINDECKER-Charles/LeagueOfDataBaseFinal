@@ -1,7 +1,7 @@
 import type { Browser, Page } from '@playwright/test';
 import { readHead, typesOf } from '../../support/head';
 import { expect, test } from '../../support/worker-account';
-import { createBuild } from './builds';
+import { createBuild, voteSaved } from './builds';
 
 // The build speaks French, whatever the visitor's browser or `?lang=` asks for.
 const LANGUAGE = 'fr_FR';
@@ -80,16 +80,20 @@ test('shares a public build, unlisted, in its own language, with its score', asy
   await test.step('lets a signed-in reader vote, keeps the vote, and withdraws it', async () => {
     await owner.goto(path);
     const up = owner.getByRole('button', { name: 'Voter pour ce build' });
+    const voted = voteSaved(owner, build);
     await up.click();
     await expect(voteScore(owner)).toHaveText('+1');
     await expect(up).toHaveAttribute('aria-pressed', 'true');
+    expect((await voted).ok(), 'the API keeps the vote').toBe(true);
     // The server renders the score for nobody; the reader's own vote comes back after it.
     await owner.reload();
     await expect(up).toHaveAttribute('aria-pressed', 'true');
     await expect(voteScore(owner)).toHaveText('+1');
+    const withdrawn = voteSaved(owner, build);
     await up.click();
     await expect(voteScore(owner)).toHaveText('0');
     await expect(up).toHaveAttribute('aria-pressed', 'false');
+    expect((await withdrawn).ok(), 'the API withdraws the vote').toBe(true);
   });
 
   expect(consoleErrors).toEqual([]);
