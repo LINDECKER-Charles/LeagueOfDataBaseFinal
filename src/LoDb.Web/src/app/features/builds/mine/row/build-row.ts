@@ -10,7 +10,7 @@ import { Image } from '../../../../ui/media/image';
 import { versionChoices } from '../../editor/context/version-choices';
 import { imageSource } from '../../editor/shared/image-source';
 import { initialsOf } from '../../editor/shared/initials-of';
-import { updatedOn } from './updated-on';
+import { shortDate } from '../../shared/format/short-date';
 
 /**
  * A build of the account's list: its champion with the keystone pinned on it, its name
@@ -44,6 +44,6 @@ export class BuildRow {
   protected readonly editLink = computed(() =>
     localePath(this.locale(), `account/builds/${this.row().id}/edit`),
   );
-  protected readonly updated = computed(() => updatedOn(this.row().updatedAt, this.locale()));
+  protected readonly updated = computed(() => shortDate(this.row().updatedAt));
   protected readonly selectId = computed(() => `lodb-import-to-${this.row().id}`);
 }
