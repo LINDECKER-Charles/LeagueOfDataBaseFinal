@@ -1,4 +1,5 @@
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Domain.Catalog.Runes;
 using LoDb.Domain.Derived.Runes;
 using LoDb.Ingestion.Catalog.Snapshots;
@@ -7,7 +8,7 @@ namespace LoDb.Api.Modules.Catalog.Runes;
 
 /// <summary>
 /// <c>GET /api/catalog/{version}/{lang}/runes/{id}</c>: a rune path and its rows, every image
-/// resolved.
+/// resolved, and the paths on either side of it in the list.
 /// </summary>
 internal sealed record RuneTreeDetails
 {
@@ -23,6 +24,9 @@ internal sealed record RuneTreeDetails
     public required RuneTreeCard Profile { get; init; }
 
     public required IReadOnlyList<RuneRow> Slots { get; init; }
+
+    /// <summary>The paths before and after it in the list's order.</summary>
+    public required DetailNeighbours Neighbours { get; init; }
 
     public static RuneTreeDetails Of(RuneTree tree, CatalogSnapshot catalog, ImageSet images)
     {
@@ -41,6 +45,7 @@ internal sealed record RuneTreeDetails
                 Slot = RuneSlotToken.Of(index),
                 Runes = [.. slot.Runes.Select(rune => RuneEntry.Of(rune, images))],
             })],
+            Neighbours = RuneList.NeighboursOf(tree, catalog),
         };
     }
 }

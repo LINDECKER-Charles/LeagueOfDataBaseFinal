@@ -38,7 +38,7 @@ internal static class SummonerEndpoints
         }
 
         var context = read.Context;
-        var shown = page.Slice(context.Catalog.Summoners.Entries);
+        var shown = page.Slice(SummonerList.EntriesOf(context.Catalog));
         var images = await context.ResolveAsync(
             shown.Select(EntityImages.Icon),
             ColdDemand.Queued,

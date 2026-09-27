@@ -39,7 +39,7 @@ internal static class ChampionEndpoints
         }
 
         var context = read.Context;
-        var shown = page.Slice(context.Catalog.Champions.Entries);
+        var shown = page.Slice(ChampionList.EntriesOf(context.Catalog));
         var images = await context.ResolveAsync(
             shown.Select(EntityImages.Portrait),
             ColdDemand.Queued,

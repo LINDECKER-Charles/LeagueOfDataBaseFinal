@@ -7,7 +7,8 @@ namespace LoDb.Api.Modules.Catalog.Items.Details;
 
 /// <summary>
 /// <c>GET /api/catalog/{version}/{lang}/items/{id}</c>: the card, then the description, the
-/// recipe, the upgrades and the champion the item is bound to, every image resolved.
+/// recipe, the upgrades and the champion the item is bound to, every image resolved, and the
+/// items on either side of it in the list.
 /// </summary>
 internal sealed record ItemDetails
 {
@@ -50,6 +51,9 @@ internal sealed record ItemDetails
     /// <summary>The listed items it builds into, in the upstream order, with their price.</summary>
     public required IReadOnlyList<ItemUpgrade> Upgrades { get; init; }
 
+    /// <summary>The items before and after it in the list's order.</summary>
+    public required DetailNeighbours Neighbours { get; init; }
+
     public static ItemDetails Of(ItemPage page, ImageSet images)
     {
         ArgumentNullException.ThrowIfNull(page);
@@ -76,6 +80,7 @@ internal sealed record ItemDetails
             Depth = item.Depth,
             Upgrades =
                 [.. page.Upgrades.Select(upgrade => ItemUpgrade.Of(upgrade, catalog, images))],
+            Neighbours = ItemList.NeighboursOf(item, catalog),
         };
     }
 }

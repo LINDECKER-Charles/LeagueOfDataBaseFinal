@@ -34,6 +34,23 @@ internal sealed record ItemList
     /// </summary>
     public required IReadOnlyList<EntityLink> Related { get; init; }
 
+    /// <summary>The items in the list's order, which the pages' pager follows.</summary>
+    public static IReadOnlyList<Item> EntriesOf(CatalogSnapshot catalog)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        return catalog.ListedItems;
+    }
+
+    /// <summary>The items on either side of <paramref name="item"/> in the list.</summary>
+    public static DetailNeighbours NeighboursOf(Item item, CatalogSnapshot catalog)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return DetailNeighbours.Around(
+            EntriesOf(catalog),
+            entry => string.Equals(entry.Id, item.Id, StringComparison.Ordinal),
+            entry => DetailNeighbour.Of(entry, catalog));
+    }
+
     /// <summary>What <paramref name="shown"/> builds into, each item once.</summary>
     public static IReadOnlyList<Item> RelatedOf(IEnumerable<Item> shown, CatalogSnapshot catalog)
     {
@@ -48,7 +65,7 @@ internal sealed record ItemList
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(page);
-        var items = catalog.ListedItems;
+        var items = EntriesOf(catalog);
         var shown = page.Slice(items);
         return new ItemList
         {

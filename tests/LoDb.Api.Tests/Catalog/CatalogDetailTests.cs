@@ -83,6 +83,44 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
         Assert.Equal(2, greaves.GetProperty("depth").GetInt32());
     }
 
+    [Theory]
+    [InlineData("champions", "Garen")]
+    [InlineData("items", "3006")]
+    [InlineData("summoners", "SummonerFlash")]
+    public async Task DetailNamesItsNeighboursInTheListOrder(string resource, string id)
+    {
+        var entries = (await api.GetJsonAsync($"{Latest}/{resource}")).Items("entries");
+        var index = entries.ToList().FindIndex(entry =>
+            string.Equals(entry.GetProperty("id").ToString(), id, StringComparison.Ordinal));
+
+        var detail = await api.GetJsonAsync($"{Latest}/{entries[index].Text("canonicalPath")}");
+
+        var neighbours = detail.GetProperty("neighbours");
+        Assert.Equal(
+            (entries[index - 1].Text("canonicalPath"), entries[index + 1].Text("name")),
+            (neighbours.GetProperty("previous").Text("canonicalPath"),
+                neighbours.GetProperty("next").Text("name")));
+    }
+
+    [Fact]
+    public async Task NeighboursStopAtBothEndsAndNameTheEdition()
+    {
+        var first = await api.GetJsonAsync($"{Latest}/champions/Ahri");
+        var domination = await api.GetJsonAsync($"{Latest}/runes/8100");
+        var precision = await api.GetJsonAsync($"{Latest}/runes/8000");
+        var flash = await api.GetJsonAsync($"{Latest}/summoners/SummonerFlash");
+
+        Assert.True(first.GetProperty("neighbours").IsNull("previous"));
+        Assert.True(domination.GetProperty("neighbours").IsNull("previous"));
+        var next = domination.GetProperty("neighbours").GetProperty("next");
+        Assert.Equal(
+            ("8000", "Precision", "runes/8000-precision", "modern"),
+            (next.Text("id"), next.Text("name"), next.Text("canonicalPath"), next.Text("edition")));
+        Assert.True(precision.GetProperty("neighbours").IsNull("next"));
+        var twin = flash.GetProperty("neighbours").GetProperty("next");
+        Assert.Equal(("SummonerFlash_Jade", "classic"), (twin.Text("id"), twin.Text("edition")));
+    }
+
     [Fact]
     public async Task SummonerDetailCarriesItsEditionAndRange()
     {
