@@ -197,6 +197,8 @@
   /*
    * Toasts (core/layout's toaster): stacked at the top of the inline end, full text wrapped,
    * each kind told by a glyph as well as a hue so colour never carries the meaning alone.
+   * Each wears the `hextech-frame` plate, as the legacy ones did; they slide in from the edge
+   * they sit on and back out to it.
    */
   .hx-toaster {
     position: fixed;
@@ -210,26 +212,23 @@
     pointer-events: none;
   }
   .hx-toast {
+    --toast-from: 1.5rem;
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
     pointer-events: auto;
-    border: 1px solid color-mix(in srgb, var(--color-gold) 42%, transparent);
-    border-inline-start: 2px solid currentColor;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-panel-raised) 96%, transparent),
-      color-mix(in srgb, var(--color-void) 96%, transparent)
-    );
-    box-shadow: 0 12px 44px -14px color-mix(in srgb, var(--color-hextech-black) 85%, transparent);
     animation: hx-toast-in 0.3s var(--ease-hextech);
+  }
+  .hx-toast:dir(rtl) {
+    --toast-from: -1.5rem;
   }
   .hx-toast__glyph {
     flex: none;
     inline-size: 1rem;
     block-size: 1rem;
     margin-block-start: 0.1rem;
+    filter: drop-shadow(0 0 6px currentColor);
   }
   .hx-toast__text {
     flex: 1;
@@ -256,24 +255,42 @@
     outline: none;
     color: var(--color-gold-bright);
   }
-  .hx-toast--info {
-    color: var(--color-hex);
+}
+
+/*
+ * What a toast changes on its frame, a utility: the border and the glyph take the kind's
+ * hue, and a leaving toast fades back to its edge (220ms, as the legacy one did).
+ */
+@layer utilities {
+  .hx-toast.hx-toast--info {
+    color: var(--color-hex-bright);
+    border-color: color-mix(in srgb, var(--color-hex) 50%, transparent);
   }
-  .hx-toast--success {
-    color: var(--color-gold);
+  .hx-toast.hx-toast--success {
+    color: var(--color-success-light);
+    border-color: color-mix(in srgb, var(--color-success) 50%, transparent);
   }
-  .hx-toast--warning {
-    color: var(--color-gold-rich);
+  .hx-toast.hx-toast--warning {
+    color: var(--color-warning-light);
+    border-color: color-mix(in srgb, var(--color-warning) 50%, transparent);
   }
-  .hx-toast--error {
+  .hx-toast.hx-toast--error {
     color: var(--color-danger-light);
+    border-color: color-mix(in srgb, var(--color-danger) 60%, transparent);
+  }
+  .hx-toast.hx-toast--leaving {
+    opacity: 0;
+    translate: var(--toast-from) 0;
+    transition:
+      opacity 0.22s var(--ease-hextech),
+      translate 0.22s var(--ease-hextech);
   }
 }
 
 @keyframes hx-toast-in {
   from {
     opacity: 0;
-    translate: 0 -0.5rem;
+    translate: var(--toast-from) 0;
   }
   to {
     opacity: 1;
@@ -283,6 +300,9 @@
 @media (prefers-reduced-motion: reduce) {
   .hx-toast {
     animation: none;
+  }
+  .hx-toast.hx-toast--leaving {
+    transition: none;
   }
   .switcher__chevron {
     transition: none;

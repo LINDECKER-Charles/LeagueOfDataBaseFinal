@@ -52,6 +52,14 @@
   --color-danger-light: #d47c7c;
   /* Saturated crimson for threat accents (rules, borders), never for text. */
   --color-danger-strong: #be1e37;
+  /*
+   * Success and warning of the toasts: the legacy emerald and amber (Tailwind 400 for the
+   * border, 200 for the glyph), the only green and yellow of the chrome.
+   */
+  --color-success: oklch(76.5% 0.177 163.223);
+  --color-success-light: oklch(90.5% 0.093 164.15);
+  --color-warning: oklch(82.8% 0.189 84.429);
+  --color-warning-light: oklch(92.4% 0.12 95.746);
 
   /* Text. text-dim is tuned to WCAG AA 4.5:1 on the canvas for small labels. */
   --color-text: #f0e6d2;

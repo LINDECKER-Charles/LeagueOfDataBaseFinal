@@ -18,33 +18,44 @@ describe('ToastService', () => {
     service.show('error', 'Offline');
 
     expect(service.toasts()).toEqual([
-      { id: 1, kind: 'success', message: 'Saved' },
-      { id: 2, kind: 'error', message: 'Offline' },
+      { id: 1, kind: 'success', message: 'Saved', leaving: false },
+      { id: 2, kind: 'error', message: 'Offline', leaving: false },
     ]);
   });
 
-  it('lets a toast leave on its own after five seconds', () => {
+  it('lets a toast leave on its own after five seconds, once its exit has played', () => {
     const service = toasts();
     service.show('info', 'First');
     vi.advanceTimersByTime(2000);
     service.show('info', 'Second');
 
     vi.advanceTimersByTime(3000);
+    expect(service.toasts().map((toast) => [toast.message, toast.leaving])).toEqual([
+      ['First', true],
+      ['Second', false],
+    ]);
 
+    vi.advanceTimersByTime(220);
     expect(service.toasts().map((toast) => toast.message)).toEqual(['Second']);
     vi.advanceTimersByTime(2000);
     expect(service.toasts()).toEqual([]);
   });
 
-  it('dismisses one toast and cancels its departure', () => {
+  it('dismisses one toast: its departure gives way to its exit', () => {
     const service = toasts();
     service.show('warning', 'Slow network');
     service.show('info', 'Kept');
 
     service.dismiss(1);
+    service.dismiss(1);
 
+    expect(service.toasts().map((toast) => [toast.id, toast.leaving])).toEqual([
+      [1, true],
+      [2, false],
+    ]);
+    expect(vi.getTimerCount()).toBe(2);
+    vi.advanceTimersByTime(220);
     expect(service.toasts().map((toast) => toast.id)).toEqual([2]);
-    expect(vi.getTimerCount()).toBe(1);
   });
 
   it('ignores an id already gone', () => {
