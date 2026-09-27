@@ -500,9 +500,11 @@ Constats du [jalon 3](docs/reecriture/rapports/jalons/lot-03.md).
 
 - **Quota d'inscriptions** : 5 par heure et par adresse (`RateLimitingPolicies`), et
   toute la suite E2E arrive par nginx sous une seule adresse. Le limiteur vit en mémoire :
-  entre deux passages complets, lancer `docker restart lodb-next-api-1`. Une spec qui
-  crée un compte réutilise le compte du parcours, ou celui de son worker. Ne jamais
-  relever le quota pour faire passer les tests (G5).
+  entre deux passages complets, lancer `docker restart lodb-next-api-1`. Seule
+  `specs/account/register.spec.ts` passe par le formulaire d'inscription ; toute autre
+  spec qui a besoin d'un compte le crée par la CLI (`createMember` et `signInMember` de
+  `support/member-account.ts`, ou le compte de son worker dans `support/worker-account.ts`).
+  Ne jamais relever le quota pour faire passer les tests (G5, puis G3 du lot 8).
 - **Sonde de 320 px** (`specs/public/layout.spec.ts`) : l'en-tête n'a que 288 px utiles.
   Tout ajout au groupe d'actions (dons, compte, thème, sélecteur de contexte) se vérifie
   à 320 px, en `ar` compris. Un `white-space: nowrap` sur un titre doit pouvoir passer à la
