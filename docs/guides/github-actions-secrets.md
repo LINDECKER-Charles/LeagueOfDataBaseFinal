@@ -323,12 +323,15 @@ en prod, pré-rempli avant la bascule), `<projet>_pages-cache`, et `<projet>_pgd
    son `up -d` redémarrerait les conteneurs arrêtés, qui réclameraient à nouveau les
    domaines.
 
-**Retour arrière** manuel, tant que le schéma reste compatible (migrations additives) :
+**Retour arrière** manuel, tant que le schéma reste compatible (migrations additives) ;
+critères et contrôles : [runbook de bascule](../reecriture/bascule.md), § 8.
 
 ```bash
-# La nouvelle stack rend les domaines, puis l'ancienne les reprend.
-cd "$PROD_NEXT_PATH" && COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml docker compose stop nginx
-cd "$PROD_PATH" && COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose start nginx go-api
+# La nouvelle stack rend les domaines et arrête ses tâches de fond, puis l'ancienne reprend
+# ses conteneurs arrêtés (start, jamais up) ; son PostgreSQL n'a jamais été arrêté.
+cd "$PROD_NEXT_PATH" && COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml \
+  docker compose stop nginx web-ssr api
+cd "$PROD_PATH" && COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose start
 ```
 
 Revenir à une révision précédente de la nouvelle stack : relancer `next promote` avec son
