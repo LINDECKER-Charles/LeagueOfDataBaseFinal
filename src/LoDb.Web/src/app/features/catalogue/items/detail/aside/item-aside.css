@@ -2,6 +2,7 @@
   margin-block-end: 1rem;
   font-family: var(--font-beaufort);
   font-size: 0.75rem;
+  line-height: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   color: var(--color-gold);
