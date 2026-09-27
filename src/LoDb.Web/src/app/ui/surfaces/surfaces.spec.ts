@@ -129,4 +129,10 @@ describe('EmptyState', () => {
 
     expect(back).toHaveBeenCalledOnce();
   });
+
+  it('sets its line in the direction of its own words, an English fallback too', async () => {
+    const host = await render();
+
+    expect(host.querySelector('#told p:last-of-type')?.getAttribute('dir')).toBe('auto');
+  });
 });

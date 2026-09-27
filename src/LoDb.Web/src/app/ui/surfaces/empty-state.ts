@@ -16,7 +16,9 @@ import { FRAME_STYLES } from './frame-styles';
   imports: [Button, RouterLink, TranslocoPipe],
   template: `<p class="mb-3 eyebrow">{{ 'common.no_result.text' | transloco }}</p>
     @if (text(); as line) {
-      <p class="mx-auto max-w-md text-sm text-text-muted">{{ line }}</p>
+      <!-- dir=auto: a line missing from the page's catalogue falls back to English, whose
+        final stop an Arabic page would otherwise set at the start. -->
+      <p class="mx-auto max-w-md text-sm text-text-muted" dir="auto">{{ line }}</p>
     }
     <div class="mt-6 flex items-center justify-center gap-3">
       <button type="button" lodbButton="ghost" (click)="back()">
