@@ -2,7 +2,6 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Image } from '../../../../ui/media/image';
-import { DialogFrame } from '../../../../ui/overlays/dialog-frame';
 import { CatalogState } from '../catalog/catalog-state';
 import { EditorCatalogs } from '../catalog/editor-catalogs';
 import { imageSource } from '../shared/image-source';
@@ -18,13 +17,15 @@ import { matchesCategory } from './matches-category';
  * The armory of a step: the whole item list of the patch and mode, narrowed by a search
  * and a category. A click adds the item and the armory stays open, counting what it added
  * and badging what the step already holds, so a step is composed in one pass. A dialog, a
- * bottom sheet on a phone.
+ * bottom sheet on a phone. It is the pane itself rather than a lodb-dialog frame: its head,
+ * tools and footer stay pinned while the grid alone scrolls, as the legacy armory did.
  */
 @Component({
   selector: 'lodb-item-armory',
-  imports: [CatalogState, DialogFrame, Image, TranslocoPipe],
+  imports: [CatalogState, Image, TranslocoPipe],
   templateUrl: './item-armory.html',
   styleUrl: './item-armory.css',
+  host: { class: 'hx-dialog-panel armory' },
   providers: [
     { provide: StepEditing, useFactory: () => inject<ArmoryData>(DIALOG_DATA).editing },
     { provide: EditorCatalogs, useFactory: () => inject<ArmoryData>(DIALOG_DATA).catalogs },
