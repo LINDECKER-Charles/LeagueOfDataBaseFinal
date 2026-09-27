@@ -33,6 +33,21 @@ public sealed class CatalogListTests(CatalogApiFixture api)
     }
 
     [Fact]
+    public async Task ChampionCardCarriesItsLoadingArtAndBlurb()
+    {
+        var list = await api.GetJsonAsync($"{Latest}/champions");
+
+        var fiddlesticks = list.Entry("entries", "Fiddlesticks");
+        Assert.Equal(
+            "https://ddragon.leagueoflegends.com/cdn/img/champion/loading/FiddleSticks_0.jpg",
+            fiddlesticks.Text("loadingArt"));
+        Assert.StartsWith(
+            "Innately connected to the magic of the spirit realm",
+            list.Entry("entries", "Ahri").Text("blurb"),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ItemListHoldsBothEditionsAndLeavesDebrisOut()
     {
         var list = await api.GetJsonAsync($"{Latest}/items");
