@@ -3,6 +3,10 @@
  * twofold: no empty hole while the content arrives, and a reserved size so its arrival shifts
  * nothing. The sweep is shared with the image lifecycle (images.css), so every "not there yet"
  * surface reads the same. Layered as components, so a utility still resizes a placeholder.
+ *
+ * The gradient is a `background-image`, never the `background` shorthand: the build moves a
+ * color-mix() declaration into an @supports copy of its rule emitted after it, where the
+ * shorthand would reset `background-size` and freeze the sweep.
  */
 @keyframes hx-sk-sweep {
   from {
@@ -17,7 +21,7 @@
   .hx-sk {
     display: block;
     border: 1px solid color-mix(in srgb, var(--color-gold) 16%, transparent);
-    background: linear-gradient(
+    background-image: linear-gradient(
       90deg,
       color-mix(in srgb, var(--color-gold) 5%, transparent),
       color-mix(in srgb, var(--color-gold) 13%, transparent),

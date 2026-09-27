@@ -54,11 +54,11 @@
       0 100% / 100% 2px no-repeat;
 }
 
-/* The node is the banner's swallowtail: a blade point hung from the rail.
-   The whole transform is restated: a `rotate` property composes with the base
-   rotate(45deg) instead of cancelling it. */
+/* The node is the banner's swallowtail: a blade point on the rail. `rotate` composes with
+   the base transform instead of cancelling it, so the point stays centred on the rail and
+   turned 45 degrees: that is how the identity shipped, and the look is kept as it is. */
 [data-theme='noxus'] .hx-rule::after {
-  transform: translateX(-50%);
+  rotate: 0deg;
   inline-size: 14px;
   block-size: 12px;
   top: 0;
