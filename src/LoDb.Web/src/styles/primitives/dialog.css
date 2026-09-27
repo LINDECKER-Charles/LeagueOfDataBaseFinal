@@ -9,14 +9,41 @@
     backdrop-filter: blur(2px);
   }
 
+  /*
+   * Widths, from the legacy panes (ui/overlays/dialog-size.ts). Each was a native <dialog>,
+   * which the browser caps at `calc(100% - 6px - 2em)`: the cap is kept, so a phone shows
+   * the same margins.
+   */
   .hx-dialog {
-    inline-size: min(46rem, calc(100vw - 2rem));
+    inline-size: min(46rem, calc(100vw - 2rem), calc(100% - 6px - 2em));
+  }
+  .hx-dialog--form {
+    inline-size: min(34rem, calc(100vw - 2rem), calc(100% - 6px - 2em));
+  }
+  .hx-dialog--picker {
+    inline-size: min(32rem, calc(100vw - 3rem));
+  }
+  .hx-dialog--wide {
+    inline-size: min(56rem, 94vw, calc(100% - 6px - 2em));
   }
   .hx-dialog .hx-dialog-panel {
     max-block-size: calc(100dvh - 2rem);
   }
+  .hx-dialog--form .hx-dialog-panel {
+    padding: 1.5rem;
+  }
+  @media (width >= 40rem) {
+    .hx-dialog--form .hx-dialog-panel {
+      padding: 1.75rem;
+    }
+  }
   .hx-dialog .cdk-dialog-container {
     animation: hx-dialog-in 0.2s var(--ease-hextech);
+  }
+  /* The container takes the focus to announce the dialog: it is no control, so no ring. */
+  .hx-dialog .cdk-dialog-container:focus,
+  .hx-sheet .cdk-dialog-container:focus {
+    outline: none;
   }
 
   /* Bottom sheet: full width, anchored to the bottom edge, clear of the home indicator. */
@@ -76,6 +103,32 @@
   .hx-dialog-panel__close:focus-visible {
     outline: none;
     color: var(--color-hex);
+  }
+  .hx-dialog-panel__glyph {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+  /*
+   * A form's head: eyebrow and title stacked, the close in the text colour, lit cyan. The
+   * 44px target is pulled into the padding so its glyph sits where the legacy one did.
+   */
+  .hx-dialog-panel__head--titled {
+    align-items: flex-start;
+    margin-block-end: 1rem;
+  }
+  .hx-dialog-panel__close--large {
+    margin-block: -0.6rem;
+    margin-inline-end: -0.95rem;
+    color: var(--color-text);
+    transition-duration: 0.3s;
+  }
+  .hx-dialog-panel__close--large:hover {
+    color: var(--color-hex);
+  }
+  /* The legacy form closed on a typeset multiplication sign, not the icon. */
+  .hx-dialog-panel__times {
+    font-size: 1.5rem;
+    line-height: 1;
   }
 
   /*

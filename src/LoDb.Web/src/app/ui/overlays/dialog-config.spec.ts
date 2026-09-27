@@ -17,6 +17,13 @@ describe('dialogConfig', () => {
       restoreFocus: true,
     });
   });
+
+  it('adds the size modifier of the pane when the opener names one', () => {
+    expect(dialogConfig({ labelledBy: 'contact-title', size: 'form' }).panelClass).toEqual([
+      'hx-dialog',
+      'hx-dialog--form',
+    ]);
+  });
 });
 
 describe('sheetConfig', () => {
@@ -33,5 +40,13 @@ describe('sheetConfig', () => {
       width: '100%',
     });
     expect(config.positionStrategy).toBe(position);
+  });
+
+  it('names its size on the sheet pane', () => {
+    const position = createGlobalPositionStrategy(TestBed.inject(Injector)).bottom('0');
+
+    const config = sheetConfig({ labelledBy: 'picker-title', size: 'picker' }, position);
+
+    expect(config.panelClass).toEqual(['hx-sheet', 'hx-sheet--picker']);
   });
 });

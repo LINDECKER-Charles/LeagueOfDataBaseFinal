@@ -35,7 +35,7 @@ describe('ContactDialog', () => {
     expect(host.querySelector('button')?.textContent?.trim()).toBe('contact.form.cta');
   });
 
-  it('opens the contact form in a dialog named by its heading', async () => {
+  it('opens the contact form in a form-sized dialog named by its heading', async () => {
     const { fixture, host } = await render();
 
     host.querySelector('button')!.click();
@@ -46,5 +46,6 @@ describe('ContactDialog', () => {
     const dialog = document.querySelector('[role=dialog]');
     expect(dialog?.getAttribute('aria-labelledby')).toBe('lodb-contact-form-heading');
     expect(dialog?.querySelector('lodb-contact-form form')).not.toBeNull();
+    expect(dialog?.closest('.cdk-overlay-pane')?.classList).toContain('hx-dialog--form');
   });
 });
