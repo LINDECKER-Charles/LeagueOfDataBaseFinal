@@ -7,7 +7,7 @@ import { press } from '../../../testing/dom/press';
 import { reply } from '../../../testing/http/reply';
 import { sent } from '../../../testing/http/sent';
 import { submit } from '../../../testing/dom/submit';
-import { toasts } from '../../../testing/dom/toasts';
+import { notice } from '../../../testing/dom/notice';
 import { ApiClientsPanel } from './api-clients-panel';
 
 const CLIENTS = '/api/admin/api-clients';
@@ -61,34 +61,35 @@ function open() {
 }
 
 describe('ApiClientsPanel', () => {
-  it('rings the plans, ranks the heaviest keys and lists every key with its quota', async () => {
+  it('rings the plans, ranks the heaviest keys and lists every key with its status', async () => {
     const visit = await open();
 
     const legend = [...visit.page.querySelectorAll('lodb-legend li')].map((li) =>
       li.textContent?.replace(/\s+/g, ' ').trim(),
     );
-    expect(legend).toEqual(['monthly 75.0 %', 'free 25.0 %']);
-    expect(visit.page.querySelector('lodb-rank-list li')?.textContent).toContain('dev · lodb_1ab');
+    expect(legend).toEqual(['monthly 3', 'free 1']);
+    expect(visit.page.querySelector('lodb-rank-list li')?.textContent).toContain('lodb_1ab… — dev');
     expect(row(visit, 1).textContent).toContain('2 500 / 100 000');
-    expect(row(visit, 1).textContent).toContain('admin.api_clients.credit');
+    expect(row(visit, 1).textContent).toContain('admin.api_clients.active');
+    expect(row(visit, 1).querySelector('input[name="requests"]')?.getAttribute('max')).toBe(
+      '1000000',
+    );
     expect(row(visit, 2).textContent).toContain('admin.api_clients.revoked');
     expect(row(visit, 2).querySelector('button')).toBeNull();
+    expect(row(visit, 2).querySelector('.actions')?.textContent?.trim()).toBe('—');
   });
 
-  it('credits a key with prepaid requests, then reads the list again', async () => {
+  it('credits a key with the requests typed in its row, then reads the list again', async () => {
     const visit = await open();
 
-    press(visit, 'admin.api_clients.credit', row(visit, 1));
-    const form = row(visit, 1).nextElementSibling ?? undefined;
-    expect(form?.querySelector('input')?.getAttribute('max')).toBe('1000000');
-    submit(visit, { requests: '5000' }, form);
+    submit(visit, { requests: '5000' }, row(visit, 1));
     const credit = await sent(visit, `${CLIENTS}/1/credit`, 'POST');
     expect(credit.request.body).toEqual({ requests: 5000 });
     credit.flush({ creditsBalance: 5_040, rateLimitPerMin: 120 });
     await reply(visit, await sent(visit, CLIENTS), clientsPage());
 
-    expect(toasts()).toEqual(['success: admin.api_clients.done.credit']);
-    expect(visit.page.querySelector('input[name="requests"]')).toBeNull();
+    expect(notice()).toBe('notice: admin.api_clients.done.credit');
+    expect(row(visit, 1).querySelector<HTMLInputElement>('input[name="requests"]')?.value).toBe('');
   });
 
   it('revokes a key once confirmed', async () => {
@@ -99,21 +100,20 @@ describe('ApiClientsPanel', () => {
     (await sent(visit, `${CLIENTS}/1/revoke`, 'POST')).flush('');
     await reply(visit, await sent(visit, CLIENTS), clientsPage([client(1, false)]));
 
-    expect(toasts()).toEqual(['success: admin.api_clients.done.revoke']);
+    expect(notice()).toBe('notice: admin.api_clients.done.revoke');
     expect(row(visit, 1).textContent).toContain('admin.api_clients.revoked');
   });
 
   it('tells that a revoked key takes no credit', async () => {
     const visit = await open();
 
-    press(visit, 'admin.api_clients.credit', row(visit, 1));
-    submit(visit, { requests: '10' }, row(visit, 1).nextElementSibling ?? undefined);
+    submit(visit, { requests: '10' }, row(visit, 1));
     (await sent(visit, `${CLIENTS}/1/credit`, 'POST')).flush(
       { code: 'api-client-revoked' },
       { status: HttpStatusCode.Conflict, statusText: 'Conflict' },
     );
 
-    await vi.waitFor(() => expect(toasts()).toEqual(['error: admin.errors.api_client_revoked']));
+    await vi.waitFor(() => expect(notice()).toBe('alert: admin.errors.api_client_revoked'));
     expect(visit.page.querySelector('input[name="requests"]')).not.toBeNull();
   });
 });

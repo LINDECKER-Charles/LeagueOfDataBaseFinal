@@ -94,13 +94,13 @@ async function doubleKeys(page: Page): Promise<KeyCalls> {
 test('shows the keys of the stack, by plan and by consumption', async ({ page, consoleErrors }) => {
   await openPanel(page, '/admin/api-clients', 'Clients API');
 
-  for (const label of ['Clés actives', 'Requêtes du mois', 'Crédits en réserve']) {
+  for (const label of ['Clés actives', 'Requêtes ce mois', 'Crédits en circulation']) {
     await expect(page.getByText(label, { exact: true })).toBeVisible();
   }
-  for (const heading of ['Clés actives par forfait', 'Plus gros consommateurs (30 j)']) {
+  for (const heading of ['Répartition par plan', 'Top consommateurs']) {
     await expect(page.getByRole('heading', { level: 2, name: heading })).toBeVisible();
   }
-  await expect(page.getByRole('columnheader', { name: 'Consommation du mois' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Conso mois' })).toBeVisible();
   expect(consoleErrors).toEqual([]);
 });
 
@@ -110,14 +110,13 @@ test('credits a key with prepaid requests', async ({ page }) => {
   const row = page.locator('tr[data-api-client]', { hasText: NAME });
   await expect(row.getByText('Mensuel', { exact: true })).toBeVisible();
 
+  await row.getByLabel('Requêtes à créditer').fill('500');
   await row.getByRole('button', { name: 'Créditer', exact: true }).click();
-  await page.getByLabel(`Requêtes prépayées à ajouter à ${NAME}`).fill('500');
-  await page.getByRole('button', { name: 'Créditer la clé' }).click();
 
-  await expectToast(page, `500 requêtes ajoutées à ${NAME}.`);
+  await expectToast(page, '500 requêtes créditées sur la clé lodb_e2e….');
   expect(calls.credits).toEqual([{ requests: 500 }]);
   await expect(row.getByRole('cell', { name: '500', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Créditer la clé' })).toHaveCount(0);
+  await expect(row.getByLabel('Requêtes à créditer')).toHaveValue('');
 });
 
 test('revokes a key', async ({ page }) => {
@@ -127,20 +126,25 @@ test('revokes a key', async ({ page }) => {
 
   await confirmAction(row, 'Révoquer', 'Confirmer la révocation');
 
-  await expectToast(page, `La clé ${NAME} est révoquée.`);
+  await expectToast(page, 'Clé lodb_e2e… révoquée (effective sous ~60 s côté API).');
   expect(calls.revokes).toBe(1);
-  await expect(row.getByText('Révoquée', { exact: true })).toBeVisible();
+  await expect(row.getByText('révoquée', { exact: true })).toBeVisible();
   await expect(row.getByRole('button', { name: 'Créditer', exact: true })).toHaveCount(0);
 });
 
 test('shows the donations of the stack, day by day', async ({ page, consoleErrors }) => {
   await openPanel(page, '/admin/donations', 'Dons');
 
-  for (const label of ['Total', 'Donateurs identifiés', 'Dons anonymes', 'Soutiens']) {
+  for (const label of [
+    'Total collecté',
+    '30 derniers jours',
+    'Donateurs identifiés',
+    'Supporters actifs',
+  ]) {
     await expect(page.getByText(label, { exact: true })).toBeVisible();
   }
-  await expect(page.getByRole('heading', { level: 2, name: 'Dons par jour' })).toBeVisible();
-  await expect(page.getByRole('columnheader', { name: 'Donateur' })).toBeVisible();
+  await expect(page.getByText('Historique', { exact: true })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Compte lié' })).toBeVisible();
   expect(consoleErrors).toEqual([]);
 });
 
@@ -174,15 +178,9 @@ test('shows each donation with its amount, its currency and its donor', async ({
   await openPanel(page, '/admin/donations', 'Dons');
 
   const foreign = page.locator('tr[data-donation="2"]');
-  await expect(foreign).toContainText(/12,50\s€/);
-  await expect(foreign.getByText('usd')).toBeVisible();
-  await expect(foreign).toContainText('Anonyme');
+  await expect(foreign).toContainText('12,50 USD');
+  await expect(foreign).toContainText('anonyme');
   const identified = page.locator('tr[data-donation="1"]');
-  await expect(identified).toContainText(/25,00\s€/);
-  await expect(identified.getByRole('link', { name: donor.username })).toHaveAttribute(
-    'href',
-    `/admin/users/${donor.id}/activity`,
-  );
-  await expect(identified.getByText('Soutien', { exact: true })).toBeVisible();
-  await expect(page.getByText('2 résultats', { exact: true })).toBeVisible();
+  await expect(identified).toContainText('25,00 EUR');
+  await expect(identified.getByText(donor.username, { exact: true })).toBeVisible();
 });

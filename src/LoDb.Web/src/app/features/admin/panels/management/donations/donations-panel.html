@@ -1,94 +1,77 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | adminText"
+  [eyebrow]="'admin.eyebrows.management' | adminText"
   [title]="'admin.donations.title' | adminText"
   [subtitle]="'admin.donations.lede' | adminText"
 />
 
-<lodb-panel-state [panel]="donations" shape="chart" />
+<lodb-panel-state [panel]="donations" />
 @if (donations.value(); as list) {
-  <div class="grid grid-cols-2 gap-3 lg:grid-cols-5">
+  <div class="kpi-grid">
     <lodb-kpi
       [label]="'admin.donations.kpi.total' | adminText"
       [value]="list.kpis.totalCents | figure: 'euros'"
+      [sub]="'admin.donations.kpi.total_sub' | adminText: { count: (list.kpis.count | figure) }"
     />
     <lodb-kpi
-      tone="hex"
-      [label]="'admin.donations.kpi.count' | adminText"
-      [value]="list.kpis.count | figure"
-    />
+      accent="hex"
+      [label]="'admin.donations.kpi.month' | adminText"
+      [value]="monthCents() | figure: 'euros'"
+    >
+      <lodb-sparkline [values]="daily()" />
+    </lodb-kpi>
     <lodb-kpi
-      tone="hex"
+      accent="green"
       [label]="'admin.donations.kpi.identified' | adminText"
       [value]="list.kpis.identifiedDonors | figure"
+      [sub]="
+        'admin.donations.kpi.identified_sub' | adminText: { count: (list.kpis.anonymous | figure) }
+      "
     />
     <lodb-kpi
-      tone="muted"
-      [label]="'admin.donations.kpi.anonymous' | adminText"
-      [value]="list.kpis.anonymous | figure"
-    />
-    <lodb-kpi
-      tone="warn"
+      accent="blue"
       [label]="'admin.donations.kpi.supporters' | adminText"
       [value]="list.kpis.supporters | figure"
+      [sub]="'admin.donations.kpi.supporters_sub' | adminText"
     />
   </div>
 
-  <lodb-admin-card class="mt-6" [heading]="'admin.donations.daily' | adminText">
-    <lodb-time-series-chart
-      [dates]="daily().dates"
-      [series]="daily().series"
-      [label]="'admin.donations.daily' | adminText"
-    />
-  </lodb-admin-card>
+  <lodb-admin-rule [label]="'admin.rules.history' | adminText" />
 
-  <p class="mt-6 mb-2 text-xs text-text-dim">
-    {{ 'admin.common.results' | adminText: { count: list.total } }}
-  </p>
-  <div class="hx-table-scroll" [attr.aria-busy]="donations.busy()">
-    <table class="hx-table">
-      <thead>
-        <tr>
-          <th scope="col">{{ 'admin.donations.columns.date' | adminText }}</th>
-          <th scope="col" class="num">{{ 'admin.donations.columns.amount' | adminText }}</th>
-          <th scope="col">{{ 'admin.donations.columns.donor' | adminText }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (donation of list.items; track donation.id) {
-          <tr [attr.data-donation]="donation.id">
-            <td class="font-mono text-xs">{{ donation.createdAt | stamp: 'minute' }}</td>
-            <td class="num">
-              {{ donation.amountCents | figure: 'euros' }}
-              @if (isForeign(donation)) {
-                <span class="font-mono text-[11px] text-text-dim uppercase">{{
-                  donation.currency
-                }}</span>
-              }
-            </td>
-            <td>
-              @if (donation.donor; as donor) {
-                <span class="flex flex-wrap items-center gap-1.5">
-                  <a
-                    class="nav-link text-sm text-gold"
-                    [routerLink]="['/admin/users', donor.id, 'activity']"
-                    >{{ donor.username }}</a
-                  >
-                  @if (donation.donorIsSupporter) {
-                    <span lodbBadge="hex">{{ 'admin.users.badges.supporter' | adminText }}</span>
-                  }
-                </span>
-              } @else {
-                <span class="text-text-dim">{{ 'admin.donations.anonymous' | adminText }}</span>
-              }
-            </td>
-          </tr>
-        } @empty {
+  <lodb-admin-card>
+    <div class="hx-table-scroll" [attr.aria-busy]="donations.busy()">
+      <table class="hx-table hx-table--flush admin-tbl">
+        <thead>
           <tr>
-            <td colspan="3" class="text-text-dim">{{ 'admin.donations.empty' | adminText }}</td>
+            <th scope="col">{{ 'admin.donations.columns.date' | adminText }}</th>
+            <th scope="col" class="num">{{ 'admin.donations.columns.amount' | adminText }}</th>
+            <th scope="col">{{ 'admin.donations.columns.donor' | adminText }}</th>
           </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          @for (donation of list.items; track donation.id) {
+            <tr [attr.data-donation]="donation.id">
+              <td>{{ donation.createdAt | stamp: 'minute' }}</td>
+              <td class="num">
+                {{ donation.amountCents | figure: 'money' }} {{ donation.currency.toUpperCase() }}
+              </td>
+              <td>
+                @if (donation.donor; as donor) {
+                  <span [lodbBadge]="donation.donorIsSupporter ? 'good' : 'muted'">
+                    {{ donor.username }}
+                  </span>
+                } @else {
+                  {{ 'admin.donations.anonymous' | adminText }}
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3" class="t-empty">{{ 'admin.donations.empty' | adminText }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </lodb-admin-card>
   <lodb-admin-pager [page]="list.page" [pages]="list.pages" />
 }
