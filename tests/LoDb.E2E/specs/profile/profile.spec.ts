@@ -1,12 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, test } from '../../support/test';
-import {
-  deleteAccount,
-  discardAccount,
-  newAccount,
-  register,
-  type TestAccount,
-} from '../account/accounts';
+import { expect, test } from '../../support/worker-account';
 
 const CHAMPION = 'Ahri';
 
@@ -34,21 +27,14 @@ async function setPublic(page: Page, isPublic: boolean): Promise<void> {
   expect((await save).ok()).toBe(true);
 }
 
-// The account of the journey, deleted even when a step fails: no run leaves one behind.
-let created: TestAccount | undefined;
-
-test.afterEach(async ({ playwright, baseURL }) => {
-  if (created) {
-    await discardAccount(playwright.request, baseURL, created);
-    created = undefined;
-  }
-});
-
-// The editor, the owner's preview and the page anyone reads, for one account.
-test('makes a profile public, previews it and shows it to anyone', async ({ page, request }) => {
-  const account = (created = newAccount('card'));
+// The editor, the owner's preview and the page anyone reads, for the worker's account. The
+// registration and the deletion of an account are account/register.spec.ts's.
+test('makes a profile public, previews it and shows it to anyone', async ({
+  member: page,
+  workerAccount: account,
+  request,
+}) => {
   const publicPath = `/en/u/${account.username}`;
-  await register(page, account);
 
   await test.step('chooses a favorite champion, saved on its own', async () => {
     await chooseChampion(page);
@@ -92,10 +78,6 @@ test('makes a profile public, previews it and shows it to anyone', async ({ page
     const page404 = await request.get(`${publicPath}?e2e=private`);
     expect(page404.status()).toBe(404);
     expect(page404.headers()['x-robots-tag']).toContain('noindex');
-  });
-
-  await test.step('deletes the account', async () => {
-    await deleteAccount(page, account);
   });
 });
 

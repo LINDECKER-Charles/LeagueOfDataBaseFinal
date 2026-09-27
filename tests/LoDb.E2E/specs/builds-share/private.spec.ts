@@ -1,29 +1,14 @@
 import { readHead } from '../../support/head';
-import { expect, test } from '../../support/test';
-import { discardAccount, newAccount, type TestAccount } from '../account/accounts';
-import { createBuild, verifiedAccount } from './builds';
+import { expect, test } from '../../support/worker-account';
+import { createBuild } from './builds';
 
-// The account of the journey, deleted even when a step fails: no run leaves one behind.
-let created: TestAccount | undefined;
-
-test.afterEach(async ({ playwright, baseURL }) => {
-  if (created) {
-    await discardAccount(playwright.request, baseURL, created);
-    created = undefined;
-  }
-});
-
+// The build of the worker's account, deleted with the others once the test ends.
 test('shares a private build with its link only, without a score', async ({
   page,
-  request,
-  browser,
-  baseURL,
+  member: owner,
   consoleErrors,
 }) => {
   test.slow();
-  const account = (created = newAccount('bpriv'));
-  const owner = await (await browser.newContext({ baseURL })).newPage();
-  await verifiedAccount(owner, request, account);
   const build = await createBuild(owner, {
     name: 'Hidden scroll',
     isPublic: false,
@@ -58,7 +43,6 @@ test('shares a private build with its link only, without a score', async ({
     await expect(page.locator(`a[href="${path}"]`)).toHaveCount(0);
   });
 
-  await owner.context().close();
   expect(consoleErrors).toEqual([]);
 });
 

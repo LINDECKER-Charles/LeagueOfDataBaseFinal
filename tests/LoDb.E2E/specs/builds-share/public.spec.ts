@@ -1,21 +1,10 @@
 import type { Browser, Page } from '@playwright/test';
 import { readHead, typesOf } from '../../support/head';
-import { expect, test } from '../../support/test';
-import { discardAccount, newAccount, type TestAccount } from '../account/accounts';
-import { createBuild, verifiedAccount } from './builds';
+import { expect, test } from '../../support/worker-account';
+import { createBuild } from './builds';
 
 // The build speaks French, whatever the visitor's browser or `?lang=` asks for.
 const LANGUAGE = 'fr_FR';
-
-// The account of the journey, deleted even when a step fails: no run leaves one behind.
-let created: TestAccount | undefined;
-
-test.afterEach(async ({ playwright, baseURL }) => {
-  if (created) {
-    await discardAccount(playwright.request, baseURL, created);
-    created = undefined;
-  }
-});
 
 async function newVisitor(browser: Browser, baseURL: string | undefined, javaScriptEnabled = true) {
   const context = await browser.newContext({ baseURL, javaScriptEnabled });
@@ -26,18 +15,17 @@ function voteScore(page: Page) {
   return page.locator('.bshare-head .vote-score');
 }
 
-// The owner and a visitor, around one public build.
+// The owner, the worker's account, and a visitor, around one public build.
 test('shares a public build, unlisted, in its own language, with its score', async ({
   page,
+  member: owner,
+  workerAccount: account,
   request,
   browser,
   baseURL,
   consoleErrors,
 }) => {
   test.slow();
-  const account = (created = newAccount('bshare'));
-  const owner = await newVisitor(browser, baseURL);
-  await verifiedAccount(owner, request, account);
   const build = await createBuild(owner, {
     name: 'Shared scroll',
     isPublic: true,
@@ -104,6 +92,5 @@ test('shares a public build, unlisted, in its own language, with its score', asy
     await expect(up).toHaveAttribute('aria-pressed', 'false');
   });
 
-  await owner.context().close();
   expect(consoleErrors).toEqual([]);
 });

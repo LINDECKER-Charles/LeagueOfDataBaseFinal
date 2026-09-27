@@ -1,7 +1,5 @@
 import { metaOf, olderVersion } from '../../support/catalog';
-import { expect, test } from '../../support/test';
-import { discardAccount, newAccount, register, type TestAccount } from '../account/accounts';
-import { accountLinkIn, lastMailTo } from '../account/mailbox';
+import { expect, test } from '../../support/worker-account';
 import {
   addItem,
   CHAMPION,
@@ -22,16 +20,6 @@ const RENAMED = 'E2E lethality carry, revised';
 const PHONE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 720 };
 
-// The account of the journey, deleted even when a step fails: no run leaves one behind.
-let created: TestAccount | undefined;
-
-test.afterEach(async ({ playwright, baseURL }) => {
-  if (created) {
-    await discardAccount(playwright.request, baseURL, created);
-    created = undefined;
-  }
-});
-
 // No account is created here: what a visitor meets on the builds of an account.
 test('sends a visitor from the builds to the sign-in, which brings them back', async ({ page }) => {
   await page.goto(LIST);
@@ -40,18 +28,10 @@ test('sends a visitor from the builds to the sign-in, which brings them back', a
   expect(new URL(page.url()).searchParams.get('returnUrl')).toBe(LIST);
 });
 
-// One account for the whole journey: the API limits how many are created in a row.
-test('forges, edits, imports and deletes a build', async ({ page, request }) => {
-  const account = (created = newAccount('bld'));
+// The worker's verified account: the API limits how many are created in a row. The forge
+// refused to an unverified account is left to verifiedEmailGuard's unit test and the API's.
+test('forges, edits, imports and deletes a build', async ({ member: page, request }) => {
   const meta = await metaOf(request);
-
-  await test.step('refuses the forge to an unverified account, then confirms it', async () => {
-    await register(page, account);
-    await page.goto(`${LIST}/new`);
-    await expect(page).toHaveURL(/\/en\/account\/verify-email/);
-    await page.goto(accountLinkIn(await lastMailTo(request, account.email), 'verify-email'));
-    await expect(page.getByText('Your email address is confirmed.')).toBeVisible();
-  });
 
   await test.step('lists no build yet, and leads to the forge on the latest patch', async () => {
     await page.goto(LIST);
