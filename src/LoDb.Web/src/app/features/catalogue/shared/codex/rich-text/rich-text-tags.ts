@@ -1,17 +1,24 @@
 /**
  * The tags Riot's rich text may keep, lower-cased as the HTML parser reads them: the basic
- * inline markup, and the game's own vocabulary that foundation/ddragon.css colours.
+ * inline markup, and the game's own vocabulary that foundation/ddragon.css colours. `<a>`
+ * keeps its look and loses its link (Data Dragon's were dead); `<font>` keeps its colour.
  */
 export const RICH_TEXT_TAGS: ReadonlySet<string> = new Set([
+  'a',
   'b',
   'br',
   'em',
+  'font',
   'hr',
   'i',
   'li',
+  'ol',
   'p',
+  'small',
   'span',
   'strong',
+  'sub',
+  'sup',
   'u',
   'ul',
   'active',
