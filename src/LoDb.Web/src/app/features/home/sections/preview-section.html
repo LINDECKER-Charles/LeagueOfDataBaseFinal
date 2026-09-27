@@ -23,7 +23,9 @@
 </div>
 
 @if (section().cards.length === 0) {
-  <p class="font-spiegel text-sm text-text-muted">{{ 'home.empty' | transloco }}</p>
+  @if (texts().noData; as noData) {
+    <lodb-empty-state [text]="noData | transloco" />
+  }
 } @else {
   <ul [class]="gridClass()">
     @for (card of section().cards; track card.link.path) {

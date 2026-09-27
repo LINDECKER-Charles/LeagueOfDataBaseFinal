@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Image } from '../../../ui/media/image';
+import { EmptyState } from '../../../ui/surfaces/empty-state';
 import { Frame } from '../../../ui/surfaces/frame';
 import type { HomeSection } from '../data/home-section';
 import type { CardLook } from './card-look';
@@ -24,11 +25,12 @@ const GRID_CLASSES: Readonly<Record<CardLook, string>> = {
 
 /**
  * One preview of the home: its heading, the size of the whole list, a link to it, and the
- * first entries as cards, each a link to its page in the home's context.
+ * first entries as cards, each a link to its page in the home's context. An empty preview
+ * of champions or rune paths says so in the framed empty state, as the legacy home did.
  */
 @Component({
   selector: 'lodb-preview-section',
-  imports: [Frame, Image, RouterLink, SeeAllArrow, TranslocoPipe],
+  imports: [EmptyState, Frame, Image, RouterLink, SeeAllArrow, TranslocoPipe],
   templateUrl: './preview-section.html',
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,

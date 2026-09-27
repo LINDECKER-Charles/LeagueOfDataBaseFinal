@@ -1,4 +1,6 @@
 {
   "patch": "Patch",
-  "empty": "Nothing to show for this version."
+  "runes": {
+    "no_data": "No runes available for this version."
+  }
 }

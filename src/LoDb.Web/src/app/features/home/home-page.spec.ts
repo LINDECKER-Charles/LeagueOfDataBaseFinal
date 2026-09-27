@@ -21,11 +21,17 @@ const CATALOGUES: Record<string, Translation> = {
     homepage: {
       title: 'League of Data Base',
       hero: { browse: 'Updated for patch <strong>{{ version }}</strong>.' },
-      champions: { title: 'Champions', see_all: 'See all champions' },
+      champions: {
+        title: 'Champions',
+        see_all: 'See all champions',
+        no_data: 'No champions available for this version.',
+      },
       items: { title: 'Items', see_all: 'See all items' },
       runes: { title: 'Runes', see_all: 'See all runes' },
       summoners: { title: 'Summoner Spells', see_all: 'See all spells' },
     },
+    common: { no_result: { text: 'No results found for your search.', back: '← Back' } },
+    header: { navigation: { home: 'Home' } },
   },
   'seo/en': {
     home: { title: SEO_TITLE, description: 'Everything of patch {{ version }}.' },
@@ -36,7 +42,7 @@ const CATALOGUES: Record<string, Translation> = {
       description: 'Tout le patch {{ version }}.',
     },
   },
-  'home/en': { patch: 'Patch', empty: 'Nothing to show for this version.' },
+  'home/en': { patch: 'Patch', runes: { no_data: 'No runes available for this version.' } },
 };
 
 function sectionOf(locale: string, resource: ResourceType, filled: boolean): HomeSection {
@@ -55,10 +61,13 @@ function sectionOf(locale: string, resource: ResourceType, filled: boolean): Hom
   };
 }
 
-// What resolveHome gives: every section filled but the summoner spells, out of reach.
+// What resolveHome gives: every section filled but those out of reach, which the test names
+// in `?unreachable=` (the summoner spells by default).
 function homeOf(route: ActivatedRouteSnapshot): HomeData {
   const locale = route.paramMap.get('locale') as Locale;
-  const section = (resource: ResourceType) => sectionOf(locale, resource, resource !== 'summoners');
+  const unreachable = (route.queryParamMap.get('unreachable') ?? 'summoners').split(',');
+  const section = (resource: ResourceType) =>
+    sectionOf(locale, resource, !unreachable.includes(resource));
   return {
     context: { locale, version: VERSION, pinned: false, language: 'en_US' },
     sections: {
@@ -208,7 +217,7 @@ describe('HomePage', () => {
     expect(portals[0]?.textContent).toContain('4');
   });
 
-  it('previews each resource in the legacy order, an empty section saying so', async () => {
+  it('previews each resource in the legacy order', async () => {
     document.documentElement.lang = 'en';
 
     const { host } = await visit('/en');
@@ -221,10 +230,26 @@ describe('HomePage', () => {
     ]);
     const champions = host.querySelector('lodb-preview-section') as HTMLElement;
     expect(champions.querySelector('li a')?.getAttribute('href')).toBe('/en/champions/first');
-    const spells = host.querySelectorAll('lodb-preview-section')[2] as HTMLElement;
-    expect(spells.querySelector('p')?.textContent?.trim()).toBe(
-      'Nothing to show for this version.',
-    );
+  });
+
+  it('frames an empty preview of champions or runes, and leaves items and spells bare', async () => {
+    document.documentElement.lang = 'en';
+
+    const { host } = await visit('/en?unreachable=champions,items,runes,summoners');
+
+    const [champions, items, spells, runes] = [...host.querySelectorAll('lodb-preview-section')];
+    expect(textsOf(champions as HTMLElement, 'lodb-empty-state p')).toEqual([
+      'No results found for your search.',
+      'No champions available for this version.',
+    ]);
+    expect(textsOf(runes as HTMLElement, 'lodb-empty-state p')).toEqual([
+      'No results found for your search.',
+      'No runes available for this version.',
+    ]);
+    expect(champions?.querySelector('lodb-empty-state a')?.getAttribute('href')).toBe('/en');
+    for (const bare of [items, spells]) {
+      expect(bare?.querySelector('lodb-empty-state, ul')).toBeNull();
+    }
   });
 
   it('draws each champion in its loading-screen art, its name a titled heading', async () => {

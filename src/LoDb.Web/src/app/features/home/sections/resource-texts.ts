@@ -7,6 +7,11 @@ interface ResourceTexts {
   readonly title: string;
   /** Label of the link to the list. */
   readonly seeAll: string;
+  /**
+   * What the framed empty state of an empty preview says; null where the legacy home left
+   * the preview empty under its heading (items, spells).
+   */
+  readonly noData: string | null;
   readonly icon: IconName;
 }
 
@@ -15,13 +20,25 @@ export const RESOURCE_TEXTS: Readonly<Record<ResourceType, ResourceTexts>> = {
   champions: {
     title: 'homepage.champions.title',
     seeAll: 'homepage.champions.see_all',
+    noData: 'homepage.champions.no_data',
     icon: 'champion',
   },
-  items: { title: 'homepage.items.title', seeAll: 'homepage.items.see_all', icon: 'item' },
-  runes: { title: 'homepage.runes.title', seeAll: 'homepage.runes.see_all', icon: 'rune' },
+  items: {
+    title: 'homepage.items.title',
+    seeAll: 'homepage.items.see_all',
+    noData: null,
+    icon: 'item',
+  },
+  runes: {
+    title: 'homepage.runes.title',
+    seeAll: 'homepage.runes.see_all',
+    noData: 'home.runes.no_data',
+    icon: 'rune',
+  },
   summoners: {
     title: 'homepage.summoners.title',
     seeAll: 'homepage.summoners.see_all',
+    noData: null,
     icon: 'spell',
   },
 };
