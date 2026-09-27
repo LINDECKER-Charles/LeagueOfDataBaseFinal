@@ -1,0 +1,160 @@
+<lodb-page-head
+  [eyebrow]="'admin.nav.management' | transloco"
+  [title]="'admin.users.title' | transloco"
+  [subtitle]="'admin.users.lede' | transloco"
+/>
+
+<form class="mb-6 flex flex-wrap items-end gap-2" role="search" (submit)="search($event)">
+  <label for="users-q" class="sr-only">{{ 'admin.users.search' | transloco }}</label>
+  <input
+    lodbField
+    id="users-q"
+    name="q"
+    type="search"
+    class="max-w-sm"
+    [value]="query.text('q')"
+    [placeholder]="'admin.users.search' | transloco"
+  />
+  <button lodbButton type="submit">{{ 'admin.actions.search' | transloco }}</button>
+</form>
+
+<lodb-panel-state [panel]="users" />
+@if (users.value(); as list) {
+  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <lodb-kpi [label]="'admin.users.kpi.total' | transloco" [value]="list.stats.total | figure" />
+    <lodb-kpi
+      tone="hex"
+      [label]="'admin.users.kpi.new_week' | transloco"
+      [value]="list.stats.newWeek | figure"
+    />
+    <lodb-kpi
+      tone="bad"
+      [label]="'admin.users.kpi.banned' | transloco"
+      [value]="list.stats.banned | figure"
+    />
+    <lodb-kpi
+      tone="good"
+      [label]="'admin.users.kpi.supporters' | transloco"
+      [value]="list.stats.supporters | figure"
+    />
+  </div>
+
+  <p class="mt-6 mb-2 text-xs text-text-dim">
+    {{ 'admin.common.results' | transloco: { count: list.total } }}
+  </p>
+  <div class="hx-table-scroll" [attr.aria-busy]="users.busy()">
+    <table class="hx-table">
+      <thead>
+        <tr>
+          <th scope="col" class="num">#</th>
+          <th scope="col">{{ 'admin.users.columns.account' | transloco }}</th>
+          <th scope="col">{{ 'admin.users.columns.created' | transloco }}</th>
+          <th scope="col" class="num">{{ 'admin.users.columns.builds' | transloco }}</th>
+          <th scope="col">{{ 'admin.users.columns.state' | transloco }}</th>
+          <th scope="col">{{ 'admin.common.actions' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of list.items; track user.id) {
+          <tr [attr.data-user]="user.id">
+            <td class="num text-text-dim">{{ user.id }}</td>
+            <td>
+              <span class="block text-text">{{ user.username }}</span>
+              <span class="block text-xs text-text-muted">{{ user.email }}</span>
+            </td>
+            <td class="font-mono text-xs">{{ user.createdAt | stamp }}</td>
+            <td class="num">{{ user.buildCount | figure }}</td>
+            <td>
+              <span class="flex flex-wrap gap-1">
+                @if (user.isAdmin) {
+                  <span lodbBadge="gold">{{ 'admin.users.badges.admin' | transloco }}</span>
+                }
+                @if (user.isBanned) {
+                  <span lodbBadge="bad" [title]="user.banReason ?? ''">
+                    {{ 'admin.users.badges.banned' | transloco }}
+                  </span>
+                }
+                @if (user.isSupporter) {
+                  <span lodbBadge="hex">{{ 'admin.users.badges.supporter' | transloco }}</span>
+                }
+                @if (user.twoFactorEnabled) {
+                  <span lodbBadge="good">{{ 'admin.users.badges.two_factor' | transloco }}</span>
+                }
+                @if (user.google) {
+                  <span lodbBadge="muted">{{ 'admin.users.badges.google' | transloco }}</span>
+                }
+                @if (!user.emailVerified) {
+                  <span lodbBadge="warn">{{ 'admin.users.badges.unverified' | transloco }}</span>
+                }
+              </span>
+            </td>
+            <td>
+              <span class="flex flex-wrap items-center gap-1.5">
+                <a lodbButton="ghost" [routerLink]="['/admin/users', user.id, 'activity']">{{
+                  'admin.users.activity' | transloco
+                }}</a>
+                @if (user.isBanned) {
+                  <lodb-confirm-button
+                    [label]="'admin.users.unban' | transloco"
+                    [confirmLabel]="'admin.users.confirm_unban' | transloco"
+                    [busy]="actions.pending() === user.id"
+                    (confirmed)="unban(user)"
+                  />
+                } @else if (banning() !== user.id) {
+                  <button
+                    lodbButton="ghost"
+                    type="button"
+                    [disabled]="actions.pending() === user.id"
+                    (click)="banning.set(user.id)"
+                  >
+                    {{ 'admin.users.ban' | transloco }}
+                  </button>
+                }
+                <lodb-confirm-button
+                  [label]="'admin.actions.delete' | transloco"
+                  [confirmLabel]="'admin.users.confirm_delete' | transloco"
+                  [busy]="actions.pending() === user.id"
+                  (confirmed)="remove(user)"
+                />
+              </span>
+            </td>
+          </tr>
+          @if (banning() === user.id) {
+            <tr>
+              <td colspan="6">
+                <form class="flex flex-wrap items-end gap-2" (submit)="ban($event, user)">
+                  <label [for]="'ban-reason-' + user.id" class="eyebrow w-full">
+                    {{ 'admin.users.ban_reason' | transloco: { name: user.username } }}
+                  </label>
+                  <input
+                    lodbField
+                    name="reason"
+                    type="text"
+                    class="max-w-md"
+                    maxlength="255"
+                    [id]="'ban-reason-' + user.id"
+                  />
+                  <button
+                    lodbButton="gold"
+                    type="submit"
+                    [disabled]="actions.pending() === user.id"
+                  >
+                    {{ 'admin.users.confirm_ban' | transloco }}
+                  </button>
+                  <button lodbButton="ghost" type="button" (click)="banning.set(null)">
+                    {{ 'admin.actions.cancel' | transloco }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          }
+        } @empty {
+          <tr>
+            <td colspan="6" class="text-text-dim">{{ 'admin.users.empty' | transloco }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <lodb-admin-pager [page]="list.page" [pages]="list.pages" />
+}

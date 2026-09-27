@@ -1,0 +1,121 @@
+<lodb-page-head
+  [eyebrow]="'admin.nav.management' | transloco"
+  [title]="'admin.builds.title' | transloco"
+  [subtitle]="'admin.builds.lede' | transloco"
+/>
+
+<form class="mb-6 flex flex-wrap items-end gap-2" role="search" (submit)="search($event)">
+  <label for="builds-q" class="sr-only">{{ 'admin.builds.search' | transloco }}</label>
+  <input
+    lodbField
+    id="builds-q"
+    name="q"
+    type="search"
+    class="max-w-sm"
+    [value]="query.text('q')"
+    [placeholder]="'admin.builds.search' | transloco"
+  />
+  <label for="builds-visibility" class="sr-only">{{ 'admin.builds.visibility' | transloco }}</label>
+  <select lodbField id="builds-visibility" name="visibility" class="max-w-48">
+    <option value="" [selected]="query.text('visibility') === ''">
+      {{ 'admin.builds.all_visibilities' | transloco }}
+    </option>
+    @for (visibility of visibilities; track visibility) {
+      <option [value]="visibility" [selected]="query.text('visibility') === visibility">
+        {{ 'admin.builds.visibilities.' + visibility | transloco }}
+      </option>
+    }
+  </select>
+  <button lodbButton type="submit">{{ 'admin.actions.filter' | transloco }}</button>
+</form>
+
+<lodb-panel-state [panel]="builds" />
+@if (builds.value(); as list) {
+  <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
+    <lodb-kpi [label]="'admin.builds.kpi.total' | transloco" [value]="list.stats.total | figure" />
+    <lodb-kpi
+      tone="hex"
+      [label]="'admin.builds.kpi.public' | transloco"
+      [value]="list.stats.public | figure"
+    />
+    <lodb-kpi
+      tone="muted"
+      [label]="'admin.builds.kpi.private' | transloco"
+      [value]="list.stats.total - list.stats.public | figure"
+    />
+  </div>
+
+  <p class="mt-6 mb-2 text-xs text-text-dim">
+    {{ 'admin.common.results' | transloco: { count: list.total } }}
+  </p>
+  <div class="hx-table-scroll" [attr.aria-busy]="builds.busy()">
+    <table class="hx-table">
+      <thead>
+        <tr>
+          <th scope="col" class="num">#</th>
+          <th scope="col">{{ 'admin.builds.columns.build' | transloco }}</th>
+          <th scope="col">{{ 'admin.builds.columns.author' | transloco }}</th>
+          <th scope="col">{{ 'admin.builds.columns.mode' | transloco }}</th>
+          <th scope="col">{{ 'admin.builds.columns.visibility' | transloco }}</th>
+          <th scope="col" class="num">{{ 'admin.builds.columns.score' | transloco }}</th>
+          <th scope="col">{{ 'admin.builds.columns.created' | transloco }}</th>
+          <th scope="col">{{ 'admin.common.actions' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (build of list.items; track build.id) {
+          <tr [attr.data-build]="build.id">
+            <td class="num text-text-dim">{{ build.id }}</td>
+            <td>
+              <span class="block text-text">{{ build.name }}</span>
+              <span class="block font-mono text-[11px] text-text-dim">
+                {{ build.championId }} · {{ build.gameVersion }} · {{ build.language }}
+              </span>
+            </td>
+            <td>
+              <a
+                class="nav-link text-sm text-gold"
+                routerLink="/admin/users"
+                [queryParams]="{ q: build.owner.username }"
+                >{{ build.owner.username }}</a
+              >
+            </td>
+            <td class="text-xs">{{ texts.term('builds.modes', build.gameMode) }}</td>
+            <td>
+              <span [lodbBadge]="build.isPublic ? 'hex' : 'muted'">
+                {{
+                  'admin.builds.visibilities.' + (build.isPublic ? 'public' : 'private') | transloco
+                }}
+              </span>
+            </td>
+            <td class="num">{{ build.score | figure }}</td>
+            <td class="font-mono text-xs">{{ build.createdAt | stamp }}</td>
+            <td>
+              <span class="flex flex-wrap items-center gap-1.5">
+                @if (build.isPublic) {
+                  <lodb-confirm-button
+                    [label]="'admin.builds.unpublish' | transloco"
+                    [confirmLabel]="'admin.builds.confirm_unpublish' | transloco"
+                    [busy]="actions.pending() === build.id"
+                    (confirmed)="unpublish(build)"
+                  />
+                }
+                <lodb-confirm-button
+                  [label]="'admin.actions.delete' | transloco"
+                  [confirmLabel]="'admin.builds.confirm_delete' | transloco"
+                  [busy]="actions.pending() === build.id"
+                  (confirmed)="remove(build)"
+                />
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="8" class="text-text-dim">{{ 'admin.builds.empty' | transloco }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <lodb-admin-pager [page]="list.page" [pages]="list.pages" />
+}

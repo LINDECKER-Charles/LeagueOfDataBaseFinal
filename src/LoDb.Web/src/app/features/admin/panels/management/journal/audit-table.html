@@ -1,0 +1,73 @@
+<div class="hx-table-scroll">
+  <table class="hx-table">
+    <thead>
+      <tr>
+        <th scope="col">{{ 'admin.journal.columns.when' | transloco }}</th>
+        <th scope="col">{{ 'admin.journal.columns.action' | transloco }}</th>
+        <th scope="col">{{ 'admin.journal.columns.outcome' | transloco }}</th>
+        <th scope="col">{{ 'admin.journal.columns.actor' | transloco }}</th>
+        <th scope="col">{{ 'admin.journal.columns.target' | transloco }}</th>
+        <th scope="col">{{ 'admin.journal.columns.origin' | transloco }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (entry of entries(); track entry.id) {
+        <tr>
+          <td class="font-mono text-xs whitespace-nowrap">
+            {{ entry.occurredAt | stamp: 'second' }}
+          </td>
+          <td>
+            <span class="block text-text">{{ texts.term('journal.actions', entry.action) }}</span>
+            <span class="block font-mono text-[11px] text-text-dim">
+              {{ texts.term('journal.categories', entry.category) }} · {{ entry.action }}
+            </span>
+          </td>
+          <td>
+            <span [lodbBadge]="outcomeTone(entry.outcome)">
+              {{ texts.term('journal.outcomes', entry.outcome) }}
+            </span>
+          </td>
+          <td>
+            @if (isAccount(entry)) {
+              <a
+                class="nav-link text-sm text-gold"
+                [routerLink]="['/admin/users', entry.actorId, 'activity']"
+              >
+                {{ entry.actor ?? '#' + entry.actorId }}
+              </a>
+            } @else {
+              <span class="text-sm text-text-muted">{{ entry.actor ?? '—' }}</span>
+            }
+            <span class="block font-mono text-[11px] text-text-dim">
+              {{ texts.term('journal.actor_types', entry.actorType) }}
+            </span>
+          </td>
+          <td class="text-xs">
+            @if (entry.targetType) {
+              <span class="block text-text-muted">{{ entry.targetType }} {{ entry.targetId }}</span>
+            }
+            <span class="block text-text">{{ entry.target }}</span>
+            @if (metaOf(entry); as meta) {
+              <code
+                class="block max-w-64 truncate font-mono text-[11px] text-text-dim"
+                [title]="meta"
+              >
+                {{ meta }}
+              </code>
+            }
+          </td>
+          <td class="font-mono text-[11px] text-text-dim">
+            <span class="block">{{ entry.ip ?? '—' }}</span>
+            <span class="block max-w-48 truncate" [title]="entry.route ?? ''">{{
+              entry.route
+            }}</span>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="text-text-dim">{{ 'admin.journal.empty' | transloco }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

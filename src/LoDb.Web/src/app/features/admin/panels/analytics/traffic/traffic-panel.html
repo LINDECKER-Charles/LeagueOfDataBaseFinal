@@ -1,0 +1,76 @@
+<lodb-page-head
+  [eyebrow]="'admin.nav.analytics' | transloco"
+  [title]="'admin.traffic.title' | transloco"
+  [subtitle]="'admin.traffic.lede' | transloco"
+>
+  <lodb-range-bar [current]="query.range()" />
+  <button lodbButton="gold" type="button" [disabled]="rollingUp()" (click)="rollUp()">
+    {{ 'admin.traffic.roll_up' | transloco }}
+  </button>
+</lodb-page-head>
+
+<lodb-panel-state [panel]="report" shape="chart" />
+@if (report.value(); as data) {
+  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" [attr.aria-busy]="report.busy()">
+    <lodb-kpi
+      [label]="'admin.traffic.kpi.views' | transloco"
+      [value]="data.totals.views | figure"
+      [sub]="'admin.traffic.kpi.pages' | transloco: { count: data.totals.pagesTracked }"
+    />
+    <lodb-kpi
+      tone="hex"
+      [label]="'admin.traffic.kpi.visitors' | transloco"
+      [value]="data.totals.uniqueVisitors | figure"
+    />
+    <lodb-kpi
+      tone="muted"
+      [label]="'admin.traffic.kpi.returning' | transloco"
+      [value]="data.totals.returningVisitors | figure"
+    />
+    <lodb-kpi
+      tone="warn"
+      [label]="'admin.traffic.kpi.bots' | transloco"
+      [value]="data.totals.botViews | figure"
+    />
+  </div>
+
+  <lodb-admin-card
+    class="mt-6"
+    [heading]="'admin.traffic.daily' | transloco"
+    [chip]="'admin.traffic.period' | transloco: { from: data.from, to: data.to }"
+  >
+    <lodb-time-series-chart
+      [dates]="traffic().dates"
+      [series]="traffic().series"
+      [label]="'admin.traffic.daily' | transloco"
+    />
+    <lodb-legend [items]="traffic().legend" />
+  </lodb-admin-card>
+
+  <lodb-admin-card class="mt-6" [heading]="'admin.traffic.heatmap' | transloco">
+    <lodb-heatmap [grid]="data.heatmap" />
+  </lodb-admin-card>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <lodb-admin-card [heading]="'admin.traffic.top_pages' | transloco">
+      <lodb-rank-list [rows]="pages()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.traffic.top_entities' | transloco">
+      <lodb-rank-list tone="hex" [rows]="entities()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.traffic.by_type' | transloco">
+      <lodb-donut-chart
+        [slices]="types()"
+        [label]="'admin.traffic.by_type' | transloco"
+        [total]="data.totals.views | figure: 'compact'"
+        [caption]="'admin.traffic.views_caption' | transloco"
+      />
+      <lodb-rank-list class="mt-4" [rows]="kinds()" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.traffic.statuses' | transloco">
+      <lodb-rank-list tone="hex" [rows]="statuses()" />
+      <h3 class="mt-6 mb-3 eyebrow">{{ 'admin.traffic.routes' | transloco }}</h3>
+      <lodb-rank-list [rows]="routes()" [limit]="limit" />
+    </lodb-admin-card>
+  </div>
+}

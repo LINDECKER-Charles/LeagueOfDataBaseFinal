@@ -1,0 +1,94 @@
+<lodb-page-head
+  [eyebrow]="'admin.nav.management' | transloco"
+  [title]="'admin.donations.title' | transloco"
+  [subtitle]="'admin.donations.lede' | transloco"
+/>
+
+<lodb-panel-state [panel]="donations" shape="chart" />
+@if (donations.value(); as list) {
+  <div class="grid grid-cols-2 gap-3 lg:grid-cols-5">
+    <lodb-kpi
+      [label]="'admin.donations.kpi.total' | transloco"
+      [value]="list.kpis.totalCents | figure: 'euros'"
+    />
+    <lodb-kpi
+      tone="hex"
+      [label]="'admin.donations.kpi.count' | transloco"
+      [value]="list.kpis.count | figure"
+    />
+    <lodb-kpi
+      tone="hex"
+      [label]="'admin.donations.kpi.identified' | transloco"
+      [value]="list.kpis.identifiedDonors | figure"
+    />
+    <lodb-kpi
+      tone="muted"
+      [label]="'admin.donations.kpi.anonymous' | transloco"
+      [value]="list.kpis.anonymous | figure"
+    />
+    <lodb-kpi
+      tone="warn"
+      [label]="'admin.donations.kpi.supporters' | transloco"
+      [value]="list.kpis.supporters | figure"
+    />
+  </div>
+
+  <lodb-admin-card class="mt-6" [heading]="'admin.donations.daily' | transloco">
+    <lodb-time-series-chart
+      [dates]="daily().dates"
+      [series]="daily().series"
+      [label]="'admin.donations.daily' | transloco"
+    />
+  </lodb-admin-card>
+
+  <p class="mt-6 mb-2 text-xs text-text-dim">
+    {{ 'admin.common.results' | transloco: { count: list.total } }}
+  </p>
+  <div class="hx-table-scroll" [attr.aria-busy]="donations.busy()">
+    <table class="hx-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'admin.donations.columns.date' | transloco }}</th>
+          <th scope="col" class="num">{{ 'admin.donations.columns.amount' | transloco }}</th>
+          <th scope="col">{{ 'admin.donations.columns.donor' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (donation of list.items; track donation.id) {
+          <tr [attr.data-donation]="donation.id">
+            <td class="font-mono text-xs">{{ donation.createdAt | stamp: 'minute' }}</td>
+            <td class="num">
+              {{ donation.amountCents | figure: 'euros' }}
+              @if (isForeign(donation)) {
+                <span class="font-mono text-[11px] text-text-dim uppercase">{{
+                  donation.currency
+                }}</span>
+              }
+            </td>
+            <td>
+              @if (donation.donor; as donor) {
+                <span class="flex flex-wrap items-center gap-1.5">
+                  <a
+                    class="nav-link text-sm text-gold"
+                    [routerLink]="['/admin/users', donor.id, 'activity']"
+                    >{{ donor.username }}</a
+                  >
+                  @if (donation.donorIsSupporter) {
+                    <span lodbBadge="hex">{{ 'admin.users.badges.supporter' | transloco }}</span>
+                  }
+                </span>
+              } @else {
+                <span class="text-text-dim">{{ 'admin.donations.anonymous' | transloco }}</span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3" class="text-text-dim">{{ 'admin.donations.empty' | transloco }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <lodb-admin-pager [page]="list.page" [pages]="list.pages" />
+}

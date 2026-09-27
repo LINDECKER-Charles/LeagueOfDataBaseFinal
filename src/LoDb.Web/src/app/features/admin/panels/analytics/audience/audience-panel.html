@@ -1,0 +1,69 @@
+<lodb-page-head
+  [eyebrow]="'admin.nav.analytics' | transloco"
+  [title]="'admin.audience.title' | transloco"
+  [subtitle]="'admin.audience.lede' | transloco"
+>
+  <lodb-range-bar [current]="query.range()" />
+</lodb-page-head>
+
+<lodb-panel-state [panel]="report" shape="chart" />
+@if (report.value(); as data) {
+  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" [attr.aria-busy]="report.busy()">
+    <lodb-kpi
+      tone="hex"
+      [label]="'admin.traffic.kpi.visitors' | transloco"
+      [value]="data.totals.uniqueVisitors | figure"
+    />
+    <lodb-kpi
+      tone="muted"
+      [label]="'admin.traffic.kpi.returning' | transloco"
+      [value]="data.totals.returningVisitors | figure"
+    />
+    <lodb-kpi
+      [label]="'admin.audience.kpi.countries' | transloco"
+      [value]="data.country.length | figure"
+    />
+    <lodb-kpi
+      tone="muted"
+      [label]="'admin.audience.kpi.referers' | transloco"
+      [value]="data.topReferers.length | figure"
+    />
+  </div>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <lodb-admin-card [heading]="'admin.audience.devices_title' | transloco">
+      <lodb-donut-chart
+        [slices]="devices()"
+        [label]="'admin.audience.devices_title' | transloco"
+        [total]="data.totals.views | figure: 'compact'"
+        [caption]="'admin.traffic.views_caption' | transloco"
+      />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.audience.sources_title' | transloco">
+      <lodb-donut-chart
+        [slices]="sources()"
+        [label]="'admin.audience.sources_title' | transloco"
+        [total]="data.totals.views | figure: 'compact'"
+        [caption]="'admin.traffic.views_caption' | transloco"
+      />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.audience.browsers' | transloco">
+      <lodb-rank-list [rows]="browsers()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.audience.systems' | transloco">
+      <lodb-rank-list tone="hex" [rows]="systems()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.audience.countries' | transloco">
+      <lodb-rank-list [rows]="countries()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.audience.referers' | transloco">
+      <lodb-rank-list tone="hex" [rows]="referers()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.audience.languages' | transloco">
+      <lodb-rank-list [rows]="languages()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.audience.locales' | transloco">
+      <lodb-rank-list tone="hex" [rows]="locales()" [limit]="limit" />
+    </lodb-admin-card>
+  </div>
+}
