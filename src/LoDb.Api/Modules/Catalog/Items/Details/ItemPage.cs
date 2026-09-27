@@ -38,11 +38,7 @@ internal sealed record ItemPage
             Catalog = catalog,
             Item = item,
             Recipe = RecipeTree.Build(item.Id, items),
-            Upgrades = [.. item.Into
-                .Distinct(StringComparer.Ordinal)
-                .Select(catalog.Items.Find)
-                .OfType<Item>()
-                .Where(catalog.IsListed)],
+            Upgrades = ItemUpgrades.Of(item, catalog),
             RequiredChampion = ChampionNamed(catalog, item.RequiredChampion),
             RequiredAlly = ChampionNamed(catalog, item.RequiredAlly),
         };

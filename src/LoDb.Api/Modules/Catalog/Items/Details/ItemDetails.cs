@@ -41,7 +41,14 @@ internal sealed record ItemDetails
     /// <summary>The item and its components, recursively.</summary>
     public RecipeStep? Recipe { get; init; }
 
-    public required IReadOnlyList<EntityLink> Upgrades { get; init; }
+    /// <summary>
+    /// Data Dragon's depth: 1 for a starter, 2 for an epic, 3 or 4 for a legendary built from
+    /// epics; null when Data Dragon ships none (a consumable, a trinket).
+    /// </summary>
+    public int? Depth { get; init; }
+
+    /// <summary>The listed items it builds into, in the upstream order, with their price.</summary>
+    public required IReadOnlyList<ItemUpgrade> Upgrades { get; init; }
 
     public static ItemDetails Of(ItemPage page, ImageSet images)
     {
@@ -66,8 +73,9 @@ internal sealed record ItemDetails
                 ? EntityLink.Of(ally, catalog, images)
                 : null,
             Recipe = page.Recipe is { } recipe ? RecipeStep.Of(recipe, page, images) : null,
+            Depth = item.Depth,
             Upgrades =
-                [.. page.Upgrades.Select(upgrade => EntityLink.Of(upgrade, catalog, images))],
+                [.. page.Upgrades.Select(upgrade => ItemUpgrade.Of(upgrade, catalog, images))],
         };
     }
 }

@@ -48,6 +48,40 @@ public sealed class CatalogListTests(CatalogApiFixture api)
     }
 
     [Fact]
+    public async Task ItemCardsNameTheirUpgradesOnceInTheRelatedLinks()
+    {
+        var list = await api.GetJsonAsync($"{Latest}/items");
+
+        // Boots and Dagger both build into Berserker's Greaves; the others are not shipped.
+        Assert.Equal(["3006"], list.Entry("entries", "1001").Texts("upgrades"));
+        Assert.Equal(["3006"], list.Entry("entries", "1042").Texts("upgrades"));
+        Assert.Empty(list.Entry("entries", "3006").Texts("upgrades"));
+        var greaves = Assert.Single(list.Items("related"), static link =>
+            link.Text("id") == "3006");
+        Assert.Equal(
+            ("Berserker's Greaves", "items/3006-berserkers-greaves", "modern", "present"),
+            (greaves.Text("name"), greaves.Text("canonicalPath"), greaves.Text("edition"),
+                greaves.GetProperty("image").Text("status")));
+        Assert.Equal(
+            list.Items("entries").SelectMany(static card => card.Texts("upgrades")).Distinct(),
+            list.Pluck("related", "id"));
+    }
+
+    [Fact]
+    public async Task ItemSummaryFallsBackToTheDescription()
+    {
+        var list = await api.GetJsonAsync($"{Latest}/items");
+
+        Assert.Equal(
+            "Enhances Move Speed and Attack Speed",
+            list.Entry("entries", "3006").Text("summary"));
+        Assert.Contains(
+            "Mana Regen per 5 seconds",
+            list.Entry("entries", "771004").Text("summary"),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ItemListHoldsBothEditionsAndLeavesDebrisOut()
     {
         var list = await api.GetJsonAsync($"{Latest}/items");

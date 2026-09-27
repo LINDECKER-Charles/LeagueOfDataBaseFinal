@@ -70,6 +70,20 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
     }
 
     [Fact]
+    public async Task ItemDetailPricesItsUpgradesAndGivesItsDepth()
+    {
+        var boots = await api.GetJsonAsync($"{Latest}/items/1001");
+        var greaves = await api.GetJsonAsync($"{Latest}/items/3006");
+
+        var upgrade = Assert.Single(boots.Items("upgrades"));
+        Assert.Equal(
+            ("3006", 1100, "modern"),
+            (upgrade.Text("id"), upgrade.GetProperty("gold").GetInt32(), upgrade.Text("edition")));
+        Assert.True(boots.IsNull("depth"));
+        Assert.Equal(2, greaves.GetProperty("depth").GetInt32());
+    }
+
+    [Fact]
     public async Task SummonerDetailCarriesItsEditionAndRange()
     {
         var jade = await api.GetJsonAsync($"{Latest}/summoners/SummonerFlash_Jade");

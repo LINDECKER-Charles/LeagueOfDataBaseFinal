@@ -11,8 +11,8 @@ using LoDb.Ingestion.Catalog.Snapshots;
 namespace LoDb.Api.Modules.Catalog.Items;
 
 /// <summary>
-/// An item as the list shows it, with the values its facets filter on: tags, edition, maps,
-/// tier, price, stats.
+/// An item as the list shows it: what it builds into, and the values its facets filter on:
+/// tags, edition, maps, tier, price, stats.
 /// </summary>
 internal sealed record ItemCard
 {
@@ -30,7 +30,10 @@ internal sealed record ItemCard
     /// <summary>The same-named item of the other game, when there is one.</summary>
     public CounterpartLink? Counterpart { get; init; }
 
-    /// <summary>The one-line description, template tokens removed.</summary>
+    /// <summary>
+    /// The one-line description, or the full one when Data Dragon ships none (Emberknife),
+    /// template tokens removed.
+    /// </summary>
     public required string Summary { get; init; }
 
     public required ItemGold Gold { get; init; }
@@ -45,6 +48,12 @@ internal sealed record ItemCard
     public required bool Consumable { get; init; }
 
     public required IReadOnlyList<ItemStat> Stats { get; init; }
+
+    /// <summary>
+    /// Ids of the listed items it builds into, in the upstream order; the list names them in
+    /// its <c>related</c> links, each once whatever the number of cards pointing to it.
+    /// </summary>
+    public required IReadOnlyList<string> Upgrades { get; init; }
 
     public static ItemCard Of(Item item, CatalogSnapshot catalog, ImageSet images)
     {
@@ -63,13 +72,15 @@ internal sealed record ItemCard
                     ? catalog.PathOf(held).Value
                     : null)
                 : null,
-            Summary = DdragonText.Clean(item.Plaintext),
+            Summary = DdragonText.Clean(
+                string.IsNullOrWhiteSpace(item.Plaintext) ? item.Description : item.Plaintext),
             Gold = item.Gold,
             Tags = item.Tags,
             Maps = [.. GameMaps.AvailableOn(item.Maps).Select(static map => (int)map)],
             Tier = ItemTiers.Of(item),
             Consumable = item.IsConsumed,
             Stats = ItemStats.Of(item.Stats),
+            Upgrades = [.. ItemUpgrades.Of(item, catalog).Select(static upgrade => upgrade.Id)],
         };
     }
 }
