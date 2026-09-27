@@ -1119,6 +1119,27 @@
         }
       }
     },
+    "/api/public-api/reference": {
+      "get": {
+        "tags": [
+          "PublicApiReference"
+        ],
+        "summary": "The base URL, key format and offers the public API documents.",
+        "operationId": "getPublicApiReference",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiReference"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/donations/options": {
       "get": {
         "tags": [
@@ -3407,6 +3428,199 @@
         }
       }
     },
+    "/api/account/api-key": {
+      "get": {
+        "tags": [
+          "ApiKeys"
+        ],
+        "summary": "The active API key of the account, with its usage; never its secret.",
+        "operationId": "getApiKey",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyState"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ApiKeys"
+        ],
+        "summary": "Issues the account's API key, whose secret this answer alone shows.",
+        "operationId": "createApiKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedApiKey"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ApiKeys"
+        ],
+        "summary": "Revokes the account's API key, refused by /v1 from the next request.",
+        "operationId": "revokeApiKey",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/api-key/regenerate": {
+      "post": {
+        "tags": [
+          "ApiKeys"
+        ],
+        "summary": "Replaces the secret of the account's API key, keeping its rights.",
+        "operationId": "regenerateApiKey",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedApiKey"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/analytics/report": {
       "get": {
         "tags": [
@@ -3922,6 +4136,1164 @@
         }
       }
     },
+    "/api/admin/mfa/enrollment": {
+      "post": {
+        "tags": [
+          "AdminMfa"
+        ],
+        "summary": "Draws a new authenticator key for an administrator without one.",
+        "operationId": "startAdminMfaEnrollment",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaSetup"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/mfa/confirm": {
+      "post": {
+        "tags": [
+          "AdminMfa"
+        ],
+        "summary": "Turns the authenticator on with one of its codes.",
+        "operationId": "confirmAdminMfa",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaConfirmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaConfirmation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": [
+          "AdminUsers"
+        ],
+        "summary": "A page of the accounts matching a search, newest first.",
+        "operationId": "searchAdminUsers",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}/ban": {
+      "post": {
+        "tags": [
+          "AdminUsers"
+        ],
+        "summary": "Bans an account, which can no longer sign in.",
+        "operationId": "banAdminUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/BanRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}/unban": {
+      "post": {
+        "tags": [
+          "AdminUsers"
+        ],
+        "summary": "Lifts the ban of an account.",
+        "operationId": "unbanAdminUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "delete": {
+        "tags": [
+          "AdminUsers"
+        ],
+        "summary": "Erases an account, its builds, votes and API keys.",
+        "operationId": "deleteAdminUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/builds": {
+      "get": {
+        "tags": [
+          "AdminBuilds"
+        ],
+        "summary": "A page of the builds matching a search, newest first.",
+        "operationId": "searchAdminBuilds",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "visibility",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBuildPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/builds/{id}/unpublish": {
+      "post": {
+        "tags": [
+          "AdminBuilds"
+        ],
+        "summary": "Makes a build private; its author and share link still see it.",
+        "operationId": "unpublishAdminBuild",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/builds/{id}": {
+      "delete": {
+        "tags": [
+          "AdminBuilds"
+        ],
+        "summary": "Removes a build and its votes.",
+        "operationId": "deleteAdminBuild",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/contacts": {
+      "get": {
+        "tags": [
+          "AdminContacts"
+        ],
+        "summary": "A page of the contact messages, newest first.",
+        "operationId": "listAdminContacts",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminContactPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/contacts/{id}/handle": {
+      "post": {
+        "tags": [
+          "AdminContacts"
+        ],
+        "summary": "Marks a contact message handled.",
+        "operationId": "handleAdminContact",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/contacts/{id}/reopen": {
+      "post": {
+        "tags": [
+          "AdminContacts"
+        ],
+        "summary": "Puts a handled contact message back among the new ones.",
+        "operationId": "reopenAdminContact",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/contacts/{id}": {
+      "delete": {
+        "tags": [
+          "AdminContacts"
+        ],
+        "summary": "Deletes a contact message.",
+        "operationId": "deleteAdminContact",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/api-clients": {
+      "get": {
+        "tags": [
+          "AdminApiClients"
+        ],
+        "summary": "A page of the keys of the public API, newest first.",
+        "operationId": "listAdminApiClients",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminApiClientPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/api-clients/{id}/revoke": {
+      "post": {
+        "tags": [
+          "AdminApiClients"
+        ],
+        "summary": "Revokes a key of the public API, at once.",
+        "operationId": "revokeAdminApiClient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/api-clients/{id}/credit": {
+      "post": {
+        "tags": [
+          "AdminApiClients"
+        ],
+        "summary": "Adds prepaid requests to an active key.",
+        "operationId": "creditAdminApiClient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/donations": {
+      "get": {
+        "tags": [
+          "AdminDonations"
+        ],
+        "summary": "A page of the donations, newest first, with their counters.",
+        "operationId": "listAdminDonations",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDonationPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/monitoring": {
+      "get": {
+        "tags": [
+          "AdminMonitoring"
+        ],
+        "summary": "The state of the API, its dependencies and its queues.",
+        "operationId": "readAdminMonitoring",
+        "parameters": [
+          {
+            "name": "refresh",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonitoringReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/storage": {
+      "get": {
+        "tags": [
+          "AdminStorage"
+        ],
+        "summary": "What the storage root holds, by family, image format and dataset.",
+        "operationId": "readAdminStorage",
+        "parameters": [
+          {
+            "name": "refresh",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/client-policy/{platform}": {
       "put": {
         "tags": [
@@ -4147,6 +5519,605 @@
           }
         },
         "description": "The signed-in account, as the fronts show it."
+      },
+      "AdminApiClientPage": {
+        "required": [
+          "kpis",
+          "topConsumers",
+          "items",
+          "total",
+          "page",
+          "pages"
+        ],
+        "type": "object",
+        "properties": {
+          "kpis": {
+            "$ref": "#/components/schemas/ApiClientKpis"
+          },
+          "topConsumers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopConsumer"
+            },
+            "description": "The keys that sent the most requests over the last thirty days."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminApiClientRow"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Keys ever issued, revoked ones included.",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "description": "The page, from 1.",
+            "format": "int32"
+          },
+          "pages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "A page of the keys of the public API, newest first, with the counters of the fleet and\nits heaviest users."
+      },
+      "AdminApiClientRow": {
+        "required": [
+          "id",
+          "name",
+          "keyPrefix",
+          "plan",
+          "monthlyQuota",
+          "usedThisMonth",
+          "creditsBalance",
+          "rateLimitPerMin",
+          "isActive",
+          "createdAt",
+          "owner"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "keyPrefix": {
+            "type": "string",
+            "description": "The first characters of the key, the only part ever shown."
+          },
+          "plan": {
+            "type": "string",
+            "description": "free, credits, monthly, monthly_plus, annual or annual_plus."
+          },
+          "monthlyQuota": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "usedThisMonth": {
+            "type": "integer",
+            "description": "Requests counted since the first day of the UTC month.",
+            "format": "int64"
+          },
+          "creditsBalance": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "rateLimitPerMin": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "revokedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/AdminUserRef"
+          }
+        },
+        "description": "A key of the public API, as the admin reads it: never its secret."
+      },
+      "AdminBuildPage": {
+        "required": [
+          "stats",
+          "items",
+          "total",
+          "page",
+          "pages"
+        ],
+        "type": "object",
+        "properties": {
+          "stats": {
+            "$ref": "#/components/schemas/AdminBuildStats"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminBuildRow"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Builds matching the search and the visibility.",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "description": "The page, from 1.",
+            "format": "int32"
+          },
+          "pages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "A page of the builds matching a search, newest first."
+      },
+      "AdminBuildRow": {
+        "required": [
+          "id",
+          "name",
+          "championId",
+          "gameVersion",
+          "gameMode",
+          "language",
+          "isPublic",
+          "score",
+          "owner",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "championId": {
+            "type": "string"
+          },
+          "gameVersion": {
+            "type": "string"
+          },
+          "gameMode": {
+            "type": "string",
+            "description": "sr, aram, nexus_blitz or arena."
+          },
+          "language": {
+            "type": "string"
+          },
+          "isPublic": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": "integer",
+            "description": "Up votes minus down votes.",
+            "format": "int32"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/AdminUserRef"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "A build in the moderation list."
+      },
+      "AdminBuildStats": {
+        "required": [
+          "total",
+          "public"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "public": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "The counters above the build list, over every build."
+      },
+      "AdminContactPage": {
+        "required": [
+          "stats",
+          "items",
+          "total",
+          "page",
+          "pages"
+        ],
+        "type": "object",
+        "properties": {
+          "stats": {
+            "$ref": "#/components/schemas/AdminContactStats"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminContactRow"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Messages of the status asked for.",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "description": "The page, from 1.",
+            "format": "int32"
+          },
+          "pages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "A page of the contact messages, newest first."
+      },
+      "AdminContactRow": {
+        "required": [
+          "id",
+          "category",
+          "email",
+          "message",
+          "status",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "category": {
+            "type": "string",
+            "description": "bug, feedback, review or commercial."
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "description": "The address to answer to."
+          },
+          "subject": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "locale": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "new or handled."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "handledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "user": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The account that sent it while signed in; null otherwise.",
+                "$ref": "#/components/schemas/AdminUserRef"
+              }
+            ]
+          }
+        },
+        "description": "A message of the contact form, as the admin reads it."
+      },
+      "AdminContactStats": {
+        "required": [
+          "total",
+          "new",
+          "handled",
+          "week"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "new": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "handled": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "week": {
+            "type": "integer",
+            "description": "Messages received over the last seven days.",
+            "format": "int32"
+          }
+        },
+        "description": "The counters above the message list, over every message."
+      },
+      "AdminDonationPage": {
+        "required": [
+          "kpis",
+          "daily",
+          "items",
+          "total",
+          "page",
+          "pages"
+        ],
+        "type": "object",
+        "properties": {
+          "kpis": {
+            "$ref": "#/components/schemas/DonationKpis"
+          },
+          "daily": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailyAmount"
+            },
+            "description": "One entry per day, oldest first, days without gifts at zero."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminDonationRow"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "description": "The page, from 1.",
+            "format": "int32"
+          },
+          "pages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "A page of the donations, newest first, with their counters and the daily totals of the\nlast thirty days."
+      },
+      "AdminDonationRow": {
+        "required": [
+          "id",
+          "amountCents",
+          "currency",
+          "createdAt",
+          "donorIsSupporter"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "amountCents": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO 4217 code, lowercase as Stripe writes it."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "donor": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The account signed in when giving; null for an anonymous gift.",
+                "$ref": "#/components/schemas/AdminUserRef"
+              }
+            ]
+          },
+          "donorIsSupporter": {
+            "type": "boolean",
+            "description": "Whether the donor's account is marked supporter now."
+          }
+        },
+        "description": "A donation, an immutable line written by the Stripe webhook."
+      },
+      "AdminUserPage": {
+        "required": [
+          "stats",
+          "items",
+          "total",
+          "page",
+          "pages"
+        ],
+        "type": "object",
+        "properties": {
+          "stats": {
+            "$ref": "#/components/schemas/AdminUserStats"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserRow"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Accounts matching the search.",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "description": "The page, from 1.",
+            "format": "int32"
+          },
+          "pages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "A page of the accounts matching a search, newest first."
+      },
+      "AdminUserRef": {
+        "required": [
+          "id",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "description": "An account a row points to, as the admin lists name it."
+      },
+      "AdminUserRow": {
+        "required": [
+          "id",
+          "username",
+          "email",
+          "emailVerified",
+          "isBanned",
+          "isSupporter",
+          "isPublicProfile",
+          "google",
+          "isAdmin",
+          "twoFactorEnabled",
+          "buildCount",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "isBanned": {
+            "type": "boolean"
+          },
+          "bannedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "banReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isSupporter": {
+            "type": "boolean"
+          },
+          "isPublicProfile": {
+            "type": "boolean"
+          },
+          "google": {
+            "type": "boolean",
+            "description": "Whether the account signs in with Google."
+          },
+          "isAdmin": {
+            "type": "boolean"
+          },
+          "twoFactorEnabled": {
+            "type": "boolean"
+          },
+          "buildCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "An account in the moderation list."
+      },
+      "AdminUserStats": {
+        "required": [
+          "total",
+          "newWeek",
+          "banned",
+          "supporters"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "newWeek": {
+            "type": "integer",
+            "description": "Accounts created over the last seven days.",
+            "format": "int32"
+          },
+          "banned": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supporters": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "The counters above the moderation list, over every account."
       },
       "AnalyticsCountry": {
         "required": [
@@ -4450,6 +6421,128 @@
         },
         "description": "The totals of a report's period."
       },
+      "ApiClientKpis": {
+        "required": [
+          "active",
+          "monthRequests",
+          "credits",
+          "byPlan"
+        ],
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monthRequests": {
+            "type": "integer",
+            "description": "Requests of every key since the first day of the UTC month.",
+            "format": "int64"
+          },
+          "credits": {
+            "type": "integer",
+            "description": "Prepaid requests left on the active keys.",
+            "format": "int64"
+          },
+          "byPlan": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanCount"
+            },
+            "description": "Active keys by plan, the largest first."
+          }
+        },
+        "description": "The counters of the key fleet: the active keys and what they consume."
+      },
+      "ApiKeyOverview": {
+        "required": [
+          "prefix",
+          "name",
+          "createdAt",
+          "plan",
+          "monthlyQuota",
+          "usedThisMonth",
+          "remainingThisMonth",
+          "creditsBalance",
+          "rateLimitPerMin",
+          "subscribed",
+          "usage"
+        ],
+        "type": "object",
+        "properties": {
+          "prefix": {
+            "type": "string",
+            "description": "The start of the secret, such as `lodb_0123456`, to recognise it."
+          },
+          "name": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "plan": {
+            "type": "string",
+            "description": "free, credits, monthly, monthly_plus, annual or annual_plus."
+          },
+          "monthlyQuota": {
+            "type": "integer",
+            "description": "Requests the plan pays for each UTC month.",
+            "format": "int32"
+          },
+          "usedThisMonth": {
+            "type": "integer",
+            "description": "Billed requests of the UTC month, as metered by the last flush.",
+            "format": "int64"
+          },
+          "remainingThisMonth": {
+            "type": "integer",
+            "description": "What is left of the quota, zero at least.",
+            "format": "int64"
+          },
+          "creditsBalance": {
+            "type": "integer",
+            "description": "Prepaid requests left, spent once the quota is.",
+            "format": "int64"
+          },
+          "rateLimitPerMin": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subscribed": {
+            "type": "boolean",
+            "description": "Whether a Stripe subscription pays for the plan."
+          },
+          "usage": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiUsageDay"
+            },
+            "description": "The metered days of the last 30, newest first; a quiet day has none."
+          }
+        },
+        "description": "The active key of an account at a glance: what identifies it, its rights, and what it\nused, never its secret."
+      },
+      "ApiKeyState": {
+        "required": [
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Null while the account has no active key.",
+                "$ref": "#/components/schemas/ApiKeyOverview"
+              }
+            ]
+          }
+        },
+        "description": "The API key of the signed-in account, if it has an active one."
+      },
       "ApiPackTerms": {
         "required": [
           "code",
@@ -4508,6 +6601,90 @@
           }
         },
         "description": "A plan of the public API sold as a subscription, the legacy `ApiPlan`."
+      },
+      "ApiUsageDay": {
+        "required": [
+          "day",
+          "requests"
+        ],
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date"
+          },
+          "requests": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "The requests a key made on one UTC day."
+      },
+      "AppCounters": {
+        "required": [
+          "usersTotal",
+          "usersNewWeek",
+          "usersBanned",
+          "buildsTotal",
+          "buildsPublic",
+          "votes",
+          "donationsCount",
+          "donationsTotalCents",
+          "apiKeysActive",
+          "apiRequestsToday",
+          "apiRequestsMonth"
+        ],
+        "type": "object",
+        "properties": {
+          "usersTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "usersNewWeek": {
+            "type": "integer",
+            "description": "Accounts created over the last seven days.",
+            "format": "int32"
+          },
+          "usersBanned": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "buildsTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "buildsPublic": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "votes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "donationsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "donationsTotalCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "apiKeysActive": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "apiRequestsToday": {
+            "type": "integer",
+            "description": "Requests of the public API on the current UTC day.",
+            "format": "int64"
+          },
+          "apiRequestsMonth": {
+            "type": "integer",
+            "description": "Requests of the public API since the first day of the UTC month.",
+            "format": "int64"
+          }
+        },
+        "description": "What the community produced, and what the public API served."
       },
       "AppPolicy": {
         "required": [
@@ -4802,6 +6979,19 @@
         "type": "string",
         "description": "What a profile's backdrop shows, so a page does not draw the champion twice."
       },
+      "BanRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "At most 255 characters; blank for none."
+          }
+        },
+        "description": "A ban, and why: the reason is optional and shown in the list."
+      },
       "BillingOffers": {
         "required": [
           "available",
@@ -4835,6 +7025,50 @@
           }
         },
         "description": "What the public API sells: credit packs and subscriptions, priced in euros."
+      },
+      "BlobFigures": {
+        "required": [
+          "byExt",
+          "sources",
+          "webpSiblings",
+          "webpCoverage",
+          "sourceBytes",
+          "webpBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "byExt": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageRow"
+            },
+            "description": "Blobs by extension, the heaviest first."
+          },
+          "sources": {
+            "type": "integer",
+            "description": "PNG blobs, the ones that get a WebP sibling.",
+            "format": "int64"
+          },
+          "webpSiblings": {
+            "type": "integer",
+            "description": "PNG blobs whose WebP sibling is written.",
+            "format": "int64"
+          },
+          "webpCoverage": {
+            "type": "number",
+            "description": "Share of the sources that have their sibling, from 0 to 1.",
+            "format": "double"
+          },
+          "sourceBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "webpBytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "The content-addressed images and the WebP siblings of the PNG ones."
       },
       "BuildDraft": {
         "required": [
@@ -5774,6 +8008,131 @@
         },
         "description": "The same-named item or summoner spell of the other game (UP 6): \"Faerie Charm\" is both\n1004 and the Classic 771004."
       },
+      "CreateApiKeyRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "What the owner calls the key, trimmed and cut to 64 characters; `default` when\nblank."
+          }
+        },
+        "description": "Body of `POST /api/account/api-key`."
+      },
+      "CreditReceipt": {
+        "required": [
+          "creditsBalance",
+          "rateLimitPerMin"
+        ],
+        "type": "object",
+        "properties": {
+          "creditsBalance": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "rateLimitPerMin": {
+            "type": "integer",
+            "description": "Raised to the floor of the keys holding credits when it was below.",
+            "format": "int32"
+          }
+        },
+        "description": "The balance and rate of a key once credited."
+      },
+      "CreditRequest": {
+        "type": "object",
+        "properties": {
+          "requests": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "From 1 to 1,000,000.",
+            "format": "int64"
+          }
+        },
+        "description": "Requests to add to the prepaid balance of a key."
+      },
+      "DailyAmount": {
+        "required": [
+          "date",
+          "cents"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "cents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "What was given on one UTC day."
+      },
+      "DatasetFigures": {
+        "required": [
+          "byVersion",
+          "byLang",
+          "byType"
+        ],
+        "type": "object",
+        "properties": {
+          "byVersion": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageRow"
+            }
+          },
+          "byLang": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageRow"
+            }
+          },
+          "byType": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageRow"
+            }
+          }
+        },
+        "description": "The immutable datasets, `data/{version}/{lang}/{type}.json`."
+      },
+      "DedupFigures": {
+        "required": [
+          "logicalRefs",
+          "physicalBlobs",
+          "ratio",
+          "savedBytesApprox"
+        ],
+        "type": "object",
+        "properties": {
+          "logicalRefs": {
+            "type": "integer",
+            "description": "Images the asset index points to, one per version and key.",
+            "format": "int64"
+          },
+          "physicalBlobs": {
+            "type": "integer",
+            "description": "Blobs stored, WebP siblings left out.",
+            "format": "int64"
+          },
+          "ratio": {
+            "type": "number",
+            "description": "References per blob; 0 without blobs.",
+            "format": "double"
+          },
+          "savedBytesApprox": {
+            "type": "integer",
+            "description": "The references beyond the blobs, at the mean size of a blob.",
+            "format": "int64"
+          }
+        },
+        "description": "What the content addressing saves: the image references of the asset index against the\nblobs actually stored."
+      },
       "DeleteAccountRequest": {
         "type": "object",
         "properties": {
@@ -5834,6 +8193,42 @@
           }
         },
         "description": "Body of `POST /api/donations/checkout`."
+      },
+      "DonationKpis": {
+        "required": [
+          "totalCents",
+          "count",
+          "identifiedDonors",
+          "anonymous",
+          "supporters"
+        ],
+        "type": "object",
+        "properties": {
+          "totalCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "identifiedDonors": {
+            "type": "integer",
+            "description": "Distinct accounts that gave while signed in.",
+            "format": "int32"
+          },
+          "anonymous": {
+            "type": "integer",
+            "description": "Gifts without an account.",
+            "format": "int32"
+          },
+          "supporters": {
+            "type": "integer",
+            "description": "Accounts marked supporter.",
+            "format": "int32"
+          }
+        },
+        "description": "The counters of the donations, over every gift."
       },
       "DonationOptions": {
         "required": [
@@ -6180,6 +8575,24 @@
         },
         "description": "Body of `POST /api/account/forgot-password`."
       },
+      "FreePlanTerms": {
+        "required": [
+          "monthlyQuota",
+          "ratePerMinute"
+        ],
+        "type": "object",
+        "properties": {
+          "monthlyQuota": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ratePerMinute": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "The rights of a new key, before any purchase."
+      },
       "GameMode": {
         "enum": [
           "sr",
@@ -6384,6 +8797,59 @@
           }
         },
         "description": "What an import to another patch had to change, for the author to review."
+      },
+      "IngestionState": {
+        "required": [
+          "versionBacklog",
+          "onDemandBacklog"
+        ],
+        "type": "object",
+        "properties": {
+          "versionBacklog": {
+            "type": "integer",
+            "description": "Versions waiting or being ingested on this instance.",
+            "format": "int32"
+          },
+          "onDemandBacklog": {
+            "type": "integer",
+            "description": "On-demand ingestions waiting on this instance.",
+            "format": "int32"
+          },
+          "outboxPending": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "E-mails waiting for their first or next attempt; null when unreadable.",
+            "format": "int32"
+          },
+          "outboxDead": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "E-mails given up after their last attempt; null when unreadable.",
+            "format": "int32"
+          }
+        },
+        "description": "The queues of this instance and of the e-mail outbox."
+      },
+      "IssuedApiKey": {
+        "required": [
+          "secret",
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "secret": {
+            "type": "string",
+            "description": "`lodb_` and 40 hexadecimal digits. Only its fingerprint is stored: no later answer\nshows it again."
+          },
+          "key": {
+            "$ref": "#/components/schemas/ApiKeyOverview"
+          }
+        },
+        "description": "A key just created or regenerated, with the only copy of its secret."
       },
       "ItemCard": {
         "required": [
@@ -6871,6 +9337,115 @@
         },
         "description": "Body of `POST /api/account/login`."
       },
+      "MfaConfirmation": {
+        "required": [
+          "recoveryCodes",
+          "session"
+        ],
+        "type": "object",
+        "properties": {
+          "recoveryCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Single-use codes that replace the authenticator at sign-in."
+          },
+          "session": {
+            "$ref": "#/components/schemas/AccountSession"
+          }
+        },
+        "description": "An authenticator turned on: the recovery codes, shown this once, and the session, now\nopened with the second factor."
+      },
+      "MfaConfirmRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Six digits, spaces and dashes allowed between them."
+          }
+        },
+        "description": "A code of the authenticator just set up, proving it holds the key."
+      },
+      "MfaSetup": {
+        "required": [
+          "sharedKey",
+          "authenticatorUri"
+        ],
+        "type": "object",
+        "properties": {
+          "sharedKey": {
+            "type": "string",
+            "description": "The shared key, in base32, for an app that cannot scan."
+          },
+          "authenticatorUri": {
+            "type": "string",
+            "description": "The `otpauth://` URI the QR code carries."
+          }
+        },
+        "description": "A new authenticator key, to scan or type before confirming it with a code."
+      },
+      "MonitoringReport": {
+        "required": [
+          "generatedAt",
+          "services",
+          "ingestion",
+          "process",
+          "tables"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceProbe"
+            }
+          },
+          "counters": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Null when the database could not be read.",
+                "$ref": "#/components/schemas/AppCounters"
+              }
+            ]
+          },
+          "ingestion": {
+            "$ref": "#/components/schemas/IngestionState"
+          },
+          "versions": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Null when the database could not be read.",
+                "$ref": "#/components/schemas/VersionState"
+              }
+            ]
+          },
+          "process": {
+            "$ref": "#/components/schemas/ProcessFigures"
+          },
+          "tables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TableVolume"
+            },
+            "description": "Weight of the main tables, the heaviest first; empty when unreadable."
+          }
+        },
+        "description": "The state of the running API: its dependencies, its queues, the Data Dragon versions,\nthe application counters and the weight of the main tables."
+      },
       "MyBuildRow": {
         "required": [
           "id",
@@ -7107,6 +9682,23 @@
         },
         "description": "Body of `POST /api/billing/checkout/plan`."
       },
+      "PlanCount": {
+        "required": [
+          "plan",
+          "keys"
+        ],
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string"
+          },
+          "keys": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "How many active keys hold a plan."
+      },
       "PlatformPolicy": {
         "required": [
           "platform"
@@ -7203,6 +9795,65 @@
             ]
           }
         }
+      },
+      "ProcessFigures": {
+        "required": [
+          "version",
+          "uptimeSeconds",
+          "workingSetBytes",
+          "managedHeapBytes",
+          "cpuSeconds",
+          "collections",
+          "threadPoolThreads",
+          "pendingWorkItems"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "Version of the API assembly."
+          },
+          "revision": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Source revision of the image; null outside of one."
+          },
+          "uptimeSeconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "workingSetBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "managedHeapBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cpuSeconds": {
+            "type": "number",
+            "format": "double"
+          },
+          "collections": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "Garbage collections so far, generation 0, 1 then 2."
+          },
+          "threadPoolThreads": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pendingWorkItems": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "Figures of the API process, read in the process itself."
       },
       "ProfileBackdrop": {
         "required": [
@@ -7314,6 +9965,50 @@
           }
         },
         "description": "What a profile curates, resolved on its patch: the four favorites and the skin banner."
+      },
+      "PublicApiReference": {
+        "required": [
+          "baseUrl",
+          "keyPrefix",
+          "freePlan",
+          "creditsRatePerMinute",
+          "packs",
+          "plans"
+        ],
+        "type": "object",
+        "properties": {
+          "baseUrl": {
+            "type": "string",
+            "description": "The origin `/v1` answers on, without a trailing slash."
+          },
+          "keyPrefix": {
+            "type": "string",
+            "description": "What every key starts with: `lodb_`."
+          },
+          "freePlan": {
+            "$ref": "#/components/schemas/FreePlanTerms"
+          },
+          "creditsRatePerMinute": {
+            "type": "integer",
+            "description": "The least rate of a key holding credits, whatever its plan.",
+            "format": "int32"
+          },
+          "packs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiPackTerms"
+            },
+            "description": "The credit packs, from the smallest."
+          },
+          "plans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiPlanTerms"
+            },
+            "description": "The subscriptions, from the cheapest."
+          }
+        },
+        "description": "What the documentation of the public API states from the server's settings: where\n`/v1` answers, what a key looks like, and the rights each offer gives."
       },
       "PublicProfile": {
         "required": [
@@ -8249,6 +10944,51 @@
         },
         "description": "`GET /api/catalog/{version}/{lang}/search`: the hits, resource by resource in the\norder champions, items, runes, summoners, each in the upstream order and capped."
       },
+      "ServiceProbe": {
+        "required": [
+          "name",
+          "status",
+          "latencyMs"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "postgres or storage, the names of the readiness checks."
+          },
+          "status": {
+            "type": "string",
+            "description": "ok, degraded or down."
+          },
+          "latencyMs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Why it is not ok, shortened; null when it is."
+          },
+          "version": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The server version, for PostgreSQL."
+          },
+          "databaseBytes": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Size of the database, for PostgreSQL.",
+            "format": "int64"
+          }
+        },
+        "description": "A dependency of the API, checked by its readiness probe."
+      },
       "SetPasswordRequest": {
         "required": [
           "password"
@@ -8535,6 +11275,160 @@
           }
         },
         "description": "A step of a build's purchase order, priced on the patch it renders on."
+      },
+      "StorageDay": {
+        "required": [
+          "date",
+          "objects",
+          "bytes",
+          "cumulativeBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "objects": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cumulativeBytes": {
+            "type": "integer",
+            "description": "Bytes of this day and of the days before it.",
+            "format": "int64"
+          }
+        },
+        "description": "The objects last written on one UTC day."
+      },
+      "StorageReport": {
+        "required": [
+          "generatedAt",
+          "ok",
+          "objects",
+          "bytes",
+          "families",
+          "blobs",
+          "data",
+          "dedup",
+          "largest",
+          "timeline",
+          "coverage"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ok": {
+            "type": "boolean",
+            "description": "False when the root could not be read; every figure is then empty."
+          },
+          "error": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Why the root could not be read; null when it could."
+          },
+          "objects": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "families": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageRow"
+            },
+            "description": "blobs, data and other, the heaviest first."
+          },
+          "blobs": {
+            "$ref": "#/components/schemas/BlobFigures"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DatasetFigures"
+          },
+          "dedup": {
+            "$ref": "#/components/schemas/DedupFigures"
+          },
+          "largest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoredObject"
+            },
+            "description": "The heaviest objects, the heaviest first."
+          },
+          "timeline": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageDay"
+            },
+            "description": "Objects written by UTC day, oldest first."
+          },
+          "coverage": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VersionCoverage"
+            },
+            "description": "The languages and types of each version, the latest version first."
+          }
+        },
+        "description": "What the storage root holds: its objects by family, the images and their WebP\nsiblings, the datasets by version, language and type, and how much the content\naddressing saves."
+      },
+      "StorageRow": {
+        "required": [
+          "name",
+          "objects",
+          "bytes",
+          "pct"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "objects": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pct": {
+            "type": "number",
+            "description": "Percentage of the bytes of the section, from 0 to 100.",
+            "format": "double"
+          }
+        },
+        "description": "A group of stored objects and its share of the bytes of its section."
+      },
+      "StoredObject": {
+        "required": [
+          "path",
+          "bytes"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Its path from the root, with forward slashes."
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "An object of the storage root."
       },
       "StructureBody": {
         "type": "object",
@@ -8861,6 +11755,23 @@
         },
         "description": "`GET /api/pickers/summoners`: the summoner spells of the standard Summoner's Rift\nqueue (Data Dragon's CLASSIC mode), by name. Classic twins and event spells are left out."
       },
+      "TableVolume": {
+        "required": [
+          "name",
+          "bytes"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "A table and its weight on disk, indexes and TOAST included."
+      },
       "TokenRequest": {
         "required": [
           "identifier",
@@ -8897,6 +11808,32 @@
           }
         },
         "description": "Body of `POST /api/account/token`, the sign-in of the apps."
+      },
+      "TopConsumer": {
+        "required": [
+          "id",
+          "keyPrefix",
+          "username",
+          "requests"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "keyPrefix": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "requests": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "A key among the most used of the last thirty days."
       },
       "TrendRow": {
         "required": [
@@ -9128,6 +12065,116 @@
         },
         "description": "Body of `POST /api/account/verify-email`: the parameters of the link."
       },
+      "VersionCoverage": {
+        "required": [
+          "version",
+          "langs",
+          "types",
+          "objects"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "langs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Its languages, sorted."
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Its dataset types, sorted."
+          },
+          "objects": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "The datasets stored for one version."
+      },
+      "VersionRow": {
+        "required": [
+          "version",
+          "status",
+          "attempts",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "discovered, ingesting, ready or failed."
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "A Data Dragon version and where its ingestion stands."
+      },
+      "VersionState": {
+        "required": [
+          "discovered",
+          "ingesting",
+          "ready",
+          "failed",
+          "recent"
+        ],
+        "type": "object",
+        "properties": {
+          "current": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The version served as the latest; null before the first promotion."
+          },
+          "promotedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "discovered": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ingesting": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ready": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VersionRow"
+            },
+            "description": "The versions changed last, the latest change first."
+          }
+        },
+        "description": "The Data Dragon versions known to the database."
+      },
       "VisibilityRequest": {
         "required": [
           "isPublic"
@@ -9187,6 +12234,9 @@
       "name": "Pickers"
     },
     {
+      "name": "PublicApiReference"
+    },
+    {
       "name": "Donations"
     },
     {
@@ -9211,10 +12261,37 @@
       "name": "Trends"
     },
     {
+      "name": "ApiKeys"
+    },
+    {
       "name": "AdminAnalytics"
     },
     {
       "name": "AdminAudit"
+    },
+    {
+      "name": "AdminMfa"
+    },
+    {
+      "name": "AdminUsers"
+    },
+    {
+      "name": "AdminBuilds"
+    },
+    {
+      "name": "AdminContacts"
+    },
+    {
+      "name": "AdminApiClients"
+    },
+    {
+      "name": "AdminDonations"
+    },
+    {
+      "name": "AdminMonitoring"
+    },
+    {
+      "name": "AdminStorage"
     },
     {
       "name": "AdminClientPolicy"
