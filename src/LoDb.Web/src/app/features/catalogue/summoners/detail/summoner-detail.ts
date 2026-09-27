@@ -22,6 +22,7 @@ import { RichText } from '../../shared/codex/rich-text/rich-text';
 import { injectTranslate } from '../../shared/codex/texts/inject-translate';
 import { CatalogueImage } from '../../shared/cards/catalogue-image';
 import { EditionBadge } from '../../shared/cards/edition-badge';
+import { initialsOf } from '../../shared/cards/initials-of';
 import { modeLabelsOf } from '../modes/mode-labels-of';
 import { summonerPlaquesOf } from './plaques/summoner-plaques-of';
 import { summonerHeadOf } from './summoner-head-of';
@@ -56,6 +57,8 @@ export class SummonerDetail {
   protected readonly entry = injectRouteData<CatalogueEntry<SummonerDetails>>('entry');
   protected readonly hero = HERO_STYLES;
   protected readonly sealIconSize = SEAL_ICON_SIZE;
+  /** A spell without art is marked by the initials of its name, as the legacy seal was. */
+  protected readonly initials = initialsOf;
 
   private readonly translate = injectTranslate();
 

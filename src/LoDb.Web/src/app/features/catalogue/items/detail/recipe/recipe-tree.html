@@ -29,13 +29,20 @@
 </ng-template>
 
 <ng-template #face let-node>
-  <lodb-catalogue-image
-    class="recipe-node__icon"
-    imgClass="object-contain transition-transform duration-500 group-hover/node:scale-110"
-    [image]="node.image"
-    [name]="node.name"
-    [size]="iconSize"
-  />
+  <!-- A component without art shows its id, as the legacy tree did. -->
+  @if (node.image.status === 'absent') {
+    <span class="recipe-node__icon grid place-items-center font-mono text-[10px] text-gold/50">
+      {{ node.id }}
+    </span>
+  } @else {
+    <lodb-catalogue-image
+      class="recipe-node__icon"
+      imgClass="object-contain transition-transform duration-500 group-hover/node:scale-110"
+      [image]="node.image"
+      [name]="node.name"
+      [size]="iconSize"
+    />
+  }
   <span class="recipe-node__name">{{ node.name }}</span>
   <!-- The price and its +combine read left to right on an RTL page too. -->
   <span class="recipe-node__gold" dir="ltr">

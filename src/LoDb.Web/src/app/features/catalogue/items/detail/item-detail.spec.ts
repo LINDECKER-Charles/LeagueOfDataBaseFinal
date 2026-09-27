@@ -189,6 +189,25 @@ describe('lodb-item-detail', () => {
     expect(chips.slice(0, 3)).toEqual(['Tier 3', 'map.11', 'items.maps.aram']);
   });
 
+  it('marks an item without art by its initials, a related one by its id, as the legacy did', async () => {
+    const absent: CatalogImage = { status: 'absent' };
+    const recipe = DETAILS.recipe && {
+      ...DETAILS.recipe,
+      components: DETAILS.recipe.components.map((node) => ({ ...node, image: absent })),
+    };
+    const upgrades = DETAILS.upgrades.map((upgrade) => ({ ...upgrade, image: absent }));
+    const profile = { ...CARD, image: absent };
+    const details = { ...DETAILS, profile, recipe, upgrades };
+    const { element } = await render({ context: CONTEXT, details });
+
+    expect(element.querySelector('header [lodbFrame]')?.textContent?.trim()).toBe('FA');
+    const component = element.querySelector('a.recipe-node[data-id="1027"] .recipe-node__icon');
+    expect(component?.textContent?.trim()).toBe('1027');
+    expect(element.querySelector('[data-testid="upgrades"] a span')?.textContent?.trim()).toBe(
+      '3114',
+    );
+  });
+
   it('names the LoL Classic edition in its head, and turns the pages of the list', async () => {
     const { element, heads } = await render();
 

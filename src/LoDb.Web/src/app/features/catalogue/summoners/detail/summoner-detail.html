@@ -25,13 +25,19 @@
       </p>
 
       <div class="seal">
-        <lodb-catalogue-image
-          class="seal__icon"
-          [image]="spell.image"
-          [name]="spell.name"
-          [size]="sealIconSize"
-          eager
-        />
+        @if (spell.image.status === 'absent') {
+          <span class="seal__icon grid place-items-center font-beaufort text-2xl text-gold/70">
+            {{ initials(spell.name) }}
+          </span>
+        } @else {
+          <lodb-catalogue-image
+            class="seal__icon"
+            [image]="spell.image"
+            [name]="spell.name"
+            [size]="sealIconSize"
+            eager
+          />
+        }
       </div>
 
       <h1 [class]="hero.name + ' relative mt-8 text-gold-grad'">{{ spell.name }}</h1>

@@ -18,6 +18,7 @@ import { Frame } from '../../../../ui/surfaces/frame';
 import { Reveal } from '../../../../ui/motion/reveal';
 import { CatalogueImage } from '../../shared/cards/catalogue-image';
 import { EditionBadge } from '../../shared/cards/edition-badge';
+import { initialsOf } from '../../shared/cards/initials-of';
 import { EditionCounterpart } from '../../shared/codex/edition/edition-counterpart';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
@@ -65,6 +66,8 @@ export class ItemDetail {
   protected readonly hero = HERO_STYLES;
   protected readonly heroIconSize = HERO_ICON_SIZE;
   protected readonly upgradeIconSize = UPGRADE_ICON_SIZE;
+  /** An item without art is marked by the initials of its name, as the legacy hero was. */
+  protected readonly initials = initialsOf;
   protected readonly linkOf = injectCatalogueLink();
   protected readonly tree = computed(() => recipeTreeOf(this.entry().details.recipe));
   protected readonly pager = injectDetailPager({
