@@ -202,7 +202,7 @@ describe('HomePage', () => {
     expect(hero.querySelector('strong')?.textContent).toBe(VERSION);
   });
 
-  it('opens four portals into the catalogue, counted when their list answered', async () => {
+  it('opens four League-marked portals, counted when their list answered', async () => {
     document.documentElement.lang = 'en';
 
     const { host } = await visit('/en');
@@ -215,6 +215,7 @@ describe('HomePage', () => {
       '/en/summoners',
     ]);
     expect(portals[0]?.textContent).toContain('4');
+    expect(portals.every((portal) => portal.querySelector('lodb-logo') !== null)).toBe(true);
   });
 
   it('previews each resource in the legacy order', async () => {
