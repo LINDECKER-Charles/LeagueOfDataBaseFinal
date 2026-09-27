@@ -195,6 +195,37 @@
   }
 
   /*
+   * Navigation progress (core/layout/progress): the legacy site's Turbo Drive bar, 3px along
+   * the top, in the accent colour. It creeps towards 90% while the page loads, then sweeps
+   * to the end and fades.
+   */
+  .hx-nav-progress {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: 60;
+    block-size: 3px;
+    background: var(--color-hex);
+    transform: scaleX(0);
+    transform-origin: left center;
+    pointer-events: none;
+  }
+  .hx-nav-progress:dir(rtl) {
+    transform-origin: right center;
+  }
+  .hx-nav-progress--pending {
+    transform: scaleX(0.9);
+    transition: transform 10s cubic-bezier(0.08, 0.6, 0.2, 1);
+  }
+  .hx-nav-progress--done {
+    transform: scaleX(1);
+    opacity: 0;
+    transition:
+      transform 0.3s var(--ease-hextech),
+      opacity 0.15s ease-in 0.15s;
+  }
+
+  /*
    * Toasts (core/layout's toaster): stacked at the top of the inline end, full text wrapped,
    * each kind told by a glyph as well as a hue so colour never carries the meaning alone.
    * Each wears the `hextech-frame` plate, as the legacy ones did; they slide in from the edge
@@ -302,6 +333,14 @@
     animation: none;
   }
   .hx-toast.hx-toast--leaving {
+    transition: none;
+  }
+  /* A static bar: the page is loading, nothing moves. */
+  .hx-nav-progress {
+    transform: scaleX(1);
+  }
+  .hx-nav-progress--pending,
+  .hx-nav-progress--done {
     transition: none;
   }
   .switcher__chevron {

@@ -4,6 +4,7 @@ import { BottomNav } from '../bottom-nav/bottom-nav';
 import { PageDirection } from '../direction/page-direction';
 import { Footer } from '../footer/footer';
 import { Header } from '../header/header';
+import { NavigationProgress } from '../progress/navigation-progress';
 import { Toaster } from '../toast/toaster';
 
 /**
@@ -18,7 +19,7 @@ import { Toaster } from '../toast/toaster';
  */
 @Component({
   selector: 'lodb-shell',
-  imports: [BottomNav, Footer, Header, Toaster],
+  imports: [BottomNav, Footer, Header, NavigationProgress, Toaster],
   templateUrl: './shell.html',
   host: { class: 'hx-shell flex min-h-dvh flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,

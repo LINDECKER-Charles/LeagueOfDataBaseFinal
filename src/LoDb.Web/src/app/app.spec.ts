@@ -43,9 +43,15 @@ describe('App', () => {
 
   it('puts both banners between the header and the page', async () => {
     const shell = (await render()).querySelector('lodb-shell');
-    const banners = Array.from(shell?.children ?? [], (child) => child.tagName.toLowerCase());
+    const children = Array.from(shell?.children ?? [], (child) => child.tagName.toLowerCase());
+    const header = children.indexOf('lodb-header');
 
-    expect(banners.slice(1, 4)).toEqual(['lodb-verify-email-banner', 'lodb-update-banner', 'main']);
+    expect(header).toBeGreaterThanOrEqual(0);
+    expect(children.slice(header + 1, header + 4)).toEqual([
+      'lodb-verify-email-banner',
+      'lodb-update-banner',
+      'main',
+    ]);
   });
 
   it('renders the routed page in main', async () => {
