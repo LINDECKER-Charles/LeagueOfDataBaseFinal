@@ -9,8 +9,7 @@
     "cancel": "İptal"
   },
   "editor": {
-    "saving": "Kaydediliyor…",
-    "errors_title": "Build kaydedilemedi"
+    "saving": "Kaydediliyor…"
   },
   "errors": {
     "generic": "Bir şeyler ters gitti. Lütfen tekrar dene.",

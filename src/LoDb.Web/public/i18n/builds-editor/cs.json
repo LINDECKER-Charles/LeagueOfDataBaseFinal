@@ -9,8 +9,7 @@
     "cancel": "Zrušit"
   },
   "editor": {
-    "saving": "Ukládání…",
-    "errors_title": "Build se nepodařilo uložit"
+    "saving": "Ukládání…"
   },
   "errors": {
     "generic": "Něco se pokazilo. Zkuste to znovu.",

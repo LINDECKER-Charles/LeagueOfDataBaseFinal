@@ -9,8 +9,7 @@
     "cancel": "Batal"
   },
   "editor": {
-    "saving": "Menyimpan…",
-    "errors_title": "Build tidak dapat disimpan"
+    "saving": "Menyimpan…"
   },
   "errors": {
     "generic": "Terjadi kesalahan. Coba lagi.",

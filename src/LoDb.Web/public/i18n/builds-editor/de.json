@@ -9,8 +9,7 @@
     "cancel": "Abbrechen"
   },
   "editor": {
-    "saving": "Wird gespeichert…",
-    "errors_title": "Der Build konnte nicht gespeichert werden"
+    "saving": "Wird gespeichert…"
   },
   "errors": {
     "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",

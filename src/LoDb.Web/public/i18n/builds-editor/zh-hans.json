@@ -9,8 +9,7 @@
     "cancel": "取消"
   },
   "editor": {
-    "saving": "正在保存…",
-    "errors_title": "无法保存出装"
+    "saving": "正在保存…"
   },
   "errors": {
     "generic": "出了点问题，请重试。",

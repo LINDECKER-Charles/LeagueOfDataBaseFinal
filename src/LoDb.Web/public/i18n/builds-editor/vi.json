@@ -9,8 +9,7 @@
     "cancel": "Hủy"
   },
   "editor": {
-    "saving": "Đang lưu…",
-    "errors_title": "Không thể lưu build"
+    "saving": "Đang lưu…"
   },
   "errors": {
     "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",

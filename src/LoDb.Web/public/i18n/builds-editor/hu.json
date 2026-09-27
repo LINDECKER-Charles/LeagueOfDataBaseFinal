@@ -9,8 +9,7 @@
     "cancel": "Mégse"
   },
   "editor": {
-    "saving": "Mentés…",
-    "errors_title": "Nem sikerült menteni a buildet"
+    "saving": "Mentés…"
   },
   "errors": {
     "generic": "Hiba történt. Próbáld újra.",
