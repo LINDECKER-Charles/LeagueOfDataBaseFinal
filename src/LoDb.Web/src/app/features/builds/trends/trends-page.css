@@ -1,12 +1,5 @@
-/* The trends: a faint gold glow behind the ranking, its rows stacked. */
+/* The trends: the ranking's rows, stacked. */
 @layer components {
-  .trends-ambient {
-    background: radial-gradient(
-      60rem 24rem at 50% 0%,
-      color-mix(in srgb, var(--color-gold) 8%, transparent),
-      transparent 70%
-    );
-  }
   .trend-list {
     display: flex;
     flex-direction: column;

@@ -8,6 +8,7 @@ import { injectRouteData } from '../../core/routing/inject-route-data';
 import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
 import { Button } from '../../ui/controls/button';
 import { Chip } from '../../ui/controls/chip';
+import { Backdrop } from '../../ui/surfaces/backdrop';
 import { applyDevelopersHead } from './apply-developers-head';
 import {
   DEFAULT_KEY_PREFIX,
@@ -35,11 +36,11 @@ const ENDPOINTS = [
  */
 @Component({
   selector: 'lodb-developers-page',
-  imports: [Button, Chip, RouterLink, TranslocoPipe],
+  imports: [Backdrop, Button, Chip, RouterLink, TranslocoPipe],
   providers: [provideTranslocoScope('api', 'developers')],
   templateUrl: './developers-page.html',
   styleUrl: './developers-page.css',
-  host: { class: 'block' },
+  host: { class: 'relative isolate block px-6 py-12' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DevelopersPage {

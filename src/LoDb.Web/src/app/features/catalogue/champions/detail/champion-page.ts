@@ -8,6 +8,7 @@ import { Reveal } from '../../../../ui/motion/reveal';
 import { Pager } from '../../../../ui/navigation/pager';
 import type { PagerLink } from '../../../../ui/navigation/pager-link';
 import { SectionNav } from '../../../../ui/navigation/section-nav';
+import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { Skeleton } from '../../../../ui/surfaces/skeleton';
 import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
 import { injectCatalogueNeighbours } from '../../shared/pager/inject-catalogue-neighbours';
@@ -37,6 +38,7 @@ function hasText(tip: string): boolean {
   selector: 'lodb-champion-page',
   imports: [
     AbilityShowcase,
+    Backdrop,
     ChampionHero,
     DdragonHtmlPipe,
     LoadTime,

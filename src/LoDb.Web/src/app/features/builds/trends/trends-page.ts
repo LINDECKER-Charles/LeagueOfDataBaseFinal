@@ -12,6 +12,7 @@ import type { VoteState } from '../../../core/api/generated/models/vote-state';
 import { TrendsService } from '../../../core/api/generated/services/trends.service';
 import { injectRouteData } from '../../../core/routing/inject-route-data';
 import { Chip } from '../../../ui/controls/chip';
+import { Backdrop } from '../../../ui/surfaces/backdrop';
 import { whenSignedIn } from '../shared/session/when-signed-in';
 import { ForgeCta } from './cta/forge-cta';
 import { TrendFilters } from './filters/trend-filters';
@@ -28,7 +29,7 @@ import { votedRows } from './rows/voted-rows';
  */
 @Component({
   selector: 'lodb-trends-page',
-  imports: [Chip, ForgeCta, TranslocoPipe, TrendFilters, TrendRow, TrendsPager],
+  imports: [Backdrop, Chip, ForgeCta, TranslocoPipe, TrendFilters, TrendRow, TrendsPager],
   templateUrl: './trends-page.html',
   styleUrl: './trends-page.css',
   host: { class: 'block' },

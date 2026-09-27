@@ -27,6 +27,8 @@
           (error)="fallBack(art, backdrop.fallback)"
         />
       </div>
+    } @else {
+      <lodb-backdrop />
     }
     <div class="relative z-10 mx-auto max-w-6xl">
       <lodb-profile-cover [name]="name()" [favorites]="form.favorites()" />

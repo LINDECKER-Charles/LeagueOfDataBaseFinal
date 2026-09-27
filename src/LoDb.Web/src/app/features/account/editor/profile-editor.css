@@ -1,11 +1,13 @@
 /*
- * The editor's page: the favorite champion dimmed behind it all, then the side column and
- * the favorites side by side from a laptop up. In the components layer, so that the
+ * The editor's page: the favorite champion dimmed behind it all (the ambient backdrop without
+ * one, isolated so that it stays above the page), then the side column and the favorites side
+ * by side from a laptop up. In the components layer, so that the
  * utilities keep their say.
  */
 @layer components {
   .profile-perso {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
     padding: 3rem 1.5rem;
   }

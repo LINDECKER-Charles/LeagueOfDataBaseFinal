@@ -14,6 +14,7 @@ import { AuthSession } from '../../../core/auth/session/auth-session';
 import { PageDirection } from '../../../core/layout/direction/page-direction';
 import { ToastService } from '../../../core/layout/toast/toast-service';
 import { Button } from '../../../ui/controls/button';
+import { Backdrop } from '../../../ui/surfaces/backdrop';
 import { accountMessage } from '../shared/account-message';
 import { displayName } from '../shared/text/display-name';
 import { IdentityAside } from './aside/identity-aside';
@@ -35,6 +36,7 @@ import { ProfileStore } from './store/profile-store';
 @Component({
   selector: 'lodb-profile-editor',
   imports: [
+    Backdrop,
     Button,
     DangerPanel,
     FavoritesPanel,

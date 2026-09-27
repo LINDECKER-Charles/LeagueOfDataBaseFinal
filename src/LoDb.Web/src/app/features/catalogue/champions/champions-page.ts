@@ -6,6 +6,7 @@ import type { ChampionCard as Card } from '../../../core/api/generated/models/ch
 import type { PageContext } from '../../../core/context/page-context';
 import { injectRouteData } from '../../../core/routing/inject-route-data';
 import { Logo } from '../../../ui/media/logo';
+import { Backdrop } from '../../../ui/surfaces/backdrop';
 import { injectCatalogueLink } from '../shared/codex/links/inject-catalogue-link';
 import { CatalogueCardTemplate } from '../shared/list/catalogue-card-template';
 import { CatalogueList } from '../shared/list/catalogue-list';
@@ -26,7 +27,15 @@ const EAGER_CARDS = 4;
  */
 @Component({
   selector: 'lodb-champions-page',
-  imports: [CatalogueCardTemplate, CatalogueList, ChampionCard, Logo, LowerCasePipe, TranslocoPipe],
+  imports: [
+    Backdrop,
+    CatalogueCardTemplate,
+    CatalogueList,
+    ChampionCard,
+    Logo,
+    LowerCasePipe,
+    TranslocoPipe,
+  ],
   templateUrl: './champions-page.html',
   styleUrl: './champions-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

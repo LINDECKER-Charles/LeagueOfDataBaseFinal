@@ -1,10 +1,12 @@
-/* The documentation page: one column of sections, code blocks and the price list. */
+/*
+ * The documentation page: one column of sections, code blocks and the price list. The host
+ * pads the page and holds the full-width backdrop; the column is 56rem of content.
+ */
 @layer components {
   .dev-page {
     position: relative;
     max-inline-size: 56rem;
     margin-inline: auto;
-    padding: 3rem 1.5rem 4rem;
   }
 
   .dev-page__title {

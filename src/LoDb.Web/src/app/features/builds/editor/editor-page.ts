@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { provideTranslocoScope } from '@jsverse/transloco';
 import { injectRouteData } from '../../../core/routing/inject-route-data';
+import { Backdrop } from '../../../ui/surfaces/backdrop';
 import { MyBuilds } from '../mine/my-builds';
 import type { EditorEntry } from './editor-entry';
 import type { EditorView } from './editor-view';
@@ -16,10 +17,11 @@ import { BUILDS_EDITOR_SCOPE } from './shared/builds-editor-scope';
  */
 @Component({
   selector: 'lodb-editor-page',
-  imports: [BuildEditor, MyBuilds],
+  imports: [Backdrop, BuildEditor, MyBuilds],
   providers: [provideTranslocoScope(BUILDS_EDITOR_SCOPE)],
   template: `
-    <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <lodb-backdrop />
+    <div class="relative mx-auto max-w-5xl">
       @switch (view()) {
         @case ('mine') {
           @defer (on immediate) {
@@ -36,7 +38,7 @@ import { BUILDS_EDITOR_SCOPE } from './shared/builds-editor-scope';
       }
     </div>
   `,
-  host: { class: 'block' },
+  host: { class: 'relative isolate block px-6 py-12' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EditorPage {

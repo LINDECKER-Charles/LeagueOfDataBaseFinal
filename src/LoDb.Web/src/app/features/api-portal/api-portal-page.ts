@@ -5,6 +5,7 @@ import { AuthSession } from '../../core/auth/session/auth-session';
 import { PageDirection } from '../../core/layout/direction/page-direction';
 import { localePath } from '../../core/layout/shell/locale-path';
 import { Button } from '../../ui/controls/button';
+import { Backdrop } from '../../ui/surfaces/backdrop';
 import { OffersPanel } from './billing/offers-panel';
 import { CreateKey } from './key/create-key';
 import { KeyOverview } from './key/key-overview';
@@ -25,6 +26,7 @@ import { checkoutNotice } from './state/checkout-status';
 @Component({
   selector: 'lodb-api-portal-page',
   imports: [
+    Backdrop,
     Button,
     CreateKey,
     KeyOverview,
@@ -37,7 +39,7 @@ import { checkoutNotice } from './state/checkout-status';
   providers: [provideTranslocoScope(API_SCOPE, API_PORTAL_SCOPE), ApiKeyPortal],
   templateUrl: './api-portal-page.html',
   styleUrls: ['./shared/portal.css', './api-portal-page.css'],
-  host: { class: 'block' },
+  host: { class: 'relative isolate block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApiPortalPage {
