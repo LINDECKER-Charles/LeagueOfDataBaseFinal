@@ -57,7 +57,13 @@ internal sealed class AuditReader(LoDbDbContext db)
     public Task<AuditSubject?> SubjectAsync(int userId, CancellationToken cancellationToken) =>
         db.Users.AsNoTracking()
             .Where(user => user.Id == userId)
-            .Select(user => new AuditSubject(user.Id, user.UserName, user.Email))
+            .Select(user => new AuditSubject
+            {
+                Id = user.Id,
+                Username = user.UserName,
+                Email = user.Email,
+                RiotTagline = user.RiotTagline,
+            })
             .SingleOrDefaultAsync(cancellationToken);
 
     /// <summary>How much the journal holds, for the purge screen.</summary>
