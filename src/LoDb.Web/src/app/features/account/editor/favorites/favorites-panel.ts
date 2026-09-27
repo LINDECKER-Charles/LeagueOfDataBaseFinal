@@ -3,13 +3,13 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { FAVORITE_SLOT } from '../../../../core/api/generated/models/favorite-slot-array';
 import type { FavoriteSlot } from '../../../../core/api/generated/models/favorite-slot';
 import { Field } from '../../../../ui/controls/field';
-import { DialogService } from '../../../../ui/overlays/dialog-service';
 import { FavoritePicker } from '../dialogs/favorite-picker';
 import type { FavoritePickerData } from '../dialogs/favorite-picker-data';
 import { SkinPicker } from '../dialogs/skin-picker';
 import type { SkinPickerData } from '../dialogs/skin-picker-data';
 import type { PickerEntry } from '../entries/picker-entry';
 import { PickerCatalog } from '../picker/picker-catalog';
+import { PickerOpener } from '../picker/picker-opener';
 import { ProfileForm } from '../store/profile-form';
 import type { SkinChoice } from '../store/skin-choice';
 import { AutosaveIndicator } from './autosave-indicator';
@@ -29,7 +29,7 @@ import { SkinSocket } from './skin-socket';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FavoritesPanel {
-  private readonly dialogs = inject(DialogService);
+  private readonly pickers = inject(PickerOpener);
   private readonly catalog = inject(PickerCatalog);
   protected readonly form = inject(ProfileForm);
   protected readonly slots = FAVORITE_SLOT;
@@ -52,12 +52,12 @@ export class FavoritesPanel {
       catalog: this.catalog,
       current: this.form.favorites()[slot].id,
     };
-    const labelledBy = FavoritePicker.HEADING_ID;
-    this.dialogs
-      .open<FavoritePicker, FavoritePickerData, PickerEntry | null>(FavoritePicker, {
-        labelledBy,
+    this.pickers
+      .open<FavoritePicker, FavoritePickerData, PickerEntry | null>(
+        FavoritePicker,
+        FavoritePicker.HEADING_ID,
         data,
-      })
+      )
       .closed.subscribe((entry) => {
         if (entry !== undefined) {
           this.form.pick(slot, entry);
@@ -67,11 +67,8 @@ export class FavoritesPanel {
 
   protected chooseSkin(): void {
     const data: SkinPickerData = { catalog: this.catalog, current: this.form.skin()?.id ?? null };
-    this.dialogs
-      .open<SkinPicker, SkinPickerData, SkinChoice | null>(SkinPicker, {
-        labelledBy: SkinPicker.HEADING_ID,
-        data,
-      })
+    this.pickers
+      .open<SkinPicker, SkinPickerData, SkinChoice | null>(SkinPicker, SkinPicker.HEADING_ID, data)
       .closed.subscribe((skin) => {
         if (skin !== undefined) {
           this.form.pickSkin(skin);

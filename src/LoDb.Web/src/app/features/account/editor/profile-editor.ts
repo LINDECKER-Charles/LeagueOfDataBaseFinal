@@ -22,6 +22,7 @@ import { ProfileAutosave } from './autosave/profile-autosave';
 import { ProfileCover } from './cover/profile-cover';
 import { FavoritesPanel } from './favorites/favorites-panel';
 import { PickerCatalog } from './picker/picker-catalog';
+import { PickerOpener } from './picker/picker-opener';
 import { DangerPanel } from './settings/danger-panel';
 import { IdentityPanel } from './settings/identity-panel';
 import { PasswordPanel } from './settings/password-panel';
@@ -48,7 +49,7 @@ import { ProfileStore } from './store/profile-store';
   ],
   templateUrl: './profile-editor.html',
   styleUrl: './profile-editor.css',
-  providers: [PickerCatalog, ProfileAutosave, ProfileForm, ProfileStore],
+  providers: [PickerCatalog, PickerOpener, ProfileAutosave, ProfileForm, ProfileStore],
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

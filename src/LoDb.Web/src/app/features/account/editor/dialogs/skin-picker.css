@@ -1,30 +1,42 @@
 /*
- * The second step of the skin picker: the way back to the champions, and the skins of the
- * one chosen as a grid of splash tiles.
+ * The second step of the skin picker: the way back to the champions, a framed square leading
+ * the dialog's head as its close ends it, and the skins of the one chosen as a grid of
+ * splash tiles.
  */
 @layer components {
   .picker-back {
-    display: inline-flex;
-    align-items: center;
-    align-self: flex-start;
-    gap: 0.4rem;
-    min-block-size: 2.75rem;
-    padding-inline: 0.2rem;
-    font-family: var(--font-beaufort);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
     color: var(--color-text-muted);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
     cursor: pointer;
-    transition: color 0.25s var(--ease-hextech);
+    transition:
+      color 0.25s var(--ease-hextech),
+      border-color 0.25s var(--ease-hextech);
   }
-  .picker-back:hover,
+  /* A 44px hit area around the 36px square. */
+  .picker-back::after {
+    content: '';
+    position: absolute;
+    inset: -0.25rem;
+  }
+  .picker-back:hover {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+  }
   .picker-back:focus-visible {
     outline: none;
-    color: var(--color-gold-bright);
+    color: var(--color-hex);
+    border-color: var(--color-hex);
   }
   /* The chevron points down: turned a quarter, it points back, whatever the direction. */
   .picker-back__icon {
+    inline-size: 1rem;
+    block-size: 1rem;
     rotate: 90deg;
   }
   .picker-back:dir(rtl) .picker-back__icon {
@@ -76,7 +88,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--color-gold-bright);
     background: linear-gradient(
       180deg,
