@@ -3,7 +3,7 @@ import { Logo } from '../../../../../ui/media/logo';
 
 /**
  * The head of a catalogue list: the crest, the data source and version it reads, the list's
- * title, and how many entries it holds.
+ * title, and how many entries it holds, boxed in the count plate.
  */
 @Component({
   selector: 'lodb-list-heading',
@@ -21,13 +21,28 @@ import { Logo } from '../../../../../ui/media/logo';
       </div>
     </div>
     @if (count() !== null) {
-      <p class="flex items-baseline gap-2">
+      <p class="list-count">
         <span class="font-mono text-xl leading-none text-hex">{{ count() }}</span>
         <span class="font-spiegel text-xs tracking-wider text-text-dim uppercase">
           {{ countLabel() }}
         </span>
       </p>
     }`,
+  // Layered like the design system: the identities restyle `.list-count` with unlayered
+  // rules (styles/theme/*/frames.css), which must keep winning over this default plate.
+  styles: `
+    @layer components {
+      .list-count {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0.5rem 0.9rem;
+        border: 1px solid var(--color-blue-abyssal);
+        background: color-mix(in srgb, var(--color-hextech-black) 50%, transparent);
+      }
+    }
+  `,
   host: { class: 'mb-8 flex flex-wrap items-end justify-between gap-5' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

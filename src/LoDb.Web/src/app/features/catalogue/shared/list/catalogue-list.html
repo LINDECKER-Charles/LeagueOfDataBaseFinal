@@ -34,7 +34,12 @@
     @let view = filter.view();
     @if (view.isSkeleton) {
       @if (notice() === null) {
-        <ul class="grid" [class.grid--stack]="layout() === 'stack'" aria-busy="true">
+        <ul
+          class="grid"
+          [class.grid--portrait]="columns() === 'portrait'"
+          [class.grid--stack]="layout() === 'stack'"
+          aria-busy="true"
+        >
           <li class="sr-only">{{ 'catalogue.loading' | transloco }}</li>
           @for (slot of skeletonSlots(); track $index) {
             <li><lodb-skeleton shape="tile" /></li>
@@ -51,7 +56,11 @@
         </button>
       </div>
     } @else {
-      <ul class="grid" [class.grid--stack]="layout() === 'stack'">
+      <ul
+        class="grid"
+        [class.grid--portrait]="columns() === 'portrait'"
+        [class.grid--stack]="layout() === 'stack'"
+      >
         @for (card of view.visible; track filter.keyOf(card); let index = $index) {
           <li class="grid__cell">
             <ng-container
