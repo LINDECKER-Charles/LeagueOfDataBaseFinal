@@ -1,4 +1,4 @@
-<div class="relative isolate px-4 py-14 sm:px-6">
+<div class="relative isolate px-6 py-14">
   <lodb-backdrop />
   <div class="relative mx-auto flex max-w-7xl flex-col gap-16">
     <section class="text-center">
@@ -52,10 +52,10 @@
                 <span
                   class="grid size-12 shrink-0 place-items-center border border-gold-deep/60 bg-abyss text-gold/80 transition-colors group-hover:text-gold"
                 >
-                  <lodb-icon class="size-7" [name]="texts[section.resource].icon" />
+                  <lodb-logo class="size-7" />
                 </span>
                 @if (section.total !== null) {
-                  <span lodbChip>{{ section.total }}</span>
+                  <span lodbChip class="border-blue-abyssal text-hex">{{ section.total }}</span>
                 }
               </span>
               <span
@@ -67,7 +67,9 @@
                 class="mt-auto inline-flex items-center gap-2 font-beaufort text-xs tracking-[0.14em] text-gold uppercase transition-colors group-hover:text-hex"
               >
                 {{ texts[section.resource].seeAll | transloco }}
-                <lodb-see-all-arrow />
+                <lodb-see-all-arrow
+                  class="transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1"
+                />
               </span>
             </a>
           </li>

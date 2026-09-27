@@ -19,6 +19,7 @@ function sectionOf(
       caption: entry.caption,
       image: entry.image,
       edition: entry.edition,
+      art: entry.art,
     })),
   };
 }

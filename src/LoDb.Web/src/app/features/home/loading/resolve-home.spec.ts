@@ -50,10 +50,17 @@ const META: CatalogMeta = {
   defaultGameMode: 'sr',
 };
 const IMAGE = { status: 'ready', url: '/cdn/blobs/abc.png', webpUrl: '/cdn/blobs/abc.webp' };
+const LOADING_ART = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Aatrox_0.jpg';
 const CHAMPIONS = {
   total: 171,
   entries: [
-    { canonicalPath: 'champions/Aatrox', name: 'Aatrox', title: 'the Darkin Blade', image: IMAGE },
+    {
+      canonicalPath: 'champions/Aatrox',
+      name: 'Aatrox',
+      title: 'the Darkin Blade',
+      image: IMAGE,
+      loadingArt: LOADING_ART,
+    },
   ],
 };
 const ITEMS = {
@@ -189,6 +196,7 @@ describe('resolveHome', () => {
         caption: 'the Darkin Blade',
         image: IMAGE,
         edition: 'modern',
+        art: LOADING_ART,
       },
     ]);
     expect(home.sections.items.cards[0]?.caption).toBe('id 1001');
@@ -196,6 +204,15 @@ describe('resolveHome', () => {
       caption: 'SummonerBarrier_Jade',
       edition: 'classic',
     });
+  });
+
+  it('gives the champions alone their loading-screen art', async () => {
+    const { home } = await visit('/en');
+
+    expect(home.sections.champions.cards[0]?.art).toBe(LOADING_ART);
+    expect(home.sections.items.cards[0]?.art).toBeNull();
+    expect(home.sections.runes.cards[0]?.art).toBeNull();
+    expect(home.sections.summoners.cards[0]?.art).toBeNull();
   });
 
   it('follows ?version= and ?lang=, and carries them into every link', async () => {
@@ -211,10 +228,10 @@ describe('resolveHome', () => {
     expect(cache).toBe('public, max-age=3600, s-maxage=604800');
   });
 
-  it('previews the first four rune paths, counting the runes of the list', async () => {
+  it('previews the first four rune paths and counts the paths, not their runes', async () => {
     const { home } = await visit('/en');
 
-    expect(home.sections.runes.total).toBe(63);
+    expect(home.sections.runes.total).toBe(5);
     expect(home.sections.runes.cards.map((card) => card.name)).toEqual([
       'Path 8000',
       'Path 8100',

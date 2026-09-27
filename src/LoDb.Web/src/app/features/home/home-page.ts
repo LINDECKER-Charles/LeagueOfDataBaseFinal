@@ -15,7 +15,7 @@ import { PageDirection } from '../../core/layout/direction/page-direction';
 import { injectRouteData } from '../../core/routing/inject-route-data';
 import { Seo } from '../../core/seo/seo';
 import { Chip } from '../../ui/controls/chip';
-import { Icon } from '../../ui/media/icon';
+import { Logo } from '../../ui/media/logo';
 import { Backdrop } from '../../ui/surfaces/backdrop';
 import { Frame } from '../../ui/surfaces/frame';
 import type { HomeData } from './data/home-data';
@@ -46,7 +46,7 @@ const PREVIEWS: readonly { readonly resource: ResourceType; readonly look: CardL
  */
 @Component({
   selector: 'lodb-home-page',
-  imports: [Backdrop, Chip, Frame, Icon, PreviewSection, RouterLink, SeeAllArrow, TranslocoPipe],
+  imports: [Backdrop, Chip, Frame, Logo, PreviewSection, RouterLink, SeeAllArrow, TranslocoPipe],
   providers: [provideTranslocoScope(HOME_SCOPE)],
   templateUrl: './home-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

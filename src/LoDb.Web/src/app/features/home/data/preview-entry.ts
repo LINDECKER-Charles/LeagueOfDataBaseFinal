@@ -11,4 +11,6 @@ export interface PreviewEntry {
   readonly image: CatalogImage;
   /** Items and spells have LoL Classic twins, which the card marks. */
   readonly edition: Edition;
+  /** A champion's loading-screen portrait, hotlinked from Data Dragon; null for the others. */
+  readonly art: string | null;
 }

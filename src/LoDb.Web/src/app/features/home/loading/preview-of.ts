@@ -9,8 +9,9 @@ import { PREVIEW_SIZE } from './preview-size';
 const ITEM_CAPTION_PREFIX = 'id ';
 
 /**
- * The preview of each resource, from the first page of its list. Runes preview their paths,
- * the pages a rune links to; the count stays the list's, the runes it holds.
+ * The preview of each resource, from the first page of its list. Runes preview and count
+ * their paths, the pages a rune links to, as the legacy home did: its count was the size of
+ * the list it previewed, not the runes the paths hold.
  */
 export const PREVIEW_OF = {
   champions: (list: ChampionList): Preview => ({
@@ -21,6 +22,7 @@ export const PREVIEW_OF = {
       caption: champion.title,
       image: champion.image,
       edition: 'modern',
+      art: champion.loadingArt,
     })),
   }),
   items: (list: ItemList): Preview => ({
@@ -31,16 +33,18 @@ export const PREVIEW_OF = {
       caption: `${ITEM_CAPTION_PREFIX}${item.id}`,
       image: item.image,
       edition: item.edition,
+      art: null,
     })),
   }),
   runes: (list: RuneList): Preview => ({
-    total: list.total,
+    total: list.trees.length,
     entries: list.trees.slice(0, PREVIEW_SIZE).map((tree) => ({
       path: tree.canonicalPath,
       name: tree.name,
       caption: tree.key,
       image: tree.image,
       edition: 'modern',
+      art: null,
     })),
   }),
   summoners: (list: SummonerList): Preview => ({
@@ -51,6 +55,7 @@ export const PREVIEW_OF = {
       caption: spell.id,
       image: spell.image,
       edition: spell.edition,
+      art: null,
     })),
   }),
 } as const;

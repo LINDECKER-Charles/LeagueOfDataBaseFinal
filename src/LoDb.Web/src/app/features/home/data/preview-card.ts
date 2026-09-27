@@ -10,4 +10,6 @@ export interface PreviewCard {
   /** The image as the API describes it: a pending one sweeps until the home reads it again. */
   readonly image: CatalogImage;
   readonly edition: Edition;
+  /** The tall art of a portrait card, a champion's loading screen; null for the others. */
+  readonly art: string | null;
 }
