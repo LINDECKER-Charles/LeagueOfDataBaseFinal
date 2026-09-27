@@ -57,19 +57,25 @@ internal sealed class DatabaseFigures(LoDbDbContext db, TimeProvider clock)
     /// The tables that grow with the audience, partitions summed: the analytics events are
     /// partitioned by day.
     /// </summary>
+    /// <remarks>
+    /// <c>pg_partition_tree</c> lists nothing for a plain table, which weighs itself.
+    /// </remarks>
     public async Task<IReadOnlyList<TableVolume>> TablesAsync(CancellationToken cancellation) =>
         await db.Database.SqlQuery<TableVolume>(
                 $"""
                 SELECT c.relname AS "Name",
-                       (SELECT COALESCE(sum(pg_total_relation_size(p.relid)), 0)
-                          FROM pg_partition_tree(c.oid) p)::bigint AS "Bytes"
+                       (CASE WHEN c.relkind = 'p'
+                             THEN (SELECT COALESCE(sum(pg_total_relation_size(p.relid)), 0)
+                                     FROM pg_partition_tree(c.oid) p)
+                             ELSE pg_total_relation_size(c.oid)
+                        END)::bigint AS "Bytes"
                   FROM pg_class c
                   JOIN pg_namespace n ON n.oid = c.relnamespace
                  WHERE n.nspname = current_schema()
                    AND c.relkind IN ('r', 'p')
                    AND c.relname IN ('users', 'builds', 'build_votes', 'donations',
                                      'api_keys', 'api_usage', 'contact_messages',
-                                     'audit_log', 'analytics_events', 'analytics_daily',
+                                     'audit_log', 'analytics_event', 'analytics_daily',
                                      'email_outbox')
                  ORDER BY 2 DESC, 1
                 """)

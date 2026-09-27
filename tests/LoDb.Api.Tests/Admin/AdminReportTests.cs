@@ -61,9 +61,14 @@ public sealed class AdminReportTests(PostgresContainerFixture postgres)
         var process = report.GetProperty("process");
         Assert.False(string.IsNullOrEmpty(ApiJson.Text(process, "version")));
         Assert.True(process.GetProperty("workingSetBytes").GetInt64() > 0);
-        Assert.Contains(
-            report.GetProperty("tables").EnumerateArray(),
-            static table => ApiJson.Text(table, "name") == "users");
+        var tables = report.GetProperty("tables").EnumerateArray()
+            .ToDictionary(
+                static table => ApiJson.Text(table, "name")!,
+                static table => table.GetProperty("bytes").GetInt64());
+        // Every table listed exists; a plain one weighs its own pages.
+        Assert.Equal(11, tables.Count);
+        Assert.Contains("analytics_event", tables.Keys);
+        Assert.True(tables["users"] > 0);
     }
 
     [Fact]
