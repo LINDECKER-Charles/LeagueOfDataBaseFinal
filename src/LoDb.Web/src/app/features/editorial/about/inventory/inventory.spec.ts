@@ -35,7 +35,8 @@ function catalogOf(listChampions = vi.fn(() => page(172))) {
   return {
     listChampions,
     listItems: vi.fn(() => page(311)),
-    listRunes: vi.fn(() => page(63)),
+    // 63 runes over 5 paths: the inventory counts the paths.
+    listRunes: vi.fn(() => of({ total: 63, trees: [{}, {}, {}, {}, {}] })),
     listSummoners: vi.fn(() => page(18)),
   };
 }
@@ -50,7 +51,7 @@ describe('Inventory', () => {
       version: '15.14.1',
       champions: 172,
       items: 311,
-      runes: 63,
+      runes: 5,
       summoners: 18,
       languages: 3,
       versions: 2,
