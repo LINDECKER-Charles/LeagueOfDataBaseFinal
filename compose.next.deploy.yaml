@@ -123,6 +123,11 @@ services:
       # 1 on next: "X-Robots-Tag: noindex, nofollow" on the responses of the stack's edge
       # (snippets/security-headers.conf). The deploy job checks it per environment.
       LODB_NOINDEX: ${LODB_NOINDEX:-0}
+      # First part of the page cache's key. IMAGE_TAG (next, next-prod) is the same for every
+      # revision: without the key compose.next.yaml sets, the image's own default applies
+      # (APP_REVISION, the commit SHA baked by next-build.yml), so a promoted build never
+      # serves the previous one's pages.
+      LODB_REVISION: !reset null
     volumes:
       # Host folder of the Android files, latest.json and assetlinks.json
       # (server.d/android-latest.conf, assetlinks.conf): empty, both URLs answer 404.
