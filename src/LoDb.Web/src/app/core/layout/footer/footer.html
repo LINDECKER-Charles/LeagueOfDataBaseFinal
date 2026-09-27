@@ -33,6 +33,18 @@
             }}</a>
           </li>
         }
+        @if (member()) {
+          <li>
+            <a class="nav-link" [routerLink]="link('account/profile')">{{
+              'nav.profile' | transloco
+            }}</a>
+          </li>
+        }
+        @if (sitemap) {
+          <li>
+            <a class="nav-link" [href]="sitemap">{{ 'footer.navigation.sitemap' | transloco }}</a>
+          </li>
+        }
       </ul>
     </nav>
 
@@ -77,8 +89,8 @@
           <li>
             <a
               class="nav-link inline-flex items-center gap-2"
-              target="_blank"
-              rel="noopener noreferrer"
+              [attr.target]="opensTab(entry) ? '_blank' : null"
+              [attr.rel]="opensTab(entry) ? 'noopener noreferrer' : null"
               [href]="entry.href"
             >
               @if (entry.icon) {
