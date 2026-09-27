@@ -141,6 +141,14 @@ describe('lodb-item-detail', () => {
     expect(element.querySelector('maintext stats')?.textContent).toBe('50% Base Mana Regen');
   });
 
+  it('prices the item in gold, the coin of the legacy after the figure', async () => {
+    const { element } = await render();
+
+    const price = element.querySelector('[data-testid="price"]');
+    expect(price?.textContent?.trim()).toBe('250');
+    expect(price?.querySelector('lodb-icon')?.getAttribute('name')).toBe('gold');
+  });
+
   it('names the LoL Classic edition in its head, and turns the pages of the list', async () => {
     const { element, heads } = await render();
 

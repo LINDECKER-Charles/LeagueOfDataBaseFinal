@@ -11,6 +11,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import type { ItemDetails } from '../../../../core/api/generated/models/item-details';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import { injectRouteData } from '../../../../core/routing/inject-route-data';
+import { Icon } from '../../../../ui/media/icon';
 import { Pager } from '../../../../ui/navigation/pager';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { Frame } from '../../../../ui/surfaces/frame';
@@ -46,6 +47,7 @@ const UPGRADE_ICON_SIZE = 48;
     EditionBadge,
     EditionCounterpart,
     Frame,
+    Icon,
     ItemAside,
     Pager,
     RecipeTree,

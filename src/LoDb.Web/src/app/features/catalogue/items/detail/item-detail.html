@@ -48,8 +48,11 @@
           <p class="font-mono text-[10px] tracking-[0.2em] text-text-dim uppercase">
             {{ 'item.detail.price_total' | transloco }}
           </p>
-          <p class="mt-1 font-beaufort text-5xl leading-none text-gold-grad" data-testid="price">
-            {{ item.gold.total }}
+          <p class="mt-1 flex items-baseline gap-2 sm:justify-end" data-testid="price">
+            <span class="font-beaufort text-5xl leading-none text-gold-grad">
+              {{ item.gold.total }}
+            </span>
+            <lodb-icon name="gold" class="size-5 text-gold-rich" />
           </p>
           @if (!item.gold.isPurchasable) {
             <p class="mt-1.5 font-mono text-[10px] tracking-wider text-text-dim uppercase">
