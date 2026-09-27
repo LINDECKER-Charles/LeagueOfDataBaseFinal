@@ -24,6 +24,7 @@ import { PreferencesStore } from '../../core/context/preferences/preferences-sto
 import { switchContext } from '../../core/context/switch/switch-context';
 import { Disclosure } from '../../core/layout/disclosure/disclosure';
 import { PageDirection } from '../../core/layout/direction/page-direction';
+import { NavContext } from '../../core/layout/nav/nav-context';
 import { Button } from '../../ui/controls/button';
 import { Field } from '../../ui/controls/field';
 import { Icon } from '../../ui/media/icon';
@@ -37,6 +38,8 @@ import { targetOf } from './selection/target-of';
 /** The Transloco scope of the switcher's own texts (`public/i18n/context-switcher/`). */
 const SCOPE = 'context-switcher';
 const LOCALE_SUBTAG_SEPARATOR = '-';
+// A patch number in the chip's monospace: seven letters and their 0.06em tracking.
+const PATCH_WIDTH = '7.7ch';
 
 function valueOf(event: Event): string {
   return (event.target as HTMLSelectElement).value;
@@ -49,8 +52,10 @@ function valueOf(event: Event): string {
  * switcher applies that cookie to the pages that name no context of their own.
  *
  * The header sits on prerendered pages too, so the options (versions, languages) load in the
- * browser, after the first render, never during one: the server renders the chip with the
- * locale alone, the same for every visitor.
+ * browser, after the first render, never during one. The chip names the page's version from
+ * the first paint all the same: a server render resolves it (`NavContext`) and hands it to
+ * the browser. A prerendered page names none; its placeholder holds the version's width, so
+ * the chip does not jump when the options arrive.
  */
 @Component({
   selector: 'lodb-context-switcher',
@@ -65,6 +70,7 @@ export class ContextSwitcher {
   private readonly apiMeta = inject(ApiMeta);
   private readonly preferences = inject(PreferencesStore);
   private readonly page = inject(PageDirection);
+  private readonly nav = inject(NavContext);
   private readonly destroyRef = inject(DestroyRef);
   private readonly panel = viewChild.required<ElementRef<HTMLDetailsElement>>('panel');
   private readonly url = toSignal(
@@ -92,10 +98,15 @@ export class ContextSwitcher {
   protected readonly languageCode = computed(() =>
     this.page.locale().split(LOCALE_SUBTAG_SEPARATOR, 1)[0].toUpperCase(),
   );
+  protected readonly placeholderWidth = PATCH_WIDTH;
+  /** The version the chip names: the page's, known before the options are. */
+  protected readonly shownVersion = computed(
+    () => this.current()?.version ?? this.nav.selection()?.shown ?? null,
+  );
   /** The context the chip stands for, in its accessible name even where the patch is hidden. */
   protected readonly shown = computed(() => {
-    const version = this.current()?.version;
-    return version === undefined ? this.languageCode() : `${version}, ${this.languageCode()}`;
+    const version = this.shownVersion();
+    return version === null ? this.languageCode() : `${version}, ${this.languageCode()}`;
   });
 
   constructor() {

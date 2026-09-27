@@ -1,6 +1,4 @@
-/** One entry of the version list. */
+/** One entry of the version list: a bare patch number, as the legacy switcher listed it. */
 export interface VersionOption {
   readonly version: string;
-  /** Whether it is the latest version, the one the short URLs follow. */
-  readonly latest: boolean;
 }

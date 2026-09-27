@@ -9,8 +9,6 @@ export interface LanguageOption {
   readonly language: string;
   /** What `?lang=` carries: null for the locale's own language, the variant otherwise. */
   readonly lang: string | null;
-  /** BCP 47 tag of the language (`en-GB`), for the option's `lang` attribute. */
-  readonly tag: string;
-  /** Name of the language in that language itself. */
+  /** English name of the language, as the legacy switcher listed it. */
   readonly label: string;
 }
