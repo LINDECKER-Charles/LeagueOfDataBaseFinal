@@ -5,12 +5,12 @@
 <ng-template #branch let-node>
   <li>
     @if (node.canonicalPath === null) {
-      <div class="recipe-node recipe-node--root" [title]="node.name">
+      <div class="group/node recipe-node recipe-node--root" [title]="node.name">
         <ng-container *ngTemplateOutlet="face; context: { $implicit: node }" />
       </div>
     } @else {
       <a
-        class="recipe-node"
+        class="group/node recipe-node"
         [routerLink]="linkOf(context(), node.canonicalPath)"
         [title]="node.name"
         [attr.data-id]="node.id"
@@ -31,7 +31,7 @@
 <ng-template #face let-node>
   <lodb-catalogue-image
     class="recipe-node__icon"
-    imgClass="object-contain"
+    imgClass="object-contain transition-transform duration-500 group-hover/node:scale-110"
     [image]="node.image"
     [name]="node.name"
     [size]="iconSize"
