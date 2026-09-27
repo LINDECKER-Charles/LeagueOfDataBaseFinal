@@ -559,3 +559,31 @@ Constats du [jalon des lots 5 à 7](docs/reecriture/rapports/jalons/lots-05-06-0
   balises (constaté sur `/developers`, `" Base URL: … "`) ; une assertion Playwright par
   regex ancrée sur `^` ou `$` échoue alors. Ancrer sur le contenu, ou utiliser une chaîne
   (G3 ; hypothèse aussi pour `/^Relevé du /` de G2).
+
+### Pièges du jalon du lot 8 (ne pas « corriger » par erreur)
+
+Constats du [jalon du lot 8](docs/reecriture/rapports/jalons/lot-08.md).
+
+- **Répétition locale** (critère du lot 8) : `docs/reecriture/bascule.md` § 3.1, tel
+  qu'écrit, depuis la racine. Elle occupe l'emplacement `lodb-next-e2`, jamais `lodb-next`,
+  et ne tourne ni pendant un build Android ni quand l'emplacement 2 est déjà occupé.
+  L'ancienne stack doit être arrêtée, ou lancée depuis ce dossier. Le script vise la copie
+  par `POSTGRES_DB` dans l'environnement de `docker compose` : ne jamais modifier le `.env`
+  pour elle.
+- Le code de `rehearse.sh … | tee …` est celui de `tee` : lire `$pipestatus[1]` (zsh) ou
+  `${PIPESTATUS[0]}` (bash), ou juger sur le résumé (15 lignes `ok` et « The rehearsal
+  passes »).
+- La base de dev de l'ancienne stack n'a aucun compte à mot de passe : `--anonymize` n'en
+  connecte aucun, sans le dire. Les comptes existants prouvés sont les 8 comptes semés
+  avant `migrate`, un par format de hash.
+- Après la répétition, `lodb_rehearsal` ne doit plus exister dans le Postgres de l'ancienne
+  stack (`psql -l`). `lodb_j567` est la copie du jalon des lots 5 à 7, à ne pas confondre
+  avec celle de la répétition.
+- **Rapport de surveillance de l'admin** : un rapport dont les lectures en base ont échoué
+  reste 30 s dans le cache hybride, avec des chiffres vides (G1). Une carte absente de la
+  vue d'ensemble ou des opérations se cherche d'abord dans
+  `docker logs lodb-next-api-1 | grep admin.monitoring.database_unreadable`, jamais par
+  un `waitFor` plus long dans la spec.
+- Les instantanés Playwright (`tests/LoDb.E2E/test-results/`) sont écrasés par le passage
+  suivant, `readonly-e2e.sh` de la répétition compris : lire les échecs de la suite complète
+  avant de lancer la répétition.

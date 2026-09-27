@@ -239,3 +239,24 @@ Lecture :
   `docker stats` n'est pas expliqué (instant différent, ou cache de pages du noyau compté
   dans le conteneur) : hypothèse à vérifier par la mesure sous limite.
 - `web-ssr` monte à 329 Mio, sous le pic du jalon 2 (338 Mio) ; la limite de 512m tient.
+
+### Lot 8 — jalon (2026-09-27)
+
+Contexte : stack d'intégration reconstruite depuis `fed0c64`
+(`IMAGE_TAG=APP_REVISION=fed0c64`), conteneurs `api`, `web-ssr` et `nginx` recréés juste
+avant la mesure, base chargée. Relevés `docker stats --no-stream` en boucle, environ toutes
+les 10 s : 8 échantillons pendant la suite complète (1,4 min). Commande :
+`npm --prefix tests/LoDb.E2E test` : 302 tests, 284 réussis, 10 échecs, 7 non lancés,
+1 ignoré (voir le [jalon](jalons/lot-08.md)).
+
+| Service | Avant la suite | Pic (302 tests) | Limite de `compose.next.deploy.yaml` |
+|---|---:|---:|---:|
+| `api` | 132 Mio | 594 Mio | 1152m |
+| `web-ssr` | 49 Mio | 287 Mio | 704m |
+| `nginx` | 14 Mio | 19 Mio | 64m |
+| `postgres` | 49 Mio | 53 Mio | 512m |
+| `mailpit` (dev seulement) | 37 Mio | 40 Mio | — |
+
+Lecture : `api` monte à 594 Mio, au-dessus du pic du jalon 3 (541 Mio) et sous la limite de
+L8.1 (1152m). L'échantillonnage à 10 s peut manquer le vrai sommet. La répétition locale (emplacement `lodb-next-e2`, ancienne
+stack et `lodb-next` en même temps) n'a pas été échantillonnée.
