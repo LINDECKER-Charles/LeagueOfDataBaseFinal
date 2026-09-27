@@ -1,12 +1,12 @@
 @let missing = 'build.show.missing' | transloco;
-<div class="codex-header">
+<div class="codex-header mb-6">
   <h2>{{ 'build.show.runes' | transloco }}</h2>
   <span class="codex-header__meta">{{ primary().name }} + {{ secondary().name }}</span>
 </div>
 
 <div class="grid grid-cols-1 gap-5 sm:grid-cols-[1.35fr_1fr]">
   <article class="hextech-frame path-border p-6" data-rune-path="primary">
-    <p class="bshare-tree path-text">
+    <p class="bshare-tree">
       @if (primary().icon; as icon) {
         <img class="hx-img" [src]="icon" alt="" width="22" height="22" />
       }
