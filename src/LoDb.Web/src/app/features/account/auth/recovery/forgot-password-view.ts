@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  type ElementRef,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
@@ -9,6 +18,7 @@ import { Button } from '../../../../ui/controls/button';
 import { Field } from '../../../../ui/controls/field';
 import { formText } from '../../shared/forms/form-text';
 import { submittedForm } from '../../shared/forms/submitted-form';
+import { overrideAccountTitle } from '../../shared/head/override-account-title';
 import type { FieldErrors } from '../../shared/problems/field-errors';
 import { fieldErrorsOf } from '../../shared/problems/field-errors-of';
 import { formErrorOf } from '../../shared/problems/form-error-of';
@@ -17,7 +27,8 @@ import { AuthCard } from '../card/auth-card';
 
 /**
  * Asks for a reset link. The answer never tells whether the address has an account, so the
- * page says the same whatever it is: check the inbox.
+ * page says the same whatever it is: check the inbox. The address field has the focus on
+ * arrival, as on the legacy page.
  */
 @Component({
   selector: 'lodb-forgot-password-view',
@@ -38,6 +49,13 @@ export class ForgotPasswordView {
     this.sent() ? 'auth.reset.check_email_title' : 'auth.reset.request_title',
   );
   protected readonly login = computed(() => localePath(this.page.locale(), 'account/login'));
+  private readonly email = viewChild<ElementRef<HTMLInputElement>>('email');
+
+  constructor() {
+    afterNextRender(() => this.email()?.nativeElement.focus());
+    // The legacy "check your inbox" was a page of its own, titled so.
+    overrideAccountTitle(() => (this.sent() ? { key: 'auth.reset.check_email_title' } : null));
+  }
 
   protected async request(event: Event): Promise<void> {
     const email = formText(submittedForm(event), 'email');

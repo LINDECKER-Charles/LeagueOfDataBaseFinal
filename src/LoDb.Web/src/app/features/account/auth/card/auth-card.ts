@@ -12,6 +12,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
     <section
       class="hextech-frame hx-corners relative w-full max-w-md p-8 sm:p-10"
       aria-labelledby="auth-card-title"
+      [class.text-center]="centered()"
     >
       <p class="eyebrow">{{ 'auth.eyebrow' | transloco }}</p>
       <h1
@@ -31,4 +32,6 @@ import { TranslocoPipe } from '@jsverse/transloco';
 export class AuthCard {
   /** The page's title, translated. */
   readonly heading = input.required<string>();
+  /** Centres the card's texts: a page that only says what happens next, as a sent request. */
+  readonly centered = input(false);
 }
