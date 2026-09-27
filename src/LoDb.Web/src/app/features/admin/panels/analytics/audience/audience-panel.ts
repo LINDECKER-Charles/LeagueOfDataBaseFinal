@@ -1,41 +1,44 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { getAnalyticsReport } from '../../../../../core/api/generated/fn/admin-analytics/get-analytics-report';
-import type { AnalyticsReport } from '../../../../../core/api/generated/models/analytics-report';
+import { categorySlices } from '../../../charts/category-slices';
 import { DonutChart } from '../../../charts/donut-chart';
-import { paletteSlices } from '../../../charts/palette-slices';
+import { Sparkline } from '../../../charts/sparkline';
 import { FigurePipe } from '../../../format/figure-pipe';
+import { AdminCard } from '../../../layout/admin-card';
+import { PageHead } from '../../../layout/page-head';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 import { injectAdminText } from '../../../shared/inject-admin-text';
 import { injectQuery } from '../../../shared/inject-query';
+import { RANGE_SEGMENTS } from '../../../shared/range-segments';
 import { injectPanel } from '../../../state/inject-panel';
 import { PanelState } from '../../../state/panel-state';
-import { AdminCard } from '../../../widgets/admin-card';
+import { Badge } from '../../../widgets/badge';
 import { Kpi } from '../../../widgets/kpi';
-import { PageHead } from '../../../widgets/page-head';
-import { RangeBar } from '../../../widgets/range-bar';
 import { RankList } from '../../../widgets/rank-list';
+import { SegmentBar } from '../../../widgets/segment-bar';
 import { rankRows } from '../rank-rows';
-import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
-// The rankings a long report folds after this many rows.
-const RANK_LIMIT = 8;
 const EMPTY: readonly never[] = [];
 
 /**
- * `/admin/audience`: who the visitors of the period are. Their devices and where they come
- * from as rings, their browsers, systems, countries and languages ranked, and the sites that
- * sent them.
+ * `/admin/audience`: who the visitors of the period are, in the order of the legacy page.
+ * Their figures, their countries (or why there are none: no GeoLite2 database on this
+ * instance) and their devices, their browsers, systems and interface languages, then where
+ * they came from and the sites that sent them.
  */
 @Component({
   selector: 'lodb-audience-panel',
   imports: [
     AdminCard,
+    Badge,
     DonutChart,
     FigurePipe,
     Kpi,
     PageHead,
     PanelState,
-    RangeBar,
     RankList,
+    SegmentBar,
+    Sparkline,
     AdminTextPipe,
   ],
   templateUrl: './audience-panel.html',
@@ -45,29 +48,31 @@ export class AudiencePanel {
   private readonly texts = injectAdminText();
 
   protected readonly query = injectQuery();
+  protected readonly ranges = RANGE_SEGMENTS;
   protected readonly report = injectPanel(getAnalyticsReport, () => ({
     range: this.query.range(),
   }));
-  protected readonly limit = RANK_LIMIT;
-  protected readonly devices = computed(() => this.slices('device', 'audience.devices'));
-  protected readonly sources = computed(() => this.slices('refSource', 'audience.sources'));
+  protected readonly visitors = computed(() =>
+    (this.report.value()?.series ?? EMPTY).map((day) => day.visitors),
+  );
+  protected readonly devices = computed(() =>
+    categorySlices('device', rankRows(this.report.value()?.device ?? EMPTY), (name) =>
+      this.texts.term('audience.devices', name),
+    ),
+  );
+  protected readonly sources = computed(() =>
+    categorySlices('source', rankRows(this.report.value()?.refSource ?? EMPTY), (name) =>
+      this.texts.term('audience.sources', name),
+    ),
+  );
   protected readonly browsers = computed(() => rankRows(this.report.value()?.browser ?? EMPTY));
   protected readonly systems = computed(() => rankRows(this.report.value()?.os ?? EMPTY));
-  protected readonly languages = computed(() => rankRows(this.report.value()?.lang ?? EMPTY));
   protected readonly locales = computed(() => rankRows(this.report.value()?.locale ?? EMPTY));
   protected readonly referers = computed(() => rankRows(this.report.value()?.topReferers ?? EMPTY));
   protected readonly countries = computed(() =>
     (this.report.value()?.country ?? EMPTY).map((country) => ({
-      name: `${country.name} (${country.code})`,
+      name: country.name,
       value: country.count,
     })),
   );
-
-  private slices(field: 'device' | 'refSource', terms: string) {
-    const ranks: AnalyticsReport[typeof field] = this.report.value()?.[field] ?? [];
-    return paletteSlices(
-      rankRows(ranks, (name) => this.texts.term(terms, name)),
-      this.texts.text('common.others'),
-    );
-  }
 }

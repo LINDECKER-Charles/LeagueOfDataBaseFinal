@@ -1,49 +1,47 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { getAnalyticsReport } from '../../../../../core/api/generated/fn/admin-analytics/get-analytics-report';
-import { rollupAnalytics } from '../../../../../core/api/generated/fn/admin-analytics/rollup-analytics';
-import { Button } from '../../../../../ui/controls/button';
-import { DonutChart } from '../../../charts/donut-chart';
 import { Heatmap } from '../../../charts/heatmap';
-import { paletteSlices } from '../../../charts/palette-slices';
+import { Sparkline } from '../../../charts/sparkline';
 import { TimeSeriesChart } from '../../../charts/time-series-chart';
 import { FigurePipe } from '../../../format/figure-pipe';
-import { AdminCommand } from '../../../shared/http/admin-command';
+import { AdminCard } from '../../../layout/admin-card';
+import { PageHead } from '../../../layout/page-head';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 import { injectAdminText } from '../../../shared/inject-admin-text';
 import { injectQuery } from '../../../shared/inject-query';
+import { RANGE_SEGMENTS } from '../../../shared/range-segments';
 import { injectPanel } from '../../../state/inject-panel';
 import { PanelState } from '../../../state/panel-state';
-import { AdminCard } from '../../../widgets/admin-card';
 import { Kpi } from '../../../widgets/kpi';
 import { Legend } from '../../../widgets/legend';
-import { PageHead } from '../../../widgets/page-head';
-import { RangeBar } from '../../../widgets/range-bar';
 import { RankList } from '../../../widgets/rank-list';
+import { SegmentBar } from '../../../widgets/segment-bar';
 import { rankRows } from '../rank-rows';
 import { trafficSeries } from '../traffic-series';
-import { AdminTextPipe } from '../../../shared/admin-text-pipe';
+import { StatusTable } from './status-table';
 
-// The rankings a long report folds after this many rows.
-const RANK_LIMIT = 10;
+// An entity is counted as `{type}:{key}`: the page names it by its key alone.
+const ENTITY_SEPARATOR = ':';
 
 /**
- * `/admin/traffic`: the page views of the period, day by day and hour by hour, the pages
- * and entities most viewed, the answers served. "Consolidate" rolls the raw events of the
- * last days into the daily aggregates the report reads, as the nightly job does.
+ * `/admin/traffic`: the page views of the period, in the order of the legacy page. Their
+ * figures, their days, the pages and entities most viewed, the resources, the kinds of page
+ * and the statuses served, then the hours of the week.
  */
 @Component({
   selector: 'lodb-traffic-panel',
   imports: [
     AdminCard,
-    Button,
-    DonutChart,
     FigurePipe,
     Heatmap,
     Kpi,
     Legend,
     PageHead,
     PanelState,
-    RangeBar,
     RankList,
+    SegmentBar,
+    Sparkline,
+    StatusTable,
     TimeSeriesChart,
     AdminTextPipe,
   ],
@@ -52,40 +50,31 @@ const RANK_LIMIT = 10;
 })
 export class TrafficPanel {
   private readonly texts = injectAdminText();
-  private readonly command = inject(AdminCommand);
 
   protected readonly query = injectQuery();
+  protected readonly ranges = RANGE_SEGMENTS;
   protected readonly report = injectPanel(getAnalyticsReport, () => ({
     range: this.query.range(),
   }));
-  protected readonly rollingUp = signal(false);
-  protected readonly limit = RANK_LIMIT;
   protected readonly traffic = computed(() =>
     trafficSeries(this.report.value()?.series ?? [], this.texts),
   );
+  /** The mean views of a day of the period, rounded as the legacy tile wrote it. */
+  protected readonly perDay = computed(() => {
+    const report = this.report.value();
+    return report ? Math.round(report.totals.views / Math.max(report.days, 1)) : 0;
+  });
   protected readonly types = computed(() =>
-    paletteSlices(
-      rankRows(this.report.value()?.byType ?? [], (name) => this.texts.term('traffic.types', name)),
-      this.texts.text('common.others'),
-    ),
+    rankRows(this.report.value()?.byType ?? [], (name) => this.texts.term('traffic.types', name)),
   );
   protected readonly kinds = computed(() =>
     rankRows(this.report.value()?.byKind ?? [], (name) => this.texts.term('traffic.kinds', name)),
   );
   protected readonly pages = computed(() => rankRows(this.report.value()?.topPages ?? []));
-  protected readonly entities = computed(() => rankRows(this.report.value()?.topEntities ?? []));
-  protected readonly statuses = computed(() => rankRows(this.report.value()?.status ?? []));
-  protected readonly routes = computed(() => rankRows(this.report.value()?.byRoute ?? []));
-
-  protected async rollUp(): Promise<void> {
-    this.rollingUp.set(true);
-    const receipt = await this.command.run(rollupAnalytics, {}, (done) => ({
-      key: 'traffic.rolled_up',
-      params: { count: done.days.length },
-    }));
-    this.rollingUp.set(false);
-    if (receipt !== null) {
-      this.report.reload();
-    }
-  }
+  protected readonly entities = computed(() =>
+    rankRows(
+      this.report.value()?.topEntities ?? [],
+      (name) => name.split(ENTITY_SEPARATOR).at(-1) ?? name,
+    ),
+  );
 }

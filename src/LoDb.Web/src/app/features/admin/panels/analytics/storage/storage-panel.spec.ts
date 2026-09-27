@@ -14,35 +14,54 @@ function texts(root: ParentNode, selector: string): string[] {
   );
 }
 
+function row(name: string, bytes: number) {
+  return { name, bytes, objects: 2_100, pct: 50 };
+}
+
 describe('StoragePanel', () => {
-  it('weighs the bucket, charts its growth and ranks what fills it', async () => {
+  it('weighs the storage, charts what it takes in and ranks what fills it', async () => {
     const { page } = await openPanel(StoragePanel, '/admin/storage', [
-      { path: STORAGE, body: storageReport() },
+      {
+        path: STORAGE,
+        body: storageReport({ families: [row('data', 4 * 1024 ** 3), row('blobs', 1024 ** 3)] }),
+      },
     ]);
 
     expect(texts(page, 'lodb-kpi')).toEqual([
-      'admin.storage.kpi.bytes6.00 GB',
-      'admin.storage.kpi.objects180 000',
-      'admin.storage.kpi.dedup2.00×admin.storage.kpi.saved',
-      'admin.storage.kpi.webp90.0 %admin.storage.kpi.webp_size',
+      'admin.storage.kpi.bytes 6.00 GB admin.overview.kpi.storage_sub',
+      'admin.storage.kpi.blobs 2.1k admin.storage.kpi.blobs_sub',
+      'admin.overview.kpi.webp 90 % 8100 / 9000',
+      'admin.storage.kpi.dedup 2.00× admin.storage.kpi.saved',
+      'admin.overview.kpi.versions 1 admin.storage.kpi.versions_sub',
     ]);
-    expect(page.querySelectorAll('lodb-time-series-chart polyline.ts-line')).toHaveLength(2);
-    expect(texts(page, 'lodb-donut-chart lodb-legend li')).toEqual(['data 66.7 %', 'img 33.3 %']);
-    expect(texts(page, 'lodb-rank-list li')).toContain('png 1.00 GB');
-    expect(texts(page, 'ol li')).toContain('img/splash/Ahri_0.jpg 512.00 KB');
-    expect(texts(page, 'tbody td')).toEqual(['16.19.1', '12 000', 'champion, item', '1']);
+    expect(texts(page, 'lodb-admin-rule')).toEqual([
+      'admin.rules.images',
+      'admin.rules.data',
+      'admin.rules.detail',
+    ]);
+    // The objects written day by day, one line.
+    expect(page.querySelectorAll('lodb-time-series-chart polyline.ts-line')).toHaveLength(1);
+    expect(page.querySelector('lodb-donut-chart')).toBeNull();
+    expect(texts(page, 'lodb-rank-list li')).toEqual(
+      expect.arrayContaining(['data 4.00 GB', 'blobs 1.00 GB', 'png 1.00 GB', 'fr_FR 1.00 GB']),
+    );
+    expect(texts(page, 'lodb-largest-objects tbody tr')).toEqual([
+      'img/splash/Ahri_0.jpg 512.00 KB',
+    ]);
+    expect(texts(page, 'lodb-coverage-matrix li')).toEqual(['16.19.1fr_FR']);
     expect(page.querySelector('[role="alert"]')).toBeNull();
   });
 
-  it('warns that a report read partly is incomplete', async () => {
+  it('says the storage could not be read in place of the figures', async () => {
     const { page } = await openPanel(StoragePanel, '/admin/storage', [
       { path: STORAGE, body: storageReport({ ok: false, error: 'listing timed out' }) },
     ]);
 
-    expect(page.querySelector('[role="alert"]')?.textContent).toContain('listing timed out');
+    expect(page.querySelector('[role="alert"]')).not.toBeNull();
+    expect(page.querySelectorAll('lodb-kpi')).toHaveLength(0);
   });
 
-  it('reads the bucket again, past the cache of the API, on demand', async () => {
+  it('reads the storage again, past the cache of the API, on demand', async () => {
     const visit = await openPanel(StoragePanel, '/admin/storage', [
       { path: STORAGE, body: storageReport() },
     ]);
@@ -50,25 +69,25 @@ describe('StoragePanel', () => {
     press(visit, 'admin.actions.refresh');
     const again = await sent(visit, STORAGE);
     expect(again.request.params.get('refresh')).toBe('true');
-    await reply(visit, again, storageReport({ objects: 7 }));
+    await reply(visit, again, storageReport({ bytes: 1024 }));
 
-    expect(texts(visit.page, 'lodb-kpi')[1]).toBe('admin.storage.kpi.objects7');
+    expect(texts(visit.page, 'lodb-kpi')[0]).toContain('1.00 KB');
   });
 
-  it('dates a new reading in French, the site in English', async () => {
+  it('says why a reading failed in French, the site in English', async () => {
     const visit = await openPanelInFrench(StoragePanel, '/admin/storage', [
       { path: STORAGE, body: storageReport() },
     ]);
-    expect(visit.page.textContent).toContain('Relevé du 27/09/2026 10:00:00 (UTC)');
 
-    press(visit, 'Actualiser');
+    press(visit, 'Rafraîchir');
     await reply(
       visit,
       await sent(visit, STORAGE),
-      storageReport({ generatedAt: '2026-09-27T11:00:00Z' }),
+      storageReport({ ok: false, error: 'listing timed out' }),
     );
 
-    expect(visit.page.textContent).toContain('Relevé du 27/09/2026 11:00:00 (UTC)');
-    expect(visit.page.textContent).not.toContain('Read at');
+    expect(visit.page.querySelector('[role="alert"]')?.textContent).toContain(
+      'Stockage indisponible : listing timed out',
+    );
   });
 });

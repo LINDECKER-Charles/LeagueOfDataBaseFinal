@@ -1,129 +1,29 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.analytics' | adminText"
+  [eyebrow]="'admin.eyebrows.console' | adminText"
   [title]="'admin.overview.title' | adminText"
-  [subtitle]="'admin.overview.lede' | adminText"
+  [subtitle]="
+    'admin.overview.lede' | adminText: { range: ('admin.range_long.' + query.range() | adminText) }
+  "
 >
-  <lodb-range-bar [current]="query.range()" />
+  <lodb-segment-bar
+    param="range"
+    label="admin.range.label"
+    [segments]="ranges"
+    [current]="query.range()"
+  />
+  <button
+    lodbButton="ghost"
+    type="button"
+    [title]="'admin.overview.roll_up_hint' | adminText"
+    [disabled]="rollingUp()"
+    (click)="rollUp()"
+  >
+    {{ 'admin.overview.roll_up' | adminText }}
+  </button>
 </lodb-page-head>
 
-<lodb-panel-state [panel]="report" shape="chart" />
-@if (report.value(); as data) {
-  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" [attr.aria-busy]="report.busy()">
-    <lodb-kpi [label]="'admin.traffic.kpi.views' | adminText" [value]="data.totals.views | figure">
-      <lodb-sparkline
-        class="mt-2"
-        [values]="traffic().series[0]?.values ?? []"
-        color="var(--color-gold)"
-      />
-    </lodb-kpi>
-    <lodb-kpi
-      tone="hex"
-      [label]="'admin.traffic.kpi.visitors' | adminText"
-      [value]="data.totals.uniqueVisitors | figure"
-    >
-      <lodb-sparkline class="mt-2" [values]="traffic().series[1]?.values ?? []" />
-    </lodb-kpi>
-    <lodb-kpi
-      tone="muted"
-      [label]="'admin.traffic.kpi.returning' | adminText"
-      [value]="data.totals.returningVisitors | figure"
-    />
-    <lodb-kpi
-      tone="warn"
-      [label]="'admin.traffic.kpi.bots' | adminText"
-      [value]="data.totals.botViews | figure"
-    />
-  </div>
-  <lodb-admin-card class="mt-6" [heading]="'admin.traffic.daily' | adminText">
-    <a lodbCardLink class="nav-link text-xs text-gold" routerLink="/admin/traffic">
-      {{ 'admin.overview.more' | adminText }}
-    </a>
-    <lodb-time-series-chart
-      [dates]="traffic().dates"
-      [series]="traffic().series"
-      [label]="'admin.traffic.daily' | adminText"
-    />
-    <lodb-legend [items]="traffic().legend" />
-  </lodb-admin-card>
-}
-
-<div class="mt-6 grid gap-6 lg:grid-cols-2">
-  <lodb-admin-card [heading]="'admin.overview.health' | adminText">
-    <a lodbCardLink class="nav-link text-xs text-gold" routerLink="/admin/monitoring">
-      {{ 'admin.overview.more' | adminText }}
-    </a>
-    <lodb-panel-state [panel]="monitoring" shape="card" />
-    @if (monitoring.value(); as health) {
-      <ul class="space-y-2">
-        @for (probe of health.services; track probe.name) {
-          <li class="flex items-center justify-between gap-3 text-sm">
-            <span class="text-text">{{ probe.name }}</span>
-            <span class="flex items-center gap-2">
-              <span class="font-mono text-xs text-text-muted">{{ probe.latencyMs }} ms</span>
-              <span [lodbBadge]="healthTone(probe.status)">
-                {{ 'admin.health.' + probe.status | adminText }}
-              </span>
-            </span>
-          </li>
-        }
-      </ul>
-      @if (health.counters; as counters) {
-        <div class="mt-5 grid grid-cols-2 gap-3">
-          <lodb-kpi
-            [label]="'admin.overview.users' | adminText"
-            [value]="counters.usersTotal | figure"
-            [sub]="'admin.overview.users_week' | adminText: { count: counters.usersNewWeek }"
-          />
-          <lodb-kpi
-            tone="hex"
-            [label]="'admin.overview.builds' | adminText"
-            [value]="counters.buildsPublic | figure"
-            [sub]="'admin.overview.builds_total' | adminText: { count: counters.buildsTotal }"
-          />
-          <lodb-kpi
-            tone="muted"
-            [label]="'admin.overview.api_requests' | adminText"
-            [value]="counters.apiRequestsToday | figure"
-            [sub]="'admin.overview.api_keys' | adminText: { count: counters.apiKeysActive }"
-          />
-          <lodb-kpi
-            tone="gold"
-            [label]="'admin.overview.donations' | adminText"
-            [value]="counters.donationsTotalCents | figure: 'euros'"
-            [sub]="'admin.overview.donations_count' | adminText: { count: counters.donationsCount }"
-          />
-        </div>
-      }
-    }
-  </lodb-admin-card>
-
-  <lodb-admin-card [heading]="'admin.overview.storage' | adminText">
-    <a lodbCardLink class="nav-link text-xs text-gold" routerLink="/admin/storage">
-      {{ 'admin.overview.more' | adminText }}
-    </a>
-    <lodb-panel-state [panel]="storage" shape="card" />
-    @if (storage.value(); as disk) {
-      <div class="grid grid-cols-2 gap-3">
-        <lodb-kpi
-          [label]="'admin.storage.kpi.bytes' | adminText"
-          [value]="disk.bytes | figure: 'bytes'"
-        />
-        <lodb-kpi
-          tone="hex"
-          [label]="'admin.storage.kpi.objects' | adminText"
-          [value]="disk.objects | figure"
-        />
-        <lodb-kpi
-          tone="muted"
-          [label]="'admin.storage.kpi.dedup' | adminText"
-          [value]="disk.dedup.ratio | figure: 'ratio'"
-        />
-        <lodb-kpi
-          tone="muted"
-          [label]="'admin.storage.kpi.webp' | adminText"
-          [value]="disk.blobs.webpCoverage | figure: 'share'"
-        />
-      </div>
-    }
-  </lodb-admin-card>
-</div>
+<lodb-overview-app />
+<lodb-admin-rule [label]="'admin.rules.traffic' | adminText" />
+<lodb-overview-traffic [revision]="rolledUp()" />
+<lodb-admin-rule [label]="'admin.rules.storage' | adminText" />
+<lodb-overview-storage />
