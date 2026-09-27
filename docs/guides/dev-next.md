@@ -244,6 +244,11 @@ images dans le magasin containerd. Le conteneur garde l'empreinte propre à sa p
 et l'étiquette pointe vers l'index : c'est le même build. Après une reconstruction,
 `up -d --wait` suffit à recréer les services dont l'image a changé.
 
+**Le changelog est vide après un `ng serve` ou un build local sous Windows.**
+`src/LoDb.Web/src/app/features/editorial/changelog/published` est un lien symbolique vers
+`app/public/changelog` : il faut `git config core.symlinks true` (mode développeur) ou une
+jonction à sa place (`mklink /J`). L'image `web-ssr` pose ce lien elle-même.
+
 **Avertissements sans conséquence** :
 
 - `DEP0205` (`module.register()`) pendant `build:web` sous Node 26 ;
