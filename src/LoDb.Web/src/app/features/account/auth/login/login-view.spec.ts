@@ -119,6 +119,12 @@ describe('LoginView', () => {
     expect(TestBed.inject(Router).url).toBe('/fr/account/profile');
   });
 
+  it('gives the identifier the focus on arrival, as the legacy page did', async () => {
+    const { host } = await open('/fr/account/login');
+
+    expect(document.activeElement).toBe(host.querySelector('#login-identifier'));
+  });
+
   it('shows why the Google sign-in came back without a session', async () => {
     const { host } = await open('/fr/account/login?error=google-cancelled');
 
