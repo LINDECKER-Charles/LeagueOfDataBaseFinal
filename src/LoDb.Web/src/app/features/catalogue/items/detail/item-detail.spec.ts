@@ -125,7 +125,10 @@ describe('lodb-item-detail', () => {
     const { element } = await render();
 
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Faerie Charm');
-    expect(element.querySelector('lodb-edition-badge')?.textContent).toContain('edition.classic');
+    const badge = element.querySelector('header lodb-edition-badge span');
+    expect(badge?.textContent).toContain('edition.classic');
+    // The hero wears the chip's own size, set apart from the version; cards keep the compact one.
+    expect([...(badge?.classList ?? [])].sort()).toEqual(['hx-chip-hex', 'ms-3', 'shrink-0']);
     const twin = element.querySelector<HTMLAnchorElement>('lodb-edition-counterpart a');
     expect(twin?.getAttribute('href')).toBe('/en/items/1004-faerie-charm');
     expect(twin?.dataset['edition']).toBe('modern');

@@ -25,10 +25,10 @@
           <p [class]="hero.eyebrow">
             {{ 'item.list.title' | transloco }}
             <span class="hx-pip mx-2 text-gold-deep" aria-hidden="true">◆</span>
-            <span class="me-3 font-mono text-[11px] tracking-normal text-text-muted normal-case">
+            <span class="font-mono text-[11px] tracking-normal text-text-muted normal-case">
               {{ context.version }} · {{ context.language }}
             </span>
-            <lodb-edition-badge [edition]="item.edition" />
+            <lodb-edition-badge size="regular" [edition]="item.edition" />
           </p>
           <h1 [class]="hero.name + ' text-gold-grad'">{{ item.name }}</h1>
           @if (item.summary) {
