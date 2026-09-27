@@ -14,10 +14,21 @@ import { NOINDEX_HEADERS } from './noindex-headers';
 @Injectable({ providedIn: 'root' })
 export class PageResponse {
   private readonly init = inject(RESPONSE_INIT, { optional: true });
+  private isStorable = true;
 
-  /** Sets the `Cache-Control` of a class of response. */
+  /** Sets the `Cache-Control` of a class of response, unless storage was forbidden. */
   cache(kind: CacheClass): void {
-    this.header('Cache-Control', CACHE_CONTROL[kind]);
+    this.header('Cache-Control', CACHE_CONTROL[this.isStorable ? kind : 'private']);
+  }
+
+  /**
+   * Keeps this response out of every cache, whatever a resolver sets afterwards: a render
+   * missing part of itself, such as a catalogue that failed to load, must not be served to
+   * every visitor and crawler for minutes, or a week for a pinned version.
+   */
+  forbidStorage(): void {
+    this.isStorable = false;
+    this.cache('private');
   }
 
   /** Answers an outcome instead of the page: its status, `Location`, cache and robots. */

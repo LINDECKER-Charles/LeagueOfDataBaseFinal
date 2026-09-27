@@ -4,7 +4,10 @@ import {
   type ApplicationConfig,
   ChangeDetectionStrategy,
   Component,
+  inject,
   mergeApplicationConfig,
+  type Provider,
+  RESPONSE_INIT,
   type Type,
   ɵgetDocument as getDocument,
 } from '@angular/core';
@@ -20,6 +23,8 @@ import { provideRouter, RouterOutlet } from '@angular/router';
 import { type Translation, TranslocoPipe, provideTranslocoScope } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { Shell } from '../../layout/shell/shell';
+import { CACHE_CONTROL } from '../../routing/response/cache-control';
+import { PageResponse } from '../../routing/response/page-response';
 import { keepingGlobals } from '../../testing/keeping-globals';
 import { activateLocale } from '../activate-locale';
 import { provideI18n } from '../provide-i18n';
@@ -29,6 +34,8 @@ import { TranslocoHttpLoader } from './transloco-http-loader';
 const CATALOGUES: Record<string, Translation> = {
   '/i18n/en.json': { base: { title: 'Hello', tagline: 'Only in English' } },
   '/i18n/fr.json': { base: { title: 'Bonjour' } },
+  // Italian lacks the chrome's scopes, which then fail to load (404).
+  '/i18n/it.json': { base: { title: 'Ciao' } },
   '/i18n/about/en.json': {
     index: { title: 'About' },
     data: { title: 'Our data' },
@@ -114,7 +121,11 @@ function browserConfig(): ApplicationConfig {
     providers: [
       provideRouter([
         { path: ':locale', resolve: { locale: activateLocale }, component: TitlePage },
-        { path: ':locale/chrome', resolve: { locale: activateLocale }, component: ChromePage },
+        {
+          path: ':locale/chrome',
+          resolve: { locale: activateLocale, cache: () => inject(PageResponse).cache('latest') },
+          component: ChromePage,
+        },
         {
           path: ':locale/late',
           canMatch: [() => after(MATCH_DELAY_MS).then(() => true)],
@@ -136,14 +147,19 @@ function browserConfig(): ApplicationConfig {
 // Merged in the order of app.config.server.ts, which matters: the transfer cache must key a
 // request before the server's own root interceptor makes its URL absolute, or the browser,
 // which requests the relative URL, would never find it.
-async function renderOnServer(url: string, root: Type<unknown> = Root): Promise<string> {
+interface RenderOptions {
+  readonly root?: Type<unknown>;
+  readonly providers?: Provider[];
+}
+
+async function renderOnServer(url: string, options: RenderOptions = {}): Promise<string> {
   Reflect.set(globalThis, 'ngServerMode', true);
   try {
     const serverConfig = mergeApplicationConfig(browserConfig(), {
-      providers: [provideServerRendering()],
+      providers: [provideServerRendering(), ...(options.providers ?? [])],
     });
     const bootstrap = (context: BootstrapContext) =>
-      bootstrapApplication(root, serverConfig, context);
+      bootstrapApplication(options.root ?? Root, serverConfig, context);
     return await keepingGlobals(() =>
       renderApplication(bootstrap, { document: DOCUMENT_HTML, url }),
     );
@@ -204,10 +220,23 @@ describe('i18n catalogues in SSR', () => {
   it('renders the chrome in the root catalogue, even when one of its scopes lands first', async () => {
     stubCatalogueFetch({ '/i18n/en.json': ROOT_DELAY_MS });
 
-    const body = bodyOf(await renderOnServer('/en/late', ChromeRoot));
+    const body = bodyOf(await renderOnServer('/en/late', { root: ChromeRoot }));
 
     expect(body).toContain('<b>Hello</b>');
     expect(body).toContain('<h1>Hello</h1>');
+  });
+
+  it('never lets a render whose catalogue failed be stored, whatever its route set', async () => {
+    stubCatalogueFetch();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const init: ResponseInit = { headers: new Headers() };
+
+    await renderOnServer('/it/chrome', {
+      providers: [{ provide: RESPONSE_INIT, useValue: init }],
+    });
+
+    expect(new Headers(init.headers).get('Cache-Control')).toBe(CACHE_CONTROL.private);
   });
 
   it('leaves jsdom its DOM classes and document for the specs that run next in this worker', async () => {
