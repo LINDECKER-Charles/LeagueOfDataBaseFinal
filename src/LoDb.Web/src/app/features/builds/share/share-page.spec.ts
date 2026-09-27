@@ -110,6 +110,13 @@ describe('SharePage', () => {
     expect(host.querySelector('[data-mode]')?.getAttribute('title')).toBe('Mode de jeu');
     expect(textOf(host, '[data-version]')).toBe('Forgé sur le patch 15.14.1 — actuel : 16.19.1');
     expect(textOf(host, '[lang="fr-FR"]')).toBe('French');
+    expect(textOf(host, '.bshare-meta')).toContain('01/09/2026');
+  });
+
+  it('leaves the patch out of a build forged before patches were pinned', async () => {
+    const { host } = await visit(sharedBuildOf({ gameVersion: '' }));
+
+    expect(host.querySelector('[data-version]')).toBeNull();
   });
 
   it('names the patch alone when it is the current one', async () => {

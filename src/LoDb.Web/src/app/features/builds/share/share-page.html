@@ -24,7 +24,7 @@
         />
       </div>
 
-      <div class="min-w-0 flex-1">
+      <div class="bshare-title">
         <p class="eyebrow path-text">
           {{ champion.name }}
           @if (champion.title) {
@@ -36,17 +36,16 @@
         >
           {{ current.name }}
         </h1>
-        <p class="mt-3 flex flex-wrap items-center gap-2 font-mono text-xs text-text-muted">
-          <lodb-owner-credit [owner]="current.owner" />
-          <span aria-hidden="true" class="opacity-50">◆</span>
-          <span>{{ updated() }}</span>
-          <span
-            lodbChip
-            [title]="'build.show.mode' | transloco"
-            [attr.data-mode]="current.gameMode"
-          >
-            {{ modeKey() | transloco }}
-          </span>
+      </div>
+
+      <p class="bshare-meta flex flex-wrap items-center gap-2 font-mono text-xs text-text-muted">
+        <lodb-owner-credit [owner]="current.owner" />
+        <span aria-hidden="true" class="opacity-50">◆</span>
+        <span>{{ updated() }}</span>
+        <span lodbChip [title]="'build.show.mode' | transloco" [attr.data-mode]="current.gameMode">
+          {{ modeKey() | transloco }}
+        </span>
+        @if (current.gameVersion) {
           <span lodbChip [attr.data-version]="current.gameVersion">
             @if (current.patchMismatch && current.currentVersion) {
               {{
@@ -57,11 +56,13 @@
               {{ 'build.show.patch' | transloco: { version: current.gameVersion } }}
             }
           </span>
+        }
+        @if (current.language) {
           <span lodbChip [attr.lang]="languageTag()">{{ language() }}</span>
-        </p>
-      </div>
+        }
+      </p>
 
-      <div class="flex flex-col items-end gap-3">
+      <div class="bshare-actions">
         @if (current.isPublic && vote(); as score) {
           <lodb-vote-score [buildId]="current.id" [vote]="score" />
         }
