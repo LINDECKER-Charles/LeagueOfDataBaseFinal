@@ -19,7 +19,8 @@
             }
             {{ row.label | transloco }}
           </dt>
-          <dd class="stat-row__value">{{ row.value }}</dd>
+          <!-- A signed figure (+75, +25 %) keeps its order on an RTL page. -->
+          <dd class="stat-row__value" dir="ltr">{{ row.value }}</dd>
         </div>
       }
     </dl>

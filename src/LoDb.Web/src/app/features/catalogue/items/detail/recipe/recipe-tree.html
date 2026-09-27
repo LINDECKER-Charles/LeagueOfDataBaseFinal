@@ -37,7 +37,8 @@
     [size]="iconSize"
   />
   <span class="recipe-node__name">{{ node.name }}</span>
-  <span class="recipe-node__gold">
+  <!-- The price and its +combine read left to right on an RTL page too. -->
+  <span class="recipe-node__gold" dir="ltr">
     {{ node.gold }}
     @if (node.combine !== null) {
       <em class="recipe-node__combine">+{{ node.combine }}</em>
