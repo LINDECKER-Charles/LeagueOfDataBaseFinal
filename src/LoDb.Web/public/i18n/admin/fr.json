@@ -1,5 +1,4 @@
 {
-  "brand": "LODB Admin",
   "nav": {
     "label": "Navigation de l'administration",
     "analytics": "Analytics",
@@ -18,11 +17,10 @@
     "sign_out": "Déconnexion"
   },
   "login": {
-    "title": "Administration",
-    "lede": "Réservé aux administrateurs : mot de passe, puis code de l'application d'authentification.",
-    "identifier": "E-mail ou nom d'utilisateur",
+    "title": "Panneau d'administration",
+    "identifier": "Identifiant",
     "password": "Mot de passe",
-    "submit": "Continuer",
+    "submit": "Se connecter",
     "second_factor": "Saisissez le code à 6 chiffres de votre application d'authentification.",
     "code": "Code d'authentification",
     "recovery_code": "Code de récupération",
@@ -37,7 +35,9 @@
       "rate_limited": "Trop de tentatives. Patientez avant de réessayer.",
       "refused": "Ce compte n'a pas accès à l'administration.",
       "generic": "La connexion a échoué. Réessayez."
-    }
+    },
+    "eyebrow": "Accès réservé",
+    "document_title": "Connexion"
   },
   "enroll": {
     "title": "Double authentification",
@@ -53,21 +53,25 @@
     "errors": {
       "invalid_code": "Ce code ne correspond pas. Vérifiez l'heure du téléphone et réessayez.",
       "already": "Une application d'authentification est déjà associée à ce compte."
-    }
+    },
+    "eyebrow": "LODB Admin"
   },
   "state": {
     "loading": "Chargement…",
     "retry": "Réessayer",
     "sign_in": "Se reconnecter",
-    "timeout": "L'API n'a pas répondu dans les 30 secondes.",
-    "session": "Votre session d'administration a expiré ou n'a plus les droits nécessaires.",
-    "network": "L'API est injoignable. Vérifiez votre connexion.",
-    "server": "L'API a rencontré une erreur."
+    "unavailable": "Panneau indisponible ({reason}).",
+    "reasons": {
+      "timeout": "délai dépassé",
+      "session": "session expirée ou droits insuffisants",
+      "network": "API injoignable",
+      "server": "erreur de l'API"
+    }
   },
   "errors": {
     "session": "Session expirée ou droits insuffisants : reconnectez-vous.",
     "self_moderation": "Vous ne pouvez pas appliquer cette action à votre propre compte.",
-    "api_client_revoked": "Cette clé est révoquée.",
+    "api_client_revoked": "Cette clé est déjà révoquée.",
     "gone": "Cet élément n'existe plus.",
     "rate_limited": "Trop de requêtes. Patientez avant de réessayer.",
     "invalid": "La saisie est invalide.",
@@ -76,22 +80,20 @@
   },
   "actions": {
     "cancel": "Annuler",
-    "refresh": "Actualiser",
+    "refresh": "Rafraîchir",
     "search": "Rechercher",
     "filter": "Filtrer",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "reset": "Réinitialiser"
   },
   "common": {
-    "no_data": "Aucune donnée sur la période.",
-    "others": "Autres",
-    "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
-    "actions": "Actions",
-    "generated_at": "Relevé du {at} (UTC)"
+    "no_data": "Aucune donnée.",
+    "actions": "Actions"
   },
   "health": {
-    "ok": "Opérationnel",
-    "degraded": "Dégradé",
-    "down": "Hors service"
+    "ok": "opérationnel",
+    "degraded": "dégradé",
+    "down": "hors ligne"
   },
   "chart": {
     "empty": "Aucune donnée",
@@ -114,7 +116,7 @@
     }
   },
   "rank": {
-    "more": "Afficher {count, plural, one {# ligne de plus} other {# lignes de plus}}",
+    "more": "+ {count} de plus",
     "less": "Réduire"
   },
   "pager": {
@@ -125,79 +127,123 @@
   },
   "range": {
     "label": "Période",
-    "7d": "7 jours",
-    "30d": "30 jours",
-    "90d": "90 jours",
+    "7d": "7 j",
+    "30d": "30 j",
+    "90d": "90 j",
     "all": "Tout"
   },
   "overview": {
     "title": "Vue d'ensemble",
-    "lede": "Le trafic de la période, la santé des services et les chiffres de l'application.",
-    "health": "Santé des services",
-    "storage": "Stockage",
-    "more": "Détails",
-    "users": "Comptes",
-    "users_week": "+{count} cette semaine",
-    "builds": "Builds publics",
-    "builds_total": "{count} au total",
-    "api_requests": "Requêtes API du jour",
-    "api_keys": "{count, plural, one {# clé active} other {# clés actives}}",
-    "donations": "Dons",
-    "donations_count": "{count, plural, one {# don} other {# dons}}"
+    "lede": "Trafic, audience et stockage — {range}.",
+    "health": "Santé",
+    "roll_up": "Consolider",
+    "roll_up_hint": "Consolider les journées locales en agrégats durables dans le stockage",
+    "rolled_up": "Consolidation terminée : {count} journée(s) consolidée(s).",
+    "counters_unavailable": "Compteurs applicatifs indisponibles.",
+    "frequentation": "Fréquentation",
+    "frequentation_chip": "vues · visiteurs",
+    "frequentation_label": "Fréquentation dans le temps",
+    "by_resource": "Par ressource",
+    "by_resource_label": "Vues par ressource",
+    "top_pages": "Pages les plus consultées",
+    "top_pages_empty": "Aucune vue enregistrée.",
+    "sources": "Sources de trafic",
+    "sources_empty": "Aucune source.",
+    "detail_link": "Détail →",
+    "audience_link": "Audience →",
+    "families": "Familles d'objets",
+    "families_empty": "Stockage vide.",
+    "dedup": "Déduplication",
+    "dedup_label": "Ratio réfs / blobs",
+    "dedup_text": "{refs} références logiques → {blobs} blobs physiques. Économie estimée ≈ {saved}.",
+    "health_webp": "WebP {pct}",
+    "health_versions": "{count} version(s)",
+    "health_objects": "{count} objets stockés",
+    "kpi": {
+      "users": "Comptes",
+      "users_sub": "+{week} sur 7 j · {banned} banni(s)",
+      "builds": "Builds",
+      "builds_sub": "{count} public(s)",
+      "donations": "Dons",
+      "donations_sub": "{count} don(s)",
+      "api_keys": "Clés API actives",
+      "api_keys_sub": "{count} req. ce mois",
+      "services": "Services",
+      "services_sub": "Surveillance →",
+      "views": "Vues",
+      "views_sub": "{count} bots exclus",
+      "visitors": "Visiteurs uniques",
+      "visitors_sub": "{count} récurrents",
+      "top_page": "Page la plus vue",
+      "storage": "Stockage",
+      "storage_sub": "{count} objets",
+      "versions": "Versions",
+      "versions_sub": "jeux de données ingérés",
+      "webp": "Couverture WebP",
+      "webp_sub": "{done} / {total} images"
+    }
   },
   "traffic": {
     "title": "Trafic",
-    "lede": "Les pages vues de la période, jour par jour et heure par heure.",
-    "roll_up": "Consolider",
-    "rolled_up": "{count, plural, =0 {Aucun jour à consolider.} one {# jour consolidé.} other {# jours consolidés.}}",
-    "period": "Du {from} au {to}",
-    "daily": "Vues par jour",
-    "heatmap": "Rythme de la semaine",
-    "top_pages": "Pages les plus vues",
-    "top_entities": "Fiches les plus vues",
-    "by_type": "Vues par type",
-    "statuses": "Réponses",
-    "routes": "Routes",
+    "lede": "Pages les plus consultées et rythme de fréquentation.",
+    "daily": "Fréquentation dans le temps",
+    "heatmap": "Rythme horaire",
+    "top_pages": "Pages les plus consultées",
+    "top_entities": "Entités les plus vues",
+    "statuses": "Codes de réponse",
     "views_caption": "vues",
     "kpi": {
-      "views": "Pages vues",
-      "pages": "{count, plural, one {# page suivie} other {# pages suivies}}",
+      "views": "Vues totales",
+      "pages": "Pages distinctes",
       "visitors": "Visiteurs uniques",
-      "returning": "Visiteurs fidèles",
-      "bots": "Vues de robots"
+      "visitors_sub": "{count} récurrents",
+      "pages_sub": "URL suivies",
+      "per_day": "Vues / jour",
+      "per_day_sub": "moyenne"
     },
     "series": {
       "views": "Vues",
-      "visitors": "Visiteurs",
-      "bots": "Robots"
+      "visitors": "Visiteurs"
     },
     "types": {
       "home": "Accueil",
       "champion": "Champions",
       "item": "Objets",
       "runesReforged": "Runes",
-      "summoner": "Sorts d'invocateur"
+      "summoner": "Sorts"
     },
     "kinds": {
       "home": "Accueil",
       "list": "Listes",
-      "detail": "Fiches"
+      "detail": "Détails"
+    },
+    "heatmap_chip": "heure × jour · vues",
+    "top_entities_empty": "Aucune page de détail vue.",
+    "by_kind": "Par type de page",
+    "columns": {
+      "status": "Statut",
+      "views": "Vues",
+      "share": "Part"
     }
   },
   "audience": {
     "title": "Audience",
-    "lede": "Qui sont les visiteurs de la période, et d'où ils viennent.",
+    "lede": "Qui consulte le site — géographie, appareils et sources.",
     "devices_title": "Appareils",
-    "sources_title": "Provenance",
+    "sources_title": "Sources de trafic",
     "browsers": "Navigateurs",
     "systems": "Systèmes",
     "countries": "Pays",
     "referers": "Sites référents",
-    "languages": "Langues du navigateur",
-    "locales": "Langues du site",
+    "locales": "Langue d'interface",
     "kpi": {
-      "countries": "Pays",
-      "referers": "Sites référents"
+      "visitors": "Visiteurs uniques",
+      "returning": "Récurrents",
+      "returning_sub": "≥ 2 jours distincts",
+      "new": "Nouveaux",
+      "new_sub": "vus un seul jour",
+      "bots": "Vues robots",
+      "bots_sub": "exclues des métriques"
     },
     "devices": {
       "desktop": "Ordinateur",
@@ -206,230 +252,272 @@
       "other": "Autre"
     },
     "sources": {
-      "direct": "Accès direct",
-      "search": "Moteurs de recherche",
-      "social": "Réseaux sociaux",
-      "internal": "Navigation interne",
-      "external": "Autres sites"
-    }
+      "direct": "Direct",
+      "search": "Recherche",
+      "social": "Réseaux",
+      "internal": "Interne",
+      "external": "Externe"
+    },
+    "devices_label": "Répartition par appareil",
+    "countries_empty": "Aucune donnée géographique.",
+    "geo_badge": "base géo absente",
+    "geo_missing": "Résolution IP→pays inactive : aucune base GeoLite2 provisionnée",
+    "geo_missing_after": "Les vues reçues d'ici là restent sans pays.",
+    "referers_empty": "Aucun référent externe (trafic direct)."
   },
   "storage": {
     "title": "Stockage",
-    "lede": "Le contenu du bucket : volume, déduplication, images et données par version.",
-    "partial": "Relevé incomplet :",
-    "growth": "Croissance",
-    "families": "Familles",
-    "extensions": "Extensions",
-    "types": "Types de données",
-    "languages": "Langues",
-    "versions": "Versions",
+    "lede": "Poids et composition du volume de stockage DDragon (content-addressed).",
+    "extensions": "Blobs par extension",
+    "types": "Par type",
+    "languages": "Par langue",
+    "versions": "Par version",
     "largest": "Objets les plus lourds",
-    "coverage": "Couverture par version",
+    "coverage": "Complétude par version",
     "kpi": {
-      "bytes": "Volume",
-      "objects": "Objets",
+      "bytes": "Poids total",
       "dedup": "Déduplication",
-      "saved": "{size} économisés",
-      "webp": "Couverture WebP",
-      "webp_size": "{size} en WebP"
+      "saved": "≈ {size} économisés",
+      "blobs": "Blobs",
+      "blobs_sub": "images content-addressed",
+      "versions_sub": "jeux de données"
     },
     "series": {
-      "total": "Volume cumulé",
-      "added": "Ajouts du jour"
+      "objects": "Objets"
     },
     "columns": {
-      "version": "Version",
-      "objects": "Objets",
-      "types": "Types",
-      "langs": "Langues"
-    }
+      "key": "Clé",
+      "weight": "Poids"
+    },
+    "refresh_hint": "Recalculer (ignore le cache 10 min)",
+    "unavailable": "Stockage indisponible : {error}",
+    "families_empty": "Vide.",
+    "timeline": "Ingestion dans le temps",
+    "timeline_chip": "objets / jour",
+    "timeline_label": "Objets ajoutés par jour",
+    "extensions_empty": "Aucun blob.",
+    "webp": "WebP",
+    "webp_label": "Couverture des variantes",
+    "webp_text": "{source} de sources → {webp} en WebP.",
+    "largest_empty": "Aucun objet.",
+    "coverage_chip": "langues ingérées",
+    "coverage_empty": "Aucune version stockée."
   },
   "users": {
     "title": "Utilisateurs",
-    "lede": "Tous les comptes, du plus récent au plus ancien.",
-    "search": "Nom d'utilisateur ou e-mail",
-    "empty": "Aucun compte ne correspond.",
+    "lede": "Comptes invocateurs : recherche, bannissement et suppression définitive.",
+    "search": "Nom d'invocateur ou e-mail…",
+    "empty": "Aucun compte enregistré.",
     "activity": "Activité",
     "ban": "Bannir",
-    "ban_reason": "Motif du bannissement de {name} (facultatif)",
-    "confirm_ban": "Bannir le compte",
-    "unban": "Rétablir",
-    "confirm_unban": "Confirmer le rétablissement",
+    "ban_reason": "Motif : {reason}",
+    "unban": "Débannir",
     "confirm_delete": "Supprimer définitivement",
     "kpi": {
       "total": "Comptes",
       "new_week": "Nouveaux (7 j)",
       "banned": "Bannis",
-      "supporters": "Soutiens"
+      "supporters": "Supporters"
     },
     "columns": {
-      "account": "Compte",
-      "created": "Inscription",
+      "account": "Invocateur",
+      "created": "Inscrit le",
       "builds": "Builds",
-      "state": "État"
+      "state": "Statuts",
+      "email": "E-mail"
     },
     "badges": {
-      "admin": "Admin",
-      "banned": "Banni",
-      "supporter": "Soutien",
-      "two_factor": "2FA",
-      "google": "Google",
-      "unverified": "Non vérifié"
+      "admin": "admin",
+      "banned": "banni",
+      "supporter": "supporter",
+      "google": "google",
+      "unverified": "non vérifié",
+      "public_profile": "profil public"
     },
     "done": {
-      "ban": "{name} est banni.",
-      "unban": "{name} est rétabli.",
-      "delete": "Le compte {name} est supprimé."
-    }
+      "ban": "Compte « {name} » banni : connexion bloquée, profil et builds retirés du site public.",
+      "unban": "Compte « {name} » rétabli.",
+      "delete": "Compte « {name} » supprimé définitivement."
+    },
+    "search_label": "Recherche de compte",
+    "count": "{count} compte(s)",
+    "empty_search": "Aucun compte ne correspond à la recherche.",
+    "reason_placeholder": "Raison (optionnel)",
+    "reason_label": "Raison du bannissement"
   },
   "activity": {
-    "title": "Activité de {name}",
-    "back": "Retour aux utilisateurs"
+    "title": "Activité — {name}",
+    "back": "← Utilisateurs",
+    "document_title": "Activité · {name}",
+    "lede": "actions effectuées par ce compte ou le ciblant. Horodatage en UTC.",
+    "empty": "Aucune action journalisée pour ce compte sur cette période."
   },
   "builds": {
     "title": "Builds",
-    "lede": "Les builds de tous les comptes, par nom, champion ou auteur.",
-    "search": "Nom, champion ou auteur",
-    "visibility": "Visibilité",
-    "all_visibilities": "Toutes les visibilités",
-    "empty": "Aucun build ne correspond.",
+    "lede": "Builds de la communauté : dépublication et suppression.",
+    "search": "Nom du build ou champion…",
+    "visibility": "Filtre de visibilité",
+    "all_visibilities": "Toutes visibilités",
+    "empty": "Aucun build enregistré.",
     "unpublish": "Dépublier",
-    "confirm_unpublish": "Confirmer la dépublication",
     "confirm_delete": "Supprimer définitivement",
     "kpi": {
       "total": "Builds",
-      "public": "Publics",
-      "private": "Privés"
+      "public": "Publics"
     },
     "columns": {
       "build": "Build",
       "author": "Auteur",
-      "mode": "Mode",
+      "mode": "Mode · Patch",
       "visibility": "Visibilité",
       "score": "Score",
-      "created": "Création"
+      "created": "Créé le"
     },
     "visibilities": {
-      "public": "Public",
-      "private": "Privé"
+      "public": "public",
+      "private": "privé"
     },
     "modes": {
-      "sr": "Faille de l'invocateur",
+      "sr": "Faille",
       "aram": "ARAM",
-      "nexus_blitz": "Raid du Nexus",
-      "arena": "Arena"
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "Arène"
     },
     "done": {
-      "unpublish": "« {name} » n'est plus public.",
-      "delete": "« {name} » est supprimé."
-    }
+      "unpublish": "Build « {name} » dépublié — il reste visible par son auteur et via son lien de partage.",
+      "delete": "Build « {name} » supprimé."
+    },
+    "search_label": "Recherche de build",
+    "filters": {
+      "public": "Publics",
+      "private": "Privés"
+    },
+    "count": "{count} build(s)",
+    "empty_filtered": "Aucun build ne correspond aux filtres.",
+    "view": "Voir"
   },
   "donations": {
     "title": "Dons",
-    "lede": "Ce qui a été donné, jour par jour, et chaque don. Un remboursement passe par Stripe.",
-    "daily": "Dons par jour",
-    "empty": "Aucun don pour l'instant.",
-    "anonymous": "Anonyme",
+    "lede": "Soutiens Stripe enregistrés par le webhook — lignes comptables immuables.",
+    "empty": "Aucun don enregistré.",
+    "anonymous": "anonyme",
     "kpi": {
-      "total": "Total",
-      "count": "Dons",
+      "total": "Total collecté",
       "identified": "Donateurs identifiés",
-      "anonymous": "Dons anonymes",
-      "supporters": "Soutiens"
-    },
-    "series": {
-      "amount": "Montant"
+      "supporters": "Supporters actifs",
+      "total_sub": "{count} don(s)",
+      "month": "30 derniers jours",
+      "identified_sub": "{count} don(s) anonyme(s)",
+      "supporters_sub": "comptes marqués supporter"
     },
     "columns": {
       "date": "Date",
       "amount": "Montant",
-      "donor": "Donateur"
+      "donor": "Compte lié"
     }
   },
   "contacts": {
-    "title": "Messages",
-    "lede": "Les messages du formulaire de contact, du plus récent au plus ancien.",
+    "title": "Messages de contact",
+    "lede": "Demandes envoyées depuis le formulaire du pied de page — bugs, retours, avis et contacts commerciaux.",
     "filter": "Filtrer par statut",
-    "empty": "Aucun message.",
-    "no_subject": "(sans objet)",
-    "reply": "Répondre",
+    "empty": "Aucun message de contact.",
     "handle": "Marquer traité",
     "reopen": "Rouvrir",
     "confirm_delete": "Supprimer définitivement",
-    "handled_at": "Traité le {at}",
     "kpi": {
-      "total": "Messages",
+      "total": "Total",
       "new": "À traiter",
       "handled": "Traités",
-      "week": "Reçus (7 j)"
+      "week": "7 derniers jours"
     },
     "statuses": {
       "all": "Tous",
-      "new": "À traiter",
-      "handled": "Traités"
+      "new": "Nouveau",
+      "handled": "Traité"
     },
     "categories": {
-      "bug": "Bug",
-      "feedback": "Suggestion",
+      "bug": "Bug / anomalie",
+      "feedback": "Suggestion / feedback",
       "review": "Avis",
-      "commercial": "Commercial"
+      "commercial": "Contact commercial"
     },
     "done": {
       "handle": "Message marqué comme traité.",
       "reopen": "Message rouvert.",
-      "delete": "Message supprimé."
+      "delete": "Message supprimé définitivement."
+    },
+    "document_title": "Messages",
+    "empty_status": "Aucun message dans cette catégorie.",
+    "account": "compte : {name}",
+    "filters": {
+      "new": "Nouveaux",
+      "handled": "Traités"
+    },
+    "columns": {
+      "received": "Reçu le",
+      "category": "Catégorie",
+      "contact": "Contact",
+      "message": "Message",
+      "status": "Statut"
     }
   },
   "api_clients": {
     "title": "Clients API",
-    "lede": "Les clés de l'API publique, leur forfait et leur consommation du mois.",
-    "by_plan": "Clés actives par forfait",
+    "lede": "Clés de l'API publique payante : consommation, révocation et crédits manuels.",
+    "by_plan": "Répartition par plan",
     "keys_caption": "clés",
-    "top_consumers": "Plus gros consommateurs (30 j)",
-    "empty": "Aucune clé.",
-    "revoked": "Révoquée",
+    "top_consumers": "Top consommateurs",
+    "empty": "Aucune clé API émise.",
+    "revoked": "révoquée",
     "credit": "Créditer",
-    "credit_label": "Requêtes prépayées à ajouter à {name} (1 à 1 000 000)",
-    "confirm_credit": "Créditer la clé",
+    "credit_label": "Requêtes à créditer",
     "revoke": "Révoquer",
     "confirm_revoke": "Confirmer la révocation",
     "kpi": {
       "active": "Clés actives",
-      "month_requests": "Requêtes du mois",
-      "credits": "Crédits en réserve"
+      "month_requests": "Requêtes ce mois",
+      "credits": "Crédits en circulation",
+      "month_requests_sub": "toutes clés confondues",
+      "credits_sub": "requêtes prépayées (clés actives)"
     },
     "columns": {
       "key": "Clé",
-      "owner": "Titulaire",
-      "plan": "Forfait",
-      "usage": "Consommation du mois",
+      "owner": "Compte",
+      "plan": "Plan",
+      "usage": "Conso mois",
       "credits": "Crédits",
-      "rate": "Req./min",
-      "created": "Création"
+      "rate": "Req/min",
+      "created": "Créée le",
+      "status": "Statut"
     },
     "plans": {
-      "free": "Gratuit",
+      "free": "Free",
       "monthly": "Mensuel",
       "monthly_plus": "Mensuel+",
       "annual": "Annuel",
-      "annual_plus": "Annuel+"
+      "annual_plus": "Annuel+",
+      "credits": "Crédits"
     },
     "done": {
-      "credit": "{count} requêtes ajoutées à {name}.",
-      "revoke": "La clé {name} est révoquée."
-    }
+      "credit": "{count} requêtes créditées sur la clé {prefix}….",
+      "revoke": "Clé {prefix}… révoquée (effective sous ~60 s côté API)."
+    },
+    "by_plan_chip": "clés actives",
+    "by_plan_label": "Clés actives par plan",
+    "top_consumers_chip": "30 jours",
+    "top_consumers_empty": "Aucun trafic sur 30 jours.",
+    "active": "active",
+    "credit_placeholder": "Requêtes"
   },
   "monitoring": {
     "title": "Surveillance",
-    "lede": "La santé de l'API : ses dépendances, son processus, l'ingestion et les volumes.",
-    "tables": "Tables les plus lourdes",
+    "lede": "Santé des services internes, compteurs applicatifs et volumes — instantané mémorisé 30 s.",
+    "tables": "Tables principales",
     "services": {
-      "name": "Service",
-      "status": "État",
-      "latency": "Latence",
-      "version": "Version",
-      "size": "Taille",
-      "detail": "Détail"
+      "names": {
+        "postgres": "PostgreSQL",
+        "storage": "Stockage"
+      }
     },
     "process": {
       "title": "Processus de l'API",
@@ -445,9 +533,7 @@
     "ingestion": {
       "title": "Ingestion",
       "versions": "Versions en attente",
-      "on_demand": "Ingestions à la demande",
-      "outbox_pending": "E-mails en attente",
-      "outbox_dead": "E-mails abandonnés"
+      "on_demand": "Ingestions à la demande"
     },
     "versions": {
       "title": "Versions Data Dragon",
@@ -464,61 +550,78 @@
       }
     },
     "counters": {
-      "title": "Chiffres de l'application",
-      "users": "Comptes",
-      "users_sub": "+{week} cette semaine · {banned} bannis",
-      "builds": "Builds",
-      "builds_sub": "{public} publics · {votes} votes",
-      "api": "Requêtes API du mois",
-      "api_sub": "{today} aujourd'hui · {keys} clés actives",
-      "donations": "Dons",
-      "donations_sub": "{count, plural, one {# don} other {# dons}}"
+      "api": "Requêtes API",
+      "api_sub": "{count} ce mois",
+      "votes": "Votes",
+      "unavailable": "Compteurs indisponibles."
+    },
+    "probes": "Sondes",
+    "generated_hint": "Heure de génération du rapport",
+    "tables_chip": "pg_total_relation_size",
+    "tables_empty": "Tailles indisponibles (Postgres requis).",
+    "columns": {
+      "table": "Table",
+      "bytes": "Poids total"
+    },
+    "probe": {
+      "database": "base {size}",
+      "objects": "{count} objets · {size}"
+    },
+    "outbox": {
+      "title": "File d'e-mails",
+      "chip": "email_outbox",
+      "pending": "E-mails en attente",
+      "text": "E-mails non encore envoyés. Un backlog durable signale un worker arrêté.",
+      "dead": "Abandonnés : {count}."
     }
   },
   "journal": {
-    "title": "Journal",
-    "lede": "Le journal d'audit : connexions, actions des comptes et modération, du plus récent au plus ancien.",
-    "empty": "Aucune entrée ne correspond.",
-    "purged": "{count, plural, =0 {Aucune entrée supprimée.} one {# entrée supprimée.} other {# entrées supprimées.}}",
+    "title": "Journal d'audit",
+    "lede": "Actions sensibles et événements de sécurité. Horodatage en UTC. Conservation {months} mois (recommandation CNIL).",
+    "empty": "Aucune action journalisée sur cette période.",
+    "purged": "Purge effectuée : {count} entrée(s) supprimée(s).",
     "volume": {
       "entries": "Entrées",
-      "oldest": "Plus ancienne",
-      "newest": "Plus récente",
-      "retention": "Rétention ({months} mois)",
-      "cutoff": "Conservé à partir de cette date"
+      "retention": "Rétention",
+      "cutoff": "purge auto avant le {day}",
+      "total": "Espace total",
+      "since": "depuis le {day}",
+      "months": "{months} mois"
     },
     "filters": {
-      "title": "Filtrer",
-      "any": "Tous",
-      "category": "Catégorie",
+      "category": "Catégorie d'action",
       "action": "Action",
       "outcome": "Résultat",
-      "actor_type": "Type d'auteur",
-      "actor": "Auteur",
+      "actor_type": "Type d'acteur",
+      "actor": "Acteur",
       "from": "Du",
       "to": "Au",
-      "clear": "Effacer les filtres"
+      "any_category": "Toutes catégories",
+      "any_outcome": "Tous résultats",
+      "any_actor_type": "Tous types d'acteur",
+      "any_action": "Toutes actions"
     },
     "purge": {
-      "title": "Maintenance",
-      "lede": "Supprime des entrées du journal. La purge est elle-même journalisée.",
-      "scope": "Portée",
+      "title": "Purger les journaux",
+      "lede": "La rétention légale ({months} mois) est appliquée automatiquement. Cette purge manuelle libère de l'espace immédiatement. Action irréversible.",
+      "scope": "Portée de la purge",
       "before": "Avant le",
       "submit": "Purger",
-      "confirm": "Confirmer la purge",
+      "confirm": "Purger définitivement",
       "scopes": {
-        "retention": "Au-delà de la rétention",
-        "before": "Avant une date",
+        "retention": "Au-delà de la rétention (> {months} mois)",
+        "before": "Avant le",
         "all": "Tout supprimer"
       }
     },
     "columns": {
-      "when": "Date (UTC)",
+      "when": "Horodatage (UTC)",
       "action": "Action",
       "outcome": "Résultat",
-      "actor": "Auteur",
+      "actor": "Acteur",
       "target": "Cible",
-      "origin": "Origine"
+      "actor_type": "Acteur",
+      "ip": "IP"
     },
     "categories": {
       "auth": "Authentification",
@@ -533,9 +636,9 @@
       "denied": "Refusé"
     },
     "actor_types": {
-      "user": "Utilisateur",
-      "admin": "Administrateur",
-      "anonymous": "Anonyme"
+      "user": "utilisateur",
+      "admin": "admin",
+      "anonymous": "anonyme"
     },
     "actions": {
       "user": {
@@ -574,6 +677,39 @@
         "analytics_rollup": "Consolidation analytics",
         "logs_purge": "Purge des journaux"
       }
-    }
+    },
+    "document_title": "Journal"
+  },
+  "brand_name": "LODB",
+  "brand_tag": "Admin",
+  "range_long": {
+    "7d": "7 jours",
+    "30d": "30 jours",
+    "90d": "90 jours",
+    "all": "tout l'historique"
+  },
+  "eyebrows": {
+    "console": "Console",
+    "analytics": "Analytics",
+    "infrastructure": "Infrastructure",
+    "moderation": "Modération",
+    "management": "Gestion",
+    "surveillance": "Surveillance"
+  },
+  "rules": {
+    "traffic": "Trafic",
+    "storage": "Stockage",
+    "images": "Images",
+    "data": "Données",
+    "detail": "Détail",
+    "accounts": "Comptes",
+    "builds": "Builds",
+    "history": "Historique",
+    "inbox": "Boîte de réception",
+    "keys": "Clés",
+    "application": "Application",
+    "volumes": "Volumes",
+    "filter": "Filtrer",
+    "maintenance": "Maintenance"
   }
 }

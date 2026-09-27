@@ -1,5 +1,4 @@
 {
-  "brand": "LODB Admin",
   "nav": {
     "label": "Administration navigation",
     "analytics": "Analytics",
@@ -18,11 +17,10 @@
     "sign_out": "Sign out"
   },
   "login": {
-    "title": "Administration",
-    "lede": "Administrators only: password, then the code of the authenticator app.",
-    "identifier": "E-mail or username",
+    "title": "Administration panel",
+    "identifier": "Identifier",
     "password": "Password",
-    "submit": "Continue",
+    "submit": "Sign in",
     "second_factor": "Enter the 6-digit code of your authenticator app.",
     "code": "Authentication code",
     "recovery_code": "Recovery code",
@@ -37,7 +35,9 @@
       "rate_limited": "Too many attempts. Wait before trying again.",
       "refused": "This account has no access to the administration.",
       "generic": "Signing in failed. Try again."
-    }
+    },
+    "eyebrow": "Restricted access",
+    "document_title": "Sign in"
   },
   "enroll": {
     "title": "Two-factor authentication",
@@ -53,21 +53,25 @@
     "errors": {
       "invalid_code": "This code does not match. Check the time of the phone and try again.",
       "already": "An authenticator app is already linked to this account."
-    }
+    },
+    "eyebrow": "LODB Admin"
   },
   "state": {
     "loading": "Loading…",
     "retry": "Try again",
     "sign_in": "Sign in again",
-    "timeout": "The API did not answer within 30 seconds.",
-    "session": "Your administration session expired or lost the rights it needs.",
-    "network": "The API cannot be reached. Check your connection.",
-    "server": "The API ran into an error."
+    "unavailable": "Panel unavailable ({reason}).",
+    "reasons": {
+      "timeout": "timed out",
+      "session": "session expired or rights missing",
+      "network": "API unreachable",
+      "server": "API error"
+    }
   },
   "errors": {
     "session": "Session expired or rights missing: sign in again.",
     "self_moderation": "You cannot apply this action to your own account.",
-    "api_client_revoked": "This key is revoked.",
+    "api_client_revoked": "This key is already revoked.",
     "gone": "This item no longer exists.",
     "rate_limited": "Too many requests. Wait before trying again.",
     "invalid": "The input is invalid.",
@@ -79,19 +83,17 @@
     "refresh": "Refresh",
     "search": "Search",
     "filter": "Filter",
-    "delete": "Delete"
+    "delete": "Delete",
+    "reset": "Reset"
   },
   "common": {
-    "no_data": "No data over the period.",
-    "others": "Others",
-    "results": "{count, plural, =0 {No result} one {# result} other {# results}}",
-    "actions": "Actions",
-    "generated_at": "Read at {at} (UTC)"
+    "no_data": "No data.",
+    "actions": "Actions"
   },
   "health": {
-    "ok": "Operational",
-    "degraded": "Degraded",
-    "down": "Down"
+    "ok": "operational",
+    "degraded": "degraded",
+    "down": "offline"
   },
   "chart": {
     "empty": "No data",
@@ -114,8 +116,8 @@
     }
   },
   "rank": {
-    "more": "Show {count, plural, one {# more row} other {# more rows}}",
-    "less": "Show less"
+    "more": "+ {count} more",
+    "less": "Collapse"
   },
   "pager": {
     "label": "Pagination",
@@ -125,79 +127,123 @@
   },
   "range": {
     "label": "Period",
-    "7d": "7 days",
-    "30d": "30 days",
-    "90d": "90 days",
+    "7d": "7 d",
+    "30d": "30 d",
+    "90d": "90 d",
     "all": "All"
   },
   "overview": {
     "title": "Overview",
-    "lede": "The traffic of the period, the health of the services and the figures of the application.",
-    "health": "Health of the services",
-    "storage": "Storage",
-    "more": "Details",
-    "users": "Accounts",
-    "users_week": "+{count} this week",
-    "builds": "Public builds",
-    "builds_total": "{count} in all",
-    "api_requests": "API requests today",
-    "api_keys": "{count, plural, one {# active key} other {# active keys}}",
-    "donations": "Donations",
-    "donations_count": "{count, plural, one {# donation} other {# donations}}"
+    "lede": "Traffic, audience and storage — {range}.",
+    "health": "Health",
+    "roll_up": "Consolidate",
+    "roll_up_hint": "Consolidate the local days into lasting aggregates in the storage",
+    "rolled_up": "Consolidation done: {count} day(s) consolidated.",
+    "counters_unavailable": "Application counters unavailable.",
+    "frequentation": "Traffic",
+    "frequentation_chip": "views · visitors",
+    "frequentation_label": "Traffic over time",
+    "by_resource": "By resource",
+    "by_resource_label": "Views by resource",
+    "top_pages": "Most viewed pages",
+    "top_pages_empty": "No view recorded.",
+    "sources": "Traffic sources",
+    "sources_empty": "No source.",
+    "detail_link": "Detail →",
+    "audience_link": "Audience →",
+    "families": "Object families",
+    "families_empty": "Empty storage.",
+    "dedup": "Deduplication",
+    "dedup_label": "Refs / blobs ratio",
+    "dedup_text": "{refs} logical references → {blobs} physical blobs. Estimated saving ≈ {saved}.",
+    "health_webp": "WebP {pct}",
+    "health_versions": "{count} version(s)",
+    "health_objects": "{count} stored objects",
+    "kpi": {
+      "users": "Accounts",
+      "users_sub": "+{week} over 7 d · {banned} banned",
+      "builds": "Builds",
+      "builds_sub": "{count} public",
+      "donations": "Donations",
+      "donations_sub": "{count} donation(s)",
+      "api_keys": "Active API keys",
+      "api_keys_sub": "{count} req. this month",
+      "services": "Services",
+      "services_sub": "Monitoring →",
+      "views": "Views",
+      "views_sub": "{count} bots excluded",
+      "visitors": "Unique visitors",
+      "visitors_sub": "{count} returning",
+      "top_page": "Most viewed page",
+      "storage": "Storage",
+      "storage_sub": "{count} objects",
+      "versions": "Versions",
+      "versions_sub": "ingested datasets",
+      "webp": "WebP coverage",
+      "webp_sub": "{done} / {total} images"
+    }
   },
   "traffic": {
     "title": "Traffic",
-    "lede": "The page views of the period, day by day and hour by hour.",
-    "roll_up": "Consolidate",
-    "rolled_up": "{count, plural, =0 {No day to consolidate.} one {# day consolidated.} other {# days consolidated.}}",
-    "period": "From {from} to {to}",
-    "daily": "Views per day",
-    "heatmap": "Rhythm of the week",
+    "lede": "Most viewed pages and rhythm of the traffic.",
+    "daily": "Traffic over time",
+    "heatmap": "Hourly rhythm",
     "top_pages": "Most viewed pages",
-    "top_entities": "Most viewed entries",
-    "by_type": "Views per type",
-    "statuses": "Answers",
-    "routes": "Routes",
+    "top_entities": "Most viewed entities",
+    "statuses": "Response codes",
     "views_caption": "views",
     "kpi": {
-      "views": "Page views",
-      "pages": "{count, plural, one {# page tracked} other {# pages tracked}}",
+      "views": "Total views",
+      "pages": "Distinct pages",
       "visitors": "Unique visitors",
-      "returning": "Returning visitors",
-      "bots": "Bot views"
+      "visitors_sub": "{count} returning",
+      "pages_sub": "tracked URLs",
+      "per_day": "Views / day",
+      "per_day_sub": "average"
     },
     "series": {
       "views": "Views",
-      "visitors": "Visitors",
-      "bots": "Bots"
+      "visitors": "Visitors"
     },
     "types": {
       "home": "Home",
       "champion": "Champions",
       "item": "Items",
       "runesReforged": "Runes",
-      "summoner": "Summoner spells"
+      "summoner": "Spells"
     },
     "kinds": {
       "home": "Home",
       "list": "Lists",
-      "detail": "Entries"
+      "detail": "Details"
+    },
+    "heatmap_chip": "hour × day · views",
+    "top_entities_empty": "No detail page viewed.",
+    "by_kind": "By kind of page",
+    "columns": {
+      "status": "Status",
+      "views": "Views",
+      "share": "Share"
     }
   },
   "audience": {
     "title": "Audience",
-    "lede": "Who the visitors of the period are, and where they come from.",
+    "lede": "Who visits the site — geography, devices and sources.",
     "devices_title": "Devices",
-    "sources_title": "Sources",
+    "sources_title": "Traffic sources",
     "browsers": "Browsers",
     "systems": "Systems",
     "countries": "Countries",
     "referers": "Referring sites",
-    "languages": "Browser languages",
-    "locales": "Site languages",
+    "locales": "Interface language",
     "kpi": {
-      "countries": "Countries",
-      "referers": "Referring sites"
+      "visitors": "Unique visitors",
+      "returning": "Returning",
+      "returning_sub": "≥ 2 distinct days",
+      "new": "New",
+      "new_sub": "seen on one day only",
+      "bots": "Bot views",
+      "bots_sub": "left out of the metrics"
     },
     "devices": {
       "desktop": "Desktop",
@@ -207,54 +253,65 @@
     },
     "sources": {
       "direct": "Direct",
-      "search": "Search engines",
-      "social": "Social networks",
-      "internal": "Internal navigation",
-      "external": "Other sites"
-    }
+      "search": "Search",
+      "social": "Social",
+      "internal": "Internal",
+      "external": "External"
+    },
+    "devices_label": "Split by device",
+    "countries_empty": "No geographic data.",
+    "geo_badge": "no geo database",
+    "geo_missing": "IP-to-country resolution inactive: no GeoLite2 database provisioned",
+    "geo_missing_after": "The views received until then stay without a country.",
+    "referers_empty": "No external referrer (direct traffic)."
   },
   "storage": {
     "title": "Storage",
-    "lede": "The content of the bucket: size, deduplication, images and data per version.",
-    "partial": "Partial reading:",
-    "growth": "Growth",
-    "families": "Families",
-    "extensions": "Extensions",
-    "types": "Data types",
-    "languages": "Languages",
-    "versions": "Versions",
+    "lede": "Weight and make-up of the DDragon storage volume (content-addressed).",
+    "extensions": "Blobs by extension",
+    "types": "By type",
+    "languages": "By language",
+    "versions": "By version",
     "largest": "Heaviest objects",
-    "coverage": "Coverage per version",
+    "coverage": "Completeness by version",
     "kpi": {
-      "bytes": "Size",
-      "objects": "Objects",
+      "bytes": "Total weight",
       "dedup": "Deduplication",
-      "saved": "{size} saved",
-      "webp": "WebP coverage",
-      "webp_size": "{size} as WebP"
+      "saved": "≈ {size} saved",
+      "blobs": "Blobs",
+      "blobs_sub": "content-addressed images",
+      "versions_sub": "datasets"
     },
     "series": {
-      "total": "Cumulative size",
-      "added": "Added that day"
+      "objects": "Objects"
     },
     "columns": {
-      "version": "Version",
-      "objects": "Objects",
-      "types": "Types",
-      "langs": "Languages"
-    }
+      "key": "Key",
+      "weight": "Weight"
+    },
+    "refresh_hint": "Recount (skips the 10-minute cache)",
+    "unavailable": "Storage unavailable: {error}",
+    "families_empty": "Empty.",
+    "timeline": "Ingestion over time",
+    "timeline_chip": "objects / day",
+    "timeline_label": "Objects added per day",
+    "extensions_empty": "No blob.",
+    "webp": "WebP",
+    "webp_label": "Coverage of the variants",
+    "webp_text": "{source} of sources → {webp} in WebP.",
+    "largest_empty": "No object.",
+    "coverage_chip": "ingested languages",
+    "coverage_empty": "No stored version."
   },
   "users": {
     "title": "Users",
-    "lede": "Every account, newest first.",
-    "search": "Username or e-mail",
-    "empty": "No account matches.",
+    "lede": "Summoner accounts: search, ban and permanent deletion.",
+    "search": "Summoner name or e-mail…",
+    "empty": "No account registered.",
     "activity": "Activity",
     "ban": "Ban",
-    "ban_reason": "Reason for banning {name} (optional)",
-    "confirm_ban": "Ban the account",
-    "unban": "Restore",
-    "confirm_unban": "Confirm the restoration",
+    "ban_reason": "Reason: {reason}",
+    "unban": "Unban",
     "confirm_delete": "Delete for good",
     "kpi": {
       "total": "Accounts",
@@ -263,173 +320,204 @@
       "supporters": "Supporters"
     },
     "columns": {
-      "account": "Account",
+      "account": "Summoner",
       "created": "Signed up",
       "builds": "Builds",
-      "state": "State"
+      "state": "Statuses",
+      "email": "E-mail"
     },
     "badges": {
-      "admin": "Admin",
-      "banned": "Banned",
-      "supporter": "Supporter",
-      "two_factor": "2FA",
-      "google": "Google",
-      "unverified": "Unverified"
+      "admin": "admin",
+      "banned": "banned",
+      "supporter": "supporter",
+      "google": "google",
+      "unverified": "unverified",
+      "public_profile": "public profile"
     },
     "done": {
-      "ban": "{name} is banned.",
-      "unban": "{name} is restored.",
-      "delete": "The account {name} is deleted."
-    }
+      "ban": "Account “{name}” banned: sign-in blocked, profile and builds taken off the public site.",
+      "unban": "Account “{name}” restored.",
+      "delete": "Account “{name}” deleted for good."
+    },
+    "search_label": "Account search",
+    "count": "{count} account(s)",
+    "empty_search": "No account matches the search.",
+    "reason_placeholder": "Reason (optional)",
+    "reason_label": "Reason of the ban"
   },
   "activity": {
-    "title": "Activity of {name}",
-    "back": "Back to the users"
+    "title": "Activity — {name}",
+    "back": "← Users",
+    "document_title": "Activity · {name}",
+    "lede": "actions made by this account or targeting it. Times in UTC.",
+    "empty": "No action logged for this account over this period."
   },
   "builds": {
     "title": "Builds",
-    "lede": "The builds of every account, by name, champion or author.",
-    "search": "Name, champion or author",
-    "visibility": "Visibility",
-    "all_visibilities": "Every visibility",
-    "empty": "No build matches.",
+    "lede": "Community builds: unpublishing and deletion.",
+    "search": "Build or champion name…",
+    "visibility": "Visibility filter",
+    "all_visibilities": "All visibilities",
+    "empty": "No build saved.",
     "unpublish": "Unpublish",
-    "confirm_unpublish": "Confirm unpublishing",
     "confirm_delete": "Delete for good",
     "kpi": {
       "total": "Builds",
-      "public": "Public",
-      "private": "Private"
+      "public": "Public"
     },
     "columns": {
       "build": "Build",
       "author": "Author",
-      "mode": "Mode",
+      "mode": "Mode · Patch",
       "visibility": "Visibility",
       "score": "Score",
       "created": "Created"
     },
     "visibilities": {
-      "public": "Public",
-      "private": "Private"
+      "public": "public",
+      "private": "private"
     },
     "modes": {
-      "sr": "Summoner's Rift",
+      "sr": "Rift",
       "aram": "ARAM",
       "nexus_blitz": "Nexus Blitz",
       "arena": "Arena"
     },
     "done": {
-      "unpublish": "“{name}” is no longer public.",
-      "delete": "“{name}” is deleted."
-    }
+      "unpublish": "Build “{name}” unpublished — still visible to its author and through its share link.",
+      "delete": "Build “{name}” deleted."
+    },
+    "search_label": "Build search",
+    "filters": {
+      "public": "Public",
+      "private": "Private"
+    },
+    "count": "{count} build(s)",
+    "empty_filtered": "No build matches the filters.",
+    "view": "View"
   },
   "donations": {
     "title": "Donations",
-    "lede": "What was given, day by day, and every donation. A refund goes through Stripe.",
-    "daily": "Donations per day",
-    "empty": "No donation yet.",
-    "anonymous": "Anonymous",
+    "lede": "Stripe supports recorded by the webhook — immutable ledger lines.",
+    "empty": "No donation recorded.",
+    "anonymous": "anonymous",
     "kpi": {
-      "total": "Total",
-      "count": "Donations",
+      "total": "Total collected",
       "identified": "Identified donors",
-      "anonymous": "Anonymous donations",
-      "supporters": "Supporters"
-    },
-    "series": {
-      "amount": "Amount"
+      "supporters": "Active supporters",
+      "total_sub": "{count} donation(s)",
+      "month": "Last 30 days",
+      "identified_sub": "{count} anonymous donation(s)",
+      "supporters_sub": "accounts marked supporter"
     },
     "columns": {
       "date": "Date",
       "amount": "Amount",
-      "donor": "Donor"
+      "donor": "Linked account"
     }
   },
   "contacts": {
-    "title": "Messages",
-    "lede": "The messages of the contact form, newest first.",
+    "title": "Contact messages",
+    "lede": "Requests sent from the footer form — bugs, feedback, reviews and business contacts.",
     "filter": "Filter by status",
-    "empty": "No message.",
-    "no_subject": "(no subject)",
-    "reply": "Reply",
+    "empty": "No contact message.",
     "handle": "Mark handled",
     "reopen": "Reopen",
     "confirm_delete": "Delete for good",
-    "handled_at": "Handled on {at}",
     "kpi": {
-      "total": "Messages",
+      "total": "Total",
       "new": "To handle",
       "handled": "Handled",
-      "week": "Received (7 d)"
+      "week": "Last 7 days"
     },
     "statuses": {
       "all": "All",
-      "new": "To handle",
+      "new": "New",
       "handled": "Handled"
     },
     "categories": {
-      "bug": "Bug",
-      "feedback": "Suggestion",
+      "bug": "Bug / issue",
+      "feedback": "Suggestion / feedback",
       "review": "Review",
-      "commercial": "Business"
+      "commercial": "Business contact"
     },
     "done": {
       "handle": "Message marked as handled.",
       "reopen": "Message reopened.",
-      "delete": "Message deleted."
+      "delete": "Message deleted for good."
+    },
+    "document_title": "Messages",
+    "empty_status": "No message in this category.",
+    "account": "account: {name}",
+    "filters": {
+      "new": "New",
+      "handled": "Handled"
+    },
+    "columns": {
+      "received": "Received",
+      "category": "Category",
+      "contact": "Contact",
+      "message": "Message",
+      "status": "Status"
     }
   },
   "api_clients": {
     "title": "API clients",
-    "lede": "The keys of the public API, their plan and their use this month.",
-    "by_plan": "Active keys per plan",
+    "lede": "Keys of the paid public API: usage, revocation and manual credits.",
+    "by_plan": "Split by plan",
     "keys_caption": "keys",
-    "top_consumers": "Heaviest users (30 d)",
-    "empty": "No key.",
-    "revoked": "Revoked",
+    "top_consumers": "Top consumers",
+    "empty": "No API key issued.",
+    "revoked": "revoked",
     "credit": "Credit",
-    "credit_label": "Prepaid requests to add to {name} (1 to 1,000,000)",
-    "confirm_credit": "Credit the key",
+    "credit_label": "Requests to credit",
     "revoke": "Revoke",
     "confirm_revoke": "Confirm the revocation",
     "kpi": {
       "active": "Active keys",
       "month_requests": "Requests this month",
-      "credits": "Credits in reserve"
+      "credits": "Credits in circulation",
+      "month_requests_sub": "all keys together",
+      "credits_sub": "prepaid requests (active keys)"
     },
     "columns": {
       "key": "Key",
-      "owner": "Holder",
+      "owner": "Account",
       "plan": "Plan",
-      "usage": "Use this month",
+      "usage": "Month usage",
       "credits": "Credits",
-      "rate": "Req./min",
-      "created": "Created"
+      "rate": "Req/min",
+      "created": "Created",
+      "status": "Status"
     },
     "plans": {
       "free": "Free",
       "monthly": "Monthly",
       "monthly_plus": "Monthly+",
       "annual": "Annual",
-      "annual_plus": "Annual+"
+      "annual_plus": "Annual+",
+      "credits": "Credits"
     },
     "done": {
-      "credit": "{count} requests added to {name}.",
-      "revoke": "The key {name} is revoked."
-    }
+      "credit": "{count} requests credited to the key {prefix}….",
+      "revoke": "Key {prefix}… revoked (effective within ~60 s on the API)."
+    },
+    "by_plan_chip": "active keys",
+    "by_plan_label": "Active keys by plan",
+    "top_consumers_chip": "30 days",
+    "top_consumers_empty": "No traffic over 30 days.",
+    "active": "active",
+    "credit_placeholder": "Requests"
   },
   "monitoring": {
     "title": "Monitoring",
-    "lede": "The health of the API: its dependencies, its process, the ingestion and the volumes.",
-    "tables": "Heaviest tables",
+    "lede": "Health of the internal services, application counters and volumes — 30 s snapshot.",
+    "tables": "Main tables",
     "services": {
-      "name": "Service",
-      "status": "State",
-      "latency": "Latency",
-      "version": "Version",
-      "size": "Size",
-      "detail": "Detail"
+      "names": {
+        "postgres": "PostgreSQL",
+        "storage": "Storage"
+      }
     },
     "process": {
       "title": "API process",
@@ -445,9 +533,7 @@
     "ingestion": {
       "title": "Ingestion",
       "versions": "Versions waiting",
-      "on_demand": "On-demand ingestions",
-      "outbox_pending": "E-mails waiting",
-      "outbox_dead": "E-mails given up"
+      "on_demand": "On-demand ingestions"
     },
     "versions": {
       "title": "Data Dragon versions",
@@ -464,61 +550,78 @@
       }
     },
     "counters": {
-      "title": "Figures of the application",
-      "users": "Accounts",
-      "users_sub": "+{week} this week · {banned} banned",
-      "builds": "Builds",
-      "builds_sub": "{public} public · {votes} votes",
-      "api": "API requests this month",
-      "api_sub": "{today} today · {keys} active keys",
-      "donations": "Donations",
-      "donations_sub": "{count, plural, one {# donation} other {# donations}}"
+      "api": "API requests",
+      "api_sub": "{count} this month",
+      "votes": "Votes",
+      "unavailable": "Counters unavailable."
+    },
+    "probes": "Probes",
+    "generated_hint": "Time the report was generated",
+    "tables_chip": "pg_total_relation_size",
+    "tables_empty": "Sizes unavailable (Postgres required).",
+    "columns": {
+      "table": "Table",
+      "bytes": "Total weight"
+    },
+    "probe": {
+      "database": "database {size}",
+      "objects": "{count} objects · {size}"
+    },
+    "outbox": {
+      "title": "E-mail queue",
+      "chip": "email_outbox",
+      "pending": "Pending e-mails",
+      "text": "E-mails not sent yet. A lasting backlog means a stopped worker.",
+      "dead": "Given up: {count}."
     }
   },
   "journal": {
-    "title": "Journal",
-    "lede": "The audit journal: sign-ins, account actions and moderation, newest first.",
-    "empty": "No entry matches.",
-    "purged": "{count, plural, =0 {No entry deleted.} one {# entry deleted.} other {# entries deleted.}}",
+    "title": "Audit journal",
+    "lede": "Sensitive actions and security events. Times in UTC. Kept {months} months (CNIL recommendation).",
+    "empty": "No action logged over this period.",
+    "purged": "Purge done: {count} entry(ies) deleted.",
     "volume": {
       "entries": "Entries",
-      "oldest": "Oldest",
-      "newest": "Newest",
-      "retention": "Retention ({months} months)",
-      "cutoff": "Kept from this date"
+      "retention": "Retention",
+      "cutoff": "auto purge before {day}",
+      "total": "Total space",
+      "since": "since {day}",
+      "months": "{months} months"
     },
     "filters": {
-      "title": "Filter",
-      "any": "Any",
-      "category": "Category",
+      "category": "Action category",
       "action": "Action",
       "outcome": "Outcome",
       "actor_type": "Actor type",
       "actor": "Actor",
       "from": "From",
       "to": "To",
-      "clear": "Clear the filters"
+      "any_category": "All categories",
+      "any_outcome": "All outcomes",
+      "any_actor_type": "All actor types",
+      "any_action": "All actions"
     },
     "purge": {
-      "title": "Maintenance",
-      "lede": "Deletes entries of the journal. The purge is journaled itself.",
-      "scope": "Scope",
+      "title": "Purge the logs",
+      "lede": "The legal retention ({months} months) is applied automatically. This manual purge frees space at once. Irreversible action.",
+      "scope": "Scope of the purge",
       "before": "Before",
       "submit": "Purge",
-      "confirm": "Confirm the purge",
+      "confirm": "Purge for good",
       "scopes": {
-        "retention": "Past the retention",
-        "before": "Before a date",
+        "retention": "Past the retention (> {months} months)",
+        "before": "Before",
         "all": "Delete everything"
       }
     },
     "columns": {
-      "when": "Date (UTC)",
+      "when": "Time (UTC)",
       "action": "Action",
       "outcome": "Outcome",
       "actor": "Actor",
       "target": "Target",
-      "origin": "Origin"
+      "actor_type": "Actor",
+      "ip": "IP"
     },
     "categories": {
       "auth": "Authentication",
@@ -533,9 +636,9 @@
       "denied": "Denied"
     },
     "actor_types": {
-      "user": "User",
-      "admin": "Administrator",
-      "anonymous": "Anonymous"
+      "user": "user",
+      "admin": "admin",
+      "anonymous": "anonymous"
     },
     "actions": {
       "user": {
@@ -574,6 +677,39 @@
         "analytics_rollup": "Analytics consolidation",
         "logs_purge": "Journal purge"
       }
-    }
+    },
+    "document_title": "Journal"
+  },
+  "brand_name": "LODB",
+  "brand_tag": "Admin",
+  "range_long": {
+    "7d": "7 days",
+    "30d": "30 days",
+    "90d": "90 days",
+    "all": "the whole history"
+  },
+  "eyebrows": {
+    "console": "Console",
+    "analytics": "Analytics",
+    "infrastructure": "Infrastructure",
+    "moderation": "Moderation",
+    "management": "Management",
+    "surveillance": "Surveillance"
+  },
+  "rules": {
+    "traffic": "Traffic",
+    "storage": "Storage",
+    "images": "Images",
+    "data": "Data",
+    "detail": "Detail",
+    "accounts": "Accounts",
+    "builds": "Builds",
+    "history": "History",
+    "inbox": "Inbox",
+    "keys": "Keys",
+    "application": "Application",
+    "volumes": "Volumes",
+    "filter": "Filter",
+    "maintenance": "Maintenance"
   }
 }
