@@ -8,17 +8,19 @@ import { localePath } from '../../../../core/layout/shell/locale-path';
 import { ToastService } from '../../../../core/layout/toast/toast-service';
 import { Button } from '../../../../ui/controls/button';
 import { Image } from '../../../../ui/media/image';
+import { SupporterBadge } from '../../preview/card/supporter-badge';
 import { accountMessage } from '../../shared/account-message';
 import { initialsOf } from '../entries/initials-of';
 import type { FavoriteChoices } from '../store/favorite-choices';
 
 /**
  * The head of the editor: the summoner's name, its favorites drifting as orbs, and the ways
- * to the preview of its public card and out of the account.
+ * to the preview of its public card and out of the account. A supporter's seal follows the
+ * name, as on its public card.
  */
 @Component({
   selector: 'lodb-profile-cover',
-  imports: [Button, Image, RouterLink, TranslocoPipe],
+  imports: [Button, Image, RouterLink, SupporterBadge, TranslocoPipe],
   templateUrl: './profile-cover.html',
   styleUrl: './cover.css',
   host: { class: 'profile-cover' },
@@ -43,6 +45,7 @@ export class ProfileCover {
   protected readonly preview = computed(() =>
     localePath(this.page.locale(), 'account/profile/preview'),
   );
+  protected readonly supporter = computed(() => this.session.user()?.isSupporter === true);
   protected readonly leaving = signal(false);
 
   protected async signOut(): Promise<void> {
