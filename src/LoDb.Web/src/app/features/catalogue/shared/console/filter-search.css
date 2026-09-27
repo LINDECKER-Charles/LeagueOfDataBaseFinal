@@ -18,7 +18,7 @@
   inline-size: 100%;
   min-block-size: 2.75rem;
   padding-block: 0.55rem;
-  padding-inline: 2.1rem 2rem;
+  padding-inline: 2.1rem 0.75rem;
   font-family: var(--font-mono);
   font-size: 1rem;
   color: var(--color-text);
@@ -29,6 +29,10 @@
   transition:
     border-color 0.25s var(--ease-hextech),
     box-shadow 0.25s var(--ease-hextech);
+}
+/* Room for the `/` hint, drawn in the rail only. */
+.search__input--hinted {
+  padding-inline-end: 2rem;
 }
 .search__input::placeholder {
   color: color-mix(in srgb, var(--color-text-muted) 70%, transparent);

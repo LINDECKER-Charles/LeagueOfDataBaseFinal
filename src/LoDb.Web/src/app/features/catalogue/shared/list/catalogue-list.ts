@@ -68,7 +68,7 @@ export class CatalogueList<C> implements OnInit {
   readonly adapter = input.required<CatalogueCardAdapter<C>>();
   /** The facets of the list, translated; those no card carries are not offered. */
   readonly schema = input<readonly FacetDefinition[]>([]);
-  /** Placeholder and accessible name of the search, such as "Search for an item…". */
+  /** Accessible name of the search, such as "Search for an item…". */
   readonly searchLabel = input.required<string>();
   /** Accessible name of the results, such as "Items". */
   readonly label = input.required<string>();

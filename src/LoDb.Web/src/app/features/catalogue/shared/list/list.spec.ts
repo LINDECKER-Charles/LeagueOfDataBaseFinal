@@ -45,7 +45,10 @@ const ADAPTER: CatalogueCardAdapter<Item> = {
 };
 const WINDOW_MS = 300;
 // The catalogue scope of a page that lists its own texts, such as `summoners`.
-const SCOPED: Record<string, Translation> = { 'feature/en': { search: 'Search for a feature' } };
+const SCOPED: Record<string, Translation> = {
+  en: { common: { search: 'Search…' } },
+  'feature/en': { search: 'Search for a feature' },
+};
 
 function sourceOf(dataset: List | null, status: ListStatus = 'ready') {
   const whole = signal<List | null>(dataset);
@@ -225,7 +228,9 @@ describe('lodb-catalogue-list', () => {
     const fixture = await render('/en/items', sourceOf(WHOLE).source, ScopedHost);
 
     const [search] = all(fixture, 'lodb-filter-console input[type=search]');
-    expect(search?.getAttribute('placeholder')).toBe('Search for a feature');
+    expect(search?.getAttribute('aria-label')).toBe('Search for a feature');
+    // The placeholder stays the short one of every list, which the narrow rail can hold.
+    expect(search?.getAttribute('placeholder')).toBe('Search…');
   });
 
   it('keeps a group open when its last facet is cleared under the pointer', async () => {
