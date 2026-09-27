@@ -22,6 +22,8 @@ import { handleNavigationError } from './core/routing/failure/handle-navigation-
 import { LocaleHomeLocationStrategy } from './core/routing/locale/locale-home-location-strategy';
 import { provideUpdates } from './core/update/provide-updates';
 import { updateInterceptor } from './core/update/update-interceptor';
+import { PORTAL_PAYMENTS } from './features/api-portal/shared/portal-payments';
+import { PAYMENTS_ENABLED } from '../environments/payments-enabled';
 
 /**
  * Browser configuration, shared with the server (app.config.server.ts). Angular 22 already
@@ -39,6 +41,9 @@ import { updateInterceptor } from './core/update/update-interceptor';
  *
  * `provideAuth`, `provideNavigationBeacon`, `provideUpdates` and the `auth` and `update`
  * interceptors are registered empty, for L4.5, L7.1 and L9.0 to fill in their own folders.
+ *
+ * The key portal sells packs and plans only where the build shows payments: a feature may
+ * not read src/environments, so its `PORTAL_PAYMENTS` follows `PAYMENTS_ENABLED` here.
  */
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -68,5 +73,6 @@ export const appConfig: ApplicationConfig = {
     provideAuth(),
     provideNavigationBeacon(),
     provideUpdates(),
+    { provide: PORTAL_PAYMENTS, useFactory: () => inject(PAYMENTS_ENABLED) },
   ],
 };
