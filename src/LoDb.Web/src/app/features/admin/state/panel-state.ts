@@ -4,68 +4,35 @@ import { RETURN_URL_PARAM } from '../../../core/auth/guards/return-url-param';
 import { Button } from '../../../ui/controls/button';
 import { Frame } from '../../../ui/surfaces/frame';
 import { Skeleton } from '../../../ui/surfaces/skeleton';
+import { AdminBand } from '../layout/admin-band';
 import { ADMIN_PATHS } from '../shared/admin-paths';
-import type { Panel } from './panel';
 import { AdminTextPipe } from '../shared/admin-text-pipe';
+import type { Panel } from './panel';
 
 /**
- * The shape of what a panel will show, which its placeholder reserves: figures then a chart
- * or a table, or a single card.
+ * The shape of what a panel will show, which its placeholder reserves, as the legacy
+ * skeletons had them: key figures alone, figures then a chart, figures then a row of cards,
+ * figures then a table, or a single block (a page of its own, as the enrolment).
  */
-export type PanelShape = 'chart' | 'table' | 'card';
+export type PanelShape = 'kpi' | 'chart' | 'cards' | 'table' | 'block';
 
-// Four figures head every panel of the legacy admin, then a chart or a table.
+// Four figures head every panel of the legacy admin, then a chart, cards or a table.
 const KPI_PLACEHOLDERS = [0, 1, 2, 3];
+const CARD_PLACEHOLDERS = [0, 1, 2];
+// Each card of the legacy placeholder: four lines, every other one shorter, over a bar.
+const CARD_LINES = [0, 1, 2, 3];
 const ROW_PLACEHOLDERS = [0, 1, 2, 3, 4, 5];
 
 /**
  * What a panel shows while it has nothing else: placeholders shaped like its content until
- * its first answer, then the reason it failed with a way to try again. Once the panel has a
- * value it renders nothing: the page shows the value, and a later failure (of a refresh)
- * still says so above it.
+ * its first answer, then the legacy red band that says why it failed, with a way to try
+ * again. Once the panel has a value it renders nothing: the page shows the value, and a later
+ * failure (of a refresh) still says so above it.
  */
 @Component({
   selector: 'lodb-panel-state',
-  imports: [Button, Frame, RouterLink, Skeleton, AdminTextPipe],
-  template: `
-    @if (panel().failure(); as failure) {
-      <div lodbFrame class="mb-6 block p-5" role="alert">
-        <p class="font-beaufort text-lg text-gold">{{ 'admin.state.' + failure | adminText }}</p>
-        <div class="mt-4 flex flex-wrap gap-2">
-          <button lodbButton="ghost" type="button" (click)="panel().reload()">
-            {{ 'admin.state.retry' | adminText }}
-          </button>
-          @if (failure === 'session') {
-            <a lodbButton [routerLink]="login" [queryParams]="returnQuery()">
-              {{ 'admin.state.sign_in' | adminText }}
-            </a>
-          }
-        </div>
-      </div>
-    } @else if (panel().value() === undefined) {
-      <div class="block" aria-busy="true">
-        <p class="sr-only" role="status">{{ 'admin.state.loading' | adminText }}</p>
-        @if (shape() === 'card') {
-          <lodb-skeleton shape="block" />
-        } @else {
-          <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            @for (kpi of kpis; track kpi) {
-              <lodb-skeleton shape="tile" />
-            }
-          </div>
-          <div class="mt-6">
-            @if (shape() === 'chart') {
-              <lodb-skeleton shape="block" />
-            } @else {
-              @for (row of rows; track row) {
-                <lodb-skeleton shape="bar" class="mb-2" />
-              }
-            }
-          </div>
-        }
-      </div>
-    }
-  `,
+  imports: [AdminBand, Button, Frame, RouterLink, Skeleton, AdminTextPipe],
+  templateUrl: './panel-state.html',
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -76,6 +43,8 @@ export class PanelState {
   private readonly router = inject(Router);
 
   protected readonly kpis = KPI_PLACEHOLDERS;
+  protected readonly cards = CARD_PLACEHOLDERS;
+  protected readonly lines = CARD_LINES;
   protected readonly rows = ROW_PLACEHOLDERS;
   protected readonly login = ADMIN_PATHS.login;
   // Read when a session failure shows: the login page brings the admin back here.
