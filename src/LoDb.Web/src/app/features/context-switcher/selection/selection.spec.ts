@@ -105,6 +105,13 @@ describe('currentChoice', () => {
       version: LATEST,
       language: 'fr:fr_FR',
     },
+    {
+      rule: 'the language named outside the locales, whichever locale owns it',
+      url: '/b/abc123?lang=fr_FR',
+      locale: 'en',
+      version: LATEST,
+      language: 'fr:fr_FR',
+    },
   ];
 
   it.each(cases)('reads $rule', ({ url, locale, version, language }) => {

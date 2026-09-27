@@ -1,24 +1,17 @@
 import type { CatalogMeta } from '../../../core/api/generated/models/catalog-meta';
 import { languageName } from '../../../core/api/meta/language-name';
-import type { Locale } from '../../../core/i18n/locales';
+import { localeReading } from '../../../core/api/meta/locale-reading';
 import type { LanguageOption } from './language-option';
-import { primaryLanguage } from './primary-language';
 
-function optionOf(locale: Locale, language: string, lang: string | null): LanguageOption {
-  return { key: `${locale}:${language}`, locale, language, lang, label: languageName(language) };
-}
-
-// The locale whose pages read `language`: its owner, or for a regional variant the first
-// locale sharing its language (`en_GB` under `en`, `zh_MY` under `zh-hans`); none otherwise.
+// Under the locale that reads it; `?lang=` only carries it where it is not the locale's own.
 function optionFor(meta: CatalogMeta, language: string): LanguageOption | null {
-  const owner = meta.locales.find((entry) => entry.language === language);
-  if (owner !== undefined) {
-    return optionOf(owner.locale, language, null);
+  const locale = localeReading(meta, language);
+  if (locale === null) {
+    return null;
   }
-  const sibling = meta.locales.find(
-    (entry) => primaryLanguage(entry.language) === primaryLanguage(language),
-  );
-  return sibling === undefined ? null : optionOf(sibling.locale, language, language);
+  const own = meta.locales.some((entry) => entry.language === language);
+  const lang = own ? null : language;
+  return { key: `${locale}:${language}`, locale, language, lang, label: languageName(language) };
 }
 
 /**

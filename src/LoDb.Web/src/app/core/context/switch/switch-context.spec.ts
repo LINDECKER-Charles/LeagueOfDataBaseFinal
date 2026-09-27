@@ -151,10 +151,22 @@ const CASES: Case[] = [
     to: '/fr/champions',
   },
   {
-    rule: 'leaves the locale of a page outside the locales alone',
+    rule: 'reads the language of a page outside the locales from ?lang=, its path unchanged',
     from: '/b/Zx81',
-    target: { locale: 'fr', version: '15.14.1' },
-    to: '/b/Zx81?version=15.14.1',
+    target: { locale: 'fr', version: '15.14.1', lang: null },
+    to: '/b/Zx81?lang=fr_FR&version=15.14.1',
+  },
+  {
+    rule: 'names a variant outside the locales, and replaces the language already named',
+    from: '/b/Zx81?lang=fr_FR',
+    target: { locale: 'en', lang: 'en_GB' },
+    to: '/b/Zx81?lang=en_GB',
+  },
+  {
+    rule: 'keeps the language of a page outside the locales that the target leaves unsaid',
+    from: '/b/Zx81?lang=fr_FR',
+    target: { version: '15.14.1' },
+    to: '/b/Zx81?lang=fr_FR&version=15.14.1',
   },
   {
     rule: 'changes nothing without a target',
