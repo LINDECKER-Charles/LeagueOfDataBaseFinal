@@ -17,7 +17,9 @@ const CONTEXT_PARAMS = ['version', 'lang'] as const;
 /**
  * The filters of the trends: champion, mode and language, each "all" by default, applied by
  * a button. A plain GET form, so it works before the scripts load; once they have, the submit
- * navigates to the same query instead, and the list starts again at its first page.
+ * navigates to the same query instead, and the list starts again at its first page. The
+ * applied option is selected twice: by property for the browser, by attribute for the
+ * server's HTML, whose DOM gives options no `selected` property.
  */
 @Component({
   selector: 'lodb-trend-filters',

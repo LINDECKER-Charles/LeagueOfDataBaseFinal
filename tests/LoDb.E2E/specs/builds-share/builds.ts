@@ -1,4 +1,5 @@
 import { type APIRequestContext, expect, type Page } from '@playwright/test';
+import { metaOf } from '../../support/catalog';
 import { register, type TestAccount } from '../account/accounts';
 import { accountLinkIn, lastMailTo } from '../account/mailbox';
 
@@ -44,6 +45,8 @@ export interface BuildParts {
 }
 
 const CREATED = 201;
+// The pickers answer for an explicit patch and language only; builds are made on the latest.
+const PICKER_LANGUAGE = 'en_US';
 // Two items with a price: the purchase order shows them, and its total is not nil.
 const ITEMS = 2;
 
@@ -93,9 +96,11 @@ async function pick<T>(page: Page, path: string): Promise<T> {
  * first items with a price.
  */
 export async function buildParts(page: Page, mode: BuildOptions['gameMode']): Promise<BuildParts> {
-  const champions = await pick<{ options: Option[] }>(page, '/api/pickers/champions');
-  const runes = await pick<{ trees: RuneTree[] }>(page, '/api/pickers/runes');
-  const items = await pick<{ options: Option[] }>(page, `/api/pickers/items?mode=${mode}`);
+  const { latest } = await metaOf(page.request);
+  const scope = `version=${latest}&lang=${PICKER_LANGUAGE}`;
+  const champions = await pick<{ options: Option[] }>(page, `/api/pickers/champions?${scope}`);
+  const runes = await pick<{ trees: RuneTree[] }>(page, `/api/pickers/runes?${scope}`);
+  const items = await pick<{ options: Option[] }>(page, `/api/pickers/items?${scope}&mode=${mode}`);
   const primary = firstOf(runes.trees, 'rune tree');
   const secondary = firstOf(runes.trees.slice(1), 'second rune tree');
   const perkOf = (slot: RuneTree['slots'][number]) => firstOf(slot, 'perk in a slot').id;

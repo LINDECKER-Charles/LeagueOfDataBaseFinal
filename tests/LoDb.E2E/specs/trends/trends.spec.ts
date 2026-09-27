@@ -1,21 +1,17 @@
 import type { Page } from '@playwright/test';
 import { nodesOfType, readHead } from '../../support/head';
-import { expect, test } from '../../support/test';
-import { discardAccount, newAccount, type TestAccount } from '../account/accounts';
-import { createBuild, verifiedAccount } from '../builds-share/builds';
-
-// The account of the journey, deleted even when a step fails: no run leaves one behind.
-let created: TestAccount | undefined;
-
-test.afterEach(async ({ playwright, baseURL }) => {
-  if (created) {
-    await discardAccount(playwright.request, baseURL, created);
-    created = undefined;
-  }
-});
+import { expect, test } from '../../support/worker-account';
+import { createBuild } from '../builds-share/builds';
 
 function filter(page: Page, label: string) {
   return page.locator('lodb-trend-filters').getByLabel(label);
+}
+
+// Locally the absolute URLs lose the stack's port (nginx forwards `Host: $host`), and the
+// canonical origin is the deployment's setting: the path is what the page decides.
+function pathOf(url: string): string {
+  const parsed = new URL(url);
+  return `${parsed.pathname}${parsed.search}${parsed.hash}`;
 }
 
 test.describe('the trends, without an account', () => {
@@ -29,7 +25,7 @@ test.describe('the trends, without an account', () => {
     expect(response?.status()).toBe(200);
     expect(response?.headers()['x-robots-tag'] ?? '').not.toContain('noindex');
     expect(head.robots ?? '').not.toContain('noindex');
-    expect(head.canonicals).toEqual([`${new URL(page.url()).origin}/en/trends`]);
+    expect(head.canonicals.map(pathOf)).toEqual(['/en/trends']);
     const [trail] = nodesOfType(head.jsonLd, 'BreadcrumbList');
     expect(trail?.['itemListElement']).toHaveLength(2);
     await expect(page.locator('h1')).toHaveText('Trending builds');
@@ -82,17 +78,13 @@ test.describe('the trends, without an account', () => {
   });
 });
 
-// A public build of the journey's account, found through the filters, then voted on.
+// A public build of the worker's account, found through the filters, then voted on.
 test('ranks a public build, offers to forge one and takes votes', async ({
   page,
-  request,
-  browser,
-  baseURL,
+  member: owner,
+  workerAccount: account,
 }) => {
   test.slow();
-  const account = (created = newAccount('trend'));
-  const owner = await (await browser.newContext({ baseURL })).newPage();
-  await verifiedAccount(owner, request, account);
   const build = await createBuild(owner, {
     name: 'Trending scroll',
     isPublic: true,
@@ -135,6 +127,4 @@ test('ranks a public build, offers to forge one and takes votes', async ({
     await up.click();
     await expect(row(owner).locator('.vote-score')).toHaveText('0');
   });
-
-  await owner.context().close();
 });

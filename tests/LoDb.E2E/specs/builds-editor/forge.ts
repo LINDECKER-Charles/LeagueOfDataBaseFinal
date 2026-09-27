@@ -10,6 +10,14 @@ export function rowOf(page: Page, name: string): Locator {
   return page.locator('lodb-build-row').filter({ hasText: name });
 }
 
+/**
+ * The patch of the build. Its label wraps the select, as the legacy editor's did: the label's
+ * text holds every version offered, so the field is found by its accessible name, "Patch".
+ */
+export function patchOf(page: Page): Locator {
+  return page.locator('lodb-editor-context').getByRole('combobox', { name: 'Patch', exact: true });
+}
+
 /** The purchase-order steps of the editor, in their order. */
 export function stepsOf(page: Page): Locator {
   return page.locator('lodb-step-editor li.forge-step');

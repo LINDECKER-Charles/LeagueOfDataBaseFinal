@@ -175,6 +175,21 @@ describe('TrendsPage', () => {
     expect(form.querySelector<HTMLInputElement>('input[name="lang"]')?.value).toBe('fr_FR');
   });
 
+  // The server's HTML carries attributes only: a `selected` property alone would leave every
+  // filter on "all" in a page read without scripts.
+  it('marks the filters applied as selected in the markup, for a page without scripts', async () => {
+    const filters = { champion: 'MonkeyKing', mode: 'aram' as const, language: 'fr_FR' };
+    const { host } = await visit(trendsPageOf({ filters }), 'unknown', '/fr/trends?mode=aram');
+    const selectedIn = (name: string) =>
+      [...host.querySelectorAll(`select[name="${name}"] option[selected]`)].map((option) =>
+        option.getAttribute('value'),
+      );
+
+    expect(selectedIn('champion')).toEqual(['MonkeyKing']);
+    expect(selectedIn('mode')).toEqual(['aram']);
+    expect(selectedIn('language')).toEqual(['fr_FR']);
+  });
+
   it('navigates to the filters chosen, back to the first page', async () => {
     const { host, harness } = await visit(
       trendsPageOf({ page: 2 }),
