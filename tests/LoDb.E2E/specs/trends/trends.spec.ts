@@ -80,7 +80,7 @@ test.describe('the trends, without an account', { tag: '@readonly' }, () => {
     await page.locator('.trends-pager a[rel="next"]').click();
 
     await expect(page).toHaveURL(/\/en\/trends\?page=2$/);
-    await expect(page.locator('.trends-pager__position')).toHaveText(`page 2 / ${first.pages}`);
+    await expect(page.locator('.trends-pager__position')).toHaveText(`2 / ${first.pages}`);
     await page.locator('.trends-pager a[rel="prev"]').click();
     await expect(page).toHaveURL(/\/en\/trends$/);
   });
