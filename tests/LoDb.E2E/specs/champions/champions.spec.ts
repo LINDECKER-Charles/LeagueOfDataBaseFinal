@@ -18,6 +18,8 @@ const LIST = '/en/champions';
 const DETAIL = `${LIST}/${CHAMPION}`;
 const SERVER_TIMING = /(?:^|,\s*)catalogue;dur=\d+(?:\.\d+)?/;
 const KEEP = 'lodbLeftVideo';
+// Shorter than the chroma card, as a phone turned sideways.
+const LANDSCAPE_PHONE = { width: 740, height: 360 };
 // The chips of the legacy tab bar, never a catalogue key.
 const SECTION_LABELS = ['Abilities', 'Skins', 'Lore', 'Tips', 'Base Statistics'];
 
@@ -161,6 +163,22 @@ test.describe('champion page in the browser', { tag: '@readonly' }, () => {
     await page.keyboard.press('Escape');
     await expect(viewer).toHaveCount(0);
     await expect(tile).toBeFocused();
+  });
+
+  // G1 of the lot 4 milestone: a dialog taller than the screen scrolls down to its foot.
+  test('keeps the chroma card scrollable to its foot on a landscape phone', async ({ page }) => {
+    await page.setViewportSize(LANDSCAPE_PHONE);
+    await openDetail(page);
+    await page.locator('#skins').scrollIntoViewIfNeeded();
+
+    await page.locator('#skins lodb-chroma-strip .swatch').first().click();
+
+    const card = page.getByRole('dialog').locator('.card');
+    await expect(card).toBeVisible();
+    const box = await card.boundingBox();
+    expect(box?.height ?? Infinity).toBeLessThanOrEqual(LANDSCAPE_PHONE.height);
+    await card.evaluate((node) => node.scrollTo({ top: node.scrollHeight }));
+    await expect(card.getByText(/\d+ \/ \d+/)).toBeInViewport();
   });
 
   test('pages to the next champion through the router, and badges the load time', async ({
