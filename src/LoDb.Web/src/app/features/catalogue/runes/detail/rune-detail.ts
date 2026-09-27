@@ -16,6 +16,7 @@ import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
 import { CatalogueImage } from '../../shared/cards/catalogue-image';
 import { initialsOf } from '../../shared/cards/initials-of';
+import { CatalogueEmpty } from '../../shared/list/catalogue-empty';
 import { pathThemeOf } from '../paths/path-theme-of';
 import { injectAnchorOffset } from './anchor/inject-anchor-offset';
 import { constellationOf } from './constellation/constellation-of';
@@ -29,11 +30,12 @@ const EMBLEM_SIZE = 120;
 /**
  * A rune path page, `/{locale}/[{version}/]runes/{key}`: the path's mark and name in its
  * colour, then its constellation of keystones and rows; the list's rune cards link to their
- * card here by anchor, which stops below its row's label.
+ * card here by anchor, which stops below its row's label. A path without runes shows the
+ * framed "no results" of the legacy page.
  */
 @Component({
   selector: 'lodb-rune-detail',
-  imports: [Backdrop, CatalogueImage, Pager, RuneConstellation, TranslocoPipe],
+  imports: [Backdrop, CatalogueEmpty, CatalogueImage, Pager, RuneConstellation, TranslocoPipe],
   templateUrl: './rune-detail.html',
   styleUrl: './rune-detail.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

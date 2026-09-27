@@ -133,11 +133,15 @@ describe('lodb-rune-detail', () => {
     expect(heads.at(-1)?.title).toBe('rune.detail.title {"name":"Domination"}');
   });
 
-  it('says so when the path has no runes', async () => {
+  it('frames the "no results" of the legacy when the path has no runes', async () => {
     const { element } = await render({ ...ENTRY, details: { ...DETAILS, slots: [] } });
 
     expect(element.querySelector('lodb-rune-constellation')).toBeNull();
-    expect(element.textContent).toContain('runes.empty');
+    const empty = element.querySelector('lodb-catalogue-empty');
+    expect(empty?.classList).toContain('hextech-frame');
+    expect(empty?.textContent).toContain('common.no_result.text');
+    expect(empty?.querySelector('button')?.textContent).toContain('common.no_result.back');
+    expect(empty?.querySelector('a')?.getAttribute('href')).toBe('/en');
   });
 
   it('marks a path without art by its initials, and leaves a rune without art unmarked', async () => {
