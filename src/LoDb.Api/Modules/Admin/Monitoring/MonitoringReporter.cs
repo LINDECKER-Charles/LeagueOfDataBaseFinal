@@ -11,13 +11,13 @@ namespace LoDb.Api.Modules.Admin.Monitoring;
 /// </summary>
 /// <remarks>
 /// Each part that reads the database fails on its own: a database down still shows the
-/// probes, the queues of this instance and the figures of the process.
+/// probes, the queues of this instance and the figures of the process. Such a report is
+/// answered but not kept. The requests that overlap share one assembly, which reads through
+/// a scope of its own: the request that started it may end or be aborted first.
 /// </remarks>
 internal sealed partial class MonitoringReporter(
     HybridCache cache,
-    ServiceProbes probes,
-    DatabaseFigures figures,
-    VersionOverview versions,
+    IServiceScopeFactory scopes,
     ProcessSampler process,
     IVersionBacklog versionBacklog,
     IOnDemandBacklog onDemandBacklog,
@@ -43,22 +43,36 @@ internal sealed partial class MonitoringReporter(
             await cache.RemoveAsync(CacheKey, cancellation);
         }
 
-        return await cache.GetOrCreateAsync(
+        var attempt = new Attempt();
+        var report = await cache.GetOrCreateAsync(
             CacheKey,
-            this,
-            static (reporter, cancel) => reporter.AssembleAsync(cancel),
+            (Reporter: this, Attempt: attempt),
+            static (state, cancel) => state.Reporter.AssembleAsync(state.Attempt, cancel),
             CacheEntry,
             cancellationToken: cancellation);
+        if (attempt.Degraded)
+        {
+            // Only the caller whose assembly ran knows it failed; the next one reads again.
+            await cache.RemoveAsync(CacheKey, cancellation);
+        }
+
+        return report;
     }
 
-    private async ValueTask<MonitoringReport> AssembleAsync(CancellationToken cancellation)
+    private async ValueTask<MonitoringReport> AssembleAsync(
+        Attempt attempt,
+        CancellationToken cancellation)
     {
-        var outbox = await TryAsync(figures.OutboxAsync, cancellation);
+        await using var scope = scopes.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var figures = services.GetRequiredService<DatabaseFigures>();
+        var versions = services.GetRequiredService<VersionOverview>();
+        var outbox = await TryAsync(attempt, figures.OutboxAsync, cancellation);
         return new MonitoringReport
         {
             GeneratedAt = clock.GetUtcNow(),
-            Services = await probes.ProbeAsync(cancellation),
-            Counters = await TryAsync(figures.CountersAsync, cancellation),
+            Services = await services.GetRequiredService<ServiceProbes>().ProbeAsync(cancellation),
+            Counters = await TryAsync(attempt, figures.CountersAsync, cancellation),
             Ingestion = new IngestionState
             {
                 VersionBacklog = versionBacklog.Count,
@@ -66,13 +80,14 @@ internal sealed partial class MonitoringReporter(
                 OutboxPending = outbox?.Pending,
                 OutboxDead = outbox?.Dead,
             },
-            Versions = await TryAsync(versions.ReadAsync, cancellation),
+            Versions = await TryAsync(attempt, versions.ReadAsync, cancellation),
             Process = process.Sample(),
-            Tables = await TryAsync(figures.TablesAsync, cancellation) ?? [],
+            Tables = await TryAsync(attempt, figures.TablesAsync, cancellation) ?? [],
         };
     }
 
     private async Task<T?> TryAsync<T>(
+        Attempt attempt,
         Func<CancellationToken, Task<T>> read,
         CancellationToken cancellation)
     {
@@ -83,6 +98,7 @@ internal sealed partial class MonitoringReporter(
         catch (Exception exception) when (exception is DbException or InvalidOperationException)
         {
             LogUnreadable(logger, exception);
+            attempt.Degraded = true;
             return default;
         }
     }
@@ -92,4 +108,10 @@ internal sealed partial class MonitoringReporter(
         Level = LogLevel.Warning,
         Message = "A part of the monitoring report could not be read from the database.")]
     private static partial void LogUnreadable(ILogger logger, Exception exception);
+
+    /// <summary>Whether the assembly run for this caller missed a part of the database.</summary>
+    private sealed class Attempt
+    {
+        public bool Degraded { get; set; }
+    }
 }

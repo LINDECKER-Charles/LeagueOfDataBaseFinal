@@ -74,9 +74,15 @@ tout ce qui ne se fait pas dans le dépôt. Chaque ligne est faite avant l'étap
 | Publication des apps (release desktop signée, piste Play) : elles visent `https://league-of-data-base.com/api` et n'ont de sens qu'après la bascule | lots 9 et 10 | J+3 |
 | *Contract* puis décommission | fin de la période de retour arrière | J+30 |
 
-Restent ouverts du lot 8, à corriger avant J-3 : la 301 `www.`/`.fr` de nginx sans en-têtes de
-sécurité, et `.env.next.example` incomplet (`LODB_PUBLIC_API_ORIGIN`, `LODB_DB_*`, lignes
-`LoDb__*`, variante prod).
+Reste ouvert du lot 8, à corriger avant J-3 : `.env.next.example` incomplet (ni
+`LODB_PUBLIC_API_ORIGIN` ni ligne `LoDb__*`, pas de variante prod ; `LODB_DB_*` y figure).
+
+Constat, pas un défaut : la 301 `www.`/`.fr` de nginx porte ses en-têtes de sécurité. En
+local (jalon du lot 8), `curl -sI -H 'Host: www.league-of-data-base.com'
+http://localhost:18080/en/` renvoie une 301 avec `Strict-Transport-Security`,
+`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` et
+`Cross-Origin-Resource-Policy` ; seule la CSP manque, sans effet sur une redirection. `.fr`
+passe par le même bloc `server` que `www.`.
 
 ## 2. Gel
 
@@ -97,21 +103,32 @@ sécurité, et `.env.next.example` incomplet (`LODB_PUBLIC_API_ORIGIN`, `LODB_DB
 
 Sur le poste, depuis la racine du dépôt, ancienne stack lancée **depuis ce même dossier**
 (projet `lodb`, ports 8080, 8090, 5432) ou arrêtée ; jamais en même temps qu'un build Android
-en conteneur. La répétition occupe l'emplacement `lodb-next-e2` (ports 18280, 18281, 18282,
-15632, 18225) ; la stack d'intégration `lodb-next` n'est pas touchée.
+en conteneur. La « nouvelle stack » du critère est ici l'emplacement `lodb-next-e2` (ports
+18280, 18281, 18282, 15632, 18225) : c'est lui qui sert la copie migrée. La stack
+d'intégration `lodb-next` reste intacte, sur sa propre base, pendant toute la répétition ;
+il n'y a rien à y remettre ensuite.
 
 ```bash
 test -f .env || cp .env.example .env        # valeurs de dev, jamais un secret réel
 npm ci --prefix tests/LoDb.E2E && npm --prefix tests/LoDb.E2E run browsers:install
 node --test 'tools/next/cutover/test/*.test.mjs'
 tools/next/contract/check.sh                 # contract : préparé, vérifié, non appliqué
+set -o pipefail                              # bash et zsh : le code du pipeline est celui du script
 tools/next/cutover/rehearse.sh --slot 2 --anonymize --stop-legacy 2>&1 | tee /tmp/lodb-rehearsal.log
+echo "code $?"                               # 0 : la répétition passe
 ```
 
 `--stop-legacy` arrête l'ancienne stack à la fin ; l'omettre si elle doit continuer de
 tourner. Le script remet toujours l'ancienne stack sur sa base, supprime l'emplacement
-(`down -v`) et la copie. Il réussit (code 0) si ses **15 étapes** sont `ok`. Chacune
-correspond à une étape de ce runbook :
+(`down -v`) et la copie.
+
+**Juger la réussite** : le code du script est 0, et son résumé final montre **15 lignes**
+`ok` suivies de « The rehearsal passes », qu'il n'imprime qu'en sortie 0. Sans
+`set -o pipefail`, `$?` est celui de `tee`, 0 même si le script échoue : lire alors, juste après la commande,
+`$pipestatus[1]` sous zsh (shell par défaut de macOS, où `${PIPESTATUS[0]}` est vide) ou
+`${PIPESTATUS[0]}` sous bash.
+
+Chaque étape du script correspond à une étape de ce runbook :
 
 | Étape du script | Étape du runbook |
 |---|---|
@@ -126,6 +143,14 @@ correspond à une étape de ce runbook :
 | New stack stopped (rollback) | § 8.2, étape 1 |
 | Legacy stack on `lodb_rehearsal` ; key pages ; sign-in and `/v1/usage` | § 8.2, étapes 2 et 3 (retour arrière prouvé sur le schéma migré) |
 | Legacy stack back on its own database | remise en état |
+
+**Comptes existants.** La base de dev de l'ancienne stack peut n'avoir aucun compte à mot de
+passe : celle du poste compte 1 utilisateur, `password IS NULL`. `--anonymize` n'a alors
+aucun compte de la base à connecter ; le script l'écrit sur stderr (ligne `WARNING`, reprise
+dans le journal par `2>&1`) sans faire échouer l'étape. Les 8 comptes `cutover_c01` à
+`cutover_c08`, écrits dans la copie **avant** `migrate` comme Doctrine les écrit (un par
+format de hash de `tests/fixtures/hashes`), tiennent lieu de comptes existants : présents
+avant la migration, ils satisfont le critère.
 
 Ce que la répétition locale ne couvre pas, et que § 3.2 et la fenêtre couvrent : le dump
 réel, la reprise des agrégats et du journal d'audit, l'edge (TLS, labels Caddy, reprise

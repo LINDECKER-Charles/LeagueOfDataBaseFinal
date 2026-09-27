@@ -32,7 +32,9 @@ npm ci --prefix tests/LoDb.E2E && npm --prefix tests/LoDb.E2E run browsers:insta
 tools/next/cutover/rehearse.sh --legacy-dir <checkout de l'ancienne stack> --slot 2 --anonymize
 ```
 
-Déroulé, chaque étape chronométrée dans un résumé final (code 0 si tout passe) :
+Déroulé, chaque étape chronométrée dans un résumé final (code 0 si tout passe ; derrière un
+`| tee`, lire ce code avec `set -o pipefail`, voir le [runbook](../../../docs/reecriture/bascule.md)
+§ 3.1) :
 
 1. **Copie** : `pg_dump` de la base de l'ancienne stack (projet `lodb`), passée au besoin par
    `tools/next/db/anonymize.sh` (`--anonymize`), restaurée dans une **base à part**
@@ -40,7 +42,9 @@ Déroulé, chaque étape chronométrée dans un résumé final (code 0 si tout p
    n'est jamais écrite ; le script refuse une copie qui porterait son nom.
 2. **Comptes existants** : un compte par format de hash de `tests/fixtures/hashes`
    (bcrypt `2y`/`2a`/coût 4, argon2i, argon2id sodium, faible, deux voies), écrits comme
-   Doctrine, plus ceux de `--accounts-file` et, avec `--anonymize`, cinq comptes de la base.
+   Doctrine, plus ceux de `--accounts-file` et, avec `--anonymize`, cinq comptes de la base
+   qui ont un mot de passe. Une base de dev peut n'en avoir aucun : le script l'écrit sur
+   stderr (`WARNING`) sans échouer, et les comptes semés tiennent lieu de comptes existants.
 3. **`migrate`** deux fois dans l'emplacement (`-p lodb-next-e<n>`) : `Baseline` marquée,
    migrations additives appliquées, puis rien à appliquer.
 4. **Pré-ingestion**, puis **nouvelle stack** démarrée sur la copie

@@ -87,8 +87,10 @@ internal static class AdminModule
         services.TryAddScoped<ServiceProbes>();
         services.TryAddScoped<DatabaseFigures>();
         services.TryAddScoped<VersionOverview>();
-        services.TryAddScoped<MonitoringReporter>();
-        services.TryAddScoped<StorageReporter>();
+        // The cached reports outlive the request that assembles them: they open their own
+        // scope for the readers above, never the one of the request.
+        services.TryAddSingleton<MonitoringReporter>();
+        services.TryAddSingleton<StorageReporter>();
         return services;
     }
 

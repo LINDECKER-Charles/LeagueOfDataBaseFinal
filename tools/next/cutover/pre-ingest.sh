@@ -8,7 +8,7 @@
 # The compose options name the stack, the integration one by default:
 #   -p lodb-next -f compose.next.yaml -f compose.next.override.yaml
 # The served host passes its own, for instance:
-#   tools/next/cutover/pre-ingest.sh -- -p lodb-prod-next -f compose.next.yaml -f compose.next.deploy.yaml
+#   tools/next/cutover/pre-ingest.sh -- -p lodb-next-prod -f compose.next.yaml -f compose.next.deploy.yaml
 #
 # Runs `ingest --latest <n> --languages all` in a one-shot container of the api service
 # (--no-deps: the database must already be migrated), which shares the stack's storage volume.
