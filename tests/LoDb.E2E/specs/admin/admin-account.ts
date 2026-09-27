@@ -1,6 +1,5 @@
-import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { expect, type Page } from '@playwright/test';
+import { execInStack } from '../../support/stack';
 import { nextStepAt, totpCode, totpStep } from './totp';
 
 /** An administrator the suite created with the CLI, and the key of its authenticator. */
@@ -14,12 +13,6 @@ export interface AdminAccount {
   lastStep?: number;
 }
 
-// The integration stack by default; a slot names its own project (docs/guides/dev-next.md).
-const PROJECT = process.env['LODB_E2E_COMPOSE_PROJECT'] ?? 'lodb-next';
-const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
-const COMPOSE_FILES = ['compose.next.yaml', 'compose.next.override.yaml'];
-// The CLI starts a .NET host and reaches the database: seconds, not minutes.
-const CLI_TIMEOUT_MS = 120_000;
 const RANDOM_LENGTH = 4;
 const CREATED = /^Created the administrator account (\S+) </m;
 const PASSWORD = /^Password, shown only now: (\S+)$/m;
@@ -49,23 +42,14 @@ export function createAdmin(purpose: string): AdminAccount {
     .toString(36)
     .slice(2, 2 + RANDOM_LENGTH);
   const email = `e2e_${purpose}_${Date.now().toString(36)}${random}@example.com`;
-  const output = execFileSync('docker', composeArguments(email), {
-    cwd: ROOT,
-    encoding: 'utf8',
-    timeout: CLI_TIMEOUT_MS,
-  });
+  const command = ['dotnet', 'LoDb.Api.dll', 'admin', 'create', '--email', email];
+  const output = execInStack('api', command);
   const username = CREATED.exec(output)?.[1];
   const password = PASSWORD.exec(output)?.[1];
   if (username === undefined || password === undefined) {
     throw new Error(`admin create did not create ${email}:\n${output}`);
   }
   return { email, username, password };
-}
-
-function composeArguments(email: string): string[] {
-  const files = COMPOSE_FILES.flatMap((file) => ['-f', file]);
-  const command = ['dotnet', 'LoDb.Api.dll', 'admin', 'create', '--email', email];
-  return ['compose', '-p', PROJECT, ...files, 'exec', '-T', 'api', ...command];
 }
 
 /**

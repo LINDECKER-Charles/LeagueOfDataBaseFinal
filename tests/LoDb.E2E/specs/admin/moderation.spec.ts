@@ -1,6 +1,7 @@
 import type { BrowserContext, Page } from '@playwright/test';
-import { discardAccount, newAccount, type TestAccount } from '../account/accounts';
-import { createBuild, verifiedAccount } from '../builds-share/builds';
+import { createMember, signInMember } from '../../support/member-account';
+import { discardAccount, type TestAccount } from '../account/accounts';
+import { createBuild } from '../builds-share/builds';
 import {
   anonymous,
   confirmAction,
@@ -19,11 +20,10 @@ interface Member {
   readonly buildName: string;
 }
 
-// One member for the whole journey, whose steps follow one another: the API takes five
-// registrations an hour from one address.
+// One member for the whole journey, whose steps follow one another.
 test.describe.configure({ mode: 'serial' });
 
-// A verified account, and its public build: registration, e-mail, then the API.
+// A verified account, and its public build: the CLI, the sign-in, then the API.
 const SETUP_TIMEOUT_MS = 90_000;
 const BAN_REASON = 'Builds en double (suite de bout en bout)';
 
@@ -36,9 +36,10 @@ function joined(): Member {
   return member;
 }
 
-test.beforeAll(async ({ browser, playwright }, testInfo) => {
+test.beforeAll(async ({ browser }, testInfo) => {
   test.setTimeout(SETUP_TIMEOUT_MS);
-  const account = newAccount('admmod');
+  // Created by the CLI: the registration form's quota is account/register.spec.ts's.
+  const account = createMember('admmod', { verified: true });
   // The member's own browser, and the clean-up's requests: without an empty state, they would
   // carry the session of the administrator.
   const context = await browser.newContext({
@@ -47,12 +48,7 @@ test.beforeAll(async ({ browser, playwright }, testInfo) => {
   });
   const page = await context.newPage();
   member = { account, context, page, buildName: `E2E moderation ${Date.now().toString(36)}` };
-  const mailbox = await anonymous(playwright.request).newContext();
-  try {
-    await verifiedAccount(page, mailbox, account);
-  } finally {
-    await mailbox.dispose();
-  }
+  await signInMember(page, testInfo.project.use.baseURL, account);
   await createBuild(page, {
     name: member.buildName,
     isPublic: true,
@@ -143,8 +139,9 @@ test('finds an account, then opens its activity', async ({ page }) => {
   await expect(
     page.getByRole('heading', { level: 1, name: `Activité de ${account.username}` }),
   ).toBeVisible();
+  // The member's sign-in: created by the CLI, the account has no registration to journal.
   await expect(
-    page.getByRole('table').getByText('Inscription', { exact: true }).first(),
+    page.getByRole('table').getByText('Connexion', { exact: true }).first(),
   ).toBeVisible();
   await page.getByRole('link', { name: 'Retour aux utilisateurs' }).click();
   await expect(page).toHaveURL(/\/admin\/users(\?|$)/);

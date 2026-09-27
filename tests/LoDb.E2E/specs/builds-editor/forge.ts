@@ -28,9 +28,18 @@ export function runeRowsOf(page: Page): Locator {
   return page.locator('lodb-rune-board .rune-slot');
 }
 
-/** Chooses the champion through the picker's search; the chosen one shows on its toggle. */
+/**
+ * Chooses the champion through the picker's search; the chosen one shows on its toggle. The
+ * picker opens its list at once for a build without a champion: the toggle is only pressed
+ * when the list is closed, since pressing it would close the list.
+ */
 export async function chooseChampion(page: Page, name: string): Promise<void> {
-  await page.getByRole('button', { name: 'Choose a champion' }).click();
+  const toggle = page.locator('lodb-champion-picker .champ-toggle');
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+    await toggle.click();
+  }
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   await page.getByRole('searchbox', { name: 'Search a champion…' }).fill(name);
   await page.getByRole('listbox', { name: 'Champion' }).getByRole('option', { name }).click();
   await expect(page.locator('lodb-champion-picker .champ-toggle')).toContainText(name);

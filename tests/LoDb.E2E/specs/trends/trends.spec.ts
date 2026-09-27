@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { nodesOfType, readHead } from '../../support/head';
 import { expect, test } from '../../support/worker-account';
-import { createBuild } from '../builds-share/builds';
+import { createBuild, voteSaved } from '../builds-share/builds';
 
 function filter(page: Page, label: string) {
   return page.locator('lodb-trend-filters').getByLabel(label);
@@ -120,11 +120,16 @@ test('ranks a public build, offers to forge one and takes votes', async ({
 
   await test.step('takes the reader’s vote on the row', async () => {
     const up = row(owner).getByRole('button', { name: 'Upvote this build' });
+    const voted = voteSaved(owner, build);
     await up.click();
     await expect(row(owner).locator('.vote-score')).toHaveText('+1');
+    // The row shows the vote before the API has it: the reload waits for its answer.
+    expect((await voted).ok(), 'the API keeps the vote').toBe(true);
     await owner.reload();
     await expect(up).toHaveAttribute('aria-pressed', 'true');
+    const withdrawn = voteSaved(owner, build);
     await up.click();
     await expect(row(owner).locator('.vote-score')).toHaveText('0');
+    expect((await withdrawn).ok(), 'the API withdraws the vote').toBe(true);
   });
 });
