@@ -8,11 +8,19 @@ import type { CardLook } from './card-look';
 import { RESOURCE_TEXTS } from './resource-texts';
 import { SeeAllArrow } from './see-all-arrow';
 
-// Pixel boxes reserved before the bytes arrive: Data Dragon's square icons are 120px wide,
-// its item, spell and rune marks 64px.
-const PORTRAIT_SIZE = 120;
+// Pixel boxes reserved before the bytes arrive: Data Dragon's loading-screen portraits are
+// 308 by 560, its item, spell and rune marks 64px.
+const LOADING_ART_WIDTH = 308;
+const LOADING_ART_HEIGHT = 560;
 const TILE_SIZE = 64;
 const INITIALS_LENGTH = 2;
+// Spelled out whole for the Tailwind scanner: portraits go three abreast from 640px, as the
+// legacy home's champions did, tiles two.
+const GRID_CLASSES: Readonly<Record<CardLook, string>> = {
+  portrait: 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4',
+  tile: 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4',
+  round: 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4',
+};
 
 /**
  * One preview of the home: its heading, the size of the whole list, a link to it, and the
@@ -30,7 +38,9 @@ export class PreviewSection {
   readonly look = input<CardLook>('tile');
 
   protected readonly texts = computed(() => RESOURCE_TEXTS[this.section().resource]);
-  protected readonly portraitSize = PORTRAIT_SIZE;
+  protected readonly gridClass = computed(() => GRID_CLASSES[this.look()]);
+  protected readonly loadingArtWidth = LOADING_ART_WIDTH;
+  protected readonly loadingArtHeight = LOADING_ART_HEIGHT;
   protected readonly tileSize = TILE_SIZE;
 
   protected initialsOf(name: string): string {

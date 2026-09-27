@@ -38,10 +38,17 @@ const META: CatalogMeta = {
   defaultGameMode: 'sr',
 };
 const IMAGE = { status: 'ready', url: '/cdn/blobs/abc.png', webpUrl: '/cdn/blobs/abc.webp' };
+const LOADING_ART = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Aatrox_0.jpg';
 const CHAMPIONS = {
   total: 171,
   entries: [
-    { canonicalPath: 'champions/Aatrox', name: 'Aatrox', title: 'the Darkin Blade', image: IMAGE },
+    {
+      canonicalPath: 'champions/Aatrox',
+      name: 'Aatrox',
+      title: 'the Darkin Blade',
+      image: IMAGE,
+      loadingArt: LOADING_ART,
+    },
   ],
 };
 const ITEMS = {
@@ -153,10 +160,20 @@ describe('resolveHome', () => {
         name: 'Aatrox',
         caption: 'the Darkin Blade',
         image: '/cdn/blobs/abc.png',
+        art: LOADING_ART,
       },
     ]);
     expect(home.sections.items.cards[0]?.caption).toBe('id 1001');
     expect(home.sections.summoners.cards[0]?.caption).toBe('SummonerFlash');
+  });
+
+  it('gives the champions alone their loading-screen art', async () => {
+    const { home } = await visit('/en');
+
+    expect(home.sections.champions.cards[0]?.art).toBe(LOADING_ART);
+    expect(home.sections.items.cards[0]?.art).toBeNull();
+    expect(home.sections.runes.cards[0]?.art).toBeNull();
+    expect(home.sections.summoners.cards[0]?.art).toBeNull();
   });
 
   it('follows ?version= and ?lang=, and carries them into every link', async () => {

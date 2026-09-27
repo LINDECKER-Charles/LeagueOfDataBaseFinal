@@ -18,6 +18,7 @@ function sectionOf(
       name: entry.name,
       caption: entry.caption,
       image: entry.image.url ?? null,
+      art: entry.art,
     })),
   };
 }

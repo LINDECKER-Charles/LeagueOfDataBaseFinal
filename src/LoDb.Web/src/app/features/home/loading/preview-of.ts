@@ -21,6 +21,7 @@ export const PREVIEW_OF = {
       name: champion.name,
       caption: champion.title,
       image: champion.image,
+      art: champion.loadingArt,
     })),
   }),
   items: (list: ItemList): Preview => ({
@@ -30,6 +31,7 @@ export const PREVIEW_OF = {
       name: item.name,
       caption: `${ITEM_CAPTION_PREFIX}${item.id}`,
       image: item.image,
+      art: null,
     })),
   }),
   runes: (list: RuneList): Preview => ({
@@ -39,6 +41,7 @@ export const PREVIEW_OF = {
       name: tree.name,
       caption: tree.key,
       image: tree.image,
+      art: null,
     })),
   }),
   summoners: (list: SummonerList): Preview => ({
@@ -48,6 +51,7 @@ export const PREVIEW_OF = {
       name: spell.name,
       caption: spell.id,
       image: spell.image,
+      art: null,
     })),
   }),
 } as const;

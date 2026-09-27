@@ -15,6 +15,7 @@ import { HomePage } from './home-page';
 const ORIGIN = 'https://league-of-data-base.com';
 const VERSION = '16.19.1';
 const SEO_TITLE = 'League Of Data Base — League of Legends encyclopedia';
+const LOADING_ART = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Aatrox_0.jpg';
 const CATALOGUES: Record<string, Translation> = {
   en: {
     homepage: {
@@ -44,6 +45,7 @@ function sectionOf(locale: string, resource: ResourceType, filled: boolean): Hom
     name: `First of ${resource}`,
     caption: 'caption',
     image: null,
+    art: resource === 'champions' ? LOADING_ART : null,
   };
   return {
     resource,
@@ -223,5 +225,16 @@ describe('HomePage', () => {
     expect(spells.querySelector('p')?.textContent?.trim()).toBe(
       'Nothing to show for this version.',
     );
+  });
+
+  it('draws each champion in its loading-screen art, its name a titled heading', async () => {
+    document.documentElement.lang = 'en';
+
+    const { host } = await visit('/en');
+
+    const champion = host.querySelector('lodb-preview-section li') as HTMLElement;
+    expect(champion.querySelector('img')?.getAttribute('src')).toBe(LOADING_ART);
+    expect(champion.querySelector('h3')?.getAttribute('title')).toBe('First of champions');
+    expect(champion.querySelector('h3 + p')?.textContent?.trim()).toBe('caption');
   });
 });

@@ -8,4 +8,6 @@ export interface PreviewEntry {
   /** The line under the name: a champion's title, an item's id, a rune path's key. */
   readonly caption: string;
   readonly image: CatalogImage;
+  /** A champion's loading-screen portrait, hotlinked from Data Dragon; null for the others. */
+  readonly art: string | null;
 }
