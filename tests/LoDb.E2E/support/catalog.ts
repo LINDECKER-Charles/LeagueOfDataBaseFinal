@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext } from '@playwright/test';
+import { expect, type APIRequestContext, type Page, type Response } from '@playwright/test';
 
 interface RawMeta {
   readonly latest: string | null;
@@ -7,6 +7,20 @@ interface RawMeta {
 
 interface List {
   readonly entries: readonly { readonly id: string }[];
+}
+
+interface DetailNeighbour {
+  readonly canonicalPath: string;
+  readonly edition: 'modern' | 'classic';
+}
+
+// The time a detail page's entity took, which its server sends for the load-time badge.
+const SERVER_TIMING = /(?:^|,\s*)catalogue;dur=\d+(?:\.\d+)?/;
+
+/** The entries on either side of a detail page, as its payload carries them. */
+export interface DetailNeighbours {
+  readonly previous: DetailNeighbour | null;
+  readonly next: DetailNeighbour | null;
 }
 
 /** The versions of the stack, newest first; `latest` is the one short URLs show. */
@@ -38,4 +52,29 @@ export async function idsOf(
   const response = await request.get(`/api/catalog/${version}/en_US/${resource}`);
   expect(response.status(), `${resource} of ${version}`).toBe(200);
   return ((await response.json()) as List).entries.map((entry) => entry.id);
+}
+
+/**
+ * A detail page of /en/ as its server sends it, before any script: the time its entity took,
+ * and a pager linking the payload's neighbours, a LoL Classic one chipped with its edition.
+ */
+export async function expectServedDetail(
+  page: Page,
+  response: Response | null,
+  neighbours: DetailNeighbours,
+): Promise<void> {
+  expect(response?.headers()['server-timing']).toMatch(SERVER_TIMING);
+  const sides = [
+    ['prev', neighbours.previous],
+    ['next', neighbours.next],
+  ] as const;
+  for (const [rel, neighbour] of sides) {
+    const link = page.locator(`lodb-pager a[rel="${rel}"]`);
+    await expect(link).toHaveCount(neighbour === null ? 0 : 1);
+    if (neighbour !== null) {
+      await expect(link).toHaveAttribute('href', `/en/${neighbour.canonicalPath}`);
+      const chips = neighbour.edition === 'classic' ? 1 : 0;
+      await expect(link.locator('.hx-chip-hex')).toHaveCount(chips);
+    }
+  }
 }
