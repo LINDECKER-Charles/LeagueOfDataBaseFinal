@@ -324,3 +324,139 @@ arrière est prouvé.
 Les échecs du § 3 ne touchent pas ce critère, mais la suite E2E complète n'est pas verte :
 G1 (nouveau) et G2 à G4 (hérités des lots 5 à 7 et de L8.2) restent à corriger. Le lot 7
 reste non vérifié tant que G2 tient.
+
+## 5. Vérification
+
+- **Date** : 2026-09-27, depuis la racine, sur la branche `docs/reecriture-dotnet-angular`.
+- **Fusions** (sans conflit, fichiers disjoints) : `wt/corr-l8-api-runbook` (G1, G5 ;
+  `d52fd4c`, `b642889`, `8ead54f`) en `5c7d65e`, `wt/corr-l8-admin-i18n` (G2 ; `6d82177`)
+  en `719f20e`, `wt/corr-l8-e2e` (G3, G4 ; `8a3bdff`, `7fd8725`) en `813b169`. Aucune autre
+  branche `wt/corr-l8-*` ; `git branch --no-merged` ne liste plus aucune branche `wt/*`.
+  Aucun ajout aux fichiers partagés, aucun `package.json` modifié, aucun nouveau projet :
+  `api:check` sans dérive, rien à régénérer. Le dépôt n'a aucun hook de commit : rien à
+  rejouer sur les fichiers fusionnés.
+- **Commits de la vérification** : `817aa27` (secrets des releases dans le guide des
+  secrets : A3 du [jalon des lots 9 et 10](lots-09-10.md)), `8fba30a` (piège du quota
+  d'inscriptions de `CLAUDE.md`, rendu inexact par G3), `810366d` (spec de l'éditeur de
+  builds, ci-dessous), `279ad8b` (rapport de complétude i18n régénéré), `005cb57`
+  (Lighthouse remesuré).
+- **Stack** : `lodb-next` reconstruite depuis la racine sur `8fba30a`
+  (`IMAGE_TAG=8fba30a APP_REVISION=8fba30a docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build --wait`),
+  5 services `healthy`, images `org.opencontainers.image.revision=8fba30a`. Les commits
+  suivants ne touchent que des specs et de la documentation.
+
+### 5.1 Commandes et résultats
+
+| Étape | Commande | Résultat |
+|---|---|---|
+| Build .NET | `dotnet build LoDb.slnx -c Release` | 0 avertissement, 0 erreur |
+| Tests .NET | `dotnet test LoDb.slnx` | 2 939 tests : 2 937 réussis, 2 ignorés (parité sans `LODB_PARITY_RUN`), 0 échec ; dont `AdminMonitoringConcurrencyTests` (G1) |
+| Front | `npm ci --prefix src/LoDb.Web` puis `lint`, `typecheck` | OK, OK |
+| Front | `npm --prefix src/LoDb.Web run test` | 233 fichiers, 2 039 tests réussis |
+| Front | `build:web` / `build:shell` | OK, 168 pages prérendues ; initial 654,79 ko et 653,96 ko (avertissement de budget connu) |
+| Dérive | `npm --prefix src/LoDb.Web run api:check` | sortie 0 |
+| i18n | `npm --prefix src/LoDb.Web run i18n:report` | sortie 0 ; rapport périmé depuis L3.3, régénéré (`279ad8b`) |
+| CLI de l'hôte | `docker compose -p lodb-next … exec -T api dotnet LoDb.Api.dll analytics import --source /x --dry-run` | `No such directory: /x` |
+| E2E | `npm ci --prefix tests/LoDb.E2E` puis `run typecheck` | OK |
+| E2E, passage 1 | `npm --prefix tests/LoDb.E2E test` (API recréée par la reconstruction) | 302 tests : 300 réussis, **1 échec** (`builds-editor.spec.ts:33`), 1 ignoré |
+| E2E, diagnostic | `npm --prefix tests/LoDb.E2E test -- specs/builds-editor --repeat-each=3` | 3 échecs sur 3 avant `810366d`, puis 6 réussis sur 6 |
+| **E2E, passage 2** | `docker restart lodb-next-api-1` puis `npm --prefix tests/LoDb.E2E test` | **302 tests : 301 réussis, 0 échec, 1 ignoré** (54,9 s) |
+| E2E, passage 3 | idem, **sans** redémarrer l'API | 298 réussis, 1 échec (`admin/contacts.spec.ts:42`, 429), 2 non lancés : quota de contact, ci-dessous |
+| G1 | `docker logs lodb-next-api-1 2>&1 \| grep -c admin.monitoring.database_unreadable` | 0 après les trois passages |
+| Lighthouse | `node tools/next/lighthouse/run.mjs --stack lodb-next` | sortie 1 : 5 pages sur 5 hors budget ([rapport](../lighthouse.md)) ; critère du lot 3 |
+| Outils de bascule | `node --test 'tools/next/cutover/test/*.test.mjs'` | 16 réussis |
+| *Contract* | `tools/next/contract/check.sh` | `CONTRACT OK` |
+| **Répétition locale** | `set -o pipefail; tools/next/cutover/rehearse.sh --slot 2 --anonymize 2>&1 \| tee /tmp/lodb-rehearsal-verif.log; echo "code $?"` | **`code 0`, 15 étapes `ok`**, « The rehearsal passes » ; § 5.3 |
+
+Le passage 3 ne compte pas pour le critère : il vérifie que le quota d'inscriptions tient
+deux passages de suite (G3). Il bute sur un autre quota, celui des messages de contact
+(5 par heure, `RateLimitingPolicies.Contact`), que `contacts.spec.ts` consomme à chaque
+passage. C'est la règle déjà consignée : redémarrer l'API entre deux passages complets ;
+jamais relever le quota.
+
+### 5.2 Échecs initiaux
+
+| Groupe | État | Preuve |
+|---|---|---|
+| G1 — rapport de surveillance vide par intermittence | **corrigé** | `analytics.spec.ts:7` et `operations.spec.ts:6` réussis aux passages 1 et 2 ; aucune `admin.monitoring.database_unreadable` dans les journaux ; `AdminMonitoringConcurrencyTests` vert |
+| G2 — l'admin repasse en anglais après une action | **corrigé** | 29 tests admin sur 29 aux passages 1 et 2, dont `contacts.spec.ts:61` et `:74`, `moderation.spec.ts:103` à `:189` (le mode série entier), `operations.spec.ts:6` après « Actualiser » |
+| G3 — quota d'inscriptions de la suite complète | **corrigé** | `builds-editor.spec.ts:33` (après `810366d`), `builds-share/private.spec.ts:6`, `builds-share/public.spec.ts:19`, `profile.spec.ts:32`, `trends.spec.ts:90` réussis ; aucun refus d'inscription au passage 3, enchaîné sans redémarrage |
+| G4 — `context-switcher.spec.ts:118` avant l'hydratation | **corrigé** | réussi aux trois passages complets, en 4 workers |
+| G5 — textes du runbook et des outils | **corrigé**, sauf `.env.next.example` | runbook § 1 et § 3.1 (`pipefail`, comptes semés, emplacement 2) suivis tels quels ; `WARNING: --anonymize found no account with a password…` émis ; en-tête de `pre-ingest.sh` à `lodb-next-prod`. **Persistant** : `.env.next.example` sans `LODB_PUBLIC_API_ORIGIN`, sans ligne `LoDb__*`, sans variante prod (fichier hors du périmètre des corrections et de la vérification ; le runbook § 1 le garde ouvert avant J-3) |
+
+**Nouveau, corrigé par la vérification** (`810366d`) : `builds-editor.spec.ts:33`,
+masqué jusqu'ici par le quota puis par le sélecteur de champion, échouait 3 fois sur 3.
+Trois défauts de la spec, aucun du produit :
+
+1. `pickRunes` comptait les rangées juste après le clic (`count()` n'attend pas) : 0
+   rangée, puis la sortie `locator('lodb-rune-board .rune-slot').first() … Expected: 0,
+   Received: 1`. La fonction attend maintenant le chemin pressé et sa première rangée.
+2. `getByRole('button', { name: 'All' })` dans l'armurerie : *strict mode violation*,
+   3 éléments (« Crystalline Bracer », « Executioner's Calling »). `exact: true`.
+3. L'import vers le patch précédent attendait « Save changes ». L'ancienne stack
+   (`BuildImportController` : « opening a fresh (create-mode) editor … the source is
+   untouched ») ouvre un éditeur de création, comme la nouvelle : la spec forge
+   maintenant le brouillon importé, attend deux builds, puis supprime les deux.
+
+### 5.3 Répétition locale (runbook § 3.1, rejouée)
+
+Les corrections touchent le runbook (§ 1, § 3.1) et `rehearse.sh` : la répétition est
+rejouée telle qu'écrite, `--stop-legacy` en moins (l'ancienne stack devait rester
+démarrée pour ses tests, § 5.5 ; le runbook prévoit ce cas).
+
+```text
+ok    3s  Copy lodb into lodb_rehearsal, anonymized
+ok    0s  Existing accounts of the copy
+ok    3s  Build the new stack (lodb-next-e2)
+ok    8s  migrate on lodb_rehearsal (Baseline marked, additive migrations)
+ok    190s  Pre-ingestion (ingest --latest 3 --languages all)
+ok    19s  New stack up on lodb_rehearsal
+ok    1s  Smoke tests of the new stack
+ok    44s  301 of the former sitemaps
+ok    40s  Read-only E2E (@readonly)
+ok    4s  Existing accounts on the new stack, API key
+ok    0s  New stack stopped (rollback)
+ok    14s  Legacy stack on lodb_rehearsal
+ok    1s  Legacy key pages on the migrated schema
+ok    5s  Legacy sign-in and /v1/usage after the new stack
+ok    13s  Legacy stack back on lodb
+The rehearsal passes: migrated copy served by the new stack, then by the legacy one.
+code 0
+```
+
+- `code 0` est celui du script (`set -o pipefail`), et non celui de `tee`.
+- `--anonymize` écrit l'avertissement attendu : la base de dev n'a aucun compte à mot de
+  passe ; les 8 comptes `cutover_c01` à `c08` sont écrits dans la copie avant `migrate`.
+- `@readonly` : 259 réussis, 1 ignoré ; anciens sitemaps : `latest.xml` 1 093/1 093,
+  `16.18.1.xml` 1 079/1 079 ; l'ancienne go-api accepte la clé émise par la nouvelle stack
+  (200) et refuse l'absence de clé (401).
+- Pré-ingestion : `1 of 2007 fetches got no verdict` pour 16.18.1 (avertissement réseau,
+  image reprise au passage suivant) ; l'étape sort en 0.
+- Remise en état : aucun conteneur ni volume `lodb-next-e2*` ; bases de l'ancienne stack
+  `lodb`, `lodb_j567`, `postgres`, `template0`, `template1` (pas de `lodb_rehearsal`).
+
+### 5.4 Critère de sortie du lot 8
+
+| Exigence | État | Preuve |
+|---|---|---|
+| Base de l'ancienne stack migrée (copie) | **vérifié** | § 5.3, étapes 1 à 4 |
+| Nouvelle stack servie dessus | **vérifié** | smoke, 301 des anciens sitemaps, comptes existants et clé d'API |
+| E2E en lecture seule | **vérifié** | `@readonly` 259 réussis, 1 ignoré |
+| Ancienne stack relancée sur le même schéma | **vérifié** | pages clés, connexion Symfony avec le hash réécrit, `/v1/usage` 200 |
+
+**Critère du lot 8 : vérifié**, et la suite E2E complète est verte (passage 2). Reste
+ouvert, hors critère : `.env.next.example` (G5), avant J-3 du runbook.
+
+### 5.5 Ancienne stack
+
+Démarrée par la répétition depuis ce dossier, puis :
+
+| Commande | Résultat |
+|---|---|
+| `docker compose exec -T -u www-data php php vendor/bin/phpunit tests/Unit` | OK (695 tests, 1 616 assertions) |
+| `cd app && npm ci && npm test` (hôte, Vitest) | 42 fichiers, 290 tests réussis ; `app/node_modules` retiré ensuite |
+| `docker run --rm -v "$PWD/go:/src:ro" golang:1.26 sh -c 'cd /src/api && go test ./...; cd /src/fetcher && go test ./...'` | tous les paquets `ok` (api : 7, fetcher : 3) |
+| `curl` sur 8080 et 8090 | `/`, `/champions`, `/objects`, `/runes` 200 ; `/builds` 302 ; go-api `/healthz` 200 |
+| `docker compose stop` | 6 conteneurs `Exited (0)` |
+
+Aucun fichier de l'ancienne stack modifié ; `.env` identique à `.env.example`.
