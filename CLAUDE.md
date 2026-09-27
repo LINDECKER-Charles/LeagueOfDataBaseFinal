@@ -523,3 +523,39 @@ Constats du [jalon 3](docs/reecriture/rapports/jalons/lot-03.md).
 - `api` dépasse 384m pendant la suite E2E complète (541 Mio en dev, sans limite) : ce
   n'est pas une fuite prouvée. On le mesure sous limite avant L8.1, sans rien forcer
   dans le code.
+
+### Pièges du jalon des lots 5 à 7 (ne pas « corriger » par erreur)
+
+Constats du [jalon des lots 5 à 7](docs/reecriture/rapports/jalons/lots-05-06-07.md).
+
+- **CLI de l'hôte en `Development`** : l'API de la stack de dev tourne en `Development`, où
+  l'hôte de `CliRunner` valide tout le conteneur. Un service de module qui dépend de
+  l'hôte web (autorisation, sondes de santé, routage) fait tomber **toutes** les
+  sous-commandes (`admin create`, `analytics import`, `ingest`…), sans qu'aucun test ne le
+  voie. Après tout ajout à un `Add<Module>`, lancer dans la stack
+  `docker compose -p lodb-next … exec -T api dotnet LoDb.Api.dll analytics import --source /x --dry-run`
+  (attendu : `No such directory: /x`), et non un contournement par
+  `ASPNETCORE_ENVIRONMENT=Production` (G1).
+- **Le contrat avant le front** : une branche qui importe un client généré non commité ne
+  compile qu'après `api:generate` ; l'intégration le lance et le committe avant les
+  suites.
+- **Parité des builds** (`tools/next/builds-parity/`) : la copie vit dans le Postgres de
+  l'ancienne stack (`createdb` + `pg_dump | pg_restore`), jamais dans sa base `lodb`.
+  L'ancienne stack y pointe par `POSTGRES_DB` du `.env` (ignoré, sauvegardé puis remis),
+  `lodb-next` par une surcouche compose hors dépôt qui ne change que
+  `ConnectionStrings__LoDb` (`Host=host.docker.internal;Port=5432;…`). Copier aussi
+  `ddragon_version` et `ddragon_asset` de `lodb-next` (données seules) : la copie migrée
+  n'a aucune version prête. Pas de `--json` vers `/tmp` pour un rapport commité.
+- **Mêmes agrégats analytics** : `app:analytics:rollup` d'abord côté PHP (une journée non
+  consolidée n'est lue que par l'ancienne stack), puis `analytics import` avec le volume
+  `lodb_storage` monté en lecture seule. L'ancien panneau n'a pas de plage « tout » (il
+  retombe sur 30 jours) : comparer 7, 30 et 90 jours. L'ancienne admin se connecte avec
+  `ADMIN_LOGIN`/`ADMIN_PASSWORD` du `.env` et le jeton `_csrf_token=csrf-token` plus un
+  en-tête `Origin`.
+- **Webhook Stripe en local** : aucun secret en dev (503). Pour un rejeu, un secret de
+  test `whsec_…` dans une surcouche hors dépôt, une signature `t=…,v1=HMAC-SHA256(t.payload)`
+  datée de moins de 5 minutes et `api_version` identique à celle des tests.
+- **Textes rendus** : Angular laisse un espace de tête et de queue dans un texte entre
+  balises (constaté sur `/developers`, `" Base URL: … "`) ; une assertion Playwright par
+  regex ancrée sur `^` ou `$` échoue alors. Ancrer sur le contenu, ou utiliser une chaîne
+  (G3 ; hypothèse aussi pour `/^Relevé du /` de G2).

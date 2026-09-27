@@ -197,3 +197,45 @@ Lecture :
 - `web-ssr` monte à 300 Mio, sous le pic du jalon 2 (338 Mio) ; la limite de 512m tient.
 - Le second passage complet, lancé après un nouveau redémarrage d'`api` et l'arrêt des
   relevés, ne figure pas dans ce tableau ; il ne change pas la liste des échecs.
+
+### Lots 5, 6 et 7 — jalon (2026-09-27)
+
+Contexte : stack d'intégration reconstruite depuis `01db165` (vague G intégrée : portail
+des clés, admin avec MFA, mise à jour Android), `IMAGE_TAG=APP_REVISION=01db165`,
+conteneurs `api`, `web-ssr` et `nginx` recréés juste avant la mesure, base chargée
+(16.19.1 servie). Relevés `docker stats --no-stream` en boucle, environ toutes les 5 s :
+14 échantillons pendant la suite complète (1,1 min), 21 pendant la suite admin. `api` est
+redémarré entre les deux passages (limiteur d'inscriptions en mémoire).
+
+Commandes :
+
+- `npm --prefix tests/LoDb.E2E test` : 301 tests, 262 réussis, 28 échecs, 10 non lancés,
+  1 ignoré ;
+- `npm --prefix tests/LoDb.E2E test -- specs/admin` (passage de diagnostic, voir le
+  [jalon](jalons/lots-05-06-07.md)) : 29 tests, 12 réussis.
+
+| Service | Avant la suite | Pic (301 tests) | Pic (admin) | Limite provisoire |
+|---|---:|---:|---:|---:|
+| `api` | 135 Mio | 440 Mio | 482 Mio | 384m |
+| `web-ssr` | 124 Mio | 329 Mio | 178 Mio | 512m |
+| `nginx` | 14 Mio | 19 Mio | 19 Mio | 64m |
+| `postgres` | 47 Mio | 56 Mio | 56 Mio | 512m |
+| `mailpit` (dev seulement) | 40 Mio | 46 Mio | 42 Mio | — |
+
+Les deux stacks ensemble (critères des lots 5 et 7, relevé ponctuel au repos) : ancienne
+stack `php` 67 Mio, `postgres` 36 Mio, `go-fetcher` 21 Mio, `mailer` 14 Mio, `nginx`
+13 Mio, `go-api` 5 Mio, soit environ 156 Mio ; `lodb-next` `api` 118 Mio, `web-ssr`
+234 Mio. Avant le démarrage de l'ancienne stack, tous les conteneurs du poste occupaient
+environ 4,2 Gio des 11,67 Gio : la marge est large.
+
+Lecture :
+
+- `api` reste au-dessus de sa limite provisoire : 440 Mio sur la suite complète, 482 Mio
+  sur la suite admin seule, qui charge surtout les rapports (analytics, stockage,
+  surveillance) et les connexions argon2id. C'est sous le pic du jalon 3 (541 Mio), mais
+  toujours sans mesure sous limite : à trancher avant L8.1.
+- Le panneau de surveillance de l'admin lit la mémoire du processus `api` : 290 Mio
+  à un instant de la suite admin (tas managé 60 Mio). L'écart avec le pic de
+  `docker stats` n'est pas expliqué (instant différent, ou cache de pages du noyau compté
+  dans le conteneur) : hypothèse à vérifier par la mesure sous limite.
+- `web-ssr` monte à 329 Mio, sous le pic du jalon 2 (338 Mio) ; la limite de 512m tient.
