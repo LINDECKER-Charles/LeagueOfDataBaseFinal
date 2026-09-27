@@ -8,6 +8,7 @@ import { injectRouteData } from '../../core/routing/inject-route-data';
 import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
 import { Button } from '../../ui/controls/button';
 import { Chip } from '../../ui/controls/chip';
+import { FragmentLink } from '../../ui/navigation/fragment-link';
 import { Backdrop } from '../../ui/surfaces/backdrop';
 import { applyDevelopersHead } from './apply-developers-head';
 import {
@@ -36,7 +37,7 @@ const ENDPOINTS = [
  */
 @Component({
   selector: 'lodb-developers-page',
-  imports: [Backdrop, Button, Chip, RouterLink, TranslocoPipe],
+  imports: [Backdrop, Button, Chip, FragmentLink, RouterLink, TranslocoPipe],
   providers: [provideTranslocoScope('api', 'developers')],
   templateUrl: './developers-page.html',
   styleUrl: './developers-page.css',
@@ -60,8 +61,7 @@ export class DevelopersPage {
   });
   protected readonly pricing = computed(() => {
     const reference = this.reference();
-    const counts = new Intl.NumberFormat(this.locale());
-    return reference === null ? [] : pricingRows(reference, (count) => counts.format(count));
+    return reference === null ? [] : pricingRows(reference);
   });
 
   constructor() {
