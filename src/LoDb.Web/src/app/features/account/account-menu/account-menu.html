@@ -27,7 +27,8 @@
           >{{ 'nav.builds' | transloco }}</a
         >
       </li>
-      <li class="gold-hairline mt-1 pt-1">
+      <li role="separator" class="gold-hairline my-1 h-px"></li>
+      <li>
         <button type="button" class="nav-link" [disabled]="leaving()" (click)="signOut()">
           {{ 'auth.logout' | transloco }}
         </button>
