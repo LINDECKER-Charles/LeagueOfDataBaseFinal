@@ -51,7 +51,8 @@ const CATALOGUES: Record<string, Translation> = {
 };
 // Angular's default, which the render keeps and TestBed does not.
 const SERVER_APP_ID = 'ng';
-// The chrome's scope lands at once, the route matches later, the root catalogue last.
+// A page that learns its locale late, like a shared build: the chrome's scope lands at once,
+// the route matches later, the root catalogue last.
 const MATCH_DELAY_MS = 20;
 const ROOT_DELAY_MS = 40;
 const DOCUMENT_HTML =
@@ -127,7 +128,7 @@ function browserConfig(): ApplicationConfig {
           component: ChromePage,
         },
         {
-          path: ':locale/late',
+          path: 'late/:locale',
           canMatch: [() => after(MATCH_DELAY_MS).then(() => true)],
           resolve: { locale: activateLocale },
           component: TitlePage,
@@ -217,10 +218,10 @@ describe('i18n catalogues in SSR', () => {
     expect(body.match(/>\s*(?:about|api)\.[a-z_.]+\s*</g)).toBeNull();
   });
 
-  it('renders the chrome in the root catalogue, even when one of its scopes lands first', async () => {
+  it('renders the chrome in the root catalogue when the page learns its locale late', async () => {
     stubCatalogueFetch({ '/i18n/en.json': ROOT_DELAY_MS });
 
-    const body = bodyOf(await renderOnServer('/en/late', { root: ChromeRoot }));
+    const body = bodyOf(await renderOnServer('/late/en', { root: ChromeRoot }));
 
     expect(body).toContain('<b>Hello</b>');
     expect(body).toContain('<h1>Hello</h1>');

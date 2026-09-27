@@ -1,3 +1,4 @@
+import { PlatformLocation } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -105,4 +106,32 @@ describe('provideI18n', () => {
 
     expect(transloco.translate('filter.page', { page: 1, count: 3 })).toBe('1 / 3 ページ');
   });
+});
+
+describe('provideI18n before the first render', () => {
+  function start(pathname: string): TranslocoService {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideI18n(),
+        { provide: PlatformLocation, useValue: { pathname } },
+      ],
+    });
+    return TestBed.inject(TranslocoService);
+  }
+
+  // No request may leave before the platform is detected, another initializer.
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  it('activates the locale of the URL, so the chrome renders in it', () => {
+    expect(start('/fr/items').getActiveLang()).toBe('fr');
+  });
+
+  it.each(['/', '/admin/users', '/b/0123456789abcdef01234567', '/EN/items'])(
+    'leaves %s, outside the locales, to the default one until its route decides',
+    (pathname) => {
+      expect(start(pathname).getActiveLang()).toBe('en');
+    },
+  );
 });
