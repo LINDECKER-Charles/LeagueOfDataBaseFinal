@@ -1,37 +1,41 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { readAdminMonitoring } from '../../../../../core/api/generated/fn/admin-monitoring/read-admin-monitoring';
 import { Button } from '../../../../../ui/controls/button';
-import { duration } from '../../../format/duration';
+import { Chip } from '../../../../../ui/controls/chip';
+import { figure } from '../../../format/figure';
 import { FigurePipe } from '../../../format/figure-pipe';
 import { StampPipe } from '../../../format/stamp-pipe';
-import { healthTone } from '../../../shared/health-tone';
+import { AdminBand } from '../../../layout/admin-band';
+import { AdminCard } from '../../../layout/admin-card';
+import { AdminRule } from '../../../layout/admin-rule';
+import { PageHead } from '../../../layout/page-head';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 import { injectPanel } from '../../../state/inject-panel';
 import { PanelState } from '../../../state/panel-state';
-import { AdminCard } from '../../../widgets/admin-card';
-import { Badge } from '../../../widgets/badge';
 import { Kpi } from '../../../widgets/kpi';
-import { PageHead } from '../../../widgets/page-head';
-import { RankList } from '../../../widgets/rank-list';
-import { MonitoringVersions } from './monitoring-versions';
-import { AdminTextPipe } from '../../../shared/admin-text-pipe';
+import { MonitoringRuntime } from './monitoring-runtime';
+import { ProbeCard } from './probe-card';
 
 /**
- * `/admin/monitoring`: the health of the API. Its dependencies as probed, the figures of the
- * process, the queues of the ingestion, the Data Dragon versions, the heaviest tables and
- * what the community produced. The API caches the report; refresh probes again.
+ * `/admin/monitoring`: the health of the site, in the order of the legacy page. Its probes as
+ * cards, the figures of the application, the volumes (the heaviest tables, the e-mails
+ * waiting), then what the new API adds: its process, the ingestion and the Data Dragon
+ * versions. The API caches the report; "Rafraîchir" probes again.
  */
 @Component({
   selector: 'lodb-monitoring-panel',
   imports: [
+    AdminBand,
     AdminCard,
-    Badge,
+    AdminRule,
     Button,
+    Chip,
     FigurePipe,
     Kpi,
-    MonitoringVersions,
+    MonitoringRuntime,
     PageHead,
     PanelState,
-    RankList,
+    ProbeCard,
     StampPipe,
     AdminTextPipe,
   ],
@@ -41,16 +45,14 @@ import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 export class MonitoringPanel {
   private readonly refreshes = signal(0);
 
-  protected readonly tone = healthTone;
   protected readonly report = injectPanel(readAdminMonitoring, () =>
     this.refreshes() > 0 ? { refresh: true } : {},
   );
-  protected readonly uptime = computed(() =>
-    duration(this.report.value()?.process.uptimeSeconds ?? 0),
-  );
-  protected readonly tables = computed(() =>
-    (this.report.value()?.tables ?? []).map((table) => ({ name: table.name, value: table.bytes })),
-  );
+
+  /** A count of the outbox, a dash when it could not be read. */
+  protected outbox(count: number | null | undefined): string {
+    return count === null || count === undefined ? '—' : figure(count);
+  }
 
   protected refresh(): void {
     this.refreshes.update((count) => count + 1);

@@ -1,5 +1,5 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | adminText"
+  [eyebrow]="'admin.eyebrows.management' | adminText"
   [title]="'admin.monitoring.title' | adminText"
   [subtitle]="'admin.monitoring.lede' | adminText"
 >
@@ -8,158 +8,118 @@
   </button>
 </lodb-page-head>
 
-<lodb-panel-state [panel]="report" shape="table" />
+<lodb-panel-state [panel]="report" shape="cards" />
 @if (report.value(); as data) {
-  <p class="mb-4 font-mono text-xs text-text-dim">
-    {{ 'admin.common.generated_at' | adminText: { at: (data.generatedAt | stamp: 'second') } }}
-  </p>
-
-  <div class="hx-table-scroll" [attr.aria-busy]="report.busy()">
-    <table class="hx-table">
-      <thead>
-        <tr>
-          <th scope="col">{{ 'admin.monitoring.services.name' | adminText }}</th>
-          <th scope="col">{{ 'admin.monitoring.services.status' | adminText }}</th>
-          <th scope="col" class="num">{{ 'admin.monitoring.services.latency' | adminText }}</th>
-          <th scope="col">{{ 'admin.monitoring.services.version' | adminText }}</th>
-          <th scope="col" class="num">{{ 'admin.monitoring.services.size' | adminText }}</th>
-          <th scope="col">{{ 'admin.monitoring.services.detail' | adminText }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (service of data.services; track service.name) {
-          <tr [attr.data-service]="service.name">
-            <td class="text-text">{{ service.name }}</td>
-            <td>
-              <span [lodbBadge]="tone(service.status)">
-                {{ 'admin.health.' + service.status | adminText }}
-              </span>
-            </td>
-            <td class="num">{{ service.latencyMs | figure }} ms</td>
-            <td class="font-mono text-xs">{{ service.version ?? '—' }}</td>
-            <td class="num">
-              @if (service.databaseBytes; as bytes) {
-                {{ bytes | figure: 'bytes' }}
-              } @else {
-                —
-              }
-            </td>
-            <td class="text-xs text-text-muted">{{ service.detail ?? '—' }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+  <div class="mb-[0.9rem] flex flex-wrap items-center justify-between gap-[0.6rem]">
+    <span class="eyebrow">{{ 'admin.monitoring.probes' | adminText }}</span>
+    <span lodbChip [title]="'admin.monitoring.generated_hint' | adminText">
+      {{ data.generatedAt | stamp: 'second' }}
+    </span>
   </div>
-
-  <h2 class="eyebrow mt-8 mb-3">{{ 'admin.monitoring.process.title' | adminText }}</h2>
-  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-    <lodb-kpi
-      [label]="'admin.monitoring.process.version' | adminText"
-      [value]="data.process.version"
-      [sub]="data.process.revision ?? null"
-    />
-    <lodb-kpi
-      tone="hex"
-      [label]="'admin.monitoring.process.uptime' | adminText"
-      [value]="uptime()"
-    />
-    <lodb-kpi
-      [label]="'admin.monitoring.process.working_set' | adminText"
-      [value]="data.process.workingSetBytes | figure: 'bytes'"
-      [sub]="
-        'admin.monitoring.process.heap'
-          | adminText: { size: (data.process.managedHeapBytes | figure: 'bytes') }
-      "
-    />
-    <lodb-kpi
-      tone="muted"
-      [label]="'admin.monitoring.process.threads' | adminText"
-      [value]="data.process.threadPoolThreads | figure"
-      [sub]="
-        'admin.monitoring.process.pending' | adminText: { count: data.process.pendingWorkItems }
-      "
-    />
-    <lodb-kpi
-      tone="muted"
-      [label]="'admin.monitoring.process.cpu' | adminText"
-      [value]="data.process.cpuSeconds | figure"
-    />
-    <lodb-kpi
-      tone="muted"
-      [label]="'admin.monitoring.process.collections' | adminText"
-      [value]="data.process.collections.join(' / ')"
-    />
-  </div>
-
-  <h2 class="eyebrow mt-8 mb-3">{{ 'admin.monitoring.ingestion.title' | adminText }}</h2>
-  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-    <lodb-kpi
-      [label]="'admin.monitoring.ingestion.versions' | adminText"
-      [value]="data.ingestion.versionBacklog | figure"
-    />
-    <lodb-kpi
-      [label]="'admin.monitoring.ingestion.on_demand' | adminText"
-      [value]="data.ingestion.onDemandBacklog | figure"
-    />
-    <lodb-kpi
-      tone="hex"
-      [label]="'admin.monitoring.ingestion.outbox_pending' | adminText"
-      [value]="data.ingestion.outboxPending ?? '—'"
-    />
-    <lodb-kpi
-      [tone]="data.ingestion.outboxDead ? 'bad' : 'muted'"
-      [label]="'admin.monitoring.ingestion.outbox_dead' | adminText"
-      [value]="data.ingestion.outboxDead ?? '—'"
-    />
-  </div>
-
-  <div class="mt-8 grid gap-4 lg:grid-cols-2">
-    @if (data.versions; as versions) {
-      <lodb-admin-card [heading]="'admin.monitoring.versions.title' | adminText">
-        <lodb-monitoring-versions [versions]="versions" />
-      </lodb-admin-card>
+  <div class="admin-grid admin-grid--2" [attr.aria-busy]="report.busy()">
+    @for (service of data.services; track service.name) {
+      <lodb-probe-card [probe]="service" [attr.data-service]="service.name" />
     }
-    <lodb-admin-card [heading]="'admin.monitoring.tables' | adminText">
-      <lodb-rank-list format="bytes" [rows]="tables()" />
-    </lodb-admin-card>
   </div>
 
+  <lodb-admin-rule [label]="'admin.rules.application' | adminText" />
   @if (data.counters; as counters) {
-    <h2 class="eyebrow mt-8 mb-3">{{ 'admin.monitoring.counters.title' | adminText }}</h2>
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div class="kpi-grid">
       <lodb-kpi
-        [label]="'admin.monitoring.counters.users' | adminText"
+        [label]="'admin.overview.kpi.users' | adminText"
         [value]="counters.usersTotal | figure"
         [sub]="
-          'admin.monitoring.counters.users_sub'
+          'admin.overview.kpi.users_sub'
             | adminText: { week: counters.usersNewWeek, banned: counters.usersBanned }
         "
       />
       <lodb-kpi
-        tone="hex"
-        [label]="'admin.monitoring.counters.builds' | adminText"
+        accent="hex"
+        [label]="'admin.overview.kpi.builds' | adminText"
         [value]="counters.buildsTotal | figure"
-        [sub]="
-          'admin.monitoring.counters.builds_sub'
-            | adminText: { public: counters.buildsPublic, votes: counters.votes }
-        "
+        [sub]="'admin.overview.kpi.builds_sub' | adminText: { count: counters.buildsPublic }"
       />
       <lodb-kpi
+        accent="blue"
+        [label]="'admin.monitoring.counters.votes' | adminText"
+        [value]="counters.votes | figure"
+      />
+      <lodb-kpi
+        accent="green"
+        [label]="'admin.overview.kpi.donations' | adminText"
+        [value]="counters.donationsTotalCents | figure: 'euros'"
+        [sub]="'admin.overview.kpi.donations_sub' | adminText: { count: counters.donationsCount }"
+      />
+      <lodb-kpi
+        accent="red"
+        [label]="'admin.overview.kpi.api_keys' | adminText"
+        [value]="counters.apiKeysActive | figure"
+      />
+      <lodb-kpi
+        accent="cyan"
         [label]="'admin.monitoring.counters.api' | adminText"
-        [value]="counters.apiRequestsMonth | figure"
+        [value]="counters.apiRequestsToday | figure: 'compact'"
         [sub]="
           'admin.monitoring.counters.api_sub'
-            | adminText: { today: counters.apiRequestsToday, keys: counters.apiKeysActive }
-        "
-      />
-      <lodb-kpi
-        tone="warn"
-        [label]="'admin.monitoring.counters.donations' | adminText"
-        [value]="counters.donationsTotalCents | figure: 'euros'"
-        [sub]="
-          'admin.monitoring.counters.donations_sub' | adminText: { count: counters.donationsCount }
+            | adminText: { count: (counters.apiRequestsMonth | figure: 'compact') }
         "
       />
     </div>
+  } @else {
+    <lodb-admin-band tone="alert">
+      {{ 'admin.monitoring.counters.unavailable' | adminText }}
+    </lodb-admin-band>
   }
+
+  <lodb-admin-rule [label]="'admin.rules.volumes' | adminText" />
+  <div class="admin-grid admin-grid--2">
+    <lodb-admin-card
+      [heading]="'admin.monitoring.tables' | adminText"
+      [chip]="'admin.monitoring.tables_chip' | adminText"
+    >
+      <div class="hx-table-scroll">
+        <table class="hx-table hx-table--flush admin-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'admin.monitoring.columns.table' | adminText }}</th>
+              <th scope="col" class="num">{{ 'admin.monitoring.columns.bytes' | adminText }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (table of data.tables; track table.name) {
+              <tr>
+                <td>{{ table.name }}</td>
+                <td class="num">{{ table.bytes | figure: 'bytes' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="2" class="t-empty">
+                  {{ 'admin.monitoring.tables_empty' | adminText }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </lodb-admin-card>
+    <lodb-admin-card
+      [heading]="'admin.monitoring.outbox.title' | adminText"
+      [chip]="'admin.monitoring.outbox.chip' | adminText"
+    >
+      <div class="flex flex-col gap-[1.15rem]">
+        <div>
+          <span class="readout-label">{{ 'admin.monitoring.outbox.pending' | adminText }}</span>
+          <span class="readout-value">{{ outbox(data.ingestion.outboxPending) }}</span>
+        </div>
+        <p class="readout-text">
+          {{ 'admin.monitoring.outbox.text' | adminText }}
+          {{
+            'admin.monitoring.outbox.dead' | adminText: { count: outbox(data.ingestion.outboxDead) }
+          }}
+        </p>
+      </div>
+    </lodb-admin-card>
+  </div>
+
+  <lodb-monitoring-runtime [report]="data" />
 }

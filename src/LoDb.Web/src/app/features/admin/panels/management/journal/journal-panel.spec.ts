@@ -10,7 +10,7 @@ import { press } from '../../../testing/dom/press';
 import { reply } from '../../../testing/http/reply';
 import { sent } from '../../../testing/http/sent';
 import { submit } from '../../../testing/dom/submit';
-import { toasts } from '../../../testing/dom/toasts';
+import { notice } from '../../../testing/dom/notice';
 import { JournalPanel } from './journal-panel';
 
 const JOURNAL = '/api/admin/audit';
@@ -74,11 +74,8 @@ function open(url: string): Promise<PanelVisit> {
   return openPanel(JournalPanel, url, opening);
 }
 
-function choose(visit: AdminVisit, select: HTMLSelectElement | null, value: string): void {
-  if (select) {
-    select.value = value;
-    select.dispatchEvent(new Event('change'));
-  }
+function choose(visit: AdminVisit, radio: HTMLInputElement | null | undefined): void {
+  radio?.click();
   visit.harness.detectChanges();
 }
 
@@ -88,15 +85,17 @@ describe('JournalPanel', () => {
 
     const kpis = [...visit.page.querySelectorAll('lodb-kpi')].map((kpi) => kpi.textContent ?? '');
     expect(kpis[0]).toContain('1 200');
-    expect(kpis[0]).toContain('3.00 MB');
-    expect(kpis[3]).toContain('27/03/2026');
+    expect(kpis[1]).toContain('3.00 MB');
+    expect(kpis[2]).toContain('admin.journal.volume.months');
     const groups = [...visit.page.querySelectorAll('select[name="action"] optgroup')];
     expect(groups.map((group) => group.getAttribute('label'))).toEqual(['auth', 'admin']);
     expect(groups[0]?.querySelectorAll('option')).toHaveLength(2);
     const rows = [...visit.page.querySelectorAll('lodb-audit-table tbody tr')];
     expect(rows).toHaveLength(2);
     expect(rows[0]?.querySelector('a')?.getAttribute('href')).toBe('/admin/users/1/activity');
-    expect(rows[0]?.querySelector('code')?.textContent).toContain('"reason":"spam"');
+    const cells = [...(rows[0]?.querySelectorAll('td') ?? [])].map((cell) => cell.textContent);
+    expect(cells[2]).toContain('admin · reason=spam');
+    expect(cells[3]).toContain('spammer');
     expect(rows[1]?.querySelector('a')).toBeNull();
     expect(visit.page.querySelector('lodb-admin-pager a')?.getAttribute('href')).toBe(
       '/admin/journal?page=2',
@@ -123,7 +122,9 @@ describe('JournalPanel', () => {
     expect(params.get('page')).toBe('1');
     expect(params.has('outcome')).toBe(false);
 
-    press(visit, 'admin.journal.filters.clear');
+    const reset = visit.page.querySelector<HTMLAnchorElement>('lodb-journal-filters a');
+    expect(reset?.getAttribute('href')).toBe('/admin/journal');
+    reset?.click();
     const cleared = await sent(visit, JOURNAL);
     await reply(visit, cleared, journal());
     expect(cleared.request.params.keys()).toEqual(['page']);
@@ -133,7 +134,7 @@ describe('JournalPanel', () => {
     const visit = await open('/admin/journal');
     const purge = visit.page.querySelector('lodb-journal-purge');
 
-    choose(visit, purge?.querySelector('select') ?? null, 'before');
+    choose(visit, purge?.querySelector<HTMLInputElement>('input[value="before"]'));
     expect(purge?.querySelector('button')?.disabled).toBe(true);
     const day = purge?.querySelector<HTMLInputElement>('input[type="date"]');
     if (day) {
@@ -152,7 +153,7 @@ describe('JournalPanel', () => {
     volume.flush({ ...VOLUME_BODY, entries: 560 });
     await reply(visit, entries, journal());
 
-    expect(toasts()).toEqual(['success: admin.journal.purged']);
+    expect(notice()).toBe('notice: admin.journal.purged');
     expect(visit.page.querySelector('lodb-kpi')?.textContent).toContain('560');
   });
 
@@ -160,7 +161,7 @@ describe('JournalPanel', () => {
     const visit = await open('/admin/journal');
     const purge = visit.page.querySelector('lodb-journal-purge') ?? undefined;
 
-    expect(purge?.querySelector('input')).toBeNull();
+    expect(purge?.querySelector<HTMLInputElement>('input[value="retention"]')?.checked).toBe(true);
     press(visit, 'admin.journal.purge.submit', purge);
     press(visit, 'admin.journal.purge.confirm', purge);
     const request = await sent(visit, PURGE, 'POST');

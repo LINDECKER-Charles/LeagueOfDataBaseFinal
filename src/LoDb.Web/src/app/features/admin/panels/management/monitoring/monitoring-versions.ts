@@ -9,7 +9,7 @@ import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 // Where the ingestion of a version stands, as the API names it, and the tone it reads in.
 const STATUS_TONES: Readonly<Record<string, Tone>> = {
   discovered: 'muted',
-  ingesting: 'hex',
+  ingesting: 'warn',
   ready: 'good',
   failed: 'bad',
 };
@@ -36,7 +36,7 @@ const COUNTS = ['ready', 'ingesting', 'failed', 'discovered'] as const;
       }
     </p>
     <div class="hx-table-scroll mt-4">
-      <table class="hx-table hx-table--flush">
+      <table class="hx-table hx-table--flush admin-tbl">
         <thead>
           <tr>
             <th scope="col">{{ 'admin.monitoring.versions.version' | adminText }}</th>

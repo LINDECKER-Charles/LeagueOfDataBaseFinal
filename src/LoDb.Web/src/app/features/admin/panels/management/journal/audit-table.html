@@ -1,71 +1,70 @@
 <div class="hx-table-scroll">
-  <table class="hx-table">
+  <table class="hx-table hx-table--flush admin-tbl">
     <thead>
       <tr>
-        <th scope="col">{{ 'admin.journal.columns.when' | adminText }}</th>
-        <th scope="col">{{ 'admin.journal.columns.action' | adminText }}</th>
-        <th scope="col">{{ 'admin.journal.columns.outcome' | adminText }}</th>
-        <th scope="col">{{ 'admin.journal.columns.actor' | adminText }}</th>
-        <th scope="col">{{ 'admin.journal.columns.target' | adminText }}</th>
-        <th scope="col">{{ 'admin.journal.columns.origin' | adminText }}</th>
+        @for (column of columns(); track column) {
+          <th scope="col">{{ 'admin.journal.columns.' + column | adminText }}</th>
+        }
       </tr>
     </thead>
     <tbody>
       @for (entry of entries(); track entry.id) {
         <tr>
-          <td class="font-mono text-xs whitespace-nowrap">
-            {{ entry.occurredAt | stamp: 'second' }}
-          </td>
-          <td>
-            <span class="block text-text">{{ texts.term('journal.actions', entry.action) }}</span>
-            <span class="block font-mono text-[11px] text-text-dim">
-              {{ texts.term('journal.categories', entry.category) }} · {{ entry.action }}
-            </span>
-          </td>
-          <td>
-            <span [lodbBadge]="outcomeTone(entry.outcome)">
-              {{ texts.term('journal.outcomes', entry.outcome) }}
-            </span>
-          </td>
-          <td>
-            @if (isAccount(entry)) {
-              <a
-                class="nav-link text-sm text-gold"
-                [routerLink]="['/admin/users', entry.actorId, 'activity']"
-              >
-                {{ entry.actor ?? '#' + entry.actorId }}
-              </a>
-            } @else {
-              <span class="text-sm text-text-muted">{{ entry.actor ?? '—' }}</span>
+          @for (column of columns(); track column) {
+            @switch (column) {
+              @case ('when') {
+                <td class="whitespace-nowrap">{{ entry.occurredAt | stamp: 'second' }}</td>
+              }
+              @case ('actor') {
+                <td>
+                  @if (isAccount(entry)) {
+                    <a
+                      class="text-text transition-colors hover:text-gold-bright"
+                      [routerLink]="['/admin/users', entry.actorId, 'activity']"
+                    >
+                      {{ entry.actor ?? '#' + entry.actorId }}
+                    </a>
+                  } @else {
+                    <span>{{ entry.actor ?? '—' }}</span>
+                  }
+                  <span class="cell-sub">{{
+                    texts.term('journal.actor_types', entry.actorType)
+                  }}</span>
+                </td>
+              }
+              @case ('action') {
+                <td>
+                  <span>{{ texts.term('journal.actions', entry.action) }}</span>
+                  <span class="cell-sub" [title]="detailOf(entry)">{{ detailOf(entry) }}</span>
+                </td>
+              }
+              @case ('target') {
+                <td>
+                  <span>{{ targetOf(entry) }}</span>
+                  @if (entry.targetType) {
+                    <span class="cell-sub">{{ entry.targetType }}</span>
+                  }
+                </td>
+              }
+              @case ('ip') {
+                <td [title]="entry.route ?? ''">{{ entry.ip ?? '—' }}</td>
+              }
+              @case ('actor_type') {
+                <td>{{ texts.term('journal.actor_types', entry.actorType) }}</td>
+              }
+              @case ('outcome') {
+                <td>
+                  <span [lodbBadge]="outcomeTone(entry.outcome)">
+                    {{ texts.term('journal.outcomes', entry.outcome) }}
+                  </span>
+                </td>
+              }
             }
-            <span class="block font-mono text-[11px] text-text-dim">
-              {{ texts.term('journal.actor_types', entry.actorType) }}
-            </span>
-          </td>
-          <td class="text-xs">
-            @if (entry.targetType) {
-              <span class="block text-text-muted">{{ entry.targetType }} {{ entry.targetId }}</span>
-            }
-            <span class="block text-text">{{ entry.target }}</span>
-            @if (metaOf(entry); as meta) {
-              <code
-                class="block max-w-64 truncate font-mono text-[11px] text-text-dim"
-                [title]="meta"
-              >
-                {{ meta }}
-              </code>
-            }
-          </td>
-          <td class="font-mono text-[11px] text-text-dim">
-            <span class="block">{{ entry.ip ?? '—' }}</span>
-            <span class="block max-w-48 truncate" [title]="entry.route ?? ''">{{
-              entry.route
-            }}</span>
-          </td>
+          }
         </tr>
       } @empty {
         <tr>
-          <td colspan="6" class="text-text-dim">{{ 'admin.journal.empty' | adminText }}</td>
+          <td class="t-empty" [attr.colspan]="columns().length">{{ empty() | adminText }}</td>
         </tr>
       }
     </tbody>
