@@ -40,12 +40,12 @@
         aria-describedby="register-username-help"
         [attr.aria-invalid]="errors()['username'] ? true : null"
       />
-      @if (errors()['username']; as message) {
-        <p class="auth-field-error" role="alert">{{ message | transloco }}</p>
-      }
       <p id="register-username-help" class="auth-help">
         {{ 'auth.register.username_help' | transloco }}
       </p>
+      @if (errors()['username']; as message) {
+        <p class="auth-field-error" role="alert">{{ message | transloco }}</p>
+      }
     </div>
     <lodb-password-pair
       idPrefix="register"
@@ -54,22 +54,15 @@
       [(confirmation)]="confirmation"
     />
     <div>
-      <label class="flex items-center gap-2.5 text-sm text-text-muted">
-        <input lodbField type="checkbox" name="acceptTerms" required />
-        {{ 'auth.register.terms' | transloco }}
+      <label class="flex items-start gap-2.5 text-sm text-text-muted">
+        <input lodbField type="checkbox" name="acceptTerms" required class="mt-0.5" />
+        <span>{{ 'auth.register.terms' | transloco }}</span>
       </label>
-      <a
-        class="nav-link mt-1.5 inline-block text-xs text-gold"
-        target="_blank"
-        [routerLink]="link('legal/terms')"
-      >
-        {{ 'legal.terms.title' | transloco }}
-      </a>
       @if (errors()['acceptTerms']; as message) {
         <p class="auth-field-error" role="alert">{{ message | transloco }}</p>
       }
     </div>
-    <button lodbButton type="submit" class="w-full" [disabled]="busy()">
+    <button lodbButton type="submit" class="mb-5 w-full" [disabled]="busy()">
       {{ 'auth.register.submit' | transloco }}
     </button>
   </form>
