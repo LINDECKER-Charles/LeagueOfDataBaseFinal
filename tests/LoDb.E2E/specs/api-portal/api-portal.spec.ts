@@ -2,8 +2,7 @@ import { expectNoAccessibilityViolations } from '../../support/accessibility';
 import { readHead } from '../../support/head';
 import { expect, test } from '../../support/test';
 import { discardAccount, newAccount, register, type TestAccount } from '../account/accounts';
-import { accountLinkIn, lastMailTo } from '../account/mailbox';
-import { PORTAL, shownSecret, usageStatus } from './portal';
+import { PORTAL, shownSecret, usageStatus, verifyEmail } from './portal';
 
 const OK = 200;
 const FORBIDDEN = 403;
@@ -66,7 +65,7 @@ test('issues, regenerates and revokes a key, which /v1 follows at once', async (
 }) => {
   created = newAccount('apik');
   await register(page, created);
-  await page.goto(accountLinkIn(await lastMailTo(request, created.email), 'verify-email'));
+  await verifyEmail(page, request, created.email);
   await page.goto(PORTAL);
   let secret = '';
 
@@ -113,7 +112,7 @@ test('issues, regenerates and revokes a key, which /v1 follows at once', async (
 test('buys a credit pack through Stripe, in the page locale', async ({ page, request }) => {
   created = newAccount('apip');
   await register(page, created);
-  await page.goto(accountLinkIn(await lastMailTo(request, created.email), 'verify-email'));
+  await verifyEmail(page, request, created.email);
   // Stripe is a double: the API's offers and checkout are answered by the page's routes.
   const sent: unknown[] = [];
   await page.route('**/api/billing/offers', (route) => route.fulfill({ json: OFFERS }));

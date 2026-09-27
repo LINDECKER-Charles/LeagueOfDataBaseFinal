@@ -1,4 +1,5 @@
 import { type APIRequestContext, expect, type Page } from '@playwright/test';
+import { accountLinkIn, lastMailTo } from '../account/mailbox';
 
 /** The portal of the signed-in account. */
 export const PORTAL = '/en/account/api';
@@ -19,4 +20,19 @@ export async function usageStatus(request: APIRequestContext, secret: string): P
     headers: { Authorization: `Bearer ${secret}` },
   });
   return response.status();
+}
+
+/**
+ * Follows the verification link of the last e-mail sent to `email` and waits for the page to
+ * confirm it: the portal read before that still sees an unverified address.
+ */
+export async function verifyEmail(
+  page: Page,
+  request: APIRequestContext,
+  email: string,
+): Promise<void> {
+  await page.goto(accountLinkIn(await lastMailTo(request, email), 'verify-email'));
+  await expect(
+    page.getByText('Your email address is confirmed. Have fun, summoner.'),
+  ).toBeVisible();
 }
