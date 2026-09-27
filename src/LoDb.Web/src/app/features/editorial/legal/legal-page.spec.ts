@@ -20,13 +20,6 @@ const CATALOGUES: Record<string, Translation> = {
 };
 const PAGES: LegalPageId[] = ['notice', 'privacy', 'terms', 'cookies'];
 
-// The section nav follows the reading through an observer jsdom does not have.
-class NoIntersectionObserver {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-}
-
 async function visit(url: string) {
   TestBed.configureTestingModule({
     providers: [
@@ -54,7 +47,7 @@ async function visit(url: string) {
 }
 
 function textOf(page: HTMLElement): HTMLElement {
-  return page.querySelector<HTMLElement>('.hx-prose')?.parentElement ?? page;
+  return page.querySelector<HTMLElement>('.hx-prose') ?? page;
 }
 
 describe('legalLanguageOf', () => {
@@ -80,11 +73,9 @@ describe('LegalPage', () => {
 
   beforeEach(() => {
     lang = document.documentElement.lang;
-    vi.stubGlobal('IntersectionObserver', NoIntersectionObserver);
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
     document.documentElement.lang = lang;
     document.documentElement.removeAttribute('dir');
     document.head.querySelectorAll('[data-lodb-seo]').forEach((element) => element.remove());
@@ -104,6 +95,15 @@ describe('LegalPage', () => {
     expect(page.querySelector('#publisher h2')?.textContent).toContain('Site publisher');
     expect(page.querySelector('#editeur')).toBeNull();
     expect(textOf(page).getAttribute('lang')).toBe('en');
+  });
+
+  it('boxes its contents, labelled in the page language, listed in the text one', async () => {
+    const { page } = await visit('/de/legal/notice');
+    const contents = page.querySelector('nav');
+
+    expect(contents?.querySelector('.eyebrow')?.closest('[lang]')?.getAttribute('lang')).toBe('de');
+    expect(contents?.querySelector('ol')?.getAttribute('lang')).toBe('en');
+    expect(contents?.querySelector('li a')?.textContent).toBe('1. Site publisher');
   });
 
   it('writes the head in the page locale, whatever the text language', async () => {
@@ -127,12 +127,20 @@ describe('LegalPage', () => {
     const sections = [...page.querySelectorAll('.hx-prose section[id]')].map(
       (section) => section.id,
     );
-    const links = [...page.querySelectorAll('.section-nav a')].map((link) =>
-      link.getAttribute('href'),
-    );
+    const links = [...page.querySelectorAll('nav ol a')].map((link) => link.getAttribute('href'));
 
     expect(sections).toEqual(LEGAL_CONTENTS[id][locale].map((entry) => entry.id));
     expect(links).toEqual(sections.map((section) => `/${locale}/legal/${id}#${section}`));
+  });
+
+  it.each([
+    ['en', '#publisher', 'Email: '],
+    ['fr', '#editeur', 'Email : '],
+  ])('keeps the space after the email label in %s', async (locale, id, label) => {
+    const { page } = await visit(`/${locale}/legal/notice`);
+    const mail = page.querySelector(`${id} a[href^="mailto:"]`);
+
+    expect(mail?.parentElement?.textContent?.trim()).toBe(`${label}${mail?.textContent}`);
   });
 
   it('links the other legal pages within the locale', async () => {

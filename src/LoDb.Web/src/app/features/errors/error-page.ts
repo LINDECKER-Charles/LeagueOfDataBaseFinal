@@ -1,3 +1,4 @@
+import { HttpStatusCode } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -15,17 +16,50 @@ import { injectRouteData } from '../../core/routing/inject-route-data';
 import type { PageOutcome } from '../../core/routing/outcome/page-outcome';
 import { Seo } from '../../core/seo/seo';
 import { Button } from '../../ui/controls/button';
+import { Frame } from '../../ui/surfaces/frame';
+
+/** The framed card of an outcome, its texts as keys of the `seo` scope. */
+interface ErrorCard {
+  readonly eyebrow: string | null;
+  readonly numeral: number;
+  readonly title: string;
+  readonly body: string;
+}
+
+const NOT_FOUND_CARD: ErrorCard = {
+  eyebrow: 'seo.error.404.eyebrow',
+  numeral: HttpStatusCode.NotFound,
+  title: 'seo.error.404.title',
+  body: 'seo.error.404.body',
+};
+
+// As the legacy failure page: the status is the numeral, and there is no eyebrow.
+function cardOf(outcome: PageOutcome): ErrorCard | null {
+  switch (outcome.kind) {
+    case 'redirect':
+      return null;
+    case 'not-found':
+      return NOT_FOUND_CARD;
+    default:
+      return {
+        eyebrow: null,
+        numeral: outcome.status,
+        title: 'seo.error.generic.title',
+        body: 'seo.error.generic.body',
+      };
+  }
+}
 
 /**
  * The page answered in place of the one requested (ADR 0005): a missing page, a failure, or
  * the body of a redirect the server answers with its `Location`. The status and the headers
  * (`Location`, `Retry-After`, `X-Robots-Tag: noindex`, short cache) are the `outcome`
- * resolver's; the page only says what happened, leads back home, and writes a `noindex`
- * head without canonical nor alternates.
+ * resolver's; the page only says what happened, in the legacy framed card with the status as
+ * its numeral, leads back home, and writes a `noindex` head without canonical nor alternates.
  */
 @Component({
   selector: 'lodb-error-page',
-  imports: [Button, RouterLink, TranslocoPipe],
+  imports: [Button, Frame, RouterLink, TranslocoPipe],
   providers: [provideTranslocoScope('seo')],
   templateUrl: './error-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,6 +68,7 @@ export class ErrorPage {
   protected readonly outcome = injectRouteData<PageOutcome>('outcome');
   private readonly page = inject(PageDirection);
   protected readonly home = computed(() => localePath(this.page.locale(), ''));
+  protected readonly card = computed(() => cardOf(this.outcome()));
 
   constructor() {
     const seo = inject(Seo);

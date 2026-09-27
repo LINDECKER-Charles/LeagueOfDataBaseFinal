@@ -13,6 +13,7 @@ import { API_BASE_URL } from '../../core/api/api-base-url';
 import type { DonationOptions } from '../../core/api/generated/models/donation-options';
 import { activateLocale } from '../../core/i18n/activate-locale';
 import { LOCALES } from '../../core/i18n/locales';
+import { ToastService } from '../../core/layout/toast/toast-service';
 import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
 import { Seo } from '../../core/seo/seo';
 import { StripeRedirect } from './checkout/stripe-redirect';
@@ -91,8 +92,12 @@ function submit(page: HTMLElement): void {
   form(page).dispatchEvent(new Event('submit', { cancelable: true }));
 }
 
-function alertOf(page: HTMLElement): string | undefined {
-  return page.querySelector('[role="alert"]')?.textContent?.trim();
+// The error toasts raised so far, which the shell's toaster draws over the page.
+function errorsRaised(): string[] {
+  return TestBed.inject(ToastService)
+    .toasts()
+    .filter((toast) => toast.kind === 'error')
+    .map((toast) => toast.message);
 }
 
 describe('DonatePage', () => {
@@ -131,7 +136,7 @@ describe('DonatePage', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ amountCents: 1_000, locale: 'fr' });
     expect(go).toHaveBeenCalledExactlyOnceWith(STRIPE_PAGE);
-    expect(alertOf(page)).toBeUndefined();
+    expect(errorsRaised()).toEqual([]);
   });
 
   it('gives the free amount over the tier, with either decimal separator', async () => {
@@ -146,6 +151,17 @@ describe('DonatePage', () => {
     expect(request.request.body).toEqual({ amountCents: 750, locale: 'fr' });
   });
 
+  it('lets the browser check the shape of a free amount, as the legacy form', async () => {
+    const { page } = await visit((request) => request.flush(OPEN));
+    const input = page.querySelector<HTMLInputElement>('#donate-amount')!;
+
+    expect(form(page).noValidate).toBe(false);
+    input.value = '7,50';
+    expect(input.checkValidity()).toBe(true);
+    input.value = 'dix';
+    expect(input.checkValidity()).toBe(false);
+  });
+
   it.each(['0,50', '500.01', 'dix euros'])('refuses %j without asking the API', async (typed) => {
     const { page, harness, go } = await visit((request) => request.flush(OPEN));
     typeAmount(page, typed);
@@ -153,9 +169,14 @@ describe('DonatePage', () => {
     submit(page);
     await harness.fixture.whenStable();
 
-    expect(alertOf(page)).toBe('donate.error.invalid_amount');
+    expect(errorsRaised()).toEqual(['donate.error.invalid_amount']);
     expect(page.querySelector('#donate-amount')?.getAttribute('aria-invalid')).toBe('true');
+    expect(page.querySelector('[role="alert"]')).toBeNull();
     expect(go).not.toHaveBeenCalled();
+
+    typeAmount(page, '5');
+    await harness.fixture.whenStable();
+    expect(page.querySelector('#donate-amount')?.hasAttribute('aria-invalid')).toBe(false);
   });
 
   it.each([
@@ -172,7 +193,7 @@ describe('DonatePage', () => {
     http.expectOne(CHECKOUT_URL).flush({ status }, { status, statusText: 'Refused' });
     await harness.fixture.whenStable();
 
-    expect(alertOf(page)).toBe(message);
+    expect(errorsRaised()).toEqual([message]);
     expect(go).not.toHaveBeenCalled();
     expect(page.querySelector('button[type="submit"]')?.hasAttribute('disabled')).toBe(false);
   });
@@ -185,7 +206,7 @@ describe('DonatePage', () => {
     await harness.fixture.whenStable();
 
     expect(go).toHaveBeenCalledExactlyOnceWith('javascript:alert(1)');
-    expect(alertOf(page)).toBe('donate.error.gateway');
+    expect(errorsRaised()).toEqual(['donate.error.gateway']);
   });
 
   it.each<[string, Answer]>([

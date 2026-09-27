@@ -8,7 +8,7 @@
       <a lodbButton="gold" data-testid="developers-cta" [routerLink]="link('account/api')">
         {{ 'api.developers.cta' | transloco }}
       </a>
-      <a lodbButton="ghost" routerLink="." fragment="pricing">
+      <a lodbButton="ghost" lodbFragmentLink="pricing">
         {{ 'api.developers.docs_pricing' | transloco }}
       </a>
     </div>
@@ -19,7 +19,7 @@
     <h2 id="dev-auth-title">{{ 'api.developers.auth.title' | transloco }}</h2>
     <p>{{ 'api.developers.auth.body' | transloco: { prefix: prefix() } }}</p>
     <pre class="dev-code">{{ headers() }}</pre>
-    <p class="text-sm" data-testid="developers-base-url">
+    <p class="dev-section__note" data-testid="developers-base-url">
       {{ 'developers.base_url' | transloco: { url: baseUrl() } }}
     </p>
   </section>
@@ -29,7 +29,7 @@
     <ul class="dev-endpoints">
       @for (endpoint of endpoints; track endpoint.path) {
         <li class="dev-endpoint">
-          <span lodbChip>GET</span>
+          <span lodbChip="live">GET</span>
           <code>{{ endpoint.path }}</code>
           <p>{{ endpoint.purpose | transloco }}</p>
         </li>
@@ -71,12 +71,7 @@
             @for (row of pricing(); track row.code) {
               <tr [attr.data-offer]="row.code">
                 <td>{{ row.name | transloco }}</td>
-                <td>
-                  {{ row.price }} €
-                  @if (row.period; as period) {
-                    <small>{{ period | transloco }}</small>
-                  }
-                </td>
+                <td>{{ row.price }} €{{ row.period === null ? '' : (row.period | transloco) }}</td>
                 <td>{{ row.volume | transloco: { count: row.count } }}</td>
                 <td>{{ 'api.portal.key.rate_unit' | transloco: { rate: row.rate } }}</td>
               </tr>
@@ -84,7 +79,7 @@
           </tbody>
         </table>
       </div>
-      <p class="text-sm">{{ 'api.pricing.validity_note' | transloco }}</p>
+      <p class="dev-section__note">{{ 'api.pricing.validity_note' | transloco }}</p>
     } @else {
       <p role="status">{{ 'developers.pricing_unavailable' | transloco }}</p>
     }

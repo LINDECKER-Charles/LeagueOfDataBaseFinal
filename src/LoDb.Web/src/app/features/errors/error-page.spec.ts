@@ -61,6 +61,12 @@ function headingOf(harness: RouterTestingHarness): string | undefined {
   return harness.routeNativeElement?.querySelector('h1')?.textContent?.trim();
 }
 
+// The eyebrow, the numeral and the title of the framed card, as a reader sees them.
+function cardOf(harness: RouterTestingHarness): (string | undefined)[] {
+  const card = harness.routeNativeElement?.querySelector('.hextech-frame');
+  return ['.eyebrow', 'h1', 'h1 + p'].map((part) => card?.querySelector(part)?.textContent?.trim());
+}
+
 function linkOf(harness: RouterTestingHarness): string | null | undefined {
   return harness.routeNativeElement?.querySelector('a')?.getAttribute('href');
 }
@@ -87,7 +93,7 @@ describe('ErrorPage', () => {
 
     const { harness } = await visit('/fr/nowhere');
 
-    expect(headingOf(harness)).toBe('Page not found');
+    expect(cardOf(harness)).toEqual(['Lost', '404', 'Page not found']);
     expect(linkOf(harness)).toBe('/fr');
   });
 
@@ -96,7 +102,7 @@ describe('ErrorPage', () => {
     async (status) => {
       const { harness } = await visit('/down', { '/down': { ...BROKEN, status } });
 
-      expect(headingOf(harness)).toBe('Something went wrong');
+      expect(cardOf(harness)).toEqual([undefined, String(status), 'Something went wrong']);
       expect(linkOf(harness)).toBe('/en');
     },
   );
@@ -119,7 +125,7 @@ describe('ErrorPage', () => {
     await harness.fixture.whenStable();
 
     expect(harness.routeDebugElement?.componentInstance).toBe(page);
-    expect(headingOf(harness)).toBe('Something went wrong');
+    expect(cardOf(harness)).toEqual([undefined, '500', 'Something went wrong']);
   });
 
   it('writes a noindex head, with neither canonical nor alternates', async () => {

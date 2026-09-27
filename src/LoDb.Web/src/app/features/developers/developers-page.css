@@ -9,13 +9,30 @@
     margin-inline: auto;
   }
 
+  /* The legacy steps (24, 30, then 36 px from 640 px): the long word of the title fits a
+     phone's line whole. */
   .dev-page__title {
     margin-block-start: 0.5rem;
     font-family: var(--font-beaufort);
-    font-size: 2.25rem;
+    font-size: 1.5rem;
     font-weight: 700;
+    line-height: 2rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.025em;
+  }
+
+  @media (width >= 400px) {
+    .dev-page__title {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+  }
+
+  @media (width >= 40rem) {
+    .dev-page__title {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
   }
 
   .dev-page__intro {
@@ -35,6 +52,7 @@
   .dev-page__hint {
     margin-block-start: 0.75rem;
     font-size: 0.75rem;
+    line-height: 1rem;
     color: var(--color-text-dim);
   }
 
@@ -54,6 +72,11 @@
     margin-block-start: 0.75rem;
     line-height: 1.7;
     color: var(--color-text-muted);
+  }
+
+  /* Not the text-sm utility, whose line height would beat the section's 1.7. */
+  .dev-section__note {
+    font-size: 0.875rem;
   }
 
   .dev-code {

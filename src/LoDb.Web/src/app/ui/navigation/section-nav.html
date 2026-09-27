@@ -1,7 +1,7 @@
 <nav class="section-nav" [attr.aria-label]="label()">
   @for (section of sections(); track section.id) {
     <a
-      [href]="href(section.id)"
+      [href]="sectionJump.href(section.id)"
       [attr.aria-current]="current() === section.id ? 'true' : null"
       (click)="jump($event, section.id)"
       >{{ section.label }}</a

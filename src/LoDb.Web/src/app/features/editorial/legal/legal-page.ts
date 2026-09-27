@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { TranslocoPipe } from '@jsverse/transloco';
 import { PageDirection } from '../../../core/layout/direction/page-direction';
 import { injectRouteData } from '../../../core/routing/inject-route-data';
-import { SectionNav } from '../../../ui/navigation/section-nav';
+import { FragmentLink } from '../../../ui/navigation/fragment-link';
 import { applyEditorialHead } from '../shared/apply-editorial-head';
 import { EditorialFrame } from '../shared/editorial-frame';
 import { LEGAL_CONTENTS } from './legal-contents';
@@ -29,11 +29,11 @@ import { TermsFr } from './texts/terms-fr';
     CookiesEn,
     CookiesFr,
     EditorialFrame,
+    FragmentLink,
     NoticeEn,
     NoticeFr,
     PrivacyEn,
     PrivacyFr,
-    SectionNav,
     TermsEn,
     TermsFr,
     TranslocoPipe,

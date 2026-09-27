@@ -4,6 +4,7 @@ import { Router, provideRouter } from '@angular/router';
 import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { activeSection } from './active-section';
+import { FragmentLink } from './fragment-link';
 import { Pager } from './pager';
 import { SectionNav } from './section-nav';
 
@@ -37,6 +38,16 @@ class NavigationHost {
     { id: 'skins', label: 'Skins' },
   ];
 }
+
+@Component({
+  imports: [FragmentLink],
+  template: `
+    <a lodbFragmentLink="pricing">Pricing</a>
+    <section id="pricing">Prices</section>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class FragmentLinkHost {}
 
 @Component({
   imports: [Pager],
@@ -104,6 +115,28 @@ describe('navigation primitives', () => {
 
     expect(chips.map((chip) => chip.getAttribute('href'))).toEqual(['/#abilities', '/#skins']);
     expect(chips.map((chip) => chip.getAttribute('aria-current'))).toEqual(['true', null]);
+  });
+
+  it('jumps to a section of the page below its scroll margin, the URL deep-linkable', async () => {
+    const fixture = TestBed.createComponent(FragmentLinkHost);
+    await fixture.whenStable();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a')!;
+    const section = (fixture.nativeElement as HTMLElement).querySelector('section')!;
+    const scroll = vi.fn();
+    section.scrollIntoView = scroll;
+    const replace = vi.spyOn(history, 'replaceState');
+
+    expect(link.getAttribute('href')).toBe('/#pricing');
+    const plain = new MouseEvent('click', { bubbles: true, cancelable: true });
+    link.dispatchEvent(plain);
+    const modified = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+    link.dispatchEvent(modified);
+
+    expect(plain.defaultPrevented).toBe(true);
+    expect(modified.defaultPrevented).toBe(false);
+    expect(scroll).toHaveBeenCalledExactlyOnceWith({ behavior: 'auto', block: 'start' });
+    expect(replace).toHaveBeenCalledExactlyOnceWith(history.state, '', '/#pricing');
+    replace.mockRestore();
   });
 
   it('keeps the hub in the middle when a neighbour is missing', async () => {

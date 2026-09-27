@@ -142,7 +142,8 @@ describe('DevelopersPage', () => {
       'monthly',
     ]);
     expect(offers[1]?.textContent).toContain('5 €');
-    expect(offers[2]?.textContent).toContain('api.portal.billing.per_month');
+    // One run of text, the period glued to the price, as the legacy cell wrote it.
+    expect(offers[2]?.children[1]?.textContent).toBe('9 €api.portal.billing.per_month');
   });
 
   it.each<[string, Answer]>([

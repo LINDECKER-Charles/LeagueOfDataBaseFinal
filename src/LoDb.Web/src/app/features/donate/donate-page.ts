@@ -8,13 +8,14 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
+import { provideTranslocoScope, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api-base-url';
 import { openDonationCheckout } from '../../core/api/generated/fn/donations/open-donation-checkout';
 import type { DonationOptions } from '../../core/api/generated/models/donation-options';
 import { PageDirection } from '../../core/layout/direction/page-direction';
 import { localePath } from '../../core/layout/shell/locale-path';
+import { ToastService } from '../../core/layout/toast/toast-service';
 import { injectRouteData } from '../../core/routing/inject-route-data';
 import { breadcrumbList } from '../../core/seo/json-ld/site/breadcrumb-list';
 import { Button } from '../../ui/controls/button';
@@ -32,6 +33,8 @@ interface DonationTier {
   readonly name: string | null;
 }
 
+const INVALID_AMOUNT = 'donate.error.invalid_amount';
+
 const TIER_NAMES: Readonly<Partial<Record<number, string>>> = {
   300: 'donate.tier.spark',
   500: 'donate.tier.gem',
@@ -46,8 +49,9 @@ function tierOf(cents: number): DonationTier {
 /**
  * `/{locale}/donate`: a tier or a free amount, then Stripe's hosted page, which the API
  * opens for the amount and the page follows. The donor comes back to `donate/success` or
- * `donate/cancel`. Without Stripe behind the API, the form stays closed and says so. Only a
- * build with payments routes here (ADR 0007).
+ * `donate/cancel`. A refusal is a toast over the form, left as it was, as the legacy flash
+ * message. Without Stripe behind the API, the form stays closed and says so. Only a build
+ * with payments routes here (ADR 0007).
  */
 @Component({
   selector: 'lodb-donate-page',
@@ -64,6 +68,8 @@ export class DonatePage {
   private readonly http = inject(HttpClient);
   private readonly apiOrigin = inject(API_BASE_URL);
   private readonly redirect = inject(StripeRedirect);
+  private readonly toasts = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
 
   protected readonly tiers = computed(() => this.options().presets.map(tierOf));
   protected readonly bounds = computed(() => ({
@@ -77,7 +83,8 @@ export class DonatePage {
   });
   protected readonly amount = signal('');
   protected readonly busy = signal(false);
-  protected readonly error = signal<string | null>(null);
+  /** The typed amount was refused: the field says so to assistive technologies. */
+  protected readonly invalidAmount = signal(false);
 
   constructor() {
     applyDonateHead((translate) => ({
@@ -99,6 +106,7 @@ export class DonatePage {
 
   protected type(event: Event): void {
     this.amount.set((event.target as HTMLInputElement).value);
+    this.invalidAmount.set(false);
   }
 
   protected submit(event: Event): void {
@@ -108,7 +116,7 @@ export class DonatePage {
     }
     const amountCents = this.amountCents();
     if (amountCents === null) {
-      this.error.set('donate.error.invalid_amount');
+      this.refuse(INVALID_AMOUNT);
       return;
     }
     void this.open(amountCents);
@@ -124,19 +132,23 @@ export class DonatePage {
 
   private async open(amountCents: number): Promise<void> {
     this.busy.set(true);
-    this.error.set(null);
     try {
       const body = { amountCents, locale: this.locale() };
       const created = await firstValueFrom(
         openDonationCheckout(this.http, this.apiOrigin, { body }),
       );
       if (!this.redirect.go(created.body.url)) {
-        this.error.set('donate.error.gateway');
+        this.refuse('donate.error.gateway');
       }
     } catch (error) {
-      this.error.set(checkoutFailure(error));
+      this.refuse(checkoutFailure(error));
     } finally {
       this.busy.set(false);
     }
+  }
+
+  private refuse(key: string): void {
+    this.invalidAmount.set(key === INVALID_AMOUNT);
+    this.toasts.show('error', this.transloco.translate(key, this.bounds()));
   }
 }

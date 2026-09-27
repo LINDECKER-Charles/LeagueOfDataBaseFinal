@@ -40,10 +40,13 @@
           <td><strong>lod_prefs</strong></td>
           <td>Preference (set only if you tick "remember" in the version/language selector)</td>
           <td>
-            Remembers your chosen Data Dragon language and version between visits. Signed content
-            (integrity) — Secure, HttpOnly, SameSite=Lax
+            Remembers your chosen site language, Data Dragon language and version between visits;
+            the server reads the site language to open the home page (/) in it. Unsigned content,
+            readable by the site's scripts — SameSite=Lax, Secure over HTTPS. Without the tick, the
+            choice lasts for the browsing session only, in the browser's session storage, not in a
+            cookie
           </td>
-          <td>7 days</td>
+          <td>1 year</td>
         </tr>
         <tr>
           <td><strong>REMEMBERME</strong></td>
