@@ -10,7 +10,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
   imports: [TranslocoPipe],
   template: `<button
       type="button"
-      class="arrow arrow--previous"
+      class="hx-viewer-button arrow arrow--previous"
       [attr.aria-label]="'champions.viewer.previous' | transloco"
       (click)="step.emit('previous')"
     >
@@ -18,7 +18,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
     </button>
     <button
       type="button"
-      class="arrow arrow--next"
+      class="hx-viewer-button arrow arrow--next"
       [attr.aria-label]="'champions.viewer.next' | transloco"
       (click)="step.emit('next')"
     >

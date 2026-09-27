@@ -1,4 +1,4 @@
-<ul class="strip">
+<ul #strip class="strip">
   @for (skin of tiles(); track skin.id; let index = $index) {
     <li class="w-72 shrink-0 snap-start">
       <figure>
@@ -18,12 +18,7 @@
             decoding="async"
           />
           @if (skin.chromas.length > 0) {
-            <span
-              class="badge"
-              [title]="
-                'champion.detail.chromas_available' | transloco: { count: skin.chromas.length }
-              "
-            >
+            <span class="badge" [title]="skin.chromas.length">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 3 21 12 12 21 3 12z" />
                 <path d="M7.5 12 12 7.5 16.5 12 12 16.5z" />

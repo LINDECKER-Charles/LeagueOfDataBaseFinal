@@ -6,6 +6,7 @@ import { of } from 'rxjs';
 import type { ChampionSkin } from '../../../../../core/api/generated/models/champion-skin';
 import { alternateSkins } from './alternate-skins';
 import { SkinGallery } from './skin-gallery';
+import { SkinViewer } from './skin-viewer';
 import { viewerIndexAfter } from './viewer/viewer-index-after';
 
 const CHAMPIONS = {
@@ -149,18 +150,43 @@ describe('lodb-skin-gallery', () => {
 
     expect(items[0]?.querySelector('.badge')).toBeNull();
     expect(items[1]?.querySelector('.badge')?.textContent?.trim()).toBe('3');
+    // The bare count, as the legacy badge: no sentence to agree with a single chroma.
+    expect(items[1]?.querySelector('.badge')?.getAttribute('title')).toBe('3');
     expect(items[1]?.querySelectorAll('lodb-chroma-strip .swatch')).toHaveLength(3);
   });
 
-  it('opens the viewer on the skin picked, named after the champion', async () => {
+  it('opens the lightbox on the skin picked, named under the champion', async () => {
     const fixture = await render();
 
     const opened = await openTile(fixture, 1);
 
-    expect(opened.querySelector('h2')?.textContent?.trim()).toBe('Annie');
+    expect(opened.querySelector('figcaption .eyebrow')?.textContent?.trim()).toBe('Annie');
+    expect(opened.querySelector('h2')?.textContent?.trim()).toBe('Red Riding Annie');
+    expect(opened.querySelector('h2')?.id).toBe(SkinViewer.HEADING_ID);
     expect(splash()).toBe('https://cdn.test/Annie_2.splash.jpg');
-    expect(opened.querySelector('figcaption p')?.textContent?.trim()).toBe('Red Riding Annie');
     expect(counter()).toBe('2 / 3');
+    expect(document.querySelector('.cdk-overlay-pane')?.classList).toContain('hx-lightbox');
+  });
+
+  it('closes from the button over the picture', async () => {
+    const fixture = await render();
+    const opened = await openTile(fixture, 0);
+
+    opened.querySelector<HTMLButtonElement>('button[aria-label="Close"]')?.click();
+    await fixture.whenStable();
+
+    expect(viewer()).toBeNull();
+  });
+
+  it('starts the strip over at its first tile for another champion', async () => {
+    const fixture = await render();
+    const strip = (fixture.nativeElement as HTMLElement).querySelector('ul') as HTMLElement;
+    strip.scrollLeft = 120;
+
+    fixture.componentInstance.skins.set([SKINS[0] as ChampionSkin, SKINS[3] as ChampionSkin]);
+    await fixture.whenStable();
+
+    expect(strip.scrollLeft).toBe(0);
   });
 
   it('steps through the skins with the arrow buttons, wrapping around', async () => {

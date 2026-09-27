@@ -23,6 +23,7 @@ import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
 import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
 import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
 import { RichText } from '../../shared/codex/rich-text/rich-text';
+import { LoadTime } from '../../shared/codex/timing/load-time';
 import { ItemAside } from './aside/item-aside';
 import { itemHeadOf } from './item-head-of';
 import { recipeTreeOf } from './recipe/recipe-tree-of';
@@ -47,6 +48,7 @@ const UPGRADE_ICON_SIZE = 48;
     EditionCounterpart,
     Frame,
     ItemAside,
+    LoadTime,
     Pager,
     RecipeTree,
     Reveal,
@@ -65,11 +67,11 @@ export class ItemDetail {
   protected readonly upgradeIconSize = UPGRADE_ICON_SIZE;
   protected readonly linkOf = injectCatalogueLink();
   protected readonly tree = computed(() => recipeTreeOf(this.entry().details.recipe));
-  protected readonly pager = injectDetailPager({
+  protected readonly pager = injectDetailPager(() => ({
     resource: 'items',
-    at: () => ({ context: this.entry().context, key: this.entry().details.profile.id }),
-    keyOf: (card) => card.id,
-  });
+    context: this.entry().context,
+    neighbours: this.entry().details.neighbours,
+  }));
 
   constructor() {
     const head = inject(CatalogueHead);

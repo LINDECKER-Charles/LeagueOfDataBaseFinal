@@ -6,11 +6,11 @@ import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { ChampionCard } from '../../../../core/api/generated/models/champion-card';
 import type { ChampionDetails } from '../../../../core/api/generated/models/champion-details';
+import type { DetailNeighbour } from '../../../../core/api/generated/models/detail-neighbour';
 import type { PageContext } from '../../../../core/context/page-context';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import { Seo } from '../../../../core/seo/seo';
 import type { SeoPage } from '../../../../core/seo/seo-page';
-import { CatalogueLists } from '../../shared/data/catalogue-lists';
 import { ChampionPage } from './champion-page';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
@@ -32,6 +32,10 @@ function cardOf(id: string): ChampionCard {
   };
 }
 
+function neighbourOf(id: string): DetailNeighbour {
+  return { id, name: id, canonicalPath: `champions/${id}`, edition: 'modern' };
+}
+
 function detailsOf(overrides: Partial<ChampionDetails> = {}): ChampionDetails {
   const art = { splash: 'splash.jpg', centered: 'centered.jpg', loading: 'loading.jpg' };
   return {
@@ -51,7 +55,7 @@ function detailsOf(overrides: Partial<ChampionDetails> = {}): ChampionDetails {
     ],
     allyTips: ['Stun with the passive.', ' '],
     enemyTips: [],
-    neighbours: { previous: null, next: null },
+    neighbours: { previous: neighbourOf('Ahri'), next: neighbourOf('Brand') },
     ...overrides,
   };
 }
@@ -73,7 +77,6 @@ class Blank {}
 
 async function visit(details: ChampionDetails, url = '/en/champions/Annie') {
   const apply = vi.fn<(page: SeoPage) => Promise<void>>().mockResolvedValue(undefined);
-  const entries = ['Ahri', 'Annie', 'Brand'].map(cardOf);
   const entry: CatalogueEntry<ChampionDetails> = { context: CONTEXT, details };
   TestBed.configureTestingModule({
     providers: [
@@ -93,10 +96,6 @@ async function visit(details: ChampionDetails, url = '/en/champions/Annie') {
         },
       }),
       { provide: Seo, useValue: { apply } },
-      {
-        provide: CatalogueLists,
-        useValue: { fetch: () => of({ kind: 'list', list: { entries } }) },
-      },
     ],
   });
   const harness = await RouterTestingHarness.create(url);

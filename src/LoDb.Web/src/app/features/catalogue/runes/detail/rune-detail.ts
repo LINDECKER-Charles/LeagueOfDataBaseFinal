@@ -14,11 +14,12 @@ import { Pager } from '../../../../ui/navigation/pager';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
+import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
+import { LoadTime } from '../../shared/codex/timing/load-time';
 import { CatalogueImage } from '../../../../ui/cards/catalogue-image';
 import { pathThemeOf } from '../paths/path-theme-of';
 import { constellationOf } from './constellation/constellation-of';
 import { RuneConstellation } from './constellation/rune-constellation';
-import { injectPathPager } from './pager/inject-path-pager';
 import { runeHeadOf } from './rune-head-of';
 
 /** Box of the path's mark in the hero, in CSS pixels. */
@@ -31,7 +32,7 @@ const EMBLEM_SIZE = 120;
  */
 @Component({
   selector: 'lodb-rune-detail',
-  imports: [Backdrop, CatalogueImage, Pager, RuneConstellation, TranslocoPipe],
+  imports: [Backdrop, CatalogueImage, LoadTime, Pager, RuneConstellation, TranslocoPipe],
   templateUrl: './rune-detail.html',
   styleUrl: './rune-detail.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,9 +44,10 @@ export class RuneDetail {
   protected readonly emblemSize = EMBLEM_SIZE;
   protected readonly theme = computed(() => pathThemeOf(this.entry().details.profile.key));
   protected readonly constellation = computed(() => constellationOf(this.entry().details));
-  protected readonly pager = injectPathPager(() => ({
+  protected readonly pager = injectDetailPager(() => ({
+    resource: 'runes',
     context: this.entry().context,
-    key: this.entry().details.profile.key,
+    neighbours: this.entry().details.neighbours,
   }));
 
   constructor() {

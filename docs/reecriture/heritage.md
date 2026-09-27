@@ -82,6 +82,7 @@ Les identifiants (A1, B2…) servent de référence stable dans les ADR et le pl
 | H4 | Timeout de 4 s du service worker, `respondWith(undefined)` qui donnait des pages blanches | PWA conservée : network-first pour les pages, cache-first pour les blobs, contournement des routes privées |
 | H5 | Admin hors pipeline Vite, tokens dupliqués | module Angular chargé à la demande, même design system |
 | H6 | Zoom iOS sur les champs < 16 px, sonde de débordement, **pas de RTL** | champs ≥ 16 px, sonde reprise en E2E, RTL pour `ar` |
+| H7 | Puces de section : chaque clic ajoutait une entrée d'historique (`pushState`) que Retour rembobinait sans défiler (restauration manuelle de Turbo), soit un appui mort par puce | ancre partageable sans entrée d'historique (`replaceState`) : Retour quitte la page. Un `pushState` brut désynchronise le routeur Angular |
 
 ## 4. Bugs latents et dérives — à corriger dans l'existant sans attendre
 

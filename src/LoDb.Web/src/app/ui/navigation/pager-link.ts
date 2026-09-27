@@ -8,4 +8,9 @@ export interface PagerLink {
    */
   readonly url: string | UrlTree;
   readonly name: string;
+  /**
+   * A chip after the name, with its tooltip: the edition of a neighbour whose name alone
+   * repeats another entry's. Texts come in translated: the design system reads no catalogue.
+   */
+  readonly mark?: { readonly label: string; readonly hint: string };
 }

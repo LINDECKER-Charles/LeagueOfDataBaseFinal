@@ -49,6 +49,20 @@ class RegionalPagerHost {
   readonly hub = this.router.parseUrl('/en/champions?lang=en_GB');
 }
 
+@Component({
+  imports: [Pager],
+  template: `<lodb-pager [previous]="previous" [next]="next" hub="/en/items" />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class MarkedPagerHost {
+  readonly previous = { url: '/en/items/1001-boots', name: 'Boots' };
+  readonly next = {
+    url: '/en/items/771004-faerie-charm',
+    name: 'Faerie Charm',
+    mark: { label: 'LoL Classic', hint: 'League of Legends Classic version' },
+  };
+}
+
 describe('navigation primitives', () => {
   beforeEach(() => {
     vi.stubGlobal(
@@ -98,6 +112,22 @@ describe('navigation primitives', () => {
 
     expect(cells.map((cell) => cell.className)).toEqual(['pager__link', 'pager__hub', '']);
     expect(all(fixture, '[rel=prev]')[0]?.getAttribute('href')).toBe('/en/champions/aatrox');
+  });
+
+  it('chips the mark of a neighbour after its name, with its hint', async () => {
+    const fixture = TestBed.createComponent(MarkedPagerHost);
+    await fixture.whenStable();
+    const names = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.pager__name'),
+    );
+
+    expect(names.map((name) => name.textContent?.trim())).toEqual([
+      'Boots',
+      'Faerie Charm LoL Classic',
+    ]);
+    const chip = names[1]?.querySelector('.hx-chip-hex');
+    expect(chip?.getAttribute('title')).toBe('League of Legends Classic version');
+    expect(names[0]?.querySelector('.hx-chip-hex')).toBeNull();
   });
 
   it('carries the regional variant of UrlTree links, query unescaped', async () => {

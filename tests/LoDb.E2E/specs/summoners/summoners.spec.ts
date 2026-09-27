@@ -1,4 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
+import { type DetailNeighbours, expectServedDetail } from '../../support/catalog';
 import { expect, test } from '../../support/test';
 
 interface Meta {
@@ -17,6 +18,7 @@ interface Spell {
     readonly modes: readonly Mode[];
     readonly counterpart?: { readonly canonicalPath?: string | null } | null;
   };
+  readonly neighbours: DetailNeighbours;
 }
 
 const LIST = '/en/summoners';
@@ -53,9 +55,10 @@ test.describe('summoner spell pages as crawlers read them', { tag: '@readonly' }
   }) => {
     const spell = await spellOf(request, FLASH);
 
-    await page.goto(`/en/${spell.canonicalPath}`);
+    const response = await page.goto(`/en/${spell.canonicalPath}`);
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(spell.profile.name);
+    await expectServedDetail(page, response, spell.neighbours);
     await expect(page.locator('.seal')).toBeVisible();
     expect(await page.locator('.hx-plate').count()).toBeGreaterThan(0);
     const modes = await page.locator('[data-testid="modes"] li').allTextContents();
@@ -73,6 +76,15 @@ test.describe('summoner spell pages as crawlers read them', { tag: '@readonly' }
 });
 
 test.describe('summoner spell pages', { tag: '@readonly' }, () => {
+  test('badge the time a spell took', async ({ page, request, consoleErrors }) => {
+    const spell = await spellOf(request, FLASH);
+
+    await page.goto(`/en/${spell.canonicalPath}`);
+
+    await expect(page.locator('lodb-load-time .perf')).toContainText('ms');
+    expect(consoleErrors).toEqual([]);
+  });
+
   test('link a spell to its LoL Classic twin and back', async ({
     page,
     request,

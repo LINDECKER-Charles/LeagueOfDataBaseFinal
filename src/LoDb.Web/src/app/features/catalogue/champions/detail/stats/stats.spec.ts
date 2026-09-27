@@ -189,6 +189,29 @@ describe('lodb-stat-board', () => {
     expect(growths.slice(0, 2)).toEqual(['+2.625', '+2.5%']);
   });
 
+  it('parts each value from its growth by a space, two words in a right-to-left page', () => {
+    const { element } = render();
+    const values = [...element.querySelectorAll('dd')].map((node) => node.textContent?.trim());
+    expect(values.slice(0, 2)).toEqual(['50 +2.625', '0.63 +2.5%']);
+    expect(values.at(-1)).toBe('625');
+  });
+
+  it('heads the rows of the stats that have artwork with their icon', () => {
+    const { element } = render();
+    const rows = [...element.querySelectorAll('.row')];
+    const icons = rows.map(
+      (row) => row.querySelector('img.row__icon')?.getAttribute('src') ?? null,
+    );
+    expect(icons.slice(0, 5)).toEqual([
+      '/icons/stats/attack_damage.png',
+      '/icons/stats/attack_speed.png',
+      '/icons/stats/health.png',
+      null,
+      '/icons/stats/armor.png',
+    ]);
+    expect(icons.filter((icon) => icon !== null)).toHaveLength(6);
+  });
+
   it('scales every row to the level the slider picks', async () => {
     const { fixture, valueOf, slider } = render();
     slide(slider, 18);

@@ -1,9 +1,13 @@
-/* A diagnostic chip in a free corner: under the dialogs and toasts, never catching a click. */
+/*
+ * A diagnostic chip in a free corner: under the dialogs and toasts, never catching a click.
+ * One step above the bottom nav (chrome.css), which the legacy badge, mounted after it at the
+ * end of the body, painted over on phones.
+ */
 .perf {
   position: fixed;
   inset-inline-end: 1rem;
   inset-block-end: 1rem;
-  z-index: 40;
+  z-index: 41;
   display: inline-flex;
   align-items: baseline;
   gap: 0.5rem;
@@ -41,4 +45,14 @@
 }
 .perf__sep {
   color: var(--color-gold-deep);
+}
+
+/* Phones: a tighter chip, closer to the corner. */
+@media (width <= 40rem) {
+  .perf {
+    inset-inline-end: 0.6rem;
+    inset-block-end: 0.6rem;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.6rem;
+  }
 }

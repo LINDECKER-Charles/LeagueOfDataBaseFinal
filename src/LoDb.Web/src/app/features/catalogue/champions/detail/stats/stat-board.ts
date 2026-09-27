@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, linkedSignal } fro
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { ChampionCard } from '../../../../../core/api/generated/models/champion-card';
 import { CatalogueImage } from '../../../../../ui/cards/catalogue-image';
+import { statIconOf } from '../../../shared/codex/stats/stat-icon-of';
 import { formatStat } from './format-stat';
 import { statAt } from './stat-at';
 import { statRowsOf } from './stat-rows-of';
@@ -39,6 +40,7 @@ export class StatBoard {
     const level = this.level();
     return statRowsOf(this.profile()).map((row) => ({
       ...row,
+      icon: statIconOf(row.stat),
       value: formatStat(statAt(row, level)),
     }));
   });

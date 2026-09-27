@@ -9,7 +9,6 @@ import type { ItemDetails } from '../../../../core/api/generated/models/item-det
 import type { PageContext } from '../../../../core/context/page-context';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import type { SeoPage } from '../../../../core/seo/seo-page';
-import { CatalogueLists } from '../../shared/data/catalogue-lists';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { ItemDetail } from './item-detail';
@@ -72,19 +71,16 @@ const DETAILS: ItemDetails = {
       gold: 800,
     },
   ],
-  neighbours: { previous: null, next: null },
+  neighbours: {
+    previous: { id: '1001', name: 'Boots', canonicalPath: 'items/1001-boots', edition: 'modern' },
+    next: { id: '1027', name: 'Sapphire', canonicalPath: 'items/1027-sapphire', edition: 'modern' },
+  },
 };
 const ENTRY: CatalogueEntry<ItemDetails> = { context: CONTEXT, details: DETAILS };
 const TEXTS: CatalogueTexts = {
   seo: (key, params) => `${key} ${JSON.stringify(params ?? {})}`,
   main: (key) => (key === 'edition.classic' ? 'LoL Classic' : key),
 };
-const NEIGHBOURS = ['1001-boots', '771004-faerie-charm', '1027-sapphire'].map((path) => ({
-  ...CARD,
-  id: path.split('-')[0] ?? path,
-  name: path,
-  canonicalPath: `items/${path}`,
-}));
 
 async function render() {
   const heads: SeoPage[] = [];
@@ -99,10 +95,6 @@ async function render() {
         },
       }),
       { provide: CatalogueHead, useValue: { write } },
-      {
-        provide: CatalogueLists,
-        useValue: { fetch: () => of({ kind: 'list', list: { entries: NEIGHBOURS } }) },
-      },
     ],
   });
   const harness = await RouterTestingHarness.create();

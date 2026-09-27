@@ -1,4 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
+import { type DetailNeighbours, expectServedDetail } from '../../support/catalog';
 import { expect, test } from '../../support/test';
 
 interface Meta {
@@ -15,6 +16,7 @@ interface Item {
   readonly canonicalPath: string;
   readonly profile: { readonly name: string; readonly counterpart?: Link | null };
   readonly recipe?: { readonly components: readonly { readonly canonicalPath: string }[] } | null;
+  readonly neighbours: DetailNeighbours;
 }
 
 const LIST = '/en/items';
@@ -49,9 +51,10 @@ test.describe('item pages as crawlers read them', { tag: '@readonly' }, () => {
   }) => {
     const item = await itemOf(request, CRAFTED);
 
-    await page.goto(`/en/${item.canonicalPath}`);
+    const response = await page.goto(`/en/${item.canonicalPath}`);
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(item.profile.name);
+    await expectServedDetail(page, response, item.neighbours);
     const links = page.locator('lodb-recipe-tree a.recipe-node');
     for (const component of item.recipe?.components ?? []) {
       await expect(links.and(page.locator(`[href="/en/${component.canonicalPath}"]`))).toHaveCount(
@@ -78,6 +81,15 @@ test.describe('item pages', { tag: '@readonly' }, () => {
     await page.locator('lodb-pager a[rel="next"], lodb-pager a[rel="prev"]').first().waitFor();
     await page.locator('lodb-pager .pager__hub').click();
     await expect(page).toHaveURL(/\/en\/items$/);
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test('badge the time an item took', async ({ page, request, consoleErrors }) => {
+    const item = await itemOf(request, CRAFTED);
+
+    await page.goto(`/en/${item.canonicalPath}`);
+
+    await expect(page.locator('lodb-load-time .perf')).toContainText('ms');
     expect(consoleErrors).toEqual([]);
   });
 

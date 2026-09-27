@@ -16,7 +16,7 @@
         eager
       />
       <div class="min-w-0">
-        <p [class]="hero.eyebrow + ' path-text'">
+        <p [class]="hero.eyebrow + ' gap-x-1.25 path-text'">
           {{ 'rune.list.title' | transloco }}
           <span class="hx-pip mx-2 opacity-60" aria-hidden="true">◆</span>
           <span class="font-mono text-[11px] tracking-normal text-text-muted normal-case">
@@ -37,10 +37,12 @@
     }
 
     <lodb-pager
-      class="mt-16"
+      class="mt-14"
       [previous]="pager().previous"
       [next]="pager().next"
       [hub]="pager().hub"
     />
   </article>
 </div>
+
+<lodb-load-time />

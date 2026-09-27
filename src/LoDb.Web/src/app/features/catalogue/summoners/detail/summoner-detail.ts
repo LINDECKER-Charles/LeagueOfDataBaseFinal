@@ -19,6 +19,7 @@ import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
 import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
 import { RichText } from '../../shared/codex/rich-text/rich-text';
+import { LoadTime } from '../../shared/codex/timing/load-time';
 import { injectTranslate } from '../../shared/codex/texts/inject-translate';
 import { CatalogueImage } from '../../../../ui/cards/catalogue-image';
 import { EditionBadge } from '../../../../ui/cards/edition-badge';
@@ -42,6 +43,7 @@ const SEAL_ICON_SIZE = 154;
     EditionBadge,
     EditionCounterpart,
     Frame,
+    LoadTime,
     Pager,
     Reveal,
     RichText,
@@ -66,11 +68,11 @@ export class SummonerDetail {
   protected readonly modes = computed(() =>
     modeLabelsOf(this.entry().details.profile.modes, this.translate()('edition.classic')),
   );
-  protected readonly pager = injectDetailPager({
+  protected readonly pager = injectDetailPager(() => ({
     resource: 'summoners',
-    at: () => ({ context: this.entry().context, key: this.entry().details.profile.id }),
-    keyOf: (card) => card.id,
-  });
+    context: this.entry().context,
+    neighbours: this.entry().details.neighbours,
+  }));
 
   constructor() {
     const head = inject(CatalogueHead);

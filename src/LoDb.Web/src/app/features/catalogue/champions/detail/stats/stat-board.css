@@ -11,11 +11,22 @@
   border-block-end: 0;
 }
 .row__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-family: var(--font-mono);
   font-size: 0.66rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--color-text-muted);
+}
+/* The stat icon is decorative: the label carries the meaning. */
+.row__icon {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  flex-shrink: 0;
+  object-fit: contain;
+  opacity: 0.92;
 }
 .row__value {
   font-family: var(--font-beaufort);
