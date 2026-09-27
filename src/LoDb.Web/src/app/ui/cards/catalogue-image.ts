@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, booleanAttribute, input } from '@angular/core';
-import type { CatalogImage } from '../../../../core/api/generated/models/catalog-image';
-import { Image } from '../../../../ui/media/image';
+import type { CatalogImage } from '../../core/api/generated/models/catalog-image';
+import { Image } from '../media/image';
 import { initialsOf } from './initials-of';
 
 /**

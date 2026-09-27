@@ -11,7 +11,7 @@ import type { PageContext } from '../../../../core/context/page-context';
 import { FRAME_STYLES } from '../../../../ui/surfaces/frame-styles';
 import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
 import { RichText } from '../../shared/codex/rich-text/rich-text';
-import { CatalogueImage } from '../../shared/cards/catalogue-image';
+import { CatalogueImage } from '../../../../ui/cards/catalogue-image';
 
 /** Box of the rune's icon, in CSS pixels, as lodb-entity-card draws it. */
 const ICON_SIZE = 56;

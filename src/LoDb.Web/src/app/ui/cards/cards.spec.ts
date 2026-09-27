@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
-import type { CatalogImage } from '../../../../core/api/generated/models/catalog-image';
-import type { Edition } from '../../../../core/api/generated/models/edition';
+import type { CatalogImage } from '../../core/api/generated/models/catalog-image';
+import type { Edition } from '../../core/api/generated/models/edition';
 import { EntityCard } from './entity-card';
 import { initialsOf } from './initials-of';
 

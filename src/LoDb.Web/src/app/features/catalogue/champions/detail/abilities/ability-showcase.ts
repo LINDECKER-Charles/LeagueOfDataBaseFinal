@@ -14,7 +14,7 @@ import type { AbilitySlot } from '../../../../../core/api/generated/models/abili
 import type { ChampionAbility } from '../../../../../core/api/generated/models/champion-ability';
 import { tabIndexAfter } from '../../../../../ui/tabs/tab-index-after';
 import { tabMoveForKey } from '../../../../../ui/tabs/tab-move-for-key';
-import { CatalogueImage } from '../../../shared/cards/catalogue-image';
+import { CatalogueImage } from '../../../../../ui/cards/catalogue-image';
 import { DdragonHtmlPipe } from '../rich-text/ddragon-html-pipe';
 import { abilityChipsOf } from './ability-chips-of';
 import { abilityKey } from './ability-key';

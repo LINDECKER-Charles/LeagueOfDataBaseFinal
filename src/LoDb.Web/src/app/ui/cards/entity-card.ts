@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, booleanAttribute, input } from '@angular/core';
 import { RouterLink, type UrlTree } from '@angular/router';
-import type { CatalogImage } from '../../../../core/api/generated/models/catalog-image';
-import type { Edition } from '../../../../core/api/generated/models/edition';
-import { FRAME_STYLES } from '../../../../ui/surfaces/frame-styles';
+import type { CatalogImage } from '../../core/api/generated/models/catalog-image';
+import type { Edition } from '../../core/api/generated/models/edition';
+import { FRAME_STYLES } from '../surfaces/frame-styles';
 import { CatalogueImage } from './catalogue-image';
 import { EditionBadge } from './edition-badge';
 

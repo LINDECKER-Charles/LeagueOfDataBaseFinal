@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import type { Edition } from '../../../../core/api/generated/models/edition';
+import type { Edition } from '../../core/api/generated/models/edition';
 
 /**
  * The mark of an entry of the LoL Classic edition. The current game is the default and

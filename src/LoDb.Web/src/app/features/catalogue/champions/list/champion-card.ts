@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import type { UrlTree } from '@angular/router';
 import type { ChampionCard as Card } from '../../../../core/api/generated/models/champion-card';
-import { EntityCard } from '../../shared/cards/entity-card';
+import { EntityCard } from '../../../../ui/cards/entity-card';
 import { capitalize } from '../text/capitalize';
 
 /** A champion in the list: its square icon, name and title, then its roles. */

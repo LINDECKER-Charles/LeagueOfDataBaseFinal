@@ -11,7 +11,7 @@ import { injectListHead } from '../../shared/codex/head/inject-list-head';
 import { ListHeading } from '../../shared/codex/heading/list-heading';
 import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
 import { injectTranslate } from '../../shared/codex/texts/inject-translate';
-import { CatalogueImage } from '../../shared/cards/catalogue-image';
+import { CatalogueImage } from '../../../../ui/cards/catalogue-image';
 import { CatalogueCardTemplate } from '../../shared/list/catalogue-card-template';
 import { CatalogueList } from '../../shared/list/catalogue-list';
 import { injectCatalogueList } from '../../shared/source/inject-catalogue-list';

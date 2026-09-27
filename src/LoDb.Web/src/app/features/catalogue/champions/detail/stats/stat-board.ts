@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, linkedSignal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { ChampionCard } from '../../../../../core/api/generated/models/champion-card';
-import { CatalogueImage } from '../../../shared/cards/catalogue-image';
+import { CatalogueImage } from '../../../../../ui/cards/catalogue-image';
 import { formatStat } from './format-stat';
 import { statAt } from './stat-at';
 import { statRowsOf } from './stat-rows-of';
