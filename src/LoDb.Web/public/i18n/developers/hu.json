@@ -1,0 +1,4 @@
+{
+  "base_url": "Alap URL: {{ url }}",
+  "pricing_unavailable": "Az árak most nem jeleníthetők meg."
+}

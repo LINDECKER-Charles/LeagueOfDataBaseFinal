@@ -1,0 +1,17 @@
+{
+  "loading": "Loading your API key…",
+  "retry": "Try again",
+  "error": {
+    "load": "Your API key could not be loaded.",
+    "failed": "The action failed, please try again."
+  },
+  "raw": {
+    "done": "I have copied it"
+  },
+  "create": {
+    "verify": "Verify my email"
+  },
+  "actions": {
+    "revoke_help": "Disables the key at once: the API refuses it from the next request."
+  }
+}

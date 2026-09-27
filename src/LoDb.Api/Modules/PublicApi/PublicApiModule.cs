@@ -3,6 +3,7 @@ using LoDb.Api.Hosting.OpenApi;
 using LoDb.Api.Modules.PublicApi.Access;
 using LoDb.Api.Modules.PublicApi.Builds;
 using LoDb.Api.Modules.PublicApi.Gate;
+using LoDb.Api.Modules.PublicApi.Keys;
 using LoDb.Api.Modules.PublicApi.Limits;
 using LoDb.Api.Modules.PublicApi.Metering;
 using LoDb.Api.Modules.PublicApi.OpenApi;
@@ -49,6 +50,7 @@ internal static class PublicApiModule
         services.TryAddScoped<ProfileEndpoint>();
         services.TryAddScoped<ChampionBuildsEndpoint>();
         services.TryAddScoped<UsageEndpoint>();
+        services.AddApiKeyPortal();
         services.Configure<OpenApiOptions>(
             OpenApiDocuments.PublicV1,
             static options => options.AddDocumentTransformer<PublicApiDocumentTransformer>());
@@ -76,6 +78,7 @@ internal static class PublicApiModule
             TrendsEndpoint.Pattern,
             UsageEndpoint.Pattern,
         ]);
+        endpoints.MapApiKeyPortal();
         return endpoints;
     }
 

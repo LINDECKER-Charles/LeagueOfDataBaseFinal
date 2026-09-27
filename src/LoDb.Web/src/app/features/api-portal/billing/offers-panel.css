@@ -1,0 +1,54 @@
+/* The offer cards of the portal: packs in threes, plans in fours on wide screens. */
+@layer components {
+  .offer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 1rem;
+    margin-block-start: 1rem;
+  }
+
+  .offer {
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+  }
+
+  .offer__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-gold);
+  }
+
+  .offer__price {
+    margin-block-start: 0.35rem;
+    font-family: var(--font-beaufort);
+    font-size: 1.6rem;
+    color: var(--color-text);
+  }
+
+  .offer__price small {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .offer__detail {
+    margin-block-start: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .offer__action {
+    margin-block-start: auto;
+    inline-size: 100%;
+  }
+
+  .offer__detail:last-of-type {
+    margin-block-end: 1rem;
+  }
+}

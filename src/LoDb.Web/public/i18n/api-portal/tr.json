@@ -1,0 +1,17 @@
+{
+  "loading": "API anahtarın yükleniyor…",
+  "retry": "Tekrar dene",
+  "error": {
+    "load": "API anahtarın yüklenemedi.",
+    "failed": "İşlem başarısız oldu, lütfen tekrar dene."
+  },
+  "raw": {
+    "done": "Kopyaladım"
+  },
+  "create": {
+    "verify": "E-postamı doğrula"
+  },
+  "actions": {
+    "revoke_help": "Anahtarı anında devre dışı bırakır: API onu bir sonraki istekten itibaren reddeder."
+  }
+}

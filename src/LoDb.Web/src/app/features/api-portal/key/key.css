@@ -1,0 +1,101 @@
+/*
+ * The key's own blocks: the one-time reveal, the creation form, the plates of the overview
+ * with the quota meter, and the lifecycle actions, revocation in the danger tone.
+ */
+@layer components {
+  .key-reveal {
+    margin-block-end: 2rem;
+    padding: 1.5rem;
+  }
+
+  .key-reveal__warning {
+    margin-block-start: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-gold-bright);
+  }
+
+  .key-reveal__row,
+  .create-key__form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+    margin-block-start: 1rem;
+  }
+
+  .key-reveal__field {
+    flex: 1 1 20rem;
+  }
+
+  .create-key__name {
+    flex: 0 1 20rem;
+  }
+
+  .key-plates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+    margin-block-start: 1.25rem;
+  }
+
+  .key-plate__note {
+    margin-block-start: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+  }
+
+  .key-meter {
+    display: block;
+    margin-block-start: 0.4rem;
+    block-size: 8px;
+    background: color-mix(in srgb, var(--color-gold-dark) 60%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-gold-dark) 80%, transparent);
+  }
+
+  .key-meter__fill {
+    display: block;
+    block-size: 100%;
+    background: linear-gradient(90deg, var(--color-hex-deep), var(--color-hex));
+  }
+
+  .key-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block-start: 1.5rem;
+  }
+
+  .key-actions__end {
+    text-align: end;
+  }
+
+  .key-actions__help {
+    margin-block-start: 0.5rem;
+    max-inline-size: 36rem;
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+  }
+
+  .key-actions__revoke {
+    padding: 0.55rem 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--color-danger) 70%, transparent);
+    font-family: var(--font-beaufort);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-danger-light);
+    cursor: pointer;
+  }
+
+  .key-actions__revoke:hover:not(:disabled),
+  .key-actions__revoke:focus-visible {
+    background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  }
+
+  .key-actions__revoke:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+}

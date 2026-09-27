@@ -1,0 +1,73 @@
+<section lodbFrame class="portal-panel" aria-labelledby="api-billing-title">
+  <h2 id="api-billing-title" class="portal-panel__title">
+    {{ 'api.portal.billing.title' | transloco }}
+  </h2>
+
+  @if (!available()) {
+    <p class="portal-text">{{ 'api.portal.billing.unavailable' | transloco }}</p>
+  } @else {
+    <h3 class="eyebrow mt-6">{{ 'api.portal.billing.packs_title' | transloco }}</h3>
+    <p class="portal-text">{{ 'api.portal.billing.packs_help' | transloco }}</p>
+    <div class="offer-grid offer-grid--packs">
+      @for (pack of packs(); track pack.code) {
+        <div lodbFrame="interactive" class="offer" [attr.data-offer]="pack.code">
+          <p class="offer__name">{{ 'api.pack.' + pack.code | transloco }}</p>
+          <p class="offer__price">{{ pack.price }} €</p>
+          <p class="offer__detail">
+            {{ 'api.portal.billing.requests_once' | transloco: { count: pack.volume } }}
+          </p>
+          <button
+            lodbButton="gold"
+            type="button"
+            class="offer__action"
+            [disabled]="busy()"
+            (click)="buy.emit({ kind: 'pack', code: pack.code })"
+          >
+            {{ 'api.portal.billing.buy' | transloco }}
+          </button>
+        </div>
+      }
+    </div>
+
+    <h3 class="eyebrow mt-8">{{ 'api.portal.billing.plans_title' | transloco }}</h3>
+    <p class="portal-text">{{ 'api.portal.billing.plans_help' | transloco }}</p>
+    @if (key().subscribed) {
+      <p class="portal-banner portal-banner--muted mt-4">
+        {{ 'api.portal.billing.already_subscribed' | transloco }}
+      </p>
+    }
+    <div class="offer-grid offer-grid--plans">
+      @for (plan of plans(); track plan.code) {
+        <div lodbFrame="interactive" class="offer" [attr.data-offer]="plan.code">
+          <p class="offer__name">
+            {{ 'api.plan.' + plan.code | transloco }}
+            @if (key().plan === plan.code) {
+              <span lodbChip="live">{{ 'api.portal.billing.current' | transloco }}</span>
+            }
+          </p>
+          <p class="offer__price">
+            {{ plan.price }} €<small>{{
+              (plan.yearly ? 'api.portal.billing.per_year' : 'api.portal.billing.per_month')
+                | transloco
+            }}</small>
+          </p>
+          <p class="offer__detail">
+            {{ 'api.portal.billing.requests_month' | transloco: { count: plan.volume } }}
+          </p>
+          <p class="offer__detail">
+            {{ 'api.portal.key.rate_unit' | transloco: { rate: plan.rate } }}
+          </p>
+          <button
+            lodbButton="gold"
+            type="button"
+            class="offer__action"
+            [disabled]="busy() || key().subscribed"
+            (click)="buy.emit({ kind: 'plan', code: plan.code })"
+          >
+            {{ 'api.portal.billing.subscribe' | transloco }}
+          </button>
+        </div>
+      }
+    </div>
+  }
+</section>

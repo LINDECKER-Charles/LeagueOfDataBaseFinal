@@ -1,0 +1,17 @@
+{
+  "loading": "Se încarcă cheia API…",
+  "retry": "Încearcă din nou",
+  "error": {
+    "load": "Cheia API nu a putut fi încărcată.",
+    "failed": "Acțiunea a eșuat, încearcă din nou."
+  },
+  "raw": {
+    "done": "Am copiat-o"
+  },
+  "create": {
+    "verify": "Confirmă-mi e-mailul"
+  },
+  "actions": {
+    "revoke_help": "Dezactivează cheia imediat: API-ul o refuză de la următoarea cerere."
+  }
+}
