@@ -30,27 +30,34 @@
     color: var(--color-danger-light);
   }
 
-  /* A ghost button tinted with danger, standing alone so no utility repaints it. */
+  /*
+   * A ghost button tinted with danger, standing alone so no utility repaints it. It rests on
+   * the legacy mix of danger and text; the title and the hover take the light danger tone,
+   * as the plain danger red stays under 4.5:1 for small text on the canvas.
+   */
   .profile-danger__button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
     min-block-size: 2.75rem;
     padding: 0.625rem 1rem;
     font-family: var(--font-beaufort);
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    color: var(--color-danger-light);
+    color: color-mix(in srgb, var(--color-danger) 80%, var(--color-text));
     border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
     background: transparent;
     cursor: pointer;
     transition:
+      color 0.3s var(--ease-hextech),
       border-color 0.3s var(--ease-hextech),
       background-color 0.3s var(--ease-hextech);
   }
   .profile-danger__button:hover {
     border-color: var(--color-danger);
+    color: var(--color-danger-light);
     background: color-mix(in srgb, var(--color-danger) 10%, transparent);
   }
   .profile-danger__button:focus-visible {
@@ -75,7 +82,7 @@
     border-inline-end: none;
     background: color-mix(in srgb, var(--color-gold-deep) 14%, transparent);
     font-family: var(--font-mono);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--color-gold);
   }
   .riot-tag__input {
