@@ -40,6 +40,8 @@ services:
       LoDb__Storage__Root: /srv/storage
       # Empty: contact messages are stored but no notification is sent (L7.5).
       LoDb__Contact__Recipient: ${CONTACT_RECIPIENT:-}
+      # The origin /developers documents for /v1: the api. subdomain nginx serves it on.
+      LoDb__PublicApi__Reference__BaseUrl: ${PUBLIC_API_BASE_URL:-https://api.league-of-data-base.com}
       # Empty: traces stay local (log correlation) until infra-vps exposes a collector.
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     volumes:
