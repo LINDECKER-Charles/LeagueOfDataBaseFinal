@@ -12,22 +12,23 @@ import { ResendVerification } from '../shared/resend-verification';
 
 /**
  * The strip over every page of a signed-in account whose e-mail is not verified yet, with a
- * button that sends the link again (`banner` slot). Nothing for anyone else, nor on the
- * server, which never knows the session.
+ * button that sends the link again (`banner` slot), laid out as the legacy one. Nothing for
+ * anyone else, nor on the server, which never knows the session. A region rather than the
+ * legacy alert: it is there on every page load, not news to interrupt with.
  */
 @Component({
   selector: 'lodb-verify-email-banner',
   imports: [TranslocoPipe],
   template: `@if (unverified()) {
     <div
-      class="border-b border-gold-deep bg-panel px-4 py-2.5 text-center text-sm text-gold-bright"
+      class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 border-b border-gold-deep bg-panel px-4 py-2.5 text-center text-sm text-gold-bright"
       role="region"
       [attr.aria-label]="'auth.verify.banner' | transloco"
     >
-      {{ 'auth.verify.banner' | transloco }}
+      <span>{{ 'auth.verify.banner' | transloco }}</span>
       <button
         type="button"
-        class="nav-link ms-2 font-beaufort tracking-[0.12em] text-hex uppercase underline underline-offset-4"
+        class="font-semibold text-gold underline decoration-gold-deep underline-offset-4 transition-colors hover:text-gold-bright"
         [disabled]="sending()"
         (click)="resend()"
       >
