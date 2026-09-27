@@ -1,13 +1,17 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { deleteAdminBuild } from '../../../../../core/api/generated/fn/admin-builds/delete-admin-build';
 import { searchAdminBuilds } from '../../../../../core/api/generated/fn/admin-builds/search-admin-builds';
 import { unpublishAdminBuild } from '../../../../../core/api/generated/fn/admin-builds/unpublish-admin-build';
 import type { AdminBuildRow } from '../../../../../core/api/generated/models/admin-build-row';
 import { Button } from '../../../../../ui/controls/button';
-import { Field } from '../../../../../ui/controls/field';
+import { Chip } from '../../../../../ui/controls/chip';
 import { FigurePipe } from '../../../format/figure-pipe';
 import { StampPipe } from '../../../format/stamp-pipe';
+import { AdminCard } from '../../../layout/admin-card';
+import { AdminRule } from '../../../layout/admin-rule';
+import { PageHead } from '../../../layout/page-head';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 import { formText } from '../../../shared/form-text';
 import { injectRowActions } from '../../../shared/http/inject-row-actions';
 import { injectAdminText } from '../../../shared/inject-admin-text';
@@ -18,25 +22,25 @@ import { AdminPager } from '../../../widgets/admin-pager';
 import { Badge } from '../../../widgets/badge';
 import { ConfirmButton } from '../../../widgets/confirm-button';
 import { Kpi } from '../../../widgets/kpi';
-import { PageHead } from '../../../widgets/page-head';
-import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /** The visibilities a build has, as the API filters them. */
 const VISIBILITIES = ['public', 'private'] as const;
 
 /**
- * `/admin/builds`: the builds of every account, searched by name, champion or author and
- * filtered by visibility. An administrator takes a public build off the public pages or
- * deletes it.
+ * `/admin/builds`: the builds of every account in the legacy table, searched by name or
+ * champion and filtered by visibility. An administrator opens a build's share page, takes a
+ * public build off the public pages or deletes it.
  */
 @Component({
   selector: 'lodb-builds-panel',
   imports: [
+    AdminCard,
     AdminPager,
+    AdminRule,
     Badge,
     Button,
+    Chip,
     ConfirmButton,
-    Field,
     FigurePipe,
     Kpi,
     PageHead,
@@ -58,6 +62,15 @@ export class BuildsPanel {
     page: this.query.page(),
   }));
   protected readonly actions = injectRowActions(() => this.builds.reload());
+  /** Whether a search or a visibility narrows the list. */
+  protected readonly filtered = computed(
+    () => this.query.text('q') !== '' || this.query.text('visibility') !== '',
+  );
+
+  /** The score of a build, signed when it is positive, as the legacy table wrote it. */
+  protected scoreOf(build: AdminBuildRow): string {
+    return build.score > 0 ? `+${build.score}` : String(build.score);
+  }
 
   protected search(event: Event): void {
     this.query.set({
