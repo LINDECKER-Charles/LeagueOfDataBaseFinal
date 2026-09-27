@@ -27,7 +27,7 @@ public sealed class AuditActivityTests(PostgresContainerFixture postgres)
     public async Task ActivityGathersTheActionsOfAndOnTheAccount()
     {
         using var admin = await AdminBrowser.OpenAsync(App);
-        var member = await App.SeedAsync(new AccountSeed());
+        var member = await App.SeedAsync(new AccountSeed { RiotTagline = "EUW" });
         await JournalRows.ClearAsync(App.Services);
         var id = member.Id.ToString(CultureInfo.InvariantCulture);
         var acted = Acted(Day.AddHours(1), member.Id);
@@ -40,7 +40,10 @@ public sealed class AuditActivityTests(PostgresContainerFixture postgres)
 
         var answer = await ActivityAsync(admin, member.Id, string.Empty);
 
-        Assert.Equal(AccountSeed.Name, ApiJson.Text(answer.GetProperty("subject"), "username"));
+        var subject = answer.GetProperty("subject");
+        Assert.Equal(
+            (AccountSeed.Name, "EUW"),
+            (ApiJson.Text(subject, "username"), ApiJson.Text(subject, "riotTagline")));
         Assert.Equal([Day.AddHours(3), Day.AddHours(2), Day.AddHours(1)], Times(answer));
     }
 

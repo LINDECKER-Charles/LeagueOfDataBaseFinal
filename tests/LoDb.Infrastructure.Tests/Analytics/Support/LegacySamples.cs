@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using LoDb.Infrastructure.Persistence.Analytics;
 
 namespace LoDb.Infrastructure.Tests.Analytics.Support;
@@ -18,6 +19,17 @@ internal static class LegacySamples
 
     public static JsonDocument Json(string name) =>
         JsonDocument.Parse(File.ReadAllText(Path.Combine(Folder, name)));
+
+    /// <summary>
+    /// The legacy report of the sample, with the flag the legacy admin passed next to it
+    /// (<c>geo_available</c>): the report of the rewrite carries both.
+    /// </summary>
+    public static JsonElement Report(bool geoAvailable)
+    {
+        var report = JsonNode.Parse(File.ReadAllText(Path.Combine(Folder, "report.json")))!;
+        report["geoAvailable"] = geoAvailable;
+        return JsonSerializer.SerializeToElement(report);
+    }
 
     /// <summary>The sample's views, in the order the legacy stack logged them.</summary>
     public static IReadOnlyList<AnalyticsEvent> Events() =>

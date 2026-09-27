@@ -77,4 +77,10 @@ public sealed record AnalyticsReport
 
     /// <summary>Views by country, for the views that have one.</summary>
     public required IReadOnlyList<AnalyticsCountry> Country { get; init; }
+
+    /// <summary>
+    /// Whether this instance resolves countries: false without a GeoLite2 database, the
+    /// country breakdown then staying empty. The legacy admin passed it next to its report.
+    /// </summary>
+    public required bool GeoAvailable { get; init; }
 }

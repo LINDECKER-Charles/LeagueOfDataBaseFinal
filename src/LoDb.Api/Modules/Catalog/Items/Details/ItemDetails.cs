@@ -1,13 +1,16 @@
 using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Shared;
+using LoDb.Domain.Catalog.Items;
 using LoDb.Domain.Editions;
 using LoDb.Domain.Text;
+using LoDb.Ingestion.Catalog.Snapshots;
 
 namespace LoDb.Api.Modules.Catalog.Items.Details;
 
 /// <summary>
 /// <c>GET /api/catalog/{version}/{lang}/items/{id}</c>: the card, then the description, the
-/// recipe, the upgrades and the champion the item is bound to, every image resolved.
+/// recipe, the upgrades and the champion the item is bound to, every image resolved, and the
+/// items on either side of it in the list.
 /// </summary>
 internal sealed record ItemDetails
 {
@@ -41,7 +44,17 @@ internal sealed record ItemDetails
     /// <summary>The item and its components, recursively.</summary>
     public RecipeStep? Recipe { get; init; }
 
-    public required IReadOnlyList<EntityLink> Upgrades { get; init; }
+    /// <summary>
+    /// Data Dragon's depth: 1 for a starter, 2 for an epic, 3 or 4 for a legendary built from
+    /// epics; null when Data Dragon ships none (a consumable, a trinket).
+    /// </summary>
+    public int? Depth { get; init; }
+
+    /// <summary>The listed items it builds into, in the upstream order, with their price.</summary>
+    public required IReadOnlyList<ItemUpgrade> Upgrades { get; init; }
+
+    /// <summary>The items before and after it in the list's order.</summary>
+    public required DetailNeighbours Neighbours { get; init; }
 
     public static ItemDetails Of(ItemPage page, ImageSet images)
     {
@@ -49,7 +62,7 @@ internal sealed record ItemDetails
         ArgumentNullException.ThrowIfNull(images);
         var catalog = page.Catalog;
         var item = page.Item;
-        var profile = ItemCard.Of(item, catalog, images);
+        var profile = ProfileOf(item, catalog, images);
         return new ItemDetails
         {
             Version = catalog.Version.Value,
@@ -66,8 +79,15 @@ internal sealed record ItemDetails
                 ? EntityLink.Of(ally, catalog, images)
                 : null,
             Recipe = page.Recipe is { } recipe ? RecipeStep.Of(recipe, page, images) : null,
+            Depth = item.Depth,
             Upgrades =
-                [.. page.Upgrades.Select(upgrade => EntityLink.Of(upgrade, catalog, images))],
+                [.. page.Upgrades.Select(upgrade => ItemUpgrade.Of(upgrade, catalog, images))],
+            Neighbours = ItemList.NeighboursOf(item, catalog),
         };
     }
+
+    // The page prints the description in full below its hero: the hero's lead is the
+    // plaintext alone, as on the legacy page, never that description a second time.
+    private static ItemCard ProfileOf(Item item, CatalogSnapshot catalog, ImageSet images) =>
+        ItemCard.Of(item, catalog, images) with { Summary = DdragonText.Clean(item.Plaintext) };
 }

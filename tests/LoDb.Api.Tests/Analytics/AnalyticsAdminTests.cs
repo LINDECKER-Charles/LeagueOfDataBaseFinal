@@ -69,6 +69,8 @@ public sealed class AnalyticsAdminTests(PostgresContainerFixture postgres)
         var report = await ApiJson.ReadAsync(response, HttpStatusCode.OK);
         Assert.Equal(name, ApiJson.Text(report, "range"));
         Assert.Equal(days, Number(report, "days"));
+        // No GeoLite2 database is provisioned for the tests: the panel says so.
+        Assert.False(report.GetProperty("geoAvailable").GetBoolean());
     }
 
     [Fact]

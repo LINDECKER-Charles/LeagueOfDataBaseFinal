@@ -38,9 +38,9 @@ internal static class ItemEndpoints
         }
 
         var context = read.Context;
-        var shown = page.Slice(context.Catalog.ListedItems);
+        var shown = page.Slice(ItemList.EntriesOf(context.Catalog));
         var images = await context.ResolveAsync(
-            shown.Select(EntityImages.Icon),
+            shown.Concat(ItemList.RelatedOf(shown, context.Catalog)).Select(EntityImages.Icon),
             ColdDemand.Queued,
             request.CancellationToken);
         return context.Answer(ItemList.Of(context.Catalog, page, images), images);

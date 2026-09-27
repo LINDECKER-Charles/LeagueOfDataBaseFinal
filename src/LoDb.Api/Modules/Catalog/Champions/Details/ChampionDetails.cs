@@ -1,4 +1,5 @@
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Text;
 using LoDb.Ingestion.Catalog.Snapshots;
@@ -7,7 +8,8 @@ namespace LoDb.Api.Modules.Catalog.Champions.Details;
 
 /// <summary>
 /// <c>GET /api/catalog/{version}/{lang}/champions/{id}</c>: the card, then the lore, the
-/// abilities and the skins, every image resolved and every art hotlinked.
+/// abilities and the skins, every image resolved and every art hotlinked, and the champions
+/// on either side of it in the list.
 /// </summary>
 internal sealed record ChampionDetails
 {
@@ -39,6 +41,9 @@ internal sealed record ChampionDetails
 
     public required IReadOnlyList<ChampionSkin> Skins { get; init; }
 
+    /// <summary>The champions before and after it in the list's order.</summary>
+    public required DetailNeighbours Neighbours { get; init; }
+
     public static ChampionDetails Of(
         ChampionDetail champion,
         CatalogSnapshot catalog,
@@ -61,6 +66,7 @@ internal sealed record ChampionDetails
             Abilities = ChampionAbility.AllOf(champion, images),
             Art = ChampionArt.Of(profile.Id, 0),
             Skins = [.. champion.Skins.Select(skin => ChampionSkin.Of(skin, champion.Summary))],
+            Neighbours = ChampionList.NeighboursOf(champion, catalog),
         };
     }
 }

@@ -18,6 +18,8 @@ internal sealed partial class MaxMindGeoLocator(
         () => Open(options.Value.GeoIpDatabase, logger),
         LazyThreadSafetyMode.ExecutionAndPublication);
 
+    public bool IsAvailable => _reader.Value is not null;
+
     public GeoCountry? Locate(IPAddress? address)
     {
         if (address is null || PrivateAddresses.Contains(address)

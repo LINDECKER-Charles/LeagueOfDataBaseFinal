@@ -2,16 +2,21 @@ using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Derived.Ranges;
+using LoDb.Domain.Paths;
+using LoDb.Domain.Text;
+using LoDb.Ingestion.Catalog.Hotlinks;
 using LoDb.Ingestion.Catalog.Snapshots;
 
 namespace LoDb.Api.Modules.Catalog.Champions;
 
 /// <summary>
-/// A champion as the list shows it, with the values its facets filter on: roles, resource,
-/// range, ratings and base stats.
+/// A champion as the list shows it: its portrait, its lore teaser, and the values its facets
+/// filter on: roles, resource, range, ratings and base stats.
 /// </summary>
 internal sealed record ChampionCard
 {
+    private const int BaseSkin = 0;
+
     /// <summary>Public id, such as MonkeyKing: the page and the art are keyed by it.</summary>
     public required string Id { get; init; }
 
@@ -25,6 +30,15 @@ internal sealed record ChampionCard
     public required string CanonicalPath { get; init; }
 
     public required CatalogImage Image { get; init; }
+
+    /// <summary>
+    /// The base skin's loading-screen portrait, hotlinked from Data Dragon (UP 8): the art of
+    /// the list's card.
+    /// </summary>
+    public required Uri LoadingArt { get; init; }
+
+    /// <summary>The lore teaser, template tokens removed.</summary>
+    public required string Blurb { get; init; }
 
     /// <summary>Roles, as Data Dragon names them ("Mage").</summary>
     public required IReadOnlyList<string> Tags { get; init; }
@@ -58,6 +72,8 @@ internal sealed record ChampionCard
             Title = summary.Title,
             CanonicalPath = catalog.PathOf(champion).Value,
             Image = images.Of(EntityImages.Portrait(champion)),
+            LoadingArt = ChampionHotlinks.Art(summary.Id, ChampionArtKind.Loading, BaseSkin),
+            Blurb = DdragonText.Clean(summary.Blurb),
             Tags = summary.Tags,
             Resource = catalog.ResourceTokenOf(champion),
             Partype = summary.Partype,

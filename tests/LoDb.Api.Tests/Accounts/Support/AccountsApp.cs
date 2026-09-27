@@ -103,6 +103,7 @@ public sealed class AccountsApp : IAsyncDisposable
             EmailConfirmed = seed.EmailConfirmed,
             IsBanned = seed.Banned,
             GoogleId = seed.GoogleId,
+            RiotTagline = seed.RiotTagline,
             Roles = [],
             CreatedAt = Clock.GetUtcNow(),
         };

@@ -1,4 +1,5 @@
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Domain.Catalog.Summoners;
 using LoDb.Domain.Derived.Ranges;
 using LoDb.Ingestion.Catalog.Snapshots;
@@ -7,7 +8,7 @@ namespace LoDb.Api.Modules.Catalog.Summoners;
 
 /// <summary>
 /// <c>GET /api/catalog/{version}/{lang}/summoners/{id}</c>: the card, then the cost, range
-/// and charges, the image resolved.
+/// and charges, the image resolved, and the spells on either side of it in the list.
 /// </summary>
 internal sealed record SummonerDetails
 {
@@ -36,6 +37,9 @@ internal sealed record SummonerDetails
 
     public int? Charges { get; init; }
 
+    /// <summary>The spells before and after it in the list's order.</summary>
+    public required DetailNeighbours Neighbours { get; init; }
+
     public static SummonerDetails Of(
         SummonerSpell spell,
         CatalogSnapshot catalog,
@@ -56,6 +60,7 @@ internal sealed record SummonerDetails
             Range = spell.Range,
             GlobalRange = spell.Range.Any(RangeSentinels.IsGlobal),
             Charges = spell.Charges,
+            Neighbours = SummonerList.NeighboursOf(spell, catalog),
         };
     }
 }

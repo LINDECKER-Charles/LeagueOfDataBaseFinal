@@ -19,4 +19,13 @@ internal sealed record ServiceProbe
 
     /// <summary>Size of the database, for PostgreSQL.</summary>
     public long? DatabaseBytes { get; init; }
+
+    /// <summary>
+    /// Objects of the storage root, for the storage, when its report is kept from an earlier
+    /// walk: the probe never walks the root itself.
+    /// </summary>
+    public long? Objects { get; init; }
+
+    /// <summary>Bytes of the storage root, known when <c>objects</c> is.</summary>
+    public long? Bytes { get; init; }
 }

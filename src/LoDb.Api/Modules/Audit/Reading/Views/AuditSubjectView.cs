@@ -9,6 +9,12 @@ internal sealed record AuditSubjectView
 
     public string? Email { get; init; }
 
+    /// <summary>
+    /// The Riot tagline, null when unset: the page names the account <c>username#tagline</c>,
+    /// as the legacy <c>displayName</c> did.
+    /// </summary>
+    public string? RiotTagline { get; init; }
+
     public static AuditSubjectView Of(AuditSubject subject)
     {
         ArgumentNullException.ThrowIfNull(subject);
@@ -17,6 +23,7 @@ internal sealed record AuditSubjectView
             Id = subject.Id,
             Username = subject.Username,
             Email = subject.Email,
+            RiotTagline = subject.RiotTagline,
         };
     }
 }

@@ -40,7 +40,12 @@ internal sealed class DonationLedger(LoDbDbContext db, TimeProvider clock)
             CreatedAt = donation.CreatedAt,
             Donor = donation.User == null
                 ? null
-                : new AdminUserRef { Id = donation.User.Id, Username = donation.User.UserName! },
+                : new AdminUserRef
+                {
+                    Id = donation.User.Id,
+                    Username = donation.User.UserName!,
+                    IsBanned = donation.User.IsBanned,
+                },
             DonorIsSupporter = donation.User != null && donation.User.IsSupporter,
         });
 

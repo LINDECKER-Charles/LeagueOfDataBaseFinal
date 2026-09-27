@@ -35,7 +35,7 @@ internal static class UserActivityEndpoint
         }
 
         var stored = await reader.SubjectAsync(userId, cancellationToken);
-        var subject = stored ?? new AuditSubject(userId, null, null);
+        var subject = stored ?? new AuditSubject { Id = userId };
         var page = await reader.ActivityAsync(subject, query, cancellationToken);
         return TypedResults.Ok(new UserActivity
         {

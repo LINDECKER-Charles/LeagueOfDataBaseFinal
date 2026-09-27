@@ -60,6 +60,7 @@ internal sealed class UserDirectory(LoDbDbContext db, TimeProvider clock)
         {
             Id = user.Id,
             Username = user.UserName ?? string.Empty,
+            RiotTagline = user.RiotTagline,
             Email = user.Email ?? string.Empty,
             EmailVerified = user.EmailConfirmed,
             IsBanned = user.IsBanned,

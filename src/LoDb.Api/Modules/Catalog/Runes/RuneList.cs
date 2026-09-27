@@ -1,5 +1,7 @@
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.Catalog.Shared;
+using LoDb.Domain.Catalog.Runes;
 using LoDb.Ingestion.Catalog.Snapshots;
 
 namespace LoDb.Api.Modules.Catalog.Runes;
@@ -29,11 +31,28 @@ internal sealed record RuneList
 
     public required IReadOnlyList<RuneCard> Entries { get; init; }
 
+    /// <summary>The paths in the list's order, which the path pages' pager follows.</summary>
+    public static IReadOnlyList<RuneTree> TreesOf(CatalogSnapshot catalog)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        return catalog.Runes.Entries;
+    }
+
+    /// <summary>The paths on either side of <paramref name="tree"/> in the list.</summary>
+    public static DetailNeighbours NeighboursOf(RuneTree tree, CatalogSnapshot catalog)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+        return DetailNeighbours.Around(
+            TreesOf(catalog),
+            entry => entry.Id == tree.Id,
+            entry => DetailNeighbour.Of(entry, catalog));
+    }
+
     /// <summary>Every rune with its path and row, in the list's order.</summary>
     public static IReadOnlyList<RuneLocation> Located(CatalogSnapshot catalog)
     {
         ArgumentNullException.ThrowIfNull(catalog);
-        return [.. catalog.Runes.Entries.SelectMany(static tree => tree.Slots.SelectMany(
+        return [.. TreesOf(catalog).SelectMany(static tree => tree.Slots.SelectMany(
             (slot, index) => slot.Runes.Select(rune => new RuneLocation
             {
                 Tree = tree,
@@ -55,8 +74,7 @@ internal sealed record RuneList
             Total = runes.Count,
             Page = page.Page,
             Size = page.Size,
-            Trees = [.. catalog.Runes.Entries
-                .Select(tree => RuneTreeCard.Of(tree, catalog, images))],
+            Trees = [.. TreesOf(catalog).Select(tree => RuneTreeCard.Of(tree, catalog, images))],
             Entries = [.. page.Slice(runes).Select(rune => RuneCard.Of(rune, catalog, images))],
         };
     }

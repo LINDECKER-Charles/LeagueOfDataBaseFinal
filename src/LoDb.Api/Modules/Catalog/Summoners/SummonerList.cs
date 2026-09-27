@@ -1,5 +1,7 @@
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.Catalog.Shared;
+using LoDb.Domain.Catalog.Summoners;
 using LoDb.Ingestion.Catalog.Snapshots;
 
 namespace LoDb.Api.Modules.Catalog.Summoners;
@@ -26,6 +28,23 @@ internal sealed record SummonerList
 
     public required IReadOnlyList<SummonerCard> Entries { get; init; }
 
+    /// <summary>The spells in the list's order, which the pages' pager follows.</summary>
+    public static IReadOnlyList<SummonerSpell> EntriesOf(CatalogSnapshot catalog)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        return catalog.Summoners.Entries;
+    }
+
+    /// <summary>The spells on either side of <paramref name="spell"/> in the list.</summary>
+    public static DetailNeighbours NeighboursOf(SummonerSpell spell, CatalogSnapshot catalog)
+    {
+        ArgumentNullException.ThrowIfNull(spell);
+        return DetailNeighbours.Around(
+            EntriesOf(catalog),
+            entry => string.Equals(entry.Id, spell.Id, StringComparison.Ordinal),
+            entry => DetailNeighbour.Of(entry, catalog));
+    }
+
     public static SummonerList Of(CatalogSnapshot catalog, PageRequest page, ImageSet images)
     {
         ArgumentNullException.ThrowIfNull(catalog);
@@ -36,11 +55,11 @@ internal sealed record SummonerList
             Version = catalog.Version.Value,
             Language = catalog.Language.Code,
             ContentLanguage = spells.ContentLanguage?.Code,
-            Total = spells.Entries.Count,
+            Total = EntriesOf(catalog).Count,
             Page = page.Page,
             Size = page.Size,
             Facets = SummonerFacets.Of(catalog),
-            Entries = [.. page.Slice(spells.Entries)
+            Entries = [.. page.Slice(EntriesOf(catalog))
                 .Select(spell => SummonerCard.Of(spell, catalog, images))],
         };
     }

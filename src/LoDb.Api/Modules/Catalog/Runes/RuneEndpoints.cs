@@ -41,7 +41,7 @@ internal static class RuneEndpoints
         var catalog = context.Catalog;
         var shown = page.Slice(RuneList.Located(catalog));
         var images = await context.ResolveAsync(
-            catalog.Runes.Entries.Select(EntityImages.Icon)
+            RuneList.TreesOf(catalog).Select(EntityImages.Icon)
                 .Concat(shown.Select(location => EntityImages.Icon(location.Rune))),
             ColdDemand.Queued,
             request.CancellationToken);
