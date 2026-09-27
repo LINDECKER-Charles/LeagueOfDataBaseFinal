@@ -1,9 +1,10 @@
 <form class="forge" novalidate (submit)="submit($event)">
   <header class="forge__head">
     <p class="eyebrow">{{ 'build.editor.eyebrow' | transloco }}</p>
-    <h1 class="font-beaufort text-3xl tracking-wide text-gold-grad uppercase">
+    <h1 class="font-beaufort text-3xl font-bold tracking-wide text-gold-grad uppercase sm:text-4xl">
       {{ (isEdit ? 'build.editor.title_edit' : 'build.editor.title_create') | transloco }}
     </h1>
+    <hr class="hx-rule mt-3" />
   </header>
 
   <lodb-import-notices />
@@ -34,7 +35,7 @@
         #description
         lodbField
         name="description"
-        rows="4"
+        rows="3"
         maxlength="2000"
         [value]="store.description()"
         (input)="store.description.set(description.value)"

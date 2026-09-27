@@ -13,7 +13,7 @@ import type { CatalogStatus } from './catalog-status';
   template: `
     @switch (status()) {
       @case ('loading') {
-        <p class="font-mono text-xs tracking-wide text-text-dim" role="status">
+        <p class="font-mono text-[0.7rem] tracking-[0.06em] text-text-dim" role="status">
           {{ 'build.editor.loading' | transloco }}
         </p>
       }
