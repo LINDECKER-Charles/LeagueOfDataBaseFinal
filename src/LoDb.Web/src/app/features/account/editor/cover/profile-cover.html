@@ -17,10 +17,8 @@
 <div class="profile-cover__body">
   <div class="min-w-0">
     <p class="eyebrow">{{ 'profile.eyebrow' | transloco }}</p>
-    <h1
-      class="mt-2 flex items-center gap-2.5 font-beaufort text-4xl font-bold tracking-wide break-words text-gold-grad uppercase"
-    >
-      {{ name() }}
+    <h1 class="profile-cover__name text-gold-grad">
+      <span class="min-w-0 break-words">{{ name() }}</span>
       @if (supporter()) {
         <lodb-supporter-badge />
       }
