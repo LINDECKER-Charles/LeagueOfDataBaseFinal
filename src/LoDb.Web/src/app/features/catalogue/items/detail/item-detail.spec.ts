@@ -149,6 +149,13 @@ describe('lodb-item-detail', () => {
     expect(price?.querySelector('lodb-icon')?.getAttribute('name')).toBe('gold');
   });
 
+  it('prices each possible evolution under its name', async () => {
+    const { element } = await render();
+
+    const upgrade = element.querySelector('[data-testid="upgrades"] a');
+    expect(upgrade?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Forbidden Idol 800');
+  });
+
   it('names the LoL Classic edition in its head, and turns the pages of the list', async () => {
     const { element, heads } = await render();
 
