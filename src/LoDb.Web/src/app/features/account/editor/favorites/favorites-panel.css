@@ -1,8 +1,19 @@
 /*
- * The favorites panel: the grid of the four sockets, and the version pin past the header's
- * hairline, at its inline end.
+ * The favorites panel: the skin banner under its label, the grid of the four sockets, and
+ * the version pin past the header's hairline, at its inline end.
  */
 @layer components {
+  /* The socket names itself to a screen reader: the label is for the eye. */
+  .skin-field__label {
+    display: block;
+    margin-block-end: 0.5rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--color-gold);
+  }
+
   .socket-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -23,7 +34,7 @@
   }
   .profile-version__label {
     font-family: var(--font-beaufort);
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
     letter-spacing: 0.16em;
     color: var(--color-gold);

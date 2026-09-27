@@ -12,6 +12,7 @@
     justify-content: center;
     gap: 0.5rem;
     inline-size: 100%;
+    block-size: 100%;
     min-block-size: 7.75rem;
     padding: 0.85rem 0.6rem;
     text-align: center;
@@ -19,9 +20,17 @@
     color: inherit;
     cursor: pointer;
   }
+  /*
+   * Focus lights the frame cyan, inside the bevel that would clip a ring. A filled socket's
+   * border belongs to the frame utility: an outline laid over it draws the same line.
+   */
   .socket:focus-visible {
-    outline: 2px solid var(--color-hex);
-    outline-offset: 2px;
+    outline: none;
+    border-color: var(--color-hex);
+  }
+  .socket--filled:focus-visible {
+    outline: 1px solid var(--color-hex);
+    outline-offset: -1px;
   }
   .socket--empty,
   .socket--unavailable {
@@ -35,7 +44,7 @@
   }
   .socket__type {
     font-family: var(--font-beaufort);
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     text-transform: uppercase;
     letter-spacing: 0.26em;
     color: var(--color-gold);
@@ -58,10 +67,10 @@
   }
   .socket__name--muted {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    color: var(--color-text-muted);
+    color: var(--color-text-dim);
   }
   .socket__hex {
     inline-size: 2.6rem;

@@ -28,7 +28,11 @@ const MESSAGES = {
       </button>
     }`,
   styleUrl: './autosave-indicator.css',
-  host: { class: 'flex min-h-11 items-center justify-end gap-3' },
+  // The band only takes room when the retry shows: idle, nothing sits under the sockets.
+  host: {
+    class: 'flex items-center justify-end gap-4',
+    '[class.min-h-11]': "status() === 'error'",
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AutosaveIndicator {

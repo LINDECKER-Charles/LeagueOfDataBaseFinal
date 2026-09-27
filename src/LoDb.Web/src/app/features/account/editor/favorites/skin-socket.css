@@ -19,9 +19,14 @@
     color: inherit;
     cursor: pointer;
   }
+  /* Focus lights the frame cyan, as on a favorite socket (favorite-socket.css). */
   .skin-socket:focus-visible {
-    outline: 2px solid var(--color-hex);
-    outline-offset: 2px;
+    outline: none;
+    border-color: var(--color-hex);
+  }
+  .skin-socket--filled:focus-visible {
+    outline: 1px solid var(--color-hex);
+    outline-offset: -1px;
   }
   .skin-socket--empty {
     border: 1px dashed color-mix(in srgb, var(--color-gold-deep) 40%, transparent);
@@ -55,7 +60,7 @@
   }
   .skin-socket__type {
     font-family: var(--font-beaufort);
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
     letter-spacing: 0.24em;
     color: var(--color-gold);
@@ -70,10 +75,10 @@
   }
   .skin-socket__name--muted {
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--color-text-muted);
+    color: var(--color-text-dim);
   }
   .skin-socket__cta {
     position: relative;
@@ -81,7 +86,7 @@
     flex: none;
     padding: 0.35rem 0.7rem;
     font-family: var(--font-beaufort);
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     text-transform: uppercase;
     letter-spacing: 0.16em;
     color: var(--color-hex-bright);
