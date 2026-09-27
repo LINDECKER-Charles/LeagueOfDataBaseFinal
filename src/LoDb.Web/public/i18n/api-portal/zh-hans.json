@@ -5,12 +5,6 @@
     "load": "无法加载 API 密钥。",
     "failed": "操作失败，请重试。"
   },
-  "raw": {
-    "done": "我已复制"
-  },
-  "create": {
-    "verify": "验证我的邮箱"
-  },
   "actions": {
     "revoke_help": "立即停用密钥：API 从下一个请求起拒绝它。"
   }

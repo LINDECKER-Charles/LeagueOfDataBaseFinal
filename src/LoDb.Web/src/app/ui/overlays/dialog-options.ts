@@ -8,4 +8,9 @@ export interface DialogOptions<D = unknown> {
   readonly data?: D;
   /** Width of the pane (dialog-size.ts); the theme picker's 46rem when left out. */
   readonly size?: DialogSize;
+  /**
+   * Selector of the control that takes the focus on opening, such as a picker's search;
+   * the dialog itself when left out, which a screen reader then announces by name.
+   */
+  readonly autoFocus?: string;
 }

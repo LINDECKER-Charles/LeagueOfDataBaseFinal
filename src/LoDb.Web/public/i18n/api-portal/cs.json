@@ -5,12 +5,6 @@
     "load": "API klíč se nepodařilo načíst.",
     "failed": "Akce se nezdařila, zkuste to znovu."
   },
-  "raw": {
-    "done": "Klíč zkopírován"
-  },
-  "create": {
-    "verify": "Ověřit e-mail"
-  },
   "actions": {
     "revoke_help": "Okamžitě klíč vypne: API jej odmítne od příštího požadavku."
   }

@@ -11,7 +11,7 @@
   }
   .profile-identity__mono {
     font-family: var(--font-mono);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     letter-spacing: 0.02em;
     overflow-wrap: anywhere;
   }
@@ -19,9 +19,10 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    min-block-size: 2.75rem;
+    margin-block-start: 0.25rem;
     font-family: var(--font-beaufort);
     font-size: 0.875rem;
+    line-height: 1.25rem;
     text-transform: uppercase;
     letter-spacing: 0.15em;
     color: var(--color-gold);
@@ -73,14 +74,14 @@
   }
   .visibility-card__label {
     font-family: var(--font-beaufort);
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
     letter-spacing: 0.16em;
     color: var(--color-gold);
   }
   .visibility-card__state {
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--color-text);
     transition: color 0.35s var(--ease-hextech);
   }
@@ -89,16 +90,19 @@
     color: var(--color-hex-bright);
   }
   .visibility-card__help {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--color-text-muted);
   }
+  /* The link keeps its own width and the legacy line box, the card its legacy height. */
   .visibility-card__link {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    min-block-size: 2.75rem;
+    align-self: flex-start;
+    max-inline-size: 100%;
+    min-block-size: 1.5rem;
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--color-gold-bright);
     transition: color 0.25s var(--ease-hextech);
   }

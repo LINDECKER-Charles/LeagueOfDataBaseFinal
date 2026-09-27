@@ -21,6 +21,22 @@
     gap: 1rem;
     inline-size: 100%;
   }
+  /*
+   * The legacy title (text-4xl, tracking-wide), a supporter's seal after the name. The name
+   * is a flex item that may shrink, so a long one breaks instead of running off a phone.
+   */
+  .profile-cover__name {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-block-start: 0.5rem;
+    font-family: var(--font-beaufort);
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+  }
   .profile-cover__actions {
     display: flex;
     flex-wrap: wrap;

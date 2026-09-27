@@ -18,7 +18,7 @@
     min-block-size: 2.75rem;
     padding: 0.4rem 1.1rem;
     font-family: var(--font-beaufort);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.16em;
     cursor: pointer;
@@ -41,6 +41,7 @@
   .picker-option {
     display: flex;
     align-items: center;
+    flex: none;
     gap: 0.7rem;
     min-block-size: 2.75rem;
     padding: 0.45rem 0.6rem;
@@ -70,7 +71,7 @@
     z-index: 1;
     background: var(--color-panel);
     font-family: var(--font-beaufort);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.18em;
     color: var(--color-gold);
@@ -80,6 +81,7 @@
     padding-inline-start: 2rem;
   }
   .picker-option__img {
+    flex: none;
     inline-size: 2rem;
     block-size: 2rem;
     border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
@@ -89,7 +91,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .picker-foot {

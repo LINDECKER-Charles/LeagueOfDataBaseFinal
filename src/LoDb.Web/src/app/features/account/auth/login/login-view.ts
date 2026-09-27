@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  type ElementRef,
+  afterNextRender,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { LoginRequest } from '../../../../core/api/generated/models/login-request';
@@ -25,6 +33,7 @@ type Step = 'credentials' | 'two-factor';
  * Sign-in with an e-mail or a summoner name and a password, then, for an account with an
  * authenticator, a second step asking its code (or a recovery code) with the same password.
  * A success lands on the page the visitor came from when it is safe, the profile otherwise.
+ * The identifier has the focus on arrival, as on the legacy page.
  */
 @Component({
   selector: 'lodb-login-view',
@@ -47,6 +56,12 @@ export class LoginView {
   protected readonly error = signal<string | null>(this.googleError());
   protected readonly link = (path: string) => localePath(this.page.locale(), path);
   protected readonly registerQuery = this.returnQuery();
+  private readonly identifier = viewChild<ElementRef<HTMLInputElement>>('identifier');
+
+  constructor() {
+    // Programmatic: the view renders after the first paint, past the browser's autofocus.
+    afterNextRender(() => this.identifier()?.nativeElement.focus());
+  }
 
   protected signIn(event: Event): void {
     const form = submittedForm(event);

@@ -86,7 +86,7 @@ describe('ProfilePage', () => {
     expect(textOf(host, 'h1')).toBe('Faker#KR1');
     expect(host.querySelector('h1 [role="img"]')?.getAttribute('aria-label')).toBe('Soutien');
     expect(textsOf(host, '.profile-hero__meta > span')).toEqual([
-      'Membre depuis · 5 mars 2024',
+      'Membre depuis · mars 2024',
       'Arcade Ahri',
     ]);
     expect(host.querySelector('.profile-hero__art')?.getAttribute('src')).toBe(
@@ -111,7 +111,7 @@ describe('ProfilePage', () => {
 
     expect(host.querySelector('h1 [role="img"]')).toBeNull();
     expect(host.querySelector('.profile-hero__art')).toBeNull();
-    expect(textsOf(host, '.profile-hero__meta > span')).toEqual(['Membre depuis · 5 mars 2024']);
+    expect(textsOf(host, '.profile-hero__meta > span')).toEqual(['Membre depuis · mars 2024']);
   });
 
   it('links each public build to its shared page, the champion named by its id when unknown', async () => {

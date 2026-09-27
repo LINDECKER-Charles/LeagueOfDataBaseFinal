@@ -5,12 +5,6 @@
     "load": "Impossible de charger votre clé d'API.",
     "failed": "L'action a échoué, veuillez réessayer."
   },
-  "raw": {
-    "done": "Je l'ai copiée"
-  },
-  "create": {
-    "verify": "Vérifier mon e-mail"
-  },
   "actions": {
     "revoke_help": "Désactive la clé aussitôt : l'API la refuse dès la requête suivante."
   }

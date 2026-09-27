@@ -3,13 +3,18 @@
   [headingId]="headingId"
   [closeLabel]="'filter.close' | transloco"
 >
+  @if (champion() !== null) {
+    <button
+      lodbDialogLead
+      type="button"
+      class="picker-back"
+      [attr.aria-label]="'profile.skin.back' | transloco"
+      (click)="back(search)"
+    >
+      <lodb-icon name="chevron" class="picker-back__icon" />
+    </button>
+  }
   <div class="picker">
-    @if (champion() !== null) {
-      <button type="button" class="picker-back" (click)="back(search)">
-        <lodb-icon name="chevron" class="picker-back__icon size-4" />
-        {{ 'profile.skin.back' | transloco }}
-      </button>
-    }
     <input
       #search
       type="search"

@@ -1,4 +1,4 @@
-<section lodbFrame class="portal-panel" aria-labelledby="api-key-title">
+<section class="portal-panel" aria-labelledby="api-key-title">
   <div class="portal-panel__head">
     <h2 id="api-key-title" class="portal-panel__title">{{ 'api.portal.key.title' | transloco }}</h2>
     <span lodbChip="live" data-testid="api-key-plan">{{
@@ -10,7 +10,7 @@
     <div class="hx-plate">
       <span class="hx-plate__label">{{ 'api.portal.key.label_key' | transloco }}</span>
       <span class="hx-plate__value font-mono" data-testid="api-key-prefix"
-        >{{ key().prefix }}…</span
+        ><bdi>{{ key().prefix }}…</bdi></span
       >
     </div>
     <div class="hx-plate">

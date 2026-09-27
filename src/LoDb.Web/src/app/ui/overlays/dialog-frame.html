@@ -1,4 +1,5 @@
 <div class="hx-dialog-panel__head" [class.hx-dialog-panel__head--titled]="eyebrow() !== null">
+  <ng-content select="[lodbDialogLead]" />
   @if (eyebrow() !== null) {
     <div>
       <p class="eyebrow">{{ eyebrow() }}</p>

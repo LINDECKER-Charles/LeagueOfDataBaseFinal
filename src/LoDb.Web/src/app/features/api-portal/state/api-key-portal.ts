@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
 import { createApiKey } from '../../../core/api/generated/fn/api-keys/create-api-key';
@@ -12,6 +13,8 @@ import { openPlanCheckout } from '../../../core/api/generated/fn/billing/open-pl
 import type { ApiKeyOverview } from '../../../core/api/generated/models/api-key-overview';
 import type { BillingOffers } from '../../../core/api/generated/models/billing-offers';
 import type { IssuedApiKey } from '../../../core/api/generated/models/issued-api-key';
+import type { ToastKind } from '../../../core/layout/toast/toast-kind';
+import { ToastService } from '../../../core/layout/toast/toast-service';
 import { PORTAL_PAYMENTS } from '../shared/portal-payments';
 import { portalFailure } from './portal-failure';
 import type { PortalNotice } from './portal-notice';
@@ -28,10 +31,12 @@ export interface PortalPurchase {
 type LoadStatus = 'loading' | 'ready' | 'failed';
 
 /**
- * The state of the API portal and its actions: the account's key, the offers on sale, the
- * secret just issued, and the banner of the last outcome. The secret lives in this service
- * alone, the time the page shows it: nothing stores it, and a reload forgets it for good.
- * Provided by the page, so that leaving it drops the secret.
+ * The state of the API portal and its actions: the account's key, the offers on sale and the
+ * secret just issued. Each outcome is a toast, as the legacy flashes were; the banner only
+ * tells a return from Stripe, or a Stripe page that would not open. The secret lives in this
+ * service alone, the time the page shows it: nothing stores it, and a reload forgets it for
+ * good. Provided by the page, so that leaving it drops the secret; its texts are the page's
+ * scopes, loaded by then.
  */
 @Injectable()
 export class ApiKeyPortal {
@@ -39,6 +44,8 @@ export class ApiKeyPortal {
   private readonly apiOrigin = inject(API_BASE_URL);
   private readonly redirect = inject(PortalStripeRedirect);
   private readonly payments = inject(PORTAL_PAYMENTS);
+  private readonly toasts = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
 
   readonly status = signal<LoadStatus>('loading');
   readonly key = signal<ApiKeyOverview | null>(null);
@@ -86,7 +93,7 @@ export class ApiKeyPortal {
       await firstValueFrom(revokeApiKey(this.http, this.apiOrigin));
       this.key.set(null);
       this.secret.set(null);
-      this.notice.set({ tone: 'success', key: 'api.portal.flash.revoked' });
+      this.toast('success', 'api.portal.flash.revoked');
     });
   }
 
@@ -98,11 +105,6 @@ export class ApiKeyPortal {
         this.notice.set({ tone: 'error', key: 'api.portal.flash.gateway' });
       }
     });
-  }
-
-  /** Forgets the secret once its owner copied it. */
-  dismissSecret(): void {
-    this.secret.set(null);
   }
 
   private checkout({ kind, code, locale }: PortalPurchase) {
@@ -123,10 +125,14 @@ export class ApiKeyPortal {
   private reveal(issued: IssuedApiKey, message: string): void {
     this.key.set(issued.key);
     this.secret.set(issued.secret);
-    this.notice.set({ tone: 'success', key: message });
+    this.toast('success', message);
   }
 
-  // One action at a time; its refusal becomes the banner.
+  private toast(kind: ToastKind, key: string): void {
+    this.toasts.show(kind, this.transloco.translate(key));
+  }
+
+  // One action at a time; its refusal becomes a toast.
   private async run(action: () => Promise<void>): Promise<void> {
     if (this.busy()) {
       return;
@@ -136,7 +142,7 @@ export class ApiKeyPortal {
     try {
       await action();
     } catch (error) {
-      this.notice.set({ tone: 'error', key: portalFailure(error) });
+      this.toast('error', portalFailure(error));
     } finally {
       this.busy.set(false);
     }

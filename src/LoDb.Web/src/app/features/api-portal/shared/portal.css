@@ -3,8 +3,11 @@
  * field labels and the banners of an outcome. Tokens only, logical properties for RTL.
  */
 @layer components {
+  /* The flat gold-tinted panel of the legacy profile and portal, square and without shadow. */
   .portal-panel {
     padding: 1.5rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    background: color-mix(in srgb, var(--color-gold-deep) 6%, transparent);
   }
 
   .portal-panel__head {
@@ -17,10 +20,10 @@
 
   .portal-panel__title {
     font-family: var(--font-beaufort);
-    font-size: 1.1rem;
+    font-size: 1rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-gold-bright);
+    letter-spacing: 0.2em;
+    color: var(--color-gold-light);
   }
 
   .portal-text {

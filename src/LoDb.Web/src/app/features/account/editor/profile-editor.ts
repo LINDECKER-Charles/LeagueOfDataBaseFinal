@@ -16,12 +16,14 @@ import { ToastService } from '../../../core/layout/toast/toast-service';
 import { Button } from '../../../ui/controls/button';
 import { Backdrop } from '../../../ui/surfaces/backdrop';
 import { accountMessage } from '../shared/account-message';
+import { overrideAccountTitle } from '../shared/head/override-account-title';
 import { displayName } from '../shared/text/display-name';
 import { IdentityAside } from './aside/identity-aside';
 import { ProfileAutosave } from './autosave/profile-autosave';
 import { ProfileCover } from './cover/profile-cover';
 import { FavoritesPanel } from './favorites/favorites-panel';
 import { PickerCatalog } from './picker/picker-catalog';
+import { PickerOpener } from './picker/picker-opener';
 import { DangerPanel } from './settings/danger-panel';
 import { IdentityPanel } from './settings/identity-panel';
 import { PasswordPanel } from './settings/password-panel';
@@ -48,7 +50,7 @@ import { ProfileStore } from './store/profile-store';
   ],
   templateUrl: './profile-editor.html',
   styleUrl: './profile-editor.css',
-  providers: [PickerCatalog, ProfileAutosave, ProfileForm, ProfileStore],
+  providers: [PickerCatalog, PickerOpener, ProfileAutosave, ProfileForm, ProfileStore],
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -79,6 +81,8 @@ export class ProfileEditor {
   protected readonly pinning = signal(false);
 
   constructor() {
+    // The tab reads the summoner's name, as the legacy editor's did.
+    overrideAccountTitle(() => (this.profile() === null ? null : { text: this.name() }));
     // Each reading of the profile is the new starting point of what the editor changes.
     effect(() => {
       const profile = this.profile();
