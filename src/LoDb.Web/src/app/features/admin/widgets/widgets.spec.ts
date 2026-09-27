@@ -1,16 +1,13 @@
 import { Component, type Type, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Seo } from '../../../core/seo/seo';
 import { configureAdminTestBed } from '../testing/admin-test-bed';
-import { AdminCard } from './admin-card';
 import { AdminPager } from './admin-pager';
 import { Badge, type Tone } from './badge';
 import { ConfirmButton } from './confirm-button';
 import { Kpi } from './kpi';
 import { Legend } from './legend';
-import { PageHead } from './page-head';
-import { RangeBar } from './range-bar';
 import { RankList } from './rank-list';
+import { SegmentBar } from './segment-bar';
 
 function render<T>(type: Type<T>, inputs: Readonly<Record<string, unknown>>): ComponentFixture<T> {
   const fixture = TestBed.createComponent(type);
@@ -42,28 +39,33 @@ class BadgeHost {
 }
 
 describe('admin widgets', () => {
-  const apply = vi.fn(() => Promise.resolve());
+  beforeEach(() => configureAdminTestBed());
 
-  beforeEach(() => {
-    apply.mockClear();
-    configureAdminTestBed([], [{ provide: Seo, useValue: { apply } }]);
+  it('shows a key figure with its label, its value, its line and the bar of its accent', () => {
+    const fixture = render(Kpi, { label: 'Vues', value: '1 234', sub: '+5 %', accent: 'bad' });
+
+    expect(words(root(fixture))).toBe('Vues 1 234 +5 %');
+    const bar = root(fixture).querySelector<HTMLElement>('[aria-hidden="true"]');
+    expect(bar?.style.background).toBe('var(--color-bad)');
   });
 
-  it('shows a key figure with its label, its line and the hairline of its tone', () => {
-    const fixture = render(Kpi, { label: 'Vues', value: '1 234', sub: '+5 %', tone: 'bad' });
+  it('leaves the value out of a tile of badges, and reads its line in cyan as a link', () => {
+    const fixture = render(Kpi, { label: 'Services', sub: 'Surveillance →', isLink: true });
 
-    expect(all(fixture, 'span').map(words)).toEqual(['', 'Vues', '1 234', '+5 %']);
-    expect(root(fixture).querySelector('[aria-hidden="true"]')?.className).toContain('bg-danger');
+    expect(words(root(fixture))).toBe('Services Surveillance →');
+    expect(all(fixture, '.text-hex').map(words)).toEqual(['Surveillance →']);
   });
 
   it('dresses a badge in its tone, and a blank tone as a neutral one', () => {
     const fixture = TestBed.createComponent(BadgeHost);
     fixture.detectChanges();
-    expect(root(fixture).querySelector('span')?.className).toContain('text-danger-light');
+    const badge = () => root(fixture).querySelector('span');
+    expect(badge()?.className).toContain('text-danger-light');
+    expect(badge()?.className).not.toContain('uppercase');
 
     fixture.componentInstance.tone.set('');
     fixture.detectChanges();
-    expect(root(fixture).querySelector('span')?.className).toBe('hx-chip');
+    expect(badge()?.className).toContain('text-text-muted');
   });
 
   it('sizes each bar of a ranking on its largest row', () => {
@@ -94,7 +96,7 @@ describe('admin widgets', () => {
     toggle?.click();
     fixture.detectChanges();
     expect(all(fixture, 'li')).toHaveLength(4);
-    expect(words(toggle)).toBe('admin.rank.less');
+    expect(words(root(fixture).querySelector('button'))).toBe('admin.rank.less');
   });
 
   it('says what an empty ranking holds instead of drawing it', () => {
@@ -114,11 +116,21 @@ describe('admin widgets', () => {
     expect(words(root(fixture).querySelector('nav span'))).toBe('2 / 3');
   });
 
+  it('keeps the direction that leads nowhere in sight, greyed out', () => {
+    const fixture = render(AdminPager, { page: 1, pages: 2 });
+
+    expect(all(fixture, 'a').map((link) => link.getAttribute('href'))).toEqual(['/?page=2']);
+    const disabled = all(fixture, '[aria-disabled="true"]');
+    expect(disabled.map(words)).toEqual(['← admin.pager.previous']);
+  });
+
   it('pages a journal read by cursor while the API says more follows', () => {
     const fixture = render(AdminPager, { page: 1, hasMore: true });
 
     expect(all(fixture, 'a').map((link) => link.getAttribute('href'))).toEqual(['/?page=2']);
-    expect(words(root(fixture).querySelector('nav span'))).toBe('admin.pager.page');
+    expect(words(root(fixture).querySelector('nav span:not([aria-disabled])'))).toBe(
+      'admin.pager.page',
+    );
 
     fixture.componentRef.setInput('hasMore', false);
     fixture.detectChanges();
@@ -126,15 +138,23 @@ describe('admin widgets', () => {
   });
 
   it('asks for a confirmation before it runs an action', async () => {
-    const fixture = render(ConfirmButton, { label: 'Supprimer', confirmLabel: 'Confirmer' });
+    const fixture = render(ConfirmButton, {
+      label: 'Supprimer',
+      confirmLabel: 'Confirmer',
+      tone: 'danger',
+      confirmTone: 'danger',
+    });
     const confirmed = vi.fn();
     fixture.componentInstance.confirmed.subscribe(confirmed);
+    expect(root(fixture).querySelector('button')?.className).toContain('hx-btn-danger');
+    expect(root(fixture).querySelector('button')?.className).toContain('hx-btn-sm');
 
     root(fixture).querySelector('button')?.click();
     fixture.detectChanges();
     await fixture.whenStable();
     const [confirm, cancel] = all(fixture, 'button');
     expect(words(confirm)).toBe('Confirmer');
+    expect(confirm?.className).toContain('hx-btn-danger');
     expect(document.activeElement).toBe(confirm);
     expect(confirmed).not.toHaveBeenCalled();
 
@@ -156,58 +176,45 @@ describe('admin widgets', () => {
     expect(root(fixture).querySelector('button')?.disabled).toBe(true);
   });
 
-  it('marks the current period and links the others with the first page', () => {
-    const fixture = render(RangeBar, { current: '90d' });
-
-    const links = all(fixture, 'a');
-    expect(links.map((link) => link.getAttribute('href'))).toEqual([
-      '/?range=7d',
-      '/?range=30d',
-      '/?range=90d',
-      '/?range=all',
-    ]);
-    expect(links.filter((link) => link.getAttribute('aria-current') === 'page')).toEqual([
-      links[2],
-    ]);
-  });
-
-  it('titles the document as a private admin page, once the title is known', () => {
-    const fixture = render(PageHead, { eyebrow: 'Gestion', title: '' });
-    TestBed.tick();
-    expect(apply).not.toHaveBeenCalled();
-
-    fixture.componentRef.setInput('title', 'Comptes');
-    fixture.componentRef.setInput('subtitle', 'Tous les comptes');
-    fixture.detectChanges();
-    TestBed.tick();
-
-    expect(root(fixture).querySelector('h1')?.textContent?.trim()).toBe('Comptes');
-    expect(words(root(fixture))).toContain('Tous les comptes');
-    expect(apply).toHaveBeenCalledWith({
-      kind: 'private',
-      titleFormat: 'admin',
-      locale: 'fr',
-      title: 'Comptes',
-    });
-  });
-
-  it('names each series of a legend, with the value of a slice when it has one', () => {
-    const fixture = render(Legend, {
-      items: [
-        { label: 'Vues', color: 'var(--color-gold)' },
-        { label: 'Mobile', color: 'var(--color-hex)', value: '40.0 %' },
+  it('marks the current choice of a segmented bar and links the others from the first page', () => {
+    const fixture = render(SegmentBar, {
+      param: 'range',
+      label: 'admin.range.label',
+      current: '90d',
+      segments: [
+        { value: '30d', label: 'admin.range.30d', name: 'admin.range_long.30d' },
+        { value: '90d', label: 'admin.range.90d', name: 'admin.range_long.90d' },
+        { value: '', label: 'admin.contacts.statuses.all' },
       ],
     });
 
-    expect(all(fixture, 'li').map(words)).toEqual(['Vues', 'Mobile 40.0 %']);
-    expect(all(fixture, 'li > span')[1]?.style.background).toBe('var(--color-hex)');
+    const links = all(fixture, 'a');
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/?range=30d',
+      '/?range=90d',
+      '/',
+    ]);
+    expect(links.map((link) => link.getAttribute('aria-label'))).toEqual([
+      'admin.range_long.30d',
+      'admin.range_long.90d',
+      null,
+    ]);
+    expect(links.filter((link) => link.getAttribute('aria-current') === 'page')).toEqual([
+      links[1],
+    ]);
   });
 
-  it('heads a card with its title and what it counts', () => {
-    const fixture = render(AdminCard, { heading: 'Pages', chip: 'vues' });
+  it('names each series of a legend with a diamond, and the count of a slice', () => {
+    const fixture = render(Legend, {
+      items: [
+        { label: 'Vues', color: 'var(--color-gold)' },
+        { label: 'Mobile', color: 'var(--color-hex)', value: '40' },
+      ],
+    });
 
-    expect(words(root(fixture).querySelector('h2'))).toBe('Pages');
-    expect(words(root(fixture).querySelector('[lodbChip]'))).toBe('vues');
-    expect(all(render(AdminCard, {}), 'h2')).toHaveLength(0);
+    expect(all(fixture, 'li').map(words)).toEqual(['Vues', 'Mobile 40']);
+    const swatch = all(fixture, 'li > span')[1];
+    expect(swatch?.style.background).toBe('var(--color-hex)');
+    expect(swatch?.className).toContain('rotate-45');
   });
 });

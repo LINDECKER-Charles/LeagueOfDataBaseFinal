@@ -11,13 +11,15 @@ import {
   viewChild,
 } from '@angular/core';
 import { Button } from '../../../ui/controls/button';
+import type { ButtonSize } from '../../../ui/controls/button-sizes';
 import type { ButtonTone } from '../../../ui/controls/button-tones';
 import { AdminTextPipe } from '../shared/admin-text-pipe';
 
 /**
  * An action that asks twice: the first press arms it and offers to confirm or cancel, the
  * second one runs it. It stands where the legacy admin asked with `confirm()`, in the
- * design system and within reach of a keyboard: the focus moves to the confirmation.
+ * design system and within reach of a keyboard: the focus moves to the confirmation. Small by
+ * default, as the actions of a row or a toolbar; a destructive action confirms in red.
  */
 @Component({
   selector: 'lodb-confirm-button',
@@ -25,15 +27,33 @@ import { AdminTextPipe } from '../shared/admin-text-pipe';
   template: `
     @if (armed()) {
       <span class="inline-flex flex-wrap items-center gap-1.5">
-        <button #confirmation lodbButton="gold" type="button" [disabled]="busy()" (click)="run()">
+        <button
+          #confirmation
+          type="button"
+          [lodbButton]="confirmTone()"
+          [lodbButtonSize]="size()"
+          [disabled]="busy()"
+          (click)="run()"
+        >
           {{ confirmLabel() }}
         </button>
-        <button lodbButton="ghost" type="button" (click)="armed.set(false)">
+        <button
+          lodbButton="ghost"
+          type="button"
+          [lodbButtonSize]="size()"
+          (click)="armed.set(false)"
+        >
           {{ 'admin.actions.cancel' | adminText }}
         </button>
       </span>
     } @else {
-      <button [lodbButton]="tone()" type="button" [disabled]="busy()" (click)="arm()">
+      <button
+        type="button"
+        [lodbButton]="tone()"
+        [lodbButtonSize]="size()"
+        [disabled]="busy()"
+        (click)="arm()"
+      >
         {{ label() }}
       </button>
     }
@@ -47,6 +67,9 @@ export class ConfirmButton {
   /** What confirms it, translated: "Supprimer définitivement". */
   readonly confirmLabel = input.required<string>();
   readonly tone = input<ButtonTone>('ghost');
+  /** The tone of the confirmation: `danger` for what cannot be undone. */
+  readonly confirmTone = input<ButtonTone>('gold');
+  readonly size = input<ButtonSize>('small');
   readonly busy = input(false);
   readonly confirmed = output<void>();
 
