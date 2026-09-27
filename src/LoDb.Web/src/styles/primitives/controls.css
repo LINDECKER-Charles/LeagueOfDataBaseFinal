@@ -35,10 +35,14 @@
   );
   clip-path: var(--hx-bevel-btn);
 }
-/* Destructive action: red text on a faint red wash (deletions, revocations, purges). */
+/*
+ * Destructive action: red text on a faint red wash (deletions, revocations, purges). Border,
+ * wash and glow keep the legacy admin red, not the text: that red reads about 4:1 on its own
+ * wash, under the 4.5:1 small text needs, where danger-light stays above 5:1.
+ */
 @utility hx-btn-danger {
   @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-bad/50
-    bg-bad/8 px-4 py-2.5 font-beaufort text-sm tracking-[0.15em] text-bad uppercase
+    bg-bad/8 px-4 py-2.5 font-beaufort text-sm tracking-[0.15em] text-danger-light uppercase
     transition-all duration-300 hover:bg-bad/18
     hover:shadow-[0_0_22px_-10px_var(--hx-glow-danger)] focus-visible:ring-2
     focus-visible:ring-bad/40 focus-visible:outline-none disabled:cursor-not-allowed
