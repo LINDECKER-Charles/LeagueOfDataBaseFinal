@@ -1,36 +1,111 @@
 import { provideHttpClient } from '@angular/common/http';
-import type { EnvironmentProviders, Provider } from '@angular/core';
+import { type EnvironmentProviders, type Provider, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { API_BASE_URL } from '../../api/api-base-url';
+import { ClientPolicyService } from '../../api/generated/services/client-policy.service';
 import { AuthStrategies } from '../../auth/strategy/auth-strategies';
+import { ActivePlatform } from '../detection/active-platform';
+import type { UpdateState } from '../update-state';
 import { AndroidPlatform } from './android-platform';
 import { BearerAuthStrategy } from './auth/bearer-auth-strategy';
 import { ANDROID_PLUGINS } from './native/android-plugins-token';
 import { FakeAndroidPlugins } from './testing/fake-android-plugins';
+import { AndroidUpdates } from './updates/android-updates';
+import { UPDATE_PLUGINS } from './updates/native/update-plugins-token';
+import { FakeAppUpdate } from './updates/testing/fake-app-update';
+import { FakeLiveUpdate } from './updates/testing/fake-live-update';
+import { TRANSITIONAL_CHANNEL } from './updates/transitional/transitional-channel-token';
+
+// The updates as the platform sees them; their behaviour is android-updates.spec.ts's.
+class FakeUpdates {
+  readonly state = signal<UpdateState>('none');
+  starts = 0;
+  applies = 0;
+
+  start(): void {
+    this.starts++;
+  }
+
+  async apply(): Promise<void> {
+    this.applies++;
+  }
+}
 
 describe('AndroidPlatform', () => {
   let native: FakeAndroidPlugins;
+  let updates: FakeUpdates;
 
   function start(afterDetection: (Provider | EnvironmentProviders)[] = []): AndroidPlatform {
     // No API_BASE_URL: the app derives it from PLATFORM, which the detection only sets once
     // this platform is built. Anything built here that reads it fails these specs.
     TestBed.configureTestingModule({
-      providers: [{ provide: ANDROID_PLUGINS, useValue: native.plugins }, ...afterDetection],
+      providers: [
+        { provide: ANDROID_PLUGINS, useValue: native.plugins },
+        { provide: AndroidUpdates, useValue: updates },
+        ...afterDetection,
+      ],
     });
     return TestBed.inject(AndroidPlatform);
   }
 
   beforeEach(() => {
     native = new FakeAndroidPlugins();
+    updates = new FakeUpdates();
   });
 
-  it('is Android, authenticated by bearer tokens, without updates before L10.3', () => {
+  it('is Android, authenticated by bearer tokens', () => {
     const platform = start();
 
     expect(platform.kind).toBe('android');
     expect(platform.authStrategy).toBe('bearer');
+  });
+
+  it('starts its updates as it is built, and relays their state', () => {
+    const platform = start();
+
+    expect(updates.starts).toBe(1);
     expect(platform.updateState()).toBe('none');
+
+    updates.state.set('downloading');
+    expect(platform.updateState()).toBe('downloading');
+    updates.state.set('ready');
+    expect(platform.updateState()).toBe('ready');
+  });
+
+  it('restarts on the update its updates hold', async () => {
+    await start().applyUpdate();
+
+    expect(updates.applies).toBe(1);
+  });
+
+  it('confirms the start of the bundle to the live update once the app has started', async () => {
+    // The real updates, built without the API origin: the plugin rolls the bundle back
+    // after its readyTimeout unless the app calls ready().
+    const device = new FakeLiveUpdate();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: ANDROID_PLUGINS, useValue: native.plugins },
+        {
+          provide: UPDATE_PLUGINS,
+          useValue: { liveUpdate: device.plugin, appUpdate: new FakeAppUpdate().plugin },
+        },
+        { provide: ActivePlatform, useValue: { detect: () => Promise.resolve({}) } },
+        {
+          provide: ClientPolicyService,
+          useValue: { getClientPolicy: () => of({ platforms: [] }) },
+        },
+        { provide: TRANSITIONAL_CHANNEL, useValue: null },
+      ],
+    });
+    TestBed.inject(AndroidPlatform);
+    expect(device.readyCalls).toBe(0);
+
+    await TestBed.inject(Router).navigateByUrl('/');
+
+    await vi.waitFor(() => expect(device.readyCalls).toBe(1));
   });
 
   it('registers the bearer strategy with core/auth as it is built', () => {
