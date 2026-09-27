@@ -14,6 +14,7 @@ import { Pager } from '../../../../ui/navigation/pager';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
+import { LoadTime } from '../../shared/codex/timing/load-time';
 import { CatalogueImage } from '../../shared/cards/catalogue-image';
 import { pathThemeOf } from '../paths/path-theme-of';
 import { constellationOf } from './constellation/constellation-of';
@@ -31,7 +32,7 @@ const EMBLEM_SIZE = 120;
  */
 @Component({
   selector: 'lodb-rune-detail',
-  imports: [Backdrop, CatalogueImage, Pager, RuneConstellation, TranslocoPipe],
+  imports: [Backdrop, CatalogueImage, LoadTime, Pager, RuneConstellation, TranslocoPipe],
   templateUrl: './rune-detail.html',
   styleUrl: './rune-detail.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

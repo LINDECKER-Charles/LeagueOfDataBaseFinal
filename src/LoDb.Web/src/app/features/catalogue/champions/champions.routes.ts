@@ -1,7 +1,7 @@
 import type { Routes } from '@angular/router';
 import { resolveCatalogueContext } from '../../../core/routing/catalogue/resolve-catalogue-context';
 import { resolveCatalogueEntry } from '../../../core/routing/catalogue/resolve-catalogue-entry';
-import { withLoadTiming } from './detail/timing/with-load-timing';
+import { withLoadTiming } from '../shared/codex/timing/with-load-timing';
 
 const loadList = () => import('./champions-page').then((m) => m.ChampionsPage);
 const loadDetail = () => import('./detail/champion-page').then((m) => m.ChampionPage);

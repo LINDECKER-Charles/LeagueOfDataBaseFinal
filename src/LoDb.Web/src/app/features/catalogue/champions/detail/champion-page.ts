@@ -21,7 +21,7 @@ import { DdragonHtmlPipe } from './rich-text/ddragon-html-pipe';
 import { alternateSkins } from './skins/alternate-skins';
 import { SkinGallery } from './skins/skin-gallery';
 import { StatBoard } from './stats/stat-board';
-import { LoadTime } from './timing/load-time';
+import { LoadTime } from '../../shared/codex/timing/load-time';
 
 type SectionId = (typeof CHAMPION_SECTIONS)[number]['id'];
 

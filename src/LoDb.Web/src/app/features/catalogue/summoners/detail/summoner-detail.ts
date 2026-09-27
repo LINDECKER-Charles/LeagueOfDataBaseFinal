@@ -19,6 +19,7 @@ import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
 import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
 import { RichText } from '../../shared/codex/rich-text/rich-text';
+import { LoadTime } from '../../shared/codex/timing/load-time';
 import { injectTranslate } from '../../shared/codex/texts/inject-translate';
 import { CatalogueImage } from '../../shared/cards/catalogue-image';
 import { EditionBadge } from '../../shared/cards/edition-badge';
@@ -42,6 +43,7 @@ const SEAL_ICON_SIZE = 154;
     EditionBadge,
     EditionCounterpart,
     Frame,
+    LoadTime,
     Pager,
     Reveal,
     RichText,
