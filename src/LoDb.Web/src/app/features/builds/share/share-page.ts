@@ -13,6 +13,7 @@ import { BuildsService } from '../../../core/api/generated/services/builds.servi
 import { injectRouteData } from '../../../core/routing/inject-route-data';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
 import { Chip } from '../../../ui/controls/chip';
+import { CopyLink } from '../../../ui/controls/copy-link';
 import { Image } from '../../../ui/media/image';
 import { Backdrop } from '../../../ui/surfaces/backdrop';
 import { languageLabel } from '../shared/language/language-label';
@@ -22,7 +23,6 @@ import { modeLabelKey } from '../shared/modes/mode-label-key';
 import { OwnerCredit } from '../shared/owner/owner-credit';
 import { whenSignedIn } from '../shared/session/when-signed-in';
 import { VoteScore } from '../shared/votes/vote-score';
-import { CopyLink } from './copy/copy-link';
 import { pathClassOf } from './format/path-class-of';
 import { shortDate } from './format/short-date';
 import { applyShareHead } from './head/apply-share-head';

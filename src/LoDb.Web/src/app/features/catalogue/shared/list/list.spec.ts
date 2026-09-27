@@ -101,7 +101,10 @@ class ScopedHost {
 }
 
 describe('lodb-catalogue-list', () => {
-  afterEach(() => (currentSchema = SCHEMA));
+  afterEach(() => {
+    currentSchema = SCHEMA;
+    vi.unstubAllGlobals();
+  });
 
   async function render(
     url: string,
@@ -237,6 +240,15 @@ describe('lodb-catalogue-list', () => {
     await fixture.whenStable();
     expect(all(fixture, 'lodb-active-filters')).toHaveLength(0);
     expect(heading()).toBe('true');
+  });
+
+  it('offers the link of the list as filtered at the foot of the rail', async () => {
+    vi.stubGlobal('navigator', {});
+    const fixture = await render('/en/items?lang=en_GB&tag=Damage', sourceOf(WHOLE).source);
+    all(fixture, 'lodb-filter-console .console__foot button')[0].click();
+    await fixture.whenStable();
+    const [field] = all(fixture, '.console__foot input[readonly]') as HTMLInputElement[];
+    expect(field?.value).toBe(`${location.origin}/en/items?lang=en_GB&tag=Damage`);
   });
 
   it('opens the facets in a bottom sheet on narrow screens', async () => {

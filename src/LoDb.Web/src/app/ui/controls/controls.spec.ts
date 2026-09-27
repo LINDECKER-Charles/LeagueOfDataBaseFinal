@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Button } from './button';
 import { Chip } from './chip';
+import { CopyLink } from './copy-link';
 import { Field } from './field';
 import { fieldClass } from './field-class';
 
@@ -58,5 +59,45 @@ describe('control directives', () => {
 
   it('adds the compact size to the tone', () => {
     expect(render().querySelector('#danger')?.className).toBe('hx-btn-danger hx-btn-sm');
+  });
+});
+
+@Component({
+  imports: [CopyLink],
+  template: `<lodb-copy-link
+    url="https://example.test/en/items?tag=Boots"
+    [labels]="{ copy: 'Copy link', copied: 'Link copied', error: 'Copy the link below' }"
+  />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class CopyHost {}
+
+describe('lodb-copy-link', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  async function render() {
+    const fixture = TestBed.createComponent(CopyHost);
+    await fixture.whenStable();
+    const host = fixture.nativeElement as HTMLElement;
+    host.querySelector('button')?.click();
+    await new Promise((resolve) => setTimeout(resolve));
+    await fixture.whenStable();
+    return host;
+  }
+
+  it('copies the link and says so, in the words it is given', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+    const host = await render();
+    expect(writeText).toHaveBeenCalledWith('https://example.test/en/items?tag=Boots');
+    expect(host.querySelector('button')?.textContent?.trim()).toBe('Link copied');
+  });
+
+  it('hands the link over in a field when the clipboard is out of reach', async () => {
+    vi.stubGlobal('navigator', {});
+    const host = await render();
+    const field = host.querySelector<HTMLInputElement>('input[readonly]');
+    expect(field?.value).toBe('https://example.test/en/items?tag=Boots');
+    expect(field?.title).toBe('Copy the link below');
   });
 });
