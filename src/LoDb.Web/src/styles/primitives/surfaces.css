@@ -140,12 +140,18 @@
     );
     box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-gold-bright) 5%, transparent);
   }
+  /*
+   * A label wraps between words, never inside one as the body's break-word would ("PURCHA /
+   * SE"); a word longer than the plate (de "GESAMTKOSTEN") hyphenates on the page's lang.
+   */
   .hx-plate__label {
     font-family: var(--font-mono);
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: var(--color-text-dim);
+    overflow-wrap: normal;
+    hyphens: auto;
   }
   .hx-plate__value {
     font-family: var(--font-beaufort);
