@@ -1,10 +1,15 @@
 <details #panel class="switcher" lodbDisclosure>
-  <!-- Under lg the chip shows the language alone: the patch stays in the panel and the name. -->
+  <!-- The chip shows the language alone under 23rem and from md to 54rem, where the header has
+       no room for the patch (core/layout/header): it stays in the panel and the name. -->
   <summary [attr.aria-label]="('header.switcher.label' | transloco) + ' — ' + shown()">
-    <span class="hidden lg:inline">{{
+    <span class="hidden min-[23rem]:max-md:inline min-[54rem]:inline">{{
       current()?.version ?? ('contextSwitcher.patch' | transloco)
     }}</span>
-    <span class="hidden text-gold-deep lg:inline" aria-hidden="true">·</span>
+    <span
+      class="hidden text-gold-deep min-[23rem]:max-md:inline min-[54rem]:inline"
+      aria-hidden="true"
+      >·</span
+    >
     <span>{{ languageCode() }}</span>
     <lodb-icon name="chevron" class="switcher__chevron" />
   </summary>

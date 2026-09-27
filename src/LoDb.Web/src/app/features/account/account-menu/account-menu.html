@@ -1,15 +1,17 @@
 <details class="switcher" lodbDisclosure>
-  <summary [attr.aria-label]="user()?.username ?? ('nav.account' | transloco)">
+  <summary
+    class="px-2.5 md:px-3.5"
+    [attr.aria-label]="user()?.username ?? ('nav.account' | transloco)"
+  >
     <lodb-icon name="user" class="size-4" />
-    @if (label(); as name) {
-      <span class="hidden lg:inline">{{ name }}</span>
-    }
+    <span class="hidden lg:inline">{{ label() ?? ('nav.account' | transloco) }}</span>
     <lodb-icon name="chevron" class="switcher__chevron" />
   </summary>
   <ul class="switcher__panel switcher__panel--menu">
     @if (user()) {
       <li>
         <a
+          class="nav-link"
           [routerLink]="link('account/profile')"
           routerLinkActive="text-gold-bright"
           ariaCurrentWhenActive="page"
@@ -18,6 +20,7 @@
       </li>
       <li>
         <a
+          class="nav-link"
           [routerLink]="link('account/builds')"
           routerLinkActive="text-gold-bright"
           ariaCurrentWhenActive="page"
@@ -25,16 +28,28 @@
         >
       </li>
       <li class="gold-hairline mt-1 pt-1">
-        <button type="button" [disabled]="leaving()" (click)="signOut()">
+        <button type="button" class="nav-link" [disabled]="leaving()" (click)="signOut()">
           {{ 'auth.logout' | transloco }}
         </button>
       </li>
     } @else {
       <li>
-        <a [routerLink]="link('account/login')">{{ 'nav.login' | transloco }}</a>
+        <a
+          class="nav-link"
+          [routerLink]="link('account/login')"
+          routerLinkActive="text-gold-bright"
+          ariaCurrentWhenActive="page"
+          >{{ 'nav.login' | transloco }}</a
+        >
       </li>
       <li>
-        <a [routerLink]="link('account/register')">{{ 'nav.register' | transloco }}</a>
+        <a
+          class="nav-link"
+          [routerLink]="link('account/register')"
+          routerLinkActive="text-gold-bright"
+          ariaCurrentWhenActive="page"
+          >{{ 'nav.register' | transloco }}</a
+        >
       </li>
     }
   </ul>

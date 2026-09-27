@@ -16,10 +16,14 @@ import { CODEX_ENTRIES } from './codex-entries';
  * Slim Hextech bar: brand and release chip, the primary navigation from md up (the bottom
  * bar carries it below), then the cluster that stays on every viewport: donate (unless the
  * build shows no payment, ADR 0007), the `account` slot, the theme picker and the `switcher`
- * slot. The brand shortens to its initials wherever the row is crowded: under 460px, and
- * from md to lg where the navigation joins it. Under 460px the release chip goes, and under
- * 400px the brand keeps its emblem alone, its name read by assistive technology only; with
- * the switcher showing its language alone under lg, a 320px screen never scrolls sideways.
+ * slot. One width budget, checked in 21 locales from 320 to 1440px, decides what the row
+ * carries besides the emblem, so that nothing overlaps nor scrolls sideways:
+ * - under 368px, the switcher's language alone; from 368px, its patch as well;
+ * - from 460px, the release chip; from 640px, the initials of the name;
+ * - from md, the navigation takes the room back: no name, no chip, the language alone;
+ * - from 864px the patch returns, from 1180px the chip, from xl the full name.
+ * Where the name is left out, assistive technology still reads it. The legacy bar showed the
+ * name and the chip at more widths, but let them overlap the logo and the navigation there.
  * The developers entry is labelled from the `api` catalogue scope, loaded here since the
  * header sits outside the pages that provide it.
  */
