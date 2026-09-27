@@ -24,8 +24,16 @@ const CARDS: ItemCard[] = ['1001-boots', '771004-faerie-charm'].map((path, index
   stats: [{ stat: 'move_speed', value: 25, isPercent: false }],
   summary: '<stats>+25 Move Speed</stats>',
   tags: ['Boots'],
-  upgrades: [],
+  upgrades: index === 0 ? ['3006'] : [],
 }));
+const RELATED = [
+  {
+    id: '3006',
+    name: "Berserker's Greaves",
+    canonicalPath: 'items/3006-berserkers-greaves',
+    image: { status: 'absent' as const },
+  },
+];
 const TEXTS: CatalogueTexts = {
   seo: (key, params) => `${key} ${JSON.stringify(params ?? {})}`,
   main: (key) => key,
@@ -34,7 +42,12 @@ const TEXTS: CatalogueTexts = {
 async function render() {
   const heads: SeoPage[] = [];
   const write = (_: string, build: (texts: CatalogueTexts) => SeoPage) => heads.push(build(TEXTS));
-  const list = { entries: CARDS, total: CARDS.length, facets: { tags: ['Boots'] } };
+  const list = {
+    entries: CARDS,
+    total: CARDS.length,
+    facets: { tags: ['Boots'] },
+    related: RELATED,
+  };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([{ path: 'en/items', component: ItemList, data: { context: CONTEXT } }]),
@@ -61,13 +74,25 @@ describe('lodb-item-list', () => {
   it('lists every item with its price, each card linking its page', async () => {
     const { element } = await render();
 
-    const links = [...element.querySelectorAll('lodb-entity-card a')];
+    const links = [...element.querySelectorAll('lodb-entity-card > a')];
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/en/items/1001-boots',
       '/en/items/771004-faerie-charm',
     ]);
     expect(element.querySelectorAll('lodb-entity-card .stat-cell')).toHaveLength(4);
     expect(element.querySelector('h1')?.textContent).toContain('item.list.header');
+  });
+
+  it('links the evolutions of an item, named through the list', async () => {
+    const { element } = await render();
+
+    const [boots, charm] = [...element.querySelectorAll('lodb-entity-card')];
+    const evolutions = [...(boots?.querySelectorAll('a[title]') ?? [])];
+    expect(evolutions.map((link) => link.getAttribute('href'))).toEqual([
+      '/en/items/3006-berserkers-greaves',
+    ]);
+    expect(evolutions[0]?.textContent?.trim()).toBe("Berserker's Greaves");
+    expect(charm?.textContent).not.toContain('item.list.evolutions');
   });
 
   it('marks the LoL Classic twin of an item', async () => {

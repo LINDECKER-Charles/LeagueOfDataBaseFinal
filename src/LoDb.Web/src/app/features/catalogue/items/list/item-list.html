@@ -41,13 +41,41 @@
             </p>
           </div>
 
-          @if (card.tags.length > 0 || card.summary) {
+          @if (card.tags.length > 0 || card.upgrades.length > 0 || card.summary) {
             <lodb-accordion class="mt-auto" multi>
               @if (card.tags.length > 0) {
                 <lodb-accordion-item [heading]="'item.list.categories' | transloco" [level]="4">
                   <div class="flex flex-wrap gap-1.5">
                     @for (tag of card.tags; track tag) {
                       <span class="hx-chip">{{ tagLabel(tag) }}</span>
+                    }
+                  </div>
+                </lodb-accordion-item>
+              }
+              @if (card.upgrades.length > 0) {
+                <lodb-accordion-item [heading]="'item.list.evolutions' | transloco" [level]="4">
+                  <div class="flex flex-wrap gap-2">
+                    @for (id of card.upgrades; track id) {
+                      @if (relatedOf().get(id); as upgrade) {
+                        <a
+                          class="group/evo flex items-center gap-1.5 rounded border border-gold-deep/40 bg-void/60 px-1.5 py-1 transition-colors hover:border-gold hover:bg-void/90"
+                          [routerLink]="linkOf(current, upgrade.canonicalPath)"
+                          [title]="upgrade.name"
+                        >
+                          @if (upgrade.image.status !== 'absent') {
+                            <lodb-catalogue-image
+                              class="size-6"
+                              imgClass="object-contain"
+                              [image]="upgrade.image"
+                              [name]="upgrade.name"
+                              [size]="evolutionIconSize"
+                            />
+                          }
+                          <span class="font-mono text-xs text-text-muted group-hover/evo:text-hex">
+                            {{ upgrade.name }}
+                          </span>
+                        </a>
+                      }
                     }
                   </div>
                 </lodb-accordion-item>
