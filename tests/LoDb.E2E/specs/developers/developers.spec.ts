@@ -31,7 +31,8 @@ test('gives the configured base URL, never the legacy localhost', async ({ page 
   await page.goto(PAGE);
 
   const baseUrl = page.getByTestId('developers-base-url');
-  await expect(baseUrl).toHaveText(/^Base URL: https?:\/\/\S+$/);
+  // The paragraph's text keeps the template's line breaks, collapsed to one space each side.
+  await expect(baseUrl).toHaveText(/^\s*Base URL: https?:\/\/\S+\s*$/);
   const url = (await baseUrl.textContent())?.replace('Base URL:', '').trim() ?? '';
   expect(url).not.toContain('localhost:8090');
   await expect(page.getByTestId('developers-curl')).toContainText(`"${url}/v1/usage"`);
