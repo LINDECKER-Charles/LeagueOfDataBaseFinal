@@ -26,6 +26,18 @@ const SESSION_TIMEOUT_MS = 180_000;
 const DELETED = 204;
 
 /**
+ * The state of a context without any session. Within a test or a hook, every new browser or
+ * request context takes the options of the test, whose `storageState` is the session of the
+ * administrator: a context that must stay anonymous says so.
+ */
+export const NO_SESSION: StorageState = { cookies: [], origins: [] };
+
+/** `api`, whose new contexts open without the session of the test. */
+export function anonymous(api: APIRequest): APIRequest {
+  return { newContext: (options) => api.newContext({ storageState: NO_SESSION, ...options }) };
+}
+
+/**
  * The `test` of the admin specs: each worker creates an administrator with `admin create`,
  * enrols its authenticator through the UI, and opens every `page` with that session. The
  * account is deleted once the worker is done.
@@ -35,7 +47,7 @@ export const test = base.extend<AdminFixtures, AdminWorkerFixtures>({
     async ({ browser, playwright }, use, workerInfo) => {
       const baseURL = workerInfo.project.use.baseURL;
       const account = createAdmin('adm');
-      const context = await browser.newContext({ baseURL });
+      const context = await browser.newContext({ baseURL, storageState: NO_SESSION });
       await enrollAdmin(await context.newPage(), account);
       const state = await context.storageState();
       await context.close();
