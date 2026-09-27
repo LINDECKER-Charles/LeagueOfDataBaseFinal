@@ -34,9 +34,13 @@ test('sends a visitor to the login of the admin, kept out of the index', async (
 
   expect(response?.headers()['x-robots-tag']).toContain('noindex');
   await expect(page).toHaveURL(/\/admin\/login\?returnUrl=%2Fadmin%2Fusers$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Administration' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 1, name: "Panneau d'administration" }),
+  ).toBeVisible();
+  await expect(page.getByLabel(LOGIN.identifier)).toBeFocused();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
-  await expect(page).toHaveTitle('Administration · Admin · LODB');
+  await expect(page).toHaveTitle('Connexion · Admin · LODB');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
   await expectNoAccessibilityViolations(page);
 });
 
@@ -75,7 +79,7 @@ test('signs the administrator in with the code of the authenticator, then out', 
 
   // The return URL of the guard is honoured once the second factor is in.
   await expect(page).toHaveURL(/\/admin\/journal$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Journal' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: "Journal d'audit" })).toBeVisible();
   await page.getByRole('button', { name: 'Déconnexion' }).click();
   await expect(page).toHaveURL(/\/admin\/login$/);
   await page.goto('/admin');
@@ -84,14 +88,12 @@ test('signs the administrator in with the code of the authenticator, then out', 
 
 test('lists every panel in its navigation and opens on the overview', async ({
   page,
-  admin,
   consoleErrors,
 }) => {
   await openPanel(page, '/admin', "Vue d'ensemble");
 
   const nav = page.getByRole('navigation', { name: "Navigation de l'administration" });
   await expect(nav.getByRole('link')).toHaveText(PANELS);
-  await expect(nav.getByText(admin.username)).toBeVisible();
   await expect(nav.getByRole('link', { name: "Vue d'ensemble" })).toHaveAttribute(
     'aria-current',
     'page',
@@ -99,5 +101,13 @@ test('lists every panel in its navigation and opens on the overview', async ({
   await nav.getByRole('link', { name: 'Surveillance' }).click();
   await expect(page).toHaveURL(/\/admin\/monitoring$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Surveillance' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Surveillance' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  // The legacy URL of the journal still opens it.
+  await page.goto('/admin/logs');
+  await expect(page).toHaveURL(/\/admin\/journal$/);
+  await expect(nav.getByRole('link', { name: 'Journal' })).toHaveAttribute('aria-current', 'page');
   expect(consoleErrors).toEqual([]);
 });

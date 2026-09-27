@@ -36,20 +36,21 @@ test.beforeAll(async ({ playwright }, testInfo) => {
 });
 
 function card(page: Page) {
-  return page.locator('li[data-contact]', { hasText: SUBJECT });
+  return page.locator('tr[data-contact]', { hasText: SUBJECT });
 }
 
 test('lists a new message, which the statuses sort', async ({ page }) => {
-  await openPanel(page, '/admin/contacts', 'Messages');
-  await expect(card(page)).toContainText('Visiteur E2E');
-  await expect(card(page).getByText('Suggestion', { exact: true })).toBeVisible();
-  await expect(card(page).getByRole('link', { name: 'Répondre' })).toHaveAttribute(
+  await openPanel(page, '/admin/contacts', 'Messages de contact');
+  await expect(page).toHaveTitle('Messages · Admin · LODB');
+  await expect(card(page).getByText('Suggestion / feedback', { exact: true })).toBeVisible();
+  await expect(card(page).getByRole('link', { name: 'Visiteur E2E' })).toHaveAttribute(
     'href',
     `mailto:${SENDER}`,
   );
+  await expect(card(page).getByText('Nouveau', { exact: true })).toBeVisible();
   const statuses = page.getByRole('navigation', { name: 'Filtrer par statut' });
 
-  await statuses.getByRole('link', { name: 'À traiter' }).click();
+  await statuses.getByRole('link', { name: 'Nouveaux' }).click();
   await expect(page).toHaveURL(/[?&]status=new/);
   await expect(card(page)).toHaveCount(1);
 
@@ -59,12 +60,11 @@ test('lists a new message, which the statuses sort', async ({ page }) => {
 });
 
 test('marks a message handled, then reopens it', async ({ page }) => {
-  await openPanel(page, '/admin/contacts', 'Messages');
+  await openPanel(page, '/admin/contacts', 'Messages de contact');
 
   await card(page).getByRole('button', { name: 'Marquer traité' }).click();
   await expectToast(page, 'Message marqué comme traité.');
-  // A pattern meets the text as rendered, with the space its template line leaves before.
-  await expect(card(page).getByText(/^\s*Traité le /)).toBeVisible();
+  await expect(card(page).getByText('Traité', { exact: true })).toBeVisible();
 
   await card(page).getByRole('button', { name: 'Rouvrir' }).click();
   await expectToast(page, 'Message rouvert.');
@@ -72,10 +72,10 @@ test('marks a message handled, then reopens it', async ({ page }) => {
 });
 
 test('deletes a message', async ({ page }) => {
-  await openPanel(page, '/admin/contacts?status=new', 'Messages');
+  await openPanel(page, '/admin/contacts?status=new', 'Messages de contact');
 
   await confirmAction(card(page), 'Supprimer', 'Supprimer définitivement');
 
-  await expectToast(page, 'Message supprimé.');
+  await expectToast(page, 'Message supprimé définitivement.');
   await expect(card(page)).toHaveCount(0);
 });

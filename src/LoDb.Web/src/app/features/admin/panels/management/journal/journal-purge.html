@@ -1,0 +1,57 @@
+<h2 class="mb-[0.4rem] font-beaufort text-[0.95rem] font-bold tracking-[0.06em] text-gold-bright">
+  {{ 'admin.journal.purge.title' | adminText }}
+</h2>
+<p class="text-text-dim">{{ 'admin.journal.purge.lede' | adminText: { months: months() } }}</p>
+<div
+  class="mt-4 flex flex-wrap items-center gap-[0.9rem]"
+  role="radiogroup"
+  [attr.aria-label]="'admin.journal.purge.scope' | adminText"
+>
+  <label class="radio">
+    <input
+      type="radio"
+      name="scope"
+      value="retention"
+      [checked]="scope() === 'retention'"
+      (change)="pick('retention')"
+    />
+    {{ 'admin.journal.purge.scopes.retention' | adminText: { months: months() } }}
+  </label>
+  <label class="radio">
+    <input
+      type="radio"
+      name="scope"
+      value="before"
+      [checked]="scope() === 'before'"
+      (change)="pick('before')"
+    />
+    {{ 'admin.journal.purge.scopes.before' | adminText }}
+    <input
+      name="before"
+      type="date"
+      class="admin-input"
+      [value]="day()"
+      [attr.aria-label]="'admin.journal.purge.before' | adminText"
+      (input)="setDay($event)"
+    />
+  </label>
+  <label class="radio">
+    <input
+      type="radio"
+      name="scope"
+      value="all"
+      [checked]="scope() === 'all'"
+      (change)="pick('all')"
+    />
+    {{ 'admin.journal.purge.scopes.all' | adminText }}
+  </label>
+  <lodb-confirm-button
+    class="submit"
+    tone="danger"
+    confirmTone="danger"
+    [label]="'admin.journal.purge.submit' | adminText"
+    [confirmLabel]="'admin.journal.purge.confirm' | adminText"
+    [busy]="busy() || !ready()"
+    (confirmed)="purge()"
+  />
+</div>

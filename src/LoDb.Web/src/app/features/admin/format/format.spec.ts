@@ -39,9 +39,17 @@ describe('figure', () => {
     expect(figure(500, 'euros')).toBe('5,00 €');
   });
 
-  it('writes a share with one decimal', () => {
+  it('writes cents as a French amount without its currency, for a foreign one', () => {
+    expect(figure(123456, 'money')).toBe('1 234,56');
+  });
+
+  it('writes a share with one decimal, or rounded to a whole percent', () => {
     expect(figure(12.345, 'pct')).toBe('12.3 %');
     expect(figure(0.4567, 'share')).toBe('45.7 %');
+    // As the legacy `round(1)`: a decimal that carries nothing is left out.
+    expect(figure(1, 'share')).toBe('100 %');
+    expect(figure(0.4567, 'percent')).toBe('46 %');
+    expect(figure(1, 'percent')).toBe('100 %');
   });
 
   it('writes a ratio as a multiplier with two decimals', () => {

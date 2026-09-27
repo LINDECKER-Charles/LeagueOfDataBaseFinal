@@ -15,43 +15,67 @@ function texts(root: ParentNode, selector: string): string[] {
 }
 
 describe('MonitoringPanel', () => {
-  it('shows the probes, the process, the queues, the versions and the tables', async () => {
+  it('shows a card per probe, the application figures, the volumes, then the process', async () => {
     const { page } = await openPanel(MonitoringPanel, '/admin/monitoring', [
-      { path: MONITORING, body: monitoringReport() },
+      {
+        path: MONITORING,
+        body: monitoringReport({
+          services: [
+            ...monitoringReport().services,
+            { name: 'storage-root', status: 'ok', latencyMs: 2, objects: 4_742, bytes: 1024 ** 2 },
+          ],
+        }),
+      },
     ]);
 
-    expect(texts(page, '[data-service="postgres"] td')).toEqual([
-      'postgres',
-      'admin.health.ok',
+    expect(texts(page, '[data-service="postgres"] [lodbChip]')).toEqual([
       '4 ms',
       '17.2',
-      '3.00 GB',
-      '—',
+      'admin.monitoring.probe.database',
     ]);
-    const storage = page.querySelector('[data-service="storage"] td:nth-child(2) span');
-    expect(storage?.className).toContain('text-gold-light');
+    const storage = page.querySelector('[data-service="storage"] span.inline-flex');
+    expect(storage?.className).toContain('text-gold');
+    expect(texts(page, '[data-service="storage"] p')).toEqual(['slow listing']);
+    expect(texts(page, '[data-service="storage-root"] [lodbChip]')).toContain(
+      'admin.monitoring.probe.objects',
+    );
+    expect(texts(page, 'lodb-admin-rule')).toEqual([
+      'admin.rules.application',
+      'admin.rules.volumes',
+      'admin.monitoring.process.title',
+      'admin.monitoring.ingestion.title',
+    ]);
+    expect(texts(page, 'lodb-kpi').slice(0, 6)).toEqual([
+      'admin.overview.kpi.users 5 400 admin.overview.kpi.users_sub',
+      'admin.overview.kpi.builds 9 800 admin.overview.kpi.builds_sub',
+      'admin.monitoring.counters.votes 12 000',
+      'admin.overview.kpi.donations 315,00 € admin.overview.kpi.donations_sub',
+      'admin.overview.kpi.api_keys 14',
+      'admin.monitoring.counters.api 4.2k admin.monitoring.counters.api_sub',
+    ]);
     expect(texts(page, 'lodb-kpi')).toEqual(
       expect.arrayContaining([
-        'admin.monitoring.process.version1.4.0abc1234',
-        'admin.monitoring.process.uptime2 j 3 h',
-        'admin.monitoring.process.collections120 / 14 / 2',
-        'admin.monitoring.ingestion.outbox_dead1',
+        'admin.monitoring.process.version 1.4.0 abc1234',
+        'admin.monitoring.process.uptime 2 j 3 h',
+        'admin.monitoring.process.collections 120 / 14 / 2',
       ]),
     );
     expect(texts(page, 'lodb-monitoring-versions tbody tr')[0]).toContain('16.20.1');
-    expect(texts(page, 'lodb-rank-list li')).toEqual([
-      'analytics_daily 80.00 MB',
-      'audit_log 20.00 MB',
+    expect(texts(page, 'lodb-admin-card table tbody tr').slice(0, 2)).toEqual([
+      'analytics_daily80.00 MB',
+      'audit_log20.00 MB',
     ]);
+    expect(texts(page, '.readout-value')).toEqual(['3']);
   });
 
-  it('leaves out the sections the API could not read', async () => {
+  it('says what the API could not read, in place of its figures', async () => {
     const { page } = await openPanel(MonitoringPanel, '/admin/monitoring', [
       {
         path: MONITORING,
         body: monitoringReport({
           versions: null,
           counters: null,
+          tables: [],
           ingestion: {
             versionBacklog: 0,
             onDemandBacklog: 0,
@@ -63,8 +87,9 @@ describe('MonitoringPanel', () => {
     ]);
 
     expect(page.querySelector('lodb-monitoring-versions')).toBeNull();
-    expect(page.textContent).not.toContain('admin.monitoring.counters.title');
-    expect(texts(page, 'lodb-kpi')).toContain('admin.monitoring.ingestion.outbox_pending—');
+    expect(texts(page, '[role="alert"]')).toEqual(['admin.monitoring.counters.unavailable']);
+    expect(texts(page, '.t-empty')).toEqual(['admin.monitoring.tables_empty']);
+    expect(texts(page, '.readout-value')).toEqual(['—']);
   });
 
   it('probes again, past the cache of the API, on demand', async () => {
@@ -77,23 +102,19 @@ describe('MonitoringPanel', () => {
     expect(again.request.params.get('refresh')).toBe('true');
     await reply(visit, again, monitoringReport({ generatedAt: '2026-09-27T11:00:00Z' }));
 
-    expect(visit.page.textContent).toContain('admin.common.generated_at');
+    expect(visit.page.textContent).toContain('27/09/2026 11:00:00');
   });
 
-  it('dates a new reading in French, the site in English', async () => {
+  it('says the counters could not be read in French, the site in English', async () => {
     const visit = await openPanelInFrench(MonitoringPanel, '/admin/monitoring', [
       { path: MONITORING, body: monitoringReport() },
     ]);
-    expect(visit.page.textContent).toContain('Relevé du 27/09/2026 10:15:30 (UTC)');
 
-    press(visit, 'Actualiser');
-    await reply(
-      visit,
-      await sent(visit, MONITORING),
-      monitoringReport({ generatedAt: '2026-09-27T11:00:00Z' }),
+    press(visit, 'Rafraîchir');
+    await reply(visit, await sent(visit, MONITORING), monitoringReport({ counters: null }));
+
+    expect(visit.page.querySelector('[role="alert"]')?.textContent?.trim()).toBe(
+      'Compteurs indisponibles.',
     );
-
-    expect(visit.page.textContent).toContain('Relevé du 27/09/2026 11:00:00 (UTC)');
-    expect(visit.page.textContent).not.toContain('Read at');
   });
 });

@@ -103,7 +103,9 @@ describe('injectPanel and PanelState', () => {
     await settle(fixture);
 
     expect(fixture.componentInstance.report.failure()).toBe('timeout');
-    expect(element(fixture, '[role="alert"]')?.textContent).toContain('admin.state.timeout');
+    expect(element(fixture, 'lodb-admin-band[role="alert"]')?.textContent).toContain(
+      'admin.state.unavailable',
+    );
     element(fixture, '[role="alert"] button')?.click();
     fixture.detectChanges();
     http.expectOne(`${REPORT_URL}?page=1`).flush({ name: 'again' });
@@ -123,7 +125,7 @@ describe('injectPanel and PanelState', () => {
     await settle(fixture);
 
     expect(fixture.componentInstance.report.failure()).toBe(failure);
-    expect(text(fixture)).toContain(`admin.state.${failure}`);
+    expect(element(fixture, '[role="alert"]')?.textContent).toContain('admin.state.unavailable');
   });
 
   it('offers to sign in again when the session was lost', async () => {

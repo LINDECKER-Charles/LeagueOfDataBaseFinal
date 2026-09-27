@@ -1,0 +1,65 @@
+@if (panel().failure(); as failure) {
+  <lodb-admin-band tone="alert">
+    <span>
+      {{
+        'admin.state.unavailable'
+          | adminText: { reason: ('admin.state.reasons.' + failure | adminText) }
+      }}
+    </span>
+    <button lodbButton="ghost" lodbButtonSize="small" type="button" (click)="panel().reload()">
+      {{ 'admin.state.retry' | adminText }}
+    </button>
+    @if (failure === 'session') {
+      <a lodbButton lodbButtonSize="small" [routerLink]="login" [queryParams]="returnQuery()">
+        {{ 'admin.state.sign_in' | adminText }}
+      </a>
+    }
+  </lodb-admin-band>
+} @else if (panel().value() === undefined) {
+  <div class="block" aria-busy="true">
+    <p class="sr-only" role="status">{{ 'admin.state.loading' | adminText }}</p>
+    @if (shape() !== 'block') {
+      <div class="mb-[1.15rem] grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4">
+        @for (kpi of kpis; track kpi) {
+          <span class="relative block">
+            <lodb-skeleton shape="tile" class="h-[5.6rem]" />
+            <span class="absolute inset-y-0 start-0 w-0.5 bg-gold" aria-hidden="true"></span>
+          </span>
+        }
+      </div>
+    }
+    @switch (shape()) {
+      @case ('chart') {
+        <div lodbFrame class="block px-[1.6rem] py-6">
+          <lodb-skeleton shape="line" class="mb-[1.15rem] w-[45%]" />
+          <lodb-skeleton shape="block" class="aspect-[760/240]" />
+        </div>
+      }
+      @case ('cards') {
+        <div class="grid gap-[1.15rem] min-[861px]:grid-cols-3">
+          @for (card of cards; track card) {
+            <div lodbFrame class="block px-[1.6rem] py-6">
+              <lodb-skeleton shape="line" class="mb-[1.15rem] w-[45%]" />
+              <div class="flex flex-col gap-3">
+                @for (line of lines; track line) {
+                  <lodb-skeleton shape="line" [class]="line % 2 === 0 ? 'w-[70%]' : ''" />
+                  <lodb-skeleton shape="line" class="h-1.5" />
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+      @case ('block') {
+        <lodb-skeleton shape="block" />
+      }
+      @case ('table') {
+        <div lodbFrame class="block px-[1.6rem] py-6">
+          @for (row of rows; track row) {
+            <lodb-skeleton shape="line" class="mb-3 h-6" />
+          }
+        </div>
+      }
+    }
+  </div>
+}

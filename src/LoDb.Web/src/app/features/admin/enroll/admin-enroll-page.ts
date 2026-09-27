@@ -1,5 +1,14 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  type ElementRef,
+  afterRenderEffect,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
@@ -15,7 +24,7 @@ import { formText } from '../shared/form-text';
 import { problemOf } from '../shared/http/problem-of';
 import { injectPanel } from '../state/inject-panel';
 import { PanelState } from '../state/panel-state';
-import { PageHead } from '../widgets/page-head';
+import { PageHead } from '../layout/page-head';
 import { enrollErrorKey } from './enroll-error-key';
 import { QrImage } from './qr/qr-image';
 import { AdminTextPipe } from '../shared/admin-text-pipe';
@@ -27,7 +36,8 @@ const KEY_GROUPS = /.{1,4}/g;
  * `/admin/enroll`: an administrator without an authenticator enrols one before anything
  * else, as the API's `Admin` policy requires a session opened with a second factor. The
  * page draws a new key (a QR code and its text), checks a first code of it, then hands out
- * the recovery codes, shown only this once; the session is then open for the admin.
+ * the recovery codes, shown only this once; the session is then open for the admin. The code
+ * field takes the focus as soon as the key shows.
  */
 @Component({
   selector: 'lodb-admin-enroll-page',
@@ -40,6 +50,7 @@ export class AdminEnrollPage {
   private readonly rootUrl = inject(API_BASE_URL);
   private readonly wait = inject(ADMIN_TIMEOUT);
   private readonly session = inject(AuthSession);
+  private readonly code = viewChild<ElementRef<HTMLInputElement>>('code');
 
   protected readonly setup = injectPanel(startAdminMfaEnrollment, () => ({}));
   protected readonly sharedKey = computed(
@@ -49,6 +60,10 @@ export class AdminEnrollPage {
   protected readonly error = signal<string | null>(null);
   protected readonly recoveryCodes = signal<readonly string[] | null>(null);
   protected readonly home = ADMIN_PATHS.home;
+
+  constructor() {
+    afterRenderEffect(() => this.code()?.nativeElement.focus());
+  }
 
   protected confirm(event: Event): void {
     void this.send(formText(event, 'code'));

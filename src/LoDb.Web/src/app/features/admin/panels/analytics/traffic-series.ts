@@ -10,7 +10,8 @@ export interface TrafficSeries {
   readonly legend: readonly LegendItem[];
 }
 
-// The views lead in gold, the people behind them in cyan, the robots stay in the back.
+// The views lead in gold, the people behind them in cyan. The robots, left out of both, are
+// not drawn: the legacy charts never did.
 const LINES = [
   {
     key: 'traffic.series.views',
@@ -22,14 +23,9 @@ const LINES = [
     color: 'var(--color-hex)',
     pick: (day: AnalyticsDay) => day.visitors,
   },
-  {
-    key: 'traffic.series.bots',
-    color: 'var(--color-text-dim)',
-    pick: (day: AnalyticsDay) => day.botViews,
-  },
 ] as const;
 
-/** Views, visitors and robots day by day, labelled in French. */
+/** Views and visitors day by day, labelled in French. */
 export function trafficSeries(days: readonly AnalyticsDay[], texts: AdminText): TrafficSeries {
   const series = LINES.map((line) => ({
     label: texts.text(line.key),

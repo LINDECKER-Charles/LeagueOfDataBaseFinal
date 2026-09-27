@@ -40,24 +40,22 @@ function cells(page: HTMLElement, id: number): string[] {
 }
 
 describe('DonationsPanel', () => {
-  it('totals the gifts, charts them day by day and lists them page by page', async () => {
+  it('totals the gifts, sums the last 30 days and lists them page by page', async () => {
     const { page, calls } = await openPanel(DonationsPanel, '/admin/donations?page=2', [
       { path: DONATIONS, body: PAGE },
     ]);
 
     expect(calls[0]?.request.params.get('page')).toBe('2');
-    expect(page.querySelector('lodb-kpi')?.textContent).toContain('1 234,56 €');
-    expect(page.querySelectorAll('lodb-time-series-chart polyline.ts-line')).toHaveLength(1);
-    expect(page.querySelectorAll('lodb-time-series-chart .ts-axis')[2]?.textContent?.trim()).toBe(
-      '20€',
+    const kpis = [...page.querySelectorAll('lodb-kpi')];
+    expect(kpis[0]?.textContent).toContain('1 234,56 €');
+    expect(kpis[1]?.textContent).toContain('25,00 €');
+    expect(kpis[1]?.querySelector('lodb-sparkline svg')).not.toBeNull();
+    expect(page.querySelector('lodb-time-series-chart')).toBeNull();
+    expect(cells(page, 1)).toEqual(['27/09/2026 12:00', '20,00 EUR', 'lux']);
+    expect(page.querySelector('[data-donation="1"] span.inline-flex')?.className).toContain(
+      'text-good',
     );
-    expect(cells(page, 1)).toEqual([
-      '27/09/2026 12:00',
-      '20,00 €',
-      // A flex row sets the name and the badge apart, not a space.
-      'luxadmin.users.badges.supporter',
-    ]);
-    expect(cells(page, 2)).toEqual(['25/09/2026 08:00', '5,00 € USD', 'admin.donations.anonymous']);
+    expect(cells(page, 2)).toEqual(['25/09/2026 08:00', '5,00 USD', 'admin.donations.anonymous']);
     const pager = [...page.querySelectorAll('lodb-admin-pager a')].map((a) =>
       a.getAttribute('href'),
     );

@@ -8,17 +8,18 @@ export interface LegendItem {
   readonly value?: string;
 }
 
-/** The legend beside a chart: one swatch per series or slice. */
+/** The legend under a chart: a diamond per series or slice, as the legacy one drew them. */
 @Component({
   selector: 'lodb-legend',
   template: `
-    <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-text-muted">
+    <ul class="mt-[0.9rem] flex flex-wrap gap-x-[1.1rem] gap-y-2 text-[0.78rem] text-text-muted">
       @for (item of items(); track item.label) {
-        <li class="flex items-center gap-1.5">
-          <span class="inline-block size-2.5" [style.background]="item.color"></span>
+        <li class="inline-flex items-center gap-[0.45rem]">
+          <span class="inline-block size-2.5 flex-none rotate-45" [style.background]="item.color">
+          </span>
           {{ item.label }}
           @if (item.value) {
-            <b class="font-mono font-medium text-text">{{ item.value }}</b>
+            <b class="font-mono font-normal text-text">{{ item.value }}</b>
           }
         </li>
       }

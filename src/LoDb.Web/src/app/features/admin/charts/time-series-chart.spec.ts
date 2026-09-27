@@ -66,7 +66,7 @@ describe('TimeSeriesChart', () => {
     expect(tools(fixture)).toHaveLength(0);
   });
 
-  it('draws a line per series, the first one over its area, dated by month and day', () => {
+  it('draws a line per series without markers, the first over its area, dated by day', () => {
     const fixture = open();
 
     const lines = all(fixture, 'polyline.ts-line');
@@ -75,12 +75,32 @@ describe('TimeSeriesChart', () => {
       'var(--color-hex)',
     ]);
     expect(all(fixture, 'polygon.ts-area')).toHaveLength(1);
-    expect(all(fixture, 'circle[r="2.5"]')).toHaveLength(2 * DATES.length);
+    // As in the legacy chart, only the crosshair marks a point.
+    expect(all(fixture, 'circle')).toHaveLength(0);
     // Four ticks spread over five dates, both ends included.
     expect(ticks(fixture)).toEqual(['09-01', '09-02', '09-04', '09-05']);
     expect(query(fixture, 'svg')?.getAttribute('aria-describedby')).toBe(
       query(fixture, '.sr-only')?.id,
     );
+  });
+
+  it('dots each series of a single day, which no line can draw', () => {
+    const fixture = open(['2026-09-27']);
+    fixture.componentRef.setInput(
+      'series',
+      SERIES.map((series) => ({ ...series, values: series.values.slice(0, 1) })),
+    );
+    fixture.detectChanges();
+
+    const dots = all(fixture, 'svg > g circle');
+    expect(dots.map((dot) => dot.getAttribute('fill'))).toEqual([
+      'var(--color-gold)',
+      'var(--color-hex)',
+    ]);
+    expect(dots.map((dot) => dot.getAttribute('cx'))).toEqual([
+      String(LEFT + PLOT_BOX.plotW / 2),
+      String(LEFT + PLOT_BOX.plotW / 2),
+    ]);
   });
 
   it('follows the pointer with a crosshair and says every value at that date', () => {

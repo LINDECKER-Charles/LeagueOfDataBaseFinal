@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { FigureFormat } from '../format/figure';
 import { FigurePipe } from '../format/figure-pipe';
 import { AdminTextPipe } from '../shared/admin-text-pipe';
+import { foldRows } from './fold-rows';
+import { FoldToggle } from './fold-toggle';
 
 /** A ranked entry: a page, a browser, a family of objects. */
 export interface RankRow {
@@ -10,8 +12,13 @@ export interface RankRow {
 }
 
 const PERCENT = 100;
-// Spelled out whole for the Tailwind scanner.
-const FILLS = { gold: 'block h-full bg-gold', hex: 'block h-full bg-hex' } as const;
+// Spelled out whole for the Tailwind scanner: the legacy gradients, gold or cyan.
+const FILLS = {
+  gold: 'block h-full bg-linear-to-r from-gold-deep to-gold',
+  hex: 'block h-full bg-linear-to-r from-hex-deep to-hex',
+} as const;
+// A row: its name and its value on a line, its bar under them.
+const ROW = 'grid grid-cols-[minmax(6rem,1fr)_auto] items-center gap-x-[0.9rem] gap-y-1.5';
 
 /**
  * Entries ranked by their value, each with a bar sized on the largest of the whole set. Past
@@ -19,40 +26,27 @@ const FILLS = { gold: 'block h-full bg-gold', hex: 'block h-full bg-hex' } as co
  */
 @Component({
   selector: 'lodb-rank-list',
-  imports: [FigurePipe, AdminTextPipe],
+  imports: [FigurePipe, FoldToggle, AdminTextPipe],
   template: `
     @if (rows().length === 0) {
-      <p class="text-sm text-text-dim">{{ empty() | adminText }}</p>
+      <p class="text-text-dim">{{ empty() | adminText }}</p>
     } @else {
-      <ol class="space-y-2.5">
-        @for (row of shown(); track $index) {
-          <li>
-            <div class="flex items-baseline justify-between gap-3 text-sm">
-              <span class="min-w-0 truncate text-text" [title]="row.name">{{ row.name }}</span>
-              <span class="shrink-0 font-mono text-xs text-text-muted">
-                {{ row.value | figure: format() }}
-              </span>
-            </div>
-            <span class="mt-1 block h-1 bg-gold-deep/25" aria-hidden="true">
-              <span [class]="fill()" [style.inline-size.%]="share(row.value)"></span>
+      <ol class="flex flex-col gap-[0.7rem]">
+        @for (entry of fold.shown(); track $index) {
+          <li [class]="rowClass">
+            <span class="truncate text-[0.86rem] text-text" [title]="entry.name">{{
+              entry.name
+            }}</span>
+            <span class="font-mono text-[0.82rem] text-gold-bright tabular-nums">
+              {{ entry.value | figure: format() }}
+            </span>
+            <span class="col-span-full block h-1.5 overflow-hidden bg-track" aria-hidden="true">
+              <span [class]="fill()" [style.inline-size.%]="share(entry.value)"></span>
             </span>
           </li>
         }
       </ol>
-      @if (folded() > 0) {
-        <button
-          type="button"
-          class="nav-link mt-3 cursor-pointer text-xs text-gold"
-          [attr.aria-expanded]="open()"
-          (click)="open.set(!open())"
-        >
-          {{
-            open()
-              ? ('admin.rank.less' | adminText)
-              : ('admin.rank.more' | adminText: { count: folded() })
-          }}
-        </button>
-      }
+      <lodb-fold-toggle [folded]="fold.folded()" [(open)]="fold.open" />
     }
   `,
   host: { class: 'block' },
@@ -67,13 +61,11 @@ export class RankList {
   /** The translation key of what an empty ranking says. */
   readonly empty = input('admin.common.no_data');
 
-  protected readonly open = signal(false);
+  protected readonly rowClass = ROW;
   protected readonly fill = computed(() => FILLS[this.tone()]);
-  protected readonly folded = computed(() =>
-    this.limit() > 0 ? Math.max(0, this.rows().length - this.limit()) : 0,
-  );
-  protected readonly shown = computed(() =>
-    this.open() || this.folded() === 0 ? this.rows() : this.rows().slice(0, this.limit()),
+  protected readonly fold = foldRows(
+    () => this.rows(),
+    () => this.limit(),
   );
   private readonly max = computed(() => Math.max(0, ...this.rows().map((row) => row.value)));
 

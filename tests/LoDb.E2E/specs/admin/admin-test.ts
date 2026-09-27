@@ -104,7 +104,7 @@ export async function confirmAction(
   await scope.getByRole('button', { name: confirmation, exact: true }).click();
 }
 
-/** Waits for the toast that says `message`. */
+/** Waits for the band at the top of the admin that says `message`, the outcome of an action. */
 export async function expectToast(page: Page, message: string | RegExp): Promise<void> {
   await expect(page.getByText(message).first()).toBeVisible();
 }

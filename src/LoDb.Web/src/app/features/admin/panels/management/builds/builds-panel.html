@@ -1,121 +1,145 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | adminText"
+  [eyebrow]="'admin.eyebrows.moderation' | adminText"
   [title]="'admin.builds.title' | adminText"
   [subtitle]="'admin.builds.lede' | adminText"
 />
 
-<form class="mb-6 flex flex-wrap items-end gap-2" role="search" (submit)="search($event)">
-  <label for="builds-q" class="sr-only">{{ 'admin.builds.search' | adminText }}</label>
-  <input
-    lodbField
-    id="builds-q"
-    name="q"
-    type="search"
-    class="max-w-sm"
-    [value]="query.text('q')"
-    [placeholder]="'admin.builds.search' | adminText"
-  />
-  <label for="builds-visibility" class="sr-only">{{ 'admin.builds.visibility' | adminText }}</label>
-  <select lodbField id="builds-visibility" name="visibility" class="max-w-48">
-    <option value="" [selected]="query.text('visibility') === ''">
-      {{ 'admin.builds.all_visibilities' | adminText }}
-    </option>
-    @for (visibility of visibilities; track visibility) {
-      <option [value]="visibility" [selected]="query.text('visibility') === visibility">
-        {{ 'admin.builds.visibilities.' + visibility | adminText }}
-      </option>
-    }
-  </select>
-  <button lodbButton type="submit">{{ 'admin.actions.filter' | adminText }}</button>
-</form>
-
 <lodb-panel-state [panel]="builds" />
 @if (builds.value(); as list) {
-  <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
+  <div class="kpi-grid">
     <lodb-kpi [label]="'admin.builds.kpi.total' | adminText" [value]="list.stats.total | figure" />
     <lodb-kpi
-      tone="hex"
+      accent="hex"
       [label]="'admin.builds.kpi.public' | adminText"
       [value]="list.stats.public | figure"
     />
-    <lodb-kpi
-      tone="muted"
-      [label]="'admin.builds.kpi.private' | adminText"
-      [value]="list.stats.total - list.stats.public | figure"
-    />
   </div>
 
-  <p class="mt-6 mb-2 text-xs text-text-dim">
-    {{ 'admin.common.results' | adminText: { count: list.total } }}
-  </p>
-  <div class="hx-table-scroll" [attr.aria-busy]="builds.busy()">
-    <table class="hx-table">
-      <thead>
-        <tr>
-          <th scope="col" class="num">#</th>
-          <th scope="col">{{ 'admin.builds.columns.build' | adminText }}</th>
-          <th scope="col">{{ 'admin.builds.columns.author' | adminText }}</th>
-          <th scope="col">{{ 'admin.builds.columns.mode' | adminText }}</th>
-          <th scope="col">{{ 'admin.builds.columns.visibility' | adminText }}</th>
-          <th scope="col" class="num">{{ 'admin.builds.columns.score' | adminText }}</th>
-          <th scope="col">{{ 'admin.builds.columns.created' | adminText }}</th>
-          <th scope="col">{{ 'admin.common.actions' | adminText }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (build of list.items; track build.id) {
-          <tr [attr.data-build]="build.id">
-            <td class="num text-text-dim">{{ build.id }}</td>
-            <td>
-              <span class="block text-text">{{ build.name }}</span>
-              <span class="block font-mono text-[11px] text-text-dim">
-                {{ build.championId }} · {{ build.gameVersion }} · {{ build.language }}
-              </span>
-            </td>
-            <td>
-              <a
-                class="nav-link text-sm text-gold"
-                routerLink="/admin/users"
-                [queryParams]="{ q: build.owner.username }"
-                >{{ build.owner.username }}</a
-              >
-            </td>
-            <td class="text-xs">{{ texts.term('builds.modes', build.gameMode) }}</td>
-            <td>
-              <span [lodbBadge]="build.isPublic ? 'hex' : 'muted'">
-                {{
-                  'admin.builds.visibilities.' + (build.isPublic ? 'public' : 'private') | adminText
-                }}
-              </span>
-            </td>
-            <td class="num">{{ build.score | figure }}</td>
-            <td class="font-mono text-xs">{{ build.createdAt | stamp }}</td>
-            <td>
-              <span class="flex flex-wrap items-center gap-1.5">
-                @if (build.isPublic) {
-                  <lodb-confirm-button
-                    [label]="'admin.builds.unpublish' | adminText"
-                    [confirmLabel]="'admin.builds.confirm_unpublish' | adminText"
-                    [busy]="actions.pending() === build.id"
-                    (confirmed)="unpublish(build)"
-                  />
-                }
-                <lodb-confirm-button
-                  [label]="'admin.actions.delete' | adminText"
-                  [confirmLabel]="'admin.builds.confirm_delete' | adminText"
-                  [busy]="actions.pending() === build.id"
-                  (confirmed)="remove(build)"
-                />
-              </span>
-            </td>
-          </tr>
-        } @empty {
+  <lodb-admin-rule [label]="'admin.rules.builds' | adminText" />
+
+  <form class="toolbar" role="search" (submit)="search($event)">
+    <input
+      name="q"
+      type="search"
+      class="admin-input admin-input--wide"
+      [value]="query.text('q')"
+      [placeholder]="'admin.builds.search' | adminText"
+      [attr.aria-label]="'admin.builds.search_label' | adminText"
+    />
+    <select
+      name="visibility"
+      class="hx-select admin-input"
+      [attr.aria-label]="'admin.builds.visibility' | adminText"
+    >
+      <option value="" [selected]="query.text('visibility') === ''">
+        {{ 'admin.builds.all_visibilities' | adminText }}
+      </option>
+      @for (visibility of visibilities; track visibility) {
+        <option [value]="visibility" [selected]="query.text('visibility') === visibility">
+          {{ 'admin.builds.filters.' + visibility | adminText }}
+        </option>
+      }
+    </select>
+    <button lodbButton="ghost" lodbButtonSize="small" type="submit">
+      {{ 'admin.actions.filter' | adminText }}
+    </button>
+    @if (filtered()) {
+      <a lodbChip [routerLink]="[]" [queryParams]="{}">{{ 'admin.actions.reset' | adminText }}</a>
+    }
+    <span class="toolbar-count">
+      {{ 'admin.builds.count' | adminText: { count: (list.total | figure) } }}
+    </span>
+  </form>
+
+  <lodb-admin-card>
+    <div class="hx-table-scroll" [attr.aria-busy]="builds.busy()">
+      <table class="hx-table hx-table--flush admin-tbl">
+        <thead>
           <tr>
-            <td colspan="8" class="text-text-dim">{{ 'admin.builds.empty' | adminText }}</td>
+            <th scope="col">{{ 'admin.builds.columns.build' | adminText }}</th>
+            <th scope="col">{{ 'admin.builds.columns.mode' | adminText }}</th>
+            <th scope="col">{{ 'admin.builds.columns.author' | adminText }}</th>
+            <th scope="col" class="num">{{ 'admin.builds.columns.score' | adminText }}</th>
+            <th scope="col">{{ 'admin.builds.columns.visibility' | adminText }}</th>
+            <th scope="col">{{ 'admin.builds.columns.created' | adminText }}</th>
+            <th scope="col" class="num">{{ 'admin.common.actions' | adminText }}</th>
           </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          @for (build of list.items; track build.id) {
+            <tr [attr.data-build]="build.id">
+              <td>
+                {{ build.name }}
+                <span class="cell-sub">{{ build.championId }}</span>
+              </td>
+              <td>
+                <span class="badges">
+                  <span lodbChip>{{ texts.term('builds.modes', build.gameMode) }}</span>
+                  <span lodbChip>{{ build.gameVersion }}</span>
+                </span>
+              </td>
+              <td>
+                <span class="badges">
+                  <span lodbBadge>{{ build.owner.username }}</span>
+                  @if (build.owner.isBanned) {
+                    <span lodbBadge="bad">{{ 'admin.users.badges.banned' | adminText }}</span>
+                  }
+                </span>
+              </td>
+              <td class="num">{{ scoreOf(build) }}</td>
+              <td>
+                <span [lodbBadge]="build.isPublic ? 'good' : 'muted'">
+                  {{
+                    'admin.builds.visibilities.' + (build.isPublic ? 'public' : 'private')
+                      | adminText
+                  }}
+                </span>
+              </td>
+              <td>{{ build.createdAt | stamp }}</td>
+              <td class="actions">
+                <span class="inline-flex flex-nowrap items-center gap-[0.45rem]">
+                  <a
+                    lodbButton="ghost"
+                    lodbButtonSize="small"
+                    target="_blank"
+                    rel="noopener"
+                    [href]="'/b/' + build.shareToken"
+                    >{{ 'admin.builds.view' | adminText }}</a
+                  >
+                  @if (build.isPublic) {
+                    <button
+                      lodbButton="ghost"
+                      lodbButtonSize="small"
+                      type="button"
+                      [disabled]="actions.pending() === build.id"
+                      (click)="unpublish(build)"
+                    >
+                      {{ 'admin.builds.unpublish' | adminText }}
+                    </button>
+                  }
+                  <lodb-confirm-button
+                    tone="danger"
+                    confirmTone="danger"
+                    [label]="'admin.actions.delete' | adminText"
+                    [confirmLabel]="'admin.builds.confirm_delete' | adminText"
+                    [busy]="actions.pending() === build.id"
+                    (confirmed)="remove(build)"
+                  />
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="t-empty">
+                {{
+                  (filtered() ? 'admin.builds.empty_filtered' : 'admin.builds.empty') | adminText
+                }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </lodb-admin-card>
   <lodb-admin-pager [page]="list.page" [pages]="list.pages" />
 }

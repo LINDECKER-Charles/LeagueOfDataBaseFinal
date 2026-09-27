@@ -1,160 +1,112 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | adminText"
+  [eyebrow]="'admin.eyebrows.moderation' | adminText"
   [title]="'admin.users.title' | adminText"
   [subtitle]="'admin.users.lede' | adminText"
 />
 
-<form class="mb-6 flex flex-wrap items-end gap-2" role="search" (submit)="search($event)">
-  <label for="users-q" class="sr-only">{{ 'admin.users.search' | adminText }}</label>
-  <input
-    lodbField
-    id="users-q"
-    name="q"
-    type="search"
-    class="max-w-sm"
-    [value]="query.text('q')"
-    [placeholder]="'admin.users.search' | adminText"
-  />
-  <button lodbButton type="submit">{{ 'admin.actions.search' | adminText }}</button>
-</form>
-
 <lodb-panel-state [panel]="users" />
 @if (users.value(); as list) {
-  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+  <div class="kpi-grid">
     <lodb-kpi [label]="'admin.users.kpi.total' | adminText" [value]="list.stats.total | figure" />
     <lodb-kpi
-      tone="hex"
+      accent="hex"
       [label]="'admin.users.kpi.new_week' | adminText"
       [value]="list.stats.newWeek | figure"
     />
     <lodb-kpi
-      tone="bad"
+      [accent]="list.stats.banned > 0 ? 'bad' : 'good'"
       [label]="'admin.users.kpi.banned' | adminText"
       [value]="list.stats.banned | figure"
     />
     <lodb-kpi
-      tone="good"
+      accent="green"
       [label]="'admin.users.kpi.supporters' | adminText"
       [value]="list.stats.supporters | figure"
     />
   </div>
 
-  <p class="mt-6 mb-2 text-xs text-text-dim">
-    {{ 'admin.common.results' | adminText: { count: list.total } }}
-  </p>
-  <div class="hx-table-scroll" [attr.aria-busy]="users.busy()">
-    <table class="hx-table">
-      <thead>
-        <tr>
-          <th scope="col" class="num">#</th>
-          <th scope="col">{{ 'admin.users.columns.account' | adminText }}</th>
-          <th scope="col">{{ 'admin.users.columns.created' | adminText }}</th>
-          <th scope="col" class="num">{{ 'admin.users.columns.builds' | adminText }}</th>
-          <th scope="col">{{ 'admin.users.columns.state' | adminText }}</th>
-          <th scope="col">{{ 'admin.common.actions' | adminText }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (user of list.items; track user.id) {
-          <tr [attr.data-user]="user.id">
-            <td class="num text-text-dim">{{ user.id }}</td>
-            <td>
-              <span class="block text-text">{{ user.username }}</span>
-              <span class="block text-xs text-text-muted">{{ user.email }}</span>
-            </td>
-            <td class="font-mono text-xs">{{ user.createdAt | stamp }}</td>
-            <td class="num">{{ user.buildCount | figure }}</td>
-            <td>
-              <span class="flex flex-wrap gap-1">
-                @if (user.isAdmin) {
-                  <span lodbBadge="gold">{{ 'admin.users.badges.admin' | adminText }}</span>
-                }
-                @if (user.isBanned) {
-                  <span lodbBadge="bad" [title]="user.banReason ?? ''">
-                    {{ 'admin.users.badges.banned' | adminText }}
+  <lodb-admin-rule [label]="'admin.rules.accounts' | adminText" />
+
+  <form class="toolbar" role="search" (submit)="search($event)">
+    <input
+      name="q"
+      type="search"
+      class="admin-input admin-input--wide"
+      [value]="query.text('q')"
+      [placeholder]="'admin.users.search' | adminText"
+      [attr.aria-label]="'admin.users.search_label' | adminText"
+    />
+    <button lodbButton="ghost" lodbButtonSize="small" type="submit">
+      {{ 'admin.actions.search' | adminText }}
+    </button>
+    @if (query.text('q')) {
+      <a
+        lodbChip
+        [routerLink]="[]"
+        [queryParams]="{ q: null, page: null }"
+        queryParamsHandling="merge"
+      >
+        {{ 'admin.actions.reset' | adminText }}
+      </a>
+    }
+    <span class="toolbar-count">
+      {{ 'admin.users.count' | adminText: { count: (list.total | figure) } }}
+    </span>
+  </form>
+
+  <lodb-admin-card>
+    <div class="hx-table-scroll" [attr.aria-busy]="users.busy()">
+      <table class="hx-table hx-table--flush admin-tbl">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'admin.users.columns.account' | adminText }}</th>
+            <th scope="col">{{ 'admin.users.columns.state' | adminText }}</th>
+            <th scope="col">{{ 'admin.users.columns.email' | adminText }}</th>
+            <th scope="col" class="num">{{ 'admin.users.columns.builds' | adminText }}</th>
+            <th scope="col">{{ 'admin.users.columns.created' | adminText }}</th>
+            <th scope="col" class="num">{{ 'admin.common.actions' | adminText }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of list.items; track user.id) {
+            <tr [attr.data-user]="user.id">
+              <td>
+                {{ nameOf(user) }}
+                @if (user.isBanned && user.banReason) {
+                  <span class="cell-sub" [title]="user.banReason">
+                    {{ 'admin.users.ban_reason' | adminText: { reason: user.banReason } }}
                   </span>
                 }
-                @if (user.isSupporter) {
-                  <span lodbBadge="hex">{{ 'admin.users.badges.supporter' | adminText }}</span>
-                }
-                @if (user.twoFactorEnabled) {
-                  <span lodbBadge="good">{{ 'admin.users.badges.two_factor' | adminText }}</span>
-                }
-                @if (user.google) {
-                  <span lodbBadge="muted">{{ 'admin.users.badges.google' | adminText }}</span>
-                }
-                @if (!user.emailVerified) {
-                  <span lodbBadge="warn">{{ 'admin.users.badges.unverified' | adminText }}</span>
-                }
-              </span>
-            </td>
-            <td>
-              <span class="flex flex-wrap items-center gap-1.5">
-                <a lodbButton="ghost" [routerLink]="['/admin/users', user.id, 'activity']">{{
-                  'admin.users.activity' | adminText
-                }}</a>
-                @if (user.isBanned) {
-                  <lodb-confirm-button
-                    [label]="'admin.users.unban' | adminText"
-                    [confirmLabel]="'admin.users.confirm_unban' | adminText"
-                    [busy]="actions.pending() === user.id"
-                    (confirmed)="unban(user)"
-                  />
-                } @else if (banning() !== user.id) {
-                  <button
-                    lodbButton="ghost"
-                    type="button"
-                    [disabled]="actions.pending() === user.id"
-                    (click)="banning.set(user.id)"
-                  >
-                    {{ 'admin.users.ban' | adminText }}
-                  </button>
-                }
-                <lodb-confirm-button
-                  [label]="'admin.actions.delete' | adminText"
-                  [confirmLabel]="'admin.users.confirm_delete' | adminText"
+              </td>
+              <td>
+                <lodb-user-badges [user]="user" />
+              </td>
+              <td>{{ user.email }}</td>
+              <td class="num">{{ user.buildCount | figure }}</td>
+              <td>{{ user.createdAt | stamp }}</td>
+              <td class="actions">
+                <lodb-user-actions
+                  [user]="user"
+                  [self]="user.id === selfId()"
                   [busy]="actions.pending() === user.id"
-                  (confirmed)="remove(user)"
+                  (banned)="ban(user, $event)"
+                  (unbanned)="unban(user)"
+                  (deleted)="remove(user)"
                 />
-              </span>
-            </td>
-          </tr>
-          @if (banning() === user.id) {
+              </td>
+            </tr>
+          } @empty {
             <tr>
-              <td colspan="6">
-                <form class="flex flex-wrap items-end gap-2" (submit)="ban($event, user)">
-                  <label [for]="'ban-reason-' + user.id" class="eyebrow w-full">
-                    {{ 'admin.users.ban_reason' | adminText: { name: user.username } }}
-                  </label>
-                  <input
-                    lodbField
-                    name="reason"
-                    type="text"
-                    class="max-w-md"
-                    maxlength="255"
-                    [id]="'ban-reason-' + user.id"
-                  />
-                  <button
-                    lodbButton="gold"
-                    type="submit"
-                    [disabled]="actions.pending() === user.id"
-                  >
-                    {{ 'admin.users.confirm_ban' | adminText }}
-                  </button>
-                  <button lodbButton="ghost" type="button" (click)="banning.set(null)">
-                    {{ 'admin.actions.cancel' | adminText }}
-                  </button>
-                </form>
+              <td colspan="6" class="t-empty">
+                {{
+                  (query.text('q') ? 'admin.users.empty_search' : 'admin.users.empty') | adminText
+                }}
               </td>
             </tr>
           }
-        } @empty {
-          <tr>
-            <td colspan="6" class="text-text-dim">{{ 'admin.users.empty' | adminText }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+        </tbody>
+      </table>
+    </div>
+  </lodb-admin-card>
   <lodb-admin-pager [page]="list.page" [pages]="list.pages" />
 }

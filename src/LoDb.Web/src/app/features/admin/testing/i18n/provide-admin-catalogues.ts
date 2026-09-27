@@ -6,23 +6,31 @@ import { of } from 'rxjs';
 // Excerpts of `public/i18n/admin/{fr,en}.json`: the texts that change after an action.
 const CATALOGUES: Readonly<Record<string, Translation>> = {
   'admin/fr': {
-    actions: { refresh: 'Actualiser' },
-    common: { generated_at: 'Relevé du {at} (UTC)' },
-    contacts: { handle: 'Marquer traité', reopen: 'Rouvrir', handled_at: 'Traité le {at}' },
+    actions: { refresh: 'Rafraîchir' },
+    storage: { unavailable: 'Stockage indisponible : {error}' },
+    monitoring: { counters: { unavailable: 'Compteurs indisponibles.' } },
+    contacts: {
+      handle: 'Marquer traité',
+      reopen: 'Rouvrir',
+      statuses: { new: 'Nouveau', handled: 'Traité' },
+    },
     builds: {
       unpublish: 'Dépublier',
-      confirm_unpublish: 'Confirmer la dépublication',
-      visibilities: { public: 'Public', private: 'Privé' },
+      visibilities: { public: 'public', private: 'privé' },
     },
   },
   'admin/en': {
     actions: { refresh: 'Refresh' },
-    common: { generated_at: 'Read at {at} (UTC)' },
-    contacts: { handle: 'Mark handled', reopen: 'Reopen', handled_at: 'Handled on {at}' },
+    storage: { unavailable: 'Storage unavailable: {error}' },
+    monitoring: { counters: { unavailable: 'Counters unavailable.' } },
+    contacts: {
+      handle: 'Mark handled',
+      reopen: 'Reopen',
+      statuses: { new: 'New', handled: 'Handled' },
+    },
     builds: {
       unpublish: 'Unpublish',
-      confirm_unpublish: 'Confirm unpublishing',
-      visibilities: { public: 'Public', private: 'Private' },
+      visibilities: { public: 'public', private: 'private' },
     },
   },
 };

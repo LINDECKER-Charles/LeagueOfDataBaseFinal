@@ -6,7 +6,7 @@ import { openPanel } from '../../../testing/panels/open-panel';
 import { press } from '../../../testing/dom/press';
 import { reply } from '../../../testing/http/reply';
 import { sent } from '../../../testing/http/sent';
-import { toasts } from '../../../testing/dom/toasts';
+import { notice } from '../../../testing/dom/notice';
 import { ContactsPanel } from './contacts-panel';
 
 const CONTACTS = '/api/admin/contacts';
@@ -19,7 +19,7 @@ function contact(id: number, status: string): AdminContactRow {
     email: `player${id}@example.com`,
     name: `Player ${id}`,
     subject: id === 1 ? 'Broken page' : null,
-    message: 'The items page\nshows nothing.',
+    message: id === 1 ? 'x'.repeat(200) : 'The items page\nshows nothing.',
     locale: 'fr',
     createdAt: '2026-09-26T18:00:00Z',
     handledAt: status === 'handled' ? '2026-09-27T09:00:00Z' : null,
@@ -50,27 +50,40 @@ function open(url = '/admin/contacts') {
 }
 
 describe('ContactsPanel', () => {
-  it('shows each message with its sender, its category and a way to answer', async () => {
+  it('lists each message with its sender, its category, an excerpt and its status', async () => {
     const visit = await open();
 
-    expect(card(visit, 1).textContent).toContain('Broken page');
-    expect(card(visit, 2).textContent).toContain('admin.contacts.no_subject');
+    const cells = [...card(visit, 2).querySelectorAll('td')].map((cell) =>
+      (cell.textContent ?? '').replace(/\s+/g, ' ').trim(),
+    );
+    expect(cells.slice(1, 5)).toEqual([
+      'bug',
+      'Player 2player2@example.com',
+      'The items page shows nothing.',
+      'handled',
+    ]);
+    expect(card(visit, 1).querySelector('strong')?.textContent).toBe('Broken page');
+    const excerpt = card(visit, 1).querySelector('td:nth-child(4) span');
+    expect(excerpt?.textContent).toBe(`${'x'.repeat(160)}…`);
+    expect(excerpt?.getAttribute('title')).toBe('x'.repeat(200));
     expect(card(visit, 1).querySelector('a[href^="mailto:"]')?.getAttribute('href')).toBe(
       'mailto:player1@example.com',
     );
-    expect(card(visit, 1).querySelector('a[href="/admin/users/5/activity"]')).not.toBeNull();
+    expect(card(visit, 1).textContent).toContain('admin.contacts.account');
+    expect(card(visit, 1).querySelector('span.inline-flex')?.className).toContain(
+      'text-danger-light',
+    );
     expect(card(visit, 1).textContent).toContain('admin.contacts.handle');
     expect(card(visit, 2).textContent).toContain('admin.contacts.reopen');
-    expect(card(visit, 2).textContent).toContain('admin.contacts.handled_at');
   });
 
   it('filters the inbox by status through the URL', async () => {
     const visit = await open('/admin/contacts?status=new');
 
     expect(visit.calls[0]?.request.params.get('status')).toBe('new');
-    const current = visit.page.querySelector('lodb-page-head a[aria-current="page"]');
-    expect(current?.textContent).toContain('admin.contacts.statuses.new');
-    const links = [...visit.page.querySelectorAll('lodb-page-head nav a')];
+    const current = visit.page.querySelector('lodb-segment-bar a[aria-current="page"]');
+    expect(current?.textContent).toContain('admin.contacts.filters.new');
+    const links = [...visit.page.querySelectorAll('lodb-segment-bar a')];
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/admin/contacts',
       '/admin/contacts?status=new',
@@ -88,14 +101,12 @@ describe('ContactsPanel', () => {
       await sent(visit, CONTACTS),
       inbox([contact(1, 'handled'), contact(2, 'handled')]),
     );
+    expect(notice()).toBe('notice: admin.contacts.done.handle');
     press(visit, 'admin.contacts.reopen', card(visit, 2));
     (await sent(visit, `${CONTACTS}/2/reopen`, 'POST')).flush('');
     await reply(visit, await sent(visit, CONTACTS), inbox());
 
-    expect(toasts()).toEqual([
-      'success: admin.contacts.done.handle',
-      'success: admin.contacts.done.reopen',
-    ]);
+    expect(notice()).toBe('notice: admin.contacts.done.reopen');
   });
 
   it('deletes a message once confirmed', async () => {
@@ -106,7 +117,7 @@ describe('ContactsPanel', () => {
     (await sent(visit, `${CONTACTS}/2`, 'DELETE')).flush('');
     await reply(visit, await sent(visit, CONTACTS), inbox([contact(1, 'new')]));
 
-    expect(toasts()).toEqual(['success: admin.contacts.done.delete']);
+    expect(notice()).toBe('notice: admin.contacts.done.delete');
     expect(visit.page.querySelector('[data-contact="2"]')).toBeNull();
   });
 
@@ -125,7 +136,7 @@ describe('ContactsPanel', () => {
     );
 
     expect(card(visit, 1).textContent).toContain('Rouvrir');
-    expect(card(visit, 1).textContent).toContain('Traité le 27/09/2026 09:00');
-    expect(visit.page.textContent).not.toMatch(/Reopen|Handled on/);
+    expect(card(visit, 1).textContent).toContain('Traité');
+    expect(visit.page.textContent).not.toMatch(/Reopen|Handled/);
   });
 });

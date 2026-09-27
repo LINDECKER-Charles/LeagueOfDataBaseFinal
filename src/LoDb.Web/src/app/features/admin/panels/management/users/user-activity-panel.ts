@@ -2,34 +2,59 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
+import { readAuditVocabulary } from '../../../../../core/api/generated/fn/admin-audit/read-audit-vocabulary';
 import { readUserAuditActivity } from '../../../../../core/api/generated/fn/admin-audit/read-user-audit-activity';
-import { Button } from '../../../../../ui/controls/button';
+import { Chip } from '../../../../../ui/controls/chip';
+import { AdminCard } from '../../../layout/admin-card';
+import { PageHead } from '../../../layout/page-head';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
+import { displayName } from '../../../shared/display-name';
+import { injectAdminText } from '../../../shared/inject-admin-text';
 import { injectQuery } from '../../../shared/inject-query';
 import { injectPanel } from '../../../state/inject-panel';
 import { PanelState } from '../../../state/panel-state';
 import { AdminPager } from '../../../widgets/admin-pager';
-import { PageHead } from '../../../widgets/page-head';
 import { AuditTable } from '../journal/audit-table';
-import { AdminTextPipe } from '../../../shared/admin-text-pipe';
+import { JournalFilters } from '../journal/journal-filters';
 
 /**
  * `/admin/users/:id/activity`: what an account did and what was done to it, from the audit
- * journal, newest first, page by page.
+ * journal, newest first, page by page, filtered by category and by day as the legacy page
+ * was, the way back to the accounts first in its toolbar.
  */
 @Component({
   selector: 'lodb-user-activity-panel',
-  imports: [AdminPager, AuditTable, Button, PageHead, PanelState, RouterLink, AdminTextPipe],
+  imports: [
+    AdminCard,
+    AdminPager,
+    AuditTable,
+    Chip,
+    JournalFilters,
+    PageHead,
+    PanelState,
+    RouterLink,
+    AdminTextPipe,
+  ],
   template: `
     <lodb-page-head
-      [eyebrow]="'admin.nav.users' | adminText"
+      [eyebrow]="'admin.eyebrows.moderation' | adminText"
       [title]="'admin.activity.title' | adminText: { name: name() }"
-      [subtitle]="activity.value()?.subject?.email ?? ''"
-    >
-      <a lodbButton="ghost" routerLink="/admin/users">{{ 'admin.activity.back' | adminText }}</a>
-    </lodb-page-head>
+      [documentTitle]="'admin.activity.document_title' | adminText: { name: name() }"
+      [subtitle]="subtitle()"
+    />
+    <lodb-journal-filters [vocabulary]="vocabulary.value()" [full]="false">
+      <a lodbChip routerLink="/admin/users">{{ 'admin.activity.back' | adminText }}</a>
+    </lodb-journal-filters>
     <lodb-panel-state [panel]="activity" />
     @if (activity.value(); as data) {
-      <lodb-audit-table [entries]="data.activity.items" [attr.aria-busy]="activity.busy()" />
+      <lodb-admin-card>
+        <lodb-audit-table
+          view="activity"
+          empty="admin.activity.empty"
+          [entries]="data.activity.items"
+          [attr.aria-busy]="activity.busy()"
+        />
+      </lodb-admin-card>
       <lodb-admin-pager [page]="data.activity.page" [hasMore]="data.activity.hasMore" />
     }
   `,
@@ -40,14 +65,26 @@ export class UserActivityPanel {
     inject(ActivatedRoute).paramMap.pipe(map((params) => Number(params.get('id')))),
     { requireSync: true },
   );
+  private readonly query = injectQuery();
+  private readonly texts = injectAdminText();
 
-  protected readonly query = injectQuery();
+  protected readonly vocabulary = injectPanel(readAuditVocabulary, () => ({}));
   protected readonly activity = injectPanel(readUserAuditActivity, () => ({
     userId: this.userId(),
+    category: this.query.text('category') || undefined,
+    from: this.query.text('from') || undefined,
+    to: this.query.text('to') || undefined,
     page: this.query.page(),
   }));
   protected readonly name = computed(() => {
     const subject = this.activity.value()?.subject;
-    return subject?.username ?? `#${this.userId()}`;
+    return subject?.username
+      ? displayName(subject.username, subject.riotTagline)
+      : `#${this.userId()}`;
+  });
+  protected readonly subtitle = computed(() => {
+    const email = this.activity.value()?.subject?.email;
+    const lede = this.texts.text('activity.lede');
+    return email ? `${email} · ${lede}` : lede;
   });
 }

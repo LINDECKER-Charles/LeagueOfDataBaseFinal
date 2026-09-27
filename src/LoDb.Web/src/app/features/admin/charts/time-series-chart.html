@@ -7,9 +7,9 @@
       </text>
     </svg>
   } @else {
-    <div class="mb-2 flex justify-end gap-1.5">
+    <!-- The legacy tools: over the plot's corner, shown on hover, on focus and once zoomed. -->
+    <div class="ts-tools" [class.is-zoomed]="view().zoomed">
       <button
-        lodbButton="ghost"
         type="button"
         class="ts-tool"
         [attr.aria-label]="'admin.chart.zoom_out' | adminText"
@@ -19,7 +19,6 @@
         −
       </button>
       <button
-        lodbButton="ghost"
         type="button"
         class="ts-tool"
         [attr.aria-label]="'admin.chart.zoom_in' | adminText"
@@ -28,7 +27,6 @@
         +
       </button>
       <button
-        lodbButton="ghost"
         type="button"
         class="ts-tool"
         [attr.aria-label]="'admin.chart.reset' | adminText"
@@ -82,7 +80,7 @@
             <polygon [attr.points]="line.area" [attr.fill]="line.color" class="ts-area" />
           }
           <polyline [attr.points]="line.line" [attr.stroke]="line.color" class="ts-line" />
-          @for (dot of line.dots; track $index) {
+          @if (line.dot; as dot) {
             <circle [attr.cx]="dot[0]" [attr.cy]="dot[1]" r="2.5" [attr.fill]="line.color" />
           }
         }

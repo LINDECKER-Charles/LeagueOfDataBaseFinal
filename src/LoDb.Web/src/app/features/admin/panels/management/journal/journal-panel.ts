@@ -1,30 +1,36 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { readAuditJournal } from '../../../../../core/api/generated/fn/admin-audit/read-audit-journal';
 import { readAuditVocabulary } from '../../../../../core/api/generated/fn/admin-audit/read-audit-vocabulary';
 import { readAuditVolume } from '../../../../../core/api/generated/fn/admin-audit/read-audit-volume';
 import { FigurePipe } from '../../../format/figure-pipe';
 import { StampPipe } from '../../../format/stamp-pipe';
+import { AdminCard } from '../../../layout/admin-card';
+import { AdminRule } from '../../../layout/admin-rule';
+import { PageHead } from '../../../layout/page-head';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 import { injectQuery } from '../../../shared/inject-query';
 import { injectPanel } from '../../../state/inject-panel';
 import { PanelState } from '../../../state/panel-state';
-import { AdminCard } from '../../../widgets/admin-card';
 import { AdminPager } from '../../../widgets/admin-pager';
 import { Kpi } from '../../../widgets/kpi';
-import { PageHead } from '../../../widgets/page-head';
 import { AuditTable } from './audit-table';
 import { JournalFilters } from './journal-filters';
 import { JournalPurge } from './journal-purge';
-import { AdminTextPipe } from '../../../shared/admin-text-pipe';
+
+// The legal retention (CNIL), which the lede states before the API told its own.
+const RETENTION_MONTHS = 6;
 
 /**
- * `/admin/journal`: the audit journal. What it holds and what the retention keeps, the
- * entries filtered by category, action, outcome, actor and day, newest first, and the purge.
+ * `/admin/journal`: the audit journal, in the order of the legacy page. What it holds and
+ * what the retention keeps, the entries filtered by category, day, outcome, actor and action,
+ * newest first, and the manual purge.
  */
 @Component({
   selector: 'lodb-journal-panel',
   imports: [
     AdminCard,
     AdminPager,
+    AdminRule,
     AuditTable,
     FigurePipe,
     JournalFilters,
@@ -56,6 +62,9 @@ export class JournalPanel {
       page: this.query.page(),
     };
   });
+  protected readonly months = computed(
+    () => this.volume.value()?.retentionMonths ?? RETENTION_MONTHS,
+  );
 
   protected reload(): void {
     this.volume.reload();

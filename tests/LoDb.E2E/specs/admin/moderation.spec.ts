@@ -89,15 +89,16 @@ test('finds a build by its name, public, with its author', async ({ page }) => {
   const { account, buildName } = joined();
   await openPanel(page, '/admin/builds', 'Builds');
 
-  await page.getByLabel('Nom, champion ou auteur').fill(buildName);
-  await page.getByLabel('Visibilité').selectOption({ label: 'Public' });
+  await page.getByLabel('Recherche de build').fill(buildName);
+  await page.getByLabel('Filtre de visibilité').selectOption({ label: 'Publics' });
   await page.getByRole('button', { name: 'Filtrer' }).click();
 
   await expect(page).toHaveURL(/[?&]visibility=public/);
   const row = page.locator('tr[data-build]', { hasText: buildName });
   await expect(row).toHaveCount(1);
-  await expect(row.getByRole('link', { name: account.username })).toBeVisible();
-  await expect(row.getByText('Public', { exact: true })).toBeVisible();
+  await expect(row.getByText(account.username, { exact: true })).toBeVisible();
+  await expect(row.getByText('public', { exact: true })).toBeVisible();
+  await expect(row.getByRole('link', { name: 'Voir' })).toHaveAttribute('href', /^\/b\/\w+/);
 });
 
 test('unpublishes a public build', async ({ page }) => {
@@ -105,10 +106,10 @@ test('unpublishes a public build', async ({ page }) => {
   await openPanel(page, `/admin/builds?q=${encodeURIComponent(buildName)}`, 'Builds');
   const row = page.locator('tr[data-build]', { hasText: buildName });
 
-  await confirmAction(row, 'Dépublier', 'Confirmer la dépublication');
+  await row.getByRole('button', { name: 'Dépublier' }).click();
 
-  await expectToast(page, `« ${buildName} » n'est plus public.`);
-  await expect(row.getByText('Privé', { exact: true })).toBeVisible();
+  await expectToast(page, new RegExp(`^Build « ${buildName} » dépublié`));
+  await expect(row.getByText('privé', { exact: true })).toBeVisible();
   await expect(row.getByRole('button', { name: 'Dépublier' })).toHaveCount(0);
 });
 
@@ -119,31 +120,31 @@ test('deletes a build', async ({ page }) => {
 
   await confirmAction(row, 'Supprimer', 'Supprimer définitivement');
 
-  await expectToast(page, `« ${buildName} » est supprimé.`);
-  await expect(page.getByText('Aucun build ne correspond.')).toBeVisible();
+  await expectToast(page, `Build « ${buildName} » supprimé.`);
+  await expect(page.getByText('Aucun build ne correspond aux filtres.')).toBeVisible();
 });
 
 test('finds an account, then opens its activity', async ({ page }) => {
   const { account } = joined();
   await openPanel(page, '/admin/users', 'Utilisateurs');
 
-  await page.getByLabel("Nom d'utilisateur ou e-mail").fill(account.username);
+  await page.getByLabel('Recherche de compte').fill(account.username);
   await page.getByRole('button', { name: 'Rechercher' }).click();
 
   await expect(page).toHaveURL(/[?&]q=/);
-  await expect(page.getByText('1 résultat', { exact: true })).toBeVisible();
+  await expect(page.getByText('1 compte(s)', { exact: true })).toBeVisible();
   const row = page.locator('tr[data-user]', { hasText: account.username });
   await expect(row).toContainText(account.email);
   await row.getByRole('link', { name: 'Activité' }).click();
   await expect(page).toHaveURL(/\/admin\/users\/\d+\/activity$/);
   await expect(
-    page.getByRole('heading', { level: 1, name: `Activité de ${account.username}` }),
+    page.getByRole('heading', { level: 1, name: new RegExp(`^Activité — ${account.username}`) }),
   ).toBeVisible();
   // The member's sign-in: created by the CLI, the account has no registration to journal.
   await expect(
     page.getByRole('table').getByText('Connexion', { exact: true }).first(),
   ).toBeVisible();
-  await page.getByRole('link', { name: 'Retour aux utilisateurs' }).click();
+  await page.getByRole('link', { name: '← Utilisateurs' }).click();
   await expect(page).toHaveURL(/\/admin\/users(\?|$)/);
 });
 
@@ -152,15 +153,13 @@ test('bans an account, with its reason', async ({ page }) => {
   await openPanel(page, `/admin/users?q=${account.username}`, 'Utilisateurs');
   const row = page.locator('tr[data-user]', { hasText: account.username });
 
+  await row.getByLabel('Raison du bannissement').fill(BAN_REASON);
   await row.getByRole('button', { name: 'Bannir', exact: true }).click();
-  await page
-    .getByLabel(`Motif du bannissement de ${account.username} (facultatif)`)
-    .fill(BAN_REASON);
-  await page.getByRole('button', { name: 'Bannir le compte' }).click();
 
-  await expectToast(page, `${account.username} est banni.`);
-  await expect(row.getByText('Banni', { exact: true })).toHaveAttribute('title', BAN_REASON);
-  await expect(row.getByRole('button', { name: 'Rétablir' })).toBeVisible();
+  await expectToast(page, new RegExp(`^Compte « ${account.username} » banni`));
+  await expect(row.getByText('banni', { exact: true })).toBeVisible();
+  await expect(row).toContainText(`Motif : ${BAN_REASON}`);
+  await expect(row.getByRole('button', { name: 'Débannir' })).toBeVisible();
 });
 
 test('lifts the ban of an account', async ({ page }) => {
@@ -168,10 +167,10 @@ test('lifts the ban of an account', async ({ page }) => {
   await openPanel(page, `/admin/users?q=${account.username}`, 'Utilisateurs');
   const row = page.locator('tr[data-user]', { hasText: account.username });
 
-  await confirmAction(row, 'Rétablir', 'Confirmer le rétablissement');
+  await row.getByRole('button', { name: 'Débannir' }).click();
 
-  await expectToast(page, `${account.username} est rétabli.`);
-  await expect(row.getByText('Banni', { exact: true })).toHaveCount(0);
+  await expectToast(page, `Compte « ${account.username} » rétabli.`);
+  await expect(row.getByText('banni', { exact: true })).toHaveCount(0);
   await expect(row.getByRole('button', { name: 'Bannir', exact: true })).toBeVisible();
 });
 
@@ -182,13 +181,13 @@ test('deletes an account', async ({ page }) => {
 
   await confirmAction(row, 'Supprimer', 'Supprimer définitivement');
 
-  await expectToast(page, `Le compte ${account.username} est supprimé.`);
-  await expect(page.getByText('Aucun compte ne correspond.')).toBeVisible();
+  await expectToast(page, `Compte « ${account.username} » supprimé définitivement.`);
+  await expect(page.getByText('Aucun compte ne correspond à la recherche.')).toBeVisible();
 });
 
 test('journals every moderation under the administrator', async ({ page, admin }) => {
   const actor = encodeURIComponent(admin.username);
-  await openPanel(page, `/admin/journal?category=admin&actor=${actor}`, 'Journal');
+  await openPanel(page, `/admin/journal?category=admin&actor=${actor}`, "Journal d'audit");
 
   // In the table: the filters list the same actions among their choices.
   const journal = page.getByRole('table');

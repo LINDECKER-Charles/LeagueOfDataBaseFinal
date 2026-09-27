@@ -87,6 +87,17 @@ describe('AdminLoginPage', () => {
     await vi.waitFor(() => expect(router.url).toBe('/admin/users'));
   });
 
+  it('puts the caret in the field to fill: the identifier, then the code', async () => {
+    const { page, harness } = await open('/admin/login', 'two-factor-required');
+
+    expect(document.activeElement).toBe(page.querySelector('input[name="identifier"]'));
+    await signIn(page);
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+
+    expect(document.activeElement).toBe(page.querySelector('input[name="twoFactorCode"]'));
+  });
+
   it('accepts a recovery code in place of the authenticator', async () => {
     const {
       page,

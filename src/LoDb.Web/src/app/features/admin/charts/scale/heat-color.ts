@@ -12,7 +12,7 @@ const PRECISION = 10;
  */
 export function heatColor(value: number, max: number): string {
   if (max <= 0 || value <= 0) {
-    return 'color-mix(in srgb, var(--color-gold-deep) 14%, transparent)';
+    return 'var(--color-track)';
   }
   const eased = Math.min(1, value / max) ** GAMMA;
   const share = Math.round((FLOOR + SPAN * eased) * PRECISION) / PRECISION;

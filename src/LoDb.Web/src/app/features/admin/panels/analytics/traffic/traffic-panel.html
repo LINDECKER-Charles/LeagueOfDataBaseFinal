@@ -1,43 +1,51 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.analytics' | adminText"
+  [eyebrow]="'admin.eyebrows.analytics' | adminText"
   [title]="'admin.traffic.title' | adminText"
   [subtitle]="'admin.traffic.lede' | adminText"
 >
-  <lodb-range-bar [current]="query.range()" />
-  <button lodbButton="gold" type="button" [disabled]="rollingUp()" (click)="rollUp()">
-    {{ 'admin.traffic.roll_up' | adminText }}
-  </button>
+  <lodb-segment-bar
+    param="range"
+    label="admin.range.label"
+    [segments]="ranges"
+    [current]="query.range()"
+  />
 </lodb-page-head>
 
 <lodb-panel-state [panel]="report" shape="chart" />
 @if (report.value(); as data) {
-  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" [attr.aria-busy]="report.busy()">
+  <div class="kpi-grid mb-6" [attr.aria-busy]="report.busy()">
     <lodb-kpi
       [label]="'admin.traffic.kpi.views' | adminText"
-      [value]="data.totals.views | figure"
-      [sub]="'admin.traffic.kpi.pages' | adminText: { count: data.totals.pagesTracked }"
-    />
+      [value]="data.totals.views | figure: 'compact'"
+      [sub]="data.range"
+    >
+      <lodb-sparkline [values]="traffic().series[0]?.values ?? []" color="var(--color-gold)" />
+    </lodb-kpi>
     <lodb-kpi
-      tone="hex"
+      accent="hex"
       [label]="'admin.traffic.kpi.visitors' | adminText"
-      [value]="data.totals.uniqueVisitors | figure"
+      [value]="data.totals.uniqueVisitors | figure: 'compact'"
+      [sub]="'admin.traffic.kpi.visitors_sub' | adminText: { count: data.totals.returningVisitors }"
+    >
+      <lodb-sparkline [values]="traffic().series[1]?.values ?? []" />
+    </lodb-kpi>
+    <lodb-kpi
+      accent="green"
+      [label]="'admin.traffic.kpi.pages' | adminText"
+      [value]="data.totals.pagesTracked | figure: 'compact'"
+      [sub]="'admin.traffic.kpi.pages_sub' | adminText"
     />
     <lodb-kpi
-      tone="muted"
-      [label]="'admin.traffic.kpi.returning' | adminText"
-      [value]="data.totals.returningVisitors | figure"
-    />
-    <lodb-kpi
-      tone="warn"
-      [label]="'admin.traffic.kpi.bots' | adminText"
-      [value]="data.totals.botViews | figure"
+      accent="blue"
+      [label]="'admin.traffic.kpi.per_day' | adminText"
+      [value]="perDay()"
+      [sub]="'admin.traffic.kpi.per_day_sub' | adminText"
     />
   </div>
 
   <lodb-admin-card
-    class="mt-6"
     [heading]="'admin.traffic.daily' | adminText"
-    [chip]="'admin.traffic.period' | adminText: { from: data.from, to: data.to }"
+    [chip]="'admin.overview.frequentation_chip' | adminText"
   >
     <lodb-time-series-chart
       [dates]="traffic().dates"
@@ -47,30 +55,37 @@
     <lodb-legend [items]="traffic().legend" />
   </lodb-admin-card>
 
-  <lodb-admin-card class="mt-6" [heading]="'admin.traffic.heatmap' | adminText">
-    <lodb-heatmap [grid]="data.heatmap" />
-  </lodb-admin-card>
-
-  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+  <div class="admin-grid admin-grid--2 mt-[1.15rem]">
     <lodb-admin-card [heading]="'admin.traffic.top_pages' | adminText">
-      <lodb-rank-list [rows]="pages()" [limit]="limit" />
+      <lodb-rank-list [rows]="pages()" [limit]="8" empty="admin.overview.top_pages_empty" />
     </lodb-admin-card>
     <lodb-admin-card [heading]="'admin.traffic.top_entities' | adminText">
-      <lodb-rank-list tone="hex" [rows]="entities()" [limit]="limit" />
-    </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.traffic.by_type' | adminText">
-      <lodb-donut-chart
-        [slices]="types()"
-        [label]="'admin.traffic.by_type' | adminText"
-        [total]="data.totals.views | figure: 'compact'"
-        [caption]="'admin.traffic.views_caption' | adminText"
+      <lodb-rank-list
+        tone="hex"
+        [rows]="entities()"
+        [limit]="8"
+        empty="admin.traffic.top_entities_empty"
       />
-      <lodb-rank-list class="mt-4" [rows]="kinds()" />
-    </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.traffic.statuses' | adminText">
-      <lodb-rank-list tone="hex" [rows]="statuses()" />
-      <h3 class="mt-6 mb-3 eyebrow">{{ 'admin.traffic.routes' | adminText }}</h3>
-      <lodb-rank-list [rows]="routes()" [limit]="limit" />
     </lodb-admin-card>
   </div>
+
+  <div class="admin-grid admin-grid--3 mt-[1.15rem]">
+    <lodb-admin-card [heading]="'admin.overview.by_resource' | adminText">
+      <lodb-rank-list [rows]="types()" [limit]="6" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.traffic.by_kind' | adminText">
+      <lodb-rank-list tone="hex" [rows]="kinds()" [limit]="6" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.traffic.statuses' | adminText">
+      <lodb-status-table [statuses]="data.status" />
+    </lodb-admin-card>
+  </div>
+
+  <lodb-admin-card
+    class="mt-[1.15rem]"
+    [heading]="'admin.traffic.heatmap' | adminText"
+    [chip]="'admin.traffic.heatmap_chip' | adminText"
+  >
+    <lodb-heatmap [grid]="data.heatmap" />
+  </lodb-admin-card>
 }

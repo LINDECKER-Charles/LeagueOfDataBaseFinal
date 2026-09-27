@@ -1,10 +1,10 @@
 import type { Type } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { configureAdminTestBed } from '../testing/admin-test-bed';
+import { categorySlices } from './category-slices';
 import type { ChartSeries } from './chart-series';
 import { DonutChart } from './donut-chart';
 import { Heatmap } from './heatmap';
-import { paletteSlices } from './palette-slices';
 import { ChartScale } from './scale/chart-scale';
 import { plotMarks } from './scale/plot-marks';
 import { Sparkline } from './sparkline';
@@ -46,7 +46,7 @@ describe('the SVG charts of the admin', () => {
     expect(all(render(Sparkline, { values: [3] }), 'svg')).toHaveLength(0);
   });
 
-  it('rings each slice of a donut, titled with its share, and repeats it in the legend', () => {
+  it('rings each slice of a donut, titled with its share, its count in the legend', () => {
     const fixture = render(DonutChart, {
       slices: [
         { name: 'Mobile', value: 30, color: 'var(--color-hex)' },
@@ -65,7 +65,17 @@ describe('the SVG charts of the admin', () => {
     ]);
     expect(words(arcs[0]?.querySelector('title'))).toBe('Mobile — 30 (75.0 %)');
     expect(all(fixture, 'text').map(words)).toEqual(['40', 'vues']);
-    expect(all(fixture, 'lodb-legend li').map(words)).toEqual(['Mobile 75.0 %', 'Desktop 25.0 %']);
+    expect(all(fixture, 'lodb-legend li').map(words)).toEqual(['Mobile 30', 'Desktop 10']);
+  });
+
+  it('squeezes a total too long for the hole of the ring into it', () => {
+    const fixture = render(DonutChart, {
+      slices: [{ name: 'data', value: 1, color: 'var(--color-gold)' }],
+      label: 'Familles',
+      total: '121.02 MB',
+    });
+
+    expect(all(fixture, 'text.donut-total')[0]?.getAttribute('textLength')).toBe('80');
   });
 
   it('says a donut of nothing is empty instead of drawing a bare ring', () => {
@@ -90,7 +100,7 @@ describe('the SVG charts of the admin', () => {
     expect(cells).toHaveLength(7 * 24);
     expect(cells[2 * 24 + 13]?.style.background).toContain('var(--color-hex) 100%');
     expect(cells[2 * 24 + 14]?.style.background).toContain('var(--color-hex)');
-    expect(cells[0]?.style.background).toContain('var(--color-gold-deep)');
+    expect(cells[0]?.style.background).toBe('var(--color-track)');
     expect(all(fixture, '.heat-day').map(words)[0]).toBe('admin.heatmap.days.0');
     expect(all(fixture, '.heat-hour').map(words).filter(Boolean)).toEqual(['0', '6', '12', '18']);
   });
@@ -119,13 +129,6 @@ describe('plotMarks', () => {
 
     expect(marks.lines[0]?.area).not.toBeNull();
     expect(marks.lines[1]?.area).toBeNull();
-    expect(marks.lines[0]?.dots).toHaveLength(3);
-  });
-
-  it('drops the dots of a long series', () => {
-    const long = Array.from({ length: 60 }, (_, index) => index);
-
-    expect(plotMarks([series(long)], ChartScale.of(60)).lines[0]?.dots).toEqual([]);
   });
 
   it('writes the axis in the unit of the first series, short enough for the margin', () => {
@@ -147,31 +150,28 @@ describe('plotMarks', () => {
   });
 });
 
-describe('paletteSlices', () => {
-  const rows = (count: number) =>
-    Array.from({ length: count }, (_, index) => ({ name: `r${index}`, value: 10 - index }));
+describe('categorySlices', () => {
+  const name = (key: string) => key.toUpperCase();
 
-  it('colours the slices in turn with the tokens of the palette', () => {
-    const slices = paletteSlices(rows(2), 'Autres');
+  it('keeps the colour of each category whatever its rank', () => {
+    const slices = categorySlices(
+      'resource',
+      [
+        { name: 'home', value: 10 },
+        { name: 'champion', value: 5 },
+      ],
+      name,
+    );
 
     expect(slices).toEqual([
-      { name: 'r0', value: 10, color: 'var(--color-gold)' },
-      { name: 'r1', value: 9, color: 'var(--color-hex)' },
+      { name: 'HOME', value: 10, color: 'var(--color-series-cyan)' },
+      { name: 'CHAMPION', value: 5, color: 'var(--color-gold)' },
     ]);
   });
 
-  it('keeps six rows whole, and folds the smallest past them into the rest', () => {
-    expect(paletteSlices(rows(6), 'Autres').map((slice) => slice.name)).toEqual([
-      'r0',
-      'r1',
-      'r2',
-      'r3',
-      'r4',
-      'r5',
-    ]);
+  it('paints a category it does not know in the muted text colour', () => {
+    const [slice] = categorySlices('plan', [{ name: 'lifetime', value: 1 }], name);
 
-    const folded = paletteSlices(rows(8), 'Autres');
-    expect(folded.map((slice) => slice.name)).toEqual(['r0', 'r1', 'r2', 'r3', 'r4', 'Autres']);
-    expect(folded[5]).toEqual({ name: 'Autres', value: 5 + 4 + 3, color: 'var(--color-text-dim)' });
+    expect(slice?.color).toBe('var(--color-text-muted)');
   });
 });

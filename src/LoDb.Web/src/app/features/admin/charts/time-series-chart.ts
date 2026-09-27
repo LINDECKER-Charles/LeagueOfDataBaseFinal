@@ -7,7 +7,6 @@ import {
   linkedSignal,
   viewChild,
 } from '@angular/core';
-import { Button } from '../../../ui/controls/button';
 import { figure } from '../format/figure';
 import type { ChartSeries } from './chart-series';
 import { ChartScale } from './scale/chart-scale';
@@ -51,12 +50,13 @@ let lastChart = 0;
  * Overlaid series on one date axis, explorable: the wheel, the buttons or `+` and `-` zoom
  * the X axis around the pointer, a drag pans a zoomed chart, a double click or `Home`
  * resets it; the crosshair follows the pointer or the arrows and a tooltip says the exact
- * value of every series at that date. The legacy admin enhanced a server SVG; here the
- * marks are drawn from the view, so the dots stay round at any zoom.
+ * value of every series at that date. As in the legacy admin, the lines carry no marker:
+ * only the crosshair dots the point it reads. The legacy enhanced a server SVG; here the
+ * marks are drawn from the view.
  */
 @Component({
   selector: 'lodb-time-series-chart',
-  imports: [Button, AdminTextPipe],
+  imports: [AdminTextPipe],
   templateUrl: './time-series-chart.html',
   styleUrl: './time-series-chart.css',
   host: { class: 'block' },

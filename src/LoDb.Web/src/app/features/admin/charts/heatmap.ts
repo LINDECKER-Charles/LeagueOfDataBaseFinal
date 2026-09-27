@@ -52,18 +52,37 @@ const HOUR_LABEL_EVERY = 6;
   styles: `
     .heat {
       display: grid;
-      grid-template-columns: 2.5rem repeat(24, minmax(0, 1fr));
+      grid-template-columns: 2.2rem repeat(24, minmax(0, 1fr));
+      align-items: center;
       gap: 2px;
+    }
+    /* The hours every six: two digits never break, even over a 10px column of a phone. */
+    .heat-hour {
       font-family: var(--font-mono);
-      font-size: 0.65rem;
+      font-size: 0.6rem;
+      text-align: center;
+      white-space: nowrap;
       color: var(--color-text-dim);
+    }
+    .heat-day {
+      font-family: var(--font-beaufort);
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
     }
     .heat-cell {
       aspect-ratio: 1;
-      min-block-size: 0.6rem;
+      min-block-size: 12px;
+      border: 1px solid color-mix(in srgb, var(--color-text) 3%, transparent);
     }
-    .heat-day {
-      align-self: center;
+    .heat-cell:hover {
+      outline: 1px solid var(--color-gold);
+    }
+    @media (width <= 860px) {
+      .heat {
+        grid-template-columns: 2rem repeat(24, minmax(0, 1fr));
+      }
     }
   `,
   host: { class: 'block' },

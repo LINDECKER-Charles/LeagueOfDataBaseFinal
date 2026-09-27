@@ -1,50 +1,27 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthSession } from '../../core/auth/session/auth-session';
-import { Button } from '../../ui/controls/button';
+import { ChangeDetectionStrategy, Component, ViewEncapsulation, signal } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { Skeleton } from '../../ui/surfaces/skeleton';
-import { ADMIN_NAV } from './admin-nav';
+import { NoticesOutlet } from './layout/notices-outlet';
 import { OverviewPanel } from './panels/analytics/overview/overview-panel';
-import { ADMIN_PATHS } from './shared/admin-paths';
-import { AdminTextPipe } from './shared/admin-text-pipe';
 
 /**
- * The shell of the admin, `/admin/...`: the navigation of the legacy sidebar and the panel
- * of the URL, each in its own chunk, loaded when opened. `/admin` itself shows the overview,
- * deferred too. Its guard lets in an administrator whose session was opened with a second
- * factor only (admin.routes.ts).
+ * The panels of the admin, `/admin/...`, under its frame: the band of the last action, then
+ * the panel of the URL, each in its own chunk, loaded when opened. `/admin` itself shows the
+ * overview, deferred too. Its guard lets in an administrator whose session was opened with a
+ * second factor only (admin.routes.ts). It also carries the look the legacy panels shared
+ * (tables, toolbars, slim fields), scoped under its host.
  */
 @Component({
   selector: 'lodb-admin-page',
-  imports: [
-    Button,
-    OverviewPanel,
-    RouterLink,
-    RouterLinkActive,
-    RouterOutlet,
-    Skeleton,
-    AdminTextPipe,
-  ],
+  imports: [NoticesOutlet, OverviewPanel, RouterOutlet, Skeleton],
   templateUrl: './admin-page.html',
+  styleUrl: './admin-page.css',
+  // The panels are separate components: their tables share one sheet, scoped by hand.
+  encapsulation: ViewEncapsulation.None,
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminPage {
-  private readonly session = inject(AuthSession);
-  private readonly router = inject(Router);
-
-  protected readonly nav = ADMIN_NAV;
-  protected readonly user = this.session.user;
   /** Whether a panel of the URL fills the outlet; the overview shows otherwise. */
   protected readonly panelOpen = signal(false);
-  protected readonly signingOut = signal(false);
-
-  protected async signOut(): Promise<void> {
-    this.signingOut.set(true);
-    try {
-      await this.session.signOut();
-      await this.router.navigateByUrl(ADMIN_PATHS.login);
-    } finally {
-      this.signingOut.set(false);
-    }
-  }
 }

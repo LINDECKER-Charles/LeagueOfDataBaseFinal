@@ -1,21 +1,52 @@
-<form class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="search" (submit)="apply($event)">
-  @for (select of selects; track select.name) {
-    <label class="grid gap-1">
-      <span class="eyebrow">{{ 'admin.journal.filters.' + select.label | adminText }}</span>
-      <select lodbField [name]="select.name">
-        <option value="">{{ 'admin.journal.filters.any' | adminText }}</option>
+<form class="toolbar" role="search" (submit)="apply($event)">
+  <ng-content />
+  <select
+    name="category"
+    class="hx-select admin-input"
+    [attr.aria-label]="'admin.journal.filters.category' | adminText"
+  >
+    <option value="">{{ 'admin.journal.filters.any_category' | adminText }}</option>
+    @for (choice of choices('categories'); track choice) {
+      <option [value]="choice" [selected]="query.text('category') === choice">
+        {{ texts.term('journal.categories', choice) }}
+      </option>
+    }
+  </select>
+  <input
+    name="from"
+    type="date"
+    class="admin-input"
+    [value]="query.text('from')"
+    [attr.aria-label]="'admin.journal.filters.from' | adminText"
+  />
+  <input
+    name="to"
+    type="date"
+    class="admin-input"
+    [value]="query.text('to')"
+    [attr.aria-label]="'admin.journal.filters.to' | adminText"
+  />
+  @if (full()) {
+    @for (select of selects; track select.name) {
+      <select
+        class="hx-select admin-input"
+        [name]="select.name"
+        [attr.aria-label]="'admin.journal.filters.' + select.label | adminText"
+      >
+        <option value="">{{ 'admin.journal.filters.any_' + select.label | adminText }}</option>
         @for (choice of choices(select.set); track choice) {
           <option [value]="choice" [selected]="query.text(select.name) === choice">
             {{ texts.term(select.terms, choice) }}
           </option>
         }
       </select>
-    </label>
-  }
-  <label class="grid gap-1">
-    <span class="eyebrow">{{ 'admin.journal.filters.action' | adminText }}</span>
-    <select lodbField name="action">
-      <option value="">{{ 'admin.journal.filters.any' | adminText }}</option>
+    }
+    <select
+      name="action"
+      class="hx-select admin-input"
+      [attr.aria-label]="'admin.journal.filters.action' | adminText"
+    >
+      <option value="">{{ 'admin.journal.filters.any_action' | adminText }}</option>
       @for (group of groups(); track group.category) {
         <optgroup [label]="texts.term('journal.categories', group.category)">
           @for (action of group.actions; track action) {
@@ -26,23 +57,22 @@
         </optgroup>
       }
     </select>
-  </label>
-  <label class="grid gap-1">
-    <span class="eyebrow">{{ 'admin.journal.filters.actor' | adminText }}</span>
-    <input lodbField name="actor" type="search" maxlength="180" [value]="query.text('actor')" />
-  </label>
-  <label class="grid gap-1">
-    <span class="eyebrow">{{ 'admin.journal.filters.from' | adminText }}</span>
-    <input lodbField name="from" type="date" [value]="query.text('from')" />
-  </label>
-  <label class="grid gap-1">
-    <span class="eyebrow">{{ 'admin.journal.filters.to' | adminText }}</span>
-    <input lodbField name="to" type="date" [value]="query.text('to')" />
-  </label>
-  <div class="flex flex-wrap items-end gap-2">
-    <button lodbButton type="submit">{{ 'admin.actions.filter' | adminText }}</button>
-    <button lodbButton="ghost" type="button" (click)="clear()">
-      {{ 'admin.journal.filters.clear' | adminText }}
-    </button>
-  </div>
+    <input
+      name="actor"
+      type="search"
+      maxlength="180"
+      class="admin-input"
+      [value]="query.text('actor')"
+      [placeholder]="'admin.journal.filters.actor' | adminText"
+      [attr.aria-label]="'admin.journal.filters.actor' | adminText"
+    />
+  }
+  <button lodbButton="ghost" lodbButtonSize="small" type="submit">
+    {{ 'admin.actions.filter' | adminText }}
+  </button>
+  @if (active()) {
+    <a lodbChip [routerLink]="[]" [queryParams]="cleared">
+      {{ 'admin.actions.reset' | adminText }}
+    </a>
+  }
 </form>

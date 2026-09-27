@@ -1,44 +1,89 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.analytics' | adminText"
+  [eyebrow]="'admin.eyebrows.analytics' | adminText"
   [title]="'admin.audience.title' | adminText"
   [subtitle]="'admin.audience.lede' | adminText"
 >
-  <lodb-range-bar [current]="query.range()" />
+  <lodb-segment-bar
+    param="range"
+    label="admin.range.label"
+    [segments]="ranges"
+    [current]="query.range()"
+  />
 </lodb-page-head>
 
-<lodb-panel-state [panel]="report" shape="chart" />
+<lodb-panel-state [panel]="report" shape="cards" />
 @if (report.value(); as data) {
-  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" [attr.aria-busy]="report.busy()">
+  <div class="kpi-grid mb-6" [attr.aria-busy]="report.busy()">
     <lodb-kpi
-      tone="hex"
-      [label]="'admin.traffic.kpi.visitors' | adminText"
-      [value]="data.totals.uniqueVisitors | figure"
+      accent="hex"
+      [label]="'admin.audience.kpi.visitors' | adminText"
+      [value]="data.totals.uniqueVisitors | figure: 'compact'"
+      [sub]="data.range"
+    >
+      <lodb-sparkline [values]="visitors()" />
+    </lodb-kpi>
+    <lodb-kpi
+      accent="green"
+      [label]="'admin.audience.kpi.returning' | adminText"
+      [value]="data.totals.returningVisitors | figure: 'compact'"
+      [sub]="'admin.audience.kpi.returning_sub' | adminText"
     />
     <lodb-kpi
-      tone="muted"
-      [label]="'admin.traffic.kpi.returning' | adminText"
-      [value]="data.totals.returningVisitors | figure"
+      [label]="'admin.audience.kpi.new' | adminText"
+      [value]="data.totals.uniqueVisitors - data.totals.returningVisitors | figure: 'compact'"
+      [sub]="'admin.audience.kpi.new_sub' | adminText"
     />
     <lodb-kpi
-      [label]="'admin.audience.kpi.countries' | adminText"
-      [value]="data.country.length | figure"
-    />
-    <lodb-kpi
-      tone="muted"
-      [label]="'admin.audience.kpi.referers' | adminText"
-      [value]="data.topReferers.length | figure"
+      accent="red"
+      [label]="'admin.audience.kpi.bots' | adminText"
+      [value]="data.totals.botViews | figure: 'compact'"
+      [sub]="'admin.audience.kpi.bots_sub' | adminText"
     />
   </div>
 
-  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+  <div class="admin-grid admin-grid--3">
+    <lodb-admin-card class="span-2" [heading]="'admin.audience.countries' | adminText">
+      @if (!data.geoAvailable) {
+        <span lodbCardHead lodbBadge="warn">{{ 'admin.audience.geo_badge' | adminText }}</span>
+      }
+      @if (data.geoAvailable || data.country.length > 0) {
+        <lodb-rank-list
+          tone="hex"
+          [rows]="countries()"
+          [limit]="10"
+          empty="admin.audience.countries_empty"
+        />
+      } @else {
+        <p class="text-text-dim">
+          {{ 'admin.audience.geo_missing' | adminText }}
+          (<code class="font-mono">LoDb:Analytics:GeoIpDatabase</code>).
+          {{ 'admin.audience.geo_missing_after' | adminText }}
+        </p>
+      }
+    </lodb-admin-card>
     <lodb-admin-card [heading]="'admin.audience.devices_title' | adminText">
       <lodb-donut-chart
         [slices]="devices()"
-        [label]="'admin.audience.devices_title' | adminText"
+        [label]="'admin.audience.devices_label' | adminText"
         [total]="data.totals.views | figure: 'compact'"
         [caption]="'admin.traffic.views_caption' | adminText"
       />
     </lodb-admin-card>
+  </div>
+
+  <div class="admin-grid admin-grid--3 mt-[1.15rem]">
+    <lodb-admin-card [heading]="'admin.audience.browsers' | adminText">
+      <lodb-rank-list [rows]="browsers()" [limit]="6" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.audience.systems' | adminText">
+      <lodb-rank-list tone="hex" [rows]="systems()" [limit]="6" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.audience.locales' | adminText">
+      <lodb-rank-list [rows]="locales()" [limit]="6" />
+    </lodb-admin-card>
+  </div>
+
+  <div class="admin-grid admin-grid--3 mt-[1.15rem]">
     <lodb-admin-card [heading]="'admin.audience.sources_title' | adminText">
       <lodb-donut-chart
         [slices]="sources()"
@@ -47,23 +92,13 @@
         [caption]="'admin.traffic.views_caption' | adminText"
       />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.browsers' | adminText">
-      <lodb-rank-list [rows]="browsers()" [limit]="limit" />
-    </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.systems' | adminText">
-      <lodb-rank-list tone="hex" [rows]="systems()" [limit]="limit" />
-    </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.countries' | adminText">
-      <lodb-rank-list [rows]="countries()" [limit]="limit" />
-    </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.referers' | adminText">
-      <lodb-rank-list tone="hex" [rows]="referers()" [limit]="limit" />
-    </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.languages' | adminText">
-      <lodb-rank-list [rows]="languages()" [limit]="limit" />
-    </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.locales' | adminText">
-      <lodb-rank-list tone="hex" [rows]="locales()" [limit]="limit" />
+    <lodb-admin-card class="span-2" [heading]="'admin.audience.referers' | adminText">
+      <lodb-rank-list
+        tone="hex"
+        [rows]="referers()"
+        [limit]="8"
+        empty="admin.audience.referers_empty"
+      />
     </lodb-admin-card>
   </div>
 }
