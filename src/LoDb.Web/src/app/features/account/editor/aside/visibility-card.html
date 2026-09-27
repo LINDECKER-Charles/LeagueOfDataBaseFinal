@@ -33,7 +33,7 @@
 </p>
 @if (isPublic()) {
   <a class="visibility-card__link" [routerLink]="publicLink()">
-    <span class="visibility-card__url">{{ publicPath() }}</span>
+    <span class="visibility-card__url" dir="ltr">{{ publicPath() }}</span>
     <span class="rtl:-scale-x-100" aria-hidden="true">→</span>
   </a>
 }
