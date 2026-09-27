@@ -50,6 +50,6 @@ export class SkinGallery {
       skins: this.tiles(),
       index,
     };
-    this.dialogs.open(SkinViewer, { labelledBy: SkinViewer.HEADING_ID, data, variant: 'lightbox' });
+    this.dialogs.open(SkinViewer, { labelledBy: SkinViewer.HEADING_ID, data, size: 'lightbox' });
   }
 }

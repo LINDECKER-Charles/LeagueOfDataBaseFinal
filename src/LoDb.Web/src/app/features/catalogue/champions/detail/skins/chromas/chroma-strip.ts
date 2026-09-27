@@ -30,7 +30,7 @@ export class ChromaStrip {
     this.dialogs.open(ChromaViewer, {
       labelledBy: ChromaViewer.HEADING_ID,
       data,
-      variant: 'compact',
+      size: 'compact',
     });
   }
 }

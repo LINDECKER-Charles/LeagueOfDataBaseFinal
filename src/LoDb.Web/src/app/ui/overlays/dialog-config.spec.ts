@@ -25,9 +25,9 @@ describe('dialogConfig', () => {
     ]);
   });
 
-  it('draws a viewer variant on its own pane and darker backdrop, whatever the size', () => {
-    const lightbox = dialogConfig({ labelledBy: 'skin-title', variant: 'lightbox', size: 'wide' });
-    const compact = dialogConfig({ labelledBy: 'chroma-title', variant: 'compact' });
+  it('draws a viewer on a pane of its own, over a darker backdrop', () => {
+    const lightbox = dialogConfig({ labelledBy: 'skin-title', size: 'lightbox' });
+    const compact = dialogConfig({ labelledBy: 'chroma-title', size: 'compact' });
 
     expect(lightbox).toMatchObject({
       backdropClass: ['hx-backdrop', 'hx-backdrop--lightbox'],

@@ -1,8 +1,8 @@
 /*
- * Viewer dialogs (ui/overlays/dialog-variant.ts): the skin lightbox and the chroma card. Unlike
- * a pane, the dialog draws its own surface, a frameless picture or a `hextech-frame` card, so
- * the pane holds only the width. The legacy viewers were no native dialogs: no size cap here,
- * and no slide-in, only the picture pops.
+ * Viewer dialogs, the `lightbox` and `compact` sizes of ui/overlays/dialog-size.ts: the skin
+ * lightbox and the chroma card. Unlike a pane, the dialog draws its own surface, a frameless
+ * picture or a `hextech-frame` card, so the pane holds only the width. The legacy viewers
+ * were no native dialogs: no size cap here, and no slide-in, only the picture pops.
  */
 @layer components {
   .hx-backdrop--lightbox {
