@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ApplicationRef, ChangeDetectionStrategy, Component } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { RELEASE_VERSION } from './release-version';
@@ -28,7 +28,10 @@ describe('Shell', () => {
   function configure(version: string | null): void {
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([]),
+        provideRouter([
+          { path: 'admin', data: { chrome: 'bare' }, children: [{ path: '**', children: [] }] },
+          { path: '**', children: [] },
+        ]),
         provideTransloco({
           config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
           loader: class {
@@ -103,6 +106,29 @@ describe('Shell', () => {
 
     expect(chip?.textContent?.trim()).toBe('v2.4.0');
     expect(chip?.getAttribute('href')).toBe('/fr/changelog');
+  });
+
+  it('renders a bare section with its page and toasts only, in the default identity', async () => {
+    document.cookie = 'lod_theme=noxus; path=/';
+    configure(null);
+    const host = await render();
+    const router = TestBed.inject(Router);
+
+    await router.navigateByUrl('/admin/users');
+    await TestBed.inject(ApplicationRef).whenStable();
+    const shell = host.querySelector('lodb-shell');
+    expect(Array.from(shell?.children ?? [], (child) => child.tagName)).toEqual([
+      'LODB-NAVIGATION-PROGRESS',
+      'MAIN',
+      'LODB-TOASTER',
+    ]);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('hextech');
+
+    await router.navigateByUrl('/en/champions');
+    await TestBed.inject(ApplicationRef).whenStable();
+    expect(shell?.querySelector('lodb-header')).not.toBeNull();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('noxus');
+    document.cookie = 'lod_theme=; path=/; max-age=0';
   });
 
   it('points every bottom bar destination under the page locale', async () => {

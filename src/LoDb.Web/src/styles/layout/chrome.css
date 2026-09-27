@@ -182,9 +182,9 @@
     filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-gold) 80%, transparent));
   }
 
-  /* The fixed bar needs breathing room at the end of every page. */
+  /* The fixed bar needs breathing room at the end of every page that shows it. */
   @media (width < 48rem) {
-    .hx-shell {
+    .hx-shell:not(.hx-shell--bare) {
       padding-block-end: calc(3.9rem + env(safe-area-inset-bottom));
     }
   }

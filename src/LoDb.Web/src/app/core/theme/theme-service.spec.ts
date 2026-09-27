@@ -73,6 +73,22 @@ describe('ThemeService', () => {
     expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
     expect(written).not.toHaveBeenCalled();
   });
+
+  it("pins an identity over the visitor's own, then gives theirs back", () => {
+    document.cookie = 'lod_theme=noxus; path=/';
+    const themes = service();
+    const written = vi.spyOn(document, 'cookie', 'set');
+
+    themes.pin('hextech');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('hextech');
+    expect(browserColor()).toBe('#010a13');
+    expect(themes.current()).toBe('noxus');
+
+    themes.unpin();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('noxus');
+    expect(browserColor()).toBe('#08090b');
+    expect(written).not.toHaveBeenCalled();
+  });
 });
 
 describe('themeCookieEntry', () => {

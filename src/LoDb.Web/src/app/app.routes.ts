@@ -156,8 +156,10 @@ export const routes: Routes = [
   // Outside the locales, outcomes and missing pages speak the default locale.
   { ...outcomeRoute, resolve: { locale: activateLocale, outcome: resolveOutcome } },
   { ...bareNotFound('b'), resolve: { locale: activateLocale, outcome: resolveOutcome } },
+  // The admin draws its own frame, in the default identity, without the site's chrome.
   {
     path: 'admin',
+    data: { chrome: 'bare' },
     loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
   {
