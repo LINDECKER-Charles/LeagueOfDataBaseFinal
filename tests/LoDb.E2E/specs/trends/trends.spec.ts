@@ -1,10 +1,15 @@
 import type { Page } from '@playwright/test';
 import { nodesOfType, readHead } from '../../support/head';
+import { hydrated } from '../../support/hydration';
 import { expect, test } from '../../support/worker-account';
 import { createBuild, voteSaved } from '../builds-share/builds';
 
+function filtersOf(page: Page) {
+  return page.locator('lodb-trend-filters');
+}
+
 function filter(page: Page, label: string) {
-  return page.locator('lodb-trend-filters').getByLabel(label);
+  return filtersOf(page).getByLabel(label);
 }
 
 // Locally the absolute URLs lose the stack's port (nginx forwards `Host: $host`), and the
@@ -36,7 +41,9 @@ test.describe('the trends, without an account', { tag: '@readonly' }, () => {
     page,
     consoleErrors,
   }) => {
+    // Before the app drives the form, the browser would send every field of it.
     await page.goto('/en/trends?page=2');
+    await hydrated(filtersOf(page));
     await filter(page, 'Game mode').selectOption('aram');
     await page.getByRole('button', { name: 'Filter' }).click();
 
@@ -45,6 +52,7 @@ test.describe('the trends, without an account', { tag: '@readonly' }, () => {
     await page.reload();
     await expect(filter(page, 'Game mode')).toHaveValue('aram');
 
+    await hydrated(filtersOf(page));
     await filter(page, 'Game mode').selectOption('');
     await page.getByRole('button', { name: 'Filter' }).click();
     await expect(page).toHaveURL(/\/en\/trends$/);
