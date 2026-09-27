@@ -36,7 +36,11 @@ test('forges, edits, imports and deletes a build', async ({ member: page, reques
   await test.step('lists no build yet, and leads to the forge on the latest patch', async () => {
     await page.goto(LIST);
     await expect(page.getByRole('heading', { name: 'My builds' })).toBeVisible();
-    await expect(page.getByText("You haven't forged any build yet.")).toBeVisible();
+    // The site's empty state, as the legacy list drew it: a way back and home, then the forge.
+    const empty = page.locator('lodb-my-builds .hextech-frame');
+    await expect(empty).toContainText("You haven't forged any build yet.");
+    await expect(empty.getByRole('button', { name: 'Back' })).toBeVisible();
+    await expect(empty.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/en/');
     await page.getByRole('link', { name: 'Forge my first build' }).click();
     await expect(page).toHaveURL(`${LIST}/new`);
     await expect(page.getByRole('heading', { name: 'Forge a build' })).toBeVisible();
