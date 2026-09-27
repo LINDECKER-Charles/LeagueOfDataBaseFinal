@@ -33,9 +33,14 @@ const ITEMS: Item[] = [
 const WHOLE: List = { entries: ITEMS, total: ITEMS.length };
 const FIRST: List = { entries: ITEMS.slice(0, 2), total: ITEMS.length };
 const SCHEMA = [facetOf({ key: 'tag', kind: 'choice', label: 'Tag', primary: true })];
+// A second group, folded by default: nothing in it is a main axis of the list.
+const WITH_KIND = [
+  ...SCHEMA,
+  facetOf({ key: 'kind', kind: 'choice', label: 'Kind', group: 'More' }),
+];
 const ADAPTER: CatalogueCardAdapter<Item> = {
   searchTextOf: (item) => item.name,
-  valuesOf: (item): CardValues => ({ tag: item.tags }),
+  valuesOf: (item): CardValues => ({ tag: item.tags, kind: item.tags }),
   keyOf: (item) => item.name,
 };
 const WINDOW_MS = 300;
@@ -57,6 +62,7 @@ function sourceOf(dataset: List | null, status: ListStatus = 'ready') {
 }
 
 let current = sourceOf(null).source;
+let currentSchema = SCHEMA;
 
 @Component({
   imports: [CatalogueList, CatalogueCardTemplate],
@@ -73,7 +79,7 @@ let current = sourceOf(null).source;
 class Host {
   readonly source = current;
   readonly adapter = ADAPTER;
-  readonly schema = SCHEMA;
+  readonly schema = currentSchema;
 }
 
 // A page under its own catalogue scope, which translates the label it hands the list.
@@ -95,6 +101,8 @@ class ScopedHost {
 }
 
 describe('lodb-catalogue-list', () => {
+  afterEach(() => (currentSchema = SCHEMA));
+
   async function render(
     url: string,
     source: CatalogueListSource<List>,
@@ -215,6 +223,20 @@ describe('lodb-catalogue-list', () => {
 
     const [search] = all(fixture, 'lodb-filter-console input[type=search]');
     expect(search?.getAttribute('placeholder')).toBe('Search for a feature');
+  });
+
+  it('keeps a group open when its last facet is cleared under the pointer', async () => {
+    currentSchema = WITH_KIND;
+    const fixture = await render('/en/items?kind=Vision', sourceOf(WHOLE).source);
+    const heading = () =>
+      all(fixture, 'lodb-filter-console lodb-facet-group button')
+        .find((button) => button.textContent?.includes('More'))
+        ?.getAttribute('aria-expanded');
+    expect(heading()).toBe('true');
+    all(fixture, '.active__chip')[0].click();
+    await fixture.whenStable();
+    expect(all(fixture, 'lodb-active-filters')).toHaveLength(0);
+    expect(heading()).toBe('true');
   });
 
   it('opens the facets in a bottom sheet on narrow screens', async () => {

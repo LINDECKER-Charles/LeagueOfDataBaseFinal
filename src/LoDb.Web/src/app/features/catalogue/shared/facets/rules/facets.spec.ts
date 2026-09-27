@@ -5,6 +5,7 @@ import { countEngaged } from './count-engaged';
 import { groupFacets } from './group-facets';
 import { isGroupOpenByDefault } from './is-group-open-by-default';
 import { matchesFacets } from './matches-facets';
+import { pinEngagedGroups } from './pin-engaged-groups';
 
 const SCHEMA = [
   facetOf({ key: 'tag', kind: 'choice', matchAll: true }),
@@ -101,5 +102,13 @@ describe('groupFacets', () => {
     expect(isGroupOpenByDefault(profile, {})).toBe(true);
     expect(isGroupOpenByDefault(stats, {})).toBe(false);
     expect(isGroupOpenByDefault(stats, { armor: { min: 20, max: 40 } })).toBe(true);
+  });
+
+  it('pins an engaged group open unless the reader folded it', () => {
+    const groups = groupFacets(grouped);
+    const engaged: FacetState = { armor: { min: 20, max: 40 } };
+    expect(pinEngagedGroups(groups, engaged, {})).toEqual({ Stats: true });
+    expect(pinEngagedGroups(groups, engaged, { Stats: false })).toBeNull();
+    expect(pinEngagedGroups(groups, {}, {})).toBeNull();
   });
 });
