@@ -100,14 +100,20 @@
 }
 
 [data-theme='spirit-blossom'] .filter-marker,
+[data-theme='spirit-blossom']
+  :is(lodb-filter-console, lodb-filter-sheet, lodb-active-filters)
+  .marker,
+[data-theme='spirit-blossom'] lodb-catalogue-list .empty__mark,
 [data-theme='spirit-blossom'] .cl-node::before,
+[data-theme='spirit-blossom'] lodb-changelog-page .node::before,
 [data-theme='spirit-blossom'] .slot-node i,
 [data-theme='spirit-blossom'] .ddragon-rich li::before {
   transform: none;
   rotate: 0deg;
   border-radius: 50%;
 }
-[data-theme='spirit-blossom'] .cl-node::before {
+[data-theme='spirit-blossom'] .cl-node::before,
+[data-theme='spirit-blossom'] lodb-changelog-page .node::before {
   box-shadow: 0 0 14px 1px color-mix(in srgb, var(--color-gold) 45%, transparent);
 }
 [data-theme='spirit-blossom'] .hx-pip {

@@ -114,14 +114,18 @@
 
 /* Rivets: markers that were small rotated squares are now seated studs. */
 [data-theme='zaun'] .filter-marker,
+[data-theme='zaun'] :is(lodb-filter-console, lodb-filter-sheet, lodb-active-filters) .marker,
+[data-theme='zaun'] lodb-catalogue-list .empty__mark,
 [data-theme='zaun'] .cl-node::before,
+[data-theme='zaun'] lodb-changelog-page .node::before,
 [data-theme='zaun'] .slot-node i,
 [data-theme='zaun'] .ddragon-rich li::before {
   transform: none;
   rotate: 0deg;
   border-radius: 50%;
 }
-[data-theme='zaun'] .cl-node::before {
+[data-theme='zaun'] .cl-node::before,
+[data-theme='zaun'] lodb-changelog-page .node::before {
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--color-gold-bright) 45%, transparent),
     0 0 10px -1px color-mix(in srgb, var(--color-gold) 70%, transparent);

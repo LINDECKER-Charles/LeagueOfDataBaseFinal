@@ -51,7 +51,8 @@
 
 /* ---- Secondary surfaces — the same bar, quieter --------------------------- */
 [data-theme='noxus'] .hx-plate,
-[data-theme='noxus'] .filter-console {
+[data-theme='noxus'] .filter-console,
+[data-theme='noxus'] lodb-filter-console .console {
   border-radius: 0;
   border-inline-start: 2px solid color-mix(in srgb, var(--color-hex-deep) 80%, transparent);
   background: linear-gradient(
@@ -66,6 +67,7 @@
    only strip the softness the other identities add, so a theme switch from Zaun
    leaves nothing rounded behind. */
 [data-theme='noxus'] .filter-empty,
+[data-theme='noxus'] lodb-catalogue-list :is(.notice, .empty),
 [data-theme='noxus'] .visibility-card,
 [data-theme='noxus'] .socket--empty,
 [data-theme='noxus'] .socket--unavailable,

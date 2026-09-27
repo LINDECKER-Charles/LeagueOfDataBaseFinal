@@ -95,7 +95,10 @@
 }
 
 [data-theme='noxus'] .filter-marker,
+[data-theme='noxus'] :is(lodb-filter-console, lodb-filter-sheet, lodb-active-filters) .marker,
+[data-theme='noxus'] lodb-catalogue-list .empty__mark,
 [data-theme='noxus'] .cl-node::before,
+[data-theme='noxus'] lodb-changelog-page .node::before,
 [data-theme='noxus'] .slot-node i,
 [data-theme='noxus'] .ddragon-rich li::before,
 [data-theme='noxus'] .hx-pip {
@@ -112,7 +115,8 @@
   font-size: 0;
   vertical-align: middle;
 }
-[data-theme='noxus'] .cl-node::before {
+[data-theme='noxus'] .cl-node::before,
+[data-theme='noxus'] lodb-changelog-page .node::before {
   box-shadow: none;
 }
 

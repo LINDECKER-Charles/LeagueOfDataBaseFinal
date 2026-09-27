@@ -24,9 +24,11 @@
   color: var(--color-hextech-black);
   background: var(--color-gold);
 }
+/* Its own weight: an identity sets its headings heavier, and this one reads as a label. */
 .title {
   font-family: var(--font-beaufort);
   font-size: 0.8rem;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   color: var(--color-text);

@@ -62,7 +62,8 @@
 
 /* ---- Secondary sheets ---------------------------------------------------- */
 [data-theme='spirit-blossom'] .hx-plate,
-[data-theme='spirit-blossom'] .filter-console {
+[data-theme='spirit-blossom'] .filter-console,
+[data-theme='spirit-blossom'] lodb-filter-console .console {
   border-radius: var(--sb-arch);
   border-color: transparent;
   background: linear-gradient(
@@ -77,6 +78,7 @@
 
 /* ---- Everything the bevel token used to shape ---------------------------- */
 [data-theme='spirit-blossom'] .filter-empty,
+[data-theme='spirit-blossom'] lodb-catalogue-list :is(.notice, .empty),
 [data-theme='spirit-blossom'] .visibility-card,
 [data-theme='spirit-blossom'] .socket--empty,
 [data-theme='spirit-blossom'] .socket--unavailable,

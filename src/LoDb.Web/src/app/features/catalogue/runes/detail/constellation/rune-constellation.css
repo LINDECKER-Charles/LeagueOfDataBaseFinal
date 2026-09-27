@@ -37,6 +37,8 @@
     background: var(--color-hextech-black);
     font-family: var(--font-beaufort);
     font-size: 0.72rem;
+    /* Its own weight: the heading around it takes an identity's heavier heading weight. */
+    font-weight: 400;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--path, var(--color-gold));
