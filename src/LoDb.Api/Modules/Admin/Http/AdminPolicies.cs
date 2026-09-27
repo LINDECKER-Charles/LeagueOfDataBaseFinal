@@ -26,7 +26,10 @@ internal static class AdminPolicies
             .RequireAuthenticatedUser()
             .RequireRole(Role.Admin)
             .Build();
-        services.AddAuthorizationBuilder().AddPolicy(Enrollment, enrollment);
+        // Options only: the authorization services come with the web host, and the command
+        // host, which has no endpoints, could not build them.
+        services.Configure<AuthorizationOptions>(
+            options => options.AddPolicy(Enrollment, enrollment));
         return services;
     }
 }
