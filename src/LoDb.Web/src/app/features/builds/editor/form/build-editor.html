@@ -1,4 +1,4 @@
-<form class="forge" novalidate (submit)="submit($event)">
+<form class="forge" (submit)="submit($event)">
   <header class="forge__head">
     <p class="eyebrow">{{ 'build.editor.eyebrow' | transloco }}</p>
     <h1 class="font-beaufort text-3xl font-bold tracking-wide text-gold-grad uppercase sm:text-4xl">
@@ -6,8 +6,6 @@
     </h1>
     <hr class="hx-rule mt-3" />
   </header>
-
-  <lodb-import-notices />
 
   <section class="hextech-frame hx-corners forge-section" aria-labelledby="forge-identity">
     <div class="codex-header">
@@ -24,7 +22,7 @@
         minlength="3"
         maxlength="80"
         autocomplete="off"
-        [value]="store.name()"
+        [value]="initialName"
         [placeholder]="'build.editor.name_placeholder' | transloco"
         (input)="store.name.set(name.value)"
       />
@@ -81,17 +79,6 @@
     </div>
     <lodb-step-editor />
   </section>
-
-  @if (saver.messages().length > 0) {
-    <div class="forge-errors" role="alert">
-      <p class="forge-errors__title">{{ 'buildsEditor.editor.errors_title' | transloco }}</p>
-      <ul>
-        @for (message of saver.messages(); track message.key) {
-          <li>{{ message.key | transloco: message.params }}</li>
-        }
-      </ul>
-    </div>
-  }
 
   <footer class="forge__foot">
     <a lodbButton="ghost" [routerLink]="listLink">{{ 'build.editor.back' | transloco }}</a>

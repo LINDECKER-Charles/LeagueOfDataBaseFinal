@@ -1,6 +1,6 @@
 /*
  * The build editor: a column of Hextech sections, the identity first and the purchase
- * order last, then the refusals of the API and the save.
+ * order last, then the save. The API's refusals are toasts, as the legacy flashes were.
  */
 @layer components {
   .forge {
@@ -48,25 +48,6 @@
     font-size: 0.875rem;
     color: var(--color-text-muted);
     cursor: pointer;
-  }
-
-  .forge-errors {
-    border: 1px solid color-mix(in srgb, var(--color-danger) 55%, transparent);
-    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
-    padding: 0.9rem 1.1rem;
-    font-size: 0.9rem;
-    color: var(--color-text);
-  }
-  .forge-errors__title {
-    margin-block-end: 0.4rem;
-    font-family: var(--font-beaufort);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-danger-light);
-  }
-  .forge-errors ul {
-    padding-inline-start: 1.1rem;
-    list-style: disc;
   }
 
   .forge__foot {

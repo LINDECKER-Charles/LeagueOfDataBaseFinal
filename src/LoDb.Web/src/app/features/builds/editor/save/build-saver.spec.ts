@@ -93,19 +93,22 @@ describe('BuildSaver', () => {
     expect(show).toHaveBeenCalledExactlyOnceWith('success', 'build.flash.updated');
   });
 
-  it('keeps the form on a refusal, with the messages of the API', async () => {
-    const { saver, http, navigateByUrl } = setUp();
+  it('keeps the form on a refusal, each message of the API a toast', async () => {
+    const { saver, http, navigateByUrl, show } = setUp();
 
     const saving = saver.save();
     http
       .expectOne(`${API}/api/builds?lang=en_US`)
       .flush(
-        { code: 'validation-failed', errors: { name: ['name.length'] } },
+        { code: 'validation-failed', errors: { name: ['name.length'], steps: ['steps.label'] } },
         { status: 400, statusText: 'Bad Request' },
       );
     await saving;
 
-    expect(saver.messages()).toEqual([{ key: 'build.error.name.length' }]);
+    expect(show.mock.calls).toEqual([
+      ['error', 'build.error.name.length'],
+      ['error', 'build.error.steps.label'],
+    ]);
     expect(saver.saving()).toBe(false);
     expect(navigateByUrl).not.toHaveBeenCalled();
   });
