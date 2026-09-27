@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { languageName } from '../../../../core/api/meta/language-name';
 import { Field } from '../../../../ui/controls/field';
 import { BuildEditorStore } from '../form/build-editor-store';
 import { EDITOR_ENTRY } from '../form/editor-entry-token';
-import { languageLabel } from './language-label';
 import { versionChoices } from './version-choices';
 
 /**
@@ -60,7 +60,7 @@ export class EditorContext {
   protected readonly modes = this.entry.gameModes;
   protected readonly languages = this.entry.languages.map((code) => ({
     code,
-    label: languageLabel(code),
+    label: languageName(code),
   }));
   protected readonly versions = versionChoices(this.entry.versions, this.entry.draft.gameVersion);
 

@@ -10,13 +10,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { SharedBuild } from '../../../core/api/generated/models/shared-build';
 import { BuildsService } from '../../../core/api/generated/services/builds.service';
+import { languageName } from '../../../core/api/meta/language-name';
 import { injectRouteData } from '../../../core/routing/inject-route-data';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
 import { Chip } from '../../../ui/controls/chip';
 import { Image } from '../../../ui/media/image';
 import { Backdrop } from '../../../ui/surfaces/backdrop';
 import { shortDate } from '../shared/format/short-date';
-import { languageLabel } from '../shared/language/language-label';
 import { imageSource } from '../shared/media/image-source';
 import { initialsOf } from '../shared/media/initials-of';
 import { modeLabelKey } from '../shared/modes/mode-label-key';
@@ -69,7 +69,7 @@ export class SharePage {
   protected readonly initials = computed(() => initialsOf(this.build().champion.name));
   protected readonly modeKey = computed(() => modeLabelKey(this.build().gameMode));
   protected readonly updated = computed(() => shortDate(this.build().updatedAt));
-  protected readonly language = computed(() => languageLabel(this.build().language));
+  protected readonly language = computed(() => languageName(this.build().language));
   protected readonly languageTag = computed(() => this.build().language.replace('_', '-'));
   protected readonly link = computed(() => `${this.origin}/b/${this.build().shareToken}`);
 

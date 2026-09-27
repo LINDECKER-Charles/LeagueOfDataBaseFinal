@@ -5,9 +5,9 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import type { ChampionOption } from '../../../../core/api/generated/models/champion-option';
 import type { GameMode } from '../../../../core/api/generated/models/game-mode';
 import type { TrendsFilter } from '../../../../core/api/generated/models/trends-filter';
+import { languageName } from '../../../../core/api/meta/language-name';
 import { Button } from '../../../../ui/controls/button';
 import { Field } from '../../../../ui/controls/field';
-import { languageLabel } from '../../shared/language/language-label';
 import { modeLabelKey } from '../../shared/modes/mode-label-key';
 import { filterParamsOf } from './trends-params';
 
@@ -45,7 +45,7 @@ export class TrendFilters {
     this.modes().map((mode) => ({ mode, key: modeLabelKey(mode) })),
   );
   protected readonly languageOptions = computed(() =>
-    this.languages().map((code) => ({ code, label: languageLabel(code) })),
+    this.languages().map((code) => ({ code, label: languageName(code) })),
   );
   protected readonly context = computed(() =>
     CONTEXT_PARAMS.flatMap((name) => {

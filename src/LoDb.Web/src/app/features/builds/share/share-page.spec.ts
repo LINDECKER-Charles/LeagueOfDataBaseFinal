@@ -109,7 +109,7 @@ describe('SharePage', () => {
     expect(textOf(host, '[data-mode]')).toBe('ARAM');
     expect(host.querySelector('[data-mode]')?.getAttribute('title')).toBe('Mode de jeu');
     expect(textOf(host, '[data-version]')).toBe('Forgé sur le patch 15.14.1 — actuel : 16.19.1');
-    expect(host.querySelector('[lang="fr-FR"]')).not.toBeNull();
+    expect(textOf(host, '[lang="fr-FR"]')).toBe('French');
   });
 
   it('names the patch alone when it is the current one', async () => {

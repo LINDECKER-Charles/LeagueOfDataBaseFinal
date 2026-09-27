@@ -1,4 +1,3 @@
-import { languageLabel } from './language-label';
 import { versionChoices } from './version-choices';
 
 describe('versionChoices', () => {
@@ -14,15 +13,5 @@ describe('versionChoices', () => {
 
   it('adds nothing for a build pinned to no patch yet', () => {
     expect(versionChoices(versions, '')).toBe(versions);
-  });
-});
-
-describe('languageLabel', () => {
-  it('names a language in itself', () => {
-    expect(languageLabel('fr_FR')).toBe('Français (France)');
-  });
-
-  it('falls back to the code when Intl cannot name it', () => {
-    expect(languageLabel('not a language')).toBe('not a language');
   });
 });
