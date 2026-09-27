@@ -145,7 +145,6 @@
     justify-content: center;
     gap: 0.25rem;
     min-block-size: 3.9rem;
-    min-inline-size: 0;
     padding: 0.45rem 0.25rem;
     color: var(--color-text-muted);
     transition: color 0.25s var(--ease-hextech);
@@ -158,16 +157,22 @@
     inline-size: 1.35rem;
     block-size: 1.35rem;
   }
-  /* Six labels share 320px: a long translation is clipped rather than widening the bar. */
+  /*
+   * Every label is read whole: a column grows to fit its label (the `1fr` columns keep their
+   * min-content width) and the others give it room. Under 360px the tracking tightens so
+   * that the six labels still fit 320px in every locale.
+   */
   .bottom-nav span {
-    max-inline-size: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
     font-family: var(--font-beaufort);
     font-size: 0.58rem;
     text-transform: uppercase;
     letter-spacing: 0.14em;
     white-space: nowrap;
+  }
+  @media (width < 22.5rem) {
+    .bottom-nav span {
+      letter-spacing: 0.08em;
+    }
   }
   .bottom-nav a[aria-current] {
     color: var(--color-gold-bright);
