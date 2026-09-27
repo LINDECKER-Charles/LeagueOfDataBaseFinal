@@ -1,5 +1,6 @@
 import {
   HttpErrorResponse,
+  HttpHeaders,
   type HttpInterceptorFn,
   HttpResponse,
   HttpStatusCode,
@@ -7,13 +8,24 @@ import {
   withInterceptors,
 } from '@angular/common/http';
 import { provideLocationMocks } from '@angular/common/testing';
-import { Component, RESPONSE_INIT } from '@angular/core';
+import {
+  Component,
+  Injector,
+  PLATFORM_ID,
+  RESPONSE_INIT,
+  TransferState,
+  runInInjectionContext,
+  signal,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, withRouterConfig } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
 import type { CatalogMeta } from '../../../core/api/generated/models/catalog-meta';
 import type { HomeData } from '../data/home-data';
+import type { HomeSection } from '../data/home-section';
+import { injectRefreshedSections } from './inject-refreshed-sections';
+import { injectRetryTransfer } from './inject-retry-transfer';
 import { resolveHome } from './resolve-home';
 
 @Component({ template: '' })
@@ -62,7 +74,13 @@ const RUNES = {
 const SUMMONERS = {
   total: 18,
   entries: [
-    { canonicalPath: 'summoners/SummonerFlash', id: 'SummonerFlash', name: 'Flash', image: IMAGE },
+    {
+      canonicalPath: 'summoners/SummonerBarrier_Jade',
+      id: 'SummonerBarrier_Jade',
+      name: 'Barrier',
+      image: IMAGE,
+      edition: 'classic',
+    },
   ],
 };
 const LISTS: Record<string, unknown> = {
@@ -74,33 +92,50 @@ const LISTS: Record<string, unknown> = {
 const LIST_PATH = /^\/api\/catalog\/[^/]+\/[^/]+\/(\w+)\?page=1&size=4$/;
 
 // The simulated API: /api/meta, then every list but the failing ones.
-function simulatedApi(
-  meta: CatalogMeta,
-  failing: string[],
-  requested: string[],
-): HttpInterceptorFn {
+interface Options {
+  readonly meta?: CatalogMeta;
+  readonly failing?: string[];
+  /** `Retry-After` of the lists whose version still fetches images, by resource. */
+  readonly retryAfter?: Readonly<Record<string, string>>;
+  /** Lists whose previewed images are still pending. */
+  readonly pending?: string[];
+}
+
+// A list whose images are all pending, as a cold version answers before its art is stored.
+function withPendingImages(body: unknown): unknown {
+  const list = body as { entries: object[]; trees?: object[] };
+  const pending = (entries: object[]) =>
+    entries.map((one) => ({ ...one, image: { status: 'pending' } }));
+  return { ...list, entries: pending(list.entries), trees: list.trees && pending(list.trees) };
+}
+
+// A list as the API answers it, pending images and `Retry-After` included when asked.
+function answerOf(options: Options, url: string, body: unknown) {
+  const resource = LIST_PATH.exec(url)?.[1] ?? '';
+  const delay = options.retryAfter?.[resource];
+  const headers = new HttpHeaders(delay === undefined ? {} : { 'Retry-After': delay });
+  const answer = options.pending?.includes(resource) ? withPendingImages(body) : body;
+  return new HttpResponse({ status: HttpStatusCode.Ok, url, body: answer, headers });
+}
+
+function simulatedApi(options: Options, requested: string[]): HttpInterceptorFn {
   return (request) => {
     const url = request.urlWithParams;
     requested.push(url);
     const resource = LIST_PATH.exec(url)?.[1] ?? '';
-    const body = url === '/api/meta' ? meta : LISTS[resource];
-    if (body === undefined || failing.includes(resource)) {
+    const body = url === '/api/meta' ? (options.meta ?? META) : LISTS[resource];
+    if (body === undefined || (options.failing ?? []).includes(resource)) {
       const status = HttpStatusCode.InternalServerError;
       return throwError(() => new HttpErrorResponse({ status, url }));
     }
-    return of(new HttpResponse({ status: HttpStatusCode.Ok, url, body }));
+    return of(answerOf(options, url, body));
   };
-}
-
-interface Options {
-  readonly meta?: CatalogMeta;
-  readonly failing?: string[];
 }
 
 async function visit(url: string, options: Options = {}) {
   const init: ResponseInit = { status: HttpStatusCode.Ok, headers: new Headers() };
   const requested: string[] = [];
-  const api = simulatedApi(options.meta ?? META, options.failing ?? [], requested);
+  const api = simulatedApi(options, requested);
   TestBed.configureTestingModule({
     providers: [
       provideRouter(
@@ -152,11 +187,15 @@ describe('resolveHome', () => {
         link: { path: '/fr/champions/Aatrox', query: {} },
         name: 'Aatrox',
         caption: 'the Darkin Blade',
-        image: '/cdn/blobs/abc.png',
+        image: IMAGE,
+        edition: 'modern',
       },
     ]);
     expect(home.sections.items.cards[0]?.caption).toBe('id 1001');
-    expect(home.sections.summoners.cards[0]?.caption).toBe('SummonerFlash');
+    expect(home.sections.summoners.cards[0]).toMatchObject({
+      caption: 'SummonerBarrier_Jade',
+      edition: 'classic',
+    });
   });
 
   it('follows ?version= and ?lang=, and carries them into every link', async () => {
@@ -182,7 +221,7 @@ describe('resolveHome', () => {
       'Path 8200',
       'Path 8300',
     ]);
-    expect(home.sections.runes.cards[0]?.image).toBeNull();
+    expect(home.sections.runes.cards[0]?.image).toEqual({ status: 'placeholder' });
   });
 
   it('empties the section of a list out of reach, the others still filled', async () => {
@@ -210,5 +249,75 @@ describe('resolveHome', () => {
       cards: [],
     });
     expect(requested).toEqual(['/api/meta']);
+  });
+
+  it('keeps a home whose images are on their way out of shared caches', async () => {
+    const retryAfter = { champions: '9', items: '5', runes: '2' };
+    const { home, cache } = await visit('/en', { retryAfter, pending: ['items', 'runes'] });
+
+    // The champions list asks too, but its preview shows no pending image.
+    expect(home.retryAfterMs).toBe(5000);
+    expect(cache).toBe('public, max-age=0, s-maxage=60');
+  });
+
+  it('reads a list asking for a retry as settled when its preview shows no pending image', async () => {
+    const { home, cache } = await visit('/fr', { retryAfter: { items: '5' } });
+
+    expect(home.retryAfterMs).toBeNull();
+    expect(cache).toBe('public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
+  });
+});
+
+describe('injectRefreshedSections', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('reads pending previews once more, after the delay the API asked for', async () => {
+    vi.useFakeTimers();
+    const requested: string[] = [];
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([simulatedApi({}, requested)])),
+        { provide: API_BASE_URL, useValue: '' },
+      ],
+    });
+    const context = { locale: 'en', version: LATEST, pinned: false, language: 'en_US' } as const;
+    const stale: HomeSection = {
+      resource: 'items',
+      list: { path: '/en/items', query: {} },
+      total: 0,
+      cards: [],
+    };
+    const sections = { champions: stale, items: stale, runes: stale, summoners: stale } as const;
+    const data = signal<HomeData>({ context, sections, retryAfterMs: 5000 });
+    const refreshed = TestBed.runInInjectionContext(() => injectRefreshedSections(data));
+    TestBed.tick();
+
+    expect(refreshed().items.cards).toEqual([]);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(refreshed().items.cards.map((card) => card.name)).toEqual(['Boots']);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(requested.filter((url) => url.includes('/items?'))).toHaveLength(1);
+  });
+});
+
+describe('injectRetryTransfer', () => {
+  it('hands the delay the server read to the first browser read that lacks one', () => {
+    const state = new TransferState();
+    const on = (platform: string) =>
+      runInInjectionContext(
+        Injector.create({
+          providers: [
+            { provide: PLATFORM_ID, useValue: platform },
+            { provide: TransferState, useValue: state },
+          ],
+        }),
+        injectRetryTransfer,
+      );
+
+    expect(on('server')(5000)).toBe(5000);
+    const inBrowser = on('browser');
+    expect(inBrowser(null)).toBe(5000);
+    expect(inBrowser(null)).toBeNull();
+    expect(inBrowser(2000)).toBe(2000);
   });
 });

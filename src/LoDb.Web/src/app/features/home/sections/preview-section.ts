@@ -1,17 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Router, RouterLink, type UrlTree } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { EntityCard } from '../../../ui/cards/entity-card';
 import { Image } from '../../../ui/media/image';
 import { Frame } from '../../../ui/surfaces/frame';
+import type { HomeLink } from '../data/home-link';
 import type { HomeSection } from '../data/home-section';
 import type { CardLook } from './card-look';
 import { RESOURCE_TEXTS } from './resource-texts';
 import { SeeAllArrow } from './see-all-arrow';
 
-// Pixel boxes reserved before the bytes arrive: Data Dragon's square icons are 120px wide,
-// its item, spell and rune marks 64px.
+// Pixel box reserved before the bytes arrive: Data Dragon's square icons are 120px wide.
 const PORTRAIT_SIZE = 120;
-const TILE_SIZE = 64;
 const INITIALS_LENGTH = 2;
 
 /**
@@ -20,7 +20,7 @@ const INITIALS_LENGTH = 2;
  */
 @Component({
   selector: 'lodb-preview-section',
-  imports: [Frame, Image, RouterLink, SeeAllArrow, TranslocoPipe],
+  imports: [EntityCard, Frame, Image, RouterLink, SeeAllArrow, TranslocoPipe],
   templateUrl: './preview-section.html',
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,9 +31,17 @@ export class PreviewSection {
 
   protected readonly texts = computed(() => RESOURCE_TEXTS[this.section().resource]);
   protected readonly portraitSize = PORTRAIT_SIZE;
-  protected readonly tileSize = TILE_SIZE;
+  private readonly router = inject(Router);
 
   protected initialsOf(name: string): string {
     return name.slice(0, INITIALS_LENGTH).toUpperCase();
+  }
+
+  /**
+   * A card's page as a UrlTree, the shape lodb-entity-card links with: a string would reach
+   * the router with its `?lang=` escaped.
+   */
+  protected hrefOf(link: HomeLink): UrlTree {
+    return this.router.createUrlTree([link.path], { queryParams: link.query });
   }
 }

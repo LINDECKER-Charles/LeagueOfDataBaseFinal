@@ -1,8 +1,8 @@
 import { type Observable, of } from 'rxjs';
+import { retryAfterOf } from '../../../../core/http/retry-after-of';
 import { PAGE_SIZE_ALL } from '../filtering/grid/page-size-all';
 import type { ListOutcome } from './list-outcome';
 import { pageRequestOf } from './page-request-of';
-import { retryAfterOf } from './retry-after-of';
 import { withOneRetry } from './with-one-retry';
 
 describe('retryAfterOf', () => {

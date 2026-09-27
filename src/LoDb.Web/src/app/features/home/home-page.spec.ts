@@ -43,7 +43,8 @@ function sectionOf(locale: string, resource: ResourceType, filled: boolean): Hom
     link: { path: `/${locale}/${resource}/first`, query: {} },
     name: `First of ${resource}`,
     caption: 'caption',
-    image: null,
+    image: { status: 'absent' as const },
+    edition: 'modern' as const,
   };
   return {
     resource,
@@ -65,6 +66,7 @@ function homeOf(route: ActivatedRouteSnapshot): HomeData {
       runes: section('runes'),
       summoners: section('summoners'),
     },
+    retryAfterMs: null,
   };
 }
 

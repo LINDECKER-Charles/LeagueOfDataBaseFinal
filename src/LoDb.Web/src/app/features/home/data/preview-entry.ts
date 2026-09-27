@@ -1,4 +1,5 @@
 import type { CatalogImage } from '../../../core/api/generated/models/catalog-image';
+import type { Edition } from '../../../core/api/generated/models/edition';
 
 /** One entry of a preview, as the list endpoint gives it. */
 export interface PreviewEntry {
@@ -8,4 +9,6 @@ export interface PreviewEntry {
   /** The line under the name: a champion's title, an item's id, a rune path's key. */
   readonly caption: string;
   readonly image: CatalogImage;
+  /** Items and spells have LoL Classic twins, which the card marks. */
+  readonly edition: Edition;
 }
