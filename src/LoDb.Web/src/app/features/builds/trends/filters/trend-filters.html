@@ -8,7 +8,11 @@
     <select lodbField name="champion">
       <option value="">{{ 'community.trends.filter.all_champions' | transloco }}</option>
       @for (option of champions(); track option.id) {
-        <option [value]="option.id" [selected]="applied.champion === option.id">
+        <option
+          [value]="option.id"
+          [selected]="applied.champion === option.id"
+          [attr.selected]="applied.champion === option.id ? '' : null"
+        >
           {{ option.name }}
         </option>
       }
@@ -19,7 +23,11 @@
     <select lodbField name="mode">
       <option value="">{{ 'community.trends.filter.all_modes' | transloco }}</option>
       @for (option of modeOptions(); track option.mode) {
-        <option [value]="option.mode" [selected]="applied.mode === option.mode">
+        <option
+          [value]="option.mode"
+          [selected]="applied.mode === option.mode"
+          [attr.selected]="applied.mode === option.mode ? '' : null"
+        >
           {{ option.key | transloco }}
         </option>
       }
@@ -30,7 +38,11 @@
     <select lodbField name="language">
       <option value="">{{ 'community.trends.filter.all_languages' | transloco }}</option>
       @for (option of languageOptions(); track option.code) {
-        <option [value]="option.code" [selected]="applied.language === option.code">
+        <option
+          [value]="option.code"
+          [selected]="applied.language === option.code"
+          [attr.selected]="applied.language === option.code ? '' : null"
+        >
           {{ option.label }}
         </option>
       }
