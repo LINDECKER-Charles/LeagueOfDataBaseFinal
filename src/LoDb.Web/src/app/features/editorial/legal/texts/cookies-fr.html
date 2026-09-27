@@ -43,10 +43,13 @@
             version/langue)
           </td>
           <td>
-            Mémorise la langue et la version Data Dragon choisies entre deux visites. Contenu signé
-            (intégrité) — Secure, HttpOnly, SameSite=Lax
+            Mémorise la langue du site, la langue et la version Data Dragon choisies entre deux
+            visites ; le serveur lit la langue du site pour ouvrir l'accueil (/) dans celle-ci.
+            Contenu non signé, lisible par les scripts du site — SameSite=Lax, Secure en HTTPS. Sans
+            la case cochée, le choix ne vaut que pour la session de navigation, dans le stockage de
+            session du navigateur, pas dans un cookie
           </td>
-          <td>7 jours</td>
+          <td>1 an</td>
         </tr>
         <tr>
           <td><strong>REMEMBERME</strong></td>
