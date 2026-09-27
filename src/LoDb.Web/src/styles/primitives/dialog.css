@@ -58,11 +58,13 @@
     gap: 1rem;
     margin-block-end: 1.1rem;
   }
+  /* A 44px target that lays out at the legacy 2rem: the head keeps the height of its title. */
   .hx-dialog-panel__close {
     display: grid;
     place-items: center;
     inline-size: 2.75rem;
     block-size: 2.75rem;
+    margin-block: -0.375rem;
     margin-inline-end: -0.6rem;
     border: 0;
     background: transparent;
