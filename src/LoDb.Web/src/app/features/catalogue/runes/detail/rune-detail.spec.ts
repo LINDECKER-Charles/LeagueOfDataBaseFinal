@@ -139,4 +139,19 @@ describe('lodb-rune-detail', () => {
     expect(element.querySelector('lodb-rune-constellation')).toBeNull();
     expect(element.textContent).toContain('runes.empty');
   });
+
+  it('marks a path without art by its initials, and leaves a rune without art unmarked', async () => {
+    const absent: CatalogImage = { status: 'absent' };
+    const slots = DETAILS.slots.map((slot) => ({
+      ...slot,
+      runes: slot.runes.map((rune) => ({ ...rune, image: absent })),
+    }));
+    const profile = { ...DETAILS.profile, image: absent };
+    const { element } = await render({ ...ENTRY, details: { ...DETAILS, profile, slots } });
+
+    expect(element.querySelector('header .path-emblem')?.textContent?.trim()).toBe('DO');
+    expect(element.querySelector('lodb-rune-constellation lodb-catalogue-image')).toBeNull();
+    expect(element.querySelector('#rune-Electrocute .keystone__icon')?.textContent).toBe('');
+    expect(element.querySelector('#rune-CheapShot .rune-medallion')?.textContent).toBe('');
+  });
 });

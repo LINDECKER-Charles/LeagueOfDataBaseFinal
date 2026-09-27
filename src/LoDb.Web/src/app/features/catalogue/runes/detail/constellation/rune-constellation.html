@@ -9,12 +9,17 @@
     <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
       @for (rune of stars.keystones; track rune.id) {
         <article [id]="rune.anchor" lodbFrame class="path-border flex gap-5 p-6">
-          <lodb-catalogue-image
-            class="keystone__icon"
-            [image]="rune.image"
-            [name]="rune.name"
-            [size]="keystoneIconSize"
-          />
+          <!-- An icon Data Dragon never shipped (.dds era) leaves the tinted circle empty. -->
+          @if (rune.image.status === 'absent') {
+            <span class="keystone__icon shrink-0" aria-hidden="true"></span>
+          } @else {
+            <lodb-catalogue-image
+              class="keystone__icon"
+              [image]="rune.image"
+              [name]="rune.name"
+              [size]="keystoneIconSize"
+            />
+          }
           <div class="min-w-0 flex-1">
             <h3 class="mb-3 font-beaufort text-lg tracking-wide text-gold-bright uppercase">
               {{ rune.name }}
@@ -42,12 +47,16 @@
       @for (rune of row.runes; track rune.id) {
         <article [id]="rune.anchor" lodbFrame="interactive" class="group flex flex-col p-5">
           <div class="flex items-center gap-3.5">
-            <lodb-catalogue-image
-              class="rune-medallion"
-              [image]="rune.image"
-              [name]="rune.name"
-              [size]="medallionSize"
-            />
+            @if (rune.image.status === 'absent') {
+              <span class="rune-medallion shrink-0" aria-hidden="true"></span>
+            } @else {
+              <lodb-catalogue-image
+                class="rune-medallion"
+                [image]="rune.image"
+                [name]="rune.name"
+                [size]="medallionSize"
+              />
+            }
             <h3 class="min-w-0 font-beaufort text-[15px] leading-snug tracking-wide text-text">
               {{ rune.name }}
             </h3>

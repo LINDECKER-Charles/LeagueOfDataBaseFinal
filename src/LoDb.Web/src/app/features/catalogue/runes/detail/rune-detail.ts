@@ -15,6 +15,7 @@ import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
 import { CatalogueImage } from '../../shared/cards/catalogue-image';
+import { initialsOf } from '../../shared/cards/initials-of';
 import { pathThemeOf } from '../paths/path-theme-of';
 import { injectAnchorOffset } from './anchor/inject-anchor-offset';
 import { constellationOf } from './constellation/constellation-of';
@@ -42,6 +43,8 @@ export class RuneDetail {
   protected readonly entry = injectRouteData<CatalogueEntry<RuneTreeDetails>>('entry');
   protected readonly hero = HERO_STYLES;
   protected readonly emblemSize = EMBLEM_SIZE;
+  /** A path without art is marked by its initials, large and in its colour, as the legacy was. */
+  protected readonly initials = initialsOf;
   protected readonly theme = computed(() => pathThemeOf(this.entry().details.profile.key));
   protected readonly constellation = computed(() => constellationOf(this.entry().details));
   protected readonly pager = injectPathPager(() => ({
