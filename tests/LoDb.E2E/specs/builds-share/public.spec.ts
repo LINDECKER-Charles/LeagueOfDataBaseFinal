@@ -3,7 +3,8 @@ import { readHead, typesOf } from '../../support/head';
 import { expect, test } from '../../support/worker-account';
 import { createBuild, voteSaved } from './builds';
 
-// The build speaks French, whatever the visitor's browser or `?lang=` asks for.
+// The build is written in French: its page speaks it, unless `?lang=` names another language,
+// the one the visitor picked in the switcher (as the legacy session did).
 const LANGUAGE = 'fr_FR';
 
 async function newVisitor(browser: Browser, baseURL: string | undefined, javaScriptEnabled = true) {
@@ -49,13 +50,13 @@ test('shares a public build, unlisted, in its own language, with its score', asy
     await crawler.context().close();
   });
 
-  await test.step('speaks the build’s language, even when ?lang= names others', async () => {
+  await test.step('speaks the language ?lang= names, the build’s own without one', async () => {
     await page.goto(`${path}?lang=en_US`);
-    await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.locator('.bshare-head h1')).toHaveText('Shared scroll');
     await expect(page.locator('[data-mode]')).toHaveText('ARAM');
     await expect(page.locator('[data-version]')).toContainText(build.gameVersion);
-    await expect(page.locator('.bshare-head')).toContainText(`Par ${account.username}`);
+    await expect(page.locator('.bshare-head')).toContainText(`By ${account.username}`);
     await expect(page.locator('.bsteps-node .bshare-item')).toHaveCount(2);
   });
 
