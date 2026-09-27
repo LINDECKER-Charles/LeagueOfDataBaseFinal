@@ -1,15 +1,22 @@
 name: next deploy
 
-# Manual deployment of the `next` environment (stack lodb-next) over SSH, with the same
-# mechanics as the legacy _deploy.yml: the host checks the branch out for its compose files,
-# receives its .env from a secret, then pulls the images pushed by next-build.yml (tag
-# IMAGE_TAG of ENV_NEXT, normally `next`). Nothing is built on the host.
+# Deployment of the new stack over SSH, with the mechanics of the legacy _deploy.yml: the
+# host checks the branch out for its compose files, receives its .env and its Data
+# Protection certificate from secrets, then pulls images that next-build.yml built once.
+# Nothing is built on the host.
 #
-# Order: pull, migrations in an ephemeral container (service `migrate`, from L1.4) BEFORE
-# `up -d`, so new code never serves an old schema; then a smoke test.
+# - next: run by hand (workflow_dispatch), images :next, project lodb-next.
+# - prod: called by next-promote.yml only. The job runs in the environment `production`,
+#   whose approval gates it; it first retags the images of the chosen commit as :next-prod
+#   (promote by retag, no rebuild), then deploys them as project lodb-next-prod.
 #
-# Secrets (docs/guides/github-actions-secrets.md, section "Nouvelle stack"):
-# NEXT_SSH_KEY, NEXT_HOST, NEXT_PATH, NEXT_SSH_USER (optional, root), ENV_NEXT.
+# Order (heritage.md F3, ADR 0010): pull, migrations in the ephemeral `migrate` container
+# (a Doctrine database is marked at the baseline first), then `up -d`, then smoke tests. A
+# failed migration stops the job while the running containers keep serving.
+#
+# Secrets (docs/guides/github-actions-secrets.md, section "Nouvelle stack"), prefix NEXT
+# for next and PROD_NEXT for prod: <prefix>_SSH_KEY, <prefix>_HOST, <prefix>_PATH,
+# <prefix>_SSH_USER (optional, root), ENV_<prefix>, <prefix>_DATA_PROTECTION_PFX.
 on:
   workflow_dispatch:
     inputs:
@@ -18,64 +25,186 @@ on:
         required: true
         type: string
         default: docs/reecriture-dotnet-angular
+  workflow_call:
+    inputs:
+      environment:
+        description: Target environment, next or production.
+        required: true
+        type: string
+      branch:
+        description: Branch the host checks out for its compose files.
+        required: true
+        type: string
+      revision:
+        description: Full commit SHA whose images become :next-prod (production only).
+        required: false
+        type: string
+        default: ''
+      take_over_domains:
+        description: Stop the containers of other projects that claim this stack's domains.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
-# Two deployments of the same host never overlap; a queued one waits for the running one.
-concurrency:
-  group: next-deploy
-  cancel-in-progress: false
-
 jobs:
-  deploy:
+  # Everything that depends on the target, settled before any approval or connection.
+  target:
     runs-on: ubuntu-latest
-    environment: next
-    env:
-      SSH_TARGET: ${{ secrets.NEXT_SSH_USER || 'root' }}@${{ secrets.NEXT_HOST }}
-      NEXT_HOST: ${{ secrets.NEXT_HOST }}
-      NEXT_PATH: ${{ secrets.NEXT_PATH }}
-      BRANCH: ${{ inputs.branch }}
-      REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+    outputs:
+      environment: ${{ steps.resolve.outputs.environment }}
+      secret_prefix: ${{ steps.resolve.outputs.secret_prefix }}
+      project: ${{ steps.resolve.outputs.project }}
+      image_tag: ${{ steps.resolve.outputs.image_tag }}
+      noindex: ${{ steps.resolve.outputs.noindex }}
     steps:
-      # The input reaches a remote shell: only plain branch names go through.
-      - name: Validate the branch name
+      - name: Resolve the target and validate the inputs
+        id: resolve
+        env:
+          ENVIRONMENT: ${{ inputs.environment || 'next' }}
+          BRANCH: ${{ inputs.branch }}
+          REVISION: ${{ inputs.revision }}
+          TAKE_OVER: ${{ inputs.take_over_domains || false }}
         run: |
+          # The inputs reach a remote shell: only plain names go through.
           if [[ ! "$BRANCH" =~ ^[A-Za-z0-9._/-]+$ ]]; then
             echo "Invalid branch name: $BRANCH" >&2
             exit 1
           fi
+          case "$ENVIRONMENT" in
+            next)
+              if [ -n "$REVISION" ] || [ "$TAKE_OVER" = true ]; then
+                echo "next deploys :next as it is: no revision, no take-over." >&2
+                exit 1
+              fi
+              printf '%s\n' secret_prefix=NEXT project=lodb-next image_tag=next noindex=1 \
+                >> "$GITHUB_OUTPUT"
+              ;;
+            production)
+              if [[ ! "$REVISION" =~ ^[0-9a-f]{40}$ ]]; then
+                echo "production needs the full commit SHA to promote, got '$REVISION'." >&2
+                exit 1
+              fi
+              printf '%s\n' secret_prefix=PROD_NEXT project=lodb-next-prod \
+                image_tag=next-prod noindex=0 >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unknown environment: $ENVIRONMENT (next or production)." >&2
+              exit 1
+              ;;
+          esac
+          echo "environment=$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: target
+    runs-on: ubuntu-latest
+    environment: ${{ needs.target.outputs.environment }}
+    # packages: write for the retag of production; next's run does not use it.
+    permissions:
+      contents: read
+      packages: write
+    # Two deployments of the same environment never overlap; a queued one waits.
+    concurrency:
+      group: next-deploy-${{ needs.target.outputs.environment }}
+      cancel-in-progress: false
+    env:
+      TARGET: ${{ needs.target.outputs.environment }}
+      EXPECTED_PROJECT: ${{ needs.target.outputs.project }}
+      IMAGE_TAG: ${{ needs.target.outputs.image_tag }}
+      EXPECTED_NOINDEX: ${{ needs.target.outputs.noindex }}
+      REVISION: ${{ inputs.revision }}
+      TAKE_OVER: ${{ inputs.take_over_domains || false }}
+      BRANCH: ${{ inputs.branch }}
+      REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+      DEPLOY_HOST: ${{ secrets[format('{0}_HOST', needs.target.outputs.secret_prefix)] }}
+      DEPLOY_PATH: ${{ secrets[format('{0}_PATH', needs.target.outputs.secret_prefix)] }}
+      DEPLOY_USER: ${{ secrets[format('{0}_SSH_USER', needs.target.outputs.secret_prefix)] || 'root' }}
+    steps:
+      - name: Check the secrets
+        env:
+          PREFIX: ${{ needs.target.outputs.secret_prefix }}
+          SSH_KEY_SET: ${{ secrets[format('{0}_SSH_KEY', needs.target.outputs.secret_prefix)] != '' }}
+          ENV_FILE_SET: ${{ secrets[format('ENV_{0}', needs.target.outputs.secret_prefix)] != '' }}
+          PFX_SET: ${{ secrets[format('{0}_DATA_PROTECTION_PFX', needs.target.outputs.secret_prefix)] != '' }}
+        run: |
+          missing=""
+          [ -n "$DEPLOY_HOST" ] || missing="$missing ${PREFIX}_HOST"
+          [ -n "$DEPLOY_PATH" ] || missing="$missing ${PREFIX}_PATH"
+          [ "$SSH_KEY_SET" = true ] || missing="$missing ${PREFIX}_SSH_KEY"
+          [ "$ENV_FILE_SET" = true ] || missing="$missing ENV_${PREFIX}"
+          [ "$PFX_SET" = true ] || missing="$missing ${PREFIX}_DATA_PROTECTION_PFX"
+          if [ -n "$missing" ]; then
+            echo "Missing secrets for $TARGET:$missing" >&2
+            exit 1
+          fi
+
+      # Promote by retag: the images of the commit validated on next, never rebuilt.
+      - name: Setup Buildx
+        if: env.TARGET == 'production'
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        if: env.TARGET == 'production'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retag the revision as :next-prod (no rebuild)
+        if: env.TARGET == 'production'
+        run: |
+          registry="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb"
+          for image in api web-ssr nginx; do
+            docker buildx imagetools create \
+              --tag "$registry/$image:$IMAGE_TAG" "$registry/$image:$REVISION"
+          done
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.10.0
         with:
-          ssh-private-key: ${{ secrets.NEXT_SSH_KEY }}
+          ssh-private-key: ${{ secrets[format('{0}_SSH_KEY', needs.target.outputs.secret_prefix)] }}
 
       - name: Known hosts
-        run: ssh-keyscan -H "$NEXT_HOST" >> ~/.ssh/known_hosts
+        run: ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
 
-      - name: Push env to host (from ENV_NEXT)
+      # The .env stays readable by root alone. The certificate is read by the API's non-root
+      # user through a bind mount: the file is world-readable, its folder root's only.
+      - name: Push the env and the Data Protection certificate to the host
         env:
-          ENV_NEXT: ${{ secrets.ENV_NEXT }}
+          ENV_FILE: ${{ secrets[format('ENV_{0}', needs.target.outputs.secret_prefix)] }}
+          DATA_PROTECTION_PFX: ${{ secrets[format('{0}_DATA_PROTECTION_PFX', needs.target.outputs.secret_prefix)] }}
         run: |
+          ssh_target="$DEPLOY_USER@$DEPLOY_HOST"
           # Expanded on the runner on purpose (SC2029), already quoted for the remote shell.
-          remote_path="$(printf '%q' "$NEXT_PATH")"
+          remote_path="$(printf '%q' "$DEPLOY_PATH")"
           # shellcheck disable=SC2029
-          ssh "$SSH_TARGET" "mkdir -p $remote_path"
+          ssh "$ssh_target" "mkdir -p $remote_path/.deploy && chmod 700 $remote_path/.deploy"
           # shellcheck disable=SC2029
-          printf '%s\n' "$ENV_NEXT" | ssh "$SSH_TARGET" "cat > $remote_path/.env"
+          printf '%s\n' "$ENV_FILE" | ssh "$ssh_target" "umask 077 && cat > $remote_path/.env"
+          # shellcheck disable=SC2029
+          printf '%s' "$DATA_PROTECTION_PFX" | base64 -d \
+            | ssh "$ssh_target" "umask 022 && cat > $remote_path/.deploy/data-protection.pfx"
 
       - name: Deploy (pull, migrate, up, smoke test)
         run: |
           # The remote script receives its inputs as variables, expanded on the runner on
           # purpose (SC2029) and quoted for the remote shell; the script is sent verbatim.
-          remote_env="NEXT_PATH=$(printf '%q' "$NEXT_PATH")"
-          remote_env="$remote_env BRANCH=$(printf '%q' "$BRANCH")"
-          remote_env="$remote_env REPO_URL=$(printf '%q' "$REPO_URL")"
+          remote_env=""
+          for name in DEPLOY_PATH BRANCH REPO_URL TARGET EXPECTED_PROJECT IMAGE_TAG \
+            EXPECTED_NOINDEX REVISION TAKE_OVER; do
+            remote_env="$remote_env $name=$(printf '%q' "${!name}")"
+          done
           # shellcheck disable=SC2029
-          ssh "$SSH_TARGET" "$remote_env bash -s" <<'EOSSH'
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "$remote_env bash -s" <<'EOSSH'
             set -euo pipefail
-            cd "$NEXT_PATH"
+            cd "$DEPLOY_PATH"
+            fail() {
+              echo "$*" >&2
+              exit 1
+            }
 
             # Idempotent init: the directory already holds the .env pushed just before.
             if [ ! -d .git ]; then
@@ -88,54 +217,153 @@ jobs:
 
             # Deployment overlay, WITHOUT compose.next.override.yaml (dev conveniences).
             export COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml
-            # Without it the project would be named after the directory and could clobber
-            # another stack of the host.
-            grep -q '^COMPOSE_PROJECT_NAME=' .env || {
-              echo "COMPOSE_PROJECT_NAME is missing from ENV_NEXT (expected lodb-next)." >&2
-              exit 1
-            }
-            # The edge and its network belong to infra-vps; this job only asserts them.
-            docker network inspect edge >/dev/null 2>&1 || {
-              echo "Docker network 'edge' is missing — deploy infra-vps before this project." >&2
-              exit 1
-            }
 
+            # ── The .env against the target, before anything changes ─────────────────
+            env_value() {
+              grep -E "^$1=" .env | tail -n 1 | cut -d= -f2- | tr -d "\"'" || true
+            }
+            expect() {
+              local actual
+              actual="$(env_value "$1")"
+              actual="${actual:-${3:-}}"
+              [ "$actual" = "$2" ] || fail "$1 is '$actual' in the .env; $TARGET expects '$2'."
+            }
+            # A distinct project per environment: no stack of the host is clobbered.
+            expect COMPOSE_PROJECT_NAME "$EXPECTED_PROJECT"
+            expect IMAGE_TAG "$IMAGE_TAG"
+            # next is never indexed; prod always is.
+            expect LODB_NOINDEX "$EXPECTED_NOINDEX" 0
+
+            db_network="$(env_value LODB_DB_NETWORK)"
+            if [ "$TARGET" = production ]; then
+              # prod joins the existing database where it lives, never a copy.
+              [ -n "$db_network" ] \
+                || fail "LODB_DB_NETWORK must name the network of the existing database."
+              docker network inspect "$db_network" >/dev/null 2>&1 \
+                || fail "Network '$db_network' is missing: is the database's stack running?"
+              for key in LoDb__Mail__Host LoDb__Billing__StripeSecretKey \
+                LoDb__Billing__StripeWebhookSecret; do
+                [ -n "$(env_value "$key")" ] || fail "$key is required in production."
+              done
+            else
+              # next runs its own database: it must never reach production's.
+              [ -z "$db_network" ] || fail "LODB_DB_NETWORK must stay unset on $TARGET."
+              db_network="$EXPECTED_PROJECT-db"
+              docker network inspect "$db_network" >/dev/null 2>&1 \
+                || docker network create "$db_network" >/dev/null
+            fi
+
+            # The edge and its network belong to infra-vps; this job only asserts them.
+            docker network inspect edge >/dev/null 2>&1 \
+              || fail "Docker network 'edge' is missing — deploy infra-vps before this project."
+
+            # ── Domains already claimed by another project (the legacy stack at cutover) ─
+            # "a.com, b.com" -> one domain per line.
+            one_per_line() {
+              tr -s ', ' '\n' | sed '/^$/d'
+            }
+            domains() {
+              for key in CADDY_DOMAINS API_CADDY_DOMAINS; do
+                env_value "$key" | one_per_line
+              done
+            }
+            # Domains of a container's Caddy labels (caddy, caddy_0, caddy_1…).
+            claimed_by() {
+              docker inspect --format \
+                '{{ range $k, $v := .Config.Labels }}{{ $k }}={{ $v }}{{ "\n" }}{{ end }}' "$1" \
+                | grep -E '^caddy(_[0-9]+)?=' | cut -d= -f2- | one_per_line
+            }
+            project_of() {
+              docker inspect --format \
+                '{{ index .Config.Labels "com.docker.compose.project" }}' "$1"
+            }
+            claimants=""
+            for id in $(docker ps -q); do
+              [ "$(project_of "$id")" != "$EXPECTED_PROJECT" ] || continue
+              if claimed_by "$id" | grep -qxFf <(domains); then
+                claimants="$claimants $id"
+              fi
+            done
+            if [ -n "$claimants" ] && [ "$TAKE_OVER" != true ]; then
+              for id in $claimants; do
+                echo "Domain claimed by $(docker inspect --format '{{.Name}}' "$id")." >&2
+              done
+              fail "Other containers serve these domains: rerun with take_over_domains."
+            fi
+
+            # ── Pull, then migrations before the traffic switches ──────────────────────
             # The registry sometimes resets a layer mid-copy: retry with backoff.
             for attempt in 1 2 3 4 5; do
               if docker compose pull; then break; fi
-              if [ "$attempt" = 5 ]; then
-                echo "docker compose pull failed after 5 attempts." >&2
-                exit 1
-              fi
+              [ "$attempt" != 5 ] || fail "docker compose pull failed after 5 attempts."
               echo "pull failed (attempt $attempt), retrying in $((attempt * 10))s…" >&2
               sleep $((attempt * 10))
             done
 
-            # Migrations before the traffic switches: fail-fast, the old containers keep
-            # serving if they fail. The service exists from L1.4 on.
-            if docker compose config --services | grep -qx migrate; then
-              docker compose run --rm migrate
-            fi
+            # Fail-fast: the containers in place keep serving if it fails. Idempotent: a
+            # database already up to date applies nothing.
+            docker compose run --rm migrate
+
+            # ── Traffic switch ─────────────────────────────────────────────────────────
+            # Until the smoke tests pass, a failure hands the domains back to whoever held
+            # them: their containers stay deployed, only stopped (rollback = start them).
+            stopped=""
+            # shellcheck disable=SC2329 # invoked by the trap below
+            give_back() {
+              if [ "$?" -ne 0 ] && [ -n "$stopped" ]; then
+                echo "Deploy failed after the take-over: restarting$stopped." >&2
+                docker compose stop nginx || true
+                # shellcheck disable=SC2086
+                docker start $stopped >/dev/null || true
+              fi
+            }
+            trap give_back EXIT
+            for id in $claimants; do
+              echo "Taking over from $(docker inspect --format '{{.Name}}' "$id")" \
+                "(project $(project_of "$id"))."
+              docker stop "$id" >/dev/null
+              stopped="$stopped $id"
+            done
 
             # --wait: the job fails if a probe does not turn healthy.
-            docker compose up -d --remove-orphans --wait --wait-timeout 180
-            docker image prune -f
+            docker compose up -d --no-build --remove-orphans --wait --wait-timeout 180
 
-            # Smoke test inside the stack: nginx, the API's readiness, a page rendered by
-            # the SSR server for the canonical host.
-            docker compose exec -T nginx wget -qO /dev/null http://127.0.0.1/healthz
+            # ── Smoke test inside the stack ────────────────────────────────────────────
+            canonical="$(env_value LODB_CANONICAL_HOST)"
+            api_host="$(env_value API_CADDY_DOMAINS | one_per_line | head -n 1)"
+            fetch() {
+              docker compose exec -T nginx wget -qO /dev/null --header "Host: $1" \
+                "http://127.0.0.1$2"
+            }
+            fetch "$canonical" /healthz
             docker compose exec -T nginx wget -qO- http://api:8080/readyz
             echo
-            docker compose exec -T nginx sh -c \
-              'wget -qO /dev/null --header "Host: $LODB_CANONICAL_HOST" http://127.0.0.1/en/'
+            # A page rendered by the SSR server, then the API subdomain.
+            fetch "$canonical" /en/
+            fetch "$api_host" /healthz
+            robots="$(docker compose exec -T nginx wget -S -qO /dev/null \
+              --header "Host: $canonical" http://127.0.0.1/en/ 2>&1 \
+              | grep -i 'x-robots-tag' || true)"
+            if [ "$EXPECTED_NOINDEX" = 1 ]; then
+              [ -n "$robots" ] || fail "$TARGET must answer X-Robots-Tag: noindex."
+            else
+              [ -z "$robots" ] || fail "$TARGET must be indexable, got '$robots'."
+            fi
+            revision="$(docker inspect --format \
+              '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+              "$(docker compose ps -q api)")"
+            if [ -n "$REVISION" ] && [ "$revision" != "$REVISION" ]; then
+              fail "The API runs revision $revision, not the promoted $REVISION."
+            fi
+            # Read by next-promote.yml's operator: the revision to promote.
+            echo "::notice title=Deployed revision::$TARGET ($EXPECTED_PROJECT) serves $revision"
+            stopped=""
+            docker image prune -f
 
-            # Public TLS check and edge certificate self-heal, as in _deploy.yml: a domain
-            # whose issuance failed earlier stays in back-off until the edge reloads.
-            domains() {
-              grep -E "^$1=" .env | cut -d= -f2- | tr -d '"' | tr ',' ' '
-            }
+            # ── Public TLS check and edge certificate self-heal, as in _deploy.yml ─────
+            # A domain whose issuance failed earlier stays in back-off until the edge reloads.
             assert_tls() {
-              for domain in $(domains CADDY_DOMAINS) $(domains API_CADDY_DOMAINS); do
+              for domain in $(domains); do
                 # No -f/-k: success means the handshake and the certificate check passed.
                 curl -sS --max-time 10 -o /dev/null "https://${domain}/healthz" || return 1
               done
@@ -151,10 +379,7 @@ jobs:
             fi
             echo "TLS check failed — forcing the edge to retry certificate issuance…" >&2
             caddy_id="$(edge_caddy)"
-            if [ -z "$caddy_id" ]; then
-              echo "Edge Caddy container not found — is infra-vps deployed?" >&2
-              exit 1
-            fi
+            [ -n "$caddy_id" ] || fail "Edge Caddy container not found — is infra-vps deployed?"
             docker restart "$caddy_id" >/dev/null
             for _ in $(seq 1 18); do
               sleep 5
