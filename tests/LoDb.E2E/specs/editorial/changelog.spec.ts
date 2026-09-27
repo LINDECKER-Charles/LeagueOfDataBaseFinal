@@ -3,7 +3,7 @@ import { expect, test } from "../../support/test";
 
 const VERSION = /^v\d+\.\d+\.\d+$/;
 
-test.describe("changelog", () => {
+test.describe("changelog", { tag: '@readonly' }, () => {
   test("lists the releases newest first, the newest one open", async ({
     page,
     consoleErrors,

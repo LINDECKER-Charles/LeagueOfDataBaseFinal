@@ -7,7 +7,7 @@ function freshKey(path: string): string {
   return `${path}?e2e=${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-test.describe('headers of a page', () => {
+test.describe('headers of a page', { tag: '@readonly' }, () => {
   test('carry a CSP that admits exactly the inline scripts of the page', async ({ request }) => {
     const response = await request.get('/en/about');
     const policy = response.headers()['content-security-policy'] ?? '';
@@ -64,7 +64,7 @@ test.describe('headers of a page', () => {
   });
 });
 
-test.describe('headers of the front files', () => {
+test.describe('headers of the front files', { tag: '@readonly' }, () => {
   test('cache the hashed bundles of /build/ for a year', async ({ request }) => {
     const html = await (await request.get('/en/about')).text();
     const bundle = /<script src="(\/build\/main-[\w-]+\.js)"/.exec(html)?.[1];

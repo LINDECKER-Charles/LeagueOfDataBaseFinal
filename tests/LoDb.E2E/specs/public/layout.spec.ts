@@ -21,7 +21,7 @@ async function expectFitsPhone(page: Page, url: string): Promise<void> {
   expect.soft(await smallFields(page), `${url}: fields under 16 px`).toEqual([]);
 }
 
-test.describe('public pages on a 320 px phone', () => {
+test.describe('public pages on a 320 px phone', { tag: '@readonly' }, () => {
   test.use({ viewport: NARROW_PHONE, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
 
   for (const entry of PUBLIC_PAGES) {
@@ -52,7 +52,7 @@ test.describe('public pages on a 320 px phone', () => {
   }
 });
 
-test.describe('right-to-left layout', () => {
+test.describe('right-to-left layout', { tag: '@readonly' }, () => {
   test.use({ viewport: DESKTOP });
 
   for (const path of RTL_PATHS) {

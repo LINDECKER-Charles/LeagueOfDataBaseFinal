@@ -147,7 +147,7 @@ async function expectOneHop(
   }
 }
 
-test.describe('legacy redirects', () => {
+test.describe('legacy redirects', { tag: '@readonly' }, () => {
   test('catalog URLs land on the canonical page in one hop', async ({ request }) => {
     const catalog = await readCatalog(request);
     for (const row of catalogRows(catalog)) {

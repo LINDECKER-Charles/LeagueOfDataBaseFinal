@@ -81,7 +81,9 @@ test('makes a profile public, previews it and shows it to anyone', async ({
   });
 });
 
-test('answers an unknown summoner with a 404 kept out of the index', async ({ page }) => {
+test('answers an unknown summoner with a 404 kept out of the index', { tag: '@readonly' }, async ({
+  page,
+}) => {
   const response = await page.goto('/en/u/nobody-e2e-at-all');
 
   expect(response?.status()).toBe(404);

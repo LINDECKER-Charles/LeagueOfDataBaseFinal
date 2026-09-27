@@ -16,7 +16,7 @@ function unexpected(errors: readonly string[]): string[] {
   return errors.filter((error) => !error.startsWith('Failed to load resource'));
 }
 
-test.describe('missing pages', () => {
+test.describe('missing pages', { tag: '@readonly' }, () => {
   test('answers a real 404 in the locale of the URL, then leads back to its home', async ({
     page,
     request,

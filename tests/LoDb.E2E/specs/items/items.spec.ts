@@ -32,7 +32,7 @@ async function itemOf(request: APIRequestContext, id: number): Promise<Item> {
   return (await response.json()) as Item;
 }
 
-test.describe('item pages as crawlers read them', () => {
+test.describe('item pages as crawlers read them', { tag: '@readonly' }, () => {
   test.use({ javaScriptEnabled: false });
 
   test('renders the list, each card linking its item page', async ({ page }) => {
@@ -66,7 +66,7 @@ test.describe('item pages as crawlers read them', () => {
   });
 });
 
-test.describe('item pages', () => {
+test.describe('item pages', { tag: '@readonly' }, () => {
   test('lead from a card to its item, then back to the list', async ({ page, consoleErrors }) => {
     await page.goto(LIST);
     await page.waitForLoadState('networkidle');

@@ -11,7 +11,7 @@ const PRIVATE = 'private, no-store';
 const LATEST_PATHS = ['/en/', '/en/champions', '/en/items/3031-infinity-edge', '/fr/runes'];
 const PRIVATE_PATHS = ['/en/account/login', '/en/account/register', '/fr/account/profile'];
 
-test.describe('cache classes of the pages', () => {
+test.describe('cache classes of the pages', { tag: '@readonly' }, () => {
   test('keep a page of the latest version five minutes in the shared cache', async ({
     request,
   }) => {

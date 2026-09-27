@@ -82,7 +82,7 @@ async function openChampion(page: Page): Promise<void> {
   await page.waitForLoadState('networkidle');
 }
 
-test.describe('clips of the abilities', () => {
+test.describe('clips of the abilities', { tag: '@readonly' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('start muted, each of them, from the moment they exist', async ({ page }) => {

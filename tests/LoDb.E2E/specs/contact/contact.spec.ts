@@ -12,7 +12,7 @@ function openDialog(page: Page): Promise<void> {
   return page.getByRole('contentinfo').getByRole('button', { name: CTA }).click();
 }
 
-test('opens the contact form from the footer and closes it again', async ({
+test('opens the contact form from the footer and closes it again', { tag: '@readonly' }, async ({
   page,
   consoleErrors,
 }) => {

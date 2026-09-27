@@ -41,7 +41,7 @@ function pathOf(page: Page): string {
   return new URL(page.url()).pathname;
 }
 
-test.describe('navigation', () => {
+test.describe('navigation', { tag: '@readonly' }, () => {
   test('goes from a prerendered page to another through the router', async ({
     page,
     consoleErrors,

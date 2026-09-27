@@ -46,7 +46,7 @@ test('shares a private build with its link only, without a score', async ({
   expect(consoleErrors).toEqual([]);
 });
 
-test.describe('a link no build answers to', () => {
+test.describe('a link no build answers to', { tag: '@readonly' }, () => {
   for (const token of ['ffffffffffffffffffffffff', 'not-a-token']) {
     test(`answers /b/${token} with the 404`, async ({ request }) => {
       const response = await request.get(`/b/${token}`);

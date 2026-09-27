@@ -22,7 +22,7 @@ const CHECKED_THEMES: readonly Theme[] = ['hextech', 'spirit-blossom'];
 const DEFAULT_BASE_URL = 'http://localhost:18080';
 
 for (const theme of CHECKED_THEMES) {
-  test.describe(`accessibility in the ${theme} theme`, () => {
+  test.describe(`accessibility in the ${theme} theme`, { tag: '@readonly' }, () => {
     test.beforeEach(async ({ context, baseURL }) => {
       await useTheme(context, baseURL ?? DEFAULT_BASE_URL, theme);
     });

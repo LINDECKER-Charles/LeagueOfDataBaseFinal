@@ -16,7 +16,7 @@ async function hreflangs(page: Page): Promise<string[]> {
 }
 
 // The head as the server wrote it, which is what crawlers read.
-test.describe('head of the server render', () => {
+test.describe('head of the server render', { tag: '@readonly' }, () => {
   test.use({ javaScriptEnabled: false });
 
   test('gives the home one canonical, 21 alternates and x-default', async ({ page }) => {
@@ -49,7 +49,7 @@ test.describe('head of the server render', () => {
   });
 });
 
-test.describe('head after hydration', () => {
+test.describe('head after hydration', { tag: '@readonly' }, () => {
   test('replaces the server head instead of adding to it', async ({ page, consoleErrors }) => {
     await page.goto('/en/');
     await page.waitForLoadState('networkidle');

@@ -20,7 +20,7 @@ async function openList(page: Page, url = LIST): Promise<void> {
   await page.waitForLoadState('networkidle');
 }
 
-test.describe('catalogue list as crawlers read it', () => {
+test.describe('catalogue list as crawlers read it', { tag: '@readonly' }, () => {
   test.use({ javaScriptEnabled: false });
 
   test('renders the first page and links the next one', async ({ page }) => {
@@ -34,7 +34,7 @@ test.describe('catalogue list as crawlers read it', () => {
   });
 });
 
-test.describe('catalogue filters', () => {
+test.describe('catalogue filters', { tag: '@readonly' }, () => {
   test('searches live and keeps the search in the URL, which a reload restores', async ({
     page,
     consoleErrors,

@@ -3,7 +3,7 @@ import { expect, test } from "../../support/test";
 
 const NUMBER = /^\s*\d[\d\s., ]*\s*$/;
 
-test.describe("about pages", () => {
+test.describe("about pages", { tag: '@readonly' }, () => {
   test("prerender the inventory as placeholders", async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();

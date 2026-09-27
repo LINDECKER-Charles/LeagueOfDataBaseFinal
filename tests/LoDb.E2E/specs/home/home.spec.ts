@@ -24,7 +24,7 @@ function portals(page: Page) {
     .getByRole("link");
 }
 
-test.describe("home", () => {
+test.describe("home", { tag: '@readonly' }, () => {
   test("renders its hero, portals and previews on the server", async ({
     request,
   }) => {
