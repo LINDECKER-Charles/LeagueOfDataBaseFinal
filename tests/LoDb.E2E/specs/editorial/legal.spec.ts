@@ -1,5 +1,13 @@
+import type { Locator } from "@playwright/test";
 import { expectNoAccessibilityViolations } from "../../support/accessibility";
 import { expect, test } from "../../support/test";
+
+// The scroll margin of a prose section (6.5rem), a pixel short for rounding.
+const SCROLL_MARGIN = 103;
+
+async function topOf(section: Locator): Promise<number> {
+  return section.evaluate((element) => element.getBoundingClientRect().top);
+}
 
 test.describe("legal pages", { tag: '@readonly' }, () => {
   test("show the French text under fr", async ({ page, consoleErrors }) => {
@@ -17,7 +25,7 @@ test.describe("legal pages", { tag: '@readonly' }, () => {
     page,
   }) => {
     await page.goto("/de/legal/privacy");
-    const text = page.locator(".hx-prose").locator("..");
+    const text = page.locator(".hx-prose");
 
     await expect(text).toHaveAttribute("lang", "en");
     await expect(page.locator("html")).toHaveAttribute("lang", "de");
@@ -30,14 +38,30 @@ test.describe("legal pages", { tag: '@readonly' }, () => {
   test("scroll to a section from the table of contents", async ({ page }) => {
     await page.goto("/en/legal/cookies");
     await page.waitForLoadState("networkidle");
-    const link = page.locator(".section-nav a").nth(2);
+    const contents = page.getByRole("navigation", { name: "Contents" });
+    const link = contents.getByRole("link").nth(2);
     const target =
       ((await link.getAttribute("href")) ?? "").split("#")[1] ?? "";
 
     await link.click();
 
     await expect(page).toHaveURL(new RegExp(`/en/legal/cookies#${target}$`));
-    await expect(page.locator(`section#${target}`)).toBeInViewport();
+    const section = page.locator(`section#${target}`);
+    await expect(section).toBeInViewport();
+    // Below its scroll margin (6.5rem), clear of the sticky header, as a native jump lands.
+    expect(await topOf(section)).toBeGreaterThanOrEqual(SCROLL_MARGIN);
+  });
+
+  test("jump to a section from a link in the text", async ({ page }) => {
+    await page.goto("/en/legal/privacy");
+    await page.waitForLoadState("networkidle");
+
+    await page.locator('a[href="/en/legal/privacy#audience"]').first().click();
+
+    await expect(page).toHaveURL(/\/en\/legal\/privacy#audience$/);
+    expect(await topOf(page.locator("section#audience"))).toBeGreaterThanOrEqual(
+      SCROLL_MARGIN,
+    );
   });
 
   test("link the other legal pages within the locale", async ({ page }) => {
