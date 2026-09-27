@@ -8,7 +8,7 @@
     </h2>
     <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
       @for (rune of stars.keystones; track rune.id) {
-        <article [id]="rune.anchor" lodbFrame class="path-border flex scroll-mt-24 gap-5 p-6">
+        <article [id]="rune.anchor" lodbFrame class="path-border flex gap-5 p-6">
           <lodb-catalogue-image
             class="keystone__icon"
             [image]="rune.image"
@@ -40,11 +40,7 @@
     </h2>
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       @for (rune of row.runes; track rune.id) {
-        <article
-          [id]="rune.anchor"
-          lodbFrame="interactive"
-          class="group flex scroll-mt-24 flex-col p-5"
-        >
+        <article [id]="rune.anchor" lodbFrame="interactive" class="group flex flex-col p-5">
           <div class="flex items-center gap-3.5">
             <lodb-catalogue-image
               class="rune-medallion"

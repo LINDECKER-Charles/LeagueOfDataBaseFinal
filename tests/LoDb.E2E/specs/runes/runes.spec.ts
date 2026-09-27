@@ -15,6 +15,8 @@ const CARD = 'lodb-catalogue-list lodb-rune-card';
 const RUNE_PATHS = 5;
 // A path strings its keystones over three rows of at least three minor runes.
 const MINOR_RUNES = 9;
+// The scroll margin of every anchored element (foundation/base.css, 5.5rem), in CSS pixels.
+const SCROLL_MARGIN = 88;
 
 // The rune list as /en/ shows it: the latest version, in en_US.
 async function runesOf(request: APIRequestContext): Promise<RuneList> {
@@ -65,7 +67,13 @@ test.describe('rune pages', { tag: '@readonly' }, () => {
     await link.click();
 
     await expect(page).toHaveURL(new RegExp(`/en/runes/[^#]+#${anchor}$`));
-    await expect(page.locator(`#${anchor}`)).toBeInViewport();
+    const card = page.locator(`#${anchor}`);
+    await expect(card).toBeInViewport();
+    // Once scrolled to, the card keeps its scroll margin above it, below its row's label, as
+    // on the legacy page; flush with the top, it would sit at 0.
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    const top = await card.evaluate((element) => element.getBoundingClientRect().top);
+    expect(top).toBeGreaterThan(SCROLL_MARGIN / 2);
     await page.locator('lodb-pager .pager__hub').click();
     await expect(page).toHaveURL(/\/en\/runes$/);
     expect(consoleErrors).toEqual([]);

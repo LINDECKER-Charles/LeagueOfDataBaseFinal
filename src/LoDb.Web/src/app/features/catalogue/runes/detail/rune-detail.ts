@@ -16,6 +16,7 @@ import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
 import { CatalogueImage } from '../../shared/cards/catalogue-image';
 import { pathThemeOf } from '../paths/path-theme-of';
+import { injectAnchorOffset } from './anchor/inject-anchor-offset';
 import { constellationOf } from './constellation/constellation-of';
 import { RuneConstellation } from './constellation/rune-constellation';
 import { injectPathPager } from './pager/inject-path-pager';
@@ -27,7 +28,7 @@ const EMBLEM_SIZE = 120;
 /**
  * A rune path page, `/{locale}/[{version}/]runes/{key}`: the path's mark and name in its
  * colour, then its constellation of keystones and rows; the list's rune cards link to their
- * card here by anchor.
+ * card here by anchor, which stops below its row's label.
  */
 @Component({
   selector: 'lodb-rune-detail',
@@ -49,6 +50,7 @@ export class RuneDetail {
   }));
 
   constructor() {
+    injectAnchorOffset();
     const head = inject(CatalogueHead);
     effect(() => {
       const entry = this.entry();
