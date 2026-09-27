@@ -55,8 +55,10 @@ test.describe('service worker', { tag: '@readonly' }, () => {
     await expect(page).toHaveTitle(title);
 
     await page.goto(NEVER_VISITED);
-    await expect(page.locator('section[lang="en"] h1')).toHaveText('You are offline');
-    await expect(page.locator('section[lang="fr"] h1')).toHaveText('Vous êtes hors ligne');
+    await expect(page.locator('h1')).toHaveText('Connexion à la Faille perdue');
+    await expect(page.locator('p[lang="en"]')).toHaveText(
+      'You are offline — previously visited pages remain available.',
+    );
     await context.setOffline(false);
   });
 

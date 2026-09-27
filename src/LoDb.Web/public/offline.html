@@ -2,15 +2,16 @@
 <!--
   Answered by the service worker (src/sw) for a page that is neither reachable nor cached.
   Self-contained: no script (the CSP admits none here) and nothing it cannot render offline.
-  The font is the site's own, which the worker keeps once any page has loaded it.
+  The font is the site's own, which the worker keeps once any page has loaded it. The text is
+  the legacy one: a French headline with an English line under it.
 -->
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="robots" content="noindex" />
     <meta name="theme-color" content="#010a13" />
-    <title>Offline · Hors ligne — League Of Data Base</title>
+    <title>Hors ligne — League Of Data Base</title>
     <style>
       @font-face {
         font-family: 'Beaufort';
@@ -38,44 +39,48 @@
         text-align: center;
       }
       main {
-        max-width: 28rem;
+        max-width: 26rem;
       }
       svg {
         width: 4.5rem;
         height: 4.5rem;
         color: #c8aa6e;
+        filter: drop-shadow(0 0 18px rgba(200, 170, 110, 0.5));
       }
       h1 {
         margin: 1.2rem 0 0.4rem;
         font-family: 'Beaufort', serif;
-        font-size: 1.5rem;
+        font-size: 1.6rem;
+        font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-      }
-      section + section {
-        margin-top: 1.6rem;
-        padding-top: 1.2rem;
-        border-top: 1px solid rgba(200, 170, 110, 0.3);
+        color: #f0e6d2;
       }
       p {
         margin: 0.4rem 0;
         line-height: 1.6;
         color: #a09b8c;
+        font-size: 0.95rem;
       }
-      a {
+      p.en {
+        font-size: 0.8rem;
+        color: #8f8d82;
+      }
+      a.retry {
         display: inline-block;
-        margin-top: 1rem;
-        padding: 0.7rem 1.4rem;
+        margin-top: 1.6rem;
+        padding: 0.8rem 1.6rem;
         border: 1px solid rgba(200, 170, 110, 0.7);
         background: rgba(200, 170, 110, 0.14);
         color: #f0e6d2;
-        font-family: 'Beaufort', serif;
-        letter-spacing: 0.15em;
         text-decoration: none;
+        font-family: 'Beaufort', serif;
+        font-size: 0.85rem;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
       }
-      a:hover,
-      a:focus-visible {
+      a.retry:hover,
+      a.retry:focus-visible {
         background: rgba(200, 170, 110, 0.25);
       }
     </style>
@@ -93,17 +98,14 @@
           points="393.14 75 220.98 75 253.88 142.3 253.88 658.33 221.32 724.89 611.49 724.89 647.14 597.7 393.14 597.7 393.14 75"
         />
       </svg>
-      <section lang="en">
-        <h1>You are offline</h1>
-        <p>Pages you have already visited stay available. This one is not saved yet.</p>
-        <!-- An empty href reloads the address the visitor asked for, not this file. -->
-        <a href="">Try again</a>
-      </section>
-      <section lang="fr">
-        <h1>Vous êtes hors ligne</h1>
-        <p>Les pages déjà visitées restent consultables. Celle-ci n’est pas encore enregistrée.</p>
-        <a href="">Réessayer</a>
-      </section>
+      <h1>Connexion à la Faille perdue</h1>
+      <p>
+        Vous êtes hors ligne. Les pages déjà visitées restent consultables ; celle-ci n'est pas
+        encore dans le grimoire.
+      </p>
+      <p class="en" lang="en">You are offline — previously visited pages remain available.</p>
+      <!-- An empty href reloads the address the visitor asked for, not this file. -->
+      <a class="retry" href="">Réessayer</a>
     </main>
   </body>
 </html>
