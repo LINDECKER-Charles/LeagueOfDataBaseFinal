@@ -10,7 +10,6 @@ import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogu
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
-import { CatalogueLists } from '../../shared/data/catalogue-lists';
 import { SummonerDetail } from './summoner-detail';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
@@ -43,19 +42,26 @@ const DETAILS: SummonerDetails = {
   globalRange: false,
   range: [425],
   profile: CARD,
-  neighbours: { previous: null, next: null },
+  neighbours: {
+    previous: {
+      id: 'SummonerExhaust_Jade',
+      name: 'Exhaust',
+      canonicalPath: 'summoners/SummonerExhaust_Jade',
+      edition: 'classic',
+    },
+    next: {
+      id: 'SummonerHeal',
+      name: 'Heal',
+      canonicalPath: 'summoners/SummonerHeal',
+      edition: 'modern',
+    },
+  },
 };
 const ENTRY: CatalogueEntry<SummonerDetails> = { context: CONTEXT, details: DETAILS };
 const TEXTS: CatalogueTexts = {
   seo: (key, params) => `${key} ${JSON.stringify(params ?? {})}`,
   main: (key) => (key === 'edition.classic' ? 'LoL Classic' : key),
 };
-const NEIGHBOURS = ['SummonerExhaust', 'SummonerFlash_Jade', 'SummonerHeal'].map((id) => ({
-  ...CARD,
-  id,
-  name: id,
-  canonicalPath: `summoners/${id}`,
-}));
 
 async function render() {
   const heads: SeoPage[] = [];
@@ -77,10 +83,6 @@ async function render() {
         },
       }),
       { provide: CatalogueHead, useValue: { write } },
-      {
-        provide: CatalogueLists,
-        useValue: { fetch: () => of({ kind: 'list', list: { entries: NEIGHBOURS } }) },
-      },
     ],
   });
   const harness = await RouterTestingHarness.create();
@@ -117,13 +119,16 @@ describe('lodb-summoner-detail', () => {
     expect(modes.map((mode) => mode.textContent?.trim())).toEqual(['LoL Classic']);
   });
 
-  it('engraves its plaques, and turns the pages of the list', async () => {
+  it('engraves its plaques, and turns the pages of the list, a LoL Classic one marked', async () => {
     const { element } = await render();
 
     expect(element.querySelectorAll('.hx-plate')).toHaveLength(2);
     expect(element.querySelector('lodb-pager a[rel="next"]')?.getAttribute('href')).toBe(
       '/en/summoners/SummonerHeal',
     );
+    const previous = element.querySelector('lodb-pager a[rel="prev"] .pager__name');
+    expect(previous?.textContent?.trim()).toBe('Exhaust LoL Classic');
+    expect(element.querySelector('lodb-pager a[rel="next"] .hx-chip-hex')).toBeNull();
   });
 
   it('names the LoL Classic edition in its head', async () => {

@@ -67,11 +67,11 @@ export class ItemDetail {
   protected readonly upgradeIconSize = UPGRADE_ICON_SIZE;
   protected readonly linkOf = injectCatalogueLink();
   protected readonly tree = computed(() => recipeTreeOf(this.entry().details.recipe));
-  protected readonly pager = injectDetailPager({
+  protected readonly pager = injectDetailPager(() => ({
     resource: 'items',
-    at: () => ({ context: this.entry().context, key: this.entry().details.profile.id }),
-    keyOf: (card) => card.id,
-  });
+    context: this.entry().context,
+    neighbours: this.entry().details.neighbours,
+  }));
 
   constructor() {
     const head = inject(CatalogueHead);

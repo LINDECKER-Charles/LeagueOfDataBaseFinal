@@ -72,6 +72,8 @@ test.describe('champion pages as crawlers read them', { tag: '@readonly' }, () =
 
     expect(response?.status()).toBe(200);
     expect(response?.headers()['server-timing']).toMatch(SERVER_TIMING);
+    // The pager comes with the page's payload: its neighbours are in the server's HTML.
+    expect(await response?.text()).toMatch(/<a [^>]*rel="next"[^>]*href="\/en\/champions\/\w/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(details.profile.name);
     for (const id of ['abilities', 'skins', 'lore', 'tips', 'stats']) {
       await expect(page.locator(`#${id}`)).toHaveCount(1);

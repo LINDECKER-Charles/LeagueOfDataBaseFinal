@@ -1,17 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { TranslocoPipe, translateSignal } from '@jsverse/transloco';
-import type { ChampionCard } from '../../../../core/api/generated/models/champion-card';
 import type { ChampionDetails } from '../../../../core/api/generated/models/champion-details';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import { injectRouteData } from '../../../../core/routing/inject-route-data';
 import { Reveal } from '../../../../ui/motion/reveal';
 import { Pager } from '../../../../ui/navigation/pager';
-import type { PagerLink } from '../../../../ui/navigation/pager-link';
 import { SectionNav } from '../../../../ui/navigation/section-nav';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { Skeleton } from '../../../../ui/surfaces/skeleton';
-import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
-import { injectCatalogueNeighbours } from '../../shared/pager/inject-catalogue-neighbours';
+import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
 import { applyChampionsHead } from '../seo/apply-champions-head';
 import { championSeo } from '../seo/champion-seo';
 import { AbilityShowcase } from './abilities/ability-showcase';
@@ -55,7 +52,6 @@ function hasText(tip: string): boolean {
 })
 export class ChampionPage {
   private readonly entry = injectRouteData<CatalogueEntry<ChampionDetails>>('entry');
-  private readonly linkTo = injectCatalogueLink();
   protected readonly details = computed(() => this.entry().details);
   protected readonly context = computed(() => this.entry().context);
   protected readonly profile = computed(() => this.details().profile);
@@ -73,14 +69,11 @@ export class ChampionPage {
       label: labels[index] ?? '',
     })).filter((section) => this.isShown(section.id));
   });
-  private readonly neighbours = injectCatalogueNeighbours(
-    'champions',
-    computed(() => ({ context: this.context(), key: this.details().canonicalPath })),
-    (card) => card.canonicalPath,
-  );
-  protected readonly previous = computed(() => this.linkOf(this.neighbours().previous));
-  protected readonly next = computed(() => this.linkOf(this.neighbours().next));
-  protected readonly hub = computed(() => this.linkTo(this.context(), 'champions'));
+  protected readonly pager = injectDetailPager(() => ({
+    resource: 'champions',
+    context: this.context(),
+    neighbours: this.details().neighbours,
+  }));
 
   constructor() {
     applyChampionsHead(() => {
@@ -102,9 +95,5 @@ export class ChampionPage {
       case 'stats':
         return true;
     }
-  }
-
-  private linkOf(card: ChampionCard | null): PagerLink | null {
-    return card && { url: this.linkTo(this.context(), card.canonicalPath), name: card.name };
   }
 }

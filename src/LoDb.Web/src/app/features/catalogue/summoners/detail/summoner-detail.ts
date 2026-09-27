@@ -68,11 +68,11 @@ export class SummonerDetail {
   protected readonly modes = computed(() =>
     modeLabelsOf(this.entry().details.profile.modes, this.translate()('edition.classic')),
   );
-  protected readonly pager = injectDetailPager({
+  protected readonly pager = injectDetailPager(() => ({
     resource: 'summoners',
-    at: () => ({ context: this.entry().context, key: this.entry().details.profile.id }),
-    keyOf: (card) => card.id,
-  });
+    context: this.entry().context,
+    neighbours: this.entry().details.neighbours,
+  }));
 
   constructor() {
     const head = inject(CatalogueHead);

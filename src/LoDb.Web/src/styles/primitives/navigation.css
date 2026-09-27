@@ -64,7 +64,6 @@
     justify-content: center;
     gap: 0.3rem;
     min-block-size: 4.25rem;
-    min-inline-size: 0;
     padding: 0.85rem 1.15rem;
     border: 1px solid color-mix(in srgb, var(--color-gold) 30%, transparent);
     background: linear-gradient(
@@ -125,12 +124,17 @@
     block-size: 1.15rem;
     rotate: 45deg;
   }
-  /* A phone keeps the hub between two narrower links rather than overflowing. */
-  @media (max-width: 400px) {
+  /*
+   * From 360px up, the legacy pager as is: its links as wide as their longest word, so a name
+   * never breaks inside a word. Below, where that would overflow, the hub sits between two
+   * narrower links that may break a long name.
+   */
+  @media (width < 360px) {
     .pager {
       gap: 0.4rem;
     }
     .pager__link {
+      min-inline-size: 0;
       padding: 0.7rem 0.75rem;
     }
     .pager__hub {

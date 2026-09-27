@@ -11,8 +11,6 @@ import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogu
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
-import { CatalogueLists } from '../../shared/data/catalogue-lists';
-import type { ListRequest } from '../../shared/data/list-request';
 import { RuneDetail } from './rune-detail';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
@@ -29,7 +27,10 @@ const DETAILS: RuneTreeDetails = {
   language: 'en_US',
   version: CONTEXT.version,
   profile: TREES[1] as RuneTreeCard,
-  neighbours: { previous: null, next: null },
+  neighbours: {
+    previous: { id: '0', name: 'Precision', canonicalPath: 'runes/precision', edition: 'modern' },
+    next: { id: '2', name: 'Sorcery', canonicalPath: 'runes/sorcery', edition: 'modern' },
+  },
   slots: [
     {
       slot: 'keystone',
@@ -67,12 +68,7 @@ const TEXTS: CatalogueTexts = {
 
 async function render(entry = ENTRY) {
   const heads: SeoPage[] = [];
-  const requests: ListRequest[] = [];
   const write = (_: string, build: (texts: CatalogueTexts) => SeoPage) => heads.push(build(TEXTS));
-  const fetch = (_: string, request: ListRequest) => {
-    requests.push(request);
-    return of({ kind: 'list', list: { entries: [], trees: TREES } });
-  };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([{ path: 'en/runes/:id', component: RuneDetail, data: { entry } }]),
@@ -83,13 +79,12 @@ async function render(entry = ENTRY) {
         },
       }),
       { provide: CatalogueHead, useValue: { write } },
-      { provide: CatalogueLists, useValue: { fetch } },
     ],
   });
   const harness = await RouterTestingHarness.create();
   await harness.navigateByUrl('/en/runes/domination');
   await harness.fixture.whenStable();
-  return { element: harness.routeNativeElement as HTMLElement, heads, requests };
+  return { element: harness.routeNativeElement as HTMLElement, heads };
 }
 
 describe('lodb-rune-detail', () => {
@@ -115,9 +110,8 @@ describe('lodb-rune-detail', () => {
   });
 
   it('turns the pages of the paths, not of the runes', async () => {
-    const { element, requests } = await render();
+    const { element } = await render();
 
-    expect(requests).toEqual([{ version: '16.19.1', lang: 'en_US', page: 1, size: 1 }]);
     expect(element.querySelector('lodb-pager a[rel="prev"]')?.getAttribute('href')).toBe(
       '/en/runes/precision',
     );
