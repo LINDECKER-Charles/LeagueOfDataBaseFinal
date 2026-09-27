@@ -16,6 +16,7 @@ import { ToastService } from '../../../core/layout/toast/toast-service';
 import { Button } from '../../../ui/controls/button';
 import { Backdrop } from '../../../ui/surfaces/backdrop';
 import { accountMessage } from '../shared/account-message';
+import { overrideAccountTitle } from '../shared/head/override-account-title';
 import { displayName } from '../shared/text/display-name';
 import { IdentityAside } from './aside/identity-aside';
 import { ProfileAutosave } from './autosave/profile-autosave';
@@ -80,6 +81,8 @@ export class ProfileEditor {
   protected readonly pinning = signal(false);
 
   constructor() {
+    // The tab reads the summoner's name, as the legacy editor's did.
+    overrideAccountTitle(() => (this.profile() === null ? null : { text: this.name() }));
     // Each reading of the profile is the new starting point of what the editor changes.
     effect(() => {
       const profile = this.profile();

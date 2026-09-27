@@ -7,7 +7,9 @@ import { ProfileService } from '../../../core/api/generated/services/profile.ser
 import { PageDirection } from '../../../core/layout/direction/page-direction';
 import { localePath } from '../../../core/layout/shell/locale-path';
 import { Button } from '../../../ui/controls/button';
+import { overrideAccountTitle } from '../shared/head/override-account-title';
 import { injectCatalogQuery } from '../shared/inject-catalog-query';
+import { displayName } from '../shared/text/display-name';
 import { ProfileBuilds } from './card/profile-builds';
 import { ProfileHero } from './card/profile-hero';
 
@@ -42,6 +44,11 @@ export class ProfilePreview {
   protected readonly editor = computed(() => localePath(this.page.locale(), 'account/profile'));
 
   constructor() {
+    // The tab reads the summoner's name, as the legacy preview's did.
+    overrideAccountTitle(() => {
+      const profile = this.profile();
+      return profile === null ? null : { text: displayName(profile.username, profile.riotTagline) };
+    });
     void this.load();
   }
 
