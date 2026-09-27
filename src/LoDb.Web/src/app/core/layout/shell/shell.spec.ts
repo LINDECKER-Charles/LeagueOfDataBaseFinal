@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { ApplicationRef, ChangeDetectionStrategy, Component } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
@@ -129,6 +130,16 @@ describe('Shell', () => {
     expect(shell?.querySelector('lodb-header')).not.toBeNull();
     expect(document.documentElement.getAttribute('data-theme')).toBe('noxus');
     document.cookie = 'lod_theme=; path=/; max-age=0';
+  });
+
+  it("keeps the chrome out of a bare section's first render, whatever its query", async () => {
+    configure(null);
+    // The address the browser loaded, before the router has recognized any navigation.
+    TestBed.inject(Location).replaceState('/admin', 'range=7');
+    const shell = (await render()).querySelector('lodb-shell');
+
+    expect(shell?.querySelector('lodb-header')).toBeNull();
+    expect(shell?.querySelector('lodb-footer')).toBeNull();
   });
 
   it('points every bottom bar destination under the page locale', async () => {

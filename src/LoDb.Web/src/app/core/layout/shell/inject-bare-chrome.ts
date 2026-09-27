@@ -6,16 +6,15 @@ import {
   NavigationCancel,
   NavigationEnd,
   NavigationError,
+  PRIMARY_OUTLET,
   Router,
   RoutesRecognized,
-  type Routes,
 } from '@angular/router';
 import { filter, map } from 'rxjs';
 
 /** Route data key: `{ chrome: 'bare' }` renders a section in its own frame, as the admin. */
 const CHROME_KEY = 'chrome';
 const BARE = 'bare';
-const SEGMENT_SEPARATOR = '/';
 
 function isBare(snapshot: ActivatedRouteSnapshot | null): boolean {
   for (let route = snapshot; route !== null; route = route.firstChild) {
@@ -27,10 +26,11 @@ function isBare(snapshot: ActivatedRouteSnapshot | null): boolean {
 }
 
 // Before the first navigation is recognized (a page rendered in the browser only): the top
-// route the path starts with, read from the configuration, never from a copied path.
-function startsBare(config: Routes, path: string): boolean {
-  const first = path.split(SEGMENT_SEPARATOR).find((segment) => segment !== '');
-  return config.some((route) => route.data?.[CHROME_KEY] === BARE && route.path === first);
+// route the path starts with, read from the configuration, never from a copied path. The
+// router parses the address, so a query or a fragment (`/admin?range=7`) is no segment.
+function startsBare(router: Router, path: string): boolean {
+  const first = router.parseUrl(path).root.children[PRIMARY_OUTLET]?.segments[0]?.path;
+  return router.config.some((route) => route.data?.[CHROME_KEY] === BARE && route.path === first);
 }
 
 /**
@@ -40,7 +40,7 @@ function startsBare(config: Routes, path: string): boolean {
  */
 export function injectBareChrome(): Signal<boolean> {
   const router = inject(Router);
-  const initial = startsBare(router.config, inject(Location).path());
+  const initial = startsBare(router, inject(Location).path());
   return toSignal(
     router.events.pipe(
       filter(
