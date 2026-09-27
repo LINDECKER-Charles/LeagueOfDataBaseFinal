@@ -25,12 +25,12 @@ const ICON_SIZE = 56;
   imports: [CatalogueImage, RichText, RouterLink],
   template: `<a [routerLink]="link()" class="flex items-center gap-3 px-4 pt-4 pb-3">
       <lodb-catalogue-image
-        class="size-14 rounded-full border border-gold-deep/50 bg-void"
+        class="size-14 border border-gold-deep/50 bg-void"
         [image]="card().image"
         [name]="card().name"
         [size]="iconSize"
         [eager]="eager()"
-        imgClass="object-contain"
+        imgClass="object-contain transition-transform duration-500 group-hover:scale-110 motion-reduce:transition-none"
       />
       <div class="min-w-0">
         <h3

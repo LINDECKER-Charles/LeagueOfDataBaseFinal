@@ -16,14 +16,17 @@
               class="hx-chip gap-2 py-1.5 text-xs tracking-normal normal-case transition-colors hover:border-gold hover:text-gold-bright"
               [routerLink]="linkOf(current, tree.canonicalPath)"
             >
-              <lodb-catalogue-image
-                class="size-5 rounded-full"
-                [image]="tree.image"
-                [name]="tree.name"
-                [size]="pathIconSize"
-                imgClass="object-contain"
-                eager
-              />
+              <!-- The dead .dds marks of 7.22 to 8.7: the name alone, as the legacy chip read. -->
+              @if (tree.image.status !== 'absent') {
+                <lodb-catalogue-image
+                  class="size-5 rounded-full"
+                  [image]="tree.image"
+                  [name]="tree.name"
+                  [size]="pathIconSize"
+                  imgClass="object-contain"
+                  eager
+                />
+              }
               {{ tree.name }}
             </a>
           }

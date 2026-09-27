@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, booleanAttribute, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  booleanAttribute,
+  computed,
+  input,
+} from '@angular/core';
 import { RouterLink, type UrlTree } from '@angular/router';
 import type { CatalogImage } from '../../core/api/generated/models/catalog-image';
 import type { Edition } from '../../core/api/generated/models/edition';
@@ -8,6 +14,16 @@ import { EditionBadge } from './edition-badge';
 
 /** Box of the card's icon, in CSS pixels. */
 const ICON_SIZE = 56;
+// Spelled out whole for the Tailwind scanner. The art zooms inside its box on hover; a
+// rune path's mark sits at 72% of a round box, the transform composing with the hover scale.
+const ZOOM =
+  'transition-transform duration-500 group-hover:scale-110 motion-reduce:transition-none';
+const IMG_CLASSES = {
+  cover: `object-cover ${ZOOM}`,
+  contain: `object-contain ${ZOOM}`,
+  mark: `object-cover [transform:scale(0.72)] ${ZOOM}`,
+} as const;
+const MARK_BOX = 'rounded-full shadow-[inset_0_0_0_1px_var(--hx-ring-accent-2)]';
 
 /**
  * The card shell every catalogue list shares: a link holding the icon, the name, a caption
@@ -19,12 +35,12 @@ const ICON_SIZE = 56;
   template: `<a [routerLink]="href()" class="flex items-center gap-3 px-4 pt-4 pb-3">
       <lodb-catalogue-image
         class="size-14 border border-gold-deep/50 bg-void"
-        [class.rounded-full]="round()"
+        [class]="fit() === 'mark' ? markBox : ''"
         [image]="image()"
         [name]="name()"
         [size]="iconSize"
         [eager]="eager()"
-        [imgClass]="fit() === 'contain' ? 'object-contain' : 'object-cover'"
+        [imgClass]="imgClass()"
       />
       <div class="min-w-0">
         <h3
@@ -59,11 +75,12 @@ export class EntityCard {
   /** One line under the name: a champion's title, an item's price. */
   readonly caption = input<string | null>(null);
   readonly edition = input<Edition | null | undefined>('modern');
-  readonly fit = input<'cover' | 'contain'>('cover');
-  /** A round icon, such as a rune path's mark. */
-  readonly round = input(false, { transform: booleanAttribute });
+  /** How the art fills its box; `mark` is a rune path's glyph, round and inset. */
+  readonly fit = input<'cover' | 'contain' | 'mark'>('cover');
   /** Above the fold: loaded at once. */
   readonly eager = input(false, { transform: booleanAttribute });
 
   protected readonly iconSize = ICON_SIZE;
+  protected readonly markBox = MARK_BOX;
+  protected readonly imgClass = computed(() => IMG_CLASSES[this.fit()]);
 }

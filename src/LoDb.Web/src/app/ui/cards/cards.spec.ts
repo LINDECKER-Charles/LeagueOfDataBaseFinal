@@ -60,11 +60,11 @@ describe('lodb-entity-card', () => {
     expect(element.textContent).toContain('350');
   });
 
-  it('sweeps a pending image and shows the initials of an absent one', async () => {
+  it('sweeps the initials of a pending image and shows those of an absent one', async () => {
     const { fixture, element } = await render();
     fixture.componentInstance.image.set({ status: 'pending' });
     await fixture.whenStable();
-    expect(element.querySelector('.hx-sk')).not.toBeNull();
+    expect(element.querySelector('.slot')?.textContent).toBe('LO');
     expect(element.querySelector('img')).toBeNull();
     fixture.componentInstance.image.set({ status: 'absent' });
     await fixture.whenStable();
