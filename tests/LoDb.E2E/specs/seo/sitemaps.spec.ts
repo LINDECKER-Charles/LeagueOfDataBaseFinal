@@ -8,7 +8,7 @@ function locations(xml: string): string[] {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1] ?? '');
 }
 
-test.describe('sitemaps', () => {
+test.describe('sitemaps', { tag: '@readonly' }, () => {
   test('indexes every locale sitemap of every version', async ({ request }) => {
     const response = await request.get('/sitemap.xml');
     // Without Data Dragon's list of versions the index is unavailable, never wrong.

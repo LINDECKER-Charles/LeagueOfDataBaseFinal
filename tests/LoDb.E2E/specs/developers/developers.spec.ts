@@ -11,7 +11,9 @@ const ROUTES = [
   '/v1/usage',
 ];
 
-test('documents the API on an indexable page, rendered by the server', async ({ page }) => {
+test('documents the API on an indexable page, rendered by the server', { tag: '@readonly' }, async ({
+  page,
+}) => {
   const response = await page.goto(PAGE);
 
   expect(response?.status()).toBe(200);
@@ -27,7 +29,9 @@ test('documents the API on an indexable page, rendered by the server', async ({ 
   await expectNoAccessibilityViolations(page);
 });
 
-test('gives the configured base URL, never the legacy localhost', async ({ page }) => {
+test('gives the configured base URL, never the legacy localhost', { tag: '@readonly' }, async ({
+  page,
+}) => {
   await page.goto(PAGE);
 
   const baseUrl = page.getByTestId('developers-base-url');
@@ -38,7 +42,9 @@ test('gives the configured base URL, never the legacy localhost', async ({ page 
   await expect(page.getByTestId('developers-curl')).toContainText(`"${url}/v1/usage"`);
 });
 
-test('prices the free plan, the packs and the plans from the API', async ({ page }) => {
+test('prices the free plan, the packs and the plans from the API', { tag: '@readonly' }, async ({
+  page,
+}) => {
   await page.goto(PAGE);
 
   const offers = page.getByTestId('developers-pricing').locator('tbody tr');
@@ -49,7 +55,10 @@ test('prices the free plan, the packs and the plans from the API', async ({ page
   await expect(page.getByTestId('developers-usage')).toContainText('"monthly_quota": 500');
 });
 
-test('leads a reader to the portal, through the sign-in', async ({ page, consoleErrors }) => {
+test('leads a reader to the portal, through the sign-in', { tag: '@readonly' }, async ({
+  page,
+  consoleErrors,
+}) => {
   await page.goto(PAGE);
 
   await page.getByTestId('developers-cta').click();

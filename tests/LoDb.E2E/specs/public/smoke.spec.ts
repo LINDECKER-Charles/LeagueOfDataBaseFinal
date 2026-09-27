@@ -1,6 +1,6 @@
 import { expect, test } from '../../support/test';
 
-test.describe('smoke', () => {
+test.describe('smoke', { tag: '@readonly' }, () => {
   test('serves /en/ rendered by the SSR server, then runs it without console error', async ({
     page,
     consoleErrors,

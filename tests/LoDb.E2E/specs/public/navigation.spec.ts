@@ -35,7 +35,7 @@ async function isSameDocument(page: Page): Promise<boolean> {
   return page.evaluate((mark) => Reflect.get(window, mark) === true, MARK);
 }
 
-test.describe('navigation by the header and the bottom bar', () => {
+test.describe('navigation by the header and the bottom bar', { tag: '@readonly' }, () => {
   test('opens each list of the codex from the header menu, through the router', async ({
     page,
     consoleErrors,
@@ -82,7 +82,7 @@ test.describe('navigation by the header and the bottom bar', () => {
   });
 });
 
-test.describe('section anchors', () => {
+test.describe('section anchors', { tag: '@readonly' }, () => {
   test('jump to a section, mark its chip and leave a deep link', async ({ page }) => {
     await page.goto(CHAMPION);
     await page.waitForLoadState('networkidle');
@@ -123,7 +123,7 @@ test.describe('section anchors', () => {
   });
 });
 
-test.describe('filters in the URL', () => {
+test.describe('filters in the URL', { tag: '@readonly' }, () => {
   for (const { resource, search } of LISTS) {
     test(`keeps the filters of /en/${resource} in the URL, which opens them again`, async ({
       page,

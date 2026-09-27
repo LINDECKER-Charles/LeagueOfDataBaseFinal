@@ -76,7 +76,7 @@ async function expectOutcome(request: APIRequestContext, row: Row): Promise<void
   expect(landing.status(), `${row.from} → ${row.to} lands in one hop`).toBe(200);
 }
 
-test.describe('outcomes of the URL grammar', () => {
+test.describe('outcomes of the URL grammar', { tag: '@readonly' }, () => {
   test('redirect a decorative slug and the latest version, answer 404 for the unknown', async ({
     request,
   }) => {
@@ -123,7 +123,7 @@ const PREFERENCES: readonly (readonly [string, string])[] = [
   ['nl-NL,sv;q=0.8', '/en/'],
 ];
 
-test.describe('entry at /', () => {
+test.describe('entry at /', { tag: '@readonly' }, () => {
   for (const [header, target] of PREFERENCES) {
     test(`sends Accept-Language "${header}" to ${target}`, async ({ request }) => {
       const response = await request.get('/', {

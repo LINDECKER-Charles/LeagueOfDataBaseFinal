@@ -14,7 +14,7 @@ function pathOf(url: string): string {
   return `${parsed.pathname}${parsed.search}${parsed.hash}`;
 }
 
-test.describe('the trends, without an account', () => {
+test.describe('the trends, without an account', { tag: '@readonly' }, () => {
   test('renders an indexable page, canonical without its query', async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
     const page = await context.newPage();

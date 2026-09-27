@@ -44,7 +44,7 @@ async function jsonLdTypes(page: Page): Promise<string[]> {
   );
 }
 
-test.describe('champion pages as crawlers read them', () => {
+test.describe('champion pages as crawlers read them', { tag: '@readonly' }, () => {
   test.use({ javaScriptEnabled: false });
 
   test('renders the list with its version once, and links every champion', async ({
@@ -99,7 +99,7 @@ test.describe('champion pages as crawlers read them', () => {
   });
 });
 
-test.describe('champion page in the browser', () => {
+test.describe('champion page in the browser', { tag: '@readonly' }, () => {
   test('plays the clip muted, and stops it when the reader leaves', async ({
     page,
     consoleErrors,

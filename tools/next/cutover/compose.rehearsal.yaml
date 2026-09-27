@@ -1,0 +1,26 @@
+# Overlay of compose.next.yaml for the local rehearsal (L8.2, rehearse.sh): the new stack
+# joins the legacy stack's PostgreSQL, on the rehearsal's copy of its database, as it joins
+# the existing database in production (L8.1). Its own postgres service stays up but unused.
+#
+#   docker compose -p lodb-next-e2 -f compose.next.yaml -f compose.next.override.yaml \
+#     -f tools/next/cutover/compose.rehearsal.yaml …
+#
+# LODB_REHEARSAL_DB_PASSWORD is the legacy stack's POSTGRES_PASSWORD, which rehearse.sh reads
+# from its postgres container; never write it into a file.
+
+x-rehearsal-connection: &rehearsal-connection >-
+  Host=${LODB_REHEARSAL_DB_HOST:-host.docker.internal};Port=${LODB_REHEARSAL_DB_PORT:-5432};Database=${LODB_REHEARSAL_DB_NAME:-lodb_rehearsal};Username=${LODB_REHEARSAL_DB_USER:-lodb};Password=${LODB_REHEARSAL_DB_PASSWORD:-};Gss Encryption Mode=Disable
+
+services:
+  api:
+    environment:
+      ConnectionStrings__LoDb: *rehearsal-connection
+    # Docker Desktop resolves host.docker.internal by itself; a Linux engine needs this.
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  migrate:
+    environment:
+      ConnectionStrings__LoDb: *rehearsal-connection
+    extra_hosts:
+      - host.docker.internal:host-gateway

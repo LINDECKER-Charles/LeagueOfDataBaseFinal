@@ -1,7 +1,7 @@
 import { expectNoAccessibilityViolations } from "../../support/accessibility";
 import { expect, test } from "../../support/test";
 
-test.describe("legal pages", () => {
+test.describe("legal pages", { tag: '@readonly' }, () => {
   test("show the French text under fr", async ({ page, consoleErrors }) => {
     await page.goto("/fr/legal/notice");
     await page.waitForLoadState("networkidle");

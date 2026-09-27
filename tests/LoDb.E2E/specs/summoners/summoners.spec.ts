@@ -35,7 +35,7 @@ async function spellOf(request: APIRequestContext, id: string): Promise<Spell> {
   return (await response.json()) as Spell;
 }
 
-test.describe('summoner spell pages as crawlers read them', () => {
+test.describe('summoner spell pages as crawlers read them', { tag: '@readonly' }, () => {
   test.use({ javaScriptEnabled: false });
 
   test('renders the list, each card with its cooldown, linking its spell', async ({ page }) => {
@@ -72,7 +72,7 @@ test.describe('summoner spell pages as crawlers read them', () => {
   });
 });
 
-test.describe('summoner spell pages', () => {
+test.describe('summoner spell pages', { tag: '@readonly' }, () => {
   test('link a spell to its LoL Classic twin and back', async ({
     page,
     request,

@@ -1,7 +1,7 @@
 import { expect, test } from '../../support/test';
 
 // Files nginx must hand to the API (server.d/seo.conf): the SSR server knows none of them.
-test.describe('crawler files', () => {
+test.describe('crawler files', { tag: '@readonly' }, () => {
   test('serves robots.txt from the API, pointing to the sitemap index', async ({
     request,
     baseURL,

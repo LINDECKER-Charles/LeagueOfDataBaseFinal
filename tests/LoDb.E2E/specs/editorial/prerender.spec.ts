@@ -13,7 +13,7 @@ const PAGES = [
 const LOCALES = ["en", "fr", "ar", "zh-hant"];
 
 // What the server answers before any script runs: the file the build prerendered.
-test.describe("prerendered editorial pages", () => {
+test.describe("prerendered editorial pages", { tag: '@readonly' }, () => {
   test.use({ javaScriptEnabled: false });
 
   for (const locale of LOCALES) {

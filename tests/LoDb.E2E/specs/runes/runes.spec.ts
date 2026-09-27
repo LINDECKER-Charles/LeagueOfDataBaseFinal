@@ -25,7 +25,7 @@ async function runesOf(request: APIRequestContext): Promise<RuneList> {
   return (await response.json()) as RuneList;
 }
 
-test.describe('rune pages as crawlers read them', () => {
+test.describe('rune pages as crawlers read them', { tag: '@readonly' }, () => {
   test.use({ javaScriptEnabled: false });
 
   test('renders the band of paths and the runes, each linking its card on its path', async ({
@@ -55,7 +55,7 @@ test.describe('rune pages as crawlers read them', () => {
   });
 });
 
-test.describe('rune pages', () => {
+test.describe('rune pages', { tag: '@readonly' }, () => {
   test('lead from a rune to its card on its path page', async ({ page, consoleErrors }) => {
     await page.goto(LIST);
     await page.waitForLoadState('networkidle');

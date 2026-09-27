@@ -24,7 +24,7 @@ async function cachedPaths(page: Page, cacheName: string): Promise<string[]> {
   }, cacheName);
 }
 
-test.describe('service worker', () => {
+test.describe('service worker', { tag: '@readonly' }, () => {
   test('makes the site installable and controls its pages', async ({ page }) => {
     await page.goto(VISITED);
     await controlledByWorker(page);

@@ -1,0 +1,80 @@
+# Monitoring of the cutover window and of the 72 hours after it (plan-migration.md, cutover
+# step 4.6; L8.2). LogsQL for the host's VictoriaLogs, read through Grafana
+# (docs/guides/observabilite.md). Alerts and counts rest on event keys, never on the level
+# Vector guesses.
+#
+# Format: each query follows a `# name: what it answers` line, blank lines between queries.
+# Placeholders, filled by check-queries.sh or by hand in Grafana:
+#   {{stack}}   the new stack's Compose project (COMPOSE_PROJECT_NAME of the served host)
+#   {{domain}}  the public domain, as the edge journal writes it in `domaine`
+#   {{window}}  the period, for instance 1h during the window, 24h after it
+#
+# The new stack writes one JSON object per line: the API `EventName` and `LogLevel`, the SSR
+# server `msg` and `status`. The edge journal is parsed by Vector (journal, classe, domaine,
+# chemin, schema); nginx of the new stack keeps no access log.
+
+# name: edge-5xx: 5xx answered on the domain, by path
+stack:edge service:caddy journal:acces classe:5xx schema:https domaine:{{domain}} _time:{{window}}
+  | stats by (chemin) count() requetes | sort by (requetes desc) | limit 20
+
+# name: edge-legacy-4xx: 4xx on a former URL, which should all be 301 (the paths of legacy-redirects.conf)
+stack:edge service:caddy journal:acces classe:4xx schema:https domaine:{{domain}} _time:{{window}}
+  chemin:~"^/(home|champions?|objects?|runes?|summoners?|about|faq|changelog|developers|donate|legal|trends|u|login|register|profile|reset-password|builds|[0-9]+(\\.[0-9]+)+)(/|$)"
+  | stats by (chemin) count() requetes | sort by (requetes desc) | limit 50
+
+# name: edge-traffic: requests on the domain by status class, to read the others against
+stack:edge service:caddy journal:acces schema:https domaine:{{domain}} _time:{{window}}
+  | stats by (classe) count() requetes
+
+# name: ssr-5xx: 5xx the SSR server answered (its request log carries no path)
+stack:{{stack}} service:web-ssr _time:{{window}} "http.request.served"
+  | unpack_json fields (status) | filter status:>=500 | stats count() reponses
+
+# name: ssr-status: answers of the SSR server by status, 404 of former URLs included
+stack:{{stack}} service:web-ssr _time:{{window}} "http.request.served"
+  | unpack_json fields (status) | stats by (status) count() reponses | sort by (reponses desc)
+
+# name: ssr-failures: renders that failed, and requests the SSR server could not serve
+stack:{{stack}} service:web-ssr _time:{{window}} ("ssr.render.failed" OR "http.request.failed")
+  | stats count() erreurs
+
+# name: api-errors: API errors by event key
+stack:{{stack}} service:api _time:{{window}}
+  | unpack_json fields (EventName, LogLevel) | filter LogLevel:in(Error, Critical)
+  | stats by (EventName) count() lignes | sort by (lignes desc)
+
+# name: legacy-unresolved: former URLs the API could not resolve (Data Dragon unreadable)
+stack:{{stack}} service:api _time:{{window}} "legacy.redirect.failed" | stats count() lignes
+
+# name: ingestion: ingestion outcomes by event key (patch watch, on demand, pre-ingestion)
+stack:{{stack}} service:api _time:{{window}}
+  ("ingest.version.completed" OR "ingest.version.incomplete" OR "ingest.version.failed"
+   OR "ingest.version.abandoned" OR "ingest.version.locked" OR "ingest.on_demand.failed"
+   OR "ingest.images.completed" OR "ingest.images.incomplete")
+  | unpack_json fields (EventName) | stats by (EventName) count() lignes
+
+# name: egress-refused: outbound requests the allowlist refused (security event)
+stack:{{stack}} service:api _time:{{window}} ("fetch.allowlist.refused" OR "fetch.redirect.refused")
+  | stats count() lignes
+
+# name: jobs-failed: periodic jobs that failed (patch watch, rollups, retention, outbox)
+stack:{{stack}} service:api _time:{{window}} ("jobs.run.failed" OR "jobs.schedule.failed")
+  | stats count() lignes
+
+# name: accounts-mail: account e-mails given up or failing (verification, reset)
+stack:{{stack}} service:api _time:{{window}} ("outbox.message.dead" OR "outbox.batch.failed")
+  | unpack_json fields (EventName) | stats by (EventName) count() lignes
+
+# name: payments: Stripe webhooks refused or failed, and checkouts that failed
+stack:{{stack}} service:api _time:{{window}}
+  ("billing.webhook.failed" OR "billing.webhook.rejected" OR "billing.checkout.failed")
+  | unpack_json fields (EventName) | stats by (EventName) count() lignes
+
+# name: public-api: /v1 failures and usage counts not written
+stack:{{stack}} service:api _time:{{window}}
+  ("publicapi.request.failed" OR "publicapi.request.unavailable" OR "publicapi.usage.flush_failed"
+   OR "publicapi.usage.dropped")
+  | unpack_json fields (EventName) | stats by (EventName) count() lignes
+
+# name: volume: lines per service, to spot one that turned talkative or silent
+stack:{{stack}} _time:{{window}} | stats by (service) count() lignes | sort by (lignes desc)

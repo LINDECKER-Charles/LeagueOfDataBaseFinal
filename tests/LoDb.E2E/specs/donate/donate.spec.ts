@@ -48,7 +48,10 @@ async function openDonatePage(page: Page): Promise<void> {
   ).toBeVisible();
 }
 
-test('sends a donor to Stripe with the tier they chose', async ({ page, consoleErrors }) => {
+test('sends a donor to Stripe with the tier they chose', { tag: '@readonly' }, async ({
+  page,
+  consoleErrors,
+}) => {
   const checkout = await doubleStripe(page);
   await openDonatePage(page);
   await expect(page.getByRole('radio', { name: /Gemstone/ })).toBeChecked();
@@ -62,7 +65,9 @@ test('sends a donor to Stripe with the tier they chose', async ({ page, consoleE
   expect(consoleErrors).toEqual([]);
 });
 
-test('gives a free amount over the tier, and refuses one out of bounds', async ({ page }) => {
+test('gives a free amount over the tier, and refuses one out of bounds', { tag: '@readonly' }, async ({
+  page,
+}) => {
   const checkout = await doubleStripe(page);
   await openDonatePage(page);
   const amount = page.getByLabel('Free amount');
@@ -85,7 +90,7 @@ test('gives a free amount over the tier, and refuses one out of bounds', async (
   });
 });
 
-test('keeps the return pages out of the index, their links followed', async ({
+test('keeps the return pages out of the index, their links followed', { tag: '@readonly' }, async ({
   page,
   consoleErrors,
 }) => {

@@ -1,7 +1,7 @@
 import { expect, test } from '../../support/test';
 
 // `/` has no page: the SSR server sends the browser to the locale it prefers (ADR 0005).
-test.describe('entry, in a French browser', () => {
+test.describe('entry, in a French browser', { tag: '@readonly' }, () => {
   test.use({ locale: 'fr-FR' });
 
   test('lands on the French home, rendered by the server, then runs it', async ({
@@ -18,7 +18,7 @@ test.describe('entry, in a French browser', () => {
   });
 });
 
-test.describe('entry, in an Arabic browser', () => {
+test.describe('entry, in an Arabic browser', { tag: '@readonly' }, () => {
   test.use({ locale: 'ar-SA' });
 
   test('lands on the Arabic home, laid out right to left', async ({ page }) => {
@@ -30,7 +30,7 @@ test.describe('entry, in an Arabic browser', () => {
   });
 });
 
-test.describe('entry, in a browser whose languages the site lacks', () => {
+test.describe('entry, in a browser whose languages the site lacks', { tag: '@readonly' }, () => {
   test.use({ locale: 'nl-NL' });
 
   test('falls back to English', async ({ page }) => {
@@ -40,7 +40,9 @@ test.describe('entry, in a browser whose languages the site lacks', () => {
   });
 });
 
-test('answers / with a 302 that shared caches keep apart by language', async ({ request }) => {
+test('answers / with a 302 that shared caches keep apart by language', { tag: '@readonly' }, async ({
+  request,
+}) => {
   const response = await request.get('/', {
     headers: { 'Accept-Language': 'de-DE,de;q=0.9' },
     maxRedirects: 0,

@@ -5,7 +5,9 @@ const PASSWORD_RULES = 6;
 
 // No account is created here: what a visitor meets on the account pages.
 test.describe('account pages for a visitor', () => {
-  test('are rendered in the browser, never cached nor indexed', async ({ request }) => {
+  test('are rendered in the browser, never cached nor indexed', { tag: '@readonly' }, async ({
+    request,
+  }) => {
     const response = await request.get('/en/account/login');
 
     expect(response.status()).toBe(200);
@@ -14,7 +16,9 @@ test.describe('account pages for a visitor', () => {
     expect(await response.text()).not.toContain('ng-server-context="ssr"');
   });
 
-  test('send the profile to the sign-in, which will bring the visitor back', async ({ page }) => {
+  test('send the profile to the sign-in, which will bring the visitor back', { tag: '@readonly' }, async ({
+    page,
+  }) => {
     await page.goto('/en/account/profile');
 
     await expect(page).toHaveURL(/\/en\/account\/login\?/);
@@ -22,7 +26,10 @@ test.describe('account pages for a visitor', () => {
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
   });
 
-  test('draw the sign-in form, without console error', async ({ page, consoleErrors }) => {
+  test('draw the sign-in form, without console error', { tag: '@readonly' }, async ({
+    page,
+    consoleErrors,
+  }) => {
     await page.goto('/en/account/login');
 
     await expect(page.getByLabel('Email or summoner name')).toBeVisible();
@@ -43,7 +50,9 @@ test.describe('account pages for a visitor', () => {
     await expect(page).toHaveURL(/\/en\/account\/login$/);
   });
 
-  test('check a new password as it is typed, with the rules of the server', async ({ page }) => {
+  test('check a new password as it is typed, with the rules of the server', { tag: '@readonly' }, async ({
+    page,
+  }) => {
     await page.goto('/en/account/register');
     const rules = page.locator('lodb-password-checklist li');
 
@@ -56,7 +65,7 @@ test.describe('account pages for a visitor', () => {
     await expect(rules.filter({ hasText: '(met)' })).toHaveCount(PASSWORD_RULES);
   });
 
-  test('keep a mismatched confirmation from being sent', async ({ page }) => {
+  test('keep a mismatched confirmation from being sent', { tag: '@readonly' }, async ({ page }) => {
     await page.goto('/en/account/register');
     let sent = false;
     page.on('request', (request) => {

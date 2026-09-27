@@ -46,7 +46,7 @@ async function crawl(page: Page, url: string): Promise<Head> {
   return readHead(page);
 }
 
-test.describe('head of the public pages, as crawlers read it', () => {
+test.describe('head of the public pages, as crawlers read it', { tag: '@readonly' }, () => {
   test.use({ javaScriptEnabled: false });
 
   for (const entry of INDEXED_PAGES) {

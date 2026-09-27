@@ -56,7 +56,7 @@ function pathAndQuery(page: Page): string {
   return `${url.pathname}${url.search}`;
 }
 
-test.describe("context switcher", () => {
+test.describe("context switcher", { tag: '@readonly' }, () => {
   test("ships no option in the prerendered HTML: the browser loads them", async ({
     page,
     request,
