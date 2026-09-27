@@ -1,4 +1,5 @@
 import type { PageContext } from '../../../../core/context/page-context';
+import { cataloguePath } from '../../../../core/routing/url/catalogue-path';
 import { QueryString } from '../../../../core/routing/url/query-string';
 import { searchOf } from '../url/search-of';
 
@@ -11,8 +12,7 @@ const LANG_PARAM = 'lang';
  * `path` is the API's `canonicalPath` (`champions/Aatrox`) or a list (`champions`).
  */
 export function catalogueHref(context: PageContext, path: string, currentUrl = ''): string {
-  const version = context.pinned ? `${context.version}/` : '';
-  const lang = QueryString.parse(searchOf(currentUrl)).get(LANG_PARAM);
-  const query = lang ? QueryString.parse('').with(LANG_PARAM, lang).toString() : '';
-  return `/${context.locale}/${version}${path}${query}`;
+  const version = context.pinned ? context.version : null;
+  const lang = QueryString.parse(searchOf(currentUrl)).get(LANG_PARAM) || null;
+  return cataloguePath(context.locale, path, { version, lang });
 }

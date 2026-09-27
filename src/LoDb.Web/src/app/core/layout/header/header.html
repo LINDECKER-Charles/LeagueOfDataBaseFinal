@@ -63,14 +63,14 @@
               <lodb-icon name="chevron" class="switcher__chevron" />
             </summary>
             <ul class="switcher__panel switcher__panel--menu">
-              @for (entry of codex; track entry.path) {
+              @for (codexLink of codex(); track codexLink.entry.path) {
                 <li>
                   <a
                     class="nav-link"
-                    [routerLink]="link(entry.path)"
+                    [routerLink]="codexLink.target"
                     routerLinkActive="text-gold-bright"
                     ariaCurrentWhenActive="page"
-                    >{{ entry.label | transloco }}</a
+                    >{{ codexLink.entry.label | transloco }}</a
                   >
                 </li>
               }

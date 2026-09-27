@@ -7,6 +7,7 @@ import { Icon } from '../../../ui/media/icon';
 import { Logo } from '../../../ui/media/logo';
 import { PageDirection } from '../direction/page-direction';
 import { Disclosure } from '../disclosure/disclosure';
+import { injectChromeLinks } from '../nav/inject-chrome-links';
 import { localePath } from '../shell/locale-path';
 import { RELEASE_VERSION } from '../shell/release-version';
 import { ThemePicker } from '../theme-picker/theme-picker';
@@ -24,8 +25,9 @@ import { CODEX_ENTRIES } from './codex-entries';
  * - from 864px the patch returns, from 1180px the chip, from xl the full name.
  * Where the name is left out, assistive technology still reads it. The legacy bar showed the
  * name and the chip at more widths, but let them overlap the logo and the navigation there.
- * The developers entry is labelled from the `api` catalogue scope, loaded here since the
- * header sits outside the pages that provide it.
+ * The Codex menu keeps the page's version and variant (`injectChromeLinks`), and lights up on
+ * any page of the catalogue. The developers entry is labelled from the `api` catalogue scope,
+ * loaded here since the header sits outside the pages that provide it.
  */
 @Component({
   selector: 'lodb-header',
@@ -45,7 +47,7 @@ import { CODEX_ENTRIES } from './codex-entries';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Header {
-  protected readonly codex = CODEX_ENTRIES;
+  protected readonly codex = injectChromeLinks(CODEX_ENTRIES);
   protected readonly version = inject(RELEASE_VERSION);
   protected readonly payments = inject(PAYMENTS_ENABLED);
   private readonly page = inject(PageDirection);
