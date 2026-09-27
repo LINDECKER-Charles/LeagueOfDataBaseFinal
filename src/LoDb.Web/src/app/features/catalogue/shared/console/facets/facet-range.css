@@ -65,7 +65,11 @@
 .range__fill {
   position: absolute;
   inset-block: 0;
-  background: var(--color-gold);
+  background: linear-gradient(90deg, var(--color-gold-deep), var(--color-gold));
+}
+/* The fill brightens toward the high thumb, which sits at the inline start in RTL. */
+.range__fill:dir(rtl) {
+  background: linear-gradient(270deg, var(--color-gold-deep), var(--color-gold));
 }
 .range__input {
   appearance: none;

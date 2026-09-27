@@ -13,7 +13,11 @@
   inset-block-start: env(safe-area-inset-top, 0);
   z-index: 20;
   min-block-size: 4rem;
-  background: color-mix(in srgb, var(--color-void) 92%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-void) 97%, transparent),
+    color-mix(in srgb, var(--color-void) 88%, transparent)
+  );
   backdrop-filter: blur(8px);
 }
 .list__console {
