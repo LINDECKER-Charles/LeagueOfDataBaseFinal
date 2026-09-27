@@ -41,7 +41,6 @@ export class OffersPanel {
   /** Null when the API could not say what is on sale. */
   readonly offers = input.required<BillingOffers | null>();
   readonly key = input.required<ApiKeyOverview>();
-  readonly locale = input.required<string>();
   readonly busy = input(false);
 
   /** A choice, without its locale: the page adds it. */
@@ -52,14 +51,14 @@ export class OffersPanel {
     (this.offers()?.packs ?? []).map((pack) => ({
       code: pack.code,
       price: pack.priceCents / CENTS_PER_EURO,
-      volume: formatCount(this.locale(), pack.requests),
+      volume: formatCount(pack.requests),
     })),
   );
   protected readonly plans = computed<readonly PlanCard[]>(() =>
     (this.offers()?.plans ?? []).map((plan) => ({
       code: plan.code,
       price: plan.priceCents / CENTS_PER_EURO,
-      volume: formatCount(this.locale(), plan.monthlyQuota),
+      volume: formatCount(plan.monthlyQuota),
       rate: plan.ratePerMinute,
       yearly: plan.interval === YEAR,
     })),

@@ -3,7 +3,7 @@ import { readHead } from '../../support/head';
 import { createMember, signInMember } from '../../support/member-account';
 import { expect, test } from '../../support/test';
 import { discardAccount, type TestAccount } from '../account/accounts';
-import { PORTAL, shownSecret, usageStatus } from './portal';
+import { PORTAL, portalToast, shownSecret, usageStatus } from './portal';
 
 const OK = 200;
 const FORBIDDEN = 403;
@@ -51,10 +51,8 @@ test('asks an account to verify its e-mail before it issues a key', async ({ pag
   await expect(
     page.getByText('Confirm your email address before generating an API key.'),
   ).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Verify my email' })).toHaveAttribute(
-    'href',
-    '/en/account/verify-email',
-  );
+  // As in the legacy portal, the panel only says why: the banner above sends the link.
+  await expect(page.getByRole('link', { name: 'Verify my email' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Create my key' })).toHaveCount(0);
   const head = await readHead(page);
   expect(head.robots).toContain('noindex');
@@ -75,6 +73,7 @@ test('issues, regenerates and revokes a key, which /v1 follows at once', async (
     await page.getByLabel('Key name (optional)').fill('e2e-bot');
     await page.getByRole('button', { name: 'Create my key' }).click();
     secret = await shownSecret(page);
+    await expect(portalToast(page, 'API key created.')).toBeVisible();
     await expect(page.getByTestId('api-key-prefix')).toHaveText(`${secret.slice(0, 12)}…`);
     await expect(page.getByTestId('api-key-plan')).toHaveText('Free');
     await expectNoAccessibilityViolations(page);
@@ -89,21 +88,20 @@ test('issues, regenerates and revokes a key, which /v1 follows at once', async (
 
   await test.step('regenerates it: the old secret is refused, the new one served', async () => {
     await page.getByRole('button', { name: 'Regenerate the key' }).click();
-    await expect(page.getByTestId('api-portal-notice')).toHaveText(
-      'Key regenerated — the previous secret no longer works.',
-    );
+    await expect(
+      portalToast(page, 'Key regenerated — the previous secret no longer works.'),
+    ).toBeVisible();
     const renewed = await shownSecret(page);
     expect(renewed).not.toBe(secret);
     expect(await usageStatus(request, secret)).toBe(FORBIDDEN);
     expect(await usageStatus(request, renewed)).toBe(OK);
     secret = renewed;
-    await page.getByRole('button', { name: 'I have copied it' }).click();
-    await expect(page.getByTestId('api-key-secret')).toHaveCount(0);
   });
 
   await test.step('revokes it: /v1 refuses it from the next request', async () => {
     await page.getByRole('button', { name: 'Revoke', exact: true }).click();
-    await expect(page.getByTestId('api-portal-notice')).toHaveText('Key revoked.');
+    await expect(portalToast(page, 'Key revoked.')).toBeVisible();
+    await expect(page.getByTestId('api-key-secret')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Create my key' })).toBeVisible();
     expect(await usageStatus(request, secret)).toBe(FORBIDDEN);
   });

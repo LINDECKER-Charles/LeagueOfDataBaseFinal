@@ -15,6 +15,8 @@ import { accountUser } from '../../core/auth/testing/account-user';
 import { FakeAuthStrategy } from '../../core/auth/testing/fake-auth-strategy';
 import { activateLocale } from '../../core/i18n/activate-locale';
 import { LOCALES } from '../../core/i18n/locales';
+import type { ToastKind } from '../../core/layout/toast/toast-kind';
+import { ToastService } from '../../core/layout/toast/toast-service';
 import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
 import { Seo } from '../../core/seo/seo';
 import { API_PORTAL_ROUTES } from './api-portal.routes';
@@ -108,6 +110,7 @@ async function visit(options: Visit = {}) {
   TestBed.configureTestingModule({ providers: portalProviders(user, payments, go) });
   const http = TestBed.inject(HttpTestingController);
   const apply = vi.spyOn(TestBed.inject(Seo), 'apply');
+  const toasts = TestBed.inject(ToastService);
   const created = RouterTestingHarness.create(url ?? '/fr/account/api');
   const read = await vi.waitFor(() => http.expectOne(KEY_URL));
   if (failed) {
@@ -121,7 +124,14 @@ async function visit(options: Visit = {}) {
   const harness = await created;
   await harness.fixture.whenStable();
   const settle = () => harness.fixture.whenStable();
-  return { page: harness.routeNativeElement as HTMLElement, settle, http, go, apply };
+  const page = harness.routeNativeElement as HTMLElement;
+  // The shell's toaster is not mounted here: the queue says what it would show.
+  const toasted = () => toasts.toasts().map(({ kind, message }) => ({ kind, message }));
+  return { page, settle, http, go, apply, toasted };
+}
+
+function toast(kind: ToastKind, message: string) {
+  return { kind, message };
 }
 
 function text(page: HTMLElement, selector: string): string | undefined {
@@ -166,7 +176,7 @@ describe('ApiPortalPage', () => {
   });
 
   it('issues a key under the name typed, then shows its secret once', async () => {
-    const { page, settle, http } = await visit({ key: null });
+    const { page, settle, http, toasted } = await visit({ key: null });
 
     submitName(page, '  bot  ');
     const request = http.expectOne(KEY_URL);
@@ -177,27 +187,22 @@ describe('ApiPortalPage', () => {
     expect(request.request.body).toEqual({ name: 'bot' });
     const field = page.querySelector<HTMLInputElement>('[data-testid="api-key-secret"]');
     expect(field?.value).toBe(SECRET);
-    expect(text(page, '[data-testid="api-portal-notice"]')).toBe('api.portal.flash.created');
-
-    buttonOf(page, 'apiPortal.raw.done').click();
-    await settle();
-    expect(page.querySelector('[data-testid="api-key-secret"]')).toBeNull();
     expect(text(page, '[data-testid="api-key-prefix"]')).toBe('lodb_0123456…');
+    expect(toasted()).toEqual([toast('success', 'api.portal.flash.created')]);
+    expect(page.querySelector('[data-testid="api-portal-notice"]')).toBeNull();
   });
 
-  it('sends an account whose e-mail is not verified to verify it first', async () => {
+  it('tells an account whose e-mail is not verified why it cannot issue a key', async () => {
     const { page } = await visit({ key: null, user: accountUser({ emailVerified: false }) });
 
     expect(page.querySelector('form')).toBeNull();
     expect(page.textContent).toContain('auth.verify.gate_api');
-    const verify = [...page.querySelectorAll('a')].find(
-      (link) => link.textContent?.trim() === 'apiPortal.create.verify',
-    );
-    expect(verify?.getAttribute('href')).toBe('/fr/account/verify-email');
+    // The banner over every page sends the link again: the panel only says why.
+    expect(page.querySelector('lodb-create-key a')).toBeNull();
   });
 
   it('regenerates the secret, the new prefix shown', async () => {
-    const { page, settle, http } = await visit();
+    const { page, settle, http, toasted } = await visit();
 
     buttonOf(page, 'api.portal.actions.regenerate').click();
     const request = http.expectOne(REGENERATE_URL);
@@ -209,11 +214,11 @@ describe('ApiPortalPage', () => {
     expect(page.querySelector<HTMLInputElement>('[data-testid="api-key-secret"]')?.value).toBe(
       SECRET,
     );
-    expect(text(page, '[data-testid="api-portal-notice"]')).toBe('api.portal.flash.regenerated');
+    expect(toasted()).toEqual([toast('success', 'api.portal.flash.regenerated')]);
   });
 
   it('revokes the key, the form offered again', async () => {
-    const { page, settle, http } = await visit();
+    const { page, settle, http, toasted } = await visit();
 
     buttonOf(page, 'api.portal.actions.revoke').click();
     const request = http.expectOne(KEY_URL);
@@ -223,18 +228,18 @@ describe('ApiPortalPage', () => {
     expect(request.request.method).toBe('DELETE');
     expect(page.querySelector('[data-testid="api-key-prefix"]')).toBeNull();
     expect(page.querySelector('form')).not.toBeNull();
-    expect(text(page, '[data-testid="api-portal-notice"]')).toBe('api.portal.flash.revoked');
+    expect(toasted()).toEqual([toast('success', 'api.portal.flash.revoked')]);
   });
 
   it('tells a refusal by its code, the key kept', async () => {
-    const { page, settle, http } = await visit({ key: null });
+    const { page, settle, http, toasted } = await visit({ key: null });
 
     submitName(page, '');
     const problem = { status: 409, code: 'api-key-exists' };
     http.expectOne(KEY_URL).flush(problem, { status: 409, statusText: 'Conflict' });
     await settle();
 
-    expect(text(page, '[role="alert"]')).toBe('api.portal.flash.key_exists');
+    expect(toasted()).toEqual([toast('error', 'api.portal.flash.key_exists')]);
     expect(page.querySelector('[data-testid="api-key-secret"]')).toBeNull();
   });
 

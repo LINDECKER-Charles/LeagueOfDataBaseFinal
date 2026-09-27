@@ -4,7 +4,6 @@ import {
   DestroyRef,
   inject,
   input,
-  output,
   signal,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -17,9 +16,9 @@ const COPIED_RESET_MS = 2000;
 type CopyState = 'idle' | 'copied' | 'failed';
 
 /**
- * The one showing of a secret just issued: a read-only field holding it, a copy button, and
- * a button to put it away. Without the Clipboard API, or when it refuses, the field says to
- * copy by hand and is selected on focus.
+ * The one showing of a secret just issued: a read-only field holding it and a copy button,
+ * until the page is left, as in the legacy portal. Without the Clipboard API, or when it
+ * refuses, the button says to copy by hand, and the field is selected on focus.
  */
 @Component({
   selector: 'lodb-key-reveal',
@@ -44,11 +43,8 @@ type CopyState = 'idle' | 'copied' | 'failed';
             (focus)="field.select()"
           />
         </label>
-        <button type="button" lodbButton aria-live="polite" (click)="copy()">
+        <button type="button" lodbButton="ghost" aria-live="polite" (click)="copy()">
           {{ copyLabel() | transloco }}
-        </button>
-        <button type="button" lodbButton="ghost" (click)="dismissed.emit()">
-          {{ 'apiPortal.raw.done' | transloco }}
         </button>
       </div>
     </section>
@@ -60,9 +56,6 @@ type CopyState = 'idle' | 'copied' | 'failed';
 export class KeyReveal {
   /** The secret, `lodb_` and 40 hexadecimal digits. */
   readonly secret = input.required<string>();
-
-  /** Its owner put it away. */
-  readonly dismissed = output();
 
   private readonly state = signal<CopyState>('idle');
   private timer: ReturnType<typeof setTimeout> | undefined;

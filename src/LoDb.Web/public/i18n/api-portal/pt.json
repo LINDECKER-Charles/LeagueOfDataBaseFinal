@@ -5,12 +5,6 @@
     "load": "Não foi possível carregar a chave de API.",
     "failed": "A ação falhou, tente novamente."
   },
-  "raw": {
-    "done": "Já copiei"
-  },
-  "create": {
-    "verify": "Verificar meu e-mail"
-  },
   "actions": {
     "revoke_help": "Desativa a chave imediatamente: a API a recusa a partir da próxima requisição."
   }

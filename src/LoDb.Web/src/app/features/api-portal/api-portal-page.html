@@ -3,7 +3,9 @@
   <header class="portal-header">
     <div>
       <p class="eyebrow">{{ 'api.portal.eyebrow' | transloco }}</p>
-      <h1 class="portal-header__title text-gold-grad">{{ 'api.portal.title' | transloco }}</h1>
+      <h1 class="mt-2 font-beaufort text-4xl font-bold tracking-wide text-gold-grad uppercase">
+        {{ 'api.portal.title' | transloco }}
+      </h1>
     </div>
     <div class="portal-header__links">
       <a class="nav-link text-sm text-gold" [routerLink]="link('developers')">
@@ -15,6 +17,10 @@
     </div>
   </header>
 
+  @if (portal.secret(); as secret) {
+    <lodb-key-reveal [secret]="secret" />
+  }
+
   @if (portal.notice(); as notice) {
     <p
       class="portal-banner"
@@ -25,10 +31,6 @@
     >
       {{ notice.key | transloco }}
     </p>
-  }
-
-  @if (portal.secret(); as secret) {
-    <lodb-key-reveal [secret]="secret" (dismissed)="portal.dismissSecret()" />
   }
 
   @switch (portal.status()) {
@@ -47,7 +49,6 @@
       @if (portal.key(); as key) {
         <lodb-key-overview
           [key]="key"
-          [locale]="locale()"
           [busy]="portal.busy()"
           (regenerate)="portal.regenerate()"
           (revoke)="portal.revoke()"
@@ -57,17 +58,15 @@
             class="mt-14"
             [offers]="portal.offers()"
             [key]="key"
-            [locale]="locale()"
             [busy]="portal.busy()"
             (buy)="buy($event)"
           />
         }
-        <lodb-usage-table class="mt-14" [key]="key" [locale]="locale()" />
+        <lodb-usage-table class="mt-14" [key]="key" />
       } @else {
         <lodb-create-key
           [verified]="verified()"
           [busy]="portal.busy()"
-          [verifyLink]="link('account/verify-email')"
           (create)="portal.create($event)"
         />
       }

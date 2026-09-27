@@ -5,12 +5,6 @@
     "load": "No se pudo cargar tu clave de API.",
     "failed": "La acción ha fallado, inténtalo de nuevo."
   },
-  "raw": {
-    "done": "Ya la he copiado"
-  },
-  "create": {
-    "verify": "Verificar mi correo"
-  },
   "actions": {
     "revoke_help": "Desactiva la clave de inmediato: la API la rechaza desde la siguiente petición."
   }

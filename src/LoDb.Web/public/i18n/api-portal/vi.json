@@ -5,12 +5,6 @@
     "load": "Không thể tải khóa API.",
     "failed": "Thao tác thất bại, vui lòng thử lại."
   },
-  "raw": {
-    "done": "Tôi đã sao chép"
-  },
-  "create": {
-    "verify": "Xác minh email của tôi"
-  },
   "actions": {
     "revoke_help": "Vô hiệu hóa khóa ngay lập tức: API từ chối khóa từ yêu cầu tiếp theo."
   }

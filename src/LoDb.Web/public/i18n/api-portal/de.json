@@ -5,12 +5,6 @@
     "load": "Der API-Schlüssel konnte nicht geladen werden.",
     "failed": "Die Aktion ist fehlgeschlagen, bitte erneut versuchen."
   },
-  "raw": {
-    "done": "Schlüssel kopiert"
-  },
-  "create": {
-    "verify": "E-Mail-Adresse bestätigen"
-  },
   "actions": {
     "revoke_help": "Deaktiviert den Schlüssel sofort: Die API lehnt ihn ab der nächsten Anfrage ab."
   }

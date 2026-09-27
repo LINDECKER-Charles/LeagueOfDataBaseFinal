@@ -5,12 +5,6 @@
     "load": "Nie udało się wczytać klucza API.",
     "failed": "Akcja nie powiodła się, spróbuj ponownie."
   },
-  "raw": {
-    "done": "Klucz skopiowany"
-  },
-  "create": {
-    "verify": "Potwierdź mój e-mail"
-  },
   "actions": {
     "revoke_help": "Natychmiast wyłącza klucz: API odrzuca go od następnego żądania."
   }
