@@ -5,7 +5,7 @@ interface ErrorCopy {
   readonly error: { readonly '404': { readonly title: string } };
 }
 
-// The 404 heading of a locale, from the catalogue the site serves: the spec follows the copy.
+// The 404 title of a locale, from the catalogue the site serves: the spec follows the copy.
 async function notFoundTitle(request: APIRequestContext, locale: string): Promise<string> {
   const copy = (await (await request.get(`/i18n/seo/${locale}.json`)).json()) as ErrorCopy;
   return copy.error['404'].title;
@@ -27,9 +27,8 @@ test.describe('missing pages', { tag: '@readonly' }, () => {
     expect(response?.status()).toBe(404);
     expect(response?.headers()['x-robots-tag']).toBe('noindex');
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      await notFoundTitle(request, 'fr'),
-    );
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('404');
+    await expect(page.getByRole('main')).toContainText(await notFoundTitle(request, 'fr'));
 
     await page.waitForLoadState('networkidle');
     await page.getByRole('main').getByRole('link').click();
@@ -43,9 +42,8 @@ test.describe('missing pages', { tag: '@readonly' }, () => {
 
     expect(response?.status()).toBe(404);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      await notFoundTitle(request, 'en'),
-    );
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('404');
+    await expect(page.getByRole('main')).toContainText(await notFoundTitle(request, 'en'));
   });
 
   test('answers a pinned version alone with a 404, never a blank page', async ({ page }) => {

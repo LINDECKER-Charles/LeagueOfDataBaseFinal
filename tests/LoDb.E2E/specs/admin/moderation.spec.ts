@@ -79,7 +79,8 @@ test('hides the admin from a member, behind the 404 of the URL', async ({ reques
   await page.goto('/admin/users');
 
   await expect(page).toHaveURL(/\/admin\/users$/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(copy.error['404'].title);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('404');
+  await expect(page.getByRole('main')).toContainText(copy.error['404'].title);
   await expect(
     page.getByRole('navigation', { name: "Navigation de l'administration" }),
   ).toHaveCount(0);
