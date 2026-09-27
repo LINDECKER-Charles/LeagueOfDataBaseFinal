@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideTransloco } from '@jsverse/transloco';
+import { of } from 'rxjs';
 import type { ChampionCard as Card } from '../../../../core/api/generated/models/champion-card';
 import { ChampionCard } from './champion-card';
 import { CHAMPION_CARD_ADAPTER } from './champion-card-adapter';
@@ -135,18 +137,49 @@ describe('championFacets', () => {
 });
 
 describe('lodb-champion-card', () => {
-  it('links the champion page, with its capitalized title and roles', async () => {
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+  async function render(card: Card) {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideTransloco({
+          config: {
+            availableLangs: ['en'],
+            defaultLang: 'en',
+            missingHandler: { logMissingKey: false },
+            prodMode: true,
+          },
+          loader: class {
+            getTranslation = () => of({ common: { detail: 'See details' } });
+          },
+        }),
+      ],
+    });
     const fixture = TestBed.createComponent(ChampionCard);
-    fixture.componentRef.setInput('card', cardOf());
+    fixture.componentRef.setInput('card', card);
     fixture.componentRef.setInput('href', '/en/champions/Annie');
     fixture.componentRef.setInput('locale', 'en');
     await fixture.whenStable();
-    const element = fixture.nativeElement as HTMLElement;
+    return fixture.nativeElement as HTMLElement;
+  }
 
-    expect(element.querySelector('a')?.getAttribute('href')).toBe('/en/champions/Annie');
-    expect(element.textContent).toContain('The Dark Child');
+  it('makes the whole card the link, with its capitalized title, roles and teaser', async () => {
+    const element = await render(cardOf());
+    const link = element.querySelector('a');
+
+    expect(link?.getAttribute('href')).toBe('/en/champions/Annie');
+    expect(link?.textContent).toContain('The Dark Child');
     const chips = [...element.querySelectorAll('.hx-chip')].map((chip) => chip.textContent);
     expect(chips).toEqual(['Mage', 'Support']);
+    expect(link?.textContent).toContain('Dangerous, yet disarmingly precocious.');
+    expect(link?.textContent).toContain('See details');
+  });
+
+  it('shows the loading-screen portrait of the champion', async () => {
+    const element = await render(cardOf());
+    const art = element.querySelector('img');
+    expect(art?.getAttribute('src')).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Annie_0.jpg',
+    );
+    expect(art?.getAttribute('alt')).toBe('Annie');
   });
 });

@@ -18,8 +18,8 @@ import { FACET_LABEL_KEYS } from './list/facet-label-keys';
 import { applyChampionsHead } from './seo/apply-champions-head';
 import { championsListSeo } from './seo/champions-list-seo';
 
-/** Cards of the first row, whose icons load at once. */
-const EAGER_CARDS = 4;
+/** Cards of the widest first row (five columns), whose portraits load at once. */
+const EAGER_CARDS = 5;
 
 /**
  * The champions list: the page the URL names rendered on the server, readable as is, then
