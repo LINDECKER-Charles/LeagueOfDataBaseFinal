@@ -1,6 +1,7 @@
 /** Glyphs of the chrome: disclosure, dismissal, primary destinations, contact channels. */
 export type IconName =
   | 'chevron'
+  | 'chevron-solid'
   | 'close'
   | 'heart'
   | 'user'

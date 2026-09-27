@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { Icon } from '../../../../../ui/media/icon';
 
 /**
  * One group of facets under its heading, after the ARIA accordion pattern: a heading holding
@@ -9,6 +10,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
  */
 @Component({
   selector: 'lodb-facet-group',
+  imports: [Icon],
   template: `<div role="heading" aria-level="3">
       <button
         type="button"
@@ -23,19 +25,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         @if (engaged() > 0) {
           <b class="badge">{{ engaged() }}</b>
         }
-        <svg
-          class="chevron"
-          [class.chevron--open]="open()"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-          />
-        </svg>
+        <lodb-icon name="chevron-solid" class="chevron" [class.chevron--open]="open()" />
       </button>
     </div>
     <div
