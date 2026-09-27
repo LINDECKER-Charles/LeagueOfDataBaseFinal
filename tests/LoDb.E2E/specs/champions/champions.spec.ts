@@ -18,6 +18,8 @@ const LIST = '/en/champions';
 const DETAIL = `${LIST}/${CHAMPION}`;
 const SERVER_TIMING = /(?:^|,\s*)catalogue;dur=\d+(?:\.\d+)?/;
 const KEEP = 'lodbLeftVideo';
+// The chips of the legacy tab bar, never a catalogue key.
+const SECTION_LABELS = ['Abilities', 'Skins', 'Lore', 'Tips', 'Base Statistics'];
 
 async function latestOf(request: APIRequestContext): Promise<string> {
   const meta = (await (await request.get('/api/meta')).json()) as Meta;
@@ -74,6 +76,7 @@ test.describe('champion pages as crawlers read them', { tag: '@readonly' }, () =
     for (const id of ['abilities', 'skins', 'lore', 'tips', 'stats']) {
       await expect(page.locator(`#${id}`)).toHaveCount(1);
     }
+    await expect(page.locator('.section-nav a')).toHaveText(SECTION_LABELS);
     expect(
       new URL((await page.locator('link[rel="canonical"]').getAttribute('href')) ?? '').pathname,
     ).toBe(`/en/${details.canonicalPath}`);

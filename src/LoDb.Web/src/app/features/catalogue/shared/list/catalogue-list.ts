@@ -54,7 +54,11 @@ const MAX_SKELETON_TILES = 24;
   ],
   templateUrl: './catalogue-list.html',
   styleUrl: './catalogue-list.css',
-  providers: [FilterUrlSync, CatalogueFilter, provideTranslocoScope('catalogue')],
+  providers: [FilterUrlSync, CatalogueFilter],
+  // View providers, not providers: the page's own pipes on this element's inputs, and in the
+  // card template it projects, would resolve this scope instead of the page's, and translate
+  // its keys (`summoners.search_placeholder`) only if another pipe happened to load them first.
+  viewProviders: [provideTranslocoScope('catalogue')],
   host: { class: 'block', '(document:keydown)': 'onKeydown($event)' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

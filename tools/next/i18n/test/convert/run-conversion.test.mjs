@@ -49,6 +49,14 @@ describe('runConversion', () => {
     assert.deepEqual([1, 2].map(render), ['1 result', '2 results']);
   });
 
+  // The `en` message also renders under locales that lack it, with their own plural rules.
+  it('takes X_one for exactly one, as the legacy did, whatever the plural rules', () => {
+    const { results } = read('en.json').filter;
+    const render = (locale) => (count) => renderLikeTransloco(results, { count }, locale);
+    assert.deepEqual([0, 1, 2].map(render('fr')), ['0 results', '1 result', '2 results']);
+    assert.deepEqual([0, 1, 2].map(render('ja')), ['0 results', '1 result', '2 results']);
+  });
+
   it('converts pipe plurals of every locale', () => {
     const apples = read('en.json').apples;
     const render = (count) => renderLikeTransloco(apples, { count, name: 'Ornn' }, 'en');

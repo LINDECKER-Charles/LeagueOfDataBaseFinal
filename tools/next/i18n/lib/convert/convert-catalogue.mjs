@@ -2,6 +2,9 @@ import { buildIcuPlural } from './message/build-icu-plural.mjs';
 import { convertMessage } from './message/convert-message.mjs';
 
 const SINGULAR_SUFFIX = '_one';
+// The legacy front took `X_one` for a count of exactly one, whatever the locale: the CLDR
+// `one` category would also cover 0 in French, and match nothing in Japanese or Chinese.
+const SINGULAR_SELECTOR = '=1';
 
 /**
  * Converts one parsed YAML catalogue, keeping its keys and nesting. The legacy front paired
@@ -48,7 +51,7 @@ function convertLeaf(message, singular, { locale, stats }) {
   if (typeof singular === 'string') {
     stats.pluralPairs += 1;
     return buildIcuPlural([
-      { selector: 'one', text: singular },
+      { selector: SINGULAR_SELECTOR, text: singular },
       { selector: 'other', text: message },
     ]);
   }

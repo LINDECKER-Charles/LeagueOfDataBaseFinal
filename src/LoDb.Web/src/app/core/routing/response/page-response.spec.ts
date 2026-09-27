@@ -79,6 +79,17 @@ describe('PageResponse', () => {
     expect(headersOf(init)['cache-control']).toBe('public, max-age=3600, s-maxage=604800');
   });
 
+  it('keeps a response it may not store out of caches, whatever is set afterwards', () => {
+    const init: ResponseInit = { headers: new Headers() };
+    const response = serverResponse(init);
+
+    response.forbidStorage();
+    response.cache('archived');
+    response.answer({ kind: 'not-found' });
+
+    expect(headersOf(init)['cache-control']).toBe('private, no-store');
+  });
+
   it('keeps the headers given in another form', () => {
     const init: ResponseInit = { headers: { 'Content-Type': 'text/html' } };
 

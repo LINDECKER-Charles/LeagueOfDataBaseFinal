@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { TranslocoPipe, provideTranslocoScope, translateSignal } from '@jsverse/transloco';
+import { TranslocoPipe, translateSignal } from '@jsverse/transloco';
 import type { ChampionCard } from '../../../../core/api/generated/models/champion-card';
 import type { ChampionDetails } from '../../../../core/api/generated/models/champion-details';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
@@ -51,7 +51,6 @@ function hasText(tip: string): boolean {
     TranslocoPipe,
   ],
   templateUrl: './champion-page.html',
-  providers: [provideTranslocoScope('champions')],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChampionPage {
@@ -64,6 +63,8 @@ export class ChampionPage {
   protected readonly lore = computed(() => this.details().lore || this.details().blurb);
   protected readonly allyTips = computed(() => this.details().allyTips.filter(hasText));
   protected readonly enemyTips = computed(() => this.details().enemyTips.filter(hasText));
+  // Root keys, hence no catalogue scope on this page: under one, translateSignal reads its keys
+  // inside that scope (`champions.champion.detail.…`), where the pipe does not.
   private readonly labels = translateSignal(CHAMPION_SECTIONS.map((section) => section.label));
   protected readonly sections = computed(() => {
     const labels = this.labels();

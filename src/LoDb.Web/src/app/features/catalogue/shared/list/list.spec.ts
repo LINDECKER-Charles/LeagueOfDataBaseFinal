@@ -1,7 +1,12 @@
-import { Component, PLATFORM_ID, signal } from '@angular/core';
+import { Component, PLATFORM_ID, type Type, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
+import {
+  type Translation,
+  TranslocoPipe,
+  provideTransloco,
+  provideTranslocoScope,
+} from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { CardValues } from '../facets/model/card-values';
 import type { CatalogueListSource } from '../source/catalogue-list-source';
@@ -34,6 +39,8 @@ const ADAPTER: CatalogueCardAdapter<Item> = {
   keyOf: (item) => item.name,
 };
 const WINDOW_MS = 300;
+// The catalogue scope of a page that lists its own texts, such as `summoners`.
+const SCOPED: Record<string, Translation> = { 'feature/en': { search: 'Search for a feature' } };
 
 function sourceOf(dataset: List | null, status: ListStatus = 'ready') {
   const whole = signal<List | null>(dataset);
@@ -69,33 +76,60 @@ class Host {
   readonly schema = SCHEMA;
 }
 
+// A page under its own catalogue scope, which translates the label it hands the list.
+@Component({
+  imports: [CatalogueList, CatalogueCardTemplate, TranslocoPipe],
+  providers: [provideTranslocoScope('feature')],
+  template: `<lodb-catalogue-list
+    [source]="source"
+    [adapter]="adapter"
+    [searchLabel]="'feature.search' | transloco"
+    label="Items"
+  >
+    <p class="card" *lodbCatalogueCard="let item of source">{{ item.name }}</p>
+  </lodb-catalogue-list>`,
+})
+class ScopedHost {
+  readonly source = current;
+  readonly adapter = ADAPTER;
+}
+
 describe('lodb-catalogue-list', () => {
-  async function render(url: string, source: CatalogueListSource<List>) {
+  async function render(
+    url: string,
+    source: CatalogueListSource<List>,
+    host: Type<unknown> = Host,
+  ) {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: '**', children: [] }]),
         { provide: PLATFORM_ID, useValue: 'browser' },
         provideTransloco({
-          config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
+          config: {
+            availableLangs: ['en'],
+            defaultLang: 'en',
+            missingHandler: { logMissingKey: false },
+            prodMode: true,
+          },
           loader: class {
-            getTranslation = () => of({});
+            getTranslation = (path: string) => of(SCOPED[path] ?? {});
           },
         }),
       ],
     });
     await TestBed.inject(Router).navigateByUrl(url);
     current = source;
-    const fixture = TestBed.createComponent(Host);
+    const fixture = TestBed.createComponent(host);
     await fixture.whenStable();
     return fixture;
   }
 
-  const all = (fixture: ComponentFixture<Host>, selector: string): HTMLElement[] =>
+  const all = (fixture: ComponentFixture<unknown>, selector: string): HTMLElement[] =>
     Array.from((fixture.nativeElement as HTMLElement).querySelectorAll(selector));
-  const names = (fixture: ComponentFixture<Host>) =>
+  const names = (fixture: ComponentFixture<unknown>) =>
     all(fixture, '.card').map((card) => card.textContent?.trim());
 
-  async function type(fixture: ComponentFixture<Host>, text: string) {
+  async function type(fixture: ComponentFixture<unknown>, text: string) {
     const field = all(fixture, 'input[type=search]')[0] as HTMLInputElement;
     field.value = text;
     field.dispatchEvent(new Event('input'));
@@ -174,6 +208,13 @@ describe('lodb-catalogue-list', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: '/' }));
     expect(document.activeElement).toBe(rail);
     rail.blur();
+  });
+
+  it('translates the label a scoped page hands it within the scope of that page', async () => {
+    const fixture = await render('/en/items', sourceOf(WHOLE).source, ScopedHost);
+
+    const [search] = all(fixture, 'lodb-filter-console input[type=search]');
+    expect(search?.getAttribute('placeholder')).toBe('Search for a feature');
   });
 
   it('opens the facets in a bottom sheet on narrow screens', async () => {

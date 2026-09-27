@@ -54,7 +54,15 @@ function detailsOf(overrides: Partial<ChampionDetails> = {}): ChampionDetails {
 }
 
 const EN = {
-  champion: { detail: { abilities: 'Abilities', skins: 'Skins', stats: { title: 'Stats' } } },
+  champion: {
+    detail: {
+      abilities: 'Abilities',
+      skins: 'Skins',
+      lore: { title: 'Lore' },
+      tips: 'Tips',
+      stats: { title: 'Base Statistics' },
+    },
+  },
 };
 
 @Component({ template: '' })
@@ -123,6 +131,13 @@ describe('ChampionPage', () => {
     expect(sections).toEqual(['abilities', 'skins', 'lore', 'tips', 'stats']);
     expect(host.querySelectorAll('#tips li')).toHaveLength(1);
     expect(host.querySelector('lodb-stat-board')).not.toBeNull();
+  });
+
+  it('labels its section chips from the root catalogue, like the legacy tabs', async () => {
+    const { host } = await visit(detailsOf());
+    const chips = [...host.querySelectorAll('.section-nav a')].map((a) => a.textContent?.trim());
+
+    expect(chips).toEqual(['Abilities', 'Skins', 'Lore', 'Tips', 'Base Statistics']);
   });
 
   it('keeps the lore markup Data Dragon uses, and makes anything else plain text', async () => {
