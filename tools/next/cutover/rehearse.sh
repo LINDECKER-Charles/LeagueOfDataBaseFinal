@@ -15,8 +15,9 @@
 # --copy           the database the copy goes to, next to the legacy one in its PostgreSQL;
 #                  dropped and created again. Never the legacy database itself.
 # --anonymize      passes the dump through tools/next/db/anonymize.sh; every account of the
-#                  copy then has LODB_ANON_PASSWORD (a random one when unset), and five of them
-#                  are signed in as well.
+#                  copy with a password then has LODB_ANON_PASSWORD (a random one when unset),
+#                  and five of them are signed in as well. A dev database may have none: a
+#                  warning says so, and the seeded accounts alone stand for the existing ones.
 # --accounts-file  accounts of the copy whose password is known, `<identifier>:<password>`
 #                  per line, checked with the seeded ones (accounts.mjs).
 # --historical     version sitemaps followed by the 301 check beyond the primary one.
@@ -238,9 +239,16 @@ seed_accounts() {
     cat "$accounts_file" >>"$file"
   fi
   if [ "$anonymize" = 1 ]; then
-    psql_legacy -d "$copy" -c "SELECT coalesce(username, email) FROM users
-      WHERE password IS NOT NULL AND NOT is_banned ORDER BY id LIMIT 5" |
-      sed "s/\$/:$LODB_ANON_PASSWORD/" >>"$file"
+    local anonymized
+    anonymized="$(psql_legacy -d "$copy" -c "SELECT coalesce(username, email) FROM users
+      WHERE password IS NOT NULL AND NOT is_banned ORDER BY id LIMIT 5")"
+    if [ -z "$anonymized" ]; then
+      # Not a failure: the seeded accounts, written before migrate, are existing ones too.
+      echo "WARNING: --anonymize found no account with a password in $copy to sign in;" \
+        "only the seeded accounts (and --accounts-file) stand for the existing ones." >&2
+    else
+      printf '%s\n' "$anonymized" | sed "s/\$/:$LODB_ANON_PASSWORD/" >>"$file"
+    fi
   fi
   node "$here/accounts.mjs" seed --state "$work/state.json" --postgres "$LEGACY_POSTGRES" \
     --database "$copy" --pg-user "$pg_user" --accounts-file "$file"
