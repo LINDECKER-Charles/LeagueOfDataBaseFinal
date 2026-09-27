@@ -5,6 +5,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   mergeApplicationConfig,
+  type Type,
   ɵgetDocument as getDocument,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -16,7 +17,7 @@ import {
 } from '@angular/platform-browser';
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 import { provideRouter, RouterOutlet } from '@angular/router';
-import { type Translation, TranslocoPipe } from '@jsverse/transloco';
+import { type Translation, TranslocoPipe, provideTranslocoScope } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { Shell } from '../../layout/shell/shell';
 import { keepingGlobals } from '../../testing/keeping-globals';
@@ -43,6 +44,9 @@ const CATALOGUES: Record<string, Translation> = {
 };
 // Angular's default, which the render keeps and TestBed does not.
 const SERVER_APP_ID = 'ng';
+// The chrome's scope lands at once, the route matches later, the root catalogue last.
+const MATCH_DELAY_MS = 20;
+const ROOT_DELAY_MS = 40;
 const DOCUMENT_HTML =
   '<html><head><base href="/"></head><body><lodb-root></lodb-root></body></html>';
 
@@ -71,13 +75,33 @@ class ChromePage {}
 })
 class Root {}
 
-function stubCatalogueFetch(): ReturnType<typeof vi.fn> {
-  const fetch = vi.fn((input: RequestInfo | URL) => {
+@Component({
+  selector: 'lodb-scoped-label',
+  imports: [TranslocoPipe],
+  template: `<b>{{ 'base.title' | transloco }}</b>`,
+  providers: [provideTranslocoScope('api')],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class ScopedLabel {}
+
+// Like app.html: the chrome sits outside the outlet, so it renders before the navigation ends.
+@Component({
+  selector: 'lodb-root',
+  imports: [RouterOutlet, ScopedLabel],
+  template: '<lodb-scoped-label /><router-outlet />',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class ChromeRoot {}
+
+const after = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// `delays`: milliseconds before a path answers, none by default.
+function stubCatalogueFetch(delays: Record<string, number> = {}): ReturnType<typeof vi.fn> {
+  const fetch = vi.fn(async (input: RequestInfo | URL) => {
     const url = new URL(input instanceof Request ? input.url : String(input), 'http://ssr.test');
     const catalogue = CATALOGUES[url.pathname];
-    return Promise.resolve(
-      catalogue ? Response.json(catalogue) : new Response('Not Found', { status: 404 }),
-    );
+    await after(delays[url.pathname] ?? 0);
+    return catalogue ? Response.json(catalogue) : new Response('Not Found', { status: 404 });
   });
   vi.stubGlobal('fetch', fetch);
   return fetch;
@@ -91,6 +115,12 @@ function browserConfig(): ApplicationConfig {
       provideRouter([
         { path: ':locale', resolve: { locale: activateLocale }, component: TitlePage },
         { path: ':locale/chrome', resolve: { locale: activateLocale }, component: ChromePage },
+        {
+          path: ':locale/late',
+          canMatch: [() => after(MATCH_DELAY_MS).then(() => true)],
+          resolve: { locale: activateLocale },
+          component: TitlePage,
+        },
       ]),
       provideHttpClient(),
       provideClientHydration(),
@@ -106,14 +136,14 @@ function browserConfig(): ApplicationConfig {
 // Merged in the order of app.config.server.ts, which matters: the transfer cache must key a
 // request before the server's own root interceptor makes its URL absolute, or the browser,
 // which requests the relative URL, would never find it.
-async function renderOnServer(url: string): Promise<string> {
+async function renderOnServer(url: string, root: Type<unknown> = Root): Promise<string> {
   Reflect.set(globalThis, 'ngServerMode', true);
   try {
     const serverConfig = mergeApplicationConfig(browserConfig(), {
       providers: [provideServerRendering()],
     });
     const bootstrap = (context: BootstrapContext) =>
-      bootstrapApplication(Root, serverConfig, context);
+      bootstrapApplication(root, serverConfig, context);
     return await keepingGlobals(() =>
       renderApplication(bootstrap, { document: DOCUMENT_HTML, url }),
     );
@@ -169,6 +199,15 @@ describe('i18n catalogues in SSR', () => {
     expect(body).toContain('Nos données');
     expect(body).toContain('Foire aux questions');
     expect(body.match(/>\s*(?:about|api)\.[a-z_.]+\s*</g)).toBeNull();
+  });
+
+  it('renders the chrome in the root catalogue, even when one of its scopes lands first', async () => {
+    stubCatalogueFetch({ '/i18n/en.json': ROOT_DELAY_MS });
+
+    const body = bodyOf(await renderOnServer('/en/late', ChromeRoot));
+
+    expect(body).toContain('<b>Hello</b>');
+    expect(body).toContain('<h1>Hello</h1>');
   });
 
   it('leaves jsdom its DOM classes and document for the specs that run next in this worker', async () => {

@@ -3,11 +3,11 @@ import { inject } from '@angular/core';
 import type { ResolveFn } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { BuildsService } from '../../../../core/api/generated/services/builds.service';
+import { injectLocaleSwitch } from '../../../../core/i18n/inject-locale-switch';
 import { injectOutcomeCommand } from '../../../../core/routing/outcome/inject-outcome-command';
 import { NOT_FOUND } from '../../../../core/routing/outcome/not-found';
 import { PageResponse } from '../../../../core/routing/response/page-response';
 import { localeOfLanguage } from '../../shared/language/locale-of-language';
-import { injectLocaleActivation } from './activate-build-locale';
 import type { SharedBuildPage } from './shared-build-page';
 
 // A token no build holds is a 404, a malformed one too (the API checks `[a-f0-9]{24}`); so is
@@ -24,7 +24,7 @@ export const resolveSharedBuild: ResolveFn<SharedBuildPage> = async (route, stat
   const builds = inject(BuildsService);
   const answer = injectOutcomeCommand();
   const response = inject(PageResponse);
-  const activate = injectLocaleActivation();
+  const activate = injectLocaleSwitch();
   const token = route.paramMap.get('token') ?? '';
   const version = route.queryParamMap.get('version') ?? undefined;
   const lang = route.queryParamMap.get('lang') ?? undefined;
