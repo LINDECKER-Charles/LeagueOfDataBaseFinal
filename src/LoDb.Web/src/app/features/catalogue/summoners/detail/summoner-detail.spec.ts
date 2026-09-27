@@ -119,7 +119,7 @@ describe('lodb-summoner-detail', () => {
     expect(modes.map((mode) => mode.textContent?.trim())).toEqual(['LoL Classic']);
   });
 
-  it('engraves its plaques, and turns the pages of the list, a LoL Classic one marked', async () => {
+  it('engraves its plaques, and turns the pages, a LoL Classic neighbour marked', async () => {
     const { element } = await render();
 
     expect(element.querySelectorAll('.hx-plate')).toHaveLength(2);
