@@ -9,6 +9,8 @@ export const BUTTON_TONES = {
   ghost: 'hx-btn-ghost',
   /** Filled parchment-to-gold face: the one strongest call to action of a view. */
   gold: 'hx-btn-gold',
+  /** Red text on a red wash: an action that destroys or revokes. */
+  danger: 'hx-btn-danger',
 } as const;
 
 export type ButtonTone = keyof typeof BUTTON_TONES;
