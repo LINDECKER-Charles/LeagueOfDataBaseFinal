@@ -6,7 +6,10 @@
   @if (section().total !== null) {
     <span class="font-mono text-xs text-hex">{{ section().total }}</span>
   }
-  <span aria-hidden="true" class="h-px flex-1 bg-linear-to-r from-gold-deep to-transparent"></span>
+  <span
+    aria-hidden="true"
+    class="h-px flex-1 bg-linear-to-r from-gold-deep to-transparent rtl:bg-linear-to-l"
+  ></span>
   <a
     class="group inline-flex shrink-0 items-center gap-2 font-beaufort text-xs tracking-[0.11em] text-gold uppercase transition-colors hover:text-hex"
     [routerLink]="section().list.path"
