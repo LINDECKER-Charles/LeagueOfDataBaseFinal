@@ -9,6 +9,8 @@ import { Icon } from '../media/icon';
  *
  * The heading is a small-caps eyebrow on its own (the theme picker). With an `eyebrow`, the
  * frame is a form's: the eyebrow above a display title, and a larger close (the contact form).
+ * An element marked `lodbDialogLead` leads the head, before the heading: a way back, whose
+ * square matches the close's so that the heading sits centred between them.
  */
 @Component({
   selector: 'lodb-dialog',

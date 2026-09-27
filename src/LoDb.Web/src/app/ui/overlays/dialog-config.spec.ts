@@ -24,6 +24,15 @@ describe('dialogConfig', () => {
       'hx-dialog--form',
     ]);
   });
+
+  it('focuses the control the opener names, the dialog still named by its heading', () => {
+    const config = dialogConfig({ labelledBy: 'picker-title', autoFocus: 'input[type=search]' });
+
+    expect(config).toMatchObject({
+      ariaLabelledBy: 'picker-title',
+      autoFocus: 'input[type=search]',
+    });
+  });
 });
 
 describe('sheetConfig', () => {
