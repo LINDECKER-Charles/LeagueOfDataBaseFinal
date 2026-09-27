@@ -30,6 +30,7 @@ function treeOf(slots: RuneTreeDetails['slots']): RuneTreeDetails {
       name: 'Precision',
     },
     slots,
+    neighbours: { previous: null, next: null },
   };
 }
 

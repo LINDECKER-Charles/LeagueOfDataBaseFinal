@@ -55,6 +55,12 @@ export interface AnalyticsReport {
   from: string;
 
   /**
+   * Whether this instance resolves countries: false without a GeoLite2 database, the
+   * country breakdown then staying empty. The legacy admin passed it next to its report.
+   */
+  geoAvailable: boolean;
+
+  /**
    * Views by weekday (rows, Monday first) and UTC hour (columns).
    */
   heatmap: Array<Array<number>>;

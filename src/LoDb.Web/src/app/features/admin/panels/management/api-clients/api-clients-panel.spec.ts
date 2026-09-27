@@ -25,7 +25,7 @@ function client(id: number, isActive = true): AdminApiClientRow {
     creditsBalance: 40,
     rateLimitPerMin: 60,
     createdAt: '2026-08-01T00:00:00Z',
-    owner: { id: 3, username: 'dev' },
+    owner: { id: 3, username: 'dev', isBanned: false },
   };
 }
 

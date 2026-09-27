@@ -9,8 +9,8 @@ import { ItemStat } from '../models/item-stat';
 import { ItemTier } from '../models/item-tier';
 
 /**
- * An item as the list shows it, with the values its facets filter on: tags, edition, maps,
- * tier, price, stats.
+ * An item as the list shows it: what it builds into, and the values its facets filter on:
+ * tags, edition, maps, tier, price, stats.
  */
 export interface ItemCard {
   canonicalPath: string;
@@ -33,9 +33,17 @@ export interface ItemCard {
   stats: Array<ItemStat>;
 
   /**
-   * The one-line description, template tokens removed.
+   * The one-line description, template tokens removed. On a list card, the full one when
+   * Data Dragon ships none (Emberknife): the card has no other text. On the item's page,
+   * the one-liner alone, since the full description follows it.
    */
   summary: string;
   tags: Array<string>;
   tier?: (null | ItemTier | null);
+
+  /**
+   * Ids of the listed items it builds into, in the upstream order; the list names them in
+   * its `related` links, each once whatever the number of cards pointing to it.
+   */
+  upgrades: Array<string>;
 }

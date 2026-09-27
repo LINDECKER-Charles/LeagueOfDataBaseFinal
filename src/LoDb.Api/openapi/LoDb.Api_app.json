@@ -5679,6 +5679,7 @@
           "isPublic",
           "score",
           "owner",
+          "shareToken",
           "createdAt"
         ],
         "type": "object",
@@ -5713,6 +5714,10 @@
           },
           "owner": {
             "$ref": "#/components/schemas/AdminUserRef"
+          },
+          "shareToken": {
+            "type": "string",
+            "description": "24 hexadecimal characters: the build's share page is `/b/{token}`."
           },
           "createdAt": {
             "type": "string",
@@ -6003,7 +6008,8 @@
       "AdminUserRef": {
         "required": [
           "id",
-          "username"
+          "username",
+          "isBanned"
         ],
         "type": "object",
         "properties": {
@@ -6013,6 +6019,10 @@
           },
           "username": {
             "type": "string"
+          },
+          "isBanned": {
+            "type": "boolean",
+            "description": "Whether the account is banned now: the build list badges its author."
           }
         },
         "description": "An account a row points to, as the admin lists name it."
@@ -6040,6 +6050,13 @@
           },
           "username": {
             "type": "string"
+          },
+          "riotTagline": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Riot tagline, null when unset: the admin names the account `username#tagline`,\nas the legacy `displayName` did."
           },
           "email": {
             "type": "string"
@@ -6226,7 +6243,8 @@
           "device",
           "refSource",
           "topReferers",
-          "country"
+          "country",
+          "geoAvailable"
         ],
         "type": "object",
         "properties": {
@@ -6380,6 +6398,10 @@
               "$ref": "#/components/schemas/AnalyticsCountry"
             },
             "description": "Views by country, for the views that have one."
+          },
+          "geoAvailable": {
+            "type": "boolean",
+            "description": "Whether this instance resolves countries: false without a GeoLite2 database, the\ncountry breakdown then staying empty. The legacy admin passed it next to its report."
           }
         },
         "description": "The traffic and audience of a period, as the legacy admin's report\n(`RangeReportBuilder`): what was viewed, when, by whom and from where."
@@ -6877,6 +6899,13 @@
               "null",
               "string"
             ]
+          },
+          "riotTagline": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Riot tagline, null when unset: the page names the account `username#tagline`,\nas the legacy `displayName` did."
           }
         },
         "description": "The account whose activity is shown."
@@ -7475,6 +7504,8 @@
           "title",
           "canonicalPath",
           "image",
+          "loadingArt",
+          "blurb",
           "tags",
           "resource",
           "stats"
@@ -7500,6 +7531,15 @@
           },
           "image": {
             "$ref": "#/components/schemas/CatalogImage"
+          },
+          "loadingArt": {
+            "type": "string",
+            "description": "The base skin's loading-screen portrait, hotlinked from Data Dragon (UP 8): the art of\nthe list's card.",
+            "format": "uri"
+          },
+          "blurb": {
+            "type": "string",
+            "description": "The lore teaser, template tokens removed."
           },
           "tags": {
             "type": "array",
@@ -7546,7 +7586,7 @@
             }
           }
         },
-        "description": "A champion as the list shows it, with the values its facets filter on: roles, resource,\nrange, ratings and base stats."
+        "description": "A champion as the list shows it: its portrait, its lore teaser, and the values its facets\nfilter on: roles, resource, range, ratings and base stats."
       },
       "ChampionChroma": {
         "required": [
@@ -7594,7 +7634,8 @@
           "enemyTips",
           "abilities",
           "art",
-          "skins"
+          "skins",
+          "neighbours"
         ],
         "type": "object",
         "properties": {
@@ -7655,9 +7696,13 @@
             "items": {
               "$ref": "#/components/schemas/ChampionSkin"
             }
+          },
+          "neighbours": {
+            "description": "The champions before and after it in the list's order.",
+            "$ref": "#/components/schemas/DetailNeighbours"
           }
         },
-        "description": "`GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the\nabilities and the skins, every image resolved and every art hotlinked."
+        "description": "`GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the\nabilities and the skins, every image resolved and every art hotlinked, and the champions\non either side of it in the list."
       },
       "ChampionFacets": {
         "required": [
@@ -8172,6 +8217,63 @@
         ],
         "type": "string",
         "description": "What an account types to confirm its erasure, one of three variants."
+      },
+      "DetailNeighbour": {
+        "required": [
+          "id",
+          "name",
+          "canonicalPath",
+          "edition"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of its page: MonkeyKing, 3031, 8100, SummonerFlash."
+          },
+          "name": {
+            "type": "string"
+          },
+          "canonicalPath": {
+            "type": "string",
+            "description": "Its page, such as `items/1036-long-sword`, under the locale prefix."
+          },
+          "edition": {
+            "description": "Which game it belongs to: walking the Classic range of the items or the spells, every\nname repeats a current entry's (UP 6). Champions and rune paths have no Classic twin:\ntheirs is modern, as the legacy pager assumed.",
+            "$ref": "#/components/schemas/Edition"
+          }
+        },
+        "description": "An entry beside a detail page in its list's order, as the pager links it."
+      },
+      "DetailNeighbours": {
+        "required": [
+          "previous",
+          "next"
+        ],
+        "type": "object",
+        "properties": {
+          "previous": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DetailNeighbour"
+              }
+            ]
+          },
+          "next": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DetailNeighbour"
+              }
+            ]
+          }
+        },
+        "description": "The entries on either side of a detail page in its list's order, without wrapping round:\nthe first entry has no previous one. Sent with the page, so that the pager is in the\nserver's HTML rather than filled in after the browser fetched the whole list."
       },
       "DonationCheckoutRequest": {
         "type": "object",
@@ -8863,7 +8965,8 @@
           "tags",
           "maps",
           "consumable",
-          "stats"
+          "stats",
+          "upgrades"
         ],
         "type": "object",
         "properties": {
@@ -8896,7 +8999,7 @@
           },
           "summary": {
             "type": "string",
-            "description": "The one-line description, template tokens removed."
+            "description": "The one-line description, template tokens removed. On a list card, the full one when\nData Dragon ships none (Emberknife): the card has no other text. On the item's page,\nthe one-liner alone, since the full description follows it."
           },
           "gold": {
             "$ref": "#/components/schemas/ItemGold"
@@ -8933,9 +9036,16 @@
             "items": {
               "$ref": "#/components/schemas/ItemStat"
             }
+          },
+          "upgrades": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Ids of the listed items it builds into, in the upstream order; the list names them in\nits `related` links, each once whatever the number of cards pointing to it."
           }
         },
-        "description": "An item as the list shows it, with the values its facets filter on: tags, edition, maps,\ntier, price, stats."
+        "description": "An item as the list shows it: what it builds into, and the values its facets filter on:\ntags, edition, maps, tier, price, stats."
       },
       "ItemDetails": {
         "required": [
@@ -8945,7 +9055,8 @@
           "profile",
           "description",
           "availableMaps",
-          "upgrades"
+          "upgrades",
+          "neighbours"
         ],
         "type": "object",
         "properties": {
@@ -9014,14 +9125,27 @@
               }
             ]
           },
+          "depth": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Data Dragon's depth: 1 for a starter, 2 for an epic, 3 or 4 for a legendary built from\nepics; null when Data Dragon ships none (a consumable, a trinket).",
+            "format": "int32"
+          },
           "upgrades": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/EntityLink"
-            }
+              "$ref": "#/components/schemas/ItemUpgrade"
+            },
+            "description": "The listed items it builds into, in the upstream order, with their price."
+          },
+          "neighbours": {
+            "description": "The items before and after it in the list's order.",
+            "$ref": "#/components/schemas/DetailNeighbours"
           }
         },
-        "description": "`GET /api/catalog/{version}/{lang}/items/{id}`: the card, then the description, the\nrecipe, the upgrades and the champion the item is bound to, every image resolved."
+        "description": "`GET /api/catalog/{version}/{lang}/items/{id}`: the card, then the description, the\nrecipe, the upgrades and the champion the item is bound to, every image resolved, and the\nitems on either side of it in the list."
       },
       "ItemFacets": {
         "required": [
@@ -9072,7 +9196,8 @@
           "language",
           "total",
           "facets",
-          "entries"
+          "entries",
+          "related"
         ],
         "type": "object",
         "properties": {
@@ -9114,6 +9239,13 @@
             "items": {
               "$ref": "#/components/schemas/ItemCard"
             }
+          },
+          "related": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntityLink"
+            },
+            "description": "The items the entries build into, each once, in the order they are met: the names and\nicons of the cards' `upgrades`."
           }
         },
         "description": "`GET /api/catalog/{version}/{lang}/items`: the items of the encyclopedia, Classic\nones included and debris left out, in the upstream order."
@@ -9213,6 +9345,42 @@
           "null",
           "string"
         ]
+      },
+      "ItemUpgrade": {
+        "required": [
+          "id",
+          "name",
+          "canonicalPath",
+          "image",
+          "edition",
+          "gold"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "canonicalPath": {
+            "type": "string",
+            "description": "Its page, such as `items/1036-long-sword`, under the locale prefix."
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "edition": {
+            "description": "Which game it belongs to; twins share their name.",
+            "$ref": "#/components/schemas/Edition"
+          },
+          "gold": {
+            "type": "integer",
+            "description": "Total cost of the upgrade.",
+            "format": "int32"
+          }
+        },
+        "description": "An item the page's item builds into: the fields of an EntityLink, and the\nprice its card shows under the name, as the legacy recipe nodes did."
       },
       "ItemView": {
         "required": [
@@ -10758,7 +10926,8 @@
           "language",
           "canonicalPath",
           "profile",
-          "slots"
+          "slots",
+          "neighbours"
         ],
         "type": "object",
         "properties": {
@@ -10786,9 +10955,13 @@
             "items": {
               "$ref": "#/components/schemas/RuneRow"
             }
+          },
+          "neighbours": {
+            "description": "The paths before and after it in the list's order.",
+            "$ref": "#/components/schemas/DetailNeighbours"
           }
         },
-        "description": "`GET /api/catalog/{version}/{lang}/runes/{id}`: a rune path and its rows, every image\nresolved."
+        "description": "`GET /api/catalog/{version}/{lang}/runes/{id}`: a rune path and its rows, every image\nresolved, and the paths on either side of it in the list."
       },
       "RuneTreeOption": {
         "required": [
@@ -10984,6 +11157,22 @@
               "integer"
             ],
             "description": "Size of the database, for PostgreSQL.",
+            "format": "int64"
+          },
+          "objects": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Objects of the storage root, for the storage, when its report is kept from an earlier\nwalk: the probe never walks the root itself.",
+            "format": "int64"
+          },
+          "bytes": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Bytes of the storage root, known when `objects` is.",
             "format": "int64"
           }
         },
@@ -11545,7 +11734,8 @@
           "profile",
           "cost",
           "range",
-          "globalRange"
+          "globalRange",
+          "neighbours"
         ],
         "type": "object",
         "properties": {
@@ -11601,9 +11791,13 @@
               "integer"
             ],
             "format": "int32"
+          },
+          "neighbours": {
+            "description": "The spells before and after it in the list's order.",
+            "$ref": "#/components/schemas/DetailNeighbours"
           }
         },
-        "description": "`GET /api/catalog/{version}/{lang}/summoners/{id}`: the card, then the cost, range\nand charges, the image resolved."
+        "description": "`GET /api/catalog/{version}/{lang}/summoners/{id}`: the card, then the cost, range\nand charges, the image resolved, and the spells on either side of it in the list."
       },
       "SummonerFacets": {
         "required": [

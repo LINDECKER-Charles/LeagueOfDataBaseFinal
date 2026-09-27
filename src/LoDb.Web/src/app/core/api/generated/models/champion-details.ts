@@ -5,10 +5,12 @@ import { ChampionAbility } from '../models/champion-ability';
 import { ChampionArt } from '../models/champion-art';
 import { ChampionCard } from '../models/champion-card';
 import { ChampionSkin } from '../models/champion-skin';
+import { DetailNeighbours } from '../models/detail-neighbours';
 
 /**
  * `GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the
- * abilities and the skins, every image resolved and every art hotlinked.
+ * abilities and the skins, every image resolved and every art hotlinked, and the champions
+ * on either side of it in the list.
  */
 export interface ChampionDetails {
 
@@ -32,6 +34,11 @@ export interface ChampionDetails {
   enemyTips: Array<string>;
   language: string;
   lore?: (string | null);
+
+  /**
+   * The champions before and after it in the list's order.
+   */
+  neighbours: DetailNeighbours;
 
   /**
    * The facts of the list's card.

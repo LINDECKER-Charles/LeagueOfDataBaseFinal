@@ -34,6 +34,8 @@ const ANNIE: ChampionCard = {
   name: 'Annie',
   title: 'the Dark Child',
   image: { status: 'absent' },
+  loadingArt: 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Annie_0.jpg',
+  blurb: 'Dangerous, yet disarmingly precocious.',
   partype: 'Mana',
   resource: 'mana',
   stats: [{ stat: 'health', base: 560, perLevel: 96 }],
@@ -51,6 +53,7 @@ const DETAILS: ChampionDetails = {
   skins: [],
   allyTips: [],
   enemyTips: [],
+  neighbours: { previous: null, next: null },
 };
 
 const LIST: ChampionList = {

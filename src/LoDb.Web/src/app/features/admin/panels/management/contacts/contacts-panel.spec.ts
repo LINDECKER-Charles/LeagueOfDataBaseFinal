@@ -23,7 +23,7 @@ function contact(id: number, status: string): AdminContactRow {
     locale: 'fr',
     createdAt: '2026-09-26T18:00:00Z',
     handledAt: status === 'handled' ? '2026-09-27T09:00:00Z' : null,
-    user: id === 1 ? { id: 5, username: 'teemo' } : null,
+    user: id === 1 ? { id: 5, username: 'teemo', isBanned: false } : null,
   };
 }
 

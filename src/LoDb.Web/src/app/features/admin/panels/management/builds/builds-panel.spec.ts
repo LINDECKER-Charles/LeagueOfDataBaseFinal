@@ -23,7 +23,8 @@ function build(id: number, isPublic: boolean): AdminBuildRow {
     isPublic,
     score: 12,
     createdAt: '2026-09-20T10:00:00Z',
-    owner: { id: 9, username: 'faker' },
+    owner: { id: 9, username: 'faker', isBanned: false },
+    shareToken: String(id).padStart(24, '0'),
   };
 }
 

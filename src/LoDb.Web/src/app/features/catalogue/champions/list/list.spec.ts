@@ -14,6 +14,8 @@ function cardOf(overrides: Partial<Card> = {}): Card {
     name: 'Annie',
     title: 'the Dark Child',
     image: { status: 'absent' },
+    loadingArt: 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Annie_0.jpg',
+    blurb: 'Dangerous, yet disarmingly precocious.',
     partype: 'Mana',
     resource: 'mana',
     attackRange: 'ranged',

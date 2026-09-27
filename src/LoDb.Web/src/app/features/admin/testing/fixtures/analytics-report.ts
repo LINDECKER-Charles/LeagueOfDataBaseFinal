@@ -11,6 +11,7 @@ function rank(name: string, count: number, pct = 0): AnalyticsRank {
 
 const REPORT: AnalyticsReport = {
   range: '30d',
+  geoAvailable: true,
   days: 3,
   from: '2026-09-01',
   to: '2026-09-03',

@@ -7,5 +7,10 @@
  */
 export interface AdminUserRef {
   id: number;
+
+  /**
+   * Whether the account is banned now: the build list badges its author.
+   */
+  isBanned: boolean;
   username: string;
 }

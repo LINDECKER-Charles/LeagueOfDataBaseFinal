@@ -20,7 +20,7 @@ const PAGE: AdminDonationPage = {
       amountCents: 2_000,
       currency: 'eur',
       createdAt: '2026-09-27T12:00:00Z',
-      donor: { id: 4, username: 'lux' },
+      donor: { id: 4, username: 'lux', isBanned: false },
       donorIsSupporter: true,
     },
     {

@@ -8,5 +8,11 @@
 export interface AuditSubjectView {
   email?: (string | null);
   id: number;
+
+  /**
+   * The Riot tagline, null when unset: the page names the account `username#tagline`,
+   * as the legacy `displayName` did.
+   */
+  riotTagline?: (string | null);
   username?: (string | null);
 }

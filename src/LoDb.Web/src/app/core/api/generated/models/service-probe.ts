@@ -8,6 +8,11 @@
 export interface ServiceProbe {
 
   /**
+   * Bytes of the storage root, known when `objects` is.
+   */
+  bytes?: (number | null);
+
+  /**
    * Size of the database, for PostgreSQL.
    */
   databaseBytes?: (number | null);
@@ -22,6 +27,12 @@ export interface ServiceProbe {
    * postgres or storage, the names of the readiness checks.
    */
   name: string;
+
+  /**
+   * Objects of the storage root, for the storage, when its report is kept from an earlier
+   * walk: the probe never walks the root itself.
+   */
+  objects?: (number | null);
 
   /**
    * ok, degraded or down.

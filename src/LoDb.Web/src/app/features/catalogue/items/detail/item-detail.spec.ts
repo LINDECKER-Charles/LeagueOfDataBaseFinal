@@ -34,6 +34,7 @@ const CARD: ItemCard = {
   stats: [],
   summary: 'Slightly increases <stats>Mana Regen</stats>',
   tags: ['ManaRegen'],
+  upgrades: [],
 };
 const DETAILS: ItemDetails = {
   availableMaps: [453],
@@ -62,8 +63,16 @@ const DETAILS: ItemDetails = {
     ],
   },
   upgrades: [
-    { id: '3114', name: 'Forbidden Idol', canonicalPath: 'items/3114-idol', image: IMAGE },
+    {
+      id: '3114',
+      name: 'Forbidden Idol',
+      canonicalPath: 'items/3114-idol',
+      image: IMAGE,
+      edition: 'modern',
+      gold: 800,
+    },
   ],
+  neighbours: { previous: null, next: null },
 };
 const ENTRY: CatalogueEntry<ItemDetails> = { context: CONTEXT, details: DETAILS };
 const TEXTS: CatalogueTexts = {

@@ -22,6 +22,12 @@ export interface AdminUserRow {
   isBanned: boolean;
   isPublicProfile: boolean;
   isSupporter: boolean;
+
+  /**
+   * The Riot tagline, null when unset: the admin names the account `username#tagline`,
+   * as the legacy `displayName` did.
+   */
+  riotTagline?: (string | null);
   twoFactorEnabled: boolean;
   username: string;
 }

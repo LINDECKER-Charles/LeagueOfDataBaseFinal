@@ -12,6 +12,7 @@ const FLASH: SummonerDetails = {
   costType: 'No Cost',
   globalRange: false,
   range: [425],
+  neighbours: { previous: null, next: null },
   profile: {
     canonicalPath: 'summoners/SummonerFlash',
     cooldown: [300],

@@ -23,6 +23,8 @@ function cardOf(id: string): ChampionCard {
     name: id,
     title: 'the Dark Child',
     image: { status: 'absent' },
+    loadingArt: `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${id}_0.jpg`,
+    blurb: 'Dangerous, yet disarmingly precocious.',
     partype: 'Mana',
     resource: 'mana',
     stats: [{ stat: 'health', base: 560, perLevel: 96 }],
@@ -49,6 +51,7 @@ function detailsOf(overrides: Partial<ChampionDetails> = {}): ChampionDetails {
     ],
     allyTips: ['Stun with the passive.', ' '],
     enemyTips: [],
+    neighbours: { previous: null, next: null },
     ...overrides,
   };
 }

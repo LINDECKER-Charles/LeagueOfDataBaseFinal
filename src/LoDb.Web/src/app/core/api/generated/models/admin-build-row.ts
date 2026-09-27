@@ -25,4 +25,9 @@ export interface AdminBuildRow {
    * Up votes minus down votes.
    */
   score: number;
+
+  /**
+   * 24 hexadecimal characters: the build's share page is `/b/{token}`.
+   */
+  shareToken: string;
 }

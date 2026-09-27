@@ -25,6 +25,8 @@ function detailsOf(
       name: id,
       title: 'the Dark Child',
       image: { status: 'absent' },
+      loadingArt: art('loading'),
+      blurb: '',
       partype: 'Mana',
       resource: 'mana',
       stats: [],
@@ -37,6 +39,7 @@ function detailsOf(
     skins: [],
     allyTips: [],
     enemyTips: [],
+    neighbours: { previous: null, next: null },
   };
 }
 

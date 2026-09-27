@@ -10,7 +10,11 @@ import { summonerSpellJsonLd } from './summoner-spell-json-ld';
 
 const ORIGIN = 'https://league-of-data-base.com';
 const IMAGE = { status: 'present', url: '/cdn/blobs/ab12.png' } as const;
-const COMMON = { language: 'en_US', version: '16.19.1' };
+const COMMON = {
+  language: 'en_US',
+  version: '16.19.1',
+  neighbours: { previous: null, next: null },
+};
 
 function urlsOf(path: string) {
   return seoUrlsOf({ origin: ORIGIN, locale: 'en', version: null, path });
@@ -32,6 +36,8 @@ const AHRI: ChampionDetails = {
     name: 'Ahri',
     title: 'the Nine-Tailed Fox',
     image: IMAGE,
+    loadingArt: 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Ahri_0.jpg',
+    blurb: 'Innately connected to the magic of the spirit realm, Ahri is a fox-like vastaya.',
     partype: 'Mana',
     resource: 'mana',
     tags: ['Mage', 'Assassin'],
@@ -63,6 +69,7 @@ const FAERIE_CHARM: ItemDetails = {
     summary: 'Slightly increases Mana Regen.',
     tags: ['ManaRegen'],
     gold: { base: 200, total: 200, sell: 140, isPurchasable: true },
+    upgrades: [],
   },
 };
 

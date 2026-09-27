@@ -43,6 +43,7 @@ const DETAILS: SummonerDetails = {
   globalRange: false,
   range: [425],
   profile: CARD,
+  neighbours: { previous: null, next: null },
 };
 const ENTRY: CatalogueEntry<SummonerDetails> = { context: CONTEXT, details: DETAILS };
 const TEXTS: CatalogueTexts = {

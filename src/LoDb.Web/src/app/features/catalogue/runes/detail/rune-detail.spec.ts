@@ -29,6 +29,7 @@ const DETAILS: RuneTreeDetails = {
   language: 'en_US',
   version: CONTEXT.version,
   profile: TREES[1] as RuneTreeCard,
+  neighbours: { previous: null, next: null },
   slots: [
     {
       slot: 'keystone',

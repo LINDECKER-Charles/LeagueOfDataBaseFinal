@@ -7,11 +7,16 @@ import { ChampionRatings } from '../models/champion-ratings';
 import { ChampionStat } from '../models/champion-stat';
 
 /**
- * A champion as the list shows it, with the values its facets filter on: roles, resource,
- * range, ratings and base stats.
+ * A champion as the list shows it: its portrait, its lore teaser, and the values its facets
+ * filter on: roles, resource, range, ratings and base stats.
  */
 export interface ChampionCard {
   attackRange?: (null | AttackRangeClass | null);
+
+  /**
+   * The lore teaser, template tokens removed.
+   */
+  blurb: string;
   canonicalPath: string;
 
   /**
@@ -24,6 +29,12 @@ export interface ChampionCard {
    * Numeric key, such as 62.
    */
   key: string;
+
+  /**
+   * The base skin's loading-screen portrait, hotlinked from Data Dragon (UP 8): the art of
+   * the list's card.
+   */
+  loadingArt: string;
   name: string;
 
   /**

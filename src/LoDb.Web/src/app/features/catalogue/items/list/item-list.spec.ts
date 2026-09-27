@@ -24,6 +24,7 @@ const CARDS: ItemCard[] = ['1001-boots', '771004-faerie-charm'].map((path, index
   stats: [{ stat: 'move_speed', value: 25, isPercent: false }],
   summary: '<stats>+25 Move Speed</stats>',
   tags: ['Boots'],
+  upgrades: [],
 }));
 const TEXTS: CatalogueTexts = {
   seo: (key, params) => `${key} ${JSON.stringify(params ?? {})}`,
