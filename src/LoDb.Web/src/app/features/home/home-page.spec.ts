@@ -233,7 +233,7 @@ describe('HomePage', () => {
     expect(champions.querySelector('li a')?.getAttribute('href')).toBe('/en/champions/first');
   });
 
-  it('frames an empty preview of champions or runes, and leaves items and spells bare', async () => {
+  it('frames an empty preview of champions or runes, leaves items and spells bare', async () => {
     document.documentElement.lang = 'en';
 
     const { host } = await visit('/en?unreachable=champions,items,runes,summoners');
