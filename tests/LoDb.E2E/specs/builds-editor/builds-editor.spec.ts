@@ -7,6 +7,7 @@ import {
   CHAMPION,
   chooseChampion,
   ITEM,
+  patchOf,
   pickRunes,
   rowOf,
   runeRowsOf,
@@ -59,7 +60,7 @@ test('forges, edits, imports and deletes a build', async ({ page, request }) => 
     await page.getByRole('link', { name: 'Forge my first build' }).click();
     await expect(page).toHaveURL(`${LIST}/new`);
     await expect(page.getByRole('heading', { name: 'Forge a build' })).toBeVisible();
-    await expect(page.getByLabel('Patch', { exact: true })).toHaveValue(meta.latest);
+    await expect(patchOf(page)).toHaveValue(meta.latest);
   });
 
   await test.step('drops the oldest secondary rune for a third one', async () => {
@@ -142,7 +143,7 @@ test('forges, edits, imports and deletes a build', async ({ page, request }) => 
     await row.getByRole('button', { name: 'Import' }).click();
     await expect(page).toHaveURL(new RegExp(`/import\\?to=${older.replaceAll('.', '\\.')}$`));
     await expect(page.getByText(`Build imported to patch ${older}`)).toBeVisible();
-    await expect(page.getByLabel('Patch', { exact: true })).toHaveValue(older);
+    await expect(patchOf(page)).toHaveValue(older);
     await expect(page.getByLabel('Build name')).toHaveValue(RENAMED);
 
     await page.getByRole('button', { name: 'Save changes' }).click();
