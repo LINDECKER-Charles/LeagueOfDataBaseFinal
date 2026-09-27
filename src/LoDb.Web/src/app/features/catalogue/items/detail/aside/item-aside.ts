@@ -5,6 +5,7 @@ import type { ItemDetails } from '../../../../../core/api/generated/models/item-
 import type { PageContext } from '../../../../../core/context/page-context';
 import { Frame } from '../../../../../ui/surfaces/frame';
 import { injectCatalogueLink } from '../../../shared/codex/links/inject-catalogue-link';
+import { statIconOf } from '../../../shared/codex/stats/stat-icon-of';
 import { tagLabelOf } from '../../list/facets/tag-label-of';
 import { formatItemStat } from '../../stats/format-item-stat';
 import { mapLabelKey } from './map-label-key';
@@ -33,6 +34,7 @@ export class ItemAside {
     this.details().profile.stats.map((row) => ({
       label: `stat.${row.stat}`,
       value: formatItemStat(row),
+      icon: statIconOf(row.stat),
     })),
   );
   /** Only an epic or a legendary item states its tier, as the legacy depth did. */

@@ -86,16 +86,21 @@ const NEIGHBOURS = ['1001-boots', '771004-faerie-charm', '1027-sapphire'].map((p
   canonicalPath: `items/${path}`,
 }));
 
-async function render() {
+async function render(entry = ENTRY) {
   const heads: SeoPage[] = [];
   const write = (_: string, build: (texts: CatalogueTexts) => SeoPage) => heads.push(build(TEXTS));
   TestBed.configureTestingModule({
     providers: [
-      provideRouter([{ path: 'en/items/:id', component: ItemDetail, data: { entry: ENTRY } }]),
+      provideRouter([{ path: 'en/items/:id', component: ItemDetail, data: { entry } }]),
       provideTransloco({
-        config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
+        config: {
+          availableLangs: ['en'],
+          defaultLang: 'en',
+          missingHandler: { logMissingKey: false },
+          prodMode: true,
+        },
         loader: class {
-          getTranslation = () => of({});
+          getTranslation = () => of({ item: { detail: { tier: 'Tier {{ depth }}' } } });
         },
       }),
       { provide: CatalogueHead, useValue: { write } },
@@ -157,6 +162,20 @@ describe('lodb-item-detail', () => {
 
     const upgrade = element.querySelector('[data-testid="upgrades"] a');
     expect(upgrade?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Forbidden Idol 800');
+  });
+
+  it('draws the icon of each stat the legacy had art for', async () => {
+    const stats: ItemCard['stats'] = [
+      { stat: 'attack_damage', isPercent: false, value: 75 },
+      { stat: 'crit_chance', isPercent: true, value: 0.25 },
+    ];
+    const details = { ...DETAILS, profile: { ...CARD, stats } };
+    const { element } = await render({ context: CONTEXT, details });
+
+    const icons = [...element.querySelectorAll('lodb-item-aside .stat-row img')];
+    expect(icons.map((icon) => icon.getAttribute('src'))).toEqual([
+      '/icons/stats/attack_damage.png',
+    ]);
   });
 
   it('names the LoL Classic edition in its head, and turns the pages of the list', async () => {

@@ -5,7 +5,20 @@
     <dl>
       @for (row of stats(); track $index) {
         <div class="stat-row">
-          <dt class="stat-row__label">{{ row.label | transloco }}</dt>
+          <dt class="stat-row__label">
+            @if (row.icon; as icon) {
+              <img
+                class="stat-icon"
+                [src]="icon"
+                alt=""
+                width="18"
+                height="18"
+                loading="lazy"
+                decoding="async"
+              />
+            }
+            {{ row.label | transloco }}
+          </dt>
           <dd class="stat-row__value">{{ row.value }}</dd>
         </div>
       }

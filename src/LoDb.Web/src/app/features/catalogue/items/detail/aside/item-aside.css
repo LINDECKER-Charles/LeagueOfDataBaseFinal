@@ -19,11 +19,22 @@
   border-block-end: 0;
 }
 .stat-row__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-family: var(--font-mono);
   font-size: 0.66rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--color-text-muted);
+}
+/* CommunityDragon's stat art: decorative, the label carries the meaning. */
+.stat-icon {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  flex-shrink: 0;
+  object-fit: contain;
+  opacity: 0.92;
 }
 .stat-row__value {
   font-family: var(--font-beaufort);
