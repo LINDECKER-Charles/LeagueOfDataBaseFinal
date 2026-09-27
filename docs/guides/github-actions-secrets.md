@@ -223,6 +223,24 @@ openssl pkcs12 -export -inkey dp.key -in dp.crt -out dp.pfx   # mot de passe dem
 base64 < dp.pfx | tr -d '\n'   # valeur du secret ; garder dp.pfx hors ligne, détruire dp.key
 ```
 
+### Secrets des releases des apps (environnements `desktop-release` et `android-release`)
+
+Les workflows `next-release-desktop.yml` et `next-release-android.yml` ont chacun leur
+environnement GitHub ; leurs secrets n'y sont délivrés qu'aux jobs qui signent et publient.
+Les variables du desktop vivent dans son environnement, celles d'Android au niveau du dépôt
+(`stage` lit la clé publique hors de l'environnement). La liste complète, avec la façon
+d'obtenir chaque valeur, est tenue dans leur guide :
+
+| Environnement | Secrets | Variables | Guide |
+|---|---|---|---|
+| `desktop-release` | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `APPLE_DEVELOPER_ID_P12`, `APPLE_DEVELOPER_ID_P12_PASSWORD`, `APPLE_NOTARY_KEY_P8`, `APPLE_NOTARY_KEY_ID`, `APPLE_NOTARY_ISSUER_ID` | `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`, `AZURE_SIGNING_PROFILE`, `APPLE_APP_IDENTITY`, `APPLE_INSTALL_IDENTITY` | [`release-desktop.md`](release-desktop.md) § Signature |
+| `android-release` | `ANDROID_UPLOAD_KEYSTORE_BASE64`, `ANDROID_UPLOAD_STORE_PASSWORD`, `ANDROID_UPLOAD_KEY_PASSWORD`, `ANDROID_APP_SIGNING_KEYSTORE_BASE64`, `ANDROID_APP_SIGNING_STORE_PASSWORD`, `ANDROID_APP_SIGNING_KEY_PASSWORD`, `LODB_LIVE_UPDATE_PRIVATE_KEY`, `PLAY_SERVICE_ACCOUNT_JSON` | `ANDROID_UPLOAD_KEY_ALIAS`, `ANDROID_APP_SIGNING_KEY_ALIAS`, `LODB_LIVE_UPDATE_PUBLIC_KEY`, `ANDROID_TRANSITIONAL_CHANNEL`, `ANDROID_PLAY_ENABLED`, `ANDROID_APP_LINK_HOST` | [`release-android.md`](release-android.md) § Secrets et variables |
+
+Sans ces secrets, la release desktop échoue à la signature (`signing.sh`) et la release
+Android à la signature des bundles ou de l'AAB ; sans `LODB_LIVE_UPDATE_PUBLIC_KEY`, l'app
+accepterait des bundles non signés, ce que l'étape « Check the LiveUpdate settings of the
+APKs » refuse.
+
 ### Lignes de `ENV_NEXT` et `ENV_PROD_NEXT`
 
 Variables lues par `compose.next.yaml` et `compose.next.deploy.yaml`. Le job **vérifie**
