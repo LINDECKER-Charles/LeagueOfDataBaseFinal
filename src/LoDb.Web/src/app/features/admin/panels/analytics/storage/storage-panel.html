@@ -1,85 +1,85 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.analytics' | transloco"
-  [title]="'admin.storage.title' | transloco"
-  [subtitle]="'admin.storage.lede' | transloco"
+  [eyebrow]="'admin.nav.analytics' | adminText"
+  [title]="'admin.storage.title' | adminText"
+  [subtitle]="'admin.storage.lede' | adminText"
 >
   <button lodbButton="ghost" type="button" [disabled]="report.busy()" (click)="refresh()">
-    {{ 'admin.actions.refresh' | transloco }}
+    {{ 'admin.actions.refresh' | adminText }}
   </button>
 </lodb-page-head>
 
 <lodb-panel-state [panel]="report" shape="chart" />
 @if (report.value(); as data) {
   <p class="mb-4 font-mono text-xs text-text-dim">
-    {{ 'admin.common.generated_at' | transloco: { at: (data.generatedAt | stamp: 'second') } }}
+    {{ 'admin.common.generated_at' | adminText: { at: (data.generatedAt | stamp: 'second') } }}
   </p>
   @if (!data.ok) {
     <p class="mb-6 border border-danger/60 p-4 text-sm text-danger-light" role="alert">
-      {{ 'admin.storage.partial' | transloco }} {{ data.error }}
+      {{ 'admin.storage.partial' | adminText }} {{ data.error }}
     </p>
   }
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" [attr.aria-busy]="report.busy()">
     <lodb-kpi
-      [label]="'admin.storage.kpi.bytes' | transloco"
+      [label]="'admin.storage.kpi.bytes' | adminText"
       [value]="data.bytes | figure: 'bytes'"
     />
     <lodb-kpi
       tone="hex"
-      [label]="'admin.storage.kpi.objects' | transloco"
+      [label]="'admin.storage.kpi.objects' | adminText"
       [value]="data.objects | figure"
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.storage.kpi.dedup' | transloco"
+      [label]="'admin.storage.kpi.dedup' | adminText"
       [value]="data.dedup.ratio | figure: 'ratio'"
       [sub]="
         'admin.storage.kpi.saved'
-          | transloco: { size: (data.dedup.savedBytesApprox | figure: 'bytes') }
+          | adminText: { size: (data.dedup.savedBytesApprox | figure: 'bytes') }
       "
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.storage.kpi.webp' | transloco"
+      [label]="'admin.storage.kpi.webp' | adminText"
       [value]="data.blobs.webpCoverage | figure: 'share'"
       [sub]="
         'admin.storage.kpi.webp_size'
-          | transloco: { size: (data.blobs.webpBytes | figure: 'bytes') }
+          | adminText: { size: (data.blobs.webpBytes | figure: 'bytes') }
       "
     />
   </div>
 
-  <lodb-admin-card class="mt-6" [heading]="'admin.storage.growth' | transloco">
+  <lodb-admin-card class="mt-6" [heading]="'admin.storage.growth' | adminText">
     <lodb-time-series-chart
       [dates]="timeline().dates"
       [series]="timeline().series"
-      [label]="'admin.storage.growth' | transloco"
+      [label]="'admin.storage.growth' | adminText"
     />
     <lodb-legend [items]="timeline().series" />
   </lodb-admin-card>
 
   <div class="mt-6 grid gap-6 lg:grid-cols-2">
-    <lodb-admin-card [heading]="'admin.storage.families' | transloco">
+    <lodb-admin-card [heading]="'admin.storage.families' | adminText">
       <lodb-donut-chart
         [slices]="families()"
-        [label]="'admin.storage.families' | transloco"
+        [label]="'admin.storage.families' | adminText"
         [total]="data.bytes | figure: 'bytes'"
       />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.storage.extensions' | transloco">
+    <lodb-admin-card [heading]="'admin.storage.extensions' | adminText">
       <lodb-rank-list format="bytes" [rows]="extensions()" [limit]="limit" />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.storage.types' | transloco">
+    <lodb-admin-card [heading]="'admin.storage.types' | adminText">
       <lodb-rank-list tone="hex" format="bytes" [rows]="types()" [limit]="limit" />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.storage.languages' | transloco">
+    <lodb-admin-card [heading]="'admin.storage.languages' | adminText">
       <lodb-rank-list format="bytes" [rows]="languages()" [limit]="limit" />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.storage.versions' | transloco">
+    <lodb-admin-card [heading]="'admin.storage.versions' | adminText">
       <lodb-rank-list tone="hex" format="bytes" [rows]="versions()" [limit]="limit" />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.storage.largest' | transloco">
+    <lodb-admin-card [heading]="'admin.storage.largest' | adminText">
       @if (data.largest.length === 0) {
-        <p class="text-sm text-text-dim">{{ 'admin.common.no_data' | transloco }}</p>
+        <p class="text-sm text-text-dim">{{ 'admin.common.no_data' | adminText }}</p>
       } @else {
         <ol class="space-y-1.5 text-sm">
           @for (object of data.largest; track object.path) {
@@ -97,15 +97,15 @@
     </lodb-admin-card>
   </div>
 
-  <lodb-admin-card class="mt-6" [heading]="'admin.storage.coverage' | transloco">
+  <lodb-admin-card class="mt-6" [heading]="'admin.storage.coverage' | adminText">
     <div class="hx-table-scroll">
       <table class="hx-table hx-table--flush">
         <thead>
           <tr>
-            <th scope="col">{{ 'admin.storage.columns.version' | transloco }}</th>
-            <th scope="col" class="num">{{ 'admin.storage.columns.objects' | transloco }}</th>
-            <th scope="col">{{ 'admin.storage.columns.types' | transloco }}</th>
-            <th scope="col">{{ 'admin.storage.columns.langs' | transloco }}</th>
+            <th scope="col">{{ 'admin.storage.columns.version' | adminText }}</th>
+            <th scope="col" class="num">{{ 'admin.storage.columns.objects' | adminText }}</th>
+            <th scope="col">{{ 'admin.storage.columns.types' | adminText }}</th>
+            <th scope="col">{{ 'admin.storage.columns.langs' | adminText }}</th>
           </tr>
         </thead>
         <tbody>
@@ -118,7 +118,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="4" class="text-text-dim">{{ 'admin.common.no_data' | transloco }}</td>
+              <td colspan="4" class="text-text-dim">{{ 'admin.common.no_data' | adminText }}</td>
             </tr>
           }
         </tbody>

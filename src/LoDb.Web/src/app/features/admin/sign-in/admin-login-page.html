@@ -1,13 +1,13 @@
 <div class="mx-auto max-w-md px-4 py-12 sm:px-6">
   <lodb-page-head
-    [eyebrow]="'admin.brand' | transloco"
-    [title]="'admin.login.title' | transloco"
-    [subtitle]="'admin.login.lede' | transloco"
+    [eyebrow]="'admin.brand' | adminText"
+    [title]="'admin.login.title' | adminText"
+    [subtitle]="'admin.login.lede' | adminText"
   />
   <div lodbFrame="ornate" class="block p-6">
     @if (error(); as message) {
       <p class="mb-5 text-sm text-danger-light" role="alert">
-        {{ 'admin.' + message | transloco }}
+        {{ 'admin.' + message | adminText }}
       </p>
     }
 
@@ -15,7 +15,7 @@
       <form class="space-y-5" (submit)="signIn($event)">
         <div>
           <label for="admin-identifier" class="eyebrow">
-            {{ 'admin.login.identifier' | transloco }}
+            {{ 'admin.login.identifier' | adminText }}
           </label>
           <input
             lodbField
@@ -31,7 +31,7 @@
         </div>
         <div>
           <label for="admin-password" class="eyebrow">
-            {{ 'admin.login.password' | transloco }}
+            {{ 'admin.login.password' | adminText }}
           </label>
           <input
             lodbField
@@ -44,16 +44,16 @@
           />
         </div>
         <button lodbButton type="submit" class="w-full" [disabled]="busy()">
-          {{ 'admin.login.submit' | transloco }}
+          {{ 'admin.login.submit' | adminText }}
         </button>
       </form>
     } @else {
       <form class="space-y-5" (submit)="confirm($event)">
-        <p class="text-sm text-text-muted">{{ 'admin.login.second_factor' | transloco }}</p>
+        <p class="text-sm text-text-muted">{{ 'admin.login.second_factor' | adminText }}</p>
         @if (useRecovery()) {
           <div>
             <label for="admin-recovery-code" class="eyebrow">
-              {{ 'admin.login.recovery_code' | transloco }}
+              {{ 'admin.login.recovery_code' | adminText }}
             </label>
             <input
               lodbField
@@ -70,7 +70,7 @@
         } @else {
           <div>
             <label for="admin-two-factor-code" class="eyebrow">
-              {{ 'admin.login.code' | transloco }}
+              {{ 'admin.login.code' | adminText }}
             </label>
             <input
               lodbField
@@ -86,11 +86,11 @@
         }
         <p>
           <button type="button" class="nav-link text-xs text-text-muted" (click)="toggleRecovery()">
-            {{ (useRecovery() ? 'admin.login.use_app' : 'admin.login.use_recovery') | transloco }}
+            {{ (useRecovery() ? 'admin.login.use_app' : 'admin.login.use_recovery') | adminText }}
           </button>
         </p>
         <button lodbButton type="submit" class="w-full" [disabled]="busy()">
-          {{ 'admin.login.verify' | transloco }}
+          {{ 'admin.login.verify' | adminText }}
         </button>
       </form>
     }

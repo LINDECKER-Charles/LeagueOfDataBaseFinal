@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { Button } from '../../../ui/controls/button';
+import { AdminTextPipe } from '../shared/admin-text-pipe';
 
 /**
  * Previous and next pages of a list, kept in the URL (`?page=`) with the other filters, so
@@ -10,12 +10,12 @@ import { Button } from '../../../ui/controls/button';
  */
 @Component({
   selector: 'lodb-admin-pager',
-  imports: [Button, RouterLink, TranslocoPipe],
+  imports: [Button, RouterLink, AdminTextPipe],
   template: `
     @if (page() > 1 || hasNext()) {
       <nav
         class="mt-5 flex items-center justify-center gap-3"
-        [attr.aria-label]="'admin.pager.label' | transloco"
+        [attr.aria-label]="'admin.pager.label' | adminText"
       >
         @if (page() > 1) {
           <a
@@ -23,12 +23,12 @@ import { Button } from '../../../ui/controls/button';
             [routerLink]="[]"
             [queryParams]="{ page: page() - 1 }"
             queryParamsHandling="merge"
-            >← {{ 'admin.pager.previous' | transloco }}</a
+            >← {{ 'admin.pager.previous' | adminText }}</a
           >
         }
         <span class="font-mono text-sm text-text-muted">
           @if (pages() === null) {
-            {{ 'admin.pager.page' | transloco: { page: page() } }}
+            {{ 'admin.pager.page' | adminText: { page: page() } }}
           } @else {
             {{ page() }} / {{ pages() }}
           }
@@ -39,7 +39,7 @@ import { Button } from '../../../ui/controls/button';
             [routerLink]="[]"
             [queryParams]="{ page: page() + 1 }"
             queryParamsHandling="merge"
-            >{{ 'admin.pager.next' | transloco }} →</a
+            >{{ 'admin.pager.next' | adminText }} →</a
           >
         }
       </nav>

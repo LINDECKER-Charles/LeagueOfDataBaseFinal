@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { getAnalyticsReport } from '../../../../../core/api/generated/fn/admin-analytics/get-analytics-report';
 import type { AnalyticsReport } from '../../../../../core/api/generated/models/analytics-report';
 import { DonutChart } from '../../../charts/donut-chart';
@@ -15,6 +14,7 @@ import { PageHead } from '../../../widgets/page-head';
 import { RangeBar } from '../../../widgets/range-bar';
 import { RankList } from '../../../widgets/rank-list';
 import { rankRows } from '../rank-rows';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 // The rankings a long report folds after this many rows.
 const RANK_LIMIT = 8;
@@ -36,7 +36,7 @@ const EMPTY: readonly never[] = [];
     PanelState,
     RangeBar,
     RankList,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './audience-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

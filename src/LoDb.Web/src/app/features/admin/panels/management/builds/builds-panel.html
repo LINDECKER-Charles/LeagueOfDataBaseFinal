@@ -1,11 +1,11 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | transloco"
-  [title]="'admin.builds.title' | transloco"
-  [subtitle]="'admin.builds.lede' | transloco"
+  [eyebrow]="'admin.nav.management' | adminText"
+  [title]="'admin.builds.title' | adminText"
+  [subtitle]="'admin.builds.lede' | adminText"
 />
 
 <form class="mb-6 flex flex-wrap items-end gap-2" role="search" (submit)="search($event)">
-  <label for="builds-q" class="sr-only">{{ 'admin.builds.search' | transloco }}</label>
+  <label for="builds-q" class="sr-only">{{ 'admin.builds.search' | adminText }}</label>
   <input
     lodbField
     id="builds-q"
@@ -13,53 +13,53 @@
     type="search"
     class="max-w-sm"
     [value]="query.text('q')"
-    [placeholder]="'admin.builds.search' | transloco"
+    [placeholder]="'admin.builds.search' | adminText"
   />
-  <label for="builds-visibility" class="sr-only">{{ 'admin.builds.visibility' | transloco }}</label>
+  <label for="builds-visibility" class="sr-only">{{ 'admin.builds.visibility' | adminText }}</label>
   <select lodbField id="builds-visibility" name="visibility" class="max-w-48">
     <option value="" [selected]="query.text('visibility') === ''">
-      {{ 'admin.builds.all_visibilities' | transloco }}
+      {{ 'admin.builds.all_visibilities' | adminText }}
     </option>
     @for (visibility of visibilities; track visibility) {
       <option [value]="visibility" [selected]="query.text('visibility') === visibility">
-        {{ 'admin.builds.visibilities.' + visibility | transloco }}
+        {{ 'admin.builds.visibilities.' + visibility | adminText }}
       </option>
     }
   </select>
-  <button lodbButton type="submit">{{ 'admin.actions.filter' | transloco }}</button>
+  <button lodbButton type="submit">{{ 'admin.actions.filter' | adminText }}</button>
 </form>
 
 <lodb-panel-state [panel]="builds" />
 @if (builds.value(); as list) {
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
-    <lodb-kpi [label]="'admin.builds.kpi.total' | transloco" [value]="list.stats.total | figure" />
+    <lodb-kpi [label]="'admin.builds.kpi.total' | adminText" [value]="list.stats.total | figure" />
     <lodb-kpi
       tone="hex"
-      [label]="'admin.builds.kpi.public' | transloco"
+      [label]="'admin.builds.kpi.public' | adminText"
       [value]="list.stats.public | figure"
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.builds.kpi.private' | transloco"
+      [label]="'admin.builds.kpi.private' | adminText"
       [value]="list.stats.total - list.stats.public | figure"
     />
   </div>
 
   <p class="mt-6 mb-2 text-xs text-text-dim">
-    {{ 'admin.common.results' | transloco: { count: list.total } }}
+    {{ 'admin.common.results' | adminText: { count: list.total } }}
   </p>
   <div class="hx-table-scroll" [attr.aria-busy]="builds.busy()">
     <table class="hx-table">
       <thead>
         <tr>
           <th scope="col" class="num">#</th>
-          <th scope="col">{{ 'admin.builds.columns.build' | transloco }}</th>
-          <th scope="col">{{ 'admin.builds.columns.author' | transloco }}</th>
-          <th scope="col">{{ 'admin.builds.columns.mode' | transloco }}</th>
-          <th scope="col">{{ 'admin.builds.columns.visibility' | transloco }}</th>
-          <th scope="col" class="num">{{ 'admin.builds.columns.score' | transloco }}</th>
-          <th scope="col">{{ 'admin.builds.columns.created' | transloco }}</th>
-          <th scope="col">{{ 'admin.common.actions' | transloco }}</th>
+          <th scope="col">{{ 'admin.builds.columns.build' | adminText }}</th>
+          <th scope="col">{{ 'admin.builds.columns.author' | adminText }}</th>
+          <th scope="col">{{ 'admin.builds.columns.mode' | adminText }}</th>
+          <th scope="col">{{ 'admin.builds.columns.visibility' | adminText }}</th>
+          <th scope="col" class="num">{{ 'admin.builds.columns.score' | adminText }}</th>
+          <th scope="col">{{ 'admin.builds.columns.created' | adminText }}</th>
+          <th scope="col">{{ 'admin.common.actions' | adminText }}</th>
         </tr>
       </thead>
       <tbody>
@@ -84,7 +84,7 @@
             <td>
               <span [lodbBadge]="build.isPublic ? 'hex' : 'muted'">
                 {{
-                  'admin.builds.visibilities.' + (build.isPublic ? 'public' : 'private') | transloco
+                  'admin.builds.visibilities.' + (build.isPublic ? 'public' : 'private') | adminText
                 }}
               </span>
             </td>
@@ -94,15 +94,15 @@
               <span class="flex flex-wrap items-center gap-1.5">
                 @if (build.isPublic) {
                   <lodb-confirm-button
-                    [label]="'admin.builds.unpublish' | transloco"
-                    [confirmLabel]="'admin.builds.confirm_unpublish' | transloco"
+                    [label]="'admin.builds.unpublish' | adminText"
+                    [confirmLabel]="'admin.builds.confirm_unpublish' | adminText"
                     [busy]="actions.pending() === build.id"
                     (confirmed)="unpublish(build)"
                   />
                 }
                 <lodb-confirm-button
-                  [label]="'admin.actions.delete' | transloco"
-                  [confirmLabel]="'admin.builds.confirm_delete' | transloco"
+                  [label]="'admin.actions.delete' | adminText"
+                  [confirmLabel]="'admin.builds.confirm_delete' | adminText"
                   [busy]="actions.pending() === build.id"
                   (confirmed)="remove(build)"
                 />
@@ -111,7 +111,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="8" class="text-text-dim">{{ 'admin.builds.empty' | transloco }}</td>
+            <td colspan="8" class="text-text-dim">{{ 'admin.builds.empty' | adminText }}</td>
           </tr>
         }
       </tbody>

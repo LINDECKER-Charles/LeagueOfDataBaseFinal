@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { creditAdminApiClient } from '../../../../../core/api/generated/fn/admin-api-clients/credit-admin-api-client';
 import { listAdminApiClients } from '../../../../../core/api/generated/fn/admin-api-clients/list-admin-api-clients';
 import { revokeAdminApiClient } from '../../../../../core/api/generated/fn/admin-api-clients/revoke-admin-api-client';
@@ -25,6 +24,7 @@ import { ConfirmButton } from '../../../widgets/confirm-button';
 import { Kpi } from '../../../widgets/kpi';
 import { PageHead } from '../../../widgets/page-head';
 import { RankList } from '../../../widgets/rank-list';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /** The requests a credit adds, as the API bounds them. */
 const CREDIT = { min: 1, max: 1_000_000 } as const;
@@ -51,7 +51,7 @@ const CREDIT = { min: 1, max: 1_000_000 } as const;
     RankList,
     RouterLink,
     StampPipe,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './api-clients-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

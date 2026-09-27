@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { RETURN_URL_PARAM } from '../../../core/auth/guards/return-url-param';
 import { Button } from '../../../ui/controls/button';
 import { Frame } from '../../../ui/surfaces/frame';
 import { Skeleton } from '../../../ui/surfaces/skeleton';
 import { ADMIN_PATHS } from '../shared/admin-paths';
 import type { Panel } from './panel';
+import { AdminTextPipe } from '../shared/admin-text-pipe';
 
 /**
  * The shape of what a panel will show, which its placeholder reserves: figures then a chart
@@ -26,25 +26,25 @@ const ROW_PLACEHOLDERS = [0, 1, 2, 3, 4, 5];
  */
 @Component({
   selector: 'lodb-panel-state',
-  imports: [Button, Frame, RouterLink, Skeleton, TranslocoPipe],
+  imports: [Button, Frame, RouterLink, Skeleton, AdminTextPipe],
   template: `
     @if (panel().failure(); as failure) {
       <div lodbFrame class="mb-6 block p-5" role="alert">
-        <p class="font-beaufort text-lg text-gold">{{ 'admin.state.' + failure | transloco }}</p>
+        <p class="font-beaufort text-lg text-gold">{{ 'admin.state.' + failure | adminText }}</p>
         <div class="mt-4 flex flex-wrap gap-2">
           <button lodbButton="ghost" type="button" (click)="panel().reload()">
-            {{ 'admin.state.retry' | transloco }}
+            {{ 'admin.state.retry' | adminText }}
           </button>
           @if (failure === 'session') {
             <a lodbButton [routerLink]="login" [queryParams]="returnQuery()">
-              {{ 'admin.state.sign_in' | transloco }}
+              {{ 'admin.state.sign_in' | adminText }}
             </a>
           }
         </div>
       </div>
     } @else if (panel().value() === undefined) {
       <div class="block" aria-busy="true">
-        <p class="sr-only" role="status">{{ 'admin.state.loading' | transloco }}</p>
+        <p class="sr-only" role="status">{{ 'admin.state.loading' | adminText }}</p>
         @if (shape() === 'card') {
           <lodb-skeleton shape="block" />
         } @else {

@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import type { AuditVocabularyView } from '../../../../../core/api/generated/models/audit-vocabulary-view';
 import { Button } from '../../../../../ui/controls/button';
 import { Field } from '../../../../../ui/controls/field';
 import { formText } from '../../../shared/form-text';
 import { injectAdminText } from '../../../shared/inject-admin-text';
 import { injectQuery } from '../../../shared/inject-query';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /** The closed sets a filter picks from, as the vocabulary names them. */
 type ClosedSet = 'categories' | 'outcomes' | 'actorTypes';
@@ -33,7 +33,7 @@ const SELECTS: readonly ClosedFilter[] = [
  */
 @Component({
   selector: 'lodb-journal-filters',
-  imports: [Button, Field, TranslocoPipe],
+  imports: [Button, Field, AdminTextPipe],
   templateUrl: './journal-filters.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

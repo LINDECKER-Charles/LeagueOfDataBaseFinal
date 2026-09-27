@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { firstValueFrom, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
 import { confirmAdminMfa } from '../../../core/api/generated/fn/admin-mfa/confirm-admin-mfa';
@@ -19,6 +18,7 @@ import { PanelState } from '../state/panel-state';
 import { PageHead } from '../widgets/page-head';
 import { enrollErrorKey } from './enroll-error-key';
 import { QrImage } from './qr/qr-image';
+import { AdminTextPipe } from '../shared/admin-text-pipe';
 
 // The shared key reads in groups of four, as the authenticator apps print it.
 const KEY_GROUPS = /.{1,4}/g;
@@ -31,7 +31,7 @@ const KEY_GROUPS = /.{1,4}/g;
  */
 @Component({
   selector: 'lodb-admin-enroll-page',
-  imports: [Button, Field, Frame, PageHead, PanelState, QrImage, RouterLink, TranslocoPipe],
+  imports: [Button, Field, Frame, PageHead, PanelState, QrImage, RouterLink, AdminTextPipe],
   templateUrl: './admin-enroll-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

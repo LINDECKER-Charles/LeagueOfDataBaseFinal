@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { deleteAdminContact } from '../../../../../core/api/generated/fn/admin-contacts/delete-admin-contact';
 import { handleAdminContact } from '../../../../../core/api/generated/fn/admin-contacts/handle-admin-contact';
 import { listAdminContacts } from '../../../../../core/api/generated/fn/admin-contacts/list-admin-contacts';
@@ -20,6 +19,7 @@ import { Badge } from '../../../widgets/badge';
 import { ConfirmButton } from '../../../widgets/confirm-button';
 import { Kpi } from '../../../widgets/kpi';
 import { PageHead } from '../../../widgets/page-head';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /** The filters of the inbox: every message, then by status as the API names them. */
 const STATUSES = ['', 'new', 'handled'] as const;
@@ -43,7 +43,7 @@ const HANDLED = 'handled';
     PanelState,
     RouterLink,
     StampPipe,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './contacts-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

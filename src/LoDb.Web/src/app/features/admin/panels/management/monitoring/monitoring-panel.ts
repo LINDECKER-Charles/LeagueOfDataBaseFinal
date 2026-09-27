@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { readAdminMonitoring } from '../../../../../core/api/generated/fn/admin-monitoring/read-admin-monitoring';
 import { Button } from '../../../../../ui/controls/button';
 import { duration } from '../../../format/duration';
@@ -14,6 +13,7 @@ import { Kpi } from '../../../widgets/kpi';
 import { PageHead } from '../../../widgets/page-head';
 import { RankList } from '../../../widgets/rank-list';
 import { MonitoringVersions } from './monitoring-versions';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /**
  * `/admin/monitoring`: the health of the API. Its dependencies as probed, the figures of the
@@ -33,7 +33,7 @@ import { MonitoringVersions } from './monitoring-versions';
     PanelState,
     RankList,
     StampPipe,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './monitoring-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

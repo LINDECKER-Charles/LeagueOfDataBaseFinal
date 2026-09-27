@@ -1,9 +1,9 @@
 <div
   class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-10"
 >
-  <nav class="mb-8 lg:mb-0" [attr.aria-label]="'admin.nav.label' | transloco">
+  <nav class="mb-8 lg:mb-0" [attr.aria-label]="'admin.nav.label' | adminText">
     <p class="font-beaufort text-lg tracking-[0.2em] text-gold-grad uppercase">
-      {{ 'admin.brand' | transloco }}
+      {{ 'admin.brand' | adminText }}
     </p>
     @if (user(); as account) {
       <p class="mt-1 truncate text-xs text-text-dim">{{ account.username }}</p>
@@ -11,7 +11,7 @@
     <div class="mt-4 flex gap-6 overflow-x-auto lg:block">
       @for (section of nav; track section.key) {
         <div class="shrink-0 lg:mt-5">
-          <p class="eyebrow">{{ 'admin.nav.' + section.key | transloco }}</p>
+          <p class="eyebrow">{{ 'admin.nav.' + section.key | adminText }}</p>
           <ul class="mt-2 flex gap-3 lg:block lg:space-y-1.5">
             @for (link of section.links; track link.key) {
               <li>
@@ -21,7 +21,7 @@
                   routerLinkActive="text-gold-bright"
                   [routerLinkActiveOptions]="{ exact: link.exact }"
                   ariaCurrentWhenActive="page"
-                  >{{ 'admin.nav.' + link.key | transloco }}</a
+                  >{{ 'admin.nav.' + link.key | adminText }}</a
                 >
               </li>
             }
@@ -36,7 +36,7 @@
       [disabled]="signingOut()"
       (click)="signOut()"
     >
-      {{ 'admin.nav.sign_out' | transloco }}
+      {{ 'admin.nav.sign_out' | adminText }}
     </button>
   </nav>
   <div class="min-w-0">

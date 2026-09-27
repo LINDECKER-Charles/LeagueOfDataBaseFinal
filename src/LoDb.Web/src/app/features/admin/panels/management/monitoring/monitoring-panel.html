@@ -1,29 +1,29 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | transloco"
-  [title]="'admin.monitoring.title' | transloco"
-  [subtitle]="'admin.monitoring.lede' | transloco"
+  [eyebrow]="'admin.nav.management' | adminText"
+  [title]="'admin.monitoring.title' | adminText"
+  [subtitle]="'admin.monitoring.lede' | adminText"
 >
   <button lodbButton="ghost" type="button" [disabled]="report.busy()" (click)="refresh()">
-    {{ 'admin.actions.refresh' | transloco }}
+    {{ 'admin.actions.refresh' | adminText }}
   </button>
 </lodb-page-head>
 
 <lodb-panel-state [panel]="report" shape="table" />
 @if (report.value(); as data) {
   <p class="mb-4 font-mono text-xs text-text-dim">
-    {{ 'admin.common.generated_at' | transloco: { at: (data.generatedAt | stamp: 'second') } }}
+    {{ 'admin.common.generated_at' | adminText: { at: (data.generatedAt | stamp: 'second') } }}
   </p>
 
   <div class="hx-table-scroll" [attr.aria-busy]="report.busy()">
     <table class="hx-table">
       <thead>
         <tr>
-          <th scope="col">{{ 'admin.monitoring.services.name' | transloco }}</th>
-          <th scope="col">{{ 'admin.monitoring.services.status' | transloco }}</th>
-          <th scope="col" class="num">{{ 'admin.monitoring.services.latency' | transloco }}</th>
-          <th scope="col">{{ 'admin.monitoring.services.version' | transloco }}</th>
-          <th scope="col" class="num">{{ 'admin.monitoring.services.size' | transloco }}</th>
-          <th scope="col">{{ 'admin.monitoring.services.detail' | transloco }}</th>
+          <th scope="col">{{ 'admin.monitoring.services.name' | adminText }}</th>
+          <th scope="col">{{ 'admin.monitoring.services.status' | adminText }}</th>
+          <th scope="col" class="num">{{ 'admin.monitoring.services.latency' | adminText }}</th>
+          <th scope="col">{{ 'admin.monitoring.services.version' | adminText }}</th>
+          <th scope="col" class="num">{{ 'admin.monitoring.services.size' | adminText }}</th>
+          <th scope="col">{{ 'admin.monitoring.services.detail' | adminText }}</th>
         </tr>
       </thead>
       <tbody>
@@ -32,7 +32,7 @@
             <td class="text-text">{{ service.name }}</td>
             <td>
               <span [lodbBadge]="tone(service.status)">
-                {{ 'admin.health.' + service.status | transloco }}
+                {{ 'admin.health.' + service.status | adminText }}
               </span>
             </td>
             <td class="num">{{ service.latencyMs | figure }} ms</td>
@@ -51,113 +51,113 @@
     </table>
   </div>
 
-  <h2 class="eyebrow mt-8 mb-3">{{ 'admin.monitoring.process.title' | transloco }}</h2>
+  <h2 class="eyebrow mt-8 mb-3">{{ 'admin.monitoring.process.title' | adminText }}</h2>
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
     <lodb-kpi
-      [label]="'admin.monitoring.process.version' | transloco"
+      [label]="'admin.monitoring.process.version' | adminText"
       [value]="data.process.version"
       [sub]="data.process.revision ?? null"
     />
     <lodb-kpi
       tone="hex"
-      [label]="'admin.monitoring.process.uptime' | transloco"
+      [label]="'admin.monitoring.process.uptime' | adminText"
       [value]="uptime()"
     />
     <lodb-kpi
-      [label]="'admin.monitoring.process.working_set' | transloco"
+      [label]="'admin.monitoring.process.working_set' | adminText"
       [value]="data.process.workingSetBytes | figure: 'bytes'"
       [sub]="
         'admin.monitoring.process.heap'
-          | transloco: { size: (data.process.managedHeapBytes | figure: 'bytes') }
+          | adminText: { size: (data.process.managedHeapBytes | figure: 'bytes') }
       "
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.monitoring.process.threads' | transloco"
+      [label]="'admin.monitoring.process.threads' | adminText"
       [value]="data.process.threadPoolThreads | figure"
       [sub]="
-        'admin.monitoring.process.pending' | transloco: { count: data.process.pendingWorkItems }
+        'admin.monitoring.process.pending' | adminText: { count: data.process.pendingWorkItems }
       "
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.monitoring.process.cpu' | transloco"
+      [label]="'admin.monitoring.process.cpu' | adminText"
       [value]="data.process.cpuSeconds | figure"
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.monitoring.process.collections' | transloco"
+      [label]="'admin.monitoring.process.collections' | adminText"
       [value]="data.process.collections.join(' / ')"
     />
   </div>
 
-  <h2 class="eyebrow mt-8 mb-3">{{ 'admin.monitoring.ingestion.title' | transloco }}</h2>
+  <h2 class="eyebrow mt-8 mb-3">{{ 'admin.monitoring.ingestion.title' | adminText }}</h2>
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
     <lodb-kpi
-      [label]="'admin.monitoring.ingestion.versions' | transloco"
+      [label]="'admin.monitoring.ingestion.versions' | adminText"
       [value]="data.ingestion.versionBacklog | figure"
     />
     <lodb-kpi
-      [label]="'admin.monitoring.ingestion.on_demand' | transloco"
+      [label]="'admin.monitoring.ingestion.on_demand' | adminText"
       [value]="data.ingestion.onDemandBacklog | figure"
     />
     <lodb-kpi
       tone="hex"
-      [label]="'admin.monitoring.ingestion.outbox_pending' | transloco"
+      [label]="'admin.monitoring.ingestion.outbox_pending' | adminText"
       [value]="data.ingestion.outboxPending ?? '—'"
     />
     <lodb-kpi
       [tone]="data.ingestion.outboxDead ? 'bad' : 'muted'"
-      [label]="'admin.monitoring.ingestion.outbox_dead' | transloco"
+      [label]="'admin.monitoring.ingestion.outbox_dead' | adminText"
       [value]="data.ingestion.outboxDead ?? '—'"
     />
   </div>
 
   <div class="mt-8 grid gap-4 lg:grid-cols-2">
     @if (data.versions; as versions) {
-      <lodb-admin-card [heading]="'admin.monitoring.versions.title' | transloco">
+      <lodb-admin-card [heading]="'admin.monitoring.versions.title' | adminText">
         <lodb-monitoring-versions [versions]="versions" />
       </lodb-admin-card>
     }
-    <lodb-admin-card [heading]="'admin.monitoring.tables' | transloco">
+    <lodb-admin-card [heading]="'admin.monitoring.tables' | adminText">
       <lodb-rank-list format="bytes" [rows]="tables()" />
     </lodb-admin-card>
   </div>
 
   @if (data.counters; as counters) {
-    <h2 class="eyebrow mt-8 mb-3">{{ 'admin.monitoring.counters.title' | transloco }}</h2>
+    <h2 class="eyebrow mt-8 mb-3">{{ 'admin.monitoring.counters.title' | adminText }}</h2>
     <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <lodb-kpi
-        [label]="'admin.monitoring.counters.users' | transloco"
+        [label]="'admin.monitoring.counters.users' | adminText"
         [value]="counters.usersTotal | figure"
         [sub]="
           'admin.monitoring.counters.users_sub'
-            | transloco: { week: counters.usersNewWeek, banned: counters.usersBanned }
+            | adminText: { week: counters.usersNewWeek, banned: counters.usersBanned }
         "
       />
       <lodb-kpi
         tone="hex"
-        [label]="'admin.monitoring.counters.builds' | transloco"
+        [label]="'admin.monitoring.counters.builds' | adminText"
         [value]="counters.buildsTotal | figure"
         [sub]="
           'admin.monitoring.counters.builds_sub'
-            | transloco: { public: counters.buildsPublic, votes: counters.votes }
+            | adminText: { public: counters.buildsPublic, votes: counters.votes }
         "
       />
       <lodb-kpi
-        [label]="'admin.monitoring.counters.api' | transloco"
+        [label]="'admin.monitoring.counters.api' | adminText"
         [value]="counters.apiRequestsMonth | figure"
         [sub]="
           'admin.monitoring.counters.api_sub'
-            | transloco: { today: counters.apiRequestsToday, keys: counters.apiKeysActive }
+            | adminText: { today: counters.apiRequestsToday, keys: counters.apiKeysActive }
         "
       />
       <lodb-kpi
         tone="warn"
-        [label]="'admin.monitoring.counters.donations' | transloco"
+        [label]="'admin.monitoring.counters.donations' | adminText"
         [value]="counters.donationsTotalCents | figure: 'euros'"
         [sub]="
-          'admin.monitoring.counters.donations_sub' | transloco: { count: counters.donationsCount }
+          'admin.monitoring.counters.donations_sub' | adminText: { count: counters.donationsCount }
         "
       />
     </div>

@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { banAdminUser } from '../../../../../core/api/generated/fn/admin-users/ban-admin-user';
 import { deleteAdminUser } from '../../../../../core/api/generated/fn/admin-users/delete-admin-user';
 import { searchAdminUsers } from '../../../../../core/api/generated/fn/admin-users/search-admin-users';
@@ -20,6 +19,7 @@ import { Badge } from '../../../widgets/badge';
 import { ConfirmButton } from '../../../widgets/confirm-button';
 import { Kpi } from '../../../widgets/kpi';
 import { PageHead } from '../../../widgets/page-head';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /**
  * `/admin/users`: the accounts, searched by name or e-mail. An administrator bans one (with
@@ -41,7 +41,7 @@ import { PageHead } from '../../../widgets/page-head';
     PanelState,
     RouterLink,
     StampPipe,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './users-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

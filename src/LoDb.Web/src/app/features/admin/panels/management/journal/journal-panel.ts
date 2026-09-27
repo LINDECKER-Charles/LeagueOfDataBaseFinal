@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { readAuditJournal } from '../../../../../core/api/generated/fn/admin-audit/read-audit-journal';
 import { readAuditVocabulary } from '../../../../../core/api/generated/fn/admin-audit/read-audit-vocabulary';
 import { readAuditVolume } from '../../../../../core/api/generated/fn/admin-audit/read-audit-volume';
@@ -15,6 +14,7 @@ import { PageHead } from '../../../widgets/page-head';
 import { AuditTable } from './audit-table';
 import { JournalFilters } from './journal-filters';
 import { JournalPurge } from './journal-purge';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /**
  * `/admin/journal`: the audit journal. What it holds and what the retention keeps, the
@@ -33,7 +33,7 @@ import { JournalPurge } from './journal-purge';
     PageHead,
     PanelState,
     StampPipe,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './journal-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

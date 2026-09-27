@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { getAnalyticsReport } from '../../../../../core/api/generated/fn/admin-analytics/get-analytics-report';
 import { rollupAnalytics } from '../../../../../core/api/generated/fn/admin-analytics/rollup-analytics';
 import { Button } from '../../../../../ui/controls/button';
@@ -21,6 +20,7 @@ import { RangeBar } from '../../../widgets/range-bar';
 import { RankList } from '../../../widgets/rank-list';
 import { rankRows } from '../rank-rows';
 import { trafficSeries } from '../traffic-series';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 // The rankings a long report folds after this many rows.
 const RANK_LIMIT = 10;
@@ -45,7 +45,7 @@ const RANK_LIMIT = 10;
     RangeBar,
     RankList,
     TimeSeriesChart,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './traffic-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

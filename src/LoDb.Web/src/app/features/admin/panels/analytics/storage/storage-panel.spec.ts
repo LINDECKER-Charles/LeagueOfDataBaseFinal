@@ -1,4 +1,5 @@
 import { openPanel } from '../../../testing/panels/open-panel';
+import { openPanelInFrench } from '../../../testing/panels/open-panel-in-french';
 import { press } from '../../../testing/dom/press';
 import { reply } from '../../../testing/http/reply';
 import { sent } from '../../../testing/http/sent';
@@ -52,5 +53,22 @@ describe('StoragePanel', () => {
     await reply(visit, again, storageReport({ objects: 7 }));
 
     expect(texts(visit.page, 'lodb-kpi')[1]).toBe('admin.storage.kpi.objects7');
+  });
+
+  it('dates a new reading in French, the site in English', async () => {
+    const visit = await openPanelInFrench(StoragePanel, '/admin/storage', [
+      { path: STORAGE, body: storageReport() },
+    ]);
+    expect(visit.page.textContent).toContain('Relevé du 27/09/2026 10:00:00 (UTC)');
+
+    press(visit, 'Actualiser');
+    await reply(
+      visit,
+      await sent(visit, STORAGE),
+      storageReport({ generatedAt: '2026-09-27T11:00:00Z' }),
+    );
+
+    expect(visit.page.textContent).toContain('Relevé du 27/09/2026 11:00:00 (UTC)');
+    expect(visit.page.textContent).not.toContain('Read at');
   });
 });

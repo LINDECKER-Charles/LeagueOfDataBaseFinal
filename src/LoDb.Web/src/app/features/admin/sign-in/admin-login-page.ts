@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import type { LoginRequest } from '../../../core/api/generated/models/login-request';
 import { RETURN_URL_PARAM } from '../../../core/auth/guards/return-url-param';
 import { AuthSession } from '../../../core/auth/session/auth-session';
@@ -13,6 +12,7 @@ import { formText } from '../shared/form-text';
 import { problemOf } from '../shared/http/problem-of';
 import { PageHead } from '../widgets/page-head';
 import { adminLoginErrorKey } from './admin-login-error-key';
+import { AdminTextPipe } from '../shared/admin-text-pipe';
 
 const SPACES = /\s+/g;
 
@@ -26,7 +26,7 @@ type Step = 'credentials' | 'second-factor';
  */
 @Component({
   selector: 'lodb-admin-login-page',
-  imports: [Button, Field, Frame, PageHead, TranslocoPipe],
+  imports: [Button, Field, Frame, PageHead, AdminTextPipe],
   templateUrl: './admin-login-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

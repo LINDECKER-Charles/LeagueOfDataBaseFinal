@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import type { FigureFormat } from '../format/figure';
 import { FigurePipe } from '../format/figure-pipe';
+import { AdminTextPipe } from '../shared/admin-text-pipe';
 
 /** A ranked entry: a page, a browser, a family of objects. */
 export interface RankRow {
@@ -19,10 +19,10 @@ const FILLS = { gold: 'block h-full bg-gold', hex: 'block h-full bg-hex' } as co
  */
 @Component({
   selector: 'lodb-rank-list',
-  imports: [FigurePipe, TranslocoPipe],
+  imports: [FigurePipe, AdminTextPipe],
   template: `
     @if (rows().length === 0) {
-      <p class="text-sm text-text-dim">{{ empty() | transloco }}</p>
+      <p class="text-sm text-text-dim">{{ empty() | adminText }}</p>
     } @else {
       <ol class="space-y-2.5">
         @for (row of shown(); track $index) {
@@ -48,8 +48,8 @@ const FILLS = { gold: 'block h-full bg-gold', hex: 'block h-full bg-hex' } as co
         >
           {{
             open()
-              ? ('admin.rank.less' | transloco)
-              : ('admin.rank.more' | transloco: { count: folded() })
+              ? ('admin.rank.less' | adminText)
+              : ('admin.rank.more' | adminText: { count: folded() })
           }}
         </button>
       }

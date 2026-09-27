@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import type { AuditEntryView } from '../../../../../core/api/generated/models/audit-entry-view';
 import { StampPipe } from '../../../format/stamp-pipe';
 import { injectAdminText } from '../../../shared/inject-admin-text';
 import { Badge, type Tone } from '../../../widgets/badge';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 // The outcomes of the journal, as the API names them.
 const OUTCOME_TONES: Readonly<Record<string, Tone>> = {
@@ -22,7 +22,7 @@ const ACCOUNT_ACTORS: readonly string[] = ['user', 'admin'];
  */
 @Component({
   selector: 'lodb-audit-table',
-  imports: [Badge, RouterLink, StampPipe, TranslocoPipe],
+  imports: [Badge, RouterLink, StampPipe, AdminTextPipe],
   templateUrl: './audit-table.html',
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,

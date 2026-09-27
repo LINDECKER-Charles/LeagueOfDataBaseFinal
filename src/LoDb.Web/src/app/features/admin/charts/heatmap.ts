@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { heatColor } from './scale/heat-color';
+import { AdminTextPipe } from '../shared/admin-text-pipe';
 
 /** A cell of the grid: its day (0 is Monday), its hour, its views and its fill. */
 interface HeatCell {
@@ -22,24 +22,24 @@ const HOUR_LABEL_EVERY = 6;
  */
 @Component({
   selector: 'lodb-heatmap',
-  imports: [TranslocoPipe],
+  imports: [AdminTextPipe],
   template: `
-    <div class="heat" role="img" [attr.aria-label]="'admin.heatmap.label' | transloco">
+    <div class="heat" role="img" [attr.aria-label]="'admin.heatmap.label' | adminText">
       <span></span>
       @for (hour of hours; track hour) {
         <span class="heat-hour">{{ hour % hourLabelEvery === 0 ? hour : '' }}</span>
       }
       @for (row of rows(); track $index; let day = $index) {
-        <span class="heat-day">{{ 'admin.heatmap.days.' + day | transloco }}</span>
+        <span class="heat-day">{{ 'admin.heatmap.days.' + day | adminText }}</span>
         @for (cell of row; track cell.hour) {
           <span
             class="heat-cell"
             [style.background]="cell.color"
             [title]="
               'admin.heatmap.cell'
-                | transloco
+                | adminText
                   : {
-                      day: ('admin.heatmap.days.' + cell.day | transloco),
+                      day: ('admin.heatmap.days.' + cell.day | adminText),
                       hour: cell.hour,
                       views: cell.views,
                     }

@@ -1,11 +1,11 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | transloco"
-  [title]="'admin.users.title' | transloco"
-  [subtitle]="'admin.users.lede' | transloco"
+  [eyebrow]="'admin.nav.management' | adminText"
+  [title]="'admin.users.title' | adminText"
+  [subtitle]="'admin.users.lede' | adminText"
 />
 
 <form class="mb-6 flex flex-wrap items-end gap-2" role="search" (submit)="search($event)">
-  <label for="users-q" class="sr-only">{{ 'admin.users.search' | transloco }}</label>
+  <label for="users-q" class="sr-only">{{ 'admin.users.search' | adminText }}</label>
   <input
     lodbField
     id="users-q"
@@ -13,45 +13,45 @@
     type="search"
     class="max-w-sm"
     [value]="query.text('q')"
-    [placeholder]="'admin.users.search' | transloco"
+    [placeholder]="'admin.users.search' | adminText"
   />
-  <button lodbButton type="submit">{{ 'admin.actions.search' | transloco }}</button>
+  <button lodbButton type="submit">{{ 'admin.actions.search' | adminText }}</button>
 </form>
 
 <lodb-panel-state [panel]="users" />
 @if (users.value(); as list) {
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-    <lodb-kpi [label]="'admin.users.kpi.total' | transloco" [value]="list.stats.total | figure" />
+    <lodb-kpi [label]="'admin.users.kpi.total' | adminText" [value]="list.stats.total | figure" />
     <lodb-kpi
       tone="hex"
-      [label]="'admin.users.kpi.new_week' | transloco"
+      [label]="'admin.users.kpi.new_week' | adminText"
       [value]="list.stats.newWeek | figure"
     />
     <lodb-kpi
       tone="bad"
-      [label]="'admin.users.kpi.banned' | transloco"
+      [label]="'admin.users.kpi.banned' | adminText"
       [value]="list.stats.banned | figure"
     />
     <lodb-kpi
       tone="good"
-      [label]="'admin.users.kpi.supporters' | transloco"
+      [label]="'admin.users.kpi.supporters' | adminText"
       [value]="list.stats.supporters | figure"
     />
   </div>
 
   <p class="mt-6 mb-2 text-xs text-text-dim">
-    {{ 'admin.common.results' | transloco: { count: list.total } }}
+    {{ 'admin.common.results' | adminText: { count: list.total } }}
   </p>
   <div class="hx-table-scroll" [attr.aria-busy]="users.busy()">
     <table class="hx-table">
       <thead>
         <tr>
           <th scope="col" class="num">#</th>
-          <th scope="col">{{ 'admin.users.columns.account' | transloco }}</th>
-          <th scope="col">{{ 'admin.users.columns.created' | transloco }}</th>
-          <th scope="col" class="num">{{ 'admin.users.columns.builds' | transloco }}</th>
-          <th scope="col">{{ 'admin.users.columns.state' | transloco }}</th>
-          <th scope="col">{{ 'admin.common.actions' | transloco }}</th>
+          <th scope="col">{{ 'admin.users.columns.account' | adminText }}</th>
+          <th scope="col">{{ 'admin.users.columns.created' | adminText }}</th>
+          <th scope="col" class="num">{{ 'admin.users.columns.builds' | adminText }}</th>
+          <th scope="col">{{ 'admin.users.columns.state' | adminText }}</th>
+          <th scope="col">{{ 'admin.common.actions' | adminText }}</th>
         </tr>
       </thead>
       <tbody>
@@ -67,36 +67,36 @@
             <td>
               <span class="flex flex-wrap gap-1">
                 @if (user.isAdmin) {
-                  <span lodbBadge="gold">{{ 'admin.users.badges.admin' | transloco }}</span>
+                  <span lodbBadge="gold">{{ 'admin.users.badges.admin' | adminText }}</span>
                 }
                 @if (user.isBanned) {
                   <span lodbBadge="bad" [title]="user.banReason ?? ''">
-                    {{ 'admin.users.badges.banned' | transloco }}
+                    {{ 'admin.users.badges.banned' | adminText }}
                   </span>
                 }
                 @if (user.isSupporter) {
-                  <span lodbBadge="hex">{{ 'admin.users.badges.supporter' | transloco }}</span>
+                  <span lodbBadge="hex">{{ 'admin.users.badges.supporter' | adminText }}</span>
                 }
                 @if (user.twoFactorEnabled) {
-                  <span lodbBadge="good">{{ 'admin.users.badges.two_factor' | transloco }}</span>
+                  <span lodbBadge="good">{{ 'admin.users.badges.two_factor' | adminText }}</span>
                 }
                 @if (user.google) {
-                  <span lodbBadge="muted">{{ 'admin.users.badges.google' | transloco }}</span>
+                  <span lodbBadge="muted">{{ 'admin.users.badges.google' | adminText }}</span>
                 }
                 @if (!user.emailVerified) {
-                  <span lodbBadge="warn">{{ 'admin.users.badges.unverified' | transloco }}</span>
+                  <span lodbBadge="warn">{{ 'admin.users.badges.unverified' | adminText }}</span>
                 }
               </span>
             </td>
             <td>
               <span class="flex flex-wrap items-center gap-1.5">
                 <a lodbButton="ghost" [routerLink]="['/admin/users', user.id, 'activity']">{{
-                  'admin.users.activity' | transloco
+                  'admin.users.activity' | adminText
                 }}</a>
                 @if (user.isBanned) {
                   <lodb-confirm-button
-                    [label]="'admin.users.unban' | transloco"
-                    [confirmLabel]="'admin.users.confirm_unban' | transloco"
+                    [label]="'admin.users.unban' | adminText"
+                    [confirmLabel]="'admin.users.confirm_unban' | adminText"
                     [busy]="actions.pending() === user.id"
                     (confirmed)="unban(user)"
                   />
@@ -107,12 +107,12 @@
                     [disabled]="actions.pending() === user.id"
                     (click)="banning.set(user.id)"
                   >
-                    {{ 'admin.users.ban' | transloco }}
+                    {{ 'admin.users.ban' | adminText }}
                   </button>
                 }
                 <lodb-confirm-button
-                  [label]="'admin.actions.delete' | transloco"
-                  [confirmLabel]="'admin.users.confirm_delete' | transloco"
+                  [label]="'admin.actions.delete' | adminText"
+                  [confirmLabel]="'admin.users.confirm_delete' | adminText"
                   [busy]="actions.pending() === user.id"
                   (confirmed)="remove(user)"
                 />
@@ -124,7 +124,7 @@
               <td colspan="6">
                 <form class="flex flex-wrap items-end gap-2" (submit)="ban($event, user)">
                   <label [for]="'ban-reason-' + user.id" class="eyebrow w-full">
-                    {{ 'admin.users.ban_reason' | transloco: { name: user.username } }}
+                    {{ 'admin.users.ban_reason' | adminText: { name: user.username } }}
                   </label>
                   <input
                     lodbField
@@ -139,10 +139,10 @@
                     type="submit"
                     [disabled]="actions.pending() === user.id"
                   >
-                    {{ 'admin.users.confirm_ban' | transloco }}
+                    {{ 'admin.users.confirm_ban' | adminText }}
                   </button>
                   <button lodbButton="ghost" type="button" (click)="banning.set(null)">
-                    {{ 'admin.actions.cancel' | transloco }}
+                    {{ 'admin.actions.cancel' | adminText }}
                   </button>
                 </form>
               </td>
@@ -150,7 +150,7 @@
           }
         } @empty {
           <tr>
-            <td colspan="6" class="text-text-dim">{{ 'admin.users.empty' | transloco }}</td>
+            <td colspan="6" class="text-text-dim">{{ 'admin.users.empty' | adminText }}</td>
           </tr>
         }
       </tbody>

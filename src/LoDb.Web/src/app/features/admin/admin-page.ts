@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthSession } from '../../core/auth/session/auth-session';
 import { Button } from '../../ui/controls/button';
 import { Skeleton } from '../../ui/surfaces/skeleton';
 import { ADMIN_NAV } from './admin-nav';
 import { OverviewPanel } from './panels/analytics/overview/overview-panel';
 import { ADMIN_PATHS } from './shared/admin-paths';
+import { AdminTextPipe } from './shared/admin-text-pipe';
 
 /**
  * The shell of the admin, `/admin/...`: the navigation of the legacy sidebar and the panel
@@ -23,7 +23,7 @@ import { ADMIN_PATHS } from './shared/admin-paths';
     RouterLinkActive,
     RouterOutlet,
     Skeleton,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './admin-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

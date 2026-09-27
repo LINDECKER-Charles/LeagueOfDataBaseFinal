@@ -1,7 +1,7 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | transloco"
-  [title]="'admin.api_clients.title' | transloco"
-  [subtitle]="'admin.api_clients.lede' | transloco"
+  [eyebrow]="'admin.nav.management' | adminText"
+  [title]="'admin.api_clients.title' | adminText"
+  [subtitle]="'admin.api_clients.lede' | adminText"
 />
 
 <lodb-panel-state [panel]="clients" />
@@ -9,49 +9,49 @@
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
     <lodb-kpi
       tone="hex"
-      [label]="'admin.api_clients.kpi.active' | transloco"
+      [label]="'admin.api_clients.kpi.active' | adminText"
       [value]="list.kpis.active | figure"
     />
     <lodb-kpi
-      [label]="'admin.api_clients.kpi.month_requests' | transloco"
+      [label]="'admin.api_clients.kpi.month_requests' | adminText"
       [value]="list.kpis.monthRequests | figure"
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.api_clients.kpi.credits' | transloco"
+      [label]="'admin.api_clients.kpi.credits' | adminText"
       [value]="list.kpis.credits | figure"
     />
   </div>
 
   <div class="mt-6 grid gap-4 lg:grid-cols-2">
-    <lodb-admin-card [heading]="'admin.api_clients.by_plan' | transloco">
+    <lodb-admin-card [heading]="'admin.api_clients.by_plan' | adminText">
       <lodb-donut-chart
         [slices]="plans()"
-        [label]="'admin.api_clients.by_plan' | transloco"
+        [label]="'admin.api_clients.by_plan' | adminText"
         [total]="list.kpis.active | figure: 'compact'"
-        [caption]="'admin.api_clients.keys_caption' | transloco"
+        [caption]="'admin.api_clients.keys_caption' | adminText"
       />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.api_clients.top_consumers' | transloco">
+    <lodb-admin-card [heading]="'admin.api_clients.top_consumers' | adminText">
       <lodb-rank-list tone="hex" [rows]="consumers()" />
     </lodb-admin-card>
   </div>
 
   <p class="mt-6 mb-2 text-xs text-text-dim">
-    {{ 'admin.common.results' | transloco: { count: list.total } }}
+    {{ 'admin.common.results' | adminText: { count: list.total } }}
   </p>
   <div class="hx-table-scroll" [attr.aria-busy]="clients.busy()">
     <table class="hx-table">
       <thead>
         <tr>
-          <th scope="col">{{ 'admin.api_clients.columns.key' | transloco }}</th>
-          <th scope="col">{{ 'admin.api_clients.columns.owner' | transloco }}</th>
-          <th scope="col">{{ 'admin.api_clients.columns.plan' | transloco }}</th>
-          <th scope="col" class="num">{{ 'admin.api_clients.columns.usage' | transloco }}</th>
-          <th scope="col" class="num">{{ 'admin.api_clients.columns.credits' | transloco }}</th>
-          <th scope="col" class="num">{{ 'admin.api_clients.columns.rate' | transloco }}</th>
-          <th scope="col">{{ 'admin.api_clients.columns.created' | transloco }}</th>
-          <th scope="col">{{ 'admin.common.actions' | transloco }}</th>
+          <th scope="col">{{ 'admin.api_clients.columns.key' | adminText }}</th>
+          <th scope="col">{{ 'admin.api_clients.columns.owner' | adminText }}</th>
+          <th scope="col">{{ 'admin.api_clients.columns.plan' | adminText }}</th>
+          <th scope="col" class="num">{{ 'admin.api_clients.columns.usage' | adminText }}</th>
+          <th scope="col" class="num">{{ 'admin.api_clients.columns.credits' | adminText }}</th>
+          <th scope="col" class="num">{{ 'admin.api_clients.columns.rate' | adminText }}</th>
+          <th scope="col">{{ 'admin.api_clients.columns.created' | adminText }}</th>
+          <th scope="col">{{ 'admin.common.actions' | adminText }}</th>
         </tr>
       </thead>
       <tbody>
@@ -72,7 +72,7 @@
               <span class="flex flex-wrap gap-1.5">
                 <span lodbBadge="gold">{{ planOf(client) }}</span>
                 @if (!client.isActive) {
-                  <span lodbBadge="bad">{{ 'admin.api_clients.revoked' | transloco }}</span>
+                  <span lodbBadge="bad">{{ 'admin.api_clients.revoked' | adminText }}</span>
                 }
               </span>
             </td>
@@ -92,12 +92,12 @@
                       [disabled]="actions.pending() === client.id"
                       (click)="crediting.set(client.id)"
                     >
-                      {{ 'admin.api_clients.credit' | transloco }}
+                      {{ 'admin.api_clients.credit' | adminText }}
                     </button>
                   }
                   <lodb-confirm-button
-                    [label]="'admin.api_clients.revoke' | transloco"
-                    [confirmLabel]="'admin.api_clients.confirm_revoke' | transloco"
+                    [label]="'admin.api_clients.revoke' | adminText"
+                    [confirmLabel]="'admin.api_clients.confirm_revoke' | adminText"
                     [busy]="actions.pending() === client.id"
                     (confirmed)="revoke(client)"
                   />
@@ -112,7 +112,7 @@
               <td colspan="8">
                 <form class="flex flex-wrap items-end gap-2" (submit)="grant($event, client)">
                   <label [for]="'credit-' + client.id" class="eyebrow w-full">
-                    {{ 'admin.api_clients.credit_label' | transloco: { name: client.name } }}
+                    {{ 'admin.api_clients.credit_label' | adminText: { name: client.name } }}
                   </label>
                   <input
                     lodbField
@@ -130,10 +130,10 @@
                     type="submit"
                     [disabled]="actions.pending() === client.id"
                   >
-                    {{ 'admin.api_clients.confirm_credit' | transloco }}
+                    {{ 'admin.api_clients.confirm_credit' | adminText }}
                   </button>
                   <button lodbButton="ghost" type="button" (click)="crediting.set(null)">
-                    {{ 'admin.actions.cancel' | transloco }}
+                    {{ 'admin.actions.cancel' | adminText }}
                   </button>
                 </form>
               </td>
@@ -141,7 +141,7 @@
           }
         } @empty {
           <tr>
-            <td colspan="8" class="text-text-dim">{{ 'admin.api_clients.empty' | transloco }}</td>
+            <td colspan="8" class="text-text-dim">{{ 'admin.api_clients.empty' | adminText }}</td>
           </tr>
         }
       </tbody>

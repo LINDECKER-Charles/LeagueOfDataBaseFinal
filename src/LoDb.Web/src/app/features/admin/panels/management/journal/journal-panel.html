@@ -1,37 +1,37 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | transloco"
-  [title]="'admin.journal.title' | transloco"
-  [subtitle]="'admin.journal.lede' | transloco"
+  [eyebrow]="'admin.nav.management' | adminText"
+  [title]="'admin.journal.title' | adminText"
+  [subtitle]="'admin.journal.lede' | adminText"
 />
 
 <lodb-panel-state [panel]="volume" shape="card" />
 @if (volume.value(); as held) {
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
     <lodb-kpi
-      [label]="'admin.journal.volume.entries' | transloco"
+      [label]="'admin.journal.volume.entries' | adminText"
       [value]="held.entries | figure"
       [sub]="held.totalBytes | figure: 'bytes'"
     />
     <lodb-kpi
       tone="hex"
-      [label]="'admin.journal.volume.oldest' | transloco"
+      [label]="'admin.journal.volume.oldest' | adminText"
       [value]="held.oldest | stamp"
     />
     <lodb-kpi
       tone="hex"
-      [label]="'admin.journal.volume.newest' | transloco"
+      [label]="'admin.journal.volume.newest' | adminText"
       [value]="held.newest | stamp: 'minute'"
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.journal.volume.retention' | transloco: { months: held.retentionMonths }"
+      [label]="'admin.journal.volume.retention' | adminText: { months: held.retentionMonths }"
       [value]="held.retentionCutoff | stamp"
-      [sub]="'admin.journal.volume.cutoff' | transloco"
+      [sub]="'admin.journal.volume.cutoff' | adminText"
     />
   </div>
 }
 
-<lodb-admin-card class="mt-6" [heading]="'admin.journal.filters.title' | transloco">
+<lodb-admin-card class="mt-6" [heading]="'admin.journal.filters.title' | adminText">
   @if (vocabulary.failure()) {
     <lodb-panel-state [panel]="vocabulary" shape="card" />
   }
@@ -46,6 +46,6 @@
   }
 </div>
 
-<lodb-admin-card class="mt-8" [heading]="'admin.journal.purge.title' | transloco">
+<lodb-admin-card class="mt-8" [heading]="'admin.journal.purge.title' | adminText">
   <lodb-journal-purge (purged)="reload()" />
 </lodb-admin-card>

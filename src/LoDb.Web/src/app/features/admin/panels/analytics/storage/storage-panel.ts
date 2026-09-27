@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { readAdminStorage } from '../../../../../core/api/generated/fn/admin-storage/read-admin-storage';
 import type { StorageRow } from '../../../../../core/api/generated/models/storage-row';
 import { Button } from '../../../../../ui/controls/button';
@@ -16,6 +15,7 @@ import { Kpi } from '../../../widgets/kpi';
 import { Legend } from '../../../widgets/legend';
 import { PageHead } from '../../../widgets/page-head';
 import { type RankRow, RankList } from '../../../widgets/rank-list';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 const RANK_LIMIT = 8;
 const EMPTY: readonly never[] = [];
@@ -43,7 +43,7 @@ function byBytes(rows: readonly StorageRow[]): RankRow[] {
     RankList,
     StampPipe,
     TimeSeriesChart,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './storage-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

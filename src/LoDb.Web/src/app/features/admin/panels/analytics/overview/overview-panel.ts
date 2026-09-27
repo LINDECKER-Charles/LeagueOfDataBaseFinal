@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { getAnalyticsReport } from '../../../../../core/api/generated/fn/admin-analytics/get-analytics-report';
 import { readAdminMonitoring } from '../../../../../core/api/generated/fn/admin-monitoring/read-admin-monitoring';
 import { readAdminStorage } from '../../../../../core/api/generated/fn/admin-storage/read-admin-storage';
@@ -19,6 +18,7 @@ import { Legend } from '../../../widgets/legend';
 import { PageHead } from '../../../widgets/page-head';
 import { RangeBar } from '../../../widgets/range-bar';
 import { trafficSeries } from '../traffic-series';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /**
  * `/admin`: the site at a glance. The traffic of the period, the health of the services and
@@ -39,7 +39,7 @@ import { trafficSeries } from '../traffic-series';
     RouterLink,
     Sparkline,
     TimeSeriesChart,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './overview-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
