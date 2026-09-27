@@ -4,6 +4,11 @@ import { PAGE_SIZE_ALL } from '../filtering/grid/page-size-all';
 import { CatalogueFilter } from '../state/catalogue-filter';
 import { PAGE_SIZES } from '../state/page-sizes';
 import { isPlainClick } from './is-plain-click';
+import { splitAroundCount } from './split-around-count';
+
+// The legacy pager's chevrons, drawn toward the inline start and end; mirrored in RTL.
+const PREVIOUS_CHEVRON = 'M15 6l-6 6 6 6';
+const NEXT_CHEVRON = 'M9 6l6 6-6 6';
 
 /** A step of the pager: where it leads, or null at either end of the list. */
 interface PagerStep {
@@ -11,8 +16,8 @@ interface PagerStep {
   readonly page: number | null;
   readonly href: string;
   readonly label: string;
-  /** Bidi-mirrored angle quotes, so the arrows turn round in right-to-left pages. */
-  readonly glyph: string;
+  /** Path of its chevron, in a 24-unit box. */
+  readonly chevron: string;
 }
 
 /**
@@ -31,6 +36,8 @@ export class FilterToolbar {
   protected readonly filter = inject(CatalogueFilter);
   protected readonly sizes = PAGE_SIZES;
   protected readonly all = PAGE_SIZE_ALL;
+  /** The count cut around its figure: the figure in cyan mono, the words in the body face. */
+  protected readonly split = splitAroundCount;
 
   protected readonly steps = computed<PagerStep[]>(() => {
     const { page, pageCount } = this.filter.view();
@@ -42,9 +49,15 @@ export class FilterToolbar {
         page: previous,
         href: this.hrefOf(previous),
         label: 'filter.prev',
-        glyph: '‹',
+        chevron: PREVIOUS_CHEVRON,
       },
-      { rel: 'next', page: next, href: this.hrefOf(next), label: 'filter.next', glyph: '›' },
+      {
+        rel: 'next',
+        page: next,
+        href: this.hrefOf(next),
+        label: 'filter.next',
+        chevron: NEXT_CHEVRON,
+      },
     ];
   });
 

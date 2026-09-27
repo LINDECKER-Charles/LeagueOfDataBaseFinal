@@ -47,12 +47,14 @@
           }
         </div>
       }
+    } @else if (view.total === 0 && notice() === null) {
+      <lodb-catalogue-empty />
     } @else if (view.visible.length === 0 && filter.isEngaged()) {
       <div class="empty">
         <span class="empty__mark" aria-hidden="true"></span>
         <p class="empty__title">{{ 'filter.empty_title' | transloco }}</p>
         <p class="empty__text">{{ 'filter.empty' | transloco }}</p>
-        <button type="button" lodbButton (click)="filter.clearAll()">
+        <button type="button" class="empty__cta" lodbButton (click)="filter.clearAll()">
           {{ 'filter.empty_cta' | transloco }}
         </button>
       </div>

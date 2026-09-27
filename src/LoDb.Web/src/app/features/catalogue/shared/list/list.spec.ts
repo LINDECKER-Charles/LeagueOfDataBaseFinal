@@ -46,15 +46,15 @@ const ADAPTER: CatalogueCardAdapter<Item> = {
 const WINDOW_MS = 300;
 // The catalogue scope of a page that lists its own texts, such as `summoners`.
 const SCOPED: Record<string, Translation> = {
-  en: { common: { search: 'Search…' } },
+  en: { common: { search: 'Search…' }, filter: { results: '{{ count }} results' } },
   'feature/en': { search: 'Search for a feature' },
 };
 
-function sourceOf(dataset: List | null, status: ListStatus = 'ready') {
+function sourceOf(dataset: List | null, status: ListStatus = 'ready', first: List = FIRST) {
   const whole = signal<List | null>(dataset);
   const state = signal<ListStatus>(status);
   const source: CatalogueListSource<List> = {
-    firstPage: signal(FIRST),
+    firstPage: signal(first),
     slice: { page: 1, size: 2 },
     defaultSize: 2,
     dataset: whole,
@@ -254,6 +254,19 @@ describe('lodb-catalogue-list', () => {
     await fixture.whenStable();
     const [field] = all(fixture, '.console__foot input[readonly]') as HTMLInputElement[];
     expect(field?.value).toBe(`${location.origin}/en/items?lang=en_GB&tag=Damage`);
+  });
+
+  it('sets the figure of the count apart from its words', async () => {
+    const fixture = await render('/en/items', sourceOf(WHOLE).source);
+    expect(all(fixture, '.toolbar__figure').map((node) => node.textContent)).toEqual(['4']);
+    expect(all(fixture, '.toolbar__text').map((node) => node.textContent)).toEqual(['', 'results']);
+  });
+
+  it('frames the empty list of a version that holds nothing, with a way home', async () => {
+    const empty: List = { entries: [], total: 0 };
+    const fixture = await render('/en/7.20.1/runes', sourceOf(empty, 'ready', empty).source);
+    expect(all(fixture, '[role=list]')).toHaveLength(0);
+    expect(all(fixture, 'lodb-catalogue-empty a')[0]?.getAttribute('href')).toBe('/en');
   });
 
   it('opens the facets in a bottom sheet on narrow screens', async () => {

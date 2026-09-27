@@ -29,6 +29,7 @@ import { CatalogueFilter } from '../state/catalogue-filter';
 import type { CatalogueListLike } from '../state/catalogue-list-like';
 import { FilterUrlSync } from '../url/sync/filter-url-sync';
 import { CatalogueCardTemplate } from './catalogue-card-template';
+import { CatalogueEmpty } from './catalogue-empty';
 
 /** Beyond a screenful, more placeholder tiles only lengthen the page. */
 const MAX_SKELETON_TILES = 24;
@@ -45,6 +46,7 @@ const MAX_SKELETON_TILES = 24;
   imports: [
     ActiveFilters,
     Button,
+    CatalogueEmpty,
     FilterConsole,
     FilterSearch,
     FilterToolbar,

@@ -1,8 +1,12 @@
 <div class="toolbar">
   <p class="toolbar__count" aria-live="polite">
-    <span class="toolbar__results">
-      {{ 'filter.results' | transloco: { count: filter.view().matching } }}
-    </span>
+    @let matching = filter.view().matching;
+    @let results = split('filter.results' | transloco: { count: matching }, matching);
+    <span class="toolbar__text">{{ results.before }}</span>
+    @if (results.figure !== null) {
+      <span class="toolbar__figure">{{ results.figure }}</span>
+    }
+    <span class="toolbar__text">{{ results.after }}</span>
     <span class="toolbar__dot" aria-hidden="true">·</span>
     <span class="toolbar__page">
       {{ 'filter.page' | transloco: { page: filter.view().page, count: filter.view().pageCount } }}
@@ -35,10 +39,16 @@
               [attr.aria-label]="step.label | transloco"
               (click)="go($event, step.page)"
             >
-              <span aria-hidden="true">{{ step.glyph }}</span>
+              <svg class="nav__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path [attr.d]="step.chevron" stroke="currentColor" stroke-width="2" />
+              </svg>
             </a>
           } @else {
-            <span class="nav nav--off" aria-hidden="true">{{ step.glyph }}</span>
+            <span class="nav nav--off" aria-hidden="true">
+              <svg class="nav__icon" viewBox="0 0 24 24" fill="none">
+                <path [attr.d]="step.chevron" stroke="currentColor" stroke-width="2" />
+              </svg>
+            </span>
           }
         }
       </nav>
