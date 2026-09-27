@@ -49,6 +49,20 @@ public sealed class AdminContentTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task ABuildRowLinksItsSharePageAndFlagsABannedAuthor()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+        var owner = await App.SeedAsync(new AccountSeed { Banned = true });
+        await AdminSeed.BuildAsync(App, owner.Id, "Ahri mid");
+
+        var page = await ReadAsync(admin, BuildsPath);
+
+        var row = Assert.Single(page.GetProperty("items").EnumerateArray());
+        Assert.Equal("share-Ahri mid", ApiJson.Text(row, "shareToken"));
+        Assert.True(row.GetProperty("owner").GetProperty("isBanned").GetBoolean());
+    }
+
+    [Fact]
     public async Task UnpublishingAndDeletingABuildAreAudited()
     {
         using var admin = await AdminBrowser.OpenAsync(App);

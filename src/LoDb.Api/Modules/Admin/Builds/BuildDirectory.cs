@@ -73,7 +73,9 @@ internal sealed class BuildDirectory(LoDbDbContext db)
             {
                 Id = build.OwnerId,
                 Username = build.Owner!.UserName ?? string.Empty,
+                IsBanned = build.Owner.IsBanned,
             },
+            ShareToken = build.ShareToken,
             CreatedAt = build.CreatedAt,
         });
 }

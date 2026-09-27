@@ -51,7 +51,12 @@ internal sealed class ContactInbox(LoDbDbContext db, TimeProvider clock)
             HandledAt = message.HandledAt,
             User = message.User == null
                 ? null
-                : new AdminUserRef { Id = message.User.Id, Username = message.User.UserName! },
+                : new AdminUserRef
+                {
+                    Id = message.User.Id,
+                    Username = message.User.UserName!,
+                    IsBanned = message.User.IsBanned,
+                },
         });
 
     private async Task<AdminContactStats> StatsAsync(

@@ -53,7 +53,12 @@ internal sealed class ApiClientDirectory(LoDbDbContext db, TimeProvider clock)
             IsActive = key.IsActive && key.RevokedAt == null,
             RevokedAt = key.RevokedAt,
             CreatedAt = key.CreatedAt,
-            Owner = new AdminUserRef { Id = key.UserId, Username = key.User!.UserName! },
+            Owner = new AdminUserRef
+            {
+                Id = key.UserId,
+                Username = key.User!.UserName!,
+                IsBanned = key.User.IsBanned,
+            },
         });
 
     private async Task<ApiClientKpis> KpisAsync(DateOnly month, CancellationToken cancellation)
