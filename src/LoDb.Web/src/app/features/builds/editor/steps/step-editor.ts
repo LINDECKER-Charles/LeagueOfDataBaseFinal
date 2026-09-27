@@ -1,4 +1,4 @@
-import { CdkDrag, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragHandle, CdkDragPlaceholder, CdkDropList } from '@angular/cdk/drag-drop';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { ItemOption } from '../../../../core/api/generated/models/item-option';
@@ -22,7 +22,7 @@ const PRESETS = ['start', 'first_back', 'core', 'situational', 'final'] as const
  */
 @Component({
   selector: 'lodb-step-editor',
-  imports: [Button, CdkDrag, CdkDragHandle, CdkDropList, Image, TranslocoPipe],
+  imports: [Button, CdkDrag, CdkDragHandle, CdkDragPlaceholder, CdkDropList, Image, TranslocoPipe],
   templateUrl: './step-editor.html',
   styleUrl: './step-editor.css',
   providers: [StepDrag, ArmoryOpener],
@@ -53,6 +53,11 @@ export class StepEditor {
 
   protected itemOf(itemId: string): ItemOption | undefined {
     return this.catalogs.resolveItem(itemId);
+  }
+
+  /** The icon of a placed item; null when it has none, and its name stands in for it. */
+  protected imageOf(item: ItemOption | undefined): string | null {
+    return item ? imageSource(item.image) : null;
   }
 
   /** The translation key saying why an item is a ghost, null for an available one. */

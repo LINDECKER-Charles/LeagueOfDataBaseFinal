@@ -12,6 +12,10 @@
       [cdkDragStartDelay]="startDelay"
       (cdkDragStarted)="drag.startStep(i)"
     >
+      <!-- An ng-template: an <li> opened right inside this one would close it. -->
+      <ng-template cdkDragPlaceholder>
+        <li class="forge-droprow" aria-hidden="true"></li>
+      </ng-template>
       <div class="forge-step__head">
         <span
           class="forge-drag-handle"
@@ -102,20 +106,27 @@
               [cdkDragStartDelay]="startDelay"
               (cdkDragStarted)="drag.startItem({ step: i, index: j })"
             >
+              <ng-template cdkDragPlaceholder>
+                <li class="forge-dropslot" aria-hidden="true"></li>
+              </ng-template>
               <span
                 class="forge-item"
                 [class.forge-item--ghost]="ghostKey !== null"
                 [title]="ghostKey === null ? name : name + ' — ' + (ghostKey | transloco)"
               >
-                <lodb-image
-                  class="size-full"
-                  imgClass="object-cover"
-                  [src]="item ? imageSource(item.image) : null"
-                  [alt]="name"
-                  [width]="48"
-                  [height]="48"
-                  [initials]="initialsOf(name)"
-                />
+                @if (imageOf(item); as src) {
+                  <lodb-image
+                    class="size-full"
+                    imgClass="object-cover"
+                    [src]="src"
+                    [alt]="name"
+                    [width]="48"
+                    [height]="48"
+                    [initials]="initialsOf(name)"
+                  />
+                } @else {
+                  <span class="forge-item__fallback">{{ name }}</span>
+                }
               </span>
               <span class="forge-slot__tools">
                 <button
@@ -151,10 +162,11 @@
             </li>
           }
         </ul>
+        <!-- Never disabled: on a full step the armory opens full, and says so. -->
         <button
           type="button"
           class="forge-additem"
-          [disabled]="!order().canAddItem(i)"
+          [title]="'build.editor.armory.add_cta' | transloco"
           (click)="openArmory(i)"
         >
           <svg
