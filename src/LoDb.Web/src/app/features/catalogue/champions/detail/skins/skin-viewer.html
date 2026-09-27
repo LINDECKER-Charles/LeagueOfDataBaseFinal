@@ -1,35 +1,41 @@
-<lodb-dialog
-  [heading]="data.championName"
-  [headingId]="headingId"
-  [closeLabel]="'champions.viewer.close' | transloco"
->
-  @if (skin(); as shown) {
-    <figure>
-      <div class="relative">
-        @for (current of [shown]; track current.id) {
-          <img
-            class="hx-img splash mx-auto max-h-[70vh] w-full object-contain"
-            [src]="current.art.splash"
-            [alt]="current.name"
-          />
-        }
-        @if (count > 1) {
-          <lodb-viewer-arrows (step)="step($event)" />
-        }
-      </div>
-      <figcaption class="mt-3 flex items-center justify-between gap-4">
-        <p
+@if (skin(); as shown) {
+  <figure>
+    <div class="relative">
+      @for (current of [shown]; track current.id) {
+        <img
+          class="hx-img splash mx-auto max-h-[80vh] w-full rounded object-contain"
+          [src]="current.art.splash"
+          [alt]="current.name"
+        />
+      }
+      <button
+        type="button"
+        class="hx-viewer-button close"
+        [attr.aria-label]="'champions.viewer.close' | transloco"
+        (click)="close()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
+      </button>
+      @if (count > 1) {
+        <lodb-viewer-arrows (step)="step($event)" />
+      }
+    </div>
+    <figcaption class="mt-3 flex items-center justify-between gap-4 px-1">
+      <div class="min-w-0">
+        <p class="eyebrow">{{ data.championName }}</p>
+        <h2
           class="truncate font-beaufort tracking-wide text-gold-bright uppercase"
+          [id]="headingId"
           aria-live="polite"
         >
           {{ shown.name }}
-        </p>
-        @if (count > 1) {
-          <span class="shrink-0 font-mono text-xs text-text-dim">
-            {{ 'champions.viewer.counter' | transloco: { index: index() + 1, count } }}
-          </span>
-        }
-      </figcaption>
-    </figure>
-  }
-</lodb-dialog>
+        </h2>
+      </div>
+      @if (count > 1) {
+        <span class="shrink-0 font-mono text-xs text-text-dim">
+          {{ 'champions.viewer.counter' | transloco: { index: index() + 1, count } }}
+        </span>
+      }
+    </figcaption>
+  </figure>
+}

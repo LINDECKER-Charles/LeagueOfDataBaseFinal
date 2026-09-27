@@ -152,11 +152,12 @@ test.describe('champion page in the browser', { tag: '@readonly' }, () => {
     await expect(tile).toBeVisible();
     await tile.click();
 
+    // The lightbox is named by the skin shown, under the champion's name.
     const viewer = page.getByRole('dialog');
-    await expect(viewer.getByRole('heading')).toHaveText(details.profile.name);
-    await expect(viewer.locator('figcaption p')).toHaveText(skins[0]?.name ?? '');
+    await expect(viewer).toHaveAccessibleName(skins[0]?.name ?? '');
+    await expect(viewer.locator('figcaption .eyebrow')).toHaveText(details.profile.name);
     await page.keyboard.press('ArrowRight');
-    await expect(viewer.locator('figcaption p')).toHaveText(skins[1]?.name ?? '');
+    await expect(viewer.getByRole('heading')).toHaveText(skins[1]?.name ?? '');
     await page.keyboard.press('Escape');
     await expect(viewer).toHaveCount(0);
     await expect(tile).toBeFocused();

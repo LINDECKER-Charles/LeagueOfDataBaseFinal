@@ -27,6 +27,10 @@ export class ChromaStrip {
 
   protected open(index: number): void {
     const data: ChromaViewerData = { skinName: this.skinName(), chromas: this.chromas(), index };
-    this.dialogs.open(ChromaViewer, { labelledBy: ChromaViewer.HEADING_ID, data });
+    this.dialogs.open(ChromaViewer, {
+      labelledBy: ChromaViewer.HEADING_ID,
+      data,
+      variant: 'compact',
+    });
   }
 }

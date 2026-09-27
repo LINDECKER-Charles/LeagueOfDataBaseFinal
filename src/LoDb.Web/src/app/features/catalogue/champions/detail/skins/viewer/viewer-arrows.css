@@ -1,31 +1,14 @@
+/* Laid over the picture's inline edges; the look is the global hx-viewer-button. */
 .arrow {
   position: absolute;
   inset-block-start: 50%;
-  display: grid;
-  place-items: center;
   inline-size: 2.6rem;
   block-size: 2.6rem;
   translate: 0 -50%;
-  color: var(--color-gold);
-  border: 1px solid var(--color-gold-deep);
-  background: color-mix(in srgb, var(--color-sink) 72%, transparent);
-  cursor: pointer;
-  transition:
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-.arrow:hover,
-.arrow:focus-visible {
-  color: var(--color-gold-bright);
-  border-color: var(--color-gold);
-  outline: none;
 }
 .arrow svg {
   inline-size: 1.3rem;
   block-size: 1.3rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
 }
 .arrow:dir(rtl) svg {
   scale: -1 1;
@@ -35,4 +18,13 @@
 }
 .arrow--next {
   inset-inline-end: 0.6rem;
+}
+/* The chroma card's smaller stage. */
+:host(.compact) .arrow {
+  inline-size: 2.2rem;
+  block-size: 2.2rem;
+}
+:host(.compact) .arrow svg {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
 }

@@ -8,7 +8,9 @@
   scroll-snap-type: x proximity;
   scroll-padding-inline: 1.5rem;
 }
+/* 16:9, taller than the art: a band of the frame shows above and below it, as in the legacy. */
 .tile {
+  aspect-ratio: 16 / 9;
   padding: 0;
   cursor: pointer;
   transition:

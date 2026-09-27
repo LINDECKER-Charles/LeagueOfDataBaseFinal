@@ -109,6 +109,20 @@ describe('lodb-chroma-strip', () => {
     expect(ring(2)).toContain('var(--color-gold)');
   });
 
+  it('opens the compact card named after the chroma picked, under its skin', async () => {
+    const fixture = await render();
+
+    swatches(fixture)[1]?.click();
+    await fixture.whenStable();
+    const viewer = document.querySelector('lodb-chroma-viewer') as HTMLElement;
+
+    expect(viewer.querySelector('.eyebrow')?.textContent?.trim()).toBe('Red Riding Annie');
+    expect(viewer.querySelector('h2')?.textContent?.trim()).toBe('Pearl');
+    expect(document.querySelector('.cdk-overlay-pane')?.classList).toContain(
+      'hx-lightbox--compact',
+    );
+  });
+
   it('opens the viewer on the chroma picked, and steps to the next one', async () => {
     const fixture = await render();
 
@@ -117,7 +131,6 @@ describe('lodb-chroma-strip', () => {
     const viewer = document.querySelector('lodb-chroma-viewer') as HTMLElement;
     const art = () => viewer.querySelector('img.art');
 
-    expect(viewer.querySelector('h2')?.textContent?.trim()).toBe('Red Riding Annie');
     expect(art()?.getAttribute('src')).toBe('https://cdn.test/2.png');
     expect(art()?.getAttribute('alt')).toBe('Pearl');
 

@@ -24,6 +24,21 @@ describe('dialogConfig', () => {
       'hx-dialog--form',
     ]);
   });
+
+  it('draws a viewer variant on its own pane and darker backdrop, whatever the size', () => {
+    const lightbox = dialogConfig({ labelledBy: 'skin-title', variant: 'lightbox', size: 'wide' });
+    const compact = dialogConfig({ labelledBy: 'chroma-title', variant: 'compact' });
+
+    expect(lightbox).toMatchObject({
+      backdropClass: ['hx-backdrop', 'hx-backdrop--lightbox'],
+      panelClass: 'hx-lightbox',
+      autoFocus: 'dialog',
+    });
+    expect(compact).toMatchObject({
+      backdropClass: ['hx-backdrop', 'hx-backdrop--compact'],
+      panelClass: ['hx-lightbox', 'hx-lightbox--compact'],
+    });
+  });
 });
 
 describe('sheetConfig', () => {

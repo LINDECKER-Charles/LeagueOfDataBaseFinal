@@ -1,4 +1,5 @@
 import type { DialogSize } from './dialog-size';
+import type { DialogVariant } from './dialog-variant';
 
 /** What a caller says about a dialog it opens; the look and the behaviour are fixed here. */
 export interface DialogOptions<D = unknown> {
@@ -8,4 +9,6 @@ export interface DialogOptions<D = unknown> {
   readonly data?: D;
   /** Width of the pane (dialog-size.ts); the theme picker's 46rem when left out. */
   readonly size?: DialogSize;
+  /** A viewer's look (dialog-variant.ts) instead of the framed pane, whatever the `size`. */
+  readonly variant?: DialogVariant;
 }

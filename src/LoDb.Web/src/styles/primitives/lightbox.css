@@ -1,0 +1,51 @@
+/*
+ * Viewer dialogs (ui/overlays/dialog-variant.ts): the skin lightbox and the chroma card. Unlike
+ * a pane, the dialog draws its own surface, a frameless picture or a `hextech-frame` card, so
+ * the pane holds only the width. The legacy viewers were no native dialogs: no size cap here,
+ * and no slide-in, only the picture pops.
+ */
+@layer components {
+  .hx-backdrop--lightbox {
+    background: color-mix(in srgb, var(--color-hextech-black) 80%, transparent);
+    backdrop-filter: blur(8px);
+  }
+  .hx-backdrop--compact {
+    background: color-mix(in srgb, var(--color-hextech-black) 75%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .hx-lightbox {
+    inline-size: min(94vw, 72rem);
+  }
+  .hx-lightbox--compact {
+    inline-size: min(92vw, 30rem);
+  }
+  /* The container takes the focus to announce the dialog: it is no control, so no ring. */
+  .hx-lightbox .cdk-dialog-container:focus {
+    outline: none;
+  }
+
+  /* The square close and arrows laid over a viewer's picture. */
+  .hx-viewer-button {
+    display: grid;
+    place-items: center;
+    color: var(--color-gold);
+    border: 1px solid var(--color-gold-deep);
+    background: color-mix(in srgb, var(--color-sink) 72%, transparent);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+  .hx-viewer-button:hover,
+  .hx-viewer-button:focus-visible {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+    outline: none;
+  }
+  .hx-viewer-button svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+}

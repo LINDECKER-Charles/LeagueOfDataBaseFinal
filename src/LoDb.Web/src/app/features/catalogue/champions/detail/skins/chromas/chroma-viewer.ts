@@ -3,19 +3,19 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoPipe, provideTranslocoScope } from '@jsverse/transloco';
-import { DialogFrame } from '../../../../../../ui/overlays/dialog-frame';
 import { tabIndexAfter } from '../../../../../../ui/tabs/tab-index-after';
 import { ViewerArrows } from '../viewer/viewer-arrows';
 import { viewerIndexAfter } from '../viewer/viewer-index-after';
 import type { ChromaViewerData } from './chroma-viewer-data';
 
 /**
- * A chroma up close, in a dialog: its label, its art and its accent colours. The arrows, and
- * the arrow keys in the reading direction, step through the skin's chromas and wrap around.
+ * A chroma up close, on the legacy's small Hextech card: the skin over the chroma's label,
+ * its art, then its accent colours. The arrows, and the arrow keys in the reading direction,
+ * step through the skin's chromas and wrap around.
  */
 @Component({
   selector: 'lodb-chroma-viewer',
-  imports: [DialogFrame, TranslocoPipe, ViewerArrows],
+  imports: [TranslocoPipe, ViewerArrows],
   templateUrl: './chroma-viewer.html',
   styleUrl: './chroma-viewer.css',
   providers: [provideTranslocoScope('champions')],
@@ -30,15 +30,18 @@ export class ChromaViewer {
   protected readonly index = signal(this.data.index);
   protected readonly chroma = computed(() => this.data.chromas[this.index()]);
   private readonly direction = inject(Directionality);
+  private readonly ref = inject(DialogRef);
 
   constructor() {
     // The dialog's container, not this host, holds the focus once open: its keys reach the
     // overlay's stream, whichever element inside has the focus.
-    inject(DialogRef)
-      .keydownEvents.pipe(takeUntilDestroyed())
-      .subscribe((event) => {
-        this.onKeydown(event);
-      });
+    this.ref.keydownEvents.pipe(takeUntilDestroyed()).subscribe((event) => {
+      this.onKeydown(event);
+    });
+  }
+
+  protected close(): void {
+    this.ref.close();
   }
 
   protected step(move: 'previous' | 'next'): void {
