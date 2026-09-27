@@ -48,9 +48,9 @@
   <section lodbFrame class="p-5">
     <h2 class="panel-title">{{ 'item.detail.availability' | transloco }}</h2>
     <ul class="flex flex-wrap gap-2">
-      @if (tier(); as tier) {
+      @if (depth(); as depth) {
         <li class="hx-chip border-gold/50 text-gold">
-          {{ 'facet.item.tiers.' + tier | transloco }}
+          {{ 'item.detail.tier' | transloco: { depth } }}
         </li>
       }
       @for (champion of bindings(); track champion.id) {

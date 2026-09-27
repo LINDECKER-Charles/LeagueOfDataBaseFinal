@@ -10,16 +10,20 @@ import { tagLabelOf } from '../../list/facets/tag-label-of';
 import { formatItemStat } from '../../stats/format-item-stat';
 import { mapLabelKey } from './map-label-key';
 
+/** Data Dragon's depth of a starter item, which states no tier. */
+const STARTER_DEPTH = 1;
+
 /**
  * The aside of an item page: its stat block, its gold ledger, where and for whom it is
- * available, and its categories. A panel with nothing to say is left out.
+ * available, and its categories. A panel with nothing to say is left out. Nested in the
+ * page's `<article>`, an `<aside>` would map to no landmark: the host states its role.
  */
 @Component({
   selector: 'lodb-item-aside',
   imports: [Frame, RouterLink, TranslocoPipe],
   templateUrl: './item-aside.html',
   styleUrl: './item-aside.css',
-  host: { class: 'mt-12 block space-y-6 lg:sticky lg:top-6 lg:mt-0' },
+  host: { class: 'mt-12 block space-y-6 lg:sticky lg:top-6 lg:mt-0', role: 'complementary' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ItemAside {
@@ -37,10 +41,10 @@ export class ItemAside {
       icon: statIconOf(row.stat),
     })),
   );
-  /** Only an epic or a legendary item states its tier, as the legacy depth did. */
-  protected readonly tier = computed(() => {
-    const tier = this.details().profile.tier;
-    return tier === 'epic' || tier === 'legendary' ? tier : null;
+  /** Only an item built from others states its tier: Data Dragon's depth, 2 to 4. */
+  protected readonly depth = computed(() => {
+    const depth = this.details().depth;
+    return depth != null && depth > STARTER_DEPTH ? depth : null;
   });
   protected readonly bindings = computed(() => {
     const { requiredChampion, requiredAlly } = this.details();
@@ -48,6 +52,8 @@ export class ItemAside {
   });
   protected readonly hasAvailability = computed(
     () =>
-      this.tier() !== null || this.bindings().length > 0 || this.details().availableMaps.length > 0,
+      this.depth() !== null ||
+      this.bindings().length > 0 ||
+      this.details().availableMaps.length > 0,
   );
 }

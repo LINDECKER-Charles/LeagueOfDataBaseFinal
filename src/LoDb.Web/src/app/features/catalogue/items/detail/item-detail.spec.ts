@@ -178,6 +178,17 @@ describe('lodb-item-detail', () => {
     ]);
   });
 
+  it('states its tier from its depth and ARAM by its acronym, in a landmark', async () => {
+    const details: ItemDetails = { ...DETAILS, depth: 3, availableMaps: [11, 12] };
+    const { element } = await render({ context: CONTEXT, details });
+
+    const aside = element.querySelector('[role="complementary"]');
+    const chips = [...(aside?.querySelectorAll('.hx-chip') ?? [])].map((chip) =>
+      chip.textContent?.trim(),
+    );
+    expect(chips.slice(0, 3)).toEqual(['Tier 3', 'map.11', 'items.maps.aram']);
+  });
+
   it('names the LoL Classic edition in its head, and turns the pages of the list', async () => {
     const { element, heads } = await render();
 
