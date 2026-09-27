@@ -5,8 +5,8 @@ import { TranslocoPipe, translateSignal } from '@jsverse/transloco';
 import type { ChampionCard as Card } from '../../../core/api/generated/models/champion-card';
 import type { PageContext } from '../../../core/context/page-context';
 import { injectRouteData } from '../../../core/routing/inject-route-data';
-import { Logo } from '../../../ui/media/logo';
 import { Backdrop } from '../../../ui/surfaces/backdrop';
+import { ListHeading } from '../shared/codex/heading/list-heading';
 import { injectCatalogueLink } from '../shared/codex/links/inject-catalogue-link';
 import { CatalogueCardTemplate } from '../shared/list/catalogue-card-template';
 import { CatalogueList } from '../shared/list/catalogue-list';
@@ -18,8 +18,8 @@ import { FACET_LABEL_KEYS } from './list/facet-label-keys';
 import { applyChampionsHead } from './seo/apply-champions-head';
 import { championsListSeo } from './seo/champions-list-seo';
 
-/** Cards of the first row, whose icons load at once. */
-const EAGER_CARDS = 4;
+/** Cards of the widest first row (five columns), whose portraits load at once. */
+const EAGER_CARDS = 5;
 
 /**
  * The champions list: the page the URL names rendered on the server, readable as is, then
@@ -32,12 +32,11 @@ const EAGER_CARDS = 4;
     CatalogueCardTemplate,
     CatalogueList,
     ChampionCard,
-    Logo,
+    ListHeading,
     LowerCasePipe,
     TranslocoPipe,
   ],
   templateUrl: './champions-page.html',
-  styleUrl: './champions-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChampionsPage {

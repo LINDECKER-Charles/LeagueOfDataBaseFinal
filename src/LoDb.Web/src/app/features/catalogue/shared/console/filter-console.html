@@ -27,4 +27,15 @@
       <lodb-facet-panel />
     }
   </div>
+  <div class="console__foot">
+    <lodb-copy-link
+      [url]="shareUrl()"
+      [labels]="{
+        copy: 'filter.copy_link' | transloco,
+        copied: 'filter.copied' | transloco,
+        error: 'filter.copy_error' | transloco,
+      }"
+      stretch
+    />
+  </div>
 </div>

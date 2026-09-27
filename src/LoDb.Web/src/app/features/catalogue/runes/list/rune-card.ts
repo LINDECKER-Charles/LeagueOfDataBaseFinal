@@ -11,7 +11,7 @@ import type { PageContext } from '../../../../core/context/page-context';
 import { FRAME_STYLES } from '../../../../ui/surfaces/frame-styles';
 import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
 import { RichText } from '../../shared/codex/rich-text/rich-text';
-import { CatalogueImage } from '../../shared/cards/catalogue-image';
+import { CatalogueImage } from '../../../../ui/cards/catalogue-image';
 
 /** Box of the rune's icon, in CSS pixels, as lodb-entity-card draws it. */
 const ICON_SIZE = 56;
@@ -25,12 +25,12 @@ const ICON_SIZE = 56;
   imports: [CatalogueImage, RichText, RouterLink],
   template: `<a [routerLink]="link()" class="flex items-center gap-3 px-4 pt-4 pb-3">
       <lodb-catalogue-image
-        class="size-14 rounded-full border border-gold-deep/50 bg-void"
+        class="size-14 border border-gold-deep/50 bg-void"
         [image]="card().image"
         [name]="card().name"
         [size]="iconSize"
         [eager]="eager()"
-        imgClass="object-contain"
+        imgClass="object-contain transition-transform duration-500 group-hover:scale-110 motion-reduce:transition-none"
       />
       <div class="min-w-0">
         <h3

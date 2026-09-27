@@ -15,7 +15,6 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  min-block-size: 2rem;
   padding: 0.2rem 0.55rem;
   white-space: nowrap;
   font-family: var(--font-mono);

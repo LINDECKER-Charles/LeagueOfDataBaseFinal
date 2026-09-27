@@ -33,20 +33,28 @@ const ITEMS: Item[] = [
 const WHOLE: List = { entries: ITEMS, total: ITEMS.length };
 const FIRST: List = { entries: ITEMS.slice(0, 2), total: ITEMS.length };
 const SCHEMA = [facetOf({ key: 'tag', kind: 'choice', label: 'Tag', primary: true })];
+// A second group, folded by default: nothing in it is a main axis of the list.
+const WITH_KIND = [
+  ...SCHEMA,
+  facetOf({ key: 'kind', kind: 'choice', label: 'Kind', group: 'More' }),
+];
 const ADAPTER: CatalogueCardAdapter<Item> = {
   searchTextOf: (item) => item.name,
-  valuesOf: (item): CardValues => ({ tag: item.tags }),
+  valuesOf: (item): CardValues => ({ tag: item.tags, kind: item.tags }),
   keyOf: (item) => item.name,
 };
 const WINDOW_MS = 300;
 // The catalogue scope of a page that lists its own texts, such as `summoners`.
-const SCOPED: Record<string, Translation> = { 'feature/en': { search: 'Search for a feature' } };
+const SCOPED: Record<string, Translation> = {
+  en: { common: { search: 'Search…' }, filter: { results: '{{ count }} results' } },
+  'feature/en': { search: 'Search for a feature' },
+};
 
-function sourceOf(dataset: List | null, status: ListStatus = 'ready') {
+function sourceOf(dataset: List | null, status: ListStatus = 'ready', first: List = FIRST) {
   const whole = signal<List | null>(dataset);
   const state = signal<ListStatus>(status);
   const source: CatalogueListSource<List> = {
-    firstPage: signal(FIRST),
+    firstPage: signal(first),
     slice: { page: 1, size: 2 },
     defaultSize: 2,
     dataset: whole,
@@ -57,6 +65,7 @@ function sourceOf(dataset: List | null, status: ListStatus = 'ready') {
 }
 
 let current = sourceOf(null).source;
+let currentSchema = SCHEMA;
 
 @Component({
   imports: [CatalogueList, CatalogueCardTemplate],
@@ -73,7 +82,7 @@ let current = sourceOf(null).source;
 class Host {
   readonly source = current;
   readonly adapter = ADAPTER;
-  readonly schema = SCHEMA;
+  readonly schema = currentSchema;
 }
 
 // A page under its own catalogue scope, which translates the label it hands the list.
@@ -95,6 +104,11 @@ class ScopedHost {
 }
 
 describe('lodb-catalogue-list', () => {
+  afterEach(() => {
+    currentSchema = SCHEMA;
+    vi.unstubAllGlobals();
+  });
+
   async function render(
     url: string,
     source: CatalogueListSource<List>,
@@ -214,7 +228,45 @@ describe('lodb-catalogue-list', () => {
     const fixture = await render('/en/items', sourceOf(WHOLE).source, ScopedHost);
 
     const [search] = all(fixture, 'lodb-filter-console input[type=search]');
-    expect(search?.getAttribute('placeholder')).toBe('Search for a feature');
+    expect(search?.getAttribute('aria-label')).toBe('Search for a feature');
+    // The placeholder stays the short one of every list, which the narrow rail can hold.
+    expect(search?.getAttribute('placeholder')).toBe('Search…');
+  });
+
+  it('keeps a group open when its last facet is cleared under the pointer', async () => {
+    currentSchema = WITH_KIND;
+    const fixture = await render('/en/items?kind=Vision', sourceOf(WHOLE).source);
+    const heading = () =>
+      all(fixture, 'lodb-filter-console lodb-facet-group button')
+        .find((button) => button.textContent?.includes('More'))
+        ?.getAttribute('aria-expanded');
+    expect(heading()).toBe('true');
+    all(fixture, '.active__chip')[0].click();
+    await fixture.whenStable();
+    expect(all(fixture, 'lodb-active-filters')).toHaveLength(0);
+    expect(heading()).toBe('true');
+  });
+
+  it('offers the link of the list as filtered at the foot of the rail', async () => {
+    vi.stubGlobal('navigator', {});
+    const fixture = await render('/en/items?lang=en_GB&tag=Damage', sourceOf(WHOLE).source);
+    all(fixture, 'lodb-filter-console .console__foot button')[0].click();
+    await fixture.whenStable();
+    const [field] = all(fixture, '.console__foot input[readonly]') as HTMLInputElement[];
+    expect(field?.value).toBe(`${location.origin}/en/items?lang=en_GB&tag=Damage`);
+  });
+
+  it('sets the figure of the count apart from its words', async () => {
+    const fixture = await render('/en/items', sourceOf(WHOLE).source);
+    expect(all(fixture, '.toolbar__figure').map((node) => node.textContent)).toEqual(['4']);
+    expect(all(fixture, '.toolbar__text').map((node) => node.textContent)).toEqual(['', 'results']);
+  });
+
+  it('frames the empty list of a version that holds nothing, with a way home', async () => {
+    const empty: List = { entries: [], total: 0 };
+    const fixture = await render('/en/7.20.1/runes', sourceOf(empty, 'ready', empty).source);
+    expect(all(fixture, '[role=list]')).toHaveLength(0);
+    expect(all(fixture, 'lodb-catalogue-empty a')[0]?.getAttribute('href')).toBe('/en');
   });
 
   it('opens the facets in a bottom sheet on narrow screens', async () => {

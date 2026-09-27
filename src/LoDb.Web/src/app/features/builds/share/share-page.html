@@ -65,7 +65,14 @@
         @if (current.isPublic && vote(); as score) {
           <lodb-vote-score [buildId]="current.id" [vote]="score" />
         }
-        <lodb-copy-link [url]="link()" />
+        <lodb-copy-link
+          [url]="link()"
+          [labels]="{
+            copy: 'build.show.copy' | transloco,
+            copied: 'build.show.copied' | transloco,
+            error: 'build.show.copy_error' | transloco,
+          }"
+        />
       </div>
     </header>
 

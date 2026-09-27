@@ -7,10 +7,12 @@
   rotate: 45deg;
   border: 1px solid var(--color-gold);
   background: var(--color-gold);
+  box-shadow: 0 0 12px -2px color-mix(in srgb, var(--color-gold) 90%, transparent);
 }
 .marker--on {
   border-color: var(--color-hex);
   background: var(--color-hex);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-hex) 80%, transparent);
 }
 .badge {
   display: grid;

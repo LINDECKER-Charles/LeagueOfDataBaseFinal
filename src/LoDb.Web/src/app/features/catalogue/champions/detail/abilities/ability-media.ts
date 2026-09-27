@@ -15,7 +15,7 @@ import {
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { AbilityVideo } from '../../../../../core/api/generated/models/ability-video';
 import type { ChampionAbility } from '../../../../../core/api/generated/models/champion-ability';
-import { CatalogueImage } from '../../../shared/cards/catalogue-image';
+import { CatalogueImage } from '../../../../../ui/cards/catalogue-image';
 import { injectVideoPlayback } from './playback/inject-video-playback';
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';

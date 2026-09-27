@@ -18,14 +18,21 @@
   inline-size: 100%;
   min-block-size: 2.75rem;
   padding-block: 0.55rem;
-  padding-inline: 2.1rem 2rem;
+  padding-inline: 2.1rem 0.75rem;
   font-family: var(--font-mono);
   font-size: 1rem;
   color: var(--color-text);
   border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
   background: color-mix(in srgb, var(--color-hextech-black) 55%, transparent);
-  clip-path: var(--hx-bevel-sm);
-  transition: border-color 0.25s var(--ease-hextech);
+  /* An 8px cut, not the 12px bevel token: every identity keeps it, as the legacy field did. */
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition:
+    border-color 0.25s var(--ease-hextech),
+    box-shadow 0.25s var(--ease-hextech);
+}
+/* Room for the `/` hint, drawn in the rail only. */
+.search__input--hinted {
+  padding-inline-end: 2rem;
 }
 .search__input::placeholder {
   color: color-mix(in srgb, var(--color-text-muted) 70%, transparent);
@@ -34,7 +41,9 @@
 .search__input:focus {
   outline: none;
   border-color: var(--color-hex);
-  box-shadow: inset 0 0 0 1px var(--color-hex);
+  box-shadow:
+    inset 0 0 0 1px var(--color-hex),
+    inset 0 0 14px -4px color-mix(in srgb, var(--color-hex) 50%, transparent);
 }
 .search__kbd {
   position: absolute;

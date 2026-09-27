@@ -19,6 +19,7 @@ import { Icon } from '../../ui/media/icon';
 import { Backdrop } from '../../ui/surfaces/backdrop';
 import { Frame } from '../../ui/surfaces/frame';
 import type { HomeData } from './data/home-data';
+import { injectRefreshedSections } from './loading/inject-refreshed-sections';
 import type { CardLook } from './sections/card-look';
 import { PreviewSection } from './sections/preview-section';
 import { RESOURCE_TEXTS } from './sections/resource-texts';
@@ -52,14 +53,15 @@ const PREVIEWS: readonly { readonly resource: ResourceType; readonly look: CardL
 })
 export class HomePage {
   protected readonly data = injectRouteData<HomeData>('home');
+  private readonly sections = injectRefreshedSections(this.data);
   protected readonly texts = RESOURCE_TEXTS;
   protected readonly version = computed(() => this.data().context?.version ?? '');
   protected readonly portals = computed(() => {
-    const { sections } = this.data();
+    const sections = this.sections();
     return PORTAL_ORDER.map((resource) => sections[resource]);
   });
   protected readonly previews = computed(() => {
-    const { sections } = this.data();
+    const sections = this.sections();
     return PREVIEWS.map(({ resource, look }) => ({ section: sections[resource], look }));
   });
 

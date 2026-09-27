@@ -13,7 +13,7 @@ import { ListHeading } from '../../shared/codex/heading/list-heading';
 import { RichText } from '../../shared/codex/rich-text/rich-text';
 import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
 import { injectTranslate } from '../../shared/codex/texts/inject-translate';
-import { EntityCard } from '../../shared/cards/entity-card';
+import { EntityCard } from '../../../../ui/cards/entity-card';
 import { CatalogueCardTemplate } from '../../shared/list/catalogue-card-template';
 import { CatalogueList } from '../../shared/list/catalogue-list';
 import { injectCatalogueList } from '../../shared/source/inject-catalogue-list';

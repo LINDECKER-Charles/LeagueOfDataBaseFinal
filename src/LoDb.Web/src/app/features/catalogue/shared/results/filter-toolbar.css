@@ -12,10 +12,18 @@
   gap: 0.5rem;
   margin: 0;
 }
-.toolbar__results {
+.toolbar__figure {
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
+  line-height: 1;
   color: var(--color-hex);
+}
+.toolbar__text {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.toolbar__text:empty {
+  display: none;
 }
 .toolbar__dot {
   color: var(--color-gold-dark);
@@ -33,6 +41,10 @@
   align-items: center;
   gap: 0.5rem 0.9rem;
 }
+.toolbar__sizes {
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+}
 .toolbar__pager {
   gap: 0.25rem;
 }
@@ -46,8 +58,7 @@
 .segments {
   display: flex;
 }
-.segment,
-.nav {
+.segment {
   display: grid;
   place-items: center;
   min-inline-size: 2rem;
@@ -63,8 +74,7 @@
 .segment + .segment {
   border-inline-start: 0;
 }
-.segment:hover,
-.nav:hover {
+.segment:hover {
   color: var(--color-hex);
 }
 .segment:focus-visible,
@@ -77,17 +87,42 @@
   background: linear-gradient(180deg, var(--color-gold-bright), var(--color-gold));
 }
 .nav {
-  font-size: 1rem;
+  display: grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
   color: var(--color-gold);
+  border: 1px solid var(--color-gold-deep);
+  background: var(--color-void);
+  cursor: pointer;
+  transition:
+    color 0.2s var(--ease-hextech),
+    border-color 0.2s var(--ease-hextech);
+}
+.nav:not(.nav--off):hover {
+  color: var(--color-gold-bright);
+  border-color: var(--color-gold);
 }
 .nav--off {
   opacity: 0.4;
   cursor: not-allowed;
+}
+.nav__icon {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+}
+.nav__icon:dir(rtl) {
+  scale: -1 1;
 }
 @media (pointer: coarse) {
   .segment,
   .nav {
     min-inline-size: 2.5rem;
     block-size: 2.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav {
+    transition: none;
   }
 }

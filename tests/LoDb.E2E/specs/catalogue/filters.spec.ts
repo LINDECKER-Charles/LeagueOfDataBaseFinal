@@ -98,7 +98,8 @@ test.describe('catalogue filters', { tag: '@readonly' }, () => {
     await expect(page.locator('lodb-active-filters .active__chip')).toHaveCount(1);
   });
 
-  // A short phone makes the facets outgrow the sheet: its panel must scroll, footer in view.
+  // A short phone makes the facets outgrow the sheet: only its facets scroll, head and
+  // footer stay in view.
   test('keeps the sheet footer on screen when the facets outgrow it', async ({ page }) => {
     await page.setViewportSize(SHORT_PHONE);
     await openList(page);
@@ -106,14 +107,15 @@ test.describe('catalogue filters', { tag: '@readonly' }, () => {
     await page.locator(`${LIST_ROOT} .bar__trigger`).click();
 
     const sheet = page.getByRole('dialog');
-    const panel = sheet.locator('.hx-dialog-panel');
-    await expect(panel).toBeVisible();
-    const overflow = await panel.evaluate((node) => node.scrollHeight - node.clientHeight);
+    const facets = sheet.locator('.sheet__body');
+    await expect(facets).toBeVisible();
+    const overflow = await facets.evaluate((node) => node.scrollHeight - node.clientHeight);
     expect(overflow).toBeGreaterThan(0);
-    const box = await panel.boundingBox();
+    const box = await sheet.locator('lodb-filter-sheet').boundingBox();
     expect(box?.height ?? Infinity).toBeLessThanOrEqual(SHORT_PHONE.height);
+    await facets.evaluate((node) => node.scrollTo({ top: node.scrollHeight }));
+    await expect(sheet.getByRole('heading', { name: 'Filters' })).toBeInViewport();
     await expect(sheet.locator('.sheet__done')).toBeInViewport();
-    await panel.evaluate((node) => node.scrollTo({ top: node.scrollHeight }));
     await sheet.locator('.sheet__done').click();
     await expect(sheet).toBeHidden();
   });

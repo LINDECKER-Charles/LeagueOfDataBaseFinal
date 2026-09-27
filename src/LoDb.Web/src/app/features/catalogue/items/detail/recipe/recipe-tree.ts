@@ -2,7 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { PageContext } from '../../../../../core/context/page-context';
-import { CatalogueImage } from '../../../shared/cards/catalogue-image';
+import { CatalogueImage } from '../../../../../ui/cards/catalogue-image';
 import { injectCatalogueLink } from '../../../shared/codex/links/inject-catalogue-link';
 import type { RecipeNode } from './recipe-node';
 

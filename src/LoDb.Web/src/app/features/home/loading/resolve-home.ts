@@ -19,8 +19,10 @@ const NO_PREVIEWS: Previews = { champions: null, items: null, runes: null, summo
 /**
  * Resolver of the home (`home`): its context, read from `?version=` and `?lang=` like any
  * page outside the catalogue (the server reads no cookie), then the four previews in that
- * context. An older version is cached as long as a pinned catalogue page. `/api/meta` out of
- * reach fails the navigation (503); one list out of reach only empties its section.
+ * context. An older version is cached as long as a pinned catalogue page, unless a preview
+ * still waits for its images: that page stays out of shared caches, and the browser reads
+ * it again once (HomePage). `/api/meta` out of reach fails the navigation (503); one list
+ * out of reach only empties its section.
  */
 export const resolveHome: ResolveFn<HomeData> = async (route, state) => {
   const meta$ = inject(ApiMeta).meta();
@@ -33,9 +35,10 @@ export const resolveHome: ResolveFn<HomeData> = async (route, state) => {
   const context = pageContextOf(sources, meta);
   if (context === null) {
     const link = (path: string) => ({ path: `/${locale}/${path}`, query: {} });
-    return { context: null, sections: sectionsOf(NO_PREVIEWS, link) };
+    return { context: null, sections: sectionsOf(NO_PREVIEWS, link), retryAfterMs: null };
   }
-  response.cache(cacheClassOf(context.version, meta));
-  const previews = await fetchPreviews(context);
-  return { context, sections: sectionsOf(previews, linkMakerOf(context, meta)) };
+  const { previews, retryAfterMs } = await fetchPreviews(context);
+  response.cache(retryAfterMs === null ? cacheClassOf(context.version, meta) : 'transient');
+  const sections = sectionsOf(previews, linkMakerOf(context, meta));
+  return { context, sections, retryAfterMs };
 };

@@ -48,6 +48,26 @@ class ItemsProbe {
   protected readonly adapter = ADAPTER;
 }
 
+// A card holding rich text as Data Dragon writes it: a bare <li>, with no list around it.
+@Component({
+  selector: 'lodb-rich-probe',
+  imports: [CatalogueList, CatalogueCardTemplate],
+  template: `<lodb-catalogue-list
+    [source]="list"
+    [adapter]="adapter"
+    searchLabel="Search for an item"
+    label="Items"
+  >
+    <div class="card" *lodbCatalogueCard="let card of list" [innerHTML]="riotText(card)"></div>
+  </lodb-catalogue-list>`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class RichProbe extends ItemsProbe {
+  protected riotText(card: ItemCard): string {
+    return `<li>${card.name}</li>`;
+  }
+}
+
 @Component({
   selector: 'lodb-root',
   imports: [RouterOutlet],
@@ -70,7 +90,10 @@ async function renderOnServer(url: string, requests: ListRequest[]): Promise<str
   };
   const config: ApplicationConfig = {
     providers: [
-      provideRouter([{ path: 'en/items', component: ItemsProbe }]),
+      provideRouter([
+        { path: 'en/items', component: ItemsProbe },
+        { path: 'en/rich', component: RichProbe },
+      ]),
       provideTransloco({
         config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
         loader: class {
@@ -101,5 +124,16 @@ describe('lodb-catalogue-list rendered on the server', () => {
     expect(cards).toEqual(['Dagger', 'Ward']);
     expect(html).toContain('href="/en/items" rel="prev"');
     expect(html).toContain('href="/en/items?page=3"');
+  });
+
+  it('keeps a card whose rich text holds a bare <li> inside its cell once parsed', async () => {
+    const html = await renderOnServer('/en/rich', []);
+    // The browser parses the server's HTML as a whole document, as hydration then finds it.
+    const parsed = new DOMParser().parseFromString(html, 'text/html');
+    const cells = [...parsed.querySelectorAll('lodb-catalogue-list .grid__cell')];
+    expect(cells.map((cell) => cell.querySelector('.card li')?.textContent)).toEqual([
+      'Boots',
+      'Long Sword',
+    ]);
   });
 });

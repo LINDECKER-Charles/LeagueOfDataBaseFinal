@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Reveal } from '../../../../../ui/motion/reveal';
 import { Frame } from '../../../../../ui/surfaces/frame';
-import { CatalogueImage } from '../../../shared/cards/catalogue-image';
+import { CatalogueImage } from '../../../../../ui/cards/catalogue-image';
 import { RichText } from '../../../shared/codex/rich-text/rich-text';
 import type { Constellation } from './constellation';
 

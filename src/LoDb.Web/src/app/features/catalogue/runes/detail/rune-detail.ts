@@ -14,7 +14,7 @@ import { Pager } from '../../../../ui/navigation/pager';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
-import { CatalogueImage } from '../../shared/cards/catalogue-image';
+import { CatalogueImage } from '../../../../ui/cards/catalogue-image';
 import { pathThemeOf } from '../paths/path-theme-of';
 import { constellationOf } from './constellation/constellation-of';
 import { RuneConstellation } from './constellation/rune-constellation';

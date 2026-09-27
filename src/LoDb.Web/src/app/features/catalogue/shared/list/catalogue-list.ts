@@ -29,6 +29,7 @@ import { CatalogueFilter } from '../state/catalogue-filter';
 import type { CatalogueListLike } from '../state/catalogue-list-like';
 import { FilterUrlSync } from '../url/sync/filter-url-sync';
 import { CatalogueCardTemplate } from './catalogue-card-template';
+import { CatalogueEmpty } from './catalogue-empty';
 
 /** Beyond a screenful, more placeholder tiles only lengthen the page. */
 const MAX_SKELETON_TILES = 24;
@@ -45,6 +46,7 @@ const MAX_SKELETON_TILES = 24;
   imports: [
     ActiveFilters,
     Button,
+    CatalogueEmpty,
     FilterConsole,
     FilterSearch,
     FilterToolbar,
@@ -68,14 +70,19 @@ export class CatalogueList<C> implements OnInit {
   readonly adapter = input.required<CatalogueCardAdapter<C>>();
   /** The facets of the list, translated; those no card carries are not offered. */
   readonly schema = input<readonly FacetDefinition[]>([]);
-  /** Placeholder and accessible name of the search, such as "Search for an item…". */
+  /** Accessible name of the search, such as "Search for an item…". */
   readonly searchLabel = input.required<string>();
   /** Accessible name of the results, such as "Items". */
   readonly label = input.required<string>();
   /** `stack` lays the cards out one per row, such as an accordion of spells. */
   readonly layout = input<'grid' | 'stack'>('grid');
-  /** Which side the rail sits on, on wide screens. */
-  readonly rail = input<'start' | 'end'>('start');
+  /**
+   * Columns of the grid per viewport width, as the legacy lists set them: `entity` rows
+   * (1 to 4) for items, spells and runes, `portrait` art cards (2 to 5) for champions.
+   */
+  readonly columns = input<'entity' | 'portrait'>('entity');
+  /** Which side the rail sits on, on wide screens: the inline end, as on every legacy list. */
+  readonly rail = input<'start' | 'end'>('end');
 
   protected readonly filter = inject(CatalogueFilter);
   protected readonly cardTemplate = contentChild.required(CatalogueCardTemplate);

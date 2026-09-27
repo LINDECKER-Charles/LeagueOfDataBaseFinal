@@ -4,10 +4,10 @@ import { type Observable, catchError, map, of } from 'rxjs';
 import type { ResourceType } from '../../../../core/api/generated/models/resource-type';
 import { CatalogService } from '../../../../core/api/generated/services/catalog.service';
 import type { StrictHttpResponse } from '../../../../core/api/generated/strict-http-response';
+import { retryAfterOf } from '../../../../core/http/retry-after-of';
 import type { ListByResource } from './list-by-resource';
 import type { ListOutcome } from './list-outcome';
 import type { ListRequest } from './list-request';
-import { retryAfterOf } from './retry-after-of';
 
 type Fetchers = {
   readonly [R in ResourceType]: (

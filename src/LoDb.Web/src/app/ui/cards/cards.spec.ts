@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
-import type { CatalogImage } from '../../../../core/api/generated/models/catalog-image';
-import type { Edition } from '../../../../core/api/generated/models/edition';
+import type { CatalogImage } from '../../core/api/generated/models/catalog-image';
+import type { Edition } from '../../core/api/generated/models/edition';
 import { EntityCard } from './entity-card';
 import { initialsOf } from './initials-of';
 
@@ -60,11 +60,11 @@ describe('lodb-entity-card', () => {
     expect(element.textContent).toContain('350');
   });
 
-  it('sweeps a pending image and shows the initials of an absent one', async () => {
+  it('sweeps the initials of a pending image and shows those of an absent one', async () => {
     const { fixture, element } = await render();
     fixture.componentInstance.image.set({ status: 'pending' });
     await fixture.whenStable();
-    expect(element.querySelector('.hx-sk')).not.toBeNull();
+    expect(element.querySelector('.slot')?.textContent).toBe('LO');
     expect(element.querySelector('img')).toBeNull();
     fixture.componentInstance.image.set({ status: 'absent' });
     await fixture.whenStable();

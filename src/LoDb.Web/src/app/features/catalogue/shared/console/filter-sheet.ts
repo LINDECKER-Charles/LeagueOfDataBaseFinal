@@ -2,7 +2,6 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Button } from '../../../../ui/controls/button';
-import { DialogFrame } from '../../../../ui/overlays/dialog-frame';
 import { CatalogueFilter } from '../state/catalogue-filter';
 import { FacetPanel } from './facets/facet-panel';
 
@@ -14,7 +13,7 @@ import { FacetPanel } from './facets/facet-panel';
  */
 @Component({
   selector: 'lodb-filter-sheet',
-  imports: [Button, DialogFrame, FacetPanel, TranslocoPipe],
+  imports: [Button, FacetPanel, TranslocoPipe],
   templateUrl: './filter-sheet.html',
   styleUrls: ['./marks.css', './filter-sheet.css'],
   providers: [{ provide: CatalogueFilter, useFactory: () => inject(DIALOG_DATA) }],

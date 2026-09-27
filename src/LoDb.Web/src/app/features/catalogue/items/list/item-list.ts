@@ -1,14 +1,16 @@
 import { LowerCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import type { UrlTree } from '@angular/router';
+import { RouterLink, type UrlTree } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+import type { EntityLink } from '../../../../core/api/generated/models/entity-link';
 import type { ItemCard } from '../../../../core/api/generated/models/item-card';
 import type { PageContext } from '../../../../core/context/page-context';
 import { injectRouteData } from '../../../../core/routing/inject-route-data';
 import { Accordion } from '../../../../ui/accordion/accordion';
 import { AccordionItem } from '../../../../ui/accordion/accordion-item';
+import { CatalogueImage } from '../../../../ui/cards/catalogue-image';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
-import { EntityCard } from '../../shared/cards/entity-card';
+import { EntityCard } from '../../../../ui/cards/entity-card';
 import { CatalogueCardTemplate } from '../../shared/list/catalogue-card-template';
 import { CatalogueList } from '../../shared/list/catalogue-list';
 import { injectCatalogueList } from '../../shared/source/inject-catalogue-list';
@@ -23,6 +25,8 @@ import { ITEM_CARD_ADAPTER } from './item-card-adapter';
 
 /** Cards of the first row, whose icons are loaded at once. */
 const EAGER_CARDS = 4;
+/** The icon of an evolution chip, in CSS pixels. */
+const EVOLUTION_ICON_SIZE = 24;
 
 /**
  * The item list, `/{locale}/[{version}/]items`: every item, LoL Classic twins included and
@@ -36,11 +40,13 @@ const EAGER_CARDS = 4;
     AccordionItem,
     Backdrop,
     CatalogueCardTemplate,
+    CatalogueImage,
     CatalogueList,
     EntityCard,
     ListHeading,
     LowerCasePipe,
     RichText,
+    RouterLink,
     TranslocoPipe,
   ],
   templateUrl: './item-list.html',
@@ -53,10 +59,18 @@ export class ItemList {
   protected readonly adapter = ITEM_CARD_ADAPTER;
   protected readonly eagerCards = EAGER_CARDS;
   protected readonly tagLabel = tagLabelOf;
+  protected readonly evolutionIconSize = EVOLUTION_ICON_SIZE;
+  protected readonly linkOf = injectCatalogueLink();
 
   private readonly translate = injectTranslate();
-  private readonly linkOf = injectCatalogueLink();
 
+  /** The items the cards build into, by id: each card names its `upgrades` through it. */
+  protected readonly relatedOf = computed(
+    () =>
+      new Map<string, EntityLink>(
+        ((this.list.list() ?? this.list.firstPage())?.related ?? []).map((link) => [link.id, link]),
+      ),
+  );
   protected readonly schema = computed(() =>
     itemFacetsOf(this.list.list()?.facets.tags ?? [], this.translate()),
   );

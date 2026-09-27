@@ -52,6 +52,14 @@ export class CatalogueFilter {
   );
 
   readonly state = computed(() => this.adopted() ?? this.initial() ?? BLANK);
+  /**
+   * The facet groups the reader folded or unfolded, by group name, per surface: the rail and
+   * the sheet fold apart, and the sheet, built anew at each opening, keeps its folding here.
+   */
+  readonly folds = {
+    rail: signal<Readonly<Record<string, boolean>>>({}),
+    sheet: signal<Readonly<Record<string, boolean>>>({}),
+  } as const;
   readonly status = computed(() => this.source()?.status() ?? 'loading');
   readonly activeCount = computed(() => activeFacetCount(this.state().facets));
   readonly isEngaged = computed(() => isFilterEngaged(this.state().query, this.state().facets));

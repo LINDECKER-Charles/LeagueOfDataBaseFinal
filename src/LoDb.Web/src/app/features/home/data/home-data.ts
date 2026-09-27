@@ -7,4 +7,9 @@ export interface HomeData {
   /** Null while no version is ingested: the sections then hold their portals alone. */
   readonly context: PageContext | null;
   readonly sections: Readonly<Record<ResourceType, HomeSection>>;
+  /**
+   * The delay the API asked for before one more read, while a preview still waits for its
+   * images (a cold version); null once they are all settled.
+   */
+  readonly retryAfterMs: number | null;
 }
