@@ -73,7 +73,10 @@ video,
   color: var(--color-hex-bright);
   cursor: pointer;
   opacity: 0.6;
-  transition: opacity 0.25s var(--ease-hextech);
+  transition:
+    opacity 0.25s var(--ease-hextech),
+    border-color 0.25s var(--ease-hextech),
+    box-shadow 0.25s var(--ease-hextech);
 }
 .sound:hover,
 .sound:focus-visible,
@@ -110,6 +113,7 @@ video,
   transform: scaleX(0);
   transform-origin: left;
   background: linear-gradient(90deg, var(--color-hex), var(--color-hex-bright));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-hex) 55%, transparent);
   will-change: transform;
 }
 .progress__fill:dir(rtl) {
