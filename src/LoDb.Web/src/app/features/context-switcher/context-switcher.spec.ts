@@ -218,7 +218,7 @@ describe('ContextSwitcher', () => {
     expect(routerUrl()).toBe(`/en/${OLDER}/champions?lang=en_GB`);
   });
 
-  it('keeps a choice for the session, remember unticked, and applies it to the next page', async () => {
+  it('keeps a choice for the session, remember unticked, for the next page', async () => {
     configure('browser');
     const fixture = await openOn('/en/items');
     const host = await loaded(fixture);
