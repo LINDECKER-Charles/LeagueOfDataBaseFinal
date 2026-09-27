@@ -242,6 +242,7 @@ correspondent pas à la cible.
 | `LODB_EDGE_CIDR` | sous-réseau d'`edge` | idem | Seul pair cru sur `X-Forwarded-For` : `docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}'`. |
 | `LODB_NOINDEX` ⚙️ | `1` | `0` ou absente | `X-Robots-Tag: noindex, nofollow` sur les réponses de nginx ; le smoke test contrôle l'en-tête. |
 | `LODB_DB_NETWORK` ⚙️ | **absente** | `lodb-prod_default` | Réseau de la base. Absente : la stack a son Postgres (dump anonymisé) sur le réseau `lodb-next-db`, que le job crée. Présente : le Postgres embarqué est écarté et `api` et `migrate` rejoignent la base existante sur ce réseau, **sans la déplacer**. |
+| `COMPOSE_PROFILES` | `bundled-database` | **absente** | Active le Postgres embarqué. Le job l'impose de lui-même (`bundled-database` sur `next`, vide en prod, quel que soit le `.env`) ; la ligne ne sert qu'aux commandes `docker compose` lancées à la main sur l'hôte `next`. |
 | `LODB_DB_HOST`, `LODB_DB_PORT` | défauts | défauts | `postgres` et `5432` : le nom du service Postgres sur ce réseau, dans les deux cas. |
 | `LODB_DB_NAME`, `LODB_DB_USER`, `LODB_DB_PASSWORD` | Postgres de `next` (mot de passe fort et unique) | ceux de l'ancienne stack (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` de `ENV_PROD`) | Chaîne de connexion de l'API et de `migrate`. |
 | `LODB_DATA_PROTECTION_CERT_FILE`, `LODB_ANDROID_DIR` | défauts | défauts | Fichiers de l'hôte, voir plus bas. Ne pas les définir : le job écrit aux emplacements par défaut. |

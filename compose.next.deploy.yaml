@@ -13,8 +13,8 @@
 # so a missing image fails the deploy instead of building on the host.
 #
 # Database, one variable apart (LODB_DB_NETWORK):
-#   next  unset: the stack runs its own Postgres (anonymized dump), on the network
-#         <project>-db, which the deploy job creates;
+#   next  unset: the stack runs its own Postgres (anonymized dump, profile
+#         bundled-database), on the network <project>-db, which the deploy job creates;
 #   prod  the legacy stack's network (lodb-prod_default): the bundled Postgres is left
 #         out and api and migrate reach the existing database there, which never moves.
 #
@@ -143,9 +143,11 @@ services:
           # Peak 19 MiB; the kernel's page cache of the blobs it serves is charged here.
           memory: 64m
 
-  # next only: left out as soon as LODB_DB_NETWORK names a shared database's network.
+  # next only, enabled by COMPOSE_PROFILES=bundled-database (next-deploy.yml sets it when
+  # LODB_DB_NETWORK is unset, and clears it in prod). An interpolated profile that resolves
+  # to "" does not enable a service: Compose treats "" as a profile name.
   postgres:
-    profiles: ["${LODB_DB_NETWORK:+shared-database}"]
+    profiles: [bundled-database]
     environment:
       POSTGRES_PASSWORD: ${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment}
     networks:

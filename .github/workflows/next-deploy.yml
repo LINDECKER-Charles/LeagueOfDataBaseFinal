@@ -241,6 +241,9 @@ jobs:
                 || fail "LODB_DB_NETWORK must name the network of the existing database."
               docker network inspect "$db_network" >/dev/null 2>&1 \
                 || fail "Network '$db_network' is missing: is the database's stack running?"
+              # Overrides the .env: a second "postgres" on that network would shadow the
+              # existing database.
+              export COMPOSE_PROFILES=
               for key in LoDb__Mail__Host LoDb__Billing__StripeSecretKey \
                 LoDb__Billing__StripeWebhookSecret; do
                 [ -n "$(env_value "$key")" ] || fail "$key is required in production."
@@ -251,6 +254,8 @@ jobs:
               db_network="$EXPECTED_PROJECT-db"
               docker network inspect "$db_network" >/dev/null 2>&1 \
                 || docker network create "$db_network" >/dev/null
+              # The stack's own Postgres (compose.next.deploy.yaml).
+              export COMPOSE_PROFILES=bundled-database
             fi
 
             # The edge and its network belong to infra-vps; this job only asserts them.
