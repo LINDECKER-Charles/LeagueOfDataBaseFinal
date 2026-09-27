@@ -1,0 +1,579 @@
+{
+  "brand": "LODB Admin",
+  "nav": {
+    "label": "Administration navigation",
+    "analytics": "Analytics",
+    "management": "Management",
+    "overview": "Overview",
+    "traffic": "Traffic",
+    "audience": "Audience",
+    "storage": "Storage",
+    "users": "Users",
+    "builds": "Builds",
+    "donations": "Donations",
+    "contacts": "Messages",
+    "api_clients": "API clients",
+    "monitoring": "Monitoring",
+    "journal": "Journal",
+    "sign_out": "Sign out"
+  },
+  "login": {
+    "title": "Administration",
+    "lede": "Administrators only: password, then the code of the authenticator app.",
+    "identifier": "E-mail or username",
+    "password": "Password",
+    "submit": "Continue",
+    "second_factor": "Enter the 6-digit code of your authenticator app.",
+    "code": "Authentication code",
+    "recovery_code": "Recovery code",
+    "use_app": "Use the authenticator app",
+    "use_recovery": "Use a recovery code",
+    "verify": "Verify",
+    "errors": {
+      "invalid_credentials": "Wrong credentials.",
+      "invalid_code": "This code is not valid. Try again with the current code.",
+      "banned": "This account is banned.",
+      "locked": "Too many attempts: this account is locked for a few minutes.",
+      "rate_limited": "Too many attempts. Wait before trying again.",
+      "refused": "This account has no access to the administration.",
+      "generic": "Signing in failed. Try again."
+    }
+  },
+  "enroll": {
+    "title": "Two-factor authentication",
+    "lede": "The administration requires a second factor. Link an authenticator app to your account.",
+    "scan": "Scan this QR code with your app (Aegis, 2FAS, Google Authenticator…), or type the key below.",
+    "key": "Secret key",
+    "qr_label": "QR code linking the authenticator app",
+    "code": "6-digit code shown by the app",
+    "confirm": "Turn on",
+    "codes_title": "Recovery codes",
+    "codes_lede": "Keep these codes somewhere safe: each replaces the app once if you lose it. They will not be shown again.",
+    "open": "Open the administration",
+    "errors": {
+      "invalid_code": "This code does not match. Check the time of the phone and try again.",
+      "already": "An authenticator app is already linked to this account."
+    }
+  },
+  "state": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "sign_in": "Sign in again",
+    "timeout": "The API did not answer within 30 seconds.",
+    "session": "Your administration session expired or lost the rights it needs.",
+    "network": "The API cannot be reached. Check your connection.",
+    "server": "The API ran into an error."
+  },
+  "errors": {
+    "session": "Session expired or rights missing: sign in again.",
+    "self_moderation": "You cannot apply this action to your own account.",
+    "api_client_revoked": "This key is revoked.",
+    "gone": "This item no longer exists.",
+    "rate_limited": "Too many requests. Wait before trying again.",
+    "invalid": "The input is invalid.",
+    "network": "The API cannot be reached.",
+    "generic": "The action failed."
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "refresh": "Refresh",
+    "search": "Search",
+    "filter": "Filter",
+    "delete": "Delete"
+  },
+  "common": {
+    "no_data": "No data over the period.",
+    "others": "Others",
+    "results": "{count, plural, =0 {No result} one {# result} other {# results}}",
+    "actions": "Actions",
+    "generated_at": "Read at {at} (UTC)"
+  },
+  "health": {
+    "ok": "Operational",
+    "degraded": "Degraded",
+    "down": "Down"
+  },
+  "chart": {
+    "empty": "No data",
+    "zoom_in": "Zoom in",
+    "zoom_out": "Zoom out",
+    "reset": "Reset the zoom",
+    "hint": "Left and right arrows: move through the days. + and −: zoom. Home: reset. Wheel or buttons to zoom, drag to move."
+  },
+  "heatmap": {
+    "label": "Views per day of the week and per hour (UTC)",
+    "cell": "{day} {hour}:00: {views, plural, =0 {no view} one {# view} other {# views}}",
+    "days": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    }
+  },
+  "rank": {
+    "more": "Show {count, plural, one {# more row} other {# more rows}}",
+    "less": "Show less"
+  },
+  "pager": {
+    "label": "Pagination",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page}"
+  },
+  "range": {
+    "label": "Period",
+    "7d": "7 days",
+    "30d": "30 days",
+    "90d": "90 days",
+    "all": "All"
+  },
+  "overview": {
+    "title": "Overview",
+    "lede": "The traffic of the period, the health of the services and the figures of the application.",
+    "health": "Health of the services",
+    "storage": "Storage",
+    "more": "Details",
+    "users": "Accounts",
+    "users_week": "+{count} this week",
+    "builds": "Public builds",
+    "builds_total": "{count} in all",
+    "api_requests": "API requests today",
+    "api_keys": "{count, plural, one {# active key} other {# active keys}}",
+    "donations": "Donations",
+    "donations_count": "{count, plural, one {# donation} other {# donations}}"
+  },
+  "traffic": {
+    "title": "Traffic",
+    "lede": "The page views of the period, day by day and hour by hour.",
+    "roll_up": "Consolidate",
+    "rolled_up": "{count, plural, =0 {No day to consolidate.} one {# day consolidated.} other {# days consolidated.}}",
+    "period": "From {from} to {to}",
+    "daily": "Views per day",
+    "heatmap": "Rhythm of the week",
+    "top_pages": "Most viewed pages",
+    "top_entities": "Most viewed entries",
+    "by_type": "Views per type",
+    "statuses": "Answers",
+    "routes": "Routes",
+    "views_caption": "views",
+    "kpi": {
+      "views": "Page views",
+      "pages": "{count, plural, one {# page tracked} other {# pages tracked}}",
+      "visitors": "Unique visitors",
+      "returning": "Returning visitors",
+      "bots": "Bot views"
+    },
+    "series": {
+      "views": "Views",
+      "visitors": "Visitors",
+      "bots": "Bots"
+    },
+    "types": {
+      "home": "Home",
+      "champion": "Champions",
+      "item": "Items",
+      "runesReforged": "Runes",
+      "summoner": "Summoner spells"
+    },
+    "kinds": {
+      "home": "Home",
+      "list": "Lists",
+      "detail": "Entries"
+    }
+  },
+  "audience": {
+    "title": "Audience",
+    "lede": "Who the visitors of the period are, and where they come from.",
+    "devices_title": "Devices",
+    "sources_title": "Sources",
+    "browsers": "Browsers",
+    "systems": "Systems",
+    "countries": "Countries",
+    "referers": "Referring sites",
+    "languages": "Browser languages",
+    "locales": "Site languages",
+    "kpi": {
+      "countries": "Countries",
+      "referers": "Referring sites"
+    },
+    "devices": {
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "tablet": "Tablet",
+      "other": "Other"
+    },
+    "sources": {
+      "direct": "Direct",
+      "search": "Search engines",
+      "social": "Social networks",
+      "internal": "Internal navigation",
+      "external": "Other sites"
+    }
+  },
+  "storage": {
+    "title": "Storage",
+    "lede": "The content of the bucket: size, deduplication, images and data per version.",
+    "partial": "Partial reading:",
+    "growth": "Growth",
+    "families": "Families",
+    "extensions": "Extensions",
+    "types": "Data types",
+    "languages": "Languages",
+    "versions": "Versions",
+    "largest": "Heaviest objects",
+    "coverage": "Coverage per version",
+    "kpi": {
+      "bytes": "Size",
+      "objects": "Objects",
+      "dedup": "Deduplication",
+      "saved": "{size} saved",
+      "webp": "WebP coverage",
+      "webp_size": "{size} as WebP"
+    },
+    "series": {
+      "total": "Cumulative size",
+      "added": "Added that day"
+    },
+    "columns": {
+      "version": "Version",
+      "objects": "Objects",
+      "types": "Types",
+      "langs": "Languages"
+    }
+  },
+  "users": {
+    "title": "Users",
+    "lede": "Every account, newest first.",
+    "search": "Username or e-mail",
+    "empty": "No account matches.",
+    "activity": "Activity",
+    "ban": "Ban",
+    "ban_reason": "Reason for banning {name} (optional)",
+    "confirm_ban": "Ban the account",
+    "unban": "Restore",
+    "confirm_unban": "Confirm the restoration",
+    "confirm_delete": "Delete for good",
+    "kpi": {
+      "total": "Accounts",
+      "new_week": "New (7 d)",
+      "banned": "Banned",
+      "supporters": "Supporters"
+    },
+    "columns": {
+      "account": "Account",
+      "created": "Signed up",
+      "builds": "Builds",
+      "state": "State"
+    },
+    "badges": {
+      "admin": "Admin",
+      "banned": "Banned",
+      "supporter": "Supporter",
+      "two_factor": "2FA",
+      "google": "Google",
+      "unverified": "Unverified"
+    },
+    "done": {
+      "ban": "{name} is banned.",
+      "unban": "{name} is restored.",
+      "delete": "The account {name} is deleted."
+    }
+  },
+  "activity": {
+    "title": "Activity of {name}",
+    "back": "Back to the users"
+  },
+  "builds": {
+    "title": "Builds",
+    "lede": "The builds of every account, by name, champion or author.",
+    "search": "Name, champion or author",
+    "visibility": "Visibility",
+    "all_visibilities": "Every visibility",
+    "empty": "No build matches.",
+    "unpublish": "Unpublish",
+    "confirm_unpublish": "Confirm unpublishing",
+    "confirm_delete": "Delete for good",
+    "kpi": {
+      "total": "Builds",
+      "public": "Public",
+      "private": "Private"
+    },
+    "columns": {
+      "build": "Build",
+      "author": "Author",
+      "mode": "Mode",
+      "visibility": "Visibility",
+      "score": "Score",
+      "created": "Created"
+    },
+    "visibilities": {
+      "public": "Public",
+      "private": "Private"
+    },
+    "modes": {
+      "sr": "Summoner's Rift",
+      "aram": "ARAM",
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "Arena"
+    },
+    "done": {
+      "unpublish": "“{name}” is no longer public.",
+      "delete": "“{name}” is deleted."
+    }
+  },
+  "donations": {
+    "title": "Donations",
+    "lede": "What was given, day by day, and every donation. A refund goes through Stripe.",
+    "daily": "Donations per day",
+    "empty": "No donation yet.",
+    "anonymous": "Anonymous",
+    "kpi": {
+      "total": "Total",
+      "count": "Donations",
+      "identified": "Identified donors",
+      "anonymous": "Anonymous donations",
+      "supporters": "Supporters"
+    },
+    "series": {
+      "amount": "Amount"
+    },
+    "columns": {
+      "date": "Date",
+      "amount": "Amount",
+      "donor": "Donor"
+    }
+  },
+  "contacts": {
+    "title": "Messages",
+    "lede": "The messages of the contact form, newest first.",
+    "filter": "Filter by status",
+    "empty": "No message.",
+    "no_subject": "(no subject)",
+    "reply": "Reply",
+    "handle": "Mark handled",
+    "reopen": "Reopen",
+    "confirm_delete": "Delete for good",
+    "handled_at": "Handled on {at}",
+    "kpi": {
+      "total": "Messages",
+      "new": "To handle",
+      "handled": "Handled",
+      "week": "Received (7 d)"
+    },
+    "statuses": {
+      "all": "All",
+      "new": "To handle",
+      "handled": "Handled"
+    },
+    "categories": {
+      "bug": "Bug",
+      "feedback": "Suggestion",
+      "review": "Review",
+      "commercial": "Business"
+    },
+    "done": {
+      "handle": "Message marked as handled.",
+      "reopen": "Message reopened.",
+      "delete": "Message deleted."
+    }
+  },
+  "api_clients": {
+    "title": "API clients",
+    "lede": "The keys of the public API, their plan and their use this month.",
+    "by_plan": "Active keys per plan",
+    "keys_caption": "keys",
+    "top_consumers": "Heaviest users (30 d)",
+    "empty": "No key.",
+    "revoked": "Revoked",
+    "credit": "Credit",
+    "credit_label": "Prepaid requests to add to {name} (1 to 1,000,000)",
+    "confirm_credit": "Credit the key",
+    "revoke": "Revoke",
+    "confirm_revoke": "Confirm the revocation",
+    "kpi": {
+      "active": "Active keys",
+      "month_requests": "Requests this month",
+      "credits": "Credits in reserve"
+    },
+    "columns": {
+      "key": "Key",
+      "owner": "Holder",
+      "plan": "Plan",
+      "usage": "Use this month",
+      "credits": "Credits",
+      "rate": "Req./min",
+      "created": "Created"
+    },
+    "plans": {
+      "free": "Free",
+      "monthly": "Monthly",
+      "monthly_plus": "Monthly+",
+      "annual": "Annual",
+      "annual_plus": "Annual+"
+    },
+    "done": {
+      "credit": "{count} requests added to {name}.",
+      "revoke": "The key {name} is revoked."
+    }
+  },
+  "monitoring": {
+    "title": "Monitoring",
+    "lede": "The health of the API: its dependencies, its process, the ingestion and the volumes.",
+    "tables": "Heaviest tables",
+    "services": {
+      "name": "Service",
+      "status": "State",
+      "latency": "Latency",
+      "version": "Version",
+      "size": "Size",
+      "detail": "Detail"
+    },
+    "process": {
+      "title": "API process",
+      "version": "Version",
+      "uptime": "Uptime",
+      "working_set": "Memory",
+      "heap": "Managed heap: {size}",
+      "threads": "Threads",
+      "pending": "{count, plural, =0 {No pending work item} one {# pending work item} other {# pending work items}}",
+      "cpu": "CPU time (s)",
+      "collections": "GC collections (0 / 1 / 2)"
+    },
+    "ingestion": {
+      "title": "Ingestion",
+      "versions": "Versions waiting",
+      "on_demand": "On-demand ingestions",
+      "outbox_pending": "E-mails waiting",
+      "outbox_dead": "E-mails given up"
+    },
+    "versions": {
+      "title": "Data Dragon versions",
+      "current": "Version served:",
+      "version": "Version",
+      "status": "State",
+      "attempts": "Attempts",
+      "updated": "Updated",
+      "statuses": {
+        "discovered": "Discovered",
+        "ingesting": "Ingesting",
+        "ready": "Ready",
+        "failed": "Failed"
+      }
+    },
+    "counters": {
+      "title": "Figures of the application",
+      "users": "Accounts",
+      "users_sub": "+{week} this week · {banned} banned",
+      "builds": "Builds",
+      "builds_sub": "{public} public · {votes} votes",
+      "api": "API requests this month",
+      "api_sub": "{today} today · {keys} active keys",
+      "donations": "Donations",
+      "donations_sub": "{count, plural, one {# donation} other {# donations}}"
+    }
+  },
+  "journal": {
+    "title": "Journal",
+    "lede": "The audit journal: sign-ins, account actions and moderation, newest first.",
+    "empty": "No entry matches.",
+    "purged": "{count, plural, =0 {No entry deleted.} one {# entry deleted.} other {# entries deleted.}}",
+    "volume": {
+      "entries": "Entries",
+      "oldest": "Oldest",
+      "newest": "Newest",
+      "retention": "Retention ({months} months)",
+      "cutoff": "Kept from this date"
+    },
+    "filters": {
+      "title": "Filter",
+      "any": "Any",
+      "category": "Category",
+      "action": "Action",
+      "outcome": "Outcome",
+      "actor_type": "Actor type",
+      "actor": "Actor",
+      "from": "From",
+      "to": "To",
+      "clear": "Clear the filters"
+    },
+    "purge": {
+      "title": "Maintenance",
+      "lede": "Deletes entries of the journal. The purge is journaled itself.",
+      "scope": "Scope",
+      "before": "Before",
+      "submit": "Purge",
+      "confirm": "Confirm the purge",
+      "scopes": {
+        "retention": "Past the retention",
+        "before": "Before a date",
+        "all": "Delete everything"
+      }
+    },
+    "columns": {
+      "when": "Date (UTC)",
+      "action": "Action",
+      "outcome": "Outcome",
+      "actor": "Actor",
+      "target": "Target",
+      "origin": "Origin"
+    },
+    "categories": {
+      "auth": "Authentication",
+      "account": "Account",
+      "build": "Builds",
+      "apikey": "API keys",
+      "admin": "Administration"
+    },
+    "outcomes": {
+      "success": "Success",
+      "failure": "Failure",
+      "denied": "Denied"
+    },
+    "actor_types": {
+      "user": "User",
+      "admin": "Administrator",
+      "anonymous": "Anonymous"
+    },
+    "actions": {
+      "user": {
+        "login": "Sign-in",
+        "login_failed": "Failed sign-in",
+        "logout": "Sign-out",
+        "register": "Registration",
+        "password_reset": "Password reset",
+        "email_verified": "E-mail address verified"
+      },
+      "profile": {
+        "update": "Profile updated"
+      },
+      "account": {
+        "delete": "Account deleted"
+      },
+      "build": {
+        "create": "Build created",
+        "update": "Build edited",
+        "delete": "Build deleted",
+        "vote": "Vote on a build"
+      },
+      "apikey": {
+        "create": "API key created",
+        "regenerate": "API key regenerated",
+        "revoke": "API key revoked"
+      },
+      "admin": {
+        "user_ban": "Account banned",
+        "user_unban": "Account restored",
+        "user_delete": "Account deleted",
+        "build_hide": "Build unpublished",
+        "build_delete": "Build deleted (moderation)",
+        "api_client_revoke": "API client key revoked",
+        "api_client_credit": "API client credit adjusted",
+        "analytics_rollup": "Analytics consolidation",
+        "logs_purge": "Journal purge"
+      }
+    }
+  }
+}
