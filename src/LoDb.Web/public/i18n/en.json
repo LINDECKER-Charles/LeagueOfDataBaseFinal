@@ -201,7 +201,7 @@
     "detail": "See details"
   },
   "filter": {
-    "results": "{count, plural, one {# result} other {# results}}",
+    "results": "{count, plural, =1 {# result} other {# results}}",
     "page": "page {{ page }} / {{ count }}",
     "gauge": "Results",
     "empty": "No results match your filters.",
@@ -215,7 +215,7 @@
     "all": "All",
     "filters": "Filters",
     "close": "Close",
-    "show_results": "{count, plural, one {Show # result} other {Show # results}}",
+    "show_results": "{count, plural, =1 {Show # result} other {Show # results}}",
     "edition": "Edition",
     "match_mode": "Combine",
     "match_any": "Any",
