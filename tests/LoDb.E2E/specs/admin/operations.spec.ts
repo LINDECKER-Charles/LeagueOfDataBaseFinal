@@ -22,7 +22,8 @@ test('shows the health of the API and reads it again on demand', async ({
   await page.getByRole('button', { name: 'Actualiser' }).click();
 
   expect((await reading).status()).toBe(200);
-  await expect(page.getByText(/^Relevé du /)).toBeVisible();
+  // A pattern meets the text as rendered, with the space its template line leaves before.
+  await expect(page.getByText(/^\s*Relevé du /)).toBeVisible();
   expect(consoleErrors).toEqual([]);
 });
 

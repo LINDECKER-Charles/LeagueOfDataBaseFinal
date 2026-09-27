@@ -61,7 +61,8 @@ test('marks a message handled, then reopens it', async ({ page }) => {
 
   await card(page).getByRole('button', { name: 'Marquer traité' }).click();
   await expectToast(page, 'Message marqué comme traité.');
-  await expect(card(page).getByText(/^Traité le /)).toBeVisible();
+  // A pattern meets the text as rendered, with the space its template line leaves before.
+  await expect(card(page).getByText(/^\s*Traité le /)).toBeVisible();
 
   await card(page).getByRole('button', { name: 'Rouvrir' }).click();
   await expectToast(page, 'Message rouvert.');
