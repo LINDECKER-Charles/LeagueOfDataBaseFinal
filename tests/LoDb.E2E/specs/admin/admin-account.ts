@@ -19,9 +19,9 @@ const PASSWORD = /^Password, shown only now: (\S+)$/m;
 
 /** The French copy of the admin (public/i18n/admin/fr.json), which the specs follow. */
 export const LOGIN = {
-  identifier: "E-mail ou nom d'utilisateur",
+  identifier: 'Identifiant',
   password: 'Mot de passe',
-  submit: 'Continuer',
+  submit: 'Se connecter',
   code: "Code d'authentification",
   verify: 'Vérifier',
 } as const;

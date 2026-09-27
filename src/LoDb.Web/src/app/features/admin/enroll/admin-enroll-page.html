@@ -1,6 +1,6 @@
-<div class="mx-auto max-w-2xl px-4 py-12 sm:px-6">
+<div class="mx-auto mt-[4vh] max-w-2xl">
   <lodb-page-head
-    [eyebrow]="'admin.brand' | adminText"
+    [eyebrow]="'admin.enroll.eyebrow' | adminText"
     [title]="'admin.enroll.title' | adminText"
     [subtitle]="'admin.enroll.lede' | adminText"
   />
@@ -19,7 +19,7 @@
       <a lodbButton class="mt-6" [routerLink]="home">{{ 'admin.enroll.open' | adminText }}</a>
     </section>
   } @else {
-    <lodb-panel-state [panel]="setup" shape="card" />
+    <lodb-panel-state [panel]="setup" shape="block" />
     @if (setup.value(); as key) {
       <section lodbFrame="ornate" class="grid gap-6 p-6 sm:grid-cols-[14rem_1fr]">
         <lodb-qr-image
@@ -42,6 +42,7 @@
             <div>
               <label for="enroll-code" class="eyebrow">{{ 'admin.enroll.code' | adminText }}</label>
               <input
+                #code
                 lodbField
                 id="enroll-code"
                 name="code"
