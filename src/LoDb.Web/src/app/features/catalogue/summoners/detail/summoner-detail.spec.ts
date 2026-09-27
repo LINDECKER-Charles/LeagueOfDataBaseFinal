@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
+import type { CatalogImage } from '../../../../core/api/generated/models/catalog-image';
 import type { SummonerCard } from '../../../../core/api/generated/models/summoner-card';
 import type { SummonerDetails } from '../../../../core/api/generated/models/summoner-details';
 import type { PageContext } from '../../../../core/context/page-context';
@@ -63,14 +64,12 @@ const TEXTS: CatalogueTexts = {
   main: (key) => (key === 'edition.classic' ? 'LoL Classic' : key),
 };
 
-async function render() {
+async function render(entry = ENTRY) {
   const heads: SeoPage[] = [];
   const write = (_: string, build: (texts: CatalogueTexts) => SeoPage) => heads.push(build(TEXTS));
   TestBed.configureTestingModule({
     providers: [
-      provideRouter([
-        { path: 'en/summoners/:id', component: SummonerDetail, data: { entry: ENTRY } },
-      ]),
+      provideRouter([{ path: 'en/summoners/:id', component: SummonerDetail, data: { entry } }]),
       provideTransloco({
         config: {
           availableLangs: ['en'],
@@ -110,6 +109,15 @@ describe('lodb-summoner-detail', () => {
     const twin = element.querySelector<HTMLAnchorElement>('lodb-edition-counterpart a');
     expect(twin?.getAttribute('href')).toBe('/en/summoners/SummonerFlash');
     expect(twin?.dataset['edition']).toBe('modern');
+  });
+
+  it('marks a spell without art by its initials in the seal, as the legacy did', async () => {
+    const absent: CatalogImage = { status: 'absent' };
+    const profile = { ...CARD, image: absent };
+    const { element } = await render({ context: CONTEXT, details: { ...DETAILS, profile } });
+
+    expect(element.querySelector('.seal lodb-catalogue-image')).toBeNull();
+    expect(element.querySelector('.seal')?.textContent?.trim()).toBe('FL');
   });
 
   it('names its modes from the whitelist, LoL Classic by its edition', async () => {

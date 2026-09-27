@@ -15,4 +15,5 @@ export type IconName =
   | 'mail'
   | 'code'
   | 'github'
-  | 'linkedin';
+  | 'linkedin'
+  | 'gold';

@@ -82,16 +82,21 @@ const TEXTS: CatalogueTexts = {
   main: (key) => (key === 'edition.classic' ? 'LoL Classic' : key),
 };
 
-async function render() {
+async function render(entry = ENTRY) {
   const heads: SeoPage[] = [];
   const write = (_: string, build: (texts: CatalogueTexts) => SeoPage) => heads.push(build(TEXTS));
   TestBed.configureTestingModule({
     providers: [
-      provideRouter([{ path: 'en/items/:id', component: ItemDetail, data: { entry: ENTRY } }]),
+      provideRouter([{ path: 'en/items/:id', component: ItemDetail, data: { entry } }]),
       provideTransloco({
-        config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
+        config: {
+          availableLangs: ['en'],
+          defaultLang: 'en',
+          missingHandler: { logMissingKey: false },
+          prodMode: true,
+        },
         loader: class {
-          getTranslation = () => of({});
+          getTranslation = () => of({ item: { detail: { tier: 'Tier {{ depth }}' } } });
         },
       }),
       { provide: CatalogueHead, useValue: { write } },
@@ -117,7 +122,10 @@ describe('lodb-item-detail', () => {
     const { element } = await render();
 
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Faerie Charm');
-    expect(element.querySelector('lodb-edition-badge')?.textContent).toContain('edition.classic');
+    const badge = element.querySelector('header lodb-edition-badge span');
+    expect(badge?.textContent).toContain('edition.classic');
+    // The hero wears the chip's own size, set apart from the version; cards keep the compact one.
+    expect([...(badge?.classList ?? [])].sort()).toEqual(['hx-chip-hex', 'ms-3', 'shrink-0']);
     const twin = element.querySelector<HTMLAnchorElement>('lodb-edition-counterpart a');
     expect(twin?.getAttribute('href')).toBe('/en/items/1004-faerie-charm');
     expect(twin?.dataset['edition']).toBe('modern');
@@ -131,6 +139,65 @@ describe('lodb-item-detail', () => {
     const upgrade = element.querySelector('[data-testid="upgrades"] a');
     expect(upgrade?.getAttribute('href')).toBe('/en/items/3114-idol');
     expect(element.querySelector('maintext stats')?.textContent).toBe('50% Base Mana Regen');
+  });
+
+  it('prices the item in gold, the coin of the legacy after the figure', async () => {
+    const { element } = await render();
+
+    const price = element.querySelector('[data-testid="price"]');
+    expect(price?.textContent?.trim()).toBe('250');
+    expect(price?.querySelector('lodb-icon')?.getAttribute('name')).toBe('gold');
+  });
+
+  it('prices each possible evolution under its name', async () => {
+    const { element } = await render();
+
+    const upgrade = element.querySelector('[data-testid="upgrades"] a');
+    expect(upgrade?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Forbidden Idol 800');
+  });
+
+  it('draws the icon of each stat the legacy had art for', async () => {
+    const stats: ItemCard['stats'] = [
+      { stat: 'attack_damage', isPercent: false, value: 75 },
+      { stat: 'crit_chance', isPercent: true, value: 0.25 },
+    ];
+    const details = { ...DETAILS, profile: { ...CARD, stats } };
+    const { element } = await render({ context: CONTEXT, details });
+
+    const icons = [...element.querySelectorAll('lodb-item-aside .stat-row img')];
+    expect(icons.map((icon) => icon.getAttribute('src'))).toEqual([
+      '/icons/stats/attack_damage.png',
+    ]);
+  });
+
+  it('states its tier from its depth and ARAM by its acronym, in a landmark', async () => {
+    const details: ItemDetails = { ...DETAILS, depth: 3, availableMaps: [11, 12] };
+    const { element } = await render({ context: CONTEXT, details });
+
+    const aside = element.querySelector('[role="complementary"]');
+    const chips = [...(aside?.querySelectorAll('.hx-chip') ?? [])].map((chip) =>
+      chip.textContent?.trim(),
+    );
+    expect(chips.slice(0, 3)).toEqual(['Tier 3', 'map.11', 'items.maps.aram']);
+  });
+
+  it('marks an item without art by its initials, a related one by its id, as the legacy did', async () => {
+    const absent: CatalogImage = { status: 'absent' };
+    const recipe = DETAILS.recipe && {
+      ...DETAILS.recipe,
+      components: DETAILS.recipe.components.map((node) => ({ ...node, image: absent })),
+    };
+    const upgrades = DETAILS.upgrades.map((upgrade) => ({ ...upgrade, image: absent }));
+    const profile = { ...CARD, image: absent };
+    const details = { ...DETAILS, profile, recipe, upgrades };
+    const { element } = await render({ context: CONTEXT, details });
+
+    expect(element.querySelector('header [lodbFrame]')?.textContent?.trim()).toBe('FA');
+    const component = element.querySelector('a.recipe-node[data-id="1027"] .recipe-node__icon');
+    expect(component?.textContent?.trim()).toBe('1027');
+    expect(element.querySelector('[data-testid="upgrades"] a span')?.textContent?.trim()).toBe(
+      '3114',
+    );
   });
 
   it('names the LoL Classic edition in its head, and turns the pages of the list', async () => {

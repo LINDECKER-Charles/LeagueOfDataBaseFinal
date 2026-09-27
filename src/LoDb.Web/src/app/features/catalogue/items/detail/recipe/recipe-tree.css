@@ -87,8 +87,8 @@ a.recipe-node:focus-visible {
   transform: translateY(-2px);
 }
 a.recipe-node:focus-visible {
-  outline: 1px solid var(--color-hex);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-gold) 40%, transparent);
 }
 .recipe-node--root {
   border-color: var(--color-gold);

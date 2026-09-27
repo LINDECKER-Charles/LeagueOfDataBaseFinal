@@ -11,29 +11,33 @@
       }
       <div class="relative flex flex-col gap-8 sm:flex-row sm:items-center">
         <div lodbFrame="ornate" class="grid size-28 shrink-0 place-items-center p-3 sm:size-32">
-          <lodb-catalogue-image
-            class="size-full"
-            [image]="item.image"
-            [name]="item.name"
-            [size]="heroIconSize"
-            imgClass="object-contain"
-            eager
-          />
+          @if (item.image.status === 'absent') {
+            <span class="font-beaufort text-2xl text-gold/70">{{ initials(item.name) }}</span>
+          } @else {
+            <lodb-catalogue-image
+              class="size-full"
+              [image]="item.image"
+              [name]="item.name"
+              [size]="heroIconSize"
+              imgClass="object-contain"
+              eager
+            />
+          }
         </div>
 
         <div class="min-w-0 flex-1">
           <p [class]="hero.eyebrow">
             {{ 'item.list.title' | transloco }}
             <span class="hx-pip mx-2 text-gold-deep" aria-hidden="true">◆</span>
-            <span class="me-3 font-mono text-[11px] tracking-normal text-text-muted normal-case">
+            <span class="font-mono text-[11px] tracking-normal text-text-muted normal-case">
               {{ context.version }} · {{ context.language }}
             </span>
-            <lodb-edition-badge [edition]="item.edition" />
+            <lodb-edition-badge size="regular" [edition]="item.edition" />
           </p>
           <h1 [class]="hero.name + ' text-gold-grad'">{{ item.name }}</h1>
           @if (item.summary) {
             <lodb-rich-text
-              class="mt-2.5 max-w-[60ch] font-spiegel text-text-muted"
+              class="mt-2.5 max-w-[60ch] font-spiegel leading-normal text-text-muted"
               [text]="item.summary"
             />
           }
@@ -48,8 +52,11 @@
           <p class="font-mono text-[10px] tracking-[0.2em] text-text-dim uppercase">
             {{ 'item.detail.price_total' | transloco }}
           </p>
-          <p class="mt-1 font-beaufort text-5xl leading-none text-gold-grad" data-testid="price">
-            {{ item.gold.total }}
+          <p class="mt-1 flex items-baseline gap-2 sm:justify-end" data-testid="price">
+            <span class="font-beaufort text-5xl leading-none text-gold-grad">
+              {{ item.gold.total }}
+            </span>
+            <lodb-icon name="gold" class="size-5 text-gold-rich" />
           </p>
           @if (!item.gold.isPurchasable) {
             <p class="mt-1.5 font-mono text-[10px] tracking-wider text-text-dim uppercase">
@@ -83,18 +90,27 @@
                     [routerLink]="linkOf(context, upgrade.canonicalPath)"
                     [title]="upgrade.name"
                   >
-                    <lodb-catalogue-image
-                      class="size-12 border border-gold-deep/50 bg-void"
-                      [image]="upgrade.image"
-                      [name]="upgrade.name"
-                      [size]="upgradeIconSize"
-                      imgClass="object-contain transition-transform duration-500 group-hover/node:scale-110"
-                    />
+                    @if (upgrade.image.status === 'absent') {
+                      <span
+                        class="grid size-12 shrink-0 place-items-center border border-gold-deep/50 bg-void font-mono text-[10px] text-gold/50"
+                      >
+                        {{ upgrade.id }}
+                      </span>
+                    } @else {
+                      <lodb-catalogue-image
+                        class="size-12 border border-gold-deep/50 bg-void"
+                        [image]="upgrade.image"
+                        [name]="upgrade.name"
+                        [size]="upgradeIconSize"
+                        imgClass="object-contain transition-transform duration-500 group-hover/node:scale-110"
+                      />
+                    }
                     <span
                       class="min-w-0 font-beaufort text-xs leading-tight tracking-wide text-text transition-colors group-hover/node:text-gold-bright"
                     >
                       {{ upgrade.name }}
                     </span>
+                    <span class="font-mono text-[11px] text-gold">{{ upgrade.gold }}</span>
                   </a>
                 </li>
               }
@@ -117,7 +133,7 @@
           </section>
         }
       </div>
-      <lodb-item-aside class="mt-12 lg:mt-0" [details]="details" [context]="context" />
+      <lodb-item-aside class="mt-12 lg:mt-0" lodbReveal [details]="details" [context]="context" />
     </div>
 
     <lodb-pager

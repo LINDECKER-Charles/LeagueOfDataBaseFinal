@@ -42,6 +42,7 @@
     );
   }
 
+  /* The legacy emblem wore the keystone's wider halo (34px) over the path glow. */
   .path-emblem {
     align-self: flex-start;
     inline-size: 7.5rem;
@@ -55,5 +56,6 @@
         transparent 80%
       ),
       var(--color-hextech-black);
+    box-shadow: 0 0 34px -8px var(--path, var(--color-gold));
   }
 }

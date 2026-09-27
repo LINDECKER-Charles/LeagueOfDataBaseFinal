@@ -7,14 +7,22 @@
 
   <article class="relative mx-auto max-w-6xl">
     <header class="relative mb-14 flex flex-col gap-8 sm:flex-row sm:items-center">
-      <lodb-catalogue-image
-        class="path-emblem path-glow"
-        [image]="path.image"
-        [name]="path.name"
-        [size]="emblemSize"
-        imgClass="object-contain p-5"
-        eager
-      />
+      @if (path.image.status === 'absent') {
+        <span
+          class="path-emblem path-glow grid shrink-0 place-items-center font-beaufort text-2xl path-text"
+          aria-hidden="true"
+          >{{ initials(path.name) }}</span
+        >
+      } @else {
+        <lodb-catalogue-image
+          class="path-emblem path-glow"
+          [image]="path.image"
+          [name]="path.name"
+          [size]="emblemSize"
+          imgClass="object-contain p-5"
+          eager
+        />
+      }
       <div class="min-w-0">
         <p [class]="hero.eyebrow + ' gap-x-1.25 path-text'">
           {{ 'rune.list.title' | transloco }}
@@ -31,9 +39,7 @@
     @if (constellation(); as stars) {
       <lodb-rune-constellation [constellation]="stars" />
     } @else {
-      <p class="py-16 text-center font-spiegel text-text-muted">
-        {{ 'runes.empty' | transloco }}
-      </p>
+      <lodb-catalogue-empty />
     }
 
     <lodb-pager

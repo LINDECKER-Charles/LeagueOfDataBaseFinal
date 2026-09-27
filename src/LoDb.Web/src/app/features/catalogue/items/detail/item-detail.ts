@@ -11,12 +11,14 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import type { ItemDetails } from '../../../../core/api/generated/models/item-details';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import { injectRouteData } from '../../../../core/routing/inject-route-data';
+import { Icon } from '../../../../ui/media/icon';
 import { Pager } from '../../../../ui/navigation/pager';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { Frame } from '../../../../ui/surfaces/frame';
 import { Reveal } from '../../../../ui/motion/reveal';
 import { CatalogueImage } from '../../../../ui/cards/catalogue-image';
 import { EditionBadge } from '../../../../ui/cards/edition-badge';
+import { initialsOf } from '../../../../ui/cards/initials-of';
 import { EditionCounterpart } from '../../shared/codex/edition/edition-counterpart';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
@@ -47,6 +49,7 @@ const UPGRADE_ICON_SIZE = 48;
     EditionBadge,
     EditionCounterpart,
     Frame,
+    Icon,
     ItemAside,
     LoadTime,
     Pager,
@@ -65,6 +68,8 @@ export class ItemDetail {
   protected readonly hero = HERO_STYLES;
   protected readonly heroIconSize = HERO_ICON_SIZE;
   protected readonly upgradeIconSize = UPGRADE_ICON_SIZE;
+  /** An item without art is marked by the initials of its name, as the legacy hero was. */
+  protected readonly initials = initialsOf;
   protected readonly linkOf = injectCatalogueLink();
   protected readonly tree = computed(() => recipeTreeOf(this.entry().details.recipe));
   protected readonly pager = injectDetailPager(() => ({

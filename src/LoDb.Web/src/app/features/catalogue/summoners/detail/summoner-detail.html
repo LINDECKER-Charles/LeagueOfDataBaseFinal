@@ -18,20 +18,26 @@
       <p [class]="hero.eyebrow + ' relative mb-7 justify-center'">
         {{ 'summoner.list.title' | transloco }}
         <span class="hx-pip mx-2 text-gold-deep" aria-hidden="true">◆</span>
-        <span class="me-3 font-mono text-[11px] tracking-normal text-text-muted normal-case">
+        <span class="font-mono text-[11px] tracking-normal text-text-muted normal-case">
           {{ context.version }} · {{ context.language }}
         </span>
-        <lodb-edition-badge [edition]="spell.edition" />
+        <lodb-edition-badge size="regular" [edition]="spell.edition" />
       </p>
 
       <div class="seal">
-        <lodb-catalogue-image
-          class="seal__icon"
-          [image]="spell.image"
-          [name]="spell.name"
-          [size]="sealIconSize"
-          eager
-        />
+        @if (spell.image.status === 'absent') {
+          <span class="seal__icon grid place-items-center font-beaufort text-2xl text-gold/70">
+            {{ initials(spell.name) }}
+          </span>
+        } @else {
+          <lodb-catalogue-image
+            class="seal__icon"
+            [image]="spell.image"
+            [name]="spell.name"
+            [size]="sealIconSize"
+            eager
+          />
+        }
       </div>
 
       <h1 [class]="hero.name + ' relative mt-8 text-gold-grad'">{{ spell.name }}</h1>

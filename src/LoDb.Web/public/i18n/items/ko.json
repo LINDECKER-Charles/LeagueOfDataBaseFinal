@@ -1,5 +1,6 @@
 {
   "maps": {
+    "aram": "ARAM",
     "classic_rift": "Classic Rift",
     "other": "맵 {{ id }}"
   }

@@ -127,10 +127,29 @@ describe('lodb-rune-detail', () => {
     expect(heads.at(-1)?.title).toBe('rune.detail.title {"name":"Domination"}');
   });
 
-  it('says so when the path has no runes', async () => {
+  it('frames the "no results" of the legacy when the path has no runes', async () => {
     const { element } = await render({ ...ENTRY, details: { ...DETAILS, slots: [] } });
 
     expect(element.querySelector('lodb-rune-constellation')).toBeNull();
-    expect(element.textContent).toContain('runes.empty');
+    const empty = element.querySelector('lodb-catalogue-empty');
+    expect(empty?.classList).toContain('hextech-frame');
+    expect(empty?.textContent).toContain('common.no_result.text');
+    expect(empty?.querySelector('button')?.textContent).toContain('common.no_result.back');
+    expect(empty?.querySelector('a')?.getAttribute('href')).toBe('/en');
+  });
+
+  it('marks a path without art by its initials, and leaves a rune without art unmarked', async () => {
+    const absent: CatalogImage = { status: 'absent' };
+    const slots = DETAILS.slots.map((slot) => ({
+      ...slot,
+      runes: slot.runes.map((rune) => ({ ...rune, image: absent })),
+    }));
+    const profile = { ...DETAILS.profile, image: absent };
+    const { element } = await render({ ...ENTRY, details: { ...DETAILS, profile, slots } });
+
+    expect(element.querySelector('header .path-emblem')?.textContent?.trim()).toBe('DO');
+    expect(element.querySelector('lodb-rune-constellation lodb-catalogue-image')).toBeNull();
+    expect(element.querySelector('#rune-Electrocute .keystone__icon')?.textContent).toBe('');
+    expect(element.querySelector('#rune-CheapShot .rune-medallion')?.textContent).toBe('');
   });
 });
