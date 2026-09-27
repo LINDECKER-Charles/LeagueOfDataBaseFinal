@@ -102,6 +102,7 @@ describe('ContextSwitcher', () => {
   });
 
   afterEach(() => {
+    sessionStorage.clear();
     document.cookie = FORGET;
     document.documentElement.lang = lang;
     document.documentElement.removeAttribute('dir');
@@ -188,7 +189,7 @@ describe('ContextSwitcher', () => {
     remember?.click();
     await submit(fixture);
 
-    expect(document.cookie).toContain(`lod_prefs=v=${OLDER}`);
+    expect(document.cookie).toContain(`lod_prefs=loc=en&v=${OLDER}`);
     expect(routerUrl()).toBe(`/en/?version=${OLDER}`);
   });
 
@@ -215,6 +216,20 @@ describe('ContextSwitcher', () => {
     await loaded(fixture);
 
     expect(routerUrl()).toBe(`/en/${OLDER}/champions?lang=en_GB`);
+  });
+
+  it('keeps a choice for the session, remember unticked, and applies it to the next page', async () => {
+    configure('browser');
+    const fixture = await openOn('/en/items');
+    const host = await loaded(fixture);
+    pick(host, 'switcher-version', OLDER);
+    await submit(fixture);
+
+    await TestBed.inject(Router).navigateByUrl('/en/champions');
+    await fixture.whenStable();
+
+    expect(document.cookie).not.toContain('lod_prefs');
+    await vi.waitFor(() => expect(routerUrl()).toBe(`/en/${OLDER}/champions`));
   });
 
   it('leaves a page whose URL names its context', async () => {

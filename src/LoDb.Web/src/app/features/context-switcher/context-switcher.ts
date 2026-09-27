@@ -50,9 +50,9 @@ function valueOf(event: Event): string {
 /**
  * Patch and language switcher of the header (`switcher` slot): a native `<details>` holding
  * a form that never posts. Submitting navigates to the same page in the chosen context, the
- * URL rewritten by `switchContext`, and confirms with a toast; "remember" writes the choice
- * into `lod_prefs`, and the switcher applies that cookie to the pages that name no context of
- * their own.
+ * URL rewritten by `switchContext`, and confirms with a toast. The choice is kept for the
+ * browsing session, and in `lod_prefs` across visits when "remember" is ticked; the switcher
+ * applies it to the pages that name no context of their own, as the legacy session did.
  *
  * The header sits on prerendered pages too, so the options (versions, languages) load in the
  * browser, after the first render, never during one. The chip names the page's version from
@@ -148,7 +148,9 @@ export class ContextSwitcher {
       return;
     }
     const target = targetOf(this.version(), language);
-    this.preferences.remember(this.remember() ? preferencesOf(target, meta) : null);
+    const chosen = preferencesOf(target, meta);
+    this.preferences.keep(chosen);
+    this.preferences.remember(this.remember() ? chosen : null);
     this.panel().nativeElement.open = false;
     const current = this.router.url;
     const next = switchContext(current, target, meta);
@@ -182,10 +184,10 @@ export class ContextSwitcher {
       });
   }
 
-  // The remembered context fills what the URL leaves unsaid; the history entry is replaced,
-  // so Back does not return to the page the cookie rewrote.
+  // The kept or remembered context fills what the URL leaves unsaid; the history entry is
+  // replaced, so Back does not return to the page it rewrote.
   private followRemembered(url: string, meta: CatalogMeta): void {
-    const remembered = this.preferences.read();
+    const remembered = this.preferences.current();
     const target = remembered === null ? null : rememberedTarget(url, remembered, meta);
     if (target === null) {
       return;

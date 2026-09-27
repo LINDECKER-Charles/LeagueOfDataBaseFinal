@@ -187,13 +187,13 @@ describe('preferencesOf', () => {
   it('remembers an older version and a variant', () => {
     const target = targetOf(OLDER, option('en:en_GB'));
 
-    expect(preferencesOf(target, META)).toEqual({ lang: 'en_GB', version: OLDER });
+    expect(preferencesOf(target, META)).toEqual({ lang: 'en_GB', version: OLDER, locale: 'en' });
   });
 
-  it('remembers to follow the latest and the own language, not their values', () => {
+  it('remembers the locale, and to follow the latest in its own language', () => {
     const target = targetOf(LATEST, option('fr:fr_FR'));
 
-    expect(preferencesOf(target, META)).toEqual({ lang: null, version: null });
+    expect(preferencesOf(target, META)).toEqual({ lang: null, version: null, locale: 'fr' });
   });
 });
 

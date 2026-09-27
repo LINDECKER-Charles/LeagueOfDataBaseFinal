@@ -56,7 +56,7 @@ export class NavContext {
     if (meta === null) {
       return page.url === this.firstUrl ? this.rendered : null;
     }
-    return navSelectionOf(page, meta, this.preferences.read());
+    return navSelectionOf(page, meta, this.preferences.current());
   });
 
   constructor() {

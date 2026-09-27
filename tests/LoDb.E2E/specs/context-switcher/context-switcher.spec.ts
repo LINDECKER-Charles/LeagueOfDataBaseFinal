@@ -132,7 +132,7 @@ test.describe("context switcher", { tag: '@readonly' }, () => {
     await apply(page);
     await expect.poll(() => pathAndQuery(page)).toBe(`/en/${older}/runes`);
 
-    expect(await preferencesCookie(context)).toBe(`v=${older}`);
+    expect(await preferencesCookie(context)).toBe(`loc=en&v=${older}`);
     await page.goto("/en/summoners");
     await expect.poll(() => pathAndQuery(page)).toBe(`/en/${older}/summoners`);
   });
