@@ -11,8 +11,8 @@ function dashOf(dasharray: string): number {
 
 describe('heatColor', () => {
   it('paints an empty cell, or a grid without visits, with the track', () => {
-    expect(heatColor(0, 10)).toContain('--color-gold-deep');
-    expect(heatColor(4, 0)).toContain('--color-gold-deep');
+    expect(heatColor(0, 10)).toBe('var(--color-track)');
+    expect(heatColor(4, 0)).toBe('var(--color-track)');
   });
 
   it('mixes the cyan token, fully opaque on the busiest cell', () => {

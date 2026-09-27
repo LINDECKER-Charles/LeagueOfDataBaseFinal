@@ -11,12 +11,15 @@ interface GridLine {
   readonly label: string;
 }
 
-/** The marks of one series: its line, its area when it has one, its dots when they fit. */
+/**
+ * The marks of one series: its line, its area when it has one, and a dot for a lone point,
+ * which no line can draw (the legacy chart dotted a series of one day, its static fallback).
+ */
 interface PlotLine {
   readonly color: string;
   readonly line: string;
   readonly area: string | null;
-  readonly dots: readonly ChartPoint[];
+  readonly dot: ChartPoint | null;
 }
 
 /** What a time-series chart draws for the current view. */
@@ -26,8 +29,6 @@ export interface PlotMarks {
   readonly lines: readonly PlotLine[];
 }
 
-// Past this many points, the dots only add noise.
-const DOT_LIMIT = 45;
 const GRID_STEPS = [0, 0.5, 1] as const;
 // Between a grid line and its label, and down to the optical centre of the line.
 const LABEL_GAP = 6;
@@ -85,7 +86,7 @@ function lineOf(series: ChartSeries, scale: ChartScale, max: number): PlotLine {
     color: series.color,
     line: polylinePoints(points),
     area,
-    dots: points.length <= DOT_LIMIT ? points : [],
+    dot: points.length === 1 ? (first ?? null) : null,
   };
 }
 

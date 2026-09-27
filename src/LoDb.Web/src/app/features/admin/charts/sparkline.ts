@@ -14,7 +14,7 @@ const AREA_OPACITY = 0.14;
   template: `
     @if (shape(); as shape) {
       <svg
-        class="block h-8 w-full"
+        class="block size-full"
         [attr.viewBox]="shape.viewBox"
         preserveAspectRatio="none"
         aria-hidden="true"
@@ -35,7 +35,7 @@ const AREA_OPACITY = 0.14;
       </svg>
     }
   `,
-  host: { class: 'block' },
+  host: { class: 'block size-full' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Sparkline {

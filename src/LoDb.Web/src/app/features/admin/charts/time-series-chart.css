@@ -7,11 +7,56 @@
   margin: 0;
 }
 
+/* The zoom tools sit over the corner of the plot, out of sight until they are wanted. */
+.ts-tools {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  z-index: 1;
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease-hextech);
+}
+
+.ts-chart:hover .ts-tools,
+.ts-chart:focus-within .ts-tools,
+.ts-tools.is-zoomed {
+  opacity: 1;
+}
+
 .ts-tool {
-  min-inline-size: 2.5rem;
-  padding-block: 0.25rem;
-  padding-inline: 0.6rem;
-  letter-spacing: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+  background: color-mix(in srgb, var(--color-void) 85%, transparent);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.25s var(--ease-hextech),
+    border-color 0.25s var(--ease-hextech);
+}
+
+.ts-tool:hover:not(:disabled) {
+  color: var(--color-hex);
+  border-color: color-mix(in srgb, var(--color-hex) 50%, transparent);
+}
+
+.ts-tool:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.ts-tool:focus-visible {
+  outline: 1px solid var(--color-hex);
+  outline-offset: 2px;
 }
 
 svg:focus-visible {
@@ -20,8 +65,7 @@ svg:focus-visible {
 }
 
 .ts-grid {
-  stroke: color-mix(in srgb, var(--color-gold-deep) 40%, transparent);
-  stroke-dasharray: 3 4;
+  stroke: var(--color-track);
 }
 
 .ts-axis,
@@ -47,12 +91,14 @@ svg:focus-visible {
 }
 
 .ts-cross {
-  stroke: color-mix(in srgb, var(--color-gold-bright) 45%, transparent);
+  stroke: var(--color-gold);
+  stroke-dasharray: 3 3;
+  opacity: 0.55;
 }
 
 .ts-hover-dot {
-  stroke: var(--color-void);
-  stroke-width: 1.5;
+  stroke: var(--color-hextech-black);
+  stroke-width: 2;
 }
 
 .ts-hit {
@@ -65,24 +111,28 @@ svg:focus-visible {
 
 .ts-tip {
   position: absolute;
-  display: grid;
-  gap: 0.15rem;
-  min-inline-size: 9rem;
-  padding-block: 0.45rem;
-  padding-inline: 0.6rem;
-  border: 1px solid color-mix(in srgb, var(--color-gold-deep) 70%, transparent);
-  background: color-mix(in srgb, var(--color-void) 94%, transparent);
-  font-size: 0.78rem;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-inline-size: 8.5rem;
+  padding-block: 0.5rem;
+  padding-inline: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+  background: color-mix(in srgb, var(--color-hextech-black) 95%, transparent);
+  box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--color-hextech-black) 95%, transparent);
   pointer-events: none;
-  translate: 0.75rem 0;
+  translate: 0.6rem 0;
 }
 
 .ts-tip.is-flipped {
-  translate: calc(-100% - 0.75rem) 0;
+  translate: calc(-100% - 0.6rem) 0;
 }
 
 .ts-tip-date {
   font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
   color: var(--color-gold);
 }
 
@@ -90,17 +140,29 @@ svg:focus-visible {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  font-size: 0.76rem;
+  white-space: nowrap;
   color: var(--color-text-muted);
 }
 
 .ts-tip-row b {
   margin-inline-start: auto;
   font-family: var(--font-mono);
-  font-weight: 500;
-  color: var(--color-text);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-gold-bright);
 }
 
 .ts-swatch {
-  inline-size: 0.55rem;
-  block-size: 0.55rem;
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  rotate: 45deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-tools,
+  .ts-tool {
+    transition: none;
+  }
 }
