@@ -64,7 +64,8 @@ test('forges, edits, imports and deletes a build', async ({ member: page, reques
     const armory = page.getByRole('dialog', { name: 'Armory' });
     await expect(armory).toBeVisible();
     await expect(page.locator('.hx-sheet')).toHaveCount(1);
-    await expect(armory.getByRole('button', { name: 'All' })).toHaveAttribute(
+    // Exact: item names such as "Crystalline Bracer" contain "all" too.
+    await expect(armory.getByRole('button', { name: 'All', exact: true })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -116,7 +117,9 @@ test('forges, edits, imports and deletes a build', async ({ member: page, reques
     await expect(rowOf(page, RENAMED)).toContainText('Public');
   });
 
-  await test.step('imports it to the previous patch, reviewed then saved', async () => {
+  // As in the legacy editor, an import opens a create-mode editor: the source is kept, and
+  // forging the ported draft adds a second build.
+  await test.step('imports it to the previous patch, reviewed then forged anew', async () => {
     const older = olderVersion(meta);
     const row = rowOf(page, RENAMED);
     await row.getByLabel('Import to patch').selectOption(older);
@@ -126,23 +129,26 @@ test('forges, edits, imports and deletes a build', async ({ member: page, reques
     await expect(patchOf(page)).toHaveValue(older);
     await expect(page.getByLabel('Build name')).toHaveValue(RENAMED);
 
-    await page.getByRole('button', { name: 'Save changes' }).click();
+    await page.getByRole('button', { name: 'Forge the build' }).click();
     await expect(page).toHaveURL(SHARED);
     await page.goto(LIST);
-    await expect(page.locator('lodb-build-row')).toHaveCount(1);
+    await expect(rowOf(page, RENAMED)).toHaveCount(2);
   });
 
-  await test.step('deletes it once confirmed, the list empty again', async () => {
+  await test.step('deletes both once confirmed, the list empty again', async () => {
     const confirm = page.getByRole('dialog', { name: 'Delete the build' });
-    await rowOf(page, RENAMED).getByRole('button', { name: 'Delete' }).click();
+    await rowOf(page, RENAMED).first().getByRole('button', { name: 'Delete' }).click();
     // The frame's close button is named "Cancel" too: the dialog's own comes last.
     await confirm.getByRole('button', { name: 'Cancel' }).last().click();
     await expect(confirm).toHaveCount(0);
-    await expect(rowOf(page, RENAMED)).toHaveCount(1);
+    await expect(rowOf(page, RENAMED)).toHaveCount(2);
 
-    await rowOf(page, RENAMED).getByRole('button', { name: 'Delete' }).click();
-    await confirm.getByRole('button', { name: 'Delete', exact: true }).click();
-    await expect(page.getByText('Build deleted.')).toBeVisible();
+    for (const left of [1, 0]) {
+      await rowOf(page, RENAMED).first().getByRole('button', { name: 'Delete' }).click();
+      await confirm.getByRole('button', { name: 'Delete', exact: true }).click();
+      await expect(page.getByText('Build deleted.').first()).toBeVisible();
+      await expect(rowOf(page, RENAMED)).toHaveCount(left);
+    }
     await expect(page.getByText("You haven't forged any build yet.")).toBeVisible();
   });
 });

@@ -51,7 +51,11 @@ export async function chooseChampion(page: Page, name: string): Promise<void> {
  */
 export async function pickRunes(page: Page): Promise<number> {
   const board = page.locator('lodb-rune-board');
-  await board.getByRole('group', { name: 'Primary path' }).getByRole('button').first().click();
+  const primaryPath = board.getByRole('group', { name: 'Primary path' }).getByRole('button');
+  await primaryPath.first().click();
+  // count() does not wait: the rows are counted once the chosen path has rendered them.
+  await expect(primaryPath.first()).toHaveAttribute('aria-pressed', 'true');
+  await expect(runeRowsOf(page).first()).toBeVisible();
   const primaryRows = await runeRowsOf(page).count();
   for (let row = 0; row < primaryRows; row++) {
     await runeRowsOf(page).nth(row).locator('.rune-perk').first().click();
