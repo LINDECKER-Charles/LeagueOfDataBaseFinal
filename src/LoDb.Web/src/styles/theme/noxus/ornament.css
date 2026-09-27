@@ -54,11 +54,11 @@
       0 100% / 100% 2px no-repeat;
 }
 
-/* The node is the banner's swallowtail: a blade point hung from the rail.
-   The whole transform is restated: a `rotate` property composes with the base
-   rotate(45deg) instead of cancelling it. */
+/* The node is the banner's swallowtail: a blade point on the rail. `rotate` composes with
+   the base transform instead of cancelling it, so the point stays centred on the rail and
+   turned 45 degrees: that is how the identity shipped, and the look is kept as it is. */
 [data-theme='noxus'] .hx-rule::after {
-  transform: translateX(-50%);
+  rotate: 0deg;
   inline-size: 14px;
   block-size: 12px;
   top: 0;
@@ -95,7 +95,10 @@
 }
 
 [data-theme='noxus'] .filter-marker,
+[data-theme='noxus'] :is(lodb-filter-console, lodb-filter-sheet, lodb-active-filters) .marker,
+[data-theme='noxus'] lodb-catalogue-list .empty__mark,
 [data-theme='noxus'] .cl-node::before,
+[data-theme='noxus'] lodb-changelog-page .node::before,
 [data-theme='noxus'] .slot-node i,
 [data-theme='noxus'] .ddragon-rich li::before,
 [data-theme='noxus'] .hx-pip {
@@ -112,7 +115,8 @@
   font-size: 0;
   vertical-align: middle;
 }
-[data-theme='noxus'] .cl-node::before {
+[data-theme='noxus'] .cl-node::before,
+[data-theme='noxus'] lodb-changelog-page .node::before {
   box-shadow: none;
 }
 

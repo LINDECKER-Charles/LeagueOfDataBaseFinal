@@ -2,9 +2,10 @@
  * Image lifecycle (ui/image): what an `<img class="hx-img">` looks like while its bytes are in
  * flight or never arrive. The state is stamped as `data-img-state` (loading | loaded | error)
  * in the browser only: the server-rendered image carries no state and renders plainly.
+ * The loading sweep is a `background-image` for the reason skeleton.css gives.
  */
 .hx-img[data-img-state='loading'] {
-  background: linear-gradient(
+  background-image: linear-gradient(
     90deg,
     color-mix(in srgb, var(--color-gold) 5%, transparent),
     color-mix(in srgb, var(--color-gold) 13%, transparent),

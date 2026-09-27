@@ -1,12 +1,24 @@
-<div class="hx-dialog-panel__head">
-  <h2 class="eyebrow" [id]="headingId()">{{ heading() }}</h2>
+<div class="hx-dialog-panel__head" [class.hx-dialog-panel__head--titled]="eyebrow() !== null">
+  @if (eyebrow() !== null) {
+    <div>
+      <p class="eyebrow">{{ eyebrow() }}</p>
+      <h2 class="font-beaufort text-lg text-gold-bright" [id]="headingId()">{{ heading() }}</h2>
+    </div>
+  } @else {
+    <h2 class="eyebrow" [id]="headingId()">{{ heading() }}</h2>
+  }
   <button
     type="button"
     class="hx-dialog-panel__close"
+    [class.hx-dialog-panel__close--large]="eyebrow() !== null"
     [attr.aria-label]="closeLabel()"
     (click)="close()"
   >
-    <lodb-icon name="close" class="size-4" />
+    @if (eyebrow() !== null) {
+      <span class="hx-dialog-panel__times" aria-hidden="true">&times;</span>
+    } @else {
+      <lodb-icon name="close" class="hx-dialog-panel__glyph" />
+    }
   </button>
 </div>
 <ng-content />

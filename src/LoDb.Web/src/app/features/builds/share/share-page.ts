@@ -14,6 +14,7 @@ import { injectRouteData } from '../../../core/routing/inject-route-data';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
 import { Chip } from '../../../ui/controls/chip';
 import { Image } from '../../../ui/media/image';
+import { Backdrop } from '../../../ui/surfaces/backdrop';
 import { languageLabel } from '../shared/language/language-label';
 import { imageSource } from '../shared/media/image-source';
 import { initialsOf } from '../shared/media/initials-of';
@@ -38,7 +39,17 @@ import { ShareRunes } from './sections/share-runes';
  */
 @Component({
   selector: 'lodb-share-page',
-  imports: [Chip, CopyLink, Image, OwnerCredit, ShareOrder, ShareRunes, TranslocoPipe, VoteScore],
+  imports: [
+    Backdrop,
+    Chip,
+    CopyLink,
+    Image,
+    OwnerCredit,
+    ShareOrder,
+    ShareRunes,
+    TranslocoPipe,
+    VoteScore,
+  ],
   templateUrl: './share-page.html',
   styleUrl: './share-page.css',
   host: { class: 'block' },

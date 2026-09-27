@@ -30,6 +30,7 @@ export class ContactDialog {
       .get(DialogService)
       .open<InstanceType<typeof ContactForm>, undefined, boolean>(ContactForm, {
         labelledBy: ContactForm.HEADING_ID,
+        size: 'form',
       });
   }
 }

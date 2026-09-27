@@ -16,9 +16,13 @@
  *   Noxus           leaves the corners square and stamps an edge (the banner's hoist)
  *   Spirit Blossom  draws no edge at all: a lit sheet of paper on the dark
  *
- * Some overrides target class names of features not ported yet (filter console, sockets,
- * changelog nodes, donation seals): the theme stays whole, and a feature keeps those class
- * names global when it lands.
+ * Some overrides target class names of features not ported yet (sockets, donation seals):
+ * the theme stays whole, and a feature keeps those class names global when it lands. The
+ * filter console, its marks, the list's empty panel and the changelog nodes were renamed
+ * when they landed: each rule names them next to the legacy class, through their host
+ * element (`lodb-filter-console .console`), whose extra type selector outranks the
+ * component's own rule. The changelog sheet also sits in the components layer, as its legacy
+ * sheet did, so an identity restyles its latest node and its title too.
  */
 @import './zaun/index.css';
 @import './noxus/index.css';

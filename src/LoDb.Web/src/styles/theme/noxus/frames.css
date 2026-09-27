@@ -20,7 +20,11 @@
 /* ---- The plate ---------------------------------------------------------- */
 [data-theme='noxus'] .hextech-frame {
   border-radius: 0;
-  border-color: color-mix(in srgb, var(--color-blue-steel) 70%, transparent);
+  /* The three other sides, never the `border-color` shorthand: the build moves each
+     color-mix() declaration into an @supports copy of the rule emitted after it, where a
+     shorthand would repaint the hoist steel. */
+  border-block-color: color-mix(in srgb, var(--color-blue-steel) 70%, transparent);
+  border-inline-end-color: color-mix(in srgb, var(--color-blue-steel) 70%, transparent);
   border-inline-start: 3px solid var(--color-hex-deep);
   background:
     /* hammered steel: a flat sheet lit from straight above, not raked */ linear-gradient(
@@ -36,7 +40,8 @@
 /* Contact tightens the binding rather than lighting the plate. Nothing glows
    in Noxus: the empire does not advertise, it asserts. */
 [data-theme='noxus'] .hextech-frame-hover:hover {
-  border-color: color-mix(in srgb, var(--color-gold) 55%, transparent);
+  border-block-color: color-mix(in srgb, var(--color-gold) 55%, transparent);
+  border-inline-end-color: color-mix(in srgb, var(--color-gold) 55%, transparent);
   border-inline-start-color: var(--color-hex);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--color-gold) 30%, transparent),
@@ -46,7 +51,8 @@
 
 /* ---- Secondary surfaces — the same bar, quieter --------------------------- */
 [data-theme='noxus'] .hx-plate,
-[data-theme='noxus'] .filter-console {
+[data-theme='noxus'] .filter-console,
+[data-theme='noxus'] lodb-filter-console .console {
   border-radius: 0;
   border-inline-start: 2px solid color-mix(in srgb, var(--color-hex-deep) 80%, transparent);
   background: linear-gradient(
@@ -61,6 +67,7 @@
    only strip the softness the other identities add, so a theme switch from Zaun
    leaves nothing rounded behind. */
 [data-theme='noxus'] .filter-empty,
+[data-theme='noxus'] lodb-catalogue-list :is(.notice, .empty),
 [data-theme='noxus'] .visibility-card,
 [data-theme='noxus'] .socket--empty,
 [data-theme='noxus'] .socket--unavailable,

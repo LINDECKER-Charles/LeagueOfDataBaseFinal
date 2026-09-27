@@ -108,7 +108,8 @@
   /*
    * A header carrying both a title and a meta would force a minimum width wider than a phone,
    * the meta being nowrap on the title's flex line: the meta wraps onto its own line under the
-   * hairline. A long title stays on the diamond's line, capped so it wraps there instead.
+   * hairline. A title too long for the diamond's line takes a line of its own, then the
+   * hairline another, as the legacy header did; only a title wider than the phone wraps.
    */
   @media (max-width: 480px) {
     .codex-header {
@@ -116,7 +117,7 @@
     }
     .codex-header h2,
     .codex-header .codex-header__title {
-      max-inline-size: calc(100% - 3rem);
+      max-inline-size: 100%;
     }
     .codex-header .codex-header__meta {
       order: 1;

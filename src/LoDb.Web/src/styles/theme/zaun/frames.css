@@ -114,7 +114,9 @@
    exhaustive for the legacy sheets: a grep for `hx-bevel` returned these plus
    the two already restated above. Most belong to features and wait for them. */
 [data-theme='zaun'] .filter-console,
-[data-theme='zaun'] .filter-empty {
+[data-theme='zaun'] lodb-filter-console .console,
+[data-theme='zaun'] .filter-empty,
+[data-theme='zaun'] lodb-catalogue-list :is(.notice, .empty) {
   border-radius: var(--hx-iron-radius);
 }
 [data-theme='zaun'] .visibility-card,
@@ -126,7 +128,8 @@
 
 /* The filter rail's own glass, matched to the plate so the console and the
    cards it filters read as the same material. */
-[data-theme='zaun'] .filter-console {
+[data-theme='zaun'] .filter-console,
+[data-theme='zaun'] lodb-filter-console .console {
   background:
     linear-gradient(
       152deg,

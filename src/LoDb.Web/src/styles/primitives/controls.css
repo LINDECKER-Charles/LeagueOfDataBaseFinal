@@ -35,6 +35,31 @@
   );
   clip-path: var(--hx-bevel-btn);
 }
+/*
+ * Destructive action: red text on a faint red wash (deletions, revocations, purges). Border,
+ * wash and glow keep the legacy admin red, not the text: that red reads about 4:1 on its own
+ * wash, under the 4.5:1 small text needs, where danger-light stays above 5:1.
+ */
+@utility hx-btn-danger {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-bad/50
+    bg-bad/8 px-4 py-2.5 font-beaufort text-sm tracking-[0.15em] text-danger-light uppercase
+    transition-all duration-300 hover:bg-bad/18
+    hover:shadow-[0_0_22px_-10px_var(--hx-glow-danger)] focus-visible:ring-2
+    focus-visible:ring-bad/40 focus-visible:outline-none disabled:cursor-not-allowed
+    disabled:opacity-50 motion-reduce:transition-none;
+}
+/*
+ * Compact size of any tone, for the actions of a table row or a toolbar. Qualified by the
+ * tone so that it outranks the tone's own padding and type, whatever order Tailwind emits.
+ */
+@utility hx-btn-sm {
+  &:is(.hx-btn, .hx-btn-ghost, .hx-btn-gold, .hx-btn-danger) {
+    padding: 0.34rem 0.6rem;
+    font-size: 0.62rem;
+    line-height: 1.55;
+    letter-spacing: 0.1em;
+  }
+}
 @utility hx-chip {
   @apply inline-flex items-center border border-gold-deep/50 bg-void/90 px-2.5 py-1 font-mono
     text-[11px] tracking-wider text-text-muted uppercase;
@@ -126,11 +151,11 @@
   }
 }
 
-/* Thumb-sized controls on coarse pointers. */
+/* Thumb-sized controls on coarse pointers; the filled gold face keeps its 40px, as it did. */
 @media (pointer: coarse) {
   .hx-btn,
   .hx-btn-ghost,
-  .hx-btn-gold {
+  .hx-btn-danger {
     min-block-size: 2.75rem;
   }
 }

@@ -2,6 +2,7 @@ import type { DialogConfig, DialogRef } from '@angular/cdk/dialog';
 import type { PositionStrategy } from '@angular/cdk/overlay';
 import { dialogConfig } from './dialog-config';
 import type { DialogOptions } from './dialog-options';
+import { paneClass } from './pane-class';
 
 /**
  * CDK configuration of a bottom sheet: the dialog's behaviour, pinned to the bottom edge at
@@ -13,7 +14,7 @@ export function sheetConfig<D, R, C>(
 ): DialogConfig<D, DialogRef<R, C>> {
   return {
     ...dialogConfig<D, R, C>(options),
-    panelClass: 'hx-sheet',
+    panelClass: paneClass('hx-sheet', options.size),
     positionStrategy: position,
     width: '100%',
   };

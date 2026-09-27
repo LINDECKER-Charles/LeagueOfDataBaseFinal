@@ -58,6 +58,20 @@
   --color-text-muted: #a09b8c;
   --color-text-dim: #8f8d82;
 
+  /*
+   * State and categorical readouts of the admin (its legacy foundation sheet): a healthy state
+   * reads green and a failed one red, the chart series keep a fixed order after gold, and a
+   * gauge runs on a faint track. The admin stays Hextech whatever the identity, so no theme
+   * restates them.
+   */
+  --color-good: #37b06e;
+  --color-bad: #dc3d3d;
+  --color-series-blue: #6a8cff;
+  --color-series-green: #37b06e;
+  --color-series-red: #dc3d3d;
+  --color-series-cyan: #49cfd6;
+  --color-track: rgb(255 255 255 / 0.06);
+
   /* Fonts */
   --font-beaufort: 'Beaufort', 'Times New Roman', serif;
   --font-spiegel: 'Spiegel', ui-sans-serif, system-ui, sans-serif;
@@ -109,6 +123,7 @@
    */
   --hx-glow-accent: rgba(200, 170, 110, 0.65);
   --hx-glow-accent-strong: rgba(200, 170, 110, 0.75);
+  --hx-glow-danger: rgba(220, 61, 61, 0.7);
   --hx-shadow-soft: rgba(1, 10, 19, 0.75);
   --hx-shadow-hard: rgba(1, 10, 19, 0.9);
   --hx-ring-accent-2: rgba(10, 200, 185, 0.14);

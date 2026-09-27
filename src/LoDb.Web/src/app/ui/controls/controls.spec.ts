@@ -23,6 +23,7 @@ describe('fieldClass', () => {
   template: `
     <button id="default" class="w-full" lodbButton>Go</button>
     <a id="gold" href="/" lodbButton="gold">Go</a>
+    <button id="danger" lodbButton="danger" lodbButtonSize="small">Delete</button>
     <span id="chip" lodbChip>tag</span>
     <span id="live" lodbChip="live">GET</span>
     <label>Name <input id="text" lodbField /></label>
@@ -42,6 +43,7 @@ describe('control directives', () => {
   it.each([
     ['default', 'hx-btn'],
     ['gold', 'hx-btn-gold'],
+    ['danger', 'hx-btn-danger'],
     ['chip', 'hx-chip'],
     ['live', 'hx-chip-hex'],
     ['text', 'hx-input'],
@@ -52,5 +54,9 @@ describe('control directives', () => {
 
   it('keeps the classes the template sets itself', () => {
     expect(render().querySelector('#default')?.className).toBe('w-full hx-btn');
+  });
+
+  it('adds the compact size to the tone', () => {
+    expect(render().querySelector('#danger')?.className).toBe('hx-btn-danger hx-btn-sm');
   });
 });

@@ -1,10 +1,10 @@
 <lodb-dialog
+  [eyebrow]="'contact.form.eyebrow' | transloco"
   [heading]="'contact.form.title' | transloco"
   [headingId]="headingId"
   [closeLabel]="'contact.form.close' | transloco"
 >
   <form class="flex flex-col gap-4" novalidate (submit)="submit($event)">
-    <p class="eyebrow">{{ 'contact.form.eyebrow' | transloco }}</p>
     <p class="text-sm text-text-muted">{{ 'contact.form.intro' | transloco }}</p>
     @if (error(); as message) {
       <p class="contact-error" role="alert">{{ message | transloco }}</p>
