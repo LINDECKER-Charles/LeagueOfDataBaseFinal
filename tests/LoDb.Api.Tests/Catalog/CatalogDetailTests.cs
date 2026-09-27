@@ -83,6 +83,19 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
         Assert.Equal(2, greaves.GetProperty("depth").GetInt32());
     }
 
+    [Fact]
+    public async Task ItemPageLeadsWithThePlaintextAlone()
+    {
+        var classic = await api.GetJsonAsync($"{Latest}/items/771004");
+
+        // Its list card falls back to the description, which the page prints below instead.
+        Assert.Empty(classic.GetProperty("profile").Text("summary"));
+        Assert.Contains(
+            "Mana Regen per 5 seconds",
+            classic.Text("description"),
+            StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("champions", "Garen")]
     [InlineData("items", "3006")]

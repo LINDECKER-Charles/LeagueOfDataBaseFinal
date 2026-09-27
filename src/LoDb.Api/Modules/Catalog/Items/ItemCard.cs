@@ -31,8 +31,9 @@ internal sealed record ItemCard
     public CounterpartLink? Counterpart { get; init; }
 
     /// <summary>
-    /// The one-line description, or the full one when Data Dragon ships none (Emberknife),
-    /// template tokens removed.
+    /// The one-line description, template tokens removed. On a list card, the full one when
+    /// Data Dragon ships none (Emberknife): the card has no other text. On the item's page,
+    /// the one-liner alone, since the full description follows it.
     /// </summary>
     public required string Summary { get; init; }
 

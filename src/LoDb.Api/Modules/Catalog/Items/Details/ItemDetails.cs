@@ -1,7 +1,9 @@
 using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Shared;
+using LoDb.Domain.Catalog.Items;
 using LoDb.Domain.Editions;
 using LoDb.Domain.Text;
+using LoDb.Ingestion.Catalog.Snapshots;
 
 namespace LoDb.Api.Modules.Catalog.Items.Details;
 
@@ -60,7 +62,7 @@ internal sealed record ItemDetails
         ArgumentNullException.ThrowIfNull(images);
         var catalog = page.Catalog;
         var item = page.Item;
-        var profile = ItemCard.Of(item, catalog, images);
+        var profile = ProfileOf(item, catalog, images);
         return new ItemDetails
         {
             Version = catalog.Version.Value,
@@ -83,4 +85,9 @@ internal sealed record ItemDetails
             Neighbours = ItemList.NeighboursOf(item, catalog),
         };
     }
+
+    // The page prints the description in full below its hero: the hero's lead is the
+    // plaintext alone, as on the legacy page, never that description a second time.
+    private static ItemCard ProfileOf(Item item, CatalogSnapshot catalog, ImageSet images) =>
+        ItemCard.Of(item, catalog, images) with { Summary = DdragonText.Clean(item.Plaintext) };
 }
