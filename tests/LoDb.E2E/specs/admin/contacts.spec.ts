@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { confirmAction, expect, expectToast, openPanel, test } from './admin-test';
+import { confirmAction, expect, expectToast, NO_SESSION, openPanel, test } from './admin-test';
 
 // One message for the whole journey, whose steps follow one another: the API takes five
 // messages an hour from one address, and the contact spec sends two of them.
@@ -12,8 +12,10 @@ const SENT = 204;
 test.beforeAll(async ({ playwright }, testInfo) => {
   const baseURL = testInfo.project.use.baseURL;
   // A visitor without a session: the API asks for the site's origin, and no XSRF token.
+  // The session of the administrator, which a request context would take, asks for one.
   const visitor = await playwright.request.newContext({
     baseURL,
+    storageState: NO_SESSION,
     extraHTTPHeaders: { Origin: new URL(baseURL ?? '').origin },
   });
   try {
@@ -61,7 +63,8 @@ test('marks a message handled, then reopens it', async ({ page }) => {
 
   await card(page).getByRole('button', { name: 'Marquer traité' }).click();
   await expectToast(page, 'Message marqué comme traité.');
-  await expect(card(page).getByText(/^Traité le /)).toBeVisible();
+  // A pattern meets the text as rendered, with the space its template line leaves before.
+  await expect(card(page).getByText(/^\s*Traité le /)).toBeVisible();
 
   await card(page).getByRole('button', { name: 'Rouvrir' }).click();
   await expectToast(page, 'Message rouvert.');

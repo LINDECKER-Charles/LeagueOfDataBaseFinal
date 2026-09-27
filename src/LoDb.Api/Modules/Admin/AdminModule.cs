@@ -81,6 +81,9 @@ internal static class AdminModule
 
     private static IServiceCollection AddAdminReports(this IServiceCollection services)
     {
+        // The web host adds the readiness checks; the command host gets a service that runs
+        // none, so that every registration of the module resolves there too.
+        services.AddHealthChecks();
         services.TryAddScoped<ServiceProbes>();
         services.TryAddScoped<DatabaseFigures>();
         services.TryAddScoped<VersionOverview>();

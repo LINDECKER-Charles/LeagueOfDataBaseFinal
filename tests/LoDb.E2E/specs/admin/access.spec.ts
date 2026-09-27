@@ -1,7 +1,7 @@
 import type { Browser, Page } from '@playwright/test';
 import { expectNoAccessibilityViolations } from '../../support/accessibility';
 import { enterPassword, LOGIN, signInAdmin } from './admin-account';
-import { expect, openPanel, test } from './admin-test';
+import { expect, NO_SESSION, openPanel, test } from './admin-test';
 
 // Every panel of the navigation, in its order: analytics, then management.
 const PANELS = [
@@ -20,7 +20,7 @@ const PANELS = [
 
 // A browser without the administrator's session.
 async function visitor(browser: Browser, baseURL: string | undefined): Promise<Page> {
-  const context = await browser.newContext({ baseURL });
+  const context = await browser.newContext({ baseURL, storageState: NO_SESSION });
   return context.newPage();
 }
 

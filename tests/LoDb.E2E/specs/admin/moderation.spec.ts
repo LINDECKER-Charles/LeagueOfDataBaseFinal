@@ -1,7 +1,15 @@
 import type { BrowserContext, Page } from '@playwright/test';
 import { discardAccount, newAccount, type TestAccount } from '../account/accounts';
 import { createBuild, verifiedAccount } from '../builds-share/builds';
-import { confirmAction, expect, expectToast, openPanel, test } from './admin-test';
+import {
+  anonymous,
+  confirmAction,
+  expect,
+  expectToast,
+  NO_SESSION,
+  openPanel,
+  test,
+} from './admin-test';
 
 /** The member the administrator moderates, signed in on a browser of their own. */
 interface Member {
@@ -31,10 +39,15 @@ function joined(): Member {
 test.beforeAll(async ({ browser, playwright }, testInfo) => {
   test.setTimeout(SETUP_TIMEOUT_MS);
   const account = newAccount('admmod');
-  const context = await browser.newContext({ baseURL: testInfo.project.use.baseURL });
+  // The member's own browser, and the clean-up's requests: without an empty state, they would
+  // carry the session of the administrator.
+  const context = await browser.newContext({
+    baseURL: testInfo.project.use.baseURL,
+    storageState: NO_SESSION,
+  });
   const page = await context.newPage();
   member = { account, context, page, buildName: `E2E moderation ${Date.now().toString(36)}` };
-  const mailbox = await playwright.request.newContext();
+  const mailbox = await anonymous(playwright.request).newContext();
   try {
     await verifiedAccount(page, mailbox, account);
   } finally {
@@ -51,7 +64,11 @@ test.beforeAll(async ({ browser, playwright }, testInfo) => {
 // Deleted by the journey; a failed step leaves it to the clean-up.
 test.afterAll(async ({ playwright }, testInfo) => {
   if (member !== undefined) {
-    await discardAccount(playwright.request, testInfo.project.use.baseURL, member.account);
+    await discardAccount(
+      anonymous(playwright.request),
+      testInfo.project.use.baseURL,
+      member.account,
+    );
     await member.context.close();
     member = undefined;
   }

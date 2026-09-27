@@ -70,7 +70,8 @@ test('shows the audience: devices, sources and the rankings', async ({ page, con
 
 test('scans the storage again on demand', async ({ page }) => {
   await openPanel(page, '/admin/storage', 'Stockage');
-  await expect(page.getByText(/^Relevé du /)).toBeVisible();
+  // A pattern meets the text as rendered, with the space its template line leaves before.
+  await expect(page.getByText(/^\s*Relevé du /)).toBeVisible();
   await expect(page.getByRole('heading', { level: 2, name: 'Croissance' })).toBeVisible();
 
   const scan = page.waitForResponse((response) => {
