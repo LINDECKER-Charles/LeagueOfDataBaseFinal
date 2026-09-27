@@ -82,7 +82,10 @@
     .bshare-actions {
       flex-direction: row;
       align-items: center;
-      justify-content: space-between;
+    }
+    /* The link keeps the end of the row, as in the legacy column, with a score or without. */
+    .bshare-actions > lodb-copy-link {
+      margin-inline-start: auto;
     }
   }
   @media (width < 22.5rem) {
