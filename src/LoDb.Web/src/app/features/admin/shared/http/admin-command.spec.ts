@@ -3,7 +3,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import type { Observable } from 'rxjs';
 import type { StrictHttpResponse } from '../../../../core/api/generated/strict-http-response';
-import { ToastService } from '../../../../core/layout/toast/toast-service';
+import { AdminNotices } from '../../layout/admin-notices';
 import { ADMIN_API } from '../../testing/admin-api';
 import { configureAdminTestBed } from '../../testing/admin-test-bed';
 import { AdminCommand } from './admin-command';
@@ -28,7 +28,7 @@ function setUp(timeout = 30_000) {
   return {
     command: TestBed.inject(AdminCommand),
     http: TestBed.inject(HttpTestingController),
-    toasts: TestBed.inject(ToastService),
+    notices: TestBed.inject(AdminNotices),
   };
 }
 
@@ -39,20 +39,18 @@ describe('AdminCommand', () => {
     expect(TestBed.inject(ADMIN_TIMEOUT)).toBe(30_000);
   });
 
-  it('tells a success in a toast and answers the body', async () => {
-    const { command, http, toasts } = setUp();
+  it('tells a success in the band of the page and answers the body', async () => {
+    const { command, http, notices } = setUp();
 
     const run = command.run(banUser, { id: 4 }, { key: 'users.done.ban', params: { name: 'x' } });
     http.expectOne(BAN_URL).flush('');
 
     await expect(run).resolves.toBe('');
-    expect(toasts.toasts()).toEqual([
-      expect.objectContaining({ kind: 'success', message: 'admin.users.done.ban' }),
-    ]);
+    expect(notices.current()).toEqual({ tone: 'notice', text: 'admin.users.done.ban' });
   });
 
   it('tells why the API refused, from the code of a problem sent as text', async () => {
-    const { command, http, toasts } = setUp();
+    const { command, http, notices } = setUp();
 
     const run = command.run(banUser, { id: 4 }, { key: 'users.done.ban' });
     http.expectOne(BAN_URL).flush(JSON.stringify({ code: 'self-moderation' }), {
@@ -61,34 +59,33 @@ describe('AdminCommand', () => {
     });
 
     await expect(run).resolves.toBeNull();
-    expect(toasts.toasts()).toEqual([
-      expect.objectContaining({ kind: 'error', message: 'admin.errors.self_moderation' }),
-    ]);
+    expect(notices.current()).toEqual({ tone: 'alert', text: 'admin.errors.self_moderation' });
   });
 
   it('reads a lost session and an unknown refusal', async () => {
-    const { command, http, toasts } = setUp();
+    const { command, http, notices } = setUp();
 
     const lost = command.run(banUser, { id: 4 }, { key: 'users.done.ban' });
     http.expectOne(BAN_URL).flush('', { status: HttpStatusCode.Forbidden, statusText: 'x' });
     await lost;
+    const session = notices.current()?.text;
     const failed = command.run(banUser, { id: 4 }, { key: 'users.done.ban' });
     http.expectOne(BAN_URL).flush('oops', { status: HttpStatusCode.BadGateway, statusText: 'x' });
     await failed;
 
-    expect(toasts.toasts().map((toast) => toast.message)).toEqual([
+    expect([session, notices.current()?.text]).toEqual([
       'admin.errors.session',
       'admin.errors.generic',
     ]);
   });
 
   it('gives up on an API that does not answer', async () => {
-    const { command, http, toasts } = setUp(10);
+    const { command, http, notices } = setUp(10);
 
     const run = command.run(banUser, { id: 4 }, { key: 'users.done.ban' });
     http.expectOne(BAN_URL);
 
     await expect(run).resolves.toBeNull();
-    expect(toasts.toasts()[0]?.message).toBe('admin.errors.network');
+    expect(notices.current()?.text).toBe('admin.errors.network');
   });
 });

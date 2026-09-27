@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom, map, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../../../core/api/api-base-url';
-import { ToastService } from '../../../../core/layout/toast/toast-service';
+import { AdminNotices } from '../../layout/admin-notices';
 import { ADMIN_I18N } from '../admin-i18n';
 import type { AdminCall } from './admin-call';
 import type { AdminMessage } from './admin-message';
@@ -12,15 +12,16 @@ import { problemKey } from './problem-key';
 import { problemOf } from './problem-of';
 
 /**
- * Runs the actions of the admin (ban, purge, credit…) and tells how they went in a toast:
- * `done` on success, the reason of the refusal otherwise, from the API's problem code. The
- * panel reloads itself on success; a refusal leaves it as it was.
+ * Runs the actions of the admin (ban, purge, credit…) and tells how they went in the band at
+ * the top of the page, as the legacy flash messages did: `done` on success, the reason of the
+ * refusal otherwise, from the API's problem code. The panel reloads itself on success; a
+ * refusal leaves it as it was.
  */
 @Injectable({ providedIn: 'root' })
 export class AdminCommand {
   private readonly http = inject(HttpClient);
   private readonly rootUrl = inject(API_BASE_URL);
-  private readonly toasts = inject(ToastService);
+  private readonly notices = inject(AdminNotices);
   private readonly transloco = inject(TranslocoService);
   private readonly wait = inject(ADMIN_TIMEOUT);
 
@@ -40,10 +41,12 @@ export class AdminCommand {
           map((response) => response.body),
         ),
       );
-      this.toasts.show('success', await this.text(typeof done === 'function' ? done(body) : done));
+      const message = typeof done === 'function' ? done(body) : done;
+      this.notices.post({ tone: 'notice', text: await this.text(message) });
       return body;
     } catch (error) {
-      this.toasts.show('error', await this.text({ key: problemKey(problemOf(error)) }));
+      const reason = await this.text({ key: problemKey(problemOf(error)) });
+      this.notices.post({ tone: 'alert', text: reason });
       return null;
     }
   }
