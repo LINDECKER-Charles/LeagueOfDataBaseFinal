@@ -1,5 +1,6 @@
 using System.Data.Common;
 using LoDb.Api.Modules.Admin.Monitoring.Views;
+using LoDb.Api.Modules.Admin.Storage;
 using LoDb.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -8,7 +9,8 @@ namespace LoDb.Api.Modules.Admin.Monitoring;
 
 /// <summary>
 /// The dependencies of the API, checked by the readiness probes of the host, with the
-/// version and size of the database when it answers.
+/// version and size of the database when it answers, and the volume of the storage when its
+/// report is kept.
 /// </summary>
 /// <remarks>
 /// The legacy admin also probed go-fetcher and go-api, which the API replaces: they are
@@ -17,10 +19,12 @@ namespace LoDb.Api.Modules.Admin.Monitoring;
 internal sealed partial class ServiceProbes(
     HealthCheckService health,
     LoDbDbContext db,
+    StorageReporter storage,
     ILogger<ServiceProbes> logger)
 {
     private const string ReadyTag = "ready";
     private const string Postgres = "postgres";
+    private const string Storage = "storage";
     private const int DetailLength = 140;
 
     public async Task<IReadOnlyList<ServiceProbe>> ProbeAsync(CancellationToken cancellationToken)
@@ -38,12 +42,31 @@ internal sealed partial class ServiceProbes(
                 LatencyMs = (long)entry.Duration.TotalMilliseconds,
                 Detail = Detail(entry),
             };
-            var described = name == Postgres && entry.Status == HealthStatus.Healthy;
-            probes.Add(described ? await DescribeDatabaseAsync(probe, cancellationToken) : probe);
+            probes.Add(entry.Status == HealthStatus.Healthy
+                ? await DescribeAsync(probe, cancellationToken)
+                : probe);
         }
 
         return probes;
     }
+
+    private async Task<ServiceProbe> DescribeAsync(
+        ServiceProbe probe,
+        CancellationToken cancellationToken) => probe.Name switch
+        {
+            Postgres => await DescribeDatabaseAsync(probe, cancellationToken),
+            Storage => await DescribeStorageAsync(probe, cancellationToken),
+            _ => probe,
+        };
+
+    // A bonus the legacy admin showed when the storage report happened to be warm: walking
+    // the root at every monitoring load would cost a full inventory.
+    private async Task<ServiceProbe> DescribeStorageAsync(
+        ServiceProbe probe,
+        CancellationToken cancellationToken) =>
+        await storage.KeptAsync(cancellationToken) is { Ok: true } report
+            ? probe with { Objects = report.Objects, Bytes = report.Bytes }
+            : probe;
 
     private async Task<ServiceProbe> DescribeDatabaseAsync(
         ServiceProbe probe,

@@ -18,6 +18,7 @@ public sealed class AdminStorageTests(PostgresContainerFixture postgres)
     : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
 {
     private const string StoragePath = "/api/admin/storage?refresh=true";
+    private const string MonitoringPath = "/api/admin/monitoring?refresh=true";
 
     private static readonly string Portrait = new('a', 64);
     private static readonly string Splash = new('b', 64);
@@ -94,6 +95,28 @@ public sealed class AdminStorageTests(PostgresContainerFixture postgres)
             (0, 0, 1),
             (Int(first, "objects"), Int(cached, "objects"), Int(refreshed, "objects")));
     }
+
+    [Fact]
+    public async Task TheStorageProbeShowsTheVolumeOnceAReportIsKept()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+        await LayOutAsync();
+
+        var before = StorageProbe(await ReadAsync(admin, MonitoringPath));
+        var report = await ReadAsync(admin, "/api/admin/storage");
+        var after = StorageProbe(await ReadAsync(admin, MonitoringPath));
+
+        // Probing first neither walked the root nor kept an empty report in its place.
+        Assert.Equal(
+            (JsonValueKind.Null, JsonValueKind.Null),
+            (before.GetProperty("objects").ValueKind, before.GetProperty("bytes").ValueKind));
+        Assert.Equal(7, Int(report, "objects"));
+        Assert.Equal((7, 99), (Int(after, "objects"), Int(after, "bytes")));
+    }
+
+    private static JsonElement StorageProbe(JsonElement monitoring) =>
+        monitoring.GetProperty("services").EnumerateArray()
+            .Single(static probe => ApiJson.Text(probe, "name") == "storage");
 
     private static int Int(JsonElement element, string name) =>
         element.GetProperty(name).GetInt32();

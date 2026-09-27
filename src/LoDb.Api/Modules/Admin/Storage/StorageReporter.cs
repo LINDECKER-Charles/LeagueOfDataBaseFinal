@@ -36,6 +36,23 @@ internal sealed partial class StorageReporter(
         Flags = HybridCacheEntryFlags.DisableDistributedCache,
     };
 
+    // Reads what an earlier walk kept, and nothing else: no walk, and no entry written for a
+    // miss, which would hide the next real report.
+    private static readonly HybridCacheEntryOptions KeptOnly = new()
+    {
+        Flags = HybridCacheEntryFlags.DisableUnderlyingData
+            | HybridCacheEntryFlags.DisableLocalCacheWrite
+            | HybridCacheEntryFlags.DisableDistributedCache,
+    };
+
+    /// <summary>The report an earlier walk kept, or null: never walks the root itself.</summary>
+    public async Task<StorageReport?> KeptAsync(CancellationToken cancellation) =>
+        await cache.GetOrCreateAsync<StorageReport?>(
+            CacheKey,
+            static _ => ValueTask.FromResult<StorageReport?>(null),
+            KeptOnly,
+            cancellationToken: cancellation);
+
     public async Task<StorageReport> ReportAsync(bool refresh, CancellationToken cancellation)
     {
         if (refresh)
