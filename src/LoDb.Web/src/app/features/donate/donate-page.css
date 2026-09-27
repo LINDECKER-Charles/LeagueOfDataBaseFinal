@@ -167,15 +167,6 @@
     color: var(--color-text-dim);
   }
 
-  .donate-error {
-    margin-top: 1.25rem;
-    border: 1px solid color-mix(in srgb, var(--color-danger) 55%, transparent);
-    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
-    padding: 0.7rem 1rem;
-    font-size: 0.85rem;
-    color: var(--color-text);
-  }
-
   /* --- Form closed: no Stripe behind the API ------------------------------------------- */
   .donate-unavailable {
     margin-top: 1.5rem;

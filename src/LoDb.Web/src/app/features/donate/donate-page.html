@@ -16,7 +16,6 @@
     @if (options().available) {
       <form
         class="donate-form mt-6"
-        novalidate
         [attr.aria-busy]="busy() ? true : null"
         (submit)="submit($event)"
       >
@@ -59,10 +58,11 @@
               inputmode="decimal"
               autocomplete="off"
               maxlength="6"
+              pattern="\d{1,3}([.,]\d{1,2})?"
               aria-describedby="donate-amount-hint"
               [placeholder]="'donate.custom.placeholder' | transloco"
               [value]="amount()"
-              [attr.aria-invalid]="error() === 'donate.error.invalid_amount' ? true : null"
+              [attr.aria-invalid]="invalidAmount() ? true : null"
               (input)="type($event)"
             />
             <span class="donate-custom__unit" aria-hidden="true">€</span>
@@ -71,10 +71,6 @@
             {{ 'donate.custom.hint' | transloco: bounds() }}
           </p>
         </div>
-
-        @if (error(); as message) {
-          <p class="donate-error" role="alert">{{ message | transloco: bounds() }}</p>
-        }
 
         <button lodbButton="gold" type="submit" class="mt-6 w-full" [disabled]="busy()">
           {{ (busy() ? 'donate.busy' : 'donate.submit') | transloco }}
