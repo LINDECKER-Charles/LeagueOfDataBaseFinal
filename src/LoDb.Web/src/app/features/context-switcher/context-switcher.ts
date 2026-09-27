@@ -16,8 +16,8 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
-import { filter, map } from 'rxjs';
+import { provideTranslocoScope, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { filter, firstValueFrom, map } from 'rxjs';
 import type { CatalogMeta } from '../../core/api/generated/models/catalog-meta';
 import { ApiMeta } from '../../core/api/meta/api-meta';
 import { PreferencesStore } from '../../core/context/preferences/preferences-store';
@@ -25,6 +25,7 @@ import { switchContext } from '../../core/context/switch/switch-context';
 import { Disclosure } from '../../core/layout/disclosure/disclosure';
 import { PageDirection } from '../../core/layout/direction/page-direction';
 import { NavContext } from '../../core/layout/nav/nav-context';
+import { ToastService } from '../../core/layout/toast/toast-service';
 import { Button } from '../../ui/controls/button';
 import { Field } from '../../ui/controls/field';
 import { Icon } from '../../ui/media/icon';
@@ -37,6 +38,7 @@ import { targetOf } from './selection/target-of';
 
 /** The Transloco scope of the switcher's own texts (`public/i18n/context-switcher/`). */
 const SCOPE = 'context-switcher';
+const SAVED_KEY = 'contextSwitcher.saved';
 const LOCALE_SUBTAG_SEPARATOR = '-';
 // A patch number in the chip's monospace: seven letters and their 0.06em tracking.
 const PATCH_WIDTH = '7.7ch';
@@ -48,8 +50,9 @@ function valueOf(event: Event): string {
 /**
  * Patch and language switcher of the header (`switcher` slot): a native `<details>` holding
  * a form that never posts. Submitting navigates to the same page in the chosen context, the
- * URL rewritten by `switchContext`; "remember" writes the choice into `lod_prefs`, and the
- * switcher applies that cookie to the pages that name no context of their own.
+ * URL rewritten by `switchContext`, and confirms with a toast; "remember" writes the choice
+ * into `lod_prefs`, and the switcher applies that cookie to the pages that name no context of
+ * their own.
  *
  * The header sits on prerendered pages too, so the options (versions, languages) load in the
  * browser, after the first render, never during one. The chip names the page's version from
@@ -71,6 +74,8 @@ export class ContextSwitcher {
   private readonly preferences = inject(PreferencesStore);
   private readonly page = inject(PageDirection);
   private readonly nav = inject(NavContext);
+  private readonly toasts = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly panel = viewChild.required<ElementRef<HTMLDetailsElement>>('panel');
   private readonly url = toSignal(
@@ -145,7 +150,20 @@ export class ContextSwitcher {
     const target = targetOf(this.version(), language);
     this.preferences.remember(this.remember() ? preferencesOf(target, meta) : null);
     this.panel().nativeElement.open = false;
-    void this.router.navigateByUrl(switchContext(this.router.url, target, meta));
+    const current = this.router.url;
+    const next = switchContext(current, target, meta);
+    void this.router.navigateByUrl(next).then(async (done) => {
+      if (done || next === current) {
+        await this.saved();
+      }
+    });
+  }
+
+  // Every accepted choice is confirmed, as the legacy flash did, in the page's new locale.
+  private async saved(): Promise<void> {
+    const locale = this.page.locale();
+    await firstValueFrom(this.transloco.load(`${SCOPE}/${locale}`)).catch(() => undefined);
+    this.toasts.show('success', this.transloco.translate(SAVED_KEY, {}, locale));
   }
 
   private optionsOf<T>(build: (meta: CatalogMeta) => T[]): T[] {

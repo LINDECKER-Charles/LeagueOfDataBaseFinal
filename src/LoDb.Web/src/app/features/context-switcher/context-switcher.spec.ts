@@ -7,6 +7,7 @@ import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api-base-url';
 import type { CatalogMeta } from '../../core/api/generated/models/catalog-meta';
+import { ToastService } from '../../core/layout/toast/toast-service';
 import { ContextSwitcher } from './context-switcher';
 
 @Component({ template: '' })
@@ -157,6 +158,24 @@ describe('ContextSwitcher', () => {
 
     expect(routerUrl()).toBe(`/en/${OLDER}/items?page=2&lang=en_GB`);
     expect(document.cookie).not.toContain('lod_prefs');
+  });
+
+  it('confirms every choice with a toast, as the legacy flash did', async () => {
+    configure('browser');
+    const fixture = await openOn('/fr/items');
+    const host = await loaded(fixture);
+    const saved = () =>
+      TestBed.inject(ToastService)
+        .toasts()
+        .map((toast) => toast.message);
+
+    pick(host, 'switcher-version', OLDER);
+    await submit(fixture);
+    await vi.waitFor(() => expect(saved()).toEqual(['contextSwitcher.saved']));
+
+    await submit(fixture);
+    await vi.waitFor(() => expect(saved()).toHaveLength(2));
+    expect(routerUrl()).toBe(`/fr/${OLDER}/items`);
   });
 
   it('writes lod_prefs when "remember" is ticked', async () => {
