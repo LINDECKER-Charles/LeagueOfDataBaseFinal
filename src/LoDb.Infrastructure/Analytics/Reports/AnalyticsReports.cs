@@ -1,4 +1,5 @@
 using LoDb.Infrastructure.Analytics.Aggregation;
+using LoDb.Infrastructure.Analytics.Geo;
 using LoDb.Infrastructure.Analytics.Rollup;
 using LoDb.Infrastructure.Persistence.Analytics;
 
@@ -11,6 +12,7 @@ namespace LoDb.Infrastructure.Analytics.Reports;
 internal sealed class AnalyticsReports(
     DailyStore store,
     DayEvents events,
+    IGeoLocator geo,
     TimeProvider timeProvider) : IAnalyticsReports
 {
     public async Task<AnalyticsReport> BuildAsync(
@@ -35,7 +37,7 @@ internal sealed class AnalyticsReports(
             && imported.Source == AnalyticsDailySource.Import
                 ? DailyColumns.Read(imported)
                 : await events.FoldAsync(today, cancellationToken));
-        return RangeReportBuilder.Build(dailies, range.Name);
+        return RangeReportBuilder.Build(dailies, range.Name, geo.IsAvailable);
     }
 
     private async Task<DateOnly> FirstDayAsync(

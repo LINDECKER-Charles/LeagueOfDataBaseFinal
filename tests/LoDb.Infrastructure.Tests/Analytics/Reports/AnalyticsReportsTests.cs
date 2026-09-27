@@ -29,8 +29,10 @@ public sealed class AnalyticsReportsTests(PostgresContainerFixture postgres)
 
         var report = await Reports.BuildAsync(Range(AnalyticsRange.All), Cancellation);
 
-        using var expected = LegacySamples.Json("report.json");
-        JsonAssert.Equivalent(expected.RootElement, JsonSerializer.SerializeToElement(report, Web));
+        // No GeoLite2 database is provisioned for the tests.
+        JsonAssert.Equivalent(
+            LegacySamples.Report(geoAvailable: false),
+            JsonSerializer.SerializeToElement(report, Web));
     }
 
     [Fact]

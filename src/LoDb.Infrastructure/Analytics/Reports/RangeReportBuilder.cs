@@ -21,10 +21,14 @@ internal static class RangeReportBuilder
 
     /// <param name="dailies">Every day of the period, in order; at least one.</param>
     /// <param name="range">Name of the period.</param>
-    public static AnalyticsReport Build(IReadOnlyList<DailyAggregate> dailies, string range) =>
-        Build(new MergedDays(dailies), range);
+    /// <param name="geoAvailable">Whether this instance resolves countries.</param>
+    public static AnalyticsReport Build(
+        IReadOnlyList<DailyAggregate> dailies,
+        string range,
+        bool geoAvailable) =>
+        Build(new MergedDays(dailies), range, geoAvailable);
 
-    private static AnalyticsReport Build(MergedDays days, string range) => new()
+    private static AnalyticsReport Build(MergedDays days, string range, bool geoAvailable) => new()
     {
         Range = range,
         From = days.Dailies[0].Day,
@@ -49,6 +53,7 @@ internal static class RangeReportBuilder
         RefSource = Rank(days[DailyBuckets.RefSource]),
         TopReferers = Rank(days[DailyBuckets.RefHost], TopReferers),
         Country = Countries(days[DailyBuckets.Country], days.CountryNames),
+        GeoAvailable = geoAvailable,
     };
 
     private static AnalyticsTotals TotalsOf(MergedDays days)
