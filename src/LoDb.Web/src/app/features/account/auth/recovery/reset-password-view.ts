@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { AccountService } from '../../../../core/api/generated/services/account.service';
@@ -24,11 +24,12 @@ const MISMATCH: FieldErrors = { confirmation: 'auth.register.password_mismatch' 
 
 /**
  * Sets a new password from the link of a reset e-mail, then sends to the login page. A link
- * expired, used or damaged says so and offers to ask for another one.
+ * damaged, or found expired or used when sent, goes back to the request of another one with
+ * a toast, as the legacy page did; the API cannot tell an expired link before it is used.
  */
 @Component({
   selector: 'lodb-reset-password-view',
-  imports: [AuthCard, Button, PasswordPair, RouterLink, TranslocoPipe],
+  imports: [AuthCard, Button, PasswordPair, TranslocoPipe],
   templateUrl: './reset-password-view.html',
   styleUrl: '../card/auth-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,12 +47,19 @@ export class ResetPasswordView {
   protected readonly password = signal('');
   protected readonly confirmation = signal('');
   protected readonly busy = signal(false);
-  protected readonly invalid = signal(!USER_ID.test(this.user) || this.token === '');
+  /** The link was refused: the page leaves for a new request, its form gone. */
+  protected readonly rejected = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly errors = signal<FieldErrors>({});
-  protected readonly forgot = computed(() =>
+  private readonly forgot = computed(() =>
     localePath(this.page.locale(), 'account/forgot-password'),
   );
+
+  constructor() {
+    if (!USER_ID.test(this.user) || this.token === '') {
+      void this.reject();
+    }
+  }
 
   protected reset(event: Event): void {
     submittedForm(event);
@@ -80,10 +88,16 @@ export class ResetPasswordView {
 
   private refused(problem: ApiProblem): void {
     if (problem.code === 'invalid-token') {
-      this.invalid.set(true);
+      void this.reject();
       return;
     }
     this.errors.set(fieldErrorsOf(problem));
     this.error.set(formErrorOf(problem));
+  }
+
+  private async reject(): Promise<void> {
+    this.rejected.set(true);
+    this.toasts.show('error', this.transloco.translate('auth.flash.reset_error'));
+    await this.router.navigateByUrl(this.forgot(), { replaceUrl: true });
   }
 }
