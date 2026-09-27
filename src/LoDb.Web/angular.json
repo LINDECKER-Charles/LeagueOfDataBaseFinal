@@ -58,6 +58,30 @@
                   "type": "anyComponentStyle",
                   "maximumWarning": "4kB",
                   "maximumError": "8kB"
+                },
+                {
+                  "type": "bundle",
+                  "name": "admin-routes",
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
+                },
+                {
+                  "type": "bundle",
+                  "name": "admin-page",
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
+                },
+                {
+                  "type": "bundle",
+                  "name": "admin-login-page",
+                  "maximumWarning": "10kB",
+                  "maximumError": "20kB"
+                },
+                {
+                  "type": "bundle",
+                  "name": "admin-enroll-page",
+                  "maximumWarning": "16kB",
+                  "maximumError": "24kB"
                 }
               ],
               "outputHashing": "all",

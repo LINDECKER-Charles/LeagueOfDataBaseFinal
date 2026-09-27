@@ -1,0 +1,128 @@
+<lodb-page-head
+  [eyebrow]="'admin.nav.analytics' | transloco"
+  [title]="'admin.storage.title' | transloco"
+  [subtitle]="'admin.storage.lede' | transloco"
+>
+  <button lodbButton="ghost" type="button" [disabled]="report.busy()" (click)="refresh()">
+    {{ 'admin.actions.refresh' | transloco }}
+  </button>
+</lodb-page-head>
+
+<lodb-panel-state [panel]="report" shape="chart" />
+@if (report.value(); as data) {
+  <p class="mb-4 font-mono text-xs text-text-dim">
+    {{ 'admin.common.generated_at' | transloco: { at: (data.generatedAt | stamp: 'second') } }}
+  </p>
+  @if (!data.ok) {
+    <p class="mb-6 border border-danger/60 p-4 text-sm text-danger-light" role="alert">
+      {{ 'admin.storage.partial' | transloco }} {{ data.error }}
+    </p>
+  }
+  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" [attr.aria-busy]="report.busy()">
+    <lodb-kpi
+      [label]="'admin.storage.kpi.bytes' | transloco"
+      [value]="data.bytes | figure: 'bytes'"
+    />
+    <lodb-kpi
+      tone="hex"
+      [label]="'admin.storage.kpi.objects' | transloco"
+      [value]="data.objects | figure"
+    />
+    <lodb-kpi
+      tone="muted"
+      [label]="'admin.storage.kpi.dedup' | transloco"
+      [value]="data.dedup.ratio | figure: 'ratio'"
+      [sub]="
+        'admin.storage.kpi.saved'
+          | transloco: { size: (data.dedup.savedBytesApprox | figure: 'bytes') }
+      "
+    />
+    <lodb-kpi
+      tone="muted"
+      [label]="'admin.storage.kpi.webp' | transloco"
+      [value]="data.blobs.webpCoverage | figure: 'share'"
+      [sub]="
+        'admin.storage.kpi.webp_size'
+          | transloco: { size: (data.blobs.webpBytes | figure: 'bytes') }
+      "
+    />
+  </div>
+
+  <lodb-admin-card class="mt-6" [heading]="'admin.storage.growth' | transloco">
+    <lodb-time-series-chart
+      [dates]="timeline().dates"
+      [series]="timeline().series"
+      [label]="'admin.storage.growth' | transloco"
+    />
+    <lodb-legend [items]="timeline().series" />
+  </lodb-admin-card>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <lodb-admin-card [heading]="'admin.storage.families' | transloco">
+      <lodb-donut-chart
+        [slices]="families()"
+        [label]="'admin.storage.families' | transloco"
+        [total]="data.bytes | figure: 'bytes'"
+      />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.storage.extensions' | transloco">
+      <lodb-rank-list format="bytes" [rows]="extensions()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.storage.types' | transloco">
+      <lodb-rank-list tone="hex" format="bytes" [rows]="types()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.storage.languages' | transloco">
+      <lodb-rank-list format="bytes" [rows]="languages()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.storage.versions' | transloco">
+      <lodb-rank-list tone="hex" format="bytes" [rows]="versions()" [limit]="limit" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.storage.largest' | transloco">
+      @if (data.largest.length === 0) {
+        <p class="text-sm text-text-dim">{{ 'admin.common.no_data' | transloco }}</p>
+      } @else {
+        <ol class="space-y-1.5 text-sm">
+          @for (object of data.largest; track object.path) {
+            <li class="flex justify-between gap-3">
+              <span class="min-w-0 truncate font-mono text-xs text-text" [title]="object.path">
+                {{ object.path }}
+              </span>
+              <span class="shrink-0 font-mono text-xs text-text-muted">
+                {{ object.bytes | figure: 'bytes' }}
+              </span>
+            </li>
+          }
+        </ol>
+      }
+    </lodb-admin-card>
+  </div>
+
+  <lodb-admin-card class="mt-6" [heading]="'admin.storage.coverage' | transloco">
+    <div class="hx-table-scroll">
+      <table class="hx-table hx-table--flush">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'admin.storage.columns.version' | transloco }}</th>
+            <th scope="col" class="num">{{ 'admin.storage.columns.objects' | transloco }}</th>
+            <th scope="col">{{ 'admin.storage.columns.types' | transloco }}</th>
+            <th scope="col">{{ 'admin.storage.columns.langs' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of data.coverage; track row.version) {
+            <tr>
+              <td class="font-mono">{{ row.version }}</td>
+              <td class="num">{{ row.objects | figure }}</td>
+              <td class="text-xs text-text-muted">{{ row.types.join(', ') }}</td>
+              <td class="text-xs text-text-muted">{{ row.langs.length }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="text-text-dim">{{ 'admin.common.no_data' | transloco }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </lodb-admin-card>
+}

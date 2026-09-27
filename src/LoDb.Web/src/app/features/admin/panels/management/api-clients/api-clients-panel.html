@@ -1,0 +1,151 @@
+<lodb-page-head
+  [eyebrow]="'admin.nav.management' | transloco"
+  [title]="'admin.api_clients.title' | transloco"
+  [subtitle]="'admin.api_clients.lede' | transloco"
+/>
+
+<lodb-panel-state [panel]="clients" />
+@if (clients.value(); as list) {
+  <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
+    <lodb-kpi
+      tone="hex"
+      [label]="'admin.api_clients.kpi.active' | transloco"
+      [value]="list.kpis.active | figure"
+    />
+    <lodb-kpi
+      [label]="'admin.api_clients.kpi.month_requests' | transloco"
+      [value]="list.kpis.monthRequests | figure"
+    />
+    <lodb-kpi
+      tone="muted"
+      [label]="'admin.api_clients.kpi.credits' | transloco"
+      [value]="list.kpis.credits | figure"
+    />
+  </div>
+
+  <div class="mt-6 grid gap-4 lg:grid-cols-2">
+    <lodb-admin-card [heading]="'admin.api_clients.by_plan' | transloco">
+      <lodb-donut-chart
+        [slices]="plans()"
+        [label]="'admin.api_clients.by_plan' | transloco"
+        [total]="list.kpis.active | figure: 'compact'"
+        [caption]="'admin.api_clients.keys_caption' | transloco"
+      />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.api_clients.top_consumers' | transloco">
+      <lodb-rank-list tone="hex" [rows]="consumers()" />
+    </lodb-admin-card>
+  </div>
+
+  <p class="mt-6 mb-2 text-xs text-text-dim">
+    {{ 'admin.common.results' | transloco: { count: list.total } }}
+  </p>
+  <div class="hx-table-scroll" [attr.aria-busy]="clients.busy()">
+    <table class="hx-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'admin.api_clients.columns.key' | transloco }}</th>
+          <th scope="col">{{ 'admin.api_clients.columns.owner' | transloco }}</th>
+          <th scope="col">{{ 'admin.api_clients.columns.plan' | transloco }}</th>
+          <th scope="col" class="num">{{ 'admin.api_clients.columns.usage' | transloco }}</th>
+          <th scope="col" class="num">{{ 'admin.api_clients.columns.credits' | transloco }}</th>
+          <th scope="col" class="num">{{ 'admin.api_clients.columns.rate' | transloco }}</th>
+          <th scope="col">{{ 'admin.api_clients.columns.created' | transloco }}</th>
+          <th scope="col">{{ 'admin.common.actions' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (client of list.items; track client.id) {
+          <tr [attr.data-api-client]="client.id">
+            <td>
+              <span class="block text-text">{{ client.name }}</span>
+              <span class="block font-mono text-[11px] text-text-dim">{{ client.keyPrefix }}…</span>
+            </td>
+            <td>
+              <a
+                class="nav-link text-sm text-gold"
+                [routerLink]="['/admin/users', client.owner.id, 'activity']"
+                >{{ client.owner.username }}</a
+              >
+            </td>
+            <td>
+              <span class="flex flex-wrap gap-1.5">
+                <span lodbBadge="gold">{{ planOf(client) }}</span>
+                @if (!client.isActive) {
+                  <span lodbBadge="bad">{{ 'admin.api_clients.revoked' | transloco }}</span>
+                }
+              </span>
+            </td>
+            <td class="num">
+              {{ client.usedThisMonth | figure }} / {{ client.monthlyQuota | figure }}
+            </td>
+            <td class="num">{{ client.creditsBalance | figure }}</td>
+            <td class="num">{{ client.rateLimitPerMin | figure }}</td>
+            <td class="font-mono text-xs">{{ client.createdAt | stamp }}</td>
+            <td>
+              @if (client.isActive) {
+                <span class="flex flex-wrap items-center gap-1.5">
+                  @if (crediting() !== client.id) {
+                    <button
+                      lodbButton="ghost"
+                      type="button"
+                      [disabled]="actions.pending() === client.id"
+                      (click)="crediting.set(client.id)"
+                    >
+                      {{ 'admin.api_clients.credit' | transloco }}
+                    </button>
+                  }
+                  <lodb-confirm-button
+                    [label]="'admin.api_clients.revoke' | transloco"
+                    [confirmLabel]="'admin.api_clients.confirm_revoke' | transloco"
+                    [busy]="actions.pending() === client.id"
+                    (confirmed)="revoke(client)"
+                  />
+                </span>
+              } @else {
+                <span class="font-mono text-xs text-text-dim">{{ client.revokedAt | stamp }}</span>
+              }
+            </td>
+          </tr>
+          @if (crediting() === client.id) {
+            <tr>
+              <td colspan="8">
+                <form class="flex flex-wrap items-end gap-2" (submit)="grant($event, client)">
+                  <label [for]="'credit-' + client.id" class="eyebrow w-full">
+                    {{ 'admin.api_clients.credit_label' | transloco: { name: client.name } }}
+                  </label>
+                  <input
+                    lodbField
+                    name="requests"
+                    type="number"
+                    class="max-w-48"
+                    required
+                    step="1"
+                    [min]="credit.min"
+                    [max]="credit.max"
+                    [id]="'credit-' + client.id"
+                  />
+                  <button
+                    lodbButton="gold"
+                    type="submit"
+                    [disabled]="actions.pending() === client.id"
+                  >
+                    {{ 'admin.api_clients.confirm_credit' | transloco }}
+                  </button>
+                  <button lodbButton="ghost" type="button" (click)="crediting.set(null)">
+                    {{ 'admin.actions.cancel' | transloco }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          }
+        } @empty {
+          <tr>
+            <td colspan="8" class="text-text-dim">{{ 'admin.api_clients.empty' | transloco }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <lodb-admin-pager [page]="list.page" [pages]="list.pages" />
+}

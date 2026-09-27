@@ -1,0 +1,51 @@
+<lodb-page-head
+  [eyebrow]="'admin.nav.management' | transloco"
+  [title]="'admin.journal.title' | transloco"
+  [subtitle]="'admin.journal.lede' | transloco"
+/>
+
+<lodb-panel-state [panel]="volume" shape="card" />
+@if (volume.value(); as held) {
+  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <lodb-kpi
+      [label]="'admin.journal.volume.entries' | transloco"
+      [value]="held.entries | figure"
+      [sub]="held.totalBytes | figure: 'bytes'"
+    />
+    <lodb-kpi
+      tone="hex"
+      [label]="'admin.journal.volume.oldest' | transloco"
+      [value]="held.oldest | stamp"
+    />
+    <lodb-kpi
+      tone="hex"
+      [label]="'admin.journal.volume.newest' | transloco"
+      [value]="held.newest | stamp: 'minute'"
+    />
+    <lodb-kpi
+      tone="muted"
+      [label]="'admin.journal.volume.retention' | transloco: { months: held.retentionMonths }"
+      [value]="held.retentionCutoff | stamp"
+      [sub]="'admin.journal.volume.cutoff' | transloco"
+    />
+  </div>
+}
+
+<lodb-admin-card class="mt-6" [heading]="'admin.journal.filters.title' | transloco">
+  @if (vocabulary.failure()) {
+    <lodb-panel-state [panel]="vocabulary" shape="card" />
+  }
+  <lodb-journal-filters [vocabulary]="vocabulary.value()" />
+</lodb-admin-card>
+
+<div class="mt-6">
+  <lodb-panel-state [panel]="journal" shape="table" />
+  @if (journal.value(); as page) {
+    <lodb-audit-table [entries]="page.items" [attr.aria-busy]="journal.busy()" />
+    <lodb-admin-pager [page]="page.page" [hasMore]="page.hasMore" />
+  }
+</div>
+
+<lodb-admin-card class="mt-8" [heading]="'admin.journal.purge.title' | transloco">
+  <lodb-journal-purge (purged)="reload()" />
+</lodb-admin-card>

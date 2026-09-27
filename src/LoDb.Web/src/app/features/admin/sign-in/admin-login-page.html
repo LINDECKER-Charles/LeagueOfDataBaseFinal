@@ -1,0 +1,98 @@
+<div class="mx-auto max-w-md px-4 py-12 sm:px-6">
+  <lodb-page-head
+    [eyebrow]="'admin.brand' | transloco"
+    [title]="'admin.login.title' | transloco"
+    [subtitle]="'admin.login.lede' | transloco"
+  />
+  <div lodbFrame="ornate" class="block p-6">
+    @if (error(); as message) {
+      <p class="mb-5 text-sm text-danger-light" role="alert">
+        {{ 'admin.' + message | transloco }}
+      </p>
+    }
+
+    @if (step() === 'credentials') {
+      <form class="space-y-5" (submit)="signIn($event)">
+        <div>
+          <label for="admin-identifier" class="eyebrow">
+            {{ 'admin.login.identifier' | transloco }}
+          </label>
+          <input
+            lodbField
+            id="admin-identifier"
+            name="identifier"
+            type="text"
+            class="mt-1.5"
+            required
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+        </div>
+        <div>
+          <label for="admin-password" class="eyebrow">
+            {{ 'admin.login.password' | transloco }}
+          </label>
+          <input
+            lodbField
+            id="admin-password"
+            name="password"
+            type="password"
+            class="mt-1.5"
+            required
+            autocomplete="current-password"
+          />
+        </div>
+        <button lodbButton type="submit" class="w-full" [disabled]="busy()">
+          {{ 'admin.login.submit' | transloco }}
+        </button>
+      </form>
+    } @else {
+      <form class="space-y-5" (submit)="confirm($event)">
+        <p class="text-sm text-text-muted">{{ 'admin.login.second_factor' | transloco }}</p>
+        @if (useRecovery()) {
+          <div>
+            <label for="admin-recovery-code" class="eyebrow">
+              {{ 'admin.login.recovery_code' | transloco }}
+            </label>
+            <input
+              lodbField
+              id="admin-recovery-code"
+              name="recoveryCode"
+              type="text"
+              class="mt-1.5 font-mono"
+              required
+              autocomplete="off"
+              autocapitalize="none"
+              spellcheck="false"
+            />
+          </div>
+        } @else {
+          <div>
+            <label for="admin-two-factor-code" class="eyebrow">
+              {{ 'admin.login.code' | transloco }}
+            </label>
+            <input
+              lodbField
+              id="admin-two-factor-code"
+              name="twoFactorCode"
+              type="text"
+              class="mt-1.5 font-mono tracking-[0.3em]"
+              required
+              inputmode="numeric"
+              autocomplete="one-time-code"
+            />
+          </div>
+        }
+        <p>
+          <button type="button" class="nav-link text-xs text-text-muted" (click)="toggleRecovery()">
+            {{ (useRecovery() ? 'admin.login.use_app' : 'admin.login.use_recovery') | transloco }}
+          </button>
+        </p>
+        <button lodbButton type="submit" class="w-full" [disabled]="busy()">
+          {{ 'admin.login.verify' | transloco }}
+        </button>
+      </form>
+    }
+  </div>
+</div>

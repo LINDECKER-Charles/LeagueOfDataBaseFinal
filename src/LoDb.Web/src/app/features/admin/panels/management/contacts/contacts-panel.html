@@ -1,0 +1,111 @@
+<lodb-page-head
+  [eyebrow]="'admin.nav.management' | transloco"
+  [title]="'admin.contacts.title' | transloco"
+  [subtitle]="'admin.contacts.lede' | transloco"
+>
+  <nav class="flex flex-wrap gap-1.5" [attr.aria-label]="'admin.contacts.filter' | transloco">
+    @for (status of statuses; track status) {
+      <a
+        [lodbButton]="status === query.text('status') ? 'primary' : 'ghost'"
+        [routerLink]="[]"
+        [queryParams]="{ status: status || null, page: null }"
+        queryParamsHandling="merge"
+        [attr.aria-current]="status === query.text('status') ? 'page' : null"
+        >{{ 'admin.contacts.statuses.' + (status || 'all') | transloco }}</a
+      >
+    }
+  </nav>
+</lodb-page-head>
+
+<lodb-panel-state [panel]="contacts" />
+@if (contacts.value(); as inbox) {
+  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <lodb-kpi
+      [label]="'admin.contacts.kpi.total' | transloco"
+      [value]="inbox.stats.total | figure"
+    />
+    <lodb-kpi
+      tone="warn"
+      [label]="'admin.contacts.kpi.new' | transloco"
+      [value]="inbox.stats.new | figure"
+    />
+    <lodb-kpi
+      tone="good"
+      [label]="'admin.contacts.kpi.handled' | transloco"
+      [value]="inbox.stats.handled | figure"
+    />
+    <lodb-kpi
+      tone="muted"
+      [label]="'admin.contacts.kpi.week' | transloco"
+      [value]="inbox.stats.week | figure"
+    />
+  </div>
+
+  <ul class="mt-6 space-y-4" [attr.aria-busy]="contacts.busy()">
+    @for (contact of inbox.items; track contact.id) {
+      <li lodbFrame class="block p-5" [attr.data-contact]="contact.id">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="font-beaufort text-lg text-gold-bright">
+              {{ contact.subject || ('admin.contacts.no_subject' | transloco) }}
+            </p>
+            <p class="mt-1 text-xs text-text-muted">
+              {{ contact.name || '—' }} &lt;{{ contact.email }}&gt;
+              @if (contact.user; as user) {
+                ·
+                <a class="nav-link text-gold" [routerLink]="['/admin/users', user.id, 'activity']">
+                  {{ user.username }}
+                </a>
+              }
+              @if (contact.locale) {
+                · <span class="font-mono">{{ contact.locale }}</span>
+              }
+            </p>
+          </div>
+          <span class="flex flex-wrap items-center gap-1.5">
+            <span lodbBadge="gold">{{ texts.term('contacts.categories', contact.category) }}</span>
+            <span [lodbBadge]="isHandled(contact) ? 'muted' : 'warn'">
+              {{ texts.term('contacts.statuses', contact.status) }}
+            </span>
+            <span class="font-mono text-xs text-text-dim">{{
+              contact.createdAt | stamp: 'minute'
+            }}</span>
+          </span>
+        </div>
+        <p class="mt-4 text-sm whitespace-pre-line text-text">{{ contact.message }}</p>
+        <div class="mt-4 flex flex-wrap items-center gap-1.5">
+          <a lodbButton="ghost" [href]="'mailto:' + contact.email">{{
+            'admin.contacts.reply' | transloco
+          }}</a>
+          <button
+            lodbButton="ghost"
+            type="button"
+            [disabled]="actions.pending() === contact.id"
+            (click)="toggle(contact)"
+          >
+            {{
+              (isHandled(contact) ? 'admin.contacts.reopen' : 'admin.contacts.handle') | transloco
+            }}
+          </button>
+          <lodb-confirm-button
+            [label]="'admin.actions.delete' | transloco"
+            [confirmLabel]="'admin.contacts.confirm_delete' | transloco"
+            [busy]="actions.pending() === contact.id"
+            (confirmed)="remove(contact)"
+          />
+          @if (contact.handledAt) {
+            <span class="text-xs text-text-dim">
+              {{
+                'admin.contacts.handled_at'
+                  | transloco: { at: (contact.handledAt | stamp: 'minute') }
+              }}
+            </span>
+          }
+        </div>
+      </li>
+    } @empty {
+      <li class="text-sm text-text-dim">{{ 'admin.contacts.empty' | transloco }}</li>
+    }
+  </ul>
+  <lodb-admin-pager [page]="inbox.page" [pages]="inbox.pages" />
+}

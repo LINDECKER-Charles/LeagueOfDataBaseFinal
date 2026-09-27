@@ -1,0 +1,63 @@
+<div class="mx-auto max-w-2xl px-4 py-12 sm:px-6">
+  <lodb-page-head
+    [eyebrow]="'admin.brand' | transloco"
+    [title]="'admin.enroll.title' | transloco"
+    [subtitle]="'admin.enroll.lede' | transloco"
+  />
+
+  @if (recoveryCodes(); as codes) {
+    <section lodbFrame="ornate" class="block p-6" aria-labelledby="enroll-codes">
+      <h2 id="enroll-codes" class="font-beaufort text-xl text-gold">
+        {{ 'admin.enroll.codes_title' | transloco }}
+      </h2>
+      <p class="mt-2 text-sm text-text-muted">{{ 'admin.enroll.codes_lede' | transloco }}</p>
+      <ul class="mt-4 grid grid-cols-2 gap-2 font-mono text-sm sm:grid-cols-3">
+        @for (code of codes; track code) {
+          <li class="stat-cell text-center">{{ code }}</li>
+        }
+      </ul>
+      <a lodbButton class="mt-6" [routerLink]="home">{{ 'admin.enroll.open' | transloco }}</a>
+    </section>
+  } @else {
+    <lodb-panel-state [panel]="setup" shape="card" />
+    @if (setup.value(); as key) {
+      <section lodbFrame="ornate" class="grid gap-6 p-6 sm:grid-cols-[14rem_1fr]">
+        <lodb-qr-image
+          class="mx-auto w-56 max-w-full"
+          [text]="key.authenticatorUri"
+          [label]="'admin.enroll.qr_label' | transloco"
+        />
+        <div class="min-w-0">
+          <p class="text-sm text-text-muted">{{ 'admin.enroll.scan' | transloco }}</p>
+          <p class="mt-4 eyebrow">{{ 'admin.enroll.key' | transloco }}</p>
+          <p class="mt-1 font-mono text-sm break-all text-gold-light" data-shared-key>
+            {{ sharedKey() }}
+          </p>
+          @if (error(); as message) {
+            <p class="mt-4 text-sm text-danger-light" role="alert">
+              {{ 'admin.' + message | transloco }}
+            </p>
+          }
+          <form class="mt-5 space-y-4" (submit)="confirm($event)">
+            <div>
+              <label for="enroll-code" class="eyebrow">{{ 'admin.enroll.code' | transloco }}</label>
+              <input
+                lodbField
+                id="enroll-code"
+                name="code"
+                type="text"
+                class="mt-1.5 font-mono tracking-[0.3em]"
+                required
+                inputmode="numeric"
+                autocomplete="one-time-code"
+              />
+            </div>
+            <button lodbButton type="submit" [disabled]="busy()">
+              {{ 'admin.enroll.confirm' | transloco }}
+            </button>
+          </form>
+        </div>
+      </section>
+    }
+  }
+</div>
