@@ -10,7 +10,11 @@ import { type PasswordRule, passwordRules, passwordsMatch } from './password-rul
 @Component({
   selector: 'lodb-password-checklist',
   imports: [TranslocoPipe],
-  template: `<ul class="pwd-checklist" [class.pwd-checklist--touched]="touched()">
+  template: `<ul
+    class="pwd-checklist"
+    aria-live="polite"
+    [class.pwd-checklist--touched]="touched()"
+  >
     @for (rule of rules(); track rule.code) {
       <li class="pwd-checklist__item" [class.pwd-checklist__item--ok]="rule.met">
         <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true">
@@ -24,7 +28,12 @@ import { type PasswordRule, passwordRules, passwordsMatch } from './password-rul
               stroke-linejoin="round"
             />
           } @else {
-            <path d="M6 1.5 10.5 6 6 10.5 1.5 6Z" fill="none" stroke="currentColor" />
+            <path
+              d="M6 1.5 10.5 6 6 10.5 1.5 6Z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.2"
+            />
           }
         </svg>
         {{ rule.code | transloco }}
