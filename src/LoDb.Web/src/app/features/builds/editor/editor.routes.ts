@@ -41,6 +41,7 @@ export const EDITOR_ROUTES: Routes = [
     canActivate: forAuthors,
     runGuardsAndResolvers: 'paramsOrQueryParamsChange',
     ...editor,
-    ...view('import', 'build.import.action'),
+    // An import opens the editor of a new build: the legacy page titled it so.
+    ...view('import', 'build.editor.title_create'),
   },
 ];

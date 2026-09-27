@@ -168,7 +168,7 @@ const PRIVATE_PAGES: Page[] = [
   { url: '/en/account/builds', page: EditorPage, heading: 'build.list.title' },
   { url: '/en/account/builds/new', page: EditorPage, heading: 'build.editor.title_create' },
   { url: '/en/account/builds/42/edit', page: EditorPage, heading: 'build.editor.title_edit' },
-  { url: '/en/account/builds/42/import', page: EditorPage, heading: 'build.import.action' },
+  { url: '/en/account/builds/42/import', page: EditorPage, heading: 'build.editor.title_create' },
   { url: '/admin', page: AdminPage },
 ];
 
