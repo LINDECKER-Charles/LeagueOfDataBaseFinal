@@ -34,17 +34,18 @@
     @let view = filter.view();
     @if (view.isSkeleton) {
       @if (notice() === null) {
-        <ul
+        <div
           class="grid"
+          role="list"
           [class.grid--portrait]="columns() === 'portrait'"
           [class.grid--stack]="layout() === 'stack'"
           aria-busy="true"
         >
-          <li class="sr-only">{{ 'catalogue.loading' | transloco }}</li>
+          <div class="sr-only" role="listitem">{{ 'catalogue.loading' | transloco }}</div>
           @for (slot of skeletonSlots(); track $index) {
-            <li><lodb-skeleton shape="tile" /></li>
+            <div role="listitem"><lodb-skeleton shape="tile" /></div>
           }
-        </ul>
+        </div>
       }
     } @else if (view.visible.length === 0 && filter.isEngaged()) {
       <div class="empty">
@@ -56,20 +57,23 @@
         </button>
       </div>
     } @else {
-      <ul
+      <!-- Divs, not ul/li: Riot's rich text holds bare <li> tags, which the browser's parser
+           would take for the end of a cell and move out of it, breaking the hydration. -->
+      <div
         class="grid"
+        role="list"
         [class.grid--portrait]="columns() === 'portrait'"
         [class.grid--stack]="layout() === 'stack'"
       >
         @for (card of view.visible; track filter.keyOf(card); let index = $index) {
-          <li class="grid__cell">
+          <div class="grid__cell" role="listitem">
             <ng-container
               [ngTemplateOutlet]="cardTemplate().template"
               [ngTemplateOutletContext]="{ $implicit: card, index }"
             />
-          </li>
+          </div>
         }
-      </ul>
+      </div>
     }
   </section>
 </div>
