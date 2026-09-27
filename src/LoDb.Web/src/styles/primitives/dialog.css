@@ -61,6 +61,26 @@
   }
 
   /*
+   * The wide pane is the item armory's (dialog-size.ts): the legacy dialog's height cap, and
+   * its panel-to-abyss surface under a deeper shadow; as a sheet, it rises to 92% of the screen.
+   */
+  .hx-dialog--wide .hx-dialog-panel {
+    max-block-size: min(88vh, calc(100dvh - 2rem));
+  }
+  .hx-sheet--wide .hx-dialog-panel {
+    max-block-size: 92dvh;
+  }
+  .hx-dialog--wide .hx-dialog-panel,
+  .hx-sheet--wide .hx-dialog-panel {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-panel) 98%, transparent),
+      color-mix(in srgb, var(--color-abyss) 99%, transparent)
+    );
+    box-shadow: 0 24px 60px -20px color-mix(in srgb, var(--color-hextech-black) 90%, transparent);
+  }
+
+  /*
    * The frame every dialog body sits in (ui/dialog's lodb-dialog). Its height cap lives on the
    * panel, per pane class above, never on the pane: the CDK's `max-height: 100%` sits in a later
    * layer and beats any pane class, and the panel's parent is the dialog component's host, not
