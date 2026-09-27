@@ -10,9 +10,13 @@ namespace LoDb.Api.Modules.Admin.Storage;
 /// Assembles the storage report, kept ten minutes: a walk of the whole root is too heavy to
 /// run at every visit of the page; a refresh asks for a new one.
 /// </summary>
+/// <remarks>
+/// The requests that overlap share one walk, which reads the database through a scope of
+/// its own: the request that started it may end or be aborted first.
+/// </remarks>
 internal sealed partial class StorageReporter(
     HybridCache cache,
-    LoDbDbContext db,
+    IServiceScopeFactory scopes,
     IConfiguration configuration,
     TimeProvider clock,
     ILogger<StorageReporter> logger)
@@ -68,9 +72,15 @@ internal sealed partial class StorageReporter(
             return Failed(UnreadableRoot);
         }
 
-        var logicalRefs = await db.DdragonAssets.AsNoTracking()
+        return Report(scan, await LogicalRefsAsync(cancellation));
+    }
+
+    private async Task<long> LogicalRefsAsync(CancellationToken cancellation)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LoDbDbContext>();
+        return await db.DdragonAssets.AsNoTracking()
             .LongCountAsync(static asset => asset.Sha256 != null, cancellation);
-        return Report(scan, logicalRefs);
     }
 
     private StorageReport Report(StorageScan scan, long logicalRefs)
