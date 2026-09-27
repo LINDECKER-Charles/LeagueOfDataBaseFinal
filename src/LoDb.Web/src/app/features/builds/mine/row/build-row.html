@@ -43,7 +43,7 @@
   <div class="forge-row__actions">
     <form class="forge-row__import" (submit)="$event.preventDefault(); importTo.emit(to.value)">
       <label class="sr-only" [for]="selectId()">{{ 'build.import.to' | transloco }}</label>
-      <select #to lodbField class="forge-row__select" [id]="selectId()">
+      <select #to lodbField class="forge-row__select py-1" [id]="selectId()">
         @for (version of choices(); track version) {
           <option [value]="version">{{ version }}</option>
         }
