@@ -16,14 +16,16 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
-import { filter, map } from 'rxjs';
+import { provideTranslocoScope, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { filter, firstValueFrom, map } from 'rxjs';
 import type { CatalogMeta } from '../../core/api/generated/models/catalog-meta';
 import { ApiMeta } from '../../core/api/meta/api-meta';
 import { PreferencesStore } from '../../core/context/preferences/preferences-store';
 import { switchContext } from '../../core/context/switch/switch-context';
 import { Disclosure } from '../../core/layout/disclosure/disclosure';
 import { PageDirection } from '../../core/layout/direction/page-direction';
+import { NavContext } from '../../core/layout/nav/nav-context';
+import { ToastService } from '../../core/layout/toast/toast-service';
 import { Button } from '../../ui/controls/button';
 import { Field } from '../../ui/controls/field';
 import { Icon } from '../../ui/media/icon';
@@ -36,7 +38,10 @@ import { targetOf } from './selection/target-of';
 
 /** The Transloco scope of the switcher's own texts (`public/i18n/context-switcher/`). */
 const SCOPE = 'context-switcher';
+const SAVED_KEY = 'contextSwitcher.saved';
 const LOCALE_SUBTAG_SEPARATOR = '-';
+// A patch number in the chip's monospace: seven letters and their 0.06em tracking.
+const PATCH_WIDTH = '7.7ch';
 
 function valueOf(event: Event): string {
   return (event.target as HTMLSelectElement).value;
@@ -45,12 +50,15 @@ function valueOf(event: Event): string {
 /**
  * Patch and language switcher of the header (`switcher` slot): a native `<details>` holding
  * a form that never posts. Submitting navigates to the same page in the chosen context, the
- * URL rewritten by `switchContext`; "remember" writes the choice into `lod_prefs`, and the
- * switcher applies that cookie to the pages that name no context of their own.
+ * URL rewritten by `switchContext`, and confirms with a toast. The choice is kept for the
+ * browsing session, and in `lod_prefs` across visits when "remember" is ticked; the switcher
+ * applies it to the pages that name no context of their own, as the legacy session did.
  *
  * The header sits on prerendered pages too, so the options (versions, languages) load in the
- * browser, after the first render, never during one: the server renders the chip with the
- * locale alone, the same for every visitor.
+ * browser, after the first render, never during one. The chip names the page's version from
+ * the first paint all the same: a server render resolves it (`NavContext`) and hands it to
+ * the browser. A prerendered page names none; its placeholder holds the version's width, so
+ * the chip does not jump when the options arrive.
  */
 @Component({
   selector: 'lodb-context-switcher',
@@ -65,6 +73,9 @@ export class ContextSwitcher {
   private readonly apiMeta = inject(ApiMeta);
   private readonly preferences = inject(PreferencesStore);
   private readonly page = inject(PageDirection);
+  private readonly nav = inject(NavContext);
+  private readonly toasts = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly panel = viewChild.required<ElementRef<HTMLDetailsElement>>('panel');
   private readonly url = toSignal(
@@ -92,10 +103,15 @@ export class ContextSwitcher {
   protected readonly languageCode = computed(() =>
     this.page.locale().split(LOCALE_SUBTAG_SEPARATOR, 1)[0].toUpperCase(),
   );
+  protected readonly placeholderWidth = PATCH_WIDTH;
+  /** The version the chip names: the page's, known before the options are. */
+  protected readonly shownVersion = computed(
+    () => this.current()?.version ?? this.nav.selection()?.shown ?? null,
+  );
   /** The context the chip stands for, in its accessible name even where the patch is hidden. */
   protected readonly shown = computed(() => {
-    const version = this.current()?.version;
-    return version === undefined ? this.languageCode() : `${version}, ${this.languageCode()}`;
+    const version = this.shownVersion();
+    return version === null ? this.languageCode() : `${version}, ${this.languageCode()}`;
   });
 
   constructor() {
@@ -132,9 +148,24 @@ export class ContextSwitcher {
       return;
     }
     const target = targetOf(this.version(), language);
-    this.preferences.remember(this.remember() ? preferencesOf(target, meta) : null);
+    const chosen = preferencesOf(target, meta);
+    this.preferences.keep(chosen);
+    this.preferences.remember(this.remember() ? chosen : null);
     this.panel().nativeElement.open = false;
-    void this.router.navigateByUrl(switchContext(this.router.url, target, meta));
+    const current = this.router.url;
+    const next = switchContext(current, target, meta);
+    void this.router.navigateByUrl(next).then(async (done) => {
+      if (done || next === current) {
+        await this.saved();
+      }
+    });
+  }
+
+  // Every accepted choice is confirmed, as the legacy flash did, in the page's new locale.
+  private async saved(): Promise<void> {
+    const locale = this.page.locale();
+    await firstValueFrom(this.transloco.load(`${SCOPE}/${locale}`)).catch(() => undefined);
+    this.toasts.show('success', this.transloco.translate(SAVED_KEY, {}, locale));
   }
 
   private optionsOf<T>(build: (meta: CatalogMeta) => T[]): T[] {
@@ -153,10 +184,10 @@ export class ContextSwitcher {
       });
   }
 
-  // The remembered context fills what the URL leaves unsaid; the history entry is replaced,
-  // so Back does not return to the page the cookie rewrote.
+  // The kept or remembered context fills what the URL leaves unsaid; the history entry is
+  // replaced, so Back does not return to the page it rewrote.
   private followRemembered(url: string, meta: CatalogMeta): void {
-    const remembered = this.preferences.read();
+    const remembered = this.preferences.current();
     const target = remembered === null ? null : rememberedTarget(url, remembered, meta);
     if (target === null) {
       return;

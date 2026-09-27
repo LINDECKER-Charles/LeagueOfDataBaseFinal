@@ -4,6 +4,7 @@ import { ApplicationInitStatus } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { RELEASE_VERSION } from '../../../core/layout/shell/release-version';
+import { ActivePlatform } from '../../../core/platform/detection/active-platform';
 import { ChangelogReader } from './changelog-reader';
 import { provideReleaseVersion } from './provide-release-version';
 
@@ -94,6 +95,8 @@ describe('provideReleaseVersion', () => {
       providers: [provideHttpClient(), provideHttpClientTesting(), provideReleaseVersion()],
     });
     const status = TestBed.inject(ApplicationInitStatus);
+    // The manifest is only read once the platform is known, as every startup request.
+    await TestBed.inject(ActivePlatform).detect();
     answer(TestBed.inject(HttpTestingController));
     await status.donePromise;
     return TestBed.inject(RELEASE_VERSION);

@@ -1,8 +1,9 @@
 <div class="hx-toaster" aria-live="polite">
   @for (toast of service.toasts(); track toast.id) {
     <div
-      class="hx-toast"
+      class="hx-toast hextech-frame"
       [class]="kindClass(toast.kind)"
+      [class.hx-toast--leaving]="toast.leaving"
       [attr.role]="toast.kind === 'error' ? 'alert' : null"
     >
       <svg

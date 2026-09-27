@@ -12,8 +12,9 @@ const KIND_CLASSES: Readonly<Record<ToastKind, string>> = {
 };
 
 /**
- * Draws the ToastService queue at the top of the inline end. The region is polite; an error
- * interrupts as an alert. Its full text wraps: nothing is truncated behind a modal.
+ * Draws the ToastService queue at the top of the inline end, each toast on the Hextech plate
+ * in the hue of its kind. The region is polite; an error interrupts as an alert. Its full
+ * text wraps, so the legacy click that opened a truncated message in a modal is not needed.
  */
 @Component({
   selector: 'lodb-toaster',

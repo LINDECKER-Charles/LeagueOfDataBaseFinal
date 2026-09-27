@@ -77,6 +77,7 @@ describe('AccountMenu', () => {
 
     expect(linksOf(host)).toEqual(['/fr/account/login', '/fr/account/register']);
     expect(host.querySelector('summary')?.getAttribute('aria-label')).toBe('nav.account');
+    expect(host.querySelector('summary span')?.textContent?.trim()).toBe('nav.account');
   });
 
   it('shows the same to every visitor of an application that never detected its platform', async () => {

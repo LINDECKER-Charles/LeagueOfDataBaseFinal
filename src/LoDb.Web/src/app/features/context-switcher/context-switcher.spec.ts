@@ -7,6 +7,7 @@ import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api-base-url';
 import type { CatalogMeta } from '../../core/api/generated/models/catalog-meta';
+import { ToastService } from '../../core/layout/toast/toast-service';
 import { ContextSwitcher } from './context-switcher';
 
 @Component({ template: '' })
@@ -101,6 +102,7 @@ describe('ContextSwitcher', () => {
   });
 
   afterEach(() => {
+    sessionStorage.clear();
     document.cookie = FORGET;
     document.documentElement.lang = lang;
     document.documentElement.removeAttribute('dir');
@@ -159,6 +161,24 @@ describe('ContextSwitcher', () => {
     expect(document.cookie).not.toContain('lod_prefs');
   });
 
+  it('confirms every choice with a toast, as the legacy flash did', async () => {
+    configure('browser');
+    const fixture = await openOn('/fr/items');
+    const host = await loaded(fixture);
+    const saved = () =>
+      TestBed.inject(ToastService)
+        .toasts()
+        .map((toast) => toast.message);
+
+    pick(host, 'switcher-version', OLDER);
+    await submit(fixture);
+    await vi.waitFor(() => expect(saved()).toEqual(['contextSwitcher.saved']));
+
+    await submit(fixture);
+    await vi.waitFor(() => expect(saved()).toHaveLength(2));
+    expect(routerUrl()).toBe(`/fr/${OLDER}/items`);
+  });
+
   it('writes lod_prefs when "remember" is ticked', async () => {
     configure('browser');
     const fixture = await openOn('/en/');
@@ -169,7 +189,7 @@ describe('ContextSwitcher', () => {
     remember?.click();
     await submit(fixture);
 
-    expect(document.cookie).toContain(`lod_prefs=v=${OLDER}`);
+    expect(document.cookie).toContain(`lod_prefs=loc=en&v=${OLDER}`);
     expect(routerUrl()).toBe(`/en/?version=${OLDER}`);
   });
 
@@ -196,6 +216,20 @@ describe('ContextSwitcher', () => {
     await loaded(fixture);
 
     expect(routerUrl()).toBe(`/en/${OLDER}/champions?lang=en_GB`);
+  });
+
+  it('keeps a choice for the session, remember unticked, for the next page', async () => {
+    configure('browser');
+    const fixture = await openOn('/en/items');
+    const host = await loaded(fixture);
+    pick(host, 'switcher-version', OLDER);
+    await submit(fixture);
+
+    await TestBed.inject(Router).navigateByUrl('/en/champions');
+    await fixture.whenStable();
+
+    expect(document.cookie).not.toContain('lod_prefs');
+    await vi.waitFor(() => expect(routerUrl()).toBe(`/en/${OLDER}/champions`));
   });
 
   it('leaves a page whose URL names its context', async () => {

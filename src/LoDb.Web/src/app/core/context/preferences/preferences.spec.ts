@@ -15,6 +15,13 @@ describe('preferencesFromCookie', () => {
     ['among other cookies', 'lod_theme=zaun; lod_prefs=l=en_GB&v=15.14.1; x=1', REMEMBERED],
     ['a language only', 'lod_prefs=l=en_GB', { lang: 'en_GB', version: null }],
     ['a version only', 'lod_prefs=v=15.14.1', { lang: null, version: '15.14.1' }],
+    ['a locale only', 'lod_prefs=loc=fr', { lang: null, version: null, locale: 'fr' }],
+    [
+      'a locale among the others',
+      'lod_prefs=loc=en&l=en_GB&v=15.14.1',
+      { ...REMEMBERED, locale: 'en' },
+    ],
+    ['a locale the site lacks', 'lod_prefs=loc=xx&v=15.14.1', null],
     ['an empty value', 'lod_prefs=', null],
     ['empty fields', 'lod_prefs=l=&v=', null],
     ['the signed legacy value', 'lod_prefs=eyJsIjoiZW5fR0IifQ.c2lnbmF0dXJl', null],
@@ -48,10 +55,17 @@ describe('preferencesCookieEntry', () => {
     expect(preferencesCookieEntry({ lang: null, version: null }, false)).toBe(forgotten);
   });
 
-  it('writes what the reader reads back', () => {
-    const entry = preferencesCookieEntry(REMEMBERED, false).split(';')[0];
+  it('writes what the reader reads back, the locale first for nginx', () => {
+    const entry = preferencesCookieEntry({ ...REMEMBERED, locale: 'fr' }, false).split(';')[0];
 
-    expect(preferencesFromCookie(entry)).toEqual(REMEMBERED);
+    expect(entry).toBe('lod_prefs=loc=fr&l=en_GB&v=15.14.1');
+    expect(preferencesFromCookie(entry)).toEqual({ ...REMEMBERED, locale: 'fr' });
+  });
+
+  it('remembers a locale alone, the latest in its own language', () => {
+    expect(preferencesCookieEntry({ lang: null, version: null, locale: 'en' }, false)).toBe(
+      'lod_prefs=loc=en; path=/; max-age=31536000; samesite=lax',
+    );
   });
 });
 
@@ -64,6 +78,7 @@ describe('PreferencesStore', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     document.cookie = 'lod_prefs=; path=/; max-age=0';
+    sessionStorage.clear();
   });
 
   it('reads back what it remembered', () => {
@@ -81,6 +96,24 @@ describe('PreferencesStore', () => {
     preferences.remember(null);
 
     expect(preferences.read()).toBeNull();
+  });
+
+  it("prefers this session's choice to the remembered one, and never writes it as a cookie", () => {
+    const preferences = store();
+    preferences.remember(REMEMBERED);
+
+    preferences.keep({ lang: null, version: null, locale: 'fr' });
+
+    expect(preferences.current()).toEqual({ lang: null, version: null, locale: 'fr' });
+    expect(preferences.read()).toEqual(REMEMBERED);
+    expect(document.cookie).not.toContain('loc=fr');
+  });
+
+  it('falls back to the remembered choice when the session kept none', () => {
+    const preferences = store();
+    preferences.remember(REMEMBERED);
+
+    expect(preferences.current()).toEqual(REMEMBERED);
   });
 
   it('answers nothing when the cookie cannot be read', () => {

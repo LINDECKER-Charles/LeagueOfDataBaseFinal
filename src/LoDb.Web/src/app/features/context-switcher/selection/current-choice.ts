@@ -6,6 +6,8 @@ import { parsePublicUrl } from '../../../core/routing/url/parse-public-url';
 import type { LanguageOption } from '../options/language-option';
 import type { SwitcherChoice } from './switcher-choice';
 
+const LANG_PARAM = 'lang';
+
 /** The page the switcher sits on: its URL and the locale it speaks. */
 interface ShownPage {
   readonly url: string;
@@ -16,7 +18,8 @@ interface ShownPage {
  * What the switcher shows as selected on a page: the context it reads, by the rules of the
  * routing (path > query, the latest version and the locale's own language by default). The
  * cookie is not a source here: once applied, the URL names it. A page outside the locales
- * (`/b/…`) reads the locale it speaks. Null while no version is ingested.
+ * (`/b/…`) reads the language its `?lang=` names, whichever locale owns it, else the locale
+ * it speaks. Null while no version is ingested.
  */
 export function currentChoice(
   shown: ShownPage,
@@ -34,6 +37,11 @@ export function currentChoice(
   const context = pageContextOf(sources, meta);
   if (context === null) {
     return null;
+  }
+  const outside = page.locale === null ? page.query.get(LANG_PARAM) : null;
+  const named = options.find((option) => outside !== null && option.language === outside);
+  if (named !== undefined) {
+    return { version: context.version, language: named.key };
   }
   const ofLocale = options.filter((option) => option.locale === context.locale);
   // A variant listed under a sibling locale (`zh_MY` under `zh-hans` on `/zh-hant/`) is not

@@ -1,10 +1,19 @@
 <details #panel class="switcher" lodbDisclosure>
-  <!-- Under lg the chip shows the language alone: the patch stays in the panel and the name. -->
+  <!-- The chip shows the language alone under 23rem and from md to 54rem, where the header has
+       no room for the patch (core/layout/header): it stays in the panel and the name. -->
   <summary [attr.aria-label]="('header.switcher.label' | transloco) + ' — ' + shown()">
-    <span class="hidden lg:inline">{{
-      current()?.version ?? ('contextSwitcher.patch' | transloco)
-    }}</span>
-    <span class="hidden text-gold-deep lg:inline" aria-hidden="true">·</span>
+    <!-- The placeholder of a prerendered page holds the width of a patch number (7 letters and
+         their tracking), so the chip does not jump when the options name it. -->
+    <span
+      class="hidden text-center min-[23rem]:max-md:inline-block min-[54rem]:inline-block"
+      [style.min-inline-size]="shownVersion() === null ? placeholderWidth : null"
+      >{{ shownVersion() ?? ('contextSwitcher.patch' | transloco) }}</span
+    >
+    <span
+      class="hidden text-gold-deep min-[23rem]:max-md:inline min-[54rem]:inline"
+      aria-hidden="true"
+      >·</span
+    >
     <span>{{ languageCode() }}</span>
     <lodb-icon name="chevron" class="switcher__chevron" />
   </summary>
@@ -23,9 +32,6 @@
         @for (option of versions(); track option.version) {
           <option [value]="option.version" [selected]="option.version === version()">
             {{ option.version }}
-            @if (option.latest) {
-              ({{ 'contextSwitcher.latest' | transloco }})
-            }
           </option>
         }
       </select>
@@ -39,11 +45,7 @@
         (change)="pickLanguage($event)"
       >
         @for (option of languages(); track option.key) {
-          <option
-            [value]="option.key"
-            [attr.lang]="option.tag"
-            [selected]="option.key === language()"
-          >
+          <option [value]="option.key" [selected]="option.key === language()">
             {{ option.label }}
           </option>
         }

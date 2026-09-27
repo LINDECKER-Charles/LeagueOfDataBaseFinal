@@ -23,6 +23,7 @@ import { LocaleHomeLocationStrategy } from './core/routing/locale/locale-home-lo
 import { provideUpdates } from './core/update/provide-updates';
 import { updateInterceptor } from './core/update/update-interceptor';
 import { PORTAL_PAYMENTS } from './features/api-portal/shared/portal-payments';
+import { provideReleaseVersion } from './features/editorial/changelog/provide-release-version';
 import { PAYMENTS_ENABLED } from '../environments/payments-enabled';
 
 /**
@@ -44,6 +45,8 @@ import { PAYMENTS_ENABLED } from '../environments/payments-enabled';
  *
  * The key portal sells packs and plans only where the build shows payments: a feature may
  * not read src/environments, so its `PORTAL_PAYMENTS` follows `PAYMENTS_ENABLED` here.
+ * Likewise core may not read the changelog: the release the header chip and the footer show
+ * (`RELEASE_VERSION`) is fed here by the changelog's `provideReleaseVersion`.
  */
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -74,5 +77,6 @@ export const appConfig: ApplicationConfig = {
     provideNavigationBeacon(),
     provideUpdates(),
     { provide: PORTAL_PAYMENTS, useFactory: () => inject(PAYMENTS_ENABLED) },
+    provideReleaseVersion(),
   ],
 };

@@ -128,6 +128,13 @@ describe('resolveSharedBuild', () => {
     expect(requested).toEqual([`/api/share/${TOKEN}?version=16.19.1&lang=en_GB`]);
   });
 
+  it('speaks the language ?lang= names, as the switcher picked it', async () => {
+    const { shared } = await visit(`/b/${TOKEN}?lang=en_GB`, sharedBuildOf());
+
+    expect(shared).toEqual(expect.objectContaining({ locale: 'en' }));
+    expect(document.documentElement.lang).toBe('en');
+  });
+
   it.each([
     ['a malformed token', '/b/NOT-A-TOKEN', null],
     ['a token no build holds', '/b/ffffffffffffffffffffffff', null],

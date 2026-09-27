@@ -9,19 +9,24 @@
     <!-- The chip is a sibling of the brand, never nested in it: two links, two targets. -->
     <div class="flex min-w-0 items-center gap-2 sm:gap-3">
       <a [routerLink]="link('')" class="brand-link group flex min-w-0 items-center gap-3">
-        <span class="brand-logo shrink-0 text-gold"><lodb-logo class="size-8 sm:size-9" /></span>
-        <!-- A Latin name, laid out left to right in every page; under 400px it only names the link. -->
+        <!-- A flex box: the inline-block logo then sits on no text line, and the link is
+             exactly as tall as the emblem, as the legacy one. -->
+        <span class="brand-logo flex shrink-0 text-gold"
+          ><lodb-logo class="size-8 sm:size-9"
+        /></span>
+        <!-- A Latin name, laid out left to right in every page; where the row is crowded, it
+             only names the link (see the class doc). -->
         <span
-          class="brand-title truncate font-beaufort text-base tracking-[0.18em] text-gold-bright uppercase max-[400px]:sr-only sm:text-lg"
+          class="brand-title truncate font-beaufort text-base tracking-[0.18em] text-gold-bright uppercase max-sm:sr-only sm:text-lg md:max-xl:sr-only"
           dir="ltr"
         >
-          <span class="hidden min-[460px]:max-md:inline lg:inline">League Of Data Base</span>
-          <span class="min-[460px]:max-md:hidden lg:hidden">LoDB</span>
+          <span class="hidden xl:inline">League Of Data Base</span>
+          <span class="xl:hidden">LoDB</span>
         </span>
       </a>
       @if (version; as release) {
         <a
-          class="hx-version-chip hidden shrink-0 min-[460px]:inline-flex"
+          class="hx-version-chip hidden shrink-0 min-[460px]:max-md:inline-flex min-[73.75rem]:inline-flex"
           [routerLink]="link('changelog')"
           routerLinkActive
           ariaCurrentWhenActive="page"
@@ -37,7 +42,7 @@
       [attr.aria-label]="'footer.navigation.title' | transloco"
     >
       <ul
-        class="flex items-center gap-x-7 font-beaufort text-sm tracking-[0.15em] text-text-muted uppercase"
+        class="flex items-center gap-x-5 font-beaufort text-sm tracking-[0.15em] text-text-muted uppercase xl:gap-x-7"
       >
         <li>
           <a
@@ -60,14 +65,14 @@
               <lodb-icon name="chevron" class="switcher__chevron" />
             </summary>
             <ul class="switcher__panel switcher__panel--menu">
-              @for (entry of codex; track entry.path) {
+              @for (codexLink of codex(); track codexLink.entry.path) {
                 <li>
                   <a
                     class="nav-link"
-                    [routerLink]="link(entry.path)"
+                    [routerLink]="codexLink.target"
                     routerLinkActive="text-gold-bright"
                     ariaCurrentWhenActive="page"
-                    >{{ entry.label | transloco }}</a
+                    >{{ codexLink.entry.label | transloco }}</a
                   >
                 </li>
               }

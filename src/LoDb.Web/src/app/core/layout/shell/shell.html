@@ -1,19 +1,24 @@
-<lodb-header>
-  <ng-container ngProjectAs="[lodbSlot=account]">
-    <ng-content select="[lodbSlot=account]" />
-  </ng-container>
-  <ng-container ngProjectAs="[lodbSlot=switcher]">
-    <ng-content select="[lodbSlot=switcher]" />
-  </ng-container>
-</lodb-header>
-<ng-content select="[lodbSlot=banner]" />
+<lodb-navigation-progress />
+@if (!bare()) {
+  <lodb-header>
+    <ng-container ngProjectAs="[lodbSlot=account]">
+      <ng-content select="[lodbSlot=account]" />
+    </ng-container>
+    <ng-container ngProjectAs="[lodbSlot=switcher]">
+      <ng-content select="[lodbSlot=switcher]" />
+    </ng-container>
+  </lodb-header>
+  <ng-content select="[lodbSlot=banner]" />
+}
 <main class="flex-1">
   <ng-content />
 </main>
-<lodb-footer>
-  <ng-container ngProjectAs="[lodbSlot=contact]">
-    <ng-content select="[lodbSlot=contact]" />
-  </ng-container>
-</lodb-footer>
-<lodb-bottom-nav />
+@if (!bare()) {
+  <lodb-footer>
+    <ng-container ngProjectAs="[lodbSlot=contact]">
+      <ng-content select="[lodbSlot=contact]" />
+    </ng-container>
+  </lodb-footer>
+  <lodb-bottom-nav />
+}
 <lodb-toaster />

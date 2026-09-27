@@ -16,9 +16,10 @@ const NO_BUILD: readonly number[] = [HttpStatusCode.NotFound, HttpStatusCode.Bad
 
 /**
  * Resolver of a shared build (`shared`): the build read anonymously, public or private, on
- * the patch it is pinned to, then its page switched to the build's own language. `?version=`
- * names the version the visitor browses, `?lang=` the language of the names; both pass to
- * the API as they are. Its proxy cache lasts a minute: the owner may edit, hide or delete it.
+ * the patch it is pinned to, then its page switched to the language `?lang=` names, else to
+ * the build's own. `?version=` names the version the visitor browses, `?lang=` the language
+ * of the names; both pass to the API as they are. Its proxy cache lasts a minute: the owner
+ * may edit, hide or delete it.
  */
 export const resolveSharedBuild: ResolveFn<SharedBuildPage> = async (route, state) => {
   const builds = inject(BuildsService);
@@ -30,7 +31,9 @@ export const resolveSharedBuild: ResolveFn<SharedBuildPage> = async (route, stat
   const lang = route.queryParamMap.get('lang') ?? undefined;
   try {
     const build = await firstValueFrom(builds.getSharedBuild({ token, version, lang }));
-    const locale = localeOfLanguage(build.language);
+    // The language the visitor picked (switcher) names the page's locale, chrome included, as
+    // the legacy session did; without one, the build's own language does.
+    const locale = localeOfLanguage(lang ?? build.language);
     await activate(locale);
     response.cache('transient');
     return { build, locale };

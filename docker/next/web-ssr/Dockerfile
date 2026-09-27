@@ -11,7 +11,13 @@ RUN --mount=type=cache,id=lodb-npm,target=/root/.npm \
     npm ci --no-audit --no-fund
 COPY app/public/changelog/ /source/app/public/changelog/
 COPY src/LoDb.Web/ ./
-RUN npm run build:web
+# `published` is a git symlink to app/public/changelog/, but a checkout without symlinks
+# (Windows, core.symlinks=false) holds a text file or a junction to a host path there, which
+# resolves nowhere in this image. The link is laid again, relative as git stores it, and the
+# build fails rather than ship a site without its releases (chip, footer, changelog page).
+RUN rm -rf src/app/features/editorial/changelog/published \
+ && ln -s ../../../../../../../app/public/changelog src/app/features/editorial/changelog/published
+RUN npm run build:web && test -f dist/web/browser/changelog/manifest.json
 
 # The server bundle inlines its dependencies: the runtime needs no node_modules.
 FROM node:24-slim

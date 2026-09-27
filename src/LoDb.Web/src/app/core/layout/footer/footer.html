@@ -26,9 +26,23 @@
     <nav aria-labelledby="footer-site">
       <h2 id="footer-site" class="eyebrow mb-3">{{ 'footer.navigation.title' | transloco }}</h2>
       <ul class="flex flex-col gap-1.5 text-sm">
-        @for (entry of site; track entry.path) {
+        @for (siteLink of site(); track siteLink.entry.path) {
           <li>
-            <a class="nav-link" [routerLink]="link(entry.path)">{{ entry.label | transloco }}</a>
+            <a class="nav-link" [routerLink]="siteLink.target">{{
+              siteLink.entry.label | transloco
+            }}</a>
+          </li>
+        }
+        @if (member()) {
+          <li>
+            <a class="nav-link" [routerLink]="link('account/profile')">{{
+              'nav.profile' | transloco
+            }}</a>
+          </li>
+        }
+        @if (sitemap) {
+          <li>
+            <a class="nav-link" [href]="sitemap">{{ 'footer.navigation.sitemap' | transloco }}</a>
           </li>
         }
       </ul>
@@ -75,8 +89,8 @@
           <li>
             <a
               class="nav-link inline-flex items-center gap-2"
-              target="_blank"
-              rel="noopener noreferrer"
+              [attr.target]="opensTab(entry) ? '_blank' : null"
+              [attr.rel]="opensTab(entry) ? 'noopener noreferrer' : null"
               [href]="entry.href"
             >
               @if (entry.icon) {

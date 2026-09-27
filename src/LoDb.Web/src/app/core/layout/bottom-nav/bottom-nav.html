@@ -1,15 +1,15 @@
 <nav class="bottom-nav" [attr.aria-label]="'footer.navigation.title' | transloco">
-  @for (entry of entries; track entry.path) {
+  @for (link of links(); track link.entry.path) {
     <a
-      [routerLink]="link(entry.path)"
+      [routerLink]="link.target"
       routerLinkActive
-      [routerLinkActiveOptions]="{ exact: entry.path === '' }"
+      [routerLinkActiveOptions]="{ exact: link.entry.path === '' }"
       ariaCurrentWhenActive="page"
     >
-      @if (entry.icon) {
-        <lodb-icon [name]="entry.icon" />
+      @if (link.entry.icon) {
+        <lodb-icon [name]="link.entry.icon" />
       }
-      <span>{{ entry.label | transloco }}</span>
+      <span>{{ link.entry.label | transloco }}</span>
     </a>
   }
 </nav>

@@ -76,3 +76,17 @@ test.describe('right-to-left layout', { tag: '@readonly' }, () => {
     });
   }
 });
+
+test.describe('header brand', { tag: '@readonly' }, () => {
+  test.use({ viewport: DESKTOP });
+
+  // The former site's link was exactly as tall as its emblem: its focus ring and hover lift
+  // frame the logo, not a text line under it.
+  test('sizes the brand link to its emblem', async ({ page }) => {
+    await page.goto(pageUrl('en', ''));
+
+    const link = await page.locator('header a.brand-link').boundingBox();
+    const logo = await page.locator('header a.brand-link lodb-logo').boundingBox();
+    expect(link?.height).toBe(logo?.height);
+  });
+});

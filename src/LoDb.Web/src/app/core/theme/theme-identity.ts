@@ -9,4 +9,9 @@ export interface ThemeIdentity {
   readonly origin: string;
   /** Value of `<meta name="theme-color">`, the identity's `--color-hextech-black`. */
   readonly browserColor: string;
+  /**
+   * Latin subset of the display face the identity swaps in (its styles/theme/<name>/type.css),
+   * which index.html preloads; null for the default, whose faces are always preloaded.
+   */
+  readonly displayFont: string | null;
 }
