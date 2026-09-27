@@ -33,15 +33,70 @@
     );
   }
 
+  /*
+   * The seal, the title and its credits, then the score and the link, as the legacy row. The
+   * legacy flex row squeezed the title to a few letters a line on a phone: here the credits
+   * leave the title's column there, the actions take their own row, and the narrowest
+   * screens stack the seal over the title, so a word never breaks.
+   */
   .bshare-head {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      'seal title actions'
+      'seal meta actions';
     align-items: center;
-    gap: 1.25rem;
+    column-gap: 1.25rem;
+  }
+  .bshare-title {
+    grid-area: title;
+    align-self: end;
+  }
+  .bshare-meta {
+    grid-area: meta;
+    align-self: start;
+    margin-block-start: 0.75rem;
+  }
+  .bshare-actions {
+    grid-area: actions;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.75rem;
+  }
+  @media (width < 40rem) {
+    .bshare-head {
+      grid-template-columns: 6rem minmax(0, 1fr);
+      grid-template-areas:
+        'seal title'
+        'meta meta'
+        'actions actions';
+      row-gap: 1.25rem;
+    }
+    .bshare-title {
+      align-self: center;
+    }
+    .bshare-meta {
+      margin-block-start: 0;
+    }
+    .bshare-actions {
+      flex-direction: row;
+      align-items: center;
+    }
+    /* The link keeps the end of the row, as in the legacy column, with a score or without. */
+    .bshare-actions > lodb-copy-link {
+      margin-inline-start: auto;
+    }
+  }
+  @media (width < 22.5rem) {
+    .bshare-head {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'seal' 'title' 'meta' 'actions';
+    }
   }
   .bshare-portrait {
+    grid-area: seal;
     position: relative;
-    flex: none;
     inline-size: 6rem;
     block-size: 6rem;
     border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent);

@@ -36,8 +36,12 @@
   <p class="trend-row__author"><lodb-owner-credit [owner]="build.owner" /></p>
   <p class="trend-row__chips">
     <span lodbChip>{{ modeKey() | transloco }}</span>
-    <span lodbChip>{{ build.gameVersion }}</span>
-    <span lodbChip>{{ language() }}</span>
+    @if (build.gameVersion) {
+      <span lodbChip>{{ build.gameVersion }}</span>
+    }
+    @if (build.language) {
+      <span lodbChip>{{ language() }}</span>
+    }
   </p>
 </div>
 

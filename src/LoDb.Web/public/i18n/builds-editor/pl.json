@@ -9,8 +9,7 @@
     "cancel": "Anuluj"
   },
   "editor": {
-    "saving": "Zapisywanie…",
-    "errors_title": "Nie udało się zapisać buildu"
+    "saving": "Zapisywanie…"
   },
   "errors": {
     "generic": "Coś poszło nie tak. Spróbuj ponownie.",

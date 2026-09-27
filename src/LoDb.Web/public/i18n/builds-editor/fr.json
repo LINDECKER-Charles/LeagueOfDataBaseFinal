@@ -9,8 +9,7 @@
     "cancel": "Annuler"
   },
   "editor": {
-    "saving": "Enregistrement…",
-    "errors_title": "Le build n'a pas pu être enregistré"
+    "saving": "Enregistrement…"
   },
   "errors": {
     "generic": "Une erreur est survenue. Réessayez.",

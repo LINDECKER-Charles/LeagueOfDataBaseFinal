@@ -17,7 +17,7 @@
       />
     }
     <span class="champ-toggle__label">
-      <span class="font-mono text-xs tracking-wide text-text-dim">
+      <span class="font-mono text-[0.7rem] tracking-[0.06em] text-text-dim">
         {{
           (championId() ? 'build.editor.champion.selected' : 'build.editor.champion.title')
             | transloco
@@ -81,7 +81,9 @@
         }
       </div>
     } @else {
-      <p class="font-mono text-xs text-text-dim">{{ 'build.editor.champion.empty' | transloco }}</p>
+      <p class="font-mono text-[0.7rem] tracking-[0.06em] text-text-dim">
+        {{ 'build.editor.champion.empty' | transloco }}
+      </p>
     }
   </lodb-catalog-state>
 </div>

@@ -3,18 +3,28 @@
  * square portraits, the chosen one ringed in gold.
  */
 @layer components {
+  /*
+   * Where the chosen champion and "Choose a champion" do not fit side by side (a phone), the
+   * action wraps under the champion rather than squeezing its name into broken words.
+   */
   .champ-toggle {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.4rem 1rem;
     inline-size: 100%;
-    min-block-size: 3.25rem;
     padding: 0.6rem 0.85rem;
     border: 1px solid color-mix(in srgb, var(--color-gold) 30%, transparent);
     background: color-mix(in srgb, var(--color-gold) 6%, transparent);
     cursor: pointer;
     transition: border-color 0.25s var(--ease-hextech);
+  }
+  /* The legacy toggle laid out at its padding; a thumb gets the 44px target (controls.css). */
+  @media (pointer: coarse) {
+    .champ-toggle {
+      min-block-size: 2.75rem;
+    }
   }
   .champ-toggle:hover {
     border-color: var(--color-gold);
@@ -25,6 +35,7 @@
   }
   .champ-toggle__id {
     display: flex;
+    flex: 1 1 9rem;
     align-items: center;
     gap: 0.75rem;
     min-inline-size: 0;
@@ -41,6 +52,7 @@
     align-items: center;
     gap: 0.4rem;
     flex: none;
+    margin-inline-start: auto;
     font-family: var(--font-mono);
     font-size: 0.7rem;
     letter-spacing: 0.06em;

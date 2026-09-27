@@ -20,6 +20,7 @@ export class ArmoryOpener {
   open(step: number): void {
     const options = {
       labelledBy: ItemArmory.HEADING_ID,
+      size: 'wide' as const,
       data: { step, editing: this.editing, catalogs: this.catalogs } satisfies ArmoryData,
     };
     if (this.breakpoints.isMatched(PHONE)) {

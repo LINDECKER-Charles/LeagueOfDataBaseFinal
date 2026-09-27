@@ -9,7 +9,7 @@ import { EditorCatalogs } from '../catalog/editor-catalogs';
 import { ChampionPicker } from '../champion/champion-picker';
 import { EditorContext } from '../context/editor-context';
 import type { EditorEntry } from '../editor-entry';
-import { ImportNotices } from '../report/import-notices';
+import { announceImport } from '../report/announce-import';
 import { RuneBoard } from '../runes/rune-board';
 import { RuneEditing } from '../runes/rune-editing';
 import { BuildSaver } from '../save/build-saver';
@@ -27,7 +27,8 @@ function routeEntry(): EditorEntry {
 /**
  * The build editor: its identity, its game context, its champion, its runes and its purchase
  * order, then the save. Each editor holds its own state, provided here: a new entry makes a
- * new editor. The API checks the build and names what it refuses, shown over the save.
+ * new editor. The browser checks the name before anything is sent, as the legacy form did;
+ * the API checks the rest and names what it refuses, in toasts. An import toasts its report.
  */
 @Component({
   selector: 'lodb-build-editor',
@@ -36,7 +37,6 @@ function routeEntry(): EditorEntry {
     ChampionPicker,
     EditorContext,
     Field,
-    ImportNotices,
     RouterLink,
     RuneBoard,
     StepEditor,
@@ -60,7 +60,17 @@ export class BuildEditor {
   protected readonly store = inject(BuildEditorStore);
   protected readonly saver = inject(BuildSaver);
   protected readonly isEdit = inject(EDITOR_ENTRY).mode === 'edit';
+  /**
+   * The name field's value, written once: the field alone changes the name afterwards. Written
+   * again on each keystroke, it would no longer count as typed, and `minlength` would never
+   * stop a short name (the browser only checks the length of what the user typed).
+   */
+  protected readonly initialName = this.store.name();
   protected readonly listLink = localePath(inject(PageDirection).locale(), 'account/builds');
+
+  constructor() {
+    announceImport();
+  }
 
   protected submit(event: Event): void {
     event.preventDefault();

@@ -36,7 +36,11 @@ test('forges, edits, imports and deletes a build', async ({ member: page, reques
   await test.step('lists no build yet, and leads to the forge on the latest patch', async () => {
     await page.goto(LIST);
     await expect(page.getByRole('heading', { name: 'My builds' })).toBeVisible();
-    await expect(page.getByText("You haven't forged any build yet.")).toBeVisible();
+    // The site's empty state, as the legacy list drew it: a way back and home, then the forge.
+    const empty = page.locator('lodb-my-builds .hextech-frame');
+    await expect(empty).toContainText("You haven't forged any build yet.");
+    await expect(empty.getByRole('button', { name: 'Back' })).toBeVisible();
+    await expect(empty.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/en/');
     await page.getByRole('link', { name: 'Forge my first build' }).click();
     await expect(page).toHaveURL(`${LIST}/new`);
     await expect(page.getByRole('heading', { name: 'Forge a build' })).toBeVisible();
@@ -74,13 +78,20 @@ test('forges, edits, imports and deletes a build', async ({ member: page, reques
     await page.setViewportSize(DESKTOP);
   });
 
-  await test.step('shows the refusal of the server as it words it', async () => {
+  // As the legacy form: the browser stops a short name, the API names the rest in toasts.
+  await test.step('stops a short name, then shows the refusal of the server', async () => {
     await stepsOf(page).first().getByLabel('Step label').fill('Core');
     await addItem(page, 0, ITEM);
-    await page.getByLabel('Build name').fill('ab');
+    const name = page.getByLabel('Build name');
+    await name.fill('ab');
     await page.getByRole('button', { name: 'Forge the build' }).click();
-    const refusal = page.getByRole('alert').filter({ hasText: "The build couldn't be saved" });
-    await expect(refusal).toContainText('Build name must be 3–80 characters.');
+    await expect(name).toBeFocused();
+    expect(await name.evaluate((field: HTMLInputElement) => field.validity.tooShort)).toBe(true);
+
+    // Three characters for the browser, two once the API has trimmed them.
+    await name.fill('ab ');
+    await page.getByRole('button', { name: 'Forge the build' }).click();
+    await expect(page.getByText('Build name must be 3–80 characters.')).toBeVisible();
     await expect(page).toHaveURL(`${LIST}/new`);
   });
 

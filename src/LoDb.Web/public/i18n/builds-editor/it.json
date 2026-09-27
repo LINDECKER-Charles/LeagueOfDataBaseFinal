@@ -9,8 +9,7 @@
     "cancel": "Annulla"
   },
   "editor": {
-    "saving": "Salvataggio…",
-    "errors_title": "Non è stato possibile salvare la build"
+    "saving": "Salvataggio…"
   },
   "errors": {
     "generic": "Qualcosa è andato storto. Riprova.",

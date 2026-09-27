@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { languageName } from '../../../../core/api/meta/language-name';
 import { Field } from '../../../../ui/controls/field';
 import { BuildEditorStore } from '../form/build-editor-store';
 import { EDITOR_ENTRY } from '../form/editor-entry-token';
-import { languageLabel } from './language-label';
 import { versionChoices } from './version-choices';
 
 /**
@@ -15,9 +15,9 @@ import { versionChoices } from './version-choices';
   selector: 'lodb-editor-context',
   imports: [Field, TranslocoPipe],
   template: `
-    <div class="grid gap-4 sm:grid-cols-3">
-      <label class="flex flex-col gap-1.5 text-sm">
-        <span class="text-text-muted">{{ 'build.editor.context.version' | transloco }}</span>
+    <div class="forge-context">
+      <label class="forge-context__field">
+        <span class="forge-context__label">{{ 'build.editor.context.version' | transloco }}</span>
         <select #version lodbField (change)="store.gameVersion.set(version.value)">
           @for (choice of versions; track choice) {
             <option [value]="choice" [selected]="choice === store.gameVersion()">
@@ -26,8 +26,8 @@ import { versionChoices } from './version-choices';
           }
         </select>
       </label>
-      <label class="flex flex-col gap-1.5 text-sm">
-        <span class="text-text-muted">{{ 'build.editor.context.mode' | transloco }}</span>
+      <label class="forge-context__field">
+        <span class="forge-context__label">{{ 'build.editor.context.mode' | transloco }}</span>
         <select #mode lodbField (change)="setMode(mode.value)">
           @for (choice of modes; track choice) {
             <option [value]="choice" [selected]="choice === store.gameMode()">
@@ -36,8 +36,8 @@ import { versionChoices } from './version-choices';
           }
         </select>
       </label>
-      <label class="flex flex-col gap-1.5 text-sm">
-        <span class="text-text-muted">{{ 'build.editor.context.language' | transloco }}</span>
+      <label class="forge-context__field">
+        <span class="forge-context__label">{{ 'build.editor.context.language' | transloco }}</span>
         <select #language lodbField (change)="store.language.set(language.value)">
           @for (choice of languages; track choice.code) {
             <option [value]="choice.code" [selected]="choice.code === store.language()">
@@ -47,9 +47,37 @@ import { versionChoices } from './version-choices';
         </select>
       </label>
     </div>
-    <p class="mt-3 font-mono text-xs text-text-dim">
+    <p class="mt-3 font-mono text-[0.7rem] tracking-[0.06em] text-text-dim">
       {{ 'build.editor.context.mode_hint' | transloco }}
     </p>
+  `,
+  // The legacy grid: the patch and the mode side by side, then the language, in columns
+  // narrower than the section; labels in the eyebrow's voice, one size down (`.auth-label`).
+  styles: `
+    @layer components {
+      .forge-context {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem 1.25rem;
+      }
+      @media (width >= 40rem) {
+        .forge-context {
+          grid-template-columns: minmax(0, 14rem) minmax(0, 18rem);
+        }
+      }
+      .forge-context__field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+      }
+      .forge-context__label {
+        font-family: var(--font-beaufort);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: var(--color-gold-light);
+      }
+    }
   `,
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -60,7 +88,7 @@ export class EditorContext {
   protected readonly modes = this.entry.gameModes;
   protected readonly languages = this.entry.languages.map((code) => ({
     code,
-    label: languageLabel(code),
+    label: languageName(code),
   }));
   protected readonly versions = versionChoices(this.entry.versions, this.entry.draft.gameVersion);
 

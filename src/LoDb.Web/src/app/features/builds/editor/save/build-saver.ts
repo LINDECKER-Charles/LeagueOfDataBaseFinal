@@ -8,7 +8,6 @@ import { ToastService } from '../../../../core/layout/toast/toast-service';
 import { BuildEditorStore } from '../form/build-editor-store';
 import { EDITOR_ENTRY } from '../form/editor-entry-token';
 import { RuneEditing } from '../runes/rune-editing';
-import type { EditorMessage } from '../shared/editor-message';
 import { StepEditing } from '../steps/step-editing';
 import { buildProblem } from './build-problem';
 import { buildRequestOf } from './build-request-of';
@@ -16,8 +15,8 @@ import { saveMessagesOf } from './save-messages-of';
 
 /**
  * Saves the build of an editor: a new build is created, an owned one replaced. A saved build
- * opens on its share page; a refused one keeps the form as typed, with the API's messages
- * over it, shown as the API worded them.
+ * opens on its share page; a refused one keeps the form as typed, and each message of the
+ * API is a toast, as the legacy editor flashed them.
  */
 @Injectable()
 export class BuildSaver {
@@ -31,23 +30,27 @@ export class BuildSaver {
   private readonly transloco = inject(TranslocoService);
 
   readonly saving = signal(false);
-  readonly messages = signal<readonly EditorMessage[]>([]);
 
   async save(): Promise<void> {
     if (this.saving()) {
       return;
     }
     this.saving.set(true);
-    this.messages.set([]);
     try {
       const build = await firstValueFrom(this.send());
       const flash = this.entry.mode === 'edit' ? 'build.flash.updated' : 'build.flash.created';
       this.toasts.show('success', this.transloco.translate(flash));
       await this.router.navigateByUrl(`/b/${build.shareToken}`);
     } catch (error) {
-      this.messages.set(saveMessagesOf(buildProblem(error)));
+      this.announce(error);
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  private announce(error: unknown): void {
+    for (const message of saveMessagesOf(buildProblem(error))) {
+      this.toasts.show('error', this.transloco.translate(message.key, message.params));
     }
   }
 

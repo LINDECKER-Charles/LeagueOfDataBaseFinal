@@ -136,6 +136,17 @@ describe('TrendsPage', () => {
     expect(host.querySelectorAll('.trend-row__items .forge-ghost')).toHaveLength(2);
   });
 
+  it('names languages in English, as the legacy did, and leaves out a missing patch', async () => {
+    const [first, second] = trendsPageOf().rows;
+    const unpinned = { ...second, gameVersion: '', language: 'fr_FR' };
+    const { host } = await visit(trendsPageOf({ rows: [first, unpinned] }));
+
+    const chips = [...host.querySelectorAll('.trend-row__chips')].map((row) =>
+      textsOf(row, 'span').slice(1),
+    );
+    expect(chips).toEqual([['16.19.1', 'English (United States)'], ['French']]);
+  });
+
   it('offers the sign-up to a visitor, the editor to a signed-in reader', async () => {
     const { host } = await visit(trendsPageOf());
     expect(hrefsOf(host, 'lodb-forge-cta a')).toEqual(['/fr/account/register']);
@@ -148,9 +159,12 @@ describe('TrendsPage', () => {
   it('pages through the query, keeping its filters', async () => {
     const { host } = await visit(trendsPageOf(), 'unknown', '/fr/trends?mode=aram');
 
-    expect(textsOf(host, '.trends-pager__position')).toEqual(['page 1 / 2']);
+    expect(textsOf(host, '.trends-pager__position')).toEqual(['1 / 2']);
     expect(hrefsOf(host, '.trends-pager a')).toEqual(['/fr/trends?mode=aram&page=2']);
-    expect(host.querySelector('.trends-pager a')?.getAttribute('rel')).toBe('next');
+    const next = host.querySelector('.trends-pager a');
+    expect(next?.getAttribute('rel')).toBe('next');
+    expect(next?.getAttribute('aria-label')).toBe('Suivant');
+    expect(host.querySelector('.trends-pager__nav--off')?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('links the first page bare from the second', async () => {

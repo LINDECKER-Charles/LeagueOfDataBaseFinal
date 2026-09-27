@@ -3,10 +3,10 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { TrendRow as TrendRowView } from '../../../../core/api/generated/models/trend-row';
 import type { VoteState } from '../../../../core/api/generated/models/vote-state';
+import { languageName } from '../../../../core/api/meta/language-name';
 import { Chip } from '../../../../ui/controls/chip';
 import { Image } from '../../../../ui/media/image';
 import { BuildItem } from '../../shared/items/build-item';
-import { languageLabel } from '../../shared/language/language-label';
 import { imageSource } from '../../shared/media/image-source';
 import { initialsOf } from '../../shared/media/initials-of';
 import { modeLabelKey } from '../../shared/modes/mode-label-key';
@@ -35,5 +35,5 @@ export class TrendRow {
   protected readonly initials = computed(() => initialsOf(this.row().champion.name));
   protected readonly keystone = computed(() => imageSource(this.row().keystone.icon));
   protected readonly modeKey = computed(() => modeLabelKey(this.row().gameMode));
-  protected readonly language = computed(() => languageLabel(this.row().language));
+  protected readonly language = computed(() => languageName(this.row().language));
 }

@@ -37,7 +37,6 @@
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    min-block-size: 2.75rem;
     padding: 0.45rem 0.9rem;
     border: 1px solid color-mix(in srgb, var(--color-gold) 35%, transparent);
     background: color-mix(in srgb, var(--color-void) 70%, transparent);
@@ -67,6 +66,12 @@
   .rune-tree__icon {
     inline-size: 1.35rem;
     block-size: 1.35rem;
+  }
+  /* The legacy tab laid out at its padding; a thumb gets the 44px target (controls.css). */
+  @media (pointer: coarse) {
+    .rune-tree {
+      min-block-size: 2.75rem;
+    }
   }
 
   .rune-slot {

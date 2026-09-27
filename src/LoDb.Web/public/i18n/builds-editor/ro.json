@@ -9,8 +9,7 @@
     "cancel": "Anulează"
   },
   "editor": {
-    "saving": "Se salvează…",
-    "errors_title": "Build-ul nu a putut fi salvat"
+    "saving": "Se salvează…"
   },
   "errors": {
     "generic": "Ceva nu a mers bine. Încearcă din nou.",

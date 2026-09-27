@@ -9,8 +9,7 @@
     "cancel": "Cancelar"
   },
   "editor": {
-    "saving": "Guardando…",
-    "errors_title": "No se pudo guardar la build"
+    "saving": "Guardando…"
   },
   "errors": {
     "generic": "Algo salió mal. Inténtalo de nuevo.",

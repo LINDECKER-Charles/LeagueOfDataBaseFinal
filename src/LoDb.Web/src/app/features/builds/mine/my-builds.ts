@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -12,7 +13,8 @@ import { BuildRow } from './row/build-row';
 
 /**
  * The builds of the account, `/{locale}/account/builds`: a row per build with its import,
- * edit and delete, and the way to forge a new one; the first one when there is none yet.
+ * edit and delete, and the way to forge a new one; with none yet, the site's empty state,
+ * its way back and home, then the way to forge the first one.
  */
 @Component({
   selector: 'lodb-my-builds',
@@ -25,7 +27,14 @@ import { BuildRow } from './row/build-row';
 export class MyBuilds {
   protected readonly store = inject(MyBuildsStore);
   private readonly dialogs = inject(DialogService);
-  protected readonly newLink = localePath(inject(PageDirection).locale(), 'account/builds/new');
+  private readonly location = inject(Location);
+  private readonly locale = inject(PageDirection).locale();
+  protected readonly newLink = localePath(this.locale, 'account/builds/new');
+  protected readonly homeLink = localePath(this.locale, '');
+
+  protected back(): void {
+    this.location.back();
+  }
 
   protected confirmDelete(row: MyBuildRow): void {
     const ref = this.dialogs.open<DeleteBuildDialog, string, boolean>(DeleteBuildDialog, {

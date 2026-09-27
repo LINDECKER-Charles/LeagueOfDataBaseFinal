@@ -1,45 +1,71 @@
 @if (pages() > 1) {
-  <nav
-    class="trends-pager"
-    [attr.aria-label]="'filter.page' | transloco: { page: page(), count: pages() }"
-  >
+  @let prevLabel = 'filter.prev' | transloco;
+  @let nextLabel = 'filter.next' | transloco;
+  <nav class="trends-pager" [attr.aria-label]="'community.trends.title' | transloco">
     @if (previous(); as params) {
       <a
-        class="trends-pager__link"
+        class="trends-pager__nav"
         rel="prev"
         [routerLink]="[]"
         [queryParams]="params"
         queryParamsHandling="merge"
+        [attr.aria-label]="prevLabel"
       >
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-          <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M15 6l-6 6 6 6" />
         </svg>
-        {{ 'filter.prev' | transloco }}
       </a>
     } @else {
-      <span class="trends-pager__link trends-pager__link--off" aria-hidden="true">
-        {{ 'filter.prev' | transloco }}
+      <span class="trends-pager__nav trends-pager__nav--off" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M15 6l-6 6 6 6" />
+        </svg>
       </span>
     }
-    <span class="trends-pager__position">
-      {{ 'filter.page' | transloco: { page: page(), count: pages() } }}
-    </span>
+    <!-- ltr: the fraction reads "2 / 3" in a right-to-left page too. -->
+    <span class="trends-pager__position" dir="ltr">{{ page() }} / {{ pages() }}</span>
     @if (next(); as params) {
       <a
-        class="trends-pager__link"
+        class="trends-pager__nav"
         rel="next"
         [routerLink]="[]"
         [queryParams]="params"
         queryParamsHandling="merge"
+        [attr.aria-label]="nextLabel"
       >
-        {{ 'filter.next' | transloco }}
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-          <path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M9 6l6 6-6 6" />
         </svg>
       </a>
     } @else {
-      <span class="trends-pager__link trends-pager__link--off" aria-hidden="true">
-        {{ 'filter.next' | transloco }}
+      <span class="trends-pager__nav trends-pager__nav--off" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       </span>
     }
   </nav>

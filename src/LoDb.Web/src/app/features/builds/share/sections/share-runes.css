@@ -13,16 +13,16 @@
     letter-spacing: 0.18em;
     color: var(--color-gold);
   }
-  .path-text {
-    color: var(--path, var(--color-gold));
-  }
   .path-border {
     border-color: color-mix(in srgb, var(--path, var(--color-gold)) 45%, transparent);
   }
 
   .keystone__icon {
+    position: relative;
     flex: none;
-    inline-size: 4.5rem;
+    align-self: flex-start;
+    overflow: hidden;
+    inline-size: 5.75rem;
     aspect-ratio: 1;
     border: 1px solid color-mix(in srgb, var(--path, var(--color-gold)) 60%, transparent);
     border-radius: 50%;
@@ -33,6 +33,7 @@
         transparent 80%
       ),
       var(--color-hextech-black);
+    box-shadow: 0 0 34px -8px var(--path, var(--color-gold));
   }
   .keystone__icon img,
   .rune-medallion img {
@@ -42,6 +43,7 @@
 
   .rune-medallion {
     flex: none;
+    overflow: hidden;
     aspect-ratio: 1;
     border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
     border-radius: 50%;

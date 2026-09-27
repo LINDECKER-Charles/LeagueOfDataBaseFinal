@@ -9,8 +9,7 @@
     "cancel": "Cancel"
   },
   "editor": {
-    "saving": "Saving…",
-    "errors_title": "The build couldn't be saved"
+    "saving": "Saving…"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
