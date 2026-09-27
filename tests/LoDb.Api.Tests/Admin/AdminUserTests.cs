@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using System.Text.Json;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Admin.Support;
 using LoDb.Api.Tests.Audit.Support;
@@ -23,7 +24,7 @@ public sealed class AdminUserTests(PostgresContainerFixture postgres)
     public async Task SearchMatchesUsernamesAndEmails()
     {
         using var admin = await AdminBrowser.OpenAsync(App);
-        var member = await App.SeedAsync(new AccountSeed());
+        var member = await App.SeedAsync(new AccountSeed { RiotTagline = "EUW" });
         await AdminSeed.BuildAsync(App, member.Id, "Ahri mid");
 
         var byName = await ReadAsync(admin, UsersPath + "?q=legende_");
@@ -36,8 +37,10 @@ public sealed class AdminUserTests(PostgresContainerFixture postgres)
             (found.GetProperty("id").GetInt32(), ApiJson.Text(found, "username"),
                 found.GetProperty("buildCount").GetInt32(),
                 found.GetProperty("isAdmin").GetBoolean()));
+        Assert.Equal("EUW", ApiJson.Text(found, "riotTagline"));
         var operatrice = Assert.Single(byEmail.GetProperty("items").EnumerateArray());
         Assert.True(operatrice.GetProperty("isAdmin").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, operatrice.GetProperty("riotTagline").ValueKind);
         Assert.True(operatrice.GetProperty("twoFactorEnabled").GetBoolean());
         Assert.Equal(2, all.GetProperty("total").GetInt32());
         Assert.Equal(2, all.GetProperty("stats").GetProperty("total").GetInt32());

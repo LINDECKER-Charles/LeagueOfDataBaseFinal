@@ -7,6 +7,12 @@ internal sealed record AdminUserRow
 
     public required string Username { get; init; }
 
+    /// <summary>
+    /// The Riot tagline, null when unset: the admin names the account <c>username#tagline</c>,
+    /// as the legacy <c>displayName</c> did.
+    /// </summary>
+    public string? RiotTagline { get; init; }
+
     public required string Email { get; init; }
 
     public required bool EmailVerified { get; init; }

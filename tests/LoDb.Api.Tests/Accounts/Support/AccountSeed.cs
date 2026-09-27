@@ -21,4 +21,6 @@ public sealed record AccountSeed
     public bool Banned { get; init; }
 
     public string? GoogleId { get; init; }
+
+    public string? RiotTagline { get; init; }
 }
