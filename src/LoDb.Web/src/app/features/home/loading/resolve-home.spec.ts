@@ -172,10 +172,10 @@ describe('resolveHome', () => {
     expect(cache).toBe('public, max-age=3600, s-maxage=604800');
   });
 
-  it('previews the first four rune paths, counting the runes of the list', async () => {
+  it('previews the first four rune paths and counts the paths, not their runes', async () => {
     const { home } = await visit('/en');
 
-    expect(home.sections.runes.total).toBe(63);
+    expect(home.sections.runes.total).toBe(5);
     expect(home.sections.runes.cards.map((card) => card.name)).toEqual([
       'Path 8000',
       'Path 8100',
