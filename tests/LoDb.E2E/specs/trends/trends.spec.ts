@@ -18,6 +18,13 @@ function filter(page: Page, label: string) {
   return page.locator('lodb-trend-filters').getByLabel(label);
 }
 
+// Locally the absolute URLs lose the stack's port (nginx forwards `Host: $host`), and the
+// canonical origin is the deployment's setting: the path is what the page decides.
+function pathOf(url: string): string {
+  const parsed = new URL(url);
+  return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+}
+
 test.describe('the trends, without an account', () => {
   test('renders an indexable page, canonical without its query', async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
@@ -29,7 +36,7 @@ test.describe('the trends, without an account', () => {
     expect(response?.status()).toBe(200);
     expect(response?.headers()['x-robots-tag'] ?? '').not.toContain('noindex');
     expect(head.robots ?? '').not.toContain('noindex');
-    expect(head.canonicals).toEqual([`${new URL(page.url()).origin}/en/trends`]);
+    expect(head.canonicals.map(pathOf)).toEqual(['/en/trends']);
     const [trail] = nodesOfType(head.jsonLd, 'BreadcrumbList');
     expect(trail?.['itemListElement']).toHaveLength(2);
     await expect(page.locator('h1')).toHaveText('Trending builds');
