@@ -1,22 +1,22 @@
 <div class="mx-auto max-w-2xl px-4 py-12 sm:px-6">
   <lodb-page-head
-    [eyebrow]="'admin.brand' | transloco"
-    [title]="'admin.enroll.title' | transloco"
-    [subtitle]="'admin.enroll.lede' | transloco"
+    [eyebrow]="'admin.brand' | adminText"
+    [title]="'admin.enroll.title' | adminText"
+    [subtitle]="'admin.enroll.lede' | adminText"
   />
 
   @if (recoveryCodes(); as codes) {
     <section lodbFrame="ornate" class="block p-6" aria-labelledby="enroll-codes">
       <h2 id="enroll-codes" class="font-beaufort text-xl text-gold">
-        {{ 'admin.enroll.codes_title' | transloco }}
+        {{ 'admin.enroll.codes_title' | adminText }}
       </h2>
-      <p class="mt-2 text-sm text-text-muted">{{ 'admin.enroll.codes_lede' | transloco }}</p>
+      <p class="mt-2 text-sm text-text-muted">{{ 'admin.enroll.codes_lede' | adminText }}</p>
       <ul class="mt-4 grid grid-cols-2 gap-2 font-mono text-sm sm:grid-cols-3">
         @for (code of codes; track code) {
           <li class="stat-cell text-center">{{ code }}</li>
         }
       </ul>
-      <a lodbButton class="mt-6" [routerLink]="home">{{ 'admin.enroll.open' | transloco }}</a>
+      <a lodbButton class="mt-6" [routerLink]="home">{{ 'admin.enroll.open' | adminText }}</a>
     </section>
   } @else {
     <lodb-panel-state [panel]="setup" shape="card" />
@@ -25,22 +25,22 @@
         <lodb-qr-image
           class="mx-auto w-56 max-w-full"
           [text]="key.authenticatorUri"
-          [label]="'admin.enroll.qr_label' | transloco"
+          [label]="'admin.enroll.qr_label' | adminText"
         />
         <div class="min-w-0">
-          <p class="text-sm text-text-muted">{{ 'admin.enroll.scan' | transloco }}</p>
-          <p class="mt-4 eyebrow">{{ 'admin.enroll.key' | transloco }}</p>
+          <p class="text-sm text-text-muted">{{ 'admin.enroll.scan' | adminText }}</p>
+          <p class="mt-4 eyebrow">{{ 'admin.enroll.key' | adminText }}</p>
           <p class="mt-1 font-mono text-sm break-all text-gold-light" data-shared-key>
             {{ sharedKey() }}
           </p>
           @if (error(); as message) {
             <p class="mt-4 text-sm text-danger-light" role="alert">
-              {{ 'admin.' + message | transloco }}
+              {{ 'admin.' + message | adminText }}
             </p>
           }
           <form class="mt-5 space-y-4" (submit)="confirm($event)">
             <div>
-              <label for="enroll-code" class="eyebrow">{{ 'admin.enroll.code' | transloco }}</label>
+              <label for="enroll-code" class="eyebrow">{{ 'admin.enroll.code' | adminText }}</label>
               <input
                 lodbField
                 id="enroll-code"
@@ -53,7 +53,7 @@
               />
             </div>
             <button lodbButton type="submit" [disabled]="busy()">
-              {{ 'admin.enroll.confirm' | transloco }}
+              {{ 'admin.enroll.confirm' | adminText }}
             </button>
           </form>
         </div>

@@ -7,13 +7,13 @@ import {
   linkedSignal,
   viewChild,
 } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { Button } from '../../../ui/controls/button';
 import { figure } from '../format/figure';
 import type { ChartSeries } from './chart-series';
 import { ChartScale } from './scale/chart-scale';
 import { PLOT_BOX } from './scale/plot-box';
 import { plotMarks } from './scale/plot-marks';
+import { AdminTextPipe } from '../shared/admin-text-pipe';
 
 /** A labelled date under the plot. */
 interface AxisTick {
@@ -56,7 +56,7 @@ let lastChart = 0;
  */
 @Component({
   selector: 'lodb-time-series-chart',
-  imports: [Button, TranslocoPipe],
+  imports: [Button, AdminTextPipe],
   templateUrl: './time-series-chart.html',
   styleUrl: './time-series-chart.css',
   host: { class: 'block' },

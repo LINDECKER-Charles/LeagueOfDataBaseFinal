@@ -1,7 +1,7 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.analytics' | transloco"
-  [title]="'admin.audience.title' | transloco"
-  [subtitle]="'admin.audience.lede' | transloco"
+  [eyebrow]="'admin.nav.analytics' | adminText"
+  [title]="'admin.audience.title' | adminText"
+  [subtitle]="'admin.audience.lede' | adminText"
 >
   <lodb-range-bar [current]="query.range()" />
 </lodb-page-head>
@@ -11,58 +11,58 @@
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" [attr.aria-busy]="report.busy()">
     <lodb-kpi
       tone="hex"
-      [label]="'admin.traffic.kpi.visitors' | transloco"
+      [label]="'admin.traffic.kpi.visitors' | adminText"
       [value]="data.totals.uniqueVisitors | figure"
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.traffic.kpi.returning' | transloco"
+      [label]="'admin.traffic.kpi.returning' | adminText"
       [value]="data.totals.returningVisitors | figure"
     />
     <lodb-kpi
-      [label]="'admin.audience.kpi.countries' | transloco"
+      [label]="'admin.audience.kpi.countries' | adminText"
       [value]="data.country.length | figure"
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.audience.kpi.referers' | transloco"
+      [label]="'admin.audience.kpi.referers' | adminText"
       [value]="data.topReferers.length | figure"
     />
   </div>
 
   <div class="mt-6 grid gap-6 lg:grid-cols-2">
-    <lodb-admin-card [heading]="'admin.audience.devices_title' | transloco">
+    <lodb-admin-card [heading]="'admin.audience.devices_title' | adminText">
       <lodb-donut-chart
         [slices]="devices()"
-        [label]="'admin.audience.devices_title' | transloco"
+        [label]="'admin.audience.devices_title' | adminText"
         [total]="data.totals.views | figure: 'compact'"
-        [caption]="'admin.traffic.views_caption' | transloco"
+        [caption]="'admin.traffic.views_caption' | adminText"
       />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.sources_title' | transloco">
+    <lodb-admin-card [heading]="'admin.audience.sources_title' | adminText">
       <lodb-donut-chart
         [slices]="sources()"
-        [label]="'admin.audience.sources_title' | transloco"
+        [label]="'admin.audience.sources_title' | adminText"
         [total]="data.totals.views | figure: 'compact'"
-        [caption]="'admin.traffic.views_caption' | transloco"
+        [caption]="'admin.traffic.views_caption' | adminText"
       />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.browsers' | transloco">
+    <lodb-admin-card [heading]="'admin.audience.browsers' | adminText">
       <lodb-rank-list [rows]="browsers()" [limit]="limit" />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.systems' | transloco">
+    <lodb-admin-card [heading]="'admin.audience.systems' | adminText">
       <lodb-rank-list tone="hex" [rows]="systems()" [limit]="limit" />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.countries' | transloco">
+    <lodb-admin-card [heading]="'admin.audience.countries' | adminText">
       <lodb-rank-list [rows]="countries()" [limit]="limit" />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.referers' | transloco">
+    <lodb-admin-card [heading]="'admin.audience.referers' | adminText">
       <lodb-rank-list tone="hex" [rows]="referers()" [limit]="limit" />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.languages' | transloco">
+    <lodb-admin-card [heading]="'admin.audience.languages' | adminText">
       <lodb-rank-list [rows]="languages()" [limit]="limit" />
     </lodb-admin-card>
-    <lodb-admin-card [heading]="'admin.audience.locales' | transloco">
+    <lodb-admin-card [heading]="'admin.audience.locales' | adminText">
       <lodb-rank-list tone="hex" [rows]="locales()" [limit]="limit" />
     </lodb-admin-card>
   </div>

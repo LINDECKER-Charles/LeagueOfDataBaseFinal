@@ -1,9 +1,9 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | transloco"
-  [title]="'admin.contacts.title' | transloco"
-  [subtitle]="'admin.contacts.lede' | transloco"
+  [eyebrow]="'admin.nav.management' | adminText"
+  [title]="'admin.contacts.title' | adminText"
+  [subtitle]="'admin.contacts.lede' | adminText"
 >
-  <nav class="flex flex-wrap gap-1.5" [attr.aria-label]="'admin.contacts.filter' | transloco">
+  <nav class="flex flex-wrap gap-1.5" [attr.aria-label]="'admin.contacts.filter' | adminText">
     @for (status of statuses; track status) {
       <a
         [lodbButton]="status === query.text('status') ? 'primary' : 'ghost'"
@@ -11,7 +11,7 @@
         [queryParams]="{ status: status || null, page: null }"
         queryParamsHandling="merge"
         [attr.aria-current]="status === query.text('status') ? 'page' : null"
-        >{{ 'admin.contacts.statuses.' + (status || 'all') | transloco }}</a
+        >{{ 'admin.contacts.statuses.' + (status || 'all') | adminText }}</a
       >
     }
   </nav>
@@ -21,22 +21,22 @@
 @if (contacts.value(); as inbox) {
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
     <lodb-kpi
-      [label]="'admin.contacts.kpi.total' | transloco"
+      [label]="'admin.contacts.kpi.total' | adminText"
       [value]="inbox.stats.total | figure"
     />
     <lodb-kpi
       tone="warn"
-      [label]="'admin.contacts.kpi.new' | transloco"
+      [label]="'admin.contacts.kpi.new' | adminText"
       [value]="inbox.stats.new | figure"
     />
     <lodb-kpi
       tone="good"
-      [label]="'admin.contacts.kpi.handled' | transloco"
+      [label]="'admin.contacts.kpi.handled' | adminText"
       [value]="inbox.stats.handled | figure"
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.contacts.kpi.week' | transloco"
+      [label]="'admin.contacts.kpi.week' | adminText"
       [value]="inbox.stats.week | figure"
     />
   </div>
@@ -47,7 +47,7 @@
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
             <p class="font-beaufort text-lg text-gold-bright">
-              {{ contact.subject || ('admin.contacts.no_subject' | transloco) }}
+              {{ contact.subject || ('admin.contacts.no_subject' | adminText) }}
             </p>
             <p class="mt-1 text-xs text-text-muted">
               {{ contact.name || '—' }} &lt;{{ contact.email }}&gt;
@@ -75,7 +75,7 @@
         <p class="mt-4 text-sm whitespace-pre-line text-text">{{ contact.message }}</p>
         <div class="mt-4 flex flex-wrap items-center gap-1.5">
           <a lodbButton="ghost" [href]="'mailto:' + contact.email">{{
-            'admin.contacts.reply' | transloco
+            'admin.contacts.reply' | adminText
           }}</a>
           <button
             lodbButton="ghost"
@@ -84,12 +84,12 @@
             (click)="toggle(contact)"
           >
             {{
-              (isHandled(contact) ? 'admin.contacts.reopen' : 'admin.contacts.handle') | transloco
+              (isHandled(contact) ? 'admin.contacts.reopen' : 'admin.contacts.handle') | adminText
             }}
           </button>
           <lodb-confirm-button
-            [label]="'admin.actions.delete' | transloco"
-            [confirmLabel]="'admin.contacts.confirm_delete' | transloco"
+            [label]="'admin.actions.delete' | adminText"
+            [confirmLabel]="'admin.contacts.confirm_delete' | adminText"
             [busy]="actions.pending() === contact.id"
             (confirmed)="remove(contact)"
           />
@@ -97,14 +97,14 @@
             <span class="text-xs text-text-dim">
               {{
                 'admin.contacts.handled_at'
-                  | transloco: { at: (contact.handledAt | stamp: 'minute') }
+                  | adminText: { at: (contact.handledAt | stamp: 'minute') }
               }}
             </span>
           }
         </div>
       </li>
     } @empty {
-      <li class="text-sm text-text-dim">{{ 'admin.contacts.empty' | transloco }}</li>
+      <li class="text-sm text-text-dim">{{ 'admin.contacts.empty' | adminText }}</li>
     }
   </ul>
   <lodb-admin-pager [page]="inbox.page" [pages]="inbox.pages" />

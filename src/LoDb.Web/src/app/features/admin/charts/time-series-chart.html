@@ -3,7 +3,7 @@
   @if (dates().length === 0) {
     <svg [attr.viewBox]="viewBox" class="block w-full" role="img" [attr.aria-label]="label()">
       <text [attr.x]="box.w / 2" [attr.y]="box.h / 2" text-anchor="middle" class="ts-empty">
-        {{ 'admin.chart.empty' | transloco }}
+        {{ 'admin.chart.empty' | adminText }}
       </text>
     </svg>
   } @else {
@@ -12,7 +12,7 @@
         lodbButton="ghost"
         type="button"
         class="ts-tool"
-        [attr.aria-label]="'admin.chart.zoom_out' | transloco"
+        [attr.aria-label]="'admin.chart.zoom_out' | adminText"
         [disabled]="!view().zoomed"
         (click)="zoomOut()"
       >
@@ -22,7 +22,7 @@
         lodbButton="ghost"
         type="button"
         class="ts-tool"
-        [attr.aria-label]="'admin.chart.zoom_in' | transloco"
+        [attr.aria-label]="'admin.chart.zoom_in' | adminText"
         (click)="zoomIn()"
       >
         +
@@ -31,7 +31,7 @@
         lodbButton="ghost"
         type="button"
         class="ts-tool"
-        [attr.aria-label]="'admin.chart.reset' | transloco"
+        [attr.aria-label]="'admin.chart.reset' | adminText"
         [disabled]="!view().zoomed"
         (click)="reset()"
       >
@@ -121,7 +121,7 @@
         (pointerdown)="onPointerDown($event)"
       />
     </svg>
-    <p [id]="hintId" class="sr-only">{{ 'admin.chart.hint' | transloco }}</p>
+    <p [id]="hintId" class="sr-only">{{ 'admin.chart.hint' | adminText }}</p>
     @if (cursor(); as cursor) {
       <div
         class="ts-tip"

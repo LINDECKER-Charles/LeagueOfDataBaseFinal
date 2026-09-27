@@ -1,6 +1,7 @@
 import type { AdminBuildPage } from '../../../../../core/api/generated/models/admin-build-page';
 import type { AdminBuildRow } from '../../../../../core/api/generated/models/admin-build-row';
 import type { AdminVisit } from '../../../testing/admin-visit';
+import { openPanelInFrench } from '../../../testing/panels/open-panel-in-french';
 import { openPanel } from '../../../testing/panels/open-panel';
 import { press } from '../../../testing/dom/press';
 import { reply } from '../../../testing/http/reply';
@@ -96,5 +97,20 @@ describe('BuildsPanel', () => {
 
     expect(toasts()).toEqual(['success: admin.builds.done.delete']);
     expect(visit.page.querySelector('[data-build="2"]')).toBeNull();
+  });
+
+  it('keeps the visibility in French once a build is unpublished, the site in English', async () => {
+    const visit = await openPanelInFrench(BuildsPanel, '/admin/builds', [
+      { path: BUILDS, body: buildsPage() },
+    ]);
+    expect(row(visit, 1).textContent).toContain('Public');
+
+    press(visit, 'Dépublier', row(visit, 1));
+    press(visit, 'Confirmer la dépublication', row(visit, 1));
+    (await sent(visit, `${BUILDS}/1/unpublish`, 'POST')).flush('');
+    await reply(visit, await sent(visit, BUILDS), buildsPage([build(1, false), build(2, false)]));
+
+    expect(row(visit, 1).textContent).toContain('Privé');
+    expect(visit.page.textContent).not.toContain('Private');
   });
 });

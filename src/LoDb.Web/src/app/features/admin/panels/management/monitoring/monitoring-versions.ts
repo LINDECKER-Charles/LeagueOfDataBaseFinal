@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import type { VersionState } from '../../../../../core/api/generated/models/version-state';
 import { FigurePipe } from '../../../format/figure-pipe';
 import { StampPipe } from '../../../format/stamp-pipe';
 import { injectAdminText } from '../../../shared/inject-admin-text';
 import { Badge, type Tone } from '../../../widgets/badge';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 // Where the ingestion of a version stands, as the API names it, and the tone it reads in.
 const STATUS_TONES: Readonly<Record<string, Tone>> = {
@@ -18,11 +18,11 @@ const COUNTS = ['ready', 'ingesting', 'failed', 'discovered'] as const;
 /** The Data Dragon versions of the monitoring: the one served, the counts, the last moves. */
 @Component({
   selector: 'lodb-monitoring-versions',
-  imports: [Badge, FigurePipe, StampPipe, TranslocoPipe],
+  imports: [Badge, FigurePipe, StampPipe, AdminTextPipe],
   template: `
     @let state = versions();
     <p class="text-sm text-text-muted">
-      {{ 'admin.monitoring.versions.current' | transloco }}
+      {{ 'admin.monitoring.versions.current' | adminText }}
       <b class="font-mono text-gold-bright">{{ state.current ?? '—' }}</b>
       @if (state.promotedAt) {
         · {{ state.promotedAt | stamp: 'minute' }}
@@ -39,10 +39,10 @@ const COUNTS = ['ready', 'ingesting', 'failed', 'discovered'] as const;
       <table class="hx-table hx-table--flush">
         <thead>
           <tr>
-            <th scope="col">{{ 'admin.monitoring.versions.version' | transloco }}</th>
-            <th scope="col">{{ 'admin.monitoring.versions.status' | transloco }}</th>
-            <th scope="col" class="num">{{ 'admin.monitoring.versions.attempts' | transloco }}</th>
-            <th scope="col">{{ 'admin.monitoring.versions.updated' | transloco }}</th>
+            <th scope="col">{{ 'admin.monitoring.versions.version' | adminText }}</th>
+            <th scope="col">{{ 'admin.monitoring.versions.status' | adminText }}</th>
+            <th scope="col" class="num">{{ 'admin.monitoring.versions.attempts' | adminText }}</th>
+            <th scope="col">{{ 'admin.monitoring.versions.updated' | adminText }}</th>
           </tr>
         </thead>
         <tbody>
@@ -59,7 +59,7 @@ const COUNTS = ['ready', 'ingesting', 'failed', 'discovered'] as const;
             </tr>
           } @empty {
             <tr>
-              <td colspan="4" class="text-text-dim">{{ 'admin.common.no_data' | transloco }}</td>
+              <td colspan="4" class="text-text-dim">{{ 'admin.common.no_data' | adminText }}</td>
             </tr>
           }
         </tbody>

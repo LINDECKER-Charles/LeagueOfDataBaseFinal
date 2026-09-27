@@ -1,5 +1,6 @@
 import { monitoringReport } from '../../../testing/fixtures/monitoring-report';
 import { openPanel } from '../../../testing/panels/open-panel';
+import { openPanelInFrench } from '../../../testing/panels/open-panel-in-french';
 import { press } from '../../../testing/dom/press';
 import { reply } from '../../../testing/http/reply';
 import { sent } from '../../../testing/http/sent';
@@ -77,5 +78,22 @@ describe('MonitoringPanel', () => {
     await reply(visit, again, monitoringReport({ generatedAt: '2026-09-27T11:00:00Z' }));
 
     expect(visit.page.textContent).toContain('admin.common.generated_at');
+  });
+
+  it('dates a new reading in French, the site in English', async () => {
+    const visit = await openPanelInFrench(MonitoringPanel, '/admin/monitoring', [
+      { path: MONITORING, body: monitoringReport() },
+    ]);
+    expect(visit.page.textContent).toContain('Relevé du 27/09/2026 10:15:30 (UTC)');
+
+    press(visit, 'Actualiser');
+    await reply(
+      visit,
+      await sent(visit, MONITORING),
+      monitoringReport({ generatedAt: '2026-09-27T11:00:00Z' }),
+    );
+
+    expect(visit.page.textContent).toContain('Relevé du 27/09/2026 11:00:00 (UTC)');
+    expect(visit.page.textContent).not.toContain('Read at');
   });
 });

@@ -6,11 +6,11 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { purgeAuditJournal } from '../../../../../core/api/generated/fn/admin-audit/purge-audit-journal';
 import { Field } from '../../../../../ui/controls/field';
 import { AdminCommand } from '../../../shared/http/admin-command';
 import { ConfirmButton } from '../../../widgets/confirm-button';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /** What a purge deletes, as the API names it. */
 const SCOPES = ['retention', 'before', 'all'] as const;
@@ -27,23 +27,23 @@ function isScope(value: string): value is PurgeScope {
  */
 @Component({
   selector: 'lodb-journal-purge',
-  imports: [ConfirmButton, Field, TranslocoPipe],
+  imports: [ConfirmButton, Field, AdminTextPipe],
   template: `
-    <p class="mb-4 text-sm text-text-muted">{{ 'admin.journal.purge.lede' | transloco }}</p>
+    <p class="mb-4 text-sm text-text-muted">{{ 'admin.journal.purge.lede' | adminText }}</p>
     <div class="flex flex-wrap items-end gap-3">
       <label class="grid gap-1">
-        <span class="eyebrow">{{ 'admin.journal.purge.scope' | transloco }}</span>
+        <span class="eyebrow">{{ 'admin.journal.purge.scope' | adminText }}</span>
         <select lodbField name="scope" (change)="pick($event)">
           @for (choice of scopes; track choice) {
             <option [value]="choice" [selected]="scope() === choice">
-              {{ 'admin.journal.purge.scopes.' + choice | transloco }}
+              {{ 'admin.journal.purge.scopes.' + choice | adminText }}
             </option>
           }
         </select>
       </label>
       @if (scope() === before) {
         <label class="grid gap-1">
-          <span class="eyebrow">{{ 'admin.journal.purge.before' | transloco }}</span>
+          <span class="eyebrow">{{ 'admin.journal.purge.before' | adminText }}</span>
           <input
             lodbField
             name="before"
@@ -56,8 +56,8 @@ function isScope(value: string): value is PurgeScope {
       }
       <lodb-confirm-button
         tone="primary"
-        [label]="'admin.journal.purge.submit' | transloco"
-        [confirmLabel]="'admin.journal.purge.confirm' | transloco"
+        [label]="'admin.journal.purge.submit' | adminText"
+        [confirmLabel]="'admin.journal.purge.confirm' | adminText"
         [busy]="busy() || !ready()"
         (confirmed)="purge()"
       />

@@ -1,56 +1,56 @@
 <lodb-page-head
-  [eyebrow]="'admin.nav.management' | transloco"
-  [title]="'admin.donations.title' | transloco"
-  [subtitle]="'admin.donations.lede' | transloco"
+  [eyebrow]="'admin.nav.management' | adminText"
+  [title]="'admin.donations.title' | adminText"
+  [subtitle]="'admin.donations.lede' | adminText"
 />
 
 <lodb-panel-state [panel]="donations" shape="chart" />
 @if (donations.value(); as list) {
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-5">
     <lodb-kpi
-      [label]="'admin.donations.kpi.total' | transloco"
+      [label]="'admin.donations.kpi.total' | adminText"
       [value]="list.kpis.totalCents | figure: 'euros'"
     />
     <lodb-kpi
       tone="hex"
-      [label]="'admin.donations.kpi.count' | transloco"
+      [label]="'admin.donations.kpi.count' | adminText"
       [value]="list.kpis.count | figure"
     />
     <lodb-kpi
       tone="hex"
-      [label]="'admin.donations.kpi.identified' | transloco"
+      [label]="'admin.donations.kpi.identified' | adminText"
       [value]="list.kpis.identifiedDonors | figure"
     />
     <lodb-kpi
       tone="muted"
-      [label]="'admin.donations.kpi.anonymous' | transloco"
+      [label]="'admin.donations.kpi.anonymous' | adminText"
       [value]="list.kpis.anonymous | figure"
     />
     <lodb-kpi
       tone="warn"
-      [label]="'admin.donations.kpi.supporters' | transloco"
+      [label]="'admin.donations.kpi.supporters' | adminText"
       [value]="list.kpis.supporters | figure"
     />
   </div>
 
-  <lodb-admin-card class="mt-6" [heading]="'admin.donations.daily' | transloco">
+  <lodb-admin-card class="mt-6" [heading]="'admin.donations.daily' | adminText">
     <lodb-time-series-chart
       [dates]="daily().dates"
       [series]="daily().series"
-      [label]="'admin.donations.daily' | transloco"
+      [label]="'admin.donations.daily' | adminText"
     />
   </lodb-admin-card>
 
   <p class="mt-6 mb-2 text-xs text-text-dim">
-    {{ 'admin.common.results' | transloco: { count: list.total } }}
+    {{ 'admin.common.results' | adminText: { count: list.total } }}
   </p>
   <div class="hx-table-scroll" [attr.aria-busy]="donations.busy()">
     <table class="hx-table">
       <thead>
         <tr>
-          <th scope="col">{{ 'admin.donations.columns.date' | transloco }}</th>
-          <th scope="col" class="num">{{ 'admin.donations.columns.amount' | transloco }}</th>
-          <th scope="col">{{ 'admin.donations.columns.donor' | transloco }}</th>
+          <th scope="col">{{ 'admin.donations.columns.date' | adminText }}</th>
+          <th scope="col" class="num">{{ 'admin.donations.columns.amount' | adminText }}</th>
+          <th scope="col">{{ 'admin.donations.columns.donor' | adminText }}</th>
         </tr>
       </thead>
       <tbody>
@@ -74,17 +74,17 @@
                     >{{ donor.username }}</a
                   >
                   @if (donation.donorIsSupporter) {
-                    <span lodbBadge="hex">{{ 'admin.users.badges.supporter' | transloco }}</span>
+                    <span lodbBadge="hex">{{ 'admin.users.badges.supporter' | adminText }}</span>
                   }
                 </span>
               } @else {
-                <span class="text-text-dim">{{ 'admin.donations.anonymous' | transloco }}</span>
+                <span class="text-text-dim">{{ 'admin.donations.anonymous' | adminText }}</span>
               }
             </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="3" class="text-text-dim">{{ 'admin.donations.empty' | transloco }}</td>
+            <td colspan="3" class="text-text-dim">{{ 'admin.donations.empty' | adminText }}</td>
           </tr>
         }
       </tbody>

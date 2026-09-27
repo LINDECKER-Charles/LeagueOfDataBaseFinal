@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { deleteAdminBuild } from '../../../../../core/api/generated/fn/admin-builds/delete-admin-build';
 import { searchAdminBuilds } from '../../../../../core/api/generated/fn/admin-builds/search-admin-builds';
 import { unpublishAdminBuild } from '../../../../../core/api/generated/fn/admin-builds/unpublish-admin-build';
@@ -20,6 +19,7 @@ import { Badge } from '../../../widgets/badge';
 import { ConfirmButton } from '../../../widgets/confirm-button';
 import { Kpi } from '../../../widgets/kpi';
 import { PageHead } from '../../../widgets/page-head';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /** The visibilities a build has, as the API filters them. */
 const VISIBILITIES = ['public', 'private'] as const;
@@ -43,7 +43,7 @@ const VISIBILITIES = ['public', 'private'] as const;
     PanelState,
     RouterLink,
     StampPipe,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './builds-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

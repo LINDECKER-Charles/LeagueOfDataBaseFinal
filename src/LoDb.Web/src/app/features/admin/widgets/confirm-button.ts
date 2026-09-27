@@ -10,9 +10,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { Button } from '../../../ui/controls/button';
 import type { ButtonTone } from '../../../ui/controls/button-tones';
+import { AdminTextPipe } from '../shared/admin-text-pipe';
 
 /**
  * An action that asks twice: the first press arms it and offers to confirm or cancel, the
@@ -21,7 +21,7 @@ import type { ButtonTone } from '../../../ui/controls/button-tones';
  */
 @Component({
   selector: 'lodb-confirm-button',
-  imports: [Button, TranslocoPipe],
+  imports: [Button, AdminTextPipe],
   template: `
     @if (armed()) {
       <span class="inline-flex flex-wrap items-center gap-1.5">
@@ -29,7 +29,7 @@ import type { ButtonTone } from '../../../ui/controls/button-tones';
           {{ confirmLabel() }}
         </button>
         <button lodbButton="ghost" type="button" (click)="armed.set(false)">
-          {{ 'admin.actions.cancel' | transloco }}
+          {{ 'admin.actions.cancel' | adminText }}
         </button>
       </span>
     } @else {

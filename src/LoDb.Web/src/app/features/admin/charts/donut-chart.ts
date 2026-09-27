@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { figure } from '../format/figure';
 import { FigurePipe } from '../format/figure-pipe';
 import { Legend } from '../widgets/legend';
 import { donutArcs } from './scale/donut-arcs';
 import type { DonutSlice } from './scale/donut-slice';
+import { AdminTextPipe } from '../shared/admin-text-pipe';
 
 /**
  * A part-to-whole ring with its total in the middle: one arc per slice, each titled with its
@@ -13,7 +13,7 @@ import type { DonutSlice } from './scale/donut-slice';
  */
 @Component({
   selector: 'lodb-donut-chart',
-  imports: [FigurePipe, Legend, TranslocoPipe],
+  imports: [FigurePipe, Legend, AdminTextPipe],
   template: `
     <svg
       viewBox="0 0 180 180"
@@ -23,7 +23,7 @@ import type { DonutSlice } from './scale/donut-slice';
     >
       @if (arcs().length === 0) {
         <text x="90" y="94" text-anchor="middle" class="donut-empty">
-          {{ 'admin.chart.empty' | transloco }}
+          {{ 'admin.chart.empty' | adminText }}
         </text>
       } @else {
         <circle cx="90" cy="90" r="54" fill="none" class="donut-track" stroke-width="20" />

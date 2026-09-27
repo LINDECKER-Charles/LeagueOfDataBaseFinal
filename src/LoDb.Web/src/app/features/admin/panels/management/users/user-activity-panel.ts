@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { readUserAuditActivity } from '../../../../../core/api/generated/fn/admin-audit/read-user-audit-activity';
 import { Button } from '../../../../../ui/controls/button';
@@ -11,6 +10,7 @@ import { PanelState } from '../../../state/panel-state';
 import { AdminPager } from '../../../widgets/admin-pager';
 import { PageHead } from '../../../widgets/page-head';
 import { AuditTable } from '../journal/audit-table';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 /**
  * `/admin/users/:id/activity`: what an account did and what was done to it, from the audit
@@ -18,14 +18,14 @@ import { AuditTable } from '../journal/audit-table';
  */
 @Component({
   selector: 'lodb-user-activity-panel',
-  imports: [AdminPager, AuditTable, Button, PageHead, PanelState, RouterLink, TranslocoPipe],
+  imports: [AdminPager, AuditTable, Button, PageHead, PanelState, RouterLink, AdminTextPipe],
   template: `
     <lodb-page-head
-      [eyebrow]="'admin.nav.users' | transloco"
-      [title]="'admin.activity.title' | transloco: { name: name() }"
+      [eyebrow]="'admin.nav.users' | adminText"
+      [title]="'admin.activity.title' | adminText: { name: name() }"
       [subtitle]="activity.value()?.subject?.email ?? ''"
     >
-      <a lodbButton="ghost" routerLink="/admin/users">{{ 'admin.activity.back' | transloco }}</a>
+      <a lodbButton="ghost" routerLink="/admin/users">{{ 'admin.activity.back' | adminText }}</a>
     </lodb-page-head>
     <lodb-panel-state [panel]="activity" />
     @if (activity.value(); as data) {

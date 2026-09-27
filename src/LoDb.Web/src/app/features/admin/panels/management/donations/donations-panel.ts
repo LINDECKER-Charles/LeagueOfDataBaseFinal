@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { listAdminDonations } from '../../../../../core/api/generated/fn/admin-donations/list-admin-donations';
 import type { AdminDonationRow } from '../../../../../core/api/generated/models/admin-donation-row';
 import { TimeSeriesChart } from '../../../charts/time-series-chart';
@@ -15,6 +14,7 @@ import { AdminPager } from '../../../widgets/admin-pager';
 import { Badge } from '../../../widgets/badge';
 import { Kpi } from '../../../widgets/kpi';
 import { PageHead } from '../../../widgets/page-head';
+import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 
 // The currency the amounts are written in; another one is named next to its amount.
 const EURO = 'eur';
@@ -36,7 +36,7 @@ const EURO = 'eur';
     RouterLink,
     StampPipe,
     TimeSeriesChart,
-    TranslocoPipe,
+    AdminTextPipe,
   ],
   templateUrl: './donations-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

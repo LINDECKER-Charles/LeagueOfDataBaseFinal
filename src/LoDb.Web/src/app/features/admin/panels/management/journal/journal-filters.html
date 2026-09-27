@@ -1,9 +1,9 @@
 <form class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="search" (submit)="apply($event)">
   @for (select of selects; track select.name) {
     <label class="grid gap-1">
-      <span class="eyebrow">{{ 'admin.journal.filters.' + select.label | transloco }}</span>
+      <span class="eyebrow">{{ 'admin.journal.filters.' + select.label | adminText }}</span>
       <select lodbField [name]="select.name">
-        <option value="">{{ 'admin.journal.filters.any' | transloco }}</option>
+        <option value="">{{ 'admin.journal.filters.any' | adminText }}</option>
         @for (choice of choices(select.set); track choice) {
           <option [value]="choice" [selected]="query.text(select.name) === choice">
             {{ texts.term(select.terms, choice) }}
@@ -13,9 +13,9 @@
     </label>
   }
   <label class="grid gap-1">
-    <span class="eyebrow">{{ 'admin.journal.filters.action' | transloco }}</span>
+    <span class="eyebrow">{{ 'admin.journal.filters.action' | adminText }}</span>
     <select lodbField name="action">
-      <option value="">{{ 'admin.journal.filters.any' | transloco }}</option>
+      <option value="">{{ 'admin.journal.filters.any' | adminText }}</option>
       @for (group of groups(); track group.category) {
         <optgroup [label]="texts.term('journal.categories', group.category)">
           @for (action of group.actions; track action) {
@@ -28,21 +28,21 @@
     </select>
   </label>
   <label class="grid gap-1">
-    <span class="eyebrow">{{ 'admin.journal.filters.actor' | transloco }}</span>
+    <span class="eyebrow">{{ 'admin.journal.filters.actor' | adminText }}</span>
     <input lodbField name="actor" type="search" maxlength="180" [value]="query.text('actor')" />
   </label>
   <label class="grid gap-1">
-    <span class="eyebrow">{{ 'admin.journal.filters.from' | transloco }}</span>
+    <span class="eyebrow">{{ 'admin.journal.filters.from' | adminText }}</span>
     <input lodbField name="from" type="date" [value]="query.text('from')" />
   </label>
   <label class="grid gap-1">
-    <span class="eyebrow">{{ 'admin.journal.filters.to' | transloco }}</span>
+    <span class="eyebrow">{{ 'admin.journal.filters.to' | adminText }}</span>
     <input lodbField name="to" type="date" [value]="query.text('to')" />
   </label>
   <div class="flex flex-wrap items-end gap-2">
-    <button lodbButton type="submit">{{ 'admin.actions.filter' | transloco }}</button>
+    <button lodbButton type="submit">{{ 'admin.actions.filter' | adminText }}</button>
     <button lodbButton="ghost" type="button" (click)="clear()">
-      {{ 'admin.journal.filters.clear' | transloco }}
+      {{ 'admin.journal.filters.clear' | adminText }}
     </button>
   </div>
 </form>
