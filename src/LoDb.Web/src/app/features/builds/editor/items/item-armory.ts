@@ -1,15 +1,13 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Image } from '../../../../ui/media/image';
 import { CatalogState } from '../catalog/catalog-state';
 import { EditorCatalogs } from '../catalog/editor-catalogs';
-import { imageSource } from '../shared/image-source';
-import { initialsOf } from '../shared/initials-of';
 import { SearchIndex } from '../shared/search-index';
 import { STEP_LIMITS } from '../steps/order/step-limits';
 import { StepEditing } from '../steps/step-editing';
 import type { ArmoryData } from './armory-data';
+import { ArmoryItemTile } from './armory-item-tile';
 import { ITEM_CATEGORIES, type ItemCategory } from './item-categories';
 import { matchesCategory } from './matches-category';
 
@@ -22,7 +20,7 @@ import { matchesCategory } from './matches-category';
  */
 @Component({
   selector: 'lodb-item-armory',
-  imports: [CatalogState, Image, TranslocoPipe],
+  imports: [ArmoryItemTile, CatalogState, TranslocoPipe],
   templateUrl: './item-armory.html',
   styleUrl: './item-armory.css',
   host: { class: 'hx-dialog-panel armory' },
@@ -43,8 +41,6 @@ export class ItemArmory {
   protected readonly headingId = ItemArmory.HEADING_ID;
   protected readonly categories = ITEM_CATEGORIES;
   protected readonly maxItems = STEP_LIMITS.maxItemsPerStep;
-  protected readonly imageSource = imageSource;
-  protected readonly initialsOf = initialsOf;
   protected readonly query = signal('');
   protected readonly category = signal<ItemCategory>('all');
   /** What this opening added, the counter of the footer. */

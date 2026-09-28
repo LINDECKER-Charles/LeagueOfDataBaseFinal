@@ -1,8 +1,6 @@
 /*
- * The purchase order: step cards, each with its label row, its note and its item medallions,
- * and the CDK's drag states. The CDK moves the elements with transforms; the preview lifts
- * above the page, and the legacy drop marks show where it lands: a dashed slot between items,
- * a dashed seam between steps.
+ * The purchase order: step cards, each with its label row, its note and its item medallions.
+ * The drag states and drop marks are the CDK's primitives (styles/primitives/drag.css).
  */
 @layer components {
   .steps {
@@ -205,36 +203,5 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-  }
-
-  /* CDK drag states: the lifted preview, the legacy drop marks, the settling animation. */
-  .cdk-drag-preview {
-    box-shadow: 0 10px 24px -10px color-mix(in srgb, var(--color-hextech-black) 90%, transparent);
-    opacity: 0.9;
-  }
-  .forge-dropslot,
-  .forge-droprow {
-    border: 1px dashed var(--color-gold-rich);
-    background: color-mix(in srgb, var(--color-gold-rich) 12%, transparent);
-    pointer-events: none;
-  }
-  .forge-dropslot {
-    flex: none;
-    inline-size: 3rem;
-    block-size: 3rem;
-  }
-  .forge-droprow {
-    block-size: 0.4rem;
-  }
-  .cdk-drag-animating,
-  .cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
-    transition: transform 0.2s var(--ease-hextech);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .cdk-drag-animating,
-    .cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
-      transition: none;
-    }
   }
 }

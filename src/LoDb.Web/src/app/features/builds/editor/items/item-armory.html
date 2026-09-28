@@ -60,36 +60,12 @@
     @if (shown().length > 0) {
       <div class="armory__grid">
         @for (item of shown(); track item.id) {
-          @let count = countInStep(item.id);
-          <button
-            type="button"
-            class="armory-item"
-            [class.armory-item--placed]="count > 0"
+          <lodb-armory-item-tile
+            [item]="item"
+            [count]="countInStep(item.id)"
             [disabled]="!canAdd()"
-            [title]="item.name"
-            (click)="add(item.id)"
-          >
-            <span class="armory-item__icon">
-              <lodb-image
-                class="size-full"
-                imgClass="object-cover"
-                [src]="imageSource(item.image)"
-                [width]="48"
-                [height]="48"
-                [initials]="initialsOf(item.name)"
-              />
-              @if (count > 0) {
-                <span
-                  class="armory-item__badge"
-                  [title]="'build.editor.armory.in_step' | transloco: { count }"
-                >
-                  {{ count }}
-                </span>
-              }
-            </span>
-            <span class="armory-item__name">{{ item.name }}</span>
-            <span class="armory-item__gold">{{ item.gold }} ◆</span>
-          </button>
+            (picked)="add(item.id)"
+          />
         }
       </div>
     } @else {

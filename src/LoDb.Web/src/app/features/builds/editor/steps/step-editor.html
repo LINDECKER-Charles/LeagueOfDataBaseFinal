@@ -14,7 +14,7 @@
     >
       <!-- An ng-template: an <li> opened right inside this one would close it. -->
       <ng-template cdkDragPlaceholder>
-        <li class="forge-droprow" aria-hidden="true"></li>
+        <li class="hx-drop-row" aria-hidden="true"></li>
       </ng-template>
       <!--
         The card's body is the step's item list: an item dragged anywhere on the card lands in
@@ -111,7 +111,7 @@
             (cdkDragStarted)="drag.startItem({ step: i, index: j })"
           >
             <ng-template cdkDragPlaceholder>
-              <div class="forge-dropslot" aria-hidden="true"></div>
+              <div class="hx-drop-slot" aria-hidden="true"></div>
             </ng-template>
             <span
               class="forge-item"
