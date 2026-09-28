@@ -1,157 +1,169 @@
-# Réalignement du front sur l'ancien site : état au 2026-09-27
+# Réalignement du front sur l'ancien site : état au 2026-09-28
 
 L'utilisateur n'était pas satisfait du front Angular. La demande : comparer le nouveau front
 (`src/LoDb.Web`) à l'ancien (Symfony/Twig/Vue, `app/`) et corriger le nouveau pour qu'il
 rejoigne l'ancien. **L'ancien site est la cible** : aspect, mise en page, contenu, interactions et
 comportement responsive. Restent volontaires les divergences d'URL et de SSR des ADR (locale en
-préfixe, URLs id-slug, pas de session serveur).
+préfixe, URLs id-slug, pas de session serveur), les champs de saisie d'au moins 16 px, les
+propriétés CSS logiques (RTL) et le chrome traduit là où l'ancien site restait en anglais.
 
-Travail interrompu à la demande de l'utilisateur, dont la machine saturait. Tout est committé
-localement et **rien n'est poussé**. Consigne donnée pour la fin : lancer `/commit-and-push`
-une fois tout terminé.
+**Le chantier est terminé et intégré** dans `docs/reecriture-dotnet-angular` : deux vagues de
+corrections, un second audit, ses corrections et les garde-fous complets. Les points que ce
+chantier ne tranche pas sont listés en section 6.
 
 ## 1. Méthode
 
 1. **Captures.** Les deux stacks tournent : l'ancienne sur :8080, `lodb-next` sur :18080. 29
    paires de pages sont capturées en 1440 et 390 px (`donnees/paires-de-pages.json`,
-   `outils/capture.mjs`).
-2. **Audit.** 12 zones sont auditées en parallèle, chaque auditeur étant suivi d'un vérificateur
-   adverse. Le résultat tient en **339 écarts vérifiés** : 9 bloquants, 109 majeurs, 153
-   mineurs et 68 finitions ; un seul a été réfuté. Le détail de chaque écart est dans
-   `donnees/ecarts.json` : description ancien/nouveau avec fichier:ligne, preuve, correctif
-   vérifié, fichiers touchés et lot attribué (champ `wp`).
-3. **Découpage.** Les écarts sont répartis en lots par propriété de fichiers
-   (`outils/plan.mjs`, qui lit `ecarts.json` renommé en `assigned.json`).
-   - Vague 1 : API, DS, SHELL, I18N.
-   - Vague 2 : LISTS, DETAIL, ENTITYDET, HOME, EDITORIAL, ACCOUNT, BUILDS, ADMIN.
-4. **Correction.** Chaque lot a son worktree `F:/Git/lodb-parite/<lot>` (branche
-   `wt/parite-<lot>`). Un correcteur l'implémente et vérifie visuellement contre l'ancien site via
-   un aperçu local (`outils/preview.mjs` sert le build du worktree et proxifie `/api` et `/cdn`
-   vers `lodb-next`). Un relecteur adverse passe ensuite, puis l'intégration fusionne dans
-   `docs/reecriture-dotnet-angular`.
+   `outils/comparaison/capture.mjs`).
+2. **Premier audit.** 12 zones auditées, chacune suivie d'un vérificateur adverse : **339 écarts
+   vérifiés** (9 bloquants, 109 majeurs, 153 mineurs, 68 finitions), un seul réfuté. Détail dans
+   `donnees/ecarts.json` (description ancien/nouveau avec fichier:ligne, preuve, correctif vérifié,
+   fichiers, lot).
+3. **Corrections par lots.** Les écarts sont répartis par propriété de fichiers
+   (`outils/comparaison/plan.mjs`). Chaque lot a son worktree et sa branche ; un correcteur
+   l'implémente et le vérifie contre l'ancien site sur un aperçu local
+   (`outils/comparaison/preview.mjs`), puis un relecteur adverse repasse avant la fusion.
+4. **Second audit** sur la stack intégrée, puis corrections, même procédé (section 4).
 
-## 2. Vague 1 : intégrée
+## 2. Vague 1 : API, DS, SHELL, I18N
 
-Fusions sur `docs/reecriture-dotnet-angular`, puis `36709519 chore(api): regenerer le contrat
-et le client du realignement du front`. Les rapports des correcteurs et des relecteurs sont dans
+Contrat additif de l'API (art de chargement et résumé des cartes de champion, évolutions et
+voisins des fiches, champs de l'admin), design system (fond d'ambiance, thèmes, dialogues, palette
+admin), chrome (en-tête, pied, barre du bas, sélecteur patch/langue, admin hors du chrome public)
+et i18n (clés brutes, course SSR sur les portées, pluriels). Rapports :
 `donnees/vague-1-rapports.json`.
 
-| Lot | Contenu | État |
-|---|---|---|
-| API | Contrat additif. Cartes de champion : `loadingArt`, `blurb`. Objets : `upgrades`, `related`, `ItemUpgrade.gold`, `depth`. `neighbours` sur les 4 fiches, dans l'ordre des listes (69/69 conformes à l'ancien rel=prev/next). Admin : `shareToken`, `isBanned`, `riotTagline`, `geoAvailable`, `objects`/`bytes` de la sonde de stockage. `/v1` inchangé. | intégré, relu |
-| DS | Fond d'ambiance, thèmes qui atteignent de nouveau la console de filtres et le journal, hampe Noxus, cadre de dialogue (surtitre, largeurs `wide`/`picker`), couleurs `<font>` de Data Dragon, palette admin (`good`, `bad`, `series-*`), boutons `danger` et `small`. | intégré, relu |
-| SHELL | Pastille de version et « Version » du pied de page, libellé « Account », liens qui gardent le patch épinglé et `?lang=`, états actifs, barre du bas, toasts, progression de navigation, préchargement des polices, sélecteur patch/langue (libellés, toast, choix retenu, `/` vers la locale retenue par nginx), admin hors du chrome public et en Hextech, changelog relié dans l'image `web-ssr`. | intégré, relu |
-| I18N | Clés brutes des puces de la fiche champion, course SSR sur les portées (plus de rendu mis en cache avec un catalogue manquant), pluriels `=1`, faute « touts ». | intégré, relu |
+## 3. Vague 2 : les huit lots de pages
 
-Contrôles de l'intégration :
+Interrompue le 2026-09-27 (machine saturée, section 7), reprise et terminée le 2026-09-28. Deux
+commits de sauvegarde (ENTITYDET, HOME) avaient embarqué les 18 JSON du changelog à travers la
+jonction `published` : défaits (`reset --soft`), le travail repris et committé proprement.
+Rapports des correcteurs et des relecteurs : `donnees/vague-2-rapports.json`.
 
-- typecheck et ESLint verts ;
-- tests des règles de lint : 9/9 ;
-- suite front 240/240 sur deux passages ;
-- `build:web` vert, le bundle initial étant à 672 ko, en avertissement comme avant ;
-- `lodb-next` reconstruite à `36709519` et cache de pages purgé.
+| Lot | Écarts | Correcteur | Relecteur |
+|---|---|---|---|
+| LISTS | 62 | 62 corrigés | rien à reprendre |
+| DETAIL | 26 | 26 corrigés | 4 problèmes corrigés (visionneuse de chromas en paysage, tests) |
+| ENTITYDET | 21 | 21 corrigés, `app.config.ts` rendu intact | 3 problèmes, dont un test manquant |
+| HOME | 13 | 11 corrigés, 2 couverts par LISTS | 3 problèmes (repli RTL, conventions) |
+| EDITORIAL | 18 | 17 corrigés, 1 déjà fait par DS | rien à reprendre |
+| ACCOUNT | 42 | 39 corrigés, 1 partiel, 2 sans objet | 2 régressions corrigées (axe `list`, pseudo à 390 px) |
+| BUILDS | 36 | 35 corrigés, 1 sans objet | 5 problèmes corrigés |
+| ADMIN | 53 | 53 corrigés | 8 problèmes corrigés ; commit de 129 fichiers découpé en 11 |
 
-## 3. Vague 2 : en cours
+Fusions `--no-ff` dans l'ordre LISTS, DETAIL, ENTITYDET, HOME, BUILDS, ACCOUNT, ADMIN, EDITORIAL.
+Conflits résolus en gardant les deux apports : chemins de `ui/cards` (déplacés par LISTS),
+aperçus de l'accueil (carte partagée de LISTS et portrait de HOME), tailles de dialogue (DETAIL et
+ACCOUNT).
 
-Les branches existent et tout leur travail est committé. **Aucune n'est fusionnée.** Les rapports
-des correcteurs sont dans `donnees/vague-2-rapports.json`, et la passation de la vague 1 vers la
-vague 2 dans `donnees/vague-2-notes.md`.
+## 4. Second audit et corrections
 
-| Lot | Branche | Correcteur | Relecteur | Remarque |
-|---|---|---|---|---|
-| LISTS | `wt/parite-lists` (14 commits) | terminé : 62/62 | **à faire** | cartes portrait, filtres à droite, Copy link, états vides… |
-| DETAIL | `wt/parite-detail` (8) | terminé : 26/26 | **à faire** | pagers SSR depuis `neighbours`, badge de temps sur les 4 fiches |
-| ADMIN | `wt/parite-admin` (2) | terminé : 53/53 | **à faire** | un seul commit de 129 fichiers : à découper, ou au moins à justifier en relecture |
-| ACCOUNT | `wt/parite-account` (16) | terminé : 39 corrigés, 1 partiel, 2 sans objet | **interrompu** | relecture à relancer |
-| BUILDS | `wt/parite-builds` (14) | terminé : 35 corrigés, 1 sans objet | **à faire** | |
-| ENTITYDET | `wt/parite-entitydet` (1) | **interrompu** | à faire | dernier commit = sauvegarde non vérifiée (`chore(front/catalogue): sauvegarder le travail en cours…`) |
-| HOME | `wt/parite-home` (2) | **interrompu** | à faire | idem : dernier commit = sauvegarde non vérifiée |
-| EDITORIAL | `wt/parite-editorial` (0) | **pas commencé** | à faire | inclut le bloquant du h1 de `/developers` sur téléphone |
+Six groupes de pages (shell/DS/i18n, accueil et listes, fiches détail, éditorial, compte et
+builds, admin), chacun audité puis vérifié par un adversaire : **64 écarts vérifiés** (4 majeurs,
+30 mineurs, 30 finitions), 3 réfutés. Les 339 écarts du premier audit y sont recontrôlés
+(`donnees/second-audit/anciens-ecarts.json`). L'erreur d'hydratation de `/en/items`
+(`__ngContext__`) avait disparu : le texte riche de Riot contient des `<li>` nus, qui fermaient
+les cellules de la grille en `ul/li` ; la grille est en `div role=list` depuis LISTS.
 
-## 4. Reprise, dans l'ordre
+| Lot | Écarts | Correcteur | Relecteur |
+|---|---|---|---|
+| SHELL (A, D) | 18 | 17 corrigés, 1 partiel (A2-06) | 4 problèmes corrigés |
+| CATALOGUE (B, C) | 19 | 19 corrigés | 2 régressions à 320 px et un écart DRY corrigés |
+| APPS (E) | 11 | 9 corrigés, 1 partiel, 1 pris par SHELL | 3 problèmes corrigés |
+| ADMIN (F) | 16 | 16 corrigés | rien à reprendre |
 
-1. **Stacks.** Chaque commande est à lancer depuis la racine.
+Écarts, rapports et relectures : `donnees/second-audit/`. APPS ajoute un point d'API additif,
+`POST /api/account/reset-password/check`, qui dit si un lien de réinitialisation est encore
+valable sans le consommer (contrat et client régénérés à l'intégration). ADMIN corrige la sonde
+PostgreSQL à la source (`ServiceProbes.cs`), sans changer le contrat.
 
-   ```bash
-   docker compose up -d
-   MSYS_NO_PATHCONV=1 docker compose exec -T php chown -R www-data:www-data var /srv/storage
-   docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --wait
-   ```
+## 5. Intégration et garde-fous
 
-2. **Outils.** Les scripts de `outils/` codent en dur le chemin du scratchpad de la session
-   précédente, dans les variables `S` et `LOCKS`. Copier `outils/` et `donnees/` dans le
-   scratchpad de la nouvelle session, puis corriger ces chemins. `ecarts.json` y reprend son nom
-   de travail `assigned.json`, et les lots se régénèrent par `node plan.mjs`, qui écrit `wp/<LOT>.json`.
-   Les comptes de test et la clé TOTP de l'admin sont **hors dépôt**, dans
-   `F:/Git/lodb-parite/COMPTES-LOCAUX.txt` et `F:/Git/lodb-parite/admin-totp/`.
-3. **Terminer la vague 2.**
-   - Relecteurs de LISTS, DETAIL, ADMIN, ACCOUNT et BUILDS.
-   - Correcteurs d'ENTITYDET et HOME : dire qu'une tentative précédente a laissé un commit de
-     sauvegarde à reprendre.
-   - Correcteur d'EDITORIAL, puis leurs relecteurs.
+État final : `c8c5a6ed`, 178 commits depuis l'état consigné la veille (`664926d0`), dont 12
+fusions ; `lodb-next` reconstruite service par service (`api`, `web-ssr`) à ce commit.
 
-   `outils/wave2.js` contient les consignes complètes, sans mots de passe. Pour ne pas relancer
-   les correcteurs terminés, écrire un script qui ne lance que les agents manquants, en passant
-   les rapports de `vague-2-rapports.json`.
-4. **Intégrer la vague 2.**
-   - Fusions `--no-ff`, puis typecheck, ESLint, suite front bridée et `build:web`.
-   - Reconstruire `lodb-next` **service par service** :
-     `APP_REVISION=<sha> IMAGE_TAG=<sha> docker compose -p lodb-next … build api`, puis
-     `web-ssr` et `nginx`, puis `up -d --wait`. Purger ensuite le cache de pages :
-     `docker exec lodb-next-nginx-1 sh -c 'rm -rf /var/cache/nginx/pages/*'`.
-   - La vague 2 ne change pas le contrat : pas de régénération, sauf si un lot touche l'API.
-5. **Second audit.** Recapturer les 29 paires et rejouer un audit ciblé sur les écarts restants.
-   Corriger jusqu'à ce qu'il ne remonte plus rien.
-6. **Garde-fous complets.**
-   - `dotnet build LoDb.slnx -c Release` et `dotnet test`.
-   - Suite E2E complète : lancer `docker restart lodb-next-api-1` avant, à cause du quota
-     d'inscriptions.
-   - Remesure Lighthouse : les portraits et résumés des champions et les descriptions des
-     objets alourdissent les listes, et un budget ne se relâche jamais.
-7. **Fin.** Lancer `/commit-and-push`, comme l'utilisateur l'a demandé.
+- **Front** : typecheck, ESLint, suite Vitest complète (247 fichiers, 2 199 tests), `build:web`,
+  Prettier sur les 500 fichiers touchés : verts. Seul avertissement : le bundle initial (686 kB
+  pour un seuil d'avertissement de 500 kB, déjà dépassé avant ; section 6).
+- **.NET** : `dotnet build -c Release`, 0 avertissement ; `dotnet test`, 2 928 réussis. Les 22
+  échecs sont ceux de l'environnement : les 21 comparaisons de texte du checkout CRLF, et
+  `PhotinoIsolationTests`, qui cherche `LoDb.slnx` en remontant depuis sa sortie et échoue quand
+  `--artifacts-path` la met ailleurs (vert avec la sortie par défaut).
+- **E2E** : suite complète contre `lodb-next`, 318 réussis, 1 ignoré, 0 échec.
+- **Lighthouse** (`docs/reecriture/rapports/lighthouse.md`) : les cartes portrait avaient fait
+  passer le CLS de la liste des champions de 0 à 1,198. Cause : quand le cache de transfert manque,
+  la liste affiche son squelette, fait de tuiles de 9rem deux à trois fois plus basses que les
+  cartes ; la page s'effondre, et les halos du fond, placés en pourcentage de sa hauteur, bougent
+  avec elle. Le squelette d'une grille de portraits a désormais la hauteur d'une carte
+  (`c8c5a6ed`) : CLS 0,001. Les cinq pages manquaient déjà les budgets Performance et LCP avant le
+  chantier ; la liste des champions garde un LCP plus lent (5,3 s contre 3,6 s), dû à l'art de
+  chargement hébergé par Data Dragon (section 6).
+- **Contrat** : `api:check` signale une dérive sous Windows, faite uniquement des `\r\n` que les
+  commentaires XML d'un checkout CRLF laissent dans les descriptions. Les documents committés sont
+  normalisés en `\n` (`outils/comparaison/normalize-openapi.mjs`), comme une génération sous Linux.
+- **Grammaire d'URL** : `tools/next/routing/check-urls.sh` n'a pas tourné, faute de `jq` sur le
+  poste ; les specs E2E `routing/` et `legacy/` sont vertes.
 
-## 5. Règles et pièges constatés
+## 6. À trancher, et restes connus
 
-- **Mémoire.** Ne jamais saturer la machine : c'est la cause de l'arrêt.
-  - Vitest lance par défaut un worker par CPU logique, soit 24. Une suite monte ainsi à 4,8 Go,
-    contre 1,9 Go avec 3 workers (`outils/vitest-limited.config.mjs` ou
-    `VITEST_MAX_WORKERS=3`), pour la même durée.
-  - Toutes les commandes lourdes passent par `outils/heavy.sh`, un sémaphore machine à 2 places
-    qui coupe aussi MSBuild et Roslyn résidents.
-  - Au plus 4 agents à la fois, et même moins si la machine rame.
-  - `dotnet build-server shutdown` après tout travail .NET.
-  - Ne laisser aucun aperçu ni navigateur orphelin.
-- **Worktrees et jonctions.** Les worktrees partagent les `node_modules` du checkout principal
-  par **jonctions NTFS**, et le lien du changelog (`features/editorial/changelog/published`,
-  extrait en simple fichier texte car `core.symlinks=false`) y est remplacé par une jonction
-  masquée à git (`skip-worktree`). Le checkout principal a lui aussi cette jonction. **Toujours
-  lancer `outils/unprep-worktree.sh <worktree>` avant `git worktree remove`**, sinon la
-  suppression pourrait traverser la jonction et effacer les `node_modules` principaux.
-- **CRLF.** Le checkout est en CRLF (`core.autocrlf=true`).
-  - `prettier --check .` signale environ 149 fichiers non touchés : juger avec
-    `--end-of-line auto`.
-  - 21 tests .NET qui comparent du texte échouent déjà sur la base.
-  - Vitest réécrit deux `.snap` de `core/seo/json-ld` en LF : les restaurer, ne pas les committer.
-- **OpenAPI sous Windows.** Les descriptions sortent avec `\r\n`, tirés des commentaires XML
-  du checkout CRLF. Les normaliser en `\n` avant de committer, ce qu'a fait `36709519`. Idéalement,
-  `tools/next/api` devrait le faire lui-même.
-- **Reprise d'un workflow.** Seul le préfixe inchangé des appels est rejoué depuis le cache :
-  modifier le prompt d'un agent relance tous ceux qui le suivent.
-- **Ports et specs.**
-  - Le port 4310 est pris par un conteneur d'un autre projet ; la vague 2 utilisait 4400 à 4470.
-  - `core/layout/nav/chrome-links.spec.ts` a échoué une fois sur trois passages complets, puis
-    est passée seule et deux fois en suite complète : à surveiller.
-  - Sur un aperçu local, les specs E2E `routing/` et `legacy/` échouent, car elles exigent nginx.
-    Ne jamais lancer `register` ni `contact` (quota de 5 par heure).
+- **Budget du bundle initial.** Un correcteur l'avait relevé à 700 kB ; c'est annulé (`c50b33fe`) :
+  relever un budget revient au propriétaire du projet. Deux voies : garder l'avertissement, ou
+  réduire la feuille globale en sortant les fonctionnalités chargées à la demande du balayage
+  Tailwind global (`@source not`, feuille chargée avec la fonctionnalité). Les classes des panneaux
+  CDK (`dialog-picker.css`, `lightbox.css`) doivent rester globales.
+- **LCP de la liste des champions.** Deux leviers : un `preconnect` vers
+  `ddragon.leagueoflegends.com` (ni l'ancien ni le nouveau front n'en ont), et une mesure locale
+  plus juste. En local, nginx transmet `Host: $host` sans le port : l'origine que le SSR range dans
+  le cache de transfert (`http://localhost`) diffère de celle du navigateur
+  (`http://localhost:18080`), le cache manque et la liste se redessine à l'hydratation. En
+  production, sur le port standard, les deux coïncident. Transmettre `$http_host` au SSR rendrait
+  la mesure locale fidèle ; à vérifier contre `LODB_ALLOWED_HOSTS`.
+- **Divergences consignées dans `heritage.md`.** H7 : après plusieurs sauts de section, Retour
+  rembobine l'adresse sans défiler (l'ancien site remontait en haut à chaque fois). H8 : les pages
+  prérendues affichent « Patch » jusqu'au chargement de `/api/meta` (parité complète = amender
+  l'ADR 0005). H9 : `auth.register.password_help` n'est pas affiché.
+- **Arabe.** 407 clés manquent à `ar.json` (comme dans l'ancien `messages.ar.yaml`) : les textes de
+  repli anglais sont isolés en `dir=ltr`, pas traduits.
+- **Admin.** À 320 px, `/admin/monitoring` déborde de 24 px sur le nom de table insécable
+  `pg_total_relation_size` (l'ancienne admin déborde davantage). Les 11 commits du découpage ADMIN
+  de la vague 2 ne compilent pas un à un ; seul le dernier est vérifié.
+- **Outillage et hygiène.** `tools/next/api` devrait normaliser lui-même les `\r\n` ;
+  `check-urls.sh` demande `jq` ; cinq copies de `initials-of.ts` ; `ui/navigation` compte 10
+  fichiers, la limite.
 
-## 6. Divergences volontaires du second audit
+## 7. Ressources : ce qui paralysait la machine
 
-### Admin
+Le premier passage (quatre agents) avait figé le poste. Mesures faites pendant la reprise :
 
-- **Lectures de carte** (F2-06) : Déduplication de la vue d'ensemble, WebP du stockage et file
-  d'e-mails de la surveillance. L'ancien balisage `.k-label` / `.k-val` et la barre `.r-track`
-  y sont posés hors d'une tuile `.kpi` et d'une ligne `.rank-row`, les seules portées où
-  `data.css` les style. L'ancien site les rend donc en texte courant collé à sa valeur
-  (« Ratio réfs / blobs2.2× »), et sa barre WebP reste invisible. Le nouveau rend ce que ce
-  balisage visait : un libellé en surtitre au-dessus de sa valeur, et une barre visible. Même
-  famille que les clés tronquées des plus gros objets, que l'audit ne fait pas recopier non plus.
+- **Le disque.** Le dépôt, les worktrees et `node_modules` sont sur F:, un disque dur SMR (Seagate
+  ST8000DM004) qui porte aussi E:, où est installé League of Legends. Les écritures aléatoires y
+  font monter la latence de tout le poste. Les sorties de build et de Playwright (`dist`,
+  `test-results`) sont redirigées vers le SSD (C:) par des jonctions
+  (`outils/worktrees/ssd-outputs.sh`) ; les builds .NET prennent `--artifacts-path` sur C:.
+- **Windows Defender** relit jusqu'à 260 Mo/s pendant un build ; une exclusion des dossiers de
+  travail est à la décision de l'utilisateur.
+- **Le sémaphore** `outils/ressources/heavy.sh` : au plus deux commandes lourdes sur la machine,
+  en priorité basse (`nice`, soit BelowNormal), Vitest à 3 workers, build Angular, esbuild et
+  MSBuild bridés ; il attend tant que F: sature (5 min au plus, sonde `watch-disk.ps1`), que la
+  RAM libre est sous 12 Go, ou qu'une partie de League of Legends tourne (mode jeu, sans limite ;
+  `game-guard.ps1` passe alors navigateurs et aperçus des agents en priorité Idle).
+- **Le pool noyau.** Le cache de noms du Filter Manager (`FMfn`, 6,8 Go) et les FCB NTFS montent
+  avec le nombre de fichiers touchés : huit worktrees lisant `node_modules` par huit chemins de
+  jonction. Peu de worktrees à la fois ; `outils/ressources/pool-tags.ps1` donne le détail.
+- **Recherche** : `git grep`, jamais `grep -r` sur un worktree (les jonctions `node_modules`).
+- Au plus trois agents à la fois ; aucun aperçu ni navigateur orphelin.
+
+## 8. Données et outils
+
+- `donnees/` : `ecarts.json` (premier audit), `paires-de-pages.json`, rapports des vagues 1 et 2,
+  `vague-2-notes.md` (passation), `second-audit/` (écarts vérifiés, anciens écarts recontrôlés,
+  rapports des corrections).
+- `outils/comparaison/` : captures, aperçu local d'un build, découpage en lots, normalisation des
+  documents OpenAPI.
+- `outils/ressources/` : sémaphore, sondes disque et RAM, mode jeu, pool noyau.
+- `outils/worktrees/` : préparation (jonctions `node_modules` et changelog), sorties sur SSD,
+  retrait des jonctions. **Toujours lancer `unprep-worktree.sh` avant `git worktree remove`**.
+- `outils/workflows/` : les scripts des workflows d'agents. Ils codent en dur le scratchpad de la
+  session (variables `S`, `LOCKS`) : à corriger avant réemploi. Les comptes de test et la clé TOTP
+  de l'admin restent hors dépôt (`F:/Git/lodb-parite/`).

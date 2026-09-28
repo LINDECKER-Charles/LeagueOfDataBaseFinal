@@ -5,6 +5,7 @@
 // to the lodb-next stack (nginx on :18080), so data and images are the integration stack's.
 import http from 'node:http';
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 
 const [, , webRoot, portArg] = process.argv;
@@ -13,7 +14,10 @@ const ssrPort = port + 1;
 const STACK = { host: 'localhost', port: 18080 };
 const TO_STACK = /^\/(api|cdn|v1|webhooks|sitemaps?|sitemap\.xml|robots\.txt|llms\.txt)(\/|$|\?|\.)/;
 
-const ssr = spawn(process.execPath, [path.join(webRoot, 'dist/web/server/server.mjs')], {
+// dist may be a junction to another drive (ssd-outputs.sh): Angular's isMainModule compares
+// argv[1] with the module's resolved URL, so the server only listens when started by its real path.
+const serverEntry = fs.realpathSync.native(path.join(webRoot, 'dist/web/server/server.mjs'));
+const ssr = spawn(process.execPath, [serverEntry], {
   env: {
     ...process.env,
     PORT: String(ssrPort),

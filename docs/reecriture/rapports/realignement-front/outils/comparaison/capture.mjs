@@ -1,6 +1,7 @@
 // Usage: node capture.mjs <outDir> <pairsJson> [widths=1440,390] [only=name1,name2]
 // Captures full-page screenshots + visible text of legacy (:8080) vs next (:18080) page pairs.
 // Pair: {name, old, new, oldBase?, newBase?, scheme?: 'dark'|'light', click?: [selectorOld, selectorNew]}
+import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,6 +17,16 @@ fs.mkdirSync(outDir, { recursive: true });
 const OLD = process.env.OLD_BASE ?? 'http://localhost:8080';
 const NEW = process.env.NEW_BASE ?? 'http://localhost:18080';
 const HIDE_DEV_CHROME = '.sf-toolbar, .sf-minitoolbar, [id^="sfwdt"] { display: none !important; }';
+
+// Game mode, as in heavy.sh: no browser starts while the user plays a League of Legends match.
+const isMatchRunning = () =>
+  execFileSync('tasklist', ['/FI', 'IMAGENAME eq League of Legends.exe', '/NH'], {
+    encoding: 'utf8',
+  }).includes('League of Legends.exe');
+if (isMatchRunning()) {
+  console.error('capture.mjs: waiting, the user is playing a League of Legends match (game mode).');
+  while (isMatchRunning()) await new Promise((resolve) => setTimeout(resolve, 10000));
+}
 
 const browser = await chromium.launch();
 for (const width of widths) {

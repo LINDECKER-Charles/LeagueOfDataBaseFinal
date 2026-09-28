@@ -589,3 +589,25 @@ Constats du [jalon du lot 8](docs/reecriture/rapports/jalons/lot-08.md).
 - Les instantanés Playwright (`tests/LoDb.E2E/test-results/`) sont écrasés par le passage
   suivant, `readonly-e2e.sh` de la répétition compris : lire les échecs de la suite complète
   avant de lancer la répétition.
+
+### Pièges du réalignement du front (ne pas « corriger » par erreur)
+
+Constats du [réalignement](docs/reecriture/rapports/realignement-front/README.md).
+
+- **Grilles de cartes en `div role=list`**, jamais en `ul/li` ni en `<p>` : le texte riche de
+  Riot contient des `<li>` nus, que le navigateur prend pour la fin de la cellule. La cellule
+  se referme, l'hydratation ne retrouve plus ses nœuds (`__ngContext__` sur null) et le clic
+  sur une carte reste sur la liste.
+- **Squelette à la hauteur de ce qu'il remplace** : la forme `portrait` pour une grille de
+  portraits. Un squelette plus bas effondre la page pendant le chargement, et les halos du fond
+  (placés en pourcentage de sa hauteur) la font compter en CLS (1,2 mesuré).
+- **Lighthouse en local est pessimiste** : nginx transmet `Host` sans le port, le cache de
+  transfert du SSR range ses réponses sous `http://localhost` et le navigateur les demande à
+  `:18080`. Tout est redemandé à l'hydratation, ce qui n'arrive pas en production.
+- **Contrat sous Windows** : après `api:generate`, normaliser en `\n` les `\r\n` que le checkout
+  CRLF laisse dans les descriptions OpenAPI (`normalize-openapi.mjs` du rapport) ; `api:check`
+  signale sinon une dérive faite de ces seuls caractères.
+- **`dotnet test` ne prend pas `-m`** : la plateforme de test le passe aux applications de test,
+  qui n'exécutent alors aucun test (code 5). `--artifacts-path` fait échouer
+  `PhotinoIsolationTests`, qui cherche `LoDb.slnx` en remontant depuis sa sortie.
+- Relever le budget `initial` de `build:web` est une décision du propriétaire, pas d'un lot.
