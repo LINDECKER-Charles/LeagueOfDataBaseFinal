@@ -43,6 +43,11 @@ test.describe('public pages on a 320 px phone', { tag: '@readonly' }, () => {
     await expectFitsPhone(page, '/en/champions/nowhere/at/all');
   });
 
+  // The longest list title of the 21 locales: one German word wider than the phone.
+  test('fit a list titled with one long word in the width', async ({ page }) => {
+    await expectFitsPhone(page, pageUrl('de', 'summoners'));
+  });
+
   for (const path of RTL_PATHS) {
     const url = pageUrl('ar', path);
 

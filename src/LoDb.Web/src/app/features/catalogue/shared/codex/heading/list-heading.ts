@@ -15,7 +15,9 @@ import { Logo } from '../../../../../ui/media/logo';
       </div>
       <div>
         <p class="mb-1.5 eyebrow">Data Dragon · {{ version() }}</p>
-        <h1 class="font-beaufort text-3xl tracking-wide text-gold-grad uppercase sm:text-4xl">
+        <h1
+          class="font-beaufort text-3xl tracking-wide [overflow-wrap:anywhere] text-gold-grad uppercase sm:text-4xl"
+        >
           {{ title() }}
         </h1>
       </div>
