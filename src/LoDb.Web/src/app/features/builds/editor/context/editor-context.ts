@@ -70,6 +70,13 @@ import { versionChoices } from './version-choices';
         flex-direction: column;
         gap: 0.375rem;
       }
+      /*
+       * A percentage width, as the legacy w-full: the widest option no longer sets the
+       * column's minimum, which pushed the selects through the section's padding at 320 px.
+       */
+      .forge-context__field > select {
+        inline-size: 100%;
+      }
       .forge-context__label {
         font-family: var(--font-beaufort);
         font-size: 0.65rem;
