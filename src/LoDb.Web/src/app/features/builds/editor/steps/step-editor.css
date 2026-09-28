@@ -42,9 +42,10 @@
     align-items: center;
     gap: 0.5rem;
   }
+  /* Beside the handle and the number down to 320 px: 10rem would wrap to a row of its own. */
   .forge-step__label {
-    flex: 1 1 10rem;
-    min-inline-size: 10rem;
+    flex: 1 1 min(10rem, 100% - 4rem);
+    min-inline-size: min(10rem, 100% - 4rem);
     max-inline-size: 18rem;
   }
   .forge-step__note {
