@@ -82,7 +82,7 @@ Les identifiants (A1, B2…) servent de référence stable dans les ADR et le pl
 | H4 | Timeout de 4 s du service worker, `respondWith(undefined)` qui donnait des pages blanches | PWA conservée : network-first pour les pages, cache-first pour les blobs, contournement des routes privées |
 | H5 | Admin hors pipeline Vite, tokens dupliqués | module Angular chargé à la demande, même design system |
 | H6 | Zoom iOS sur les champs < 16 px, sonde de débordement, **pas de RTL** | champs ≥ 16 px, sonde reprise en E2E, RTL pour `ar` |
-| H7 | Puces de section : chaque clic ajoutait une entrée d'historique (`pushState`) que Retour rembobinait sans défiler (restauration manuelle de Turbo), soit un appui mort par puce | ancre partageable sans entrée d'historique (`replaceState`) : Retour quitte la page. Un `pushState` brut désynchronise le routeur Angular |
+| H7 | Ancres et puces de section : chaque saut ajoutait une entrée d'historique (`pushState`, ancres natives comme puces) ; Retour revenait en haut de la page légale, mais rembobinait sans défiler sur les puces (restauration manuelle de Turbo) | saut par `SectionJump` : défilement avec la marge de la section, focus dans la section (le Tab suivant y entre, comme après une ancre native) et entrée d'historique (`pushState` de `history.state`, qui garde les identifiants du routeur). Retour après un saut revient en haut de la page, puces comprises ; après plusieurs sauts, les entrées intermédiaires se rembobinent sans défiler (le routeur restaure la position de sa navigation, partagée par les entrées ajoutées) |
 
 ## 4. Bugs latents et dérives — à corriger dans l'existant sans attendre
 

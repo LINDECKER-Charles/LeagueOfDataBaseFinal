@@ -71,4 +71,8 @@
   [id] {
     scroll-margin-block-start: 5.5rem;
   }
+  /* A section focused by a jump (SectionJump) is no control: it shows no ring. */
+  [data-section-target]:focus {
+    outline: none;
+  }
 }
