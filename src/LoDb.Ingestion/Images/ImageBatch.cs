@@ -12,4 +12,11 @@ namespace LoDb.Ingestion.Images;
 internal sealed record ImageBatch(
     PatchVersion Version,
     IReadOnlyCollection<DdragonImage> Images,
-    bool Force);
+    bool Force)
+{
+    /// <summary>
+    /// Told of each image the run fetched, whatever its verdict, before the verdicts of its
+    /// chunk are recorded. An image skipped as already recorded is not reported.
+    /// </summary>
+    public IProgress<DdragonImage>? Progress { get; init; }
+}

@@ -90,35 +90,24 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
         return true;
     }
 
-    public async Task EnsureImagesAsync(
+    public Task EnsureImagesAsync(
         PatchVersion version,
         IReadOnlyCollection<DdragonImage> images,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(version);
         ArgumentNullException.ThrowIfNull(images);
-        var unrecorded = await services.Manifest
-            .UnrecordedAsync(version, images, cancellationToken)
-            .ConfigureAwait(false);
-        if (unrecorded.Count == 0
-            || !await services.Releases.IsKnownAsync(version, cancellationToken)
-                .ConfigureAwait(false))
-        {
-            return;
-        }
+        return EnsureAsync(new ImageBatch(version, images, false), cancellationToken);
+    }
 
-        var byUnit = unrecorded
-            .DistinctBy(image => ImageUnit(version, image))
-            .ToDictionary(image => ImageUnit(version, image), StringComparer.Ordinal);
-        await flights.RunAsync(
-                byUnit.Keys,
-                (units, token) => WithSlotAsync(
-                    slotToken => services.Images.IngestAsync(
-                        new ImageBatch(version, [.. units.Select(unit => byUnit[unit])], false),
-                        slotToken),
-                    token),
-                cancellationToken)
-            .ConfigureAwait(false);
+    public Task EnsureImagesAsync(WatchedImages images, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(images);
+        var batch = new ImageBatch(images.Version, images.Images, false)
+        {
+            Progress = images.Progress,
+        };
+        return EnsureAsync(batch, cancellationToken);
     }
 
     public bool TryEnqueue(OnDemandRequest request)
@@ -223,6 +212,34 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
             await EnsureImagesAsync(work.Version, work.Images, cancellationToken)
                 .ConfigureAwait(false);
         }
+    }
+
+    // The flight covering a unit runs only the images it claimed, with the claimer's progress.
+    private async Task EnsureAsync(ImageBatch requested, CancellationToken cancellationToken)
+    {
+        var version = requested.Version;
+        var unrecorded = await services.Manifest
+            .UnrecordedAsync(version, requested.Images, cancellationToken)
+            .ConfigureAwait(false);
+        if (unrecorded.Count == 0
+            || !await services.Releases.IsKnownAsync(version, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return;
+        }
+
+        var byUnit = unrecorded
+            .DistinctBy(image => ImageUnit(version, image))
+            .ToDictionary(image => ImageUnit(version, image), StringComparer.Ordinal);
+        await flights.RunAsync(
+                byUnit.Keys,
+                (units, token) => WithSlotAsync(
+                    slotToken => services.Images.IngestAsync(
+                        requested with { Images = [.. units.Select(unit => byUnit[unit])] },
+                        slotToken),
+                    token),
+                cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private async Task WithSlotAsync(

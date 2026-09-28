@@ -8,6 +8,8 @@ import { of } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api-base-url';
 import type { CatalogMeta } from '../../core/api/generated/models/catalog-meta';
 import { PreferencesStore } from '../../core/context/preferences/preferences-store';
+import { WarmUpLoader } from '../../core/context/warm-up/warm-up-loader';
+import type { WarmUpTarget } from '../../core/context/warm-up/warm-up-target';
 import { NavContext } from '../../core/layout/nav/nav-context';
 import { ToastService } from '../../core/layout/toast/toast-service';
 import { ContextSwitcher } from './context-switcher';
@@ -36,12 +38,15 @@ const META: CatalogMeta = {
   defaultGameMode: 'sr',
 };
 const FORGET = 'lod_prefs=; path=/; max-age=0';
+// Lets every visit through at once: the loader's own spec covers the wait.
+const gate = vi.fn((_target: WarmUpTarget, visit: () => Promise<boolean>) => visit());
 
 function configure(platform: 'browser' | 'server'): void {
   TestBed.configureTestingModule({
     providers: [
       { provide: PLATFORM_ID, useValue: platform },
       { provide: API_BASE_URL, useValue: ORIGIN },
+      { provide: WarmUpLoader, useValue: { gate } },
       provideHttpClient(),
       provideHttpClientTesting(),
       provideRouter([{ path: ':locale', children: [{ path: '**', component: Probe }] }]),
@@ -101,6 +106,7 @@ describe('ContextSwitcher', () => {
   beforeEach(() => {
     lang = document.documentElement.lang;
     document.cookie = FORGET;
+    gate.mockClear();
   });
 
   afterEach(() => {
@@ -161,6 +167,24 @@ describe('ContextSwitcher', () => {
 
     expect(routerUrl()).toBe(`/en/${OLDER}/items?page=2&lang=en_GB`);
     expect(document.cookie).not.toContain('lod_prefs');
+  });
+
+  it('warms the chosen patch and language, and the lists of the page, before the visit', async () => {
+    configure('browser');
+    const fixture = await openOn('/fr/items?page=2');
+    const host = await loaded(fixture);
+
+    pick(host, 'switcher-version', OLDER);
+    pick(host, 'switcher-language', 'en:en_GB');
+    await submit(fixture);
+    await submit(fixture);
+
+    // The second choice changes nothing: that visit needs no loader.
+    expect(gate).toHaveBeenCalledExactlyOnceWith(
+      { version: OLDER, language: 'en_GB', resources: ['items'] },
+      expect.any(Function),
+    );
+    expect(routerUrl()).toBe(`/en/${OLDER}/items?page=2&lang=en_GB`);
   });
 
   it('confirms every choice with a toast, as the legacy flash did', async () => {
