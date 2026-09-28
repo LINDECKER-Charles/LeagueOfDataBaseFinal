@@ -1,34 +1,40 @@
-name: Build
+name: _build
 
-# Reusable: build the three images and push them to GHCR, tagged with the commit SHA
-# (immutable) and a moving tag (preprod). Called by ci.yml on a push of dev, once its
-# blocking jobs are green. Uses the automatic GITHUB_TOKEN.
+# Reusable: build the 3 images and push them to GHCR, tagged with the triggering SHA
+# (immutable) plus a moving tag (default: staging). Single responsibility = "produce the
+# candidate artifacts". Uses the automatic GITHUB_TOKEN (no extra secret needed).
 #
-# Images: ghcr.io/<owner>/lodb/{api,web-ssr,nginx}. The legacy _build.yml also pushes
-# lodb/nginx, but only under its own tags (<sha of dev>, staging, prod, latest).
+# Images: ghcr.io/<owner>/lodb/{api,web-ssr,nginx}. lodb/nginx is the name the legacy stack
+# used too: its immutable <sha> tags stay in the registry for a rollback.
 on:
   workflow_call:
     inputs:
+      ref:
+        description: Git ref to build from (e.g. the test branch after merge).
+        required: true
+        type: string
       moving_tag:
-        description: Moving tag applied alongside the immutable SHA tag.
+        description: Moving tag applied alongside the immutable SHA tag (e.g. staging).
         required: false
         type: string
-        default: preprod
+        default: staging
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  image:
+  build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
         image: [api, web-ssr, nginx]
     steps:
-      - name: Checkout
+      - name: Checkout ${{ inputs.ref }}
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Compute image name (lowercase owner)
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb/${{ matrix.image }}" >> "$GITHUB_ENV"
@@ -44,7 +50,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # APP_REVISION feeds the OCI revision label and the lodb_build_info metric.
-      - name: Build and push ${{ matrix.image }}
+      - name: Build & push ${{ matrix.image }}
         uses: docker/build-push-action@v7
         with:
           context: .

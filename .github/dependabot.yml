@@ -1,8 +1,9 @@
 # Dependabot — weekly version updates for every manifest of the new stack.
 #
 # Decisions:
-# - target-branch: dev. A push of dev builds the images and deploys preprod (ci.yml); prod
-#   is promoted by hand (promote.yml), so dependency PRs must land on dev. This file
+# - target-branch: dev. A push of dev merges into test, builds the images and deploys
+#   staging (ci.yml); prod follows the manual test→main merge, so dependency PRs must land
+#   on dev. This file
 #   itself is only read from the default branch (main): it is inert until promoted.
 # - Security updates (if enabled in the repo settings) always target the default
 #   branch and, because target-branch is set, IGNORE every option below (prefix,

@@ -1,12 +1,17 @@
-name: CI
+name: CI/CD
 
-# Continuous integration (.NET 10 + Angular). The legacy stack's ci.yml is archived under
-# legacy/.github/workflows/ and no longer runs; changes under legacy/ trigger nothing.
+# Continuous integration (.NET 10 + Angular) and delivery. The legacy stack's workflows are
+# archived under legacy/.github/workflows/ and no longer run; changes under legacy/ trigger
+# nothing. The checks run in parallel: build and tests .NET, front checks, API contract,
+# i18n report (informative) and E2E on the local stack. No sensitive value here: hosts,
+# paths and app secrets are repository secrets / live inside the per-host ENV_FILE.
 #
-# The jobs run in parallel: build and tests .NET, front checks, API contract, i18n report
-# (informative) and E2E on the local stack. A push of dev, once every blocking job is green, builds and pushes the images
-# (build.yml), then deploys them on preprod (deploy.yml): build once, deploy the same
-# artifact. Production is promoted by hand from a revision preprod served (promote.yml).
+# Two-stage promotion (build once, promote the same artifact):
+#   push dev  ─▶ checks ─▶ merge dev→test ─▶ _build (:sha + :staging) ─▶ _deploy STAGING
+#   push main ─▶ _promote (:staging → :prod) ─▶ _deploy PROD
+#
+# `test` never triggers this workflow. `main` is reached only by a manual test→main
+# merge — that human gate promotes to production (prod never rebuilds nor reruns checks).
 on:
   push:
     branches: [docs/reecriture-dotnet-angular, dev, main]
@@ -26,14 +31,16 @@ on:
 permissions:
   contents: read
 
-# A newer push of the same ref makes the running checks obsolete, except on dev: its run ends
-# with a deploy, which a cancellation would cut halfway through. dev queues instead.
+# A newer push of the same ref makes the running checks obsolete, except on dev and main:
+# their runs end with a deploy, which a cancellation would cut halfway through. They queue.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/main' }}
 
 jobs:
+  # ───────────────────────────── checks (not on main) ────────────────────────
   dotnet:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -59,6 +66,7 @@ jobs:
         run: dotnet test LoDb.slnx -c Release --no-build
 
   front:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -95,6 +103,7 @@ jobs:
   # Drift between the API's OpenAPI documents and the committed client (L2.2). The SDK is
   # installed now because the check builds the API to regenerate the documents.
   contract:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -120,6 +129,7 @@ jobs:
 
   # Translation completeness (L3.3): reported, never blocking.
   i18n:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -140,6 +150,7 @@ jobs:
         run: npm --prefix src/LoDb.Web run i18n:report
 
   e2e:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       COMPOSE_PROJECT_NAME: lodb-dev
@@ -189,25 +200,77 @@ jobs:
         if: always()
         run: docker compose down -v
 
-  build:
+  # ───────────────────────────────── dev path ────────────────────────────────
+  merge-to-test:
     needs: [dotnet, front, contract, e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/build.yml
-    with:
-      moving_tag: preprod
+      contents: write   # pushes the test branch
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-  # The images just built reach preprod at once; production stays a manual promotion
-  # (promote.yml).
-  deploy-preprod:
-    needs: build
+      - name: Merge dev → test (create from main if missing)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch --all --prune
+          if git show-ref --verify --quiet refs/remotes/origin/test; then
+            git checkout -B test origin/test
+          else
+            git checkout -B test origin/main
+          fi
+          git merge --no-ff --no-edit "${GITHUB_SHA}"
+          git push origin HEAD:test
+
+  build:
+    needs: merge-to-test
     permissions:
       contents: read
       packages: write
-    uses: ./.github/workflows/deploy.yml
+    uses: ./.github/workflows/_build.yml
     with:
-      environment: preprod
-      branch: dev
-    secrets: inherit
+      ref: test
+      moving_tag: staging
+
+  deploy-staging:
+    needs: build
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      environment: staging
+      branch: test
+    secrets:
+      SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+      SSH_HOST: ${{ secrets.STAGING_HOST }}
+      DEPLOY_PATH: ${{ secrets.STAGING_PATH }}
+      SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      ENV_FILE: ${{ secrets.ENV_STAGING }}
+      DATA_PROTECTION_PFX: ${{ secrets.STAGING_DATA_PROTECTION_PFX }}
+
+  # ──────────────────────────────── main path ────────────────────────────────
+  promote:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/_promote.yml
+    with:
+      source_tag: staging
+      target_tags: prod latest
+
+  deploy-prod:
+    needs: promote
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      environment: prod
+      branch: main
+    secrets:
+      SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+      SSH_HOST: ${{ secrets.PROD_HOST }}
+      DEPLOY_PATH: ${{ secrets.PROD_PATH }}
+      SSH_USER: ${{ secrets.PROD_SSH_USER }}
+      ENV_FILE: ${{ secrets.ENV_PROD }}
+      DATA_PROTECTION_PFX: ${{ secrets.PROD_DATA_PROTECTION_PFX }}
