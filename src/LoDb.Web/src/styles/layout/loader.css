@@ -1,0 +1,251 @@
+/*
+ * Loader of a patch or language switch (core/context/warm-up): the legacy overlay, on the
+ * `compact` dialog pane. Under its charging core (loader-core.css), the lists the destination
+ * shows turning ready one by one, the entry landing now, and the bar of the images fetched.
+ */
+@layer components {
+  .hx-loader {
+    padding: 2.25rem 2rem 1.9rem;
+    text-align: center;
+  }
+
+  /* ---- Text ---- */
+  .hx-loader__eyebrow {
+    margin-block-end: 0.6rem;
+  }
+  .hx-loader__title {
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 1.4rem;
+    color: var(--color-gold-bright);
+  }
+  .hx-loader__subtitle {
+    margin-block-start: 0.4rem;
+    min-block-size: 1.2em;
+    font-family: var(--font-spiegel);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  /* ---- Manifest: one row per list ---- */
+  .hx-manifest {
+    margin: 1.5rem 0 1rem;
+    padding: 0;
+    list-style: none;
+    text-align: start;
+  }
+  .hx-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-block: 0.4rem;
+  }
+  .hx-row__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 1.85rem;
+    block-size: 1.85rem;
+    color: var(--color-gold);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+    background: color-mix(in srgb, var(--color-void) 60%, transparent);
+    animation: hx-loader-row 1.5s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * 0.16s);
+  }
+  .hx-row--ready .hx-row__icon {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 20%, transparent);
+    animation: none;
+  }
+  .hx-row__label {
+    font-family: var(--font-spiegel);
+    font-size: 0.9rem;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+  .hx-row__lead {
+    flex: 1;
+    align-self: flex-end;
+    block-size: 1px;
+    margin: 0 0.35rem 0.4rem;
+    border-block-end: 1px dotted color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+  }
+  .hx-row__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-hex);
+  }
+  .hx-row--ready .hx-row__status {
+    color: var(--color-gold-bright);
+  }
+  .hx-row__check {
+    inline-size: 0.85rem;
+    block-size: 0.85rem;
+  }
+
+  /*
+   * The entry landing now, on one fixed line: names arrive far faster than a scrolling list
+   * can be read, and a single line stays legible at any pace without ever pushing the bar.
+   */
+  .hx-now {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-block-size: 2.9rem;
+    margin-block-end: 1.2rem;
+    padding: 0.7rem 0.9rem;
+    text-align: start;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 28%, transparent);
+    background: color-mix(in srgb, var(--color-sink) 55%, transparent);
+  }
+  .hx-now__dot {
+    flex: none;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 1px;
+    transform: rotate(45deg);
+    background: var(--color-gold-deep);
+    transition:
+      background 0.25s var(--ease-hextech),
+      box-shadow 0.25s var(--ease-hextech);
+  }
+  .hx-now__dot[data-resource='champions'] {
+    background: var(--color-hex);
+    box-shadow: 0 0 8px 0 var(--color-hex);
+  }
+  .hx-now__dot[data-resource='items'] {
+    background: var(--color-gold);
+    box-shadow: 0 0 8px 0 var(--color-gold);
+  }
+  .hx-now__dot[data-resource='runes'] {
+    background: var(--color-hex-bright);
+    box-shadow: 0 0 8px 0 var(--color-hex-bright);
+  }
+  .hx-now__dot[data-resource='summoners'] {
+    background: var(--color-gold-bright);
+    box-shadow: 0 0 8px 0 var(--color-gold-bright);
+  }
+  .hx-now__name {
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-spiegel);
+    font-size: 1rem;
+    color: var(--color-gold-bright);
+    animation: hx-loader-swap 0.28s var(--ease-hextech);
+  }
+  .hx-now__category {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-hex);
+  }
+
+  /* ---- Bar of the images fetched ---- */
+  .hx-bar {
+    position: relative;
+    block-size: 4px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--color-gold-deep) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 35%, transparent);
+  }
+  .hx-bar__fill {
+    display: block;
+    block-size: 100%;
+    inline-size: 0;
+    background: linear-gradient(90deg, var(--color-gold), var(--color-hex-bright));
+    box-shadow: 0 0 10px -1px color-mix(in srgb, var(--color-hex) 70%, transparent);
+    transition: inline-size 0.35s var(--ease-hextech);
+  }
+  /* While the datasets are prepared, no count exists yet: an indeterminate shimmer. */
+  .hx-bar--indeterminate .hx-bar__fill {
+    inline-size: 40% !important;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-gold),
+      var(--color-hex),
+      transparent
+    );
+    animation: hx-loader-slide 1.3s var(--ease-hextech) infinite;
+    transition: none;
+  }
+  .hx-bar--indeterminate:dir(rtl) .hx-bar__fill {
+    animation-name: hx-loader-slide-rtl;
+  }
+  .hx-bar__pct {
+    margin-block-start: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    color: var(--color-hex);
+  }
+
+  @keyframes hx-loader-row {
+    0%,
+    100% {
+      border-color: color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+      color: var(--color-gold);
+      box-shadow: none;
+    }
+    50% {
+      border-color: var(--color-hex);
+      color: var(--color-hex-bright);
+      box-shadow: 0 0 14px -2px color-mix(in srgb, var(--color-hex) 60%, transparent);
+    }
+  }
+  @keyframes hx-loader-slide {
+    from {
+      transform: translateX(-120%);
+    }
+    to {
+      transform: translateX(320%);
+    }
+  }
+  @keyframes hx-loader-slide-rtl {
+    from {
+      transform: translateX(120%);
+    }
+    to {
+      transform: translateX(-320%);
+    }
+  }
+  @keyframes hx-loader-swap {
+    from {
+      opacity: 0.25;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Nothing is told by movement alone: the rows, the name and the bar keep their state. */
+  @media (prefers-reduced-motion: reduce) {
+    .hx-row__icon,
+    .hx-now__name {
+      animation: none;
+    }
+    .hx-bar__fill {
+      transition: none;
+    }
+    .hx-bar--indeterminate .hx-bar__fill {
+      inline-size: 100% !important;
+      opacity: 0.6;
+      animation: none;
+    }
+  }
+}

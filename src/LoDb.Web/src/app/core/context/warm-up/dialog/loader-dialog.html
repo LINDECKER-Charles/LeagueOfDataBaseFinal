@@ -1,0 +1,61 @@
+<div class="hx-loader hextech-frame">
+  <lodb-loader-core />
+
+  <p class="eyebrow hx-loader__eyebrow">{{ 'loader.eyebrow' | transloco }}</p>
+  <h2 class="hx-loader__title" [id]="headingId">{{ 'loader.title' | transloco }}</h2>
+  <p class="hx-loader__subtitle">
+    {{ (preparing() ? 'loader.preparing' : 'loader.subtitle') | transloco }}
+  </p>
+
+  <!-- The lists the destination shows: a screen reader hears each one turn ready. -->
+  <ul class="hx-manifest" aria-live="polite">
+    @for (row of frame().resources; track row.resource; let index = $index) {
+      <li class="hx-row" [class.hx-row--ready]="row.ready" [style.--i]="index">
+        <span class="hx-row__icon">
+          <lodb-icon class="size-[1.05rem]" [name]="rows[row.resource].icon" />
+        </span>
+        <span class="hx-row__label">{{ rows[row.resource].label | transloco }}</span>
+        <span class="hx-row__lead" aria-hidden="true"></span>
+        <span class="hx-row__status">
+          @if (row.ready) {
+            <svg
+              class="hx-row__check"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 8.5 6.5 12 13 4.5" />
+            </svg>
+          }
+          {{ (row.ready ? 'loader.status.ready' : 'loader.status.fetching') | transloco }}
+        </span>
+      </li>
+    }
+  </ul>
+
+  <!-- Visual only: a name a second would flood a screen reader. -->
+  <div class="hx-now" aria-hidden="true">
+    <span class="hx-now__dot" [attr.data-resource]="frame().latest?.resource ?? null"></span>
+    @for (entry of landing(); track entry.name) {
+      <span class="hx-now__name">{{ entry.name }}</span>
+      <span class="hx-now__category">{{ rows[entry.resource].label | transloco }}</span>
+    }
+  </div>
+
+  <div
+    class="hx-bar"
+    [class.hx-bar--indeterminate]="preparing()"
+    role="progressbar"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    [attr.aria-valuenow]="preparing() ? null : percent()"
+    [attr.aria-labelledby]="headingId"
+  >
+    <span class="hx-bar__fill" [style.inline-size.%]="percent()"></span>
+  </div>
+  <p class="hx-bar__pct" aria-hidden="true">{{ percent() }}%</p>
+</div>
