@@ -35,6 +35,10 @@
       var(--color-hextech-black);
     box-shadow: 0 0 34px -8px var(--path, var(--color-gold));
   }
+  /* Whole words, as the legacy name: one too long for 320 px overflows, it never breaks. */
+  .keystone__name {
+    overflow-wrap: normal;
+  }
   .keystone__icon img,
   .rune-medallion img {
     inline-size: 100%;

@@ -2,8 +2,10 @@ import { metaOf, olderVersion } from '../../support/catalog';
 import { expect, test } from '../../support/worker-account';
 import {
   addItem,
+  boxOf,
   CHAMPION,
   chooseChampion,
+  dragTo,
   ITEM,
   patchOf,
   pickRunes,
@@ -18,6 +20,7 @@ const EDITING = /\/en\/account\/builds\/\d+\/edit$/;
 const NAME = 'E2E lethality carry';
 const RENAMED = 'E2E lethality carry, revised';
 const PHONE = { width: 390, height: 844 };
+const NARROW = { width: 320, height: 844 };
 const DESKTOP = { width: 1280, height: 720 };
 
 // No account is created here: what a visitor meets on the builds of an account.
@@ -26,6 +29,76 @@ test('sends a visitor from the builds to the sign-in, which brings them back', a
 
   await expect(page).toHaveURL(/\/en\/account\/login\?/);
   expect(new URL(page.url()).searchParams.get('returnUrl')).toBe(LIST);
+});
+
+// As on the legacy card, an item dropped anywhere on a step lands in it, an empty step too.
+test('moves an item onto the note of an empty step', async ({ member: page }) => {
+  await page.goto(`${LIST}/new`);
+  await addItem(page, 0, ITEM);
+  await page.getByRole('button', { name: 'Add a step' }).click();
+  const [first, second] = [stepsOf(page).nth(0), stepsOf(page).nth(1)];
+  // Both cards in view: the empty one at the bottom, the item right above it.
+  await second.evaluate((step) => step.scrollIntoView({ block: 'end' }));
+
+  await dragTo(page, first.locator('.forge-slot').first(), second.getByLabel('Note (optional)'));
+
+  await expect(second.locator('.forge-slot')).toHaveCount(1);
+  await expect(first.locator('.forge-slot')).toHaveCount(0);
+});
+
+// The Arabic page runs right to left; its counters still read "0 / 8", never "8 / 0".
+test('keeps the counters in reading order on the Arabic page', async ({ member: page }) => {
+  await page.goto('/ar/account/builds/new');
+  const counter = stepsOf(page).first().locator('.forge-step__count');
+  await expect(counter).toHaveText('0 / 8');
+
+  // The fraction's text node, wherever the markup that isolates it puts it.
+  const [count, max] = await counter.evaluate((element) => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let text = walker.nextNode() as Text | null;
+    while (text !== null && !text.data.includes('/')) {
+      text = walker.nextNode() as Text | null;
+    }
+    const fraction = text!;
+    const leftOf = (index: number) => {
+      const range = document.createRange();
+      range.setStart(fraction, index);
+      range.setEnd(fraction, index + 1);
+      return range.getBoundingClientRect().left;
+    };
+    return [leftOf(fraction.data.indexOf('0')), leftOf(fraction.data.lastIndexOf('8'))];
+  });
+  expect(count).toBeLessThan(max);
+});
+
+// As the legacy editor on the narrowest phones: the lists of the context stay in their frame,
+// a step's label beside its handle, and "Add item" after the last item, not on a row alone.
+test('fits the forge in a 320 px phone', async ({ member: page }) => {
+  await page.setViewportSize(NARROW);
+  await page.goto(`${LIST}/new`);
+
+  // Patch, game mode and authoring language; all() does not wait for them to render.
+  const selects = page.locator('lodb-editor-context select');
+  await expect(selects).toHaveCount(3);
+  for (const select of await selects.all()) {
+    const [end, frameEnd] = await select.evaluate((field) => {
+      const frame = field.closest('section')!;
+      const padding = parseFloat(getComputedStyle(frame).paddingRight);
+      return [field.getBoundingClientRect().right, frame.getBoundingClientRect().right - padding];
+    });
+    expect(end).toBeLessThanOrEqual(frameEnd);
+  }
+
+  const step = stepsOf(page).first();
+  const handle = await boxOf(step.locator('.forge-drag-handle'));
+  const label = await boxOf(step.getByLabel('Step label'));
+  expect(label.y).toBeLessThan(handle.y + handle.height);
+
+  await addItem(page, 0, ITEM);
+  await addItem(page, 0, ITEM);
+  const last = await boxOf(step.locator('.forge-slot').last());
+  const tile = await boxOf(step.getByRole('button', { name: 'Add item' }));
+  expect(Math.abs(tile.y - last.y)).toBeLessThan(2);
 });
 
 // The worker's verified account: the API limits how many are created in a row. The forge

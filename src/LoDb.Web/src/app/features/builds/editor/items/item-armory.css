@@ -116,7 +116,6 @@
     border-color: color-mix(in srgb, var(--color-hex) 55%, transparent);
   }
   .armory__cat:focus-visible,
-  .armory-item:focus-visible,
   .armory__done:focus-visible {
     outline: 2px solid var(--color-hex);
     outline-offset: 1px;
@@ -134,75 +133,11 @@
     overscroll-behavior: contain;
     padding: 1rem 1.25rem;
   }
+  /* Its tiles are armory-item-tile's. */
   .armory__grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
     gap: 0.6rem;
-  }
-  .armory-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
-    min-inline-size: 0;
-    padding: 0.5rem 0.35rem;
-    border: 1px solid color-mix(in srgb, var(--color-gold) 22%, transparent);
-    background: color-mix(in srgb, var(--color-void) 55%, transparent);
-    cursor: pointer;
-    transition:
-      border-color 0.18s var(--ease-hextech),
-      background-color 0.18s var(--ease-hextech),
-      transform 0.18s var(--ease-hextech);
-  }
-  .armory-item:hover:not(:disabled) {
-    border-color: var(--color-gold);
-    transform: translateY(-2px);
-  }
-  .armory-item:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .armory-item--placed {
-    border-color: color-mix(in srgb, var(--color-gold) 55%, transparent);
-    background: color-mix(in srgb, var(--color-gold) 10%, transparent);
-  }
-  .armory-item__icon {
-    position: relative;
-    inline-size: 3rem;
-    block-size: 3rem;
-    border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
-    background: var(--color-void);
-  }
-  .armory-item__badge {
-    position: absolute;
-    inset-inline-end: -0.4rem;
-    inset-block-start: -0.4rem;
-    display: grid;
-    place-items: center;
-    min-inline-size: 1.15rem;
-    block-size: 1.15rem;
-    padding: 0 0.25rem;
-    border-radius: 999px;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    line-height: 1;
-    color: var(--color-hextech-black);
-    background: var(--color-gold);
-    box-shadow: 0 0 0 1px var(--color-hextech-black);
-  }
-  .armory-item__name {
-    max-inline-size: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.66rem;
-    text-align: center;
-    color: var(--color-text);
-  }
-  .armory-item__gold {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    color: var(--color-gold-light);
   }
 
   .armory__foot {
@@ -245,10 +180,6 @@
     .armory__grid {
       grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
     }
-    .armory-item__icon {
-      inline-size: 3.25rem;
-      block-size: 3.25rem;
-    }
     .armory__done {
       padding: 0.55rem 1.6rem;
     }
@@ -263,13 +194,9 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .armory-item,
     .armory__cat,
     .armory__close {
       transition: none;
-    }
-    .armory-item:hover:not(:disabled) {
-      transform: none;
     }
   }
 }

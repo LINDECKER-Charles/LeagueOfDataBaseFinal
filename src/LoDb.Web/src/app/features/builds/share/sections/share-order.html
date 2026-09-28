@@ -9,7 +9,7 @@
       <span class="bsteps-marker" aria-hidden="true"></span>
       <article class="hextech-frame p-5">
         <header class="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 class="font-beaufort text-base tracking-wide text-gold-bright uppercase">
+          <h3 class="font-beaufort text-base tracking-wide text-gold-bright uppercase" dir="auto">
             {{ step.label }}
           </h3>
           <span class="hx-chip" [title]="'build.show.step_cost' | transloco"
@@ -17,7 +17,9 @@
           >
         </header>
         @if (step.note) {
-          <p class="mt-2 font-spiegel text-sm text-text-muted italic">{{ step.note }}</p>
+          <p class="mt-2 font-spiegel text-sm text-text-muted italic" dir="auto">
+            {{ step.note }}
+          </p>
         }
         <ul class="mt-4 flex flex-wrap gap-2.5">
           @for (item of step.items; track $index) {

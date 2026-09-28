@@ -1,5 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
+type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
+
 // A champion and an item every patch and Summoner's Rift carry: an import to an older patch
 // keeps them, and the build stays savable.
 export const CHAMPION = 'Annie';
@@ -69,6 +71,33 @@ export async function pickRunes(page: Page): Promise<number> {
     .click();
   await expect(board.locator('.rune-perk[aria-pressed="true"]')).toHaveCount(primaryRows + 2);
   return primaryRows;
+}
+
+/** The box of an element, in the coordinates of the viewport. */
+export async function boxOf(element: Locator): Promise<Box> {
+  const box = await element.boundingBox();
+  expect(box, 'the element is laid out').not.toBeNull();
+  return box!;
+}
+
+/** The centre of an element, in the coordinates of the viewport. */
+async function centreOf(element: Locator): Promise<{ x: number; y: number }> {
+  const box = await boxOf(element);
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+/**
+ * Drags with the mouse, as a hand does: the CDK starts a drag once the pointer has moved a few
+ * pixels, and only then follows it from list to list. Both elements must be in the viewport.
+ */
+export async function dragTo(page: Page, source: Locator, target: Locator): Promise<void> {
+  const from = await centreOf(source);
+  const to = await centreOf(target);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 10, from.y + 10, { steps: 5 });
+  await page.mouse.move(to.x, to.y, { steps: 20 });
+  await page.mouse.up();
 }
 
 /** Adds an item to a step through the armory, found by its search, then closes it. */

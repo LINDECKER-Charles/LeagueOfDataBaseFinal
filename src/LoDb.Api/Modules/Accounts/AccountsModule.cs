@@ -12,6 +12,7 @@ using LoDb.Api.Modules.Accounts.Session;
 using LoDb.Api.Modules.Accounts.SignIn;
 using LoDb.Api.Modules.Accounts.Verification;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
@@ -40,6 +41,7 @@ internal static class AccountsModule
             .AddDefaultTokenProviders();
         services.AddAccountsAuthentication().AddAccountsGoogle(configuration);
         services.TryAddSingleton<TrustedOrigins>();
+        services.Configure<RateLimiterOptions>(ResetCheckRateLimit.AddTo);
         AddAccountServices(services);
         AddEndpoints(services);
         return services;
@@ -58,6 +60,7 @@ internal static class AccountsModule
         ResendVerificationEndpoint.Map(account);
         ForgotPasswordEndpoint.Map(account);
         ResetPasswordEndpoint.Map(account);
+        CheckResetTokenEndpoint.Map(account);
         GoogleStartEndpoint.Map(account);
         GoogleExchangeEndpoint.Map(account);
         return endpoints;
@@ -72,6 +75,7 @@ internal static class AccountsModule
         services.TryAddScoped<LinkOrigin>();
         services.TryAddScoped<AccountMail>();
         services.TryAddScoped<MailThrottle>();
+        services.TryAddScoped<ResetLinks>();
         services.TryAddScoped<GoogleProvisioner>();
         services.TryAddScoped<GoogleSignIn>();
         services.TryAddScoped<GoogleCallback>();
@@ -90,6 +94,7 @@ internal static class AccountsModule
         services.TryAddScoped<ResendVerificationEndpoint>();
         services.TryAddScoped<ForgotPasswordEndpoint>();
         services.TryAddScoped<ResetPasswordEndpoint>();
+        services.TryAddScoped<CheckResetTokenEndpoint>();
         services.TryAddScoped<GoogleStartEndpoint>();
         services.TryAddScoped<GoogleExchangeEndpoint>();
     }
