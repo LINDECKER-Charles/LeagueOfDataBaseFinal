@@ -44,14 +44,9 @@
     border-color 0.25s var(--ease-hextech);
 }
 
-.ts-tool:hover:not(:disabled) {
+.ts-tool:hover {
   color: var(--color-hex);
   border-color: color-mix(in srgb, var(--color-hex) 50%, transparent);
-}
-
-.ts-tool:disabled {
-  cursor: default;
-  opacity: 0.5;
 }
 
 .ts-tool:focus-visible {
