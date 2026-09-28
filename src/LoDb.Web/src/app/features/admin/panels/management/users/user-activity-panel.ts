@@ -80,11 +80,21 @@ export class UserActivityPanel {
     const subject = this.activity.value()?.subject;
     return subject?.username
       ? displayName(subject.username, subject.riotTagline)
-      : `#${this.userId()}`;
+      : (this.formerName() ?? `#${this.userId()}`);
   });
   protected readonly subtitle = computed(() => {
-    const email = this.activity.value()?.subject?.email;
+    const data = this.activity.value();
+    if (data && !data.subject) {
+      return this.texts.text('activity.lede_orphan');
+    }
     const lede = this.texts.text('activity.lede');
-    return email ? `${email} · ${lede}` : lede;
+    return data?.subject?.email ? `${data.subject.email} · ${lede}` : lede;
   });
+
+  // A deleted account keeps its journal: it goes by the name its latest action shown bore.
+  private formerName(): string | undefined {
+    const userId = this.userId();
+    const own = this.activity.value()?.activity.items.find((entry) => entry.actorId === userId);
+    return own?.actor ?? undefined;
+  }
 }

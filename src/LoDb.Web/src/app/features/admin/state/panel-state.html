@@ -3,13 +3,17 @@
     <span>
       {{
         'admin.state.unavailable'
-          | adminText: { reason: ('admin.state.reasons.' + failure | adminText) }
+          | adminText
+            : {
+                reason:
+                  ('admin.state.reasons.' + failure.kind | adminText: { status: failure.status }),
+              }
       }}
     </span>
     <button lodbButton="ghost" lodbButtonSize="small" type="button" (click)="panel().reload()">
       {{ 'admin.state.retry' | adminText }}
     </button>
-    @if (failure === 'session') {
+    @if (failure.kind === 'session') {
       <a lodbButton lodbButtonSize="small" [routerLink]="login" [queryParams]="returnQuery()">
         {{ 'admin.state.sign_in' | adminText }}
       </a>

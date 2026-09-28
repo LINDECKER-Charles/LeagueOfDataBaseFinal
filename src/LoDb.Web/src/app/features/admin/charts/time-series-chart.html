@@ -7,13 +7,19 @@
       </text>
     </svg>
   } @else {
-    <!-- The legacy tools: over the plot's corner, shown on hover, on focus and once zoomed. -->
+    <!--
+      The legacy tools: over the plot's corner, shown on hover, on focus and once zoomed, alike
+      at rest and titled. At the whole view, − and ⟲ do nothing, which only assistive
+      technology is told: a disabled button would dim and lose its title.
+    -->
+    @let whole = view().zoomed ? null : 'true';
     <div class="ts-tools" [class.is-zoomed]="view().zoomed">
       <button
         type="button"
         class="ts-tool"
+        [title]="'admin.chart.zoom_out' | adminText"
         [attr.aria-label]="'admin.chart.zoom_out' | adminText"
-        [disabled]="!view().zoomed"
+        [attr.aria-disabled]="whole"
         (click)="zoomOut()"
       >
         −
@@ -21,6 +27,7 @@
       <button
         type="button"
         class="ts-tool"
+        [title]="'admin.chart.zoom_in' | adminText"
         [attr.aria-label]="'admin.chart.zoom_in' | adminText"
         (click)="zoomIn()"
       >
@@ -29,8 +36,9 @@
       <button
         type="button"
         class="ts-tool"
+        [title]="'admin.chart.reset' | adminText"
         [attr.aria-label]="'admin.chart.reset' | adminText"
-        [disabled]="!view().zoomed"
+        [attr.aria-disabled]="whole"
         (click)="reset()"
       >
         ⟲

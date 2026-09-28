@@ -52,10 +52,14 @@
         var prefix = 'lod_theme=';
         var index = 0;
         var entries = [];
-        try {
-          entries = document.cookie.split(';');
-        } catch (unreadable) {
-          // Sandboxed documents throw on cookie access: the default theme still applies.
+        // The admin keeps the default identity, as the legacy back office did, before its
+        // bundle pins it: it never reads the visitor's choice.
+        if (!/^\/admin(\/|$)/.test(location.pathname)) {
+          try {
+            entries = document.cookie.split(';');
+          } catch (unreadable) {
+            // Sandboxed documents throw on cookie access: the default theme still applies.
+          }
         }
         for (var i = 0; i < entries.length; i++) {
           var entry = entries[i].trim();

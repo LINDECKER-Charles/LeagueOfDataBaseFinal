@@ -143,3 +143,15 @@ vague 2 dans `donnees/vague-2-notes.md`.
     est passée seule et deux fois en suite complète : à surveiller.
   - Sur un aperçu local, les specs E2E `routing/` et `legacy/` échouent, car elles exigent nginx.
     Ne jamais lancer `register` ni `contact` (quota de 5 par heure).
+
+## 6. Divergences volontaires du second audit
+
+### Admin
+
+- **Lectures de carte** (F2-06) : Déduplication de la vue d'ensemble, WebP du stockage et file
+  d'e-mails de la surveillance. L'ancien balisage `.k-label` / `.k-val` et la barre `.r-track`
+  y sont posés hors d'une tuile `.kpi` et d'une ligne `.rank-row`, les seules portées où
+  `data.css` les style. L'ancien site les rend donc en texte courant collé à sa valeur
+  (« Ratio réfs / blobs2.2× »), et sa barre WebP reste invisible. Le nouveau rend ce que ce
+  balisage visait : un libellé en surtitre au-dessus de sa valeur, et une barre visible. Même
+  famille que les clés tronquées des plus gros objets, que l'audit ne fait pas recopier non plus.

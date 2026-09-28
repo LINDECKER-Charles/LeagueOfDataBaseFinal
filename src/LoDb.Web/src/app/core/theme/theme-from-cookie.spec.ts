@@ -9,8 +9,11 @@ interface Painted {
   readonly preloaded: string[];
 }
 
-/** Runs the inline script of src/index.html in a document parsed from that same file. */
-function paintedByInlineScript(cookie: string | (() => string)): Painted {
+/**
+ * Runs the inline script of src/index.html in a document parsed from that same file, served
+ * at `pathname`.
+ */
+function paintedByInlineScript(cookie: string | (() => string), pathname = '/en/'): Painted {
   const page = new DOMParser().parseFromString(indexHtml, 'text/html');
   const script = page.querySelector('head > script:not([src])')?.textContent ?? '';
   const preloadsBefore = page.head.querySelectorAll('link[rel=preload]').length;
@@ -24,7 +27,7 @@ function paintedByInlineScript(cookie: string | (() => string)): Painted {
     createElement: (name: string) => page.createElement(name),
   };
 
-  new Function('document', script)(stub);
+  new Function('document', 'location', script)(stub, { pathname });
   const preloads = Array.from(page.head.querySelectorAll<HTMLLinkElement>('link[rel=preload]'));
   return {
     theme: page.documentElement.getAttribute('data-theme') ?? undefined,
@@ -75,6 +78,14 @@ describe('inline theme script of index.html', () => {
     };
 
     expect(themeSetByInlineScript(sandboxed)).toBe('hextech');
+  });
+
+  it.each(['/admin', '/admin/users'])('keeps the default identity on %s', (pathname) => {
+    expect(paintedByInlineScript('lod_theme=noxus', pathname).theme).toBe('hextech');
+  });
+
+  it('reads the cookie on a page whose path only starts like the admin', () => {
+    expect(paintedByInlineScript('lod_theme=noxus', '/administration').theme).toBe('noxus');
   });
 
   it.each(THEMES)('gives %s its browser colour and display face', (theme: Theme) => {

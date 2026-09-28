@@ -13,7 +13,7 @@
           @for (column of columns(); track column) {
             @switch (column) {
               @case ('when') {
-                <td class="whitespace-nowrap">{{ entry.occurredAt | stamp: 'second' }}</td>
+                <td>{{ entry.occurredAt | stamp: 'second' }}</td>
               }
               @case ('actor') {
                 <td>

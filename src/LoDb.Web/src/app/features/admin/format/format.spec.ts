@@ -71,6 +71,14 @@ describe('stamp', () => {
     expect(stamp('2026-09-27T14:05:09Z', 'second')).toBe('27/09/2026 14:05:09');
   });
 
+  it('writes the raw ISO day and second of the legacy, in UTC, the second with its zone', () => {
+    // As the API writes an instant: an offset, and seven decimals to the second.
+    const instant = '2026-09-28T01:18:50.4678889+02:00';
+
+    expect(stamp(instant, 'day-iso')).toBe('2026-09-27');
+    expect(stamp(instant, 'utc')).toBe('2026-09-27 23:18:50 UTC');
+  });
+
   it('reads a missing or broken instant as a dash', () => {
     expect(stamp(null)).toBe('—');
     expect(new StampPipe().transform('not a date')).toBe('—');

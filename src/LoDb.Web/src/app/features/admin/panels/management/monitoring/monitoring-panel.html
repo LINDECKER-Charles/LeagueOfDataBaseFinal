@@ -13,7 +13,7 @@
   <div class="mb-[0.9rem] flex flex-wrap items-center justify-between gap-[0.6rem]">
     <span class="eyebrow">{{ 'admin.monitoring.probes' | adminText }}</span>
     <span lodbChip [title]="'admin.monitoring.generated_hint' | adminText">
-      {{ data.generatedAt | stamp: 'second' }}
+      {{ data.generatedAt | stamp: 'utc' }}
     </span>
   </div>
   <div class="admin-grid admin-grid--2" [attr.aria-busy]="report.busy()">

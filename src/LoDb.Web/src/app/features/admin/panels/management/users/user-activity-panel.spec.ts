@@ -1,6 +1,7 @@
 import type { AuditEntryView } from '../../../../../core/api/generated/models/audit-entry-view';
 import type { UserActivity } from '../../../../../core/api/generated/models/user-activity';
 import { openPanel } from '../../../testing/panels/open-panel';
+import { openPanelInFrench } from '../../../testing/panels/open-panel-in-french';
 import { UserActivityPanel } from './user-activity-panel';
 
 const ACTIVITY = '/api/admin/audit/users/42';
@@ -86,5 +87,26 @@ describe('UserActivityPanel', () => {
 
     expect(page.textContent).toContain('admin.activity.empty');
     expect(page.querySelector('lodb-admin-pager nav')).toBeNull();
+  });
+
+  it('names a deleted account as its own entries did, and says it is deleted', async () => {
+    const { page } = await openPanelInFrench(ROUTE, '/admin/users/42/activity', [
+      { path: VOCABULARY, body: VOCABULARY_BODY },
+      {
+        path: ACTIVITY,
+        body: activity({
+          subject: null,
+          activity: {
+            items: [entry(2, { actorType: 'admin', actorId: 7, actor: 'root' }), entry(1)],
+            page: 1,
+            pageSize: 40,
+            hasMore: false,
+          },
+        }),
+      },
+    ]);
+
+    expect(page.querySelector('h1')?.textContent?.trim()).toBe('Activité — ahri');
+    expect(page.textContent).toContain('Compte supprimé · actions effectuées');
   });
 });

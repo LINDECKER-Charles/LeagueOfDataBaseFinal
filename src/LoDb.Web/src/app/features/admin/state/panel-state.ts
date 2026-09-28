@@ -49,6 +49,6 @@ export class PanelState {
   protected readonly login = ADMIN_PATHS.login;
   // Read when a session failure shows: the login page brings the admin back here.
   protected readonly returnQuery = computed(() =>
-    this.panel().failure() === 'session' ? { [RETURN_URL_PARAM]: this.router.url } : {},
+    this.panel().failure()?.kind === 'session' ? { [RETURN_URL_PARAM]: this.router.url } : {},
   );
 }

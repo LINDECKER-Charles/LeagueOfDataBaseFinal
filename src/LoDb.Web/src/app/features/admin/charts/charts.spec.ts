@@ -68,6 +68,25 @@ describe('the SVG charts of the admin', () => {
     expect(all(fixture, 'lodb-legend li').map(words)).toEqual(['Mobile 30', 'Desktop 10']);
   });
 
+  it('draws the ring at the start of the canvas every legacy chart shares', () => {
+    const fixture = render(DonutChart, {
+      slices: [{ name: 'Mobile', value: 3, color: 'var(--color-hex)' }],
+      label: 'Appareils',
+      total: '3',
+    });
+
+    expect(all(fixture, 'svg')[0]?.getAttribute('viewBox')).toBe('0 0 760 240');
+    const rings = all(fixture, 'circle').map((ring) => [
+      ring.getAttribute('cx'),
+      ring.getAttribute('cy'),
+    ]);
+    expect(rings).toEqual([
+      ['90', '120'],
+      ['90', '120'],
+    ]);
+    expect(all(fixture, 'text.donut-total')[0]?.getAttribute('x')).toBe('90');
+  });
+
   it('squeezes a total too long for the hole of the ring into it', () => {
     const fixture = render(DonutChart, {
       slices: [{ name: 'data', value: 1, color: 'var(--color-gold)' }],
@@ -76,6 +95,7 @@ describe('the SVG charts of the admin', () => {
     });
 
     expect(all(fixture, 'text.donut-total')[0]?.getAttribute('textLength')).toBe('80');
+    expect(all(fixture, 'text.donut-total')[0]?.getAttribute('x')).toBe('90');
   });
 
   it('says a donut of nothing is empty instead of drawing a bare ring', () => {
@@ -86,6 +106,8 @@ describe('the SVG charts of the admin', () => {
 
     expect(all(fixture, 'circle')).toHaveLength(0);
     expect(all(fixture, 'text').map(words)).toEqual(['admin.chart.empty']);
+    // In the middle of the canvas, as the legacy empty chart.
+    expect(all(fixture, 'text')[0]?.getAttribute('x')).toBe('380');
     expect(all(fixture, 'lodb-legend')).toHaveLength(0);
   });
 

@@ -44,14 +44,9 @@
     border-color 0.25s var(--ease-hextech);
 }
 
-.ts-tool:hover:not(:disabled) {
+.ts-tool:hover {
   color: var(--color-hex);
   border-color: color-mix(in srgb, var(--color-hex) 50%, transparent);
-}
-
-.ts-tool:disabled {
-  cursor: default;
-  opacity: 0.5;
 }
 
 .ts-tool:focus-visible {
@@ -83,11 +78,13 @@ svg:focus-visible {
   fill-opacity: 0.12;
 }
 
+/* 2px on screen at any width and any zoom, as the legacy lines: the viewBox scales the rest. */
 .ts-line {
   fill: none;
   stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
 .ts-cross {

@@ -74,8 +74,12 @@ internal sealed partial class ServiceProbes(
     {
         try
         {
+            // "PostgreSQL 17.10": the first two words of version(), as the legacy chip read.
             var version = await db.Database
-                .SqlQuery<string>($"""SELECT current_setting('server_version') AS "Value" """)
+                .SqlQuery<string>($"""
+                    SELECT split_part(version(), ' ', 1) || ' ' || split_part(version(), ' ', 2)
+                        AS "Value"
+                    """)
                 .SingleAsync(cancellationToken);
             var bytes = await db.Database
                 .SqlQuery<long>($"""SELECT pg_database_size(current_database()) AS "Value" """)

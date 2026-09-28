@@ -51,6 +51,11 @@ function tools(fixture: ComponentFixture<unknown>): HTMLButtonElement[] {
   return all(fixture, 'button.ts-tool') as HTMLButtonElement[];
 }
 
+// A tool with nothing to do says so to assistive technology only: it stays titled and bright.
+function idle(tool: HTMLButtonElement | undefined): boolean {
+  return tool?.getAttribute('aria-disabled') === 'true' && !tool.disabled;
+}
+
 function ticks(fixture: ComponentFixture<unknown>): string[] {
   return all(fixture, 'svg > text.ts-axis')
     .map(words)
@@ -147,26 +152,39 @@ describe('TimeSeriesChart', () => {
     expect(query(fixture, '.ts-tip')).toBeNull();
   });
 
+  it('titles its tools as the legacy did', () => {
+    const fixture = open();
+
+    expect(tools(fixture).map((tool) => tool.title)).toEqual([
+      'admin.chart.zoom_out',
+      'admin.chart.zoom_in',
+      'admin.chart.reset',
+    ]);
+  });
+
   it('zooms with its buttons and its keys, then resets to the whole series', () => {
     const fixture = open();
     const [zoomOut, zoomIn, reset] = tools(fixture);
-    expect(zoomOut?.disabled).toBe(true);
-    expect(reset?.disabled).toBe(true);
+    expect(idle(zoomOut)).toBe(true);
+    expect(idle(reset)).toBe(true);
+    zoomOut?.click();
+    fixture.detectChanges();
+    expect(query(fixture, 'svg[tabindex]')?.classList).not.toContain('is-zoomed');
 
     zoomIn?.click();
     fixture.detectChanges();
-    expect(zoomOut?.disabled).toBe(false);
+    expect(idle(zoomOut)).toBe(false);
     expect(query(fixture, 'svg[tabindex]')?.classList).toContain('is-zoomed');
 
     key(fixture, '+');
     key(fixture, 'Home');
-    expect(reset?.disabled).toBe(true);
+    expect(idle(reset)).toBe(true);
     expect(query(fixture, 'svg[tabindex]')?.classList).not.toContain('is-zoomed');
 
     key(fixture, '=');
     reset?.click();
     fixture.detectChanges();
-    expect(reset?.disabled).toBe(true);
+    expect(idle(reset)).toBe(true);
   });
 
   it('zooms around the pointer with the wheel, and zooms back out', () => {
@@ -175,14 +193,14 @@ describe('TimeSeriesChart', () => {
 
     hit?.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, clientX: LEFT, bubbles: true }));
     fixture.detectChanges();
-    expect(tools(fixture)[2]?.disabled).toBe(false);
+    expect(idle(tools(fixture)[2])).toBe(false);
     expect(
       query(fixture, 'polyline.ts-line')?.getAttribute('points')?.startsWith(`${LEFT}.0,`),
     ).toBe(true);
 
     hit?.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, clientX: LEFT, bubbles: true }));
     fixture.detectChanges();
-    expect(tools(fixture)[2]?.disabled).toBe(true);
+    expect(idle(tools(fixture)[2])).toBe(true);
   });
 
   it('pans a zoomed chart with a drag, and not a chart shown whole', () => {

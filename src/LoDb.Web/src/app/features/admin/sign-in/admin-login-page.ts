@@ -56,6 +56,7 @@ export class AdminLoginPage {
   private readonly returnUrl = inject(ActivatedRoute).snapshot.queryParamMap.get(RETURN_URL_PARAM);
   private readonly texts = injectAdminText();
   private readonly field = viewChild<ElementRef<HTMLInputElement>>('field');
+  private readonly password = viewChild<ElementRef<HTMLInputElement>>('password');
   private credentials: LoginRequest = { identifier: null, password: null };
 
   protected readonly label = LABEL;
@@ -118,8 +119,20 @@ export class AdminLoginPage {
   private refused(code: string | null): void {
     if (code === 'two-factor-required') {
       this.step.set('second-factor');
-    } else {
-      this.error.set(adminLoginErrorKey(code));
+      return;
     }
+    this.error.set(adminLoginErrorKey(code));
+    if (this.step() === 'credentials') {
+      this.retryCredentials();
+    }
+  }
+
+  // As the legacy page came back: the identifier kept and focused, the password to type again.
+  private retryCredentials(): void {
+    const password = this.password()?.nativeElement;
+    if (password) {
+      password.value = '';
+    }
+    this.field()?.nativeElement.focus();
   }
 }

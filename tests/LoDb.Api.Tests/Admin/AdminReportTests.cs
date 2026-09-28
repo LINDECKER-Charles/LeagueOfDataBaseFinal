@@ -51,7 +51,8 @@ public sealed class AdminReportTests(PostgresContainerFixture postgres)
         var services = report.GetProperty("services").EnumerateArray()
             .ToDictionary(static probe => ApiJson.Text(probe, "name")!);
         Assert.Equal("ok", ApiJson.Text(services["postgres"], "status"));
-        Assert.False(string.IsNullOrEmpty(ApiJson.Text(services["postgres"], "version")));
+        // As the legacy chip: the product, then its version.
+        Assert.Matches(@"^PostgreSQL \d", ApiJson.Text(services["postgres"], "version"));
         Assert.Equal("ok", ApiJson.Text(services["storage"], "status"));
         var counters = report.GetProperty("counters");
         Assert.Equal(2, counters.GetProperty("usersTotal").GetInt32());

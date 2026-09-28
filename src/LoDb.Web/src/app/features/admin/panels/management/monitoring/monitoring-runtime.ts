@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { MonitoringReport } from '../../../../../core/api/generated/models/monitoring-report';
 import { duration } from '../../../format/duration';
+import { figure } from '../../../format/figure';
 import { FigurePipe } from '../../../format/figure-pipe';
 import { AdminCard } from '../../../layout/admin-card';
 import { AdminRule } from '../../../layout/admin-rule';
@@ -54,7 +55,8 @@ import { MonitoringVersions } from './monitoring-versions';
       <lodb-kpi
         accent="cyan"
         [label]="'admin.monitoring.process.collections' | adminText"
-        [value]="data.process.collections.join(' / ')"
+        [value]="collections().gen0"
+        [sub]="'admin.monitoring.process.collections_sub' | adminText: collections()"
       />
     </div>
 
@@ -86,4 +88,9 @@ export class MonitoringRuntime {
   readonly report = input.required<MonitoringReport>();
 
   protected readonly uptime = computed(() => duration(this.report().process.uptimeSeconds));
+  // Generation 0 as the figure, the older two under it: the three would not fit the tile.
+  protected readonly collections = computed(() => {
+    const [gen0 = 0, gen1 = 0, gen2 = 0] = this.report().process.collections;
+    return { gen0: figure(gen0), gen1: figure(gen1), gen2: figure(gen2) };
+  });
 }

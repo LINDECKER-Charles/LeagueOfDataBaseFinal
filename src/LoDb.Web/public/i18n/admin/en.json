@@ -28,7 +28,7 @@
     "use_recovery": "Use a recovery code",
     "verify": "Verify",
     "errors": {
-      "invalid_credentials": "Wrong credentials.",
+      "invalid_credentials": "Invalid credentials.",
       "invalid_code": "This code is not valid. Try again with the current code.",
       "banned": "This account is banned.",
       "locked": "Too many attempts: this account is locked for a few minutes.",
@@ -65,7 +65,7 @@
       "timeout": "timed out",
       "session": "session expired or rights missing",
       "network": "API unreachable",
-      "server": "API error"
+      "server": "HTTP {status}"
     }
   },
   "errors": {
@@ -350,6 +350,7 @@
     "back": "← Users",
     "document_title": "Activity · {name}",
     "lede": "actions made by this account or targeting it. Times in UTC.",
+    "lede_orphan": "Deleted account · actions made by this account or targeting it. Times in UTC.",
     "empty": "No action logged for this account over this period."
   },
   "builds": {
@@ -528,7 +529,8 @@
       "threads": "Threads",
       "pending": "{count, plural, =0 {No pending work item} one {# pending work item} other {# pending work items}}",
       "cpu": "CPU time (s)",
-      "collections": "GC collections (0 / 1 / 2)"
+      "collections": "GC collections",
+      "collections_sub": "gen 1: {gen1} · gen 2: {gen2}"
     },
     "ingestion": {
       "title": "Ingestion",

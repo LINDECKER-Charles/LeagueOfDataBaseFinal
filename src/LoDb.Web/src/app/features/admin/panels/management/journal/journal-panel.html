@@ -18,7 +18,7 @@
       [value]="held.totalBytes | figure: 'bytes'"
       [sub]="
         held.oldest
-          ? ('admin.journal.volume.since' | adminText: { day: (held.oldest | stamp) })
+          ? ('admin.journal.volume.since' | adminText: { day: (held.oldest | stamp: 'day-iso') })
           : null
       "
     />

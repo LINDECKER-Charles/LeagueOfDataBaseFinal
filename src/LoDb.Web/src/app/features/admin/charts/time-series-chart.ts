@@ -100,12 +100,17 @@ export class TimeSeriesChart {
     this.zoom(ChartScale.zoomStep);
   }
 
+  // Out of the whole view only: at it, the tool and its key do nothing.
   protected zoomOut(): void {
-    this.zoom(1 / ChartScale.zoomStep);
+    if (this.view().zoomed) {
+      this.zoom(1 / ChartScale.zoomStep);
+    }
   }
 
   protected reset(): void {
-    this.view.update((view) => view.reset());
+    if (this.view().zoomed) {
+      this.view.update((view) => view.reset());
+    }
   }
 
   protected onKeydown(event: KeyboardEvent): void {

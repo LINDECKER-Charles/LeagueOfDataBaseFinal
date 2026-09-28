@@ -57,7 +57,7 @@ describe('MonitoringPanel', () => {
       expect.arrayContaining([
         'admin.monitoring.process.version 1.4.0 abc1234',
         'admin.monitoring.process.uptime 2 j 3 h',
-        'admin.monitoring.process.collections 120 / 14 / 2',
+        'admin.monitoring.process.collections 120 admin.monitoring.process.collections_sub',
       ]),
     );
     expect(texts(page, 'lodb-monitoring-versions tbody tr')[0]).toContain('16.20.1');
@@ -102,7 +102,7 @@ describe('MonitoringPanel', () => {
     expect(again.request.params.get('refresh')).toBe('true');
     await reply(visit, again, monitoringReport({ generatedAt: '2026-09-27T11:00:00Z' }));
 
-    expect(visit.page.textContent).toContain('27/09/2026 11:00:00');
+    expect(visit.page.textContent).toContain('2026-09-27 11:00:00 UTC');
   });
 
   it('says the counters could not be read in French, the site in English', async () => {
