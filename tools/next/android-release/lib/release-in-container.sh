@@ -26,7 +26,7 @@ version_code="$(node --input-type=module -e "
 
 # The copy leaves out what each side installs or builds for itself (the excludes of
 # ../../android/lib/build-in-container.sh).
-mkdir -p "$WEB" "$WORK/app/public"
+mkdir -p "$WEB"
 tar -C "$REPO/src/LoDb.Web" \
   --exclude=./node_modules \
   --exclude=./dist \
@@ -38,8 +38,6 @@ tar -C "$REPO/src/LoDb.Web" \
   --exclude=./android/app/src/main/assets \
   --exclude=./android/capacitor-cordova-android-plugins \
   -cf - . | tar -C "$WEB" -xf -
-# Target of the committed symlink src/app/features/editorial/changelog/published (L3.10).
-cp -R "$REPO/app/public/changelog" "$WORK/app/public/changelog"
 
 # A throwaway bundle key too, for a capacitor.config.ts that embeds the public one.
 LODB_LIVE_UPDATE_PUBLIC_KEY="$(node -e "

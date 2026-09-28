@@ -11,7 +11,7 @@ readonly APK="$OUT/lodb-debug.apk"
 
 # The copy leaves out what each side installs or builds for itself: node_modules, the
 # builds, Angular's cache, and the Android files that `cap sync` and Gradle produce.
-mkdir -p "$WEB" "$WORK/app/public"
+mkdir -p "$WEB"
 tar -C "$REPO/src/LoDb.Web" \
   --exclude=./node_modules \
   --exclude=./dist \
@@ -23,8 +23,6 @@ tar -C "$REPO/src/LoDb.Web" \
   --exclude=./android/app/src/main/assets \
   --exclude=./android/capacitor-cordova-android-plugins \
   -cf - . | tar -C "$WEB" -xf -
-# Target of the committed symlink src/app/features/editorial/changelog/published (L3.10).
-cp -R "$REPO/app/public/changelog" "$WORK/app/public/changelog"
 
 cd "$WEB"
 npm ci --no-audit --no-fund

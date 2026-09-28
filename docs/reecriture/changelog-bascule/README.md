@@ -25,7 +25,8 @@ changelog.
    - `adresses-par-langue` : le nombre de langues est celui de la release (21 à la
      rédaction) ;
    - rien ne s'affirme qui n'a pas été vérifié pendant la fenêtre.
-3. Synthétiser dans la release publique de la bascule (`app/public/changelog/`), puis
+3. Synthétiser dans la release publique de la bascule
+   (`src/LoDb.Web/src/app/features/editorial/changelog/published/`), puis
    archiver les entrées dans `docs/changelog/archived/<année>/`.
 
 En cas de retour arrière avant la publication, les brouillons restent ici. Après la

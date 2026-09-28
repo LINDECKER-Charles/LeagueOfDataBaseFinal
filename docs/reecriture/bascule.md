@@ -253,14 +253,14 @@ non diffusée, `noindex` actif.
 
 Les brouillons sont dans [`changelog-bascule/`](changelog-bascule/README.md). La page
 `/changelog` de la nouvelle stack lit les releases publiées **au moment du build**
-(`app/public/changelog/`, lien `published` du front) : la release de la bascule doit donc être
-dans l'image promue.
+(`src/LoDb.Web/src/app/features/editorial/changelog/published/`) : la release de la bascule doit donc être dans l'image
+promue.
 
 1. Remplacer la date `AAAA-MM-JJ` des brouillons par la date de J, les copier dans
    `docs/changelog/<année>/<date>-<slug>.md` ; relire contre ce qui est réellement livré
    (apps publiées ou non, cf. README des brouillons).
 2. Synthétiser ces entrées, et le backlog de `docs/changelog/<année>/`, en une release
-   publique (`app/public/changelog/<date>-<nom>.json` et `manifest.json`), puis archiver les
+   publique (`<date>-<nom>.json` et `manifest.json` dans ce même dossier), puis archiver les
    entrées dans `docs/changelog/archived/<année>/` ([`changelog/README.md`](../changelog/README.md)).
 3. Commit sur la branche d'intégration, déploiement sur `next`, contrôle de `/fr/changelog` ;
    cette révision devient `REV`. Si J recule, redater et reconstruire.
@@ -550,21 +550,16 @@ s'exportent pas : ils se régénèrent.
 
 ### 10.3 Déménagement du changelog public
 
-`app/public/changelog/` (releases JSON et `manifest.json`) est lu par le front à travers le
-lien `src/LoDb.Web/src/app/features/editorial/changelog/published`. Il déménage **dans le
-front**, par exemple `src/LoDb.Web/changelog/` :
+**Fait avant la bascule**, avec l'archivage de l'ancienne stack sous `legacy/` : les releases
+JSON et `manifest.json` vivent dans la feature qui les lit,
+`src/LoDb.Web/src/app/features/editorial/changelog/published/`, un vrai dossier à la place de l'ancien
+lien symbolique. La copie de `app/public/changelog/` dans l'image `web-ssr` et dans les
+builds Android a disparu. Reste à faire : pointer l'outillage du changelog joueur (synthèse
+de release, [`changelog/README.md`](../changelog/README.md)) sur ce dossier. Le contexte de
+build de `web-ssr` peut redevenir `src/LoDb.Web`.
 
-- `git mv` des fichiers, suppression du lien, entrée d'assets de `src/LoDb.Web/angular.json`
-  (`input`) et commentaire de `changelog-reader.ts` ;
-- `docker/next/web-ssr/Dockerfile` et `Dockerfile.dockerignore` : plus de `COPY
-  app/public/changelog/` ; le contexte de build peut redevenir `src/LoDb.Web` ;
-- `tools/next/android/lib/build-in-container.sh` et
-  `tools/next/android-release/lib/release-in-container.sh` : plus de copie de
-  `app/public/changelog` ;
-- l'outillage du changelog joueur (synthèse de release décrite par
-  [`changelog/README.md`](../changelog/README.md), qui écrit les JSON et le manifeste) et la
-  table des scopes de `CLAUDE.md` (`app/public/changelog/**` → `changelog`) visent le
-  nouveau chemin.
+L'ancienne stack archivée n'a plus de changelog : relancée depuis `legacy/`, sa page
+`/changelog` est vide et sa version affichée est `0.0.0`.
 
 ### 10.4 Documentation à réécrire
 
