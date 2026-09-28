@@ -158,6 +158,15 @@ lodb-admin-frame :is(.hx-btn, .hx-btn-ghost, .hx-btn-gold, .hx-btn-danger):not(.
   letter-spacing: 0.14em;
 }
 
+/* The chips of the legacy admin (.chip) were tighter than the site's, more tracked, and solid. */
+lodb-admin-frame .hx-chip {
+  padding-block: 0.18rem;
+  padding-inline: 0.5rem;
+  border-color: var(--color-gold-deep);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
 lodb-admin-frame .admin-column {
   max-inline-size: 78rem;
   margin-inline: auto;
