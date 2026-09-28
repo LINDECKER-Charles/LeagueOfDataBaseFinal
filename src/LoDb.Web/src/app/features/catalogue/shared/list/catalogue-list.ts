@@ -13,6 +13,7 @@ import {
 import { TranslocoPipe, provideTranslocoScope } from '@jsverse/transloco';
 import { Button } from '../../../../ui/controls/button';
 import { DialogService } from '../../../../ui/overlays/dialog-service';
+import { EmptyState } from '../../../../ui/surfaces/empty-state';
 import { Skeleton } from '../../../../ui/surfaces/skeleton';
 import { FilterConsole } from '../console/filter-console';
 import { FilterSheet } from '../console/filter-sheet';
@@ -29,7 +30,6 @@ import { CatalogueFilter } from '../state/catalogue-filter';
 import type { CatalogueListLike } from '../state/catalogue-list-like';
 import { FilterUrlSync } from '../url/sync/filter-url-sync';
 import { CatalogueCardTemplate } from './catalogue-card-template';
-import { CatalogueEmpty } from './catalogue-empty';
 
 /** Beyond a screenful, more placeholder tiles only lengthen the page. */
 const MAX_SKELETON_TILES = 24;
@@ -46,7 +46,7 @@ const MAX_SKELETON_TILES = 24;
   imports: [
     ActiveFilters,
     Button,
-    CatalogueEmpty,
+    EmptyState,
     FilterConsole,
     FilterSearch,
     FilterToolbar,

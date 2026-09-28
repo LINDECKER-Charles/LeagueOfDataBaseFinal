@@ -30,7 +30,8 @@ import { injectCatalogueLink } from '../links/inject-catalogue-link';
           [attr.data-edition]="link.edition"
         >
           {{ 'edition.counterpart.' + link.edition | transloco }}
-          <span aria-hidden="true" class="rtl:-scale-x-100">›</span>
+          <!-- U+203A mirrors by itself in a right-to-left page: no flip on top of it. -->
+          <span aria-hidden="true">›</span>
         </a>
       }
     </div>

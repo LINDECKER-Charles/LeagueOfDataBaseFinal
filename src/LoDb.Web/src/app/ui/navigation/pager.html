@@ -1,4 +1,4 @@
-<nav class="pager" [attr.aria-label]="'detail.nav.label' | transloco">
+<nav #nav class="pager" [attr.aria-label]="'detail.nav.label' | transloco">
   @if (previous(); as link) {
     <a class="pager__link" rel="prev" [routerLink]="link.url">
       <span class="pager__eyebrow">‹ {{ 'detail.nav.previous' | transloco }}</span>

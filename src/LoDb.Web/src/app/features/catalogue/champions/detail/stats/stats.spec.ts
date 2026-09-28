@@ -196,6 +196,18 @@ describe('lodb-stat-board', () => {
     expect(values.at(-1)).toBe('625');
   });
 
+  it('keeps the signed growths and the level counter left to right in any page', () => {
+    const { element } = render();
+    const growths = [...element.querySelectorAll('.row__growth')];
+    const counter = [...element.querySelectorAll('.level span')].find((node) =>
+      node.textContent?.includes('/'),
+    );
+    expect(growths.length).toBeGreaterThan(0);
+    expect(growths.every((node) => node.getAttribute('dir') === 'ltr')).toBe(true);
+    expect(counter?.getAttribute('dir')).toBe('ltr');
+    expect(counter?.textContent?.trim()).toBe('1 / 18');
+  });
+
   it('heads the rows of the stats that have artwork with their icon', () => {
     const { element } = render();
     const rows = [...element.querySelectorAll('.row')];

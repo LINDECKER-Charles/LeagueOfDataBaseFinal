@@ -28,7 +28,8 @@
     <span class="font-mono text-[10px] tracking-[0.14em] text-text-dim uppercase">
       {{ levelLabel }}
     </span>
-    <span class="font-beaufort text-sm text-gold">{{ level() }} / {{ maxLevel }}</span>
+    <!-- dir=ltr: two figures that a right-to-left page would otherwise swap to "18 / 1". -->
+    <span class="font-beaufort text-sm text-gold" dir="ltr">{{ level() }} / {{ maxLevel }}</span>
   </div>
   <input
     type="range"
@@ -60,11 +61,12 @@
       </dt>
       <dd>
         <span class="row__value">{{ row.value }}</span>
-        <!-- The space keeps the value and its growth two words, two bidi runs in RTL. -->
+        <!-- The space keeps the value and its growth two words, two bidi runs in RTL; dir=ltr
+             keeps the sign before the figure, as the item aside does. -->
         @if (row.growth > 0 && row.kind === 'flat') {
-          &ngsp;<span class="row__growth">+{{ row.growth }}</span>
+          &ngsp;<span class="row__growth" dir="ltr">+{{ row.growth }}</span>
         } @else if (row.growth > 0 && row.kind === 'percent') {
-          &ngsp;<span class="row__growth">+{{ row.growth }}%</span>
+          &ngsp;<span class="row__growth" dir="ltr">+{{ row.growth }}%</span>
         }
       </dd>
     </div>

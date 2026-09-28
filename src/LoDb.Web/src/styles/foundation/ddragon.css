@@ -209,7 +209,9 @@
     line-height: 0.8;
     float: inline-start;
     padding-inline-end: 0.14em;
-    padding-block-start: 0.05em;
+    /* Physical: Chromium's ::first-letter ignores the logical paddings (padding-inline-end
+       above computes to 0 on the legacy too, and stays for parity). */
+    padding-top: 0.05em;
     color: var(--color-gold);
     text-shadow: 0 0 18px color-mix(in srgb, var(--color-gold) 45%, transparent);
   }

@@ -43,6 +43,16 @@ test.describe('public pages on a 320 px phone', { tag: '@readonly' }, () => {
     await expectFitsPhone(page, '/en/champions/nowhere/at/all');
   });
 
+  // The longest list title of the 21 locales: one German word wider than the phone.
+  test('fit a list titled with one long word in the width', async ({ page }) => {
+    await expectFitsPhone(page, pageUrl('de', 'summoners'));
+  });
+
+  // Rune names keep whole words: a Polish keystone name wider than its card, and the page.
+  test('fit a rune path with a keystone name wider than its card', async ({ page }) => {
+    await expectFitsPhone(page, pageUrl('pl', 'runes/8300-inspiration'));
+  });
+
   for (const path of RTL_PATHS) {
     const url = pageUrl('ar', path);
 

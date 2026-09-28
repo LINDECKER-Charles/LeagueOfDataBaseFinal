@@ -266,7 +266,7 @@ describe('lodb-catalogue-list', () => {
     const empty: List = { entries: [], total: 0 };
     const fixture = await render('/en/7.20.1/runes', sourceOf(empty, 'ready', empty).source);
     expect(all(fixture, '[role=list]')).toHaveLength(0);
-    expect(all(fixture, 'lodb-catalogue-empty a')[0]?.getAttribute('href')).toBe('/en');
+    expect(all(fixture, 'lodb-empty-state a')[0]?.getAttribute('href')).toBe('/en');
   });
 
   it('opens the facets in a bottom sheet on narrow screens', async () => {

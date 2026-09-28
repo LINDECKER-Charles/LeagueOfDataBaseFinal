@@ -107,6 +107,11 @@
   border-radius: 0;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
+/* The legacy blade turned 45deg: its minifier folded the reset above to `transform: rotate(0)`
+   and dropped `rotate: 0deg`, so the base rotate survived. The rendered look is the target. */
+[data-theme='noxus'] .slot-node i {
+  rotate: 45deg;
+}
 [data-theme='noxus'] .hx-pip {
   display: inline-block;
   inline-size: 7px;
@@ -137,8 +142,11 @@
 /* `hx-corners` bracketed a panel at two opposite corners with Deco squares.
    Noxus replaces both with a SINGLE wax seal where a reader finishes the first
    line (top right in left-to-right pages) — the mark an authority leaves on a
-   document it has approved. One mark, not two: the empire signs once. */
+   document it has approved. One mark, not two: the empire signs once.
+   Stamped over the panel's content, as the legacy painted it above a static image: without
+   the z-index, a positioned child (lodb-catalogue-image) would cover it. */
 [data-theme='noxus'] .hx-corners::before {
+  z-index: 1;
   inline-size: 9px;
   block-size: 9px;
   inset-block-start: 10px;

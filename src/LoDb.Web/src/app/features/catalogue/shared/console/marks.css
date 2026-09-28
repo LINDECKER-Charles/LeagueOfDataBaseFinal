@@ -51,7 +51,10 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+/* Two figures of a Latin label ('12 / 62'): a right-to-left page must not swap them. */
 .gauge {
+  unicode-bidi: isolate;
+  direction: ltr;
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--color-hex);

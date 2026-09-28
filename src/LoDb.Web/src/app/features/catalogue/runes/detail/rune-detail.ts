@@ -12,13 +12,13 @@ import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogu
 import { injectRouteData } from '../../../../core/routing/inject-route-data';
 import { Pager } from '../../../../ui/navigation/pager';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
+import { EmptyState } from '../../../../ui/surfaces/empty-state';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
 import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
 import { LoadTime } from '../../shared/codex/timing/load-time';
 import { CatalogueImage } from '../../../../ui/cards/catalogue-image';
 import { initialsOf } from '../../../../ui/cards/initials-of';
-import { CatalogueEmpty } from '../../shared/list/catalogue-empty';
 import { pathThemeOf } from '../paths/path-theme-of';
 import { injectAnchorOffset } from './anchor/inject-anchor-offset';
 import { constellationOf } from './constellation/constellation-of';
@@ -38,8 +38,8 @@ const EMBLEM_SIZE = 120;
   selector: 'lodb-rune-detail',
   imports: [
     Backdrop,
-    CatalogueEmpty,
     CatalogueImage,
+    EmptyState,
     LoadTime,
     Pager,
     RuneConstellation,

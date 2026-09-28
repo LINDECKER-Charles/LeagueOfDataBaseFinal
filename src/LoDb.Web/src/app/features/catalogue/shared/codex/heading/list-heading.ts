@@ -13,7 +13,10 @@ import { Logo } from '../../../../../ui/media/logo';
         <div class="absolute inset-0 opacity-40 blur-lg hx-logo-halo"></div>
         <lodb-logo class="relative z-10 size-7" />
       </div>
-      <div>
+      <!-- As on the legacy, a long word may run into the page's padding rather than break;
+        the cap (1.5rem page padding, 3.5rem crest, 1rem gap) also caps the column's minimum
+        width, so only a word wider than the screen breaks, at its edge. -->
+      <div class="max-w-[calc(100vw-6rem)]">
         <p class="mb-1.5 eyebrow">Data Dragon · {{ version() }}</p>
         <h1 class="font-beaufort text-3xl tracking-wide text-gold-grad uppercase sm:text-4xl">
           {{ title() }}
