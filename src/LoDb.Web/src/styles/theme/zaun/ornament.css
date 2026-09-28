@@ -181,9 +181,12 @@
 
    Physical on purpose: the iron radius is a physical shorthand, so its sharp
    corners stay top-right and bottom-left in right-to-left pages too, and the
-   rivets that fasten them must not follow the writing direction. */
+   rivets that fasten them must not follow the writing direction.
+   Seated over the panel's content, as the legacy painted them above a static image: without
+   the z-index, a positioned child (lodb-catalogue-image) would cover them. */
 [data-theme='zaun'] .hx-corners::before,
 [data-theme='zaun'] .hx-corners::after {
+  z-index: 1;
   inline-size: 6px;
   block-size: 6px;
   border: 0;
