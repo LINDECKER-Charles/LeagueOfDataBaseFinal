@@ -48,6 +48,11 @@ test.describe('public pages on a 320 px phone', { tag: '@readonly' }, () => {
     await expectFitsPhone(page, pageUrl('de', 'summoners'));
   });
 
+  // Rune names keep whole words: a Polish keystone name wider than its card, and the page.
+  test('fit a rune path with a keystone name wider than its card', async ({ page }) => {
+    await expectFitsPhone(page, pageUrl('pl', 'runes/8300-inspiration'));
+  });
+
   for (const path of RTL_PATHS) {
     const url = pageUrl('ar', path);
 

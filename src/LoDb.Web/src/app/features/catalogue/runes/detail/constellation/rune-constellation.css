@@ -83,4 +83,14 @@
   h3 {
     overflow-wrap: normal;
   }
+  /* A keystone name its card cannot hold runs past it, as on the legacy, but never off a
+     phone: across the card's padding, its 1px frame and the page's gutter (the article's p-6,
+     rune-detail's px-6), then it breaks at the screen's edge, where the legacy made the page
+     scroll sideways (Polish and Russian keystones at 320px). */
+  .keystone__name {
+    margin-block-end: 0.75rem;
+    inline-size: fit-content;
+    max-inline-size: calc(100% + 3rem + 1px);
+    overflow-wrap: break-word;
+  }
 }
