@@ -81,7 +81,9 @@
     @if (added() > 0) {
       {{ 'build.editor.armory.added' | transloco: { count: added() } }} ·
     }
-    {{ 'build.editor.counter' | transloco: { count: placed().length, max: maxItems } }}
+    <bdi dir="ltr">{{
+      'build.editor.counter' | transloco: { count: placed().length, max: maxItems }
+    }}</bdi>
     @if (!canAdd()) {
       — {{ 'build.editor.armory.full' | transloco }}
     }

@@ -14,7 +14,10 @@
         </h1>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <span lodbChip data-total>{{ 'filter.results' | transloco: { count: page.total } }}</span>
+        <!-- Isolated: an English fallback in an RTL page would read "RESULT 1". -->
+        <span lodbChip data-total
+          ><bdi>{{ 'filter.results' | transloco: { count: page.total } }}</bdi></span
+        >
         <lodb-forge-cta [locale]="current.locale" />
       </div>
     </header>

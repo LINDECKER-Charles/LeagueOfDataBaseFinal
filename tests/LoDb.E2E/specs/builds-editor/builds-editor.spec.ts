@@ -44,6 +44,25 @@ test('moves an item onto the note of an empty step', async ({ member: page }) =>
   await expect(first.locator('.forge-slot')).toHaveCount(0);
 });
 
+// The Arabic page runs right to left; its counters still read "0 / 8", never "8 / 0".
+test('keeps the counters in reading order on the Arabic page', async ({ member: page }) => {
+  await page.goto('/ar/account/builds/new');
+  const counter = stepsOf(page).first().locator('.forge-step__count bdi');
+  await expect(counter).toHaveText('0 / 8');
+
+  const [count, max] = await counter.evaluate((element) => {
+    const text = element.firstChild as Text;
+    const leftOf = (index: number) => {
+      const range = document.createRange();
+      range.setStart(text, index);
+      range.setEnd(text, index + 1);
+      return range.getBoundingClientRect().left;
+    };
+    return [leftOf(text.data.indexOf('0')), leftOf(text.data.lastIndexOf('8'))];
+  });
+  expect(count).toBeLessThan(max);
+});
+
 // The worker's verified account: the API limits how many are created in a row. The forge
 // refused to an unverified account is left to verifiedEmailGuard's unit test and the API's.
 test('forges, edits, imports and deletes a build', async ({ member: page, request }) => {

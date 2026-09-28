@@ -44,6 +44,7 @@
             #label
             type="text"
             class="hx-input forge-step__label"
+            dir="auto"
             list="lodb-step-presets"
             [maxLength]="limits.maxLabelLength"
             [value]="step.label"
@@ -92,6 +93,7 @@
           #note
           rows="2"
           class="hx-input forge-step__note"
+          dir="auto"
           [maxLength]="limits.maxNoteLength"
           [value]="step.note ?? ''"
           [placeholder]="'build.editor.steps.note' | transloco"
@@ -185,11 +187,12 @@
           <span class="forge-additem__label">{{ 'build.editor.armory.add_cta' | transloco }}</span>
         </button>
 
+        <!-- The fraction reads left to right in every locale; the line keeps its alignment. -->
         <p class="forge-hint forge-step__count">
-          {{
+          <bdi dir="ltr">{{
             'build.editor.counter'
               | transloco: { count: step.items.length, max: limits.maxItemsPerStep }
-          }}
+          }}</bdi>
         </p>
       </div>
     </li>
@@ -206,6 +209,8 @@
     {{ 'build.editor.steps.add' | transloco }}
   </button>
   <span class="forge-hint">
-    {{ 'build.editor.counter' | transloco: { count: order().steps.length, max: limits.maxSteps } }}
+    <bdi dir="ltr">{{
+      'build.editor.counter' | transloco: { count: order().steps.length, max: limits.maxSteps }
+    }}</bdi>
   </span>
 </div>

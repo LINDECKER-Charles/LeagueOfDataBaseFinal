@@ -33,6 +33,7 @@
         </p>
         <h1
           class="mt-1.5 font-beaufort text-3xl font-bold tracking-wide text-gold-grad uppercase sm:text-4xl"
+          dir="auto"
         >
           {{ current.name }}
         </h1>
@@ -78,7 +79,7 @@
     </header>
 
     @if (current.description) {
-      <p class="bshare-desc">{{ current.description }}</p>
+      <p class="bshare-desc" dir="auto">{{ current.description }}</p>
     }
 
     <lodb-share-runes [runes]="current.runes" />
