@@ -105,9 +105,10 @@ test('lists every panel in its navigation and opens on the overview', async ({
     'aria-current',
     'page',
   );
-  // The legacy URL of the journal still opens it.
-  await page.goto('/admin/logs');
-  await expect(page).toHaveURL(/\/admin\/journal$/);
+  // The legacy URL of the journal still opens it, with the filters of the bookmark.
+  await page.goto('/admin/logs?category=auth');
+  await expect(page).toHaveURL(/\/admin\/journal\?category=auth$/);
   await expect(nav.getByRole('link', { name: 'Journal' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.locator('lodb-journal-filters').getByLabel(/^Catégorie/)).toHaveValue('auth');
   expect(consoleErrors).toEqual([]);
 });

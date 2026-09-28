@@ -54,6 +54,7 @@ export const PANEL_ROUTES: Routes = [
     path: 'journal',
     loadComponent: () => import('./management/journal/journal-panel').then((m) => m.JournalPanel),
   },
-  // The legacy URL of the journal: a bookmark lands on it, its filters kept.
-  { path: 'logs', redirectTo: 'journal' },
+  // The legacy URL of the journal: a bookmark lands on it, its filters kept. A function, as
+  // the server turns a string into a redirect of its own, which drops the query.
+  { path: 'logs', redirectTo: () => 'journal' },
 ];
