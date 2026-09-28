@@ -159,11 +159,15 @@
       border-color 0.25s var(--ease-hextech);
   }
   a.hx-version-chip:hover,
-  a.hx-version-chip:focus-visible,
-  a.hx-version-chip[aria-current] {
+  a.hx-version-chip:focus-visible {
     color: var(--color-gold-bright);
     border-color: color-mix(in srgb, var(--color-gold) 70%, transparent);
     outline: none;
+  }
+  /* After the hover rule, as the legacy `.is-active`: the current chip stays at 60%. */
+  a.hx-version-chip[aria-current] {
+    color: var(--color-gold-bright);
+    border-color: color-mix(in srgb, var(--color-gold) 60%, transparent);
   }
   .hx-version-chip--lg {
     padding: 0.2rem 0.65rem;
