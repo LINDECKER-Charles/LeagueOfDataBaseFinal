@@ -49,18 +49,24 @@ test('moves an item onto the note of an empty step', async ({ member: page }) =>
 // The Arabic page runs right to left; its counters still read "0 / 8", never "8 / 0".
 test('keeps the counters in reading order on the Arabic page', async ({ member: page }) => {
   await page.goto('/ar/account/builds/new');
-  const counter = stepsOf(page).first().locator('.forge-step__count bdi');
+  const counter = stepsOf(page).first().locator('.forge-step__count');
   await expect(counter).toHaveText('0 / 8');
 
+  // The fraction's text node, wherever the markup that isolates it puts it.
   const [count, max] = await counter.evaluate((element) => {
-    const text = element.firstChild as Text;
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let text = walker.nextNode() as Text | null;
+    while (text !== null && !text.data.includes('/')) {
+      text = walker.nextNode() as Text | null;
+    }
+    const fraction = text!;
     const leftOf = (index: number) => {
       const range = document.createRange();
-      range.setStart(text, index);
-      range.setEnd(text, index + 1);
+      range.setStart(fraction, index);
+      range.setEnd(fraction, index + 1);
       return range.getBoundingClientRect().left;
     };
-    return [leftOf(text.data.indexOf('0')), leftOf(text.data.lastIndexOf('8'))];
+    return [leftOf(fraction.data.indexOf('0')), leftOf(fraction.data.lastIndexOf('8'))];
   });
   expect(count).toBeLessThan(max);
 });
