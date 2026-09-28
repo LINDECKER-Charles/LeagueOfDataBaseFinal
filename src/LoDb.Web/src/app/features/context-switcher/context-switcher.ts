@@ -22,6 +22,7 @@ import type { CatalogMeta } from '../../core/api/generated/models/catalog-meta';
 import { ApiMeta } from '../../core/api/meta/api-meta';
 import { PreferencesStore } from '../../core/context/preferences/preferences-store';
 import { switchContext } from '../../core/context/switch/switch-context';
+import { WarmUpLoader } from '../../core/context/warm-up/warm-up-loader';
 import { Disclosure } from '../../core/layout/disclosure/disclosure';
 import { PageDirection } from '../../core/layout/direction/page-direction';
 import { NavContext } from '../../core/layout/nav/nav-context';
@@ -35,6 +36,7 @@ import { currentChoice } from './selection/current-choice';
 import { preferencesOf } from './selection/preferences-of';
 import { rememberedTarget } from './selection/remembered-target';
 import { targetOf } from './selection/target-of';
+import { warmUpOf } from './selection/warm-up-of';
 
 /** The Transloco scope of the switcher's own texts (`public/i18n/context-switcher/`). */
 const SCOPE = 'context-switcher';
@@ -50,7 +52,8 @@ function valueOf(event: Event): string {
 /**
  * Patch and language switcher of the header (`switcher` slot): a native `<details>` holding
  * a form that never posts. Submitting navigates to the same page in the chosen context, the
- * URL rewritten by `switchContext`, and confirms with a toast. The choice is kept for the
+ * URL rewritten by `switchContext`, once the loader has warmed it (`WarmUpLoader`), and
+ * confirms with a toast. The choice is kept for the
  * browsing session, and in `lod_prefs` across visits when "remember" is ticked; the switcher
  * applies it to the pages that name no context of their own, as the legacy session did.
  *
@@ -76,6 +79,7 @@ export class ContextSwitcher {
   private readonly nav = inject(NavContext);
   private readonly toasts = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
+  private readonly loader = inject(WarmUpLoader);
   private readonly destroyRef = inject(DestroyRef);
   private readonly panel = viewChild.required<ElementRef<HTMLDetailsElement>>('panel');
   private readonly url = toSignal(
@@ -155,7 +159,11 @@ export class ContextSwitcher {
     this.panel().nativeElement.open = false;
     const current = this.router.url;
     const next = switchContext(current, target, meta);
-    void this.router.navigateByUrl(next).then(async (done) => {
+    const warmUp = warmUpOf(next, { version: this.version(), language: language.language }, meta);
+    const visit = (): Promise<boolean> => this.router.navigateByUrl(next);
+    // Another context may not be ingested yet: the loader warms it, then visits.
+    const visited = next === current ? visit() : this.loader.gate(warmUp, visit);
+    void visited.then(async (done) => {
       if (done || next === current) {
         await this.saved();
       }
