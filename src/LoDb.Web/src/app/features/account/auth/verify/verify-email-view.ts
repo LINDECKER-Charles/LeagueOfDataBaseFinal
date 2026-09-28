@@ -31,6 +31,8 @@ const SETTLED: readonly VerifyOutcome[] = ['verified', 'already'];
   imports: [AuthCard, Button, RouterLink, TranslocoPipe],
   templateUrl: './verify-email-view.html',
   styleUrl: '../card/auth-form.css',
+  // Grows with the account page, so its card is centred between header and footer.
+  host: { class: 'flex flex-1 flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VerifyEmailView {

@@ -5,6 +5,7 @@
  */
 @layer components {
   .donate-outcome-page {
+    flex-grow: 1;
     display: grid;
     place-items: center;
     width: 100%;

@@ -26,7 +26,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
     </section>
   </div>`,
   styleUrl: './auth-card.css',
-  host: { class: 'block' },
+  host: { class: 'flex flex-1 flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuthCard {
