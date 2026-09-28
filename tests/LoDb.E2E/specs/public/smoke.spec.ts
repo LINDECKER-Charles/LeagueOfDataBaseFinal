@@ -26,6 +26,8 @@ test.describe('smoke', { tag: '@readonly' }, () => {
       expect(await notice.evaluate((element) => element.textContent)).toBe(
         'JavaScript is required to use this page.',
       );
+      // Clear of the screen's edge: index.html's classes must reach the global stylesheet.
+      expect((await notice.boundingBox())?.x).toBeGreaterThan(0);
       await page.goto('/en/about');
       await expect(notice).toHaveCount(0);
     });
