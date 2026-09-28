@@ -29,8 +29,8 @@ export const detailChampions = [
 export const versionsUrl = 'https://ddragon.leagueoflegends.com/api/versions.json';
 export const legacyBaseUrl = 'http://localhost:8080';
 
-/** The legacy stack: the root compose files, project `lodb`. */
-export const legacyCompose = ['compose'];
+/** The legacy stack: the compose files archived in legacy/, project `lodb`. */
+export const legacyCompose = ['compose', '--project-directory', 'legacy'];
 
 /** The new stack, one instance only. */
 export const nextCompose = [

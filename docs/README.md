@@ -50,9 +50,9 @@ Pour développer sur la nouvelle stack : guide [dev-next.md](guides/dev-next.md)
 
 | Doc | Contenu |
 |---|---|
-| [setup.md](guides/setup.md) | Prérequis, installation détaillée, dépannage |
-| [configuration.md](guides/configuration.md) | Variables d'environnement et paramètres applicatifs |
-| [docker.md](guides/docker.md) | Référence des commandes de la stack Compose |
+| [setup.md](../legacy/docs/guides/setup.md) | *Ancienne stack, archivée* — Prérequis, installation détaillée, dépannage |
+| [configuration.md](../legacy/docs/guides/configuration.md) | *Ancienne stack, archivée* — Variables d'environnement et paramètres applicatifs |
+| [docker.md](../legacy/docs/guides/docker.md) | *Ancienne stack, archivée* — Référence des commandes de la stack Compose |
 | [dev-next.md](guides/dev-next.md) | Nouvelle stack `lodb-next` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
 | [github-actions-secrets.md](guides/github-actions-secrets.md) | Secrets GitHub Actions / GHCR, flux de promotion CI/CD |
 | [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
@@ -60,7 +60,7 @@ Pour développer sur la nouvelle stack : guide [dev-next.md](guides/dev-next.md)
 | [logging.md](guides/logging.md) | Convention de journalisation applicative : clé d'événement, contexte, niveaux, canaux, interdictions |
 | [oauth-google-setup.md](guides/oauth-google-setup.md) | Configuration « Sign in with Google » côté Google Cloud Console |
 | [legal-info.md](guides/legal-info.md) | Checklist des informations légales à trancher avant la prod |
-| [packaging-apk.md](guides/packaging-apk.md) | Distribution Android (TWA / APK) à partir de la PWA |
+| [packaging-apk.md](../legacy/docs/guides/packaging-apk.md) | *Ancienne stack, archivée* — Distribution Android (TWA / APK) à partir de la PWA |
 
 ## `audits/` — constats datés
 

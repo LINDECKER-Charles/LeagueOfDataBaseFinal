@@ -1,5 +1,5 @@
 // Lifecycle of the throwaway capture environment: a private Postgres loaded with the
-// old-stack schema snapshot and the seed, and a go-api container built from go/api.
+// old-stack schema snapshot and the seed, and a go-api container built from legacy/go/api.
 // Nothing here touches the old stack: no shared network, volume, database or port.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -27,11 +27,11 @@ export async function waitUntil(what, check) {
   throw new Error(`${what} not ready after ${timings.readinessTimeoutMs} ms`);
 }
 
-/** Git tree of go/api, suffixed when the working copy differs from it. */
+/** Git tree of legacy/go/api, suffixed when the working copy differs from it. */
 export function goApiRevision() {
   const git = (args) => spawnSync('git', args, { cwd: repoRoot, encoding: 'utf8' });
-  const tree = git(['rev-parse', 'HEAD:go/api']).stdout.trim();
-  const dirty = git(['status', '--porcelain', '--', 'go/api']).stdout.trim() !== '';
+  const tree = git(['rev-parse', 'HEAD:legacy/go/api']).stdout.trim();
+  const dirty = git(['status', '--porcelain', '--', 'legacy/go/api']).stdout.trim() !== '';
   return dirty ? `${tree}+dirty` : tree;
 }
 

@@ -29,7 +29,7 @@ node --test 'tools/next/cutover/test/*.test.mjs'
 
 ```bash
 npm ci --prefix tests/LoDb.E2E && npm --prefix tests/LoDb.E2E run browsers:install
-tools/next/cutover/rehearse.sh --legacy-dir <checkout de l'ancienne stack> --slot 2 --anonymize
+tools/next/cutover/rehearse.sh --slot 2 --anonymize   # ancienne stack : legacy/ par défaut
 ```
 
 Déroulé, chaque étape chronométrée dans un résumé final (code 0 si tout passe ; derrière un
@@ -65,8 +65,9 @@ Déroulé, chaque étape chronométrée dans un résumé final (code 0 si tout p
 
 Options : `--skip-pre-ingest`, `--skip-e2e`, `--no-build`, `--historical <n>` (sitemaps de
 versions suivis par le vérificateur des 301). L'ancienne stack doit tourner depuis
-`--legacy-dir`, ou y être arrêtée : si ses conteneurs viennent d'un autre dossier, le script
-refuse de les recréer.
+`--legacy-dir` (`legacy/` de ce dépôt par défaut), ou y être arrêtée : si ses conteneurs
+viennent d'un autre dossier (la racine du dépôt avant l'archivage, par exemple), le script
+refuse de les recréer. Son `.env` est `legacy/.env`.
 
 ## Pré-ingestion
 

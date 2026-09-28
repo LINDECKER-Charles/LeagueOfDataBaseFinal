@@ -17,7 +17,7 @@ cache de clés).
 
 ## Environnement, entièrement privé
 
-- Image `lodb-v1-capture/go-api:<arbre>` construite depuis `go/api` (l'arbre Git est
+- Image `lodb-v1-capture/go-api:<arbre>` construite depuis `legacy/go/api` (l'arbre Git est
   consigné dans chaque référence, champ `source.goApiTree`).
 - Réseau `lodb-v1-capture`, Postgres `postgres:17-alpine` en mémoire (`--tmpfs`) sans port
   publié, chargé avec `seed/schema.sql` puis `seed/dataset.sql` avant chaque groupe.

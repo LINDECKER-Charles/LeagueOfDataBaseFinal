@@ -1,20 +1,23 @@
 commande.md
 
-# Env & secrets (see docs/guides/github-actions-secrets.md).
+# Env & secrets (see docs/guides/configuration.md).
 # Real env files are git-ignored; committed *.example templates and the non-secret
-# Symfony defaults (app/.env, app/.env.test) are not.
+# Symfony defaults of the archived stack (legacy/app/.env, legacy/app/.env.test) are not.
 
-# Repo-root compose env — single source of truth per environment (anchored: only repo root)
+# Repo-root compose env of the new stack (local overrides; ENV_NEXT / ENV_PROD_NEXT on a host)
 /.env
-/.env.test
-/.env.staging
-/.env.prod
 
-# Symfony host-level secret overrides (real secrets live here locally / written by CI)
-/app/.env.local
-/app/.env.*.local
+# Compose env of the archived legacy stack, read by `docker compose --project-directory legacy`
+/legacy/.env
+/legacy/.env.test
+/legacy/.env.staging
+/legacy/.env.prod
 
-# Node deps anywhere outside app/ (e.g. tools/screenshots). Unanchored: matches at any depth.
+# Symfony host-level secret overrides (legacy/app/.gitignore ignores them too)
+/legacy/app/.env.local
+/legacy/app/.env.*.local
+
+# Node deps anywhere (e.g. legacy/tools/screenshots). Unanchored: matches at any depth.
 node_modules/
 
 # JetBrains IDE
@@ -36,7 +39,7 @@ design
 # Note locale de migration edge -> infra-vps (non versionnee)
 /docs/MIGRATION-INFRA-VPS.local.md
 
-# .NET outputs of the new stack. Anchored on src/ and tests/: app/bin/ holds tracked
+# .NET outputs of the new stack. Anchored on src/ and tests/: legacy/app/bin/ holds tracked
 # Symfony entry points.
 /src/**/bin/
 /src/**/obj/

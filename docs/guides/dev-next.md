@@ -7,8 +7,8 @@ ports, emplacements et dépannage. Les règles de code et les invariants sont da
 [plan d'implémentation](../reecriture/plan-implementation.md).
 
 > Toutes les commandes se lancent depuis la **racine du dépôt**. La nouvelle stack ne
-> partage rien avec l'ancienne (`compose.yaml`, projet `lodb`) : fichiers, projet Compose,
-> images, volumes et ports sont distincts.
+> partage rien avec l'ancienne, archivée sous `legacy/` (`legacy/compose.yaml`, projet
+> `lodb`) : fichiers, projet Compose, images, volumes et ports sont distincts.
 
 ## Prérequis
 
@@ -171,11 +171,13 @@ les siennes.
 
 ## Variables
 
-Tout a une valeur par défaut en local : aucun fichier `.env` n'est nécessaire. Le modèle
-complet est `.env.next.example`.
+Tout a une valeur par défaut en local : aucun fichier `.env` n'est nécessaire. Un `.env`
+racine ne sert qu'à surcharger une variable locale (un port, par exemple) ; ne jamais y
+copier un modèle d'environnement servi. L'inventaire complet des secrets et des variables
+est dans [`configuration.md`](configuration.md).
 
-- Les variables de la nouvelle stack sont préfixées `LODB_` : Compose lit aussi le `.env`
-  racine de l'ancienne stack, et les deux ne doivent jamais se lire l'une l'autre.
+- Les variables de la nouvelle stack sont préfixées `LODB_`. L'ancienne stack a son propre
+  `.env`, `legacy/.env` : les deux ne se lisent jamais l'une l'autre.
 - Côté API, la configuration passe par `LoDb__<Section>__<Clé>` et
   `ConnectionStrings__LoDb`.
 - Côté SSR : `LODB_API_ORIGIN`, `LODB_ALLOWED_HOSTS` et `LODB_TRUST_PROXY_HEADERS`.

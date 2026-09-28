@@ -18,15 +18,16 @@
 
 <!-- Must be green before requesting review (same as CI). -->
 
-- [ ] `docker compose exec -T php php vendor/bin/phpunit tests/Unit`
-- [ ] `npm test` · `npm run typecheck` · `npm run build` (from `app/`)
+- [ ] `dotnet build LoDb.slnx -c Release` · `dotnet test LoDb.slnx`
+- [ ] `npm --prefix src/LoDb.Web run lint` · `typecheck` · `test` · `build:web` · `api:check`
 - [ ] Added or updated tests proving the change works
 
 ## ✅ Checklist
 
 - [ ] This PR targets the `dev` branch (not `main`)
-- [ ] Code follows the project conventions (`CLAUDE.md`)
-- [ ] Architecture invariants preserved (egress via go-fetcher, DB-less storage, `AbstractManager` / `AbstractResourceController`)
+- [ ] Code follows the project conventions (`CLAUDE.md`, section "Nouvelle stack")
+- [ ] Architecture invariants preserved (single `LoDb.Api` host, egress through the `ddragon` client, atomic blob writes, items and spells indexed by id, SSR without cookies or secrets)
+- [ ] Nothing changed under `legacy/` (archived stack)
 - [ ] Documentation updated if needed
 - [ ] No new warnings introduced
 

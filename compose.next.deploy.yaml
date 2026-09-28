@@ -5,7 +5,7 @@
 #
 # Driven by .github/workflows/next-deploy.yml (next) and next-promote.yml (prod). The
 # host's .env (secret ENV_NEXT or ENV_PROD_NEXT, template .env.next.example) sets the
-# project, the images, the public hosts and the secrets. Like compose.deploy.yaml, it
+# project, the images, the public hosts and the secrets. Like legacy/compose.deploy.yaml, it
 # publishes no host port: the shared edge (caddy-docker-proxy, owned by infra-vps) reads
 # the labels of nginx and reaches it over the external `edge` network.
 #

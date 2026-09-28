@@ -41,12 +41,12 @@ pas pour une version retombe sur `en_US` des deux côtés : N/A dans le rapport.
   fait sortir en 1 : relancer `ingest --version` de la version citée.
 - `export` : `php/` copié par `docker compose cp` dans le conteneur `php`, lancé en
   `-u www-data`, puis retiré ; les étiquettes de chromas sont dérivées par la règle du
-  front historique (`app/assets/vue/chroma/chromaLabel.ts`, lue sans copie). Côté
+  front historique (`legacy/app/assets/vue/chroma/chromaLabel.ts`, lue sans copie). Côté
   nouvelle stack, `catalog export --stored-only`.
 - `manifests` : `manifest/{version}/` lu dans le volume `lodb_storage` monté en lecture
   seule par un conteneur jetable, et les lignes `ddragon_asset` de l'échantillon.
 
-Aucun fichier de `app/` n'est modifié ; le script PHP n'écrit que dans `/tmp` du
+Aucun fichier de `legacy/app/` n'est modifié ; le script PHP n'écrit que dans `/tmp` du
 conteneur, et ne lit que des datasets déjà stockés (`NotWarmedException` sinon, jamais
 de récupération par go-fetcher).
 

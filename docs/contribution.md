@@ -1,5 +1,11 @@
 # 🤝 Guide de contribution
 
+> ⚠️ **À réécrire.** Les sections « Prérequis », « Configuration initiale » et « Garde-fous »
+> ci-dessous décrivent l'ancienne stack (Symfony + Go + Vue), archivée sous `legacy/`. Pour la
+> nouvelle stack, suivez [`CONTRIBUTING.md`](../CONTRIBUTING.md) et
+> [`guides/dev-next.md`](guides/dev-next.md). *EN / ES : the setup and guardrail sections
+> below describe the archived stack; follow `CONTRIBUTING.md` instead.*
+
 > 📌 **Guide court & canonique :** [`CONTRIBUTING.md`](../CONTRIBUTING.md) · **Conventions de code complètes :** [`CLAUDE.md`](../CLAUDE.md).
 > Ce document en est la version détaillée et multilingue (onboarding, templates d'issue et de PR). En cas de divergence, `CONTRIBUTING.md` et `CLAUDE.md` font foi.
 
@@ -40,7 +46,7 @@ Nous sommes ravis que vous souhaitiez contribuer à **League of Database** ! Ce 
    docker compose up -d --build
    # app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Détails : [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
+   Détails : [`docker.md`](../legacy/docs/guides/docker.md), [`configuration.md`](../legacy/docs/guides/configuration.md).
 
 3. **Dev front (optionnel, depuis `app/`)**
    ```bash
@@ -175,7 +181,7 @@ We're excited that you want to contribute to **League of Database**! This guide 
    docker compose up -d --build
    # app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Details: [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
+   Details: [`docker.md`](../legacy/docs/guides/docker.md), [`configuration.md`](../legacy/docs/guides/configuration.md).
 
 3. **Frontend dev (optional, from `app/`)**
    ```bash
@@ -310,7 +316,7 @@ The tracker provides **guided forms** (bug / feature): see [`.github/ISSUE_TEMPL
    docker compose up -d --build
    # app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Detalles: [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
+   Detalles: [`docker.md`](../legacy/docs/guides/docker.md), [`configuration.md`](../legacy/docs/guides/configuration.md).
 
 3. **Dev frontend (opcional, desde `app/`)**
    ```bash

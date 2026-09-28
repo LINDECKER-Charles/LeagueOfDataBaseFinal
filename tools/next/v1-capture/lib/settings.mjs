@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const libDir = path.dirname(fileURLToPath(import.meta.url));
 
 export const repoRoot = path.resolve(libDir, '../../../..');
-export const goApiDir = path.join(repoRoot, 'go/api');
+export const goApiDir = path.join(repoRoot, 'legacy/go/api');
 export const fixturesDir = path.join(repoRoot, 'tests/fixtures/v1');
 export const seedDir = path.join(fixturesDir, 'seed');
 export const scenariosDir = path.join(fixturesDir, 'scenarios');

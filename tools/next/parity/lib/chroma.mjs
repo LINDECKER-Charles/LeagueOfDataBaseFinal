@@ -3,7 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { repoRoot } from './settings.mjs';
 
-const legacyRule = 'app/assets/vue/chroma/chromaLabel.ts';
+const legacyRule = 'legacy/app/assets/vue/chroma/chromaLabel.ts';
 
 /**
  * The label function the legacy pages run (a TypeScript module Node loads as is). Only

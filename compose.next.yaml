@@ -1,5 +1,5 @@
 # Stack lodb-next: the .NET + Angular rewrite (plan, §5.4). It shares nothing with the
-# legacy stack (compose.yaml): own project, images, volumes and host ports.
+# legacy stack (legacy/compose.yaml): own project, images, volumes and host ports.
 #
 # Local (integration stack, from the repository root):
 #   docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build

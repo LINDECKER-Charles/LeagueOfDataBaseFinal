@@ -8,9 +8,9 @@
 #        [--anonymize] [--accounts-file <file>] [--historical 1] [--no-build]
 #        [--skip-pre-ingest] [--skip-e2e] [--keep] [--stop-legacy]
 #
-# --legacy-dir     the checkout the legacy stack (project lodb) runs from; this repository by
-#                  default. Its tracked files and its .env are never written: the copy is
-#                  named through POSTGRES_DB in the environment of `docker compose`.
+# --legacy-dir     the folder the legacy stack (project lodb) runs from; legacy/ of this
+#                  repository by default. Its tracked files and its .env are never written:
+#                  the copy is named through POSTGRES_DB in the environment of `docker compose`.
 # --slot           the lodb-next slot the new stack runs on (1 or 2), from this repository.
 # --copy           the database the copy goes to, next to the legacy one in its PostgreSQL;
 #                  dropped and created again. Never the legacy database itself.
@@ -35,7 +35,7 @@ set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(cd "$here/../../.." && pwd)"
-legacy_dir="$repo"
+legacy_dir="$repo/legacy"
 slot=2
 copy=lodb_rehearsal
 anonymize=0

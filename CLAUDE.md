@@ -61,6 +61,13 @@ Ce tableau, les invariants et les règles par langage qui suivent décrivent la 
 service**. La réécriture .NET 10 + Angular 22, en cours de construction, a sa propre
 section en fin de fichier : « Nouvelle stack (réécriture) ».
 
+> **Ancienne stack archivée sous `legacy/`** (même arborescence relative ; tag
+> `archive/stack-php` = `main` avant l'archivage). Dans les sections sur l'ancienne stack,
+> `app/`, `go/`, `docker/php/`, `docker/nginx/`, `compose*.yaml` et `.env` se lisent
+> `legacy/app/`, `legacy/go/`… Ses commandes Compose se lancent **depuis `legacy/`**
+> (`cd legacy`, ou `docker compose --project-directory legacy …`), qui porte son `.env`.
+> Ses workflows sont archivés dans `legacy/.github/workflows/` et ne tournent plus.
+
 ## Architecture — invariants à respecter
 
 - **Tout l'egress Data Dragon / CommunityDragon passe par le Go gateway** (`GoFetcherClient` → service `go_fetcher.client`). Ne jamais fetch une URL externe directement depuis PHP. Toute nouvelle source d'asset doit être ajoutée à l'`ALLOWED_HOSTS` du go-fetcher (`compose.yaml`) — **recréer le conteneur** pour prise en compte.
@@ -148,9 +155,9 @@ Les **limites chiffrées** sont des plafonds à respecter ; les **principes** so
 ## Garde-fous (à lancer avant de considérer un lot terminé)
 
 ```bash
-# Backend (dans le conteneur, comme la CI) — TOUJOURS `-u www-data`, voir Pièges connus
+# Depuis legacy/ (cd legacy). Backend dans le conteneur — TOUJOURS `-u www-data`
 docker compose exec -T -u www-data php php vendor/bin/phpunit tests/Unit   # baseline verte
-# Front (hôte, depuis app/)
+# Front (hôte, depuis legacy/app/)
 npm test          # vitest
 npm run typecheck # vue-tsc --noEmit
 npm run build     # vite build
@@ -173,13 +180,15 @@ npm run build     # vite build
 ## Références
 
 - `docs/architecture/architecture-report.md` — état archi + refactos appliqués (DRY/SOLID/KISS).
-- `docs/architecture/architecture.md`, `docs/guides/docker.md`, `docs/guides/configuration.md`, `docs/audits/performance-audit.md`.
+- `docs/architecture/architecture.md`, `legacy/docs/guides/docker.md`, `legacy/docs/guides/configuration.md`, `docs/audits/performance-audit.md`.
 
 ## commit
 
 Convention de commits (maintenue par /commit, initialisée par /b-hive-init).
 - Style : Conventional Commits — langue : fr (sujets sans accents, impératif, ≤ 80 car.)
 - Scopes (chemin → scope) :
+  - `legacy/**` en bloc (archivage, déplacement) → `legacy` ; sinon, les lignes `app/**`,
+    `go/**`, `docker/**`, `compose*` ci-dessous valent sous `legacy/`
   - `app/src/Service/Seo/**`, `app/src/Twig/SeoExtension.php`, `app/public/robots.txt` → `back/seo`
   - `app/src/EventSubscriber/LocaleSubscriber.php`, `app/src/Service/I18n/**` → `back/i18n`
   - `app/src/Controller/Admin/**`, `app/src/Service/Admin/**`, `app/templates/admin/**`, `app/public/admin/**` → `back/admin`
@@ -199,10 +208,10 @@ Convention de commits (maintenue par /commit, initialisée par /b-hive-init).
   - `go/api/**` → `api`
   - `compose*`, `docker/**`, `infra/**` → `infra`
   - `tools/**` → `tools`
-  - `screenshot/**` → `docs/screenshots`
+  - `legacy/screenshot/**` → `docs/screenshots`
   - `.github/**` → `ci`
   - `docs/**` → `docs`
-  - config transverse racine (`tailwind.config.js`, `composer.json`, `package.json`, lockfiles) → `chore` (sans scope)
+  - config transverse racine (`composer.json`, `package.json`, lockfiles) → `chore` (sans scope)
 - Règles de regroupement :
   - les tests (`app/tests/**`) voyagent avec le code testé, jamais en commit séparé ;
   - les entrées `docs/changelog/**` sont jointes au commit feature/fix qu'elles documentent.
@@ -222,10 +231,10 @@ fond fait foi dans [`docs/reecriture/`](docs/reecriture/README.md) (`heritage.md
 le [plan](docs/reecriture/plan-implementation.md) fixe chantiers, périmètres, fichiers
 partagés (§7.3) et jalons (§8). Commandes : [`dev-next.md`](docs/guides/dev-next.md).
 
-- **L'ancienne stack est en lecture seule** : `app/`, `go/`, `docker/nginx/`,
-  `docker/php/`, `compose.yaml`, `compose.override.yaml`, `compose.deploy.yaml` et les
-  workflows existants. Elle sert de référence de comportement ; ses règles (sections
-  ci-dessus) restent valables pour elle seule.
+- **L'ancienne stack est archivée et en lecture seule** : tout `legacy/` (`app/`, `go/`,
+  `docker/nginx/`, `docker/php/`, `compose.yaml`, `compose.override.yaml`,
+  `compose.deploy.yaml`, `.env*.example` et ses workflows). Elle sert de référence de
+  comportement ; ses règles (sections ci-dessus) restent valables pour elle seule.
 - Les règles de code communes (limites, nommage, fonctions, un élément public par
   fichier, commentaires en anglais) s'appliquent au nouveau code ; pas les garde-fous PHP.
 
@@ -380,8 +389,8 @@ node tools/next/lighthouse/run.mjs --stack lodb-next  # budgets du lot 3, stack 
   plateforme. Si l'image `web-ssr` échoue au build, c'est la première piste.
 - **`autoCsp` est incompatible avec le SSR** en Angular 22 : retiré, nonce en L3.11.
   `withFetch` et `withIncrementalHydration` sont omis (dépréciés, défaut en v22).
-- Variables Compose préfixées **`LODB_`** : Compose lit aussi le `.env` racine de
-  l'ancienne stack. En dev, les images s'appellent `<projet>-<service>` : un emplacement
+- Variables Compose préfixées **`LODB_`** : historiquement, Compose lisait aussi le `.env`
+  racine de l'ancienne stack ; elle a désormais le sien, `legacy/.env`. En dev, les images s'appellent `<projet>-<service>` : un emplacement
   n'écrase donc pas les images de l'intégration.
 - nginx : sous-domaine reconnu par `server_name ~^api\.` (`API_CADDY_DOMAINS` commence
   par `api.`) ; CORP `same-origin` sauf `/cdn/blobs/` en `cross-origin` (coquille
@@ -401,8 +410,10 @@ node tools/next/lighthouse/run.mjs --stack lodb-next  # budgets du lot 3, stack 
 - L'avertissement « clés Data Protection éphémères » de l'API est attendu jusqu'à L4.1.
 - `src/LoDb.Web/` compte déjà 11 fichiers à sa racine, `package-lock.json` compris : la
   limite de 10 par dossier y est à trancher avant L3.2 (`.postcssrc.json`).
-- L'ancienne stack (projet `lodb`) peut tourner depuis le checkout principal : on ne la
-  recrée jamais depuis un autre dossier (label `com.docker.compose.project.working_dir`).
+- L'ancienne stack (projet `lodb`) peut tourner depuis `legacy/` du checkout principal : on
+  ne la recrée jamais depuis un autre dossier (label `com.docker.compose.project.working_dir`).
+  Une instance lancée depuis la racine avant l'archivage se recrée depuis `legacy/` :
+  `docker compose --project-directory legacy up -d`, volumes conservés (projet `lodb`).
   Ses commandes console gardent `-u www-data`.
 
 ### Pièges du lot 1 (ne pas « corriger » par erreur)
@@ -544,7 +555,7 @@ Constats du [jalon des lots 5 à 7](docs/reecriture/rapports/jalons/lots-05-06-0
   suites.
 - **Parité des builds** (`tools/next/builds-parity/`) : la copie vit dans le Postgres de
   l'ancienne stack (`createdb` + `pg_dump | pg_restore`), jamais dans sa base `lodb`.
-  L'ancienne stack y pointe par `POSTGRES_DB` du `.env` (ignoré, sauvegardé puis remis),
+  L'ancienne stack y pointe par `POSTGRES_DB` de `legacy/.env` (ignoré, sauvegardé puis remis),
   `lodb-next` par une surcouche compose hors dépôt qui ne change que
   `ConnectionStrings__LoDb` (`Host=host.docker.internal;Port=5432;…`). Copier aussi
   `ddragon_version` et `ddragon_asset` de `lodb-next` (données seules) : la copie migrée
@@ -570,9 +581,9 @@ Constats du [jalon du lot 8](docs/reecriture/rapports/jalons/lot-08.md).
 - **Répétition locale** (critère du lot 8) : `docs/reecriture/bascule.md` § 3.1, tel
   qu'écrit, depuis la racine. Elle occupe l'emplacement `lodb-next-e2`, jamais `lodb-next`,
   et ne tourne ni pendant un build Android ni quand l'emplacement 2 est déjà occupé.
-  L'ancienne stack doit être arrêtée, ou lancée depuis ce dossier. Le script vise la copie
-  par `POSTGRES_DB` dans l'environnement de `docker compose` : ne jamais modifier le `.env`
-  pour elle.
+  L'ancienne stack doit être arrêtée, ou lancée depuis `legacy/` de ce dossier. Le script
+  vise la copie par `POSTGRES_DB` dans l'environnement de `docker compose` : ne jamais
+  modifier `legacy/.env` pour elle.
 - Le code de `rehearse.sh … | tee …` est celui de `tee` : lire `$pipestatus[1]` (zsh) ou
   `${PIPESTATUS[0]}` (bash), ou juger sur le résumé (15 lignes `ok` et « The rehearsal
   passes »).

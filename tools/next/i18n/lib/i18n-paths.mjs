@@ -11,7 +11,7 @@ const WEB_ROOT = join(REPO_ROOT, 'src', 'LoDb.Web');
 export const I18N_PATHS = Object.freeze({
   repoRoot: REPO_ROOT,
   webRoot: WEB_ROOT,
-  yamlDir: join(REPO_ROOT, 'app', 'translations'),
+  yamlDir: join(REPO_ROOT, 'legacy', 'app', 'translations'),
   catalogueDir: join(WEB_ROOT, 'public', 'i18n'),
   reportFile: join(REPO_ROOT, 'docs', 'reecriture', 'rapports', 'i18n-completude.md'),
 });

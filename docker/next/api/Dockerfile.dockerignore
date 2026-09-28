@@ -1,6 +1,6 @@
 # Build context of docker/next/api/Dockerfile (repository root): deny everything, then
-# admit what the publish reads. BuildKit prefers this file to the root .dockerignore,
-# which serves the legacy images.
+# admit what the publish reads. BuildKit prefers this file to a root .dockerignore (the
+# legacy images have theirs, legacy/.dockerignore).
 *
 
 !global.json

@@ -2,7 +2,7 @@
 
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : l'APK TWA prévu (jamais finalisé : `assetlinks.json` contient encore des
-  placeholders), cf. [`packaging-apk.md`](../../guides/packaging-apk.md)
+  placeholders), cf. [`packaging-apk.md`](../../../legacy/docs/guides/packaging-apk.md)
 
 ## Contexte
 

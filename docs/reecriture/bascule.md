@@ -101,15 +101,15 @@ passe par le même bloc `server` que `www.`.
 
 ### 3.1 Répétition locale (critère de sortie du lot 8)
 
-Sur le poste, depuis la racine du dépôt, ancienne stack lancée **depuis ce même dossier**
-(projet `lodb`, ports 8080, 8090, 5432) ou arrêtée ; jamais en même temps qu'un build Android
-en conteneur. La « nouvelle stack » du critère est ici l'emplacement `lodb-next-e2` (ports
+Sur le poste, depuis la racine du dépôt, ancienne stack lancée **depuis `legacy/` de ce même
+dossier** (projet `lodb`, ports 8080, 8090, 5432) ou arrêtée ; jamais en même temps qu'un
+build Android en conteneur. La « nouvelle stack » du critère est ici l'emplacement `lodb-next-e2` (ports
 18280, 18281, 18282, 15632, 18225) : c'est lui qui sert la copie migrée. La stack
 d'intégration `lodb-next` reste intacte, sur sa propre base, pendant toute la répétition ;
 il n'y a rien à y remettre ensuite.
 
 ```bash
-test -f .env || cp .env.example .env        # valeurs de dev, jamais un secret réel
+test -f legacy/.env || cp legacy/.env.example legacy/.env   # dev, jamais un secret réel
 npm ci --prefix tests/LoDb.E2E && npm --prefix tests/LoDb.E2E run browsers:install
 node --test 'tools/next/cutover/test/*.test.mjs'
 tools/next/contract/check.sh                 # contract : préparé, vérifié, non appliqué
@@ -494,7 +494,11 @@ Tant que le schéma reste compatible (migrations additives, jusqu'au *contract*)
 
 3. Contrôles : `tools/next/cutover/legacy-smoke.sh https://league-of-data-base.com https://api.league-of-data-base.com`,
    connexion d'un compte existant (son hash, réécrit en argon2id, est lu par PHP), `/v1/usage`
-   d'une clé. Réactiver `ci.yml` si des correctifs de l'ancienne stack doivent partir.
+   d'une clé. Des correctifs de l'ancienne stack ne partent plus par la CI : ses workflows
+   sont archivés sous `legacy/.github/workflows/`. Les remettre en service exige de les
+   replacer dans `.github/workflows/` et de préfixer leurs chemins de `legacy/` (contexte
+   `legacy`, `working-directory: legacy/app`, `COMPOSE_FILE` de `_deploy.yml`), ou de
+   déployer depuis le tag `archive/stack-php`.
 
 Ce qui est conservé : comptes, builds, votes, favoris, clés et crédits créés entre-temps sont
 dans les tables communes. Ce qui est perdu pour l'ancienne stack : les tables propres à la
@@ -533,12 +537,13 @@ reste intact jusqu'à la fin de la décommission.
 
 ### 10.2 Ce qui disparaît
 
+Le code, les compose, les environnements, les workflows et les guides de l'ancienne stack sont
+déjà **archivés sous `legacy/`** (tag `archive/stack-php` sur `main` avant l'archivage) : la
+décommission supprime ce dossier.
+
 | Quoi | Où |
 |---|---|
-| Code de l'ancienne stack | `app/`, `go/`, `docker/nginx/`, `docker/php/` |
-| Compose et environnements hérités | `compose.yaml`, `compose.override.yaml`, `compose.deploy.yaml`, `.env.example`, `.env.prod.example`, `.env.staging.example`, `.env.test.example`, `.dockerignore` (contexte des images php et nginx) |
-| Workflows hérités | `.github/workflows/ci.yml`, `_build.yml`, `_tests.yml`, `_promote.yml`, `_deploy.yml` |
-| À examiner, probablement hérités | `tailwind.config.js` racine, `tools/screenshots/`, `screenshot/` |
+| Ancienne stack archivée | `legacy/` : `app/`, `go/`, `docker/{nginx,php}/`, `compose*.yaml`, `.env*.example`, `.dockerignore`, `.github/workflows/` (`ci.yml`, `_*.yml`), `tailwind.config.js`, `tools/screenshots/`, `screenshot/`, `README.md`, `docs/guides/` |
 | Outils de la transition | `tools/next/cutover/`, `tools/next/schema/`, `tools/next/contract/`, `tools/next/parity/` et `tools/next/builds-parity/` (comparaisons avec l'ancienne stack), `Persistence/Baseline/doctrine-catalog.txt` et `tests/fixtures/schema/` quand `Baseline` ne se compare plus à Doctrine |
 | Images | `ghcr.io/<owner>/lodb/app`, `lodb/go-fetcher`, `lodb/go-api` ; le tag `:prod` de `lodb/nginx` |
 | Sur l'hôte | projets `lodb-prod` et `lodb-staging` (`docker compose down`), leurs volumes **après export**, dossiers `$PROD_PATH` et `STAGING_PATH`, secrets `PROD_*`, `STAGING_*`, `ENV_PROD`, `ENV_STAGING` |

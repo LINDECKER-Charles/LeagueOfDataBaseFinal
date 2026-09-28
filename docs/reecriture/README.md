@@ -11,7 +11,7 @@ La stack actuelle a livré le produit, mais trois limites freinent désormais so
 
 1. **Portabilité.** Un front Twig + îlots Vue ne peut pas devenir une app desktop ou
    Android : l'APK prévu n'est qu'une coquille TWA qui affiche le site en ligne
-   ([`packaging-apk.md`](../guides/packaging-apk.md)). Web, desktop (Windows, macOS) et
+   ([`packaging-apk.md`](../../legacy/docs/guides/packaging-apk.md)). Web, desktop (Windows, macOS) et
    Android doivent partager **un seul front**.
 2. **Scaling.** Tout l'état vit sur le disque d'un seul hôte (sessions, manifeste
    d'images, analytics, cache), et le pool PHP-FPM est dimensionné à l'aveugle
