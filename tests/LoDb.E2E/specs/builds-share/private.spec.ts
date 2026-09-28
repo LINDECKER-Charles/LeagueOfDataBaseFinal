@@ -35,6 +35,32 @@ test('shares a private build with its link only, without a score', async ({
     await expect(owner.locator('lodb-vote-score')).toHaveCount(0);
   });
 
+  await test.step('lays the text of its player out in its own direction, in Arabic', async () => {
+    await page.goto(`${path}?lang=ar_AE`);
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    const description = page.locator('.bshare-desc');
+    await expect(description).toHaveText('Hidden scroll, forged by the end-to-end suite.');
+    // The full stop stays after the last word, on its right, never before the first one.
+    const [first, stop] = await description.evaluate((element) => {
+      const text = element.firstChild as Text;
+      const leftOf = (index: number) => {
+        const range = document.createRange();
+        range.setStart(text, index);
+        range.setEnd(text, index + 1);
+        return range.getBoundingClientRect().left;
+      };
+      return [leftOf(text.data.indexOf('H')), leftOf(text.data.lastIndexOf('.'))];
+    });
+    expect(first).toBeLessThan(stop);
+    // The name keeps the alignment of its column: it ends on the column's right edge.
+    const [nameEnd, columnEnd] = await page.locator('.bshare-head h1').evaluate((heading) => {
+      const range = document.createRange();
+      range.selectNodeContents(heading);
+      return [range.getBoundingClientRect().right, heading.getBoundingClientRect().right];
+    });
+    expect(Math.abs(nameEnd - columnEnd)).toBeLessThan(4);
+  });
+
   await test.step('keeps it out of the trends', async () => {
     // A query of its own, which no proxy has cached yet.
     const query = `champion=${build.championId}&language=en_US&mode=sr&run=${build.shareToken}`;

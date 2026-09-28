@@ -31,11 +31,11 @@
             <span class="tracking-normal text-text-muted normal-case">· {{ champion.title }}</span>
           }
         </p>
+        <!-- A bdi, not dir="auto": the name keeps the column's alignment in a RTL page. -->
         <h1
           class="mt-1.5 font-beaufort text-3xl font-bold tracking-wide text-gold-grad uppercase sm:text-4xl"
-          dir="auto"
         >
-          {{ current.name }}
+          <bdi>{{ current.name }}</bdi>
         </h1>
       </div>
 
