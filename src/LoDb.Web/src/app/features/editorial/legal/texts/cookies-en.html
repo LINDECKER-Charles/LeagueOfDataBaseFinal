@@ -28,13 +28,35 @@
       </thead>
       <tbody>
         <tr>
-          <td><strong>PHPSESSID</strong></td>
-          <td>Essential</td>
+          <td><strong>__Host-lodb.antiforgery</strong><br /><strong>XSRF-TOKEN</strong></td>
+          <td>Essential (security)</td>
           <td>
-            Session cookie: keeps your browsing state (current version and language preferences,
-            site messages, anti-CSRF security tokens, signed-in state)
+            Anti-CSRF protection pair, set on every visit: the first is HttpOnly, the second is read
+            by the site's script and sent back in a header with every change you submit —
+            SameSite=Strict, Secure over HTTPS
           </td>
           <td>Session — deleted when the browser closes</td>
+        </tr>
+        <tr>
+          <td><strong>__Host-lodb.session</strong></td>
+          <td>Authentication (set only when you sign in)</td>
+          <td>
+            Keeps you signed in to your account. Protected content, nothing kept on the server —
+            HttpOnly, Secure, SameSite=Lax
+          </td>
+          <td>
+            Browser session, 1 day at most; 30 days, renewed while in use, if you tick "keep me
+            signed in"
+          </td>
+        </tr>
+        <tr>
+          <td><strong>.AspNetCore.Correlation.*</strong></td>
+          <td>Authentication (set only when you sign in with Google)</td>
+          <td>
+            Protects the round trip to Google's sign-in page against forgery; deleted on your return
+            — HttpOnly, Secure, SameSite=Lax
+          </td>
+          <td>15 minutes at most</td>
         </tr>
         <tr>
           <td><strong>lod_prefs</strong></td>
@@ -49,10 +71,13 @@
           <td>1 year</td>
         </tr>
         <tr>
-          <td><strong>REMEMBERME</strong></td>
-          <td>Authentication (set only if you tick "stay signed in")</td>
-          <td>Keeps you signed in to your account across browsing sessions</td>
-          <td>30 days</td>
+          <td><strong>lod_theme</strong></td>
+          <td>Preference (set only if you pick a theme)</td>
+          <td>
+            Remembers the colour theme you chose. Readable by the site's scripts — SameSite=Lax,
+            Secure over HTTPS
+          </td>
+          <td>1 year</td>
         </tr>
       </tbody>
     </table>
@@ -116,11 +141,12 @@
   </p>
   <ul>
     <li>
-      without the session cookie, browsing still works but your version/language preferences are no
-      longer kept from page to page and signing in to an account becomes impossible;
+      without the session and security cookies, browsing still works — the version and the language
+      you read are in the page's address — but signing in to an account becomes impossible;
     </li>
+    <li>deleting <strong>__Host-lodb.session</strong> signs you out;</li>
     <li>deleting <strong>lod_prefs</strong> resets the remembered language and version;</li>
-    <li>deleting <strong>REMEMBERME</strong> signs you out at the end of the current session.</li>
+    <li>deleting <strong>lod_theme</strong> restores the default theme.</li>
   </ul>
   <p>
     Questions: <a href="mailto:{{ info().publisherEmail }}">{{ info().publisherEmail }}</a

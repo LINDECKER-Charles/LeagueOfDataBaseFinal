@@ -63,9 +63,9 @@
             used
           </td>
           <td>
-            Raw logs: kept until their consolidation and deletion, both carried out manually by the
-            publisher (no fixed retention period is guaranteed). Statistical aggregates without IP
-            or User-Agent: kept without a time limit
+            Page-view events: IP address and User-Agent erased after 30 days, the event itself
+            deleted after 13 months (the CNIL's limit for audience measurement). Statistical
+            aggregates without IP or User-Agent: kept without a time limit
           </td>
         </tr>
         <tr>
@@ -85,7 +85,10 @@
         </tr>
         <tr>
           <td><strong>Session and preferences</strong><br />first-party cookies</td>
-          <td>Session cookie, opt-in language/version preference, "stay signed in" cookie</td>
+          <td>
+            Session cookie (kept for 30 days with "keep me signed in"), security cookies, opt-in
+            language/version and theme preferences
+          </td>
           <td>Legitimate interest / consent depending on the cookie</td>
           <td>Full details in the <a [routerLink]="link('legal/cookies')">cookie policy</a></td>
         </tr>
@@ -131,13 +134,13 @@
     </li>
   </ul>
   <p>
-    These events are written to daily log files stored on our server, then consolidated into daily
-    statistical aggregates (counters per page, browser, country, and so on) kept on our internal
-    storage.
+    These events are stored in the site's database, then consolidated every day into statistical
+    aggregates (counters per page, browser, country, and so on).
     <strong>The aggregates contain neither IP addresses nor User-Agent strings.</strong>
-    Consolidation and deletion of the raw logs are carried out manually by the publisher, with no
-    fixed retention period guaranteed; the aggregates, which contain no directly identifying data,
-    are kept without a time limit. Access to this data is restricted to the site publisher.
+    Retention is automatic: the IP address and the User-Agent of an event are erased after
+    <strong>30 days</strong>, and the event itself is deleted after <strong>13 months</strong>; the
+    aggregates, which contain no directly identifying data, are kept without a time limit. Access to
+    this data is restricted to the site publisher.
   </p>
   <p>
     You may object to this legitimate-interest processing as described in

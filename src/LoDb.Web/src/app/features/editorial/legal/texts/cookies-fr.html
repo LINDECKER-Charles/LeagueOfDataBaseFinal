@@ -28,13 +28,35 @@
       </thead>
       <tbody>
         <tr>
-          <td><strong>PHPSESSID</strong></td>
-          <td>Essentiel</td>
+          <td><strong>__Host-lodb.antiforgery</strong><br /><strong>XSRF-TOKEN</strong></td>
+          <td>Essentiel (sécurité)</td>
           <td>
-            Cookie de session : maintient votre navigation (préférences de version et de langue en
-            cours, messages du site, jetons de sécurité anti-CSRF, état de connexion)
+            Paire de protection anti-CSRF, déposée à chaque visite : le premier est HttpOnly, le
+            second est lu par le script du site et renvoyé dans un en-tête avec chaque modification
+            que vous soumettez — SameSite=Strict, Secure en HTTPS
           </td>
           <td>Session — supprimé à la fermeture du navigateur</td>
+        </tr>
+        <tr>
+          <td><strong>__Host-lodb.session</strong></td>
+          <td>Authentification (déposé uniquement à la connexion)</td>
+          <td>
+            Vous maintient connecté à votre compte. Contenu protégé, rien n'est conservé sur le
+            serveur — HttpOnly, Secure, SameSite=Lax
+          </td>
+          <td>
+            Session de navigation, 1 jour au plus ; 30 jours, renouvelés à l'usage, si vous cochez «
+            rester connecté »
+          </td>
+        </tr>
+        <tr>
+          <td><strong>.AspNetCore.Correlation.*</strong></td>
+          <td>Authentification (déposé uniquement à la connexion avec Google)</td>
+          <td>
+            Protège contre la falsification l'aller-retour vers la page de connexion de Google ;
+            supprimé à votre retour — HttpOnly, Secure, SameSite=Lax
+          </td>
+          <td>15 minutes au plus</td>
         </tr>
         <tr>
           <td><strong>lod_prefs</strong></td>
@@ -52,10 +74,13 @@
           <td>1 an</td>
         </tr>
         <tr>
-          <td><strong>REMEMBERME</strong></td>
-          <td>Authentification (déposé uniquement si vous cochez « rester connecté »)</td>
-          <td>Vous maintient connecté à votre compte entre deux sessions de navigation</td>
-          <td>30 jours</td>
+          <td><strong>lod_theme</strong></td>
+          <td>Préférence (déposé uniquement si vous choisissez un thème)</td>
+          <td>
+            Mémorise le thème de couleurs choisi. Lisible par les scripts du site — SameSite=Lax,
+            Secure en HTTPS
+          </td>
+          <td>1 an</td>
         </tr>
       </tbody>
     </table>
@@ -122,11 +147,13 @@
   </p>
   <ul>
     <li>
-      sans cookie de session, la navigation reste possible mais vos préférences de version/langue ne
-      sont plus retenues d'une page à l'autre et la connexion à un compte devient impossible ;
+      sans les cookies de session et de sécurité, la navigation reste possible — la version et la
+      langue consultées figurent dans l'adresse de la page — mais la connexion à un compte devient
+      impossible ;
     </li>
+    <li>supprimer <strong>__Host-lodb.session</strong> vous déconnecte ;</li>
     <li>supprimer <strong>lod_prefs</strong> réinitialise la langue et la version mémorisées ;</li>
-    <li>supprimer <strong>REMEMBERME</strong> vous déconnecte à la fin de la session en cours.</li>
+    <li>supprimer <strong>lod_theme</strong> rétablit le thème par défaut.</li>
   </ul>
   <p>
     Pour toute question :
