@@ -131,7 +131,7 @@ describe('lodb-rune-detail', () => {
     const { element } = await render({ ...ENTRY, details: { ...DETAILS, slots: [] } });
 
     expect(element.querySelector('lodb-rune-constellation')).toBeNull();
-    const empty = element.querySelector('lodb-catalogue-empty');
+    const empty = element.querySelector('lodb-empty-state');
     expect(empty?.classList).toContain('hextech-frame');
     expect(empty?.textContent).toContain('common.no_result.text');
     expect(empty?.querySelector('button')?.textContent).toContain('common.no_result.back');

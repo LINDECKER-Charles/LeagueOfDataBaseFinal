@@ -48,7 +48,7 @@
         </div>
       }
     } @else if (view.total === 0 && notice() === null) {
-      <lodb-catalogue-empty />
+      <lodb-empty-state />
     } @else if (view.visible.length === 0 && filter.isEngaged()) {
       <div class="empty">
         <span class="empty__mark" aria-hidden="true"></span>
