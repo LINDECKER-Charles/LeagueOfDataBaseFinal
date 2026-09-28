@@ -28,6 +28,7 @@ test.describe("legal pages", { tag: '@readonly' }, () => {
     const text = page.locator(".hx-prose");
 
     await expect(text).toHaveAttribute("lang", "en");
+    await expect(text).toHaveAttribute("dir", "ltr");
     await expect(page.locator("html")).toHaveAttribute("lang", "de");
     await expect(page.locator(".hx-prose section").first()).toHaveAttribute(
       "id",
