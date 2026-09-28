@@ -350,6 +350,7 @@
     "back": "← Utilisateurs",
     "document_title": "Activité · {name}",
     "lede": "actions effectuées par ce compte ou le ciblant. Horodatage en UTC.",
+    "lede_orphan": "Compte supprimé · actions effectuées par ce compte ou le ciblant. Horodatage en UTC.",
     "empty": "Aucune action journalisée pour ce compte sur cette période."
   },
   "builds": {

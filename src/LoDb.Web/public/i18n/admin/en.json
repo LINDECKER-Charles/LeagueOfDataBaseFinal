@@ -350,6 +350,7 @@
     "back": "← Users",
     "document_title": "Activity · {name}",
     "lede": "actions made by this account or targeting it. Times in UTC.",
+    "lede_orphan": "Deleted account · actions made by this account or targeting it. Times in UTC.",
     "empty": "No action logged for this account over this period."
   },
   "builds": {

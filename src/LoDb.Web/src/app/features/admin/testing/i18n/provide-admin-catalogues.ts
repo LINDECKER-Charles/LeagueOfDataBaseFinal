@@ -22,6 +22,10 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
       unpublish: 'Dépublier',
       visibilities: { public: 'public', private: 'privé' },
     },
+    activity: {
+      title: 'Activité — {name}',
+      lede_orphan: 'Compte supprimé · actions effectuées par ce compte ou le ciblant.',
+    },
   },
   'admin/en': {
     actions: { refresh: 'Refresh' },
@@ -36,6 +40,10 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
     builds: {
       unpublish: 'Unpublish',
       visibilities: { public: 'public', private: 'private' },
+    },
+    activity: {
+      title: 'Activity — {name}',
+      lede_orphan: 'Deleted account · actions made by this account or targeting it.',
     },
   },
 };
