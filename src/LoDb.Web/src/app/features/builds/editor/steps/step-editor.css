@@ -11,16 +11,32 @@
     gap: 1.25rem;
   }
   .forge-step {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
     border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
     background: linear-gradient(
       180deg,
       color-mix(in srgb, var(--color-panel) 85%, transparent),
       color-mix(in srgb, var(--color-abyss) 92%, transparent)
     );
+  }
+  /*
+   * The item list, padding included, so that it covers the card: whole rows for the head, the
+   * note and the counter, the medallions and "+ Add item" flowing between them.
+   */
+  .forge-step__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.75rem;
     padding: 1rem 1.15rem;
+  }
+  .forge-step__head,
+  .forge-step__note,
+  .forge-step__count {
+    flex: 1 1 100%;
+  }
+  /* The CDK appends the drop mark of an empty list after the counter: the order puts it back. */
+  .forge-step__count {
+    order: 2;
   }
   .forge-step__head {
     display: flex;
@@ -99,20 +115,6 @@
     cursor: not-allowed;
   }
 
-  .forge-step__items,
-  .forge-items {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-  .forge-items {
-    min-block-size: 3rem;
-  }
-  /* An empty step's list goes after "+ Add item": its gap no longer pushes the tile aside. */
-  .forge-items:empty {
-    order: 1;
-  }
   /* The legacy medallion sat at the start of its slot, above the tools. */
   .forge-slot {
     display: flex;
@@ -155,8 +157,9 @@
     color: var(--color-text-dim);
   }
 
-  /* "+ Add item": a dashed peer of the item medallions, which opens the armory. */
+  /* "+ Add item": a dashed peer of the item medallions, after the last one; opens the armory. */
   .forge-additem {
+    order: 1;
     display: flex;
     flex-direction: column;
     align-items: center;

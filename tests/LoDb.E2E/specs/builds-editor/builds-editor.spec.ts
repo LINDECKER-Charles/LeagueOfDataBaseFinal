@@ -4,6 +4,7 @@ import {
   addItem,
   CHAMPION,
   chooseChampion,
+  dragTo,
   ITEM,
   patchOf,
   pickRunes,
@@ -26,6 +27,21 @@ test('sends a visitor from the builds to the sign-in, which brings them back', a
 
   await expect(page).toHaveURL(/\/en\/account\/login\?/);
   expect(new URL(page.url()).searchParams.get('returnUrl')).toBe(LIST);
+});
+
+// As on the legacy card, an item dropped anywhere on a step lands in it, an empty step too.
+test('moves an item onto the note of an empty step', async ({ member: page }) => {
+  await page.goto(`${LIST}/new`);
+  await addItem(page, 0, ITEM);
+  await page.getByRole('button', { name: 'Add a step' }).click();
+  const [first, second] = [stepsOf(page).nth(0), stepsOf(page).nth(1)];
+  // Both cards in view: the empty one at the bottom, the item right above it.
+  await second.evaluate((step) => step.scrollIntoView({ block: 'end' }));
+
+  await dragTo(page, first.locator('.forge-slot').first(), second.getByLabel('Note (optional)'));
+
+  await expect(second.locator('.forge-slot')).toHaveCount(1);
+  await expect(first.locator('.forge-slot')).toHaveCount(0);
 });
 
 // The worker's verified account: the API limits how many are created in a row. The forge
