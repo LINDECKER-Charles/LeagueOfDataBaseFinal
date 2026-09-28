@@ -1,0 +1,60 @@
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
+import { PAYMENTS_ENABLED } from '../../../../environments/payments-enabled';
+import { Button } from '../../../ui/controls/button';
+import { Icon } from '../../../ui/media/icon';
+import { Logo } from '../../../ui/media/logo';
+import { PageDirection } from '../direction/page-direction';
+import { Disclosure } from '../disclosure/disclosure';
+import { injectChromeLinks } from '../nav/inject-chrome-links';
+import { NavContext } from '../nav/nav-context';
+import { localePath } from '../shell/locale-path';
+import { RELEASE_VERSION } from '../shell/release-version';
+import { ThemePicker } from '../theme-picker/theme-picker';
+import { CODEX_ENTRIES } from './codex-entries';
+
+/**
+ * Slim Hextech bar: brand and release chip, the primary navigation from md up (the bottom
+ * bar carries it below), then the cluster that stays on every viewport: donate (unless the
+ * build shows no payment, ADR 0007), the `account` slot, the theme picker and the `switcher`
+ * slot. One width budget, checked in 21 locales from 320 to 1440px, decides what the row
+ * carries besides the emblem, so that nothing overlaps nor scrolls sideways:
+ * - under 368px, the switcher's language alone; from 368px, its patch as well;
+ * - from 460px, the release chip; from 640px, the initials of the name;
+ * - from md, the navigation takes the room back: no name, no chip, the language alone;
+ * - from 864px the patch returns, from 1180px the chip, from xl the full name.
+ * Where the name is left out, assistive technology still reads it. The legacy bar showed the
+ * name and the chip at more widths, but let them overlap the logo and the navigation there.
+ * The Codex menu keeps the page's version and variant (`injectChromeLinks`), and lights up on
+ * any page of the catalogue. The developers entry is labelled from the `api` catalogue scope,
+ * loaded here since the header sits outside the pages that provide it.
+ */
+@Component({
+  selector: 'lodb-header',
+  imports: [
+    Button,
+    Disclosure,
+    Icon,
+    Logo,
+    RouterLink,
+    RouterLinkActive,
+    ThemePicker,
+    TranslocoPipe,
+  ],
+  providers: [provideTranslocoScope('api')],
+  templateUrl: './header.html',
+  host: { class: 'relative z-30 block' },
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class Header {
+  protected readonly codex = injectChromeLinks(CODEX_ENTRIES);
+  protected readonly version = inject(RELEASE_VERSION);
+  protected readonly payments = inject(PAYMENTS_ENABLED);
+  protected readonly home = inject(NavContext).home;
+  private readonly page = inject(PageDirection);
+
+  protected link(path: string): string {
+    return localePath(this.page.locale(), path);
+  }
+}

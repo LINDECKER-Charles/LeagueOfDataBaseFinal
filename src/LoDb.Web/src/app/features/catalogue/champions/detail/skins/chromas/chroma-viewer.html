@@ -1,0 +1,54 @@
+@if (chroma(); as shown) {
+  <div class="card hextech-frame overflow-hidden">
+    <div class="flex items-center justify-between gap-4 border-b border-gold-deep/40 px-5 py-3">
+      <div class="min-w-0">
+        <p class="eyebrow">{{ data.skinName }}</p>
+        <h2
+          class="truncate font-beaufort tracking-wide text-gold-bright uppercase"
+          [id]="headingId"
+          aria-live="polite"
+        >
+          {{ shown.label }}
+        </h2>
+      </div>
+      <button
+        type="button"
+        class="close shrink-0 rounded p-1 text-text-muted hover:text-gold-bright"
+        [attr.aria-label]="'champions.viewer.close' | transloco"
+        (click)="close()"
+      >
+        <svg class="size-5" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="relative grid place-items-center bg-void/60 p-6">
+      @for (current of [shown]; track current.id) {
+        <img
+          class="hx-img art size-64 max-w-full object-contain"
+          [src]="current.swatch"
+          [alt]="current.label"
+        />
+      }
+      @if (count > 1) {
+        <lodb-viewer-arrows class="compact" (step)="step($event)" />
+      }
+    </div>
+    <div class="flex items-center justify-between gap-3 border-t border-gold-deep/40 px-5 py-3">
+      <div class="flex items-center gap-1.5">
+        @for (color of shown.colors; track $index) {
+          <span
+            class="size-4 rounded-sm border border-gold-deep/50"
+            [style.background]="color"
+            [title]="color"
+          ></span>
+        }
+      </div>
+      @if (count > 1) {
+        <span class="font-mono text-xs text-text-dim">
+          {{ 'champions.viewer.counter' | transloco: { index: index() + 1, count } }}
+        </span>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Une erreur est survenue. Réessayez.",
+    "invalid": "Cette valeur n'est pas valide.",
+    "required": "Ce champ est obligatoire.",
+    "email_invalid": "Saisissez une adresse e-mail valide.",
+    "email_too_long": "Cette adresse e-mail est trop longue.",
+    "email_taken": "Un compte utilise déjà cette adresse e-mail.",
+    "terms_required": "Vous devez accepter les conditions d'utilisation.",
+    "password_too_long": "Ce mot de passe est trop long.",
+    "invalid_credentials": "Identifiant ou mot de passe incorrect.",
+    "invalid_two_factor": "Ce code est incorrect ou a expiré.",
+    "locked": "Trop de tentatives échouées : ce compte est verrouillé pour quelques minutes.",
+    "google_cancelled": "La connexion avec Google a été annulée.",
+    "google_email_unverified": "Google n'a pas vérifié cette adresse e-mail : elle ne peut pas servir à se connecter.",
+    "google_two_factor": "Ce compte utilise la double authentification : connectez-vous avec votre e-mail et votre mot de passe.",
+    "sign_out": "La déconnexion a échoué. Réessayez."
+  },
+  "two_factor": {
+    "lede": "Saisissez le code à 6 chiffres de votre application d'authentification.",
+    "code": "Code d'authentification",
+    "recovery_code": "Code de récupération",
+    "use_recovery": "Utiliser plutôt un code de récupération",
+    "use_app": "Utiliser plutôt mon application d'authentification"
+  },
+  "password": {
+    "met": "(respectée)",
+    "unmet": "(non respectée)"
+  },
+  "verify": {
+    "title": "Confirmation de l'e-mail",
+    "verifying": "Confirmation de votre adresse e-mail…",
+    "pending": "Un lien de confirmation a été envoyé à {{ email }}. Ouvrez-le pour confirmer votre adresse, ou demandez-en un nouveau.",
+    "sign_in": "Connectez-vous pour recevoir un nouveau lien de confirmation.",
+    "continue": "Continuer"
+  },
+  "editor": {
+    "loading": "Chargement de votre profil…",
+    "load_error": "Impossible de charger votre profil.",
+    "version_error": "Impossible de changer la version de vos favoris."
+  }
+}

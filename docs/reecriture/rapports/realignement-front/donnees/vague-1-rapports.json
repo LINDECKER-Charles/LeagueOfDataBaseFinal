@@ -1,0 +1,708 @@
+{
+ "fix:API": {
+  "wp": "API",
+  "commits": [
+   "9bbaca85 feat(back/catalog): ajouter l'art et le resume aux cartes de champion",
+   "f0dd875d feat(back/catalog): lister les evolutions des objets et leur prix",
+   "d5e81294 feat(back/catalog): envoyer les voisins de chaque fiche avec la fiche",
+   "259378cf feat(back/admin): exposer le partage et le ban des auteurs de builds",
+   "80a21a42 feat(back/admin): exposer la tagline Riot des comptes moderes",
+   "5b3c06ca feat(back/audit): exposer la tagline Riot du compte de l'activite",
+   "69b90fe2 feat(back/infrastructure): dire si le rapport d'audience resout les pays",
+   "8b55fa6e feat(back/admin): montrer le volume du stockage dans sa sonde"
+  ],
+  "results": [
+   {
+    "id": "Z02-08",
+    "status": "fixed",
+    "note": "API part only. ChampionCard now carries loadingArt (Data Dragon loading portrait, hotlinked through ChampionHotlinks.Art, so the FiddleSticks spelling rule is kept) and blurb (DdragonText.Clean). I checked it against the legacy: its champion list HTML hotlinks .../loading/FiddleSticks_0.jpg, the same URL the API test expects. The card rewrite is for LISTS."
+   },
+   {
+    "id": "Z03-02",
+    "status": "fixed",
+    "note": "API part only. It uses the same ChampionCard.loadingArt as Z04-03. The home preview reads the champions list endpoint, so it gets the field with no other change. HOME owns the front."
+   },
+   {
+    "id": "Z04-03",
+    "status": "fixed",
+    "note": "API part only. The field is named loadingArt, as this finding asked, not 'loading' as Z03-02 suggested. Front, the hatch-gold utility and EAGER_CARDS are for LISTS/DS."
+   },
+   {
+    "id": "Z04-04",
+    "status": "fixed",
+    "note": "API part only. ChampionCard.blurb is the cleaned Data Dragon blurb. This adds about 40 kB raw to the full list, the trade-off the audit accepted. ChampionDetails already had its own blurb, and profile.blurb now repeats it."
+   },
+   {
+    "id": "Z04-08",
+    "status": "fixed",
+    "note": "API part only. ItemCard.upgrades lists the ids of listed items only, deduplicated, in upstream order. The rule lives in the new ItemUpgrades, which ItemPage uses too. ItemList.related holds one EntityLink per distinct upgrade among the shown entries, and the endpoint resolves their icons as queued images. I compared every listed item of 16.19.1: the legacy 'Possible evolutions' chips match exactly, 0 differences over the whole list."
+   },
+   {
+    "id": "Z04-09",
+    "status": "fixed",
+    "note": "ItemCard.summary falls back to the description when plaintext is empty or blank. The legacy Emberknife (1035) card shows its description; the integration stack returns an empty summary for it, and this commit fills it. Covered by a test on 771004 in the fixtures. No front change is needed."
+   },
+   {
+    "id": "Z05-09",
+    "status": "fixed",
+    "note": "API part only. ChampionDetails.neighbours = {previous, next}, each a DetailNeighbour {id, name, canonicalPath, edition} or null at the ends, with no wrap-around. It uses the list endpoint's own order: ChampionList.EntriesOf/NeighboursOf are shared by the list endpoint and the detail. Checked against the legacy server-rendered pager (rel=prev/next): Aatrox, Fiddlesticks, MonkeyKing and Zyra all match. DETAIL owns the front."
+   },
+   {
+    "id": "Z06-14",
+    "status": "fixed",
+    "note": "API part only. ItemDetails, SummonerDetails and RuneTreeDetails carry neighbours too, in their list order (ItemList.EntriesOf = ListedItems, Classic items kept; SummonerList.EntriesOf; RuneList.TreesOf). The edition is set per neighbour. Legacy pager check: items 1001, 3006, 3031, 771004, 6690; spells SummonerFlash, SummonerFlash_Jade, SummonerBarrier; paths Precision, Domination, Resolve. All match. Deviation: DetailNeighbour.edition is required and set to 'modern' for champions and rune paths, which is the legacy pager's edition|default('modern'). The reason is technical: a nullable Edition met first in the document made the shared Edition component nullable (enum gained null) for every schema. That change would have broken the contract, so I avoided it."
+   },
+   {
+    "id": "Z06-04",
+    "status": "fixed",
+    "note": "API part only. ItemDetails.upgrades is now ItemUpgrade[]: the EntityLink fields (id, name, canonicalPath, image) plus a required edition and gold = the item's total gold. On the wire it is a superset of what was sent before. Legacy recipe_node golds match for 1001, 1038, 771004 and 3057, e.g. 771004 gives 700/2200/300/700/880/700/2200."
+   },
+   {
+    "id": "Z06-09",
+    "status": "fixed",
+    "note": "API part only. ItemDetails.depth (int, nullable) is Data Dragon's depth. The legacy 'Tier N' chip equals depth for 3006, 3031 and 6690 (all 2), and 1001 has no depth and no chip. ENTITYDET shows 'item.detail.tier' when depth > 1."
+   },
+   {
+    "id": "Z11-29",
+    "status": "fixed",
+    "note": "API part only. AnalyticsReport.geoAvailable (required bool) comes from IGeoLocator.IsAvailable, i.e. whether the GeoLite2 database opened. This needed a minimal Infrastructure edit, listed in outside_edits. The legacy RangeReportBuilder parity tests now compare against the legacy report plus the flag the legacy admin passed next to it (geo_available); no field is filtered out."
+   },
+   {
+    "id": "Z11-40",
+    "status": "fixed",
+    "note": "API part only. AdminBuildRow.shareToken (the legacy links to /b/{shareToken})."
+   },
+   {
+    "id": "Z11-41",
+    "status": "fixed",
+    "note": "API part only. AdminUserRef.isBanned (required) is filled everywhere an admin row names an account: builds, API keys, contacts, donations. Every other data the builds panel needs (gameMode, gameVersion, score, stats.public) already existed."
+   },
+   {
+    "id": "Z11-M04",
+    "status": "fixed",
+    "note": "API part only. AdminUserRow.riotTagline and AuditSubjectView.riotTagline (activity subject) are nullable. The front composes username + '#' + tagline, as the legacy displayName does. The activity subject lives in the Audit module, not Admin, hence the back/audit commit."
+   },
+   {
+    "id": "Z11-46 (from ADMIN.json, API part)",
+    "status": "fixed",
+    "note": "ServiceProbe gains objects and bytes (nullable long), set on the storage probe only when a storage report is already cached. That is the legacy behaviour: probe.meta objects/bytes came from cachedTotals. The probe never walks the storage root. It reads through StorageReporter.KeptAsync (HybridCache DisableUnderlyingData | DisableLocalCacheWrite), so a cache miss writes nothing that would hide the next real report; a test covers this. The labels 'PostgreSQL'/'Stockage' stay a front map. The Go probes no longer exist."
+   },
+   {
+    "id": "ADMIN.json other panels (Z11-25/26/31/33/35/38/39/42/43/44/47, Z11-M05)",
+    "status": "obsolete",
+    "note": "Checked against the existing endpoints; no API change needed. Overview/monitoring counters: AppCounters. Top page, pagesTracked, status pct, locale, botViews: AnalyticsReport. Rollup: POST /api/admin/analytics/rollup. Storage blobs family, timeline objects per day, webp sourceBytes/webpBytes, per-version languages (VersionCoverage.langs), dedup: StorageReport. Users banReason and isPublicProfile, audit meta/ip/route/targetType, AuditVolume retentionMonths/retentionCutoff/totalBytes/oldest, donations daily/anonymous/supporters/donorIsSupporter, contacts stats.week and user, API client kpis/topConsumers/usedThisMonth/monthlyQuota. Unreadable states already exist as values: monitoring counters/versions null, outboxPending null, tables empty, storage ok=false plus error. The legacy counters band also printed the exception message; the new API only logs it, and the verified fix (M05) needs no message."
+   }
+  ],
+  "outside_edits": [
+   "src/LoDb.Infrastructure/Analytics/Geo/IGeoLocator.cs: new IsAvailable property (Z11-29)",
+   "src/LoDb.Infrastructure/Analytics/Geo/MaxMindGeoLocator.cs: IsAvailable => the lazily opened reader is not null (Z11-29)",
+   "src/LoDb.Infrastructure/Analytics/Reports/AnalyticsReport.cs: required bool GeoAvailable (Z11-29)",
+   "src/LoDb.Infrastructure/Analytics/Reports/RangeReportBuilder.cs: Build(dailies, range, geoAvailable) (Z11-29)",
+   "src/LoDb.Infrastructure/Analytics/Reports/AnalyticsReports.cs: injects IGeoLocator and passes IsAvailable (Z11-29)",
+   "tests/LoDb.Infrastructure.Tests/Analytics/{Aggregation/RangeReportTests.cs,Reports/AnalyticsReportsTests.cs,Support/LegacySamples.cs}: legacy report + geoAvailable flag (other .NET test project, within scope)"
+  ],
+  "checks": "dotnet build LoDb.slnx -c Release: 0 warnings, 0 errors (run on HEAD). dotnet test tests/LoDb.Api.Tests: 1394/1399 pass. The 5 failures (MigrationCommandsTests x2, CnilPasswordValidatorTests, AccountEmailDeliveryTests x2) come from the CRLF checkout of this Windows worktree ('123456\\r', Doctrine SQL, e-mail templates). They fail the same way on the base commit d62e9950, run there on purpose. The Catalog, Admin, Audit and Analytics suites pass in full, new tests included. dotnet test tests/LoDb.Infrastructure.Tests: 469/485. The 16 failures (EmailSnapshotTests, BaselineSchemaTests, DatabaseMigratorTests, CreditBalanceRepriseTests) fail the same way on base; all 65 Analytics tests pass. LoDb.Ingestion.Tests 293/293; LoDb.Parity 53 pass, 2 skipped (no LODB_PARITY_RUN). OpenAPI: generated locally (LoDb__Storage__Root=scratch, Workers off) and diffed structurally after normalising \\r\\n. public-v1 is unchanged; app has additions only: new fields, 3 new schemas (DetailNeighbour, DetailNeighbours, ItemUpgrade), and the item type of ItemDetails.upgrades moves from EntityLink to ItemUpgrade, a superset. I restored the documents and did not commit them. Client: ran api:generate locally only to measure the front impact, then reverted the generated files (not committed). Legacy comparisons (scripts under scratchpad/cmp/fix/API): 15 of 15 pager neighbours match; every item's evolution chips match; upgrade golds match; Tier chip = depth; FiddleSticks loading URL matches. No front file was touched and no preview was started. The worktree is clean.",
+  "contract": "All additive, camelCase JSON. /api/catalog/{version}/{lang}:\n- GET /champions (ChampionList.entries[]) and GET /champions/{id} (.profile) — ChampionCard: + loadingArt: string (uri, required, e.g. https://ddragon.leagueoflegends.com/cdn/img/champion/loading/FiddleSticks_0.jpg); + blurb: string (required).\n- GET /champions/{id} — ChampionDetails: + neighbours: DetailNeighbours (required).\n- GET /items (ItemList): + related: EntityLink[] (required; {id, name, canonicalPath, image: CatalogImage, edition?}; one per distinct upgrade target of the returned entries, in first-met order). ItemCard (entries[] and ItemDetails.profile): + upgrades: string[] (required; ids of listed items it builds into, deduplicated, upstream order, key into related); summary now falls back to the description when plaintext is empty (same field).\n- GET /items/{id} — ItemDetails: upgrades items are now ItemUpgrade {id: string, name: string, canonicalPath: string, image: CatalogImage, edition: Edition (required), gold: int (required, total cost)} instead of EntityLink; + depth: int | null (optional, Data Dragon depth; show 'Tier {depth}' when > 1); + neighbours: DetailNeighbours (required).\n- GET /summoners/{id} — SummonerDetails: + neighbours: DetailNeighbours (required).\n- GET /runes/{id} — RuneTreeDetails: + neighbours: DetailNeighbours (required).\n- New schema DetailNeighbours {previous: DetailNeighbour | null (required), next: DetailNeighbour | null (required)}. No wrap-around; the order is exactly the list endpoint's (champions entries, items entries (Classic kept), summoners entries, runes trees).\n- New schema DetailNeighbour {id: string (MonkeyKing / 3031 / 8100 / SummonerFlash), name: string, canonicalPath: string (e.g. items/3031-infinity-edge, to put under the locale prefix), edition: 'modern' | 'classic' (required; always 'modern' for champions and rune paths; badge only when 'classic')}.\n/api/admin:\n- GET /api/admin/builds — AdminBuildRow: + shareToken: string (required; the share page is /b/{shareToken}).\n- AdminUserRef (AdminBuildRow.owner, AdminApiClientRow.owner, AdminContactRow.user, AdminDonationRow.donor): + isBanned: boolean (required).\n- GET /api/admin/users — AdminUserRow: + riotTagline: string | null (optional; display username + '#' + riotTagline when set).\n- GET /api/admin/audit/users/{userId} — UserActivity.subject (AuditSubjectView): + riotTagline: string | null (optional).\n- GET /api/admin/analytics/report — AnalyticsReport: + geoAvailable: boolean (required; false = no GeoLite2 database, so show the 'base geo absente' badge and the explanatory paragraph).\n- GET /api/admin/monitoring — MonitoringReport.services[] (ServiceProbe): + objects: int64 | null, + bytes: int64 | null (optional; set only on the 'storage' probe when a storage report is already cached, for the chip '{objects} objets · {bytes}').\n/v1: unchanged.",
+  "followups": [
+   "Integration: regenerate the contract (npm --prefix src/LoDb.Web run api:generate) and commit openapi/*.json plus core/api/generated. After regeneration, typecheck breaks on test fixtures that lack the new required fields. App tsconfig: features/admin/testing/fixtures/analytics-report.ts (geoAvailable). Spec tsconfig: core/seo/json-ld/game/game-json-ld.spec.ts; admin panels api-clients/builds/contacts/donations *.spec.ts (AdminUserRef.isBanned); catalogue champions-page.spec.ts, champions/detail/champion-page.spec.ts, detail/hero/hero.spec.ts, detail/stats/stats.spec.ts, list/list.spec.ts, seo/seo.spec.ts (ChampionCard.loadingArt/blurb, ChampionDetails.neighbours); items/detail/item-detail.spec.ts (ItemUpgrade.edition/gold, ItemCard.upgrades, neighbours); items/list/item-list.spec.ts (ItemCard.upgrades, ItemList.related); runes/detail/rune-detail.spec.ts and constellation/constellation-of.spec.ts, summoners/detail/summoner-detail.spec.ts and plaques/summoner-plaques-of.spec.ts (neighbours). The list is saved in scratchpad/cmp/fix/API/fixtures-to-update.txt. These fixtures cannot be fixed before regeneration: the extra properties would fail the current generated types.",
+   "DETAIL/CHAMPION: build the four pagers from details().neighbours (reuse injectDetailPager, fed from the payload), then remove the browser-only list fetches (inject-catalogue-neighbours.ts, runes inject-path-pager.ts). Link rel=prev/next; show the Classic badge when edition === 'classic'.",
+   "LISTS: the champion card reads card.loadingArt and card.blurb. The item card reads card.upgrades and resolves names/icons through list.related (a Map keyed by id). The full list and the first page (SSR) both carry related.",
+   "HOME: preview art = champion.loadingArt (the champions list endpoint, including the paged SSR call).",
+   "ENTITYDET: upgrade.gold under each evolution; Tier chip from details.depth when > 1.",
+   "ADMIN: builds 'Voir' = '/b/' + shareToken; 'banni' badge from owner.isBanned; username#riotTagline in users and activity; audience geo notice from report.geoAvailable; storage probe chip from probe.objects/bytes when not null.",
+   "Lighthouse: ChampionCard.blurb adds about 40 kB raw to the full champions list payload (transfer state of /champions). Re-run tools/next/lighthouse once the front consumes it; a budget is never relaxed."
+  ]
+ },
+ "fix:SHELL": {
+  "wp": "SHELL",
+  "commits": [
+   "7e7f642e fix(infra): relier le journal des versions dans l'image web-ssr",
+   "6af538b0 fix(front/core): afficher la version de l'application dans l'en-tete",
+   "57ddeee6 fix(front/core): repartir marque, puce et patch selon la largeur",
+   "b7b616b5 fix(front/core): garder patch et variante dans les liens du chrome",
+   "3c36b6d2 fix(front/core): completer la navigation du pied de page",
+   "8a74e712 fix(front/core): lire en entier les libelles de la barre du bas",
+   "33321c85 fix(front/core): rendre aux toasts le cadre et le mouvement d'origine",
+   "78248ca1 feat(front/core): montrer la progression des navigations lentes",
+   "ccca5356 fix(front/account): aligner le bandeau de verification sur l'ancien site",
+   "b9928c88 fix(front/core): completer la tete du document comme l'ancien site",
+   "c80ba404 fix(front/ui): rendre a l'en-tete des dialogues la hauteur de son titre",
+   "b065dc7e fix(front/context-switcher): nommer le patch et les langues comme avant",
+   "839d9448 feat(front/context-switcher): confirmer le choix par un toast",
+   "a028bd86 fix(front/context-switcher): retenir session et locale du choix",
+   "087debd7 feat(infra): ouvrir / sur la locale retenue par le selecteur",
+   "19a24414 fix(front/context-switcher): changer la langue d'un build partage",
+   "c2ad82e2 fix(front/core): rendre l'admin hors du chrome public et en Hextech"
+  ],
+  "results": [
+   {
+    "id": "Z08-01",
+    "status": "fixed",
+    "note": "The web-ssr Dockerfile removes whatever sits at changelog/published (text file, or a junction arriving as a broken symlink to F:/, which I checked in a throwaway image) and puts the relative link back. The build now fails when dist/web/browser/changelog/manifest.json is missing. I proved the link logic in a test image and removed it afterwards. The lodb-next image itself was not rebuilt (see followups)."
+   },
+   {
+    "id": "Z01-01",
+    "status": "fixed",
+    "note": "provideReleaseVersion() is registered in app.config.ts. Registering it alone broke the build (route extraction timed out): the initializer's HTTP request injected PLATFORM before platform detection had finished, which poisons that token for the whole app. The initializer now awaits ActivePlatform.detect() first. The v2.2.1 chip, the footer 'Version: 2.2.1' line and aria-current on /en/changelog are all confirmed in SSR."
+   },
+   {
+    "id": "Z01-02",
+    "status": "fixed",
+    "note": "The account summary always renders the label: the user's short name, or 'nav.account' for a visitor, hidden below lg. The spec now checks the visitor label."
+   },
+   {
+    "id": "Z01-06",
+    "status": "fixed",
+    "note": "The patch shows from 23rem up to md, and again from 54rem. This is the validated matrix, not the legacy 'always': the legacy overlaps at 320 and in md..54rem."
+   },
+   {
+    "id": "Z12-04",
+    "status": "fixed",
+    "note": "Same change as Z01-06: the chip reads '16.19.1 · EN' at 368-767 and from 864px. The 320px layout probe still passes."
+   },
+   {
+    "id": "Z01-07",
+    "status": "fixed",
+    "note": "Validated matrix applied: brand title max-sm:sr-only md:max-xl:sr-only, full name from xl, chip at 460-767 and from 1180px, nav gap-x-5 xl:gap-x-7. Measured on the real build in en/fr/de/ar at 15 widths from 320 to 1440: no crushing, overlap, overflow or horizontal scroll. fr/de at 1280 show a graceful ellipsis on the full title, as the finding expected."
+   },
+   {
+    "id": "Z01-M01",
+    "status": "fixed",
+    "note": "Nav gap reduced below xl. fr at 768 now keeps 19px between the logo and the nav instead of overlapping it."
+   },
+   {
+    "id": "Z01-12",
+    "status": "fixed",
+    "note": "Account menu links and the sign-out button get nav-link (hover and focus ring). Login and register get routerLinkActive text-gold-bright with aria-current. The summary uses px-2.5 md:px-3.5 (56px wide on phones, as in the legacy)."
+   },
+   {
+    "id": "Z01-23",
+    "status": "fixed",
+    "note": "The logo is set to display block, so the brand link box is 36px tall."
+   },
+   {
+    "id": "Z01-03",
+    "status": "fixed",
+    "note": "New NavContext service (core/layout/nav) plus pure navSelectionOf (core/context/nav). Priority is path > ?version= on any page > the session choice or the cookie, each checked against /api/meta. The server computes it and hands it to the browser through TransferState, so the SSR HTML already carries /en/14.1.1/... links. Header Codex, footer and bottom-nav catalogue links are UrlTrees keeping the version and ?lang=. Home, trends and editorial links stay unversioned, as in the legacy. The version-prefix rule lives once in core/routing/url/catalogue-path.ts, which catalogue-href reuses."
+   },
+   {
+    "id": "Z12-03",
+    "status": "fixed",
+    "note": "Covered by the same NavContext, including /about?version= (in the browser, since /about is prerendered) and ?lang=en_GB variants. Home carries no ?version=, as in the legacy."
+   },
+   {
+    "id": "Z01-04",
+    "status": "fixed",
+    "note": "On /en/14.1.1/champions and /Ahri, Encyclopedia is gold-bright and the Champions tab is aria-current, at 1440 and 390, identical to the legacy. Spec in core/layout/nav/chrome-links.spec.ts."
+   },
+   {
+    "id": "Z04-30",
+    "status": "fixed",
+    "note": "Resolved by the versioned chrome links (Z01-03), which let routerLinkActive match. No separate section-of helper was needed."
+   },
+   {
+    "id": "Z01-10",
+    "status": "fixed",
+    "note": "The footer ends with /sitemap.xml as a plain href, shown only when the platform kind is web."
+   },
+   {
+    "id": "Z01-11",
+    "status": "fixed",
+    "note": "A signed-in member sees 'My profile' (/{locale}/account/profile) before Sitemap. The session is read only in the browser."
+   },
+   {
+    "id": "Z01-21",
+    "status": "fixed",
+    "note": "The mailto: link has no target or rel. Other outside links keep target=_blank and rel=noopener noreferrer."
+   },
+   {
+    "id": "Z01-22",
+    "status": "fixed",
+    "note": "League of Legends link restored to https://www.leagueoflegends.com/en-us/."
+   },
+   {
+    "id": "Z01-05",
+    "status": "fixed",
+    "note": "Removed the min-inline-size and ellipsis from the bottom nav and added letter-spacing 0.08em below 22.5rem. Measured in 21 locales at 320/340/360/375/390: no overflow and no clipped label."
+   },
+   {
+    "id": "Z01-13",
+    "status": "fixed",
+    "note": "Toasts use the hextech-frame plate (bevel, gradient, inset highlight) with per-kind border and glyph colours (emerald, amber, danger, hex-bright). They slide in from the inline-end edge, mirrored in RTL, and leave in 220ms through a new leaving state in ToastService. The glyph is kept, with a glow, and the text wraps in full, so there is no click-to-expand modal: a documented choice that meaning should not rest on colour alone."
+   },
+   {
+    "id": "Z02-03",
+    "status": "fixed",
+    "note": "Same change as Z01-13. The feedback tokens use the legacy Tailwind v4 oklch values (legacy wins over the hex values Z01-13 proposed). The kind rules sit in @layer utilities so they beat the frame utility. Computed border colours match the legacy toast."
+   },
+   {
+    "id": "Z01-14",
+    "status": "fixed",
+    "note": "NavigationProgress bar: 3px, var(--color-hex), appears after 500ms, creeps toward 90%, then completes and fades. It ignores the hydrating first navigation and superseded navigations, and shows a static bar under reduced motion. Verified with a delayed API: the bar shows at 900ms and is gone at the end."
+   },
+   {
+    "id": "Z01-16",
+    "status": "fixed",
+    "note": "The banner is a centred flex-wrap strip with a Spiegel semibold gold CTA, decoration-gold-deep underline and gold-bright hover. role=region is kept on purpose (the legacy used alert)."
+   },
+   {
+    "id": "Z01-17",
+    "status": "fixed",
+    "note": "viewport-fit=cover is in index.html. The Android edge-to-edge check was not done on a device."
+   },
+   {
+    "id": "Z01-18",
+    "status": "fixed",
+    "note": "Spiegel Regular and Beaufort Regular/Bold are preloaded, and the browser uses the preloads. The inline theme script also preloads the active alternate theme's display face."
+   },
+   {
+    "id": "Z02-12",
+    "status": "fixed",
+    "note": "Same change as Z01-18. Checked with the Noxus cookie: archivo/latin.woff2 is preloaded and theme-color is #08090b. theme-from-cookie.spec runs the real inline script and compares it with THEME_IDENTITIES, which gained a displayFont field."
+   },
+   {
+    "id": "Z01-M02",
+    "status": "fixed",
+    "note": "index.html carries meta theme-color #010a13, and the inline script sets it per identity."
+   },
+   {
+    "id": "Z01-19",
+    "status": "fixed",
+    "note": "favicon.svg and favicon-96x96.png copied to public/favicon/ (both serve 200). Added the icon links, a shortcut icon pointing to /favicon.ico, and the mobile-web-app-capable, apple status-bar-style and apple title 'LoDB' metas."
+   },
+   {
+    "id": "Z01-24",
+    "status": "fixed",
+    "note": "margin-block -0.375rem on .hx-dialog-panel__close. The theme dialog measures 211px with a 32px head, identical to the legacy."
+   },
+   {
+    "id": "Z01-20",
+    "status": "fixed",
+    "note": "The chip shows current()?.version, else the NavContext value handed over from the server, else 'Patch'. On per-request SSR pages the HTML already reads '14.1.1 · FR' with no swap. On prerendered pages the placeholder reserves 7.7ch through a style binding: 'Patch · FR' and '16.19.1 · FR' are both 135px, so nothing shifts. No hydration mismatch: the structure is static and only text changes."
+   },
+   {
+    "id": "Z12-05",
+    "status": "partial",
+    "note": "SSR pages name the resolved version, the problem the finding reports. I kept the 'Patch' placeholder, sized to hold the width, on prerendered pages instead of showing the language alone, following Z01-20 (no shift, and meaningful if /api/meta fails). So the 'patch' key stays."
+   },
+   {
+    "id": "Z12-06",
+    "status": "fixed",
+    "note": "Version options show bare numbers. Removed the 'latest' key from the 21 catalogues and dropped VersionOption.latest."
+   },
+   {
+    "id": "Z12-07",
+    "status": "fixed",
+    "note": "English legacy labels are in core/api/meta/language-name.ts, falling back to Intl English names. Options follow Data Dragon order, each under the locale that reads it (core/api/meta/locale-reading.ts). The 28 labels and their order are identical to the legacy switcher. Removed the per-option lang attribute."
+   },
+   {
+    "id": "Z01-M03",
+    "status": "fixed",
+    "note": "Every accepted apply shows the 'saved' toast, also when the URL does not change, in the arrival locale ('Préférences enregistrées'). Keys added in en and fr only, since the legacy string was untranslated; other locales fall back to en."
+   },
+   {
+    "id": "Z12-08",
+    "status": "fixed",
+    "note": "Same change as Z01-M03, with a spec."
+   },
+   {
+    "id": "Z12-09",
+    "status": "fixed",
+    "note": "(a) Every apply keeps the choice in sessionStorage 'lodb.context', never a cookie. PreferencesStore.current() reads it before the cookie, for both followRemembered and NavContext. (b) Preferences gained an optional locale field (loc=), written first. The storage format now lives in preferences-value.ts and preferences-from-value.ts, and the 365-day lifetime is kept, as the legacy remember did. (c) nginx map on $cookie_lod_prefs redirects / to /{loc}/ with 'private, no-store' and a relative Location. Tested in a throwaway nginx on the lodb-next network: with the cookie / goes to /en/, without it Accept-Language still decides (/fr/). (d) The policy text is a followup. The E2E switcher spec now expects cookie 'loc=en&v=…'."
+   },
+   {
+    "id": "Z12-M01",
+    "status": "fixed",
+    "note": "switchContext puts any language in ?lang= on pages outside the locales, and currentChoice selects the option named by ?lang= there. For the chrome I made a one-line change in resolve-shared-build.ts (BUILDS) so the page locale comes from ?lang= before the build's own language, instead of the proposed new resolver, which the share resolver would have overridden. Verified: /b/…?lang=fr_FR renders html lang=fr, French chrome and names, and the toast."
+   },
+   {
+    "id": "Z12-M02",
+    "status": "not-fixed",
+    "note": "The lod_prefs row of the cookie policy (features/editorial/legal/texts/cookies-en.html and cookies-fr.html) is outside my owned paths, so it is a followup. I kept the legacy 365-day lifetime and corrected the code comment, which wrongly said the policy announces a year."
+   },
+   {
+    "id": "Z11-01",
+    "status": "fixed",
+    "note": "The admin route declares data {chrome: 'bare'} (small edit in app.routes.ts). The shell hides header, banners, footer and bottom nav (and the bottom-nav padding) and keeps main, the progress bar and the toasts. The value is known from the route config before the first navigation, so the public header never flashes (sampled every 15ms during load). The admin's own frame is left to wave 2 (ADMIN)."
+   },
+   {
+    "id": "Z11-04",
+    "status": "fixed",
+    "note": "ThemeService gained pin/unpin: data-theme and theme-color change without touching the cookie or current(). The shell pins DEFAULT_THEME while the section is bare. With a Noxus cookie, /admin/login is Hextech (#010a13) and the site returns to Noxus afterwards. Minor residue: before the bundle boots, the CSR admin page shows the cookie theme's body background for a moment."
+   }
+  ],
+  "outside_edits": [
+   "src/LoDb.Web/src/app/features/editorial/changelog/provide-release-version.ts (+ changelog-reader.spec.ts): the initializer awaits platform detection (Z01-01)",
+   "src/LoDb.Web/src/app/features/catalogue/shared/links/catalogue-href.ts: reuses the core cataloguePath rule, same output (Z01-03 DRY)",
+   "src/LoDb.Web/src/app/features/builds/share/loading/resolve-shared-build.ts (+ spec): page locale from ?lang= before the build's language (Z12-M01)",
+   "src/LoDb.Web/src/app/app.routes.ts: data { chrome: 'bare' } on the admin route (Z11-01)",
+   "src/LoDb.Web/src/app/app.spec.ts: banner order located after lodb-header, robust to the new progress bar",
+   "src/LoDb.Web/src/styles/layout/chrome.css: bottom nav, toasts, progress bar, bare-shell padding",
+   "src/LoDb.Web/src/styles/foundation/tokens.css: --color-success(-light), --color-warning(-light)",
+   "src/LoDb.Web/src/styles/primitives/dialog.css: close button margin-block",
+   "src/LoDb.Web/src/app/core/theme/theme-identity.ts, theme-identities.ts: displayFont field (mirror of the inline script)",
+   "docker/next/nginx/sites/site.conf: remembered-locale map and redirect of / (Z12-09c)",
+   "tests/LoDb.E2E/specs/context-switcher/context-switcher.spec.ts: remembered cookie is now loc=en&v=…"
+  ],
+  "checks": "Unit tests (ng test --watch=false, full suite): 238 files / 2079 tests pass. typecheck (app + spec) passes. ng lint passes on all files; lint rule tests pass 9/9. prettier --check (end-of-line auto) passes on every changed front file. Plain 'npm run lint' reports about 146 files in this Windows worktree because of CRLF working copies: environment noise, not a style problem. The E2E context-switcher spec shows a prettier warning that already exists on the base commit. The web build (ng build --configuration web plus the service worker bundle) passes and prerenders 168 routes. No anyComponentStyle error. The initial bundle warning already existed and grew from 654.8 to 666 kB, still under the 1 MB error threshold. E2E against the preview (:4320, --grep @readonly: public, context-switcher, editorial, seo, pwa, routing, home, champions, items, runes, summoners, builds-share): 227 pass, 3 fail. All 3 failures need nginx, which the preview bypasses: legacy one-hop 301 in outcomes.spec, edge security headers and page-cache X-Cache-Status in pwa/headers.spec. Custom measurements against the legacy stack: header matrix, bottom nav (21 locales), active states on pinned pages, toast look, theme dialog height, progress bar, head and theme script, switcher options and panel, shared-build language, admin bare chrome and theme. nginx config: nginx -t passes in a throwaway container. Everything throwaway is removed, the preview is stopped, and the worktree is clean.",
+  "contract": "No API change: no endpoint or JSON field added or changed.",
+  "followups": [
+   "Integration: rebuild lodb-next-web-ssr (Dockerfile changelog link) and lodb-next-nginx (the / remembered-locale redirect). Then check /changelog/manifest.json returns 200, /en/changelog lists 19 releases, and / with lod_prefs=loc=… is redirected.",
+   "EDITORIAL: rewrite the lod_prefs row in features/editorial/legal/texts/cookies-en.html and cookies-fr.html (Z12-M02). It should say: unsigned, readable by scripts, SameSite=Lax, Secure on HTTPS, 1 year, remembers locale + Data Dragon language + version, and that nginx reads loc= to open /. The per-session choice is kept in sessionStorage, not a cookie.",
+   "Docs: add a line to docs/guides/dev-next.md saying that on Windows a local ng serve needs git core.symlinks=true or a junction at features/editorial/changelog/published (Z08-01, outside my owned paths).",
+   "ADMIN (wave 2): the admin now renders without the public chrome and pinned to Hextech. Its own top bar and main column (Z11-02, Z11-49) and the html lang for the French admin (Z11-05) remain. No admin-frame is needed for the theme: data { chrome: 'bare' } on the admin route handles it.",
+   "BUILDS: Z10-30 (English language labels) can reuse core/api/meta/language-name.ts instead of adding another table. The share page now takes its locale from ?lang= when present.",
+   "I18N: the context-switcher 'saved' key exists only in en and fr (legacy string was untranslated); the 19 other locales fall back to en.",
+   "Rerun tools/next/lighthouse --stack lodb-next after integration: the font preloads and the progress bar change the head and the first paint."
+  ]
+ },
+ "review:API": {
+  "verdict": "fixed-issues",
+  "issues": [
+   "Regression from Z04-09, fixed in 492f416f: ItemCard.summary now falls back to the description when plaintext is blank. ItemDetails reuses ItemCard as its profile, and item-detail.html:34 shows profile.summary as the hero's lead, so the full description would have appeared twice on the item page (lead, then the Description section). This hits 694 of the 865 listed items in 16.19.1 en_US. The legacy page shows the plaintext only (app/templates/item/detail.html.twig:89); I checked that legacy /object/1035 has no lead. Fix: ItemDetails.ProfileOf keeps the plaintext alone ('ItemCard.Of(...) with { Summary = DdragonText.Clean(item.Plaintext) }'), list cards keep the fallback, the ItemCard.summary doc now describes both cases, and a new test ItemPageLeadsWithThePlaintextAlone (771004) fails without the fix.",
+   "Payload growth the fixer did not report: besides the ~40 kB of champion blurbs, the description fallback adds about 230 kB raw to the full items list (535 kB to about 785 kB; 694 cards now carry their description) and makes the SSR first page of /en/items heavier. This is the legacy behaviour (the legacy list prints every description) and the verified fix, but Lighthouse must be re-run on /items too, not only on /champions.",
+   "Environment, not the diff: this worktree is checked out with CRLF (system core.autocrlf=true). So 'prettier --check .' flags 149 files that the diff does not touch (with --end-of-line auto it passes), and 21 .NET tests that compare text fail: 5 in Api.Tests, 16 in Infrastructure.Tests. These are the same failures the fixer measured on base d62e9950; none is in a module this branch changes.",
+   "No commit subject or attribution problem: all 9 subjects are 72 characters or fewer, use the infinitive, have no accents and use map scopes, and no commit has a Co-Authored-By or Generated-with line."
+  ],
+  "commits_added": [
+   "492f416f fix(back/catalog): garder le seul plaintext en tete de la fiche d'objet"
+  ],
+  "residual": [
+   "Integration: run 'npm --prefix src/LoDb.Web run api:generate' and commit openapi/*.json and core/api/generated. I regenerated the client locally and typechecked against it: exactly the 18 files in scratchpad/cmp/fix/API/fixtures-to-update.txt break (1 in the app tsconfig: features/admin/testing/fixtures/analytics-report.ts; 17 specs), which matches the fixer's list. I then restored the generated files and the documents.",
+   "Lighthouse: re-run tools/next/lighthouse for /champions (blurb, about 40 kB raw) and for /items (description fallback, about 230 kB raw on the full list) once the front packages consume these fields. A budget is never relaxed.",
+   "Wave 2 fronts: the DETAIL, LISTS, HOME, ENTITYDET and ADMIN follow-ups stay as the fixer listed them. ENTITYDET: the item hero lead stays profile.summary, now plaintext only again, as on the legacy page.",
+   "The worktree holds src/LoDb.Web/src/app/features/editorial/changelog/published as a real directory, while git tracks it as a symlink (120000). It was there before this review (13:36). Plain 'git status' is empty, and only 'git status -uall' lists its JSON files. I left it untouched.",
+   "The first full 'ng test' run crashed one vitest worker (SIGTERM on recipe-tree-of.spec.ts) while 'dotnet test' ran at the same time. A rerun on its own passed 233/233 files and 2039/2039 tests.",
+   "Web build: the 'bundle initial exceeded maximum budget' warning (654.79 kB against 500 kB) is a warning only, and it is the same as on base because no front file changed. No anyComponentStyle error."
+  ],
+  "checks": "Scope: no front, E2E, tools or infra file differs from base. Outside src/LoDb.Api there are only the listed Infrastructure edits for Z11-29 and the tests.\n\nContract: I regenerated the documents on HEAD (LoDb__Storage__Root in scratch, Workers off), compared them structurally with the committed base documents after normalising \\r\\n, then restored them (not committed). public-v1 is identical and no path changed. Every field in the contract exists as described:\n- ChampionCard.loadingArt (uri, required) and blurb (required)\n- ItemCard.upgrades (string[], required); ItemList.related (EntityLink[], required)\n- ItemDetails.upgrades items now reference ItemUpgrade; ItemUpgrade = EntityLink's fields + required edition + required gold (int32), so a superset\n- ItemDetails.depth (int|null, optional)\n- neighbours (DetailNeighbours, required) on Champion, Item, Summoner and RuneTree details\n- DetailNeighbours: previous and next required, oneOf null or DetailNeighbour\n- DetailNeighbour: id, name, canonicalPath, edition, all required\n- AdminBuildRow.shareToken (required); AdminUserRef.isBanned (required); AdminUserRow.riotTagline and AuditSubjectView.riotTagline (nullable)\n- AnalyticsReport.geoAvailable (required); ServiceProbe.objects and bytes (int64|null)\n\nNo schema was removed and the Edition enum is unchanged.\n\nLegacy verification (scripts in scratchpad/cmp/fix/API/review):\n- Pager: 69/69 legacy rel=prev/next match the list order, over fr_FR, ko_KR and ar_AE × champions, items, summoners and rune paths, both ends included. Unlisted items are 404 on both stacks.\n- Champion cards: loading art src and blurb match 173/173 in en_US and 173/173 in fr_FR.\n- Item cards: 'Possible evolutions' chips match 497/497 on 14.1.1 fr_FR (the fixer checked 16.19.1 en_US).\n- Item pages: over a sample of 101, the legacy 'Tier N' chip equals the Data Dragon depth (42 chips) and all 86 evolution golds equal gold.total.\n- Admin: checked in code against the legacy templates (displayName username#tag, the 'Voir' link to /b/{shareToken}, the 'banni' badge from owner.isBanned, geo_available from GeoLocator::isAvailable, probe meta from cachedTotals).\n\n.NET:\n- dotnet build LoDb.slnx -c Release: 0 warnings, 0 errors.\n- dotnet test LoDb.slnx: Api.Tests 1395/1400 (the 5 CRLF failures that pre-date this branch), Infrastructure.Tests 469/485 (the same 16 pre-existing ones). Ingestion, Domain, Desktop and Parity pass (Parity: 2 skipped without LODB_PARITY_RUN). The Catalog, Admin, Audit and Analytics suites pass, the new test included.\n\nFront, unchanged by this branch:\n- npm run typecheck: pass.\n- ng lint: all files pass.\n- Lint rule tests: 9/9.\n- prettier --check: only CRLF differences; with --end-of-line auto it passes.\n- ng build --configuration web: pass.\n- ng test --watch=false: 233 files / 2039 tests pass.\n\nFinal state: worktree clean ('git status' empty), no preview started."
+ },
+ "fix:DS": {
+  "wp": "DS",
+  "commits": [
+   "6f289ea2 fix(front/ui): garder hampe noxus et balayage des squelettes au build",
+   "0a76a47c feat(front/ui): poser le fond d'ambiance sur les pages qui l'avaient",
+   "4d0adf38 fix(front/ui): rendre la console, ses marques et le journal aux themes",
+   "f4b14377 feat(front/ui): donner au cadre de dialogue un surtitre et des largeurs",
+   "eef45909 fix(front/catalogue): garder la couleur des balises font de Data Dragon",
+   "0a254637 fix(front/ui): laisser un long titre de section sur sa propre ligne",
+   "e7907480 feat(front/ui): ajouter palette admin et boutons danger et compact"
+  ],
+  "results": [
+   {
+    "id": "Z01-08",
+    "status": "fixed",
+    "note": "lodb-dialog has an optional eyebrow input: eyebrow p above a Beaufort text-lg gold-bright h2 (still the labelledBy id), head aligned flex-start, and a large text-coloured close that turns cyan on hover. The close is the typeset multiplication sign like the legacy, not the icon. contact-form passes the eyebrow and drops its in-body eyebrow. Measured at 1440: eyebrow, title, intro and close centre sit at the same offsets as legacy (+29/+45/+89, close centre 956,+41)."
+   },
+   {
+    "id": "Z01-09",
+    "status": "fixed",
+    "note": "DialogOptions.size 'form' gives pane classes hx-dialog + hx-dialog--form: min(34rem, 100vw-2rem, native dialog cap), padding 1.5rem, 1.75rem from 40rem. Contact is 544px at 1440 (x 448, as legacy) and 352px at 390 (the legacy native-dialog cap)."
+   },
+   {
+    "id": "Z02-01",
+    "status": "fixed",
+    "note": "noxus/frames.css: plate and hover rules use border-block-color + border-inline-end-color, not the border-color shorthand the build re-emits in @supports after the rule. Computed border-left on Noxus cards is 3px rgb(192,32,58), and rgb(232,105,122) (--color-hex) on hover, identical to legacy."
+   },
+   {
+    "id": "Z02-02",
+    "status": "fixed",
+    "note": "skeleton.css (.hx-sk) and images.css (.hx-img loading) use background-image. Computed background-size is 200% 100% with the hx-sk-sweep animation on both stacks."
+   },
+   {
+    "id": "Z02-04",
+    "status": "fixed",
+    "note": "Done the way the package asked: new class names went into the theme selectors, and no component was renamed. zaun/noxus/spirit-blossom frames.css and ornament.css now also target lodb-filter-console .console, :is(lodb-filter-console, lodb-filter-sheet, lodb-active-filters) .marker, lodb-catalogue-list :is(.notice, .empty) and .empty__mark, and lodb-changelog-page .node::before. The host type selector outranks the emulated component rule. changelog-page.css is wrapped in @layer components like the legacy sheet, so the latest node and the h1 follow the theme too. primitives/filter.css was not created. Probed in 4 identities at 1440 (rail), 390 (empty state, sheet) and on the changelog: radius, clip-path, hoist and background match legacy. The only remaining console diff is its box-shadow, which is LISTS Z04-27/Z07-11."
+   },
+   {
+    "id": "Z02-05",
+    "status": "fixed",
+    "note": "lodb-backdrop sits under a relative isolate container on champions list and detail, about/data/faq (editorial-frame gets an ambient opt-in, clipped to the column as legacy), developers, trends (its own trends-ambient removed), my builds and editor, share (before path-ambient), API portal, and profile without a favourite champion. SSR shows one weave-hex per page, none on legal. Checked against legacy at 1440 and 390 in all 4 identities."
+   },
+   {
+    "id": "Z02-10",
+    "status": "fixed",
+    "note": "Eyebrow variant of the frame. DialogSize 'form' | 'picker' | 'wide' (34/32/56rem), turned into pane classes hx-dialog--<size> and hx-sheet--<size> by pane-class.ts. Contact uses form. Widths keep the native <dialog> cap calc(100% - 6px - 2em) that the legacy panes had: the theme dialog is 352px at 390 and 736px at 1440, as legacy. picker and wide only set the width; wave 2 applies them."
+   },
+   {
+    "id": "Z02-11",
+    "status": "fixed",
+    "note": "dialog.css: .hx-dialog and .hx-sheet .cdk-dialog-container:focus { outline: none }. autoFocus stays 'dialog'. A keyboard-opened theme dialog no longer shows the white ring, and the filter sheet container has outline none."
+   },
+   {
+    "id": "Z02-13",
+    "status": "fixed",
+    "note": "One sanitizer in shared/codex/rich-text. <font> keeps a single attribute, a checked hex colour. <a> is kept bare, with no href, so .ddragon-rich a styles it like the legacy dead links. The tag list is the union of the two old lists (ol, small, sub, sup). The champion pipe calls richTextHtml; ddragon-html.ts and ddragon-tags.ts are deleted and their spec cases moved to the shared spec. 'adaptive damage' is rgb(72,196,183) on /runes/8100, same rect as legacy."
+   },
+   {
+    "id": "Z02-16",
+    "status": "fixed",
+    "note": ".hx-btn-gold removed from the coarse-pointer 2.75rem rule. The footer 'Contact us' is 40px at 390 on touch, as legacy."
+   },
+   {
+    "id": "Z02-17",
+    "status": "fixed",
+    "note": "At 480px or less the codex title cap is max-inline-size: 100%; text-wrap balance is kept, nowrap not restored. All 7 /about headers at 390 match legacy (title 334x30 on its own line, rule 342px). scrollWidth stays 320 at 320px in en, fr, de, ar, ru and pl."
+   },
+   {
+    "id": "Z02-M05",
+    "status": "fixed",
+    "note": "noxus/ornament.css .hx-rule::after uses rotate: 0deg, so the base transform applies as in legacy. Computed transform is matrix(0.707107, 0.707107, -0.707107, 0.707107, -7, -6) on both stacks."
+   },
+   {
+    "id": "Z03-15",
+    "status": "fixed",
+    "note": "Same fix as Z02-01: Noxus portal and preview cards keep the crimson hoist bar."
+   },
+   {
+    "id": "Z04-20",
+    "status": "fixed",
+    "note": "champions-page.html root is relative isolate with lodb-backdrop; Backdrop is imported in champions-page.ts."
+   },
+   {
+    "id": "Z04-M01",
+    "status": "fixed",
+    "note": "Covered by the Z02-04 theme selectors. Zaun console radius 22px 3px with its glass and round markers; Noxus 2px crimson inline-start bar and triangle markers; Spirit Blossom arch radius, transparent border and round markers. Legacy values match."
+   },
+   {
+    "id": "Z05-02",
+    "status": "fixed",
+    "note": "champion-page.html spread is relative isolate px-6 py-14 with lodb-backdrop as first child. I used isolate rather than overflow-x-clip, because the legacy spread has no clip. The weave shows in every theme."
+   },
+   {
+    "id": "Z05-06",
+    "status": "fixed",
+    "note": "Same fix as Z02-01. The #stats and lore frames are 3px rgb(192,32,58) in Noxus."
+   },
+   {
+    "id": "Z06-11",
+    "status": "fixed",
+    "note": "Same sanitizer as Z02-13. Item 1101 'Scorchclaw' is rgb(221,46,46), same rect as legacy. The <a> look is kept, without a link."
+   },
+   {
+    "id": "Z07-17",
+    "status": "fixed",
+    "note": "Same sanitizer as Z02-13. Rune texts keep Riot's hex <font> colours. A non-hex colour, a style or a handler gives a bare <font>, covered by the specs."
+   },
+   {
+    "id": "Z07-M01",
+    "status": "fixed",
+    "note": "The console, marker and empty-state part is covered by the Z02-04 theme selectors. HERO_STYLES.name now starts with 'hero-name', so the rune, item and summoner heroes take the identity weights: the Noxus and Zaun rune h1 match legacy. marks.css .title gets font-weight 400: the h2 title of the console and sheet was bolder than the legacy span under Noxus and Zaun."
+   },
+   {
+    "id": "Z07-M02",
+    "status": "fixed",
+    "note": "rune-constellation.css .slot-node span has font-weight 400. Slot labels are 400 in all 4 identities, as legacy."
+   },
+   {
+    "id": "Z08-04",
+    "status": "fixed",
+    "note": "editorial-frame.ts has 'ambient' (booleanAttribute, an orthogonal opt-in). The column is relative isolate with the backdrop inside it, as legacy about/layout. Set on about, about-data and faq only, not on legal."
+   },
+   {
+    "id": "Z08-05",
+    "status": "fixed",
+    "note": "developers host is 'relative isolate block px-6 py-12' with lodb-backdrop full width. .dev-page drops its padding and keeps 56rem centred. Content is x=150 at 1440 in the capture (legacy-equal) and bottom padding is 3rem."
+   },
+   {
+    "id": "Z08-M01",
+    "status": "fixed",
+    "note": "Not renamed, per the package preference. The theme selectors add lodb-changelog-page .node::before, and changelog-page.css is wrapped in @layer components like the legacy timeline.css. Probed with the legacy changelog JSON injected: Noxus blade point without glow, Zaun and Spirit Blossom round nodes, latest node included, same as legacy."
+   },
+   {
+    "id": "Z09-08",
+    "status": "fixed",
+    "note": "profile-editor.html renders lodb-backdrop in an @else when there is no favourite-champion backdrop. .profile-perso gets isolation: isolate. Checked with the parity-audit account, which has no favourites."
+   },
+   {
+    "id": "Z09-17",
+    "status": "fixed",
+    "note": "api-portal-page host is 'relative isolate block' with lodb-backdrop as first node, full width of main. Z09-18 padding is left to ACCOUNT."
+   },
+   {
+    "id": "Z10-02",
+    "status": "fixed",
+    "note": "Trends: backdrop replaces the non-legacy trends-ambient, whose CSS is deleted. Share: isolate, with the backdrop before path-ambient. My builds and editor: editor-page.ts takes the legacy main wrapper (host relative isolate px-6 py-12, backdrop, relative mx-auto max-w-5xl column). That also implements BUILDS Z10-07."
+   },
+   {
+    "id": "Z11-10",
+    "status": "partial",
+    "note": "Tokens only, as the package specifics say. The @theme block gets --color-good #37b06e, --color-bad #dc3d3d, --color-series-blue, -green, -red, -cyan and --color-track (utilities exist). Mapping them in badge.ts, kpi.ts and the chart palettes is left to ADMIN (wave 2)."
+   },
+   {
+    "id": "Z11-14",
+    "status": "partial",
+    "note": "Primitives only. New danger tone (hx-btn-danger: #dc3d3d text, 50% border, 8% wash, 18% plus glow on hover, 44px on coarse pointers). New size input lodbButtonSize='small' (hx-btn-sm, qualified by the tone so it wins whatever the emit order). Against the legacy admin CSS: small is 9.92px type, padding 5.44/9.6px, 80x28px, matching .btn.small; danger colours and hover glow match. ConfirmButton confirmTone and the admin call sites are left to ADMIN."
+   }
+  ],
+  "outside_edits": [
+   "src/LoDb.Web/src/app/features/catalogue/champions/champions-page.html and champions-page.ts (backdrop)",
+   "src/LoDb.Web/src/app/features/catalogue/champions/detail/champion-page.html and champion-page.ts (backdrop)",
+   "src/LoDb.Web/src/app/features/catalogue/champions/detail/rich-text/ddragon-html-pipe.ts and rich-text.spec.ts (pipe now calls the shared richTextHtml); deleted ddragon-html.ts and ddragon-tags.ts",
+   "src/LoDb.Web/src/app/features/catalogue/shared/codex/hero/hero-styles.ts (hero-name hook class, Z07-M01)",
+   "src/LoDb.Web/src/app/features/catalogue/shared/console/marks.css (.title font-weight 400)",
+   "src/LoDb.Web/src/app/features/catalogue/runes/detail/constellation/rune-constellation.css (.slot-node span font-weight 400, Z07-M02)",
+   "src/LoDb.Web/src/app/features/editorial/shared/editorial-frame.ts plus about/about-page.html, about-data-page.html and faq-page.html ('ambient' opt-in)",
+   "src/LoDb.Web/src/app/features/editorial/changelog/changelog-page.css (wrapped in @layer components, Z08-M01)",
+   "src/LoDb.Web/src/app/features/developers/developers-page.html, developers-page.css and developers-page.ts (host wrapper and backdrop, column padding)",
+   "src/LoDb.Web/src/app/features/builds/trends/trends-page.html, trends-page.css and trends-page.ts (backdrop replaces trends-ambient)",
+   "src/LoDb.Web/src/app/features/builds/editor/editor-page.ts (legacy wrapper and backdrop, also implements Z10-07)",
+   "src/LoDb.Web/src/app/features/builds/share/share-page.html and share-page.ts (isolate and backdrop)",
+   "src/LoDb.Web/src/app/features/api-portal/api-portal-page.html and api-portal-page.ts (host relative isolate and backdrop)",
+   "src/LoDb.Web/src/app/features/account/editor/profile-editor.html, profile-editor.ts and profile-editor.css (fallback backdrop, isolation)"
+  ],
+  "checks": "Unit tests (npx ng test --watch=false): 234 files, 2044 tests, all pass; new specs cover the dialog frame, dialog and sheet sizes, the contact form pane, the rich-text font colour and link cases, and the danger and small buttons. npm run typecheck: passes. ng lint (ESLint): all files pass. Lint rule tests (node --test lint/**): 9 of 9 pass. prettier --check . fails in this worktree on about 147 files, the untouched tsconfig.json among them, because the checkout wrote them with CRLF line endings; the main checkout fails the same way. My changed files are clean in their committed form (every committed .html checked through prettier --stdin). ng build --configuration web: passes, no component style budget warning. The initial bundle warning already existed and grew from 654.8 kB to 660.1 kB (warning at 500 kB, error at 1 MB). The CSS reorder scan leaves only .hx-toast as a real conflict; the other hits are false positives, and computed styles confirm the fixes. E2E read-only specs (public, editorial, developers, champions, runes, items, summoners, catalogue, home) against the preview on :4350: 183 pass and 15 fail. The failures come from the preview itself: it serves no service-worker script, which gives a console 404, and no nginx legacy redirects (outcomes.spec). Specs that create accounts, contact and register were not run. Visual and computed checks against legacy covered: backdrop on 13 pages at 1440 and 390 in the 4 identities; theme reach of console, markers, empty state, changelog nodes, hero names and slot labels in hextech, zaun, noxus and spirit-blossom; contact and theme dialog geometry at 1440 and 390; font colours on runes and items; buttons against the legacy admin CSS. The preview ran on :4350 because :4310 is taken by an unrelated container (bblr-galerie-web-1). It is stopped, and the worktree is clean.",
+  "contract": "n/a (front-only package, no API field changed)",
+  "followups": [
+   "ADMIN (Z11-10/Z11-14/Z11-19): map 'good' to the new tokens (text-good, bg-good/…) in badge.ts and kpi.ts and colour the charts with series-blue, -green, -red, -cyan and gold. Use lodbButton=\"danger\" for Supprimer, Revoquer and Purger, lodbButtonSize=\"small\" for row and toolbar actions, and add a confirmTone input to ConfirmButton. Also decide the full-size buttons: legacy admin .btn is 0.78rem and 40.5px tall, hx-btn is 14px and 42px.",
+   "LISTS (Z02-06, Z02-M04, Z04-10, Z04-25): primitives/filter.css was NOT created. Theme reach relies on host-scoped selectors in theme/{zaun,noxus,spirit-blossom}/{frames,ornament}.css: lodb-filter-console .console, :is(lodb-filter-console, lodb-filter-sheet, lodb-active-filters) .marker, lodb-catalogue-list :is(.notice, .empty) and .empty__mark. A renamed class, or a new marker (the facet-group .marker-hollow or filter-marker), must be added to those selectors. Keep the component rules at single-class specificity (0,2,0 once emulated) or the theme loses. The console box-shadow and head band (Z04-27/Z07-11) are still missing.",
+   "BUILDS: Z10-07 is already done by the editor-page.ts wrapper (host relative isolate px-6 py-12, backdrop, relative mx-auto max-w-5xl column), so mark it obsolete or fixed. For the armory (Z10-21) use the existing size: 'wide' (hx-dialog--wide: min(56rem, 94vw, native cap)) instead of a new panelClass option, and add the armory-specific rules under .hx-dialog--wide / .hx-sheet--wide.",
+   "ACCOUNT (Z09-01/Z09-02): open the pickers with size: 'picker'. It gives hx-dialog--picker / hx-sheet--picker, with only the width defined, min(32rem, 100vw - 3rem); add max-block-size, padding, handle and close under those classes. Z09-18: the portal host is already relative isolate block with the backdrop as its first node, so only padding remains.",
+   "DETAIL (Z05-04/Z05-05): no lightbox or compact dialog variant is provided. Extend DialogSize (ui/overlays/dialog-size.ts) or add a variant next to paneClass (ui/overlays/pane-class.ts). Keep the native-dialog cap in mind: legacy lightboxes were not native dialogs.",
+   "SHELL (Z02-03/Z01-13): .hx-toast in layout/chrome.css has the same build-order bug. Its border shorthand with color-mix() is re-emitted in @supports after border-inline-start, so the coloured start bar is lost; avoid pairing a colour-mix shorthand with a later longhand in the same rule. For Z01-24, .hx-dialog-panel__close--large sets its own margins after the base rule, so a margin-block added to .hx-dialog-panel__close does not move the contact close.",
+   "EDITORIAL: changelog-page.css is now in @layer components, so the identities' h1 rules reach the changelog title (as legacy). Z08-02 (developers h1 breaking at 390) is still open; the backdrop wrapper now sits on the developers-page host.",
+   "Integration: the 15 E2E failures seen against the preview (service-worker script 404, nginx legacy redirects) should be re-checked on a rebuilt lodb-next stack."
+  ]
+ },
+ "fix:I18N": {
+  "wp": "I18N",
+  "commits": [
+   "2e9da10d fix(front/catalogue): traduire les puces de section de la fiche champion",
+   "1927312a fix(front/core): activer la locale une fois son catalogue charge",
+   "af21c248 fix(front/catalogue): ne plus masquer la portee de la page dans la liste",
+   "39119a38 fix(front/core): ne jamais stocker un rendu dont un catalogue a echoue",
+   "533889c5 fix(i18n): accorder le compte de resultats comme l'ancien site",
+   "30272f84 fix(i18n): ecrire voir tous les sorts et objets sur l'accueil",
+   "0f626937 fix(front/core): hydrater le chrome dans la locale de l'URL"
+  ],
+  "results": [
+   {
+    "id": "Z05-01",
+    "status": "fixed",
+    "note": "I removed provideTranslocoScope('champions') from champion-page.ts. It served no purpose there: SkinViewer, ChromaViewer and ChromaStrip each provide the scope themselves. translateSignal now reads the root keys champion.detail.*. A new champion-page.spec test checks the chips read 'Abilities, Skins, Lore, Tips, Base Statistics'; with the old provider it fails with 'champions.champion.detail.*'. The crawler (no-JS) test in specs/champions/champions.spec.ts now asserts the chip texts. Checked against the legacy tab bar at 1440 and 390 in en, fr and ar: same texts, same chip widths (for example 133/72/68/99/189 px in fr) and same scroll width (521/631/444 px at 390). The overflow was caused by the raw keys and is gone. ar shows 'TIPS' in English in both stacks, because the legacy has no ar/ja translation for it."
+   },
+   {
+    "id": "Z12-01",
+    "status": "fixed",
+    "note": "Fixed by the same commit as Z05-01. I removed the scope provider rather than switching to selectTranslate: it is the smaller change and it removes the cause. A comment next to the labels records the trap (translateSignal adds the scope prefix to its keys; the pipe does not). The regression is covered by the unit test and the crawler E2E assertion."
+   },
+   {
+    "id": "Z12-02",
+    "status": "fixed",
+    "note": "The real causes were two render races, not only failed loads. My preview served /en/summoners with raw keys about one sequential render in four (7/30). (1) The summoners.search_placeholder pipe sits on an input of <lodb-catalogue-list>. A pipe used on a component's host element resolves that component's providers, so it saw the list's 'catalogue' scope instead of the page's 'summoners' scope. It showed the key only when another pipe happened to load 'summoners' first. Fix: catalogue-list now puts its scope in viewProviders, and a list.spec test proves it. (2) The chrome (header and footer) renders outside the router outlet, before activateLocale runs. Transloco counts a language as loaded as soon as any of its scopes is merged. So when a scope arrived before the root catalogue, setActiveLang (which ran before the load) made the pipes re-read root keys that were not there yet, and they stayed raw. This showed up on prerendered /en/ pages (header and footer as raw keys) in 3 of 4 builds where I added random delays to catalogue loads. Fix: a new core/i18n/inject-locale-switch.ts loads the catalogue first and activates the locale after; activateLocale and the shared-build resolver both use it. An SSR test in ssr-catalogues.spec reproduces the exact '<b>base.title</b>' output with the old order. (3) Hardening from the verified fix: a failed catalogue load now calls a new PageResponse.forbidStorage(), which sends 'private, no-store' and keeps it even if a later cache() call asks for something else. Tested in the loader spec, the PageResponse spec and an SSR test where the route sets 'latest'. Results after the fixes: /en/summoners 0/40 raw; SSR 196 pages across 7 locales 0 raw; builds with random catalogue delays: prerender 0/168 raw in 3 builds, SSR 0/168 raw in 3 passes, output identical across renders; hydrated DOM 0/524 states. Not done: the optional server-side disk loader (see followups)."
+   },
+   {
+    "id": "Z12-10",
+    "status": "fixed",
+    "note": "I switched filter.results and filter.show_results to the exact '=1' selector, in en.json and also in fr.json. That goes against the verified fix, which kept fr on 'one', but the legacy wins: its pluralTemplate uses count === 1, and the live legacy shows '0 résultats' where the new stack showed '0 résultat', because French 'one' also covers 0. Compared on the live stacks: en, fr, ja and ko now match the legacy for 0, 1 and 22 results. The provide-i18n.spec tests now load the shipped en.json and fr.json and check 0/1/2 in en, fr and ja for both keys. They fail on the old catalogues."
+   },
+   {
+    "id": "Z12-12",
+    "status": "partial",
+    "note": "As instructed, I built no UI for other packages. Followups map each unused legacy key to its UI element and owning package, with the matching wave-1 finding ids when one exists. I checked coverage: common.detail, item.list.evolutions, item.detail.tier, footer.navigation.sitemap, homepage.champions.no_data, common.no_result.*, common.search and auth.register.password_help exist in all 21 root catalogues. filter.copy_link/copied/copy_error and build.editor.nojs exist only in en and fr, exactly as in the legacy YAML, so the other locales fall back to English as the legacy did. No catalogue gap to fill."
+   },
+   {
+    "id": "EXTRA-hydration-flash",
+    "status": "fixed",
+    "note": "Found while scanning the hydrated DOM. On every non-English page, hydration showed the header and footer in English for about 20-30 ms (fr, ja and ar, captured with requestAnimationFrame snapshots). The cause: the app started under the default locale 'en'. Fix: provide-i18n.ts now has an app initializer that activates the locale taken from the first URL segment before the first render. It does not await the catalogue, because another initializer blocks all HTTP until the platform is detected. The browser reads the catalogue from the transfer cache immediately, and activateLocale then loads it and re-activates the locale. Afterwards only the version number changes during hydration. Tests are in provide-i18n.spec."
+   },
+   {
+    "id": "EXTRA-fr-typo",
+    "status": "fixed",
+    "note": "homepage.summoners.see_all and homepage.items.see_all in fr.json: 'Voir touts les' is now 'Voir tous les'. The typo comes from the legacy messages.fr.yaml, which is read-only and still has it. The package brief asked for the fix explicitly. Checked on the new fr home."
+   }
+  ],
+  "outside_edits": [
+   "src/LoDb.Web/src/app/features/catalogue/shared/list/catalogue-list.ts: the 'catalogue' scope moved from providers to viewProviders (root cause 1 of Z12-02); list.spec.ts gains a ScopedHost test, availableLangs in its Transloco config, and a render(url, source, host) helper",
+   "src/LoDb.Web/src/app/features/builds/share/loading/resolve-shared-build.ts: uses core/i18n injectLocaleSwitch; activate-build-locale.ts deleted (it duplicated the activation logic in the unsafe order)",
+   "src/LoDb.Web/src/app/core/routing/response/page-response.ts and page-response.spec.ts: new forbidStorage() that keeps the response 'private, no-store' whatever cache() is called later",
+   "tests/LoDb.E2E/specs/champions/champions.spec.ts: the crawler test asserts the .section-nav chip texts"
+  ],
+  "checks": "Worktree F:/Git/lodb-parite/i18n, branch wt/parite-i18n, clean. Preview stopped and E2E test-results removed.\n- `ng test --watch=false`: 233 files and 2053 tests pass. One run made while a Playwright scan was running had 4 timing failures, which pass alone and in a quiet full run.\n- `npm run typecheck`: ok. `ng lint`: all files pass. `lint/**/*.test.mjs`: 9/9.\n- Prettier: every touched file passes. The repo-wide `prettier --check` flags 149 files, all because the worktree was checked out with CRLF (`core.autocrlf=true`); this was there before.\n- Running the specs rewrites two json-ld `.snap` files with LF line endings; I restored them each time.\n- `ng build --configuration web`: ok, 168 routes prerendered, no component-style budget error. The initial-bundle warning (654.88 kB against 500 kB) was already there (654.79 kB before).\n- E2E against my preview on :4330 (champions, summoners, catalogue, items, runes, context-switcher, routing, public, seo, home, editorial, builds-share, trends): 193 passed. The builds-share specs create member accounts through the CLI in the integration stack, so they wrote a few rows to its database; containers untouched. Every failure is environmental: 20 fail on the console error 'A bad HTTP response code (404) was received when fetching the script' (the preview serves no sw.js, the stack's nginx does), and outcomes 'move a former URL' fails because legacy redirects are nginx's job. register and contact specs not run.\n- Raw-key scans after the fixes: prerendered 0/168; SSR 0/196 (7 locales × 28 pages); hydrated DOM 0/524 states (en, fr, ar, ja at 1440 and 390, filter sheet and context switcher opened).\n- Same scans on builds that add random delays to catalogue loads: prerender 0/168 in 3 builds (before the fixes, 3 builds in 4 had raw pages), SSR 0/168 in 3 passes, output identical across renders.\n- Checked against the legacy with Playwright: chip bar texts, widths and overflow at 1440 and 390 in en/fr/ar; result counts for 0/1/n in en/fr/ja/ko.",
+  "contract": "None: front-end and catalogue changes only, no API endpoint or JSON field changed.",
+  "followups": [
+   "Z12-12 → LISTS: filter.copy_link / filter.copied / filter.copy_error (legacy en+fr only, others fall back to en). The 'COPY LINK' button at the foot of the filter console of the four lists (legacy components/codex/list_filter.html.twig:40) → features/catalogue/shared/console/filter-console and the mobile filter sheet. Findings Z04-02, Z07-08.",
+   "Z12-12 → LISTS: common.detail (21 locales). The 'SEE DETAILS' call to action at the foot of each champion card (legacy champion/liste.html.twig:101) → the champion list card (lodb-champion-card). Finding Z04-05.",
+   "Z12-12 → LISTS: item.list.evolutions (21 locales). The 'POSSIBLE EVOLUTIONS' accordion on item cards (legacy item/liste.html.twig:94) → the card body in features/catalogue/items/list/item-list.html. Finding Z04-08.",
+   "Z12-12 → LISTS: common.search (21 locales). The 'Search…' placeholder of every list search (legacy list_filter.html.twig:15) → the [searchLabel] of the four list pages / filter-search. Findings Z12-11, Z02-M03, Z04-16, Z07-05. This retires summoners.search_placeholder and the *.list.search_placeholder keys. The scope race behind the raw summoners key is already fixed in this package.",
+   "Z12-12 → ENTITYDET: item.detail.tier with {{ depth }} (21 locales). The 'TIER 2/3/4' availability chip in the item aside (legacy item/_aside.html.twig:57), replacing Epic/Legendary → features/catalogue/items/detail/aside. Finding Z06-09.",
+   "Z12-12 → SHELL: footer.navigation.sitemap (21 locales). The 'Sitemap' link in the footer Navigation column (legacy components/footer.html.twig:53) → core/layout/footer/site-links.ts. Finding Z01-10.",
+   "Z12-12 → HOME: homepage.champions.no_data (21 locales). The champions preview when a version has no champions (legacy home/home.html.twig:158) → features/home, instead of the home scope's home.empty ('Nothing to show for this version.'). Finding Z03-16.",
+   "Z12-12 → LISTS, ENTITYDET, HOME and BUILDS: common.no_result.text and common.no_result.back (21 locales), the framed empty state of legacy components/ui/empty_state.html.twig:3,8. Where: empty catalogue lists (LISTS, Z04-22 and Z07-13), empty rune path detail (ENTITYDET, Z07-24), home previews (HOME, Z03-16), my builds (BUILDS, Z10-17). Reuse the legacy keys, never new wording.",
+   "Z12-12 → ACCOUNT: auth.register.password_help (21 locales). The hint under the register password field (legacy security/_password_checklist.html.twig:16) → the password checklist of the register view in features/account. Near Z09-35.",
+   "Z12-12 → BUILDS (with SHELL): build.editor.nojs (legacy en+fr only). The <noscript> notice of the build editor (legacy build/editor.html.twig:157). /{locale}/account/** is RenderMode.Client, so a <noscript> inside the editor component never reaches a visitor without JavaScript. It has to live in markup the server actually sends (index.html shell or a server-rendered wrapper).",
+   "Z12-02 optional part, for SHELL or infra together with the Z01 web-ssr heap exhaustion: an SSR catalogue reader that reads the catalogues once per process from dist/browser/i18n, instead of each render fetching them over HTTP from its own server (roughly 8 to 12 requests plus JSON parsing per render). Design constraints: server.ts passes the reader through REQUEST_CONTEXT (prerender and ng serve keep HttpClient); wrap the read in PendingTasks.run so the render waits for it; write each catalogue to TransferState under a key the browser loader checks before HttpClient, or the browser downloads everything again; validate the path. Renders are now correct without it; this is load and robustness only.",
+   "tools: tools/next/i18n convert turns legacy X/X_one pairs into ICU 'one'. If it is ever run again it will overwrite Z12-10. It should emit '=1', which matches the legacy pluralTemplate (count === 1).",
+   "E2E environment: the preview script serves no sw.js, so every spec that asserts consoleErrors == [] fails on the preview with 'A bad HTTP response code (404) was received when fetching the script'. Adding a /sw.js route to preview.mjs would let wave 2 run these specs cleanly.",
+   "Wave 2 note: a component that receives translated inputs or projected templates from a page with another catalogue scope must provide its own scope in viewProviders, not providers. A pipe on a component's host element resolves that component's providers, and the host-binding pipes and projected cards then load the wrong scope. catalogue-list is fixed. Also, translateSignal under any scope provider reads keys inside that scope, which the pipe does not."
+  ]
+ },
+ "review:SHELL": {
+  "verdict": "fixed-issues",
+  "issues": [
+   "Z01-23 was reported fixed but was not. The brand link measured 42px at 1440 and 38px at 390, against 36px and 32px on the legacy site. The `block` class added to lodb-logo loses to its host's `inline-block` (Tailwind emits .inline-block after .block), so the logo still sat on a line box. Fixed in c030311e: the wrapping span.brand-logo becomes a flex container, and a new E2E guard in specs/public/layout.spec.ts ('sizes the brand link to its emblem') checks it. Re-measured at 36px and 32px, identical to the legacy site.",
+   "Z11-01 had an edge bug. injectBareChrome worked out the first bare state by splitting Location.path() on '/', so the query stayed in the segment. Opening /admin?range=7 (the admin guard also adds ?returnUrl=) rendered the public header until the admin chunk was recognized. Fixed in 050fe6b2: the router now parses the address (router.parseUrl, then the first PRIMARY_OUTLET segment). New shell.spec case, which fails on the old code and passes on the new.",
+   "Z01-M03 / Z12-08: the new contextSwitcher.saved key existed only in en and fr. This would have made the context-switcher scope, complete in all 21 locales before this branch, incomplete in 19 of them. Fixed in 64eca4ee: translated in the 19 other catalogues. Verified live: de 'Einstellungen gespeichert', ar 'تم حفظ التفضيلات'. `npm run i18n:report` now matches the committed report, apart from line endings.",
+   "Conventions: resolve-shared-build.ts had a 121-character docblock line (fixed in 33cc63db). A test title in context-switcher.spec.ts was 104 characters long (fixed in ac899c88). The long Tailwind class strings in header.html and verify-email-banner.ts follow the existing project practice (Prettier cannot wrap them), so they were left as they are.",
+   "Commit grouping, not rewritten: b065dc7e 'fix(front/context-switcher): nommer le patch et les langues comme avant' also adds core/layout/nav/nav-context.spec.ts. That file tests the NavContext/TransferState handover introduced in b7b616b5 'fix(front/core): garder patch et variante dans les liens du chrome'. The tests should have gone into the commit of the code they test. All 22 subjects are otherwise valid: 72 characters or fewer, infinitive, no accents, scopes from the map, and no Co-Authored-By or Generated-with line.",
+   "Uncommitted json-ld snapshots: this is a CRLF/environment artifact, not a change made by this branch. With CR bytes removed, both files are byte-identical to HEAD. Vitest rewrites them with LF over the CRLF checkout, and did so again during my full run. I restored them each time, and they are not committed."
+  ],
+  "commits_added": [
+   "050fe6b2 fix(front/core): cacher le chrome de l'admin ouverte avec une query",
+   "c030311e fix(front/core): caler le lien de la marque sur la hauteur du logo",
+   "64eca4ee fix(i18n): traduire la confirmation du selecteur dans les 21 langues",
+   "33cc63db style(front/builds): couper a 100 colonnes la doc du partage",
+   "ac899c88 style(front/context-switcher): raccourcir un titre de test trop long"
+  ],
+  "residual": [
+   "Z01-20 / Z12-05, vi only: on a prerendered page, before /api/meta answers, the placeholder 'Bản cập nhật · VI' makes the chip 171px wide. It drops to 135px once the version arrives, so the header shifts by 36px. The 7.7ch reservation only fits Patch-length words; en, fr and ar measured no shift. Fixing it means changing the vi wording or clipping the placeholder, which is an i18n decision.",
+   "Z12-M02 (the cookie policy row for lod_prefs) is still not fixed. It lives outside SHELL's paths and is now more out of date: the cookie also carries loc=, which nginx reads to open /. This is a follow-up for EDITORIAL.",
+   "Integration: rebuild lodb-next-web-ssr (the Dockerfile changelog link) and lodb-next-nginx (the / redirect to the remembered locale). I checked the link logic in a small throwaway alpine container, but I rebuilt neither image. Then re-run tools/next/lighthouse: the font preloads, the progress bar, and the initial bundle growing from 654.8 to 666.6 kB (warning only) change the first paint.",
+   "Merge overlaps with other packages: resolve-shared-build.ts (I18N swaps injectLocaleActivation for injectLocaleSwitch; the hunks are nearby but do not overlap), and tokens.css and dialog.css (DS). DS adds a --color-good green, and SHELL adds --color-success: two greens to reconcile at integration.",
+   "Not verified live: Z01-16 (verify-email banner) and Z01-11 (profile link for a member). Both need a signed-in account, and creating one would write to the integration database. They are covered by code review and unit specs only. Z01-17 (viewport-fit=cover) was not checked on a real Android device."
+  ],
+  "checks": "Memory (your concern): every heavy command went through heavy.sh. The full unit suite ran with my own two-worker Vitest config (review/SHELL/vitest-2.config.mjs), one below the shared three-worker cap. Playwright ran with --workers=1 and one browser at a time. I kept a single preview on :4320 and stopped it at the end. No node or Playwright process, and no semaphore lock, is left behind. I could not measure peak RAM: peak-mem.ps1 reported 0.03 GB because it loses the process tree under Git Bash.\n\nBuild and tests: build:web passed twice (168 prerendered routes, initial bundle 666.59 kB, a warning that predates this branch). Typecheck passed, ng lint reported no errors, and the lint rule tests passed 9/9. Prettier --check --end-of-line auto passed on every changed front file, and on the E2E spec with the web Prettier config. The full unit suite passed: 238 files, 2080 tests. E2E against the preview (specs/public/layout, specs/public/navigation, specs/context-switcher): 47/47 passed.\n\nChecked live against the legacy site (:8080), or by curl on the SSR output:\n- Blockers:\n  - Z11-01: /admin shows no header, footer or bottom bar, and no bottom padding.\n  - Z08-01: the published link logic works in a throwaway container. The local build ships the manifest, and the chip and 'Version: 2.2.1' render.\n- Majors:\n  - Z01-01: chip v2.2.1 and footer version.\n  - Z01-02: 'Account' at 122px, and 56px on phones, as on the legacy site.\n  - Z01-03, Z12-03, Z01-04: header, footer and bottom-bar links keep /14.1.1/ and ?lang= (including /about?version=); Encyclopedia is gold-bright and the tab carries aria-current on /en/14.1.1/champions/Ahri at 1440 and 390, same as the legacy site.\n  - Z01-05: bottom bar in 10 locales at 320, 360 and 390, with no overflow and no clipped label.\n  - Z01-06, Z12-04, Z01-07, Z01-M01: header in 6 locales (en, fr, de, hu, vi, ar), 13 widths from 320 to 1440; 0 cases with crushing, overlap, overflow or horizontal scroll.\n  - Z11-04: /admin stays Hextech (#010a13) with a Noxus cookie, and the site returns to Noxus afterwards.\n  - Z12-M01: on /b/{token}, choosing French goes to ?lang=fr_FR, with html lang=fr, French chrome and the French toast.\n- Minors and polish:\n  - Z01-13 / Z02-03: the real switcher toast in en, ar and de, compared with the legacy flash; RTL mirrored; gone after 5 s.\n  - Z01-14: progress bar shows at 800ms and is gone at the end.\n  - Z01-24: theme dialog 211px, identical to the legacy site; the filter sheet close button is not clipped.\n  - Z01-18 / Z02-12: the three default fonts, plus archivo under Noxus, are loaded through the preloads, with no preload warning.\n  - Z12-06 / Z12-07: the 28 language labels and their order are identical to the legacy site, and versions are bare numbers.\n  - Z01-10, Z01-21, Z01-22: sitemap link, mailto link without a target, and en-us link.\n- Console: no errors on 6 pages at 2 widths, apart from the expected 404 for an unknown share token.\n\nWorktree F:/Git/lodb-parite/shell is clean. Nothing was pushed, and neither the legacy sources nor any generated artifact was touched."
+ },
+ "review:DS": {
+  "verdict": "fixed-issues",
+  "issues": [
+   "a11y: the new hx-btn-danger tone (Z11-14) put legacy red #dc3d3d text on its own 8% red wash. Measured contrast is 3.97-4.34:1, and 3.6-4.0:1 on hover. Small text needs 4.5:1, and tokens.css already says small red text must use danger-light. Fixed in e03eb36e: the text is now danger-light (5.3-6.3:1). Border, wash and glow keep the legacy red. Trade-off: the text is slightly paler than the legacy admin's.",
+   "Convention: the reflowed comment in src/LoDb.Web/src/app/ui/overlays/dialog-config.ts:8 was 116 characters, over the 100 limit. Fixed in 1e892528.",
+   "Missing tests: the new EditorialFrame 'ambient' opt-in (backdrop on the about pages, never on legal) had no spec. Fixed in fbee90a5 (editorial-frame.spec.ts).",
+   "Missing regression test: nothing guarded the build-order and theme-reach fixes (Z02-01, Z02-02, Z02-04, Z04-M01). They are only visible in the built CSS, so jsdom unit tests cannot see them, and Z04-M01 asked for such a check. Fixed in 174e8f4a with specs/public/identities.spec.ts (@readonly): the Noxus hoist equals --color-hex-deep, the Zaun console is rounded and its marker round, and a skeleton's background-size is 200% 100%. It passes 3/3 on the fixed build and fails 3/3 on the unfixed integration stack (:18080).",
+   "Commit scope (minor, history not rewritten): 0a76a47c 'feat(front/ui): poser le fond d'ambiance sur les pages qui l'avaient' changes 7 feature folders (account, api-portal, builds, catalogue, developers, editorial) under the front/ui scope, where only a comment changed in ui/. The scope map has no rule for multi-feature commits. All 7 original subjects are 66-71 characters, French, infinitive, no accents, with no attribution lines."
+  ],
+  "commits_added": [
+   "e03eb36e fix(front/ui): rendre lisible le texte du bouton danger",
+   "1e892528 style(front/ui): replier le commentaire de la configuration de dialogue",
+   "fbee90a5 test(front/editorial): verifier le fond d'ambiance du cadre editorial",
+   "174e8f4a test(e2e): verifier que les identites atteignent les surfaces partagees"
+  ],
+  "residual": [
+   "Z11-10 and Z11-14 are partial by design. The good/bad/series/track tokens and the danger/small button primitives exist, but mapping them into badge.ts, kpi.ts, the chart palettes, ConfirmButton confirmTone and the admin call sites is left to ADMIN (wave 2).",
+   "Out of DS scope: .hx-toast (SHELL, layout/chrome.css) still has the color-mix build-order bug. My reorder scan of the fresh build's CSS flags only that rule, plus two false positives from Tailwind's gradient internals.",
+   "Pre-existing, also on the integration stack (:18080), not caused by this diff: the champion detail section nav prints raw i18n keys (CHAMPIONS.CHAMPION.DETAIL.ABILITIES...). This belongs to I18N/CHAMPION.",
+   "Contact dialog at 1440 is 32px taller than legacy. The width, padding and header offsets match exactly; the extra height comes from the 46px, 16px-type fields that plan section 4 requires, a deliberate divergence.",
+   "The initial-bundle budget warning was already there (limit 500 kB). This branch raises the initial total from 654.8 kB to 660.1 kB, mostly CSS.",
+   "Port 4310 is held by an unrelated Docker container (com.docker.backend/wslrelay, bblr-galerie-web-1), which I must not touch. The preview therefore ran on 4350 (SSR on 4351), and it is stopped now."
+  ],
+  "checks": "Resources: every heavy command went through heavy.sh, one at a time, with Vitest capped at 3 workers (vitest-limited.config.mjs) and Playwright at --workers=2 or 1. One preview (port 4350) and one browser at a time, each closed in a finally block. No background process is left, the worktree is clean, and about 30 GB of RAM was free at the end.\n\nVerification against legacy (:8080), measured on the preview:\n- Checked all the package's blockers and majors plus most of the rest: 27 of 29 findings, all but Z11-10 and Z11-14, which only add primitives.\n- Noxus hoist: 3px rgb(192,32,58) on /champions, home and Ahri #stats/#lore; rgb(232,105,122) on hover.\n- Skeleton and loading image: 200% 100% with hx-sk-sweep.\n- Noxus hx-rule::after: same matrix as legacy.\n- Theme reach in all 4 identities: the filter console (radius, glass, hoist, clip-path) and its markers on /runes, the empty state at 390, the changelog nodes, the changelog h1 and hero frame, the rune/item/summoner hero h1 weight and tracking, the slot labels (weight 400), and the console title.\n- font colours: 'adaptive damage' rgb(72,196,183) on the rune; 'Scorchclaw' rgb(221,46,46) on item 1101.\n- Contact dialog: 544px at x=448 (1440) and 352px (390); padding 28/24px; eyebrow, title and intro offsets match; close in the text colour. In ar the close mirrors to the left.\n- Theme dialog: 736/352px. No focus ring on a keyboard-opened container.\n- Footer gold button: 40px on touch.\n- /about at 390: 'Where the data comes from' is 334x30 on its own line.\n- Developers column: x=272, width 896, padding 48/48.\n- Backdrop: one per page in the SSR on champions, Ahri, about, data, faq, developers and trends; none on legal or changelog, as in legacy.\n- Side-by-side captures at 1440 and 390 of champions, Ahri, about, about/data, faq, developers, trends, changelog and home-light show parity.\n\nFresh checks after my commits:\n- npm run build:web passes; only the existing initial-budget warning remains.\n- typecheck (app and spec) passes. ng lint passes. The 9/9 lint-rule tests pass. prettier --check --end-of-line auto on all changed files passes. The E2E tsc passes.\n- Full unit suite: 235 files, 2045 tests, all pass.\n- E2E, all @readonly specs of public, editorial, catalogue, champions, runes, items, summoners, home, trends, developers, builds-share and profile against the preview: 206 passed, 1 skipped, 1 failed. The failure is outcomes.spec:99 (nginx legacy redirects, absent from the preview); the same test passes on :18080. The axe WCAG 2.1 AA suite and the 320px/RTL layout suite (ar included) pass in the hextech and spirit-blossom themes.\n- Not run: the register, contact and account-creating specs.\n\nHousekeeping: Vitest rewrote two JSON-LD .snap files with LF line endings only; I restored them."
+ },
+ "review:I18N": {
+  "verdict": "fixed-issues",
+  "issues": [
+   "The legacy converter (tools/next/i18n/lib/convert/convert-catalogue.mjs) still turned each legacy X/X_one pair into the CLDR `one` category. The package now ships `=1` for filter.results and filter.show_results (Z12-10), so running `npm run i18n:convert` again would quietly undo that fix: '0 résultat' in fr, '1 results' in the en fallback for ja/ko/th/vi/zh. The fixer listed this only as a followup. I fixed it in 85693a60 and added a test that fails with 'one'.",
+   "No other defect found. The claims are verified: Z05-01/Z12-01 chip labels, Z12-02 raw SSR keys and the storage ban, Z12-10 counts, the EXTRA hydration flash and the fr typo. The seven fixer commits follow the rules: French infinitive subjects, no accents, 59 to 72 characters, scopes from the map, and no attribution line."
+  ],
+  "commits_added": [
+   "85693a60 fix(tools): convertir le singulier de l'ancien site en selecteur =1"
+  ],
+  "residual": [
+   "Z12-12 is partial by design. It is a checklist of legacy strings, and each one belongs to its owning package: LISTS, SHELL, HOME, ACCOUNT, BUILDS and ENTITYDET. The fixer's followups map every key to its element and to a finding id.",
+   "Not done, as the fixer noted: the optional server-side catalogue reader (Z12-02 part 2), which would read catalogues from disk instead of fetching them over HTTP from the SSR server itself. Renders are now correct without it, and a failed load now sends 'private, no-store'. It only reduces load and the heap-pressure failure mode (Z01/infra).",
+   "Existing problem, outside this package: tools/next/i18n/test/convert/run-conversion.test.mjs cannot run on Windows. `new URL(..).pathname` gives 'F:\\\\F:\\\\…', and file paths are compared with '/' separators, so its 9 tests are cancelled locally. CI runs on Linux and does not run these tool tests at all. I ran my new case locally through a temporary copy of the test that uses fileURLToPath, then deleted the copy.",
+   "Warning that was already there: the initial bundle is 655.14 kB against a 500 kB budget (654.49 kB for the shell). The fixer measured 654.79 kB before the package."
+  ],
+  "checks": "Worktree F:/Git/lodb-parite/i18n (wt/parite-i18n) is clean. Nothing is running: preview stopped, memory sampler finished, no semaphore slot held. Every heavy command went through heavy.sh, one at a time. The E2E run used 1 worker.\n\nMemory (the user's concern): the full `ng test` suite, capped at 3 Vitest workers, peaked at 1.94 GB for its whole process tree (sampled every second; 24 processes counted at the peak, which I did not identify). The machine had 29 to 31 GB free throughout.\n\n- **Fresh build:** `npm run build:web` ok, 168 routes prerendered. `npm run build:shell` ok; I deleted its output afterwards.\n- **Chip bar, against the legacy** (legacy locale set through its setup-submit form, en/fr/ar/en-light, 1440 and 390): same texts, same chip widths and same scroll width. For example fr 132.6/72.4/68.1/98.9/189.1 px, and 631 px of scroll at 390. ar is RTL and shows 'Tips' in English in both stacks.\n- **Raw-key scan of the SSR HTML:** 0 raw keys on 231 pages (21 locales x 11 pages), then on 336 more (21 x 16), checking text, placeholder, aria-label, title, alt and content.\n- **Cache-Control across the scan:** public on every page, except /account, which is private by design.\n- **Storage ban:** with dist i18n/summoners/fr.json removed, /fr/summoners falls back to en and sends 'private, no-store'. The next render sends public again, so nothing leaks between requests. Restored afterwards.\n- **Hydrated DOM:** 0 raw keys over 56 states (4 lists plus champion detail, en/fr/ar/ja, 1440 and 390, filter sheet opened on phones). On fr/ar/ja/de the header and footer only change the version number during hydration: no English flash.\n- **In-app locale switch** through the switcher (fr->de, en->ar, ja->fr): texts, lang, dir and the translateSignal chips follow, with no full reload. The skin viewer and chroma strip labels are still translated.\n- **Counts:** new en/fr/ja/zh-hans give 0/1/22 → '0 results', '1 result', '22 results' ('0 résultats' in fr). Legacy 'Voir 0 résultats', 'Voir 1 résultat', and 'Show 1 result' in ja. The fr home reads 'Voir tous les …'.\n- **Mutation checks:** putting back the page scope provider, the list's `providers` scope, or the old activate-then-load order makes exactly the 3 new specs fail. Putting back 'one' in the converter makes the new tools test fail.\n- **Unit tests:** targeted specs 12 files and 110 tests pass. Full suite 233 files and 2053 tests pass. The two json-ld .snap files the run rewrites were restored.\n- **Static checks:** `ng lint` ok, `npm run typecheck` ok. Prettier (web config, --end-of-line auto) passes on every changed file, the E2E spec and the tools files included.\n- **E2E against the preview** (specs/champions, summoners, catalogue, context-switcher, home): 26 of 26 pass. Not run: builds-share, which creates accounts in the integration database, nor register or contact.\n- **Tools:** `node --test tools/next/i18n` gives 19 pass and 0 fail; the 9 cancelled are the Windows path problem above. The converter now produces the same filter.results and filter.show_results as the shipped en and fr catalogues."
+ }
+}

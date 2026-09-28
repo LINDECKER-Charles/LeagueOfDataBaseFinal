@@ -1,0 +1,1537 @@
+{
+ "B": {
+  "previous": [
+   {
+    "id": "Z03-01",
+    "status": "fixed",
+    "note": "Hero counter, portal chip and section count read 5 runes on 16.19.1 and 0 on 7.1.1, as the legacy does (captures home-1440, home-v7-1440)."
+   },
+   {
+    "id": "Z03-02",
+    "status": "fixed",
+    "note": "The loading-screen art is 4:5 with object-top. The Aatrox card is 308x449 at 1440, 229x351 at 768 and 128x224 at 320 on both stacks (grids.mjs)."
+   },
+   {
+    "id": "Z03-03",
+    "status": "fixed",
+    "note": "Portrait grid columns are 2/2/3/3/3/4 at 320/639/640/768/1023/1024 on both stacks. Tiles are 1/2/4."
+   },
+   {
+    "id": "Z03-04",
+    "status": "fixed",
+    "note": "The LoL Classic badge shows on SummonerBarrier_Jade and SummonerBattleCry_Jade, at 1440 and 390."
+   },
+   {
+    "id": "Z03-05",
+    "status": "fixed",
+    "note": "The four portals show the LoL logo glyph, same as the legacy at 1440, 390 and in the noxus/zaun themes."
+   },
+   {
+    "id": "Z03-06",
+    "status": "fixed",
+    "note": "Home tiles are 306x84 on both stacks, same padding and same 56px box."
+   },
+   {
+    "id": "Z03-07",
+    "status": "fixed",
+    "note": "Was obsolete, now covered by the shared EntityCard. Tile h3 is rgb(240,230,210) Beaufort 15px on both stacks."
+   },
+   {
+    "id": "Z03-08",
+    "status": "fixed",
+    "note": "Was obsolete, now covered by EntityCard. Caption is rgb(160,155,140) mono on both stacks."
+   },
+   {
+    "id": "Z03-10",
+    "status": "fixed",
+    "note": "Rune path marks sit in a round inset ring at 72%, same as the legacy (home captures, all themes)."
+   },
+   {
+    "id": "Z03-11",
+    "status": "fixed",
+    "note": "Portal count chip is cyan on an abyssal border, same as the legacy."
+   },
+   {
+    "id": "Z03-13",
+    "status": "fixed",
+    "note": "Cold version /en/?version=12.4.1: at t0 no preview tile image is in the DOM, only the 4 champion arts. All 16 images are in place by t=8s and no console error is logged."
+   },
+   {
+    "id": "Z03-14",
+    "status": "fixed",
+    "note": "Portrait and tile names are h3 with a title attribute. Styles are identical."
+   },
+   {
+    "id": "Z03-15",
+    "status": "fixed",
+    "note": "Noxus: the crimson inline-start hoist bar is present on portals and preview cards (sbs/theme-noxus-home.png)."
+   },
+   {
+    "id": "Z03-16",
+    "status": "fixed",
+    "note": "The /en/?version=7.1.1 runes preview is the framed empty state with Back/Home. The legacy shows a raw key there, the new site shows the translated line (improvement)."
+   },
+   {
+    "id": "Z03-17",
+    "status": "fixed",
+    "note": "24px gutter at 390 and 320. The home is pixel-identical in height at 320/390/768/1024/1440."
+   },
+   {
+    "id": "Z03-18",
+    "status": "fixed",
+    "note": "The initials underlay is present. The versioned icon overlay is left out on purpose (amended verdict: on the legacy it shows only as a clipped sliver), so the legacy sliver is still absent."
+   },
+   {
+    "id": "Z04-01",
+    "status": "fixed",
+    "note": "Rail on the right: console x=1116 at 1440 on both stacks. It mirrors in ar."
+   },
+   {
+    "id": "Z04-02",
+    "status": "fixed",
+    "note": "Copy link foot matches: 67px foot, 42px ghost button. Click gives 'Link copied' and the clipboard holds the list URL (fold.mjs)."
+   },
+   {
+    "id": "Z04-03",
+    "status": "fixed",
+    "note": "Portrait champion card: 197x426 at 1440, 126x386 at 320 on both stacks."
+   },
+   {
+    "id": "Z04-04",
+    "status": "fixed",
+    "note": "Two-line blurb present. innerText of the lists is identical to the legacy at 1440 and 390."
+   },
+   {
+    "id": "Z04-05",
+    "status": "fixed",
+    "note": "The whole card is the link, with the 'See details' CTA. Hover turns the CTA cyan and zooms the art (st-champ-card-hover)."
+   },
+   {
+    "id": "Z04-07",
+    "status": "fixed",
+    "note": "Column counts and 20px gap are identical at 320, 639, 640, 768, 1023, 1024, 1279, 1280 and 1440 on the four lists."
+   },
+   {
+    "id": "Z04-08",
+    "status": "fixed",
+    "note": "'Possible evolutions' accordion is present. With it open, the Boots card is pixel-identical (st-item-card-evo-desc)."
+   },
+   {
+    "id": "Z04-09",
+    "status": "fixed",
+    "note": "Emberknife 1035 has its Description row."
+   },
+   {
+    "id": "Z04-10",
+    "status": "fixed",
+    "note": "Facet group titles are gold Beaufort with a diamond marker. The console text is identical on every list."
+   },
+   {
+    "id": "Z04-11",
+    "status": "fixed",
+    "note": "Chip wrapping is identical in the rail and in the sheet."
+   },
+   {
+    "id": "Z04-12",
+    "status": "fixed",
+    "note": "An engaged group lights its cyan marker and shows the square badge (st-sheet-engaged)."
+   },
+   {
+    "id": "Z04-13",
+    "status": "fixed",
+    "note": "Chip on then off keeps Profile open on both stacks, and folding is remembered (fold.mjs)."
+   },
+   {
+    "id": "Z04-14",
+    "status": "fixed",
+    "note": "Chips cut with a 6px bevel, identical in size (127.7x27.6)."
+   },
+   {
+    "id": "Z04-15",
+    "status": "fixed",
+    "note": "Search focus box-shadow and 8px clip-path are identical. Field height is 44px against 38.8px because of the deliberate 16px font."
+   },
+   {
+    "id": "Z04-16",
+    "status": "fixed",
+    "note": "Placeholder 'Search…' in the rail and in the mobile bar."
+   },
+   {
+    "id": "Z04-17",
+    "status": "fixed",
+    "note": "Results counter is split into cyan number and muted word, identical."
+   },
+   {
+    "id": "Z04-18",
+    "status": "fixed",
+    "note": "Pager nav is 32x32, gold on void with a gold-deep border, identical."
+   },
+   {
+    "id": "Z04-19",
+    "status": "fixed",
+    "note": "Count plate is boxed and wraps under the title at 390."
+   },
+   {
+    "id": "Z04-20",
+    "status": "fixed",
+    "note": "Champions list has its backdrop."
+   },
+   {
+    "id": "Z04-21",
+    "status": "fixed",
+    "note": "24px gutter at 390 and 320."
+   },
+   {
+    "id": "Z04-22",
+    "status": "fixed",
+    "note": "/en/7.20.1/runes shows the framed 'No results found' with Back/Home, same as the legacy (1440, 390, themes). The 24px path-nav gap is still missing: see B2-07."
+   },
+   {
+    "id": "Z04-23",
+    "status": "fixed",
+    "note": "Accordion rows are identical (item card crops)."
+   },
+   {
+    "id": "Z04-25",
+    "status": "fixed",
+    "note": "Sheet at 390: handle, one head row, gauge, only the body scrolls, and the footer matches (st-sheet, st-sheet-engaged). Escape and backdrop click close it on both stacks."
+   },
+   {
+    "id": "Z04-26",
+    "status": "fixed",
+    "note": "'Clear' is a bordered button and the footer is transparent, identical."
+   },
+   {
+    "id": "Z04-27",
+    "status": "fixed",
+    "note": "Console box-shadow and head band are identical (console-probe.mjs)."
+   },
+   {
+    "id": "Z04-28",
+    "status": "fixed",
+    "note": "Gauge fill glow is identical (0 0 8px hex 40%)."
+   },
+   {
+    "id": "Z04-29",
+    "status": "fixed",
+    "note": "Rune card icons are square."
+   },
+   {
+    "id": "Z04-30",
+    "status": "fixed",
+    "note": "On /en/14.1.1/champions, Encyclopedia (header) and Champions (bottom bar) are lit."
+   },
+   {
+    "id": "Z04-M01",
+    "status": "fixed",
+    "note": "Zaun, noxus and spirit-blossom restyle the console, markers and filtered empty panel as the legacy does (sbs/theme-*)."
+   },
+   {
+    "id": "Z04-M02",
+    "status": "still-open",
+    "note": "Fixed at desktop (25.6px), but on a coarse pointer (390, touch) the active chips are 40px tall against 25.6px on the legacy. See B2-05."
+   },
+   {
+    "id": "Z04-M03",
+    "status": "fixed",
+    "note": "The filtered empty panel itself is identical (342x254 at 390, 12px gap, 6.4px above the CTA). Its position is 16px higher, a separate residual: see B2-02."
+   },
+   {
+    "id": "Z03-09",
+    "status": "not-checked",
+    "note": "Hover zoom not measured reliably (probe hit the wrong element). Classes are shared through EntityCard."
+   },
+   {
+    "id": "Z03-12",
+    "status": "not-checked",
+    "note": "Probe selector missed the arrow. Not re-measured."
+   },
+   {
+    "id": "Z03-M01",
+    "status": "not-checked",
+    "note": "The ar home rule is present. Fade direction not measured at capture scale."
+   },
+   {
+    "id": "Z04-24",
+    "status": "not-checked",
+    "note": "Card icon hover zoom not re-measured."
+   }
+  ],
+  "notes": "Scope covered: home, home-fr, home-light, champions, items, runes, summoners, champions-v14, /en/items?q=zzzzqq, /en/runes?path=Domination, /ar/runes, /en/7.20.1/runes. Also /en/?version=7.1.1, /en/?version=14.1.1, /ar/, /ar/champions, /ja/items and /de/summoners. Widths 1440, 1024, 768, 390 and 320, plus grid probes at 639/640/1023/1279/1280. Themes noxus, zaun and spirit-blossom. There is no light theme on either stack (prefers-color-scheme light renders dark on both). Hover, focus, accordions, the mobile sheet (open, engaged, Escape, backdrop), fold memory, copy link and client-side navigation were exercised. The visible text (innerText) of home and the four lists is identical to the legacy in en at 1440 and 390. The fr, ar and ja differences are all deliberate localization. No console error or pageerror, and no broken internal link (HTTP≠200), on 18 group URLs (links.mjs). Captures: C:/Users/charl/AppData/Local/Temp/claude/F--Git-LeagueOfDataBaseFinal/8504f518-b0ba-4f9d-be95-f2bbdcc96c3e/scratchpad/cmp/audit2/B/{cap,sbs,st}.\n\nRESIDUAL 1 (items hydration error), not reproduced on the integrated stack: no pageerror or console error on /en/items, /fr/items or filtered/paged/size=all URLs at 1280x720/1280x800/1440/390. The flows of items.spec (card click lands on /en/items/1001-boots), navigation.spec (search + chip + copy URL reopens with 3 cards and 2 active chips) and catalogue/filters.spec (search+reload, chip+clear, next page, size=all keeps lang=en_GB, '/' shortcut, sheet) all behave (flows.mjs). Root cause of the error the reviewers saw (HOME review, pre-integration): catalogue-list.html rendered the grid as <ul>/<li> (git show db5ec031^1, l.54-63). Riot's bare <li> inside lodb-rich-text (RICH_TEXT_TAGS allows 'li') in the item Description accordion (Emberknife 1035 is on page 1) made the HTML parser close the grid <li> early and reparent the rest of the card, so hydration's node lookup returned null ('Cannot set properties of null (setting __ngContext__)') and the click stayed on /en/items. It was fixed by LISTS commit 241171be (div role=list/listitem, catalogue-list.html:62-78), integrated in db5ec031. Keep the SSR spec. Any future list markup must not put lodb-rich-text inside li or p.\n\nRESIDUAL 5 (page weight), measured; not a regression against the legacy. HTML raw/gzip: /en/champions 255 KB/61 KB against the legacy /champions 658 KB/90 KB; /en/items 462 KB/85 KB against the legacy /objects 4.64 MB/391 KB. The legacy renders every card, the new stack renders 12 plus transfer state. Total transfer, cold load with browser cache on: champions 1013 KB (1440) and 1074 KB (390) against 2583/1264 KB; items 646/634 against 724/654; runes 509 against 801/433; summoners 432 against 346/306; home 609 against 482. The extra on home, runes and summoners is the Angular JS (~200 KB against ~80 KB), not portraits or descriptions. Composition of the new /en/items SSR: main 231 KB (12 cards x ~17.5 KB, driven by the evolution chips, each a full lodb-catalogue-image picture/source/img, and 16 empty comment anchors per lodb-icon), ng-state 120 KB (the page-1 list 42 KB, plus i18n/en 25 KB, i18n/about 9.6 KB, i18n/api 6 KB and changelog manifest 8.6 KB on every page, which are shell scopes: group A), inline critical CSS 76 KB; after hydration the full list JSON adds 188 KB. On the new stack each hotlinked portrait/icon is requested twice (parser, then again after hydration); the second is a memory-cache hit (0 bytes), so it is harmless.\n\nDeliberate divergences seen and accepted: localized chrome (fr/ar/ja/de), RTL mirroring on /ar, the 16px search font (console 5px taller), the translated empty-runes line instead of the legacy raw key 'homepage.runes.no_data', the champion portrait version-icon overlay left out (Z03-18/Z04-03 amended verdict), and item 7050 'Gangplank Placeholder' dropped from the ja/ar item lists (legacy 866 against new 865; the known common defect G1 is now filtered on the new side). Sheet focus lands on the CDK dialog container instead of the first group title; both are keyboard-usable.\n\nOutside group B (shell, for group A): at 1024 the legacy header shows the v2.2.1 badge next to the logo and the new one does not; at 768 the legacy hides HOME and shows 'version · EN' in the switcher, while the new shows HOME and 'EN' only (sbs/champions-1024.png, sbs/items-768.png). Footers in noxus/spirit-blossom were checked at full scale and are identical. No leftover process of mine (the running pagerwide.mjs browser belongs to another agent)."
+ },
+ "C": {
+  "previous": [
+   {
+    "id": "Z05-01",
+    "status": "fixed",
+    "note": "Chips read ABILITIES · SKINS · LORE · TIPS · BASE STATISTICS (en), localized in fr/ar; the champion page is pixel-identical to the legacy at 1440, 1024 and 768 apart from the drop cap (C2-11) and the load badge."
+   },
+   {
+    "id": "Z05-02",
+    "status": "fixed",
+    "note": "Backdrop and weave are present. The champion page is pixel-identical at 1440 in hextech, noxus, zaun and spirit-blossom (the only differing bands are the drop cap and the badge)."
+   },
+   {
+    "id": "Z05-03",
+    "status": "fixed",
+    "note": "Stat icons are present, and the stat board is pixel-identical at 1440 and 390."
+   },
+   {
+    "id": "Z05-04",
+    "status": "fixed",
+    "note": "Lightbox splash is 1152x680 at 1440 and 367x216 at 390, the same as the legacy; the close button, arrows and caption match (inter/P-skin-open-*.png). At 320 the pane sits at x=10 instead of 16 (a divergence the fix recorded on purpose)."
+   },
+   {
+    "id": "Z05-05",
+    "status": "fixed",
+    "note": "Chroma card matches at 1440 and 390 (inter/P-chroma-open-*.png). At 844x390 the new card is 358px tall and scrollable, where the legacy one overflows the viewport by 23px; this is an improvement."
+   },
+   {
+    "id": "Z05-06",
+    "status": "fixed",
+    "note": "Lore frame border-left is 3px rgb(192,32,58) on both stacks under Noxus."
+   },
+   {
+    "id": "Z05-07",
+    "status": "fixed",
+    "note": "The hovered skin tile is pixel-identical (288x163)."
+   },
+   {
+    "id": "Z05-08",
+    "status": "fixed",
+    "note": "At 390 the compact badge paints above the bottom nav, as on the legacy."
+   },
+   {
+    "id": "Z05-09",
+    "status": "fixed",
+    "note": "The SSR HTML of /en/champions/Ahri has rel=prev (Aatrox) and rel=next (Akali)."
+   },
+   {
+    "id": "Z05-10",
+    "status": "fixed",
+    "note": "The pager band is pixel-identical at 1440."
+   },
+   {
+    "id": "Z05-11",
+    "status": "fixed",
+    "note": "Cells are identical at 390 and 360 when the names fit. For names that do not fit, see the residual C2-02."
+   },
+   {
+    "id": "Z05-12",
+    "status": "regressed",
+    "note": "The gap and the mirrored order are fixed, but the &ngsp; split turned '+104' into its own run, so ar now renders '104+', '2.2%+'. See C2-03."
+   },
+   {
+    "id": "Z05-13",
+    "status": "fixed",
+    "note": "The champion eyebrow is pixel-identical."
+   },
+   {
+    "id": "Z05-14",
+    "status": "fixed",
+    "note": "This is the accepted divergence H7. Chip clicks land at the same offsets as the legacy (skins 52, lore 88, tips 88, stats 68/88) at 1440 and 390."
+   },
+   {
+    "id": "Z05-15",
+    "status": "fixed",
+    "note": "progress fill box-shadow is 0 0 10px hex/55% and .sound transitions opacity, border-color and box-shadow, on both stacks."
+   },
+   {
+    "id": "Z05-16",
+    "status": "fixed",
+    "note": "Badge titles are the bare counts '1', '1', '2' on both stacks."
+   },
+   {
+    "id": "Z05-M01",
+    "status": "fixed",
+    "note": "The load-time badge renders on the champion, item, summoner and rune pages."
+   },
+   {
+    "id": "Z05-M02",
+    "status": "fixed",
+    "note": "Strip scrollLeft goes from 608 to 0 after pager next (Ahri to Akali)."
+   },
+   {
+    "id": "Z06-01",
+    "status": "fixed",
+    "note": "Pager spacing is pixel-identical on the item, summoner and rune pages at 1440, 1024 and 768."
+   },
+   {
+    "id": "Z06-02",
+    "status": "fixed",
+    "note": "en is identical to the legacy (plates 89px, PURCHASE on one line). The localized labels still cross the plate border in pl, ro, id and tr: residual C2-01."
+   },
+   {
+    "id": "Z06-03",
+    "status": "fixed",
+    "note": "The coin glyph is present. The price fill still differs (gradient against the legacy's solid gold): C2-10."
+   },
+   {
+    "id": "Z06-04",
+    "status": "fixed",
+    "note": "Evolution gold is shown; item pages are pixel-identical at 1440."
+   },
+   {
+    "id": "Z06-05",
+    "status": "fixed",
+    "note": "Stat icons are present; the item aside is pixel-identical in hextech."
+   },
+   {
+    "id": "Z06-06",
+    "status": "fixed",
+    "note": "The SSR pager of 771004 shows 'Boots of Speed [LoL Classic]' and 'Rejuvenation Bead [LoL Classic]'."
+   },
+   {
+    "id": "Z06-07",
+    "status": "fixed",
+    "note": "771004 and SummonerFlash_Jade are pixel-identical at 1440, 1024, 768 and 390."
+   },
+   {
+    "id": "Z06-08",
+    "status": "fixed",
+    "note": "The badge is present on the item and summoner pages (only the timing digits differ)."
+   },
+   {
+    "id": "Z06-09",
+    "status": "fixed",
+    "note": "The TIER 2 chip is shown on 3031 (fr: Palier/POZIOM in other locales)."
+   },
+   {
+    "id": "Z06-10",
+    "status": "fixed",
+    "note": "The ARAM chip is back on one row in en."
+   },
+   {
+    "id": "Z06-11",
+    "status": "fixed",
+    "note": "On item 1101, 'Scorchclaw' is rgb(221,46,46) on both stacks."
+   },
+   {
+    "id": "Z06-12",
+    "status": "fixed",
+    "note": "On hover, the recipe node image scale is 1.1 on both stacks."
+   },
+   {
+    "id": "Z06-13",
+    "status": "fixed",
+    "note": "Keyboard focus on a recipe node gives outline none and box-shadow 0 0 0 2px gold/40."
+   },
+   {
+    "id": "Z06-14",
+    "status": "fixed",
+    "note": "The SSR HTML of the item pages has rel=prev and rel=next."
+   },
+   {
+    "id": "Z06-15",
+    "status": "fixed",
+    "note": "Flash eyebrow: box x588 w263, pip x741 on both stacks."
+   },
+   {
+    "id": "Z06-16",
+    "status": "fixed",
+    "note": "The aside is pixel-identical in hextech."
+   },
+   {
+    "id": "Z06-17",
+    "status": "fixed",
+    "note": "The hero summary is pixel-identical."
+   },
+   {
+    "id": "Z06-18",
+    "status": "fixed",
+    "note": "lodbReveal is on the aside host; after scrolling the aside matches the legacy."
+   },
+   {
+    "id": "Z06-19",
+    "status": "fixed",
+    "note": "/ar/items/3031 reads +75 and +25 %, and the recipe gold reads correctly (no bidi flip found)."
+   },
+   {
+    "id": "Z06-20",
+    "status": "not-checked",
+    "note": "No current data has an absent item or summoner image; this is covered by unit tests only."
+   },
+   {
+    "id": "Z06-M01",
+    "status": "fixed",
+    "note": "LODB-ITEM-ASIDE has role=complementary."
+   },
+   {
+    "id": "Z07-01",
+    "status": "fixed",
+    "note": "The rune list rail is at the inline end (list/runes-list-1440 composite)."
+   },
+   {
+    "id": "Z07-02",
+    "status": "fixed",
+    "note": "4 columns at 1440 and 3 at 1024, the same as the legacy."
+   },
+   {
+    "id": "Z07-03",
+    "status": "fixed",
+    "note": "Rune card icons are square framed boxes."
+   },
+   {
+    "id": "Z07-04",
+    "status": "fixed",
+    "note": "On hover, the rune card icon scale is 1.1 on both stacks."
+   },
+   {
+    "id": "Z07-05",
+    "status": "fixed",
+    "note": "The placeholder reads 'Search…'."
+   },
+   {
+    "id": "Z07-06",
+    "status": "fixed",
+    "note": "The count plate is 100x38 at (24,192) at 390 on both stacks."
+   },
+   {
+    "id": "Z07-07",
+    "status": "fixed",
+    "note": "At 390 the first card starts at x=24 on both stacks."
+   },
+   {
+    "id": "Z07-08",
+    "status": "fixed",
+    "note": "The COPY LINK footer is present in the console."
+   },
+   {
+    "id": "Z07-09",
+    "status": "fixed",
+    "note": "The results count is a teal mono figure with muted words."
+   },
+   {
+    "id": "Z07-10",
+    "status": "fixed",
+    "note": "The facet header is a gold row with a diamond marker in hextech, noxus and zaun."
+   },
+   {
+    "id": "Z07-11",
+    "status": "not-checked",
+    "note": "The console shadow was not measured; it is not visible on the dark captures."
+   },
+   {
+    "id": "Z07-12",
+    "status": "not-checked",
+    "note": "The mobile filter sheet belongs to the list zone (Z04-25/26)."
+   },
+   {
+    "id": "Z07-13",
+    "status": "fixed",
+    "note": "/en/7.1.1/runes shows the framed 'No results' state with Back and Home, as the legacy does (list/runes-list-v7 captures). The toolbar and frame sit about 20px higher than on the legacy, which belongs to the list zone."
+   },
+   {
+    "id": "Z07-14",
+    "status": "fixed",
+    "note": "/en/8.1.1/runes path chip reads 'Domination' alone."
+   },
+   {
+    "id": "Z07-15",
+    "status": "fixed",
+    "note": "The rune pager gap is pixel-identical at 1440."
+   },
+   {
+    "id": "Z07-16",
+    "status": "fixed",
+    "note": "The badge is present on the rune pages."
+   },
+   {
+    "id": "Z07-17",
+    "status": "fixed",
+    "note": "'adaptive damage' is teal; the rune pages are pixel-identical apart from the eyebrow."
+   },
+   {
+    "id": "Z07-18",
+    "status": "fixed",
+    "note": "With reduced motion, #rune-SixthSense lands at 88px on both stacks (direct load and click). With motion, the legacy lands at 72 and the new stack at 88, a 16px reveal-offset quirk."
+   },
+   {
+    "id": "Z07-19",
+    "status": "fixed",
+    "note": "8.1.1 Domination is pixel-identical at 1440 apart from the eyebrow."
+   },
+   {
+    "id": "Z07-20",
+    "status": "fixed",
+    "note": "8.1.1 medallions are pixel-identical."
+   },
+   {
+    "id": "Z07-21",
+    "status": "fixed",
+    "note": "The emblem glow is pixel-identical."
+   },
+   {
+    "id": "Z07-22",
+    "status": "fixed",
+    "note": "A 1px vertical residue remains: the version text sits 1px higher at 1440, and at 390 the h1 is 1px higher and the page 1px shorter. This is pixel-level and not reported."
+   },
+   {
+    "id": "Z07-23",
+    "status": "fixed",
+    "note": "At 390 /en/runes/8000-precision measures 136/68/114 on both stacks. The overflow cases are covered by C2-02."
+   },
+   {
+    "id": "Z07-24",
+    "status": "not-checked",
+    "note": "Unreachable with current data: /en/7.1.1/runes/8100 and the legacy /7.1.1/rune/Domination both 302 to the list."
+   },
+   {
+    "id": "Z07-25",
+    "status": "fixed",
+    "note": "The toolbar band is pixel-identical at 1440 (only the console differs, by the 16px search field)."
+   },
+   {
+    "id": "Z07-M01",
+    "status": "fixed",
+    "note": "The console, marker and facet restyle in noxus and zaun. Noxus rune h1 is weight 900 and -2.52px on both stacks."
+   },
+   {
+    "id": "Z07-M02",
+    "status": "fixed",
+    "note": "The slot label span is weight 400 under Noxus and Spirit Blossom on both stacks. The marker orientation still differs: C2-09."
+   },
+   {
+    "id": "Z07-M03",
+    "status": "fixed",
+    "note": "The SSR HTML of /en/runes/8100-domination has rel=next (Inspiration)."
+   },
+   {
+    "id": "Z07-M04",
+    "status": "not-checked",
+    "note": "The active-filter chips belong to the list zone (Z04-M02)."
+   }
+  ],
+  "notes": "Method: I captured full pages with a scroll-through and pixel-diffed them with PIL (threshold 40). Pages: Ahri (en/fr/ar and 14.1.1), Fiddlesticks, Aphelios, items 3031/6672/1035/771004 (plus ar), SummonerFlash and _Jade (plus ar), all five paths plus 8.1.1 Domination and ar, and the rune lists (current, 7.1.1 empty, 8.1.1). Widths: 1440, 1024, 768, 390 and 320. Identities: hextech, noxus, zaun and spirit-blossom (lod_theme cookie). Neither stack has a light scheme (no prefers-color-scheme rule), so dark/light is moot. Results: every page of the group is pixel-identical to the legacy at 1440, 1024 and 768. The only differences are the load-badge digits, the header (group A), the rune eyebrow (1px) and the findings above. I verified all eleven proposed fixes by live CSS or DOM injection, with no edits to the checkout.\n\nInteractions: the skin lightbox and chroma viewer (open, arrow, Escape, focus return), keyboard tab order and focus rings on four detail pages, section-chip landings, pager accessible names, skin-tile, recipe-node and rune-card hover, strip scroll reset, and rune anchor landing all match the legacy. No console errors or HTTP ≥400 on any page. All 88 internal links in the SSR HTML answer 200 ('/' answers 302).\n\nResiduals:\n- Plate labels (C2-01): confirmed for the item aside in pl, ro, id and tr. Not reproduced on summoner plaques, which are one column at 320.\n- Summoner eyebrow 275 vs 263 px: not reproduced. en Flash is box x588 w263 with the pip at x741 on both stacks, and Jade is w370 on both. Other locales differ only by localized chrome, a deliberate divergence.\n- Pager (C2-02): much wider than stated, and fixing it is recommended.\n\nNot reported as gaps: localized chrome, RTL mirroring, the 16px search field, the chroma card staying in the viewport at 844x390, and the compact pager below 360px. Group A should look at the header: the legacy shows a truncated 'L' brand at 390 and a clipped context chip at 320, while the new stack shows neither.\n\nAll scripts and captures are in C:/Users/charl/AppData/Local/Temp/claude/F--Git-LeagueOfDataBaseFinal/8504f518-b0ba-4f9d-be95-f2bbdcc96c3e/scratchpad/cmp/audit2/C/ (shots in full/, th-*/, inter/, plates/, fixcheck/; composites in */sbs/, zooms in */crops/). No browser or background process is left running."
+ },
+ "A": {
+  "previous": [
+   {
+    "id": "Z01-01",
+    "status": "fixed",
+    "note": "Chip 'v2.2.1' beside the brand at 1180+ and 460-767 (matrix), footer Project column 'Version: 2.2.1' then 'Updated: 17/07/2026' in en/fr/ar, chip aria-current=page on /en/changelog, back in the tab order right after the brand (focus probe, same box 59x21 as legacy). Only residue: active border 70% vs legacy 60%, see A2-10."
+   },
+   {
+    "id": "Z01-02",
+    "status": "fixed",
+    "note": "Visitor summary reads 'Account' (en) / 'Compte' (fr) at 1024 and 1440, 122x44 at 1440 like legacy; icon-only 56x44 below lg."
+   },
+   {
+    "id": "Z01-03",
+    "status": "fixed",
+    "note": "On /en/14.1.1/champions and /Ahri the Encyclopedia menu, footer and bottom nav point to /en/14.1.1/{champions,items,runes,summoners}; on /en/champions?lang=en_GB every catalogue link keeps ?lang=en_GB (SSR hrefs, cmp/audit2/A/probe/active.out)."
+   },
+   {
+    "id": "Z01-04",
+    "status": "fixed",
+    "note": "Encyclopedia summary gold-bright and Champions tab aria-current=page on /en/14.1.1/champions and /en/14.1.1/champions/Ahri at 1440 and 390, identical to legacy."
+   },
+   {
+    "id": "Z01-05",
+    "status": "fixed",
+    "note": "No clipped or overflowing bottom-nav label at 320/360/390 in en, fr, de, ar, ja, ru, pl, vi, tr, hu, es, pt (layout.out); fr 320 shows ACCUEIL…TENDANCES in full."
+   },
+   {
+    "id": "Z01-06",
+    "status": "fixed",
+    "note": "'16.19.1 · EN' at 390 and 1024+, language alone under 368px and 768-863px as per the validated matrix (legacy overflows there: fr 768 ovf 31px, fr 320 about ovf 27px)."
+   },
+   {
+    "id": "Z01-08",
+    "status": "fixed",
+    "note": "Contact dialog: eyebrow 'CONTACT FORM' at y+29, Beaufort 18px gold-bright h2 at y+45, large × close; 544px wide at 1440 (x=448) and 352px at 390 like legacy. It is 32px taller (665 vs 633) only because of the 16px fields (deliberate)."
+   },
+   {
+    "id": "Z01-M01",
+    "status": "fixed",
+    "note": "No overlap between brand, chip and nav at 768/1024 in fr and hu (layout probe, 0 overlaps in 12 locales x 7 widths)."
+   },
+   {
+    "id": "Z02-01",
+    "status": "fixed",
+    "note": "Noxus: champion cards and the filter console carry the 3px crimson start-edge hoist, computed values identical to legacy (themes.out, rails.png)."
+   },
+   {
+    "id": "Z02-04",
+    "status": "fixed",
+    "note": "Console radius/clip/hoist, marker shape (diamond, rivet, pennant, dot), empty/notice surfaces follow the 4 identities at 1440; rail crops old/new match (cmp/audit2/A/themes/rails.png). Console box-shadow residue belongs to LISTS."
+   },
+   {
+    "id": "Z02-05",
+    "status": "fixed",
+    "note": "SSR carries one lodb-backdrop + weave on home, champions list/detail, items, runes, summoners, about, about/data, faq, developers, trends; none on legal/changelog/donate, as in legacy."
+   },
+   {
+    "id": "Z02-06",
+    "status": "fixed",
+    "note": "Facet heading: hollow marker, Beaufort gold 0.75rem 0.14em, cyan badge, solid chevron, identical in 4 themes (rails.png) and mirrored in ar."
+   },
+   {
+    "id": "Z02-08",
+    "status": "fixed",
+    "note": "Champion list card h3 'truncate font-beaufort text-[15px] tracking-wide text-gold-grad', title 'font-spiegel text-xs text-text-muted' (SSR)."
+   },
+   {
+    "id": "Z12-01",
+    "status": "fixed",
+    "note": "Section chips read Abilities|Skins|Lore|Tips|Base Statistics (en), Compétences…Statistiques de base (fr), القدرات… (ar) in SSR."
+   },
+   {
+    "id": "Z12-02",
+    "status": "fixed",
+    "note": "0 raw keys in 95 SSR pages (19 paths x en/fr/ar/ja/de), text nodes and aria-label/title/placeholder/alt."
+   },
+   {
+    "id": "Z12-03",
+    "status": "fixed",
+    "note": "Same as Z01-03, plus /en/about?version=14.1.1 and /en/trends?version=14.1.1 give /en/14.1.1/… links, like legacy /about?version=14.1.1."
+   },
+   {
+    "id": "Z12-M01",
+    "status": "fixed",
+    "note": "/b/708073019671104ebabe9da0: picking French gives ?lang=fr_FR, html lang=fr, French chrome and 'Préférences enregistrées' toast."
+   },
+   {
+    "id": "Z12-05",
+    "status": "still-open",
+    "note": "Per-request SSR pages name the version, but the 8 prerendered editorial pages still ship 'Patch · EN' (about, about/data, faq, changelog, legal x4, all locales) until /api/meta loads. Legacy prints the resolved patch. See A2-11."
+   },
+   {
+    "id": "Z12-12",
+    "status": "still-open",
+    "note": "All listed keys are now used except auth.register.password_help and build.editor.nojs. Both belong to client-rendered routes, where the new front shows nothing at all without JS. See A2-12."
+   },
+   {
+    "id": "Z01-07",
+    "status": "fixed",
+    "note": "Matrix holds, with no overlap/overflow in 12 locales. At 1280 fr/de/ru/pl/tr/hu/es/pt the full name ellipsizes, identical to legacy fr at 1280 (same boxes 24-237)."
+   },
+   {
+    "id": "Z01-09",
+    "status": "fixed",
+    "note": "544x665 at 1440 (legacy 544x633), 352 wide at 390; height delta = 16px fields."
+   },
+   {
+    "id": "Z01-10",
+    "status": "fixed",
+    "note": "Footer Sitemap -> /sitemap.xml in every locale checked."
+   },
+   {
+    "id": "Z01-12",
+    "status": "fixed",
+    "note": "Summary 56x44 at 390, 122x44 at 1440; hover (gold border, gold-bright text) and focus ring identical to legacy."
+   },
+   {
+    "id": "Z01-13",
+    "status": "fixed",
+    "note": "Toast: bevel clip, inset highlight, emerald 50% border, emerald-light text, 320px at top-right. Glyph instead of the legacy dot is the documented choice."
+   },
+   {
+    "id": "Z01-17",
+    "status": "fixed",
+    "note": "viewport meta has viewport-fit=cover."
+   },
+   {
+    "id": "Z01-18",
+    "status": "fixed",
+    "note": "Spiegel Regular, Beaufort Regular/Bold preloaded in SSR head."
+   },
+   {
+    "id": "Z01-19",
+    "status": "fixed",
+    "note": "96px PNG + SVG favicons, shortcut icon, mobile-web-app / apple status-bar / title metas in SSR. Manifest and apple-touch-icon are appended at runtime (append-install-links.ts), which is deliberate."
+   },
+   {
+    "id": "Z01-20",
+    "status": "fixed",
+    "note": "Per-request SSR pages render '16.19.1 · EN' / '14.1.1 · EN' with no swap; prerendered placeholder reserves 7.7ch."
+   },
+   {
+    "id": "Z01-21",
+    "status": "fixed",
+    "note": "mailto link has no target/rel; GitHub/LinkedIn keep _blank + noopener."
+   },
+   {
+    "id": "Z01-22",
+    "status": "fixed",
+    "note": "https://www.leagueoflegends.com/en-us/."
+   },
+   {
+    "id": "Z01-23",
+    "status": "fixed",
+    "note": "Brand link 291x36 at 1440 (legacy 291x36), 32x32 logo-only under sm."
+   },
+   {
+    "id": "Z01-24",
+    "status": "fixed",
+    "note": "Theme dialog 736x211 at 1440 and 352x592 at 390, identical to legacy."
+   },
+   {
+    "id": "Z01-M02",
+    "status": "fixed",
+    "note": "meta theme-color #010a13 in SSR head."
+   },
+   {
+    "id": "Z01-M03",
+    "status": "fixed",
+    "note": "'Preferences saved' toast after applying the switcher at 1440 and 390."
+   },
+   {
+    "id": "Z02-03",
+    "status": "fixed",
+    "note": "See Z01-13."
+   },
+   {
+    "id": "Z02-09",
+    "status": "fixed",
+    "note": "'173 CHAMPIONS' boxed in the list-count plate, recoloured per theme."
+   },
+   {
+    "id": "Z02-10",
+    "status": "fixed",
+    "note": "Contact 'form' size 544px, theme picker 736px, as legacy."
+   },
+   {
+    "id": "Z02-11",
+    "status": "fixed",
+    "note": "Keyboard-opened theme dialog: cdk-dialog-container outline none, no white ring."
+   },
+   {
+    "id": "Z02-12",
+    "status": "fixed",
+    "note": "See Z01-18."
+   },
+   {
+    "id": "Z02-17",
+    "status": "fixed",
+    "note": "About at 390: section titles and rules within 1px of legacy (diff bands are 1px text offsets)."
+   },
+   {
+    "id": "Z02-M02",
+    "status": "fixed",
+    "note": "'173 results' number mono cyan, words muted, like legacy (champions 1440/390)."
+   },
+   {
+    "id": "Z02-M03",
+    "status": "fixed",
+    "note": "Placeholder 'Search…' in the rail and mobile bar."
+   },
+   {
+    "id": "Z02-M04",
+    "status": "fixed",
+    "note": "Console head band and gauge halo present in the 4 themes (rails.png)."
+   },
+   {
+    "id": "Z02-M05",
+    "status": "fixed",
+    "note": "Noxus about page divider pennant sits on the rule like legacy (themes/crop-about-noxus.png)."
+   },
+   {
+    "id": "Z12-04",
+    "status": "fixed",
+    "note": "See Z01-06."
+   },
+   {
+    "id": "Z12-06",
+    "status": "fixed",
+    "note": "402 version options, text identical to legacy."
+   },
+   {
+    "id": "Z12-07",
+    "status": "fixed",
+    "note": "28 language labels, identical text and order to legacy."
+   },
+   {
+    "id": "Z12-08",
+    "status": "fixed",
+    "note": "See Z01-M03."
+   },
+   {
+    "id": "Z12-09",
+    "status": "fixed",
+    "note": "Choice kept in sessionStorage and carried by header/footer/bottom links after navigation. The switcher's own chip does not follow it on non-catalogue pages, which is a new gap: A2-01."
+   },
+   {
+    "id": "Z12-11",
+    "status": "fixed",
+    "note": "Placeholder common.search in en/fr/ar/ja, no truncation at 390."
+   },
+   {
+    "id": "Z12-M02",
+    "status": "fixed",
+    "note": "Cookie policy lod_prefs row: unsigned, script-readable, SameSite=Lax, Secure on HTTPS, session choice in sessionStorage."
+   },
+   {
+    "id": "Z01-11",
+    "status": "not-checked",
+    "note": "Needs a signed-in member (no account created in this read-only pass)."
+   },
+   {
+    "id": "Z01-14",
+    "status": "not-checked",
+    "note": "Needs a delayed API to see the bar; no console error during 57 chrome-link navigations."
+   },
+   {
+    "id": "Z01-15",
+    "status": "not-checked",
+    "note": "Badge present in item/champion SSR, mobile compaction not measured."
+   },
+   {
+    "id": "Z01-16",
+    "status": "not-checked",
+    "note": "Needs an unverified signed-in account."
+   },
+   {
+    "id": "Z02-02",
+    "status": "not-checked",
+    "note": "No pending image reproduced on the warm stack."
+   },
+   {
+    "id": "Z02-13",
+    "status": "not-checked",
+    "note": "No <font> hint on the sampled pages (3031, Ahri) in either stack."
+   },
+   {
+    "id": "Z02-15",
+    "status": "not-checked",
+    "note": "No pending image reproduced."
+   }
+  ],
+  "notes": "I checked all 17 blockers and majors and both partials, plus 32 minors and polish items. 15 of the 17 blockers and majors are fixed. The other two are Z12-05 (A2-11) and Z12-12 (A2-12), still open. Evidence lives under C:/Users/charl/AppData/Local/Temp/claude/F--Git-LeagueOfDataBaseFinal/8504f518-b0ba-4f9d-be95-f2bbdcc96c3e/scratchpad/cmp/audit2/A/: cap (capture.mjs pairs), loc (ar/fr/ja chrome per width), states and states-ar (menus, dialogs, toast), themes, misc, focus, tall, ssr (95 SSR pages) and probe (scripts and outputs). Every run went through heavy.sh, one browser at a time; nothing is left running.\n\nResiduals. Confirmed: 1 (A2-02), 2 (A2-05), 3 (A2-04, plus a general cause, A2-03) and 5 (A2-06). Not reproduced: residual 4. Direct loads of /en/legal/notice#publisher and #hosting, /en/legal/privacy#rights, cookies#stripe, faq#free, about/data#coverage, changelog#v2-0-0 and developers#pricing all land with the target at its scroll margin (104/88px) from 300ms onward, at 1440 and 390, like legacy (probe/anchors*.mjs). The only cross-page routerLink with a fragment is the rune path one, already fixed locally (72 vs legacy 74). The latent trap remains, though: Angular's anchor scrolling ignores scroll-margin for any future routerLink+fragment. Generalising runes/detail/anchor/inject-anchor-offset into core would remove it.\n\nFresh comparison. At 1440 and 390, home, home-light, legal-notice and the chrome are pixel-identical to legacy. About is within 1px. Light and dark render the same because neither stack has a light mode. No console error and no broken link in 57 clicks through every header, footer and bottom-nav link (en 1440, ar 390, fr 1440). No horizontal overflow from 320 to 1440 in 12 locales. The four identities match at 1440 on champions and about, and are pixel-identical at 390 on home and legal.\n\nDeliberate divergences seen, not reported:\n- the brand, chip and patch width matrix;\n- RTL menus anchored with logical properties;\n- dialog initial focus on the container (documented trap);\n- 16px fields, which make the contact dialog 32px taller;\n- a toast glyph instead of the dot;\n- localized chrome, e.g. the hero eyebrow;\n- the switcher choice kept per tab in sessionStorage instead of a server session, so a new tab starts on the latest patch.\n\nFor other groups:\n- B: the home and champions-list portrait cards lack legacy's 40px versioned square icon overlay (home/home.html.twig:116-146), and preview-section.html:42-57 has no overlay (Z03-18 marked fixed). The champions list page is 16px shorter than legacy at 1440 and 390. Item counts read 866 (legacy) vs 865 in ar and ja (7050 placeholder?).\n- D: the cookie policy is now 105px (1440) / 420px (390) longer above #stripe. Developers is 48px shorter above #pricing at 390.\n\nThe legacy 404 cannot be rendered in APP_ENV=dev (/_error/404 answers 500), so A2-08 relies on the template and a layout-chain measurement. The web-ssr container had restarted about a minute before the audit began; no restart was done by me."
+ },
+ "D": {
+  "previous": [
+   {
+    "id": "Z08-01",
+    "status": "fixed",
+    "note": "Changelog renders the 19 releases (text identical to legacy at 1440/390, latest open), hero 'Current version v2.2.1', codex meta, header chip and footer 'Version: 2.2.1' present on every page; /changelog/manifest.json 200; docker/next/web-ssr/Dockerfile:18-20 re-links the feed and fails the build without manifest.json; dev-next.md:249 documents core.symlinks."
+   },
+   {
+    "id": "Z08-02",
+    "status": "fixed",
+    "note": "Developers h1 rect equal to legacy: 272x96 at 320, 352x108 at 400, 2 lines at 390 (sbs developers-390-0), identical at 1440."
+   },
+   {
+    "id": "Z08-03",
+    "status": "fixed",
+    "note": "Legal boxed 'Contents' nav pixel-identical to legacy (threshold 40) at 1440/1024/768/390/320 on notice, privacy, terms; hover and focus-visible states identical."
+   },
+   {
+    "id": "Z08-04",
+    "status": "fixed",
+    "note": "About, about/data, faq: backdrop (glows, weave, darker column) present; faq pixel-identical, about/about-data only 1px sub-pixel shifts."
+   },
+   {
+    "id": "Z08-05",
+    "status": "fixed",
+    "note": "Developers full-width backdrop, 896px column, 3rem bottom padding: pixel-identical at 1440/1024 except the Base URL line (legacy hard-codes the dev URL, see notes)."
+   },
+   {
+    "id": "Z08-06",
+    "status": "fixed",
+    "note": "404 card pixel-identical to the legacy error404 markup (injected) at 1440 and 390; 320 differs only in the shell header/bottom nav."
+   },
+   {
+    "id": "Z08-07",
+    "status": "fixed",
+    "note": "Failure outcome provoked client-side (mocked 500/503 on /api/catalog champions): framed card, numeral 500/503, 'Something went wrong', body, button; pixel-identical to legacy error.html.twig card at 1440 except the header active item; ar version translated."
+   },
+   {
+    "id": "Z08-08",
+    "status": "fixed",
+    "note": "About runes tile reads 5 (legacy 5)."
+   },
+   {
+    "id": "Z08-09",
+    "status": "fixed",
+    "note": "GET chips cyan, developers pixel-identical at 1440."
+   },
+   {
+    "id": "Z08-10",
+    "status": "fixed",
+    "note": "Error envelope sample is the one-liner; text identical."
+   },
+   {
+    "id": "Z08-11",
+    "status": "fixed",
+    "note": "'5 000 requests' / '15 000 req/month' / '5 €/month' in en; '5 000 Anfragen' in de; text identical to legacy."
+   },
+   {
+    "id": "Z08-12",
+    "status": "fixed",
+    "note": "Legal h1 mb-6: legal pages pixel-identical."
+   },
+   {
+    "id": "Z08-13",
+    "status": "fixed",
+    "note": "'Email: charles.lindecker@outlook.fr' (en) and 'Email : …' (fr)."
+   },
+   {
+    "id": "Z08-14",
+    "status": "fixed",
+    "note": "With mocked /api/donations/options (available) and checkout: 600 € -> error toast 'Invalid amount — enter between 1 € and 500 €.' with aria-invalid=true, no inline box; 9999 -> native pattern validation; 429 -> toast 'Too many payment attempts…'; form unchanged. Stripe-off 'coming soon' state pixel-identical to legacy."
+   },
+   {
+    "id": "Z08-15",
+    "status": "fixed",
+    "note": "Base URL / credit-pack notes at 23.8px line-height: developers pixel-identical at 1440/1024."
+   },
+   {
+    "id": "Z08-16",
+    "status": "fixed",
+    "note": "curl lines show lodb_votrecle…, header block lodb_…"
+   },
+   {
+    "id": "Z08-M01",
+    "status": "fixed",
+    "note": "(was obsolete) Changelog timeline markers theme correctly: zaun, noxus (blade point), spirit-blossom captures match legacy at 1440."
+   },
+   {
+    "id": "Z08-M02",
+    "status": "fixed",
+    "note": "After a click: #pricing 88px, #rights/#audience 104px, as legacy; direct loads also 88/104. Focus and history behaviour of the same code are reported as D2-02 and D2-03."
+   },
+   {
+    "id": "Z08-M03",
+    "status": "fixed",
+    "note": "/offline.html pixel-identical to legacy at 390 and 1440."
+   }
+  ],
+  "notes": "All 18 previous entries of the area (2 blockers, 7 majors, the minors and polish) re-checked on the integrated stack: all fixed. Captures and scripts are under audit2/D/ (cap = en 1440/390, w = 1024/768/320, loc = fr/ar 1440/390, loc2 = de/ja 1440, light, th = zaun/noxus/spirit-blossom 1440, don = donate success/cancel, st = states and probes, sbs/sbsl/crops = side-by-sides).\n\nFresh comparison, compared pixel by pixel against legacy at threshold 40:\n- Identical at 1440/1024/768/390/320: faq, donate (Stripe off), legal notice/privacy/terms, donate success/cancel, the 404 card and offline.html.\n- about, about/data and changelog differ only by 1px sub-pixel shifts.\n- developers differs only by the Base URL line. Legacy hard-codes `http://localhost:8090` plus a dev note (DevelopersController::API_BASE_URL, api.en.yaml:116); new shows https://api.league-of-data-base.com. That is an improvement, not a gap.\n- cookies differs by the lod_prefs row, rewritten for the new behaviour, plus D2-01.\n- Themes zaun, noxus and spirit-blossom on 7 pages: identical. The light colour scheme changes nothing on either stack.\n- fr, de and ja: identical apart from translations. Donate is translated where legacy stayed English (deliberate).\n- ar: layouts mirror identically. Deliberate improvements: the changelog timeline mirrors (logical properties) and developer code blocks stay LTR.\n\nInteractions:\n- Changelog open, hover, focus-visible and #v2-1-2 deep link: identical.\n- Legal TOC hover and focus-visible: identical.\n- Fragment positions 88/104 px on click and on direct load: identical.\n- Donate form with mocked options: toasts work, the tier dims when a free amount is typed (same as legacy's :has rule).\n\nHealth (new stack, 13 routes, en/fr/ar/ja, 320/390/1440):\n- No console errors and no horizontal overflow.\n- 65 internal links from main and footer, all 2xx.\n- One ERR_ABORTED on the stylesheet of en/about/data during the batch run; it did not reproduce standalone, so treated as flaky.\n\nOutside group D, for the shell owner:\n- At 390 the legacy header shows a truncated 'L' brand next to the logo; at 320 legacy overlaps and overflows while new hides the version.\n- The bottom nav sits a few px differently at 320.\n\nMethod note: legacy `?lang=` changes only the Data Dragon language. The UI locale needs POST /setup-submit, which capture-loc.mjs does; the legacy flash 'Preferences saved' seen in those captures is an artifact of that.\n\nLegacy /_error/404 preview fails (Twig 'client' variable), so the legacy 404/500 cards were rendered by injecting their exact markup, as in the first audit.\n\nNo process left running."
+ },
+ "F": {
+  "previous": [
+   {
+    "id": "Z11-01",
+    "status": "fixed",
+    "note": "No public header, footer, banners or bottom nav on any admin page, the login or the activity page at 1440, 1024, 768, 390 or 320. The admin frame is bare."
+   },
+   {
+    "id": "Z11-02",
+    "status": "fixed",
+    "note": "The legacy sticky bar is there: brand, ANALYTICS / GESTION groups, gold-deep separator, pills and Déconnexion at the end. Under 860px it stacks with no overflow; the legacy spills to 466px at 390 and 320."
+   },
+   {
+    "id": "Z11-03",
+    "status": "fixed",
+    "note": "Active pill computed styles match the legacy (gold-bright, 28% border, 8% wash, cyan underline). The activity page marks Journal."
+   },
+   {
+    "id": "Z11-04",
+    "status": "fixed",
+    "note": "With lod_theme=noxus the admin is data-theme=hextech (body rgb(10,20,40)), and /fr/ goes back to noxus afterwards. The pre-boot paint still uses the cookie theme; see F2-15."
+   },
+   {
+    "id": "Z11-05",
+    "status": "fixed",
+    "note": "html lang=fr, dir=ltr, also when arriving by client navigation from /ar/. Going back to /ar/ restores ar/rtl."
+   },
+   {
+    "id": "Z11-06",
+    "status": "fixed",
+    "note": "Page head is pixel-identical at 1440 and 390: bold 1.7rem gold-bright h1, 1rem lede, actions centred."
+   },
+   {
+    "id": "Z11-07",
+    "status": "fixed",
+    "note": "Eyebrows, titles, ledes and all 13 document titles match the legacy. The range-dependent overview lede reads '— 7 jours.' on ?range=7d."
+   },
+   {
+    "id": "Z11-08",
+    "status": "fixed",
+    "note": "Labelled gold rules with the diamond are present at every legacy position."
+   },
+   {
+    "id": "Z11-09",
+    "status": "fixed",
+    "note": "KPI tiles match: 2px start accent, .66rem muted label, 1.9rem value, sparkline in the corner, auto-fit grid."
+   },
+   {
+    "id": "Z11-10",
+    "status": "fixed",
+    "note": "Green good badges, green, blue and red series accents, and donut series colours match."
+   },
+   {
+    "id": "Z11-11",
+    "status": "fixed",
+    "note": "Outlined lowercase mono badges (opérationnel, public, Succès, admin) match."
+   },
+   {
+    "id": "Z11-12",
+    "status": "fixed",
+    "note": "Card heads and chips match at 1440. On phones the chip wraps under the title instead of staying at the end; see F2-07."
+   },
+   {
+    "id": "Z11-13",
+    "status": "fixed",
+    "note": "Rule-separated tables sit in a card, with gold .66rem th, a hover wash, a centred empty row and end-aligned Actions."
+   },
+   {
+    "id": "Z11-14",
+    "status": "fixed",
+    "note": "Small ghost, gold and danger buttons with legacy metrics. The danger text uses danger-light for contrast, a choice documented in controls.css:39-41."
+   },
+   {
+    "id": "Z11-15",
+    "status": "fixed",
+    "note": "The compact segmented bar '7 j / 30 j / 90 j / Tout' has the gold active fill."
+   },
+   {
+    "id": "Z11-16",
+    "status": "fixed",
+    "note": "Rank rows, 6px gradient tracks, gold-bright mono values and the '+ N de plus' pill match."
+   },
+   {
+    "id": "Z11-17",
+    "status": "fixed",
+    "note": "Both directions always show and the unavailable one is dimmed. Page 2 of the journal matches the legacy ('← PRÉCÉDENT Page 2 SUIVANT →')."
+   },
+   {
+    "id": "Z11-18",
+    "status": "fixed",
+    "note": "Tools overlay the corner, the grid is solid, the crosshair dashed, and the tooltip identical on hover. Remaining gaps: the line width (F2-05) and the missing tool titles (F2-12)."
+   },
+   {
+    "id": "Z11-19",
+    "status": "fixed",
+    "note": "Slice colours are fixed per category and the legends show compact counts. Ring size still differs; see F2-04."
+   },
+   {
+    "id": "Z11-20",
+    "status": "fixed",
+    "note": "The 'Rythme horaire' heatmap is last, with its chip and Beaufort day labels, and fits at 390 (the legacy's overflows)."
+   },
+   {
+    "id": "Z11-21",
+    "status": "fixed",
+    "note": "The red alert band with a small Réessayer matches (500 simulated on both). The reason wording differs; see F2-11."
+   },
+   {
+    "id": "Z11-22",
+    "status": "fixed",
+    "note": "Notice and alert bands appear at the top of the column, checked by fulfilling unpublish and delete locally (no request reached the API)."
+   },
+   {
+    "id": "Z11-23",
+    "status": "fixed",
+    "note": "Skeletons match: KPI tiles with the accent bar and a card-framed chart block (API delayed 6s on both)."
+   },
+   {
+    "id": "Z11-24",
+    "status": "fixed",
+    "note": "The auth card is pixel-identical at 1440 and 390, identifier focused. The failed-attempt state differs; see F2-10."
+   },
+   {
+    "id": "Z11-25",
+    "status": "fixed",
+    "note": "All legacy overview sections are there in the legacy order, with Consolider and its title hint."
+   },
+   {
+    "id": "Z11-26",
+    "status": "fixed",
+    "note": "Traffic KPIs, cards, limits and order match the legacy, heatmap last."
+   },
+   {
+    "id": "Z11-27",
+    "status": "fixed",
+    "note": "Entities show 'Ahri', 'Domination' and '771004' (last ':' segment)."
+   },
+   {
+    "id": "Z11-28",
+    "status": "fixed",
+    "note": "Legacy vocabulary: Sorts, Détails, Direct/Interne, Faille, Vues totales, Récurrents, Nouveaux, Vues robots, Supporters."
+   },
+   {
+    "id": "Z11-29",
+    "status": "fixed",
+    "note": "Audience matches: 4 legacy KPIs, 3-column rows and the 'base géo absente' notice (deliberately reworded)."
+   },
+   {
+    "id": "Z11-30",
+    "status": "fixed",
+    "note": "Familles is a byte ranking and the donut totals fit."
+   },
+   {
+    "id": "Z11-31",
+    "status": "fixed",
+    "note": "Storage KPIs, rows, rules, largest objects and the coverage matrix match. The WebP readout style differs; see F2-06."
+   },
+   {
+    "id": "Z11-32",
+    "status": "fixed",
+    "note": "The toolbar matches (?q=parity): slim 18rem search, small Rechercher, Réinitialiser chip, and '{n} compte(s)' at the end."
+   },
+   {
+    "id": "Z11-33",
+    "status": "fixed",
+    "note": "Columns, badges, the inline reason field, Bannir and danger Supprimer, and the empty text 'Aucun compte ne correspond à la recherche.' all match."
+   },
+   {
+    "id": "Z11-34",
+    "status": "fixed",
+    "note": "Bannis is good (green) at 0."
+   },
+   {
+    "id": "Z11-35",
+    "status": "fixed",
+    "note": "Head and toolbar match (chip, category, Du/Au, Filtrer, Réinitialiser), and so does the empty text on ?category=admin."
+   },
+   {
+    "id": "Z11-36",
+    "status": "fixed",
+    "note": "No overflow at 1440, 1024, 768, 390 or 320."
+   },
+   {
+    "id": "Z11-37",
+    "status": "fixed",
+    "note": "A slim toolbar after the Filtrer rule. The extra filters (outcome, actor type, action, actor) wrap it to 2 rows at 1440, an accepted addition."
+   },
+   {
+    "id": "Z11-38",
+    "status": "fixed",
+    "note": "Columns and cell content match the legacy (label, 'Catégorie · k=v' sub, no raw code or JSON)."
+   },
+   {
+    "id": "Z11-39",
+    "status": "fixed",
+    "note": "Rétention '6 mois' with 'purge auto avant le 28/03/2026' and the legacy purge card. The 'depuis le' date format differs; see F2-16."
+   },
+   {
+    "id": "Z11-40",
+    "status": "fixed",
+    "note": "'Voir' links /b/{token} with target _blank; the page answers 200."
+   },
+   {
+    "id": "Z11-41",
+    "status": "fixed",
+    "note": "KPIs, toolbar, columns and both empty texts ('Aucun build ne correspond aux filtres.') match."
+   },
+   {
+    "id": "Z11-42",
+    "status": "fixed",
+    "note": "Pixel-identical at 1440, including the empty 'Aucun don enregistré.' row."
+   },
+   {
+    "id": "Z11-43",
+    "status": "fixed",
+    "note": "KPIs, the Boîte de réception rule, the Tous/Nouveaux/Traités bar, table headings and both empty texts are identical. Rows were checked by source against contacts.html.twig, as the new stack has no message."
+   },
+   {
+    "id": "Z11-44",
+    "status": "fixed",
+    "note": "KPI subs, chips, the Clés rule, columns and statut badges match."
+   },
+   {
+    "id": "Z11-45",
+    "status": "fixed",
+    "note": "Plans are labelled Free, Crédits, Mensuel(+) and Annuel(+) (fr.json api_clients.plans)."
+   },
+   {
+    "id": "Z11-46",
+    "status": "fixed",
+    "note": "Probe cards with human names, health badges and chips. Two chips still differ: the generation time (F2-02) and the PostgreSQL version (F2-03)."
+   },
+   {
+    "id": "Z11-47",
+    "status": "fixed",
+    "note": "The order is probes, Application (6 tiles), then Volumes (Tables principales and an outbox card), with the added runtime blocks after."
+   },
+   {
+    "id": "Z11-48",
+    "status": "still-open",
+    "note": "The 404 is gone, but /admin/logs?category=auth answers a server 302 to /admin/journal with the query dropped, contrary to the fix note ('query kept'). See F2-01."
+   },
+   {
+    "id": "Z11-49",
+    "status": "fixed",
+    "note": "Single 78rem column (content x=124..1316 at 1440, as in the legacy), with 3-column rows and span-2."
+   },
+   {
+    "id": "Z11-M01",
+    "status": "fixed",
+    "note": "No per-point dots; only the hover dot."
+   },
+   {
+    "id": "Z11-M02",
+    "status": "fixed",
+    "note": "Compact figures ('3.9k bots exclus', 'Blobs 4.8k') and WebP '100 %'."
+   },
+   {
+    "id": "Z11-M03",
+    "status": "fixed",
+    "note": "Identifier focused on arrival and the code field on step 2 (teal ring in the captures). After a failed attempt there is no refocus; see F2-10."
+   },
+   {
+    "id": "Z11-M04",
+    "status": "fixed",
+    "note": "Checked by source only (shared/display-name.ts used in users-panel.ts:68 and user-activity-panel.ts:82): no account on the new stack has a tagline."
+   },
+   {
+    "id": "Z11-M05",
+    "status": "fixed",
+    "note": "Rewriting the responses (counters null, storage ok:false) shows 'Compteurs applicatifs indisponibles.', 'Compteurs indisponibles.' and 'Stockage indisponible : …' bands."
+   },
+   {
+    "id": "Z11-M06",
+    "status": "fixed",
+    "note": "The signed-in admin's row shows only Activité and '—'."
+   }
+  ],
+  "notes": "Captures are in C:/Users/charl/AppData/Local/Temp/claude/F--Git-LeagueOfDataBaseFinal/8504f518-b0ba-4f9d-be95-f2bbdcc96c3e/scratchpad/cmp/audit2/F/:\n- shots/<page>-<1440|390>-<old|new>.png/.txt covers 14 pages.\n- shots/sbs/ holds side-by-side phone chunks, and shots/states/ the interaction states, widths 1024/768/320, light scheme, failures, skeletons, bands and login error.\n- metrics.jsonl and states.log hold the measurements.\n- The scripts are cap.mjs, states.mjs and probe*.mjs; I signed in again with auth.mjs.\n- No console errors or page errors on any admin page. The only error is the expected 401 of a failed login.\n- No horizontal page overflow at 1440/1024/768/390/320; the legacy overflows to 466px at 390 and 320.\n- Every in-admin link answers 200, including /b/{token} for Voir.\n\nNothing was mutated:\n- Moderation POST/DELETE calls were fulfilled locally by page.route (hits=2, none reached the API).\n- The login-error probe used a nonexistent login.\n- No ban, delete, purge, consolidate, unpublish or credit.\n\nResiduals:\n- (1) Monitoring chip: confirmed (F2-02). The root cause is stamp('second') in fr-FR with no zone, versus the legacy format('Y-m-d H:i:s T').\n- (2) Contacts: I could not send a message (quota, read-only audit). The empty state and headings match the legacy exactly:\n  - KPIs Total / À traiter / Traités / 7 derniers jours;\n  - the Boîte de réception rule and the Tous/Nouveaux/Traités bar;\n  - headings REÇU LE, CATÉGORIE, CONTACT, MESSAGE, STATUT, ACTIONS (end-aligned);\n  - 'Aucun message de contact.' and, on a status filter, 'Aucun message dans cette catégorie.'.\n  The row template (contacts-panel.html) matches contacts.html.twig field by field: d/m/Y H:i, category labels and tones, mailto name with e-mail and 'compte :' subs, bold subject with a 160-char excerpt and full-text title, Nouveau/Traité badges, Marquer traité/Rouvrir and danger Supprimer. No finding.\n\nDeliberate divergences I did not report:\n- The two-step confirm on Supprimer, Révoquer and Purger: the legacy data-confirm attribute has no JS handler, so the legacy deletes immediately. Escape does not cancel the confirm state, which has no legacy equivalent.\n- The danger text in danger-light rather than #dc3d3d, a contrast choice documented in controls.css:39-41.\n- The admin bar stacking and going static under 860px. At 768 the legacy sticky bar is 183px tall; at 480 it is 520px.\n- The journal's extra filters, and the 'Entrées' KPI replacing the legacy local/archived tiles (no NDJSON journal in the new stack).\n- The storage probe's objects chip, shown only when the storage report is warm, as the legacy commented.\n- Data-model differences in the storage 'Par type' keys and the missing Go probes.\n- The legacy coverage matrix's lexicographic version order.\n- The truncated largest-object keys (a legacy bug, not copied).\n\nScheme and locale:\n- The admin stays dark Hextech under a light colour scheme and under the Noxus cookie, as the legacy does.\n- It stays fr/ltr when entered from /ar/.\n\nTwo leftover node processes on the machine (editor-ix.mjs, hover.mjs) are not mine and were left alone."
+ },
+ "E": {
+  "previous": [
+   {
+    "id": "Z09-01",
+    "status": "fixed",
+    "note": "Pickers: 512 px dialog at x=464 on 1440 (legacy 512 at x=464), full-width bottom sheet with gold handle at 390, same 20/24/24 and 12/20/16 paddings. audit2/E/pickers/champ-1440-sbs-100.png, p390.png"
+   },
+   {
+    "id": "Z09-02",
+    "status": "fixed",
+    "note": "Bordered 36 px square close on both pickers, same as legacy."
+   },
+   {
+    "id": "Z09-03",
+    "status": "fixed",
+    "note": "document.activeElement = input.picker-search on open and after choosing a champion (skin step 2), on both stacks at 1440 and 390."
+   },
+   {
+    "id": "Z09-04",
+    "status": "fixed",
+    "note": "Skin step 2 reads [<] AHRI [x] with the name centred, identical to legacy (pickers/skin2-1440-sbs-100.png). In ar the chevron points right, which is correct for RTL."
+   },
+   {
+    "id": "Z09-05",
+    "status": "fixed",
+    "note": "The 'SKIN BANNER' label is present above the socket (cap/profile-1440-new.png)."
+   },
+   {
+    "id": "Z09-07",
+    "status": "fixed",
+    "note": "Shows 'September 2026' on both stacks."
+   },
+   {
+    "id": "Z09-08",
+    "status": "fixed",
+    "note": "With no favourite, the editor shows the glow and hex-weave backdrop (cap/profile-1440-new.png)."
+   },
+   {
+    "id": "Z09-16",
+    "status": "fixed",
+    "note": "Tab title is 'parity-audit · League of Data Base' (legacy 'ParityAudit · …')."
+   },
+   {
+    "id": "Z09-17",
+    "status": "fixed",
+    "note": "The portal backdrop is present at 1440 and 390 (cap/api-1440-sbs-60.png)."
+   },
+   {
+    "id": "Z09-20",
+    "status": "fixed",
+    "note": "Create, active key, boost and last-30-days panels are flat and gold-tinted, as legacy (api/key-1440-sbs-60.png)."
+   },
+   {
+    "id": "Z09-22",
+    "status": "fixed",
+    "note": "Key plates columns match legacy at every width: 356.66 px x3 at 1440, 298 x3 at 1024, 327 x2 at 768, 292 x1 at 390. A key was created and then revoked on both stacks."
+   },
+   {
+    "id": "Z09-23",
+    "status": "fixed",
+    "note": "Created date shows 28/09/2026 on both stacks."
+   },
+   {
+    "id": "Z09-24",
+    "status": "fixed",
+    "note": "Regenerate and Revoke sit side by side at 768, and the Revoke button looks like legacy (api/key-768-sbs-60.png)."
+   },
+   {
+    "id": "Z09-26",
+    "status": "fixed",
+    "note": "The reveal has a single ghost 'COPY THE KEY' button (api/created-1440-new.png)."
+   },
+   {
+    "id": "Z09-27",
+    "status": "fixed",
+    "note": "'Create my key' is full width at 390 (cap/m390-profile.png)."
+   },
+   {
+    "id": "Z09-30",
+    "status": "fixed",
+    "note": "The first field is focused on the sign-in and forgot-password pages (cyan border in the captures)."
+   },
+   {
+    "id": "Z09-31",
+    "status": "fixed",
+    "note": "'Check your inbox' card is centred with the muted sentence, pixel-equal to legacy (ix/sent-1440-sbs-60.png)."
+   },
+   {
+    "id": "Z09-M03",
+    "status": "fixed",
+    "note": "Tab title becomes 'Check your inbox · League of Data Base' after the request."
+   },
+   {
+    "id": "Z09-36",
+    "status": "still-open",
+    "note": "A well-formed but invalid link (/en/account/reset-password/QUJDREVGR0hJSktMTU5PUA?user=1) still shows the form. It is refused only after submit (toast, then redirect to forgot-password). Legacy refuses it on open. See E2-04."
+   },
+   {
+    "id": "Z09-37",
+    "status": "fixed",
+    "note": "Signed-out trigger shows 'Account' at 1440 (ix/menus.png)."
+   },
+   {
+    "id": "Z09-38",
+    "status": "fixed",
+    "note": "Signed-in and anonymous menus match legacy, including the active 'Sign in' highlight and the separator above 'Sign out' (ix/menus.png)."
+   },
+   {
+    "id": "Z09-39",
+    "status": "fixed",
+    "note": "Checked in code only: verify-email-banner.ts:22-37 has the centred flex strip and a gold, semibold, underlined CTA. The test member is verified, so the banner cannot be rendered."
+   },
+   {
+    "id": "Z09-M01",
+    "status": "fixed",
+    "note": "Picker rows and type match legacy at 1440 and 390."
+   },
+   {
+    "id": "Z09-M02",
+    "status": "fixed",
+    "note": "In ar the visibility card reads '← /u/parity-audit' with the slash in the right place."
+   },
+   {
+    "id": "Z10-01",
+    "status": "fixed",
+    "note": "At 390 and 320 the share header has no mid-word break in the title: the seal sits beside the title, and the score and 'Copy link' take their own row. The legacy still breaks here (cap/m390-trends-share.png, capw/s320.png)."
+   },
+   {
+    "id": "Z10-02",
+    "status": "fixed",
+    "note": "Backdrop present on trends, share, My builds and the editor."
+   },
+   {
+    "id": "Z10-03",
+    "status": "fixed",
+    "note": "Share section header spacing is identical at 1440 (cap/share-1440-sbs-60.png)."
+   },
+   {
+    "id": "Z10-04",
+    "status": "fixed",
+    "note": "Keystone medallion size and glow are identical to legacy at 1440 and 390."
+   },
+   {
+    "id": "Z10-06",
+    "status": "fixed",
+    "note": "Pager has 2.5rem square icon arrows and '2 / 3', also in ar (checked with a route-faked page count of 3). ix/pager-combo.png"
+   },
+   {
+    "id": "Z10-07",
+    "status": "fixed",
+    "note": "Container geometry is identical: at 1440 the My builds, new and edit pages differ from legacy by 0.2-0.3 mean pixel diff."
+   },
+   {
+    "id": "Z10-08",
+    "status": "fixed",
+    "note": "Hextech rule under the header is present on My builds and on the editor."
+   },
+   {
+    "id": "Z10-09",
+    "status": "fixed",
+    "note": "Editor h1 is bold, 36 px at 1440."
+   },
+   {
+    "id": "Z10-10",
+    "status": "fixed",
+    "note": "Labels use the gold small-caps Beaufort style, as legacy."
+   },
+   {
+    "id": "Z10-11",
+    "status": "fixed",
+    "note": "Two narrow columns from 40rem, as legacy. At 320 the single column overflows its section; see the new finding E2-07."
+   },
+   {
+    "id": "Z10-12",
+    "status": "fixed",
+    "note": "Save row is grouped at the end, as legacy."
+   },
+   {
+    "id": "Z10-15",
+    "status": "fixed",
+    "note": "'Updated on 27/09/2026' on both stacks."
+   },
+   {
+    "id": "Z10-17",
+    "status": "fixed",
+    "note": "With the list intercepted as [], the empty state matches legacy: framed box, eyebrow, Back and Home, then the gold 'Forge my first build' outside the frame, and no header 'New build' (ix/empty-1440-new.png)."
+   },
+   {
+    "id": "Z10-19",
+    "status": "fixed",
+    "note": "After filling a step to 8 items (not saved), '+ Add item' stays enabled and reopens the armory in its full state: '8 / 8 — Step full' with 250 tiles disabled, same as legacy."
+   },
+   {
+    "id": "Z10-21",
+    "status": "fixed",
+    "note": "Armory pane measures 896x792 with 9 columns at 1440, and 390x776 with 4 columns at 390, on both stacks."
+   },
+   {
+    "id": "Z10-22",
+    "status": "fixed",
+    "note": "After scrolling the body 700 px, the header, search and chips stay pinned, with hairlines (ix/armory-scroll-new-crop.png)."
+   },
+   {
+    "id": "Z10-23",
+    "status": "fixed",
+    "note": "Head has a bordered square close and a tight eyebrow and target, as legacy."
+   },
+   {
+    "id": "Z10-24",
+    "status": "fixed",
+    "note": "Search has the magnifier and the mono face."
+   },
+   {
+    "id": "Z10-25",
+    "status": "fixed",
+    "note": "Chips are 27 px with a fine pointer. They are 36 px under pointer: coarse by design (controls.css)."
+   },
+   {
+    "id": "Z10-26",
+    "status": "fixed",
+    "note": "Phone sheet top is at y=68 on both stacks (390x776)."
+   },
+   {
+    "id": "Z10-27",
+    "status": "fixed",
+    "note": "With an empty name, Save focuses the field with 'Please fill out this field.' and sends no POST or PUT."
+   },
+   {
+    "id": "Z10-28",
+    "status": "fixed",
+    "note": "Import shows the toast 'Build imported to patch 16.18.1 — review it and save.', as legacy (ix/import-sbs-0.png)."
+   },
+   {
+    "id": "Z10-29",
+    "status": "fixed",
+    "note": "Import tab title is 'Forge a build · League of Data Base' on both stacks."
+   },
+   {
+    "id": "Z10-30",
+    "status": "fixed",
+    "note": "Selects and chips show 'English (United States)'."
+   },
+   {
+    "id": "Z10-36",
+    "status": "fixed",
+    "note": "A dashed rich-gold drop slot appears during a mouse drag (dnd/new-fixed-list-during.png)."
+   },
+   {
+    "id": "Z10-M01",
+    "status": "fixed",
+    "note": "Champion toggle matches legacy at 1440. On phones 'Choose a champion' moves under the name instead of breaking it."
+   }
+  ],
+  "notes": "Group E was checked read-only on the integrated stack at commit bcaab425. Captures, scripts and measurements are in C:/Users/charl/AppData/Local/Temp/claude/F--Git-LeagueOfDataBaseFinal/8504f518-b0ba-4f9d-be95-f2bbdcc96c3e/scratchpad/cmp/audit2/E (cap, cap2, cap3, capw, cap6, ix, pickers, api, dnd, rtl, nojs, reset).\n\nCoverage:\n- Widths: every page at 1440 and 390, plus 1024, 768 and 320.\n- Themes: noxus, zaun, spirit-blossom and a light-scheme pass. All pairs are within 0.2-3.7 mean pixel diff, except trends, where the data differs (legacy has 2 builds, new has 1).\n- Locales: en, fr, ar, ja, de.\n- States: pickers and skin step 2 at 1440, 390 and in ar; the armory open, scrolled, filtered, empty and full; save validation; import; the delete dialog opened and cancelled; the signed-in and anonymous menus; the check-your-inbox state; the login error; the password checklist; copy link; row hovers; the empty My builds (route-intercepted); the trends pager (pages faked to 3); drag and drop; JavaScript disabled.\n\nResult: all 18 previous blockers and majors are fixed, and the minors I re-checked are fixed. Z09-36 is still open (E2-04). All 5 residuals are confirmed (E2-01 to E2-05), and 5 new findings were added (E2-06 to E2-10).\n\nOther checks:\n- No console errors on the new stack beyond the expected 404 of the private public profile.\n- All 67 internal links from the group's pages return 200.\n- No horizontal overflow on the new stack at any width. The legacy overflows at 320 (324 px) and on /builds at 390 (485 px).\n\nState changes, all reverted:\n- The new member's profile was set public with Ahri and Infinity Edge to match the legacy data for the profile, preview and public captures, then restored: private, no favourites (verified).\n- One API key was created and then revoked on each stack; both are back to 'No API key yet'.\n- No build was saved: non-GET build requests were routed to abort. One forgot-password request was sent for a nonexistent address. Register and contact were not used.\n\nDeliberate divergences not reported:\n- 16 px fields.\n- Coarse-pointer 36 px chips.\n- The drag handle visible on touch (the new stack supports touch drag, while legacy hides it because HTML5 drag needs a fine pointer).\n- The Hextech delete dialog instead of the legacy native confirm().\n- RTL layout and partial ar chrome.\n\nLimitations:\n- In this run the legacy armory opened at the top-left at 1440, a legacy dev quirk; the previous audit measured it centred.\n- The legacy login error and the legacy API key reveal did not render, so neither could be compared.\n- Z09-39 was verified in code only, because the member is verified.\n- The build log also warns that the initial bundle is 684 kB against a 500 kB budget, which is outside this group.\n- No processes of mine are left running."
+ }
+}

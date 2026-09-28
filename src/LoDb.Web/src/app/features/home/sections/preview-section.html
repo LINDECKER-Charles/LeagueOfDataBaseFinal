@@ -1,0 +1,88 @@
+<div class="mb-6 flex flex-wrap items-center gap-3">
+  <span aria-hidden="true" class="hx-pip text-[0.7rem] leading-none text-gold">◆</span>
+  <h2 class="font-beaufort text-xl tracking-[0.12em] text-gold-bright uppercase">
+    {{ texts().title | transloco }}
+  </h2>
+  @if (section().total !== null) {
+    <span class="font-mono text-xs text-hex">{{ section().total }}</span>
+  }
+  <span
+    aria-hidden="true"
+    class="h-px flex-1 bg-linear-to-r from-gold-deep to-transparent rtl:bg-linear-to-l"
+  ></span>
+  <a
+    class="group inline-flex shrink-0 items-center gap-2 font-beaufort text-xs tracking-[0.11em] text-gold uppercase transition-colors hover:text-hex"
+    [routerLink]="section().list.path"
+    [queryParams]="section().list.query"
+  >
+    {{ texts().seeAll | transloco }}
+    <lodb-see-all-arrow
+      class="transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1"
+    />
+  </a>
+</div>
+
+@if (section().cards.length === 0) {
+  @if (texts().noData; as noData) {
+    <lodb-empty-state [text]="noData | transloco" />
+  }
+} @else {
+  <ul [class]="gridClass()">
+    @for (card of section().cards; track card.link.path) {
+      <!-- min-w-0: a long caption (SummonerBarrier_Jade) truncates instead of widening the grid. -->
+      <li class="min-w-0">
+        @if (look() === 'portrait') {
+          <a
+            lodbFrame="interactive"
+            class="group flex h-full flex-col overflow-hidden"
+            [routerLink]="card.link.path"
+            [queryParams]="card.link.query"
+          >
+            <!-- The initials wait under the hotlinked art while it loads. -->
+            <div class="relative aspect-[4/5] overflow-hidden border-b border-gold-deep/50 bg-void">
+              <span
+                aria-hidden="true"
+                class="absolute inset-0 grid place-items-center font-beaufort text-5xl text-gold/15"
+                >{{ initialsOf(card.name) }}</span
+              >
+              @if (card.art; as art) {
+                <lodb-image
+                  class="size-full"
+                  imgClass="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  [src]="art"
+                  [alt]="card.name"
+                  [width]="loadingArtWidth"
+                  [height]="loadingArtHeight"
+                />
+              }
+            </div>
+            <div class="p-3">
+              <h3
+                class="truncate font-beaufort text-[15px] tracking-wide text-gold-grad"
+                [title]="card.name"
+              >
+                {{ card.name }}
+              </h3>
+              @if (card.caption) {
+                <p
+                  class="mt-0.5 line-clamp-2 font-spiegel text-xs text-text-muted first-letter:uppercase"
+                >
+                  {{ card.caption }}
+                </p>
+              }
+            </div>
+          </a>
+        } @else {
+          <lodb-entity-card
+            [href]="hrefOf(card.link)"
+            [image]="card.image"
+            [name]="card.name"
+            [caption]="card.caption"
+            [edition]="card.edition"
+            [fit]="look() === 'round' ? 'mark' : 'contain'"
+          />
+        }
+      </li>
+    }
+  </ul>
+}

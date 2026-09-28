@@ -1,0 +1,67 @@
+<h2 id="profile-danger-title" class="profile-danger__title">
+  {{ 'profile.danger.title' | transloco }}
+</h2>
+<p class="mt-2 max-w-2xl text-sm text-text-muted">{{ help() | transloco }}</p>
+@if (submission.error(); as message) {
+  <p class="auth-error mt-4" role="alert">{{ message | transloco }}</p>
+}
+<form
+  class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-start"
+  aria-labelledby="profile-danger-title"
+  (submit)="erase($event)"
+>
+  @switch (confirmation()) {
+    @case ('phrase') {
+      @let phrase = 'profile.danger.confirm_phrase' | transloco;
+      <div class="flex-1 sm:max-w-xs">
+        <label for="danger-confirmation" class="auth-label">
+          {{ 'profile.danger.confirm_label' | transloco: { phrase } }}
+        </label>
+        <input
+          lodbField
+          id="danger-confirmation"
+          name="confirmation"
+          type="text"
+          class="mt-1.5"
+          required
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+          [placeholder]="phrase"
+          [attr.aria-invalid]="submission.errors()['confirmation'] ? true : null"
+        />
+        @if (submission.errors()['confirmation']; as message) {
+          <p class="auth-field-error" role="alert">{{ message | transloco }}</p>
+        }
+      </div>
+    }
+    @case ('password') {
+      <div class="flex-1 sm:max-w-xs">
+        <label for="danger-password" class="auth-label">
+          {{ 'profile.danger.password' | transloco }}
+        </label>
+        <input
+          lodbField
+          id="danger-password"
+          name="password"
+          type="password"
+          class="mt-1.5"
+          required
+          autocomplete="current-password"
+          [attr.aria-invalid]="submission.errors()['password'] ? true : null"
+        />
+        @if (submission.errors()['password']; as message) {
+          <p class="auth-field-error" role="alert">{{ message | transloco }}</p>
+        }
+      </div>
+    }
+  }
+  <button
+    type="submit"
+    class="profile-danger__button"
+    [class]="confirmation() === 'none' ? '' : 'sm:mt-6'"
+    [disabled]="submission.busy()"
+  >
+    {{ 'profile.danger.delete' | transloco }}
+  </button>
+</form>

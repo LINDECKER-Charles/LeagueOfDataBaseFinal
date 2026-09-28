@@ -1,0 +1,128 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+}
+.toolbar__count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0;
+}
+.toolbar__figure {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--color-hex);
+}
+.toolbar__text {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.toolbar__text:empty {
+  display: none;
+}
+.toolbar__dot {
+  color: var(--color-gold-dark);
+}
+.toolbar__page {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-dim);
+}
+.toolbar__tools,
+.toolbar__sizes,
+.toolbar__pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+}
+.toolbar__sizes {
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+}
+.toolbar__pager {
+  gap: 0.25rem;
+}
+.toolbar__label {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--color-text-dim);
+}
+.segments {
+  display: flex;
+}
+.segment {
+  display: grid;
+  place-items: center;
+  min-inline-size: 2rem;
+  block-size: 2rem;
+  padding-inline: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+  background: color-mix(in srgb, var(--color-void) 60%, transparent);
+  cursor: pointer;
+}
+.segment + .segment {
+  border-inline-start: 0;
+}
+.segment:hover {
+  color: var(--color-hex);
+}
+.segment:focus-visible,
+.nav:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-hex);
+}
+.segment[aria-pressed='true'] {
+  color: var(--color-hextech-black);
+  background: linear-gradient(180deg, var(--color-gold-bright), var(--color-gold));
+}
+.nav {
+  display: grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  color: var(--color-gold);
+  border: 1px solid var(--color-gold-deep);
+  background: var(--color-void);
+  cursor: pointer;
+  transition:
+    color 0.2s var(--ease-hextech),
+    border-color 0.2s var(--ease-hextech);
+}
+.nav:not(.nav--off):hover {
+  color: var(--color-gold-bright);
+  border-color: var(--color-gold);
+}
+.nav--off {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.nav__icon {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+}
+.nav__icon:dir(rtl) {
+  scale: -1 1;
+}
+@media (pointer: coarse) {
+  .segment,
+  .nav {
+    min-inline-size: 2.5rem;
+    block-size: 2.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav {
+    transition: none;
+  }
+}

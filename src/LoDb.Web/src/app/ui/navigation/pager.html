@@ -1,0 +1,38 @@
+<nav #nav class="pager" [attr.aria-label]="'detail.nav.label' | transloco">
+  @if (previous(); as link) {
+    <a class="pager__link" rel="prev" [routerLink]="link.url">
+      <span class="pager__eyebrow">‹ {{ 'detail.nav.previous' | transloco }}</span>
+      <span class="pager__name"
+        >{{ link.name }}
+        @if (link.mark; as mark) {
+          <span class="hx-chip-hex ms-2 shrink-0 px-1.5 py-0.5 text-[9px]" [title]="mark.hint">{{
+            mark.label
+          }}</span>
+        }
+      </span>
+    </a>
+  } @else {
+    <span aria-hidden="true"></span>
+  }
+
+  <a class="pager__hub" [routerLink]="hub()" [title]="'detail.nav.back_to_list' | transloco">
+    <span class="sr-only">{{ 'detail.nav.back_to_list' | transloco }}</span>
+    <lodb-icon name="hub" />
+  </a>
+
+  @if (next(); as link) {
+    <a class="pager__link pager__link--next" rel="next" [routerLink]="link.url">
+      <span class="pager__eyebrow">{{ 'detail.nav.next' | transloco }} ›</span>
+      <span class="pager__name"
+        >{{ link.name }}
+        @if (link.mark; as mark) {
+          <span class="hx-chip-hex ms-2 shrink-0 px-1.5 py-0.5 text-[9px]" [title]="mark.hint">{{
+            mark.label
+          }}</span>
+        }
+      </span>
+    </a>
+  } @else {
+    <span aria-hidden="true"></span>
+  }
+</nav>

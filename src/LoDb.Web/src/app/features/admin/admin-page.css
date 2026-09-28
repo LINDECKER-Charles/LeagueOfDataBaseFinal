@@ -1,0 +1,184 @@
+/*
+ * What the legacy panels shared (app/public/admin/css/data.css, controls.css): the data table
+ * in its card, rule-separated rows lit on hover; the toolbar of a list and its slim fields.
+ * Not encapsulated, as every panel is a component of its own: each rule is scoped under the
+ * page's host. Added to the shared `hx-table hx-table--flush`, never in its place.
+ */
+lodb-admin-page .admin-tbl {
+  font-size: 0.88rem;
+}
+
+lodb-admin-page .admin-tbl :is(th, td) {
+  padding-block: 0.6rem;
+  padding-inline: 0.65rem;
+  border-block-end-color: color-mix(in srgb, var(--color-gold) 16%, transparent);
+  vertical-align: middle;
+}
+
+lodb-admin-page .admin-tbl th {
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+
+lodb-admin-page .admin-tbl tbody tr:hover {
+  background: color-mix(in srgb, var(--color-gold) 5%, transparent);
+}
+
+lodb-admin-page .admin-tbl .num {
+  font-variant-numeric: tabular-nums;
+}
+
+lodb-admin-page .admin-tbl .cell-sub {
+  display: block;
+  max-inline-size: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  color: var(--color-text-dim);
+}
+
+lodb-admin-page .admin-tbl .t-empty {
+  padding: 1.4rem;
+  text-align: center;
+  color: var(--color-text-dim);
+}
+
+/*
+ * The actions start their cell under an end-aligned heading, as the legacy tables rendered
+ * them: its `.tbl td` alignment outranked its `.actions-cell` one.
+ */
+lodb-admin-page .admin-tbl .actions {
+  text-align: start;
+  white-space: nowrap;
+}
+
+lodb-admin-page .admin-tbl .actions > * {
+  vertical-align: middle;
+}
+
+lodb-admin-page .admin-tbl .actions > * + * {
+  margin-inline-start: 0.45rem;
+}
+
+lodb-admin-page .admin-tbl .badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* An inline form of a row: the reason of a ban, the requests of a credit. */
+lodb-admin-page .row-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+lodb-admin-page .toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-block-end: 1.15rem;
+}
+
+lodb-admin-page .toolbar-count {
+  margin-inline-start: auto;
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+}
+
+/*
+ * The legacy `.input-slim`, at 16px rather than 12.8px: below 16px iOS zooms on focus. Its
+ * padding stays slim, so the toolbars keep their height.
+ */
+lodb-admin-page .admin-input {
+  inline-size: 10rem;
+  max-inline-size: 100%;
+  padding-block: 0.3rem;
+  padding-inline: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+  /* The colour only: a select keeps the chevron `hx-select` paints as its image. */
+  background-color: var(--color-panel-2);
+  color: var(--color-gold-bright);
+  font-family: var(--font-spiegel);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+lodb-admin-page .admin-input::placeholder {
+  color: var(--color-text-dim);
+}
+
+lodb-admin-page .admin-input:focus {
+  outline: none;
+  border-color: var(--color-hex);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-hex) 40%, transparent);
+}
+
+lodb-admin-page .admin-input--wide {
+  inline-size: 18rem;
+}
+
+lodb-admin-page .admin-input[type='number'] {
+  inline-size: 6.5rem;
+  font-family: var(--font-mono);
+}
+
+/* A select is `hx-select admin-input`: sized on its options, room kept for its chevron. */
+lodb-admin-page select.admin-input {
+  inline-size: auto;
+  padding-inline-end: 1.75rem;
+}
+
+/* A readout of a card body, the legacy `.k-val--sm`: a tile's figure, smaller. */
+lodb-admin-page .readout-label {
+  display: block;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+lodb-admin-page .readout-value {
+  display: block;
+  margin-block-start: 0.35rem;
+  font-family: var(--font-beaufort);
+  font-size: 1.5rem;
+  line-height: 1.1;
+  color: var(--color-gold-bright);
+}
+
+lodb-admin-page .readout-text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-dim);
+}
+
+/* The rows of a panel, the legacy `.grid.cols-2` and `.cols-3`: one column on a phone. */
+lodb-admin-page .admin-grid {
+  display: grid;
+  gap: 1.15rem;
+}
+
+@media (width > 860px) {
+  lodb-admin-page .admin-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  lodb-admin-page .admin-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  lodb-admin-page .admin-grid .span-2 {
+    grid-column: span 2;
+  }
+}
+
+/* The key figures of a panel, the legacy `.kpi-grid`: as many 11rem tiles as fit. */
+lodb-admin-page .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem;
+}

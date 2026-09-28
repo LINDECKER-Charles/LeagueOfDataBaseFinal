@@ -1,0 +1,21 @@
+Subject: [Contact · Bug / issue] Page blanche
+
+LEAGUE OF DATABASE
+New contact message
+========================================
+
+Category : Bug / issue
+Sender : Visiteur
+Email : visitor@example.com
+Subject : Page blanche
+Received : 26/09/2026 08:15 UTC · fr
+
+----------------------------------------
+La page des runes reste blanche.
+Merci !
+----------------------------------------
+
+Reply : visitor@example.com
+
+--
+Sent from the footer contact form. Find this message in the admin area.

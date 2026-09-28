@@ -1,0 +1,12 @@
+{
+  "pages": "Oldalak",
+  "loading": "A lista betöltése…",
+  "pending": {
+    "title": "Ez a patch előkészítés alatt áll",
+    "text": "Az adatai még érkeznek: a lista hamarosan kiegészül."
+  },
+  "failed": {
+    "title": "A listát nem sikerült betölteni",
+    "text": "Próbáld újra egy pillanat múlva."
+  }
+}

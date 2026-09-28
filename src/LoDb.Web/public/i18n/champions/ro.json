@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "Închide",
+    "previous": "Anterior",
+    "next": "Următor",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "Chroma pentru {{ skin }}"
+  }
+}

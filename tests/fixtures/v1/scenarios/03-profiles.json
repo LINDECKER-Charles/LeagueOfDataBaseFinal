@@ -1,0 +1,15 @@
+{
+  "title": "Public profiles: visibility, ban, case-insensitive lookup, empty favorites",
+  "steps": [
+    { "id": "public", "request": { "method": "GET", "path": "/v1/profiles/PublicPlayer", "headers": { "X-Api-Key": "{{key:monthly_plus}}" } } },
+    { "id": "public-other-case", "note": "lookup on LOWER(username); the stored spelling is returned", "request": { "method": "GET", "path": "/v1/profiles/publicPLAYER", "headers": { "X-Api-Key": "{{key:monthly_plus}}" } } },
+    { "id": "public-percent-encoded", "request": { "method": "GET", "path": "/v1/profiles/%50ublicPlayer", "headers": { "X-Api-Key": "{{key:monthly_plus}}" } } },
+    { "id": "private", "note": "same 404 as an unknown account", "request": { "method": "GET", "path": "/v1/profiles/PrivatePlayer", "headers": { "X-Api-Key": "{{key:monthly_plus}}" } } },
+    { "id": "unknown", "request": { "method": "GET", "path": "/v1/profiles/NobodyHere", "headers": { "X-Api-Key": "{{key:monthly_plus}}" } } },
+    { "id": "banned", "note": "go-api ignores the ban (the site answers 404): heritage requires the same 404 as unknown", "request": { "method": "GET", "path": "/v1/profiles/BannedPlayer", "headers": { "X-Api-Key": "{{key:monthly_plus}}" } } },
+    { "id": "no-favorites", "request": { "method": "GET", "path": "/v1/profiles/NoFavorites", "headers": { "X-Api-Key": "{{key:monthly_plus}}" } } },
+    { "id": "key-owner-private", "note": "an API client account with a private profile", "request": { "method": "GET", "path": "/v1/profiles/ApiClient0", "headers": { "X-Api-Key": "{{key:monthly_plus}}" } } },
+    { "id": "trailing-slash", "request": { "method": "GET", "path": "/v1/profiles/PublicPlayer/", "headers": { "X-Api-Key": "{{key:monthly_plus}}" } } },
+    { "id": "empty-username", "request": { "method": "GET", "path": "/v1/profiles/", "headers": { "X-Api-Key": "{{key:monthly_plus}}" } } }
+  ]
+}

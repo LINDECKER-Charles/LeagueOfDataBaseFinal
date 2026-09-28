@@ -1,0 +1,137 @@
+<lodb-page-head
+  [eyebrow]="'admin.eyebrows.infrastructure' | adminText"
+  [title]="'admin.storage.title' | adminText"
+  [subtitle]="'admin.storage.lede' | adminText"
+>
+  <button
+    lodbButton="ghost"
+    type="button"
+    [title]="'admin.storage.refresh_hint' | adminText"
+    [disabled]="report.busy()"
+    (click)="refresh()"
+  >
+    {{ 'admin.actions.refresh' | adminText }}
+  </button>
+</lodb-page-head>
+
+<lodb-panel-state [panel]="report" shape="cards" />
+@if (report.value(); as data) {
+  @if (!data.ok) {
+    <lodb-admin-band tone="alert">
+      {{ 'admin.storage.unavailable' | adminText: { error: data.error ?? '' } }}
+    </lodb-admin-band>
+  } @else {
+    <div class="kpi-grid mb-6" [attr.aria-busy]="report.busy()">
+      <lodb-kpi
+        [label]="'admin.storage.kpi.bytes' | adminText"
+        [value]="data.bytes | figure: 'bytes'"
+        [sub]="'admin.overview.kpi.storage_sub' | adminText: { count: (data.objects | figure) }"
+      />
+      <lodb-kpi
+        [label]="'admin.storage.kpi.blobs' | adminText"
+        [value]="blobs() | figure: 'compact'"
+        [sub]="'admin.storage.kpi.blobs_sub' | adminText"
+      />
+      <lodb-kpi
+        accent="cyan"
+        [label]="'admin.overview.kpi.webp' | adminText"
+        [value]="data.blobs.webpCoverage | figure: 'percent'"
+        [sub]="data.blobs.webpSiblings + ' / ' + data.blobs.sources"
+      />
+      <lodb-kpi
+        accent="green"
+        [label]="'admin.storage.kpi.dedup' | adminText"
+        [value]="data.dedup.ratio | figure: 'ratio'"
+        [sub]="
+          'admin.storage.kpi.saved'
+            | adminText: { size: (data.dedup.savedBytesApprox | figure: 'bytes') }
+        "
+      />
+      <lodb-kpi
+        accent="red"
+        [label]="'admin.overview.kpi.versions' | adminText"
+        [value]="data.coverage.length"
+        [sub]="'admin.storage.kpi.versions_sub' | adminText"
+      />
+    </div>
+
+    <div class="admin-grid admin-grid--3">
+      <lodb-admin-card [heading]="'admin.overview.families' | adminText">
+        <lodb-rank-list format="bytes" [rows]="families()" empty="admin.storage.families_empty" />
+      </lodb-admin-card>
+      <lodb-admin-card
+        class="span-2"
+        [heading]="'admin.storage.timeline' | adminText"
+        [chip]="'admin.storage.timeline_chip' | adminText"
+      >
+        <lodb-time-series-chart
+          [dates]="timeline().dates"
+          [series]="timeline().series"
+          [label]="'admin.storage.timeline_label' | adminText"
+        />
+      </lodb-admin-card>
+    </div>
+
+    <lodb-admin-rule [label]="'admin.rules.images' | adminText" />
+    <div class="admin-grid admin-grid--3">
+      <lodb-admin-card class="span-2" [heading]="'admin.storage.extensions' | adminText">
+        <lodb-rank-list
+          format="bytes"
+          [rows]="extensions()"
+          [limit]="6"
+          empty="admin.storage.extensions_empty"
+        />
+      </lodb-admin-card>
+      <lodb-admin-card [heading]="'admin.storage.webp' | adminText">
+        <div class="flex flex-col gap-[1.15rem]">
+          <div>
+            <span class="readout-label">{{ 'admin.storage.webp_label' | adminText }}</span>
+            <span class="readout-value">{{ data.blobs.webpCoverage | figure: 'share' }}</span>
+          </div>
+          <span class="block h-2 overflow-hidden bg-track" aria-hidden="true">
+            <span
+              class="block h-full bg-linear-to-r from-hex-deep to-hex"
+              [style.inline-size.%]="webpWidth()"
+            ></span>
+          </span>
+          <p class="readout-text">
+            {{
+              'admin.storage.webp_text'
+                | adminText
+                  : {
+                      source: (data.blobs.sourceBytes | figure: 'bytes'),
+                      webp: (data.blobs.webpBytes | figure: 'bytes'),
+                    }
+            }}
+          </p>
+        </div>
+      </lodb-admin-card>
+    </div>
+
+    <lodb-admin-rule [label]="'admin.rules.data' | adminText" />
+    <div class="admin-grid admin-grid--3">
+      <lodb-admin-card [heading]="'admin.storage.versions' | adminText">
+        <lodb-rank-list format="bytes" [rows]="versions()" [limit]="8" />
+      </lodb-admin-card>
+      <lodb-admin-card [heading]="'admin.storage.languages' | adminText">
+        <lodb-rank-list tone="hex" format="bytes" [rows]="languages()" [limit]="8" />
+      </lodb-admin-card>
+      <lodb-admin-card [heading]="'admin.storage.types' | adminText">
+        <lodb-rank-list format="bytes" [rows]="types()" [limit]="8" />
+      </lodb-admin-card>
+    </div>
+
+    <lodb-admin-rule [label]="'admin.rules.detail' | adminText" />
+    <div class="admin-grid admin-grid--2">
+      <lodb-admin-card [heading]="'admin.storage.largest' | adminText">
+        <lodb-largest-objects [objects]="data.largest" />
+      </lodb-admin-card>
+      <lodb-admin-card
+        [heading]="'admin.storage.coverage' | adminText"
+        [chip]="'admin.storage.coverage_chip' | adminText"
+      >
+        <lodb-coverage-matrix [coverage]="data.coverage" />
+      </lodb-admin-card>
+    </div>
+  }
+}

@@ -1,0 +1,73 @@
+/*
+ * The `picker` variant of the dialog and the sheet (ui/overlays/dialog-size.ts): the favorite
+ * and skin pickers of the profile editor, drawn as the legacy picker sheet. A lighter panel
+ * than a dialog's, square controls in its head, and on a phone the filter sheet's gold
+ * handle. The panel caps its height, so the list scrolls inside it, never the page.
+ */
+@layer components {
+  .hx-dialog--picker .hx-dialog-panel,
+  .hx-sheet--picker .hx-dialog-panel {
+    background: linear-gradient(180deg, var(--color-panel), var(--color-hextech-black));
+  }
+  .hx-dialog--picker .hx-dialog-panel {
+    max-block-size: min(38rem, 85dvh);
+    padding: 1.25rem 1.5rem 1.5rem;
+    border-color: color-mix(in srgb, var(--color-gold) 45%, transparent);
+  }
+  .hx-sheet--picker .hx-dialog-panel {
+    max-block-size: 84dvh;
+    padding: 0.75rem 1.25rem calc(1rem + env(safe-area-inset-bottom));
+  }
+  /* The handle the thumb pulls, spaced from the head as the legacy sheet's flex gap did. */
+  .hx-sheet--picker .hx-dialog-panel::before {
+    content: '';
+    display: block;
+    inline-size: 2.5rem;
+    block-size: 4px;
+    margin-block-end: 1.65rem;
+    margin-inline: auto;
+    background: color-mix(in srgb, var(--color-gold) 50%, transparent);
+  }
+  .hx-dialog--picker .hx-dialog-panel__head,
+  .hx-sheet--picker .hx-dialog-panel__head {
+    margin-block-end: 0.9rem;
+  }
+
+  /*
+   * The close is a framed square, like the way back a picker may lead its head with. It lays
+   * out at the legacy 2.25rem; its hit area reaches 44px past the frame.
+   */
+  .hx-dialog--picker .hx-dialog-panel__close,
+  .hx-sheet--picker .hx-dialog-panel__close {
+    position: relative;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    margin: 0;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+    transition:
+      color 0.25s var(--ease-hextech),
+      border-color 0.25s var(--ease-hextech);
+  }
+  .hx-dialog--picker .hx-dialog-panel__close::after,
+  .hx-sheet--picker .hx-dialog-panel__close::after {
+    content: '';
+    position: absolute;
+    inset: -0.25rem;
+  }
+  .hx-dialog--picker .hx-dialog-panel__close:hover,
+  .hx-sheet--picker .hx-dialog-panel__close:hover {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+  }
+  .hx-dialog--picker .hx-dialog-panel__close:focus-visible,
+  .hx-sheet--picker .hx-dialog-panel__close:focus-visible {
+    border-color: var(--color-hex);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hx-dialog--picker .hx-dialog-panel__close,
+    .hx-sheet--picker .hx-dialog-panel__close {
+      transition: none;
+    }
+  }
+}

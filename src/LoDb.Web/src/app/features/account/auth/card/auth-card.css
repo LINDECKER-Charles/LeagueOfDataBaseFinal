@@ -1,0 +1,51 @@
+/*
+ * The summoning portal: a thin conic ring of gold and arcane turning very slowly behind the
+ * centred card. One quiet statement, everything else stays sober.
+ */
+@layer components {
+  .auth-portal {
+    flex-grow: 1;
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: clamp(3rem, 9vh, 6.5rem) 1.5rem;
+    overflow: hidden;
+  }
+  /* The ring is hollowed by a mask so only a 1px band remains, kept faint on purpose. */
+  .auth-portal::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline: 0;
+    inline-size: min(38rem, 105vw);
+    aspect-ratio: 1;
+    margin-inline: auto;
+    translate: 0 -50%;
+    border-radius: 50%;
+    padding: 1px;
+    background: conic-gradient(
+      var(--color-gold-deep),
+      var(--color-gold) 30%,
+      var(--color-hex-deep) 55%,
+      var(--color-gold-deep) 80%,
+      var(--color-gold-deep)
+    );
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.16;
+    animation: auth-portal-turn 60s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes auth-portal-turn {
+    to {
+      rotate: 360deg;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .auth-portal::before {
+      animation: none;
+    }
+  }
+}

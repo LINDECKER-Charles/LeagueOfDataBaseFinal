@@ -1,0 +1,12 @@
+{
+  "pages": "Halaman",
+  "loading": "Memuat daftar…",
+  "pending": {
+    "title": "Patch ini sedang disiapkan",
+    "text": "Datanya masih berdatangan: daftar akan segera lengkap."
+  },
+  "failed": {
+    "title": "Daftar tidak dapat dimuat",
+    "text": "Coba lagi sebentar lagi."
+  }
+}

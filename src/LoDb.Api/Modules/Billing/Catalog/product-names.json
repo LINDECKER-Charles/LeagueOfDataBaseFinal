@@ -1,0 +1,214 @@
+{
+  "en": {
+    "donation": "Donation — League Of Data Base",
+    "pack": "LoDB API — {{ requests }} request credits",
+    "plan": "LoDB API — {{ plan }} plan",
+    "plans": {
+      "monthly": "Monthly",
+      "monthly_plus": "Monthly+",
+      "annual": "Annual",
+      "annual_plus": "Annual+"
+    }
+  },
+  "ar": {
+    "pack": "LoDB API — أرصدة {{ requests }} طلب",
+    "plan": "LoDB API — خطة {{ plan }}",
+    "plans": {
+      "monthly": "شهري",
+      "monthly_plus": "شهري+",
+      "annual": "سنوي",
+      "annual_plus": "سنوي+"
+    }
+  },
+  "cs": {
+    "pack": "LoDB API — {{ requests }} požadavků v kreditech",
+    "plan": "LoDB API — plán {{ plan }}",
+    "plans": {
+      "monthly": "Měsíční",
+      "monthly_plus": "Měsíční+",
+      "annual": "Roční",
+      "annual_plus": "Roční+"
+    }
+  },
+  "de": {
+    "pack": "LoDB-API — {{ requests }} Anfragen als Credits",
+    "plan": "LoDB-API — Tarif {{ plan }}",
+    "plans": {
+      "monthly": "Monatlich",
+      "monthly_plus": "Monatlich+",
+      "annual": "Jährlich",
+      "annual_plus": "Jährlich+"
+    }
+  },
+  "el": {
+    "pack": "LoDB API — {{ requests }} αιτήματα σε μονάδες",
+    "plan": "LoDB API — πλάνο {{ plan }}",
+    "plans": {
+      "monthly": "Μηνιαίο",
+      "monthly_plus": "Μηνιαίο+",
+      "annual": "Ετήσιο",
+      "annual_plus": "Ετήσιο+"
+    }
+  },
+  "es": {
+    "pack": "API LoDB — {{ requests }} peticiones en créditos",
+    "plan": "API LoDB — plan {{ plan }}",
+    "plans": {
+      "monthly": "Mensual",
+      "monthly_plus": "Mensual+",
+      "annual": "Anual",
+      "annual_plus": "Anual+"
+    }
+  },
+  "fr": {
+    "donation": "Don — League Of Data Base",
+    "pack": "API LoDB — {{ requests }} requêtes en crédits",
+    "plan": "API LoDB — offre {{ plan }}",
+    "plans": {
+      "monthly": "Mensuel",
+      "monthly_plus": "Mensuel+",
+      "annual": "Annuel",
+      "annual_plus": "Annuel+"
+    }
+  },
+  "hu": {
+    "pack": "LoDB API — {{ requests }} kérésnyi kredit",
+    "plan": "LoDB API — {{ plan }} csomag",
+    "plans": {
+      "monthly": "Havi",
+      "monthly_plus": "Havi+",
+      "annual": "Éves",
+      "annual_plus": "Éves+"
+    }
+  },
+  "id": {
+    "pack": "LoDB API — kredit {{ requests }} permintaan",
+    "plan": "LoDB API — paket {{ plan }}",
+    "plans": {
+      "monthly": "Bulanan",
+      "monthly_plus": "Bulanan+",
+      "annual": "Tahunan",
+      "annual_plus": "Tahunan+"
+    }
+  },
+  "it": {
+    "pack": "API LoDB — {{ requests }} richieste in crediti",
+    "plan": "API LoDB — piano {{ plan }}",
+    "plans": {
+      "monthly": "Mensile",
+      "monthly_plus": "Mensile+",
+      "annual": "Annuale",
+      "annual_plus": "Annuale+"
+    }
+  },
+  "ja": {
+    "pack": "LoDB API — クレジット {{ requests }} リクエスト",
+    "plan": "LoDB API — {{ plan }} プラン",
+    "plans": {
+      "monthly": "月額",
+      "monthly_plus": "月額+",
+      "annual": "年額",
+      "annual_plus": "年額+"
+    }
+  },
+  "ko": {
+    "pack": "LoDB API — 크레딧 {{ requests }}회 요청",
+    "plan": "LoDB API — {{ plan }} 플랜",
+    "plans": {
+      "monthly": "월간",
+      "monthly_plus": "월간+",
+      "annual": "연간",
+      "annual_plus": "연간+"
+    }
+  },
+  "pl": {
+    "pack": "API LoDB — {{ requests }} zapytań w kredytach",
+    "plan": "API LoDB — plan {{ plan }}",
+    "plans": {
+      "monthly": "Miesięczny",
+      "monthly_plus": "Miesięczny+",
+      "annual": "Roczny",
+      "annual_plus": "Roczny+"
+    }
+  },
+  "pt": {
+    "pack": "API LoDB — {{ requests }} requisições em créditos",
+    "plan": "API LoDB — plano {{ plan }}",
+    "plans": {
+      "monthly": "Mensal",
+      "monthly_plus": "Mensal+",
+      "annual": "Anual",
+      "annual_plus": "Anual+"
+    }
+  },
+  "ro": {
+    "pack": "API LoDB — {{ requests }} cereri în credite",
+    "plan": "API LoDB — plan {{ plan }}",
+    "plans": {
+      "monthly": "Lunar",
+      "monthly_plus": "Lunar+",
+      "annual": "Anual",
+      "annual_plus": "Anual+"
+    }
+  },
+  "ru": {
+    "pack": "LoDB API — {{ requests }} запросов в кредитах",
+    "plan": "LoDB API — план {{ plan }}",
+    "plans": {
+      "monthly": "Месячный",
+      "monthly_plus": "Месячный+",
+      "annual": "Годовой",
+      "annual_plus": "Годовой+"
+    }
+  },
+  "th": {
+    "pack": "LoDB API — เครดิต {{ requests }} คำขอ",
+    "plan": "LoDB API — แพ็กเกจ {{ plan }}",
+    "plans": {
+      "monthly": "รายเดือน",
+      "monthly_plus": "รายเดือน+",
+      "annual": "รายปี",
+      "annual_plus": "รายปี+"
+    }
+  },
+  "tr": {
+    "pack": "LoDB API — {{ requests }} istek kredisi",
+    "plan": "LoDB API — {{ plan }} planı",
+    "plans": {
+      "monthly": "Aylık",
+      "monthly_plus": "Aylık+",
+      "annual": "Yıllık",
+      "annual_plus": "Yıllık+"
+    }
+  },
+  "vi": {
+    "pack": "LoDB API — tín dụng {{ requests }} yêu cầu",
+    "plan": "LoDB API — gói {{ plan }}",
+    "plans": {
+      "monthly": "Hàng tháng",
+      "monthly_plus": "Hàng tháng+",
+      "annual": "Hàng năm",
+      "annual_plus": "Hàng năm+"
+    }
+  },
+  "zh-hans": {
+    "pack": "LoDB API — {{ requests }} 次请求积分",
+    "plan": "LoDB API — {{ plan }} 方案",
+    "plans": {
+      "monthly": "月付",
+      "monthly_plus": "月付+",
+      "annual": "年付",
+      "annual_plus": "年付+"
+    }
+  },
+  "zh-hant": {
+    "pack": "LoDB API — {{ requests }} 次請求點數",
+    "plan": "LoDB API — {{ plan }} 方案",
+    "plans": {
+      "monthly": "月繳",
+      "monthly_plus": "月繳+",
+      "annual": "年繳",
+      "annual_plus": "年繳+"
+    }
+  }
+}

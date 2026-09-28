@@ -1,0 +1,13 @@
+{
+  "banner_label": "Uygulama güncellemesi",
+  "banner_ready": "Bir güncelleme hazır.",
+  "restart": "Yeniden başlat",
+  "later": "Daha sonra",
+  "restart_failed": "Yeniden başlatma başarısız oldu. Uygulamayı kapatıp yeniden açın.",
+  "required_title": "Güncelleme gerekli",
+  "required_body": "League of Data Base'in bu sürümü artık desteklenmiyor. Uygulamayı kullanmaya devam etmek için güncelleyin.",
+  "required_versions": "Sürümünüz: {{ current }} — gerekli: {{ minimum }} veya daha yeni",
+  "restart_now": "Yeniden başlat ve güncelle",
+  "downloading": "Güncelleme indiriliyor…",
+  "waiting": "Güncelleme kendiliğinden iner. Uygulamayı açık tutun."
+}

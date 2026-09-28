@@ -1,0 +1,4 @@
+{
+  "base_url": "Bazowy URL: {{ url }}",
+  "pricing_unavailable": "Cennika nie można teraz wyświetlić."
+}

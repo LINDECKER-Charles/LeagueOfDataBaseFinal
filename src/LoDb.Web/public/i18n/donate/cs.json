@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Obětina pro výheň",
+  "title": "Podpořte League Of Data Base",
+  "intro": "Váš dar pokryje náklady na hosting a udrží encyklopedii rychlou, bezplatnou a bez reklam.",
+  "pledge": "Žádná výhoda ve hře, žádné bonusy — jen naše vděčnost.",
+  "tiers": {
+    "legend": "Vyberte obětinu"
+  },
+  "tier": {
+    "spark": "Jiskra",
+    "gem": "Drahokam",
+    "crest": "Erb",
+    "relic": "Relikvie"
+  },
+  "custom": {
+    "label": "Vlastní částka",
+    "placeholder": "např. 7,50",
+    "hint": "Mezi {{ min }} € a {{ max }} € — vlastní částka nahrazuje vybranou úroveň."
+  },
+  "submit": "Přispět přes Stripe",
+  "busy": "Otevírá se zabezpečená platba…",
+  "unavailable": {
+    "title": "Dary již brzy",
+    "body": "Platební brána zatím není zapnutá. Vraťte se brzy — encyklopedie zůstává zdarma tak či tak."
+  },
+  "legal": {
+    "secure": "Zabezpečená platba přes Stripe — žádné údaje o kartě se k tomuto webu nedostanou",
+    "secure_short": "zabezpečená platba",
+    "privacy": "Zásady ochrany osobních údajů",
+    "terms": "Podmínky užívání"
+  },
+  "error": {
+    "csrf": "Relace vypršela. Obnovte stránku a zkuste to znovu.",
+    "unavailable": "Dary nejsou momentálně k dispozici.",
+    "invalid_amount": "Neplatná částka — zadejte mezi {{ min }} € a {{ max }} €.",
+    "gateway": "Platební služba je nedostupná, zkuste to prosím později.",
+    "throttled": "Příliš mnoho pokusů o platbu. Chvíli počkejte a zkuste to znovu."
+  },
+  "success": {
+    "eyebrow": "Obětina přijata",
+    "title": "Děkujeme, vyvolávači",
+    "body": "Vaše podpora udržuje výheň v žáru — každý dar jde na hosting a udržuje encyklopedii zdarma pro všechny.",
+    "receipt": "Stripe vám pošle potvrzení e-mailem.",
+    "back": "Zpět do encyklopedie"
+  },
+  "cancel": {
+    "eyebrow": "Obětina stažena",
+    "title": "Dar zrušen",
+    "body": "Nic nebylo strženo. Encyklopedie zůstává zdarma a otevřená, s darem i bez něj.",
+    "retry": "Zkusit znovu",
+    "back": "Zpět na úvod"
+  }
+}

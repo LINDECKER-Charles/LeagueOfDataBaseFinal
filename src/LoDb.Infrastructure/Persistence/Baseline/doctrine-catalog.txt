@@ -1,0 +1,157 @@
+column api_keys.created_at timestamp(0) with time zone not null
+column api_keys.credits_balance bigint not null default 0
+column api_keys.id integer not null identity by default
+column api_keys.is_active boolean not null default true
+column api_keys.key_hash character varying(64) not null
+column api_keys.key_prefix character varying(12) not null
+column api_keys.monthly_quota integer not null default 500
+column api_keys.name character varying(64) not null
+column api_keys.plan character varying(16) not null default 'free'::character varying
+column api_keys.rate_limit_per_min integer not null default 10
+column api_keys.revoked_at timestamp(0) with time zone default NULL::timestamp with time zone
+column api_keys.stripe_customer_id character varying(64) default NULL::character varying
+column api_keys.stripe_subscription_id character varying(64) default NULL::character varying
+column api_keys.user_id integer not null
+column api_usage.api_key_id integer not null
+column api_usage.day date not null
+column api_usage.id bigint not null identity by default
+column api_usage.requests bigint not null default 0
+column build_votes.build_id integer not null
+column build_votes.created_at timestamp(0) without time zone not null
+column build_votes.id integer not null identity by default
+column build_votes.value smallint not null
+column build_votes.voter_id integer not null
+column builds.champion_id character varying(64) not null
+column builds.created_at timestamp(0) without time zone not null
+column builds.description text
+column builds.game_mode character varying(16) not null default 'sr'::character varying
+column builds.game_version character varying(24) not null
+column builds.id integer not null identity by default
+column builds.is_public boolean not null default false
+column builds.language character varying(8) not null default 'en_US'::character varying
+column builds.name character varying(80) not null
+column builds.owner_id integer not null
+column builds.runes jsonb not null
+column builds.share_token character varying(24) not null
+column builds.steps jsonb not null
+column builds.updated_at timestamp(0) without time zone not null
+column contact_messages.category character varying(255) not null
+column contact_messages.created_at timestamp(0) without time zone not null
+column contact_messages.email character varying(255) not null
+column contact_messages.handled_at timestamp(0) without time zone default NULL::timestamp without time zone
+column contact_messages.id integer not null identity by default
+column contact_messages.ip character varying(64) default NULL::character varying
+column contact_messages.locale character varying(16) default NULL::character varying
+column contact_messages.message text not null
+column contact_messages.name character varying(120) default NULL::character varying
+column contact_messages.status character varying(255) not null default 'new'::character varying
+column contact_messages.subject character varying(160) default NULL::character varying
+column contact_messages.user_id integer
+column doctrine_migration_versions.executed_at timestamp(0) without time zone default NULL::timestamp without time zone
+column doctrine_migration_versions.execution_time integer
+column doctrine_migration_versions.version character varying(191) not null
+column donations.amount_cents integer not null
+column donations.created_at timestamp(0) without time zone not null
+column donations.currency character varying(3) not null
+column donations.id integer not null identity by default
+column donations.stripe_session_id character varying(255) not null
+column donations.user_id integer
+column messenger_messages.available_at timestamp(0) without time zone not null
+column messenger_messages.body text not null
+column messenger_messages.created_at timestamp(0) without time zone not null
+column messenger_messages.delivered_at timestamp(0) without time zone default NULL::timestamp without time zone
+column messenger_messages.headers text not null
+column messenger_messages.id bigint not null identity by default
+column messenger_messages.queue_name character varying(190) not null
+column reset_password_request.expires_at timestamp(0) without time zone not null
+column reset_password_request.hashed_token character varying(100) not null
+column reset_password_request.id integer not null identity by default
+column reset_password_request.requested_at timestamp(0) without time zone not null
+column reset_password_request.selector character varying(20) not null
+column reset_password_request.user_id integer not null
+column users.ban_reason character varying(255) default NULL::character varying
+column users.banned_at timestamp(0) with time zone default NULL::timestamp with time zone
+column users.created_at timestamp(0) without time zone not null
+column users.email character varying(180) not null
+column users.favorite_champion_id character varying(64) default NULL::character varying
+column users.favorite_item_id character varying(16) default NULL::character varying
+column users.favorite_rune_id character varying(16) default NULL::character varying
+column users.favorite_skin_id character varying(64) default NULL::character varying
+column users.favorite_summoner_id character varying(64) default NULL::character varying
+column users.google_id character varying(30) default NULL::character varying
+column users.id integer not null identity by default
+column users.is_banned boolean not null default false
+column users.is_public_profile boolean not null default false
+column users.is_supporter boolean not null default false
+column users.is_verified boolean not null default false
+column users.password character varying(255)
+column users.preferred_version character varying(24) default NULL::character varying
+column users.riot_tagline character varying(5) default NULL::character varying
+column users.roles json not null
+column users.username character varying(24) not null
+constraint api_keys.api_keys_pkey PRIMARY KEY (id)
+constraint api_keys.fk_9579321fa76ed395 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+constraint api_usage.api_usage_pkey PRIMARY KEY (id)
+constraint api_usage.fk_f47e0aa08be312b3 FOREIGN KEY (api_key_id) REFERENCES api_keys(id) ON DELETE CASCADE
+constraint build_votes.build_votes_pkey PRIMARY KEY (id)
+constraint build_votes.fk_11530dc417c13f8b FOREIGN KEY (build_id) REFERENCES builds(id) ON DELETE CASCADE
+constraint build_votes.fk_11530dc4ebb4b8ad FOREIGN KEY (voter_id) REFERENCES users(id) ON DELETE CASCADE
+constraint builds.builds_pkey PRIMARY KEY (id)
+constraint builds.fk_ab264a57e3c61f9 FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+constraint contact_messages.contact_messages_pkey PRIMARY KEY (id)
+constraint contact_messages.fk_41278201a76ed395 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+constraint doctrine_migration_versions.doctrine_migration_versions_pkey PRIMARY KEY (version)
+constraint donations.donations_pkey PRIMARY KEY (id)
+constraint donations.fk_cde98962a76ed395 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+constraint messenger_messages.messenger_messages_pkey PRIMARY KEY (id)
+constraint reset_password_request.fk_7ce748aa76ed395 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+constraint reset_password_request.reset_password_request_pkey PRIMARY KEY (id)
+constraint users.users_pkey PRIMARY KEY (id)
+index api_keys.api_keys_pkey CREATE UNIQUE INDEX api_keys_pkey ON api_keys USING btree (id)
+index api_keys.idx_9579321fa76ed395 CREATE INDEX idx_9579321fa76ed395 ON api_keys USING btree (user_id)
+index api_keys.uniq_9579321f57bfb971 CREATE UNIQUE INDEX uniq_9579321f57bfb971 ON api_keys USING btree (key_hash)
+index api_usage.api_usage_pkey CREATE UNIQUE INDEX api_usage_pkey ON api_usage USING btree (id)
+index api_usage.idx_f47e0aa08be312b3 CREATE INDEX idx_f47e0aa08be312b3 ON api_usage USING btree (api_key_id)
+index api_usage.uniq_api_usage_key_day CREATE UNIQUE INDEX uniq_api_usage_key_day ON api_usage USING btree (api_key_id, day)
+index build_votes.build_votes_pkey CREATE UNIQUE INDEX build_votes_pkey ON build_votes USING btree (id)
+index build_votes.idx_11530dc417c13f8b CREATE INDEX idx_11530dc417c13f8b ON build_votes USING btree (build_id)
+index build_votes.idx_11530dc4ebb4b8ad CREATE INDEX idx_11530dc4ebb4b8ad ON build_votes USING btree (voter_id)
+index build_votes.uniq_build_votes_build_voter CREATE UNIQUE INDEX uniq_build_votes_build_voter ON build_votes USING btree (build_id, voter_id)
+index builds.builds_pkey CREATE UNIQUE INDEX builds_pkey ON builds USING btree (id)
+index builds.idx_ab264a57e3c61f9 CREATE INDEX idx_ab264a57e3c61f9 ON builds USING btree (owner_id)
+index builds.uniq_ab264a5d6594dd6 CREATE UNIQUE INDEX uniq_ab264a5d6594dd6 ON builds USING btree (share_token)
+index contact_messages.contact_messages_pkey CREATE UNIQUE INDEX contact_messages_pkey ON contact_messages USING btree (id)
+index contact_messages.idx_412782017b00651c CREATE INDEX idx_412782017b00651c ON contact_messages USING btree (status)
+index contact_messages.idx_412782018b8e8428 CREATE INDEX idx_412782018b8e8428 ON contact_messages USING btree (created_at)
+index contact_messages.idx_41278201a76ed395 CREATE INDEX idx_41278201a76ed395 ON contact_messages USING btree (user_id)
+index doctrine_migration_versions.doctrine_migration_versions_pkey CREATE UNIQUE INDEX doctrine_migration_versions_pkey ON doctrine_migration_versions USING btree (version)
+index donations.donations_pkey CREATE UNIQUE INDEX donations_pkey ON donations USING btree (id)
+index donations.idx_cde98962a76ed395 CREATE INDEX idx_cde98962a76ed395 ON donations USING btree (user_id)
+index donations.uniq_cde989621a314a57 CREATE UNIQUE INDEX uniq_cde989621a314a57 ON donations USING btree (stripe_session_id)
+index messenger_messages.idx_75ea56e0fb7336f0e3bd61ce16ba31dbbf396750 CREATE INDEX idx_75ea56e0fb7336f0e3bd61ce16ba31dbbf396750 ON messenger_messages USING btree (queue_name, available_at, delivered_at, id)
+index messenger_messages.messenger_messages_pkey CREATE UNIQUE INDEX messenger_messages_pkey ON messenger_messages USING btree (id)
+index reset_password_request.idx_7ce748aa76ed395 CREATE INDEX idx_7ce748aa76ed395 ON reset_password_request USING btree (user_id)
+index reset_password_request.reset_password_request_pkey CREATE UNIQUE INDEX reset_password_request_pkey ON reset_password_request USING btree (id)
+index users.uniq_1483a5e976f5c865 CREATE UNIQUE INDEX uniq_1483a5e976f5c865 ON users USING btree (google_id)
+index users.uniq_users_email_lower CREATE UNIQUE INDEX uniq_users_email_lower ON users USING btree (lower((email)::text))
+index users.uniq_users_username_lower CREATE UNIQUE INDEX uniq_users_username_lower ON users USING btree (lower((username)::text))
+index users.users_pkey CREATE UNIQUE INDEX users_pkey ON users USING btree (id)
+sequence api_keys_id_seq integer start 1 increment 1 min 1 max 2147483647 cache 1
+sequence api_usage_id_seq bigint start 1 increment 1 min 1 max 9223372036854775807 cache 1
+sequence build_votes_id_seq integer start 1 increment 1 min 1 max 2147483647 cache 1
+sequence builds_id_seq integer start 1 increment 1 min 1 max 2147483647 cache 1
+sequence contact_messages_id_seq integer start 1 increment 1 min 1 max 2147483647 cache 1
+sequence donations_id_seq integer start 1 increment 1 min 1 max 2147483647 cache 1
+sequence messenger_messages_id_seq bigint start 1 increment 1 min 1 max 9223372036854775807 cache 1
+sequence reset_password_request_id_seq integer start 1 increment 1 min 1 max 2147483647 cache 1
+sequence users_id_seq integer start 1 increment 1 min 1 max 2147483647 cache 1
+table api_keys
+table api_usage
+table build_votes
+table builds
+table contact_messages
+table doctrine_migration_versions
+table donations
+table messenger_messages
+table reset_password_request
+table users

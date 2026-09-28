@@ -1,0 +1,47 @@
+/*
+ * The display name. In the components layer, like the design system: the identities
+ * (styles/theme) restyle `.hero-name` with unlayered rules, which then win as they should.
+ */
+@layer components {
+  .hero-name {
+    font-family: var(--font-beaufort);
+    font-size: clamp(2.4rem, 6vw, 4.5rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-wrap: balance;
+  }
+  .hero-name--epic {
+    font-size: clamp(3rem, 9vw, 7rem);
+  }
+}
+
+/* Riot's ratings as ten hex diamonds; the colours are game data, pinned like ddragon.css. */
+.gauge {
+  display: flex;
+  gap: 4px;
+}
+.gauge i {
+  inline-size: 9px;
+  block-size: 9px;
+  rotate: 45deg;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 35%, transparent);
+  background: color-mix(in srgb, var(--color-hextech-black) 55%, transparent);
+}
+.gauge i.on {
+  background: var(--gauge, var(--color-gold));
+  border-color: var(--gauge, var(--color-gold));
+  box-shadow: 0 0 8px -1px var(--gauge, var(--color-gold));
+}
+.gauge--attack {
+  --gauge: #f0a868;
+}
+.gauge--defense {
+  --gauge: #3fb96f;
+}
+.gauge--magic {
+  --gauge: #0ac8b9;
+}
+.gauge--difficulty {
+  --gauge: #c99bff;
+}

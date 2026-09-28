@@ -1,0 +1,202 @@
+/*
+ * The item armory, the pane itself: a head with the step it fills and a close, the search and
+ * the category chips, the grid of items, then the count and Done. Only the grid scrolls, the
+ * rest stays pinned, as in the legacy dialog. The pane's width, height cap and surface are its
+ * size's (`wide`, primitives/dialog.css).
+ */
+@layer components {
+  /* 0,3,0: beats the panel's padding and scroll, and the sheet's padding (0,2,0). */
+  :host(.hx-dialog-panel.armory) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+  }
+  .armory__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem 0.9rem;
+    border-block-end: 1px solid color-mix(in srgb, var(--color-gold) 18%, transparent);
+  }
+  .armory__target {
+    overflow: hidden;
+    margin-block-start: 0.15rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.95rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-gold-bright);
+  }
+  .armory__close {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 2.2rem;
+    block-size: 2.2rem;
+    color: var(--color-gold);
+    border: 1px solid var(--color-gold-deep);
+    background: color-mix(in srgb, var(--color-sink) 60%, transparent);
+    cursor: pointer;
+    transition:
+      color 0.2s var(--ease-hextech),
+      border-color 0.2s var(--ease-hextech);
+  }
+  .armory__close:hover,
+  .armory__close:focus-visible {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+  }
+  .armory__close svg {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+  }
+
+  .armory__tools {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: 0.9rem 1.25rem;
+    border-block-end: 1px solid color-mix(in srgb, var(--color-gold) 14%, transparent);
+  }
+  .armory__search {
+    position: relative;
+    display: block;
+  }
+  .armory__search svg {
+    position: absolute;
+    inset-inline-start: 0.7rem;
+    inset-block-start: 50%;
+    inline-size: 1rem;
+    block-size: 1rem;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+  /* The legacy face, in mono; 16px, so iOS never zooms on focus. */
+  .armory__query {
+    inline-size: 100%;
+    padding-block: 0.55rem;
+    padding-inline: 2.1rem 0.8rem;
+    border: 1px solid var(--color-gold-deep);
+    background: var(--color-void);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+  }
+  .armory__query:focus {
+    outline: none;
+    border-color: var(--color-gold);
+  }
+  .armory__cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .armory__cat {
+    padding: 0.25rem 0.7rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-gold-deep);
+    background: color-mix(in srgb, var(--color-void) 60%, transparent);
+    cursor: pointer;
+    transition:
+      color 0.2s var(--ease-hextech),
+      border-color 0.2s var(--ease-hextech),
+      background-color 0.2s var(--ease-hextech);
+  }
+  .armory__cat:hover {
+    color: var(--color-hex);
+    border-color: color-mix(in srgb, var(--color-hex) 55%, transparent);
+  }
+  .armory__cat:focus-visible,
+  .armory__done:focus-visible {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 1px;
+  }
+  .armory__cat[aria-pressed='true'] {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+    background: color-mix(in srgb, var(--color-gold) 16%, transparent);
+  }
+
+  .armory__body {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1rem 1.25rem;
+  }
+  /* Its tiles are armory-item-tile's. */
+  .armory__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+    gap: 0.6rem;
+  }
+
+  .armory__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    padding-block-end: max(0.85rem, env(safe-area-inset-bottom));
+    border-block-start: 1px solid color-mix(in srgb, var(--color-gold) 18%, transparent);
+    background: color-mix(in srgb, var(--color-abyss) 60%, transparent);
+  }
+  .armory__count {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-dim);
+  }
+  .armory__count--full {
+    color: color-mix(in srgb, var(--color-danger) 85%, var(--color-text-dim));
+  }
+  .armory__done {
+    flex: none;
+    min-block-size: 2.5rem;
+    padding: 0.4rem 1.4rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-gold-bright);
+    border: 1px solid var(--color-gold);
+    background: color-mix(in srgb, var(--color-gold) 18%, transparent);
+    cursor: pointer;
+    transition: background-color 0.2s var(--ease-hextech);
+  }
+  .armory__done:hover {
+    background: color-mix(in srgb, var(--color-gold) 28%, transparent);
+  }
+
+  @media (max-width: 639.98px) {
+    .armory__grid {
+      grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+    }
+    .armory__done {
+      padding: 0.55rem 1.6rem;
+    }
+  }
+  /* The legacy chips and Done lay out at their padding; a thumb gets its target (controls.css). */
+  @media (pointer: coarse) {
+    .armory__cat {
+      min-block-size: 2.25rem;
+    }
+    .armory__done {
+      min-block-size: 2.75rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .armory__cat,
+    .armory__close {
+      transition: none;
+    }
+  }
+}

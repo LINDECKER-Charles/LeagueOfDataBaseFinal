@@ -1,0 +1,21 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.9.1",
+  "data": {
+    "Ahri": {
+      "version": "16.9.1",
+      "id": "Ahri",
+      "key": "103",
+      "name": "Stale Ahri",
+      "title": "older dataset, must never be served"
+    },
+    "Aatrox": {
+      "version": "16.9.1",
+      "id": "Aatrox",
+      "key": "266",
+      "name": "Stale Aatrox",
+      "title": "older dataset, must never be served"
+    }
+  }
+}

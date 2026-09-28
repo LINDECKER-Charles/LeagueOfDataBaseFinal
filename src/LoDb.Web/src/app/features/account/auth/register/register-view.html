@@ -1,0 +1,78 @@
+<lodb-auth-card [heading]="'auth.register.title' | transloco">
+  @if (error(); as message) {
+    <p class="auth-error mt-6" role="alert">{{ message | transloco }}</p>
+  }
+
+  <form class="mt-6 space-y-5" (submit)="register($event)">
+    <div>
+      <label for="register-email" class="auth-label">{{ 'auth.register.email' | transloco }}</label>
+      <input
+        lodbField
+        id="register-email"
+        name="email"
+        type="email"
+        class="mt-1.5"
+        required
+        maxlength="180"
+        autocomplete="email"
+        [attr.aria-invalid]="errors()['email'] ? true : null"
+      />
+      @if (errors()['email']; as message) {
+        <p class="auth-field-error" role="alert">{{ message | transloco }}</p>
+      }
+    </div>
+    <div>
+      <label for="register-username" class="auth-label">
+        {{ 'auth.register.username' | transloco }}
+      </label>
+      <input
+        lodbField
+        id="register-username"
+        name="username"
+        type="text"
+        class="mt-1.5"
+        required
+        minlength="3"
+        maxlength="24"
+        autocomplete="username"
+        autocapitalize="none"
+        spellcheck="false"
+        aria-describedby="register-username-help"
+        [attr.aria-invalid]="errors()['username'] ? true : null"
+      />
+      <p id="register-username-help" class="auth-help">
+        {{ 'auth.register.username_help' | transloco }}
+      </p>
+      @if (errors()['username']; as message) {
+        <p class="auth-field-error" role="alert">{{ message | transloco }}</p>
+      }
+    </div>
+    <lodb-password-pair
+      idPrefix="register"
+      [errors]="errors()"
+      [(password)]="password"
+      [(confirmation)]="confirmation"
+    />
+    <div>
+      <label class="flex items-start gap-2.5 text-sm text-text-muted">
+        <input lodbField type="checkbox" name="acceptTerms" required class="mt-0.5" />
+        <span>{{ 'auth.register.terms' | transloco }}</span>
+      </label>
+      @if (errors()['acceptTerms']; as message) {
+        <p class="auth-field-error" role="alert">{{ message | transloco }}</p>
+      }
+    </div>
+    <button lodbButton type="submit" class="mb-5 w-full" [disabled]="busy()">
+      {{ 'auth.register.submit' | transloco }}
+    </button>
+  </form>
+
+  <lodb-google-button />
+
+  <div class="gold-hairline mt-8 pt-5 text-center text-sm text-text-muted">
+    {{ 'auth.register.have_account' | transloco }}
+    <a class="nav-link text-gold" [routerLink]="link('account/login')" [queryParams]="loginQuery">
+      {{ 'auth.login.title' | transloco }}
+    </a>
+  </div>
+</lodb-auth-card>

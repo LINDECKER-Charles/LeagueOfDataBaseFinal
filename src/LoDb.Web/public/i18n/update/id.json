@@ -1,0 +1,13 @@
+{
+  "banner_label": "Pembaruan aplikasi",
+  "banner_ready": "Pembaruan sudah siap.",
+  "restart": "Mulai ulang",
+  "later": "Nanti",
+  "restart_failed": "Gagal memulai ulang. Tutup lalu buka kembali aplikasi.",
+  "required_title": "Pembaruan diperlukan",
+  "required_body": "Versi League of Data Base ini tidak lagi didukung. Perbarui untuk terus menggunakan aplikasi.",
+  "required_versions": "Versi Anda: {{ current }} — diperlukan: {{ minimum }} atau lebih baru",
+  "restart_now": "Mulai ulang dan perbarui",
+  "downloading": "Mengunduh pembaruan…",
+  "waiting": "Pembaruan diunduh secara otomatis. Biarkan aplikasi tetap terbuka."
+}

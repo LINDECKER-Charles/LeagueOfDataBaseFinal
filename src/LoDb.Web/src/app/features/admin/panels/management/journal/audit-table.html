@@ -1,0 +1,72 @@
+<div class="hx-table-scroll">
+  <table class="hx-table hx-table--flush admin-tbl">
+    <thead>
+      <tr>
+        @for (column of columns(); track column) {
+          <th scope="col">{{ 'admin.journal.columns.' + column | adminText }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (entry of entries(); track entry.id) {
+        <tr>
+          @for (column of columns(); track column) {
+            @switch (column) {
+              @case ('when') {
+                <td>{{ entry.occurredAt | stamp: 'second' }}</td>
+              }
+              @case ('actor') {
+                <td>
+                  @if (isAccount(entry)) {
+                    <a
+                      class="text-text transition-colors hover:text-gold-bright"
+                      [routerLink]="['/admin/users', entry.actorId, 'activity']"
+                    >
+                      {{ entry.actor ?? '#' + entry.actorId }}
+                    </a>
+                  } @else {
+                    <span>{{ entry.actor ?? '—' }}</span>
+                  }
+                  <span class="cell-sub">{{
+                    texts.term('journal.actor_types', entry.actorType)
+                  }}</span>
+                </td>
+              }
+              @case ('action') {
+                <td>
+                  <span>{{ texts.term('journal.actions', entry.action) }}</span>
+                  <span class="cell-sub" [title]="detailOf(entry)">{{ detailOf(entry) }}</span>
+                </td>
+              }
+              @case ('target') {
+                <td>
+                  <span>{{ targetOf(entry) }}</span>
+                  @if (entry.targetType) {
+                    <span class="cell-sub">{{ entry.targetType }}</span>
+                  }
+                </td>
+              }
+              @case ('ip') {
+                <td [title]="entry.route ?? ''">{{ entry.ip ?? '—' }}</td>
+              }
+              @case ('actor_type') {
+                <td>{{ texts.term('journal.actor_types', entry.actorType) }}</td>
+              }
+              @case ('outcome') {
+                <td>
+                  <span [lodbBadge]="outcomeTone(entry.outcome)">
+                    {{ texts.term('journal.outcomes', entry.outcome) }}
+                  </span>
+                </td>
+              }
+            }
+          }
+        </tr>
+      } @empty {
+        <tr>
+          <td class="t-empty" [attr.colspan]="columns().length">{{ empty() | adminText }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

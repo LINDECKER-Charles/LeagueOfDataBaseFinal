@@ -1,0 +1,133 @@
+/*
+ * The champion picker: a folding header with the chosen portrait, over a compact grid of
+ * square portraits, the chosen one ringed in gold.
+ */
+@layer components {
+  /*
+   * Where the chosen champion and "Choose a champion" do not fit side by side (a phone), the
+   * action wraps under the champion rather than squeezing its name into broken words.
+   */
+  .champ-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 1rem;
+    inline-size: 100%;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 30%, transparent);
+    background: color-mix(in srgb, var(--color-gold) 6%, transparent);
+    cursor: pointer;
+    transition: border-color 0.25s var(--ease-hextech);
+  }
+  /* The legacy toggle laid out at its padding; a thumb gets the 44px target (controls.css). */
+  @media (pointer: coarse) {
+    .champ-toggle {
+      min-block-size: 2.75rem;
+    }
+  }
+  .champ-toggle:hover {
+    border-color: var(--color-gold);
+  }
+  .champ-toggle:focus-visible {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 1px;
+  }
+  .champ-toggle__id {
+    display: flex;
+    flex: 1 1 9rem;
+    align-items: center;
+    gap: 0.75rem;
+    min-inline-size: 0;
+  }
+  .champ-toggle__label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-inline-size: 0;
+    text-align: start;
+  }
+  .champ-toggle__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: none;
+    margin-inline-start: auto;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--color-text-dim);
+  }
+  .champ-toggle__chevron {
+    inline-size: 0.8rem;
+    block-size: 0.8rem;
+    transition: transform 0.25s var(--ease-hextech);
+  }
+  .champ-toggle[aria-expanded='true'] .champ-toggle__chevron {
+    transform: rotate(180deg);
+  }
+  .champ-selected {
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border: 1px solid var(--color-gold);
+    box-shadow:
+      0 0 18px -4px color-mix(in srgb, var(--color-gold) 80%, transparent),
+      inset 0 0 0 1px var(--color-gold);
+  }
+  .champ-ghost {
+    opacity: 0.45;
+    filter: saturate(0.2);
+  }
+
+  .champ-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+    gap: 0.45rem;
+    max-block-size: 18rem;
+    overflow-y: auto;
+    padding-inline-end: 0.25rem;
+  }
+  .champ {
+    position: relative;
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 30%, transparent);
+    background: var(--color-void);
+    cursor: pointer;
+    transition:
+      border-color 0.25s var(--ease-hextech),
+      transform 0.25s var(--ease-hextech);
+  }
+  .champ:hover {
+    border-color: var(--color-gold);
+    transform: translateY(-2px);
+  }
+  .champ:focus-visible {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 1px;
+  }
+  .champ__name {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    overflow: hidden;
+    padding: 0.1rem 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text-muted);
+    background: color-mix(in srgb, var(--color-hextech-black) 82%, transparent);
+  }
+  .champ--on {
+    border-color: var(--color-gold);
+    box-shadow:
+      0 0 18px -4px color-mix(in srgb, var(--color-gold) 80%, transparent),
+      inset 0 0 0 1px var(--color-gold);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .champ:hover {
+      transform: none;
+    }
+  }
+}

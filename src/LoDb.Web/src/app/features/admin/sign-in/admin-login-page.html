@@ -1,0 +1,88 @@
+<section lodbFrame class="mx-auto mt-[8vh] block w-full max-w-[26rem] px-[1.6rem] py-6">
+  <div class="mb-[1.15rem] flex flex-col gap-1">
+    <p class="eyebrow text-[0.62rem]">{{ 'admin.login.eyebrow' | adminText }}</p>
+    <h1 class="font-beaufort text-[1.4rem] font-bold tracking-[0.06em] text-gold-bright">
+      {{ 'admin.login.title' | adminText }}
+    </h1>
+  </div>
+
+  @if (error(); as message) {
+    <lodb-admin-band tone="alert">{{ 'admin.' + message | adminText }}</lodb-admin-band>
+  }
+
+  @if (step() === 'credentials') {
+    <form class="flex flex-col gap-4" (submit)="signIn($event)">
+      <label for="admin-identifier" [class]="label">
+        {{ 'admin.login.identifier' | adminText }}
+        <input
+          #field
+          id="admin-identifier"
+          name="identifier"
+          type="text"
+          [class]="input"
+          required
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+        />
+      </label>
+      <label for="admin-password" [class]="label">
+        {{ 'admin.login.password' | adminText }}
+        <input
+          #password
+          id="admin-password"
+          name="password"
+          type="password"
+          [class]="input"
+          required
+          autocomplete="current-password"
+        />
+      </label>
+      <button lodbButton type="submit" class="mt-2 w-full" [disabled]="busy()">
+        {{ 'admin.login.submit' | adminText }}
+      </button>
+    </form>
+  } @else {
+    <form class="flex flex-col gap-4" (submit)="confirm($event)">
+      <p class="text-sm text-text-muted">{{ 'admin.login.second_factor' | adminText }}</p>
+      @if (useRecovery()) {
+        <label for="admin-recovery-code" [class]="label">
+          {{ 'admin.login.recovery_code' | adminText }}
+          <input
+            #field
+            id="admin-recovery-code"
+            name="recoveryCode"
+            type="text"
+            [class]="input + ' font-mono'"
+            required
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+        </label>
+      } @else {
+        <label for="admin-two-factor-code" [class]="label">
+          {{ 'admin.login.code' | adminText }}
+          <input
+            #field
+            id="admin-two-factor-code"
+            name="twoFactorCode"
+            type="text"
+            [class]="input + ' font-mono tracking-[0.3em]'"
+            required
+            inputmode="numeric"
+            autocomplete="one-time-code"
+          />
+        </label>
+      }
+      <p>
+        <button type="button" class="nav-link text-xs text-text-muted" (click)="toggleRecovery()">
+          {{ (useRecovery() ? 'admin.login.use_app' : 'admin.login.use_recovery') | adminText }}
+        </button>
+      </p>
+      <button lodbButton type="submit" class="mt-2 w-full" [disabled]="busy()">
+        {{ 'admin.login.verify' | adminText }}
+      </button>
+    </form>
+  }
+</section>

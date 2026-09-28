@@ -1,0 +1,5 @@
+# Build context of docker/next/nginx/Dockerfile (repository root): deny everything, then
+# admit the nginx configuration. BuildKit prefers this file to the root .dockerignore.
+*
+
+!docker/next/nginx/

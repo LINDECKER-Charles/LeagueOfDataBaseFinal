@@ -1,0 +1,75 @@
+/*
+ * The sheet draws its own pane: no dialog frame, no close button, as the legacy sheet had
+ * none (Escape and the backdrop close it, and so does its call to action). Head and foot
+ * stay put while only the facets scroll.
+ */
+:host {
+  display: flex;
+  flex-direction: column;
+  max-block-size: 84dvh;
+  padding: 0.75rem 1.25rem calc(1rem + env(safe-area-inset-bottom));
+  color: var(--color-text);
+  border-block-start: 1px solid var(--color-gold-deep);
+  background: linear-gradient(180deg, var(--color-panel), var(--color-hextech-black));
+}
+.sheet__handle {
+  flex: none;
+  inline-size: 2.5rem;
+  block-size: 4px;
+  margin: 0 auto 0.75rem;
+  background: color-mix(in srgb, var(--color-gold) 50%, transparent);
+}
+.sheet__head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.6rem;
+  margin-block-end: 0.6rem;
+}
+.sheet__head .title {
+  margin: 0;
+}
+.sheet__head .gauge {
+  margin-inline-start: auto;
+}
+/* Vertical pan only, so a slider drag is never taken for a scroll. */
+.sheet__body {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.sheet__foot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.6rem;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+}
+.sheet__clear {
+  min-block-size: 2.75rem;
+  padding: 0.4rem 0.9rem;
+  font-family: var(--font-beaufort);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-text-muted);
+  border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+  background: transparent;
+  cursor: pointer;
+}
+.sheet__clear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.sheet__clear:focus-visible,
+.sheet__done:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-hex);
+}
+.sheet__done {
+  flex: 1;
+  min-block-size: 2.75rem;
+}

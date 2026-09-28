@@ -1,0 +1,58 @@
+/*
+ * A diagnostic chip in a free corner: under the dialogs and toasts, never catching a click.
+ * One step above the bottom nav (chrome.css), which the legacy badge, mounted after it at the
+ * end of the body, painted over on phones.
+ */
+.perf {
+  position: fixed;
+  inset-inline-end: 1rem;
+  inset-block-end: 1rem;
+  z-index: 41;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-sink) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-gold-deep) 40%, transparent);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+}
+.perf__spark {
+  align-self: center;
+  inline-size: 0.42rem;
+  block-size: 0.42rem;
+  transform: rotate(45deg);
+  background: var(--color-hex-bright);
+  box-shadow: 0 0 7px 0 var(--color-hex);
+}
+.perf__pair {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+.perf__key {
+  text-transform: uppercase;
+  color: var(--color-gold);
+  opacity: 0.85;
+}
+.perf__value {
+  color: var(--color-hex-bright);
+}
+.perf__sep {
+  color: var(--color-gold-deep);
+}
+
+/* Phones: a tighter chip, closer to the corner. */
+@media (width <= 40rem) {
+  .perf {
+    inset-inline-end: 0.6rem;
+    inset-block-end: 0.6rem;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.6rem;
+  }
+}

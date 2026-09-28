@@ -1,0 +1,30 @@
+<div class="codex-header mb-4">
+  <h2>{{ 'profile.public.builds_title' | transloco }}</h2>
+  <span class="codex-header__meta">{{ cards().length }}</span>
+</div>
+@if (cards().length === 0) {
+  <p class="py-4 text-center font-mono text-sm text-text-muted">
+    {{ 'profile.public.no_builds' | transloco }}
+  </p>
+} @else {
+  <ul class="profile-builds__list">
+    @for (card of cards(); track card.token) {
+      <li>
+        <a class="profile-build" [routerLink]="['/b', card.token]">
+          <lodb-image
+            class="profile-build__portrait"
+            [src]="card.portrait"
+            [width]="48"
+            [height]="48"
+            [initials]="card.initials"
+            imgClass="object-cover"
+          />
+          <span class="min-w-0">
+            <span class="profile-build__name">{{ card.name }}</span>
+            <span class="profile-build__meta">{{ card.meta }}</span>
+          </span>
+        </a>
+      </li>
+    }
+  </ul>
+}

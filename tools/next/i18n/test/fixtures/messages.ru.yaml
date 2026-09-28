@@ -1,0 +1,3 @@
+filter:
+  results: '%count% результатов'
+apples: '%count% яблоко|%count% яблока|%count% яблок'

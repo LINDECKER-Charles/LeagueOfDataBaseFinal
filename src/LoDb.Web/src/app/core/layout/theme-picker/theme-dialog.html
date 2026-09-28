@@ -1,0 +1,24 @@
+<lodb-dialog
+  [heading]="'header.theme.label' | transloco"
+  [headingId]="titleId"
+  [closeLabel]="'header.theme.close' | transloco"
+>
+  <div class="theme-dialog__grid" role="group" [attr.aria-labelledby]="titleId">
+    @for (theme of themes; track theme) {
+      <button
+        type="button"
+        class="theme-card"
+        [class]="swatchClass(theme)"
+        [attr.aria-pressed]="theme === service.current()"
+        (click)="choose(theme)"
+      >
+        <span class="theme-card__crest">
+          <lodb-theme-crest class="block size-5" [theme]="theme" />
+        </span>
+        <span class="theme-card__name">{{ identities[theme].label }}</span>
+        <span class="theme-card__origin">{{ identities[theme].origin }}</span>
+        <span class="theme-card__palette" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      </button>
+    }
+  </div>
+</lodb-dialog>

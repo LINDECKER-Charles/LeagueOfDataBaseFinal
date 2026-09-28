@@ -1,0 +1,109 @@
+@let current = entry();
+@let context = current.context;
+@let details = current.details;
+@let spell = details.profile;
+<div class="relative overflow-x-clip px-6 py-14">
+  <lodb-backdrop />
+  <article class="relative mx-auto max-w-3xl">
+    <header class="relative mb-12 flex flex-col items-center text-center">
+      @if (spell.image.status === 'present' && spell.image.url) {
+        <img
+          class="pointer-events-none absolute inset-x-0 top-32 mx-auto aspect-square w-[30rem] max-w-[70vw] -translate-y-1/2 object-contain opacity-12 blur-[34px] saturate-150 select-none"
+          [src]="spell.image.url"
+          alt=""
+          aria-hidden="true"
+        />
+      }
+
+      <p [class]="hero.eyebrow + ' relative mb-7 justify-center'">
+        {{ 'summoner.list.title' | transloco }}
+        <span class="hx-pip mx-2 text-gold-deep" aria-hidden="true">◆</span>
+        <span class="font-mono text-[11px] tracking-normal text-text-muted normal-case">
+          {{ context.version }} · {{ context.language }}
+        </span>
+        <lodb-edition-badge size="regular" [edition]="spell.edition" />
+      </p>
+
+      <div class="seal">
+        @if (spell.image.status === 'absent') {
+          <span class="seal__icon grid place-items-center font-beaufort text-2xl text-gold/70">
+            {{ initials(spell.name) }}
+          </span>
+        } @else {
+          <lodb-catalogue-image
+            class="seal__icon"
+            [image]="spell.image"
+            [name]="spell.name"
+            [size]="sealIconSize"
+            eager
+          />
+        }
+      </div>
+
+      <h1 [class]="hero.name + ' relative mt-8 text-gold-grad'">{{ spell.name }}</h1>
+
+      @if (cooldown() !== null) {
+        <p class="relative mt-4 flex items-baseline gap-2">
+          <span class="font-beaufort text-4xl leading-none text-hex-bright">
+            {{ cooldown() }}<span class="text-xl">s</span>
+          </span>
+          <span class="font-mono text-[10px] tracking-[0.2em] text-text-muted uppercase">
+            {{ 'summoner.detail.fields.cooldown' | transloco }}
+          </span>
+        </p>
+      }
+      <lodb-edition-counterpart
+        class="relative"
+        [edition]="spell.edition"
+        [counterpart]="spell.counterpart"
+        [context]="context"
+        [centered]="true"
+      />
+    </header>
+
+    @if (plaques().length > 0) {
+      <dl class="mb-12 grid grid-cols-1 gap-2.5 sm:grid-cols-2" lodbReveal>
+        @for (plaque of plaques(); track plaque.label) {
+          <div class="hx-plate">
+            <dt class="hx-plate__label">{{ plaque.label }}</dt>
+            <dd class="hx-plate__value">{{ plaque.value }}</dd>
+          </div>
+        }
+      </dl>
+    }
+
+    @if (spell.description) {
+      <section class="mb-12" lodbReveal aria-labelledby="summoner-description">
+        <header class="codex-header mb-6">
+          <h2 id="summoner-description">{{ 'summoner.detail.description' | transloco }}</h2>
+        </header>
+        <div lodbFrame="ornate" class="p-7">
+          <lodb-rich-text class="max-w-[60ch]" [text]="spell.description" />
+        </div>
+      </section>
+    }
+
+    @if (modes().length > 0) {
+      <section lodbReveal aria-labelledby="summoner-modes">
+        <header class="codex-header mb-6">
+          <h2 id="summoner-modes">{{ 'summoner.detail.modes' | transloco }}</h2>
+          <span class="codex-header__meta">{{ modes().length }}</span>
+        </header>
+        <ul class="flex flex-wrap gap-2" data-testid="modes">
+          @for (label of modes(); track label) {
+            <li class="hx-chip">{{ label }}</li>
+          }
+        </ul>
+      </section>
+    }
+
+    <lodb-pager
+      class="mt-14"
+      [previous]="pager().previous"
+      [next]="pager().next"
+      [hub]="pager().hub"
+    />
+  </article>
+</div>
+
+<lodb-load-time />

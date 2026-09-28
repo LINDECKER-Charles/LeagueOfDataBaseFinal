@@ -1,0 +1,223 @@
+/*
+ * The donation form, "an offering to the forge": each tier card carries a small hex gem (a
+ * rotated facet) that ignites cyan on the chosen offering; the rest is the shared Hextech
+ * grammar. Layered with the design system, so a utility or a theme (which turns the gems
+ * round) still has the last say.
+ */
+@layer components {
+  .donate-page {
+    width: 100%;
+    max-width: 44rem;
+    margin-inline: auto;
+    padding: 2.5rem 1rem 4rem;
+  }
+
+  .donate-panel {
+    margin-top: 1.5rem;
+    padding: 1.75rem 1.5rem;
+  }
+
+  /* Shared small-caps label voice (fieldset legend and free-amount label). */
+  .donate-legend {
+    display: block;
+    font-family: var(--font-beaufort);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--color-gold-light);
+  }
+
+  /* --- Tier cards ---------------------------------------------------------------------- */
+  .donate-tiers-fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .donate-tiers {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-top: 0.85rem;
+  }
+
+  .donate-tier {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 1.1rem 0.5rem 0.9rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* The native radio stays in the tree (keyboard, assistive tech) but silent to the eye. */
+  .donate-tier__input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .donate-tier__amount {
+    font-family: var(--font-beaufort);
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-gold-bright);
+  }
+
+  .donate-tier__currency {
+    margin-inline-start: 0.15rem;
+    font-size: 0.9rem;
+    color: var(--color-gold);
+  }
+
+  .donate-tier__label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-text-dim);
+  }
+
+  /* The signature gem, above the amount; dormant until its tier is chosen. */
+  .donate-tier__gem {
+    position: relative;
+    width: 12px;
+    height: 12px;
+    margin-bottom: 0.15rem;
+  }
+
+  .donate-tier__gem::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: rotate(45deg);
+    border: 1px solid color-mix(in srgb, var(--color-hex) 35%, transparent);
+    background: transparent;
+    transition:
+      background-color 0.3s var(--ease-hextech),
+      border-color 0.3s var(--ease-hextech),
+      box-shadow 0.3s var(--ease-hextech);
+  }
+
+  .donate-tier:has(.donate-tier__input:checked) {
+    border-color: var(--color-gold);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-hex) 25%, transparent),
+      0 0 24px -6px color-mix(in srgb, var(--color-hex) 45%, transparent);
+  }
+
+  .donate-tier:has(.donate-tier__input:checked) .donate-tier__gem::before {
+    border-color: var(--color-hex);
+    background: var(--color-hex);
+    box-shadow: 0 0 12px -1px color-mix(in srgb, var(--color-hex) 85%, transparent);
+  }
+
+  .donate-tier:has(.donate-tier__input:focus-visible) {
+    outline: 2px solid var(--color-hex);
+    outline-offset: 2px;
+  }
+
+  /* A typed free amount wins over the tier: the chosen card goes dormant to say so. */
+  .donate-form:has(.donate-custom__input:not(:placeholder-shown)) .donate-tier {
+    opacity: 0.55;
+    border-color: color-mix(in srgb, var(--color-gold) 42%, transparent);
+    box-shadow: none;
+  }
+
+  .donate-form:has(.donate-custom__input:not(:placeholder-shown))
+    .donate-tier
+    .donate-tier__gem::before {
+    border-color: color-mix(in srgb, var(--color-hex) 35%, transparent);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* --- Free amount --------------------------------------------------------------------- */
+  .donate-custom {
+    margin-top: 1.6rem;
+  }
+
+  .donate-custom__field {
+    position: relative;
+    margin-top: 0.6rem;
+  }
+
+  .donate-custom__input {
+    padding-inline-end: 2.4rem;
+  }
+
+  .donate-custom__unit {
+    position: absolute;
+    top: 50%;
+    inset-inline-end: 0.9rem;
+    transform: translateY(-50%);
+    font-family: var(--font-beaufort);
+    color: var(--color-gold);
+    pointer-events: none;
+  }
+
+  .donate-custom__hint {
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+    color: var(--color-text-dim);
+  }
+
+  /* --- Form closed: no Stripe behind the API ------------------------------------------- */
+  .donate-unavailable {
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.4rem;
+    border: 1px dashed color-mix(in srgb, var(--color-gold) 35%, transparent);
+    background: color-mix(in srgb, var(--color-void) 50%, transparent);
+  }
+
+  .donate-unavailable__title {
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-gold);
+  }
+
+  .donate-unavailable__body {
+    margin-top: 0.4rem;
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+  }
+
+  .donate-unavailable [disabled] {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  /* --- Legal line ---------------------------------------------------------------------- */
+  .donate-legal {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    font-size: 0.8rem;
+    color: var(--color-text-dim);
+  }
+
+  @media (min-width: 640px) {
+    .donate-page {
+      padding-inline: 1.5rem;
+    }
+
+    .donate-panel {
+      padding: 2.5rem;
+    }
+
+    .donate-tiers {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .donate-tier__gem::before {
+      transition: none;
+    }
+  }
+}

@@ -1,0 +1,67 @@
+/*
+ * The builds of a public card, one row each: the champion's portrait, the build's name, and
+ * the champion and patch it was made for. The public page's twin reads the same.
+ */
+@layer components {
+  :host {
+    display: block;
+    inline-size: 100%;
+    max-inline-size: 56rem;
+    margin-inline: auto;
+    padding: 2.5rem 1.5rem 3rem;
+  }
+
+  .profile-builds__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .profile-build {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-panel) 85%, transparent),
+      color-mix(in srgb, var(--color-abyss) 92%, transparent)
+    );
+    transition:
+      border-color 0.3s var(--ease-hextech),
+      box-shadow 0.3s var(--ease-hextech);
+  }
+  .profile-build:hover,
+  .profile-build:focus-visible {
+    border-color: var(--color-gold);
+    box-shadow: 0 0 18px -8px color-mix(in srgb, var(--color-hex) 35%, transparent);
+  }
+  .profile-build__portrait {
+    inline-size: 3rem;
+    block-size: 3rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 60%, transparent);
+    background: var(--color-void);
+  }
+  .profile-build__name,
+  .profile-build__meta {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .profile-build__name {
+    font-family: var(--font-beaufort);
+    font-size: 0.95rem;
+    color: var(--color-gold-bright);
+  }
+  .profile-build__meta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .profile-build {
+      transition: none;
+    }
+  }
+}

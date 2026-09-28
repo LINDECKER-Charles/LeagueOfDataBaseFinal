@@ -1,0 +1,19 @@
+{
+  "title": "Trends: types, 7d/30d windows, top 25, ties, names from the latest en_US dataset, editions",
+  "steps": [
+    { "id": "champions-default-range", "request": { "method": "GET", "path": "/v1/trends/champions", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "champions-7d", "request": { "method": "GET", "path": "/v1/trends/champions?range=7d", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "champions-30d", "note": "32 ranked champions truncated to 25; day 30 is outside the window", "request": { "method": "GET", "path": "/v1/trends/champions?range=30d", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "items-7d", "request": { "method": "GET", "path": "/v1/trends/items", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "items-30d", "request": { "method": "GET", "path": "/v1/trends/items?range=30d", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "runes-7d", "note": "ids and keys both resolve; an unknown id has no name", "request": { "method": "GET", "path": "/v1/trends/runes", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "summoners-7d", "request": { "method": "GET", "path": "/v1/trends/summoners", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "empty-range", "request": { "method": "GET", "path": "/v1/trends/champions?range=", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "range-invalid", "request": { "method": "GET", "path": "/v1/trends/champions?range=90d", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "range-uppercase", "request": { "method": "GET", "path": "/v1/trends/champions?range=7D", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "type-invalid", "request": { "method": "GET", "path": "/v1/trends/skins", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "type-case", "request": { "method": "GET", "path": "/v1/trends/Champions", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "type-and-range-invalid", "note": "the range is checked first", "request": { "method": "GET", "path": "/v1/trends/skins?range=90d", "headers": { "X-Api-Key": "{{key:credits}}" } } },
+    { "id": "missing-type", "request": { "method": "GET", "path": "/v1/trends/", "headers": { "X-Api-Key": "{{key:credits}}" } } }
+  ]
+}

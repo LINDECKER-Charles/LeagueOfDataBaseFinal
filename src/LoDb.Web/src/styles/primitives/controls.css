@@ -1,0 +1,161 @@
+/*
+ * Interactive primitives: buttons, chips, form fields and the pure-CSS switch (ui/button,
+ * ui/chip, ui/field put them on elements). Fields are set at 16px whatever the pointer
+ * (plan, section 4). The two hover shadows read the pre-composed --hx-glow-accent tokens:
+ * a Tailwind arbitrary value can hold no color-mix().
+ */
+@utility hx-btn {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-gold/70
+    bg-gold/15 px-4 py-2.5 font-beaufort text-sm tracking-[0.15em] text-gold-bright uppercase
+    transition-all duration-300 hover:border-gold hover:bg-gold/25
+    hover:shadow-[0_0_28px_-6px_var(--hx-glow-accent)] focus-visible:ring-2
+    focus-visible:ring-gold/40 focus-visible:outline-none disabled:cursor-not-allowed
+    disabled:opacity-50 motion-reduce:transition-none;
+}
+@utility hx-btn-ghost {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 border
+    border-gold-deep/40 bg-transparent px-4 py-2.5 font-beaufort text-sm tracking-[0.15em]
+    text-text-muted uppercase transition-all duration-300 hover:border-hex/60 hover:text-hex
+    focus-visible:ring-2 focus-visible:ring-hex/40 focus-visible:outline-none
+    disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none;
+}
+/* Filled-gold primary: the strongest call to action (dark text on a parchment-to-gold face). */
+@utility hx-btn-gold {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 border-0 px-5 py-2.5
+    font-beaufort text-sm tracking-[0.15em] text-hextech-black uppercase
+    transition-[filter,box-shadow] duration-300 hover:brightness-110
+    hover:shadow-[0_0_28px_-6px_var(--hx-glow-accent-strong)] focus-visible:ring-2
+    focus-visible:ring-gold/50 focus-visible:outline-none disabled:cursor-not-allowed
+    disabled:opacity-50 motion-reduce:transition-none;
+  background: linear-gradient(
+    180deg,
+    var(--color-gold-bright),
+    var(--color-gold) 55%,
+    var(--color-gold-rich)
+  );
+  clip-path: var(--hx-bevel-btn);
+}
+/*
+ * Destructive action: red text on a faint red wash (deletions, revocations, purges). Border,
+ * wash and glow keep the legacy admin red, not the text: that red reads about 4:1 on its own
+ * wash, under the 4.5:1 small text needs, where danger-light stays above 5:1.
+ */
+@utility hx-btn-danger {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-bad/50
+    bg-bad/8 px-4 py-2.5 font-beaufort text-sm tracking-[0.15em] text-danger-light uppercase
+    transition-all duration-300 hover:bg-bad/18
+    hover:shadow-[0_0_22px_-10px_var(--hx-glow-danger)] focus-visible:ring-2
+    focus-visible:ring-bad/40 focus-visible:outline-none disabled:cursor-not-allowed
+    disabled:opacity-50 motion-reduce:transition-none;
+}
+/*
+ * Compact size of any tone, for the actions of a table row or a toolbar. Qualified by the
+ * tone so that it outranks the tone's own padding and type, whatever order Tailwind emits.
+ */
+@utility hx-btn-sm {
+  &:is(.hx-btn, .hx-btn-ghost, .hx-btn-gold, .hx-btn-danger) {
+    padding: 0.34rem 0.6rem;
+    font-size: 0.62rem;
+    line-height: 1.55;
+    letter-spacing: 0.1em;
+  }
+}
+@utility hx-chip {
+  @apply inline-flex items-center border border-gold-deep/50 bg-void/90 px-2.5 py-1 font-mono
+    text-[11px] tracking-wider text-text-muted uppercase;
+}
+/* Cyan chip, the "live" variant: HTTP verbs, active plan, current badge. */
+@utility hx-chip-hex {
+  @apply inline-flex items-center border border-blue-abyssal bg-hex/10 px-2.5 py-1 font-mono
+    text-[11px] tracking-wider text-hex uppercase;
+}
+@utility stat-cell {
+  @apply border border-gold-deep/40 bg-void/70 px-3 py-2;
+}
+@utility hx-select {
+  @apply appearance-none border border-gold-deep/60 bg-void py-2 ps-3 pe-8 font-spiegel
+    text-base text-text transition-colors hover:border-gold/70 focus:border-hex
+    focus:ring-1 focus:ring-hex/40 focus:outline-none;
+  /*
+   * Chevron baked in as a data URI. url() cannot read var(), so the stroke is a frozen gold and
+   * a theme that wants its own hue restates this whole declaration (theme/zaun/tokens.css).
+   * Escaped newlines are erased by the CSS string parser: the value is one unbroken URL.
+   */
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'>\
+<path d='M2 4l4 4 4-4' fill='none' stroke='%23c8aa6e' stroke-width='1.5'\
+ stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 0.7rem;
+  &:dir(rtl) {
+    background-position: left 0.65rem center;
+  }
+}
+@utility hx-input {
+  @apply w-full appearance-none border border-gold-deep/50 bg-void/70 px-3 py-2.5 font-spiegel
+    text-base text-text transition-colors placeholder:text-text-dim hover:border-gold/60
+    focus:border-hex focus:ring-1 focus:ring-hex/40 focus:outline-none;
+}
+@utility hx-check {
+  @apply size-4 shrink-0 appearance-none border border-gold-deep/60 bg-void transition-colors
+    checked:border-hex focus:ring-1 focus:ring-hex/40 focus:outline-none;
+  &:checked {
+    background-color: var(--color-hex);
+    /* Frozen colour, same reason as hx-select: a theme restates the whole declaration. */
+    background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'>\
+<path d='M4 8l3 3 5-6' fill='none' stroke='%230a1428' stroke-width='2.2'\
+ stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 0.7rem;
+  }
+}
+/*
+ * Pure-CSS toggle over a native checkbox, so a form still submits without JavaScript. Cyan is
+ * on. The knob travels toward the inline end, mirrored in right-to-left pages.
+ */
+@utility hx-switch {
+  @apply relative h-6 w-11 flex-none cursor-pointer appearance-none rounded-full border
+    border-gold-deep bg-void transition-colors duration-200 checked:border-hex
+    focus-visible:ring-2 focus-visible:ring-hex/40 focus-visible:outline-none;
+  --hx-switch-travel: 1.25rem;
+  &:dir(rtl) {
+    --hx-switch-travel: -1.25rem;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 2px;
+    inset-inline-start: 2px;
+    inline-size: 1rem;
+    block-size: 1rem;
+    border-radius: 9999px;
+    background: var(--color-gold-deep);
+    transition:
+      translate 0.2s var(--ease-hextech),
+      background-color 0.2s var(--ease-hextech);
+  }
+  &:checked {
+    background: color-mix(in srgb, var(--color-hex) 18%, transparent);
+  }
+  &:checked::after {
+    translate: var(--hx-switch-travel) 0;
+    background: var(--color-hex);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hx-switch::after {
+    transition: none;
+  }
+}
+
+/* Thumb-sized controls on coarse pointers; the filled gold face keeps its 40px, as it did. */
+@media (pointer: coarse) {
+  .hx-btn,
+  .hx-btn-ghost,
+  .hx-btn-danger {
+    min-block-size: 2.75rem;
+  }
+}

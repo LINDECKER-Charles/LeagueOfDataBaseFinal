@@ -1,0 +1,4 @@
+# Playwright outputs: traces, screenshots and the HTML report of the last run.
+/test-results/
+/playwright-report/
+/blob-report/

@@ -1,0 +1,28 @@
+<div class="relative isolate px-6 py-12">
+  <lodb-backdrop />
+  <div class="relative mx-auto max-w-[110rem]">
+    <lodb-list-heading
+      [version]="context().version"
+      [title]="'champion.list.title' | transloco"
+      [count]="total()"
+      [countLabel]="'champion.list.title' | transloco | lowercase"
+    />
+
+    <lodb-catalogue-list
+      [source]="list"
+      [adapter]="adapter"
+      [schema]="schema()"
+      [searchLabel]="'champion.list.search_placeholder' | transloco"
+      [label]="'champion.list.title' | transloco"
+      columns="portrait"
+    >
+      <lodb-champion-card
+        *lodbCatalogueCard="let card of list; let index = index"
+        [card]="card"
+        [href]="href(card)"
+        [locale]="context().locale"
+        [eager]="index < eagerCards"
+      />
+    </lodb-catalogue-list>
+  </div>
+</div>

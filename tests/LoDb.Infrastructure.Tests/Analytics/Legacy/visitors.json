@@ -1,0 +1,25 @@
+{
+    "secret": "legacy-app-secret",
+    "cases": [
+        {
+            "ip": "203.0.113.7",
+            "ua": "Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0",
+            "visitor": "ce184a4f86068eb4"
+        },
+        {
+            "ip": "2001:db8::7",
+            "ua": "curl/8.4.0",
+            "visitor": "fa1f878348646b6c"
+        },
+        {
+            "ip": "203.0.113.7",
+            "ua": null,
+            "visitor": "1e912b3bd4eda45e"
+        },
+        {
+            "ip": null,
+            "ua": "Mozilla/5.0",
+            "visitor": "dd34a86d8680cea5"
+        }
+    ]
+}

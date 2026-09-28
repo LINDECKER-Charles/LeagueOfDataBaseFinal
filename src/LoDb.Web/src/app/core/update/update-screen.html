@@ -1,0 +1,61 @@
+@if (requirement(); as requirement) {
+  <div
+    class="fixed inset-0 z-[1100] grid place-items-center overflow-y-auto bg-abyss p-4"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="lodb-update-title"
+    aria-describedby="lodb-update-body"
+  >
+    <section lodbFrame="ornate" class="grid max-w-md gap-4 bg-panel p-6 text-center">
+      <h2
+        #heading
+        id="lodb-update-title"
+        class="font-beaufort text-xl tracking-[0.08em] text-gold-bright uppercase"
+        tabindex="-1"
+      >
+        {{ 'update.required_title' | transloco }}
+      </h2>
+      <div id="lodb-update-body" class="grid gap-2 text-text">
+        <p>{{ 'update.required_body' | transloco }}</p>
+        @if (requirement.minimumVersion) {
+          <p class="text-sm text-text-muted">
+            {{
+              'update.required_versions'
+                | transloco
+                  : {
+                      current: requirement.clientVersion ?? '—',
+                      minimum: requirement.minimumVersion,
+                    }
+            }}
+          </p>
+        }
+      </div>
+      @switch (state()) {
+        @case ('ready') {
+          <button
+            type="button"
+            lodbButton="gold"
+            class="justify-self-center"
+            [disabled]="restart.busy()"
+            (click)="restart.restart()"
+          >
+            {{ 'update.restart_now' | transloco }}
+          </button>
+        }
+        @case ('downloading') {
+          <p role="status" class="text-sm text-hex-bright">
+            {{ 'update.downloading' | transloco }}
+          </p>
+        }
+        @default {
+          <p role="status" class="text-sm text-text-muted">{{ 'update.waiting' | transloco }}</p>
+        }
+      }
+      @if (restart.failed()) {
+        <p role="alert" class="text-sm text-danger-light">
+          {{ 'update.restart_failed' | transloco }}
+        </p>
+      }
+    </section>
+  </div>
+}

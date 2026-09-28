@@ -1,0 +1,206 @@
+/*
+ * The frame of the legacy back office (app/public/admin/css/chrome.css): its own top bar and
+ * one 78rem column, on the void lit by two faint glows. The admin stays Hextech whatever the
+ * identity of the site (the shell pins it), so the tokens are the default ones. Not
+ * encapsulated, to reach the buttons of every admin page: each rule is scoped under the host.
+ */
+lodb-admin-frame {
+  color-scheme: dark;
+  display: block;
+  min-block-size: 100dvh;
+  background-color: var(--color-void);
+  background-image:
+    radial-gradient(
+      1200px 600px at 50% -10%,
+      color-mix(in srgb, var(--color-hex-deep) 10%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 100% 0%,
+      color-mix(in srgb, var(--color-gold) 6%, transparent),
+      transparent 55%
+    );
+  background-attachment: fixed;
+  color: var(--color-text);
+  font-family: var(--font-spiegel);
+  line-height: 1.55;
+}
+
+lodb-admin-frame .admin-bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  padding-block: 0.9rem;
+  padding-inline: 1.75rem;
+  border-block-end: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+  background: color-mix(in srgb, var(--color-hextech-black) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+lodb-admin-frame .admin-brand {
+  display: flex;
+  flex: none;
+  align-items: baseline;
+  gap: 0.55rem;
+  font-family: var(--font-beaufort);
+  text-transform: uppercase;
+}
+
+lodb-admin-frame .admin-brand b {
+  color: var(--color-gold-bright);
+  font-size: 0.9rem;
+  letter-spacing: 0.16em;
+}
+
+lodb-admin-frame .admin-brand span {
+  color: var(--color-hex);
+  font-size: 0.62rem;
+  letter-spacing: 0.34em;
+}
+
+lodb-admin-frame .admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+lodb-admin-frame .admin-nav-label {
+  align-self: center;
+  margin-inline: 0.15rem 0.3rem;
+  font-family: var(--font-beaufort);
+  font-size: 0.58rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+
+lodb-admin-frame .admin-nav-sep {
+  align-self: stretch;
+  inline-size: 1px;
+  margin-block: 0.2rem;
+  margin-inline: 0.6rem;
+  background: linear-gradient(180deg, transparent, var(--color-gold-deep), transparent);
+}
+
+lodb-admin-frame .admin-nav-link,
+lodb-admin-frame .admin-logout {
+  font-family: var(--font-beaufort);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  transition:
+    color 0.25s var(--ease-hextech),
+    border-color 0.25s var(--ease-hextech);
+}
+
+lodb-admin-frame .admin-nav-link {
+  position: relative;
+  padding-block: 0.45rem;
+  padding-inline: 0.8rem;
+  border: 1px solid transparent;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+}
+
+lodb-admin-frame .admin-nav-link:hover {
+  color: var(--color-gold-bright);
+  border-color: color-mix(in srgb, var(--color-gold) 16%, transparent);
+}
+
+lodb-admin-frame .admin-nav-link.is-active {
+  color: var(--color-gold-bright);
+  border-color: color-mix(in srgb, var(--color-gold) 28%, transparent);
+  background: color-mix(in srgb, var(--color-gold) 8%, transparent);
+}
+
+lodb-admin-frame .admin-nav-link.is-active::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0.8rem;
+  inset-block-end: -1px;
+  block-size: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-hex), transparent);
+}
+
+lodb-admin-frame .admin-logout {
+  flex: none;
+  margin-inline-start: auto;
+  padding-block: 0.42rem;
+  padding-inline: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+  background: none;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+}
+
+lodb-admin-frame .admin-logout:hover {
+  color: var(--color-bad);
+  border-color: color-mix(in srgb, var(--color-bad) 50%, transparent);
+}
+
+lodb-admin-frame .admin-nav-link:focus-visible,
+lodb-admin-frame .admin-logout:focus-visible {
+  outline: 1px solid var(--color-hex);
+  outline-offset: 2px;
+}
+
+/*
+ * The full-size buttons of the legacy admin (.btn) were smaller than the site's: 0.78rem
+ * type. The compact size keeps its own (hx-btn-sm), and a coarse pointer keeps its 44px.
+ */
+lodb-admin-frame :is(.hx-btn, .hx-btn-ghost, .hx-btn-gold, .hx-btn-danger):not(.hx-btn-sm) {
+  padding-block: 0.6rem;
+  padding-inline: 1.1rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+}
+
+/* The chips of the legacy admin (.chip) were tighter than the site's, more tracked, and solid. */
+lodb-admin-frame .hx-chip {
+  padding-block: 0.18rem;
+  padding-inline: 0.5rem;
+  border-color: var(--color-gold-deep);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+lodb-admin-frame .admin-column {
+  max-inline-size: 78rem;
+  margin-inline: auto;
+  padding-block: 2.25rem 4rem;
+  padding-inline: 1.75rem;
+}
+
+/*
+ * Phones and narrow tablets: the brand and the sign-out share a first row, the navigation
+ * wraps under them instead of scrolling, and the bar stays in the flow rather than covering
+ * a third of the screen.
+ */
+@media (width <= 860px) {
+  lodb-admin-frame .admin-bar {
+    position: static;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    padding-inline: 1rem;
+  }
+
+  lodb-admin-frame .admin-nav {
+    flex-basis: 100%;
+    order: 1;
+  }
+
+  lodb-admin-frame .admin-column {
+    padding-block: 1.5rem 3rem;
+    padding-inline: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  lodb-admin-frame .admin-nav-link,
+  lodb-admin-frame .admin-logout {
+    transition: none;
+  }
+}

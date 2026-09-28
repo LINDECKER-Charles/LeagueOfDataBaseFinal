@@ -1,0 +1,13 @@
+{
+  "banner_label": "Actualizarea aplicației",
+  "banner_ready": "O actualizare este pregătită.",
+  "restart": "Repornește",
+  "later": "Mai târziu",
+  "restart_failed": "Repornirea a eșuat. Închide și redeschide aplicația.",
+  "required_title": "Actualizare necesară",
+  "required_body": "Această versiune a League of Data Base nu mai este acceptată. Actualizeaz-o pentru a folosi în continuare aplicația.",
+  "required_versions": "Versiunea ta: {{ current }} — necesară: {{ minimum }} sau mai nouă",
+  "restart_now": "Repornește și actualizează",
+  "downloading": "Se descarcă actualizarea…",
+  "waiting": "Actualizarea se descarcă singură. Ține aplicația deschisă."
+}

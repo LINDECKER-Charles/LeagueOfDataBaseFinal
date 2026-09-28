@@ -1,0 +1,26 @@
+{
+  "title": "60 s key cache: revocation, new key, credit top-up and plan change are all deferred (L6.3 applies them immediately)",
+  "steps": [
+    { "id": "before-revocation", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:revocation_target}}" } } },
+    { "id": "before-creation", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:late_key}}" } } },
+    { "id": "before-top-up", "request": { "method": "GET", "path": "/v1/trends/runes", "headers": { "X-Api-Key": "{{key:top_up}}" } } },
+    { "id": "before-upgrade", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:free}}" } } },
+
+    { "id": "revoke", "action": "sql", "sql": "UPDATE api_keys SET is_active = false, revoked_at = '2026-07-21 10:00:00+00' WHERE name = 'revocation_target';" },
+    { "id": "create", "action": "sql", "sql": "INSERT INTO api_keys (id, user_id, name, key_hash, key_prefix, plan, monthly_quota, credits_balance, rate_limit_per_min, is_active, created_at) VALUES (16, 25, 'late_key', encode(sha256(convert_to('lodb_a64458100b5ca54919143780b628f6ed4a1faed3', 'UTF8')), 'hex'), 'lodb_a644581', 'free', 500, 0, 10, true, '2026-07-21 10:00:00+00');" },
+    { "id": "top-up", "action": "sql", "sql": "UPDATE api_keys SET credits_balance = 100, rate_limit_per_min = 60 WHERE name = 'top_up';" },
+    { "id": "upgrade", "action": "sql", "sql": "UPDATE api_keys SET plan = 'monthly', monthly_quota = 15000, rate_limit_per_min = 120 WHERE name = 'free';" },
+
+    { "id": "revoked-still-served", "note": "deferred revocation; L6.3 answers 403 at once", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:revocation_target}}" } } },
+    { "id": "created-still-unknown", "note": "cached rejection; L6.3 must not keep a rejection past the key creation", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:late_key}}" } } },
+    { "id": "topped-up-still-refused", "note": "cached credits; L6.3 serves it at once", "request": { "method": "GET", "path": "/v1/trends/runes", "headers": { "X-Api-Key": "{{key:top_up}}" } } },
+    { "id": "upgraded-old-limit", "note": "cached rate limit (the usage body is read from the database)", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:free}}" } } },
+
+    { "id": "wait-for-cache-expiry", "action": "sleep", "ms": 61000 },
+
+    { "id": "revoked-refused", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:revocation_target}}" } } },
+    { "id": "created-served", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:late_key}}" } } },
+    { "id": "topped-up-served", "note": "quota still exhausted: paid by a credit", "request": { "method": "GET", "path": "/v1/trends/runes", "headers": { "X-Api-Key": "{{key:top_up}}" } } },
+    { "id": "upgraded-new-limit", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:free}}" } } }
+  ]
+}

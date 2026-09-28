@@ -1,0 +1,68 @@
+<h2 id="profile-identity-title" class="profile-panel__title">
+  {{ 'profile.identity.title' | transloco }}
+</h2>
+<p class="mt-2 max-w-2xl text-sm text-text-muted">
+  {{ 'profile.identity.url_warning' | transloco }}
+</p>
+@if (submission.error(); as message) {
+  <p class="auth-error mt-4" role="alert">{{ message | transloco }}</p>
+}
+<form
+  class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-start"
+  aria-labelledby="profile-identity-title"
+  (submit)="save($event)"
+>
+  <div class="flex-1 sm:max-w-xs">
+    <label for="identity-username" class="auth-label">
+      {{ 'profile.identity.username' | transloco }}
+    </label>
+    <input
+      lodbField
+      id="identity-username"
+      name="username"
+      type="text"
+      class="mt-1.5"
+      required
+      minlength="3"
+      maxlength="24"
+      autocomplete="username"
+      autocapitalize="none"
+      spellcheck="false"
+      [value]="username()"
+      [attr.aria-invalid]="submission.errors()['username'] ? true : null"
+    />
+    @if (submission.errors()['username']; as message) {
+      <p class="auth-field-error" role="alert">{{ message | transloco }}</p>
+    }
+  </div>
+  <div class="sm:w-40">
+    <label for="identity-tag" class="auth-label">{{ 'profile.identity.tag' | transloco }}</label>
+    <span class="riot-tag mt-1.5">
+      <span class="riot-tag__prefix" aria-hidden="true">#</span>
+      <input
+        lodbField
+        id="identity-tag"
+        name="riotTagline"
+        type="text"
+        class="riot-tag__input"
+        minlength="3"
+        maxlength="5"
+        pattern="[A-Za-z0-9]{3,5}"
+        placeholder="EUW"
+        autocapitalize="characters"
+        autocomplete="off"
+        spellcheck="false"
+        aria-describedby="identity-tag-help"
+        [value]="riotTagline() ?? ''"
+        [attr.aria-invalid]="submission.errors()['riotTagline'] ? true : null"
+      />
+    </span>
+    @if (submission.errors()['riotTagline']; as message) {
+      <p class="auth-field-error" role="alert">{{ message | transloco }}</p>
+    }
+  </div>
+  <button lodbButton type="submit" class="sm:mt-6" [disabled]="submission.busy()">
+    {{ 'profile.identity.submit' | transloco }}
+  </button>
+</form>
+<p id="identity-tag-help" class="auth-help">{{ 'profile.identity.tag_help' | transloco }}</p>

@@ -1,0 +1,18 @@
+{
+  "title": "One key per plan: quota, credits and rate limit as /v1/usage and X-RateLimit-* expose them",
+  "steps": [
+    { "id": "usage-free", "request": { "method": "GET", "path": "/v1/usage", "headers": { "Authorization": "Bearer {{key:free}}" } } },
+    { "id": "usage-credits", "request": { "method": "GET", "path": "/v1/usage", "headers": { "Authorization": "Bearer {{key:credits}}" } } },
+    { "id": "usage-monthly", "note": "137 requests this month; the 1000 of the previous month do not count", "request": { "method": "GET", "path": "/v1/usage", "headers": { "Authorization": "Bearer {{key:monthly}}" } } },
+    { "id": "usage-monthly-plus", "request": { "method": "GET", "path": "/v1/usage", "headers": { "Authorization": "Bearer {{key:monthly_plus}}" } } },
+    { "id": "usage-annual", "request": { "method": "GET", "path": "/v1/usage", "headers": { "Authorization": "Bearer {{key:annual}}" } } },
+    { "id": "usage-annual-plus", "request": { "method": "GET", "path": "/v1/usage", "headers": { "Authorization": "Bearer {{key:annual_plus}}" } } },
+    { "id": "usage-previous-month-only", "note": "500 requests last month, none this month", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:previous_month}}" } } },
+    { "id": "previous-month-quota-not-exhausted", "request": { "method": "GET", "path": "/v1/trends/runes", "headers": { "X-Api-Key": "{{key:previous_month}}" } } },
+    { "id": "free-plan-request", "request": { "method": "GET", "path": "/v1/profiles/NoFavorites", "headers": { "Authorization": "Bearer {{key:free}}" } } },
+    { "id": "credits-plan-request", "note": "quota left: the credits are not spent", "request": { "method": "GET", "path": "/v1/profiles/NoFavorites", "headers": { "Authorization": "Bearer {{key:credits}}" } } },
+    { "id": "wait-for-metering", "action": "sleep", "ms": 1500 },
+    { "id": "usage-free-after", "request": { "method": "GET", "path": "/v1/usage", "headers": { "Authorization": "Bearer {{key:free}}" } } },
+    { "id": "usage-credits-after", "request": { "method": "GET", "path": "/v1/usage", "headers": { "Authorization": "Bearer {{key:credits}}" } } }
+  ]
+}

@@ -1,0 +1,109 @@
+/*
+ * The head of the editor: the name over the backdrop, and the favorites drifting as orbs at
+ * its inline end. The orbs are decorative and still for those who ask for less motion.
+ */
+@layer components {
+  :host {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-block-size: 11rem;
+    margin-block-end: 2.5rem;
+  }
+
+  .profile-cover__body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    inline-size: 100%;
+  }
+  /*
+   * The legacy title (text-4xl, tracking-wide), a supporter's seal after the name. The name
+   * is a flex item that may shrink, so a long one breaks instead of running off a phone.
+   */
+  .profile-cover__name {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-block-start: 0.5rem;
+    font-family: var(--font-beaufort);
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+  }
+  .profile-cover__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .profile-orbits {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    padding: 0.5rem 0.75rem;
+    pointer-events: none;
+  }
+  .profile-orb {
+    --orb-size: 2.55rem;
+    inline-size: var(--orb-size);
+    block-size: var(--orb-size);
+    opacity: 0.72;
+    animation: profile-float 6.5s var(--ease-hextech) infinite;
+  }
+  .profile-orb--primary {
+    --orb-size: 3.1rem;
+    opacity: 0.88;
+  }
+  /* Out of step, so the cluster drifts rather than bobs. */
+  .profile-orb:nth-child(even) {
+    animation-duration: 7.8s;
+  }
+  .profile-orb:nth-child(2) {
+    animation-delay: -1.5s;
+  }
+  .profile-orb:nth-child(3) {
+    animation-delay: -0.8s;
+  }
+  .profile-orb:nth-child(4) {
+    animation-delay: -2.2s;
+  }
+  .profile-orb__disc {
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 60%, transparent);
+    background: color-mix(in srgb, var(--color-void) 70%, transparent);
+    box-shadow:
+      0 12px 30px -12px color-mix(in srgb, var(--color-shadow) 85%, transparent),
+      0 0 22px -6px color-mix(in srgb, var(--color-hex) 55%, transparent);
+  }
+  .profile-orb--primary .profile-orb__disc {
+    border-color: var(--color-gold);
+  }
+
+  @keyframes profile-float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-14px) rotate(2.5deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .profile-orb {
+      animation: none;
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "list": {
+    "loading": "正在載入你的出裝…",
+    "failed": "無法載入你的出裝。",
+    "delete_failed": "無法刪除出裝，請再試一次。"
+  },
+  "delete": {
+    "title": "刪除出裝",
+    "cancel": "取消"
+  },
+  "editor": {
+    "saving": "正在儲存…"
+  },
+  "errors": {
+    "generic": "發生錯誤，請再試一次。",
+    "signed_out": "你的工作階段已過期。請重新登入以儲存此出裝。",
+    "email_unverified": "請驗證你的電子郵件地址以儲存出裝。",
+    "not_found": "此出裝已不存在。"
+  }
+}

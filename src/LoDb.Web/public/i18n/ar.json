@@ -1,0 +1,380 @@
+{
+  "homepage": {
+    "title": "League of Data Base",
+    "meta": "مرحبًا بك في League of Data Base. استكشف عناصر League of Legends وتعويذات المستدعي مع الإحصائيات والتفاصيل الخاصة بالتحديث {{ version }}.",
+    "hero": {
+      "browse": "تصفح معلومات مفصّلة عن <strong>تعويذات المستدعي</strong> و<strong>العناصر</strong> من League of Legends. محدَّث للتحديث {{ version }}.",
+      "explore_summoners": "استكشف تعويذات المستدعي",
+      "explore_items": "استكشف العناصر",
+      "explore_champions": "استكشف الأبطال",
+      "explore_runes": "استكشف الرونات"
+    },
+    "summoners": {
+      "title": "تعويذات المستدعي",
+      "see_all": "عرض جميع التعويذات"
+    },
+    "items": {
+      "title": "العناصر",
+      "see_all": "عرض جميع العناصر"
+    },
+    "champions": {
+      "title": "الأبطال",
+      "see_all": "عرض جميع الأبطال",
+      "no_data": "لا توجد أبطال متاحون لهذا الإصدار.",
+      "wip": "هذا القسم قيد الإنشاء. قريبًا ستتمكن من تصفح جميع الأبطال."
+    },
+    "runes": {
+      "title": "الرونات",
+      "wip": "هذا القسم قيد الإنشاء. قريبًا ستتمكن من استكشاف الرونات.",
+      "see_all": "عرض جميع الرونات"
+    }
+  },
+  "setup": {
+    "form": {
+      "version": "الإصدار",
+      "language": "اللغة",
+      "remember": "تذكرني",
+      "submit": "إرسال"
+    }
+  },
+  "system": {
+    "under_construction": {
+      "title": "قيد الإنشاء",
+      "meta_description": "League of Data Base قيد الإنشاء حاليًا. نعمل بجد لنقدّم لك إحصائيات ورؤى وأدوات مفصّلة خاصة بـ League of Legends. ترقّبوا التحديثات.",
+      "heading": "هذه الصفحة قيد الإنشاء",
+      "subheading": "نحن نصقل هذه الميزة في الريفت. عد قريبًا لشيء ملحمي.",
+      "info": "إذا وصلت إلى هذه الصفحة، فإن المحتوى لم يُطرح بعد. نحن نعمل على الأداء ودقة البيانات وتجربة مستخدم سلسة تتماشى مع بقية League Of Data Base.",
+      "progress_label": "تقدّم البناء",
+      "back": "← رجوع",
+      "summoners": "عرض تعويذات المستدعي",
+      "footer": "تحتاج هذا قريبًا؟ راسلنا أو تحقق من خارطة الطريق. المزيد من التحديثات قادمة.",
+      "meanwhile": "في هذه الأثناء، يمكنك:"
+    }
+  },
+  "item": {
+    "detail": {
+      "meta_description": "اكتشف كل شيء عن العنصر {{ name }} في League of Legends. الإحصائيات والتأثيرات ومعلومات البناء محدّثة للتحديث {{ version }}.",
+      "version_locale": "الإصدار: {{ version }} — اللغة: {{ locale }}",
+      "price_total": "التكلفة الإجمالية",
+      "price_base": "تكلفة الشراء",
+      "price_sell": "قيمة البيع",
+      "categories": "الفئات",
+      "evolutions": "التطورات الممكنة",
+      "stats": "الإحصائيات",
+      "description": "الوصف",
+      "recipe": "الوصفة",
+      "builds_from": "يُصنع من",
+      "tier": "المستوى {{ depth }}",
+      "availability": "التوفّر",
+      "back": "← العودة إلى القائمة"
+    },
+    "list": {
+      "title": "العناصر",
+      "meta_description": "تصفح جميع عناصر League of Legends المتاحة في التحديث {{ version }}. اعثر على إحصائيات وتكاليف وتأثيرات مفصّلة محدّثة لأحدث إصدار.",
+      "header": "العناصر",
+      "subtitle": "كتالوج العناصر",
+      "results_per_page": "النتائج لكل صفحة:",
+      "max": "MAX",
+      "ok": "OK",
+      "search_placeholder": "ابحث عن عنصر…",
+      "cost_total": "التكلفة الإجمالية",
+      "cost_sell": "قيمة البيع",
+      "categories": "الفئات",
+      "evolutions": "التطورات الممكنة",
+      "description": "الوصف"
+    }
+  },
+  "summoner": {
+    "detail": {
+      "meta_description": "استكشف تفاصيل تعويذة المستدعي {{ name }} في League of Legends. الإحصائيات والتأثيرات محدّثة للتحديث {{ version }}.",
+      "version_locale": "الإصدار: {{ version }} — اللغة: {{ locale }}",
+      "fields": {
+        "cooldown": "زمن الاستعادة",
+        "maxammo": "عدد الشحنات",
+        "range": "نطاق الاستخدام",
+        "cost": "التكلفة",
+        "summoner_level": "مستوى المستدعي"
+      },
+      "unlocked_at": "يُفتح عند المستوى {{ level }}",
+      "range_global": "عالمي",
+      "no_cost": "بدون تكلفة",
+      "modes": "الأنماط المتوافقة",
+      "description": "الوصف"
+    },
+    "card": {
+      "cooldown": "زمن الاستعادة",
+      "level": "مستوى المستدعي",
+      "modes": "الأنماط المتوافقة",
+      "description": "الوصف"
+    },
+    "list": {
+      "title": "تعويذات المستدعي",
+      "subtitle": "كتالوج تعويذات المستدعي",
+      "count": "count تعويذات"
+    }
+  },
+  "champion": {
+    "list": {
+      "title": "الأبطال",
+      "meta_description": "تصفح جميع أبطال League of Legends. اعثر على إحصائيات وقدرات وقصص خلفية مفصّلة لكل بطل في اللعبة.",
+      "header": "الأبطال",
+      "subtitle": "كتالوج الأبطال",
+      "search_placeholder": "ابحث عن بطل…"
+    },
+    "detail": {
+      "meta_description": "اكتشف {{ name }} من League of Legends، مع الإحصائيات والأدوار والتفاصيل الخاصة بالتحديث {{ version }}.",
+      "version_locale": "التحديث {{ version }} • {{ locale }}",
+      "partype": "المورد: {{ partype }}",
+      "roles": "الأدوار",
+      "abilities": "القدرات",
+      "passive": "التأثير السلبي",
+      "skins": "الأزياء",
+      "cooldown": "زمن الاستعادة",
+      "cost": "التكلفة",
+      "range": "المدى",
+      "video_play": "تشغيل الفيديو",
+      "video_pause": "إيقاف الفيديو مؤقتًا",
+      "video_mute": "كتم الصوت",
+      "video_unmute": "تشغيل الصوت",
+      "tips_as": "عند اللعب بهذا البطل",
+      "tips_against": "عند مواجهة هذا البطل",
+      "stats": {
+        "title": "الإحصائيات الأساسية"
+      },
+      "profile": {
+        "title": "ملف البطل",
+        "attack": "الهجوم",
+        "defense": "الدفاع",
+        "magic": "السحر",
+        "difficulty": "الصعوبة"
+      },
+      "lore": {
+        "title": "القصة الخلفية"
+      }
+    }
+  },
+  "rune": {
+    "list": {
+      "title": "الرونات",
+      "meta_description": "تصفح جميع رونات League of Legends. اعثر على إحصائيات وتأثيرات مفصّلة لكل رونة في اللعبة.",
+      "header": "الرونات",
+      "subtitle": "كتالوج الرونات",
+      "search_placeholder": "ابحث عن رونة…"
+    },
+    "detail": {
+      "title": "الرونة: {{ name }}",
+      "meta_description": "اكتشف تفاصيل الرونة {{ name }} في League of Legends. الإحصائيات والتأثيرات محدّثة للتحديث {{ version }}.",
+      "overview": "نظرة عامة",
+      "keystone": "الرونة الأساسية",
+      "minor": "الرونات الثانوية",
+      "slot_n": "الخانة {{ n }}"
+    },
+    "slot": "الخانة"
+  },
+  "common": {
+    "back": "رجوع",
+    "search": "بحث…",
+    "no_result": {
+      "text": "لم يتم العثور على نتائج لبحثك.",
+      "back": "← رجوع"
+    },
+    "detail": "عرض التفاصيل"
+  },
+  "base": {
+    "title": "League of Data Base",
+    "description": "League of Data Base هي منصة يقودها المجتمع توفّر معلومات وإحصائيات ورؤى مفصّلة حول League of Legends. سريعة وموثوقة ومحدّثة دائمًا."
+  },
+  "footer": {
+    "copyright": "© 2025 LINDECKER Charles / Hexanti",
+    "legal": "إشعار قانوني",
+    "navigation": {
+      "title": "التنقل",
+      "home": "الرئيسية",
+      "champion": "الأبطال",
+      "item": "العناصر",
+      "runes": "الرونات",
+      "summoner": "المستدعي",
+      "sitemap": "خريطة الموقع"
+    },
+    "links": {
+      "title": "روابط مفيدة",
+      "lol": "League of Legends",
+      "riotapi": "Riot API",
+      "ddragon": "CDN Data Dragon",
+      "support": "Riot Support",
+      "opgg": "OP.GG"
+    },
+    "project": {
+      "title": "المشروع",
+      "version": "الإصدار: {{ version }}",
+      "updated": "تحديث: 17/07/2026"
+    },
+    "contact": {
+      "title": "تواصل",
+      "email": "البريد الإلكتروني",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    }
+  },
+  "loader": {
+    "eyebrow": "Data Dragon",
+    "title": "استدعاء البيانات",
+    "subtitle": "جاري جلب الموارد من الريفت…",
+    "preparing": "جارٍ تجهيز البيانات…",
+    "status": {
+      "fetching": "جارٍ الجلب",
+      "ready": "جاهز"
+    }
+  },
+  "pagination": {
+    "ok": "موافق",
+    "more": "…"
+  },
+  "header": {
+    "navigation": {
+      "home": "الرئيسية",
+      "champion": "الأبطال",
+      "item": "العناصر",
+      "runes": "الرونات",
+      "summoner": "تعويذات المستدعي"
+    },
+    "theme": {
+      "label": "المظهر المرئي",
+      "close": "إغلاق"
+    }
+  },
+  "auth": {
+    "or": "أو",
+    "google": {
+      "cta": "المتابعة عبر Google",
+      "unavailable": "تسجيل الدخول عبر Google غير مُفعّل على هذا الخادم.",
+      "failed": "فشل تسجيل الدخول عبر Google. حاول مرة أخرى."
+    },
+    "register": {
+      "password": "كلمة المرور",
+      "password_confirm": "تأكيد كلمة المرور",
+      "password_mismatch": "كلمتا المرور غير متطابقتين.",
+      "password_help": "12 حرفًا على الأقل، مع حرف صغير وحرف كبير ورقم ورمز خاص."
+    },
+    "password": {
+      "rule_length": "12 حرفًا على الأقل",
+      "rule_lowercase": "حرف صغير واحد على الأقل",
+      "rule_uppercase": "حرف كبير واحد على الأقل",
+      "rule_digit": "رقم واحد على الأقل",
+      "rule_special": "رمز خاص واحد على الأقل",
+      "rule_match": "كلمتا المرور متطابقتان",
+      "too_common": "كلمة المرور هذه شائعة جدًا. اختر كلمة أكثر تميزًا."
+    },
+    "flash": {
+      "banned": "تم تعليق هذا الحساب من قبل فريق الإشراف."
+    }
+  },
+  "profile": {
+    "identity": {
+      "title": "هوية المستدعي",
+      "username": "اسم المستدعي",
+      "tag": "وسم Riot",
+      "tag_help": "اختياري: الجزء بعد # في مُعرّف Riot الخاص بك — لـ GG#EUW أدخل EUW.",
+      "url_warning": "تغيير اسم المستدعي يغيّر أيضًا عنوان ملفك الشخصي العام.",
+      "submit": "تحديث الهوية",
+      "username_taken": "اسم المستدعي هذا مستخدم بالفعل.",
+      "username_invalid": "اسم مستدعٍ غير صالح: من 3 إلى 24 حرفًا (أحرف لاتينية وأرقام ونقطة وشرطة وشرطة سفلية)، ويبدأ بحرف أو رقم.",
+      "tag_invalid": "وسم Riot غير صالح: من 3 إلى 5 أحرف أو أرقام."
+    },
+    "password": {
+      "title": "تعيين كلمة مرور",
+      "help": "حسابك يسجّل الدخول عبر Google فقط. عيّن كلمة مرور لتسجيل الدخول بالبريد الإلكتروني أيضًا.",
+      "submit": "تعيين كلمة المرور"
+    },
+    "danger": {
+      "help_no_password": "حذف حسابك نهائي: تُمحى المفضلة والتجهيزات."
+    },
+    "flash": {
+      "identity_saved": "تم تحديث هوية المستدعي.",
+      "password_set": "تم تعيين كلمة المرور — يمكنك الآن تسجيل الدخول بالبريد الإلكتروني أيضًا.",
+      "password_exists": "لهذا الحساب كلمة مرور بالفعل."
+    }
+  },
+  "build": {
+    "mode": {
+      "sr": "شقّ المستدعي",
+      "aram": "ARAM",
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "الحلبة"
+    },
+    "editor": {
+      "ghost_mode": "غير متوفر في وضع اللعب هذا",
+      "context": {
+        "title": "سياق اللعبة",
+        "version": "التحديث",
+        "mode": "وضع اللعب",
+        "mode_hint": "يعتمد توفر العناصر على الوضع المختار. العناصر الموضوعة مسبقًا لا تُحذف أبدًا، بل يتم تمييزها."
+      },
+      "dnd": {
+        "handle": "اسحب لإعادة الترتيب",
+        "moved_step": "تم نقل الخطوة إلى الموضع {{ position }}",
+        "moved_item": "تم نقل العنصر إلى الموضع {{ position }}",
+        "transferred": "تم نقل العنصر إلى الخطوة {{ step }}",
+        "added": "تمت إضافة العنصر إلى الخطوة {{ step }}",
+        "cancelled": "تم إلغاء النقل"
+      }
+    },
+    "show": {
+      "mode": "وضع اللعب",
+      "patch_current": "أُنشئ على التحديث {{ version }} — الحالي: {{ current }}"
+    },
+    "error": {
+      "version": {
+        "unknown": "إصدار لعبة غير معروف."
+      },
+      "mode": {
+        "unknown": "وضع لعب غير معروف."
+      },
+      "steps": {
+        "item_mode": "غير متوفر في وضع اللعب المختار: {{ items }}"
+      }
+    }
+  },
+  "community": {
+    "nav": {
+      "trends": "الرائج"
+    },
+    "trends": {
+      "eyebrow": "نبض المجتمع",
+      "title": "البيلدات الرائجة",
+      "filter": {
+        "champion": "البطل",
+        "mode": "وضع اللعب",
+        "all_champions": "كل الأبطال",
+        "all_modes": "كل الأوضاع",
+        "apply": "تصفية"
+      },
+      "empty": "لا يوجد بيلد عام يطابق هذا الفلتر — اصنع بيلدك الخاص.",
+      "empty_cta": "اصنع بيلدي"
+    },
+    "vote": {
+      "up": "التصويت مع هذا البيلد",
+      "down": "التصويت ضد هذا البيلد",
+      "score_label": "تقييم المجتمع",
+      "login": "سجّل الدخول للتصويت",
+      "invalid": "تصويت غير صالح."
+    },
+    "supporter": {
+      "badge": "داعم"
+    }
+  },
+  "stat": {
+    "attack_damage": "الضرر الهجومي",
+    "ability_power": "قوة القدرات",
+    "attack_speed": "سرعة الهجوم",
+    "crit_chance": "فرصة الضربة الحرجة",
+    "life_steal": "سرقة الصحة",
+    "health": "الصحة",
+    "health_regen": "تجديد الصحة",
+    "armor": "الدرع",
+    "magic_resist": "المقاومة السحرية",
+    "mana": "المانا",
+    "move_speed": "سرعة الحركة",
+    "attack_range": "مدى الهجوم"
+  }
+}

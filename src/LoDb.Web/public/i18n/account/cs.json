@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Něco se pokazilo. Zkuste to znovu.",
+    "invalid": "Tato hodnota není platná.",
+    "required": "Toto pole je povinné.",
+    "email_invalid": "Zadejte platnou e-mailovou adresu.",
+    "email_too_long": "Tato e-mailová adresa je příliš dlouhá.",
+    "email_taken": "Tuto e-mailovou adresu již používá jiný účet.",
+    "terms_required": "Musíte přijmout podmínky použití.",
+    "password_too_long": "Toto heslo je příliš dlouhé.",
+    "invalid_credentials": "Nesprávný identifikátor nebo heslo.",
+    "invalid_two_factor": "Tento kód je nesprávný nebo vypršel.",
+    "locked": "Příliš mnoho neúspěšných pokusů: tento účet je na několik minut zablokován.",
+    "google_cancelled": "Přihlášení přes Google bylo zrušeno.",
+    "google_email_unverified": "Google tuto e-mailovou adresu neověřil, proto ji nelze použít k přihlášení.",
+    "google_two_factor": "Tento účet používá dvoufázové ověření: přihlaste se e-mailem a heslem.",
+    "sign_out": "Odhlášení se nezdařilo. Zkuste to znovu."
+  },
+  "two_factor": {
+    "lede": "Zadejte 6místný kód z ověřovací aplikace.",
+    "code": "Ověřovací kód",
+    "recovery_code": "Záchranný kód",
+    "use_recovery": "Použít raději záchranný kód",
+    "use_app": "Použít raději ověřovací aplikaci"
+  },
+  "password": {
+    "met": "(splněno)",
+    "unmet": "(nesplněno)"
+  },
+  "verify": {
+    "title": "Potvrzení e-mailu",
+    "verifying": "Potvrzujeme vaši e-mailovou adresu…",
+    "pending": "Na adresu {{ email }} jsme poslali potvrzovací odkaz. Otevřete ho a potvrďte svou adresu, nebo si vyžádejte nový.",
+    "sign_in": "Přihlaste se a získejte nový potvrzovací odkaz.",
+    "continue": "Pokračovat"
+  },
+  "editor": {
+    "loading": "Načítání profilu…",
+    "load_error": "Profil se nepodařilo načíst.",
+    "version_error": "Verzi oblíbených se nepodařilo změnit."
+  }
+}

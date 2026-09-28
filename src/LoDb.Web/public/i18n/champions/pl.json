@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "Zamknij",
+    "previous": "Poprzedni",
+    "next": "Następny",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "Chromy skórki {{ skin }}"
+  }
+}

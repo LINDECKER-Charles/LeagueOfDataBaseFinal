@@ -1,0 +1,40 @@
+<div class="visibility-card__head">
+  <span class="visibility-card__icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path
+        d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  </span>
+  <label class="visibility-card__text" for="profile-visibility">
+    <span class="visibility-card__label">{{ 'profile.visibility.label' | transloco }}</span>
+    <span class="visibility-card__state">
+      {{
+        (isPublic() ? 'profile.visibility.state_public' : 'profile.visibility.state_private')
+          | transloco
+      }}
+    </span>
+  </label>
+  <input
+    #toggle
+    id="profile-visibility"
+    type="checkbox"
+    lodbField="switch"
+    aria-describedby="profile-visibility-help"
+    [checked]="isPublic()"
+    (change)="changed.emit(toggle.checked)"
+  />
+</div>
+<!-- Isolated: an English fallback in an RTL page would move its full stops. -->
+<p id="profile-visibility-help" class="visibility-card__help">
+  <bdi>{{ 'profile.visibility.help' | transloco }}</bdi>
+</p>
+@if (isPublic()) {
+  <a class="visibility-card__link" [routerLink]="publicLink()">
+    <span class="visibility-card__url" dir="ltr">{{ publicPath() }}</span>
+    <span class="rtl:-scale-x-100" aria-hidden="true">→</span>
+  </a>
+}

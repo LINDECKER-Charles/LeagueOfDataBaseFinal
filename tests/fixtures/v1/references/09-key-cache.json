@@ -1,0 +1,402 @@
+{
+  "group": "09-key-cache",
+  "title": "60 s key cache: revocation, new key, credit top-up and plan change are all deferred (L6.3 applies them immediately)",
+  "source": {
+    "service": "go-api",
+    "goApiTree": "0b2172d52a4e9786470909b8616f41395ed3d431"
+  },
+  "exchanges": [
+    {
+      "id": "before-revocation",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:revocation_target}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "9",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "free",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 0,
+          "rate_limit_per_min": 10
+        }
+      }
+    },
+    {
+      "id": "before-creation",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:late_key}}"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "unknown API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "before-top-up",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/runes",
+        "headers": {
+          "X-Api-Key": "{{key:top_up}}"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "9",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "quota_exceeded",
+            "message": "monthly quota exhausted and no credits left"
+          }
+        }
+      }
+    },
+    {
+      "id": "before-upgrade",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:free}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "9",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "free",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 0,
+          "rate_limit_per_min": 10
+        }
+      }
+    },
+    {
+      "id": "revoke",
+      "action": "sql",
+      "sql": "UPDATE api_keys SET is_active = false, revoked_at = '2026-07-21 10:00:00+00' WHERE name = 'revocation_target';"
+    },
+    {
+      "id": "create",
+      "action": "sql",
+      "sql": "INSERT INTO api_keys (id, user_id, name, key_hash, key_prefix, plan, monthly_quota, credits_balance, rate_limit_per_min, is_active, created_at) VALUES (16, 25, 'late_key', encode(sha256(convert_to('lodb_a64458100b5ca54919143780b628f6ed4a1faed3', 'UTF8')), 'hex'), 'lodb_a644581', 'free', 500, 0, 10, true, '2026-07-21 10:00:00+00');"
+    },
+    {
+      "id": "top-up",
+      "action": "sql",
+      "sql": "UPDATE api_keys SET credits_balance = 100, rate_limit_per_min = 60 WHERE name = 'top_up';"
+    },
+    {
+      "id": "upgrade",
+      "action": "sql",
+      "sql": "UPDATE api_keys SET plan = 'monthly', monthly_quota = 15000, rate_limit_per_min = 120 WHERE name = 'free';"
+    },
+    {
+      "id": "revoked-still-served",
+      "note": "deferred revocation; L6.3 answers 403 at once",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:revocation_target}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "8",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "free",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 0,
+          "rate_limit_per_min": 10
+        }
+      }
+    },
+    {
+      "id": "created-still-unknown",
+      "note": "cached rejection; L6.3 must not keep a rejection past the key creation",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:late_key}}"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "unauthorized",
+            "message": "unknown API key"
+          }
+        }
+      }
+    },
+    {
+      "id": "topped-up-still-refused",
+      "note": "cached credits; L6.3 serves it at once",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/runes",
+        "headers": {
+          "X-Api-Key": "{{key:top_up}}"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "8",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "quota_exceeded",
+            "message": "monthly quota exhausted and no credits left"
+          }
+        }
+      }
+    },
+    {
+      "id": "upgraded-old-limit",
+      "note": "cached rate limit (the usage body is read from the database)",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:free}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "8",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "monthly",
+          "monthly_quota": 15000,
+          "used_this_month": 0,
+          "remaining_this_month": 15000,
+          "credits_balance": 0,
+          "rate_limit_per_min": 120
+        }
+      }
+    },
+    {
+      "id": "wait-for-cache-expiry",
+      "action": "sleep",
+      "ms": 61000
+    },
+    {
+      "id": "revoked-refused",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:revocation_target}}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "body": {
+          "error": {
+            "code": "forbidden",
+            "message": "API key is revoked or inactive"
+          }
+        }
+      }
+    },
+    {
+      "id": "created-served",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:late_key}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "9",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "free",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 0,
+          "rate_limit_per_min": 10
+        }
+      }
+    },
+    {
+      "id": "topped-up-served",
+      "note": "quota still exhausted: paid by a credit",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/runes",
+        "headers": {
+          "X-Api-Key": "{{key:top_up}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "59",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "runes",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "8100",
+              "name": "Domination",
+              "views": 6
+            },
+            {
+              "rank": 2,
+              "id": "8112",
+              "name": "Electrocute",
+              "views": 3
+            },
+            {
+              "rank": 3,
+              "id": "Electrocute",
+              "name": "Electrocute",
+              "views": 2
+            },
+            {
+              "rank": 4,
+              "id": "9999",
+              "views": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "upgraded-new-limit",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:free}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "119",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "monthly",
+          "monthly_quota": 15000,
+          "used_this_month": 0,
+          "remaining_this_month": 15000,
+          "credits_balance": 0,
+          "rate_limit_per_min": 120
+        }
+      }
+    }
+  ]
+}

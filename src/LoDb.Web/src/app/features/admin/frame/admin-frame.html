@@ -1,0 +1,31 @@
+<header class="admin-bar">
+  <span class="admin-brand">
+    <b>{{ 'admin.brand_name' | adminText }}</b>
+    <span>{{ 'admin.brand_tag' | adminText }}</span>
+  </span>
+  @if (open()) {
+    <nav class="admin-nav" [attr.aria-label]="'admin.nav.label' | adminText">
+      @for (section of nav; track section.key; let first = $first) {
+        @if (!first) {
+          <span class="admin-nav-sep" aria-hidden="true"></span>
+        }
+        <span class="admin-nav-label">{{ 'admin.nav.' + section.key | adminText }}</span>
+        @for (link of section.links; track link.key) {
+          <a
+            class="admin-nav-link"
+            [class.is-active]="isCurrent(link)"
+            [routerLink]="link.path"
+            [attr.aria-current]="isCurrent(link) ? 'page' : null"
+            >{{ 'admin.nav.' + link.key | adminText }}</a
+          >
+        }
+      }
+    </nav>
+    <button type="button" class="admin-logout" [disabled]="signingOut()" (click)="signOut()">
+      {{ 'admin.nav.sign_out' | adminText }}
+    </button>
+  }
+</header>
+<div class="admin-column">
+  <router-outlet />
+</div>

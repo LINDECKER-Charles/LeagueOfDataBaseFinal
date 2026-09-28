@@ -1,0 +1,4 @@
+/* The root only hosts the shell and the update screen: it adds no box of its own. */
+:host {
+  display: contents;
+}

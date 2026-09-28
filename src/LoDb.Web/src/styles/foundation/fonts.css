@@ -1,0 +1,27 @@
+/*
+ * League of Legends' own faces, self-hosted from public/fonts (the CSP allows `font-src 'self'`
+ * only): Beaufort for display, Spiegel for body. The display faces of the other identities are
+ * declared by their theme (theme/<slug>/type.css), with a Latin unicode-range so the browser
+ * never downloads them for a script they cannot set.
+ */
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/BeaufortforLOL-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/BeaufortforLOL-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Spiegel';
+  src: url('/fonts/Spiegel_TT_Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

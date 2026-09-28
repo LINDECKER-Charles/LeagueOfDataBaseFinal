@@ -1,0 +1,124 @@
+<footer class="relative border-t border-gold-deep/40 bg-hextech-black/95 text-text-muted">
+  <div
+    class="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-gold/50 to-transparent"
+  ></div>
+
+  <div
+    class="mx-auto grid max-w-[110rem] grid-cols-2 gap-x-6 gap-y-10 px-6 py-12 sm:px-8 sm:py-14 lg:grid-cols-6"
+  >
+    <div class="col-span-2 flex flex-col gap-3 lg:col-span-1">
+      <div class="flex items-center gap-2 text-gold">
+        <lodb-logo class="size-7" />
+        <span class="font-beaufort text-sm tracking-[0.16em] text-gold-bright uppercase"
+          >Data Base</span
+        >
+      </div>
+      <p class="text-sm">{{ 'footer.copyright' | transloco }}</p>
+      <p>
+        <a
+          class="nav-link underline-offset-4 hover:underline"
+          [routerLink]="link('legal/notice')"
+          >{{ 'footer.legal' | transloco }}</a
+        >
+      </p>
+    </div>
+
+    <nav aria-labelledby="footer-site">
+      <h2 id="footer-site" class="eyebrow mb-3">{{ 'footer.navigation.title' | transloco }}</h2>
+      <ul class="flex flex-col gap-1.5 text-sm">
+        @for (siteLink of site(); track siteLink.entry.path) {
+          <li>
+            <a class="nav-link" [routerLink]="siteLink.target">{{
+              siteLink.entry.label | transloco
+            }}</a>
+          </li>
+        }
+        @if (member()) {
+          <li>
+            <a class="nav-link" [routerLink]="link('account/profile')">{{
+              'nav.profile' | transloco
+            }}</a>
+          </li>
+        }
+        @if (sitemap) {
+          <li>
+            <a class="nav-link" [href]="sitemap">{{ 'footer.navigation.sitemap' | transloco }}</a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div>
+      <h2 class="eyebrow mb-3">{{ 'footer.links.title' | transloco }}</h2>
+      <ul class="flex flex-col gap-1.5 text-sm">
+        @for (entry of external; track entry.href) {
+          <li>
+            <a class="nav-link" target="_blank" rel="noopener noreferrer" [href]="entry.href">{{
+              entry.label | transloco
+            }}</a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="eyebrow mb-3">{{ 'footer.project.title' | transloco }}</h2>
+      <ul class="flex flex-col gap-1.5 text-sm">
+        @if (version; as release) {
+          <li>{{ 'footer.project.version' | transloco: { version: release } }}</li>
+        }
+        <li>{{ 'footer.project.updated' | transloco }}</li>
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="eyebrow mb-3">{{ 'footer.legal_title' | transloco }}</h2>
+      <ul class="flex flex-col gap-1.5 text-sm">
+        @for (entry of legal; track entry.path) {
+          <li>
+            <a class="nav-link" [routerLink]="link(entry.path)">{{ entry.label | transloco }}</a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <div class="col-span-2 lg:col-span-1">
+      <h2 class="eyebrow mb-3">{{ 'footer.contact.title' | transloco }}</h2>
+      <ul class="flex flex-col gap-2.5 text-sm">
+        @for (entry of contact; track entry.href) {
+          <li>
+            <a
+              class="nav-link inline-flex items-center gap-2"
+              [attr.target]="opensTab(entry) ? '_blank' : null"
+              [attr.rel]="opensTab(entry) ? 'noopener noreferrer' : null"
+              [href]="entry.href"
+            >
+              @if (entry.icon) {
+                <lodb-icon class="size-5" [name]="entry.icon" />
+              }
+              {{ entry.label | transloco }}
+            </a>
+          </li>
+        }
+      </ul>
+      <div class="mt-4">
+        <ng-content select="[lodbSlot=contact]" />
+      </div>
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-[110rem] px-6 pb-8 sm:px-8">
+    <!-- English, so read left to right, but aligned with the RTL columns above, as legacy:
+         the physical `text-right` is deliberate, `text-end` would follow the paragraph's ltr. -->
+    <p
+      class="border-t border-gold-deep/25 pt-5 text-xs leading-relaxed text-text-dim rtl:text-right"
+      lang="en"
+      dir="ltr"
+    >
+      League Of Data Base isn't endorsed by Riot Games and doesn't reflect the views or opinions of
+      Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot
+      Games and all associated properties are trademarks or registered trademarks of Riot Games,
+      Inc.
+    </p>
+  </div>
+</footer>

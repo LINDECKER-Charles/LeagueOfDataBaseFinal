@@ -1,0 +1,88 @@
+<lodb-editorial-frame
+  ambient
+  [eyebrow]="'about.eyebrow' | transloco"
+  [heading]="heading() | transloco"
+>
+  <p lodbLead class="max-w-[62ch] font-spiegel text-lg leading-relaxed text-text-muted">
+    {{ 'about.data.lead' | transloco }}
+  </p>
+  <div class="hx-prose relative flex flex-col gap-10">
+    <section id="snapshot">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.data.snapshot.title' | transloco }}</h2>
+      </div>
+      @defer (on idle) {
+        <lodb-inventory-counters [facts]="facts" />
+      } @placeholder {
+        <lodb-inventory-facts [facts]="facts" />
+      }
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="sources">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.data.sources.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.data.sources.body' | transloco }}</p>
+      <h3>{{ 'about.data.sources.ddragon.title' | transloco }}</h3>
+      <p>{{ 'about.data.sources.ddragon.body' | transloco }}</p>
+      <h3>{{ 'about.data.sources.cdragon.title' | transloco }}</h3>
+      <p>{{ 'about.data.sources.cdragon.body' | transloco }}</p>
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="freshness">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.data.freshness.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.data.freshness.body' | transloco }}</p>
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="coverage">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.data.coverage.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.data.coverage.body' | transloco }}</p>
+      <ul>
+        <li>{{ 'about.data.coverage.champions' | transloco }}</li>
+        <li>{{ 'about.data.coverage.items' | transloco }}</li>
+        <li>{{ 'about.data.coverage.runes' | transloco }}</li>
+        <li>{{ 'about.data.coverage.summoners' | transloco }}</li>
+      </ul>
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="limits">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.data.limits.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.data.limits.body' | transloco }}</p>
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="reuse">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.data.reuse.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.data.reuse.body' | transloco }}</p>
+      <p>
+        <a [routerLink]="link('developers')">{{ 'about.data.reuse.link' | transloco }}</a>
+      </p>
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="disclaimer">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.data.disclaimer.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.data.disclaimer.body' | transloco }}</p>
+    </section>
+  </div>
+</lodb-editorial-frame>

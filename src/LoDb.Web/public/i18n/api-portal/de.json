@@ -1,0 +1,11 @@
+{
+  "loading": "API-Schlüssel wird geladen…",
+  "retry": "Erneut versuchen",
+  "error": {
+    "load": "Der API-Schlüssel konnte nicht geladen werden.",
+    "failed": "Die Aktion ist fehlgeschlagen, bitte erneut versuchen."
+  },
+  "actions": {
+    "revoke_help": "Deaktiviert den Schlüssel sofort: Die API lehnt ihn ab der nächsten Anfrage ab."
+  }
+}

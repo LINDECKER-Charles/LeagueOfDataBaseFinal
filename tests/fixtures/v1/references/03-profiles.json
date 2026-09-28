@@ -1,0 +1,305 @@
+{
+  "group": "03-profiles",
+  "title": "Public profiles: visibility, ban, case-insensitive lookup, empty favorites",
+  "source": {
+    "service": "go-api",
+    "goApiTree": "0b2172d52a4e9786470909b8616f41395ed3d431"
+  },
+  "exchanges": [
+    {
+      "id": "public",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer",
+        "headers": {
+          "X-Api-Key": "{{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "119",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "PublicPlayer",
+          "created_at": "2026-07-01T09:12:00Z",
+          "favorites": {
+            "champion_id": "Ahri",
+            "item_id": "3006",
+            "rune_id": "8112",
+            "summoner_id": "SummonerFlash"
+          },
+          "public_builds": 57
+        }
+      }
+    },
+    {
+      "id": "public-other-case",
+      "note": "lookup on LOWER(username); the stored spelling is returned",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/publicPLAYER",
+        "headers": {
+          "X-Api-Key": "{{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "118",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "PublicPlayer",
+          "created_at": "2026-07-01T09:12:00Z",
+          "favorites": {
+            "champion_id": "Ahri",
+            "item_id": "3006",
+            "rune_id": "8112",
+            "summoner_id": "SummonerFlash"
+          },
+          "public_builds": 57
+        }
+      }
+    },
+    {
+      "id": "public-percent-encoded",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/%50ublicPlayer",
+        "headers": {
+          "X-Api-Key": "{{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "117",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "PublicPlayer",
+          "created_at": "2026-07-01T09:12:00Z",
+          "favorites": {
+            "champion_id": "Ahri",
+            "item_id": "3006",
+            "rune_id": "8112",
+            "summoner_id": "SummonerFlash"
+          },
+          "public_builds": 57
+        }
+      }
+    },
+    {
+      "id": "private",
+      "note": "same 404 as an unknown account",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PrivatePlayer",
+        "headers": {
+          "X-Api-Key": "{{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "116",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "not_found",
+            "message": "no public profile for this username"
+          }
+        }
+      }
+    },
+    {
+      "id": "unknown",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/NobodyHere",
+        "headers": {
+          "X-Api-Key": "{{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "115",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "not_found",
+            "message": "no public profile for this username"
+          }
+        }
+      }
+    },
+    {
+      "id": "banned",
+      "note": "go-api ignores the ban (the site answers 404): heritage requires the same 404 as unknown",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/BannedPlayer",
+        "headers": {
+          "X-Api-Key": "{{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "114",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "BannedPlayer",
+          "created_at": "2026-07-03T11:00:00Z",
+          "favorites": {
+            "champion_id": "Teemo",
+            "item_id": null,
+            "rune_id": null,
+            "summoner_id": null
+          },
+          "public_builds": 2
+        }
+      }
+    },
+    {
+      "id": "no-favorites",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/NoFavorites",
+        "headers": {
+          "X-Api-Key": "{{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "113",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "NoFavorites",
+          "created_at": "2026-07-04T12:00:00Z",
+          "favorites": {
+            "champion_id": null,
+            "item_id": null,
+            "rune_id": null,
+            "summoner_id": null
+          },
+          "public_builds": 0
+        }
+      }
+    },
+    {
+      "id": "key-owner-private",
+      "note": "an API client account with a private profile",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/ApiClient0",
+        "headers": {
+          "X-Api-Key": "{{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "112",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "not_found",
+            "message": "no public profile for this username"
+          }
+        }
+      }
+    },
+    {
+      "id": "trailing-slash",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/PublicPlayer/",
+        "headers": {
+          "X-Api-Key": "{{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "x-content-type-options": "nosniff",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "text": "404 page not found\n"
+      }
+    },
+    {
+      "id": "empty-username",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/",
+        "headers": {
+          "X-Api-Key": "{{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "x-content-type-options": "nosniff",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "text": "404 page not found\n"
+      }
+    }
+  ]
+}
