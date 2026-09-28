@@ -1,6 +1,4 @@
-using System.Globalization;
 using LoDb.Api.Modules.Accounts.Http;
-using LoDb.Api.Modules.Accounts.Links;
 using LoDb.Api.Modules.Accounts.Registration;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence.Accounts;
@@ -18,7 +16,10 @@ namespace LoDb.Api.Modules.Accounts.Recovery;
 /// The new password changes the security stamp: the link cannot serve twice, the refresh
 /// tokens of the account stop working, and its open sessions close at their next check.
 /// </remarks>
-internal sealed class ResetPasswordEndpoint(UserManager<User> users, AccountAudit audit)
+internal sealed class ResetPasswordEndpoint(
+    UserManager<User> users,
+    ResetLinks links,
+    AccountAudit audit)
 {
     public static void Map(IEndpointRouteBuilder account) =>
         account.MapPost(
@@ -35,11 +36,7 @@ internal sealed class ResetPasswordEndpoint(UserManager<User> users, AccountAudi
         ResetPasswordRequest request,
         CancellationToken cancellationToken)
     {
-        var token = EmailTokens.Decode(request.Token);
-        var user = token is null
-            ? null
-            : await users.FindByIdAsync(request.UserId.ToString(CultureInfo.InvariantCulture));
-        if (user is null || !await IsValidAsync(user, token!))
+        if (await links.ReadAsync(request.UserId, request.Token) is not { } link)
         {
             return AccountProblem.InvalidToken();
         }
@@ -49,7 +46,8 @@ internal sealed class ResetPasswordEndpoint(UserManager<User> users, AccountAudi
             return weak;
         }
 
-        var reset = await users.ResetPasswordAsync(user, token!, request.Password!);
+        var user = link.Account;
+        var reset = await users.ResetPasswordAsync(user, link.Token, request.Password!);
         if (!reset.Succeeded)
         {
             return AccountProblem.InvalidToken();
@@ -67,11 +65,4 @@ internal sealed class ResetPasswordEndpoint(UserManager<User> users, AccountAudi
         RegistrationRules.CheckPassword(errors, password);
         return errors.IsEmpty ? null : errors.ToProblem();
     }
-
-    private Task<bool> IsValidAsync(User user, string token) =>
-        users.VerifyUserTokenAsync(
-            user,
-            users.Options.Tokens.PasswordResetTokenProvider,
-            UserManager<User>.ResetPasswordTokenPurpose,
-            token);
 }

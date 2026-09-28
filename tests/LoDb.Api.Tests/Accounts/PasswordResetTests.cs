@@ -9,18 +9,21 @@ namespace LoDb.Api.Tests.Accounts;
 
 /// <summary>
 /// The forgotten password: the same answer whether an account uses the e-mail or not, one
-/// e-mail an hour per account and five requests an hour per address, and a link that sets
-/// the new password once, unlocks the account and closes its sessions.
+/// e-mail an hour per account and five requests an hour per address, a link its page checks
+/// without using it, and that sets the new password once, unlocks the account and closes its
+/// sessions.
 /// </summary>
 public sealed class PasswordResetTests(PostgresContainerFixture postgres)
     : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
 {
     private const string ForgotPath = "/api/account/forgot-password";
     private const string ResetPath = "/api/account/reset-password";
+    private const string CheckPath = "/api/account/reset-password/check";
     private const string NewPassword = "N0uvelle-phrase!";
     private const string WrongPassword = "Wr0ng-passphrase!";
     private const int RequestsPerHour = 5;
     private const int FailuresToLock = 5;
+    private const int ChecksPerHour = 30;
 
     private AccountsApp? _app;
 
@@ -162,6 +165,73 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
             statuses);
     }
 
+    [Fact]
+    public async Task CheckTellsAUsableLinkWithoutUsingIt()
+    {
+        await App.SeedAsync(new AccountSeed());
+        using var browser = App.Browser();
+        using var forgot = await ForgotAsync(browser, AccountSeed.Address);
+        var link = App.Outbox.LastLink(EmailTemplate.ResetPassword);
+
+        using var opened = await CheckAsync(browser, link);
+        using var reopened = await CheckAsync(browser, link);
+        using var reset = await ResetAsync(browser, link, NewPassword);
+        using var used = await CheckAsync(browser, link);
+
+        Assert.Equal(
+            [HttpStatusCode.NoContent, HttpStatusCode.NoContent, HttpStatusCode.NoContent],
+            [opened.StatusCode, reopened.StatusCode, reset.StatusCode]);
+        Assert.Equal(
+            "invalid-token",
+            await ApiJson.ProblemCodeAsync(used, HttpStatusCode.BadRequest));
+    }
+
+    [Fact]
+    public async Task CheckRefusesADamagedLinkOrOneOfAnotherAccount()
+    {
+        var other = await App.SeedAsync(new AccountSeed
+        {
+            Username = "Autre_1",
+            Email = "autre@example.test",
+        });
+        await App.SeedAsync(new AccountSeed());
+        using var browser = App.Browser();
+        using var forgot = await ForgotAsync(browser, AccountSeed.Address);
+        var link = App.Outbox.LastLink(EmailTemplate.ResetPassword);
+
+        using var damaged = await CheckAsync(browser, link with { Token = "bm9wZQ" });
+        using var empty = await CheckAsync(browser, link with { Token = "" });
+        using var otherAccount = await CheckAsync(browser, link with { UserId = other.Id });
+
+        foreach (var refused in new[] { damaged, empty, otherAccount })
+        {
+            Assert.Equal(
+                "invalid-token",
+                await ApiJson.ProblemCodeAsync(refused, HttpStatusCode.BadRequest));
+        }
+    }
+
+    [Fact]
+    public async Task CheckHasItsOwnHourlyLimitApartFromTheRequests()
+    {
+        using var browser = App.Browser();
+        var damaged = new EmailLink(AccountsApp.BaseAddress, UserId: 1, Token: "bm9wZQ");
+        var statuses = new List<HttpStatusCode>();
+
+        for (var attempt = 0; attempt <= ChecksPerHour; attempt++)
+        {
+            using var response = await CheckAsync(browser, damaged);
+            statuses.Add(response.StatusCode);
+        }
+
+        using var request = await ForgotAsync(browser, "nobody@example.test");
+        Assert.Equal(
+            [.. Enumerable.Repeat(HttpStatusCode.BadRequest, ChecksPerHour),
+                HttpStatusCode.TooManyRequests],
+            statuses);
+        Assert.Equal(HttpStatusCode.Accepted, request.StatusCode);
+    }
+
     public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);
 
     public async ValueTask DisposeAsync()
@@ -180,6 +250,9 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
         EmailLink link,
         string password) =>
         browser.PostAsync(ResetPath, new { userId = link.UserId, token = link.Token, password });
+
+    private static Task<HttpResponseMessage> CheckAsync(BrowserClient browser, EmailLink link) =>
+        browser.PostAsync(CheckPath, new { userId = link.UserId, token = link.Token });
 
     private static async Task LockAsync(BrowserClient browser)
     {
