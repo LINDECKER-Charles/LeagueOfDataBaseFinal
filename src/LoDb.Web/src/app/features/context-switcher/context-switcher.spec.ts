@@ -7,6 +7,8 @@ import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api-base-url';
 import type { CatalogMeta } from '../../core/api/generated/models/catalog-meta';
+import { PreferencesStore } from '../../core/context/preferences/preferences-store';
+import { NavContext } from '../../core/layout/nav/nav-context';
 import { ToastService } from '../../core/layout/toast/toast-service';
 import { ContextSwitcher } from './context-switcher';
 
@@ -230,6 +232,38 @@ describe('ContextSwitcher', () => {
 
     expect(document.cookie).not.toContain('lod_prefs');
     await vi.waitFor(() => expect(routerUrl()).toBe(`/en/${OLDER}/champions`));
+  });
+
+  // The legacy `page_selection`: the chip and the panel follow the session like the links.
+  it('shows the patch kept for the session on a page that names none', async () => {
+    configure('browser');
+    TestBed.inject(PreferencesStore).keep({ lang: null, version: OLDER });
+    const fixture = await openOn('/en/trends');
+
+    const host = await loaded(fixture);
+
+    expect(host.querySelector('summary')?.textContent).toContain(OLDER);
+    expect(select(host, 'switcher-version').value).toBe(OLDER);
+  });
+
+  it('moves the chip and the chrome to a patch applied on the same URL', async () => {
+    configure('browser');
+    TestBed.inject(PreferencesStore).keep({ lang: null, version: OLDER });
+    const fixture = await openOn('/en/trends');
+    const host = await loaded(fixture);
+    const nav = TestBed.inject(NavContext);
+    expect(nav.selection()?.version).toBe(OLDER);
+
+    pick(host, 'switcher-version', LATEST);
+    await submit(fixture);
+
+    expect(routerUrl()).toBe('/en/trends');
+    expect(host.querySelector('summary')?.textContent).toContain(LATEST);
+    expect(nav.selection()).toEqual({
+      shown: LATEST,
+      version: null,
+      lang: null,
+    });
   });
 
   it('leaves a page whose URL names its context', async () => {

@@ -14,7 +14,13 @@
     [attr.aria-label]="'legal.toc' | transloco"
   >
     <p class="eyebrow mb-3">{{ 'legal.toc' | transloco }}</p>
-    <ol class="grid gap-1.5 text-sm text-text-muted sm:grid-cols-2" [attr.lang]="textLanguage()">
+    <!-- A fallback text (English or French under ar) reads left to right, its numbering and
+         final stops included. -->
+    <ol
+      class="grid gap-1.5 text-sm text-text-muted sm:grid-cols-2"
+      [attr.lang]="textLanguage()"
+      [attr.dir]="textLanguage() ? 'ltr' : null"
+    >
       @for (section of contents(); track section.id) {
         <li>
           <a class="nav-link" [lodbFragmentLink]="section.id">{{ section.label }}</a>
@@ -22,7 +28,11 @@
       }
     </ol>
   </nav>
-  <div class="hx-prose flex flex-col gap-10" [attr.lang]="textLanguage()">
+  <div
+    class="hx-prose flex flex-col gap-10"
+    [attr.lang]="textLanguage()"
+    [attr.dir]="textLanguage() ? 'ltr' : null"
+  >
     @let fr = language() === 'fr';
     @switch (page()) {
       @case ('notice') {

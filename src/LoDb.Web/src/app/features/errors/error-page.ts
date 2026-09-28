@@ -62,6 +62,8 @@ function cardOf(outcome: PageOutcome): ErrorCard | null {
   imports: [Button, Frame, RouterLink, TranslocoPipe],
   providers: [provideTranslocoScope('seo')],
   templateUrl: './error-page.html',
+  // Grows into the shell's column, so its card is centred between header and footer.
+  host: { class: 'flex flex-1 flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ErrorPage {

@@ -4,6 +4,7 @@
  */
 @layer components {
   .auth-portal {
+    flex-grow: 1;
     position: relative;
     display: grid;
     place-items: center;

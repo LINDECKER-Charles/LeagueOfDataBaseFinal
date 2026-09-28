@@ -66,6 +66,14 @@ npm --prefix src/LoDb.Web run build:shell
 | `api:generate`, `api:check` | contrat OpenAPI et client généré : bouchons jusqu'à L2.2 |
 | `i18n:convert`, `i18n:report` | conversion des catalogues et complétude : bouchons jusqu'à L3.3 |
 
+Le budget `initial` de `build:web` avertit au-delà de 700 kB : la mesure après le réalignement du
+front est de 685 kB (167 kB de feuille globale, 167 kB compressés en tout). La feuille globale porte
+les utilitaires Tailwind de tous les gabarits, fonctionnalités chargées à la demande comprises ; les
+classes des panneaux CDK (`dialog-picker.css`, `lightbox.css`) doivent y rester, hors de toute vue.
+Le seuil suit cette mesure, pour qu'un avertissement signale une croissance réelle : on la réduit
+(exclure une fonctionnalité du balayage global par `@source not`, feuille chargée avec elle)
+plutôt que de relever encore le seuil.
+
 Tant que `api:generate` n'est qu'un bouchon, les documents OpenAPI se produisent à la main :
 
 ```bash

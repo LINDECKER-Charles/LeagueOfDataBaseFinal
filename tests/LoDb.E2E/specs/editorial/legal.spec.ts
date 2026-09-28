@@ -28,6 +28,7 @@ test.describe("legal pages", { tag: '@readonly' }, () => {
     const text = page.locator(".hx-prose");
 
     await expect(text).toHaveAttribute("lang", "en");
+    await expect(text).toHaveAttribute("dir", "ltr");
     await expect(page.locator("html")).toHaveAttribute("lang", "de");
     await expect(page.locator(".hx-prose section").first()).toHaveAttribute(
       "id",
@@ -50,6 +51,11 @@ test.describe("legal pages", { tag: '@readonly' }, () => {
     await expect(section).toBeInViewport();
     // Below its scroll margin (6.5rem), clear of the sticky header, as a native jump lands.
     expect(await topOf(section)).toBeGreaterThanOrEqual(SCROLL_MARGIN);
+    // As after a native jump: the next Tab starts in the section, and Back returns to the top.
+    await expect(section).toBeFocused();
+    await page.goBack();
+    await expect(page).toHaveURL(/\/en\/legal\/cookies$/);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
   });
 
   test("jump to a section from a link in the text", async ({ page }) => {

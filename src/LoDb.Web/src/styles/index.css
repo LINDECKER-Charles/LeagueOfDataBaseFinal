@@ -5,11 +5,13 @@
  *
  * Every design-system class lives here, never in a component stylesheet: a theme is an
  * unlayered override imported last, and only a global rule can be overridden that way.
- * Classes are scanned from src/app only (the public folder holds fonts and catalogues).
+ * Classes are scanned from src/app, and from index.html for its no-JavaScript notice (the
+ * public folder holds fonts and catalogues).
  *
  * The import order IS the cascade order.
  */
 @import 'tailwindcss' source('../app');
+@source '../index.html';
 
 @import './foundation/tokens.css';
 @import './foundation/fonts.css';

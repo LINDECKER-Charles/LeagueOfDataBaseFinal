@@ -40,6 +40,8 @@ type Step = 'credentials' | 'two-factor';
   imports: [AuthCard, Button, Field, GoogleButton, RouterLink, TranslocoPipe],
   templateUrl: './login-view.html',
   styleUrl: '../card/auth-form.css',
+  // Grows with the account page, so its card is centred between header and footer.
+  host: { class: 'flex flex-1 flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginView {

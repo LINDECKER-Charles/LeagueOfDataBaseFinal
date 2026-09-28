@@ -22,7 +22,12 @@
 }
 @if (entry.fixes.length > 0) {
   <div class="fixes">
-    <p class="eyebrow fixes__label" [attr.lang]="labelLanguage()">
+    <!-- The label is the page's own language inside notes read left to right. -->
+    <p
+      class="eyebrow fixes__label"
+      [attr.lang]="labelLanguage()"
+      [attr.dir]="labelLanguage() ? 'auto' : null"
+    >
       {{ 'changelog.section.fixes' | transloco }}
     </p>
     <ul class="fixes__list" role="list">

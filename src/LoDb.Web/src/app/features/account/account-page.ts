@@ -32,7 +32,7 @@ import { applyPrivateHead } from './shared/head/apply-private-head';
   ],
   providers: [provideTranslocoScope(ACCOUNT_SCOPE), AccountHead],
   templateUrl: './account-page.html',
-  host: { class: 'block' },
+  host: { class: 'flex flex-1 flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountPage {

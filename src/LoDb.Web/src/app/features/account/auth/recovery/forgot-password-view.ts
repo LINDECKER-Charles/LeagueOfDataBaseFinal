@@ -35,6 +35,8 @@ import { AuthCard } from '../card/auth-card';
   imports: [AuthCard, Button, Field, RouterLink, TranslocoPipe],
   templateUrl: './forgot-password-view.html',
   styleUrl: '../card/auth-form.css',
+  // Grows with the account page, so its card is centred between header and footer.
+  host: { class: 'flex flex-1 flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ForgotPasswordView {

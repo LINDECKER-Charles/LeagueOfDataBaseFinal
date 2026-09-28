@@ -65,9 +65,10 @@
           </td>
           <td>Intérêt légitime (art. 6.1.f RGPD) : connaître et améliorer l'usage du site</td>
           <td>
-            Journaux bruts : conservés jusqu'à leur consolidation puis suppression, opérées
-            manuellement par l'éditeur (sans durée fixe garantie). Agrégats statistiques sans IP ni
-            User-Agent : conservés sans limite de durée
+            Événements de consultation : adresse IP et User-Agent effacés après 30 jours,
+            l'événement lui-même supprimé après 13 mois (dans le respect des recommandations de la
+            CNIL pour la mesure d'audience). Agrégats statistiques sans IP ni User-Agent : conservés
+            sans limite de durée
           </td>
         </tr>
         <tr>
@@ -88,8 +89,8 @@
         <tr>
           <td><strong>Session et préférences</strong><br />cookies first-party</td>
           <td>
-            Cookie de session, préférence de langue/version mémorisée sur demande, cookie « rester
-            connecté »
+            Cookie de session (conservé 30 jours avec « rester connecté »), cookies de sécurité,
+            préférences de langue/version et de thème mémorisées sur demande
           </td>
           <td>Intérêt légitime / consentement selon le cookie</td>
           <td>
@@ -141,12 +142,12 @@
     </li>
   </ul>
   <p>
-    Ces événements sont écrits dans des journaux quotidiens stockés sur notre serveur, puis
-    consolidés en agrégats statistiques quotidiens (compteurs par page, navigateur, pays, etc.)
-    conservés sur notre stockage interne.
-    <strong>Les agrégats ne contiennent ni adresse IP ni User-Agent.</strong> La consolidation et la
-    suppression des journaux bruts sont opérées manuellement par l'éditeur, sans durée fixe garantie
-    ; les agrégats, dépourvus de données directement identifiantes, sont conservés sans limite de
+    Ces événements sont enregistrés dans la base de données du site, puis consolidés en agrégats
+    statistiques quotidiens (compteurs par page, navigateur, pays, etc.).
+    <strong>Les agrégats ne contiennent ni adresse IP ni User-Agent.</strong> La conservation est
+    automatique : l'adresse IP et le User-Agent d'un événement sont effacés après
+    <strong>30 jours</strong>, et l'événement lui-même est supprimé après <strong>13 mois</strong> ;
+    les agrégats, dépourvus de données directement identifiantes, sont conservés sans limite de
     durée. L'accès à ces données est réservé à l'éditeur du site.
   </p>
   <p>

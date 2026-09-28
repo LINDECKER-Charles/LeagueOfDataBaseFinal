@@ -23,7 +23,7 @@ export type DonationOutcome = 'success' | 'cancel';
   providers: [provideTranslocoScope('donate')],
   templateUrl: './donation-outcome-page.html',
   styleUrl: './donation-outcome-page.css',
-  host: { class: 'block' },
+  host: { class: 'flex flex-1 flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DonationOutcomePage {

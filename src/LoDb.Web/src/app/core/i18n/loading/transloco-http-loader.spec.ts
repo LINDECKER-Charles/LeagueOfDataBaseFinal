@@ -27,6 +27,34 @@ describe('TranslocoHttpLoader', () => {
     await expect(loaded).resolves.toEqual({ title: 'ok' });
   });
 
+  // Transloco asks the main and the fallback loader for `items/en` at once under `en`.
+  it('shares one request between concurrent loads of a path', async () => {
+    const loader = TestBed.inject(TranslocoHttpLoader);
+    const both = Promise.all([
+      firstValueFrom(loader.getTranslation('items/en')),
+      firstValueFrom(loader.getTranslation('items/en')),
+    ]);
+
+    TestBed.inject(HttpTestingController).expectOne('i18n/items/en.json').flush({ a: 'b' });
+
+    await expect(both).resolves.toEqual([{ a: 'b' }, { a: 'b' }]);
+  });
+
+  it('requests a failed path again', async () => {
+    const loader = TestBed.inject(TranslocoHttpLoader);
+    const http = TestBed.inject(HttpTestingController);
+    const failed = firstValueFrom(loader.getTranslation('items/en'));
+    http
+      .expectOne('i18n/items/en.json')
+      .flush('', { status: HttpStatusCode.ServiceUnavailable, statusText: 'Unavailable' });
+    await expect(failed).rejects.toBeInstanceOf(HttpErrorResponse);
+
+    const retried = firstValueFrom(loader.getTranslation('items/en'));
+    http.expectOne('i18n/items/en.json').flush({ a: 'b' });
+
+    await expect(retried).resolves.toEqual({ a: 'b' });
+  });
+
   describe('in a server render', () => {
     let init: ResponseInit;
 

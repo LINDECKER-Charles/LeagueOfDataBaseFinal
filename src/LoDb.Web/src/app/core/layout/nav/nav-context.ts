@@ -11,11 +11,12 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, PRIMARY_OUTLET, Router, type UrlTree } from '@angular/router';
 import { filter, map } from 'rxjs';
 import type { CatalogMeta } from '../../api/generated/models/catalog-meta';
 import { ApiMeta } from '../../api/meta/api-meta';
 import { injectSsrRequestContext } from '../../http/inject-ssr-request-context';
+import { isLocale } from '../../i18n/is-locale';
 import { PageDirection } from '../direction/page-direction';
 import { PreferencesStore } from '../../context/preferences/preferences-store';
 import type { NavSelection } from '../../context/nav/nav-selection';
@@ -24,6 +25,15 @@ import { navSelectionOf } from '../../context/nav/nav-selection-of';
 // The server's selection, handed to the browser so its first render links and names the
 // same context before `/api/meta` is loaded again.
 const RENDERED_SELECTION = makeStateKey<NavSelection | null>('lodb.nav.selection');
+
+// The locale's root, whatever the query and the trailing slash: the switcher's rewrites end
+// the home on an empty segment (`/en/?version=`) that a link to `/en` lacks, so an exact
+// `routerLinkActive` misses it.
+function isHome(url: UrlTree): boolean {
+  const segments = url.root.children[PRIMARY_OUTLET]?.segments ?? [];
+  const path = segments.map((segment) => segment.path).filter((part) => part !== '');
+  return path.length === 1 && isLocale(path[0]);
+}
 
 /**
  * The selection of the current page, for the chrome (header, footer, bottom bar, switcher).
@@ -58,6 +68,9 @@ export class NavContext {
     }
     return navSelectionOf(page, meta, this.preferences.current());
   });
+
+  /** Whether the page is its locale's home, lit whatever its query (legacy `app_home`). */
+  readonly home = computed(() => isHome(this.router.parseUrl(this.url())));
 
   constructor() {
     const state = inject(TransferState);

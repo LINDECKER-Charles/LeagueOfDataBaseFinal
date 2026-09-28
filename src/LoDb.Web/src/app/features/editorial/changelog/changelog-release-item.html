@@ -20,12 +20,19 @@
         <path d="M2 4l4 4 4-4" />
       </svg>
     </span>
-    <span class="release__lede" [attr.lang]="contentLanguage()">{{ entry.summary }}</span>
+    <!-- Notes in a fallback language (French under ar) read left to right. -->
+    <span
+      class="release__lede"
+      [attr.lang]="contentLanguage()"
+      [attr.dir]="contentLanguage() ? 'ltr' : null"
+      >{{ entry.summary }}</span
+    >
   </summary>
 
   <lodb-changelog-release-notes
     class="release__body"
     [attr.lang]="contentLanguage()"
+    [attr.dir]="contentLanguage() ? 'ltr' : null"
     [release]="entry"
     [labelLanguage]="contentLanguage() ? locale() : null"
   />

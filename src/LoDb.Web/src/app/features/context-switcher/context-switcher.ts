@@ -93,7 +93,8 @@ export class ContextSwitcher {
   protected readonly languages = computed(() => this.optionsOf(languageOptions));
   protected readonly current = computed(() => {
     const meta = this.meta();
-    const shown = { url: this.url(), locale: this.page.locale() };
+    const remembered = this.preferences.current();
+    const shown = { url: this.url(), locale: this.page.locale(), remembered };
     return meta === null ? null : currentChoice(shown, meta, this.languages());
   });
   protected readonly version = linkedSignal(() => this.current()?.version ?? '');

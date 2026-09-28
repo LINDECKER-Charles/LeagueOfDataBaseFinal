@@ -124,7 +124,7 @@ describe('navigation primitives', () => {
     const section = (fixture.nativeElement as HTMLElement).querySelector('section')!;
     const scroll = vi.fn();
     section.scrollIntoView = scroll;
-    const replace = vi.spyOn(history, 'replaceState');
+    const push = vi.spyOn(history, 'pushState');
 
     expect(link.getAttribute('href')).toBe('/#pricing');
     const plain = new MouseEvent('click', { bubbles: true, cancelable: true });
@@ -135,8 +135,11 @@ describe('navigation primitives', () => {
     expect(plain.defaultPrevented).toBe(true);
     expect(modified.defaultPrevented).toBe(false);
     expect(scroll).toHaveBeenCalledExactlyOnceWith({ behavior: 'auto', block: 'start' });
-    expect(replace).toHaveBeenCalledExactlyOnceWith(history.state, '', '/#pricing');
-    replace.mockRestore();
+    expect(push).toHaveBeenCalledExactlyOnceWith(history.state, '', '/#pricing');
+    // The next Tab starts inside the section, as after a native `#` link.
+    expect(document.activeElement).toBe(section);
+    expect(section.getAttribute('tabindex')).toBe('-1');
+    push.mockRestore();
   });
 
   it('keeps the hub in the middle when a neighbour is missing', async () => {
