@@ -57,7 +57,7 @@ describe('MonitoringPanel', () => {
       expect.arrayContaining([
         'admin.monitoring.process.version 1.4.0 abc1234',
         'admin.monitoring.process.uptime 2 j 3 h',
-        'admin.monitoring.process.collections 120 / 14 / 2',
+        'admin.monitoring.process.collections 120 admin.monitoring.process.collections_sub',
       ]),
     );
     expect(texts(page, 'lodb-monitoring-versions tbody tr')[0]).toContain('16.20.1');

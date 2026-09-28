@@ -528,7 +528,8 @@
       "threads": "Threads",
       "pending": "{count, plural, =0 {Aucune tâche en attente} one {# tâche en attente} other {# tâches en attente}}",
       "cpu": "Temps CPU (s)",
-      "collections": "Collectes GC (0 / 1 / 2)"
+      "collections": "Collectes GC",
+      "collections_sub": "gen 1 : {gen1} · gen 2 : {gen2}"
     },
     "ingestion": {
       "title": "Ingestion",
