@@ -770,6 +770,85 @@
         }
       }
     },
+    "/api/catalog/{version}/{lang}/warm-up": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Ingests the datasets, then the images the named lists show, streaming each state as a Server-Sent Event.",
+        "operationId": "warmUpCatalog",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resources",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/SseItemOfWarmUpProgress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/pickers/champions": {
       "get": {
         "tags": [
@@ -11469,6 +11548,33 @@
         },
         "description": "`GET /api/pickers/skins?champion=`: the skins of a champion, chromas left out. A\nmissing or unknown champion gives no skins rather than an error: the banner picker then\nshows an empty choice instead of a broken dialog."
       },
+      "SseItemOfWarmUpProgress": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/WarmUpProgress"
+          },
+          "eventType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "eventId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reconnectionInterval": {
+            "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "StepBody": {
         "type": "object",
         "properties": {
@@ -12480,6 +12586,109 @@
           }
         },
         "description": "The votes on a public build: the net score only, and the caller's own vote."
+      },
+      "WarmUpLanding": {
+        "required": [
+          "name",
+          "resource"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/ResourceType"
+          }
+        },
+        "description": "The entry whose image was fetched last, named in the requested language."
+      },
+      "WarmUpProgress": {
+        "required": [
+          "stage",
+          "total",
+          "settled",
+          "resources"
+        ],
+        "type": "object",
+        "properties": {
+          "stage": {
+            "$ref": "#/components/schemas/WarmUpStage"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Images the run fetches, over every resource; 0 while preparing.",
+            "format": "int32"
+          },
+          "settled": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WarmUpResource"
+            },
+            "description": "The requested resources, in the requested order."
+          },
+          "latest": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The image fetched last; null before the first one.",
+                "$ref": "#/components/schemas/WarmUpLanding"
+              }
+            ]
+          },
+          "failure": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The problem code that ended a failed run, as a catalog call answers it."
+          }
+        },
+        "description": "One frame of the warm-up stream: the whole state of the run, never a delta, so a client\nkeeps the last frame it read and loses nothing to a frame it skipped."
+      },
+      "WarmUpResource": {
+        "required": [
+          "resource",
+          "total",
+          "settled",
+          "ready"
+        ],
+        "type": "object",
+        "properties": {
+          "resource": {
+            "$ref": "#/components/schemas/ResourceType"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Images of the list the manifest had no verdict for; 0 while preparing.",
+            "format": "int32"
+          },
+          "settled": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ready": {
+            "type": "boolean",
+            "description": "Whether every image of the list has its verdict: its row reads \"ready\"."
+          }
+        },
+        "description": "How far the images of one resource's list have come."
+      },
+      "WarmUpStage": {
+        "enum": [
+          "preparing",
+          "images",
+          "done",
+          "failed"
+        ],
+        "type": "string",
+        "description": "Where a warm-up stands; the last two end the stream."
       }
     }
   },
