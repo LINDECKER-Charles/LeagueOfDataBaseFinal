@@ -8,8 +8,8 @@ chantier dans le [lot 9](../reecriture/implementation/lot-09-10-apps.md) (L9.4).
 | Élément | Emplacement |
 |---|---|
 | Mises à jour dans l'app | `src/LoDb.Desktop/Updates/` |
-| Workflow de release | `.github/workflows/next-release-desktop.yml` |
-| Scripts (pack, porte, publication, E2E local) | `tools/next/desktop-update-e2e/` |
+| Workflow de release | `.github/workflows/release-desktop.yml` |
+| Scripts (pack, porte, publication, E2E local) | `tools/desktop-update-e2e/` |
 
 ## Côté app
 
@@ -62,7 +62,7 @@ Noms des assets : `LoDb.Desktop-<version>-<canal>-full.nupkg`, `…-delta.nupkg`
    `git tag desktop-vX.Y.Z <sha>`, puis `git push origin desktop-vX.Y.Z`.
 3. Déployer la prod. Le déploiement appelle le workflow avec le SHA déployé
    (voir [Contrat d'appel](#contrat-dappel)). À défaut, on le lance à la main :
-   `gh workflow run next-release-desktop.yml -f sha=<sha> -f channel=stable`.
+   `gh workflow run release-desktop.yml -f sha=<sha> -f channel=stable`.
 4. Suivre le run : un job `pack` par RID, puis `publish`. La release apparaît d'abord en
    *pre-release*, puis elle est promue (`--latest`) quand les trois RID requis sont en ligne.
 
@@ -82,7 +82,7 @@ SHA exact ; le staging fait de même avec `channel: beta`.
 ```yaml
   desktop:
     needs: deploy
-    uses: ./.github/workflows/next-release-desktop.yml
+    uses: ./.github/workflows/release-desktop.yml
     with:
       sha: ${{ github.sha }}
       channel: stable
@@ -124,7 +124,7 @@ que NuGet, avec le même `pack.sh` et le même `gate.sh` que la CI.
 npm ci --prefix src/LoDb.Web
 npm --prefix src/LoDb.Web run build:shell
 dotnet tool install -g vpk --version 1.2.0   # la version du package Velopack
-tools/next/desktop-update-e2e/local.sh        # --keep pour garder les rapports
+tools/desktop-update-e2e/local.sh        # --keep pour garder les rapports
 ```
 
 Déroulé, en une minute environ :
@@ -233,7 +233,7 @@ avant l'ouverture publique : le publier ainsi, ou le retirer de la matrice.
      SmartScreen repart de zéro.
 4. **Vérifier** :
    1. lancer une beta à la main
-      (`gh workflow run next-release-desktop.yml -f sha=<sha> -f channel=beta`) ;
+      (`gh workflow run release-desktop.yml -f sha=<sha> -f channel=beta`) ;
    2. contrôler les jobs `pack`, avec la signature, la notarisation et la porte ;
    3. sauvegarder les nouveaux éléments hors ligne.
 

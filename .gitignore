@@ -4,7 +4,7 @@ commande.md
 # Real env files are git-ignored; committed *.example templates and the non-secret
 # Symfony defaults of the archived stack (legacy/app/.env, legacy/app/.env.test) are not.
 
-# Repo-root compose env of the new stack (local overrides; ENV_NEXT / ENV_PROD_NEXT on a host)
+# Repo-root compose env of the new stack (local overrides; ENV_FILE / ENV_FILE on a host)
 /.env
 
 # Compose env of the archived legacy stack, read by `docker compose --project-directory legacy`
@@ -53,4 +53,4 @@ TestResults/
 /src/LoDb.Web/coverage/
 
 # Parity runs (L1.8): exports and manifests of both stacks, regenerated on demand
-/tools/next/parity/.runs/
+/tools/parity/.runs/

@@ -62,11 +62,11 @@ Page <https://console.cloud.google.com/auth/audience> :
 2. **Application type** : **Web application**. Nom interne libre (ex. `lodb-web`).
 3. **Authorized JavaScript origins** — origine exacte, sans chemin, une par
    environnement : `https://league-of-data-base.com` (prod) et l'hôte canonique de
-   `next` (ex. `https://test.league-of-data-base.com`).
+   `preprod` (ex. `https://test.league-of-data-base.com`).
 4. **Authorized redirect URIs** — doivent correspondre **exactement** (schéma, hôte,
    chemin) à ce que l'API envoie :
    - `https://league-of-data-base.com/api/account/google/callback`
-   - `https://<hôte canonique de next>/api/account/google/callback`
+   - `https://<hôte canonique de preprod>/api/account/google/callback`
    - garder `https://league-of-data-base.com/connect/google/check` (ancienne stack)
      jusqu'à la décommission : le retour arrière en a besoin.
 5. **Create** → récupérer immédiatement le **Client ID**
@@ -89,8 +89,8 @@ clients <https://support.google.com/cloud/answer/15544987> et écran de consente
 ## 4. Poser les identifiants
 
 Les identifiants sont des **secrets** : ils ne vont jamais dans le dépôt, mais dans le
-`.env` de l'environnement servi, c'est-à-dire dans le secret GitHub `ENV_NEXT` ou
-`ENV_PROD_NEXT` ([`configuration.md`](configuration.md), § 4.2) :
+`.env` de l'environnement servi, c'est-à-dire dans le secret GitHub `ENV_FILE` ou
+`ENV_FILE` ([`configuration.md`](configuration.md), § 4.2) :
 
 ```dotenv
 LoDb__Accounts__Google__ClientId=xxxxxxxx.apps.googleusercontent.com
@@ -101,7 +101,7 @@ LoDb__Accounts__Google__AppClients__0__ClientSecret=GOCSPX-...
 LoDb__Accounts__Google__AppClients__1__ClientId=zzzzzzzz.apps.googleusercontent.com
 ```
 
-`compose.next.deploy.yaml` transmet ces lignes à l'API quand elles sont présentes ; le
+`compose.deploy.yaml` transmet ces lignes à l'API quand elles sont présentes ; le
 déploiement suivant les prend en compte. Sans `ClientId`, la connexion Google est coupée et
 les points d'entrée répondent `google-unavailable`. En prod, ce sont les identifiants
 `OAUTH_GOOGLE_CLIENT_ID` et `OAUTH_GOOGLE_CLIENT_SECRET` de l'ancienne stack : même client.
@@ -115,7 +115,7 @@ l'edge TLS (Caddy → nginx → API), si l'API ne faisait pas confiance aux en-t
 
 **Déjà configuré** : nginx ne croit `X-Forwarded-For` que de l'edge (`LODB_EDGE_CIDR`) et
 transmet le schéma à l'API, qui accepte ces en-têtes des réseaux privés
-(`LoDb__Hosting__KnownProxyNetworks__*`, fixés par `compose.next.yaml`). Si l'edge change,
+(`LoDb__Hosting__KnownProxyNetworks__*`, fixés par `compose.yaml`). Si l'edge change,
 vérifier que le nouvel intermédiaire émet bien `X-Forwarded-Proto: https`.
 
 ## 6. Comportement applicatif (rappel, ancienne stack)

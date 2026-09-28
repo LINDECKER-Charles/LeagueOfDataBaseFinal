@@ -33,7 +33,7 @@ n'a pas eu lieu, les sections ci-dessous décrivent la stack **en service**.
 | [adr/](reecriture/adr/) | Une décision par fichier : hôte, ingestion, stockage, SSR, front, coquilles, mises à jour, identité, observabilité |
 | [rapports/](reecriture/rapports/) | Rapports produits pendant la construction : relevés mémoire de la stack ([memoire.md](reecriture/rapports/memoire.md)), rapports de jalon par lot ([jalons/](reecriture/rapports/jalons/), dont [lot 0](reecriture/rapports/jalons/lot-00.md)) |
 
-Pour développer sur la nouvelle stack : guide [dev-next.md](guides/dev-next.md) et section
+Pour développer sur la nouvelle stack : guide [developpement.md](guides/developpement.md) et section
 « Nouvelle stack (réécriture) » de [`../CLAUDE.md`](../CLAUDE.md).
 
 ## `architecture/` — comment ça marche
@@ -53,9 +53,9 @@ Pour développer sur la nouvelle stack : guide [dev-next.md](guides/dev-next.md)
 | [setup.md](../legacy/docs/guides/setup.md) | *Ancienne stack, archivée* — Prérequis, installation détaillée, dépannage |
 | [configuration.md](../legacy/docs/guides/configuration.md) | *Ancienne stack, archivée* — Variables d'environnement et paramètres applicatifs |
 | [docker.md](../legacy/docs/guides/docker.md) | *Ancienne stack, archivée* — Référence des commandes de la stack Compose |
-| [dev-next.md](guides/dev-next.md) | Nouvelle stack `lodb-next` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
-| [configuration.md](guides/configuration.md) | Nouvelle stack : inventaire des secrets GitHub, des lignes `.env` de `next` et de la prod, des fichiers de l'hôte et des services externes |
-| [github-actions-secrets.md](guides/github-actions-secrets.md) | Nouvelle stack : pipeline CI/CD, déploiement de `next` depuis `dev`, promotion en prod |
+| [developpement.md](guides/developpement.md) | Nouvelle stack `lodb-dev` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
+| [configuration.md](guides/configuration.md) | Nouvelle stack : inventaire des secrets GitHub, des lignes `.env` de `preprod` et de la prod, des fichiers de l'hôte et des services externes |
+| [github-actions-secrets.md](guides/github-actions-secrets.md) | Nouvelle stack : pipeline CI/CD, déploiement de `preprod` depuis `dev`, promotion en prod |
 | [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
 | [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana : fonctionnement, ce qu'il ne faut surtout pas déclarer, requêtes LogsQL / PromQL, dépannage |
 | [logging.md](guides/logging.md) | Convention de journalisation applicative : clé d'événement, contexte, niveaux, canaux, interdictions |

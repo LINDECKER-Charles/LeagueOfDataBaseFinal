@@ -1,10 +1,10 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-// The integration stack by default; a slot names its own project (docs/guides/dev-next.md).
-const PROJECT = process.env['LODB_E2E_COMPOSE_PROJECT'] ?? 'lodb-next';
+// The integration stack by default; a slot names its own project (docs/guides/developpement.md).
+const PROJECT = process.env['LODB_E2E_COMPOSE_PROJECT'] ?? 'lodb-dev';
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
-const COMPOSE_FILES = ['compose.next.yaml', 'compose.next.override.yaml'];
+const COMPOSE_FILES = ['compose.yaml', 'compose.override.yaml'];
 // A CLI command starts a .NET host and reaches the database: seconds, not minutes.
 const EXEC_TIMEOUT_MS = 120_000;
 

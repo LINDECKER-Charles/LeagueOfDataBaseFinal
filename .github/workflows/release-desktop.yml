@@ -1,0 +1,352 @@
+name: Release desktop
+
+# Release of the desktop app (ADR 0008, docs/guides/release-desktop.md): Velopack packages
+# of LoDb.Desktop for every RID, signed, with real deltas, published to the GitHub Releases
+# of this repository, which the installed apps read (Updates/Engine/UpdateFeeds.cs).
+#
+# Called after a deployment, on the exact SHA deployed: `stable` after prod (a
+# desktop-vX.Y.Z tag on the SHA gives the version; without one, nothing is released),
+# `beta` after staging (VersionPrefix-beta.N). The caller grants contents: write and
+# id-token: write. Can also be run by hand on a SHA.
+#
+# Per RID: vpk download of N-1 BEFORE vpk pack, so that vpk writes the delta N-1 -> N;
+# signing (Authenticode through Azure Artifact Signing, Developer ID + notarisation);
+# then the update gate: N-1 installed, updated to N, and --smoke must show N. Nothing is
+# published unless every required RID passed. The release is created as a pre-release and
+# promoted once every RID is uploaded (stable), or stays a pre-release (beta).
+#
+# Environment desktop-release: the signing secrets and variables of the guide. An unsigned
+# build is never published: the signing steps fail when their configuration is missing.
+on:
+  workflow_call:
+    inputs:
+      sha:
+        description: Deployed commit (40 hex characters).
+        required: true
+        type: string
+      channel:
+        description: stable (after prod) or beta (after staging).
+        required: false
+        type: string
+        default: stable
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Deployed commit (40 hex characters).
+        required: true
+        type: string
+      channel:
+        description: Release channel.
+        required: true
+        type: choice
+        options: [stable, beta]
+        default: stable
+
+permissions:
+  contents: read
+
+# Releases of a channel never overlap: the next beta number depends on the previous one.
+concurrency:
+  group: release-desktop-${{ inputs.channel }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  E2E: tools/desktop-update-e2e
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      release: ${{ steps.version.outputs.release }}
+      version: ${{ steps.version.outputs.version }}
+      vpk: ${{ steps.version.outputs.vpk }}
+    env:
+      SHA: ${{ inputs.sha }}
+      CHANNEL: ${{ inputs.channel }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Validate the inputs
+        run: |
+          if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::sha must be a full commit SHA, got '$SHA'"
+            exit 1
+          fi
+          case "$CHANNEL" in
+            stable | beta) ;;
+            *) echo "::error::channel must be stable or beta, got '$CHANNEL'"; exit 1 ;;
+          esac
+
+      # Every tag: the stable tag of the SHA, and the beta tags to number the next one.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup .NET (version from global.json)
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Resolve the version
+        id: version
+        run: |
+          props="$(dotnet msbuild src/LoDb.Desktop/LoDb.Desktop.csproj \
+            -getProperty:VersionPrefix -getItem:PackageVersion)"
+          prefix="$(jq -r .Properties.VersionPrefix <<<"$props")"
+          # vpk must match the Velopack package the app is built with.
+          vpk="$(jq -r '[.Items.PackageVersion[] | select(.Identity == "Velopack")
+            | .Version][0] // empty' <<<"$props")"
+          [ -n "$vpk" ] || { echo "::error::no Velopack PackageVersion"; exit 1; }
+          "$E2E/release-version.sh" --channel "$CHANNEL" --sha "$SHA" --prefix "$prefix" \
+            > "$RUNNER_TEMP/version"
+          value() { sed -n "s/^$1=//p" "$RUNNER_TEMP/version"; }
+          release="$(value release)" tag="$(value tag)" reason="$(value reason)"
+
+          # A re-run after a promoted release has nothing left to do.
+          if [ "$release" = true ] && [ "$CHANNEL" = stable ] \
+            && [ "$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" \
+              --json isPrerelease --jq .isPrerelease 2>/dev/null)" = false ]; then
+            release=false reason="$tag is already published"
+          fi
+
+          {
+            echo "release=$release"
+            echo "version=$(value version)"
+            echo "vpk=$vpk"
+          } >> "$GITHUB_OUTPUT"
+          if [ "$release" = true ]; then
+            echo "Desktop $(value version) ($CHANNEL), tag $tag, vpk $vpk" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No desktop release: $reason" >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::No desktop release: $reason"
+          fi
+
+  shell:
+    needs: prepare
+    if: needs.prepare.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: src/LoDb.Web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: src/LoDb.Web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shell
+        run: npm run build:shell
+
+      - name: Upload the shell
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-shell
+          path: src/LoDb.Web/dist/shell/browser/
+          if-no-files-found: error
+          retention-days: 1
+
+  pack:
+    name: pack (${{ matrix.rid }})
+    needs: [prepare, shell]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    environment: desktop-release
+    continue-on-error: ${{ matrix.best-effort }}
+    permissions:
+      contents: read
+      # Azure Artifact Signing, through OIDC: no long-lived Azure secret.
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { rid: win-x64, os: windows-latest, best-effort: false }
+          - { rid: osx-arm64, os: macos-15, best-effort: false }
+          - { rid: osx-x64, os: macos-15-intel, best-effort: false }
+          # Best effort (ADR 0008): published when it passes, never blocking.
+          - { rid: linux-x64, os: ubuntu-24.04, best-effort: true }
+    defaults:
+      run:
+        shell: bash
+    env:
+      RID: ${{ matrix.rid }}
+      CHANNEL: ${{ inputs.channel }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+
+      - name: Setup .NET (version from global.json)
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Download the shell
+        uses: actions/download-artifact@v8
+        with:
+          name: desktop-shell
+          path: shell
+
+      - name: Install vpk
+        env:
+          VPK_VERSION: ${{ needs.prepare.outputs.vpk }}
+        run: dotnet tool install --global vpk --version "$VPK_VERSION"
+
+      # mksquashfs builds the AppImage; libfuse2 runs it in the gate.
+      - name: Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes squashfs-tools libfuse2t64
+
+      - name: Fetch N-1 (full package, installable build)
+        run: |
+          previous="$("$E2E/previous.sh" --rid "$RID" --channel "$CHANNEL" \
+            --repo "$GITHUB_REPOSITORY" --releases releases --installable-dir previous)"
+          echo "PREVIOUS=$previous" >> "$GITHUB_ENV"
+
+      - name: Developer ID and notarisation (macOS)
+        if: runner.os == 'macOS'
+        env:
+          APPLE_DEVELOPER_ID_P12: ${{ secrets.APPLE_DEVELOPER_ID_P12 }}
+          APPLE_DEVELOPER_ID_P12_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
+          APPLE_NOTARY_KEY_P8: ${{ secrets.APPLE_NOTARY_KEY_P8 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+          APPLE_APP_IDENTITY: ${{ vars.APPLE_APP_IDENTITY }}
+          APPLE_INSTALL_IDENTITY: ${{ vars.APPLE_INSTALL_IDENTITY }}
+        run: '"$E2E/signing.sh" macos "$RUNNER_TEMP/signing"'
+
+      - name: Artifact Signing metadata (Windows)
+        if: runner.os == 'Windows'
+        env:
+          AZURE_SIGNING_ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
+        run: '"$E2E/signing.sh" windows "$RUNNER_TEMP/signing"'
+
+      # signtool's Artifact Signing library signs with the Azure CLI session.
+      - name: Azure login (OIDC)
+        if: runner.os == 'Windows'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Pack (publish, sign, vpk pack)
+        run: |
+          # The signing options of the steps above; none on Linux.
+          sign_args=()
+          if [ -f "$RUNNER_TEMP/signing/sign-args" ]; then
+            while IFS= read -r arg; do
+              sign_args+=("$arg")
+            done < "$RUNNER_TEMP/signing/sign-args"
+          fi
+          "$E2E/pack.sh" --rid "$RID" --version "$VERSION" --channel "$CHANNEL" \
+            --shell-dir shell --releases releases --publish-dir publish \
+            -- ${sign_args[@]+"${sign_args[@]}"}
+
+          source "$E2E/lib.sh"
+          stem="releases/$LODB_PACK_ID-$VERSION-$(lodb_velopack_channel "$RID" "$CHANNEL")"
+          if [ -n "$PREVIOUS" ] && [ ! -f "$stem-delta.nupkg" ]; then
+            echo "::error::vpk wrote no delta $PREVIOUS -> $VERSION"
+            exit 1
+          fi
+
+      - name: Update gate (N-1 -> N, --smoke)
+        run: |
+          source "$E2E/lib.sh"
+          installable="$(lodb_installable "$RID" "$(lodb_velopack_channel "$RID" "$CHANNEL")")"
+          if [ -n "$PREVIOUS" ]; then
+            "$E2E/gate.sh" --rid "$RID" --channel "$CHANNEL" --from "$PREVIOUS" \
+              --to "$VERSION" --feed releases --work gate --artifact "previous/$installable"
+          else
+            echo "::warning::No N-1 on this channel: the gate only starts $VERSION."
+            "$E2E/gate.sh" --rid "$RID" --channel "$CHANNEL" --to "$VERSION" --work gate \
+              --artifact "releases/$installable"
+          fi
+
+      - name: Remove the signing keychain
+        if: always() && runner.os == 'macOS'
+        run: '"$E2E/signing.sh" cleanup "$RUNNER_TEMP/signing"'
+
+      - name: Upload the release folder
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-releases-${{ matrix.rid }}
+          path: releases/
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload the gate reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-gate-${{ matrix.rid }}
+          path: gate/logs/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  publish:
+    needs: [prepare, pack]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      SHA: ${{ inputs.sha }}
+      CHANNEL: ${{ inputs.channel }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+
+      - name: Setup .NET (version from global.json)
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Install vpk
+        env:
+          VPK_VERSION: ${{ needs.prepare.outputs.vpk }}
+        run: dotnet tool install --global vpk --version "$VPK_VERSION"
+
+      - name: Download the release folders
+        uses: actions/download-artifact@v8
+        with:
+          pattern: desktop-releases-*
+          path: artifacts
+
+      # Nothing is uploaded unless every required RID passed its gate; then pre-release,
+      # promotion (stable) or pruning of the old betas (beta).
+      - name: Publish
+        run: |
+          "$E2E/publish.sh" --channel "$CHANNEL" --version "$VERSION" --sha "$SHA" \
+            --repo "$GITHUB_REPOSITORY" --artifacts artifacts
+          echo "Desktop $VERSION published ($CHANNEL)." >> "$GITHUB_STEP_SUMMARY"

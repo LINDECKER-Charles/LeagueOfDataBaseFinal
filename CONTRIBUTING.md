@@ -11,7 +11,7 @@ Merci de votre intérêt pour le projet ! Ce document est le point d'entrée **c
 
 - **.NET SDK 10.0.400** (`global.json`) — API, tests, desktop.
 - **Node.js 24** (ou `^22.22.3`, `>= 26`) / **npm** — workspace Angular `src/LoDb.Web`, E2E.
-- **Docker** + **Docker Compose** — stack locale `lodb-next` et Testcontainers.
+- **Docker** + **Docker Compose** — stack locale `lodb-dev` et Testcontainers.
 - **Git**.
 
 > L'ancienne stack (Symfony + Go + Vue) est archivée sous [`legacy/`](legacy/README.md) :
@@ -24,11 +24,11 @@ git clone https://github.com/VOTRE_USERNAME/LeagueOfDataBaseFinal.git
 cd LeagueOfDataBaseFinal
 
 npm ci --prefix src/LoDb.Web
-docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build
+docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml up -d --build
 # site :18080 · API :18081 · Mailpit :18025
 ```
 
-Détails : [`docs/guides/dev-next.md`](docs/guides/dev-next.md).
+Détails : [`docs/guides/developpement.md`](docs/guides/developpement.md).
 
 ## Workflow Git
 
@@ -69,7 +69,7 @@ npm --prefix src/LoDb.Web run api:check      # le client généré suit le contr
 ```
 
 Les E2E (`tests/LoDb.E2E`) tournent contre la stack locale : voir
-[`docs/guides/dev-next.md`](docs/guides/dev-next.md).
+[`docs/guides/developpement.md`](docs/guides/developpement.md).
 
 ## Standards de code
 

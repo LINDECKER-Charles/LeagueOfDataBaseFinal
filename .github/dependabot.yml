@@ -1,8 +1,8 @@
 # Dependabot — weekly version updates for every manifest of the new stack.
 #
 # Decisions:
-# - target-branch: dev. A push of dev builds the images and deploys next (next-ci.yml); prod
-#   is promoted by hand (next-promote.yml), so dependency PRs must land on dev. This file
+# - target-branch: dev. A push of dev builds the images and deploys preprod (ci.yml); prod
+#   is promoted by hand (promote.yml), so dependency PRs must land on dev. This file
 #   itself is only read from the default branch (main): it is inert until promoted.
 # - Security updates (if enabled in the repo settings) always target the default
 #   branch and, because target-branch is set, IGNORE every option below (prefix,
@@ -18,7 +18,7 @@ version: 2
 
 updates:
   # ─────────────────────────────── Compose service images ─────────────────────
-  # Only this repo's compose.next*.yaml: the shared edge proxy (caddy-docker-proxy) is
+  # Only this repo's compose*.yaml.yaml: the shared edge proxy (caddy-docker-proxy) is
   # owned and version-tracked by the infra-vps repo, not here.
   - package-ecosystem: docker-compose
     directory: /
@@ -90,7 +90,7 @@ updates:
       # Angular pins its supported TypeScript range: bumped with the Angular major.
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
-      # @types/node tracks the runtime major (node:24 in docker/next/web-ssr, CI Node 24).
+      # @types/node tracks the runtime major (node:24 in docker/web-ssr, CI Node 24).
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
     groups:
@@ -128,9 +128,9 @@ updates:
   # ─────────────────────────────── Docker base images ─────────────────────────
   - package-ecosystem: docker
     directories:
-      - /docker/next/api
-      - /docker/next/web-ssr
-      - /docker/next/nginx
+      - /docker/api
+      - /docker/web-ssr
+      - /docker/nginx
     schedule:
       interval: weekly
       day: monday

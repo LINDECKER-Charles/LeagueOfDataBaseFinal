@@ -1,13 +1,13 @@
 # Runbook de bascule
 
 Procédure pas à pas de la bascule du domaine de l'ancienne stack (Symfony + Go + Vue, projet
-Compose `lodb-prod`) vers la nouvelle (.NET + Angular, projet `lodb-next-prod`). Elle met en
+Compose `lodb-prod`) vers la nouvelle (.NET + Angular, projet `lodb-production`). Elle met en
 œuvre [`plan-migration.md`](plan-migration.md) (« Bascule (lot 8) ») avec les outils du lot 8 :
 
 - déploiement et promotion (L8.1) : [`github-actions-secrets.md`](../guides/github-actions-secrets.md),
   section « Nouvelle stack » ;
-- outils de la répétition et de la fenêtre (L8.2) : [`tools/next/cutover/`](../../tools/next/cutover/README.md) ;
-- migration de *contract*, préparée et non appliquée (L8.3) : [`tools/next/contract/`](../../tools/next/contract/README.md).
+- outils de la répétition et de la fenêtre (L8.2) : [`tools/cutover/`](../../tools/cutover/README.md) ;
+- migration de *contract*, préparée et non appliquée (L8.3) : [`tools/contract/`](../../tools/contract/README.md).
 
 La **répétition locale** (§ 3.1) suit ce runbook tel quel : c'est le critère de sortie du
 lot 8, rejoué par son jalon. Tout écart entre la répétition et ce texte se corrige **ici**.
@@ -18,19 +18,19 @@ lot 8, rejoué par son jalon. Tout écart entre la répétition et ce texte se c
 |---|---|
 | Domaine | `league-of-data-base.com` (canonique), `league-of-data-base.fr` ; API publique `api.league-of-data-base.com` |
 | Ancienne prod | projet `lodb-prod`, dossier `$PROD_PATH` sur l'hôte, fichiers `compose.yaml` + `compose.deploy.yaml` |
-| Nouvelle prod | projet `lodb-next-prod`, dossier `$PROD_NEXT_PATH` (neuf, `/opt/lodb-next-prod` par défaut), fichiers `compose.next.yaml` + `compose.next.deploy.yaml` |
-| `next` | projet `lodb-next`, dossier `$NEXT_PATH` (`/opt/lodb-next` par défaut), sa propre base (dump anonymisé) |
+| Nouvelle prod | projet `lodb-production`, dossier `$PRODUCTION_PATH` (neuf, `/opt/lodb-production` par défaut), fichiers `compose.yaml` + `compose.deploy.yaml` |
+| `preprod` | projet `lodb-preprod`, dossier `$PREPROD_PATH` (`/opt/lodb-preprod` par défaut), sa propre base (dump anonymisé) |
 | Connexion au VPS | secrets de dépôt de l'ancienne stack, `PROD_SSH_KEY`, `PROD_HOST`, `PROD_SSH_USER`, réutilisés par les deux déploiements |
 | Base partagée | le PostgreSQL de l'ancienne stack (`lodb-prod-postgres-1`, volume `lodb-prod_pgdata`), rejoint par la nouvelle stack sur le réseau `lodb-prod_default` ; **il ne s'arrête jamais** |
-| Révision candidate | `REV` : SHA complet validé sur `next`, annoncé par « Deployed revision » |
-| Registre | `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, tags `:<sha>`, `:next`, `:next-prod` (jamais `:prod`, qui reste à l'ancienne stack) |
+| Révision candidate | `REV` : SHA complet validé sur `preprod`, annoncé par « Deployed revision » |
+| Registre | `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, tags `:<sha>`, `:preprod`, `:production` (jamais `:prod`, qui reste à l'ancienne stack) |
 
 Sur l'hôte, toute commande `docker compose` de la nouvelle stack se lance depuis son dossier
 avec ses fichiers :
 
 ```bash
-cd "$PROD_NEXT_PATH" && export COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml
-# sur l'hôte next, en plus : export COMPOSE_PROFILES=bundled-database
+cd "$PRODUCTION_PATH" && export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
+# sur l'hôte preprod, en plus : export COMPOSE_PROFILES=bundled-database
 ```
 
 Et celles de l'ancienne : `cd "$PROD_PATH" && export COMPOSE_FILE=compose.yaml:compose.deploy.yaml`.
@@ -41,7 +41,7 @@ Et celles de l'ancienne : `cd "$PROD_PATH" && export COMPOSE_FILE=compose.yaml:c
 |---|---|---|
 | J-21 | opérations hôte et humaines faites ou planifiées | 1 |
 | J-14 | gel | 2 |
-| J-14 à J-7 | répétition locale, puis répétition sur `next` avec le dump réel chiffré, puis destruction | 3 |
+| J-14 à J-7 | répétition locale, puis répétition sur `preprod` avec le dump réel chiffré, puis destruction | 3 |
 | J-3 | entrées de changelog datées, release publique préparée dans l'image candidate | 4 |
 | J-2 | sauvegarde, migrations additives et pré-ingestion sur la base de prod, administrateurs | 5 |
 | J-1 | anciens sitemaps enregistrés | 5.4 |
@@ -57,26 +57,26 @@ tout ce qui ne se fait pas dans le dépôt. Chaque ligne est faite avant l'étap
 
 | Opération | Pour | Avant |
 |---|---|---|
-| Fusionner la nouvelle stack dans `dev` et pousser : `next-ci.yml` vert, images `:<sha>` et `:next` produites, `next` déployé par le job `deploy-next` | tout déploiement | J-14 |
-| Hôte `next` : DNS de son domaine et de `api.` + domaine, secrets `ENV_NEXT` et `NEXT_DATA_PROTECTION_PFX`, dump anonymisé restauré, `COMPOSE_PROFILES=bundled-database` dans `ENV_NEXT` | répétition sur `next` | J-14 |
-| Environnement GitHub `production` : *required reviewers*, *deployment branches* limitée à `dev` ; secrets `ENV_PROD_NEXT` et `PROD_NEXT_DATA_PROTECTION_PFX` déclarés **dans l'environnement** (SSH et hôte : `PROD_SSH_KEY`, `PROD_HOST` de l'ancienne stack) | promotion | J-3 |
+| Fusionner la nouvelle stack dans `dev` et pousser : `ci.yml` vert, images `:<sha>` et `:preprod` produites, `preprod` déployé par le job `deploy-preprod` | tout déploiement | J-14 |
+| Hôte `preprod` : DNS de son domaine et de `api.` + domaine, secrets `ENV_FILE` et `DATA_PROTECTION_PFX`, dump anonymisé restauré, `COMPOSE_PROFILES=bundled-database` dans `ENV_FILE` | répétition sur `preprod` | J-14 |
+| Environnement GitHub `production` : *required reviewers*, *deployment branches* limitée à `dev` ; secrets `ENV_FILE` et `DATA_PROTECTION_PFX` déclarés **dans l'environnement** (SSH et hôte : `PROD_SSH_KEY`, `PROD_HOST` de l'ancienne stack) | promotion | J-3 |
 | Certificat Data Protection **propre à la prod** généré (guide des secrets), `.pfx` gardé hors ligne, clé détruite | connexions en prod | J-3 |
-| `ENV_PROD_NEXT` : `LODB_DB_NETWORK=lodb-prod_default`, `LODB_DB_NAME/USER/PASSWORD` de l'ancienne stack, `LODB_EDGE_CIDR` relevé sur l'hôte, `CADDY_DOMAINS` et `API_CADDY_DOMAINS` de l'ancienne stack, `LODB_PUBLIC_API_ORIGIN`, pas de `COMPOSE_PROFILES` | promotion | J-3 |
+| `ENV_FILE` : `LODB_DB_NETWORK=lodb-prod_default`, `LODB_DB_NAME/USER/PASSWORD` de l'ancienne stack, `LODB_EDGE_CIDR` relevé sur l'hôte, `CADDY_DOMAINS` et `API_CADDY_DOMAINS` de l'ancienne stack, `LODB_PUBLIC_API_ORIGIN`, pas de `COMPOSE_PROFILES` | promotion | J-3 |
 | Relais SMTP (`LoDb__Mail__*`, mêmes identifiants que le `MAILER_DSN` de l'ancienne prod), SPF/DKIM/DMARC du domaine expéditeur | e-mails de compte | J-3 |
-| Stripe : clé live et secret `whsec_` de l'endpoint **existant** (`/webhooks/stripe` ne change pas) dans `ENV_PROD_NEXT` ; clés de test et endpoint propre sur `next` | paiements | J-3 |
+| Stripe : clé live et secret `whsec_` de l'endpoint **existant** (`/webhooks/stripe` ne change pas) dans `ENV_FILE` ; clés de test et endpoint propre sur `preprod` | paiements | J-3 |
 | Google OAuth : ajouter l'URI de retour `https://league-of-data-base.com/api/account/google/callback` au client web, **sans retirer** celle de l'ancienne stack (retour arrière) ; clients Android et desktop | connexion Google | J-3 |
 | `LoDb__Analytics__VisitorKey` = `APP_SECRET` de l'ancienne prod (mêmes visiteurs des deux côtés) ; `LoDb__Contact__Recipient` | analytics, contact | J-3 |
-| `infra-vps` : collecte de `api:9464` des projets `lodb-next` et `lodb-next-prod` (jamais un port publié) ; vérifier que les requêtes `edge-*` de `queries.logsql` renvoient des lignes sur le VictoriaLogs de l'hôte (champs confirmés contre `docs/guides/observabilite.md` seulement) | surveillance | J-2 |
+| `infra-vps` : collecte de `api:9464` des projets `lodb-preprod` et `lodb-production` (jamais un port publié) ; vérifier que les requêtes `edge-*` de `queries.logsql` renvoient des lignes sur le VictoriaLogs de l'hôte (champs confirmés contre `docs/guides/observabilite.md` seulement) | surveillance | J-2 |
 | Mémoire libre de l'hôte : pendant la fenêtre, l'ancienne stack et la nouvelle (limites : api 1152m, web-ssr 704m, nginx 64m, migrate 128m) tournent ensemble | fenêtre | J-2 |
-| Espace disque : dump de la base, archives des volumes `lodb-prod_storage` et `lodb-prod_app_state`, volume `lodb-next-prod_storage` pré-rempli | sauvegarde, pré-ingestion | J-2 |
+| Espace disque : dump de la base, archives des volumes `lodb-prod_storage` et `lodb-prod_app_state`, volume `lodb-production_storage` pré-rempli | sauvegarde, pré-ingestion | J-2 |
 | Accès prêts : Search Console (propriété du domaine), tableau de bord Stripe, Grafana, reviewers de `production` joignables pendant la fenêtre | fenêtre | J |
-| Fichiers Android de prod dans `$PROD_NEXT_PATH/.deploy/android` (`latest.json`, `assetlinks.json`, [`release-android.md`](../guides/release-android.md)) ; sans eux, les deux URL répondent 404 | App Links, mises à jour | J |
+| Fichiers Android de prod dans `$PRODUCTION_PATH/.deploy/android` (`latest.json`, `assetlinks.json`, [`release-android.md`](../guides/release-android.md)) ; sans eux, les deux URL répondent 404 | App Links, mises à jour | J |
 | Désactiver le workflow de déploiement de l'ancienne prod (`ci.yml`, Actions ▸ *Disable workflow*) : son `up -d` redémarrerait les conteneurs arrêtés, qui réclameraient à nouveau le domaine | après la fenêtre | J |
 | Publication des apps (release desktop signée, piste Play) : elles visent `https://league-of-data-base.com/api` et n'ont de sens qu'après la bascule | lots 9 et 10 | J+3 |
 | *Contract* puis décommission | fin de la période de retour arrière | J+30 |
 
-Modèles des `.env` servis : `.env.next.example` (`ENV_NEXT`) et `.env.next.prod.example`
-(`ENV_PROD_NEXT`), complets. Chaque secret et chaque ligne, avec l'origine de sa valeur et
+Modèles des `.env` servis : `.env.preprod.example` (`ENV_FILE`) et `.env.production.example`
+(`ENV_FILE`), complets. Chaque secret et chaque ligne, avec l'origine de sa valeur et
 la correspondance avec `ENV_PROD` : [`configuration.md`](../guides/configuration.md).
 
 Constat, pas un défaut : la 301 `www.`/`.fr` de nginx porte ses en-têtes de sécurité. En
@@ -92,12 +92,12 @@ passe par le même bloc `server` que `www.`.
 
 - **Ancienne stack** : correctifs seulement. **Aucune migration Doctrine** : `Baseline` en
   est le miroir exact et `migrate` refuse un schéma inattendu. Une migration Doctrine
-  indispensable exige sa jumelle EF et `tools/next/schema/check.sh`
+  indispensable exige sa jumelle EF et `tools/schema/check.sh`
   ([rapport de schéma](rapports/schema-baseline.md)).
 - **Nouvelle stack** : correctifs et écarts de parité seulement. Tout correctif de l'ancienne
   stack visible des joueurs se reporte dans la nouvelle avant J-3.
 - La révision candidate `REV` est choisie dans `dev`, gelée ; tout
-  changement ultérieur relance la répétition sur `next` (§ 3.2, étapes 3 à 6).
+  changement ultérieur relance la répétition sur `preprod` (§ 3.2, étapes 3 à 6).
 
 ## 3. Répétition
 
@@ -105,18 +105,18 @@ passe par le même bloc `server` que `www.`.
 
 Sur le poste, depuis la racine du dépôt, ancienne stack lancée **depuis `legacy/` de ce même
 dossier** (projet `lodb`, ports 8080, 8090, 5432) ou arrêtée ; jamais en même temps qu'un
-build Android en conteneur. La « nouvelle stack » du critère est ici l'emplacement `lodb-next-e2` (ports
+build Android en conteneur. La « nouvelle stack » du critère est ici l'emplacement `lodb-dev-e2` (ports
 18280, 18281, 18282, 15632, 18225) : c'est lui qui sert la copie migrée. La stack
-d'intégration `lodb-next` reste intacte, sur sa propre base, pendant toute la répétition ;
+d'intégration `lodb-preprod` reste intacte, sur sa propre base, pendant toute la répétition ;
 il n'y a rien à y remettre ensuite.
 
 ```bash
 test -f legacy/.env || cp legacy/.env.example legacy/.env   # dev, jamais un secret réel
 npm ci --prefix tests/LoDb.E2E && npm --prefix tests/LoDb.E2E run browsers:install
-node --test 'tools/next/cutover/test/*.test.mjs'
-tools/next/contract/check.sh                 # contract : préparé, vérifié, non appliqué
+node --test 'tools/cutover/test/*.test.mjs'
+tools/contract/check.sh                 # contract : préparé, vérifié, non appliqué
 set -o pipefail                              # bash et zsh : le code du pipeline est celui du script
-tools/next/cutover/rehearse.sh --slot 2 --anonymize --stop-legacy 2>&1 | tee /tmp/lodb-rehearsal.log
+tools/cutover/rehearse.sh --slot 2 --anonymize --stop-legacy 2>&1 | tee /tmp/lodb-rehearsal.log
 echo "code $?"                               # 0 : la répétition passe
 ```
 
@@ -163,16 +163,16 @@ nouvelle (seuls des comptes existants y sont repris) : à vérifier à la main s
 Consigner le résumé du script (durées comprises) dans le rapport du jalon, sous
 `docs/reecriture/rapports/jalons/`.
 
-### 3.2 Répétition sur `next` avec le dump réel chiffré
+### 3.2 Répétition sur `preprod` avec le dump réel chiffré
 
 Entre J-14 et J-7, sur l'hôte (le VPS qui porte aussi la prod), en root. Le dump réel ne
 quitte jamais l'hôte, n'est jamais écrit en clair sur le disque et est détruit le jour même.
-Pendant la répétition, `next` sert des données réelles : fenêtre de quelques heures, adresse
+Pendant la répétition, `preprod` sert des données réelles : fenêtre de quelques heures, adresse
 non diffusée, `noindex` actif.
 
-1. **`next` sur la révision candidate** : déployé par `next-ci.yml` au push de `dev` (ou
-   Actions ▸ *next deploy*, branche `dev`), annonce « Deployed revision » = `REV`. Vérifier que `next` n'envoie aucun e-mail réel :
-   `grep '^LoDb__Mail__Host=' "$NEXT_PATH/.env"` ne renvoie rien (les e-mails attendent
+1. **`preprod` sur la révision candidate** : déployé par `ci.yml` au push de `dev` (ou
+   Actions ▸ *Deploy*, branche `dev`), annonce « Deployed revision » = `REV`. Vérifier que `preprod` n'envoie aucun e-mail réel :
+   `grep '^LoDb__Mail__Host=' "$PREPROD_PATH/.env"` ne renvoie rien (les e-mails attendent
    alors dans `email_outbox`, détruite avec la copie). Stripe y est en clés de test.
 2. **Dump chiffré, restauré à part** (phrase de passe saisie, jamais écrite) :
 
@@ -182,7 +182,7 @@ non diffusée, `noindex` actif.
    pg_db="$(docker exec lodb-prod-postgres-1 printenv POSTGRES_DB)"
    docker exec lodb-prod-postgres-1 pg_dump -U "$pg_user" -Fc "$pg_db" \
      | gpg --symmetric --cipher-algo AES256 --pinentry-mode loopback -o prod.dump.gpg
-   cd "$NEXT_PATH" && export COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml \
+   cd "$PREPROD_PATH" && export COMPOSE_FILE=compose.yaml:compose.deploy.yaml \
      COMPOSE_PROFILES=bundled-database
    docker compose exec -T postgres psql -U lodb -d postgres -c 'CREATE DATABASE lodb_rehearsal'
    gpg --decrypt --pinentry-mode loopback /root/lodb-rehearsal/prod.dump.gpg \
@@ -190,7 +190,7 @@ non diffusée, `noindex` actif.
          --no-owner --no-privileges --exit-on-error
    ```
 
-   (`lodb` : `LODB_DB_USER` de `next`.) Noter les comptes de lignes (`users`, `builds`,
+   (`lodb` : `LODB_DB_USER` de `preprod`.) Noter les comptes de lignes (`users`, `builds`,
    `api_keys`) de la source et de la copie.
 3. **Migrations additives**, chronométrées, deux fois (le second passage n'applique rien) :
 
@@ -200,7 +200,7 @@ non diffusée, `noindex` actif.
    ```
 
    Compose peut recréer le conteneur `postgres` (sa variable `POSTGRES_DB` change) : son
-   volume, donc la base de `next`, est conservé.
+   volume, donc la base de `preprod`, est conservé.
 
 4. **Reprise des agrégats et de l'audit** depuis les volumes de l'ancienne prod, montés en
    lecture seule ; d'abord à blanc :
@@ -216,13 +216,13 @@ non diffusée, `noindex` actif.
    docker compose up -d --wait
    ```
 
-5. **Contrôles** depuis le poste (outils de L8.2), `NEXT=https://<domaine de next>` :
+5. **Contrôles** depuis le poste (outils de L8.2), `PREPROD=https://<domaine de preprod>` :
 
    ```bash
-   tools/next/cutover/smoke.sh "$NEXT" "https://api.<domaine de next>"
-   node tools/next/cutover/check-301.mjs --base "$NEXT" \
+   tools/cutover/smoke.sh "$PREPROD" "https://api.<domaine de preprod>"
+   node tools/cutover/check-301.mjs --base "$PREPROD" \
      --sitemap https://league-of-data-base.com/sitemap.xml --historical 2
-   tools/next/cutover/readonly-e2e.sh "$NEXT" --workers=2 --retries=1
+   tools/cutover/readonly-e2e.sh "$PREPROD" --workers=2 --retries=1
    ```
 
    Comptes réels : se connecter avec des comptes **dont on connaît le mot de passe** (les
@@ -239,7 +239,7 @@ non diffusée, `noindex` actif.
 7. **Destruction**, le jour même :
 
    ```bash
-   unset LODB_DB_NAME && docker compose up -d --wait        # next revient sur sa base
+   unset LODB_DB_NAME && docker compose up -d --wait        # preprod revient sur sa base
    docker compose exec -T postgres psql -U lodb -d postgres \
      -c 'DROP DATABASE lodb_rehearsal WITH (FORCE)'
    # pages rendues avec des données réelles (profils publics…)
@@ -248,7 +248,7 @@ non diffusée, `noindex` actif.
    shred -u /root/lodb-rehearsal/prod.dump.gpg && rmdir /root/lodb-rehearsal
    ```
 
-   Vérifier qu'aucune copie ne subsiste (`ls /root`, `docker volume ls`, bases de `next` :
+   Vérifier qu'aucune copie ne subsiste (`ls /root`, `docker volume ls`, bases de `preprod` :
    `\l`). La destruction se note dans le rapport.
 
 ## 4. Changelog joueurs (J-3)
@@ -264,7 +264,7 @@ promue.
 2. Synthétiser ces entrées, et le backlog de `docs/changelog/<année>/`, en une release
    publique (`<date>-<nom>.json` et `manifest.json` dans ce même dossier), puis archiver les
    entrées dans `docs/changelog/archived/<année>/` ([`changelog/README.md`](../changelog/README.md)).
-3. Commit sur `dev` (déploiement automatique sur `next`), contrôle de `/fr/changelog` ;
+3. Commit sur `dev` (déploiement automatique sur `preprod`), contrôle de `/fr/changelog` ;
    cette révision devient `REV`. Si J recule, redater et reconstruire.
 
 ## 5. Préparation de la prod (J-2 et J-1)
@@ -280,17 +280,17 @@ Le job de promotion refuse de toucher à l'hôte tant que l'ancienne stack porte
 cette préparation est manuelle, avec les mêmes fichiers que le job écrira.
 
 ```bash
-install -d -m 700 "$PROD_NEXT_PATH" && cd "$PROD_NEXT_PATH"
+install -d -m 700 "$PRODUCTION_PATH" && cd "$PRODUCTION_PATH"
 git init -q && git remote add origin <url du dépôt> && git fetch origin dev
 git checkout -B dev origin/dev
-(umask 077 && cat > .env)          # coller le contenu exact du secret ENV_PROD_NEXT, puis Ctrl-D
+(umask 077 && cat > .env)          # coller le contenu exact du secret ENV_FILE, puis Ctrl-D
 install -d -m 700 .deploy
-(umask 022 && base64 -d > .deploy/data-protection.pfx)   # coller PROD_NEXT_DATA_PROTECTION_PFX, Ctrl-D
-export COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml COMPOSE_PROFILES= IMAGE_TAG="$REV"
+(umask 022 && base64 -d > .deploy/data-protection.pfx)   # coller DATA_PROTECTION_PFX, Ctrl-D
+export COMPOSE_FILE=compose.yaml:compose.deploy.yaml COMPOSE_PROFILES= IMAGE_TAG="$REV"
 docker compose config --quiet && docker compose pull api
 ```
 
-`IMAGE_TAG="$REV"` surcharge le `next-prod` du `.env` : `:next-prod` n'existe qu'après la
+`IMAGE_TAG="$REV"` surcharge le `production` du `.env` : `:production` n'existe qu'après la
 promotion. Sauvegarde, avant toute écriture dans la base de prod :
 
 ```bash
@@ -310,16 +310,16 @@ docker compose run --rm migrate        # « 0 migration(s) applied »
 
 Un refus (`db.baseline.refused`, code 1) arrête tout : le schéma de prod diffère de
 Doctrine, la base n'a pas été modifiée. Contrôler ensuite l'ancien site (pages clés,
-connexion) : `tools/next/cutover/legacy-smoke.sh https://league-of-data-base.com https://api.league-of-data-base.com`.
+connexion) : `tools/cutover/legacy-smoke.sh https://league-of-data-base.com https://api.league-of-data-base.com`.
 
 ### 5.3 Pré-ingestion
 
 ```bash
-time tools/next/cutover/pre-ingest.sh --latest 3 -- -p lodb-next-prod \
-  -f compose.next.yaml -f compose.next.deploy.yaml
+time tools/cutover/pre-ingest.sh --latest 3 -- -p lodb-production \
+  -f compose.yaml -f compose.deploy.yaml
 ```
 
-Remplit `lodb-next-prod_storage` et le manifeste des trois dernières versions dans toutes
+Remplit `lodb-production_storage` et le manifeste des trois dernières versions dans toutes
 les langues (183 s en local pour trois versions). Code 1 après la seconde passe : relancer
 plus tard ; la longue traîne reste à la demande. Si Riot publie un patch entre J-2 et J,
 relancer la pré-ingestion à J-1.
@@ -351,7 +351,7 @@ approuve dans `production`. Durée attendue : moins d'une heure.
 
 ### 6.1 Bascule
 
-1. **Pré-contrôles** (T-30) : `REV` validée sur `next` ; les trois images `:<REV>` présentes ;
+1. **Pré-contrôles** (T-30) : `REV` validée sur `preprod` ; les trois images `:<REV>` présentes ;
    pré-ingestion à jour (§ 5.3) ; `old-sitemaps/` complet ; mémoire et disque de l'hôte ;
    rien d'autre en cours de déploiement.
 2. **Sauvegarde** (T-15) : dump de la base comme au § 5.1, puis instantané des volumes de
@@ -364,25 +364,25 @@ approuve dans `production`. Durée attendue : moins d'une heure.
    done
    ```
 
-3. **Promotion avec reprise des domaines** (T0) : Actions ▸ *next promote*, `revision` = `REV`,
+3. **Promotion avec reprise des domaines** (T0) : Actions ▸ *Promote*, `revision` = `REV`,
    `branch` = `dev`, `take_over_domains` coché ; approuver `production`.
-   Le job, dans l'ordre : retag `:<REV>` → `:next-prod`, `pull`, `migrate` (rien à
+   Le job, dans l'ordre : retag `:<REV>` → `:production`, `pull`, `migrate` (rien à
    appliquer, ou le reliquat), arrêt des conteneurs de `lodb-prod` qui portent le domaine
    (`nginx`, `go-api`), `up -d --wait`, smoke test dans la stack, révision servie = `REV`,
    TLS public. En cas d'échec après l'arrêt, il **redémarre** les conteneurs de l'ancienne
    stack : le domaine lui revient seul, sans perte (même base).
 4. Les **301 héritées** sont actives dès que le domaine pointe sur la nouvelle stack
-   (`docker/next/nginx/server.d/legacy-redirects.conf`, résolues par l'API).
+   (`docker/nginx/server.d/legacy-redirects.conf`, résolues par l'API).
 
 ### 6.2 Contrôles (T+5)
 
 Depuis le poste :
 
 ```bash
-tools/next/cutover/smoke.sh https://league-of-data-base.com https://api.league-of-data-base.com
-node tools/next/cutover/check-301.mjs --base https://league-of-data-base.com \
+tools/cutover/smoke.sh https://league-of-data-base.com https://api.league-of-data-base.com
+node tools/cutover/check-301.mjs --base https://league-of-data-base.com \
   --sitemap old-sitemaps/latest.xml --sitemap old-sitemaps/<dernière version>.xml
-tools/next/cutover/readonly-e2e.sh https://league-of-data-base.com --workers=2 --retries=1
+tools/cutover/readonly-e2e.sh https://league-of-data-base.com --workers=2 --retries=1
 ```
 
 Puis à la main : connexion d'un compte existant, `https://league-of-data-base.com/fr/`,
@@ -404,7 +404,7 @@ Puis consolider l'ancienne stack (son `php` tourne encore) et reprendre ses fich
 ```bash
 docker compose exec -T -u www-data php php bin/console app:analytics:rollup
 docker compose exec -T -u www-data php php bin/console app:audit:rollup
-cd "$PROD_NEXT_PATH"
+cd "$PRODUCTION_PATH"
 legacy=(-v lodb-prod_storage:/legacy-storage:ro -v lodb-prod_app_state:/legacy-state:ro)
 docker compose run --rm --no-deps "${legacy[@]}" api analytics import --source /legacy-storage/analytics/daily
 docker compose run --rm --no-deps "${legacy[@]}" api audit import \
@@ -431,9 +431,9 @@ docker compose ps    # postgres : running ; nginx, go-api, php, go-fetcher : exi
 
 ## 7. Surveillance renforcée (72 h)
 
-Requêtes de [`queries.logsql`](../../tools/next/cutover/monitoring/queries.logsql) (Grafana,
-VictoriaLogs) avec `{{stack}}` = `lodb-next-prod`, `{{domain}}` = `league-of-data-base.com`,
-et de [`metrics.promql`](../../tools/next/cutover/monitoring/metrics.promql) ; elles portent
+Requêtes de [`queries.logsql`](../../tools/cutover/monitoring/queries.logsql) (Grafana,
+VictoriaLogs) avec `{{stack}}` = `lodb-production`, `{{domain}}` = `league-of-data-base.com`,
+et de [`metrics.promql`](../../tools/cutover/monitoring/metrics.promql) ; elles portent
 sur des clés d'événement, jamais sur le niveau deviné ([`observabilite.md`](../guides/observabilite.md)).
 
 | Période | Rythme | `{{window}}` |
@@ -453,7 +453,7 @@ sur des clés d'événement, jamais sur le niveau deviné ([`observabilite.md`](
 | `payments` | aucun rejet | tout `billing.webhook.rejected` ou `failed` sur un vrai paiement |
 | `public-api` | aucun | `publicapi.request.unavailable`, `publicapi.usage.flush_failed` |
 | `egress-refused` | aucun | tout refus (événement de sécurité) |
-| `volume` ; mémoire `container_memory_working_set_bytes{stack="lodb-next-prod"}` | stable | service muet, ou mémoire > 80 % de sa limite |
+| `volume` ; mémoire `container_memory_working_set_bytes{stack="lodb-production"}` | stable | service muet, ou mémoire > 80 % de sa limite |
 
 Search Console : erreurs d'exploration, pages 404, « Page avec redirection » (attendu pour les
 anciennes URL), couverture des nouveaux sitemaps, erreurs hreflang.
@@ -472,7 +472,7 @@ arrière reste possible jusqu'au *contract*.
 | 5xx > 1 % sur 15 min, ou rendu SSR en échec continu | retour arrière si pas corrigé en 30 min |
 | Paiements Stripe ou `/v1` en échec pour des clients réels | retour arrière si pas corrigé en 1 h |
 | Anciennes URL massivement en 4xx (> 5 % des accès aux anciennes URL) | retour arrière si pas corrigé en 2 h |
-| Défaut isolé (une page, un affichage, une URL hors table) | correction en avant : nouvelle `REV` validée sur `next`, puis promotion (sans reprise de domaines) |
+| Défaut isolé (une page, un affichage, une URL hors table) | correction en avant : nouvelle `REV` validée sur `preprod`, puis promotion (sans reprise de domaines) |
 
 Après les 72 h, seuls les deux premiers cas justifient encore un retour arrière. Après le
 *contract*, il n'y en a plus : on revient par la sauvegarde d'avant *contract*.
@@ -484,7 +484,7 @@ Tant que le schéma reste compatible (migrations additives, jusqu'au *contract*)
 1. La nouvelle stack rend le domaine ; ses tâches de fond s'arrêtent aussi :
 
    ```bash
-   cd "$PROD_NEXT_PATH" && COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml \
+   cd "$PRODUCTION_PATH" && COMPOSE_FILE=compose.yaml:compose.deploy.yaml \
      docker compose stop nginx web-ssr api
    ```
 
@@ -494,7 +494,7 @@ Tant que le schéma reste compatible (migrations additives, jusqu'au *contract*)
    cd "$PROD_PATH" && COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose start
    ```
 
-3. Contrôles : `tools/next/cutover/legacy-smoke.sh https://league-of-data-base.com https://api.league-of-data-base.com`,
+3. Contrôles : `tools/cutover/legacy-smoke.sh https://league-of-data-base.com https://api.league-of-data-base.com`,
    connexion d'un compte existant (son hash, réécrit en argon2id, est lu par PHP), `/v1/usage`
    d'une clé. Des correctifs de l'ancienne stack ne partent plus par la CI : ses workflows
    sont archivés sous `legacy/.github/workflows/`. Les remettre en service exige de les
@@ -508,7 +508,7 @@ nouvelle (analytics, audit, manifeste…), qu'elle ignore ; les sessions (chacun
 reconnecte) ; les nouvelles URL que les moteurs auraient déjà explorées, en 404 côté ancienne
 stack jusqu'à la bascule suivante.
 
-Rebasculer ensuite : correction, validation sur `next`, puis § 6.1 à partir de l'étape 1
+Rebasculer ensuite : correction, validation sur `preprod`, puis § 6.1 à partir de l'étape 1
 (sauvegarde comprise), `take_over_domains` coché ; les imports du § 6.3 ne reprennent que ce
 qui manque.
 
@@ -517,11 +517,11 @@ qui manque.
 Trente jours après la bascule sans retour arrière, et sur décision explicite : après lui,
 l'ancienne stack ne peut plus tourner sur la base.
 
-- Contenu, vérification et mise en œuvre : [`tools/next/contract/README.md`](../../tools/next/contract/README.md)
+- Contenu, vérification et mise en œuvre : [`tools/contract/README.md`](../../tools/contract/README.md)
   (tables `messenger_messages`, `reset_password_request`, `doctrine_migration_versions` et
   colonne `users.roles` supprimées, sept horodatages passés en `timestamptz` UTC).
 - Sauvegarde de la base juste avant, restaurée à blanc pour la vérifier.
-- Le *contract* devient une migration EF ordinaire, appliquée par `migrate` : `next`
+- Le *contract* devient une migration EF ordinaire, appliquée par `migrate` : `preprod`
   d'abord, puis promotion en prod. Jamais de SQL à la main sur la prod.
 
 ## 10. Décommission
@@ -532,8 +532,8 @@ Après le *contract*, dans l'ordre.
 
 La base partagée vit encore dans le PostgreSQL de l'ancienne stack. Elle rejoint la nouvelle
 prod par une maintenance courte : nouvelle stack arrêtée, sauvegarde, restauration dans le
-PostgreSQL embarqué de `lodb-next-prod`, puis `LODB_DB_NETWORK` retiré de `ENV_PROD_NEXT`
-et `COMPOSE_PROFILES=bundled-database` ajouté. `next-deploy.yml` exige aujourd'hui
+PostgreSQL embarqué de `lodb-production`, puis `LODB_DB_NETWORK` retiré de `ENV_FILE`
+et `COMPOSE_PROFILES=bundled-database` ajouté. `deploy.yml` exige aujourd'hui
 `LODB_DB_NETWORK` en prod : le job change avec cette étape. L'ancien volume `lodb-prod_pgdata`
 reste intact jusqu'à la fin de la décommission.
 
@@ -546,7 +546,7 @@ décommission supprime ce dossier.
 | Quoi | Où |
 |---|---|
 | Ancienne stack archivée | `legacy/` : `app/`, `go/`, `docker/{nginx,php}/`, `compose*.yaml`, `.env*.example`, `.dockerignore`, `.github/workflows/` (`ci.yml`, `_*.yml`), `tailwind.config.js`, `tools/screenshots/`, `screenshot/`, `README.md`, `docs/guides/` |
-| Outils de la transition | `tools/next/cutover/`, `tools/next/schema/`, `tools/next/contract/`, `tools/next/parity/` et `tools/next/builds-parity/` (comparaisons avec l'ancienne stack), `Persistence/Baseline/doctrine-catalog.txt` et `tests/fixtures/schema/` quand `Baseline` ne se compare plus à Doctrine |
+| Outils de la transition | `tools/cutover/`, `tools/schema/`, `tools/contract/`, `tools/parity/` et `tools/builds-parity/` (comparaisons avec l'ancienne stack), `Persistence/Baseline/doctrine-catalog.txt` et `tests/fixtures/schema/` quand `Baseline` ne se compare plus à Doctrine |
 | Images | `ghcr.io/<owner>/lodb/app`, `lodb/go-fetcher`, `lodb/go-api` ; le tag `:prod` de `lodb/nginx` |
 | Sur l'hôte | projets `lodb-prod` et `lodb-staging` (`docker compose down`), leurs volumes **après export**, dossiers `$PROD_PATH` et `STAGING_PATH`, secrets `PROD_PATH`, `STAGING_*`, `ENV_PROD`, `ENV_STAGING`, `ENV_TEST` ; **garder** `PROD_SSH_KEY`, `PROD_HOST`, `PROD_SSH_USER`, que la nouvelle stack utilise |
 
@@ -576,7 +576,7 @@ L'ancienne stack archivée n'a plus de changelog : relancée depuis `legacy/`, s
 | `README.md`, `CONTRIBUTING.md`, `docs/README.md` | **fait** avec l'archivage (l'ancien README est `legacy/README.md`) |
 | `docs/contribution.md` | démarrage, commandes et garde-fous de la nouvelle stack, en FR, EN et ES (bandeau d'avertissement en attendant) |
 | `docs/architecture/` (`architecture.md`, `architecture-report.md`, `analytics.md`, `api-publique.md`, `responsive-mobile.md`) | réécrits d'après `docs/reecriture/README.md` et les ADR |
-| `docs/guides/setup.md`, `docker.md`, `configuration.md` | **fait** : archivés sous `legacy/docs/guides/`, remplacés par `dev-next.md` et le nouveau `configuration.md` |
+| `docs/guides/setup.md`, `docker.md`, `configuration.md` | **fait** : archivés sous `legacy/docs/guides/`, remplacés par `developpement.md` et le nouveau `configuration.md` |
 | `docs/guides/github-actions-secrets.md` | **fait** : guide du pipeline de la nouvelle stack ; l'ancien est sous `legacy/docs/guides/` |
 | `docs/guides/observabilite.md`, `logging.md` | exemples sur `api` et `web-ssr` (`EventName`), plus de `php` ni `go-api` |
 | `docs/guides/oauth-google-setup.md` | à jour pour la nouvelle stack ; à la décommission, retirer du client OAuth l'URI `/connect/google/check` et le § 6 |

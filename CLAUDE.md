@@ -9,8 +9,8 @@ Encyclopédie League of Legends servie depuis les données **Data Dragon** (+ Co
 Ce répertoire est le **journal technique interne** : source de vérité de tout ce qui a été
 touché, jamais filtré. Aucune entrée = changement invisible.
 
-> **Exception : la nouvelle stack** (`src/`, `tests/`, `docker/next/`, `compose.next*`,
-> `tools/next/`). Elle ne crée **aucune** entrée pendant la reconstruction : ces entrées
+> **Exception : la nouvelle stack** (`src/`, `tests/`, `docker/`, `compose*.yaml`,
+> `tools/`). Elle ne crée **aucune** entrée pendant la reconstruction : ces entrées
 > décrivent ce qui arrive en prod, et celles de la bascule sont rédigées au lot 8 (L8.3).
 > Voir la section « Nouvelle stack » plus bas.
 
@@ -227,10 +227,10 @@ Convention de commits (maintenue par /commit, initialisée par /b-hive-init).
 
 Réécriture en .NET 10 + Angular 22, construite **à côté** de la stack en service, sur la
 branche d'intégration `docs/reecriture-dotnet-angular`, puis sur `dev` : un push de `dev`
-construit les images et déploie `next` (`next-ci.yml`), la prod se promeut à la main. Le
+construit les images et déploie `next` (`ci.yml`), la prod se promeut à la main. Le
 fond fait foi dans [`docs/reecriture/`](docs/reecriture/README.md) (`heritage.md`, `adr/`) ;
 le [plan](docs/reecriture/plan-implementation.md) fixe chantiers, périmètres, fichiers
-partagés (§7.3) et jalons (§8). Commandes : [`dev-next.md`](docs/guides/dev-next.md).
+partagés (§7.3) et jalons (§8). Commandes : [`developpement.md`](docs/guides/developpement.md).
 
 - **L'ancienne stack est archivée et en lecture seule** : tout `legacy/` (`app/`, `go/`,
   `docker/nginx/`, `docker/php/`, `compose.yaml`, `compose.override.yaml`,
@@ -243,8 +243,8 @@ partagés (§7.3) et jalons (§8). Commandes : [`dev-next.md`](docs/guides/dev-n
 
 ```
 LoDb.slnx  global.json  Directory.Build.props  Directory.Packages.props  .editorconfig
-compose.next.yaml  compose.next.override.yaml (dev)  compose.next.deploy.yaml  .env.next.example
-docker/next/{api,web-ssr,nginx}/     images lodb-api, lodb-web-ssr, lodb-nginx
+compose.yaml  compose.override.yaml (dev)  compose.deploy.yaml  .env.preprod.example
+docker/{api,web-ssr,nginx}/     images lodb-api, lodb-web-ssr, lodb-nginx
   nginx/sites/ (site, sous-domaine api.)  server.d/ (inclus dans le server du site)  snippets/
 src/LoDb.Domain/          pur, sans I/O : versions, langues, éditions, chemins canoniques
 src/LoDb.Ingestion/       Egress/ Ddragon/ Pipeline/ Catalog/ …
@@ -252,7 +252,7 @@ src/LoDb.Infrastructure/  Persistence/ Storage/ Jobs/ Outbox/ Audit/ Analytics/ 
 src/LoDb.Api/             Program.cs Hosting/ Cli/<Zone>/ Workers/<Zone>/ Modules/<M>/ openapi/
 src/LoDb.Web/             workspace Angular : src/app/{core,ui,features}  src/server/  public/i18n/
 tests/LoDb.*.Tests/  tests/LoDb.Testing/ (ApiFactory, PostgresContainerFixture)  tests/LoDb.E2E/
-tools/next/               scripts (contrat, i18n, parité, bascule)
+tools/               scripts (contrat, i18n, parité, bascule)
 docs/reecriture/rapports/ rapports des chantiers et des jalons
 ```
 
@@ -345,8 +345,8 @@ d'attribution. `git add` se fait par chemins explicites. Carte des scopes :
 | `src/LoDb.Desktop/**` | `desktop` |
 | `tests/LoDb.E2E/**` | `e2e` |
 | `tests/LoDb.Parity/**`, `tests/fixtures/**` | scope du code testé |
-| `docker/next/**`, `compose.next*` | `infra` |
-| `tools/next/**` | `tools` |
+| `docker/**`, `compose*.yaml` | `infra` |
+| `tools/**` | `tools` |
 
 Les autres chemins (`.github/**`, `docs/**`…) gardent la carte de la section « commit ».
 
@@ -358,23 +358,23 @@ dotnet test LoDb.slnx                        # Testcontainers : Docker démarré
 npm ci --prefix src/LoDb.Web
 npm --prefix src/LoDb.Web run lint           # puis typecheck, test, build:web, build:shell
 npm --prefix src/LoDb.Web run api:generate   # contrat (L2.2 ; bouchon avant)
-docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build
+docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml up -d --build
 npm --prefix tests/LoDb.E2E test             # stack démarrée (LODB_E2E_BASE_URL sinon)
 npm --prefix src/LoDb.Web run api:check      # dérive du contrat (job contract de next-ci)
-bash tools/next/routing/check-urls.sh        # grammaire d'URL de l'ADR 0005, stack démarrée
-node tools/next/accounts/legacy-logins.mjs   # critère du lot 4 (hash hérités), stack démarrée
-node tools/next/seo-diff/diff.mjs --stack lodb-next   # critère du lot 3, prod en GET seul
-node tools/next/lighthouse/run.mjs --stack lodb-next  # budgets du lot 3, stack démarrée
+bash tools/routing/check-urls.sh        # grammaire d'URL de l'ADR 0005, stack démarrée
+node tools/accounts/legacy-logins.mjs   # critère du lot 4 (hash hérités), stack démarrée
+node tools/seo-diff/diff.mjs --stack lodb-dev   # critère du lot 3, prod en GET seul
+node tools/lighthouse/run.mjs --stack lodb-dev  # budgets du lot 3, stack démarrée
 ```
 
-- **Stack d'intégration `lodb-next`**, une seule instance, depuis la racine : 18080 nginx,
-  18081 API, 18082 SSR, 15432 Postgres, 18025 Mailpit. Emplacements `lodb-next-e1` et
+- **Stack d'intégration `lodb-dev`**, une seule instance, depuis la racine : 18080 nginx,
+  18081 API, 18082 SSR, 15432 Postgres, 18025 Mailpit. Emplacements `lodb-dev-e1` et
   `-e2` (181xx/182xx), lancés depuis un worktree et supprimés (`down -v`) avant de rendre.
 - **Ne jamais toucher** aux conteneurs `chewb-*`, `laforce-*` et `grafana/mcp-grafana`,
   ni à leurs ports (3307, 33306, 21200 à 21213). Le port 9464 n'est jamais publié.
 - Métriques : lues depuis le réseau de la stack (`wget http://api:9464/metrics` dans le
-  conteneur nginx, commande complète dans `dev-next.md`).
-- Validation des workflows : image `rhysd/actionlint` sur `.github/workflows/next-*.yml`.
+  conteneur nginx, commande complète dans `developpement.md`).
+- Validation des workflows : image `rhysd/actionlint` sur `.github/workflows/**.yml`.
 - Chaque jalon consigne son rapport dans `docs/reecriture/rapports/jalons/lot-NN.md`, et
   les pics mémoire des E2E dans `docs/reecriture/rapports/memoire.md`.
 
@@ -419,7 +419,7 @@ node tools/next/lighthouse/run.mjs --stack lodb-next  # budgets du lot 3, stack 
 
 ### Pièges du lot 1 (ne pas « corriger » par erreur)
 
-- Parité (L1.8) : `tools/next/parity/` collecte, `tests/LoDb.Parity` compare. Un nouvel
+- Parité (L1.8) : `tools/parity/` collecte, `tests/LoDb.Parity` compare. Un nouvel
   écart reçoit une règle de `ParityRules.cs`, argumentée dans
   `docs/reecriture/rapports/parite-lot-1.md`, jamais un filtre dans la comparaison. Sans
   `LODB_PARITY_RUN`, les 2 tests du run sont ignorés.
@@ -480,7 +480,7 @@ node tools/next/lighthouse/run.mjs --stack lodb-next  # budgets du lot 3, stack 
 
 ### Pièges du lot 4 et de la vague D (ne pas « corriger » par erreur)
 
-- **Critère du lot 4** : `node tools/next/accounts/legacy-logins.mjs`, stack démarrée.
+- **Critère du lot 4** : `node tools/accounts/legacy-logins.mjs`, stack démarrée.
   Un hash argon2id **plus fort** que la cible (m ≥ 19456, t ≥ 2, p = 1) est conservé, pas
   réécrit : c'est voulu (`Argon2Passwords.IsTarget`). Un compte hérité s'insère sans les
   colonnes Identity (`security_stamp` `NULL`) ; la connexion doit les remplir.
@@ -499,7 +499,7 @@ node tools/next/lighthouse/run.mjs --stack lodb-next  # budgets du lot 3, stack 
 - **Variante store** (L10.1) : `environment.payments` n'a d'effet que là où le code le
   lit. esbuild émet le chunk des dons même quand `payments` vaut `false` : on retire le
   paiement par le routage et les liens. `cap sync` ne tourne que dans le conteneur
-  (`tools/next/android/build-debug.sh`) ; sur l'hôte, il copie le bundle dans
+  (`tools/android/build-debug.sh`) ; sur l'hôte, il copie le bundle dans
   `android/…/assets/public`, et `prettier --check .` échoue.
 - `npm install --prefix src/LoDb.Web` tire `@capacitor/ios` et `@capacitor/keyboard` par
   `@aparajita/capacitor-secure-storage` : c'est attendu, il n'y a pas de plateforme iOS.
@@ -513,7 +513,7 @@ Constats du [jalon 3](docs/reecriture/rapports/jalons/lot-03.md).
 
 - **Quota d'inscriptions** : 5 par heure et par adresse (`RateLimitingPolicies`), et
   toute la suite E2E arrive par nginx sous une seule adresse. Le limiteur vit en mémoire :
-  entre deux passages complets, lancer `docker restart lodb-next-api-1`. Seule
+  entre deux passages complets, lancer `docker restart lodb-dev-api-1`. Seule
   `specs/account/register.spec.ts` passe par le formulaire d'inscription ; toute autre
   spec qui a besoin d'un compte le crée par la CLI (`createMember` et `signInMember` de
   `support/member-account.ts`, ou le compte de son worker dans `support/worker-account.ts`).
@@ -525,12 +525,12 @@ Constats du [jalon 3](docs/reecriture/rapports/jalons/lot-03.md).
 - **Balise d'analytics** : chaque navigation interne envoie `POST /api/analytics/view`
   (L7.1). Une spec qui compte les POST exclut `/api/analytics/` (G3).
 - **Compression** : le SSR sert les bundles en `text/javascript`. `gzip_types` de
-  `docker/next/nginx/nginx.conf` doit lister ce type (et `application/manifest+json`),
+  `docker/nginx/nginx.conf` doit lister ce type (et `application/manifest+json`),
   sinon Lighthouse perd environ 1,7 s en 4G lente (G4). Vérifier par `curl -D - -H
   'Accept-Encoding: gzip'` sur un `/build/*.js`. Un budget Lighthouse ne se relâche jamais.
 - **Rapports générés** : `diff-seo.md` et `lighthouse.md` ne s'écrivent que par leurs
   outils. Un écart SEO nouveau reçoit une règle argumentée dans
-  `tools/next/seo-diff/lib/rules.mjs`, et on relance l'outil. Ne jamais passer `--json`
+  `tools/seo-diff/lib/rules.mjs`, et on relance l'outil. Ne jamais passer `--json`
   ni `--out` vers `/tmp` pour une exécution committée : la commande est écrite dans le
   rapport.
 - **Sélecteurs de build** : `/api/pickers/*` exige `version` et `lang` (400
@@ -548,18 +548,18 @@ Constats du [jalon des lots 5 à 7](docs/reecriture/rapports/jalons/lots-05-06-0
   l'hôte web (autorisation, sondes de santé, routage) fait tomber **toutes** les
   sous-commandes (`admin create`, `analytics import`, `ingest`…), sans qu'aucun test ne le
   voie. Après tout ajout à un `Add<Module>`, lancer dans la stack
-  `docker compose -p lodb-next … exec -T api dotnet LoDb.Api.dll analytics import --source /x --dry-run`
+  `docker compose -p lodb-dev … exec -T api dotnet LoDb.Api.dll analytics import --source /x --dry-run`
   (attendu : `No such directory: /x`), et non un contournement par
   `ASPNETCORE_ENVIRONMENT=Production` (G1).
 - **Le contrat avant le front** : une branche qui importe un client généré non commité ne
   compile qu'après `api:generate` ; l'intégration le lance et le committe avant les
   suites.
-- **Parité des builds** (`tools/next/builds-parity/`) : la copie vit dans le Postgres de
+- **Parité des builds** (`tools/builds-parity/`) : la copie vit dans le Postgres de
   l'ancienne stack (`createdb` + `pg_dump | pg_restore`), jamais dans sa base `lodb`.
   L'ancienne stack y pointe par `POSTGRES_DB` de `legacy/.env` (ignoré, sauvegardé puis remis),
-  `lodb-next` par une surcouche compose hors dépôt qui ne change que
+  `lodb-dev` par une surcouche compose hors dépôt qui ne change que
   `ConnectionStrings__LoDb` (`Host=host.docker.internal;Port=5432;…`). Copier aussi
-  `ddragon_version` et `ddragon_asset` de `lodb-next` (données seules) : la copie migrée
+  `ddragon_version` et `ddragon_asset` de `lodb-dev` (données seules) : la copie migrée
   n'a aucune version prête. Pas de `--json` vers `/tmp` pour un rapport commité.
 - **Mêmes agrégats analytics** : `app:analytics:rollup` d'abord côté PHP (une journée non
   consolidée n'est lue que par l'ancienne stack), puis `analytics import` avec le volume
@@ -580,7 +580,7 @@ Constats du [jalon des lots 5 à 7](docs/reecriture/rapports/jalons/lots-05-06-0
 Constats du [jalon du lot 8](docs/reecriture/rapports/jalons/lot-08.md).
 
 - **Répétition locale** (critère du lot 8) : `docs/reecriture/bascule.md` § 3.1, tel
-  qu'écrit, depuis la racine. Elle occupe l'emplacement `lodb-next-e2`, jamais `lodb-next`,
+  qu'écrit, depuis la racine. Elle occupe l'emplacement `lodb-dev-e2`, jamais `lodb-dev`,
   et ne tourne ni pendant un build Android ni quand l'emplacement 2 est déjà occupé.
   L'ancienne stack doit être arrêtée, ou lancée depuis `legacy/` de ce dossier. Le script
   vise la copie par `POSTGRES_DB` dans l'environnement de `docker compose` : ne jamais
@@ -597,7 +597,7 @@ Constats du [jalon du lot 8](docs/reecriture/rapports/jalons/lot-08.md).
 - **Rapport de surveillance de l'admin** : un rapport dont les lectures en base ont échoué
   reste 30 s dans le cache hybride, avec des chiffres vides (G1). Une carte absente de la
   vue d'ensemble ou des opérations se cherche d'abord dans
-  `docker logs lodb-next-api-1 | grep admin.monitoring.database_unreadable`, jamais par
+  `docker logs lodb-dev-api-1 | grep admin.monitoring.database_unreadable`, jamais par
   un `waitFor` plus long dans la spec.
 - Les instantanés Playwright (`tests/LoDb.E2E/test-results/`) sont écrasés par le passage
   suivant, `readonly-e2e.sh` de la répétition compris : lire les échecs de la suite complète

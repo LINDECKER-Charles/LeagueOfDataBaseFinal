@@ -15,7 +15,7 @@ public sealed class TestDatabase : IAsyncDisposable
 {
     /// <summary>
     /// Tables the new stack adds to the Doctrine schema: the EF history, then the tables of
-    /// lot 1. The same list as tools/next/schema/check.sh.
+    /// lot 1. The same list as tools/schema/check.sh.
     /// </summary>
     public static readonly IReadOnlyList<string> NewTables =
         ["__EFMigrationsHistory", "ddragon_asset", "ddragon_version", "periodic_job"];

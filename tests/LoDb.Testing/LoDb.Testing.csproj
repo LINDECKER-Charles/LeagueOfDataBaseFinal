@@ -16,17 +16,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The Doctrine schema frozen by tools/next/schema/, and the script of tools/next/db/. -->
+    <!-- The Doctrine schema frozen by tools/schema/, and the script of tools/db/. -->
     <EmbeddedResource
       Include="../fixtures/schema/doctrine-schema.sql" LogicalName="doctrine-schema.sql" />
     <EmbeddedResource
       Include="../fixtures/schema/doctrine-versions.txt" LogicalName="doctrine-versions.txt" />
-    <EmbeddedResource Include="../../tools/next/db/anonymize.sql" LogicalName="anonymize.sql" />
+    <EmbeddedResource Include="../../tools/db/anonymize.sql" LogicalName="anonymize.sql" />
   </ItemGroup>
 
   <ItemGroup>
     <!--
-      Data Dragon answers recorded by tools/next/fixtures/, replayed by Fixtures/: copied to
+      Data Dragon answers recorded by tools/fixtures/, replayed by Fixtures/: copied to
       the output of every project that references this one.
     -->
     <None

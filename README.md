@@ -46,7 +46,7 @@ n'est nécessaire en local.
 
 ```bash
 npm ci --prefix src/LoDb.Web
-docker compose -p lodb-next -f compose.next.yaml -f compose.next.override.yaml up -d --build
+docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml up -d --build
 # site http://localhost:18080/en/ · API :18081 · Mailpit :18025
 ```
 
@@ -59,7 +59,7 @@ npm --prefix src/LoDb.Web run lint
 npm --prefix src/LoDb.Web run test
 ```
 
-Ports, emplacements, E2E et dépannage : [`docs/guides/dev-next.md`](docs/guides/dev-next.md).
+Ports, emplacements, E2E et dépannage : [`docs/guides/developpement.md`](docs/guides/developpement.md).
 
 ## Arborescence
 
@@ -71,8 +71,8 @@ src/LoDb.Api/             hôte unique, modules, CLI, workers
 src/LoDb.Web/             workspace Angular (web, desktop, Android)
 src/LoDb.Desktop/         coquille desktop
 tests/                    tests .NET, E2E Playwright, fixtures
-docker/next/  compose.next*.yaml   images et stack Compose
-tools/next/               outils : contrat, i18n, parité, bascule, releases
+docker/  compose*.yaml.yaml   images et stack Compose
+tools/               outils : contrat, i18n, parité, bascule, releases
 legacy/                   ancienne stack, archivée
 ```
 
@@ -81,9 +81,9 @@ legacy/                   ancienne stack, archivée
 | Doc | Contenu |
 |---|---|
 | [`docs/reecriture/README.md`](docs/reecriture/README.md) | Pourquoi la réécriture, décisions, architecture cible |
-| [`docs/guides/dev-next.md`](docs/guides/dev-next.md) | Développer : commandes, stack locale, E2E |
-| [`docs/guides/configuration.md`](docs/guides/configuration.md) | Tous les secrets et variables à configurer (`next`, prod, apps) |
-| [`docs/guides/github-actions-secrets.md`](docs/guides/github-actions-secrets.md) | Pipeline : CI, images, déploiement de `next`, promotion en prod |
+| [`docs/guides/developpement.md`](docs/guides/developpement.md) | Développer : commandes, stack locale, E2E |
+| [`docs/guides/configuration.md`](docs/guides/configuration.md) | Tous les secrets et variables à configurer (`preprod`, prod, apps) |
+| [`docs/guides/github-actions-secrets.md`](docs/guides/github-actions-secrets.md) | Pipeline : CI, images, déploiement de `preprod`, promotion en prod |
 | [`docs/reecriture/bascule.md`](docs/reecriture/bascule.md) | Runbook de la bascule et du retour arrière |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribuer : branches, commits, garde-fous |
 | [`docs/README.md`](docs/README.md) | Index complet de la documentation |

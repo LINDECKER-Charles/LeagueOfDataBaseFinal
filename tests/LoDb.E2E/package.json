@@ -1,7 +1,7 @@
 {
   "name": "lodb-e2e",
   "version": "0.0.0",
-  "description": "End-to-end tests of LeagueOfDataBase, run against a started lodb-next stack.",
+  "description": "End-to-end tests of LeagueOfDataBase, run against a started lodb-dev stack.",
   "private": true,
   "license": "CC-BY-NC-4.0",
   "type": "module",

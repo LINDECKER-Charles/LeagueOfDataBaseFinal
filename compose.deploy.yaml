@@ -1,0 +1,184 @@
+# Deployment overlay of compose.yaml for a served environment (preprod, then production),
+# applied WITHOUT compose.override.yaml:
+#
+#   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
+#
+# Driven by .github/workflows/deploy.yml (preprod) and promote.yml (production). The
+# host's .env (secret ENV_FILE or ENV_FILE, template .env.preprod.example) sets the
+# project, the images, the public hosts and the secrets. Like legacy/compose.deploy.yaml, it
+# publishes no host port: the shared edge (caddy-docker-proxy, owned by infra-vps) reads
+# the labels of nginx and reaches it over the external `edge` network.
+#
+# Images come from the registry only (build once, promote by retag): `build` is dropped,
+# so a missing image fails the deploy instead of building on the host.
+#
+# Database, one variable apart (LODB_DB_NETWORK):
+#   preprod     unset: the stack runs its own Postgres (anonymized dump, profile
+#               bundled-database), on the network <project>-db, which the deploy job creates;
+#   production  the legacy stack's network (lodb-prod_default): the bundled Postgres is
+#               left out and api and migrate reach the existing database there, which never
+#               moves.
+#
+# Invariant: this overlay never overrides the `logging:` blocks of compose.yaml
+# (json-file is what the host's collector can read).
+#
+# Memory limits: rule = 2 x the observed peak (docs/reecriture/rapports/memoire.md, E2E
+# peaks of lots 0 to 7, and the migrate run of L8.1). Re-derive after a week of history:
+#   max_over_time(container_memory_working_set_bytes{stack=~"lodb-(preprod|production)"}[7d])
+# No `cpus` ceiling: set too low, it throttles silently.
+
+x-lodb-connection: &lodb-connection >-
+  Host=${LODB_DB_HOST:-postgres};Port=${LODB_DB_PORT:-5432};Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment};Gss Encryption Mode=Disable
+
+services:
+  api:
+    image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/api:${IMAGE_TAG:?IMAGE_TAG is required}
+    build: !reset null
+    environment:
+      # Same string as compose.yaml, GSS disabled (no libgssapi_krb5 in the image).
+      ConnectionStrings__LoDb: *lodb-connection
+      # Every origin the API publishes is the canonical host's: e-mail links, sitemaps,
+      # share_url of /v1, and the origin /developers documents for /v1.
+      LoDb__Accounts__SiteOrigin: https://${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
+      LoDb__Seo__CanonicalOrigin: https://${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
+      LoDb__PublicApi__SiteOrigin: https://${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
+      LoDb__PublicApi__Reference__BaseUrl: ${LODB_PUBLIC_API_ORIGIN:?LODB_PUBLIC_API_ORIGIN is required (e.g. "https://api.example.com")}
+      # Encrypts the Data Protection keys (cookies, tokens): outside Development, no key is
+      # created without it. The file comes from a secret (deploy.yml).
+      LoDb__DataProtection__CertificatePath: /run/secrets/data-protection.pfx
+      # Settings without a key of their own: passed only when the host's .env sets them,
+      # under these exact names, so an absent one keeps the API's default.
+      LoDb__DataProtection__CertificatePassword:
+      LoDb__Mail__Host:
+      LoDb__Mail__Port:
+      LoDb__Mail__Security:
+      LoDb__Mail__Username:
+      LoDb__Mail__Password:
+      LoDb__Mail__From:
+      LoDb__Billing__StripeSecretKey:
+      LoDb__Billing__StripeWebhookSecret:
+      LoDb__Accounts__Google__ClientId:
+      LoDb__Accounts__Google__ClientSecret:
+      LoDb__Accounts__Google__AppClients__0__ClientId:
+      LoDb__Accounts__Google__AppClients__0__ClientSecret:
+      LoDb__Accounts__Google__AppClients__1__ClientId:
+      LoDb__Accounts__Google__AppClients__1__ClientSecret:
+      LoDb__Contact__Recipient:
+      LoDb__Contact__NotificationLocale:
+      LoDb__Analytics__VisitorKey:
+    secrets:
+      - source: data-protection
+        target: data-protection.pfx
+    networks:
+      - default
+      - db
+    depends_on:
+      # Left out in prod (shared database): the dependency then drops.
+      postgres:
+        condition: service_healthy
+        required: false
+    deploy:
+      resources:
+        limits:
+          # Peak 571 MiB (lot 3 milestone, E2E reruns); 1 GiB would cut under 2 x.
+          memory: 1152m
+
+  # Ephemeral: `docker compose run --rm migrate` before `up -d` (deploy.yml).
+  migrate:
+    image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/api:${IMAGE_TAG:?IMAGE_TAG is required}
+    build: !reset null
+    environment:
+      ConnectionStrings__LoDb: *lodb-connection
+    networks:
+      - db
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    deploy:
+      resources:
+        limits:
+          # Baseline plus the migrations of lots 1 to 6 pass under 64m (L8.1 trial).
+          memory: 128m
+
+  web-ssr:
+    image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/web-ssr:${IMAGE_TAG:?IMAGE_TAG is required}
+    build: !reset null
+    environment:
+      # The public hosts of CADDY_DOMAINS, comma-separated: any other Host is refused.
+      LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:?LODB_ALLOWED_HOSTS is required (the public hosts)}
+    deploy:
+      resources:
+        limits:
+          # Peak 338 MiB (lot 2 milestone). The V8 heap stays capped by NODE_OPTIONS.
+          memory: 704m
+
+  nginx:
+    image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/nginx:${IMAGE_TAG:?IMAGE_TAG is required}
+    build: !reset null
+    environment:
+      LODB_CANONICAL_HOST: ${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
+      # Subnet of the external `edge` network: the only peer allowed to state the client
+      # address (docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}').
+      LODB_EDGE_CIDR: ${LODB_EDGE_CIDR:?LODB_EDGE_CIDR is required (subnet of the edge network)}
+      # 1 on preprod: "X-Robots-Tag: noindex, nofollow" on the responses of the stack's edge
+      # (snippets/security-headers.conf). The deploy job checks it per environment.
+      LODB_NOINDEX: ${LODB_NOINDEX:-0}
+      # First part of the page cache's key. IMAGE_TAG (preprod, production) is the same for every
+      # revision: without the key compose.yaml sets, the image's own default applies
+      # (APP_REVISION, the commit SHA baked by build.yml), so a promoted build never
+      # serves the previous one's pages.
+      LODB_REVISION: !reset null
+    volumes:
+      # Host folder of the Android files, latest.json and assetlinks.json
+      # (server.d/android-latest.conf, assetlinks.conf): empty, both URLs answer 404.
+      - ${LODB_ANDROID_DIR:-./.deploy/android}:/etc/nginx/android:ro
+    networks:
+      - default
+      - edge
+    labels:
+      # Two sites on the same container: the site and the API subdomain. Caddy keeps the
+      # Host header, which is how nginx tells them apart (sites/api.conf).
+      caddy_0: ${CADDY_DOMAINS:?CADDY_DOMAINS is required (e.g. "test.example.com")}
+      caddy_0.reverse_proxy: "{{upstreams 80}}"
+      caddy_1: ${API_CADDY_DOMAINS:?API_CADDY_DOMAINS is required (e.g. "api.test.example.com")}
+      caddy_1.reverse_proxy: "{{upstreams 80}}"
+    deploy:
+      resources:
+        limits:
+          # Peak 19 MiB; the kernel's page cache of the blobs it serves is charged here.
+          memory: 64m
+
+  # preprod only, enabled by COMPOSE_PROFILES=bundled-database (deploy.yml sets it when
+  # LODB_DB_NETWORK is unset, and clears it in prod). An interpolated profile that resolves
+  # to "" does not enable a service: Compose treats "" as a profile name.
+  postgres:
+    profiles: [bundled-database]
+    environment:
+      POSTGRES_PASSWORD: ${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment}
+    networks:
+      - db
+    deploy:
+      resources:
+        limits:
+          # Not 2 x the peak (62 MiB on the E2E base): shared_buffers 128 MiB plus the
+          # connections, the legacy stack's value, until preprod serves a full dump.
+          memory: 512m
+
+networks:
+  # Shared ingress network, created once per host by infra-vps; the deploy job only
+  # asserts that it exists.
+  edge:
+    external: true
+    name: edge
+  # Where api and migrate find the database: created by the deploy job on preprod, the
+  # legacy stack's network in prod. External either way, so `down` never removes it.
+  db:
+    external: true
+    name: ${LODB_DB_NETWORK:-${COMPOSE_PROJECT_NAME}-db}
+
+secrets:
+  # PKCS#12 file of the Data Protection certificate, written by the deploy job from a
+  # secret. Missing, the stack does not start.
+  data-protection:
+    file: ${LODB_DATA_PROTECTION_CERT_FILE:-./.deploy/data-protection.pfx}

@@ -12,19 +12,19 @@ Les workflows de l'ancienne stack (`ci.yml`, `_*.yml`) sont archivés sous
 
 | Fichier | Rôle |
 |---|---|
-| `next-ci.yml` | Déclenché par `push` (`dev`, `main`, `docs/reecriture-dotnet-angular`) et `pull_request`, filtré sur les chemins de la nouvelle stack. Jobs parallèles : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-next` + Playwright). Sur un `push` de **`dev`**, une fois les jobs bloquants verts : `build`, puis `deploy-next`. |
-| `next-build.yml` | Réutilisable, appelé par `next-ci.yml` : images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}` taguées `:<sha>` + `:next`, label OCI et `APP_REVISION` = SHA. |
-| `next-deploy.yml` | Déploiement SSH. Pour `next` : appelé par `next-ci.yml` après chaque build de `dev`, ou lancé à la main (`workflow_dispatch`, entrée `branch`, `dev` par défaut). Pour la prod : appelé par `next-promote.yml`. `pull`, puis conteneur éphémère `migrate` **avant** `up -d --wait`, puis smoke test (nginx, `/readyz`, `/en/`, sous-domaine `api.`, `X-Robots-Tag`, TLS public avec relance de l'edge). |
-| `next-promote.yml` | Manuel (`workflow_dispatch`, entrées `revision`, `branch`, `take_over_domains`) : vérifie que les trois images `:<revision>` existent, puis, **après approbation** de l'environnement `production`, les retague `:next-prod` (sans rebuild) et les déploie par `next-deploy.yml`. |
-| `next-release-desktop.yml`, `next-release-android.yml` | Releases signées des apps ([`release-desktop.md`](release-desktop.md), [`release-android.md`](release-android.md)). |
+| `ci.yml` | Déclenché par `push` (`dev`, `main`, `docs/reecriture-dotnet-angular`) et `pull_request`, filtré sur les chemins de la nouvelle stack. Jobs parallèles : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-preprod` + Playwright). Sur un `push` de **`dev`**, une fois les jobs bloquants verts : `build`, puis `deploy-preprod`. |
+| `build.yml` | Réutilisable, appelé par `ci.yml` : images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}` taguées `:<sha>` + `:preprod`, label OCI et `APP_REVISION` = SHA. |
+| `deploy.yml` | Déploiement SSH. Pour `preprod` : appelé par `ci.yml` après chaque build de `dev`, ou lancé à la main (`workflow_dispatch`, entrée `branch`, `dev` par défaut). Pour la prod : appelé par `promote.yml`. `pull`, puis conteneur éphémère `migrate` **avant** `up -d --wait`, puis smoke test (nginx, `/readyz`, `/en/`, sous-domaine `api.`, `X-Robots-Tag`, TLS public avec relance de l'edge). |
+| `promote.yml` | Manuel (`workflow_dispatch`, entrées `revision`, `branch`, `take_over_domains`) : vérifie que les trois images `:<revision>` existent, puis, **après approbation** de l'environnement `production`, les retague `:production` (sans rebuild) et les déploie par `deploy.yml`. |
+| `release-desktop.yml`, `release-android.yml` | Releases signées des apps ([`release-desktop.md`](release-desktop.md), [`release-android.md`](release-android.md)). |
 
 ```
-push dev ─▶ next-ci (dotnet, front, contract, e2e ; i18n informatif)
-         ─▶ build (GHCR :<sha> + :next)
-         ─▶ deploy-next ─▶ hôte next : pull ─▶ migrate ─▶ up -d ─▶ smoke test
+push dev ─▶ ci (dotnet, front, contract, e2e ; i18n informatif)
+         ─▶ build (GHCR :<sha> + :preprod)
+         ─▶ deploy-preprod ─▶ hôte preprod : pull ─▶ migrate ─▶ up -d ─▶ smoke test
                           (annonce « Deployed revision : <sha> »)
-Actions ▸ next promote (revision = <sha>) ─▶ images :<sha> présentes ?
-        ─▶ approbation « production » ─▶ retag :<sha> → :next-prod
+Actions ▸ Promote (revision = <sha>) ─▶ images :<sha> présentes ?
+        ─▶ approbation « production » ─▶ retag :<sha> → :production
         ─▶ hôte prod : pull ─▶ migrate ─▶ [reprise des domaines] ─▶ up -d ─▶ smoke test
 ```
 
@@ -33,30 +33,30 @@ run se termine par un déploiement, qu'une annulation couperait en plein milieu.
 (PR, autres branches), le run obsolète est annulé.
 
 Les jobs de CI et de build n'utilisent aucun secret (seulement `GITHUB_TOKEN`). Le job de
-déploiement tourne dans l'environnement GitHub `next` ou `production` :
+déploiement tourne dans l'environnement GitHub `preprod` ou `production` :
 
-- **`next`** : créé à la première exécution ; ses deux secrets (`ENV_NEXT`,
-  `NEXT_DATA_PROTECTION_PFX`) y sont déclarés. Tant qu'ils manquent, le job `deploy-next`
+- **`preprod`** : créé à la première exécution ; ses deux secrets (`ENV_FILE`,
+  `DATA_PROTECTION_PFX`) y sont déclarés. Tant qu'ils manquent, le job `deploy-preprod`
   échoue à son étape « Check the secrets », qui les nomme : le push de `dev` est alors rouge.
 - **`production`** : à créer **avant** la première promotion, avec des *required
   reviewers* (la validation manuelle qui met en prod) et une règle *deployment branches*
   limitée à `dev`, la branche qui porte les workflows lancés. Ses deux secrets
-  (`ENV_PROD_NEXT`, `PROD_NEXT_DATA_PROTECTION_PFX`) y sont déclarés, jamais en secrets de
+  (`ENV_FILE`, `DATA_PROTECTION_PFX`) y sont déclarés, jamais en secrets de
   dépôt : ils ne sont alors délivrés qu'au job approuvé.
 
 Le VPS étant commun aux deux stacks, la connexion réutilise les secrets de dépôt de
-l'ancienne : `PROD_SSH_KEY`, `PROD_HOST`, `PROD_SSH_USER`. Le job déploie dans `/opt/lodb-next` et
-`/opt/lodb-next-prod` ([`configuration.md`](configuration.md), § 3.2).
+l'ancienne : `PROD_SSH_KEY`, `PROD_HOST`, `PROD_SSH_USER`. Le job déploie dans `/opt/lodb-preprod` et
+`/opt/lodb-production` ([`configuration.md`](configuration.md), § 3.2).
 
-**Tags d'images** : `:<sha>` (immuable, poussé par `next-build.yml`), `:next` (dernier build
-de `dev`) et `:next-prod` (la révision promue). **Jamais `:prod`** :
+**Tags d'images** : `:<sha>` (immuable, poussé par `build.yml`), `:preprod` (dernier build
+de `dev`) et `:production` (la révision promue). **Jamais `:prod`** :
 `ghcr.io/<owner>/lodb/nginx` est partagé avec l'ancienne stack, dont les déploiements
 tirent `:prod`, et le retour arrière de la bascule a besoin de cette image intacte.
 
 ## Ce que fait le job sur l'hôte, dans l'ordre
 
 1. Synchronise le dépôt sur la branche, contrôle le `.env` (lignes marquées ⚙️ dans
-   [`configuration.md`](configuration.md)), le réseau de la base (créé sur `next`, exigé en
+   [`configuration.md`](configuration.md)), le réseau de la base (créé sur `preprod`, exigé en
    prod) et le réseau `edge` (exigé, jamais créé).
 2. Cherche les conteneurs **d'autres projets** dont les labels Caddy réclament un domaine
    de `CADDY_DOMAINS` ou `API_CADDY_DOMAINS`. S'il en trouve sans `take_over_domains`, il
@@ -71,25 +71,25 @@ tirent `:prod`, et le retour arrière de la bascule a besoin de cette image inta
 6. Annonce la révision servie (`::notice` « Deployed revision »), qui doit égaler la
    révision promue en prod, puis contrôle le TLS public (avec relance de l'edge).
 
-## Avant le premier déploiement de `next`
+## Avant le premier déploiement de `preprod`
 
-1. Tout ce que [`configuration.md`](configuration.md) liste pour `next` est en place : hôte
+1. Tout ce que [`configuration.md`](configuration.md) liste pour `preprod` est en place : hôte
    (Docker, edge `infra-vps`, DNS de `CADDY_DOMAINS` **et** de `API_CADDY_DOMAINS`),
-   secrets `ENV_NEXT` et `NEXT_DATA_PROTECTION_PFX`.
+   secrets `ENV_FILE` et `DATA_PROTECTION_PFX`.
 2. Les packages GHCR `lodb/api` et `lodb/web-ssr` sont nouveaux : leur visibilité se règle
    comme celle des autres. `lodb/nginx` est partagé avec l'ancienne stack, qui n'utilise
-   jamais les tags `next` et `next-prod`.
-3. Base de `next` : un dump anonymisé (`tools/next/db/anonymize.sh`) restauré dans le
+   jamais les tags `preprod` et `production`.
+3. Base de `preprod` : un dump anonymisé (`tools/db/anonymize.sh`) restauré dans le
    Postgres de la stack avant le premier `migrate` (`docker compose up -d --wait postgres`,
    puis `pg_restore --no-owner --no-privileges`). Sans dump, `migrate` part d'une base vide.
 4. Un push de `dev` qui touche la nouvelle stack déclenche le premier déploiement ; sinon,
-   **Actions ▸ next deploy ▸ Run workflow** sur `dev`.
+   **Actions ▸ Deploy ▸ Run workflow** sur `dev`.
 
 ## Promouvoir en prod, et bascule
 
-1. Relever la révision annoncée par le dernier déploiement de `next` validé.
-2. **Actions ▸ next promote** : `revision` = ce SHA complet. Le job `candidate` vérifie
-   les trois images (et signale si `:next` a bougé depuis) ; les reviewers de
+1. Relever la révision annoncée par le dernier déploiement de `preprod` validé.
+2. **Actions ▸ Promote** : `revision` = ce SHA complet. Le job `candidate` vérifie
+   les trois images (et signale si `:preprod` a bougé depuis) ; les reviewers de
    `production` approuvent ; le retag puis le déploiement suivent.
 3. **Bascule** (fenêtre du [runbook](../reecriture/bascule.md), sauvegarde de la base
    faite) : même promotion avec `take_over_domains` coché. Les migrations additives
@@ -106,7 +106,7 @@ critères et contrôles : [runbook de bascule](../reecriture/bascule.md), § 8.
 ```bash
 # La nouvelle stack rend les domaines et arrête ses tâches de fond, puis l'ancienne reprend
 # ses conteneurs arrêtés (start, jamais up) ; son PostgreSQL n'a jamais été arrêté.
-cd "$PROD_NEXT_PATH" && COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml \
+cd "$PRODUCTION_PATH" && COMPOSE_FILE=compose.yaml:compose.deploy.yaml \
   docker compose stop nginx web-ssr api
 cd "$PROD_PATH" && COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose start
 ```
@@ -115,5 +115,5 @@ cd "$PROD_PATH" && COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose 
 déployée (compose à sa racine) : l'archivage sous `legacy/` ne l'atteint pas, puisque plus
 aucun job ne le met à jour.
 
-Revenir à une révision précédente de la nouvelle stack : relancer `next promote` avec son
+Revenir à une révision précédente de la nouvelle stack : relancer *Promote* avec son
 SHA.

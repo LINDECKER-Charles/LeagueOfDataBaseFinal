@@ -3,7 +3,7 @@
 > ⚠️ **À réécrire.** Les sections « Prérequis », « Configuration initiale » et « Garde-fous »
 > ci-dessous décrivent l'ancienne stack (Symfony + Go + Vue), archivée sous `legacy/`. Pour la
 > nouvelle stack, suivez [`CONTRIBUTING.md`](../CONTRIBUTING.md) et
-> [`guides/dev-next.md`](guides/dev-next.md). *EN / ES : the setup and guardrail sections
+> [`guides/developpement.md`](guides/developpement.md). *EN / ES : the setup and guardrail sections
 > below describe the archived stack; follow `CONTRIBUTING.md` instead.*
 
 > 📌 **Guide court & canonique :** [`CONTRIBUTING.md`](../CONTRIBUTING.md) · **Conventions de code complètes :** [`CLAUDE.md`](../CLAUDE.md).

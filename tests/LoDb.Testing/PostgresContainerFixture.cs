@@ -36,7 +36,7 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
 
     /// <summary>
     /// <c>pg_dump --schema-only</c> of a database, without the given tables, normalized as
-    /// <c>tools/next/schema/check.sh</c> does.
+    /// <c>tools/schema/check.sh</c> does.
     /// </summary>
     public async Task<IReadOnlyList<string>> DumpSchemaAsync(
         string database,

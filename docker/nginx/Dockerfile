@@ -1,0 +1,37 @@
+# syntax=docker/dockerfile:1.7
+# Image lodb-nginx: the stack's single HTTP entry point, behind the shared edge (Caddy).
+# Build context = repository root; Dockerfile.dockerignore admits docker/nginx/ only.
+#
+# Layout, fixed for the later lots (they add files here without touching this Dockerfile):
+#   nginx.conf  http block: upstreams, resolver, proxy_cache zone, shared maps
+#   sites/      one file per server block, rendered by envsubst at start (LODB_* only)
+#   server.d/   *.conf included INSIDE the site's server block (seo, legacy redirects…)
+#   snippets/   files included inside a location (security headers, proxy headers…)
+FROM nginx:1.31-alpine
+ARG APP_REVISION=unknown
+LABEL org.opencontainers.image.title="lodb-nginx" \
+      org.opencontainers.image.source="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal" \
+      org.opencontainers.image.revision="${APP_REVISION}"
+
+# The image's entrypoint renders /etc/nginx/templates/*.conf into /etc/nginx/sites/. The
+# filter keeps envsubst away from nginx's own $variables. Defaults suit a local stack; a
+# served environment sets the first three (compose.deploy.yaml). LODB_REVISION, first
+# part of the page cache's key, defaults to the image's revision (compose.yaml sets it).
+ENV APP_REVISION=${APP_REVISION} \
+    NGINX_ENVSUBST_TEMPLATE_SUFFIX=.conf \
+    NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/sites \
+    NGINX_ENVSUBST_FILTER=^LODB_ \
+    LODB_CANONICAL_HOST=localhost \
+    LODB_EDGE_CIDR=127.0.0.1/32 \
+    LODB_NOINDEX=0 \
+    LODB_REVISION=${APP_REVISION}
+
+# /var/cache/nginx/pages holds the page cache (nginx.conf); created here so that the volume
+# mounted on it (compose.yaml) starts owned by the workers' user.
+RUN rm -f /etc/nginx/conf.d/default.conf \
+ && mkdir -p /etc/nginx/sites /var/cache/nginx/pages \
+ && chown nginx:nginx /var/cache/nginx/pages
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY docker/nginx/sites/     /etc/nginx/templates/
+COPY docker/nginx/server.d/  /etc/nginx/server.d/
+COPY docker/nginx/snippets/  /etc/nginx/snippets/

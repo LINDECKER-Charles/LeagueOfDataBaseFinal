@@ -20,7 +20,7 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
 
     /// <summary>
     /// Tables of lot 4. Not in <see cref="TestDatabase.NewTables"/>, which mirrors
-    /// <c>tools/next/schema/check.sh</c>: that script compares whole dumps, which cannot match
+    /// <c>tools/schema/check.sh</c>: that script compares whole dumps, which cannot match
     /// once <c>users</c> has the columns of lot 4.
     /// </summary>
     internal static readonly string[] Lot4Tables =
