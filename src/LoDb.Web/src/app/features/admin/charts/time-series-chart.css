@@ -83,11 +83,13 @@ svg:focus-visible {
   fill-opacity: 0.12;
 }
 
+/* 2px on screen at any width and any zoom, as the legacy lines: the viewBox scales the rest. */
 .ts-line {
   fill: none;
   stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
 .ts-cross {
