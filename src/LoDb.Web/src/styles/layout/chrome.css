@@ -68,6 +68,15 @@
     );
     box-shadow: 0 22px 60px -18px color-mix(in srgb, var(--color-hextech-black) 95%, transparent);
   }
+  /*
+   * The legacy anchored the account panel with a physical `right: 0`: in RTL it grows from
+   * the summary toward the logo, where a mirrored panel would run past the screen's edge on
+   * phones. LTR keeps the logical anchor, the same geometry.
+   */
+  [dir='rtl'] .switcher--account > .switcher__panel {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+  }
 
   /*
    * Disclosure menus (Codex, account): `--nav` blends the summary into the primary-nav type,
