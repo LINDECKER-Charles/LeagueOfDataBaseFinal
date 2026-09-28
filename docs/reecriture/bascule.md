@@ -56,7 +56,7 @@ tout ce qui ne se fait pas dans le dépôt. Chaque ligne est faite avant l'étap
 
 | Opération | Pour | Avant |
 |---|---|---|
-| Pousser la branche d'intégration (`docs/reecriture-dotnet-angular`) ; `next-ci.yml` vert, images `:<sha>` et `:next` produites | tout déploiement | J-14 |
+| Fusionner la nouvelle stack dans `dev` et pousser : `next-ci.yml` vert, images `:<sha>` et `:next` produites, `next` déployé par le job `deploy-next` | tout déploiement | J-14 |
 | Hôte `next` : DNS de son domaine et de `api.` + domaine, secrets `NEXT_*` et `ENV_NEXT`, dump anonymisé restauré, `COMPOSE_PROFILES=bundled-database` dans `ENV_NEXT` | répétition sur `next` | J-14 |
 | Environnement GitHub `production` : *required reviewers*, *deployment branches* limitée à la branche des workflows ; secrets `PROD_NEXT_SSH_KEY`, `PROD_NEXT_HOST`, `PROD_NEXT_PATH`, `ENV_PROD_NEXT`, `PROD_NEXT_DATA_PROTECTION_PFX` déclarés **dans l'environnement** | promotion | J-3 |
 | Certificat Data Protection **propre à la prod** généré (guide des secrets), `.pfx` gardé hors ligne, clé détruite | connexions en prod | J-3 |
@@ -94,7 +94,7 @@ passe par le même bloc `server` que `www.`.
   ([rapport de schéma](rapports/schema-baseline.md)).
 - **Nouvelle stack** : correctifs et écarts de parité seulement. Tout correctif de l'ancienne
   stack visible des joueurs se reporte dans la nouvelle avant J-3.
-- La révision candidate `REV` est choisie dans la branche d'intégration gelée ; tout
+- La révision candidate `REV` est choisie dans `dev`, gelée ; tout
   changement ultérieur relance la répétition sur `next` (§ 3.2, étapes 3 à 6).
 
 ## 3. Répétition
@@ -168,8 +168,8 @@ quitte jamais l'hôte, n'est jamais écrit en clair sur le disque et est détrui
 Pendant la répétition, `next` sert des données réelles : fenêtre de quelques heures, adresse
 non diffusée, `noindex` actif.
 
-1. **`next` sur la révision candidate** : Actions ▸ *next deploy* (branche d'intégration),
-   annonce « Deployed revision » = `REV`. Vérifier que `next` n'envoie aucun e-mail réel :
+1. **`next` sur la révision candidate** : déployé par `next-ci.yml` au push de `dev` (ou
+   Actions ▸ *next deploy*, branche `dev`), annonce « Deployed revision » = `REV`. Vérifier que `next` n'envoie aucun e-mail réel :
    `grep '^LoDb__Mail__Host=' "$NEXT_PATH/.env"` ne renvoie rien (les e-mails attendent
    alors dans `email_outbox`, détruite avec la copie). Stripe y est en clés de test.
 2. **Dump chiffré, restauré à part** (phrase de passe saisie, jamais écrite) :
@@ -262,7 +262,7 @@ promue.
 2. Synthétiser ces entrées, et le backlog de `docs/changelog/<année>/`, en une release
    publique (`<date>-<nom>.json` et `manifest.json` dans ce même dossier), puis archiver les
    entrées dans `docs/changelog/archived/<année>/` ([`changelog/README.md`](../changelog/README.md)).
-3. Commit sur la branche d'intégration, déploiement sur `next`, contrôle de `/fr/changelog` ;
+3. Commit sur `dev` (déploiement automatique sur `next`), contrôle de `/fr/changelog` ;
    cette révision devient `REV`. Si J recule, redater et reconstruire.
 
 ## 5. Préparation de la prod (J-2 et J-1)
@@ -279,8 +279,8 @@ cette préparation est manuelle, avec les mêmes fichiers que le job écrira.
 
 ```bash
 install -d -m 700 "$PROD_NEXT_PATH" && cd "$PROD_NEXT_PATH"
-git init -q && git remote add origin <url du dépôt> && git fetch origin docs/reecriture-dotnet-angular
-git checkout -B docs/reecriture-dotnet-angular origin/docs/reecriture-dotnet-angular
+git init -q && git remote add origin <url du dépôt> && git fetch origin dev
+git checkout -B dev origin/dev
 (umask 077 && cat > .env)          # coller le contenu exact du secret ENV_PROD_NEXT, puis Ctrl-D
 install -d -m 700 .deploy
 (umask 022 && base64 -d > .deploy/data-protection.pfx)   # coller PROD_NEXT_DATA_PROTECTION_PFX, Ctrl-D
@@ -363,7 +363,7 @@ approuve dans `production`. Durée attendue : moins d'une heure.
    ```
 
 3. **Promotion avec reprise des domaines** (T0) : Actions ▸ *next promote*, `revision` = `REV`,
-   `branch` = branche d'intégration, `take_over_domains` coché ; approuver `production`.
+   `branch` = `dev`, `take_over_domains` coché ; approuver `production`.
    Le job, dans l'ordre : retag `:<REV>` → `:next-prod`, `pull`, `migrate` (rien à
    appliquer, ou le reliquat), arrêt des conteneurs de `lodb-prod` qui portent le domaine
    (`nginx`, `go-api`), `up -d --wait`, smoke test dans la stack, révision servie = `REV`,

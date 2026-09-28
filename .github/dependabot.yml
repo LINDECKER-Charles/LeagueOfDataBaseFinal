@@ -1,8 +1,8 @@
-# Dependabot — weekly version updates for every manifest in the repo.
+# Dependabot — weekly version updates for every manifest of the new stack.
 #
 # Decisions:
-# - target-branch: dev. The pipeline is dev -> test -> main (ci.yml); main is reached
-#   only by the manual test -> main gate, so dependency PRs must land on dev. This file
+# - target-branch: dev. A push of dev builds the images and deploys next (next-ci.yml); prod
+#   is promoted by hand (next-promote.yml), so dependency PRs must land on dev. This file
 #   itself is only read from the default branch (main): it is inert until promoted.
 # - Security updates (if enabled in the repo settings) always target the default
 #   branch and, because target-branch is set, IGNORE every option below (prefix,
@@ -11,135 +11,14 @@
 #   arrive in a single batch.
 # - Minor + patch updates are grouped per ecosystem (one PR instead of N); major
 #   updates stay as individual PRs because they need a review each.
-# - Docker base images ignore semver-major: php / node / golang / postgres majors are
-#   tied to code (composer platform, go.mod, CI matrices) and are upgraded by hand.
-# - npm /app ignores the typescript and @types/node majors: TS >= 7 is the native
-#   compiler without the JS API the Vue toolchain needs, and @types/node must track the
-#   Node runtime major (Dockerfile / CI). Both are bumped by hand.
+# - The archived legacy stack (legacy/) gets no update: it no longer builds nor deploys.
 # - Commit prefix `build` follows the repo's Conventional Commits map (see CLAUDE.md).
 
 version: 2
 
 updates:
-  # ─────────────────────────────── Backend (Symfony) ──────────────────────────
-  - package-ecosystem: composer
-    directory: /app
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: Europe/Paris
-    target-branch: dev
-    open-pull-requests-limit: 10
-    commit-message:
-      prefix: build
-      include: scope
-    groups:
-      symfony:
-        patterns: ["symfony/*"]
-        update-types: [minor, patch]
-      composer-minor-patch:
-        patterns: ["*"]
-        exclude-patterns: ["symfony/*"]
-        update-types: [minor, patch]
-
-  # ─────────────────────────────── Front (Vite / Vue) ─────────────────────────
-  # One entry per npm project: a resolution failure in one must not take the other
-  # down (Dependabot runs one job per entry).
-  - package-ecosystem: npm
-    directory: /app
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: Europe/Paris
-    target-branch: dev
-    open-pull-requests-limit: 10
-    commit-message:
-      prefix: build
-      include: scope
-    ignore:
-      # typescript >= 7 is the native (Go) compiler: it no longer ships the JS API
-      # (lib/typescript.js) that @vue/compiler-sfc and vue-tsc rely on to resolve
-      # imported props types. Bumped by hand once the Vue toolchain follows.
-      - dependency-name: typescript
-        update-types: ["version-update:semver-major"]
-      # @types/node's major is the Node major it describes. The runtime is Node 22
-      # (docker/php/Dockerfile node:22-alpine, _tests.yml setup-node 22): a newer major
-      # lets vue-tsc accept APIs absent at runtime. Bumped with the Node major.
-      - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
-    groups:
-      npm-minor-patch:
-        patterns: ["*"]
-        update-types: [minor, patch]
-
-  - package-ecosystem: npm
-    directory: /tools/screenshots
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: Europe/Paris
-    target-branch: dev
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: build
-      include: scope
-    groups:
-      npm-minor-patch:
-        patterns: ["*"]
-        update-types: [minor, patch]
-
-  # ─────────────────────────────── Go (fetcher / api) ─────────────────────────
-  - package-ecosystem: gomod
-    directories:
-      - /go/api
-      - /go/fetcher
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: Europe/Paris
-    target-branch: dev
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: build
-      include: scope
-    groups:
-      gomod-minor-patch:
-        patterns: ["*"]
-        update-types: [minor, patch]
-
-  # ─────────────────────────────── Docker base images ─────────────────────────
-  - package-ecosystem: docker
-    directories:
-      - /docker/php
-      - /docker/nginx
-      - /go/api
-      - /go/fetcher
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: Europe/Paris
-    target-branch: dev
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: build
-      include: scope
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-      # php / golang ship their yearly release as a semver-minor tag; both are tied to
-      # code (composer platform, go.mod, setup-* CI matrices) and are bumped by hand.
-      - dependency-name: php
-        update-types: ["version-update:semver-minor"]
-      - dependency-name: golang
-        update-types: ["version-update:semver-minor"]
-
   # ─────────────────────────────── Compose service images ─────────────────────
-  # Only this repo's compose*.yaml: the shared edge proxy (caddy-docker-proxy) is
+  # Only this repo's compose.next*.yaml: the shared edge proxy (caddy-docker-proxy) is
   # owned and version-tracked by the infra-vps repo, not here.
   - package-ecosystem: docker-compose
     directory: /
@@ -175,10 +54,7 @@ updates:
         patterns: ["*"]
         update-types: [minor, patch]
 
-  # ─────────────────────────────── New stack (.NET + Angular) ──────────────────
-  # The rewrite's manifests only exist on its integration branch until the cutover, hence
-  # this target-branch instead of dev (L8 moves these entries to dev with the rest).
-  # ADR 0005: updates of the SSR server's dependencies are applied first.
+  # ─────────────────────────────── .NET ───────────────────────────────────────
   - package-ecosystem: nuget
     directory: /
     schedule:
@@ -186,7 +62,7 @@ updates:
       day: monday
       time: "06:00"
       timezone: Europe/Paris
-    target-branch: docs/reecriture-dotnet-angular
+    target-branch: dev
     open-pull-requests-limit: 10
     commit-message:
       prefix: build
@@ -196,6 +72,8 @@ updates:
         patterns: ["*"]
         update-types: [minor, patch]
 
+  # ─────────────────────────────── Angular workspace ──────────────────────────
+  # ADR 0005: updates of the SSR server's dependencies are applied first.
   - package-ecosystem: npm
     directory: /src/LoDb.Web
     schedule:
@@ -203,7 +81,7 @@ updates:
       day: monday
       time: "06:00"
       timezone: Europe/Paris
-    target-branch: docs/reecriture-dotnet-angular
+    target-branch: dev
     open-pull-requests-limit: 10
     commit-message:
       prefix: build
@@ -224,6 +102,7 @@ updates:
         exclude-patterns: ["@angular/*", "@angular-devkit/*", "angular-eslint"]
         update-types: [minor, patch]
 
+  # ─────────────────────────────── E2E ────────────────────────────────────────
   - package-ecosystem: npm
     directory: /tests/LoDb.E2E
     schedule:
@@ -231,7 +110,7 @@ updates:
       day: monday
       time: "06:00"
       timezone: Europe/Paris
-    target-branch: docs/reecriture-dotnet-angular
+    target-branch: dev
     open-pull-requests-limit: 5
     commit-message:
       prefix: build
@@ -246,6 +125,7 @@ updates:
         patterns: ["*"]
         update-types: [minor, patch]
 
+  # ─────────────────────────────── Docker base images ─────────────────────────
   - package-ecosystem: docker
     directories:
       - /docker/next/api
@@ -256,7 +136,7 @@ updates:
       day: monday
       time: "06:00"
       timezone: Europe/Paris
-    target-branch: docs/reecriture-dotnet-angular
+    target-branch: dev
     open-pull-requests-limit: 5
     commit-message:
       prefix: build

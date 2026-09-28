@@ -1,12 +1,13 @@
 name: next CI
 
-# Continuous integration of the rewrite (.NET 10 + Angular), next to the legacy ci.yml,
-# which it never touches. Only the new stack's paths trigger it.
+# Continuous integration of the new stack (.NET 10 + Angular). The legacy ci.yml is archived
+# under legacy/.github/workflows/ and no longer runs. Only the new stack's paths trigger it.
 #
 # The jobs run in parallel. `contract` and `i18n` call npm scripts declared from the start
 # (placeholders until L2.2 and L3.3): those chantiers fill the scripts, never this file.
-# A push of the integration branch, once every blocking job is green, builds and pushes the
-# images (next-build.yml): build once, deploy the same artifact (next-deploy.yml).
+# A push of dev, once every blocking job is green, builds and pushes the images
+# (next-build.yml), then deploys them on next (next-deploy.yml): build once, deploy the
+# same artifact. Prod is promoted by hand from a revision next served (next-promote.yml).
 on:
   push:
     branches: [docs/reecriture-dotnet-angular, dev, main]
@@ -26,10 +27,11 @@ on:
 permissions:
   contents: read
 
-# A newer push of the same ref makes the running checks obsolete.
+# A newer push of the same ref makes the running checks obsolete, except on dev: its run ends
+# with a deploy, which a cancellation would cut halfway through. dev queues instead.
 concurrency:
   group: next-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' }}
 
 jobs:
   dotnet:
@@ -190,10 +192,22 @@ jobs:
 
   build:
     needs: [dotnet, front, contract, e2e]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/docs/reecriture-dotnet-angular'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     permissions:
       contents: read
       packages: write
     uses: ./.github/workflows/next-build.yml
     with:
       moving_tag: next
+
+  # The images just built reach next at once; prod stays a manual promotion (next-promote.yml).
+  deploy-next:
+    needs: build
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/next-deploy.yml
+    with:
+      environment: next
+      branch: dev
+    secrets: inherit

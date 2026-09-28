@@ -226,7 +226,8 @@ Convention de commits (maintenue par /commit, initialisée par /b-hive-init).
 ## Nouvelle stack (réécriture)
 
 Réécriture en .NET 10 + Angular 22, construite **à côté** de la stack en service, sur la
-branche d'intégration `docs/reecriture-dotnet-angular`, jusqu'à la bascule (lot 8). Le
+branche d'intégration `docs/reecriture-dotnet-angular`, puis sur `dev` : un push de `dev`
+construit les images et déploie `next` (`next-ci.yml`), la prod se promeut à la main. Le
 fond fait foi dans [`docs/reecriture/`](docs/reecriture/README.md) (`heritage.md`, `adr/`) ;
 le [plan](docs/reecriture/plan-implementation.md) fixe chantiers, périmètres, fichiers
 partagés (§7.3) et jalons (§8). Commandes : [`dev-next.md`](docs/guides/dev-next.md).

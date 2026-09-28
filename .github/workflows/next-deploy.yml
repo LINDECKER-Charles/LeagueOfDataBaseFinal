@@ -5,7 +5,8 @@ name: next deploy
 # Protection certificate from secrets, then pulls images that next-build.yml built once.
 # Nothing is built on the host.
 #
-# - next: run by hand (workflow_dispatch), images :next, project lodb-next.
+# - next: called by next-ci.yml after each build of dev, or run by hand (workflow_dispatch);
+#   images :next, project lodb-next.
 # - prod: called by next-promote.yml only. The job runs in the environment `production`,
 #   whose approval gates it; it first retags the images of the chosen commit as :next-prod
 #   (promote by retag, no rebuild), then deploys them as project lodb-next-prod.
@@ -24,7 +25,7 @@ on:
         description: Branch the host checks out for its compose files.
         required: true
         type: string
-        default: docs/reecriture-dotnet-angular
+        default: dev
   workflow_call:
     inputs:
       environment:

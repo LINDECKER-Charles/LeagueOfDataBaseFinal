@@ -20,7 +20,7 @@ on:
         description: Branch the host checks out for its compose files.
         required: true
         type: string
-        default: docs/reecriture-dotnet-angular
+        default: dev
       take_over_domains:
         description: >-
           Cutover: once the migrations pass, stop the containers of other projects that
