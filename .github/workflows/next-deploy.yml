@@ -15,9 +15,11 @@ name: next deploy
 # (a Doctrine database is marked at the baseline first), then `up -d`, then smoke tests. A
 # failed migration stops the job while the running containers keep serving.
 #
-# Secrets (docs/guides/github-actions-secrets.md, section "Nouvelle stack"), prefix NEXT
-# for next and PROD_NEXT for prod: <prefix>_SSH_KEY, <prefix>_HOST, <prefix>_PATH,
-# <prefix>_SSH_USER (optional, root), ENV_<prefix>, <prefix>_DATA_PROTECTION_PFX.
+# Secrets (docs/guides/configuration.md), prefix NEXT for next and PROD_NEXT for prod:
+# ENV_<prefix> and <prefix>_DATA_PROTECTION_PFX, always their own. Both stacks share the VPS
+# of the legacy one, so its repository secrets PROD_SSH_KEY, PROD_HOST and PROD_SSH_USER
+# (optional, root) serve here too; <prefix>_SSH_KEY, <prefix>_HOST and <prefix>_SSH_USER
+# override them for a host of its own. <prefix>_PATH defaults to /opt/<project>.
 on:
   workflow_dispatch:
     inputs:
@@ -119,21 +121,28 @@ jobs:
       TAKE_OVER: ${{ inputs.take_over_domains || false }}
       BRANCH: ${{ inputs.branch }}
       REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
-      DEPLOY_HOST: ${{ secrets[format('{0}_HOST', needs.target.outputs.secret_prefix)] }}
-      DEPLOY_PATH: ${{ secrets[format('{0}_PATH', needs.target.outputs.secret_prefix)] }}
-      DEPLOY_USER: ${{ secrets[format('{0}_SSH_USER', needs.target.outputs.secret_prefix)] || 'root' }}
+      DEPLOY_HOST: >-
+        ${{ secrets[format('{0}_HOST', needs.target.outputs.secret_prefix)]
+        || secrets.PROD_HOST }}
+      DEPLOY_PATH: >-
+        ${{ secrets[format('{0}_PATH', needs.target.outputs.secret_prefix)]
+        || format('/opt/{0}', needs.target.outputs.project) }}
+      DEPLOY_USER: >-
+        ${{ secrets[format('{0}_SSH_USER', needs.target.outputs.secret_prefix)]
+        || secrets.PROD_SSH_USER || 'root' }}
     steps:
       - name: Check the secrets
         env:
           PREFIX: ${{ needs.target.outputs.secret_prefix }}
-          SSH_KEY_SET: ${{ secrets[format('{0}_SSH_KEY', needs.target.outputs.secret_prefix)] != '' }}
+          SSH_KEY_SET: >-
+            ${{ (secrets[format('{0}_SSH_KEY', needs.target.outputs.secret_prefix)]
+            || secrets.PROD_SSH_KEY) != '' }}
           ENV_FILE_SET: ${{ secrets[format('ENV_{0}', needs.target.outputs.secret_prefix)] != '' }}
           PFX_SET: ${{ secrets[format('{0}_DATA_PROTECTION_PFX', needs.target.outputs.secret_prefix)] != '' }}
         run: |
           missing=""
-          [ -n "$DEPLOY_HOST" ] || missing="$missing ${PREFIX}_HOST"
-          [ -n "$DEPLOY_PATH" ] || missing="$missing ${PREFIX}_PATH"
-          [ "$SSH_KEY_SET" = true ] || missing="$missing ${PREFIX}_SSH_KEY"
+          [ -n "$DEPLOY_HOST" ] || missing="$missing PROD_HOST"
+          [ "$SSH_KEY_SET" = true ] || missing="$missing PROD_SSH_KEY"
           [ "$ENV_FILE_SET" = true ] || missing="$missing ENV_${PREFIX}"
           [ "$PFX_SET" = true ] || missing="$missing ${PREFIX}_DATA_PROTECTION_PFX"
           if [ -n "$missing" ]; then
@@ -166,7 +175,9 @@ jobs:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.10.0
         with:
-          ssh-private-key: ${{ secrets[format('{0}_SSH_KEY', needs.target.outputs.secret_prefix)] }}
+          ssh-private-key: >-
+            ${{ secrets[format('{0}_SSH_KEY', needs.target.outputs.secret_prefix)]
+            || secrets.PROD_SSH_KEY }}
 
       - name: Known hosts
         run: ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts

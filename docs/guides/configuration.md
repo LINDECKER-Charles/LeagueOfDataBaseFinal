@@ -13,9 +13,10 @@ toute modification de l'hôte · 🔁 repris de l'ancienne stack (`ENV_PROD`).
 
 | Où | Contenu | Écrit par |
 |---|---|---|
-| Environnements GitHub `next`, `production` | Secrets de déploiement : SSH, hôte, dossier, `.env`, certificat | l'exploitant (*Settings ▸ Environments*) |
+| Secrets de dépôt de l'ancienne stack | Connexion SSH au VPS : `PROD_SSH_KEY`, `PROD_HOST`, `PROD_SSH_USER`, **réutilisés tels quels** | déjà en place |
+| Environnements GitHub `next`, `production` | Par environnement : son `.env` et son certificat (2 secrets) | l'exploitant (*Settings ▸ Environments*) |
 | Environnements GitHub `desktop-release`, `android-release`, variables de dépôt | Clés de signature des apps, drapeaux de release | l'exploitant |
-| `.env` de l'hôte (`${NEXT_PATH}/.env`, `${PROD_NEXT_PATH}/.env`) | Variables Compose et réglages de l'API (§ 4) | le job, depuis `ENV_NEXT` ou `ENV_PROD_NEXT` |
+| `.env` de l'hôte (`/opt/lodb-next/.env`, `/opt/lodb-next-prod/.env`) | Variables Compose et réglages de l'API (§ 4) | le job, depuis `ENV_NEXT` ou `ENV_PROD_NEXT` |
 | `.deploy/data-protection.pfx` de l'hôte | Certificat Data Protection | le job, depuis `*_DATA_PROTECTION_PFX` |
 | `.deploy/android/` de l'hôte | `latest.json`, `assetlinks.json` | l'exploitant, à chaque release Android |
 | Services externes | DNS, SMTP, Stripe, Google, Play, Apple, Azure (§ 6) | l'exploitant |
@@ -32,9 +33,10 @@ Modèles prêts à remplir : [`.env.next.example`](../../.env.next.example) (`EN
    `edge` et `observability`), ports 80/443 ouverts, `docker login ghcr.io` persistant si
    les packages GHCR sont privés (PAT `read:packages`).
 2. DNS de `CADDY_DOMAINS` et `API_CADDY_DOMAINS` pointés vers l'hôte (§ 6.1).
-3. Certificat Data Protection de `next` (§ 6.2), clé SSH de déploiement (§ 6.3).
+3. Certificat Data Protection de `next` (§ 6.2). La connexion SSH réutilise les secrets de
+   l'ancienne stack (§ 3.2) : rien à générer.
 4. `.env.next.example` rempli ; son contenu devient le secret `ENV_NEXT`.
-5. Secrets `NEXT_*` dans l'environnement GitHub `next` (§ 3.2).
+5. `ENV_NEXT` et `NEXT_DATA_PROTECTION_PFX` dans l'environnement GitHub `next` (§ 3.2).
 6. Dump anonymisé restauré dans le Postgres de `next` avant le premier `migrate`
    ([`github-actions-secrets.md`](github-actions-secrets.md), « Avant le premier
    déploiement de `next` »).
@@ -47,7 +49,8 @@ Modèles prêts à remplir : [`.env.next.example`](../../.env.next.example) (`EN
 2. Certificat Data Protection **propre à la prod** (§ 6.2), jamais celui de `next`.
 3. `.env.next.prod.example` rempli avec les valeurs 🔁 de l'ancienne prod (§ 4.4) ; son
    contenu devient `ENV_PROD_NEXT`.
-4. Secrets `PROD_NEXT_*` dans l'environnement `production` (§ 3.3).
+4. `ENV_PROD_NEXT` et `PROD_NEXT_DATA_PROTECTION_PFX` dans l'environnement `production`
+   (§ 3.2).
 5. SMTP, Stripe, Google : § 6.4 à 6.6.
 
 ## 3. GitHub
@@ -56,37 +59,50 @@ Modèles prêts à remplir : [`.env.next.example`](../../.env.next.example) (`EN
 
 | Environnement | Création | Protection | Contenu |
 |---|---|---|---|
-| `next` | automatique au premier run | aucune | secrets `NEXT_*`, `ENV_NEXT` |
-| `production` | **à la main, avant la première promotion** | *required reviewers* ; *deployment branches* : `dev` | secrets `PROD_NEXT_*`, `ENV_PROD_NEXT` (jamais en secrets de dépôt) |
+| `next` | à la main, ou automatique au premier run | aucune | `ENV_NEXT`, `NEXT_DATA_PROTECTION_PFX` |
+| `production` | **à la main, avant la première promotion** | *required reviewers* ; *deployment branches* : `dev` | `ENV_PROD_NEXT`, `PROD_NEXT_DATA_PROTECTION_PFX` (jamais en secrets de dépôt) |
 | `desktop-release` | à la main | branche des workflows lancés | secrets et variables du desktop (§ 3.4) |
 | `android-release` | à la main | branche `main` ([`release-android.md`](release-android.md)) | secrets d'Android (§ 3.4) |
 
 `GITHUB_TOKEN` est fourni par GitHub : la CI, le build des images et le retag n'utilisent
 aucun autre secret.
 
-### 3.2 Secrets de `next` (environnement `next`)
+### 3.2 Secrets de déploiement
 
-| Secret | Requis | Valeur |
-|---|:---:|---|
-| `NEXT_SSH_KEY` 🔒 | ✅ | Clé privée SSH complète (en-têtes `BEGIN`/`END` compris) ; sa clé publique dans les `authorized_keys` de l'hôte (§ 6.3). |
-| `NEXT_HOST` | ✅ | IP ou FQDN de l'hôte (le VPS de la prod, en général). |
-| `NEXT_PATH` | ✅ | Dossier absolu de la stack sur l'hôte, **distinct** de `PROD_PATH`, `STAGING_PATH` et `PROD_NEXT_PATH` ; peut être vide, le job l'initialise. |
-| `NEXT_SSH_USER` | ➖ | Utilisateur SSH, `root` par défaut. |
-| `ENV_NEXT` 🔒 | ✅ | Contenu complet de `.env.next.example` rempli (§ 4). |
-| `NEXT_DATA_PROTECTION_PFX` 🔒 | ✅ | Le `.pfx` de `next` encodé en base64, sur une ligne (§ 6.2). |
+**Repris de l'ancienne stack, rien à créer.** Les deux stacks tournent sur le même VPS : le
+job de déploiement lit les secrets de dépôt existants, pour `next` comme pour la prod.
 
-Tant qu'un secret manque, le job `deploy-next` échoue à « Check the secrets » et les nomme.
+| Secret de dépôt | Rôle |
+|---|---|
+| `PROD_SSH_KEY` 🔒 | Clé privée SSH de déploiement. |
+| `PROD_HOST` | IP ou FQDN du VPS. |
+| `PROD_SSH_USER` | Utilisateur SSH (➖, `root` par défaut). |
 
-### 3.3 Secrets de la prod (environnement `production`)
+**Nouveaux : deux par environnement**, leur contenu n'existe pas dans l'ancienne stack.
 
-Mêmes rôles, préfixe `PROD_NEXT` : `PROD_NEXT_SSH_KEY` 🔒, `PROD_NEXT_HOST`,
-`PROD_NEXT_PATH`, `PROD_NEXT_SSH_USER` (➖), `ENV_PROD_NEXT` 🔒 et
-`PROD_NEXT_DATA_PROTECTION_PFX` 🔒.
+| Environnement | Secret | Valeur |
+|---|---|---|
+| `next` | `ENV_NEXT` 🔒 | Contenu complet de `.env.next.example` rempli (§ 4). |
+| `next` | `NEXT_DATA_PROTECTION_PFX` 🔒 | Le `.pfx` de `next` encodé en base64, sur une ligne (§ 6.2). |
+| `production` | `ENV_PROD_NEXT` 🔒 | Contenu complet de `.env.next.prod.example` rempli (§ 4). |
+| `production` | `PROD_NEXT_DATA_PROTECTION_PFX` 🔒 | Le `.pfx` **propre à la prod**, en base64. Il ne change plus une fois servi : les clés déjà chiffrées deviendraient illisibles (sessions et jetons perdus). |
 
-- `PROD_NEXT_PATH` est un dossier **neuf**, distinct de `PROD_PATH`, où l'ancienne stack
-  garde son `.env` et ses fichiers pour le retour arrière.
-- `PROD_NEXT_DATA_PROTECTION_PFX` ne change plus une fois servi : les clés déjà chiffrées
-  deviendraient illisibles (sessions et jetons perdus).
+Dossiers sur l'hôte : `/opt/lodb-next` et `/opt/lodb-next-prod` (`/opt/<projet>`), créés par
+le job. Ils doivent différer de `PROD_PATH`, que l'ancienne stack garde pour le retour
+arrière. Tant qu'un secret manque, le job échoue à « Check the secrets » et les nomme.
+
+`PROD_SSH_KEY` étant un secret de dépôt, tout job du dépôt peut le lire, comme aujourd'hui
+pour l'ancienne stack ; la mise en prod reste gardée par l'approbation de `production`.
+
+**Surcharges, seulement si une stack change d'hôte** : `<préfixe>_SSH_KEY`,
+`<préfixe>_HOST`, `<préfixe>_SSH_USER` et `<préfixe>_PATH`, avec le préfixe `NEXT` ou
+`PROD_NEXT`, dans l'environnement concerné, remplacent les valeurs ci-dessus.
+
+### 3.3 Approbation de la prod
+
+L'environnement `production` porte l'approbation qui met en prod (*required reviewers*) et
+limite les déploiements à `dev` (*deployment branches*). Ses deux secrets y sont déclarés,
+jamais en secrets de dépôt : ils ne sont délivrés qu'au job approuvé.
 
 ### 3.4 Releases des apps
 
@@ -109,15 +125,16 @@ Android à la signature des bundles ou de l'AAB. Les deux releases se lancent à
 
 ### 3.5 Secrets de l'ancienne stack
 
-`STAGING_SSH_KEY`, `STAGING_HOST`, `STAGING_PATH`, `STAGING_SSH_USER`, `ENV_STAGING`,
-`PROD_SSH_KEY`, `PROD_HOST`, `PROD_PATH`, `PROD_SSH_USER`, `ENV_PROD` et `ENV_TEST` ne sont
-plus lus par aucun workflow actif. Les garder jusqu'à la décommission (runbook § 10) :
-`ENV_PROD` est la source des valeurs 🔁.
+`PROD_SSH_KEY`, `PROD_HOST` et `PROD_SSH_USER` servent la nouvelle stack : **ne jamais les
+supprimer**. `STAGING_SSH_KEY`, `STAGING_HOST`, `STAGING_PATH`, `STAGING_SSH_USER`,
+`ENV_STAGING`, `PROD_PATH`, `ENV_PROD` et `ENV_TEST` ne sont plus lus par aucun workflow
+actif. Les garder jusqu'à la décommission (runbook § 10) : `ENV_PROD` est la source des
+valeurs 🔁.
 
 ## 4. Le `.env` d'un environnement servi
 
 Le secret `ENV_NEXT` ou `ENV_PROD_NEXT` est le fichier complet, une variable par ligne. Le
-job l'écrit dans `${*_PATH}/.env` (mode 600) à chaque déploiement.
+job l'écrit dans `/opt/<projet>/.env` (mode 600) à chaque déploiement.
 
 **Pièges du fichier :**
 
@@ -224,7 +241,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 
 ## 5. Fichiers et volumes de l'hôte
 
-| Chemin, dans `${*_PATH}` | Écrit par | Rôle |
+| Chemin, dans `/opt/<projet>` | Écrit par | Rôle |
 |---|---|---|
 | `.env` | le job (`ENV_*`), mode 600 | § 4. |
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |
@@ -260,12 +277,15 @@ changer déconnecte tout le monde.
 
 ### 6.3 Clé SSH de déploiement
 
+Aucune à créer : `PROD_SSH_KEY`, celle de l'ancienne stack, est déjà autorisée sur le VPS.
+Seule une stack déplacée sur un autre hôte a besoin de la sienne :
+
 ```bash
 ssh-keygen -t ed25519 -N '' -C 'lodb-next deploy' -f lodb-next-deploy
 ```
 
 La clé publique (`.pub`) va dans `~/.ssh/authorized_keys` de l'utilisateur de déploiement
-sur l'hôte ; la clé privée, complète, dans `NEXT_SSH_KEY` (ou `PROD_NEXT_SSH_KEY`).
+sur cet hôte ; la clé privée, complète, dans `NEXT_SSH_KEY` (ou `PROD_NEXT_SSH_KEY`).
 
 ### 6.4 SMTP
 

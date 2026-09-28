@@ -35,13 +35,18 @@ run se termine par un déploiement, qu'une annulation couperait en plein milieu.
 Les jobs de CI et de build n'utilisent aucun secret (seulement `GITHUB_TOKEN`). Le job de
 déploiement tourne dans l'environnement GitHub `next` ou `production` :
 
-- **`next`** : créé à la première exécution ; ses secrets y sont déclarés (ou en secrets de
-  dépôt). Tant qu'ils manquent, le job `deploy-next` échoue à son étape « Check the
-  secrets », qui les nomme : le push de `dev` est alors rouge.
+- **`next`** : créé à la première exécution ; ses deux secrets (`ENV_NEXT`,
+  `NEXT_DATA_PROTECTION_PFX`) y sont déclarés. Tant qu'ils manquent, le job `deploy-next`
+  échoue à son étape « Check the secrets », qui les nomme : le push de `dev` est alors rouge.
 - **`production`** : à créer **avant** la première promotion, avec des *required
   reviewers* (la validation manuelle qui met en prod) et une règle *deployment branches*
-  limitée à `dev`, la branche qui porte les workflows lancés. Ses secrets `PROD_NEXT_*` y
-  sont déclarés, jamais en secrets de dépôt : ils ne sont alors délivrés qu'au job approuvé.
+  limitée à `dev`, la branche qui porte les workflows lancés. Ses deux secrets
+  (`ENV_PROD_NEXT`, `PROD_NEXT_DATA_PROTECTION_PFX`) y sont déclarés, jamais en secrets de
+  dépôt : ils ne sont alors délivrés qu'au job approuvé.
+
+Le VPS étant commun aux deux stacks, la connexion réutilise les secrets de dépôt de
+l'ancienne : `PROD_SSH_KEY`, `PROD_HOST`, `PROD_SSH_USER`. Le job déploie dans `/opt/lodb-next` et
+`/opt/lodb-next-prod` ([`configuration.md`](configuration.md), § 3.2).
 
 **Tags d'images** : `:<sha>` (immuable, poussé par `next-build.yml`), `:next` (dernier build
 de `dev`) et `:next-prod` (la révision promue). **Jamais `:prod`** :
@@ -70,7 +75,7 @@ tirent `:prod`, et le retour arrière de la bascule a besoin de cette image inta
 
 1. Tout ce que [`configuration.md`](configuration.md) liste pour `next` est en place : hôte
    (Docker, edge `infra-vps`, DNS de `CADDY_DOMAINS` **et** de `API_CADDY_DOMAINS`),
-   secrets `NEXT_*` et `ENV_NEXT`.
+   secrets `ENV_NEXT` et `NEXT_DATA_PROTECTION_PFX`.
 2. Les packages GHCR `lodb/api` et `lodb/web-ssr` sont nouveaux : leur visibilité se règle
    comme celle des autres. `lodb/nginx` est partagé avec l'ancienne stack, qui n'utilise
    jamais les tags `next` et `next-prod`.

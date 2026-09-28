@@ -18,8 +18,9 @@ lot 8, rejoué par son jalon. Tout écart entre la répétition et ce texte se c
 |---|---|
 | Domaine | `league-of-data-base.com` (canonique), `league-of-data-base.fr` ; API publique `api.league-of-data-base.com` |
 | Ancienne prod | projet `lodb-prod`, dossier `$PROD_PATH` sur l'hôte, fichiers `compose.yaml` + `compose.deploy.yaml` |
-| Nouvelle prod | projet `lodb-next-prod`, dossier `$PROD_NEXT_PATH` (neuf), fichiers `compose.next.yaml` + `compose.next.deploy.yaml` |
-| `next` | projet `lodb-next`, dossier `$NEXT_PATH`, sa propre base (dump anonymisé) |
+| Nouvelle prod | projet `lodb-next-prod`, dossier `$PROD_NEXT_PATH` (neuf, `/opt/lodb-next-prod` par défaut), fichiers `compose.next.yaml` + `compose.next.deploy.yaml` |
+| `next` | projet `lodb-next`, dossier `$NEXT_PATH` (`/opt/lodb-next` par défaut), sa propre base (dump anonymisé) |
+| Connexion au VPS | secrets de dépôt de l'ancienne stack, `PROD_SSH_KEY`, `PROD_HOST`, `PROD_SSH_USER`, réutilisés par les deux déploiements |
 | Base partagée | le PostgreSQL de l'ancienne stack (`lodb-prod-postgres-1`, volume `lodb-prod_pgdata`), rejoint par la nouvelle stack sur le réseau `lodb-prod_default` ; **il ne s'arrête jamais** |
 | Révision candidate | `REV` : SHA complet validé sur `next`, annoncé par « Deployed revision » |
 | Registre | `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, tags `:<sha>`, `:next`, `:next-prod` (jamais `:prod`, qui reste à l'ancienne stack) |
@@ -57,8 +58,8 @@ tout ce qui ne se fait pas dans le dépôt. Chaque ligne est faite avant l'étap
 | Opération | Pour | Avant |
 |---|---|---|
 | Fusionner la nouvelle stack dans `dev` et pousser : `next-ci.yml` vert, images `:<sha>` et `:next` produites, `next` déployé par le job `deploy-next` | tout déploiement | J-14 |
-| Hôte `next` : DNS de son domaine et de `api.` + domaine, secrets `NEXT_*` et `ENV_NEXT`, dump anonymisé restauré, `COMPOSE_PROFILES=bundled-database` dans `ENV_NEXT` | répétition sur `next` | J-14 |
-| Environnement GitHub `production` : *required reviewers*, *deployment branches* limitée à la branche des workflows ; secrets `PROD_NEXT_SSH_KEY`, `PROD_NEXT_HOST`, `PROD_NEXT_PATH`, `ENV_PROD_NEXT`, `PROD_NEXT_DATA_PROTECTION_PFX` déclarés **dans l'environnement** | promotion | J-3 |
+| Hôte `next` : DNS de son domaine et de `api.` + domaine, secrets `ENV_NEXT` et `NEXT_DATA_PROTECTION_PFX`, dump anonymisé restauré, `COMPOSE_PROFILES=bundled-database` dans `ENV_NEXT` | répétition sur `next` | J-14 |
+| Environnement GitHub `production` : *required reviewers*, *deployment branches* limitée à `dev` ; secrets `ENV_PROD_NEXT` et `PROD_NEXT_DATA_PROTECTION_PFX` déclarés **dans l'environnement** (SSH et hôte : `PROD_SSH_KEY`, `PROD_HOST` de l'ancienne stack) | promotion | J-3 |
 | Certificat Data Protection **propre à la prod** généré (guide des secrets), `.pfx` gardé hors ligne, clé détruite | connexions en prod | J-3 |
 | `ENV_PROD_NEXT` : `LODB_DB_NETWORK=lodb-prod_default`, `LODB_DB_NAME/USER/PASSWORD` de l'ancienne stack, `LODB_EDGE_CIDR` relevé sur l'hôte, `CADDY_DOMAINS` et `API_CADDY_DOMAINS` de l'ancienne stack, `LODB_PUBLIC_API_ORIGIN`, pas de `COMPOSE_PROFILES` | promotion | J-3 |
 | Relais SMTP (`LoDb__Mail__*`, mêmes identifiants que le `MAILER_DSN` de l'ancienne prod), SPF/DKIM/DMARC du domaine expéditeur | e-mails de compte | J-3 |
@@ -547,7 +548,7 @@ décommission supprime ce dossier.
 | Ancienne stack archivée | `legacy/` : `app/`, `go/`, `docker/{nginx,php}/`, `compose*.yaml`, `.env*.example`, `.dockerignore`, `.github/workflows/` (`ci.yml`, `_*.yml`), `tailwind.config.js`, `tools/screenshots/`, `screenshot/`, `README.md`, `docs/guides/` |
 | Outils de la transition | `tools/next/cutover/`, `tools/next/schema/`, `tools/next/contract/`, `tools/next/parity/` et `tools/next/builds-parity/` (comparaisons avec l'ancienne stack), `Persistence/Baseline/doctrine-catalog.txt` et `tests/fixtures/schema/` quand `Baseline` ne se compare plus à Doctrine |
 | Images | `ghcr.io/<owner>/lodb/app`, `lodb/go-fetcher`, `lodb/go-api` ; le tag `:prod` de `lodb/nginx` |
-| Sur l'hôte | projets `lodb-prod` et `lodb-staging` (`docker compose down`), leurs volumes **après export**, dossiers `$PROD_PATH` et `STAGING_PATH`, secrets `PROD_*`, `STAGING_*`, `ENV_PROD`, `ENV_STAGING` |
+| Sur l'hôte | projets `lodb-prod` et `lodb-staging` (`docker compose down`), leurs volumes **après export**, dossiers `$PROD_PATH` et `STAGING_PATH`, secrets `PROD_PATH`, `STAGING_*`, `ENV_PROD`, `ENV_STAGING`, `ENV_TEST` ; **garder** `PROD_SSH_KEY`, `PROD_HOST`, `PROD_SSH_USER`, que la nouvelle stack utilise |
 
 Export avant suppression des volumes : `lodb-prod_app_state` (`var/state` : journal d'audit,
 événements, GeoLite2) et les préfixes `analytics/` et `audit/` de `lodb-prod_storage`, en
