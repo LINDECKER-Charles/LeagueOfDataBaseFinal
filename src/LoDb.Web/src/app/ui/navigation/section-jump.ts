@@ -39,8 +39,8 @@ export class SectionJump {
 
   /**
    * Follows a plain click on a link to section `id`: the page scrolls to it, the focus moves
-   * into it and its URL, pushed, stays deep-linkable. Any other click, or a section not on the page, is left to the
-   * browser, the event untouched (`defaultPrevented` tells which).
+   * into it and its URL, pushed, stays deep-linkable. Any other click, or a section not on the
+   * page, is left to the browser, the event untouched (`defaultPrevented` tells which).
    */
   follow(event: MouseEvent, id: string, behavior: ScrollBehavior = 'auto'): void {
     const target = this.document.getElementById(id);
