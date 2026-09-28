@@ -1,7 +1,9 @@
 @let item = details().profile;
 @if (stats().length > 0) {
   <section lodbFrame class="p-5">
-    <h2 class="panel-title">{{ 'item.detail.stats' | transloco }}</h2>
+    <h2 class="mb-4 font-beaufort text-xs tracking-[0.22em] text-gold uppercase">
+      {{ 'item.detail.stats' | transloco }}
+    </h2>
     <dl>
       @for (row of stats(); track $index) {
         <div class="stat-row">
@@ -28,7 +30,9 @@
 }
 
 <section lodbFrame class="p-5">
-  <h2 class="panel-title">{{ 'item.detail.gold_ledger' | transloco }}</h2>
+  <h2 class="mb-4 font-beaufort text-xs tracking-[0.22em] text-gold uppercase">
+    {{ 'item.detail.gold_ledger' | transloco }}
+  </h2>
   <dl class="grid grid-cols-3 gap-2">
     <div class="hx-plate">
       <dt class="hx-plate__label">{{ 'item.detail.price_total' | transloco }}</dt>
@@ -47,7 +51,9 @@
 
 @if (hasAvailability()) {
   <section lodbFrame class="p-5">
-    <h2 class="panel-title">{{ 'item.detail.availability' | transloco }}</h2>
+    <h2 class="mb-4 font-beaufort text-xs tracking-[0.22em] text-gold uppercase">
+      {{ 'item.detail.availability' | transloco }}
+    </h2>
     <ul class="flex flex-wrap gap-2">
       @if (depth(); as depth) {
         <li class="hx-chip border-gold/50 text-gold">
@@ -72,7 +78,9 @@
 
 @if (item.tags.length > 0) {
   <section lodbFrame class="p-5">
-    <h2 class="panel-title">{{ 'item.detail.categories' | transloco }}</h2>
+    <h2 class="mb-4 font-beaufort text-xs tracking-[0.22em] text-gold uppercase">
+      {{ 'item.detail.categories' | transloco }}
+    </h2>
     <ul class="flex flex-wrap gap-2">
       @for (tag of item.tags; track tag) {
         <li class="hx-chip">{{ tagLabel(tag) }}</li>
