@@ -54,7 +54,8 @@ Pour développer sur la nouvelle stack : guide [dev-next.md](guides/dev-next.md)
 | [configuration.md](../legacy/docs/guides/configuration.md) | *Ancienne stack, archivée* — Variables d'environnement et paramètres applicatifs |
 | [docker.md](../legacy/docs/guides/docker.md) | *Ancienne stack, archivée* — Référence des commandes de la stack Compose |
 | [dev-next.md](guides/dev-next.md) | Nouvelle stack `lodb-next` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
-| [github-actions-secrets.md](guides/github-actions-secrets.md) | Secrets GitHub Actions / GHCR, flux de promotion CI/CD |
+| [configuration.md](guides/configuration.md) | Nouvelle stack : inventaire des secrets GitHub, des lignes `.env` de `next` et de la prod, des fichiers de l'hôte et des services externes |
+| [github-actions-secrets.md](guides/github-actions-secrets.md) | Nouvelle stack : pipeline CI/CD, déploiement de `next` depuis `dev`, promotion en prod |
 | [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
 | [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana : fonctionnement, ce qu'il ne faut surtout pas déclarer, requêtes LogsQL / PromQL, dépannage |
 | [logging.md](guides/logging.md) | Convention de journalisation applicative : clé d'événement, contexte, niveaux, canaux, interdictions |

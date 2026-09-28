@@ -82,6 +82,7 @@ legacy/                   ancienne stack, archivée
 |---|---|
 | [`docs/reecriture/README.md`](docs/reecriture/README.md) | Pourquoi la réécriture, décisions, architecture cible |
 | [`docs/guides/dev-next.md`](docs/guides/dev-next.md) | Développer : commandes, stack locale, E2E |
+| [`docs/guides/configuration.md`](docs/guides/configuration.md) | Tous les secrets et variables à configurer (`next`, prod, apps) |
 | [`docs/guides/github-actions-secrets.md`](docs/guides/github-actions-secrets.md) | Pipeline : CI, images, déploiement de `next`, promotion en prod |
 | [`docs/reecriture/bascule.md`](docs/reecriture/bascule.md) | Runbook de la bascule et du retour arrière |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribuer : branches, commits, garde-fous |

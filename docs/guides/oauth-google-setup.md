@@ -6,11 +6,12 @@ dans ce dépôt. Sans ces étapes, la fonctionnalité reste inactive et se dégr
 proprement : le bouton « Continuer avec Google » renvoie vers la page de connexion
 avec un message « connexion Google non configurée ».
 
-Côté code, tout est déjà en place : routes `/connect/google` (départ) et
-`/connect/google/check` (callback), authenticator sur le firewall `main`,
-provisionnement de compte (rattachement par e-mail vérifié ou création avec
-pseudo généré). Scopes demandés : `openid`, `profile`, `email` — **non sensibles**,
-ce qui permet une publication sans revue Google (voir plus bas).
+Côté code, tout est déjà en place dans l'API (`LoDb.Api`, module `Accounts`) : retour de
+Google sur `/api/account/google/callback`, échange de code pour les apps desktop et
+Android. Scopes demandés : `openid`, `profile`, `email` — **non sensibles**, ce qui permet
+une publication sans revue Google (voir plus bas). Les routes `/connect/google…` de
+l'ancienne stack (archivée sous `legacy/`) restent déclarées chez Google jusqu'à la
+décommission, pour le retour arrière.
 
 ## 1. Créer le projet Google Cloud
 
@@ -59,16 +60,25 @@ Page <https://console.cloud.google.com/auth/audience> :
 
 1. Ouvrir <https://console.cloud.google.com/auth/clients> → **Create client**.
 2. **Application type** : **Web application**. Nom interne libre (ex. `lodb-web`).
-3. **Authorized JavaScript origins** — origine exacte, sans chemin :
-   - `http://localhost:8080` (dev, port nginx publié par `compose.override.yaml`)
-   - `https://<domaine-prod>` (ex. `https://leagueofdatabase.example`)
-4. **Authorized redirect URIs** — doivent correspondre **exactement** (schéma,
-   hôte, port, chemin) à la route `connect_google_check` :
-   - `http://localhost:8080/connect/google/check`
-   - `https://<domaine-prod>/connect/google/check`
+3. **Authorized JavaScript origins** — origine exacte, sans chemin, une par
+   environnement : `https://league-of-data-base.com` (prod) et l'hôte canonique de
+   `next` (ex. `https://test.league-of-data-base.com`).
+4. **Authorized redirect URIs** — doivent correspondre **exactement** (schéma, hôte,
+   chemin) à ce que l'API envoie :
+   - `https://league-of-data-base.com/api/account/google/callback`
+   - `https://<hôte canonique de next>/api/account/google/callback`
+   - garder `https://league-of-data-base.com/connect/google/check` (ancienne stack)
+     jusqu'à la décommission : le retour arrière en a besoin.
 5. **Create** → récupérer immédiatement le **Client ID**
    (`xxxxxxxx.apps.googleusercontent.com`) et le **Client secret** (affiché une
    seule fois ; régénérable depuis la fiche du client au besoin).
+6. Apps : un client **Desktop app** pour le desktop (retour en boucle locale), et un
+   client pour Android (retour par l'App Link `https://<hôte>/app/oauth/google`). Leurs
+   ids sont déclarés côté serveur (§ 4) ; celui du desktop est aussi compilé dans l'app
+   (propriété MSBuild `LoDbDesktopGoogleClientId`).
+
+En local, la connexion Google n'est pas couverte : nginx transmet `Host` sans le port, et
+l'URI de retour calculée par l'API perd `:18080`.
 
 Références Google : flux serveur
 <https://developers.google.com/identity/protocols/oauth2/web-server>, OpenID Connect
@@ -76,68 +86,42 @@ Références Google : flux serveur
 clients <https://support.google.com/cloud/answer/15544987> et écran de consentement
 <https://support.google.com/cloud/answer/15549945>.
 
-## 4. Poser les identifiants dans ce dépôt
+## 4. Poser les identifiants
 
-Les deux variables (déclarées vides dans `app/.env`, bloc `###> google oauth ###`)
-sont des **secrets** : ne jamais les committer.
+Les identifiants sont des **secrets** : ils ne vont jamais dans le dépôt, mais dans le
+`.env` de l'environnement servi, c'est-à-dire dans le secret GitHub `ENV_NEXT` ou
+`ENV_PROD_NEXT` ([`configuration.md`](configuration.md), § 4.2) :
 
-| Variable | Contenu |
-|---|---|
-| `OAUTH_GOOGLE_CLIENT_ID` | Client ID `…apps.googleusercontent.com` |
-| `OAUTH_GOOGLE_CLIENT_SECRET` | Client secret associé |
+```dotenv
+LoDb__Accounts__Google__ClientId=xxxxxxxx.apps.googleusercontent.com
+LoDb__Accounts__Google__ClientSecret=GOCSPX-...
+# Apps : desktop (id + secret), Android (id seul) ; jamais sans le client web
+LoDb__Accounts__Google__AppClients__0__ClientId=yyyyyyyy.apps.googleusercontent.com
+LoDb__Accounts__Google__AppClients__0__ClientSecret=GOCSPX-...
+LoDb__Accounts__Google__AppClients__1__ClientId=zzzzzzzz.apps.googleusercontent.com
+```
 
-Chaîne de propagation (identique à Stripe) :
-
-1. **`.env` à la racine du dépôt** (git-ignoré — celui lu par `docker compose`,
-   pas `app/.env`) :
-
-   ```dotenv
-   OAUTH_GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com
-   OAUTH_GOOGLE_CLIENT_SECRET=GOCSPX-...
-   ```
-
-2. `compose.yaml` mappe déjà ces variables dans l'environnement du service `php`
-   (`OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}` + secret) ; elles sont
-   consommées par `config/packages/knpu_oauth2_client.yaml` et les classes
-   `GoogleConnectController` / `GoogleAuthenticator` via `%env()%` / `#[Autowire(env:)]`.
-3. Recréer le conteneur pour prise en compte :
-
-   ```bash
-   docker compose up -d php
-   ```
-
-4. En CI/CD, ajouter les deux secrets au même endroit que les autres
-   (cf. `docs/guides/github-actions-secrets.md`).
-
-Vérification rapide : `curl -sI http://localhost:8080/connect/google` doit renvoyer
-un `302` vers `accounts.google.com` (variables posées) ou vers `/login` (variables
-vides — dégradation propre).
+`compose.next.deploy.yaml` transmet ces lignes à l'API quand elles sont présentes ; le
+déploiement suivant les prend en compte. Sans `ClientId`, la connexion Google est coupée et
+les points d'entrée répondent `google-unavailable`. En prod, ce sont les identifiants
+`OAUTH_GOOGLE_CLIENT_ID` et `OAUTH_GOOGLE_CLIENT_SECRET` de l'ancienne stack : même client.
 
 ## 5. Piège production : HTTPS derrière le proxy TLS
 
-La `redirect_uri` envoyée à Google est **générée par Symfony** à partir de la
-requête. Derrière l'edge TLS (Caddy → nginx → php-fpm), si les en-têtes
-`X-Forwarded-*` n'étaient pas relayés/acceptés, Symfony verrait du HTTP et
-générerait `http://…/connect/google/check` → erreur `redirect_uri_mismatch`
-(l'URI autorisée est en `https://`).
+L'URI de retour envoyée à Google est calculée par l'API à partir de la requête. Derrière
+l'edge TLS (Caddy → nginx → API), si l'API ne faisait pas confiance aux en-têtes
+`X-Forwarded-*`, elle verrait du HTTP et enverrait `http://…/api/account/google/callback`
+→ erreur `redirect_uri_mismatch`.
 
-**État réel de ce dépôt : déjà configuré, rien à faire.**
+**Déjà configuré** : nginx ne croit `X-Forwarded-For` que de l'edge (`LODB_EDGE_CIDR`) et
+transmet le schéma à l'API, qui accepte ces en-têtes des réseaux privés
+(`LoDb__Hosting__KnownProxyNetworks__*`, fixés par `compose.next.yaml`). Si l'edge change,
+vérifier que le nouvel intermédiaire émet bien `X-Forwarded-Proto: https`.
 
-- Caddy (edge, `compose.deploy.yaml` + réseau `edge`) pose automatiquement
-  `X-Forwarded-Proto/For/Host` en proxifiant vers `nginx:80`.
-- nginx transmet ces en-têtes à php-fpm (les en-têtes de requête passent en
-  variables `HTTP_*` via fastcgi).
-- Symfony les accepte : `framework.yaml` →
-  `trusted_proxies: '%env(TRUSTED_PROXIES)%'` +
-  `trusted_headers: [x-forwarded-for, x-forwarded-host, x-forwarded-proto, x-forwarded-port]`,
-  avec `TRUSTED_PROXIES=127.0.0.1,REMOTE_ADDR` (défaut `app/.env`, redéclaré dans
-  `compose.yaml`) — `REMOTE_ADDR` = « faire confiance à l'upstream direct », soit
-  nginx.
+## 6. Comportement applicatif (rappel, ancienne stack)
 
-Si un jour l'edge change (autre proxy, CDN), vérifier que le nouvel intermédiaire
-émet bien `X-Forwarded-Proto: https`, sinon adapter `TRUSTED_PROXIES`.
-
-## 6. Comportement applicatif (rappel)
+> Décrit l'ancienne stack ; celui de la nouvelle est fixé par l'ADR 0009
+> ([`0009-identite-authentification-sessions.md`](../reecriture/adr/0009-identite-authentification-sessions.md)).
 
 - **Compte existant avec le même e-mail** : rattaché au premier login Google
   **uniquement si** Google atteste `email_verified` (anti-takeover) ; le

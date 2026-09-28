@@ -74,8 +74,9 @@ tout ce qui ne se fait pas dans le dépôt. Chaque ligne est faite avant l'étap
 | Publication des apps (release desktop signée, piste Play) : elles visent `https://league-of-data-base.com/api` et n'ont de sens qu'après la bascule | lots 9 et 10 | J+3 |
 | *Contract* puis décommission | fin de la période de retour arrière | J+30 |
 
-Reste ouvert du lot 8, à corriger avant J-3 : `.env.next.example` incomplet (ni
-`LODB_PUBLIC_API_ORIGIN` ni ligne `LoDb__*`, pas de variante prod ; `LODB_DB_*` y figure).
+Modèles des `.env` servis : `.env.next.example` (`ENV_NEXT`) et `.env.next.prod.example`
+(`ENV_PROD_NEXT`), complets. Chaque secret et chaque ligne, avec l'origine de sa valeur et
+la correspondance avec `ENV_PROD` : [`configuration.md`](../guides/configuration.md).
 
 Constat, pas un défaut : la 301 `www.`/`.fr` de nginx porte ses en-têtes de sécurité. En
 local (jalon du lot 8), `curl -sI -H 'Host: www.league-of-data-base.com'
@@ -571,13 +572,14 @@ L'ancienne stack archivée n'a plus de changelog : relancée depuis `legacy/`, s
 | Document | Changement |
 |---|---|
 | `CLAUDE.md` | décrit la stack en service : devient celui de la nouvelle (stack, commandes, garde-fous, scopes) ; les garde-fous PHP disparaissent |
-| `README.md`, `CONTRIBUTING.md`, `docs/contribution.md`, `docs/README.md` | démarrage, commandes et arborescence de la nouvelle stack |
+| `README.md`, `CONTRIBUTING.md`, `docs/README.md` | **fait** avec l'archivage (l'ancien README est `legacy/README.md`) |
+| `docs/contribution.md` | démarrage, commandes et garde-fous de la nouvelle stack, en FR, EN et ES (bandeau d'avertissement en attendant) |
 | `docs/architecture/` (`architecture.md`, `architecture-report.md`, `analytics.md`, `api-publique.md`, `responsive-mobile.md`) | réécrits d'après `docs/reecriture/README.md` et les ADR |
-| `docs/guides/setup.md`, `docker.md`, `configuration.md` | remplacés par `dev-next.md` et la configuration `LoDb__*` |
-| `docs/guides/github-actions-secrets.md` | sections de l'ancienne stack retirées ; la « Nouvelle stack » devient le guide |
+| `docs/guides/setup.md`, `docker.md`, `configuration.md` | **fait** : archivés sous `legacy/docs/guides/`, remplacés par `dev-next.md` et le nouveau `configuration.md` |
+| `docs/guides/github-actions-secrets.md` | **fait** : guide du pipeline de la nouvelle stack ; l'ancien est sous `legacy/docs/guides/` |
 | `docs/guides/observabilite.md`, `logging.md` | exemples sur `api` et `web-ssr` (`EventName`), plus de `php` ni `go-api` |
-| `docs/guides/oauth-google-setup.md` | seule URI de retour `/api/account/google/callback` ; retirer l'ancienne du client OAuth |
-| `docs/guides/packaging-apk.md` | supprimé, remplacé par l'ADR 0007 et `release-android.md` |
+| `docs/guides/oauth-google-setup.md` | à jour pour la nouvelle stack ; à la décommission, retirer du client OAuth l'URI `/connect/google/check` et le § 6 |
+| `docs/guides/packaging-apk.md` | **fait** : archivé sous `legacy/docs/guides/`, remplacé par l'ADR 0007 et `release-android.md` |
 | `docs/guides/legal-info.md`, `migration-edge-proxy.md` | relus contre la nouvelle stack |
 | `docs/changelog/README.md` | table des scopes (Twig, îlots Vue, Symfony, Go → front Angular, API .NET) |
 | `docs/reecriture/` | statut « basculé » dans son README ; ce runbook complété des dates et relevés réels |
