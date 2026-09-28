@@ -8,6 +8,7 @@ using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Runes;
 using LoDb.Api.Modules.Catalog.Search;
 using LoDb.Api.Modules.Catalog.Summoners;
+using LoDb.Api.Modules.Catalog.WarmUp;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace LoDb.Api.Modules.Catalog;
@@ -31,6 +32,8 @@ internal static class CatalogModule
         services.AddCatalogJson();
         services.TryAddSingleton<CatalogGateway>();
         services.TryAddSingleton<MetaEndpoint>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton<CatalogWarmUp>();
         return services;
     }
 
@@ -45,6 +48,7 @@ internal static class CatalogModule
         RuneEndpoints.Map(catalog);
         SummonerEndpoints.Map(catalog);
         SearchEndpoint.Map(catalog);
+        WarmUpEndpoint.Map(catalog);
 
         PickerEndpoints.Map(
             WithProblems(api.MapGroup(PickersPrefix).WithTags(CatalogTags.Pickers)));
