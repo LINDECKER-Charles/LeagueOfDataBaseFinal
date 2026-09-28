@@ -1,9 +1,10 @@
 # Réécriture .NET 10 + Angular — dossier de décision
 
 > **Statut** : décisions actées le 2026-09-24, avant la première ligne de code.
-> Ce dossier est la source de vérité de la réécriture. Tant qu'elle n'a pas basculé en
-> prod, [`../../CLAUDE.md`](../../CLAUDE.md) continue de décrire la stack **en service**
-> (Symfony + Go + Vue).
+> Ce dossier est la source de vérité de la réécriture. Elle est désormais la stack du
+> dépôt, décrite par [`../../AGENTS.md`](../../AGENTS.md) ; l'ancienne (Symfony + Go +
+> Vue) est archivée sous `legacy/` et reste en production jusqu'à la
+> [bascule](bascule.md).
 
 ## Pourquoi réécrire
 

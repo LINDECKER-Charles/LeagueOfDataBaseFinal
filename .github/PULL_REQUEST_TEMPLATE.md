@@ -25,7 +25,7 @@
 ## ✅ Checklist
 
 - [ ] This PR targets the `dev` branch (not `main`)
-- [ ] Code follows the project conventions (`CLAUDE.md`, section "Nouvelle stack")
+- [ ] Code follows the project conventions (`AGENTS.md`)
 - [ ] Architecture invariants preserved (single `LoDb.Api` host, egress through the `ddragon` client, atomic blob writes, items and spells indexed by id, SSR without cookies or secrets)
 - [ ] Nothing changed under `legacy/` (archived stack)
 - [ ] Documentation updated if needed

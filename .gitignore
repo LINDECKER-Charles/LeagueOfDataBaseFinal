@@ -1,5 +1,10 @@
 commande.md
 
+# Agent instructions of this repository: versioned here even when a global excludes file
+# ignores AGENTS.md (CLAUDE.md only imports it).
+!/AGENTS.md
+!/legacy/AGENTS.md
+
 # Env & secrets (see docs/guides/configuration.md).
 # Real env files are git-ignored; committed *.example templates and the non-secret
 # Symfony defaults of the archived stack (legacy/app/.env, legacy/app/.env.test) are not.

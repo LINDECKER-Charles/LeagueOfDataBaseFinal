@@ -23,7 +23,7 @@ dans archived/YYYY/ — la racine YYYY/ ne contient plus que le backlog de la pr
     ---
     date: YYYY-MM-DD        # date de livraison
     type: feat              # feat | fix | perf | ui | devops
-    scope: front            # front | back | fetcher | infra | full-stack
+    scope: front            # front | back | apps | infra | full-stack
     title: Titre court orienté joueur (≤ 80 caractères)
     summary: Une phrase d'impact côté joueur.
     tags: []                # optionnel
@@ -43,10 +43,10 @@ dans archived/YYYY/ — la racine YYYY/ ne contient plus que le backlog de la pr
 
 | Scope      | Périmètre                                                      |
 |------------|----------------------------------------------------------------|
-| front      | Twig, îlots Vue, CSS Hextech, PWA, navigation Turbo            |
-| back       | Symfony/PHP : contrôleurs, managers, stockage, analytics       |
-| fetcher    | Passerelle Go (egress Data Dragon / CommunityDragon)           |
-| infra      | Docker, CI/CD, Caddy, volumes, configuration                   |
+| front      | Angular : pages, SSR, SEO, i18n, design Hextech, PWA           |
+| back       | API .NET : modules, ingestion Data Dragon, stockage, analytics |
+| apps       | Desktop (Photino, Velopack) et Android (Capacitor, live update)|
+| infra      | Docker, nginx, CI/CD, Caddy, volumes, configuration            |
 | full-stack | Changement traversant plusieurs couches                        |
 
 ## Règles de rédaction

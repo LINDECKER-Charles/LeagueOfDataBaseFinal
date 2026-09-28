@@ -572,7 +572,7 @@ L'ancienne stack archivée n'a plus de changelog : relancée depuis `legacy/`, s
 
 | Document | Changement |
 |---|---|
-| `CLAUDE.md` | décrit la stack en service : devient celui de la nouvelle (stack, commandes, garde-fous, scopes) ; les garde-fous PHP disparaissent |
+| `CLAUDE.md` | **fait** : `AGENTS.md` décrit la nouvelle stack (stack, commandes, garde-fous, scopes), `CLAUDE.md` l'importe ; les règles PHP sont dans `legacy/AGENTS.md`, supprimé avec `legacy/` |
 | `README.md`, `CONTRIBUTING.md`, `docs/README.md` | **fait** avec l'archivage (l'ancien README est `legacy/README.md`) |
 | `docs/contribution.md` | démarrage, commandes et garde-fous de la nouvelle stack, en FR, EN et ES (bandeau d'avertissement en attendant) |
 | `docs/architecture/` (`architecture.md`, `architecture-report.md`, `analytics.md`, `api-publique.md`, `responsive-mobile.md`) | réécrits d'après `docs/reecriture/README.md` et les ADR |

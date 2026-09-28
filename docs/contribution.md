@@ -6,8 +6,8 @@
 > [`guides/developpement.md`](guides/developpement.md). *EN / ES : the setup and guardrail sections
 > below describe the archived stack; follow `CONTRIBUTING.md` instead.*
 
-> 📌 **Guide court & canonique :** [`CONTRIBUTING.md`](../CONTRIBUTING.md) · **Conventions de code complètes :** [`CLAUDE.md`](../CLAUDE.md).
-> Ce document en est la version détaillée et multilingue (onboarding, templates d'issue et de PR). En cas de divergence, `CONTRIBUTING.md` et `CLAUDE.md` font foi.
+> 📌 **Guide court & canonique :** [`CONTRIBUTING.md`](../CONTRIBUTING.md) · **Conventions de code complètes :** [`AGENTS.md`](../AGENTS.md).
+> Ce document en est la version détaillée et multilingue (onboarding, templates d'issue et de PR). En cas de divergence, `CONTRIBUTING.md` et `AGENTS.md` font foi.
 
 ## 🌍 Languages / Langues
 
@@ -122,7 +122,7 @@ Rien à copier : ouvrir une PR pré-remplit automatiquement le [template natif](
 
 ### 🎨 Standards de code
 
-> Les règles complètes vivent dans [`../CLAUDE.md`](../CLAUDE.md) (source unique). Résumé de ce qui bloque une revue :
+> Les règles complètes vivent dans [`../AGENTS.md`](../AGENTS.md) (source unique). Résumé de ce qui bloque une revue :
 
 #### PHP (Symfony)
 - `declare(strict_types=1);` en tête de chaque fichier ; classes `final` par défaut (sauf base abstraite).
@@ -257,7 +257,7 @@ Nothing to copy: opening a PR automatically pre-fills the [native template](../.
 
 ### 🎨 Code Standards
 
-> The full rules live in [`../CLAUDE.md`](../CLAUDE.md) (single source). Summary of what blocks a review:
+> The full rules live in [`../AGENTS.md`](../AGENTS.md) (single source). Summary of what blocks a review:
 
 #### PHP (Symfony)
 - `declare(strict_types=1);` at the top of every file; classes `final` by default (except abstract bases).
@@ -392,7 +392,7 @@ Nada que copiar: abrir una PR pre-rellena automáticamente el [template nativo](
 
 ### 🎨 Estándares de Código
 
-> Las reglas completas viven en [`../CLAUDE.md`](../CLAUDE.md) (fuente única). Resumen de lo que bloquea una revisión:
+> Las reglas completas viven en [`../AGENTS.md`](../AGENTS.md) (fuente única). Resumen de lo que bloquea una revisión:
 
 #### PHP (Symfony)
 - `declare(strict_types=1);` al inicio de cada archivo; clases `final` por defecto (salvo bases abstractas).

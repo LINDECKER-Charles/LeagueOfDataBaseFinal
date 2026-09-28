@@ -12,7 +12,7 @@
 # - Minor + patch updates are grouped per ecosystem (one PR instead of N); major
 #   updates stay as individual PRs because they need a review each.
 # - The archived legacy stack (legacy/) gets no update: it no longer builds nor deploys.
-# - Commit prefix `build` follows the repo's Conventional Commits map (see CLAUDE.md).
+# - Commit prefix `build` follows the repo's Conventional Commits map (see AGENTS.md).
 
 version: 2
 

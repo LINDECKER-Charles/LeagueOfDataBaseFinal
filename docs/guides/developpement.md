@@ -1,8 +1,8 @@
 # Développer sur la nouvelle stack (`lodb-dev`)
 
-Ce guide sert au travail quotidien sur la réécriture .NET 10 + Angular 22 : commandes,
-ports, emplacements et dépannage. Les règles de code et les invariants sont dans la section
-« Nouvelle stack » de [`CLAUDE.md`](../../CLAUDE.md). Les décisions sont dans
+Ce guide sert au travail quotidien sur la stack .NET 10 + Angular 22 : commandes, ports,
+emplacements et dépannage. Les règles de code et les invariants sont dans
+[`AGENTS.md`](../../AGENTS.md). Les décisions sont dans
 [`docs/reecriture/`](../reecriture/README.md), et le découpage en chantiers dans le
 [plan d'implémentation](../reecriture/plan-implementation.md).
 

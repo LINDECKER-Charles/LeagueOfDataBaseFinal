@@ -2,7 +2,7 @@
 
 Merci de votre intérêt pour le projet ! Ce document est le point d'entrée **court et à jour** pour contribuer.
 
-- **Conventions de code complètes** (DRY / KISS / SOLID, limites de taille, nommage, règles par langage, invariants d'architecture) : [`CLAUDE.md`](CLAUDE.md) — source unique, à respecter.
+- **Conventions de code complètes** (DRY / KISS / SOLID, limites de taille, nommage, règles par langage, invariants d'architecture) : [`AGENTS.md`](AGENTS.md) — source unique, à respecter.
 - **Guide détaillé multilingue** (FR / EN / ES, templates d'issue & de PR) : [`docs/contribution.md`](docs/contribution.md).
 
 ---
@@ -47,7 +47,7 @@ Ouvrez ensuite la PR **vers `dev`**.
 Format [Conventional Commits](https://www.conventionalcommits.org/) : `type(scope): description`.
 
 Types : `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`… Le scope suit la carte
-de [`CLAUDE.md`](CLAUDE.md) (`back/<module>`, `front/<feature>`, `i18n`, `infra`, …).
+de [`AGENTS.md`](AGENTS.md) (`back/<module>`, `front/<feature>`, `i18n`, `infra`, …).
 
 ```bash
 git commit -m "feat(front/catalogue): filtrer les champions par role"
@@ -73,7 +73,7 @@ Les E2E (`tests/LoDb.E2E`) tournent contre la stack locale : voir
 
 ## Standards de code
 
-Ne dupliquez pas les règles ici : elles vivent dans [`CLAUDE.md`](CLAUDE.md). En résumé, ce qui bloque une revue :
+Ne dupliquez pas les règles ici : elles vivent dans [`AGENTS.md`](AGENTS.md). En résumé, ce qui bloque une revue :
 
 - C# : classes `sealed`, `record` pour les DTO, `TimeProvider` injecté, `CancellationToken` partout, aucun avertissement.
 - Angular : composants standalone, signals, `OnPush`, pas de `any` ; l'orchestration vit dans des services et des fonctions pures.
@@ -81,7 +81,7 @@ Ne dupliquez pas les règles ici : elles vivent dans [`CLAUDE.md`](CLAUDE.md). E
 - Un seul élément public par fichier, nommé comme le fichier. Pas de nombres/chaînes magiques.
 - Commentaires en anglais, expliquant le **pourquoi**.
 
-**Invariants d'architecture à préserver** (voir `CLAUDE.md` § « Nouvelle stack ») : un seul hôte `LoDb.Api` ; egress Data Dragon par le client `ddragon` et son allow-list ; blobs écrits de façon atomique ; objets et sorts indexés par id ; SSR sans cookie ni secret ; le front ne consomme que le client généré.
+**Invariants d'architecture à préserver** (voir `AGENTS.md` § « Invariants d'architecture ») : un seul hôte `LoDb.Api` ; egress Data Dragon par le client `ddragon` et son allow-list ; blobs écrits de façon atomique ; objets et sorts indexés par id ; SSR sans cookie ni secret ; le front ne consomme que le client généré.
 
 ## Signaler un bug · proposer une fonctionnalité
 
