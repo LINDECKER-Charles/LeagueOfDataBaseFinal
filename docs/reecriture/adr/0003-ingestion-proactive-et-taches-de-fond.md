@@ -3,6 +3,10 @@
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : ingestion à la demande, `DeferredImageIngestor` (`kernel.terminate`),
   loader SSE, placeholders + polling `/api/images/{type}`, warm-up au déploiement
+- **Suivi** : le 2026-09-28, l'interface d'attente du point 4 est reprise pour un
+  changement de patch ou de langue. Le loader de l'en-tête lit
+  `GET /api/catalog/{version}/{lang}/warm-up`, un flux SSE asynchrone dont chaque trame
+  est l'état complet, répétée toutes les 5 s pendant l'ingestion des datasets.
 
 ## Contexte
 
