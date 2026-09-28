@@ -89,3 +89,21 @@ describe('the chrome on a pinned page', () => {
     expect(hrefs(host, '.bottom-nav a')[1]).toBe('/en/champions');
   });
 });
+
+describe('the home link', () => {
+  // The legacy lit Home on its route whatever the query, the remembered patch's included.
+  it.each(['/en', '/en/?version=14.1.1', '/en/?lang=en_GB'])('stays current on %s', async (url) => {
+    const host = await chromeAt(url);
+
+    expect(hrefs(host, 'header nav a[aria-current="page"]')).toEqual(['/en']);
+    expect(hrefs(host, '.bottom-nav a[aria-current="page"]')).toEqual(['/en']);
+    expect(host.querySelector('header nav a')?.classList).toContain('text-gold-bright');
+  });
+
+  it('leaves the other pages to their own link', async () => {
+    const host = await chromeAt('/en/trends?version=14.1.1');
+
+    expect(hrefs(host, 'header nav a[aria-current="page"]')).toEqual(['/en/trends']);
+    expect(hrefs(host, '.bottom-nav a[aria-current="page"]')).toEqual(['/en/trends']);
+  });
+});

@@ -48,9 +48,8 @@
           <a
             class="nav-link"
             [routerLink]="link('')"
-            routerLinkActive="text-gold-bright"
-            [routerLinkActiveOptions]="{ exact: true }"
-            ariaCurrentWhenActive="page"
+            [class.text-gold-bright]="home()"
+            [attr.aria-current]="home() ? 'page' : null"
             >{{ 'header.navigation.home' | transloco }}</a
           >
         </li>

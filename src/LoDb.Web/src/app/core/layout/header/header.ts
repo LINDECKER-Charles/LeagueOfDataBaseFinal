@@ -8,6 +8,7 @@ import { Logo } from '../../../ui/media/logo';
 import { PageDirection } from '../direction/page-direction';
 import { Disclosure } from '../disclosure/disclosure';
 import { injectChromeLinks } from '../nav/inject-chrome-links';
+import { NavContext } from '../nav/nav-context';
 import { localePath } from '../shell/locale-path';
 import { RELEASE_VERSION } from '../shell/release-version';
 import { ThemePicker } from '../theme-picker/theme-picker';
@@ -50,6 +51,7 @@ export class Header {
   protected readonly codex = injectChromeLinks(CODEX_ENTRIES);
   protected readonly version = inject(RELEASE_VERSION);
   protected readonly payments = inject(PAYMENTS_ENABLED);
+  protected readonly home = inject(NavContext).home;
   private readonly page = inject(PageDirection);
 
   protected link(path: string): string {
