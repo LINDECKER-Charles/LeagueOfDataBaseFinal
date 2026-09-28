@@ -67,6 +67,8 @@ export type { RequestPasswordReset$Params as RequestPasswordReset$Params } from 
 export { requestPasswordReset as requestPasswordReset } from './fn/account/request-password-reset';
 export type { ResetPassword$Params as ResetPassword$Params } from './fn/account/reset-password';
 export { resetPassword as resetPassword } from './fn/account/reset-password';
+export type { CheckPasswordResetToken$Params as CheckPasswordResetToken$Params } from './fn/account/check-password-reset-token';
+export { checkPasswordResetToken as checkPasswordResetToken } from './fn/account/check-password-reset-token';
 export type { StartGoogleSignIn$Params as StartGoogleSignIn$Params } from './fn/account/start-google-sign-in';
 export { startGoogleSignIn as startGoogleSignIn } from './fn/account/start-google-sign-in';
 export type { ExchangeGoogleCode$Params as ExchangeGoogleCode$Params } from './fn/account/exchange-google-code';

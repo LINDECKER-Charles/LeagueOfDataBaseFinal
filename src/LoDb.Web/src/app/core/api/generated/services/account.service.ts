@@ -12,6 +12,8 @@ import { StrictHttpResponse } from '../strict-http-response';
 
 import { AccessTokenResponse } from '../models/access-token-response';
 import { AccountSession } from '../models/account-session';
+import { checkPasswordResetToken } from '../fn/account/check-password-reset-token';
+import { CheckPasswordResetToken$Params } from '../fn/account/check-password-reset-token';
 import { createAccountToken } from '../fn/account/create-account-token';
 import { CreateAccountToken$Params } from '../fn/account/create-account-token';
 import { EmailVerification } from '../models/email-verification';
@@ -389,6 +391,41 @@ export class AccountService extends BaseService {
    */
   resetPassword(params: ResetPassword$Params, context?: HttpContext): Observable<void> {
     const resp = this.resetPassword$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<void>): void => r.body)
+    );
+  }
+
+  /** Path part for operation `checkPasswordResetToken()` */
+  static readonly CheckPasswordResetTokenPath = '/api/account/reset-password/check';
+
+  /**
+   * Tells whether the link sent by e-mail still sets a password.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `checkPasswordResetToken()` instead.
+   *
+   * This method sends `application/json` and handles request body of type `application/json`.
+   */
+  checkPasswordResetToken$Response(params: CheckPasswordResetToken$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+    const obs = checkPasswordResetToken(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * Tells whether the link sent by e-mail still sets a password.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `checkPasswordResetToken$Response()` instead.
+   *
+   * This method sends `application/json` and handles request body of type `application/json`.
+   */
+  checkPasswordResetToken(params: CheckPasswordResetToken$Params, context?: HttpContext): Observable<void> {
+    const resp = this.checkPasswordResetToken$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<void>): void => r.body)
     );

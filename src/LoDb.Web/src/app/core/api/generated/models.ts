@@ -65,6 +65,7 @@ export type { ChampionSkin } from './models/champion-skin';
 export type { ChampionStat } from './models/champion-stat';
 export type { ChampionView } from './models/champion-view';
 export type { CheckoutCreated } from './models/checkout-created';
+export type { CheckResetTokenRequest } from './models/check-reset-token-request';
 export type { ClientPlatform } from './models/client-platform';
 export type { ContactRequest } from './models/contact-request';
 export type { CounterpartLink } from './models/counterpart-link';

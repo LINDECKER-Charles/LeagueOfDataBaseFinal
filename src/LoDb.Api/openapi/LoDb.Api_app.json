@@ -2008,6 +2008,50 @@
         }
       }
     },
+    "/api/account/reset-password/check": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Tells whether the link sent by e-mail still sets a password.",
+        "operationId": "checkPasswordResetToken",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckResetTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/account/google/start": {
       "get": {
         "tags": [
@@ -7962,6 +8006,28 @@
           }
         },
         "description": "An opened Checkout session."
+      },
+      "CheckResetTokenRequest": {
+        "required": [
+          "userId",
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "description": "The `user` parameter of the link.",
+            "format": "int32"
+          },
+          "token": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The `token` parameter of the link, as it is."
+          }
+        },
+        "description": "Body of `POST /api/account/reset-password/check`."
       },
       "ClientPlatform": {
         "enum": [
