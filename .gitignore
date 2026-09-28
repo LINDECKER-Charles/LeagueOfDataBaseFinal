@@ -1,7 +1,7 @@
 commande.md
 
 # Agent instructions of this repository: versioned here even when a global excludes file
-# ignores AGENTS.md (CLAUDE.md only imports it).
+# ignores AGENTS.md.
 !/AGENTS.md
 !/legacy/AGENTS.md
 
@@ -9,8 +9,13 @@ commande.md
 # Real env files are git-ignored; committed *.example templates and the non-secret
 # Symfony defaults of the archived stack (legacy/app/.env, legacy/app/.env.test) are not.
 
-# Repo-root compose env of the new stack (local overrides; ENV_FILE / ENV_FILE on a host)
+# Repo-root compose env (local overrides) and the filled env of each served environment
+# (.env.staging, .env.prod): only the *.example templates are versioned.
 /.env
+/.env.*
+!/.env.*.example
+# Local checklist of the secrets to set (values included): never versioned.
+/SECRETS.md
 
 # Compose env of the archived legacy stack, read by `docker compose --project-directory legacy`
 /legacy/.env

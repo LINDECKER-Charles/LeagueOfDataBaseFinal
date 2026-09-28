@@ -1,13 +1,15 @@
-# The LeagueOfDataBase stack (.NET + Angular). It shares nothing with the archived legacy
-# stack (legacy/compose.yaml): own project, images, volumes and host ports.
+# The LeagueOfDataBase stack (.NET + Angular).
 #
 # Local (integration stack, from the repository root):
 #   docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml up -d --build
-# Served environment (preprod, then production), without the dev overlay:
+# Served environment (staging, prod), without the dev overlay:
 #   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
 #
+# On a host, it takes the place of the archived legacy stack (legacy/compose.yaml) in the
+# same project (lodb-staging, lodb-prod): same `pgdata` volume, own blob volume (`ddragon`).
+#
 # Every interpolated variable has a local default here; compose.deploy.yaml makes the
-# secrets and the public hosts mandatory. Reference: .env.preprod.example.
+# secrets and the public hosts mandatory. Reference: .env.staging.example.
 
 # json-file is imposed, not a style choice: the host's collector replays container output
 # through the Docker Engine API, which only supports json-file, local and journald
@@ -46,7 +48,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     volumes:
       # DDragon storage: the API is its only writer; nginx serves blobs/ read-only.
-      - storage:/srv/storage
+      - ddragon:/srv/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -132,7 +134,7 @@ services:
       # Silences the plain-text start-up lines of the image's docker-entrypoint.sh.
       NGINX_ENTRYPOINT_QUIET_LOGS: "1"
     volumes:
-      - storage:/srv/storage:ro
+      - ddragon:/srv/storage:ro
       # The page cache outlives a restart or a recreated container; its key sorts revisions.
       - pages-cache:/var/cache/nginx/pages
     depends_on:
@@ -168,7 +170,10 @@ services:
 
 volumes:
   # Created by the api container first (depends_on order), which seeds it with its own
-  # /srv/storage: the volume is then owned by the API's non-root user.
-  storage:
+  # /srv/storage: the volume is then owned by the API's non-root user. Not named `storage`:
+  # on a host, the legacy stack's volume of that name (same project, owned by www-data)
+  # would be reused and stay unwritable; it is kept as is for the rollback.
+  ddragon:
+  # Shared with the legacy stack on a host: `migrate` brings its database up to date.
   pgdata:
   pages-cache:
