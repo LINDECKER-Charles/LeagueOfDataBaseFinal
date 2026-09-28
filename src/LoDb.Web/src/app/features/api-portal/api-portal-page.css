@@ -1,0 +1,31 @@
+/*
+ * The frame of the portal page: the legacy `main` padding around a 72rem column, and its
+ * header. Blocks style themselves.
+ */
+@layer components {
+  :host {
+    padding: 3rem 1.5rem;
+  }
+
+  .portal-page {
+    position: relative;
+    max-inline-size: 72rem;
+    margin-inline: auto;
+  }
+
+  .portal-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block-end: 2.5rem;
+  }
+
+  .portal-header__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+}

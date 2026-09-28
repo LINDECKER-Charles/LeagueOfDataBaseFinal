@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Ceva nu a funcționat. Încearcă din nou.",
+    "invalid": "Această valoare nu este validă.",
+    "required": "Acest câmp este obligatoriu.",
+    "email_invalid": "Introdu o adresă de e-mail validă.",
+    "email_too_long": "Această adresă de e-mail este prea lungă.",
+    "email_taken": "Există deja un cont cu această adresă de e-mail.",
+    "terms_required": "Trebuie să accepți condițiile de utilizare.",
+    "password_too_long": "Această parolă este prea lungă.",
+    "invalid_credentials": "Identificator sau parolă incorecte.",
+    "invalid_two_factor": "Acest cod este incorect sau a expirat.",
+    "locked": "Prea multe încercări eșuate: acest cont este blocat pentru câteva minute.",
+    "google_cancelled": "Autentificarea cu Google a fost anulată.",
+    "google_email_unverified": "Google nu a verificat această adresă de e-mail, așa că nu poate fi folosită pentru autentificare.",
+    "google_two_factor": "Acest cont folosește autentificarea în doi pași: conectează-te cu adresa de e-mail și parola.",
+    "sign_out": "Deconectarea a eșuat. Încearcă din nou."
+  },
+  "two_factor": {
+    "lede": "Introdu codul de 6 cifre din aplicația de autentificare.",
+    "code": "Cod de autentificare",
+    "recovery_code": "Cod de recuperare",
+    "use_recovery": "Folosește un cod de recuperare",
+    "use_app": "Folosește aplicația de autentificare"
+  },
+  "password": {
+    "met": "(îndeplinită)",
+    "unmet": "(neîndeplinită)"
+  },
+  "verify": {
+    "title": "Confirmarea adresei de e-mail",
+    "verifying": "Se confirmă adresa ta de e-mail…",
+    "pending": "Am trimis un link de confirmare la {{ email }}. Deschide-l pentru a-ți confirma adresa sau cere unul nou.",
+    "sign_in": "Conectează-te pentru a primi un nou link de confirmare.",
+    "continue": "Continuă"
+  },
+  "editor": {
+    "loading": "Se încarcă profilul tău…",
+    "load_error": "Profilul tău nu a putut fi încărcat.",
+    "version_error": "Versiunea favoritelor tale nu a putut fi schimbată."
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "title": "Database stopped, then storage gone: 503 internal where the database is needed",
+  "steps": [
+    { "id": "warm-key-cache", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:free}}" } } },
+    { "id": "stop-database", "action": "stopDatabase" },
+    { "id": "healthz-database-down", "note": "always 200, the outage is in the body", "request": { "method": "GET", "path": "/healthz" } },
+    { "id": "profile-database-down", "note": "cached key: X-RateLimit-* present", "request": { "method": "GET", "path": "/v1/profiles/PublicPlayer", "headers": { "X-Api-Key": "{{key:free}}" } } },
+    { "id": "builds-database-down", "request": { "method": "GET", "path": "/v1/champions/Aatrox/builds", "headers": { "X-Api-Key": "{{key:free}}" } } },
+    { "id": "usage-database-down", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:free}}" } } },
+    { "id": "trends-database-down", "note": "trends only read the storage volume", "request": { "method": "GET", "path": "/v1/trends/champions", "headers": { "X-Api-Key": "{{key:free}}" } } },
+    { "id": "uncached-key-database-down", "note": "the key lookup fails: 503 without X-RateLimit-*", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:monthly}}" } } },
+    { "id": "unknown-key-database-down", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:unknown}}" } } },
+    { "id": "malformed-key-database-down", "note": "rejected before any lookup", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "lodb_0123" } } },
+    { "id": "no-key-database-down", "request": { "method": "GET", "path": "/v1/usage" } },
+    { "id": "hide-storage", "action": "hideStorage" },
+    { "id": "healthz-all-down", "request": { "method": "GET", "path": "/healthz" } },
+    { "id": "trends-storage-down", "note": "go-api answers 200 with no entries; L6.3 answers 503 internal", "request": { "method": "GET", "path": "/v1/trends/items", "headers": { "X-Api-Key": "{{key:free}}" } } }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "list": {
+    "loading": "Chargement de vos builds…",
+    "failed": "Vos builds n'ont pas pu être chargés.",
+    "delete_failed": "Le build n'a pas pu être supprimé. Réessayez."
+  },
+  "delete": {
+    "title": "Supprimer le build",
+    "cancel": "Annuler"
+  },
+  "editor": {
+    "saving": "Enregistrement…"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue. Réessayez.",
+    "signed_out": "Votre session a expiré. Reconnectez-vous pour enregistrer ce build.",
+    "email_unverified": "Vérifiez votre adresse e-mail pour enregistrer un build.",
+    "not_found": "Ce build n'existe plus."
+  }
+}

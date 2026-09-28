@@ -1,0 +1,99 @@
+/*
+ * The settings under the favorites: the identity and first-password panels on a gold tint,
+ * the erasure on a danger one. In the components layer, so that the utilities keep their
+ * say.
+ */
+@layer components {
+  :host(.profile-panel),
+  :host(.profile-danger) {
+    display: block;
+    padding: 1.5rem;
+  }
+  :host(.profile-panel) {
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    background: color-mix(in srgb, var(--color-gold-deep) 6%, transparent);
+  }
+  :host(.profile-danger) {
+    border: 1px solid color-mix(in srgb, var(--color-danger) 40%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 5%, transparent);
+  }
+
+  .profile-panel__title,
+  .profile-danger__title {
+    font-family: var(--font-beaufort);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-gold-light);
+  }
+  .profile-danger__title {
+    color: var(--color-danger-light);
+  }
+
+  /*
+   * A ghost button tinted with danger, standing alone so no utility repaints it. It rests on
+   * the legacy mix of danger and text; the title and the hover take the light danger tone,
+   * as the plain danger red stays under 4.5:1 for small text on the canvas.
+   */
+  .profile-danger__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-block-size: 2.75rem;
+    padding: 0.625rem 1rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: color-mix(in srgb, var(--color-danger) 80%, var(--color-text));
+    border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      color 0.3s var(--ease-hextech),
+      border-color 0.3s var(--ease-hextech),
+      background-color 0.3s var(--ease-hextech);
+  }
+  .profile-danger__button:hover {
+    border-color: var(--color-danger);
+    color: var(--color-danger-light);
+    background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  }
+  .profile-danger__button:focus-visible {
+    outline: 2px solid var(--color-danger-light);
+    outline-offset: 2px;
+  }
+  .profile-danger__button:disabled {
+    cursor: progress;
+    opacity: 0.6;
+  }
+
+  /* The Riot tag line: the # stands before the value, never in it. */
+  .riot-tag {
+    display: flex;
+    align-items: stretch;
+  }
+  .riot-tag__prefix {
+    display: inline-flex;
+    align-items: center;
+    padding-inline: 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 50%, transparent);
+    border-inline-end: none;
+    background: color-mix(in srgb, var(--color-gold-deep) 14%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-gold);
+  }
+  .riot-tag__input {
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .profile-danger__button {
+      transition: none;
+    }
+  }
+}

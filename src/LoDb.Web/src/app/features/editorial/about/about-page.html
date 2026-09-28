@@ -1,0 +1,98 @@
+<lodb-editorial-frame
+  ambient
+  [eyebrow]="'about.eyebrow' | transloco"
+  [heading]="heading() | transloco"
+>
+  <p lodbLead class="max-w-[62ch] font-spiegel text-lg leading-relaxed text-text-muted">
+    {{ 'about.index.lead' | transloco }}
+  </p>
+  <div class="hx-prose relative flex flex-col gap-10">
+    <section id="what">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.index.what.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.index.what.body' | transloco }}</p>
+      @defer (on idle) {
+        <lodb-inventory-counters [facts]="facts" />
+      } @placeholder {
+        <lodb-inventory-facts [facts]="facts" />
+      }
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="audience">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.index.audience.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.index.audience.body' | transloco }}</p>
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="features">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.index.features.title' | transloco }}</h2>
+      </div>
+      @for (feature of features; track feature) {
+        <h3>{{ 'about.index.features.' + feature + '.title' | transloco }}</h3>
+        <p>{{ 'about.index.features.' + feature + '.body' | transloco }}</p>
+      }
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="data">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.index.data.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.index.data.body' | transloco }}</p>
+      <p>
+        <a [routerLink]="link('about/data')">{{ 'about.index.data.link' | transloco }}</a>
+      </p>
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="who">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.index.who.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.index.who.body' | transloco }}</p>
+      <p>
+        {{ 'about.index.who.opensource' | transloco }}
+        <a
+          href="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal"
+          target="_blank"
+          rel="noopener noreferrer"
+          >GitHub</a
+        >.
+      </p>
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="more">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.index.more.title' | transloco }}</h2>
+      </div>
+      <ul>
+        <li>
+          <a [routerLink]="link('faq')">{{ 'about.faq.title' | transloco }}</a>
+        </li>
+        <li>
+          <a [routerLink]="link('about/data')">{{ 'about.data.title' | transloco }}</a>
+        </li>
+        <li>
+          <a [routerLink]="link('developers')">{{ 'api.nav.developers' | transloco }}</a>
+        </li>
+        <li>
+          <a [routerLink]="link('changelog')">{{ 'changelog.title' | transloco }}</a>
+        </li>
+        <li>
+          <a [routerLink]="link('legal/notice')">{{ 'legal.notice.title' | transloco }}</a>
+        </li>
+      </ul>
+    </section>
+  </div>
+</lodb-editorial-frame>

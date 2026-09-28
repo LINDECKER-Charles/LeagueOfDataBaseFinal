@@ -1,5 +1,11 @@
 # App mobile Android (TWA / APK) — guide complet
 
+> ⚠️ **Remplacé à terme** : la réécriture abandonne la TWA au profit d'une app
+> Capacitor embarquant le front Angular, avec mises à jour intégrées — voir
+> [ADR 0007](../reecriture/adr/0007-coquilles-desktop-et-android.md) et
+> [ADR 0008](../reecriture/adr/0008-mises-a-jour-integrees.md). Ce guide reste valable
+> pour la stack en service jusqu'à la bascule.
+
 > Objectif : distribuer LeagueOfDataBase en application Android (APK sideload,
 > optionnellement Play Store) **sans toucher au front**, en réutilisant la PWA existante.
 

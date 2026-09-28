@@ -1,0 +1,405 @@
+{
+  "group": "02-plans",
+  "title": "One key per plan: quota, credits and rate limit as /v1/usage and X-RateLimit-* expose them",
+  "source": {
+    "service": "go-api",
+    "goApiTree": "0b2172d52a4e9786470909b8616f41395ed3d431"
+  },
+  "exchanges": [
+    {
+      "id": "usage-free",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:free}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "9",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "free",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 0,
+          "rate_limit_per_min": 10
+        }
+      }
+    },
+    {
+      "id": "usage-credits",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "59",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "credits",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 5000,
+          "rate_limit_per_min": 60
+        }
+      }
+    },
+    {
+      "id": "usage-monthly",
+      "note": "137 requests this month; the 1000 of the previous month do not count",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:monthly}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "119",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "monthly",
+          "monthly_quota": 15000,
+          "used_this_month": 137,
+          "remaining_this_month": 14863,
+          "credits_balance": 0,
+          "rate_limit_per_min": 120
+        }
+      }
+    },
+    {
+      "id": "usage-monthly-plus",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:monthly_plus}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "119",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "monthly_plus",
+          "monthly_quota": 45000,
+          "used_this_month": 0,
+          "remaining_this_month": 45000,
+          "credits_balance": 0,
+          "rate_limit_per_min": 120
+        }
+      }
+    },
+    {
+      "id": "usage-annual",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:annual}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "300",
+          "x-ratelimit-remaining": "299",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "annual",
+          "monthly_quota": 20000,
+          "used_this_month": 0,
+          "remaining_this_month": 20000,
+          "credits_balance": 0,
+          "rate_limit_per_min": 300
+        }
+      }
+    },
+    {
+      "id": "usage-annual-plus",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:annual_plus}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "300",
+          "x-ratelimit-remaining": "299",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "annual_plus",
+          "monthly_quota": 60000,
+          "used_this_month": 0,
+          "remaining_this_month": 60000,
+          "credits_balance": 0,
+          "rate_limit_per_min": 300
+        }
+      }
+    },
+    {
+      "id": "usage-previous-month-only",
+      "note": "500 requests last month, none this month",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "X-Api-Key": "{{key:previous_month}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "9",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "free",
+          "monthly_quota": 500,
+          "used_this_month": 0,
+          "remaining_this_month": 500,
+          "credits_balance": 0,
+          "rate_limit_per_min": 10
+        }
+      }
+    },
+    {
+      "id": "previous-month-quota-not-exhausted",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/runes",
+        "headers": {
+          "X-Api-Key": "{{key:previous_month}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "8",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "runes",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "8100",
+              "name": "Domination",
+              "views": 6
+            },
+            {
+              "rank": 2,
+              "id": "8112",
+              "name": "Electrocute",
+              "views": 3
+            },
+            {
+              "rank": 3,
+              "id": "Electrocute",
+              "name": "Electrocute",
+              "views": 2
+            },
+            {
+              "rank": 4,
+              "id": "9999",
+              "views": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "free-plan-request",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/NoFavorites",
+        "headers": {
+          "Authorization": "Bearer {{key:free}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "8",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "NoFavorites",
+          "created_at": "2026-07-04T12:00:00Z",
+          "favorites": {
+            "champion_id": null,
+            "item_id": null,
+            "rune_id": null,
+            "summoner_id": null
+          },
+          "public_builds": 0
+        }
+      }
+    },
+    {
+      "id": "credits-plan-request",
+      "note": "quota left: the credits are not spent",
+      "request": {
+        "method": "GET",
+        "path": "/v1/profiles/NoFavorites",
+        "headers": {
+          "Authorization": "Bearer {{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "58",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "username": "NoFavorites",
+          "created_at": "2026-07-04T12:00:00Z",
+          "favorites": {
+            "champion_id": null,
+            "item_id": null,
+            "rune_id": null,
+            "summoner_id": null
+          },
+          "public_builds": 0
+        }
+      }
+    },
+    {
+      "id": "wait-for-metering",
+      "action": "sleep",
+      "ms": 1500
+    },
+    {
+      "id": "usage-free-after",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:free}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "10",
+          "x-ratelimit-remaining": "7",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "free",
+          "monthly_quota": 500,
+          "used_this_month": 1,
+          "remaining_this_month": 499,
+          "credits_balance": 0,
+          "rate_limit_per_min": 10
+        }
+      }
+    },
+    {
+      "id": "usage-credits-after",
+      "request": {
+        "method": "GET",
+        "path": "/v1/usage",
+        "headers": {
+          "Authorization": "Bearer {{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "58",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "plan": "credits",
+          "monthly_quota": 500,
+          "used_this_month": 1,
+          "remaining_this_month": 499,
+          "credits_balance": 5000,
+          "rate_limit_per_min": 60
+        }
+      }
+    }
+  ]
+}

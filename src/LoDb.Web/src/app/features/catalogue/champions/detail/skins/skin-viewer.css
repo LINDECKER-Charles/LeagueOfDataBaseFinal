@@ -1,0 +1,27 @@
+.splash {
+  filter: drop-shadow(0 10px 30px color-mix(in srgb, var(--color-shadow) 60%, transparent));
+  animation: pop 0.24s var(--ease-hextech);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+/* Over the picture's top end corner; the look is the global hx-viewer-button. */
+.close {
+  position: absolute;
+  inset-block-start: 0.6rem;
+  inset-inline-end: 0.6rem;
+  inline-size: 2.2rem;
+  block-size: 2.2rem;
+}
+.close svg {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash {
+    animation: none;
+  }
+}

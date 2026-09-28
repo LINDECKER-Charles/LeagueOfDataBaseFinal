@@ -1,0 +1,56 @@
+<div class="hx-toaster" aria-live="polite">
+  @for (toast of service.toasts(); track toast.id) {
+    <div
+      class="hx-toast hextech-frame"
+      [class]="kindClass(toast.kind)"
+      [class.hx-toast--leaving]="toast.leaving"
+      [attr.role]="toast.kind === 'error' ? 'alert' : null"
+    >
+      <svg
+        class="hx-toast__glyph"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        @switch (toast.kind) {
+          @case ('success') {
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          }
+          @case ('warning') {
+            <path d="M12 3.5 21.5 20h-19zM12 10v4.5M12 17.5v.01" />
+          }
+          @case ('error') {
+            <circle cx="12" cy="12" r="9" />
+            <path d="M8.5 8.5l7 7M15.5 8.5l-7 7" />
+          }
+          @default {
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 11v5.5M12 7.5v.01" />
+          }
+        }
+      </svg>
+      <p class="hx-toast__text">{{ toast.message }}</p>
+      <button
+        type="button"
+        class="hx-toast__close"
+        [attr.aria-label]="'header.theme.close' | transloco"
+        (click)="service.dismiss(toast.id)"
+      >
+        <svg
+          class="size-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  }
+</div>

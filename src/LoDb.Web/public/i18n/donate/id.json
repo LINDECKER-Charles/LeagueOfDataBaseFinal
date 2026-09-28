@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Persembahan untuk tempa",
+  "title": "Dukung League Of Data Base",
+  "intro": "Donasimu menutup biaya hosting dan menjaga ensiklopedia tetap cepat, gratis, dan tanpa iklan.",
+  "pledge": "Tanpa keuntungan dalam game, tanpa hak istimewa — hanya rasa terima kasih kami.",
+  "tiers": {
+    "legend": "Pilih persembahan"
+  },
+  "tier": {
+    "spark": "Percikan",
+    "gem": "Permata",
+    "crest": "Lambang",
+    "relic": "Relik"
+  },
+  "custom": {
+    "label": "Jumlah bebas",
+    "placeholder": "mis. 7,50",
+    "hint": "Antara {{ min }} € dan {{ max }} € — jumlah bebas menggantikan tingkat yang dipilih."
+  },
+  "submit": "Donasi lewat Stripe",
+  "busy": "Membuka pembayaran aman…",
+  "unavailable": {
+    "title": "Donasi segera hadir",
+    "body": "Gerbang pembayaran belum diaktifkan. Kembali lagi nanti — ensiklopedia tetap gratis apa pun yang terjadi."
+  },
+  "legal": {
+    "secure": "Pembayaran aman oleh Stripe — tidak ada data kartu yang sampai ke situs ini",
+    "secure_short": "pembayaran aman",
+    "privacy": "Kebijakan privasi",
+    "terms": "Ketentuan penggunaan"
+  },
+  "error": {
+    "csrf": "Sesimu telah berakhir. Muat ulang halaman lalu coba lagi.",
+    "unavailable": "Donasi sedang tidak tersedia.",
+    "invalid_amount": "Jumlah tidak valid — masukkan antara {{ min }} € dan {{ max }} €.",
+    "gateway": "Layanan pembayaran tidak dapat dihubungi, coba lagi nanti.",
+    "throttled": "Terlalu banyak percobaan pembayaran. Tunggu sebentar sebelum mencoba lagi."
+  },
+  "success": {
+    "eyebrow": "Persembahan diterima",
+    "title": "Terima kasih, Summoner",
+    "body": "Dukunganmu menjaga api tempa tetap menyala — setiap donasi digunakan untuk hosting dan menjaga ensiklopedia tetap gratis untuk semua.",
+    "receipt": "Stripe mengirimkan tanda terimamu lewat email.",
+    "back": "Kembali ke ensiklopedia"
+  },
+  "cancel": {
+    "eyebrow": "Persembahan ditarik",
+    "title": "Donasi dibatalkan",
+    "body": "Tidak ada yang ditagih. Ensiklopedia tetap gratis dan terbuka, dengan atau tanpa donasi.",
+    "retry": "Coba lagi",
+    "back": "Kembali ke beranda"
+  }
+}

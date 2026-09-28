@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Offerta alla forgia",
+  "title": "Sostieni League Of Data Base",
+  "intro": "La tua donazione copre i costi di hosting e mantiene l'enciclopedia veloce, gratuita e senza pubblicità.",
+  "pledge": "Nessun vantaggio in gioco, nessun privilegio: solo la nostra gratitudine.",
+  "tiers": {
+    "legend": "Scegli un'offerta"
+  },
+  "tier": {
+    "spark": "Scintilla",
+    "gem": "Gemma",
+    "crest": "Stemma",
+    "relic": "Reliquia"
+  },
+  "custom": {
+    "label": "Importo libero",
+    "placeholder": "es. 7,50",
+    "hint": "Tra {{ min }} € e {{ max }} €: l'importo libero sostituisce il livello selezionato."
+  },
+  "submit": "Dona con Stripe",
+  "busy": "Apertura del pagamento sicuro…",
+  "unavailable": {
+    "title": "Donazioni in arrivo",
+    "body": "Il sistema di pagamento non è ancora attivo. Torna presto: l'enciclopedia resta gratuita in ogni caso."
+  },
+  "legal": {
+    "secure": "Pagamento sicuro tramite Stripe: nessun dato della carta arriva a questo sito",
+    "secure_short": "pagamento sicuro",
+    "privacy": "Informativa sulla privacy",
+    "terms": "Condizioni d'uso"
+  },
+  "error": {
+    "csrf": "La sessione è scaduta. Ricarica la pagina e riprova.",
+    "unavailable": "Le donazioni non sono disponibili al momento.",
+    "invalid_amount": "Importo non valido: inserisci un valore tra {{ min }} € e {{ max }} €.",
+    "gateway": "Il servizio di pagamento non è raggiungibile, riprova più tardi.",
+    "throttled": "Troppi tentativi di pagamento. Attendi un momento prima di riprovare."
+  },
+  "success": {
+    "eyebrow": "Offerta ricevuta",
+    "title": "Grazie, evocatore",
+    "body": "Il tuo sostegno tiene accesa la forgia: ogni donazione va all'hosting e mantiene l'enciclopedia gratuita per tutti.",
+    "receipt": "Stripe ti invia la ricevuta via e-mail.",
+    "back": "Torna all'enciclopedia"
+  },
+  "cancel": {
+    "eyebrow": "Offerta ritirata",
+    "title": "Donazione annullata",
+    "body": "Non è stato addebitato nulla. L'enciclopedia resta gratuita e aperta, con o senza donazione.",
+    "retry": "Riprova",
+    "back": "Torna alla home"
+  }
+}

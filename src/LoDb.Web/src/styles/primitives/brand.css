@@ -1,0 +1,74 @@
+/* Brand and navigation accents: logo hover, section divider, splash scrim. */
+@utility nav-link {
+  @apply transition-colors duration-300 hover:text-hex focus-visible:ring-2
+    focus-visible:ring-hex/40 focus-visible:ring-offset-0 focus-visible:outline-none
+    motion-reduce:transition-none;
+}
+
+@utility brand-logo {
+  @apply transform-gpu transition-all duration-300 group-hover:scale-110;
+}
+
+@utility brand-title {
+  @apply transition-all duration-300;
+}
+
+.group:hover .brand-logo,
+.group:hover .brand-title {
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--color-gold) 45%, transparent));
+}
+
+/* Section divider: gold hairline with a centred hex diamond, a genuine break between blocks. */
+@utility hx-rule {
+  position: relative;
+  block-size: 1px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-gold) 55%, transparent),
+    transparent
+  );
+}
+/* Centred, hence physical `left`: the same point in both writing directions. */
+.hx-rule::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  inline-size: 7px;
+  block-size: 7px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--color-gold);
+  box-shadow: 0 0 10px -1px color-mix(in srgb, var(--color-gold) 70%, transparent);
+}
+
+/* Full-bleed splash scrim: lifts display type off cinematic art. */
+@utility splash-scrim {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-hextech-black) 15%, transparent) 0%,
+      color-mix(in srgb, var(--color-hextech-black) 55%, transparent) 55%,
+      color-mix(in srgb, var(--color-void) 97%, transparent) 100%
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-hextech-black) 75%, transparent) 0%,
+      transparent 45%
+    );
+  &:dir(rtl) {
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-hextech-black) 15%, transparent) 0%,
+        color-mix(in srgb, var(--color-hextech-black) 55%, transparent) 55%,
+        color-mix(in srgb, var(--color-void) 97%, transparent) 100%
+      ),
+      linear-gradient(
+        270deg,
+        color-mix(in srgb, var(--color-hextech-black) 75%, transparent) 0%,
+        transparent 45%
+      );
+  }
+}

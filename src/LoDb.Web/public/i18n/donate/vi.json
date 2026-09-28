@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Lễ vật dâng lò rèn",
+  "title": "Ủng hộ League Of Data Base",
+  "intro": "Khoản quyên góp của bạn chi trả phí lưu trữ và giữ cho bách khoa toàn thư nhanh, miễn phí và không quảng cáo.",
+  "pledge": "Không lợi thế trong trò chơi, không đặc quyền — chỉ có lòng biết ơn của chúng tôi.",
+  "tiers": {
+    "legend": "Chọn một lễ vật"
+  },
+  "tier": {
+    "spark": "Tia lửa",
+    "gem": "Đá quý",
+    "crest": "Huy hiệu",
+    "relic": "Thánh tích"
+  },
+  "custom": {
+    "label": "Số tiền tự chọn",
+    "placeholder": "vd. 7,50",
+    "hint": "Từ {{ min }} € đến {{ max }} € — số tiền tự chọn sẽ thay cho mức đã chọn."
+  },
+  "submit": "Quyên góp qua Stripe",
+  "busy": "Đang mở trang thanh toán an toàn…",
+  "unavailable": {
+    "title": "Sắp mở quyên góp",
+    "body": "Cổng thanh toán chưa được bật. Hãy quay lại sớm — bách khoa toàn thư vẫn luôn miễn phí."
+  },
+  "legal": {
+    "secure": "Thanh toán an toàn qua Stripe — không dữ liệu thẻ nào đến được trang này",
+    "secure_short": "thanh toán an toàn",
+    "privacy": "Chính sách quyền riêng tư",
+    "terms": "Điều khoản sử dụng"
+  },
+  "error": {
+    "csrf": "Phiên của bạn đã hết hạn. Hãy tải lại trang rồi thử lại.",
+    "unavailable": "Hiện chưa thể quyên góp.",
+    "invalid_amount": "Số tiền không hợp lệ — hãy nhập từ {{ min }} € đến {{ max }} €.",
+    "gateway": "Không thể kết nối dịch vụ thanh toán, vui lòng thử lại sau.",
+    "throttled": "Quá nhiều lần thử thanh toán. Vui lòng đợi một lát trước khi thử lại."
+  },
+  "success": {
+    "eyebrow": "Đã nhận lễ vật",
+    "title": "Cảm ơn, Triệu Hồi Sư",
+    "body": "Sự ủng hộ của bạn giữ cho lò rèn luôn cháy — mỗi khoản quyên góp đều dành cho lưu trữ và giữ bách khoa toàn thư miễn phí cho mọi người.",
+    "receipt": "Stripe sẽ gửi biên nhận cho bạn qua email.",
+    "back": "Quay lại bách khoa toàn thư"
+  },
+  "cancel": {
+    "eyebrow": "Đã rút lễ vật",
+    "title": "Đã hủy quyên góp",
+    "body": "Không có khoản nào bị trừ. Bách khoa toàn thư vẫn miễn phí và mở cho mọi người, dù có quyên góp hay không.",
+    "retry": "Thử lại",
+    "back": "Về trang chủ"
+  }
+}

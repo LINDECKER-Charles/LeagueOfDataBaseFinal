@@ -1,0 +1,18 @@
+<nav class="bottom-nav" [attr.aria-label]="'footer.navigation.title' | transloco">
+  @for (link of links(); track link.entry.path) {
+    <!-- Home is current by NavContext.home, whatever its query; null options keep
+         routerLinkActive off its aria-current. -->
+    <a
+      [routerLink]="link.target"
+      routerLinkActive
+      [routerLinkActiveOptions]="link.entry.path === '' ? null : { exact: false }"
+      ariaCurrentWhenActive="page"
+      [attr.aria-current]="link.entry.path === '' && home() ? 'page' : null"
+    >
+      @if (link.entry.icon) {
+        <lodb-icon [name]="link.entry.icon" />
+      }
+      <span>{{ link.entry.label | transloco }}</span>
+    </a>
+  }
+</nav>

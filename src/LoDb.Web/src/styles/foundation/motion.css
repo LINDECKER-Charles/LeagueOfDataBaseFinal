@@ -1,0 +1,49 @@
+/*
+ * Motion foundation. Every animation here has a static equivalent under
+ * `prefers-reduced-motion: reduce`: no information is ever carried by movement alone.
+ */
+
+/*
+ * Scroll reveal (ui/reveal): sections rise into view once. The rule is armed only once the
+ * directive stamps `.js-reveal` on <html>, so server-rendered content is never hidden without
+ * JavaScript, and an element already in view is revealed in the same frame it is armed.
+ */
+.js-reveal [data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.js-reveal [data-reveal].reveal-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.65s var(--ease-hextech),
+    transform 0.65s var(--ease-hextech);
+}
+@media (prefers-reduced-motion: reduce) {
+  .js-reveal [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Slow ambient pulse behind hero art. */
+@keyframes hx-breathe {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: translate(-50%, 0) scale(1);
+  }
+  50% {
+    opacity: 0.36;
+    transform: translate(-50%, 0) scale(1.06);
+  }
+}
+@utility hx-breathe {
+  animation: hx-breathe 7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hx-breathe {
+    animation: none;
+  }
+}

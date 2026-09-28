@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "閉じる",
+    "previous": "前へ",
+    "next": "次へ",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "{{ skin }}のクロマ"
+  }
+}

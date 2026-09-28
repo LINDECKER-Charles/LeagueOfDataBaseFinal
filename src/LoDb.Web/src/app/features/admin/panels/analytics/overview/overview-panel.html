@@ -1,0 +1,29 @@
+<lodb-page-head
+  [eyebrow]="'admin.eyebrows.console' | adminText"
+  [title]="'admin.overview.title' | adminText"
+  [subtitle]="
+    'admin.overview.lede' | adminText: { range: ('admin.range_long.' + query.range() | adminText) }
+  "
+>
+  <lodb-segment-bar
+    param="range"
+    label="admin.range.label"
+    [segments]="ranges"
+    [current]="query.range()"
+  />
+  <button
+    lodbButton="ghost"
+    type="button"
+    [title]="'admin.overview.roll_up_hint' | adminText"
+    [disabled]="rollingUp()"
+    (click)="rollUp()"
+  >
+    {{ 'admin.overview.roll_up' | adminText }}
+  </button>
+</lodb-page-head>
+
+<lodb-overview-app />
+<lodb-admin-rule [label]="'admin.rules.traffic' | adminText" />
+<lodb-overview-traffic [revision]="rolledUp()" />
+<lodb-admin-rule [label]="'admin.rules.storage' | adminText" />
+<lodb-overview-storage />

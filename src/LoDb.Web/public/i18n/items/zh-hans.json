@@ -1,0 +1,7 @@
+{
+  "maps": {
+    "aram": "ARAM",
+    "classic_rift": "Classic Rift",
+    "other": "地图 {{ id }}"
+  }
+}

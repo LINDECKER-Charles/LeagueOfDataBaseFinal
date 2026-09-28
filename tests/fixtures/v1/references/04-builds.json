@@ -1,0 +1,2789 @@
+{
+  "group": "04-builds",
+  "title": "Champion builds: pagination, per_page cap, invalid parameters, ordering, visibility",
+  "source": {
+    "service": "go-api",
+    "goApiTree": "0b2172d52a4e9786470909b8616f41395ed3d431"
+  },
+  "exchanges": [
+    {
+      "id": "default-page",
+      "note": "page 1, 20 per page; newest first, ties by id descending",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "59",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [
+            {
+              "name": "Banned Aatrox B",
+              "description": null,
+              "game_version": "16.17.1",
+              "runes": {},
+              "steps": [],
+              "share_url": "https://league-of-data-base.com/b/bannedaatroxb",
+              "created_at": "2026-08-02T10:00:00Z"
+            },
+            {
+              "name": "Banned Aatrox A",
+              "description": "Posted before the ban.",
+              "game_version": "16.17.1",
+              "runes": {},
+              "steps": [],
+              "share_url": "https://league-of-data-base.com/b/bannedaatroxa",
+              "created_at": "2026-08-01T10:00:00Z"
+            },
+            {
+              "name": "Aatrox build 55",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub055",
+              "created_at": "2026-07-02T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 54",
+              "description": "Guide number 54.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub054",
+              "created_at": "2026-07-02T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 53",
+              "description": "Guide number 53.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub053",
+              "created_at": "2026-07-02T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 52",
+              "description": "Guide number 52.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub052",
+              "created_at": "2026-07-02T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 51",
+              "description": "Guide number 51.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub051",
+              "created_at": "2026-07-02T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 50",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub050",
+              "created_at": "2026-07-02T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 49",
+              "description": "Guide number 49.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub049",
+              "created_at": "2026-07-02T00:00:00Z"
+            },
+            {
+              "name": "Aatrox build 48",
+              "description": "Guide number 48.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub048",
+              "created_at": "2026-07-02T00:00:00Z"
+            },
+            {
+              "name": "Aatrox build 47",
+              "description": "Guide number 47.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub047",
+              "created_at": "2026-07-01T23:00:00Z"
+            },
+            {
+              "name": "Aatrox build 46",
+              "description": "Guide number 46.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub046",
+              "created_at": "2026-07-01T23:00:00Z"
+            },
+            {
+              "name": "Aatrox build 45",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub045",
+              "created_at": "2026-07-01T22:00:00Z"
+            },
+            {
+              "name": "Aatrox build 44",
+              "description": "Guide number 44.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub044",
+              "created_at": "2026-07-01T22:00:00Z"
+            },
+            {
+              "name": "Aatrox build 43",
+              "description": "Guide number 43.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub043",
+              "created_at": "2026-07-01T21:00:00Z"
+            },
+            {
+              "name": "Aatrox build 42",
+              "description": "Guide number 42.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub042",
+              "created_at": "2026-07-01T21:00:00Z"
+            },
+            {
+              "name": "Aatrox build 41",
+              "description": "Guide number 41.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub041",
+              "created_at": "2026-07-01T20:00:00Z"
+            },
+            {
+              "name": "Aatrox build 40",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub040",
+              "created_at": "2026-07-01T20:00:00Z"
+            },
+            {
+              "name": "Aatrox build 39",
+              "description": "Guide number 39.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub039",
+              "created_at": "2026-07-01T19:00:00Z"
+            },
+            {
+              "name": "Aatrox build 38",
+              "description": "Guide number 38.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub038",
+              "created_at": "2026-07-01T19:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 1,
+            "per_page": 20,
+            "total": 57,
+            "total_pages": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "page-3",
+      "note": "last page: 17 of 57",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=3",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "58",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [
+            {
+              "name": "Aatrox build 17",
+              "description": "Guide number 17.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub017",
+              "created_at": "2026-07-01T08:00:00Z"
+            },
+            {
+              "name": "Aatrox build 16",
+              "description": "Guide number 16.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub016",
+              "created_at": "2026-07-01T08:00:00Z"
+            },
+            {
+              "name": "Aatrox build 15",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub015",
+              "created_at": "2026-07-01T07:00:00Z"
+            },
+            {
+              "name": "Aatrox build 14",
+              "description": "Guide number 14.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub014",
+              "created_at": "2026-07-01T07:00:00Z"
+            },
+            {
+              "name": "Aatrox build 13",
+              "description": "Guide number 13.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub013",
+              "created_at": "2026-07-01T06:00:00Z"
+            },
+            {
+              "name": "Aatrox build 12",
+              "description": "Guide number 12.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub012",
+              "created_at": "2026-07-01T06:00:00Z"
+            },
+            {
+              "name": "Aatrox build 11",
+              "description": "Guide number 11.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub011",
+              "created_at": "2026-07-01T05:00:00Z"
+            },
+            {
+              "name": "Aatrox build 10",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub010",
+              "created_at": "2026-07-01T05:00:00Z"
+            },
+            {
+              "name": "Aatrox build 09",
+              "description": "Guide number 9.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub009",
+              "created_at": "2026-07-01T04:00:00Z"
+            },
+            {
+              "name": "Aatrox build 08",
+              "description": "Guide number 8.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub008",
+              "created_at": "2026-07-01T04:00:00Z"
+            },
+            {
+              "name": "Aatrox build 07",
+              "description": "Guide number 7.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub007",
+              "created_at": "2026-07-01T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 06",
+              "description": "Guide number 6.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub006",
+              "created_at": "2026-07-01T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 05",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub005",
+              "created_at": "2026-07-01T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 04",
+              "description": "Guide number 4.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub004",
+              "created_at": "2026-07-01T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 03",
+              "description": "Guide number 3.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub003",
+              "created_at": "2026-07-01T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 02",
+              "description": "Guide number 2.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub002",
+              "created_at": "2026-07-01T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 01",
+              "description": "Guide number 1.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub001",
+              "created_at": "2026-07-01T00:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 3,
+            "per_page": 20,
+            "total": 57,
+            "total_pages": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "page-beyond-last",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=4",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "57",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [],
+          "pagination": {
+            "page": 4,
+            "per_page": 20,
+            "total": 57,
+            "total_pages": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "per-page-50",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=2&per_page=50",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "56",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [
+            {
+              "name": "Aatrox build 07",
+              "description": "Guide number 7.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub007",
+              "created_at": "2026-07-01T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 06",
+              "description": "Guide number 6.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub006",
+              "created_at": "2026-07-01T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 05",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub005",
+              "created_at": "2026-07-01T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 04",
+              "description": "Guide number 4.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub004",
+              "created_at": "2026-07-01T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 03",
+              "description": "Guide number 3.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub003",
+              "created_at": "2026-07-01T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 02",
+              "description": "Guide number 2.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub002",
+              "created_at": "2026-07-01T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 01",
+              "description": "Guide number 1.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub001",
+              "created_at": "2026-07-01T00:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 2,
+            "per_page": 50,
+            "total": 57,
+            "total_pages": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "per-page-51-capped",
+      "note": "above 50 is clamped, not rejected",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=2&per_page=51",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "55",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [
+            {
+              "name": "Aatrox build 07",
+              "description": "Guide number 7.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub007",
+              "created_at": "2026-07-01T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 06",
+              "description": "Guide number 6.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub006",
+              "created_at": "2026-07-01T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 05",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub005",
+              "created_at": "2026-07-01T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 04",
+              "description": "Guide number 4.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub004",
+              "created_at": "2026-07-01T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 03",
+              "description": "Guide number 3.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub003",
+              "created_at": "2026-07-01T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 02",
+              "description": "Guide number 2.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub002",
+              "created_at": "2026-07-01T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 01",
+              "description": "Guide number 1.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub001",
+              "created_at": "2026-07-01T00:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 2,
+            "per_page": 50,
+            "total": 57,
+            "total_pages": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "per-page-1000-capped",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=2&per_page=1000",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "54",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [
+            {
+              "name": "Aatrox build 07",
+              "description": "Guide number 7.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub007",
+              "created_at": "2026-07-01T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 06",
+              "description": "Guide number 6.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub006",
+              "created_at": "2026-07-01T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 05",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub005",
+              "created_at": "2026-07-01T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 04",
+              "description": "Guide number 4.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub004",
+              "created_at": "2026-07-01T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 03",
+              "description": "Guide number 3.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub003",
+              "created_at": "2026-07-01T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 02",
+              "description": "Guide number 2.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub002",
+              "created_at": "2026-07-01T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 01",
+              "description": "Guide number 1.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub001",
+              "created_at": "2026-07-01T00:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 2,
+            "per_page": 50,
+            "total": 57,
+            "total_pages": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "last-partial-page",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=12&per_page=5",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "53",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [
+            {
+              "name": "Aatrox build 02",
+              "description": "Guide number 2.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub002",
+              "created_at": "2026-07-01T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 01",
+              "description": "Guide number 1.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub001",
+              "created_at": "2026-07-01T00:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 12,
+            "per_page": 5,
+            "total": 57,
+            "total_pages": 12
+          }
+        }
+      }
+    },
+    {
+      "id": "leading-zeros",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=02&per_page=03",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "52",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [
+            {
+              "name": "Aatrox build 54",
+              "description": "Guide number 54.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub054",
+              "created_at": "2026-07-02T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 53",
+              "description": "Guide number 53.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub053",
+              "created_at": "2026-07-02T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 52",
+              "description": "Guide number 52.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub052",
+              "created_at": "2026-07-02T02:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 2,
+            "per_page": 3,
+            "total": 57,
+            "total_pages": 19
+          }
+        }
+      }
+    },
+    {
+      "id": "plus-sign",
+      "note": "strconv.Atoi accepts a leading +",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=%2B2&per_page=2",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "51",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [
+            {
+              "name": "Aatrox build 55",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub055",
+              "created_at": "2026-07-02T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 54",
+              "description": "Guide number 54.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub054",
+              "created_at": "2026-07-02T03:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 2,
+            "per_page": 2,
+            "total": 57,
+            "total_pages": 29
+          }
+        }
+      }
+    },
+    {
+      "id": "repeated-parameter",
+      "note": "the first value wins",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?per_page=2&per_page=9&page=1",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "50",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [
+            {
+              "name": "Banned Aatrox B",
+              "description": null,
+              "game_version": "16.17.1",
+              "runes": {},
+              "steps": [],
+              "share_url": "https://league-of-data-base.com/b/bannedaatroxb",
+              "created_at": "2026-08-02T10:00:00Z"
+            },
+            {
+              "name": "Banned Aatrox A",
+              "description": "Posted before the ban.",
+              "game_version": "16.17.1",
+              "runes": {},
+              "steps": [],
+              "share_url": "https://league-of-data-base.com/b/bannedaatroxa",
+              "created_at": "2026-08-01T10:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 1,
+            "per_page": 2,
+            "total": 57,
+            "total_pages": 29
+          }
+        }
+      }
+    },
+    {
+      "id": "empty-parameters",
+      "note": "empty values fall back to the defaults",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=&per_page=",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "49",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Aatrox",
+          "data": [
+            {
+              "name": "Banned Aatrox B",
+              "description": null,
+              "game_version": "16.17.1",
+              "runes": {},
+              "steps": [],
+              "share_url": "https://league-of-data-base.com/b/bannedaatroxb",
+              "created_at": "2026-08-02T10:00:00Z"
+            },
+            {
+              "name": "Banned Aatrox A",
+              "description": "Posted before the ban.",
+              "game_version": "16.17.1",
+              "runes": {},
+              "steps": [],
+              "share_url": "https://league-of-data-base.com/b/bannedaatroxa",
+              "created_at": "2026-08-01T10:00:00Z"
+            },
+            {
+              "name": "Aatrox build 55",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub055",
+              "created_at": "2026-07-02T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 54",
+              "description": "Guide number 54.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub054",
+              "created_at": "2026-07-02T03:00:00Z"
+            },
+            {
+              "name": "Aatrox build 53",
+              "description": "Guide number 53.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub053",
+              "created_at": "2026-07-02T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 52",
+              "description": "Guide number 52.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub052",
+              "created_at": "2026-07-02T02:00:00Z"
+            },
+            {
+              "name": "Aatrox build 51",
+              "description": "Guide number 51.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub051",
+              "created_at": "2026-07-02T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 50",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub050",
+              "created_at": "2026-07-02T01:00:00Z"
+            },
+            {
+              "name": "Aatrox build 49",
+              "description": "Guide number 49.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub049",
+              "created_at": "2026-07-02T00:00:00Z"
+            },
+            {
+              "name": "Aatrox build 48",
+              "description": "Guide number 48.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub048",
+              "created_at": "2026-07-02T00:00:00Z"
+            },
+            {
+              "name": "Aatrox build 47",
+              "description": "Guide number 47.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub047",
+              "created_at": "2026-07-01T23:00:00Z"
+            },
+            {
+              "name": "Aatrox build 46",
+              "description": "Guide number 46.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub046",
+              "created_at": "2026-07-01T23:00:00Z"
+            },
+            {
+              "name": "Aatrox build 45",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub045",
+              "created_at": "2026-07-01T22:00:00Z"
+            },
+            {
+              "name": "Aatrox build 44",
+              "description": "Guide number 44.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub044",
+              "created_at": "2026-07-01T22:00:00Z"
+            },
+            {
+              "name": "Aatrox build 43",
+              "description": "Guide number 43.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub043",
+              "created_at": "2026-07-01T21:00:00Z"
+            },
+            {
+              "name": "Aatrox build 42",
+              "description": "Guide number 42.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub042",
+              "created_at": "2026-07-01T21:00:00Z"
+            },
+            {
+              "name": "Aatrox build 41",
+              "description": "Guide number 41.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub041",
+              "created_at": "2026-07-01T20:00:00Z"
+            },
+            {
+              "name": "Aatrox build 40",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub040",
+              "created_at": "2026-07-01T20:00:00Z"
+            },
+            {
+              "name": "Aatrox build 39",
+              "description": "Guide number 39.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub039",
+              "created_at": "2026-07-01T19:00:00Z"
+            },
+            {
+              "name": "Aatrox build 38",
+              "description": "Guide number 38.",
+              "game_version": "16.18.1",
+              "runes": {
+                "primary": {
+                  "style": 8000,
+                  "keystone": 8010
+                },
+                "secondary": {
+                  "style": 8400
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "3074",
+                    "6630"
+                  ],
+                  "label": "Core"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/aatroxpub038",
+              "created_at": "2026-07-01T19:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 1,
+            "per_page": 20,
+            "total": 57,
+            "total_pages": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "page-zero",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=0",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "48",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "invalid_request",
+            "message": "page and per_page must be positive integers"
+          }
+        }
+      }
+    },
+    {
+      "id": "page-negative",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=-1",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "47",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "invalid_request",
+            "message": "page and per_page must be positive integers"
+          }
+        }
+      }
+    },
+    {
+      "id": "page-not-a-number",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?page=abc",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "46",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "invalid_request",
+            "message": "page and per_page must be positive integers"
+          }
+        }
+      }
+    },
+    {
+      "id": "per-page-zero",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?per_page=0",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "45",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "invalid_request",
+            "message": "page and per_page must be positive integers"
+          }
+        }
+      }
+    },
+    {
+      "id": "per-page-decimal",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Aatrox/builds?per_page=2.5",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "44",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "invalid_request",
+            "message": "page and per_page must be positive integers"
+          }
+        }
+      }
+    },
+    {
+      "id": "unknown-champion",
+      "note": "no validation of the id: an empty page",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/NotAChampion/builds",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "43",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "NotAChampion",
+          "data": [],
+          "pagination": {
+            "page": 1,
+            "per_page": 20,
+            "total": 0,
+            "total_pages": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "champion-id-case",
+      "note": "exact match on champion_id",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/aatrox/builds",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "42",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "aatrox",
+          "data": [],
+          "pagination": {
+            "page": 1,
+            "per_page": 20,
+            "total": 0,
+            "total_pages": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "ahri",
+      "note": "raw runes/steps JSON, HTML and non-ASCII text, a public build of a private profile",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions/Ahri/builds",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "41",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "champion_id": "Ahri",
+          "data": [
+            {
+              "name": "Ahri mid burst",
+              "description": "<b>Burst</b> & \"roam\" — combo E→Q, 100% <script>safe</script>",
+              "game_version": "16.18.1",
+              "runes": {
+                "shards": [
+                  5008,
+                  5008,
+                  5001
+                ],
+                "primary": {
+                  "perks": [
+                    8139,
+                    8138,
+                    8135
+                  ],
+                  "style": 8100,
+                  "keystone": 8112
+                },
+                "secondary": {
+                  "perks": [
+                    8313,
+                    8345
+                  ],
+                  "style": 8300
+                }
+              },
+              "steps": [
+                {
+                  "items": [
+                    "1056",
+                    "2003",
+                    "2003"
+                  ],
+                  "label": "Start"
+                },
+                {
+                  "note": null,
+                  "items": [
+                    "6655",
+                    "3020",
+                    "4645"
+                  ],
+                  "label": "Core"
+                },
+                {
+                  "items": [],
+                  "label": "Empty"
+                }
+              ],
+              "share_url": "https://league-of-data-base.com/b/ahrimidburst",
+              "created_at": "2026-07-20T18:40:00Z"
+            },
+            {
+              "name": "Ahri support",
+              "description": null,
+              "game_version": "15.24.1",
+              "runes": {},
+              "steps": [],
+              "share_url": "https://league-of-data-base.com/b/ahrisupport",
+              "created_at": "2026-07-19T08:00:00Z"
+            },
+            {
+              "name": "Ahri from a private profile",
+              "description": null,
+              "game_version": "16.18.1",
+              "runes": {},
+              "steps": [],
+              "share_url": "https://league-of-data-base.com/b/ahriprivateowner",
+              "created_at": "2026-07-18T08:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 1,
+            "per_page": 20,
+            "total": 3,
+            "total_pages": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "missing-champion-segment",
+      "request": {
+        "method": "GET",
+        "path": "/v1/champions//builds",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 307,
+        "headers": {
+          "content-type": "text/html; charset=utf-8",
+          "location": "/v1/champions/builds",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "text": "<a href=\"/v1/champions/builds\">Temporary Redirect</a>.\n\n"
+      }
+    }
+  ]
+}

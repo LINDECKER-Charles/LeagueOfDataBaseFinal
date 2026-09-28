@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Si è verificato un errore. Riprova.",
+    "invalid": "Questo valore non è valido.",
+    "required": "Questo campo è obbligatorio.",
+    "email_invalid": "Inserisci un indirizzo email valido.",
+    "email_too_long": "Questo indirizzo email è troppo lungo.",
+    "email_taken": "Un account usa già questo indirizzo email.",
+    "terms_required": "Devi accettare le condizioni d'uso.",
+    "password_too_long": "Questa password è troppo lunga.",
+    "invalid_credentials": "Identificativo o password errati.",
+    "invalid_two_factor": "Questo codice è errato o scaduto.",
+    "locked": "Troppi tentativi falliti: questo account è bloccato per qualche minuto.",
+    "google_cancelled": "L'accesso con Google è stato annullato.",
+    "google_email_unverified": "Google non ha verificato questo indirizzo email, quindi non può essere usato per accedere.",
+    "google_two_factor": "Questo account usa l'autenticazione a due fattori: accedi con la tua email e la tua password.",
+    "sign_out": "Disconnessione non riuscita. Riprova."
+  },
+  "two_factor": {
+    "lede": "Inserisci il codice a 6 cifre della tua app di autenticazione.",
+    "code": "Codice di autenticazione",
+    "recovery_code": "Codice di recupero",
+    "use_recovery": "Usa invece un codice di recupero",
+    "use_app": "Usa invece la mia app di autenticazione"
+  },
+  "password": {
+    "met": "(soddisfatto)",
+    "unmet": "(non soddisfatto)"
+  },
+  "verify": {
+    "title": "Conferma dell'email",
+    "verifying": "Conferma del tuo indirizzo email in corso…",
+    "pending": "Abbiamo inviato un link di conferma a {{ email }}. Aprilo per confermare il tuo indirizzo, oppure richiedine uno nuovo.",
+    "sign_in": "Accedi per ricevere un nuovo link di conferma.",
+    "continue": "Continua"
+  },
+  "editor": {
+    "loading": "Caricamento del tuo profilo…",
+    "load_error": "Impossibile caricare il tuo profilo.",
+    "version_error": "Impossibile cambiare la versione dei tuoi preferiti."
+  }
+}

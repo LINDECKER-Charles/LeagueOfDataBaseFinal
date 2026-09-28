@@ -1,0 +1,4 @@
+{
+  "base_url": "基礎 URL：{{ url }}",
+  "pricing_unavailable": "目前無法顯示價格。"
+}

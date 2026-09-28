@@ -1,0 +1,18 @@
+{{! Text part of the contact notification, the legacy layout. }}LEAGUE OF DATABASE
+{{title}}
+========================================
+
+{{categoryLabel}} : {{category}}
+{{senderLabel}} : {{sender}}
+{{emailLabel}} : {{email}}
+{{#subject}}{{subjectLabel}} : {{subject}}
+{{/subject}}{{receivedLabel}} : {{receivedAt}} UTC{{#visitorLocale}} · {{visitorLocale}}{{/visitorLocale}}
+
+----------------------------------------
+{{message}}
+----------------------------------------
+
+{{replyLabel}} : {{email}}
+
+--
+{{footer}}

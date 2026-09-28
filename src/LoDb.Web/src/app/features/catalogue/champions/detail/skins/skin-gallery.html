@@ -1,0 +1,43 @@
+<ul #strip class="strip">
+  @for (skin of tiles(); track skin.id; let index = $index) {
+    <li class="w-72 shrink-0 snap-start">
+      <figure>
+        <button
+          type="button"
+          class="tile hextech-frame relative block w-full overflow-hidden"
+          [attr.aria-label]="skin.name"
+          (click)="open(index)"
+        >
+          <img
+            class="hx-img h-36 w-full object-cover object-top"
+            [src]="skin.art.splash"
+            [alt]="skin.name"
+            width="288"
+            height="144"
+            loading="lazy"
+            decoding="async"
+          />
+          @if (skin.chromas.length > 0) {
+            <span class="badge" [title]="skin.chromas.length">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3 21 12 12 21 3 12z" />
+                <path d="M7.5 12 12 7.5 16.5 12 12 16.5z" />
+              </svg>
+              {{ skin.chromas.length }}
+            </span>
+          }
+          <span class="tile__zoom" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.3-4.3M11 8v6M8 11h6" />
+            </svg>
+          </span>
+        </button>
+        <figcaption class="mt-2 font-mono text-xs text-text-muted">{{ skin.name }}</figcaption>
+      </figure>
+      @if (skin.chromas.length > 0) {
+        <lodb-chroma-strip [skinName]="skin.name" [chromas]="skin.chromas" />
+      }
+    </li>
+  }
+</ul>

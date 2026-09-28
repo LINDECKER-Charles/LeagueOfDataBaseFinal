@@ -1,0 +1,39 @@
+@let entry = release();
+<details class="release" [open]="open()">
+  <summary class="release__summary">
+    <span class="release__head">
+      <span class="release__version">{{ entry.version }}</span>
+      <span class="release__codename">{{ entry.codename }}</span>
+      <span [class]="'badge badge--' + entry.type">{{
+        'changelog.type.' + entry.type | transloco
+      }}</span>
+      <time class="release__date" [attr.datetime]="entry.date">{{ date() }}</time>
+      <svg
+        class="release__chevron"
+        viewBox="0 0 12 12"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <path d="M2 4l4 4 4-4" />
+      </svg>
+    </span>
+    <!-- Notes in a fallback language (French under ar) read left to right. -->
+    <span
+      class="release__lede"
+      [attr.lang]="contentLanguage()"
+      [attr.dir]="contentLanguage() ? 'ltr' : null"
+      >{{ entry.summary }}</span
+    >
+  </summary>
+
+  <lodb-changelog-release-notes
+    class="release__body"
+    [attr.lang]="contentLanguage()"
+    [attr.dir]="contentLanguage() ? 'ltr' : null"
+    [release]="entry"
+    [labelLanguage]="contentLanguage() ? locale() : null"
+  />
+</details>

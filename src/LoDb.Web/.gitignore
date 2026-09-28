@@ -1,0 +1,14 @@
+# Build outputs and caches of the Angular workspace.
+/dist
+/out-tsc
+/tmp
+/coverage
+/.angular/cache
+
+# Dependencies: installed per checkout with `npm ci`, never shared between worktrees.
+/node_modules
+npm-debug.log
+
+# System files
+.DS_Store
+Thumbs.db

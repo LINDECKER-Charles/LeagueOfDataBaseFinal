@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Pure domain: versions, languages, editions, catalog, derived facts, canonical paths,
+    builds. It references no package and no other project, so it can never do I/O;
+    LoDb.Domain.Tests checks that it only depends on the base runtime.
+  -->
+
+</Project>

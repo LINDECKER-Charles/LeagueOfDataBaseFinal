@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    The desktop host: Kestrel on loopback serving the shell build, the /api proxy and the
+    token endpoints, shown in a Photino window (ADR 0007). WinExe keeps Windows from opening
+    a console next to the window; elsewhere it builds the same apphost as Exe.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>LoDb.Desktop</AssemblyName>
+    <RootNamespace>LoDb.Desktop</RootNamespace>
+    <!-- The web SDK would otherwise publish a web.config and look for wwwroot. -->
+    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!--
+    Build-time settings of a release (L9.4): the update channel picks the API origin, and the
+    Google client is the "desktop app" client of the Google console. Both land in the
+    assembly metadata, so an installed build carries its own.
+  -->
+  <PropertyGroup>
+    <LoDbDesktopChannel Condition="'$(LoDbDesktopChannel)' == ''">stable</LoDbDesktopChannel>
+    <!-- The shell build of the Angular workspace, copied next to the executable. -->
+    <_LoDbWebDist>$(MSBuildProjectDirectory)/../LoDb.Web/dist</_LoDbWebDist>
+    <LoDbShellDir Condition="'$(LoDbShellDir)' == ''">$(_LoDbWebDist)/shell/browser</LoDbShellDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="LoDbDesktopChannel" Value="$(LoDbDesktopChannel)" />
+    <AssemblyMetadata Include="LoDbDesktopGoogleClientId" Value="$(LoDbDesktopGoogleClientId)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content
+      Include="$(LoDbShellDir)/**"
+      LinkBase="shell"
+      CopyToOutputDirectory="PreserveNewest"
+      CopyToPublishDirectory="PreserveNewest"
+      Condition="Exists('$(LoDbShellDir)/index.html')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="LoDb.Desktop.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Only Shell/Photino references these types (ADR 0007); a test keeps it that way. -->
+    <PackageReference Include="Photino.NET" />
+    <PackageReference Include="Photino.Native" />
+    <PackageReference Include="Velopack" />
+    <PackageReference Include="Yarp.ReverseProxy" />
+  </ItemGroup>
+
+</Project>

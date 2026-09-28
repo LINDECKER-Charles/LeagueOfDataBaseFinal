@@ -1,0 +1,57 @@
+<div class="toolbar">
+  <p class="toolbar__count" aria-live="polite">
+    @let matching = filter.view().matching;
+    @let results = split('filter.results' | transloco: { count: matching }, matching);
+    <span class="toolbar__text">{{ results.before }}</span>
+    @if (results.figure !== null) {
+      <span class="toolbar__figure">{{ results.figure }}</span>
+    }
+    <span class="toolbar__text">{{ results.after }}</span>
+    <span class="toolbar__dot" aria-hidden="true">·</span>
+    <span class="toolbar__page">
+      {{ 'filter.page' | transloco: { page: filter.view().page, count: filter.view().pageCount } }}
+    </span>
+  </p>
+  <div class="toolbar__tools">
+    <div class="toolbar__sizes">
+      <span class="toolbar__label">{{ 'filter.per_page' | transloco }}</span>
+      <div class="segments" role="group" [attr.aria-label]="'filter.per_page' | transloco">
+        @for (size of sizes; track size) {
+          <button
+            type="button"
+            class="segment"
+            [attr.aria-pressed]="filter.state().size === size"
+            (click)="filter.setSize(size)"
+          >
+            {{ size === all ? ('filter.all' | transloco) : size }}
+          </button>
+        }
+      </div>
+    </div>
+    @if (filter.view().pageCount > 1) {
+      <nav class="toolbar__pager" [attr.aria-label]="'catalogue.pages' | transloco">
+        @for (step of steps(); track step.rel) {
+          @if (step.page !== null) {
+            <a
+              class="nav"
+              [href]="step.href"
+              [attr.rel]="step.rel"
+              [attr.aria-label]="step.label | transloco"
+              (click)="go($event, step.page)"
+            >
+              <svg class="nav__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path [attr.d]="step.chevron" stroke="currentColor" stroke-width="2" />
+              </svg>
+            </a>
+          } @else {
+            <span class="nav nav--off" aria-hidden="true">
+              <svg class="nav__icon" viewBox="0 0 24 24" fill="none">
+                <path [attr.d]="step.chevron" stroke="currentColor" stroke-width="2" />
+              </svg>
+            </span>
+          }
+        }
+      </nav>
+    }
+  </div>
+</div>

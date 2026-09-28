@@ -1,0 +1,4 @@
+{
+  "base_url": "عنوان URL الأساسي: {{ url }}",
+  "pricing_unavailable": "تعذّر عرض الأسعار حاليًا."
+}

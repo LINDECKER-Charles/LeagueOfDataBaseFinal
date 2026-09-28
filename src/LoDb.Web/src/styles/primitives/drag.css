@@ -1,0 +1,36 @@
+/*
+ * Drag and drop states of the CDK lists (the purchase order of the build editor): the lifted
+ * preview, the legacy drop marks, a dashed slot among medallions and a dashed seam between
+ * rows, and the settling animation. The CDK moves the elements; these rules only draw them.
+ */
+@layer components {
+  .cdk-drag-preview {
+    box-shadow: 0 10px 24px -10px color-mix(in srgb, var(--color-hextech-black) 90%, transparent);
+    opacity: 0.9;
+  }
+  .hx-drop-slot,
+  .hx-drop-row {
+    border: 1px dashed var(--color-gold-rich);
+    background: color-mix(in srgb, var(--color-gold-rich) 12%, transparent);
+    pointer-events: none;
+  }
+  .hx-drop-slot {
+    flex: none;
+    inline-size: 3rem;
+    block-size: 3rem;
+  }
+  .hx-drop-row {
+    block-size: 0.4rem;
+  }
+  .cdk-drag-animating,
+  .cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+    transition: transform 0.2s var(--ease-hextech);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cdk-drag-animating,
+    .cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+      transition: none;
+    }
+  }
+}

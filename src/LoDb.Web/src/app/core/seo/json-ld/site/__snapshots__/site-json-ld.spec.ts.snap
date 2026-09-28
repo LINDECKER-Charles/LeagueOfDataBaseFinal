@@ -1,0 +1,163 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`site JSON-LD builders > describes a public profile without its absent fields 1`] = `
+{
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "mainEntity": {
+    "@type": "Person",
+    "name": "Faker",
+    "url": "https://league-of-data-base.com/fr/u/Faker",
+  },
+}
+`;
+
+exports[`site JSON-LD builders > describes the about page, the dataset and the FAQ 1`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://league-of-data-base.com/fr/about#about",
+  "@type": "AboutPage",
+  "description": "Le projet",
+  "inLanguage": "fr",
+  "name": "À propos",
+  "url": "https://league-of-data-base.com/fr/about",
+}
+`;
+
+exports[`site JSON-LD builders > describes the about page, the dataset and the FAQ 2`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://league-of-data-base.com/fr/about/data#dataset",
+  "@type": "Dataset",
+  "creator": {
+    "@id": "https://league-of-data-base.com/#organization",
+  },
+  "description": "Champions, objets, runes et sorts, patch par patch.",
+  "inLanguage": [
+    "en",
+    "fr",
+  ],
+  "isAccessibleForFree": true,
+  "isBasedOn": "https://developer.riotgames.com/docs/lol#data-dragon",
+  "keywords": [
+    "League of Legends",
+    "Data Dragon",
+  ],
+  "name": "League of Legends game data",
+  "url": "https://league-of-data-base.com/fr/about/data",
+  "version": "16.19.1",
+}
+`;
+
+exports[`site JSON-LD builders > describes the about page, the dataset and the FAQ 3`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://league-of-data-base.com/fr/faq#faq",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "De Data Dragon.",
+      },
+      "name": "D'où viennent les données ?",
+    },
+  ],
+  "url": "https://league-of-data-base.com/fr/faq",
+}
+`;
+
+exports[`site JSON-LD builders > links WebSite, Organization and WebPage in one graph 1`] = `
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@id": "https://league-of-data-base.com/#website",
+      "@type": "WebSite",
+      "description": "Encyclopédie League of Legends",
+      "inLanguage": "fr",
+      "name": "League Of Data Base",
+      "publisher": {
+        "@id": "https://league-of-data-base.com/#organization",
+      },
+      "url": "https://league-of-data-base.com/",
+    },
+    {
+      "@id": "https://league-of-data-base.com/#organization",
+      "@type": "Organization",
+      "description": "Encyclopédie League of Legends",
+      "logo": {
+        "@id": "https://league-of-data-base.com/#logo",
+        "@type": "ImageObject",
+        "url": "https://league-of-data-base.com/favicon/icon-512.png",
+      },
+      "name": "League Of Data Base",
+      "sameAs": [
+        "https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal",
+        "https://github.com/LINDECKER-Charles",
+      ],
+      "url": "https://league-of-data-base.com/",
+    },
+    {
+      "@id": "https://league-of-data-base.com/fr/about#webpage",
+      "@type": "WebPage",
+      "inLanguage": "fr",
+      "isPartOf": {
+        "@id": "https://league-of-data-base.com/#website",
+      },
+      "name": "À propos — League Of Data Base",
+      "url": "https://league-of-data-base.com/fr/about",
+    },
+  ],
+}
+`;
+
+exports[`site JSON-LD builders > lists twenty entries at most 1`] = `
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "name": "Champion 1",
+      "position": 1,
+      "url": "https://league-of-data-base.com/fr/champions/C1",
+    },
+    {
+      "@type": "ListItem",
+      "name": "Champion 2",
+      "position": 2,
+      "url": "https://league-of-data-base.com/fr/champions/C2",
+    },
+  ],
+  "numberOfItems": 2,
+}
+`;
+
+exports[`site JSON-LD builders > numbers a breadcrumb from the home 1`] = `
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "item": "https://league-of-data-base.com/fr/",
+      "name": "Accueil",
+      "position": 1,
+    },
+    {
+      "@type": "ListItem",
+      "item": "https://league-of-data-base.com/fr/champions",
+      "name": "Champions",
+      "position": 2,
+    },
+    {
+      "@type": "ListItem",
+      "item": "https://league-of-data-base.com/fr/champions/Ahri",
+      "name": "Ahri",
+      "position": 3,
+    },
+  ],
+}
+`;

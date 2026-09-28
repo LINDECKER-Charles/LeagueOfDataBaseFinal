@@ -1,0 +1,155 @@
+<section id="approach">
+  <h2>1. Our approach</h2>
+  <p>
+    {{ info().siteName }} uses
+    <strong
+      >no advertising cookies, no third-party tracking cookies and no external analytics
+      tool</strong
+    >. The only cookies set are first-party cookies (issued by the site itself), strictly necessary
+    for the service or used to remember a preference you explicitly asked for. Audience measurement
+    is performed server-side, <strong>without cookies</strong> (see the
+    <a [routerLink]="link('legal/privacy')">privacy policy</a>).
+  </p>
+</section>
+
+<hr class="hx-rule" />
+
+<section id="cookies">
+  <h2>2. Cookies we use</h2>
+  <div class="hx-table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Type</th>
+          <th scope="col">Purpose</th>
+          <th scope="col">Lifetime</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>__Host-lodb.antiforgery</strong><br /><strong>XSRF-TOKEN</strong></td>
+          <td>Essential (security)</td>
+          <td>
+            Anti-CSRF protection pair, set on every visit: the first is HttpOnly, the second is read
+            by the site's script and sent back in a header with every change you submit —
+            SameSite=Strict, Secure over HTTPS
+          </td>
+          <td>Session — deleted when the browser closes</td>
+        </tr>
+        <tr>
+          <td><strong>__Host-lodb.session</strong></td>
+          <td>Authentication (set only when you sign in)</td>
+          <td>
+            Keeps you signed in to your account. Protected content, nothing kept on the server —
+            HttpOnly, Secure, SameSite=Lax
+          </td>
+          <td>
+            Browser session, 1 day at most; 30 days, renewed while in use, if you tick "keep me
+            signed in"
+          </td>
+        </tr>
+        <tr>
+          <td><strong>.AspNetCore.Correlation.*</strong></td>
+          <td>Authentication (set only when you sign in with Google)</td>
+          <td>
+            Protects the round trip to Google's sign-in page against forgery; deleted on your return
+            — HttpOnly, Secure, SameSite=Lax
+          </td>
+          <td>15 minutes at most</td>
+        </tr>
+        <tr>
+          <td><strong>lod_prefs</strong></td>
+          <td>Preference (set only if you tick "remember" in the version/language selector)</td>
+          <td>
+            Remembers your chosen site language, Data Dragon language and version between visits;
+            the server reads the site language to open the home page (/) in it. Unsigned content,
+            readable by the site's scripts — SameSite=Lax, Secure over HTTPS. Without the tick, the
+            choice lasts for the browsing session only, in the browser's session storage, not in a
+            cookie
+          </td>
+          <td>1 year</td>
+        </tr>
+        <tr>
+          <td><strong>lod_theme</strong></td>
+          <td>Preference (set only if you pick a theme)</td>
+          <td>
+            Remembers the colour theme you chose. Readable by the site's scripts — SameSite=Lax,
+            Secure over HTTPS
+          </td>
+          <td>1 year</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    No other cookie is set by the site. The site does not use the browser's local storage
+    (localStorage) for tracking purposes either.
+  </p>
+</section>
+
+<hr class="hx-rule" />
+
+<section id="consent">
+  <h2>3. Consent</h2>
+  <p>
+    Under the ePrivacy rules as interpreted by the French CNIL (article 82 of the French Data
+    Protection Act), cookies that are <strong>strictly necessary</strong> for the service, or whose
+    sole purpose is to store a preference explicitly requested by the user, are
+    <strong>exempt from consent</strong>. Every cookie in the table above falls into that category —
+    which is why the site shows no consent banner. Should non-essential cookies ever be introduced,
+    prior consent collection would be put in place.
+  </p>
+</section>
+
+<hr class="hx-rule" />
+
+<section id="stripe">
+  <h2>4. Stripe checkout</h2>
+  <p>
+    When you make a donation, you are redirected to a payment page hosted by
+    <strong>Stripe</strong> (stripe.com domain). Stripe then sets its own cookies
+    <strong>on its own domain</strong>, in particular for security and fraud prevention; those
+    cookies are neither controlled nor readable by {{ info().siteName }}. See the
+    <a href="https://stripe.com/legal/cookies-policy" target="_blank" rel="noopener noreferrer"
+      >Stripe cookie policy</a
+    >
+    for details.
+  </p>
+</section>
+
+<hr class="hx-rule" />
+
+<section id="pwa">
+  <h2>5. Installable app (PWA)</h2>
+  <p>
+    The site can be installed as an app (PWA). In that context, a
+    <em>service worker</em> keeps local copies of site resources (pages, styles, images) in your
+    browser's cache to speed up navigation and allow degraded offline browsing. These caches are
+    <strong>purely technical</strong>: they contain no tracking identifier and never leave your
+    device. You can clear them at any time from your browser settings ("clear site data").
+  </p>
+</section>
+
+<hr class="hx-rule" />
+
+<section id="manage">
+  <h2>6. Managing or deleting</h2>
+  <p>
+    You can delete existing cookies and configure your browser to refuse them at any time ("Privacy"
+    or "Cookies and site data" settings). Possible consequences:
+  </p>
+  <ul>
+    <li>
+      without the session and security cookies, browsing still works — the version and the language
+      you read are in the page's address — but signing in to an account becomes impossible;
+    </li>
+    <li>deleting <strong>__Host-lodb.session</strong> signs you out;</li>
+    <li>deleting <strong>lod_prefs</strong> resets the remembered language and version;</li>
+    <li>deleting <strong>lod_theme</strong> restores the default theme.</li>
+  </ul>
+  <p>
+    Questions: <a href="mailto:{{ info().publisherEmail }}">{{ info().publisherEmail }}</a
+    >.
+  </p>
+</section>

@@ -1,0 +1,4 @@
+{
+  "base_url": "Základní URL: {{ url }}",
+  "pricing_unavailable": "Ceník teď nelze zobrazit."
+}

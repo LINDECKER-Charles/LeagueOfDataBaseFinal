@@ -1,0 +1,51 @@
+<lodb-page-head
+  [eyebrow]="'admin.eyebrows.surveillance' | adminText"
+  [title]="'admin.journal.title' | adminText"
+  [documentTitle]="'admin.journal.document_title' | adminText"
+  [subtitle]="'admin.journal.lede' | adminText: { months: months() }"
+/>
+
+<lodb-panel-state [panel]="volume" shape="kpi" />
+@if (volume.value(); as held) {
+  <div class="kpi-grid">
+    <lodb-kpi
+      accent="hex"
+      [label]="'admin.journal.volume.entries' | adminText"
+      [value]="held.entries | figure"
+    />
+    <lodb-kpi
+      [label]="'admin.journal.volume.total' | adminText"
+      [value]="held.totalBytes | figure: 'bytes'"
+      [sub]="
+        held.oldest
+          ? ('admin.journal.volume.since' | adminText: { day: (held.oldest | stamp: 'day-iso') })
+          : null
+      "
+    />
+    <lodb-kpi
+      accent="good"
+      [label]="'admin.journal.volume.retention' | adminText"
+      [value]="'admin.journal.volume.months' | adminText: { months: held.retentionMonths }"
+      [sub]="'admin.journal.volume.cutoff' | adminText: { day: (held.retentionCutoff | stamp) }"
+    />
+  </div>
+}
+
+<lodb-admin-rule [label]="'admin.rules.filter' | adminText" />
+@if (vocabulary.failure()) {
+  <lodb-panel-state [panel]="vocabulary" />
+}
+<lodb-journal-filters [vocabulary]="vocabulary.value()" />
+
+<lodb-panel-state [panel]="journal" shape="table" />
+@if (journal.value(); as page) {
+  <lodb-admin-card>
+    <lodb-audit-table [entries]="page.items" [attr.aria-busy]="journal.busy()" />
+  </lodb-admin-card>
+  <lodb-admin-pager [page]="page.page" [hasMore]="page.hasMore" />
+}
+
+<lodb-admin-rule [label]="'admin.rules.maintenance' | adminText" />
+<lodb-admin-card class="mt-[1.15rem]">
+  <lodb-journal-purge [months]="months()" (purged)="reload()" />
+</lodb-admin-card>

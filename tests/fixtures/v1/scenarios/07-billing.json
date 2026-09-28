@@ -1,0 +1,20 @@
+{
+  "title": "Metering: /v1/usage is never counted, every other authorised request is (400 and 404 included)",
+  "steps": [
+    { "id": "usage-start", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+    { "id": "usage-repeat", "repeat": 2, "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+    { "id": "wait-for-metering-1", "action": "sleep", "ms": 1500 },
+    { "id": "usage-not-counted", "note": "still 0 after three /v1/usage calls", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+
+    { "id": "billed-400-pagination", "request": { "method": "GET", "path": "/v1/champions/Aatrox/builds?page=0", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+    { "id": "billed-400-range", "request": { "method": "GET", "path": "/v1/trends/items?range=1d", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+    { "id": "billed-404-profile", "request": { "method": "GET", "path": "/v1/profiles/NobodyHere", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+    { "id": "billed-404-trend-type", "request": { "method": "GET", "path": "/v1/trends/skins", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+    { "id": "billed-200", "request": { "method": "GET", "path": "/v1/profiles/PublicPlayer", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+    { "id": "billed-head", "note": "HEAD is routed like GET, hence billed", "request": { "method": "HEAD", "path": "/v1/profiles/PublicPlayer", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+    { "id": "not-billed-unrouted", "note": "an unknown /v1 route never reaches authentication", "request": { "method": "GET", "path": "/v1/nothing-here", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+    { "id": "not-billed-options", "request": { "method": "OPTIONS", "path": "/v1/profiles/PublicPlayer", "headers": { "X-Api-Key": "{{key:billing}}" } } },
+    { "id": "wait-for-metering-2", "action": "sleep", "ms": 1500 },
+    { "id": "usage-after-billed-requests", "note": "6 billed requests: the four errors, the 200 and the HEAD", "request": { "method": "GET", "path": "/v1/usage", "headers": { "X-Api-Key": "{{key:billing}}" } } }
+  ]
+}

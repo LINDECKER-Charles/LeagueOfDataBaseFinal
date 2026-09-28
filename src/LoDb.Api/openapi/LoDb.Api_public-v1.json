@@ -1,0 +1,1229 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "LoDb.Api | public-v1",
+    "description": "Read-only access to the public data of League of Data Base: profiles, builds and trends. Every request presents a key, as a bearer token or in X-Api-Key; its plan sets a monthly quota, then prepaid credits pay, and a rate limit per minute. Refusals read {\"error\": {\"code\", \"message\"}}.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/profiles/{username}": {
+      "get": {
+        "tags": [
+          "Public API"
+        ],
+        "summary": "A public profile: its favorites and how many public builds it has.",
+        "operationId": "v1GetProfile",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [ ]
+          },
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
+    "/v1/champions/{championId}/builds": {
+      "get": {
+        "tags": [
+          "Public API"
+        ],
+        "summary": "The public builds of a champion, newest first, a page at a time.",
+        "operationId": "v1ListChampionBuilds",
+        "parameters": [
+          {
+            "name": "championId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page, from 1; beyond the last one, an empty page.",
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64",
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Builds per page, from 1; above 50, capped.",
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [ ]
+          },
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
+    "/v1/trends/{type}": {
+      "get": {
+        "tags": [
+          "Public API"
+        ],
+        "summary": "The 25 most viewed entities of a type over the last 7 or 30 days.",
+        "operationId": "v1GetTrends",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "champions",
+                "items",
+                "runes",
+                "summoners"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "range",
+            "in": "query",
+            "description": "The window: the last 7 or 30 UTC days, today included.",
+            "schema": {
+              "enum": [
+                "7d",
+                "30d"
+              ],
+              "type": "string",
+              "default": "7d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [ ]
+          },
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
+    "/v1/usage": {
+      "get": {
+        "tags": [
+          "Public API"
+        ],
+        "summary": "The plan of the key and its consumption this month.",
+        "operationId": "v1GetUsage",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests the key may make per minute, in bursts of as many.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests left in the current burst.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix time when the burst is whole again; after a 429, when a request is.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [ ]
+          },
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BuildItem": {
+        "required": [
+          "name",
+          "description",
+          "game_version",
+          "runes",
+          "steps",
+          "share_url",
+          "created_at"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Its title."
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Its text as written, markup included; null when none."
+          },
+          "game_version": {
+            "type": "string",
+            "description": "The patch it was written for."
+          },
+          "runes": {
+            "description": "The runes document, as stored.",
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "steps": {
+            "description": "The item steps, as stored.",
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "share_url": {
+            "type": "string",
+            "description": "Its page on the site, absolute."
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Its creation, in UTC.",
+            "format": "date-time"
+          }
+        },
+        "description": "A public build, as `/v1` lists it."
+      },
+      "BuildsResponse": {
+        "required": [
+          "champion_id",
+          "data",
+          "pagination"
+        ],
+        "type": "object",
+        "properties": {
+          "champion_id": {
+            "type": "string",
+            "description": "The champion as the path spells it."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildItem"
+            },
+            "description": "The page, newest first."
+          },
+          "pagination": {
+            "description": "Where the page stands.",
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "description": "The body of `GET /v1/champions/{championId}/builds`."
+      },
+      "ErrorBody": {
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "description": "A refusal: a stable machine-readable code and a message for humans."
+      },
+      "ErrorEnvelope": {
+        "required": [
+          "error"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "description": "The body of every JSON refusal of `/v1`, `{\"error\": {\"code\", \"message\"}}`: a\ncontract of go-api, never a ProblemDetails."
+      },
+      "JsonElement": { },
+      "PaginationMeta": {
+        "required": [
+          "page",
+          "per_page",
+          "total",
+          "total_pages"
+        ],
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "The page asked for, beyond the last one included.",
+            "format": "int64"
+          },
+          "per_page": {
+            "type": "integer",
+            "description": "Entries per page, once capped.",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Entries of the whole collection.",
+            "format": "int64"
+          },
+          "total_pages": {
+            "type": "integer",
+            "description": "Pages of the collection, one at least.",
+            "format": "int64"
+          }
+        },
+        "description": "Where a page stands in its collection."
+      },
+      "ProfileFavorites": {
+        "required": [
+          "champion_id",
+          "item_id",
+          "rune_id",
+          "summoner_id"
+        ],
+        "type": "object",
+        "properties": {
+          "champion_id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "item_id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rune_id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "summoner_id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "The favorites of a public profile, each null when not chosen."
+      },
+      "ProfileResponse": {
+        "required": [
+          "username",
+          "created_at",
+          "favorites",
+          "public_builds"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "The username as the account spells it."
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Creation of the account, in UTC.",
+            "format": "date-time"
+          },
+          "favorites": {
+            "description": "The favorites shown on the profile.",
+            "$ref": "#/components/schemas/ProfileFavorites"
+          },
+          "public_builds": {
+            "type": "integer",
+            "description": "Builds of the account anyone can open.",
+            "format": "int64"
+          }
+        },
+        "description": "The body of `GET /v1/profiles/{username}`."
+      },
+      "TrendEntry": {
+        "required": [
+          "rank",
+          "id",
+          "name",
+          "edition",
+          "views"
+        ],
+        "type": "object",
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "description": "From 1.",
+            "format": "int32"
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the entity in Data Dragon."
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Its name in the latest catalog in en_US; left out when unknown."
+          },
+          "edition": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`modern` or `classic` for the items and the summoner spells; left out for the\nothers."
+          },
+          "views": {
+            "type": "integer",
+            "description": "Its views over the window.",
+            "format": "int64"
+          }
+        },
+        "description": "An entity of a ranking of `/v1/trends`."
+      },
+      "TrendsResponse": {
+        "required": [
+          "type",
+          "range",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type as the path spells it."
+          },
+          "range": {
+            "type": "string",
+            "description": "The window, `7d` or `30d`."
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendEntry"
+            },
+            "description": "The most viewed entities, 25 at most."
+          }
+        },
+        "description": "The body of `GET /v1/trends/{type}`."
+      },
+      "UsageResponse": {
+        "required": [
+          "plan",
+          "monthly_quota",
+          "used_this_month",
+          "remaining_this_month",
+          "credits_balance",
+          "rate_limit_per_min"
+        ],
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string",
+            "description": "free, credits, monthly, monthly_plus, annual or annual_plus."
+          },
+          "monthly_quota": {
+            "type": "integer",
+            "description": "Requests the plan pays for each UTC month.",
+            "format": "int64"
+          },
+          "used_this_month": {
+            "type": "integer",
+            "description": "Billed requests of the month, credits included, as written by the last flush.",
+            "format": "int64"
+          },
+          "remaining_this_month": {
+            "type": "integer",
+            "description": "What is left of the quota, zero at least.",
+            "format": "int64"
+          },
+          "credits_balance": {
+            "type": "integer",
+            "description": "Prepaid requests left, spent once the quota is.",
+            "format": "int64"
+          },
+          "rate_limit_per_min": {
+            "type": "integer",
+            "description": "Requests allowed per minute, in bursts of as many.",
+            "format": "int32"
+          }
+        },
+        "description": "The body of `GET /v1/usage`: the plan of the key and its consumption."
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "description": "The key as a bearer token: Authorization: Bearer lodb_…",
+        "scheme": "bearer"
+      },
+      "apiKey": {
+        "type": "apiKey",
+        "description": "The key in its own header, read when no bearer token is sent.",
+        "name": "X-Api-Key",
+        "in": "header"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Public API"
+    }
+  ]
+}

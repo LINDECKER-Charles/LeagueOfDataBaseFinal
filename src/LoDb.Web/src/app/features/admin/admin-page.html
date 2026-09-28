@@ -1,0 +1,9 @@
+<lodb-notices-outlet />
+<router-outlet (activate)="panelOpen.set(true)" (deactivate)="panelOpen.set(false)" />
+@if (!panelOpen()) {
+  @defer (on immediate) {
+    <lodb-overview-panel />
+  } @placeholder {
+    <lodb-skeleton shape="block" />
+  }
+}

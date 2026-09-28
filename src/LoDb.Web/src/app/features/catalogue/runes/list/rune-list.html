@@ -1,0 +1,57 @@
+<div class="relative isolate px-6 py-12">
+  <lodb-backdrop />
+  <div class="relative mx-auto max-w-[110rem]">
+    @if (context(); as current) {
+      <lodb-list-heading
+        [version]="current.version"
+        [title]="'rune.list.title' | transloco"
+        [count]="list.list()?.total ?? list.firstPage()?.total ?? null"
+        [countLabel]="'rune.list.title' | transloco | lowercase"
+      />
+
+      @if (trees().length > 0) {
+        <nav class="mb-6 flex flex-wrap gap-2.5" [attr.aria-label]="'facet.rune.path' | transloco">
+          @for (tree of trees(); track tree.key) {
+            <a
+              class="hx-chip gap-2 py-1.5 text-xs tracking-normal normal-case transition-colors hover:border-gold hover:text-gold-bright"
+              [routerLink]="linkOf(current, tree.canonicalPath)"
+            >
+              <!-- The dead .dds marks of 7.22 to 8.7: the name alone, as the legacy chip read. -->
+              @if (tree.image.status !== 'absent') {
+                <lodb-catalogue-image
+                  class="size-5 rounded-full"
+                  [image]="tree.image"
+                  [name]="tree.name"
+                  [size]="pathIconSize"
+                  imgClass="object-contain"
+                  eager
+                />
+              }
+              {{ tree.name }}
+            </a>
+          }
+        </nav>
+      } @else {
+        <!-- The legacy kept its empty path nav, 24px over the list; flex, so that margin does
+             not collapse into the heading's. -->
+        <div class="mb-6 flex" aria-hidden="true"></div>
+      }
+
+      <lodb-catalogue-list
+        [source]="list"
+        [adapter]="adapter"
+        [schema]="schema()"
+        [searchLabel]="'rune.list.search_placeholder' | transloco"
+        [label]="'rune.list.title' | transloco"
+      >
+        <lodb-rune-card
+          *lodbCatalogueCard="let card of list; index as position"
+          [card]="card"
+          [context]="current"
+          [caption]="captionOf(card)"
+          [eager]="position < eagerCards"
+        />
+      </lodb-catalogue-list>
+    }
+  </div>
+</div>

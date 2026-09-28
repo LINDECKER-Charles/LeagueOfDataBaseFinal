@@ -1,0 +1,79 @@
+/*
+ * Skeletons (ui/skeleton): placeholders of a `@defer` block or of data in flight. Their job is
+ * twofold: no empty hole while the content arrives, and a reserved size so its arrival shifts
+ * nothing. The sweep is shared with the image lifecycle (images.css), so every "not there yet"
+ * surface reads the same. Layered as components, so a utility still resizes a placeholder.
+ *
+ * The gradient is a `background-image`, never the `background` shorthand: the build moves a
+ * color-mix() declaration into an @supports copy of its rule emitted after it, where the
+ * shorthand would reset `background-size` and freeze the sweep.
+ */
+@keyframes hx-sk-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@layer components {
+  .hx-sk {
+    display: block;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 16%, transparent);
+    background-image: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-gold) 5%, transparent),
+      color-mix(in srgb, var(--color-gold) 13%, transparent),
+      color-mix(in srgb, var(--color-gold) 5%, transparent)
+    );
+    background-size: 200% 100%;
+    animation: hx-sk-sweep 1.6s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hx-sk {
+      animation: none;
+    }
+  }
+
+  .hx-sk-line {
+    block-size: 0.85rem;
+    inline-size: 100%;
+  }
+  .hx-sk-title {
+    block-size: 1.6rem;
+    inline-size: 60%;
+  }
+  .hx-sk-bar {
+    block-size: 2.5rem;
+    inline-size: 100%;
+  }
+  .hx-sk-block {
+    aspect-ratio: 16 / 9;
+    inline-size: 100%;
+  }
+  .hx-sk-tile {
+    block-size: 9rem;
+    inline-size: 100%;
+  }
+  /*
+   * As tall as the card it stands for (a champion's portrait card measures 183 to 231 px of
+   * text under its art): a shorter placeholder collapses the page while the list loads, and
+   * everything sized on the page's height, the backdrop's glows first, shifts with it.
+   */
+  .hx-sk-portrait {
+    inline-size: 100%;
+    padding-block-end: 12rem;
+  }
+  .hx-sk-portrait::before {
+    content: '';
+    display: block;
+    aspect-ratio: 4 / 5;
+  }
+  .hx-sk-circle {
+    block-size: 3rem;
+    inline-size: 3rem;
+    border-radius: 50%;
+  }
+}

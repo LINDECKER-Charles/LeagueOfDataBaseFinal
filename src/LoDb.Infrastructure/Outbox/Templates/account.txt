@@ -1,0 +1,16 @@
+{{! Text part of the account e-mails, the legacy layout. }}{{wordmarkSubtitle}}
+LEAGUE OF DATABASE
+========================================
+
+{{heading}}
+
+{{lede}}
+
+{{ctaLabel}} :
+{{actionUrl}}
+
+{{note}}
+
+--
+{{footerReason}}
+{{rights}}

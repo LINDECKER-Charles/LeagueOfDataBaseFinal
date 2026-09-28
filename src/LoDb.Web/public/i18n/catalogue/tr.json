@@ -1,0 +1,12 @@
+{
+  "pages": "Sayfalar",
+  "loading": "Liste yükleniyor…",
+  "pending": {
+    "title": "Bu yama hazırlanıyor",
+    "text": "Verileri hâlâ geliyor: liste kısa süre içinde tamamlanacak."
+  },
+  "failed": {
+    "title": "Liste yüklenemedi",
+    "text": "Birazdan tekrar deneyin."
+  }
+}

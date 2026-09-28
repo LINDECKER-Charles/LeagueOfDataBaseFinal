@@ -1,0 +1,60 @@
+<header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <p class="eyebrow">{{ 'build.list.eyebrow' | transloco }}</p>
+    <h1
+      class="mt-2 font-beaufort text-3xl font-bold tracking-wide text-gold-grad uppercase sm:text-4xl"
+    >
+      {{ 'build.list.title' | transloco }}
+    </h1>
+  </div>
+  @if (store.rows().length > 0) {
+    <a lodbButton="gold" [routerLink]="newLink">{{ 'build.list.new' | transloco }}</a>
+  }
+</header>
+<hr class="hx-rule mb-8" />
+
+@switch (store.status()) {
+  @case ('loading') {
+    <p class="py-16 text-center font-mono text-sm text-text-muted" role="status">
+      {{ 'buildsEditor.list.loading' | transloco }}
+    </p>
+  }
+  @case ('error') {
+    <div class="flex flex-col items-center gap-4 py-16 text-center" role="alert">
+      <p class="text-text-muted">{{ 'buildsEditor.list.failed' | transloco }}</p>
+      <button lodbButton="ghost" type="button" (click)="store.reload()">
+        {{ 'build.editor.retry' | transloco }}
+      </button>
+    </div>
+  }
+  @default {
+    @if (store.rows().length > 0) {
+      <ul class="space-y-4">
+        @for (row of store.rows(); track row.id) {
+          <li>
+            <lodb-build-row
+              [row]="row"
+              [versions]="store.versions()"
+              (importTo)="importTo(row, $event)"
+              (discard)="confirmDelete(row)"
+            />
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="hextech-frame p-10 text-center">
+        <p class="eyebrow mb-3">{{ 'common.no_result.text' | transloco }}</p>
+        <p class="mx-auto max-w-md text-sm text-text-muted">{{ 'build.list.empty' | transloco }}</p>
+        <div class="mt-6 flex items-center justify-center gap-3">
+          <button lodbButton="ghost" type="button" (click)="back()">
+            {{ 'common.no_result.back' | transloco }}
+          </button>
+          <a lodbButton [routerLink]="homeLink">{{ 'header.navigation.home' | transloco }}</a>
+        </div>
+      </div>
+      <div class="mt-6 text-center">
+        <a lodbButton="gold" [routerLink]="newLink">{{ 'build.list.cta_first' | transloco }}</a>
+      </div>
+    }
+  }
+}

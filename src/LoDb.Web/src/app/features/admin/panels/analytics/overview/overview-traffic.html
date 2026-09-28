@@ -1,0 +1,85 @@
+<lodb-panel-state [panel]="report" shape="chart" />
+@if (report.value(); as data) {
+  <div class="kpi-grid mb-[1.15rem]" [attr.aria-busy]="report.busy()">
+    <lodb-kpi
+      [label]="'admin.overview.kpi.views' | adminText"
+      [value]="data.totals.views | figure: 'compact'"
+      [sub]="
+        'admin.overview.kpi.views_sub'
+          | adminText: { count: (data.totals.botViews | figure: 'compact') }
+      "
+    >
+      <lodb-sparkline [values]="traffic().series[0]?.values ?? []" color="var(--color-gold)" />
+    </lodb-kpi>
+    <lodb-kpi
+      accent="hex"
+      [label]="'admin.overview.kpi.visitors' | adminText"
+      [value]="data.totals.uniqueVisitors | figure: 'compact'"
+      [sub]="
+        'admin.overview.kpi.visitors_sub'
+          | adminText: { count: (data.totals.returningVisitors | figure: 'compact') }
+      "
+    >
+      <lodb-sparkline [values]="traffic().series[1]?.values ?? []" />
+    </lodb-kpi>
+    <lodb-kpi
+      accent="green"
+      [label]="'admin.overview.kpi.top_page' | adminText"
+      [value]="data.topPages[0]?.count ?? 0 | figure: 'compact'"
+      [sub]="data.topPages[0]?.name ?? '—'"
+    />
+  </div>
+
+  <div class="admin-grid admin-grid--3">
+    <lodb-admin-card
+      class="span-2"
+      [heading]="'admin.overview.frequentation' | adminText"
+      [chip]="'admin.overview.frequentation_chip' | adminText"
+    >
+      <lodb-time-series-chart
+        [dates]="traffic().dates"
+        [series]="traffic().series"
+        [label]="'admin.overview.frequentation_label' | adminText"
+      />
+      <lodb-legend [items]="traffic().legend" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.overview.by_resource' | adminText">
+      <lodb-donut-chart
+        [slices]="resources()"
+        [label]="'admin.overview.by_resource_label' | adminText"
+        [total]="data.totals.views | figure: 'compact'"
+        [caption]="'admin.traffic.views_caption' | adminText"
+      />
+    </lodb-admin-card>
+  </div>
+
+  <div class="admin-grid admin-grid--2 mt-[1.15rem]">
+    <lodb-admin-card [heading]="'admin.overview.top_pages' | adminText">
+      <a
+        lodbCardHead
+        lodbChip
+        class="hover:text-gold-bright"
+        routerLink="/admin/traffic"
+        [queryParams]="{ range: data.range }"
+        >{{ 'admin.overview.detail_link' | adminText }}</a
+      >
+      <lodb-rank-list [rows]="pages()" [limit]="8" empty="admin.overview.top_pages_empty" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.overview.sources' | adminText">
+      <a
+        lodbCardHead
+        lodbChip
+        class="hover:text-gold-bright"
+        routerLink="/admin/audience"
+        [queryParams]="{ range: data.range }"
+        >{{ 'admin.overview.audience_link' | adminText }}</a
+      >
+      <lodb-rank-list
+        tone="hex"
+        [rows]="sources()"
+        [limit]="6"
+        empty="admin.overview.sources_empty"
+      />
+    </lodb-admin-card>
+  </div>
+}

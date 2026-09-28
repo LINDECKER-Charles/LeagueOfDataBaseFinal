@@ -1,0 +1,82 @@
+@let item = details().profile;
+@if (stats().length > 0) {
+  <section lodbFrame class="p-5">
+    <h2 class="panel-title">{{ 'item.detail.stats' | transloco }}</h2>
+    <dl>
+      @for (row of stats(); track $index) {
+        <div class="stat-row">
+          <dt class="stat-row__label">
+            @if (row.icon; as icon) {
+              <img
+                class="stat-icon"
+                [src]="icon"
+                alt=""
+                width="18"
+                height="18"
+                loading="lazy"
+                decoding="async"
+              />
+            }
+            {{ row.label | transloco }}
+          </dt>
+          <!-- A signed figure (+75, +25 %) keeps its order on an RTL page. -->
+          <dd class="stat-row__value" dir="ltr">{{ row.value }}</dd>
+        </div>
+      }
+    </dl>
+  </section>
+}
+
+<section lodbFrame class="p-5">
+  <h2 class="panel-title">{{ 'item.detail.gold_ledger' | transloco }}</h2>
+  <dl class="grid grid-cols-3 gap-2">
+    <div class="hx-plate">
+      <dt class="hx-plate__label">{{ 'item.detail.price_total' | transloco }}</dt>
+      <dd class="hx-plate__value text-gold">{{ item.gold.total }}</dd>
+    </div>
+    <div class="hx-plate">
+      <dt class="hx-plate__label">{{ 'item.detail.price_base' | transloco }}</dt>
+      <dd class="hx-plate__value">{{ item.gold.base }}</dd>
+    </div>
+    <div class="hx-plate">
+      <dt class="hx-plate__label">{{ 'item.detail.price_sell' | transloco }}</dt>
+      <dd class="hx-plate__value">{{ item.gold.sell }}</dd>
+    </div>
+  </dl>
+</section>
+
+@if (hasAvailability()) {
+  <section lodbFrame class="p-5">
+    <h2 class="panel-title">{{ 'item.detail.availability' | transloco }}</h2>
+    <ul class="flex flex-wrap gap-2">
+      @if (depth(); as depth) {
+        <li class="hx-chip border-gold/50 text-gold">
+          {{ 'item.detail.tier' | transloco: { depth } }}
+        </li>
+      }
+      @for (champion of bindings(); track champion.id) {
+        <li>
+          <a
+            class="hx-chip border-gold/50 text-gold hover:text-gold-bright"
+            [routerLink]="linkOf(context(), champion.canonicalPath)"
+            >{{ champion.name }}</a
+          >
+        </li>
+      }
+      @for (map of details().availableMaps; track map) {
+        <li class="hx-chip">{{ mapLabel(map) | transloco: { id: map } }}</li>
+      }
+    </ul>
+  </section>
+}
+
+@if (item.tags.length > 0) {
+  <section lodbFrame class="p-5">
+    <h2 class="panel-title">{{ 'item.detail.categories' | transloco }}</h2>
+    <ul class="flex flex-wrap gap-2">
+      @for (tag of item.tags; track tag) {
+        <li class="hx-chip">{{ tagLabel(tag) }}</li>
+      }
+    </ul>
+  </section>
+}

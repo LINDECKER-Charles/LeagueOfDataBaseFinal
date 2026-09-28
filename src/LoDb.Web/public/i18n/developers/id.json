@@ -1,0 +1,4 @@
+{
+  "base_url": "URL dasar: {{ url }}",
+  "pricing_unavailable": "Harga tidak dapat ditampilkan saat ini."
+}

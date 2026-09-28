@@ -1,0 +1,57 @@
+<details class="switcher switcher--account" lodbDisclosure>
+  <summary
+    class="px-2.5 md:px-3.5"
+    [attr.aria-label]="user()?.username ?? ('nav.account' | transloco)"
+  >
+    <lodb-icon name="user" class="size-4" />
+    <span class="hidden lg:inline">{{ label() ?? ('nav.account' | transloco) }}</span>
+    <lodb-icon name="chevron" class="switcher__chevron" />
+  </summary>
+  <ul class="switcher__panel switcher__panel--menu">
+    @if (user()) {
+      <li>
+        <a
+          class="nav-link"
+          [routerLink]="link('account/profile')"
+          routerLinkActive="text-gold-bright"
+          ariaCurrentWhenActive="page"
+          >{{ 'nav.profile' | transloco }}</a
+        >
+      </li>
+      <li>
+        <a
+          class="nav-link"
+          [routerLink]="link('account/builds')"
+          routerLinkActive="text-gold-bright"
+          ariaCurrentWhenActive="page"
+          >{{ 'nav.builds' | transloco }}</a
+        >
+      </li>
+      <li class="gold-hairline my-1 h-px" aria-hidden="true"></li>
+      <li>
+        <button type="button" class="nav-link" [disabled]="leaving()" (click)="signOut()">
+          {{ 'auth.logout' | transloco }}
+        </button>
+      </li>
+    } @else {
+      <li>
+        <a
+          class="nav-link"
+          [routerLink]="link('account/login')"
+          routerLinkActive="text-gold-bright"
+          ariaCurrentWhenActive="page"
+          >{{ 'nav.login' | transloco }}</a
+        >
+      </li>
+      <li>
+        <a
+          class="nav-link"
+          [routerLink]="link('account/register')"
+          routerLinkActive="text-gold-bright"
+          ariaCurrentWhenActive="page"
+          >{{ 'nav.register' | transloco }}</a
+        >
+      </li>
+    }
+  </ul>
+</details>

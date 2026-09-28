@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    The OpenAPI documents are generated on demand only, by the api:generate script and the
+    contract CI job: `dotnet build -p:LoDbGenerateOpenApi=true` writes
+    openapi/LoDb.Api_app.json and openapi/LoDb.Api_public-v1.json (the SDK names each file
+    after the project and the document). A plain build never touches them.
+  -->
+  <PropertyGroup>
+    <OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/openapi</OpenApiDocumentsDirectory>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(LoDbGenerateOpenApi)' == 'true'">
+    <OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="LoDb.Api.Tests" />
+    <InternalsVisibleTo Include="LoDb.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" />
+    <PackageReference Include="Isopoh.Cryptography.Argon2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" PrivateAssets="all" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+    <PackageReference Include="Stripe.net" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The legacy stack's list of common passwords, refused by the password policy. -->
+    <EmbeddedResource
+      Include="Modules/Accounts/Security/Policy/common-passwords.txt"
+      LogicalName="common-passwords.txt" />
+    <!-- Names of the products a Stripe Checkout page shows, by locale. -->
+    <EmbeddedResource
+      Include="Modules/Billing/Catalog/product-names.json"
+      LogicalName="billing-product-names.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../LoDb.Ingestion/LoDb.Ingestion.csproj" />
+  </ItemGroup>
+
+</Project>

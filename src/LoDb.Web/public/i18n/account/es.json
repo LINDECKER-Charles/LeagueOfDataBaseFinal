@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Algo salió mal. Inténtalo de nuevo.",
+    "invalid": "Este valor no es válido.",
+    "required": "Este campo es obligatorio.",
+    "email_invalid": "Introduce una dirección de correo electrónico válida.",
+    "email_too_long": "Esta dirección de correo electrónico es demasiado larga.",
+    "email_taken": "Ya hay una cuenta con esta dirección de correo electrónico.",
+    "terms_required": "Debes aceptar las condiciones de uso.",
+    "password_too_long": "Esta contraseña es demasiado larga.",
+    "invalid_credentials": "Identificador o contraseña incorrectos.",
+    "invalid_two_factor": "Este código es incorrecto o ha caducado.",
+    "locked": "Demasiados intentos fallidos: esta cuenta está bloqueada durante unos minutos.",
+    "google_cancelled": "Se canceló el inicio de sesión con Google.",
+    "google_email_unverified": "Google no ha verificado esta dirección de correo electrónico, así que no puede usarse para iniciar sesión.",
+    "google_two_factor": "Esta cuenta usa la autenticación en dos pasos: inicia sesión con tu correo electrónico y tu contraseña.",
+    "sign_out": "No se pudo cerrar la sesión. Inténtalo de nuevo."
+  },
+  "two_factor": {
+    "lede": "Introduce el código de 6 dígitos de tu aplicación de autenticación.",
+    "code": "Código de autenticación",
+    "recovery_code": "Código de recuperación",
+    "use_recovery": "Usar un código de recuperación",
+    "use_app": "Usar mi aplicación de autenticación"
+  },
+  "password": {
+    "met": "(cumplido)",
+    "unmet": "(no cumplido)"
+  },
+  "verify": {
+    "title": "Confirmación del correo electrónico",
+    "verifying": "Confirmando tu dirección de correo electrónico…",
+    "pending": "Se ha enviado un enlace de confirmación a {{ email }}. Ábrelo para confirmar tu dirección o solicita uno nuevo.",
+    "sign_in": "Inicia sesión para recibir un nuevo enlace de confirmación.",
+    "continue": "Continuar"
+  },
+  "editor": {
+    "loading": "Cargando tu perfil…",
+    "load_error": "No se pudo cargar tu perfil.",
+    "version_error": "No se pudo cambiar la versión de tus favoritos."
+  }
+}

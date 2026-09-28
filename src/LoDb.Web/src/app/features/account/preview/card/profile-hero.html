@@ -1,0 +1,51 @@
+@if (profile().backdrop; as backdrop) {
+  <img
+    #art
+    class="profile-hero__art"
+    [src]="backdrop.image"
+    alt=""
+    width="1280"
+    height="720"
+    fetchpriority="high"
+    decoding="async"
+    (error)="fallBack(art)"
+  />
+} @else {
+  <lodb-backdrop />
+}
+<div class="profile-hero__scrim" aria-hidden="true"></div>
+@if (orbs().length > 0) {
+  <div class="profile-orbits" aria-hidden="true">
+    @for (orb of orbs(); track orb.slot) {
+      <div
+        class="profile-orb"
+        [class]="'profile-orb--p' + orb.position"
+        [class.profile-orb--primary]="orb.primary"
+      >
+        <lodb-image
+          class="profile-orb__disc"
+          [src]="orb.image"
+          [width]="84"
+          [height]="84"
+          [initials]="orb.initials"
+          imgClass="object-cover"
+        />
+      </div>
+    }
+  </div>
+}
+<div class="profile-hero__body">
+  <p class="eyebrow">{{ 'profile.public.eyebrow' | transloco }}</p>
+  <h1 class="profile-hero__name text-gold-grad">
+    <span class="min-w-0 break-words">{{ name() }}</span>
+    @if (profile().isSupporter) {
+      <lodb-supporter-badge />
+    }
+  </h1>
+  <p class="profile-hero__meta">
+    <span>{{ 'profile.identity.member_since' | transloco }} · {{ since() }}</span>
+    @if (profile().showcase.skin; as skin) {
+      <span class="profile-hero__skin">{{ skin.name }}</span>
+    }
+  </p>
+</div>

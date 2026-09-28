@@ -1,0 +1,157 @@
+/*
+ * The key's own blocks: the one-time reveal, the creation form, the plates of the overview
+ * with the quota meter, and the lifecycle actions, revocation in the danger tone. Their grids
+ * and rows follow the legacy portal's breakpoints: stacked on a phone, side by side from `sm`.
+ */
+@layer components {
+  .key-reveal {
+    margin-block-end: 2rem;
+    padding: 1.5rem;
+  }
+
+  .key-reveal__warning {
+    margin-block-start: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-gold-bright);
+  }
+
+  .key-reveal__row,
+  .create-key__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .key-reveal__row {
+    margin-block-start: 1rem;
+  }
+
+  .create-key__form {
+    margin-block-start: 1.25rem;
+  }
+
+  .key-reveal__field {
+    flex: 1 1 auto;
+  }
+
+  @media (width >= 40rem) {
+    .key-reveal__row,
+    .create-key__form {
+      flex-direction: row;
+      align-items: flex-end;
+    }
+
+    .create-key__name {
+      flex: 1 1 auto;
+      max-inline-size: 20rem;
+    }
+  }
+
+  .key-plates {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    margin-block-start: 1.25rem;
+  }
+
+  @media (width >= 40rem) {
+    .key-plates {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (width >= 64rem) {
+    .key-plates {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .key-plate__note {
+    margin-block-start: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+  }
+
+  .key-meter {
+    display: block;
+    margin-block-start: 0.4rem;
+    block-size: 8px;
+    background: color-mix(in srgb, var(--color-gold-dark) 60%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-gold-dark) 80%, transparent);
+  }
+
+  .key-meter__fill {
+    display: block;
+    block-size: 100%;
+    background: linear-gradient(90deg, var(--color-hex-deep), var(--color-hex));
+  }
+
+  .key-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-block-start: 1.5rem;
+  }
+
+  @media (width >= 40rem) {
+    .key-actions {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+  }
+
+  .key-actions__end {
+    text-align: end;
+  }
+
+  .key-actions__help {
+    margin-block-start: 0.5rem;
+    max-inline-size: 42rem;
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+  }
+
+  /* The editor's danger ghost (profile-danger__button): the legacy mix at rest, lit on hover. */
+  .key-actions__revoke {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+    background: transparent;
+    font-family: var(--font-beaufort);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: color-mix(in srgb, var(--color-danger) 80%, var(--color-text));
+    cursor: pointer;
+    transition:
+      color 0.3s var(--ease-hextech),
+      border-color 0.3s var(--ease-hextech),
+      background-color 0.3s var(--ease-hextech);
+  }
+
+  .key-actions__revoke:hover:not(:disabled) {
+    border-color: var(--color-danger);
+    color: var(--color-danger-light);
+    background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  }
+
+  .key-actions__revoke:focus-visible {
+    outline: 2px solid var(--color-danger-light);
+    outline-offset: 2px;
+  }
+
+  .key-actions__revoke:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .key-actions__revoke {
+      transition: none;
+    }
+  }
+}

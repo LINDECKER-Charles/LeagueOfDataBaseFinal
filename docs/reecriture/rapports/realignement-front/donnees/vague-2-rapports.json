@@ -1,0 +1,1826 @@
+{
+ "LISTS": {
+  "fix": {
+   "wp": "LISTS",
+   "commits": [
+    "75ceabf2 refactor(front/ui): deplacer les cartes du catalogue dans ui/cards",
+    "ba90c61a fix(front/catalogue): caler rail, colonnes, marges et compteur de liste",
+    "241171be fix(front/catalogue): garder chaque carte dans sa cellule hydratee",
+    "48ac4e97 fix(front/catalogue): rendre titre et pli aux groupes de facettes",
+    "122e1db4 feat(front/catalogue): ajouter le lien a copier au pied de la console",
+    "3a8abae2 fix(front/catalogue): rendre a la console ses ombres, halos et biseaux",
+    "1f938a9b fix(front/catalogue): afficher le texte court Rechercher dans les listes",
+    "f6c94a1a fix(front/catalogue): aligner la tete des resultats et les listes vides",
+    "66b0c133 fix(front/catalogue): rendre a la feuille de filtres poignee et pied",
+    "89cb6665 feat(front/catalogue): rendre aux champions leur carte portrait",
+    "d4452116 fix(front/ui): zoomer l'icone des cartes et couvrir l'image en attente",
+    "587a7241 fix(front/ui): compacter les accordeons de carte et leur chevron",
+    "19174229 feat(front/catalogue): lister les evolutions possibles des objets",
+    "6defeecd feat(front/home): partager la carte d'entree, relire les apercus froids"
+   ],
+   "results": [
+    {
+     "id": "Z02-06",
+     "status": "fixed",
+     "note": "New feature-local lodb-facet-group (facets/facet-group.ts): hollow 7px .marker, Beaufort 0.75rem gold name at 0.14em, cyan square badge, 14px solid chevron, no inline padding. I did not create primitives/filter.css. I kept the class name .marker, so the identities reshape it. Rail probe matches the legacy."
+    },
+    {
+     "id": "Z02-07",
+     "status": "fixed",
+     "note": "ui/accordion rows lose min-h-11 and are 36.5px, as in the legacy. The icon registry gets a new 'chevron-solid' glyph. I did not add a coarse-pointer bump, to match the legacy; 36.5px still passes WCAG 2.5.8 AA."
+    },
+    {
+     "id": "Z02-08",
+     "status": "fixed",
+     "note": "Champion card rewritten: name in text-gold-grad, title in Spiegel. See Z04-03."
+    },
+    {
+     "id": "Z02-09",
+     "status": "fixed",
+     "note": "ListHeading boxes the count in .list-count, inside @layer components so the theme rules still win. The champions page now uses ListHeading; champions-page.css is removed."
+    },
+    {
+     "id": "Z02-14",
+     "status": "fixed",
+     "note": "EntityCard image zooms on hover (group-hover:scale-110). The unused 'round' input becomes fit='mark' (round box with the inset ring, art at 0.72). Measured hover scale is 1.1 on both stacks."
+    },
+    {
+     "id": "Z02-15",
+     "status": "fixed",
+     "note": "A pending CatalogueImage shows the initials under the sweep (::after, background-image). The rule lives in the component styles, not in foundation/images.css."
+    },
+    {
+     "id": "Z02-M01",
+     "status": "fixed",
+     "note": "Rune card box is square again (rounded-full removed)."
+    },
+    {
+     "id": "Z02-M02",
+     "status": "fixed",
+     "note": "New splitAroundCount helper cuts the translated ICU string around its figure. The figure is mono 1.05rem cyan, the words 0.8rem muted; empty parts are hidden. With no figure found, the whole string shows as text."
+    },
+    {
+     "id": "Z02-M03",
+     "status": "fixed",
+     "note": "Placeholder is common.search ('Search…', 'Rechercher…') in the rail and the mobile bar. The per-list sentence stays as the aria-label."
+    },
+    {
+     "id": "Z02-M04",
+     "status": "fixed",
+     "note": "Console head has its hextech-black 35% band, the gold marker its 12px glow, the gauge fill its hex 40% halo."
+    },
+    {
+     "id": "Z03-04",
+     "status": "fixed",
+     "note": "Cards moved to ui/cards. The home carries edition through PreviewEntry and PreviewCard and renders its tiles with EntityCard. The LoL Classic badge shows on SummonerBarrier_Jade and SummonerBattleCry_Jade, and the capture matches the legacy."
+    },
+    {
+     "id": "Z03-06",
+     "status": "fixed",
+     "note": "Home tiles use EntityCard: 306x84 card, 56px bg-void box, same padding. Pixel match at 1440. li min-w-0 lets long captions truncate at 320px; the layout spec passes."
+    },
+    {
+     "id": "Z03-09",
+     "status": "fixed",
+     "note": "Home tiles inherit the EntityCard hover zoom."
+    },
+    {
+     "id": "Z03-10",
+     "status": "fixed",
+     "note": "Home rune paths use fit='mark': round box with the --hx-ring-accent-2 inset ring, art at [transform:scale(0.72)], which composes with the hover scale. Capture matches the legacy."
+    },
+    {
+     "id": "Z03-13",
+     "status": "fixed",
+     "note": "PreviewCard.image is a CatalogImage, so pending images show the sweeping slot. The fetcher now reads Retry-After ($Response), only for previews that show a pending image; a pending home is served 'transient'. The browser reads the previews once more after the delay (injectRefreshedSections). The HTTP transfer cache drops headers, so the server's delay reaches the hydrating browser through TransferState (inject-retry-transfer), without touching app.config.ts. Verified on /en/?version=16.5.1: slots at t0, images after about 8s. retryAfterOf moved to core/http."
+    },
+    {
+     "id": "Z04-01",
+     "status": "fixed",
+     "note": "catalogue-list rail defaults to 'end'. Console x is 1116 at 1440 and 700 at 1024 on both stacks; it mirrors to the left in RTL."
+    },
+    {
+     "id": "Z04-02",
+     "status": "fixed",
+     "note": "CopyLink promoted from builds to ui/controls/copy-link.ts, with a labels input and a stretch option. The console foot is a full-width ghost button with filter.copy_link/copied/copy_error; its URL is origin + filter.urlOf({}). Foot metrics match the legacy (67px, 12px 16px padding; button 42px)."
+    },
+    {
+     "id": "Z04-03",
+     "status": "fixed",
+     "note": "Portrait card: 4:5 loadingArt over the gold weave and the initials; the whole card is the link. Card is 197x426 at 1440 on both stacks. The versioned icon overlay is deliberately left out: on the legacy page its box is both relative and absolute, relative wins, and only a clipped sliver shows under the art (probed). The legacy's visible result wins here, as in HOME Z03-18. EAGER_CARDS is 5."
+    },
+    {
+     "id": "Z04-04",
+     "status": "fixed",
+     "note": "Two-line blurb (card.blurb) shows under the roles."
+    },
+    {
+     "id": "Z04-05",
+     "status": "fixed",
+     "note": "'See details' (common.detail) CTA with the sliding arrow, mirrored in RTL. Hover turns it cyan and scales the art 1.05, as in the legacy."
+    },
+    {
+     "id": "Z04-06",
+     "status": "fixed",
+     "note": "Gold-gradient Beaufort name, Spiegel title. EntityCard is unchanged."
+    },
+    {
+     "id": "Z04-07",
+     "status": "fixed",
+     "note": "Grid columns follow viewport breakpoints: 1/2/3/4, or 2/3/4/5 with columns='portrait', gap 1.25rem. Columns, widths and gaps are identical on the 4 lists at 1440, 1024, 768 and 390."
+    },
+    {
+     "id": "Z04-08",
+     "status": "fixed",
+     "note": "'Possible evolutions' accordion (item.list.evolutions) between Categories and Description, fed by card.upgrades and a Map over list.related. Boots card with the accordion open is 698px on both stacks; chip styles are identical."
+    },
+    {
+     "id": "Z04-09",
+     "status": "fixed",
+     "note": "The summary fallback came from API wave 1. It exposed a bug: Riot's bare <li> closed the ul/li grid cells during parsing, so hydration failed on /en/items and the whole list never loaded. The grid is now div role=list/listitem, with an SSR spec. Emberknife shows its Description."
+    },
+    {
+     "id": "Z04-10",
+     "status": "fixed",
+     "note": "See Z02-06."
+    },
+    {
+     "id": "Z04-11",
+     "status": "fixed",
+     "note": "Group body is a flex column with gap 0.8rem, padding 0.1rem 0 0.9rem, no inline padding. The gap-4 wrapper is removed; chips wrap as in the legacy."
+    },
+    {
+     "id": "Z04-12",
+     "status": "fixed",
+     "note": "Engaged group lights its marker cyan with a glow and shows the square cyan badge."
+    },
+    {
+     "id": "Z04-13",
+     "status": "fixed",
+     "note": "Folding is kept per surface in CatalogueFilter.folds (rail, sheet). An effect pins an engaged group open (pinEngagedGroups). The sheet keeps its folding across openings (checked in the browser); the rail folds independently. Unit tests added."
+    },
+    {
+     "id": "Z04-14",
+     "status": "fixed",
+     "note": "Chip clip-path is a literal 6px polygon, not a token, so every identity keeps the cut, as in the legacy. Checked under zaun and noxus."
+    },
+    {
+     "id": "Z04-15",
+     "status": "fixed",
+     "note": "Search field uses a literal 8px bevel and has the inner cyan focus glow; box-shadow is now in the transition."
+    },
+    {
+     "id": "Z04-16",
+     "status": "fixed",
+     "note": "Placeholder 'Search…'. Without the '/' hint (mobile bar) the end padding is 0.75rem; .search__input--hinted reserves 2rem."
+    },
+    {
+     "id": "Z04-17",
+     "status": "fixed",
+     "note": "See Z02-M02."
+    },
+    {
+     "id": "Z04-18",
+     "status": "fixed",
+     "note": "Pager draws the legacy SVG chevrons, mirrored in RTL: 2rem square, gold on void with a gold-deep border, gold-bright and gold border on hover. The per-page label gap is 0.5rem, as in the legacy."
+    },
+    {
+     "id": "Z04-19",
+     "status": "fixed",
+     "note": "See Z02-09. The plate wraps under the title at 390."
+    },
+    {
+     "id": "Z04-21",
+     "status": "fixed",
+     "note": "px-6 on items, runes and summoners: content at x=24 at 390."
+    },
+    {
+     "id": "Z04-22",
+     "status": "fixed",
+     "note": "New lodb-catalogue-empty: framed common.no_result.text with '← Back' (ghost, Location.back) and 'Home' (primary). It shows when view.total is 0 and there is no notice. /en/7.20.1/runes matches the legacy."
+    },
+    {
+     "id": "Z04-23",
+     "status": "fixed",
+     "note": "See Z02-07. Accordion rows are 36.5px on both stacks."
+    },
+    {
+     "id": "Z04-24",
+     "status": "fixed",
+     "note": "See Z02-14. Rune card zoom added too."
+    },
+    {
+     "id": "Z04-25",
+     "status": "fixed",
+     "note": "The sheet draws its own pane, with no lodb-dialog and no X (legacy had none). Handle, a single head row (gold marker, h2 title as labelledBy, badge, gauge), padding 0.75rem 1.25rem, panel-to-black gradient, 84dvh; only .sheet__body scrolls. Boxes are identical to the legacy at 390. The filters.spec sheet test is updated."
+    },
+    {
+     "id": "Z04-26",
+     "status": "fixed",
+     "note": "'Clear' is a bordered Beaufort button, 2.75rem high. The foot is transparent with a top rule. The gold CTA keeps the hx-btn-gold type (14px), which is what the legacy actually computes."
+    },
+    {
+     "id": "Z04-27",
+     "status": "fixed",
+     "note": "Console has the two-layer box-shadow and the head band."
+    },
+    {
+     "id": "Z04-28",
+     "status": "fixed",
+     "note": "Restored: glows on the gold and cyan markers, gauge fill glow, gold-deep to gold range fill (RTL-aware), mobile bar gradient, halo on engaged chips, chip press at scale 0.96."
+    },
+    {
+     "id": "Z04-29",
+     "status": "fixed",
+     "note": "See Z02-M01."
+    },
+    {
+     "id": "Z04-M02",
+     "status": "fixed",
+     "note": "min-block-size 2rem removed from the active chips; the coarse 2.5rem target is kept."
+    },
+    {
+     "id": "Z04-M03",
+     "status": "fixed",
+     "note": "Filtered empty panel: gap 0.75rem and an extra 0.4rem above the Clear filters button. Capture matches the legacy."
+    },
+    {
+     "id": "Z07-01",
+     "status": "fixed",
+     "note": "See Z04-01."
+    },
+    {
+     "id": "Z07-02",
+     "status": "fixed",
+     "note": "See Z04-07. Runes have 4 columns at 1440 and 3 at 1024, gap 20px."
+    },
+    {
+     "id": "Z07-03",
+     "status": "fixed",
+     "note": "See Z02-M01."
+    },
+    {
+     "id": "Z07-04",
+     "status": "fixed",
+     "note": "Rune card zoom: scale 1.1 on hover on both stacks."
+    },
+    {
+     "id": "Z07-05",
+     "status": "fixed",
+     "note": "See Z02-M03."
+    },
+    {
+     "id": "Z07-06",
+     "status": "fixed",
+     "note": "See Z02-09. '62 RUNES' plate on its own row at 390."
+    },
+    {
+     "id": "Z07-07",
+     "status": "fixed",
+     "note": "See Z04-21."
+    },
+    {
+     "id": "Z07-08",
+     "status": "fixed",
+     "note": "See Z04-02."
+    },
+    {
+     "id": "Z07-09",
+     "status": "fixed",
+     "note": "See Z02-M02."
+    },
+    {
+     "id": "Z07-10",
+     "status": "fixed",
+     "note": "See Z02-06."
+    },
+    {
+     "id": "Z07-11",
+     "status": "fixed",
+     "note": "See Z04-27 and Z02-M04."
+    },
+    {
+     "id": "Z07-12",
+     "status": "fixed",
+     "note": "See Z04-25 and Z04-26."
+    },
+    {
+     "id": "Z07-13",
+     "status": "fixed",
+     "note": "See Z04-22."
+    },
+    {
+     "id": "Z07-14",
+     "status": "fixed",
+     "note": "Path chip image rendered only when the image is not absent: /en/8.1.1/runes reads 'Domination' alone, as in the legacy."
+    },
+    {
+     "id": "Z07-25",
+     "status": "fixed",
+     "note": "See Z04-18."
+    },
+    {
+     "id": "Z07-M04",
+     "status": "fixed",
+     "note": "See Z04-M02."
+    },
+    {
+     "id": "Z12-11",
+     "status": "fixed",
+     "note": "Placeholder is common.search in all locales (fr 'Rechercher…', ar 'بحث…'), with no truncation at 390 or 320. I did not delete the summoners i18n scope: summoners.search_placeholder is still the search field's accessible name. Deleting those files would also risk a modify/delete conflict with ENTITYDET's detail keys."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Web/src/app/ui/cards/{entity-card,catalogue-image,edition-badge,initials-of}.ts + cards.spec.ts: moved with git mv from features/catalogue/shared/cards (a new ui/cards folder) so the home can import them (Z03-04). Later edits: zoom, fit='mark', pending slot.",
+    "Import path of the moved cards changed (one line each) in DETAIL/ENTITYDET files: catalogue/champions/detail/abilities/{ability-media,ability-showcase}.ts, champions/detail/stats/stat-board.ts, items/detail/item-detail.ts, items/detail/recipe/recipe-tree.ts, runes/detail/rune-detail.ts, runes/detail/constellation/rune-constellation.ts, summoners/detail/summoner-detail.ts.",
+    "src/LoDb.Web/src/app/ui/controls/copy-link.ts: moved from features/builds/share/copy/copy-link.ts; texts become a labels input, plus a stretch option. ui/controls/controls.spec.ts gets 2 CopyLink specs. features/builds/share/share-page.ts (import) and share-page.html (passes the build.show.* labels) (Z04-02).",
+    "src/LoDb.Web/src/app/ui/accordion/accordion-item.html: min-h-11 dropped, solid chevron. ui/media/icon.html and icon-name.ts: new 'chevron-solid' glyph (Z02-07/Z04-23).",
+    "src/LoDb.Web/src/app/core/http/retry-after-of.ts: moved from features/catalogue/shared/data so the home can read Retry-After (Z03-13).",
+    "features/home/** (HOME's area, for Z03-04/06/09/10/13 assigned to LISTS): data/{preview-entry,preview-card,home-data}.ts, new data/fetched-previews.ts, loading/{inject-previews-fetcher,preview-of,sections-of,resolve-home,resolve-home.spec}.ts, new loading/inject-refreshed-sections.ts and inject-retry-transfer.ts, home-page.ts (2 lines), home-page.spec.ts, sections/preview-section.{html,ts}.",
+    "tests/LoDb.E2E/specs/catalogue/filters.spec.ts: the short-phone sheet test now checks that .sheet__body scrolls and that the head and the CTA stay in view (Z04-25)."
+   ],
+   "checks": "Run through heavy.sh in the worktree.\n- **Build:** npm run build:web succeeds and component style budgets hold. The initial bundle warning was already there (674.15 kB against a 500 kB budget; the base branch was at 672.46 kB).\n- **Static checks:** typecheck clean, ng lint clean, and lint/architecture.test.mjs passes (9/9). prettier --check --end-of-line auto is clean on every changed file under src/LoDb.Web; the edited E2E spec also fails it, but it already did before this change (it sits outside the Web prettier config).\n- **Unit tests:** the full Vitest suite ran once: 2116 of 2117 pass. The failure was champion-page.spec 'loads the skin gallery once its section is scrolled to' (5 s timeout, DETAIL area); it passes when run alone. The rewritten .snap files were restored with git checkout.\n- **E2E (preview :4410, --workers=1):** catalogue, champions, items, runes, summoners, home and public all pass, including the 320 px layout probes in en and ar, axe and identities. The only failure is public/outcomes 'move a former URL … in one hop' (a legacy URL redirect that only nginx serves). The first catalogue run hit context-teardown timeouts while the machine was loaded; the rerun was 7/7 green.\n- **Visual checks against the legacy (:8080):**\n  - Grid columns, widths and gaps are identical on the 4 lists at 1440, 1024, 768 and 390.\n  - Card boxes are identical: champion 197x426, item with the accordion open 251x698, rune 251x174. Hover zoom is equal (1.05 and 1.1).\n  - The rail, facet headings, sheet boxes, toolbar, empty states, home tiles and pending-home refill match.\n  - Checked in Hextech, noxus, zaun and spirit-blossom, in fr and ar RTL, and on pinned 14.1.1, 8.1.1 and 7.20.1.\n- **Clean-up:** no process left, worktree clean.",
+   "followups": [
+    "Expect merge conflicts with HOME: preview-card/preview-entry/preview-of/sections-of, preview-section.html/.ts, resolve-home(.spec), home-page.ts/spec. The portrait branch now reads card.image.url ?? null (image is a CatalogImage), so HOME's loadingArt change (Z03-02) has to be applied on top of it.",
+    "ENTITYDET edits features/catalogue/shared/cards/{edition-badge,catalogue-image}.ts (Z06-07, Z06-20). Those files now live in ui/cards. The commits are pure renames, so rename detection should carry the edits over, but check the catalogue-image template, since my pending slot and their absent placeholder change it.",
+    "BUILDS edits share-page.html/.ts (Z10-01) near the lodb-copy-link line: possible adjacent-line conflict.",
+    "HOME's Z03-16 creates ui/surfaces/empty-state.ts with the same markup as features/catalogue/shared/list/catalogue-empty.ts: after both land, use one component for both.",
+    "The summoners i18n scope (public/i18n/summoners, search_placeholder) is kept as the search's accessible name; delete it only if the field should go back to the legacy 'Search…' aria-label.",
+    "Champion card omits the versioned patch icon over the art, because the legacy shows only a clipped sliver of it; if the intended overlay is wanted, it takes about 10 lines in champion-card.ts.",
+    "In ar RTL the rail gauge 'matching / total' reads reversed through bidi: not a finding, and it predates this work; wrapping it in a dir=ltr isolate would fix it.",
+    "champion-page.spec 'loads the skin gallery once its section is scrolled to' times out under a loaded full-suite run (DETAIL): a flaky 5 s viewport-defer test."
+   ]
+  },
+  "review": {
+   "verdict": "ok",
+   "issues": [],
+   "commits_added": [],
+   "residual": [
+    "RTL gauge, a pre-existing bug the fixer also flagged: in ar, the rail gauge '12 / 62' shows as '62 / 12' because of the bidi algorithm (checked on /ar/runes?path=Domination). The fix is dir=\"ltr\" (or unicode-bidi: isolate) on the gauge value in shared/console/filter-console.html and filter-sheet.html. It is outside the package findings, so I did not change it.",
+    "Filtered empty panel (/en/items?q=zzzzqq): it starts 16 px higher than on the legacy page. The legacy keeps its empty 0-height grid as a flex item between the active filters and the panel, which adds one more 1rem gap. The panel box is identical otherwise. Not a finding; left as is.",
+    "Empty version (/en/7.20.1/runes): the legacy page is 24 px lower because it renders an empty <nav class=\"mb-6\"> for the rune paths. The new page drops that empty landmark, which is better for accessibility. Left as is.",
+    "Search field: 16 px text and 44 px tall against the legacy 12.8 px and 38.8 px. This follows the repo rule that inputs are at least 16 px. The console below it sits 5 px lower as a result.",
+    "Champion card: the fixer left out the versioned icon overlay of the verified Z04-03 fix, because the legacy page shows only a clipped 10 px sliver of it (checked in a zoomed capture). The legacy visible result wins; about 10 lines if the overlay is ever wanted.",
+    "Naming: the component FacetGroup (shared/console/facets/facet-group.ts) has the same name as the model interface FacetGroup (shared/facets/model/facet-group.ts) in the same feature. It compiles, but a later rename of the component (and its file) would remove the ambiguity.",
+    "CatalogueList.rail still accepts 'start', but no caller passes it now that 'end' is the default. It is a dead option (KISS), kept because it is harmless.",
+    "home/sections/preview-section.html calls hrefOf(card.link) in the template, which builds a new UrlTree on each change detection. The cost is negligible under OnPush; a computed map would be cleaner (HOME area).",
+    "Merge follow-ups from the fixer are still valid: conflicts with HOME (preview-*, resolve-home, home-page), ENTITYDET (renamed ui/cards/catalogue-image.ts and edition-badge.ts) and BUILDS (share-page.html next to lodb-copy-link). Also, HOME's future ui/surfaces/empty-state.ts duplicates shared/list/catalogue-empty.ts.",
+    "filter.copy_link, filter.copied and filter.copy_error exist in en and fr only, as in the legacy. In ar, the rail and the sheet show English labels (Filters, Results, Copy link, Clear), as on the legacy page.",
+    "Not run: specs/builds-share (it would cover the moved CopyLink on /b/{token}). It creates accounts and builds in the lodb-next database, which is read-only for this review. share-page.spec.ts ('offers its link to copy') and the two CopyLink specs in ui/controls/controls.spec.ts cover it and pass.",
+    "Housekeeping: I removed the empty, untracked folder features/builds/share/copy/ left on disk by the git mv of copy-link.ts. No commit was needed."
+   ],
+   "checks": "Review of the 14 commits (docs/reecriture-dotnet-angular..HEAD, 82 files).\n\n- **Commits:** every subject is Conventional, French, infinitive, unaccented, lowercase and at most 72 characters. No commit carries an attribution line. Nothing under editorial/changelog/published is committed (it is still marked skip-worktree). Nothing touches app.config.ts, app.html, generated artifacts or the legacy sources. Each E2E spec change sits in the same commit as the code it follows.\n- **Conventions:** every changed file is at most 323 lines (resolve-home.spec.ts). Functions are at most 30 lines and take at most 3 parameters. Each file has one public element. No colour is hard-coded (tokens and color-mix only), and the CSS uses logical properties, with :dir(rtl) mirrors on the pager chevrons and the range fill. Component rules keep single-class specificity: the identities' [data-theme] :is(lodb-filter-console, ...) .marker at (0,2,1) still beats .marker[_ngcontent] at (0,2,0).\n- **Fresh build (heavy.sh):** npm run build:web passes. The only warning is the pre-existing initial bundle budget (674.15 kB against 500 kB, base 672.46 kB), and no anyComponentStyle error.\n- **Static checks:** typecheck is clean and ng lint passes on every file. prettier --check --end-of-line auto is clean on all 79 changed files under src/LoDb.Web. The edited E2E spec failed Prettier before this branch too. lint/*.test.mjs (architecture) passes 9/9.\n- **Unit tests:** the full front suite ran once with vitest-limited: 2117/2117 tests and 240/240 files pass. Two .snap files were rewritten for line endings only and restored with git checkout.\n- **E2E on the preview (:4410, --workers=1):** catalogue, champions, items, runes, summoners, home and public: 149 passed, 1 failed. The failure is public/outcomes 'move a former URL ... in one hop' (/16.19.1/champion/Annie gives 404 instead of 301), a legacy redirect that only nginx serves.\n- **Visual checks against the legacy stack (:8080), fresh captures:**\n  - Champions, items, runes, summoners and home at 1440 and 390: side by side almost pixel-identical. Page heights differ by 16 px, all in the footer.\n  - Grid columns, gaps, x offsets and first-card sizes are identical on champions, items and summoners at 1024, 768 and 320. No horizontal scroll.\n  - Filter console geometry, two-layer box-shadow, head band and foot: identical, apart from the 16 px input.\n  - Mobile sheet at 390: identical boxes (handle, head, scrolling body, bordered Clear, gold call to action), with the same padding and gradient.\n  - Boots card with Possible evolutions open: 251x697.5 on both stacks, the same 10 chips.\n  - Champion card hover: CTA turns rgb(10,200,185), the arrow moves 4px, the art scales to 1.05.\n  - 8.1.1 path chips show the name only on both stacks.\n  - Empty version (7.20.1 runes) and filtered-empty panels match, apart from the offsets noted in residual.\n  - Home tiles: the LoL Classic badges, the round rune marks and the tile size match.\n  - Identities zaun, noxus and spirit-blossom on /runes?path=Domination: plates, markers, badges, chips, console and glow seam match. Computed styles of the seam are identical.\n  - fr: labels and 'Rechercher…' are in French.\n  - ar RTL: the rail moves to the inline end (x=24), the arrow mirrors (scale -1 1, translate -4px), the sheet mirrors, and 320 px has no horizontal scroll.\n  - No light theme exists on either stack.\n- **Behaviour:**\n  - Copy link copies http://localhost:4410/en/items?tag=Active&page=2 where the legacy page copies the same query, and says 'Link copied'.\n  - Facet groups: aria-expanded toggles with the mouse and with Enter, and the focus ring is 1px hex. An engaged group starts open and the reader's fold wins. The sheet keeps its folding across openings. Escape closes the sheet and returns focus to the trigger, and the dialog is labelled by #lodb-filter-sheet-heading.\n  - No console error, warning or leftover ngh hydration marker on 10 list and home URLs at 1440 and 390 (en, fr, ar, pinned 14.1.1, empty 7.20.1).\n- **Findings covered:** all 22 majors, and 36 of the other 40 by capture, probe, interaction or unit test. Only Z02-15 and Z03-13 (pending image slot, cold home refresh) rest on their unit tests and code review alone.\n- **Clean-up:** the preview is stopped and no node process remains for port 4410. git status is clean. Heavy commands waited out two League of Legends matches through heavy.sh, and I stopped the preview during both."
+  }
+ },
+ "DETAIL": {
+  "fix": {
+   "wp": "DETAIL",
+   "commits": [
+    "b9cf1189 feat(front/catalogue): afficher le temps de chargement sur les 4 details",
+    "9338abaf feat(front/catalogue): tirer le pager des details de leur charge utile",
+    "123655b6 feat(front/catalogue): rendre leurs icones aux statistiques du champion",
+    "2fd445a9 fix(front/catalogue): rendre son espace au losange du bandeau de detail",
+    "2ead2bf2 fix(front/catalogue): rendre sa lueur a la barre de lecture des sorts",
+    "ad416f34 feat(front/catalogue): aligner la galerie de skins et ses visionneuses",
+    "2daab252 docs(docs): consigner l'historique des puces de section",
+    "9b3bde00 refactor(front/ui): ranger les visionneuses dans les tailles de dialogue"
+   ],
+   "results": [
+    {
+     "id": "Z01-15",
+     "status": "fixed",
+     "note": "Timing moved to features/catalogue/shared/codex/timing/; item, summoner and rune :id resolvers wrapped in withLoadTiming, and <lodb-load-time /> added to the three templates. Phone variant at <=40rem (0.6rem offset, padding .3rem .55rem, 0.6rem font). The finding suggested lifting the badge above the bottom nav; I kept the legacy placement instead (legacy wins): z-index 41, painted over the bar like the legacy badge. Probe: identical rects, fonts and paddings on all four pages at 1440 and 390, elementFromPoint on the badge."
+    },
+    {
+     "id": "Z05-03",
+     "status": "fixed",
+     "note": "The 7 PNGs copied to public/icons/stats. statIconOf(GameStat) added in shared/codex/stats/stat-icon-of.ts. Stat-board rows get a decorative 1.05rem icon and the label is now an inline-flex with a .45rem gap. Probe: same icons and label widths as legacy (Ahri, Aphelios); stat board pixel-identical at 1440."
+    },
+    {
+     "id": "Z05-04",
+     "status": "fixed",
+     "note": "Skin viewer rewritten without lodb-dialog: a frameless figure 72rem at most, a max-h-[80vh] rounded splash with its pop, a bordered 2.2rem close over the corner, and a caption with the champion eyebrow, an h2 with the skin name (labelledBy) and the counter. New `lightbox` DialogSize: hx-lightbox pane, 80% backdrop with an 8px blur, no slide-in. Pixel-identical at 1440 in hextech, noxus and zaun. At <=390 the pane is centred (x=12) where the legacy overflows its p-4 box (x=16 LTR, 7 RTL). In RTL the close and arrows follow logical properties. axe: 0 violations."
+    },
+    {
+     "id": "Z05-05",
+     "status": "fixed",
+     "note": "Chroma viewer is now the hextech-frame card of the legacy: header band (skin eyebrow over an h2 with the chroma label, a 28px ghost close), a full-bleed bg-void/60 stage with 2.2rem arrows (viewer-arrows :host(.compact)), and a footer band with swatches and counter. New `compact` size: 30rem pane, 75% backdrop, 8px blur. Pixel-identical to legacy at 1440; within 3px at 390 and 320. axe: 0 violations."
+    },
+    {
+     "id": "Z05-07",
+     "status": "fixed",
+     "note": "aspect-ratio 16/9 on .tile. Probe: tile 288x162, image at +9, strip 288 and #skins section 334, as legacy."
+    },
+    {
+     "id": "Z05-08",
+     "status": "fixed",
+     "note": "Covered by the same change as Z01-15: the <=640px compact rule, and z-index 41 so the badge paints above the z-40 bottom nav. At 390 the badge is visible, at (x,808), 26px high, 9.6px font, like legacy."
+    },
+    {
+     "id": "Z05-09",
+     "status": "fixed",
+     "note": "injectDetailPager now builds prev/next from details().neighbours (the API field from wave 1). The browser-only list fetch (shared/pager/**) is deleted. The SSR HTML has <a rel=prev/next> on all four pages. Paging needs only the detail request (network probe). An E2E assertion on the SSR HTML was added."
+    },
+    {
+     "id": "Z05-10",
+     "status": "fixed",
+     "note": "The champion pager wrapper is now mt-14. Measured gap above the pager: 56px, as legacy."
+    },
+    {
+     "id": "Z05-11",
+     "status": "fixed",
+     "note": "Resolved with Z07-23's refinement: base .pager__link loses min-inline-size:0 and the phone override now applies only under 360px. At 390 and 360 the cells, hub and gap are identical to legacy. At 320 the pager fits the width (legacy overflows)."
+    },
+    {
+     "id": "Z05-12",
+     "status": "fixed",
+     "note": "&ngsp; before each growth span. Text now reads '0.67 +2.2%'. In ar the order is growth then value, as legacy (screenshot checked)."
+    },
+    {
+     "id": "Z05-13",
+     "status": "fixed",
+     "note": "&ngsp; after the pip in champion-hero.html. Probe: pip at x105, meta at x131 and innerText 'CHAMPIONS ◆ 16.19.1', identical to legacy."
+    },
+    {
+     "id": "Z05-14",
+     "status": "fixed",
+     "note": "Fixed as the verified recommendation says: no code change. The divergence is recorded as H7 in docs/reecriture/heritage.md: replaceState is kept, and a raw pushState would desynchronise the Router. The chips bar itself matches legacy at 1440, 768, 390 and 320: sticky at top 0, 59px high, same chip widths, same overflow scroll (scrollWidth 521)."
+    },
+    {
+     "id": "Z05-15",
+     "status": "fixed",
+     "note": "box-shadow glow added on .progress__fill. .sound now transitions opacity, border-color and box-shadow."
+    },
+    {
+     "id": "Z05-16",
+     "status": "fixed",
+     "note": "Strict legacy parity: the badge title is the bare count ([title]=skin.chromas.length). The key champion.detail.chromas_available is now unused; it only exists in en and fr."
+    },
+    {
+     "id": "Z05-M01",
+     "status": "fixed",
+     "note": "Same change as Z01-15: the badge is on the item, rune and summoner details, and the Server-Timing header is emitted on all four pages."
+    },
+    {
+     "id": "Z05-M02",
+     "status": "fixed",
+     "note": "SkinGallery resets strip.scrollLeft to 0 in an afterRenderEffect whenever the tiles change. A unit test covers it."
+    },
+    {
+     "id": "Z06-01",
+     "status": "fixed",
+     "note": "lodb-pager host class 'block'. mt-16 changed to mt-14 on the item, summoner and rune pagers. Measured: margin 56px and gap above 56px on all three."
+    },
+    {
+     "id": "Z06-06",
+     "status": "fixed",
+     "note": "PagerLink.mark {label, hint} renders a hx-chip-hex ms-2 px-1.5 py-0.5 text-[9px] chip with its title. injectDetailPager sets it for edition==='classic' from edition.classic and edition.classic_hint. Probe on 771004 and SummonerFlash: same names, chip size, 8px margin and offsets as legacy, at 1440 and 390. Unit tests in navigation.spec and detail-pager.spec."
+    },
+    {
+     "id": "Z06-08",
+     "status": "fixed",
+     "note": "Same change as Z01-15 and Z05-M01."
+    },
+    {
+     "id": "Z06-14",
+     "status": "fixed",
+     "note": "Same change as Z05-09: the item and summoner pagers are server-rendered from the payload neighbours, and the list fetch is removed."
+    },
+    {
+     "id": "Z07-15",
+     "status": "fixed",
+     "note": "Same change as Z06-01: the pager host is a block and mt-14 on rune-detail. Gap above the pager is 56px."
+    },
+    {
+     "id": "Z07-16",
+     "status": "fixed",
+     "note": "Same change as Z01-15: runes.routes timed and the badge mounted on the rune detail."
+    },
+    {
+     "id": "Z07-22",
+     "status": "fixed",
+     "note": "gap-x-1.25 on the rune eyebrow (rune-detail.html). Probe: pip at 62 and meta at 87, against 62 and 88 in legacy."
+    },
+    {
+     "id": "Z07-23",
+     "status": "fixed",
+     "note": "Phone override narrowed to width<360px, with min-inline-size:0 inside it. /rune/Precision at 390: 136/68/114 and gap 12, identical to legacy. At 320: 106/48/106 with no overflow. The layout.spec 320 probes pass."
+    },
+    {
+     "id": "Z07-M03",
+     "status": "fixed",
+     "note": "runes/detail/pager/inject-path-pager.ts deleted. The rune page uses injectDetailPager with details.neighbours, and the SSR HTML carries the rel=prev/next links."
+    },
+    {
+     "id": "Z12-M03",
+     "status": "fixed",
+     "note": "Champion hero fixed with &ngsp;. The rune hero is a flex container, where &ngsp; would be dropped, so it uses the gap-x fix of Z07-22. Both now match the legacy positions."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Web/src/app/ui/navigation/pager.ts: host class 'block', so the page's margin applies (Z06-01, Z07-15)",
+    "src/LoDb.Web/src/app/ui/navigation/pager.html, pager-link.ts, navigation.spec.ts: optional `mark` chip for LoL Classic neighbours (Z06-06)",
+    "src/LoDb.Web/src/styles/primitives/navigation.css: pager phone override narrowed to width<360px, with min-inline-size:0 moved into it (Z05-11, Z07-23)",
+    "src/LoDb.Web/src/app/ui/overlays/dialog-size.ts, dialog-config.ts, dialog-config.spec.ts: `lightbox` and `compact` viewer sizes with their own pane and backdrop classes (Z05-04, Z05-05)",
+    "src/LoDb.Web/src/styles/primitives/lightbox.css (new) and primitives/index.css (import): viewer panes, dimmer backdrops, shared hx-viewer-button",
+    "src/LoDb.Web/public/icons/stats/*.png (7 files copied from app/public/icons/stats) (Z05-03)",
+    "src/LoDb.Web/src/app/features/catalogue/shared/codex/stats/stat-icon-of.ts (new shared helper) (Z05-03)",
+    "src/LoDb.Web/src/app/features/catalogue/{items,summoners,runes}/*.routes.ts: withLoadTiming on the :id resolver",
+    "src/LoDb.Web/src/app/features/catalogue/{items,summoners,runes}/detail/*-detail.{ts,html,spec.ts}: pager fed from details.neighbours, mt-14, <lodb-load-time />, and specs switched from the CatalogueLists mock to payload neighbours",
+    "src/LoDb.Web/src/app/features/catalogue/runes/detail/rune-detail.html: eyebrow gap-x-1.25 (Z07-22)",
+    "src/LoDb.Web/src/app/features/catalogue/runes/detail/pager/inject-path-pager.ts: deleted (Z07-M03)",
+    "docs/reecriture/heritage.md: row H7 records the section-chip history divergence (Z05-14)",
+    "tests/LoDb.E2E/specs/champions/champions.spec.ts: SSR pager assertion; the lightbox is now named by the skin, with the champion as eyebrow"
+   ],
+   "checks": "Unit tests: full suite 240 files, 2106 tests, all passing (snapshot EOL rewrites restored). npm run typecheck OK. npx ng lint: all files pass. Prettier --check --end-of-line auto: all changed files clean (the E2E spec checked with src/LoDb.Web/.prettierrc.json). npm run build:web OK: sw.js written, no component-style budget error; the initial-bundle warning (674 kB for a 500 kB budget) predates this work.\n\nE2E against the preview on 4420 (--workers=1):\n- champions 8/8, runes, summoners and public accessibility/layout/media/navigation/seo/smoke/caching/identities all pass.\n- Failures, all pre-existing and outside this package: items.spec 'lead from a card to its item', catalogue/filters.spec (6), and navigation 'filters of /en/items'. They fail identically on lodb-next :18080, from a hydration error on /en/items: `TypeError: Cannot set properties of null (setting '__ngContext__')`. outcomes 'former URL' needs nginx.\n\nLegacy comparisons with custom Playwright probes (scratch fix/DETAIL/):\n- Pager on 4 pages at 1440/390/360/320: margin, gap, cells, padding, Classic chip.\n- Badge on 4 pages at 1440/390.\n- Stat rows in en/fr/ar.\n- Eyebrows for champion, rune and summoner.\n- Tiles and strip.\n- Lightbox and chroma geometry at 1440/1024/768/390/320 in en/fr/ar (legacy UI switched to ar through its setup form).\n- Section chips at 1440/768/390/320.\n- Section positions at 5 widths for Ahri: identical.\n- Full-page captures of Ahri, Fiddlesticks, Aphelios, Fiddlesticks 7.22.1 and 3 other detail pages at 5 widths.\n- Pixel diffs in noxus, zaun and spirit-blossom: 0.00% on the lightbox, chroma card, pager and skins at 1440.\n- axe on the open lightbox and chroma card (en, ar, light scheme): 0 violations.\n- Network check: paging on the 4 detail pages fetches only the detail endpoint, no list.\n\nNo process left running; worktree clean.",
+   "followups": [
+    "ENTITYDET Z06-05 (item aside stat icons) should reuse features/catalogue/shared/codex/stats/stat-icon-of.ts (statIconOf(GameStat)) and the public/icons/stats PNGs added here. The PNGs are identical binaries, so they merge cleanly. Its planned shared/stats/stat-icon-of.ts would duplicate the helper and push shared/ further over the 10-entry limit: dedupe at integration if both land.",
+    "Pre-existing on lodb-next: /en/items throws a hydration error, `TypeError: Cannot set properties of null (setting '__ngContext__')`. Because of it, clicking an item card does not navigate and the list search does not update the URL (items.spec:70, catalogue/filters.spec x6, navigation filters /en/items). This is in the LISTS area.",
+    "API/ingestion: in old patches (e.g. 7.22.1 Fiddlesticks) the champion stats omit attack_speed (Data Dragon's attackspeedoffset era). The row shows '0' without growth, where legacy shows '0 +2.11%'.",
+    "champion.detail.chromas_available (en/fr root catalogues) is now unused: the badge title shows the bare count, as legacy. I18N can drop the key or keep it.",
+    "Deliberate small divergences, all due to legacy physical positioning:\n- Under 390px the lightbox and chroma card are centred, where legacy overflowed its p-4 box asymmetrically (a 4-6px shift).\n- In RTL the lightbox close and the arrows follow logical properties; legacy used physical right/left.\n- In RTL the stat growth margin is logical, about 6px wider between growth and value than legacy's physical margin-left.",
+    "Z01-15 suggested lifting the load-time badge above the bottom nav on phones. I kept the legacy placement over the bar (z-index 41), per the rule that the legacy wins; revisit if the overlap is judged worse.",
+    "Because the pager override now applies only under 360px, at 320px the pager is 18px shorter than legacy's, which overflowed (the docW 357 case). This is the documented trade-off of Z07-23."
+   ]
+  },
+  "review": {
+   "verdict": "fixed-issues",
+   "issues": [
+    "Regression (G1 of the lot 4 milestone): the new chroma card (413px, no longer a lodb-dialog panel) was taller than a landscape phone and could not scroll, so its footer (swatches, counter) was cut off: 844x390 foot 371-412, 740x360 worse. The replaced dialog panel scrolled. Fixed in chroma-viewer.css/.html: a .card class capped at calc(100dvh - 2rem) with overflow-y:auto (unlayered, beats the frame's overflow-hidden). Rendering is unchanged when the card fits: noxus 1440 pixel diff 0.00%. New E2E: champions.spec 'keeps the chroma card scrollable to its foot on a landscape phone'. The legacy card was cut off the same way; the project invariant wins here.",
+    "Missing tests: the wiring the package added to the item, summoner and rune pages had no test. Nothing checked the Server-Timing header, the rel=prev/next links in the server HTML (with the LoL Classic chip) or the load-time badge. Added support/catalog.ts expectServedDetail() and used it in the crawler tests of items, summoners and runes. Added one 'badge the time ... took' browser test per spec.",
+    "Convention: summoner-detail.spec.ts had an added line of 101 characters (limit 100); the test name is shortened.",
+    "Tooling (not code): preview.mjs started on the dist junction leaves the SSR child silent: isMainModule compares the junction path with the real path, so server.mjs never listens and the proxy answers 502. Start it with the real path instead: node preview.mjs C:/Users/charl/AppData/Local/Temp/lodb-parite-ssd/detail 4420."
+   ],
+   "commits_added": [
+    "75b6436e fix(front/catalogue): rendre defilable la carte de chroma trop haute",
+    "945ef6cb test(e2e): verifier le pager serveur et le badge des autres details",
+    "d58cafcc test(front/catalogue): ramener un intitule de test sous 100 caracteres"
+   ],
+   "residual": [
+    "Pre-existing, LISTS area: items.spec 'lead from a card to its item' fails, and so do navigation.spec 'filters of /en/items' and catalogue/filters.spec. The cause is a hydration error on /en/items. The items.spec failure was confirmed identical on lodb-next :18080. outcomes.spec 'former URL' needs nginx and fails on a preview.",
+    "Legacy parity kept on purpose: between 360 and 400px, a pager neighbour with a very long single word overflows its container and is clipped (pl 'YuumiBot_Wersja_OSTATECZNA' on /pl/items/9273: cells 298+68+162 in a 342px box). The legacy does exactly the same (probe at 390 and 375 in ru, pl, de and fr). Before this branch the <=400px override shrank the pager instead. The same trade-off gives the 320px pager its compressed layout where the legacy overflows.",
+    "Deliberate divergences from the fixer's report, re-measured: in RTL the lightbox close and the arrows follow logical properties. Under 390px the viewers are centred (a 5px shift against the legacy). The load-time badge is drawn over the bottom nav (z 41), like the legacy. champion.detail.chromas_available is now unused in en.json and fr.json; that is an I18N decision.",
+    "Outside this package (ENTITYDET): the summoner eyebrow is 12px wider than the legacy one (275 vs 263), and the pip sits 6px to the left.",
+    "The initial bundle warning (674.64 kB for a 500 kB budget) predates this branch and is unchanged. No component style budget error."
+   ],
+   "checks": "Fresh build:web, before and after the fix: exit 0, sw.js written, only the pre-existing initial-bundle warning. Preview on 4420, started from the real dist path. Checks run against the legacy stack on :8080 with Playwright probes (nice, one browser at a time). All majors verified: Z05-03 stat icons (same icons, label widths, flex, 41px rows; en and ar), Z05-04 lightbox (identical figure, image, close, arrows, caption and backdrop at 1440; 390 in ar), Z05-05 chroma card (identical box, bevel, head, close, art and foot at 1440; 390 in ar), Z06-01 and Z07-15 pager margin (gap above 56px on all four pages), Z06-06 Classic chip (same text, title, 9px, 8px margin and offset on 771004 and SummonerFlash, at 1440/390/320), and Z06-08 and Z07-16 badge (same rect, font and padding on four pages at 1440 and 390, painted on top). Minor and polish findings verified too: Z01-15, Z05-07 (tile 288x162, image +9, same strip and section), Z05-08, Z05-09, Z06-14 and Z07-M03 (rel links in the SSR HTML of all four pages; paging fetches only the detail endpoint), Z05-10, Z05-11 and Z07-23 (identical cells at 1440 and 390), Z05-12 (value and growth text identical in en and ar), Z05-13 and Z07-22 (eyebrow pip positions within 1px), Z05-16 (title '1'), Z05-M02 (strip reset to 0 after the pager, also in ar RTL), Z05-M01, and Z05-15 (CSS). Browser navigation on four pages in en/fr/ar at 1440 and 390: no console errors, and the badge updates. Theme pixel diffs: zaun at 390, and noxus at 1440 after the fix (chroma, lightbox, pager and skins at 0.00%). Conventions checked: commit subjects are 55 to 72 characters, with no attribution line in any commit; nothing staged under changelog/published; no app.config.ts or app.html edit; no hard-coded colours or physical properties added; folder counts do not grow (shared/codex at 10, shared down from 16 to 15). Final runs: typecheck OK, ng lint OK, and the full front suite once (240 files, 2106 tests passed; the snapshot EOL rewrites were restored). Prettier --check passes on every changed file. E2E tsc OK. E2E on the preview with --workers=1: champions, items, runes and summoners 21/22, and public plus seo 130/132; every failure is listed in residual as pre-existing. Preview stopped, worktree clean."
+  }
+ },
+ "ENTITYDET": {
+  "fix": {
+   "wp": "ENTITYDET",
+   "commits": [
+    "05f59eec fix(front/ui): couper les libelles de plaque entre les mots",
+    "1dfbde0e feat(front/catalogue): rendre au prix de l'objet sa piece d'or",
+    "27e3bcce feat(front/catalogue): chiffrer en or les evolutions possibles",
+    "31aacae0 fix(front/catalogue): rendre au badge Classic du heros sa taille",
+    "f30634dd feat(front/catalogue): rendre leurs icones aux statistiques des objets",
+    "13837553 fix(front/catalogue): aligner l'aside des objets sur l'ancien site",
+    "61b53cf9 fix(front/catalogue): rendre au noeud de recette son zoom et son anneau",
+    "3c806d97 fix(front/catalogue): garder l'ordre des nombres signes en arabe",
+    "ab696ef5 fix(front/catalogue): resserrer l'interligne du resume et des titres",
+    "444fbcd8 fix(front/catalogue): marquer les visuels absents comme l'ancien site",
+    "3750f741 fix(front/catalogue): arreter la rune ciblee sous sa marge de defilement",
+    "64cc7af3 fix(front/catalogue): marquer la voie et les runes sans visuel",
+    "f6c7d67f fix(front/catalogue): elargir le halo de l'embleme de voie",
+    "cde767c9 fix(front/catalogue): encadrer la voie sans runes comme l'ancien site"
+   ],
+   "results": [
+    {
+     "id": "Z06-02",
+     "status": "fixed",
+     "note": "05f59eec: .hx-plate__label gets overflow-wrap: normal and hyphens: auto (styles/primitives/surfaces.css). Measured plates 89 px and labels 31 px, as on the legacy, on 3031, 6672, 3006 and 771004. de hyphenates GE-SAMT-KOSTEN inside the plate; fr REVENTE becomes RE-VENTE (localized chrome; the legacy chrome was English)."
+    },
+    {
+     "id": "Z06-03",
+     "status": "fixed",
+     "note": "1dfbde0e: 'gold' glyph added to ui/media IconName and icon.html (same SVG as the legacy). The price is a flex baseline row with lodb-icon size-5 text-gold-rich. Coin 20 px and price box 128 px wide, as on the legacy."
+    },
+    {
+     "id": "Z06-04",
+     "status": "fixed",
+     "note": "27e3bcce: upgrade.gold (wave-1 API field) under each evolution name, in 11 px gold mono. 771004 evolutions read 700, 2200, 300, 700, 880, 700, 2200, as on the legacy."
+    },
+    {
+     "id": "Z06-05",
+     "status": "fixed",
+     "note": "f30634dd: the 7 PNGs are byte-identical to the legacy app/public/icons/stats and to wt/parite-detail. statIconOf is byte-identical to wt/parite-detail, so the add/add merges cleanly. Label inline-flex with gap .45rem; icon 1.05rem at opacity .92. Icons measured 17 px on 3031, 6672 and 3006, as on the legacy."
+    },
+    {
+     "id": "Z06-07",
+     "status": "fixed",
+     "note": "31aacae0: EditionBadge gets an additive size input ('compact' by default; 'regular' = hx-chip-hex shrink-0 ms-3), used by the item and summoner heroes. Measured 95x27, 11px, padding 4px 10px, margin 12px, as on the legacy (771004, SummonerFlash_Jade)."
+    },
+    {
+     "id": "Z06-09",
+     "status": "fixed",
+     "note": "13837553: the 'item.detail.tier' chip shows when details.depth > 1 (Tier 2 on 3031 and 3006, Tier 3 on 6672, fr Palier 2)."
+    },
+    {
+     "id": "Z06-10",
+     "status": "fixed",
+     "note": "13837553: map 12 maps to items.maps.aram = 'ARAM' in the 21 items scope catalogues (HOWLING_ABYSS constant). In en the availability chips are back on one row, as on the legacy."
+    },
+    {
+     "id": "Z06-12",
+     "status": "fixed",
+     "note": "61b53cf9: group/node on the root div and on the links; imgClass with group-hover/node:scale-110 duration-500. Hover scale measured 1.1, as on the legacy."
+    },
+    {
+     "id": "Z06-13",
+     "status": "fixed",
+     "note": "61b53cf9: focus-visible sets outline: none and a 2px gold ring at 40%. Measured the same as the legacy."
+    },
+    {
+     "id": "Z06-15",
+     "status": "fixed",
+     "note": "31aacae0: me-3 removed from the version span on the item and summoner heroes; the margin now comes from the regular badge. Flash eyebrow x/width 1113/286, as on the legacy."
+    },
+    {
+     "id": "Z06-16",
+     "status": "fixed",
+     "note": "ab696ef5: .panel-title line-height 1rem (16 px, as on the legacy)."
+    },
+    {
+     "id": "Z06-17",
+     "status": "fixed",
+     "note": "ab696ef5: leading-normal on the summary lodb-rich-text (24 px, as on the legacy)."
+    },
+    {
+     "id": "Z06-18",
+     "status": "fixed",
+     "note": "13837553: lodbReveal on lodb-item-aside."
+    },
+    {
+     "id": "Z06-19",
+     "status": "fixed",
+     "note": "3c806d97: dir=ltr on .stat-row__value and .recipe-node__gold. /ar/items/3031 now reads +75, +25 % and 3500 +725."
+    },
+    {
+     "id": "Z06-20",
+     "status": "fixed",
+     "note": "444fbcd8: done in each page (@if image.status === 'absent'), without new inputs on lodb-image or lodb-catalogue-image (wt/parite-lists moves and rewrites that file). The item hero and the summoner seal show initials in font-beaufort text-2xl text-gold/70, without the dark box. Recipe nodes and evolution cards show the item id in font-mono 10px text-gold/50, as on the legacy. No current data reproduces it; covered by item-detail.spec."
+    },
+    {
+     "id": "Z06-M01",
+     "status": "fixed",
+     "note": "13837553: role=complementary on the lodb-item-aside host; one complementary landmark, as on the legacy."
+    },
+    {
+     "id": "Z07-18",
+     "status": "fixed",
+     "note": "3750f741: fixed inside the package, without editing app.config.ts. In runes/detail/anchor/, anchorOffsetOf reads the scroll-margin-block-start of the fragment's target. RuneDetail calls injectAnchorOffset(), which sets ViewportScroller.setOffset while the page lives and restores [0,0] on destroy. scroll-mt-24 is removed, so the global [id] 5.5rem applies. SixthSense landing measured at 72 px after a click, 88 px on direct load and 34 px for the label, at 1440 and 390: the same as the legacy. runes.spec (E2E) checks that the card is scrolled to and stays more than 44 px below the top."
+    },
+    {
+     "id": "Z07-19",
+     "status": "fixed",
+     "note": "64cc7af3: an absent path image renders span.path-emblem path-glow with the initials in 24 px Beaufort, in the path colour. 8.1.1 Domination measured 'DO', 24px, rgb(212,66,66), as on the legacy."
+    },
+    {
+     "id": "Z07-20",
+     "status": "fixed",
+     "note": "64cc7af3: absent keystone and minor rune icons render as empty tinted .keystone__icon and .rune-medallion (shrink-0), 92 and 48 px, as on the legacy for 8.1.1."
+    },
+    {
+     "id": "Z07-21",
+     "status": "fixed",
+     "note": "f6c7d67f: .path-emblem box-shadow 0 0 34px -8px var(--path). Measured the same as the legacy."
+    },
+    {
+     "id": "Z07-24",
+     "status": "fixed",
+     "note": "cde767c9: lodb-catalogue-empty (frame, common.no_result.text, Back and Home). The file is byte-identical to wt/parite-lists f6c94a1a, so the add/add merges cleanly. The legacy passes no text line, so the now-unused runes.empty key is removed from the 21 runes catalogues. No current data reaches this state (unit tested)."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Web/src/styles/primitives/surfaces.css (DS): Z06-02, .hx-plate__label gets overflow-wrap normal and hyphens auto. No other branch touches it.",
+    "src/LoDb.Web/src/app/ui/media/icon-name.ts and icon.html (DS): the 'gold' glyph for Z06-03, appended at the end with the doc comment untouched, so it merges cleanly with the chevron-solid glyph from wt/parite-lists.",
+    "src/LoDb.Web/src/app/features/catalogue/shared/cards/edition-badge.ts (LISTS; wt/parite-lists moves it to ui/cards): additive size input, compact by default. git merge-tree shows a clean merge through the rename.",
+    "src/LoDb.Web/src/app/features/catalogue/shared/codex/stats/stat-icon-of.ts and src/LoDb.Web/public/icons/stats/*.png (7 files): byte-identical to wt/parite-detail 123655b6 and to the legacy app/public/icons/stats. Nothing else served them before.",
+    "src/LoDb.Web/src/app/features/catalogue/shared/list/catalogue-empty.ts: byte-identical copy of wt/parite-lists f6c94a1a, for Z07-24.",
+    "tests/LoDb.E2E/specs/runes/runes.spec.ts: anchor landing assertion for Z07-18.",
+    "Reverted from the previous attempt, never committed: provideAnchorOffset in app.config.ts, core/routing/anchor/, initialsClass in ui/media/image.ts and image.html, the layering in styles/foundation/images.css, fallbackText and initialsClass in shared/cards/catalogue-image.ts, and stat-icon-of.spec.ts."
+   ],
+   "checks": "npm run build:web passes; the only warning is the initial-bundle budget (673 kB for 500 kB), with no component style budget error. Full front suite (vitest-limited): 241 files and 2109 tests pass. npm run typecheck passes. npx ng lint: all files pass. prettier --check --end-of-line auto passes on every changed file (the E2E spec checked with the web .prettierrc.json). E2E on the preview with --workers=1 (specs/items, specs/runes, specs/summoners, specs/public/layout.spec.ts, specs/public/accessibility.spec.ts): 69 passed, 1 failed. The failure, items.spec 'lead from a card to its item, then back to the list', fails the same way on the lodb-next integration stack, so it predates this package (list card click). Visual: the probe script gives the same metrics on the legacy and on the preview for every finding. Full-page captures with reveals forced: at 1440, 3031, 6672, 1035, 771004, 2003, 3006, SummonerFlash, SummonerFlash_Jade, the five paths, 8.1.1 Domination, and fr/de/ar; at 390, 3031, 771004, 2003, _Jade, Domination and ar. They match, except the pager spacing and the load-time badge, which belong to DETAIL. git merge-tree: clean with home, account, builds, admin and editorial; the expected conflicts are listed in followups. Every heavy command went through heavy.sh, and captures and heavy commands waited while the user was in a match (game mode).",
+   "followups": [
+    "Merging wt/parite-lists: conflicts in items/detail/item-detail.ts, summoners/detail/summoner-detail.ts and runes/detail/rune-detail.ts. The new initialsOf import sits next to the shared/cards imports that LISTS moves to ui/cards: keep the LISTS paths and import initialsOf from ui/cards/initials-of.",
+    "Merging wt/parite-detail: conflict in runes/detail/rune-detail.ts. The imports array keeps CatalogueEmpty and LoadTime, the pager becomes injectDetailPager, and the injectAnchorOffset() call and its import stay.",
+    "Pre-existing E2E failure, items.spec 'lead from a card to its item, then back to the list', also failing on lodb-next: LISTS/DETAIL area.",
+    "Z07-18 is fixed for rune paths only. Other fragment targets (prose sections, 6.5rem) still land flush with the top under the router. SHELL can move anchorOffsetOf to app.config (one setOffset) and remove runes/detail/anchor.",
+    "The runes/*.json scope catalogues are now empty ({}). runes-page.ts (outside this package) still provides the scope and could drop it.",
+    "Seen in de: the 'Gold ledger' heading is untranslated (item.detail.gold_ledger missing in de). Outside this package.",
+    "Preview tip: dist is a junction to C:/Users/charl/AppData/Local/Temp/lodb-parite-ssd/entitydet/dist. Pass that real path (C:/Users/charl/AppData/Local/Temp/lodb-parite-ssd/entitydet) to preview.mjs; otherwise isMainModule fails and the SSR child exits silently (502)."
+   ]
+  },
+  "review": {
+   "verdict": "fixed-issues",
+   "issues": [
+    "Missing test (fixed in 03e110db): the absent-image branch of the summoner seal (444fbcd8, Z06-20) had no unit test; only the item hero, recipe and evolution branches were covered. summoner-detail.spec now renders an absent image and asserts the seal shows 'FL' without lodb-catalogue-image.",
+    "Regression at 320 px in some locales (left as residual): .hx-plate__label with overflow-wrap:normal + hyphens:auto (05f59eec) lets an unhyphenatable word cross the plate border. On /{loc}/items/3031 at 320 px it overflows by about 10 px in pl ('CALKOWITY', 'SPRZEDAZY'), ro ('ACHIZITIE') and id, and by 3 px in tr. Before the change these labels were broken mid-word but stayed inside the plate. en overflows by 3 px, like the legacy. At 390, 1024 and 1440 no locale overflows (21-locale survey).",
+    "Minor, not fixed: the item-detail spec asserts the hero badge's exact class list (['hx-chip-hex','ms-3','shrink-0']), which ties it to the implementation. jsdom cannot measure size, and the size parity was verified in the browser."
+   ],
+   "commits_added": [
+    "03e110db test(front/catalogue): couvrir le sceau sans visuel du sort d'invocateur"
+   ],
+   "residual": [
+    "Plate label overflow at 320 px in pl, ro, id and tr (see issues). The legacy has no reference for localized chrome: it was English only. One option for DS: keep overflow-wrap:normal only under :lang(en), for legacy parity, and let other languages fall back to break-word after hyphenation. Another is shorter translations of item.detail.price_*.",
+    "Pre-existing E2E failure: items.spec 'lead from a card to its item, then back to the list' also fails against lodb-next :18080 (verified). The card click stays on /en/items. This is in the LISTS or DETAIL area.",
+    "The runes scope is now dead. public/i18n/runes/*.json are {} in all 21 locales, but runes-page.ts (outside this package) still provides the 'runes' scope, which costs one fetch per rune page. It could be dropped once I18N confirms no key is planned.",
+    "Z07-18 is fixed for rune path pages only (runes/detail/anchor). Prose fragments, for example /en/legal/notice#publisher, still land at 0 on direct load instead of 104 px. That is SHELL's app-wide offset (app.config.ts), which should then replace injectAnchorOffset.",
+    "Merge notes from the fixer stand, checked. catalogue-empty.ts is byte-identical to wt/parite-lists. stat-icon-of.ts and the 7 PNGs are byte-identical to wt/parite-detail, and the PNGs are byte-identical to the legacy app/public/icons/stats. The expected conflicts are in the imports of item-detail.ts, summoner-detail.ts and rune-detail.ts."
+   ],
+   "checks": "Fresh build:web of HEAD passed. The only warning is the known initial-bundle budget (673 kB for a 500 kB warning); no component-style error. Typecheck and ng lint passed. The full front suite (vitest-limited) ran once: 241 files, 2110 tests, all passing. The two .snap files it rewrote by line endings only were restored. prettier --check (end-of-line auto) passed on the changed spec. E2E on the preview :4430 (--workers=1), running specs/items, specs/runes, specs/summoners, public/layout and public/accessibility: 69 passed, 1 failed. The failure is the pre-existing items.spec card click, which also fails on :18080.\n\nLegacy (:8080) against preview, measured with my own probe (review.mjs) at 1440, 1024, 390 and 320 on 3031, 6672, 3006, 3089, 771004, SummonerFlash, SummonerFlash_Jade, Domination and 8.1.1 Domination. It confirms all 4 majors: Z06-02 plates 88.8 px and labels 31.2 px; Z06-03 coin 20 px in rgb(200,155,60) and price box 128.4 px; Z06-04 evolution golds 700/2200/300/700/880/700/2200 and card heights; Z06-05 stat icons 16.8 px and loaded, with label widths equal. The probe also confirms Z06-07, Z06-09, Z06-10, Z06-12 (root and link 1.1), Z06-13 (the same 2 px gold/40 ring), Z06-15, Z06-M01, Z06-19 (ar reads +75, +25 % and 3500 +725), Z07-18 (after a click the card lands at 71 to 72 px, legacy 72; direct load 88), Z07-19, Z07-20 and Z07-21. Every value is identical to the legacy.\n\nZ06-16, Z06-17, Z06-18, Z06-20 and Z07-24 were checked by code against the legacy templates and by unit tests. The absent-image states cannot be reached with the current data.\n\nRegression hunt: 21 locales at 320, 390 and 1440 on the item plates, and fr, de, ru, pl, el, hu and ar at 1024. The zaun, noxus and spirit-blossom identities look right on the item and Jade pages. The ar RTL item page is correct. The legal page plates are unchanged against :18080 in en, de, ru and pl. There is no horizontal page scroll anywhere.\n\nConventions: no hard-coded colours or physical properties in the diff, one public element per file, file, folder and function limits held, no app.config.ts or app.html edit. There are no attribution lines in any of the 15 commits, and all subjects are 72 characters or fewer. published/ is still skip-worktree and was never staged. All heavy commands went through heavy.sh, one browser at a time under nice. The preview is stopped and git status is clean."
+  }
+ },
+ "HOME": {
+  "fix": {
+   "wp": "HOME",
+   "commits": [
+    "54163db3 fix(front/home): compter les voies de runes et non leurs runes (previous attempt, re-verified)",
+    "229d5deb feat(front/ui): ajouter l'etat vide encadre de l'ancien site",
+    "5e32bbc1 fix(front/home): inverser le filet des apercus en ecriture rtl",
+    "dc7ef314 fix(front/home): rendre aux champions leur portrait de chargement",
+    "08054019 fix(front/home): encadrer l'apercu vide des champions et des runes",
+    "acf0f2f2 fix(front/home): realigner les portails sur ceux de l'ancien accueil",
+    "33213525 fix(front/home): garder la marge laterale de 24 px sur telephone"
+   ],
+   "results": [
+    {
+     "id": "Z03-01",
+     "status": "fixed",
+     "note": "54163db3 (previous attempt) kept after review: runes total = list.trees.length. Verified: hero counter, portal chip and section count read 5 on 16.19.1 (legacy 5) and 0 on 7.1.1 (legacy 0); resolve-home.spec expects 5."
+    },
+    {
+     "id": "Z03-02",
+     "status": "fixed",
+     "note": "dc7ef314. Kept and completed the previous attempt: PreviewEntry/PreviewCard.art from ChampionCard.loadingArt (API field delivered in wave 1), 4:5 box, object-cover object-top, 308x560 reserved, lazy. Probe: art box 161x201 at 390 and 227x284 at 768, object-position 50% 0%, identical to the legacy. Lighthouse not re-run (see followups)."
+    },
+    {
+     "id": "Z03-03",
+     "status": "fixed",
+     "note": "dc7ef314. gridClass computed from a GRID_CLASSES map (portrait grid-cols-2 sm:grid-cols-3 lg:grid-cols-4, tiles grid-cols-1 sm:2 lg:4). Columns and card rects identical to the legacy at 320, 639 (2), 640, 768, 1023 (3) and 1024 (4)."
+    },
+    {
+     "id": "Z03-05",
+     "status": "fixed",
+     "note": "acf0f2f2. <lodb-logo class=size-7> in the four portal boxes; Icon import and the icon field of RESOURCE_TEXTS removed. Probe: 28x28 svg, same colour as the legacy."
+    },
+    {
+     "id": "Z03-07",
+     "status": "obsolete",
+     "note": "Not changed in this branch: LISTS commit 6defeecd (wt/parite-lists) already replaces the home tile branch by the shared lodb-entity-card (h3 text-text, group-hover:text-gold-bright), which is the fix's own 'covered by EntityCard reuse'. Editing the tile markup here would only add a conflicting hunk. Check the home tiles after integration."
+    },
+    {
+     "id": "Z03-08",
+     "status": "obsolete",
+     "note": "Same as Z03-07: the caption text-text-muted comes with LISTS' lodb-entity-card (6defeecd), not duplicated here."
+    },
+    {
+     "id": "Z03-11",
+     "status": "fixed",
+     "note": "acf0f2f2. <span lodbChip class=\"border-blue-abyssal text-hex\">. Computed: color rgb(10,200,185), border rgb(10,50,60), background identical to the legacy."
+    },
+    {
+     "id": "Z03-12",
+     "status": "fixed",
+     "note": "acf0f2f2. Portal arrow gets transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1. Hover: translate 4px, arrow x 253.4 -> 257.4 in both stacks; -4px on /ar/."
+    },
+    {
+     "id": "Z03-14",
+     "status": "fixed",
+     "note": "dc7ef314 for the portrait cards: name <h3 [title]>, caption <p> rendered only when non-empty. The legacy portrait <p> has no title attribute, so none is added (the legacy wins over the fix text). Under noxus/zaun/spirit-blossom the names compute weight 600 and letter-spacing -0.075px / 0.075px / 0.3px, as the legacy. Tile headings come with LISTS' lodb-entity-card (6defeecd)."
+    },
+    {
+     "id": "Z03-16",
+     "status": "fixed",
+     "note": "229d5deb + 08054019. New ui/surfaces/empty-state.ts (frame, common.no_result.text, optional text, Back = Location.back, Home = /{locale}). Champions -> homepage.champions.no_data, runes -> home.runes.no_data, items and spells render nothing. On /en/?version=7.1.1 the runes empty state has the legacy rect (1280x197) and buttons (99x42, 82x42). The new key lives in the home scope (task rule), en + fr, instead of root en.json/fr.json as the fix proposed; it replaces the raw key the legacy showed. home.empty removed from the 21 home catalogues."
+    },
+    {
+     "id": "Z03-17",
+     "status": "fixed",
+     "note": "33213525. px-6 at every width: hero 342 px wide at x=24 on 390, scrollWidth 320 at 320 px, as the legacy."
+    },
+    {
+     "id": "Z03-18",
+     "status": "fixed",
+     "note": "dc7ef314. Initials underlay (absolute inset-0, text-5xl text-gold/15) under the art; the versioned icon overlay is not added, per the amended verdict."
+    },
+    {
+     "id": "Z03-M01",
+     "status": "fixed",
+     "note": "5e32bbc1. rtl:bg-linear-to-l on the header rule. On /ar/: background-image linear-gradient(to left, gold-deep 0%, transparent 100%), bright next to the heading."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Web/src/app/ui/surfaces/empty-state.ts (new shared component, required by the Z03-16 fix)",
+    "src/LoDb.Web/src/app/ui/surfaces/surfaces.spec.ts (tests of that component)"
+   ],
+   "checks": "build:web OK (only the pre-existing initial-bundle warning, 673 kB against 500 kB, also seen in the other packages); full front unit suite 240 files / 2105 tests pass; typecheck OK; ng lint OK; lint/*.test.mjs 9/9; prettier --check on every changed file OK; E2E specs/home 4/4 on the preview; specs/public smoke and navigation 10/11, the failure also fails on lodb-next (pre-existing, items list). Two EOL-only .snap rewrites were restored with git checkout. Legacy vs preview captures at 1440 and 390 (/en/, /en/?version=7.1.1, /ar/), style probes at 390 and 768, and column/overflow probes at 320, 639, 640, 1023 and 1024. Also checked: arrow hover, RTL rule, noxus/zaun/spirit-blossom weights, and fr/de SSR of the empty runes text. Preview stopped; worktree clean.",
+   "followups": [
+    "Integration: LISTS commit 6defeecd (wt/parite-lists) also edits features/home: preview-section.html/ts, preview-card.ts, preview-entry.ts, preview-of.ts, sections-of.ts, home-page.ts, home-page.spec.ts and resolve-home.spec.ts. Resolve by keeping LISTS' tile branch (lodb-entity-card, li.min-w-0, hrefOf) and its image: CatalogImage and edition fields, plus HOME's portrait branch (art, initials, h3/p), gridClass, empty state and RTL rule. Keep both the edition and art fields; the portrait then reads card.art and not card.image. Spec fixtures need image, edition and art together. Then recheck Z03-07, Z03-08 and the tile part of Z03-14 on the home.",
+    "DRY at integration: LISTS' features/catalogue/shared/list/catalogue-empty.ts has the same markup as ui/surfaces/empty-state.ts (without a text line). Switch it to <lodb-empty-state />, and check that the theme selectors (lodb-catalogue-list :is(.notice, .empty)) still reach it.",
+    "Re-run node tools/next/lighthouse/run.mjs --stack lodb-next once HOME is on the integration stack. On mobile the loading art starts at y≈1306 at 390 px and is lazy, so it should not become the LCP; on desktop the first row of art enters the 900 px viewport.",
+    "preview.mjs: dist/ in each worktree is a junction to C:/Users/charl/AppData/Local/Temp/lodb-parite-ssd/<wp>/dist. Angular's isMainModule compares real paths, so given the worktree path the SSR child exits silently with code 0 and every page answers 502. Pass the SSD path as webRoot, or make preview.mjs resolve the server path with realpath.",
+    "Pre-existing E2E failure, outside HOME: specs/public/navigation.spec.ts 'keeps the filters of /en/items in the URL' (the search never writes ?q=) also fails against lodb-next :18080."
+   ]
+  },
+  "review": {
+   "verdict": "fixed-issues",
+   "issues": [
+    "RTL (minor, found and fixed): the text line of the new ui/surfaces/empty-state.ts falls back to English on /ar/?version=7.1.1 (home.runes.no_data exists in en and fr only, as the rule requires), and the RTL page set its final stop at the start ('.No runes available for this version'). Fixed in 68b1914d with dir=\"auto\" on that line, plus a unit test; checked on a fresh build: the stop is back at the end, and the rect is unchanged (1280x197).",
+    "Convention (polish, found and fixed): a new test title in features/home/home-page.spec.ts was 101 characters long, over the 100-character limit. Shortened in 07ef0691. Line 156 of that spec, 105 characters, predates the branch and was left alone.",
+    "No blocker. The four majors (Z03-01, Z03-02, Z03-03, Z03-05) and 7 of the other 9 findings (Z03-11, Z03-12, Z03-14 portrait, Z03-16, Z03-17, Z03-18, Z03-M01) were verified against the legacy stack on a fresh build. The measurements are identical: counts, rects, computed styles, grid tracks at 8 widths, three themes, hover and RTL."
+   ],
+   "commits_added": [
+    "68b1914d fix(front/ui): orienter la ligne de l'etat vide selon son propre texte",
+    "07ef0691 test(front/home): ramener un intitule de test sous 100 caracteres"
+   ],
+   "residual": [
+    "Z03-07, Z03-08 and the tile part of Z03-14 are deferred to LISTS, not fixed here. LISTS commit 6defeecd (wt/parite-lists) swaps the home tiles for lodb-entity-card. I checked its markup: h3 is text-text with group-hover:text-gold-bright and [title], and the caption p is text-text-muted with [title]. On this branch the home tiles still show gold names and text-dim captions, so check them after integration.",
+    "Integration conflict with LISTS 6defeecd, which also edits these home files: preview-section.html/ts, preview-card.ts, preview-entry.ts, preview-of.ts, sections-of.ts, home-page.ts, home-page.spec.ts and resolve-home.spec.ts. Keep LISTS' tile branch and its image (CatalogImage) and edition fields. Keep HOME's portrait branch (art, initials, h3/p), gridClass, empty state and RTL rule. The portrait reads card.art.",
+    "DRY at integration: LISTS' features/catalogue/shared/list/catalogue-empty.ts has the same markup and code as ui/surfaces/empty-state.ts, and ENTITYDET's empty rune path (Z07-24) may add a third copy. Converge them on <lodb-empty-state/>. Two more points to weigh then. ui/surfaces now holds exactly 10 files, the limit. empty-state.ts is the first ui/ file that imports core/ (PageDirection and localePath for the Home link). That is acceptable, since it holds no business logic.",
+    "Outside HOME, owned by I18N: the ar root catalogue's common.no_result.back is '← رجوع'. On an RTL page the arrow should point right. It is a legacy string (the legacy site had no RTL rendering), so it is left unchanged.",
+    "Pre-existing, outside HOME (SHELL): on /en/?version=... the header 'Home' link loses aria-current and its lit colour. The same happens on lodb-next :18080, while the legacy site keeps it lit.",
+    "Pre-existing, outside HOME (LISTS/items): /en/items logs 'TypeError: Cannot set properties of null (setting __ngContext__)' on load, on the preview and on lodb-next :18080 alike. All home URLs log no error.",
+    "Lighthouse was not re-run (the fixer's follow-up stands). Its profile is mobile, 412x823, and at that width the lazy loading art starts at about y=1306, below the fold. Re-run tools/next/lighthouse/run.mjs once HOME is on the integration stack.",
+    "preview.mjs must be given the SSD path (C:/Users/charl/AppData/Local/Temp/lodb-parite-ssd/home) as webRoot. The worktree path goes through a dist junction, and the SSR child exits silently. The fixer's follow-up is confirmed.",
+    "Legacy wins over the fix text: the legacy portrait caption <p> has no title attribute, so none is added (Z03-14). The legacy Home button goes to '/'; the new one goes to /{locale}/, per ADR 0005."
+   ],
+   "checks": "Fresh build:web: EXIT 0, sw.js present, only the initial-bundle budget warning (673.06 kB against 500 kB). That warning predates the branch: the largest initial chunk has the same hash on lodb-next. No component-style budget error. typecheck OK. ng lint OK. lint/*.test.mjs 9/9. prettier --check --end-of-line auto OK on all 34 changed files. Full front suite run once: 240 files, 2106 tests pass. It rewrote two .snap files by line endings only (no content difference with --ignore-cr-at-eol); both were restored with git checkout. Touched specs re-run after the fixes: 3 files, 25 tests. E2E on the preview (--workers=1): specs/home plus specs/public/layout.spec.ts, 38/38; specs/public/accessibility.spec.ts, 26/26. axe (WCAG 2.1 AA): no violation on /en/?version=7.1.1 or /ar/?version=7.1.1. Legacy :8080 against preview :4400 on a fresh build. Captures at 1440 and 390 of /en/, /en/?version=7.1.1 and /ar/. Probes of counts, chips, portal logo and art boxes on 16.19.1, 14.1.1 and 7.1.1 (runes 5/5/0 in hero, chip and section; art box 306x383, object-position 50% 0%, lazy, Data Dragon loading URL; chip rgb(10,200,185) on rgb(10,50,60); svg 28x28). Grid tracks, hero rect and scrollWidth at 320, 390, 639, 640, 768, 1023, 1024 and 1440 (identical, 2/3/4 columns, px-6, no overflow). Champion card rect, h3 and p styles, and initials underlay at 1440 and 390 (identical). noxus, zaun and spirit-blossom: h3 weight and letter-spacing, empty-state frame, buttons, chip and logo box (identical). Hover: portal arrow 4px (-4px on /ar/), art scale 1.05 (same as legacy). /ar/: rule linear-gradient to left. Empty state on 7.1.1 in en, fr, ar, light scheme and 390 (same rect and buttons as legacy; Back uses history, Home goes to /{locale}/ and works). SSR text of the empty runes line in en, fr, de and ar (no raw key). No console error on /en/, /ar/, /en/?version=7.1.1 or /ar/?version=7.1.1. No attribution line in any commit. Nothing staged or committed under features/editorial/changelog/published (skip-worktree flag present). Preview stopped; worktree clean."
+  }
+ },
+ "EDITORIAL": {
+  "fix": {
+   "wp": "EDITORIAL",
+   "commits": [
+    "5e335343 feat(front/ui): ajouter un lien de section qui respecte sa marge",
+    "84f457ef fix(front/developers): realigner la page developpeurs sur l'ancienne",
+    "336a3e14 fix(front/editorial): remettre le sommaire encadre des pages legales",
+    "554f958f fix(front/editorial): decrire lod_prefs tel que le front l'ecrit",
+    "a6aa2802 fix(front/errors): encadrer la 404 et l'erreur avec leur code",
+    "97d70f5f fix(front/editorial): compter les voies de runes dans l'inventaire",
+    "621f4973 fix(front/donate): afficher les refus du paiement en toast",
+    "1130a453 fix(front/core): restaurer la page hors ligne de l'ancienne stack",
+    "d2c06d3e docs(docs): signaler le lien du changelog pour un build local windows"
+   ],
+   "results": [
+    {
+     "id": "Z08-02",
+     "status": "fixed",
+     "note": "Developers h1 at 24/32, 30/36 (>=400px), 36/40 (>=40rem), tracking 0.025em. Measured equal to legacy at 1440/768/400/390/320: 64px tall at 390 (was 162), 96px at 320, title on 2 lines, no horizontal scroll."
+    },
+    {
+     "id": "Z08-03",
+     "status": "fixed",
+     "note": "SectionNav replaced by the legacy boxed Contents nav (eyebrow, ol in 2 columns from 640px, nav-link entries). Label in the page locale, entries carry the text lang. Links use the new ui FragmentLink (SectionNav href/jump extracted into ui/navigation/section-jump.ts, no copy). Box geometry identical to legacy at all widths; a TOC click lands #riot at 104px."
+    },
+    {
+     "id": "Z08-06",
+     "status": "fixed",
+     "note": "404 = lodbFrame card max-w-xl p-10, eyebrow, text-7xl gold-bright 404, text-xl title, max-w-md body, hx-btn. Side by side with the audit's legacy capture at 1440 and 390: same."
+    },
+    {
+     "id": "Z08-07",
+     "status": "fixed",
+     "note": "Same card without eyebrow, numeral = outcome status (500/503). One template branch fed by a computed card, no duplication. Verified by unit tests (a 5xx cannot be provoked on the stack)."
+    },
+    {
+     "id": "Z08-08",
+     "status": "fixed",
+     "note": "Runes tile counts RuneList.trees (5, legacy 5) instead of total (62); count() takes a size selector."
+    },
+    {
+     "id": "Z08-09",
+     "status": "fixed",
+     "note": "lodbChip='live': cyan text, cyan wash, dark-cyan border; computed styles equal to legacy."
+    },
+    {
+     "id": "Z08-10",
+     "status": "fixed",
+     "note": "ERROR_SAMPLE is the legacy one-liner; the usage sample keeps its indent."
+    },
+    {
+     "id": "Z08-11",
+     "status": "fixed",
+     "note": "groupThousands (reference/group-thousands.ts) replaces Intl in pricingRows: '5 000' in every locale; the price cell renders '5 €/month' in one run, no <small>. Text identical to legacy in en and de."
+    },
+    {
+     "id": "Z08-12",
+     "status": "fixed",
+     "note": "EditorialFrame headingSpacing input ('lead' mb-5 / 'plate' mb-6); legal pages pass plate: h1 margin 24px, plate y equal to legacy."
+    },
+    {
+     "id": "Z08-13",
+     "status": "fixed",
+     "note": "&ngsp; between the Email label and the link (en and fr): 'Email: ...' / 'Email : ...'."
+    },
+    {
+     "id": "Z08-14",
+     "status": "fixed",
+     "note": "Refusals go through ToastService (error toast, role=alert) with the translated key; the inline .donate-error box and its CSS are removed; novalidate removed and the legacy pattern added; an invalidAmount signal keeps aria-invalid. Stripe is off on both stacks: covered by unit tests and the donate E2E (mocked checkout), which passes."
+    },
+    {
+     "id": "Z08-15",
+     "status": "fixed",
+     "note": ".dev-section__note (0.875rem) instead of text-sm, so the paragraphs keep 23.8px; .dev-page__hint line-height 1rem (16px). Equal to legacy at all widths."
+    },
+    {
+     "id": "Z08-16",
+     "status": "fixed",
+     "note": "curl lines print lodb_votrecle… (prefix + legacy placeholder); the header block keeps lodb_…."
+    },
+    {
+     "id": "Z08-M02",
+     "status": "fixed",
+     "note": "Owner-local as instructed (app.config.ts untouched): new ui FragmentLink directive (scrollIntoView + replaceState, href = own path) used by the developers Pricing button, the legal TOC and the privacy/terms in-text links. Measured after a click: #pricing 88px, #audience/#liability/#riot 104px, the legacy values. Router fragments elsewhere (to other pages) keep the router scroller."
+    },
+    {
+     "id": "Z08-M03",
+     "status": "fixed",
+     "note": "Legacy offline page restored (lang fr, single block, logo glow, h1 1.6rem, p.en lang=en, one Reessayer button, 26rem); only the inline onclick stays out (CSP). Pixel-identical to legacy at 390. service-worker E2E updated and passing."
+    },
+    {
+     "id": "Z12-M02",
+     "status": "fixed",
+     "note": "lod_prefs row (en, fr) now says: unsigned, readable by scripts, SameSite=Lax, Secure on HTTPS, 1 year, remembers site locale + Data Dragon language + version, nginx reads it to open /, per-session choice in sessionStorage. Legal wording remains the owner's call."
+    },
+    {
+     "id": "Z08-01",
+     "status": "fixed",
+     "note": "Docs part only (the Dockerfile part was SHELL's in wave 1): dev-next.md troubleshooting entry about core.symlinks or a junction at changelog/published."
+    },
+    {
+     "id": "Z08-M01",
+     "status": "obsolete",
+     "note": "Done by DS in wave 1. Changelog page re-checked now that its data ships locally: text identical to legacy, same layout at 1440 and 390."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Web/src/app/ui/navigation/section-jump.ts (new: shared href/jump extracted from SectionNav, needed by Z08-03 and Z08-M02)",
+    "src/LoDb.Web/src/app/ui/navigation/fragment-link.ts (new directive: the owner-local Z08-M02 fix)",
+    "src/LoDb.Web/src/app/ui/navigation/section-nav.ts and section-nav.html (use SectionJump, behaviour unchanged)",
+    "src/LoDb.Web/src/app/ui/navigation/navigation.spec.ts (FragmentLink test)",
+    "tests/LoDb.E2E/specs/routing/errors.spec.ts and tests/LoDb.E2E/specs/admin/moderation.spec.ts (h1 is now the 404 numeral, the title is asserted in main)",
+    "tests/LoDb.E2E/specs/pwa/service-worker.spec.ts (legacy offline texts)"
+   ],
+   "checks": "typecheck rc 0; ng lint: all files pass; full Vitest suite once: 240 files, 2108 tests passed (2 .snap files rewritten by line endings only, restored); build:web ok with sw.js (only the initial-bundle warning 672 kB > 500 kB, no component-style budget error); prettier --check --end-of-line auto on every changed front file ok. E2E on the preview, --workers=1: specs/developers, editorial, donate, pwa -> 68 passed, 2 failed in pwa/headers.spec.ts (edge headers and nginx x-cache-status, need nginx, unrelated). routing and admin specs not run (nginx / accounts). Parity: computed styles legacy vs preview equal at 1440/768/400/390/320 (developers h1, chips, notes, hint; legal h1, plate, contents box); side-by-side captures of developers, legal notice, 404, changelog and offline identical; fragment jumps land at 88/104px.",
+   "followups": [
+    "Run specs/routing/errors.spec.ts and specs/admin/moderation.spec.ts on the integration stack to confirm the updated 404 assertions (h1 = 404, title in main).",
+    "Cross-page routerLink fragments (and the ui gallery) still use the router anchor scroller, which ignores scroll-margin; a shell-level fix (anchorScrolling off plus a Scroll-event provider in app.config.ts) would cover them, owner SHELL.",
+    "Preview on this machine: dist is a junction to C:/Users/charl/AppData/Local/Temp/lodb-parite-ssd/<wp>; pass that real path to preview.mjs, otherwise isMainModule fails through the junction and the SSR exits silently (502). The documented stop pattern does not match that path.",
+    "The cookie policy still lists PHPSESSID, which the new stack (no server session) may no longer set; outside this package's findings, legal wording for the owner.",
+    "Legacy anchor clicks did not navigate in this run's scripted check (Turbo on the dev stack); the legacy offsets (88/104px) are the audit's measurements."
+   ]
+  },
+  "review": {
+   "verdict": "ok",
+   "issues": [],
+   "commits_added": [],
+   "residual": [
+    "A11y nit, not a regression against the pre-fix new stack: FragmentLink and SectionNav (through SectionJump) call preventDefault and scrollIntoView, so focus stays on the clicked link. A native #id jump (legacy) moves the sequential focus starting point to the section. A keyboard user who follows 'section 3', or a Contents entry, and then presses Tab continues from the link. Possible follow-up: move the focus starting point, for example with tabindex=-1 and focus({preventScroll:true}), in SectionJump.follow.",
+    "Commit granularity: 84f457ef bundles 7 developers findings (Z08-02/09/10/11/15/16 and the M02 Pricing link), and 336a3e14 bundles Z08-03, Z08-12, Z08-13 and the in-text fragment links. Each is one page's realignment and is documented in its body. They were left as they are, since history is not rewritten.",
+    "Nit: error-page.html writes '@if (card(); as card)'. The alias shadows the component's card signal. It compiles and passes lint, but it reads ambiguously.",
+    "ui/navigation now holds exactly 10 files, the per-folder limit. The next file added there needs a sub-folder.",
+    "specs/admin/moderation.spec.ts (h1 '404', title in main) was not run: it needs member accounts on the integration stack. specs/routing/errors.spec.ts was run on the preview and its three tests pass.",
+    "The fixer's follow-ups still stand. Cross-page routerLink fragments and the ui gallery still use the router's anchor scroller (owner SHELL). The cookie policy still lists PHPSESSID (the legal wording is the owner's call). The dist junction means preview.mjs must be given the real SSD path.",
+    "Build warning: the initial bundle is 672.67 kB against the 500 kB warning budget. It is a warning, not an error. All changed code is in lazy chunks (the developers, legal, errors, donate and about pages). No component-style budget error."
+   ],
+   "checks": "Reviewed the whole diff (9 commits, 45 files). Every subject is at most 72 characters, Conventional, French and scoped. No commit has an attribution line. Nothing under changelog/published is committed, and it keeps skip-worktree (S). app.config.ts and app.html are untouched. No generated artifacts or legacy sources are touched. The new code has no hard-coded colours and no physical CSS properties, and stays within the size limits. Fresh build:web through heavy.sh succeeded with sw.js written. Its only warning is the initial-bundle budget (672.67 kB against the 500 kB warning); there is no NG8113 unused-import warning and no component-style budget error. npm run typecheck passed. ng lint: all files pass. Full Vitest suite, run once: 240 files and 2108 tests passed. Two .snap files were rewritten by line endings only and were restored. Prettier --end-of-line auto: every changed front file passes. The E2E specs are not under the web project's prettier config: with it, moderation, service-worker and errors pass, and legal.spec was already non-conforming on the base (double quotes). E2E on the preview (--workers=1): specs/developers, specs/editorial, specs/donate, pwa/service-worker and routing/errors gave 63 passed out of 63. specs/public/navigation 'section anchors', which covers the SectionNav refactor, gave 3 passed out of 3. Legacy parity was checked with my own captures and probes against :8080. Z08-02 (blocker): the developers h1 has the same computed styles and geometry as the legacy at 1440, 768, 400, 390 and 320; it is 2 lines at 390 with no horizontal scroll, and matches under the zaun, noxus and spirit-blossom themes. Z08-03 (major): the Contents box, eyebrow, ol and links match the legacy at the same five widths and under the three themes. In ar (RTL) the rendering is identical to the audit's legacy capture, and the fr labels are correct. Z08-06 (major): the new 404 was compared with the legacy error404 card injected into a legacy page. Frame, eyebrow, h1, title, body and button have identical computed styles and positions at 1440 and 390, under hextech, zaun, noxus and spirit-blossom. ar/RTL was checked visually. Z08-07 (major): checked in code and by unit tests only (500 and 503 numerals, no eyebrow), because a 5xx cannot be provoked. Z08-08 (major): /en/about now reads 5 RUNES, as the legacy does. Minors verified: Z08-09 (cyan chip styles equal), Z08-10 and Z08-16 (texts equal), Z08-11 ('5 000' and '5 €/month' in en; '5 000 Anfragen' and '5 €/Monat' in de, the same as the audit's legacy capture), Z08-12 (h1 margin and plate position equal), Z08-13 ('Email: ' in en, 'Email : ' in fr), Z08-15 (note and hint line-heights equal), Z08-M02 (after a click, #pricing lands at 88 px, and #audience, #liability and #riot at 104 px, in en, fr and ar at 1440 and 390, equal to a legacy direct hash load), Z08-M03 (offline.html pixel-identical to the legacy at 1440 and 390), Z12-M02 (the cookie text matches preferences-cookie-entry.ts: 1 year, samesite=lax, secure over HTTPS, not HttpOnly, sessionStorage without the tick). Z08-14 was verified in code and by the donate E2E with a mocked checkout, whose translated role=alert toast passes. The preview is stopped and the worktree is clean."
+  }
+ },
+ "ACCOUNT": {
+  "fix": {
+   "wp": "ACCOUNT",
+   "commits": [
+    "278f65c2 feat(front/ui): habiller les dialogues picker et choisir leur focus",
+    "c3816019 fix(front/account): ouvrir les selecteurs du profil comme l'ancien site",
+    "51fb1846 fix(front/account): afficher le sceau de soutien dans l'editeur",
+    "261c8c79 fix(front/account): retrouver les mesures de l'ancien editeur de profil",
+    "975a341d fix(front/account): reprendre le tag Riot et le bouton de suppression",
+    "b6b95be9 fix(front/account): garder l'adresse publique dans l'ordre en arabe",
+    "2db292ba fix(front/profile): dater l'arrivee au mois comme l'ancien site",
+    "370729da fix(front/account): dater l'arrivee au mois comme l'ancien site",
+    "7b6a0377 fix(front/account): titrer l'onglet du profil par le nom de l'invocateur",
+    "84ebd79c fix(front/account): presenter la demande de reinitialisation comme avant",
+    "3dc3c828 fix(front/account): focaliser l'identifiant a l'arrivee sur la connexion",
+    "83c74cd7 fix(front/account): reprendre la case des conditions de l'inscription",
+    "d6c2fcf6 fix(front/account): renvoyer un lien de reinitialisation mort",
+    "e03d99a7 fix(front/account): annoncer la liste du mot de passe, adoucir ses rates",
+    "21e568b4 fix(front/account): espacer le filet du menu de compte comme l'ancien",
+    "d9627209 fix(front/api-portal): realigner le portail d'API sur l'ancien portail"
+   ],
+   "results": [
+    {
+     "id": "Z09-01",
+     "status": "fixed",
+     "note": "New PickerOpener (editor/picker/picker-opener.ts, provided by ProfileEditor) opens both pickers with size 'picker': a dialog from 48rem, a bottom sheet below. New styles/primitives/dialog-picker.css adds, under .hx-dialog--picker / .hx-sheet--picker, the legacy panel gradient (panel to hextech-black), max-block-size min(38rem,85dvh) or 84dvh, padding 20/24/24 or 12/20/16+safe area, a gold 45% border, the 2.5rem x 4px gold handle on the sheet, and a 0.9rem head gap. Measured against the legacy: 1440 panel 464,? 512px, padding and gradient identical; 390 full-width sheet, handle at +13px, head 26.4px below it (legacy 26.4)."
+    },
+    {
+     "id": "Z09-02",
+     "status": "fixed",
+     "note": "Picker close is a 36px square, gold-deep 50% border, gold-bright/gold on hover. An ::after keeps a 44px hit area. It matches the legacy 915,172 36x36 square."
+    },
+    {
+     "id": "Z09-03",
+     "status": "fixed",
+     "note": "DialogOptions.autoFocus (default 'dialog', spec kept) is set to input[type=search] by PickerOpener. The dialog stays named by ariaLabelledBy. document.activeElement is input.picker-search on open, with the cyan border, as in the legacy. Skin step changes still focus the search."
+    },
+    {
+     "id": "Z09-04",
+     "status": "fixed",
+     "note": "lodb-dialog projects [lodbDialogLead] before its heading (spec added). The skin picker's back button is now a 36px framed square with an aria-label in the lead slot, so step 2 reads [<] AHRI [x], the eyebrow centred at x=701 exactly as in the legacy. The search starts at the same y as step 1."
+    },
+    {
+     "id": "Z09-05",
+     "status": "fixed",
+     "note": "The 'Skin banner' label (.skin-field__label, 0.62rem, .22em, gold) is back above the socket. It is aria-hidden because the socket already names itself."
+    },
+    {
+     "id": "Z09-06",
+     "status": "fixed",
+     "note": "The cover h1 is flex items-center gap-2.5 and renders SupporterBadge when session.user().isSupporter. Verified in code only: the audit account is not a supporter."
+    },
+    {
+     "id": "Z09-07",
+     "status": "fixed",
+     "note": "Both member-since helpers use { month: 'long', year: 'numeric', timeZone: 'UTC' }. The editor, the preview and /u/ now show 'September 2026', like the legacy. profile-page.spec expects 'Membre depuis · mars 2024'."
+    },
+    {
+     "id": "Z09-09",
+     "status": "fixed",
+     "note": "The .socket button fills its grid cell (block-size 100%). Empty and filled sockets are all 187x137, bottoms aligned, the same as the legacy."
+    },
+    {
+     "id": "Z09-10",
+     "status": "fixed",
+     "note": "The plate links are inline-flex with a 0.25rem top margin, a 1.25rem line box and no minimum height, so the plates are 72px (legacy 72). The visibility link lost its 44px minimum height. It keeps its own width (align-self flex-start) and the legacy 24px line box, so the card height now equals the legacy one."
+    },
+    {
+     "id": "Z09-11",
+     "status": "fixed",
+     "note": "The legacy sizes are restored (visibility label/state/help/link, mono e-mail, version label, skin type/muted/CTA, socket type/muted, autosave 0.76rem), with text-dim on the muted captions. The version select keeps 16px (H6), which makes the favorites header 4px taller."
+    },
+    {
+     "id": "Z09-12",
+     "status": "fixed",
+     "note": "The tag column is sm:w-40 and the # prefix 0.85rem, so the identity button sits at x=673 as in the legacy. items-start plus sm:mt-6 are kept, per the amended fix, because of the inline field errors. The panel is 4px taller because the inputs are 16px (H6)."
+    },
+    {
+     "id": "Z09-13",
+     "status": "fixed",
+     "note": "The delete button rests on color-mix(danger 80%, text), which computes the same as the legacy, with a 0.5rem gap and a colour transition. The title and the hover stay on danger-light: plain danger text is under 4.5:1 on the canvas. This is an accepted accessibility divergence."
+    },
+    {
+     "id": "Z09-14",
+     "status": "fixed",
+     "note": "The host is flex gap-4 and gets min-h-11 only in the error state, so there is no idle band under the sockets. The warned/error tone stays danger-light (accessibility, per the amended fix)."
+    },
+    {
+     "id": "Z09-15",
+     "status": "fixed",
+     "note": "Focus on an empty socket or the skin banner sets outline:none and a cyan border-color, as in the legacy. A filled socket's border comes from the hextech-frame utility, which beats the components layer (in the legacy too, where the focus was invisible). It therefore gets a 1px outline with -1px offset over that border: the same cyan line, inside the bevel. Checked by keyboard focus in a screenshot."
+    },
+    {
+     "id": "Z09-16",
+     "status": "fixed",
+     "note": "New shared/head/{account-title,account-head,override-account-title}.ts. AccountPage provides AccountHead and passes override ?? {key: route heading} to applyPrivateHead, moved to shared/head/, which now takes a key or a text. ProfileEditor and ProfilePreview override with the display name, and it is reset on destroy (spec added). The tabs read 'parity-audit · League of Data Base'. The legacy preview used '—' (seo_title); the private head keeps '·'."
+    },
+    {
+     "id": "Z09-18",
+     "status": "fixed",
+     "note": "The 3rem 1.5rem padding moved to :host, and .portal-page is a bare 72rem column, so the panels are 144..1296 (1152px) as in the legacy."
+    },
+    {
+     "id": "Z09-19",
+     "status": "fixed",
+     "note": "The h1 uses the mt-2 font-beaufort text-4xl font-bold tracking-wide text-gold-grad uppercase utilities, 36/40px with .025em. The .portal-header__title rule is deleted, and the header links sit at the legacy y."
+    },
+    {
+     "id": "Z09-20",
+     "status": "fixed",
+     "note": "lodbFrame is removed from the create, key overview, billing and usage panels. .portal-panel is the flat legacy .profile-panel: gold-deep 55% border, gold-deep 6% background, no clip or shadow. The reveal keeps its ornate frame and the offer cards stay interactive."
+    },
+    {
+     "id": "Z09-21",
+     "status": "fixed",
+     "note": "Portal panel titles are 1rem, .2em, gold-light (computed 16px / 3.2px / rgb(205,190,145))."
+    },
+    {
+     "id": "Z09-22",
+     "status": "fixed",
+     "note": "Key plates use 1, 2 (from 40rem) and 3 (from 64rem) columns: 3+3 at 1440 and 2+2+2 at 768, as in the legacy captures."
+    },
+    {
+     "id": "Z09-23",
+     "status": "fixed",
+     "note": "formatDate/formatDay write UTC dd/mm/yyyy with Latin digits in every locale ('27/09/2026'). The locale parameter and the locale inputs of KeyOverview and UsageTable are removed, and usage-format.spec is updated."
+    },
+    {
+     "id": "Z09-24",
+     "status": "fixed",
+     "note": ".key-actions is a column below 40rem and a row from 40rem (align flex-end, space-between, no wrap), so both actions sit side by side at 768. Revoke is the legacy danger ghost: 0.875rem, .15em, danger 45% border, danger/text mix, and it is 43px tall like the legacy."
+    },
+    {
+     "id": "Z09-25",
+     "status": "fixed",
+     "note": "ApiKeyPortal injects ToastService and TranslocoService. Created, regenerated, revoked and every refusal are now toasts. The notice banner only shows a Stripe return, or a Stripe page that would not open. The unit spec reads the toast queue, and the E2E spec reads the .hx-toaster region through a new portalToast helper."
+    },
+    {
+     "id": "Z09-26",
+     "status": "fixed",
+     "note": "The reveal has a single ghost copy button, and the secret stays until the page is left. The 'I have copied it' button, the dismissed output, dismissSecret() and the now-unused apiPortal.raw.done key (21 locales) are removed. The E2E spec checks the secret disappears on revoke instead."
+    },
+    {
+     "id": "Z09-27",
+     "status": "fixed",
+     "note": "The create form is a column below 40rem, so the gold button is full width (checked at 390). From 40rem it is a row with the name at flex 1 and a 20rem maximum."
+    },
+    {
+     "id": "Z09-28",
+     "status": "fixed",
+     "note": "Offer grids are 1 column, then 2 from 40rem, then 3 (packs) or 4 (plans) from 64rem, with mt-4. Checked in code only: billing is off on both stacks."
+    },
+    {
+     "id": "Z09-29",
+     "status": "fixed",
+     "note": "The unverified panel only shows auth.verify.gate_api. The verify button, the verifyLink input and binding, and the unused apiPortal.create.verify key are removed. The unit and E2E specs now assert that no such link exists."
+    },
+    {
+     "id": "Z09-30",
+     "status": "fixed",
+     "note": "LoginView and ForgotPasswordView focus #login-identifier and #forgot-email through viewChild and afterNextRender. The browser's autofocus pass has already run by then, so the HTML attribute would be ignored. A probe confirms activeElement matches the legacy on both pages, and a unit spec was added."
+    },
+    {
+     "id": "Z09-31",
+     "status": "fixed",
+     "note": "AuthCard has a centered input. The sent state renders a plain muted role=status sentence and the footer is text-text-muted. The capture is pixel-identical to the legacy check-email page."
+    },
+    {
+     "id": "Z09-32",
+     "status": "fixed",
+     "note": "The extra Terms of Use link is removed. The label is items-start with the checkbox at mt-0.5 and the text in a span. The E2E getByLabel('I accept the terms of use') still resolves."
+    },
+    {
+     "id": "Z09-33",
+     "status": "fixed",
+     "note": "The summoner-name help is now before the field errors."
+    },
+    {
+     "id": "Z09-34",
+     "status": "fixed",
+     "note": "mb-5 is on the register, forgot and reset submits, not on login. Submit to divider is 44px on register, as in the legacy (911->955 vs 927->971). Submit to hairline is 52px on forgot, as in the legacy."
+    },
+    {
+     "id": "Z09-35",
+     "status": "fixed",
+     "note": "The checklist has aria-live=polite, the unmet diamond stroke-width is 1.2, and the touched colour is color-mix(danger 45%, text-muted), the legacy one, which passes AA."
+    },
+    {
+     "id": "Z09-36",
+     "status": "partial",
+     "note": "A malformed link (no numeric user or no token) now leaves on open for forgot-password (replaceUrl) with the auth.flash.reset_error toast, as the legacy did; the probe confirmed the toast. An invalid-token refusal on submit does the same, and the dead invalid branch is removed. A new spec covers both cases. A well-formed but expired or used token can only be detected on submit: the API has no endpoint that checks a token without consuming it."
+    },
+    {
+     "id": "Z09-37",
+     "status": "obsolete",
+     "note": "Already fixed by SHELL in wave 1: account-menu.html renders label() ?? 'nav.account' in a hidden lg:inline span."
+    },
+    {
+     "id": "Z09-38",
+     "status": "fixed",
+     "note": "routerLinkActive on login and register came from SHELL in wave 1. I replaced the separator with <li role=separator class='gold-hairline my-1 h-px'> followed by a plain li. Measured: items 71/109/150(sep)/158, panel 140px, identical to the legacy menu."
+    },
+    {
+     "id": "Z09-39",
+     "status": "obsolete",
+     "note": "Already fixed by SHELL in wave 1 (Z01-16): centred flex strip, and the CTA is gold semibold underlined with a gold-bright hover."
+    },
+    {
+     "id": "Z09-M01",
+     "status": "fixed",
+     "note": ".picker-option and its image are flex:none, so rows are 47px as in the legacy. Name 0.9rem (14.4px, same as the legacy), group and remove 0.72rem, skin tile name 0.65rem (10.4px, same as the legacy)."
+    },
+    {
+     "id": "Z09-M02",
+     "status": "fixed",
+     "note": "The visibility URL span is dir=ltr and now reads '/u/parity-audit ←' in ar. The API key prefix value is wrapped in <bdi>, so 'lodb_…' keeps its ellipsis at the end while the plate stays right-aligned in ar. Both checked in ar captures."
+    },
+    {
+     "id": "Z09-M03",
+     "status": "fixed",
+     "note": "ForgotPasswordView overrides the head with auth.reset.check_email_title once sent, through AccountHead. The tab reads 'Check your inbox · League of Data Base', as in the legacy."
+    },
+    {
+     "id": "Z09-M04",
+     "status": "fixed",
+     "note": "formatCount groups thousands in every locale. It uses a no-break space rather than the legacy plain space: it looks the same, never wraps, and keeps digit order in RTL, where a plain space between two numbers would be reordered."
+    },
+    {
+     "id": "Z09-M05",
+     "status": "fixed",
+     "note": "The 'No usage metered yet' text is portal-text mt-4, 1rem under the title."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Web/src/app/ui/overlays/dialog-options.ts (optional autoFocus selector, Z09-03)",
+    "src/LoDb.Web/src/app/ui/overlays/dialog-config.ts + dialog-config.spec.ts (autoFocus ?? 'dialog', default unchanged)",
+    "src/LoDb.Web/src/app/ui/overlays/dialog-frame.html + dialog-frame.ts + dialog-frame.spec.ts (additive <ng-content select='[lodbDialogLead]'> before the heading, Z09-04)",
+    "src/LoDb.Web/src/styles/primitives/dialog-picker.css (new; styles only the .hx-dialog--picker / .hx-sheet--picker panes, Z09-01/02) and src/LoDb.Web/src/styles/primitives/index.css (its import after dialog.css)",
+    "src/LoDb.Web/src/app/features/account/account-menu/account-menu.html (Z09-38 separator only; the file is under the path excluded as done in wave 1)",
+    "tests/LoDb.E2E/specs/api-portal/api-portal.spec.ts + portal.ts (toasts in place of the notice, no 'I have copied it', no verify link)"
+   ],
+   "checks": "Everything below was run through heavy.sh.\n\n- Build: `npm run build:web` passes. The only warning is the initial bundle budget (674.64 kB against 500 kB), which was already there.\n- Unit tests: the full Vitest suite passes, 243 files and 2108 tests, with the limited runner config.\n- Static checks: `npm run typecheck` and `npx ng lint` pass (all files).\n- Formatting: `npx prettier --check --end-of-line auto` passes on every changed web file. The E2E files pass against src/LoDb.Web/.prettierrc.json; they have no config of their own.\n- Line length: no new line over 100 characters, except a Tailwind class string in profile-cover.html, which follows existing practice.\n- E2E against my preview on port 4450, `--workers=1`: 48 tests passed.\n  - specs/account/access.spec.ts\n  - specs/api-portal (4 tests)\n  - specs/profile (2 tests)\n  - specs/public/layout.spec.ts\n  - specs/builds-editor\n  - The register and contact specs were not run, as instructed.\n- Visual comparison with the legacy stack:\n  - Captures and computed styles of the pickers (champion, skin step 1 and step 2) at 1440 and 390.\n  - The profile editor, preview and public page at 1440 and 390.\n  - The API portal with no key at 1440 and 390, with a key at 1440, 1024, 768 and 390, and after revoking.\n  - Login, forgot-password, the sent state, register and a dead reset link at 1440.\n  - The account menu measured on both stacks.\n  - In ar: the visibility link and the key prefix.\n  - Keyboard focus on the sockets.\n- Accepted divergences:\n  - Inputs stay 16px (H6), so the version select, search and form fields are about 4px taller.\n  - The danger title, the delete hover and the autosave error tone stay danger-light for accessibility.\n  - The preview tab uses '·' where the legacy used '—'.\n- Clean-up:\n  - The new account got the legacy favorites and was made public for the comparison, then was set back to empty and private.\n  - The API keys I created on it were revoked.\n  - Nothing was written to the legacy stack.\n  - The .snap files that Vitest rewrote were restored.\n  - Commit subjects were shortened with a non-interactive `filter-branch --msg-filter` over my own commits only; the resulting tree is identical. I deleted the refs/original backup that `filter-branch` created.\n  - The worktree is clean and the preview is stopped.",
+   "followups": [
+    "Z09-36 remainder: rejecting an expired or used reset link on open, as the legacy did, needs a new API endpoint that checks a reset token without consuming it (Modules/Accounts/Recovery only maps POST ResetPasswordEndpoint).",
+    "Shared overlay files touched: ui/overlays/dialog-options.ts, dialog-config.ts and dialog-frame.html/.ts, plus styles/primitives/index.css. Other wave-2 packages may extend the same files (BUILDS armory, DETAIL lightbox size); all my edits are additive, so a merge should only need to keep both sides.",
+    "Wave-2 note 'auth.register.password_help': the legacy printed it only as the no-JS fallback before the Vue checklist mounted, and the /account routes are client-rendered, so it was not added.",
+    "Not in any finding: the revoke help text differs from the legacy one. The new apiPortal.actions.revoke_help says the key is refused at once; the legacy said it might still be accepted for a minute of cache. Left as is, on the assumption the new wording is deliberate."
+   ]
+  },
+  "review": {
+   "verdict": "fixed-issues",
+   "issues": [
+    "Regression from the Z09-38 fix (account-menu.html, a wave-1 SHELL file): the separator `<li role=\"separator\">` inside the menu's `<ul>` fails the axe `list` rule (WCAG 1.3.1, wcag2a) as soon as a member opens the menu. The anonymous menu is not affected. No spec ran axe with the menu open, so the fixer's checks missed it. Fixed in 88800b8d: the hairline stays an li, now `aria-hidden=\"true\"`. The geometry is unchanged and still matches the legacy exactly (panel 140px, items at 71/109/150/158). A new E2E test in specs/profile/profile.spec.ts opens a member's menu and runs axe on the page.",
+    "Regression from the Z09-06 fix (profile-cover.html): making the h1 a flex container turned its `break-words` into a no-op. A long summoner name (24 characters plus #tag) ran off a 390px screen: it was clipped at 'ABCDEFGHIJKLMNO', and the supporter seal ended up at x=750. The same change pushed the class line from 102 to 128 characters (the limit is 100). Fixed in 8317c1c4: the name sits in a shrinkable `min-w-0 break-words` span, the pattern the preview hero already uses. The title typography moved into `.profile-cover__name` in cover.css with the same values (Beaufort 2.25rem/2.5rem, 700, .025em, uppercase, mt .5rem, gap .625rem). Measured after the change: h1 257x40, 36/40px, 0.9px tracking at 1440, 768 and 390, identical to before. The long name now wraps inside 390 and 320, and the seal stays in view (probe with a stubbed isSupporter)."
+   ],
+   "commits_added": [
+    "8317c1c4 fix(front/account): laisser passer a la ligne un long nom d'invocateur",
+    "88800b8d fix(front/account): cacher le filet du menu aux lecteurs d'ecran"
+   ],
+   "residual": [
+    "Z09-36 (partial, as the fixer reported): an expired or used reset link can only be refused on submit. Refusing it on open needs an API endpoint that checks a reset token without consuming it.",
+    "Z09-07: the new format is Intl {month: 'long', year: 'numeric'}. The legacy used the ICU pattern 'LLLL yyyy'. They agree in en, fr, de and pl, but differ in ja, zh and ko ('2026年9月' against the legacy's presumed '9月 2026'), in hu ('2026. szeptember') and in ru ('сентябрь 2026 г.'). I could not observe the legacy in those locales: its profile stayed in English, and switching the UI locale needs the POST /setup-submit form. I kept the verified fix. If the legacy form must be exact, the change is a standalone month (`{month: 'long'}`) followed by the year.",
+    "Z09-M04: counts are grouped with a no-break space where the legacy used a plain space. They look the same, and the no-break space keeps digit order in RTL. This is an accepted divergence.",
+    "The revoke help text differs from the legacy one ('refused from the next request' against 'may be accepted for a minute of cache'). The new wording matches the new API, which the E2E proves: /v1 refuses the key at once.",
+    "Other accepted divergences from the fixer: inputs stay at 16px (H6), so the version select, the search fields and the form fields are about 4px taller. The danger title, the delete hover and the autosave error tone stay danger-light for AA contrast. The preview tab title uses '·' where the legacy used '—'.",
+    "Edits outside the owned paths, all additive: ui/overlays/dialog-options.ts, dialog-config.ts (+spec), dialog-frame.html/.ts (+spec), styles/primitives/dialog-picker.css and index.css, and account-menu.html (a wave-1 SHELL file). Other wave-2 packages that extend the same overlay files should only need to keep both sides when merging.",
+    "Tooling note for the orchestrator: src/LoDb.Web/dist is a junction to C:/Users/charl/AppData/Local/Temp/lodb-parite-ssd/account/dist. Started with the F: web root given in the task, preview.mjs spawns an SSR server that never listens, because Angular's isMainModule check fails through the junction, and every page answers 502. Start it with the SSD root instead: `node preview.mjs C:/Users/charl/AppData/Local/Temp/lodb-parite-ssd/account 4450`. The stop filter in the task does not match that path; I stopped it with an added `lodb-parite-ssd[\\/]account` pattern.",
+    "The initial bundle budget warning (674.64 kB against 500 kB) predates this branch. No component style budget is exceeded."
+   ],
+   "checks": "Heavy commands ran through heavy.sh, one at a time; the E2E ran with --workers=1. The browser probes ran with nice -n 10, one browser at a time.\n\nBuilds and static checks:\n- npm run build:web ran twice, on the fixer's HEAD and after my fixes. Both passed; the only warning is the initial budget warning, which predates this branch. sw.js is present.\n- npm run typecheck passed.\n- npx ng lint passed on all files.\n- The full Vitest suite, run once with the limited config, passed: 243 files and 2108 tests. The two .snap files it rewrote by line endings were restored with git checkout.\n- Prettier (--end-of-line auto) passes on every changed file. The one warning left in profile.spec.ts is an existing test the branch did not touch; my added block formats clean.\n- Line length: no changed line is over 100 characters, apart from two existing lines in profile-page.spec.ts.\n\nE2E against the preview on 4450: specs/profile, specs/api-portal, specs/account/access.spec.ts and specs/public/layout.spec.ts. 47 tests passed, including the new menu accessibility test. The register and contact specs were not run.\n\nComparison with the legacy stack (8080), fresh captures:\n- Majors: I verified all five.\n  - Z09-01: picker 512px wide at x=464, legacy gradient, padding 20/24/24, gold 45% border; at 390 a full-width sheet with the gold-deep top border, the handle and 12/20/16 padding. Same as the legacy.\n  - Z09-04: step 2 head reads [<] AHRI [x], the eyebrow at x=701 on both stacks, the search at the same y.\n  - Z09-05: the SKIN BANNER label is 784x15, 9.92px, .22em, gold.\n  - Z09-20: flat gold-deep 55% panels, 6% tint, no clip-path.\n  - Z09-22: 3+3 plates at 1440 and 1024, 2 columns at 768, 1 at 390.\n- Other findings verified on screen: Z09-02, 03, 06 (supporter seal, probed by stubbing /api/account/me), 07, 09, 10, 11, 12, 13, 14, 15, 16, 18, 19, 21, 23, 24, 25, 26, 27, 30, 31, 32, 33, 34, 35, 36, 38, M01, M02, M03 and M05.\n  - Z09-09 and Z09-10: after filling the new member with the legacy favorites, sockets are 187x137 in a filled row at 1440 and 768, and the visibility card is 152px.\n  - Z09-15: keyboard focus is visible on filled and empty sockets in all four themes.\n  - Z09-30: the identifier (login) and the e-mail field (forgot password) are focused on arrival, as on the legacy.\n  - Z09-31 and M03: the sent state matches the legacy check-email capture; its tab title is 'Check your inbox'.\n  - Z09-35: aria-live, stroke 1.2 and the touched colour compute identically on both stacks.\n  - Z09-36: a damaged reset link lands on forgot-password with the toast.\n  - Z09-38: the menu geometry is identical.\n  - Z09-M02: the ar key prefix keeps its ellipsis at the end, and /u/parity-audit keeps its order.\n- Regression hunt:\n  - Widths 1440, 1024, 768, 390 and 320.\n  - The zaun, noxus and spirit-blossom themes: pickers, socket focus and the cover title. There is no light theme in the new stack.\n  - RTL in ar: the portal, the profile editor, and the skin picker with its way back on the right.\n  - fr on the portal.\n  - axe (WCAG 2.1 AA) on the profile editor with the menu open, the preview, the portal, both pickers and the login, register and forgot-password pages, at 1440 and 390. No violation after the fix.\n\nState restored: the review API key I created on the new member was revoked, and the new member is back to empty favorites and private. Nothing was written to the legacy stack. The preview is stopped and the worktree is clean. Neither commit carries an attribution line, and nothing under changelog/published was staged (it is still skip-worktree)."
+  }
+ },
+ "BUILDS": {
+  "fix": {
+   "wp": "BUILDS",
+   "commits": [
+    "6c19fd2e fix(front/builds): dater les builds du compte en jj/mm/aaaa",
+    "b35ee68a fix(front/builds): nommer les langues en anglais comme l'historique",
+    "b4037354 fix(front/builds): recomposer l'en-tete du build partage sur telephone",
+    "6d2e9ed7 fix(front/builds): aligner runes et ordre d'achat du build partage",
+    "76e60698 fix(front/builds): redonner aux tendances la pagination historique",
+    "fb4e9b5f fix(front/builds): aligner la mise en forme de l'editeur de build",
+    "a5547d46 fix(front/builds): valider le nom au navigateur, refus en toasts",
+    "fc5d8ccc chore(i18n): retirer le titre de l'encadre des refus de l'editeur",
+    "60edb56d fix(front/builds): titrer l'import comme la creation d'un build",
+    "9bce85c7 fix(front/builds): aligner l'ordre d'achat de l'editeur sur l'historique",
+    "111daabc fix(front/builds): aligner la liste de mes builds sur l'historique",
+    "ba6a0975 fix(front/ui): donner au panneau large la hauteur de l'armurerie",
+    "e33eaf9b fix(front/builds): epingler l'en-tete et les outils de l'armurerie",
+    "3e2434b4 test(e2e): suivre la langue de ?lang= sur le build partage"
+   ],
+   "results": [
+    {
+     "id": "Z10-01",
+     "status": "fixed",
+     "note": "share-page.html/css: header is now a grid (seal | title | actions, meta under the title). Desktop unchanged: at 1440 and 768 every measured rect (head, h1, seal) is identical to legacy. <40rem: title beside the seal (226 px at 390), credits and chips full width, score and Copy link on their own row. <22.5rem: seal stacked above the title. No mid-word breaks. Checked at 320, 390, 768 and 1440, en and ar RTL. The legacy crops the title at 390, so this layout improves on both stacks."
+    },
+    {
+     "id": "Z10-03",
+     "status": "fixed",
+     "note": "mb-6 on the codex headers of share-runes.html and share-order.html. The runes header lands at y=351 at 1440, as legacy."
+    },
+    {
+     "id": "Z10-04",
+     "status": "fixed",
+     "note": "Keystone 5.75rem (measured 92x92, as legacy), align-self flex-start, overflow hidden, 34px -8px path glow; .rune-medallion overflow hidden. The inert .path-border part was left alone, as the verifier advised."
+    },
+    {
+     "id": "Z10-05",
+     "status": "fixed",
+     "note": "path-text removed from the primary tree name, duplicate rule deleted; measured rgb(200,170,110), as legacy."
+    },
+    {
+     "id": "Z10-06",
+     "status": "fixed",
+     "note": "Pager rewritten as 2.5rem square icon-only arrows (aria-label filter.prev/next, rel kept), '2 / 3' in mono muted, off state at 0.35 with pointer-events none, nav labelled community.trends.title. Checked on a faked second page (route intercept) at 1440 and 390, en and ar. Improvement: the fraction is dir=ltr so ar no longer shows '3 / 2' (the legacy markup does). Unit and E2E specs updated."
+    },
+    {
+     "id": "Z10-07",
+     "status": "obsolete",
+     "note": "Already done by DS in wave 1 (editor-page host px-6 py-12, inner max-w-5xl, lodb-backdrop). Measured: h1 at x=208/y=138 and content 1024 px, identical to legacy on mine/new/edit."
+    },
+    {
+     "id": "Z10-08",
+     "status": "fixed",
+     "note": "hr.hx-rule mb-8 after the My builds header; hr.hx-rule mt-3 as the last child of .forge__head (0.5rem gap + 0.75rem = legacy mt-5). Measured rect [208,210,1024,1] on mine and [208,198,1024,1] in the editor, identical to legacy."
+    },
+    {
+     "id": "Z10-09",
+     "status": "fixed",
+     "note": "Editor h1: font-bold + sm:text-4xl. Measured 36px/700/0.9px at 1440 and 30px/700 at 390, as legacy."
+    },
+    {
+     "id": "Z10-10",
+     "status": "fixed",
+     "note": ".forge-field__label restyled in build-editor.css, and .forge-context__label in the editor-context component styles (emulated styles cannot be shared). Measured Beaufort 10.4px uppercase 2.288px rgb(205,190,145), identical to legacy."
+    },
+    {
+     "id": "Z10-11",
+     "status": "fixed",
+     "note": ".forge-context grid: 1 column, minmax(0,14rem) minmax(0,18rem) from 40rem. Measured '224px 288px', as legacy; 292px at 390."
+    },
+    {
+     "id": "Z10-12",
+     "status": "fixed",
+     "note": ".forge__foot justify-content flex-end, gap 0.75rem. Measured flex-end/12px, as legacy."
+    },
+    {
+     "id": "Z10-13",
+     "status": "fixed",
+     "note": ".forge-section padding 1.5rem, 2rem from 40rem (phone override deleted); .forge-section > .codex-header margin-block-end 0.25rem (gap + margin = legacy mb-6). Measured 32px at 1440 and 24px at 390, as legacy."
+    },
+    {
+     "id": "Z10-14",
+     "status": "fixed",
+     "note": "Description rows=3; .forge-switch 0.875rem text-muted (measured 14px rgb(160,155,140), as legacy). The textarea is 94px vs legacy 82px because of the intended 16px input floor."
+    },
+    {
+     "id": "Z10-15",
+     "status": "fixed",
+     "note": "short-date.ts moved to builds/shared/format (own spec); build-row uses it; updated-on.ts and its spec deleted; format.spec renamed path-class-of.spec. Shows dd/mm/yyyy in every locale."
+    },
+    {
+     "id": "Z10-16",
+     "status": "fixed",
+     "note": "py-1 on the row select in the template, ineffective component padding/font removed. Measured 155x34, 16px, padding 4px 32px 4px 12px (legacy 26px high at 12px; the 16px floor is kept)."
+    },
+    {
+     "id": "Z10-17",
+     "status": "fixed",
+     "note": "Empty state as legacy empty_state: hextech-frame p-10, eyebrow common.no_result.text, muted build.list.empty, ghost Back (Location.back) and primary Home, then the gold 'Forge my first build' outside the frame. Checked by intercepting GET /api/builds on the new stack (the legacy account owns a build, so no live legacy capture). The E2E flow asserts the empty text and CTA."
+    },
+    {
+     "id": "Z10-18",
+     "status": "fixed",
+     "note": "1.5rem override on the item tool buttons deleted; measured 32x32, as legacy."
+    },
+    {
+     "id": "Z10-19",
+     "status": "fixed",
+     "note": "Add item tile 3rem wide (measured 48px, as legacy), never disabled, title = add_cta; the dead :disabled rules removed. A full step opens the armory with every tile disabled and 'Step full' in its footer."
+    },
+    {
+     "id": "Z10-20",
+     "status": "fixed",
+     "note": "Legacy hint look (mono, 0.7rem, 0.06em, text-dim) through one utility string in catalog-state, champion-picker (x2), editor-context and the armory empty text (py-6 text-center); step-editor .forge-hint set to 0.7rem/0.06em. Measured 11.2px/0.672px, as legacy."
+    },
+    {
+     "id": "Z10-21",
+     "status": "fixed",
+     "note": "armory-opener passes size 'wide' (existing DS size). Measured pane 896x792 with 9 grid columns at 1440, identical to legacy."
+    },
+    {
+     "id": "Z10-22",
+     "status": "fixed",
+     "note": "ItemArmory is the pane itself (host 'hx-dialog-panel armory', DialogFrame dropped): header / tools / body / footer in a flex column, :host(.hx-dialog-panel.armory) padding 0 with overflow hidden. Only .armory__body scrolls; hairlines at 18%/14%/18%, footer on abyss 60% with the safe-area inset. After scrolling 700px, the header, search and chips stay in view (screenshot)."
+    },
+    {
+     "id": "Z10-23",
+     "status": "fixed",
+     "note": "Header: eyebrow h2 (HEADING_ID) with the target 0.15rem below; close is a 2.2rem square, gold, gold-deep border on sink 60%, gold-bright on hover/focus. Measured close 35x35 and header 894x75, identical to legacy."
+    },
+    {
+     "id": "Z10-24",
+     "status": "fixed",
+     "note": "label.armory__search with the magnifier svg (logical inset) and an input in mono, border gold-deep, void background, gold on focus, font-size 1rem (16px rule)."
+    },
+    {
+     "id": "Z10-25",
+     "status": "fixed",
+     "note": "Category chips without min-height (measured 47x27, as legacy); Done min-height 2.5rem (87x40, as legacy); 2.25rem/2.75rem under (pointer: coarse), following controls.css; phone Done padding 0.55rem 1.6rem."
+    },
+    {
+     "id": "Z10-26",
+     "status": "fixed",
+     "note": "dialog.css: the wide dialog and sheet panes get the legacy panel-to-abyss gradient and 0 24px 60px -20px shadow; wide dialog capped at min(88vh, 100dvh - 2rem), wide sheet at 92dvh. Measured sheet top at y=68 at 390, as legacy. The optional sink-72% backdrop tint was not done (needs a backdropClass option)."
+    },
+    {
+     "id": "Z10-27",
+     "status": "fixed",
+     "note": "novalidate removed. The name value is now written once (initialName): rewriting it on every keystroke meant Chrome never counted it as typed, so minlength never fired, even for real typing. An empty or short name now stops the submit with focus on the field and sends no POST. Each API refusal is a toast (translate + ToastService 'error'); the .forge-errors panel and signal are gone. Saver spec and E2E step updated (native block, then a trimmed 'ab ' refused by the API in a toast)."
+    },
+    {
+     "id": "Z10-28",
+     "status": "fixed",
+     "note": "ImportNotices replaced by announceImport() in the BuildEditor constructor: done as 'success', then champion_missing/runes_reset/items_dropped as 'warning' toasts. Spec added; checked at 1440 and 390 with an import to 10.1.1."
+    },
+    {
+     "id": "Z10-29",
+     "status": "fixed",
+     "note": "Import route heading build.editor.title_create; tab reads 'Forge a build · League of Data Base' on both stacks. app.routes.spec updated."
+    },
+    {
+     "id": "Z10-30",
+     "status": "fixed",
+     "note": "Both builds language-label.ts copies deleted. Trends filters, trend row, share chip and editor select use the existing core/api/meta/language-name.ts (legacy VersionManager English table), as wave2-notes advised. The share spec asserts 'French'; a trends spec asserts English names."
+    },
+    {
+     "id": "Z10-31",
+     "status": "fixed",
+     "note": "Trend row keystone 1.7rem at -0.55rem, trend-list gap 1rem. Measured 27.19px at -8.8px and 16px gap, identical to legacy."
+    },
+    {
+     "id": "Z10-32",
+     "status": "fixed",
+     "note": "Patch and language chips wrapped in @if on trend-row.html and share-page.html (a build with an empty gameVersion). Specs on both pages."
+    },
+    {
+     "id": "Z10-33",
+     "status": "fixed",
+     "note": "min-block-size removed from .rune-tree, 2.75rem only under (pointer: coarse). Measured 153x38 at 1440, as legacy."
+    },
+    {
+     "id": "Z10-34",
+     "status": "fixed",
+     "note": "Ghost items: opacity 0.45 and saturate 0.2, no dashed border; an item without an icon renders its full name in .forge-item__fallback (mono 0.6rem, dim, centred)."
+    },
+    {
+     "id": "Z10-36",
+     "status": "fixed",
+     "note": "cdkDragPlaceholder: a 3rem dashed rich-gold slot between items and a 0.4rem dashed seam between steps, inside ng-template (an li directly inside an li would close it). The generic placeholder rule is removed. Checked with a mouse drag (slot 48x48, seam 958x6)."
+    },
+    {
+     "id": "Z10-M01",
+     "status": "fixed",
+     "note": "min-block-size removed from .champ-toggle, 2.75rem under (pointer: coarse). Measured 958x38 on /new at 1440, as legacy. Extra: the toggle now wraps, so on phones 'Choose a champion' moves under the champion instead of breaking its name mid-word (a regression the new global overflow-wrap caused)."
+    },
+    {
+     "id": "Z10-M02",
+     "status": "fixed",
+     "note": "The .forge-icon-btn--danger hover rule is deleted, so the x buttons keep the gold hover, as legacy (the class stays for semantics)."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Web/src/styles/primitives/dialog.css: new rules for the wide pane (.hx-dialog--wide / .hx-sheet--wide: 88vh/92dvh caps, legacy armory surface and shadow), placed after the .hx-sheet .hx-dialog-panel rule. Needed by Z10-21/26, as wave2-notes directed. Possible adjacent-hunk conflict with ACCOUNT's picker rules.",
+    "src/LoDb.Web/src/app/app.routes.spec.ts: import route heading build.import.action -> build.editor.title_create (Z10-29).",
+    "src/LoDb.Web/public/i18n/builds-editor/*.json (owned scope): buildsEditor.editor.errors_title removed from all 21 locales, now unused.",
+    "tests/LoDb.E2E/specs/builds-share/public.spec.ts (owned): a step still expected the build's locale despite ?lang=; wave 1 made ?lang= set the share locale."
+   ],
+   "checks": "npm run typecheck: pass. npx ng lint: pass. Full Vitest suite (limited config): 2098/2099 passed; the one failure (app.routes.spec, import heading key) was fixed and that file re-run alone: 50/50. The full suite was not re-run after that fix. Builds specs: 22 files, 188 tests pass. npm run build:web: OK with sw.js; new budget warnings on item-armory.css (5.61 kB) and step-editor.css (4.03 kB), both under the 8 kB error, and the pre-existing initial bundle warning. prettier --check --end-of-line auto on every changed file: pass (E2E files checked with --config src/LoDb.Web/.prettierrc.json). E2E against the preview (:4460, --workers=1), specs/builds-editor, specs/builds-share and specs/trends: 10 passed, 1 skipped (pager test needs 2 or more pages of public builds; the pager was checked on a faked second page instead). A first E2E run had timeouts from machine load; each spec passed on re-run. Visual checks against the legacy (Playwright captures and computed-style measurements): share at 1440/768/390/320 plus ar at 390/1440; trends at 1440/390; faked pager in en and ar; My builds, new, edit and import at 1440/390; armory as dialog and sheet, before and after scrolling; empty state (intercepted); refusal toasts; import toasts; drag and drop. Snapshots rewritten by Vitest were restored; worktree clean; preview and browsers stopped.",
+   "followups": [
+    "Z12-12's build.editor.nojs <noscript> is not implemented. /{locale}/account/** is RenderMode.Client, so the server only sends index.html. A noscript there would show, unlocalized, on every account page; the alternative is a server.ts post-process for /account/builds. Needs a decision at integration.",
+    "Z10-26 optional part: the armory backdrop tint (sink 72% vs hextech-black 78%) needs a backdropClass option on DialogOptions/dialogConfig (DS).",
+    "Budget warnings: item-armory.css (5.61 kB) and step-editor.css (4.03 kB) are above the 4 kB warning threshold, below the 8 kB error.",
+    "dialog.css: ACCOUNT's picker rules may be added near my wide-pane block; resolve at merge.",
+    "The trends pager E2E test ('pages through the ranking') only runs once the stack has 2 or more pages (24+ public builds)."
+   ]
+  },
+  "review": {
+   "verdict": "fixed-issues",
+   "issues": [
+    "Empty purchase-order step (every new build, every added step): the empty CDK list is 0 px wide but still takes the 0.75rem flex gap, so '+ Add item' sat 12 px off the legacy place (x=272 vs 260 at 1440, 80 vs 68 at 390). Fixed in step-editor.css: .forge-items:empty { order: 1 } (measured 260 / 68 after the fix, as legacy).",
+    "Item medallions of a step were centred above their move/remove tools; the legacy .forge-item is a 3rem block at the start of its slot. Z10-18 (2rem tools) widened the slot, so the offset grew to 28 px. Fixed: .forge-slot align-items flex-start (checked side by side at 390 en, and ar RTL where the icon sits at the right).",
+    "Share page under 40rem: .bshare-actions used justify-content space-between, so a build without a score (unlisted/private) put 'Copy link' at the start of its row; the legacy actions column always ends at the inline end. Fixed with margin-inline-start:auto on lodb-copy-link (checked with an intercepted isPublic=false at 390 en/ar and 1440; public layout unchanged).",
+    "Missing test: Z10-17's new empty state (frame, Back, Home) had no assertion beyond the text and CTA. Added E2E assertions in specs/builds-editor (Back button, Home link to /en/).",
+    "Not a code defect but a tooling trap for the orchestrator: preview.mjs pointed at F:/Git/lodb-parite/builds/src/LoDb.Web starts an SSR child that exits silently (502), because dist is a junction to the SSD and server.mjs's main-module check compares the real path. Pass C:/Users/charl/AppData/Local/Temp/lodb-parite-ssd/builds as the web root, as the other previews do."
+   ],
+   "commits_added": [
+    "57e72179 fix(front/builds): placer vignettes et tuile d'ajout comme l'historique",
+    "cadbbf13 fix(front/builds): garder le lien de partage en fin de ligne sur mobile",
+    "3ded6e25 test(e2e): verifier l'etat vide de la liste des builds"
+   ],
+   "residual": [
+    "Pre-existing, outside the findings: an item cannot be dropped onto an EMPTY step (its CDK list is 0 px wide); the legacy card accepted a drop anywhere on the step (useStepDrag cardDragOver). A flex:1 list was tried: the placeholder enters, but the list shrinks under the pointer and the drop reports isPointerOverContainer=false, so it was reverted. Needs a drop target spanning the step card (StepDrag design), not a CSS tweak.",
+    "RTL: the '2 / 8' counters (step hint, armory footer) read '8 / 2' in ar and the armory target '1. Start' reorders, by the bidi algorithm; identical to legacy markup. Only the trends pager fraction got dir=ltr. Optional follow-up.",
+    "Budget warnings (not errors): item-armory.css 5.61 kB, step-editor.css 4.06 kB over the 4 kB warning; initial bundle 673 kB warning pre-existing.",
+    "No tests for Z10-19 (a full step opens the armory in its full state instead of a disabled tile) nor Z10-34 (name fallback); there is no step-editor/item-armory component spec, and an 8-item E2E detour was judged too heavy.",
+    "Fixer followups still open: Z12-12 build.editor.nojs noscript (account routes are RenderMode.Client, needs an integration decision); Z10-26 optional backdrop tint needs a DS backdropClass option; the trends pager E2E stays skipped until 24+ public builds; dialog.css wide-pane block may sit next to ACCOUNT's picker rules at merge.",
+    "Legacy armory dialog renders pinned top-left at 1440 (native dialog margin reset); the new one is centred with the same 896x792 pane: a legacy bug, not copied.",
+    "Accepted deviations from legacy measurements, per repo conventions: 16px form fields (description 94 vs 82 px, row select 34 vs 26 px, armory search 44 vs 40 px) and 44px coarse-pointer targets (armory chips 36 px, Done 44 px, rune tabs and champion toggle on touch)."
+   ],
+   "checks": "Diff reviewed: 14 fixer commits + 3 review commits; all subjects Conventional/French/no accents/<=72 chars; no Co-Authored-By or Generated-with line in any commit body; nothing under src/LoDb.Web/src/app/features/editorial/changelog/published in the branch diff (still skip-worktree); no app.config.ts/app.html edit; outside edits limited to styles/primitives/dialog.css (wide size, used only by the armory) and app.routes.spec.ts. Conventions: files <= 300 lines, no new line > 100, logical properties, tokens only (no new hard-coded colours), one public element per file. Fresh npm run build:web (through heavy.sh) OK with sw.js; warnings only (item-armory.css 5.61 kB, step-editor.css 4.06 kB, initial bundle). npm run typecheck: pass. npx ng lint: all files pass. Full front suite once at the end (limited config): 241 files, 2099 tests passed; two .snap files rewritten by line endings only were restored. prettier --check --end-of-line auto on every file changed in review: pass. E2E against the preview :4460 on the final build, --workers=1: specs/builds-editor, specs/builds-share, specs/trends = 10 passed, 1 skipped (pager test needs 2+ pages). Visual verification against the legacy stack (Playwright, captures + computed styles): share page at 1440/768/390/320 en (1440 and 768 rects identical to legacy), 390/1440 ar RTL, 390 spirit-blossom, unlisted header at 390 en/ar and 1440; runes (keystone 92px + 34px glow, tree gold, header spacing identical); trends 1440/390 en and 390 ar (keystone 27px, gap 16px, English language chips) with a faked 2/3 pager in en and ar; My builds 1440/390 (hr, date dd/mm/yyyy, select), empty state (intercepted), import toasts and tab title, native name check (no POST) then API refusals as toasts; editor new/edit at 1440/390 en and 390 ar (h1 36/700, labels Beaufort 10.4px gold-light, context 224px/288px, section padding 32/24, tools 32px, add tile 48px, rune tab 153x38, champion toggle 38px); armory as dialog (896x792, 9 columns, pinned head/tools/foot after scroll) and sheet at 390, in hextech, zaun and spirit-blossom, en and ar. Verified all 10 blocker/major findings (Z10-01/04/06/07/09/10/17/21/22/27) and 22 of the 26 others (Z10-03/05/08/11/12/13/14/15/16/18/19/23/24/25/26/28/29/30/31/32/33/M01). Preview stopped; browsers closed; worktree clean."
+  }
+ },
+ "ADMIN": {
+  "fix": {
+   "wp": "ADMIN",
+   "commits": [
+    "2ef72bd2 feat(front/admin): realigner l'administration sur l'ancienne admin",
+    "1e8e5d1d refactor(front/admin): figer la requete qui efface les filtres du journal"
+   ],
+   "results": [
+    {
+     "id": "Z11-02",
+     "status": "fixed",
+     "note": "New frame/admin-frame.{ts,html,css} (lazy parent route of ADMIN_ROUTES): sticky legacy top bar with LODB/ADMIN brand, the two labelled groups and a gold-deep separator, pill links, and the outlined Déconnexion at the far end. Below 860px it goes static and the nav wraps under the brand (verified fix). The legacy bar stays sticky there but overflows 466px at 390px. Sidebar and username line removed."
+    },
+    {
+     "id": "Z11-03",
+     "status": "fixed",
+     "note": "There is now one colour source (.admin-nav-link, and .is-active with the gold wash, border and cyan underline). The current link comes from a Router URL signal with per-link path RegExps that ignore the query. The overview stays current on ?range=, and /admin/users/:id/activity marks Journal. Unit and E2E tests cover this."
+    },
+    {
+     "id": "Z11-05",
+     "status": "fixed",
+     "note": "AdminFrame sets <html lang=fr> in its constructor, before NavigationEnd, so PageDirection reads fr and ltr. On leaving the admin, the locale resolver writes the URL locale back. E2E asserts lang=fr on the login page."
+    },
+    {
+     "id": "Z11-06",
+     "status": "fixed",
+     "note": "layout/page-head.ts: 1.7rem bold solid gold-bright h1, 1rem muted lede at max 46rem, actions centred. The legacy toolbar margin is applied via has-[.page-actions>*]."
+    },
+    {
+     "id": "Z11-07",
+     "status": "fixed",
+     "note": "Per-panel legacy eyebrows (Console, Analytics, Infrastructure, Modération, Gestion, Surveillance), and titles and ledes copied word for word. The overview lede uses the range. PageHead gains a documentTitle input: 'Messages', 'Journal' and 'Activité · {name}' titles, checked in E2E."
+    },
+    {
+     "id": "Z11-08",
+     "status": "fixed",
+     "note": "New layout/admin-rule.ts: gold-deep gradient line, hollow 8px diamond, label at the inline start on the void. Inserted at every legacy position on overview, storage, users, builds, donations, contacts, api clients, monitoring and journal."
+    },
+    {
+     "id": "Z11-09",
+     "status": "fixed",
+     "note": "widgets/kpi.ts: legacy tile with a 2px start accent bar and an Accent type (gold, hex, blue, green, red, cyan, good, warn, bad mapped to tokens). Spiegel .66rem muted label, 1.9rem value, sparkline slot in the end corner, and an a[lodbKpi] link variant. The .kpi-grid is auto-fit minmax(11rem,1fr), and each tile gets its legacy accent."
+    },
+    {
+     "id": "Z11-10",
+     "status": "fixed",
+     "note": "Part left over by DS: good, bad and the series tokens are now mapped in badge.ts, kpi.ts and the chart palettes (category-slices.ts)."
+    },
+    {
+     "id": "Z11-11",
+     "status": "fixed",
+     "note": "widgets/badge.ts: outlined mono .72rem badges with no fill and no uppercase, tones good, warn, bad and muted. Labels are lowercase as in the legacy (opérationnel, dégradé, hors ligne, banni, supporter, google, profil public, public, privé, active, révoquée). Unknown probe states read as bad, as in the legacy."
+    },
+    {
+     "id": "Z11-12",
+     "status": "fixed",
+     "note": "layout/admin-card.ts: 1.5rem/1.6rem padding, baseline head, bold 1.05rem uppercase h2, chips, and a [lodbCardHead] slot for the 'Détail →' / 'Audience →' chip links. All legacy chips added."
+    },
+    {
+     "id": "Z11-13",
+     "status": "fixed",
+     "note": "Tables use hx-table hx-table--flush plus a feature class admin-tbl in admin-page.css (encapsulation None, scoped under lodb-admin-page). It gives rule-separated rows, gold-wash hover, .66rem th, cell-sub, centred t-empty and end-aligned nowrap actions. Every table sits in a heading-less card. Nothing shared was changed."
+    },
+    {
+     "id": "Z11-14",
+     "status": "fixed",
+     "note": "Part left over by DS: ConfirmButton gains confirmTone and size (small by default). Supprimer, Révoquer and Purger use danger, confirmed in danger. Row and toolbar actions are small. Full-size admin buttons are brought to the legacy .78rem/.6rem 1.1rem from the frame stylesheet."
+    },
+    {
+     "id": "Z11-15",
+     "status": "fixed",
+     "note": "widgets/segment-bar.ts replaces RangeBar: compact bordered bar with short labels '7 j / 30 j / 90 j / Tout', accessible names from range_long, and the gold gradient on the active link. Reused for the contacts status filter."
+    },
+    {
+     "id": "Z11-16",
+     "status": "fixed",
+     "note": "rank-list.ts: .86rem names, gold-bright mono .82rem values, 6px track with gold or cyan gradient fills. New widgets/fold-toggle.ts shows the '+ N de plus' / 'Réduire' pill, and widgets/fold-rows.ts factors the fold, which the tables and the matrix reuse."
+    },
+    {
+     "id": "Z11-17",
+     "status": "fixed",
+     "note": "admin-pager.ts always shows both small ghost directions. The one that leads nowhere is an aria-disabled span at opacity 35. The mono .8rem state is kept."
+    },
+    {
+     "id": "Z11-18",
+     "status": "fixed",
+     "note": "Zoom tools are 1.6rem square buttons over the plot corner, shown on hover, on focus-within and once zoomed. Solid track grid, dashed gold crosshair at .55, hover dots stroked hextech-black, diamond swatches in the legend (10px) and tooltip (8px), legacy tooltip type."
+    },
+    {
+     "id": "Z11-19",
+     "status": "fixed",
+     "note": "charts/category-slices.ts replaces palette-slices. Fixed colour per category for resource, device, source and plan, text-muted as the fallback. The donut legend shows compact counts, and the share stays in the arc title. The centre caption is 9px muted with .14em tracking."
+    },
+    {
+     "id": "Z11-20",
+     "status": "fixed",
+     "note": "Heatmap uses 2.2rem columns (2rem under 860px), nowrap mono hour labels (no wrap at 390, measured), Beaufort uppercase day labels, bordered cells with a gold hover outline, and the track for empty cells. The card is now 'Rythme horaire' with the chip 'heure × jour · vues', and moved last on the traffic page."
+    },
+    {
+     "id": "Z11-21",
+     "status": "fixed",
+     "note": "New layout/admin-band.ts (alert = role alert, notice = role status). PanelState failures render 'Panneau indisponible ({reason}).' with a small ghost Réessayer inline, and keep the sign-in link on a lost session. Compared with failure-old.png."
+    },
+    {
+     "id": "Z11-22",
+     "status": "fixed",
+     "note": "New layout/admin-notices.ts (the last outcome only, as a legacy flash) and layout/notices-outlet.ts at the top of the admin column. The band is scrolled into view below the sticky bar and cleared on NavigationEnd. AdminCommand posts there instead of ToastService, and the testing helper became testing/dom/notice.ts. Action wording is the legacy flash wording. Rollup and purge are adapted to the new semantics (days consolidated, entries deleted)."
+    },
+    {
+     "id": "Z11-23",
+     "status": "fixed",
+     "note": "Skeletons are now: KPI-shaped tiles of 5.6rem with a gold accent bar in the auto-fit grid, a chart card (45% line, then an aspect 760/240 block), and a 3-card row with alternating lines and 6px bars. New kpi and block shapes."
+    },
+    {
+     "id": "Z11-24",
+     "status": "fixed",
+     "note": "Login is one centred card at 26rem, mt 8vh, with its head inside ('Accès réservé', bold 1.4rem 'Panneau d'administration'). Labels are 'Identifiant' / 'Mot de passe' in Spiegel uppercase muted, fields sit on panel-2, the gold button reads 'Se connecter', and errors show as the red band in the card. Document title is 'Connexion'. The second factor stays in the same card. The frame shows the brand alone, as the legacy bar did. access.spec and admin-account labels were updated."
+    },
+    {
+     "id": "Z11-25",
+     "status": "fixed",
+     "note": "Overview is rebuilt in the legacy order with overview-app, overview-traffic and overview-storage. Application KPIs plus a Services link tile with health badges. Trafic rule: KPIs Vues, Visiteurs uniques and Page la plus vue; Fréquentation (views and visitors only) and Par ressource donut; Pages les plus consultées and Sources de trafic with chip links. Stockage rule: KPIs, then Familles, Déduplication and Santé. Consolider moved here, with its title hint, and reloads the traffic. Sources keep their raw keys, as the legacy overview shows them: the legacy wins over the fix's 'source labels'."
+    },
+    {
+     "id": "Z11-26",
+     "status": "fixed",
+     "note": "Traffic has the range bar only. KPIs: Vues totales and Visiteurs uniques with sparklines, Pages distinctes, Vues / jour. 'Fréquentation dans le temps' shows two series. Rows: pages and entities (limit 8), then Par ressource, Par type de page (cyan) and the new traffic/status-table.ts (Statut chip, Vues, Part, fold at 6), with the heatmap last. The Routes ranking was dropped (the legacy has none)."
+    },
+    {
+     "id": "Z11-27",
+     "status": "fixed",
+     "note": "Entities are named by the last ':' segment, as the legacy split(':')|last does."
+    },
+    {
+     "id": "Z11-28",
+     "status": "fixed",
+     "note": "Legacy vocabulary: Sorts, Détails, Direct/Recherche/Réseaux/Externe/Interne, Faille/ARAM/Nexus Blitz/Arène, Vues totales, Récurrents, Nouveaux, Vues robots, Supporters."
+    },
+    {
+     "id": "Z11-29",
+     "status": "fixed",
+     "note": "Audience KPIs: Visiteurs uniques (with sparkline), Récurrents, Nouveaux, Vues robots. Three-column rows: Pays span-2 (cyan, limit 10, plain names) with Appareils; Navigateurs, Systèmes and Langue d'interface; Sources de trafic with Sites référents span-2. When geoAvailable is false: warn badge 'base géo absente' and an explanatory paragraph. The paragraph names LoDb:Analytics:GeoIpDatabase instead of the legacy doc path, and says the views stay without a country: the new stack resolves at ingestion, so the legacy 'the map will fill' would be false. 'Langues du navigateur' dropped."
+    },
+    {
+     "id": "Z11-30",
+     "status": "fixed",
+     "note": "The Familles donut is replaced by a byte ranking. The donut also squeezes any total longer than 6 characters into its hole (textLength 80, spacingAndGlyphs), with a unit test."
+    },
+    {
+     "id": "Z11-31",
+     "status": "fixed",
+     "note": "Storage: eyebrow Infrastructure, ghost 'Rafraîchir' with the 10-minute cache hint, 'Relevé du' line removed. Five legacy KPIs (percent WebP, compact Blobs). Familles rank beside 'Ingestion dans le temps' (objects per day, chip). Images rule: extensions with the WebP card and bar. Données rule. Détail rule: the new largest-objects.ts, whose keys truncate so the weight stays visible (the legacy bug is not copied), and coverage-matrix.ts with language chips. An unreadable storage replaces the figures with the band."
+    },
+    {
+     "id": "Z11-32",
+     "status": "fixed",
+     "note": "Users: KPIs, the Comptes rule, then a slim toolbar: 18rem search with the legacy placeholder and aria-label, small ghost Rechercher, Réinitialiser chip when q is set, and '{n} compte(s)' at the end."
+    },
+    {
+     "id": "Z11-33",
+     "status": "fixed",
+     "note": "Columns: Invocateur (with 'Motif : …' sub), Statuts, E-mail, Builds, Inscrit le, Actions (end, nowrap). The new user-badges.ts shows the legacy badges plus admin and non vérifié. The new user-actions.ts carries Activité, Débannir (immediate, as the legacy), an inline reason field with maxlength 255 and a small Bannir, and a danger Supprimer with a red confirmation. The # column is dropped, and the empty states are the legacy ones."
+    },
+    {
+     "id": "Z11-34",
+     "status": "fixed",
+     "note": "Bannis is bad when the count is above 0, good otherwise. Contacts 'À traiter' is warn above 0, good otherwise."
+    },
+    {
+     "id": "Z11-35",
+     "status": "fixed",
+     "note": "Activity page: head Modération / 'Activité — {name}' (document title 'Activité · {name}') with a '{email} · …' lede. Toolbar: '← Utilisateurs' chip, category select, Du and Au dates, Filtrer and Réinitialiser, all passed to readUserAuditActivity. AuditTable gains view='activity' (legacy column order) and the legacy empty text."
+    },
+    {
+     "id": "Z11-36",
+     "status": "fixed",
+     "note": "The filters are a wrapping slim toolbar and the selects have max-inline-size 100%. Measured: no overflow at 1440, 1024, 768, 390 or 320."
+    },
+    {
+     "id": "Z11-37",
+     "status": "fixed",
+     "note": "'Filtrer' rule, then the toolbar: category ('Toutes catégories') and the Du/Au dates first, each with an aria-label. Then the extra outcome, actor type, action and actor fields, a small Filtrer, and the Réinitialiser chip (only when a filter is set) in place of 'Effacer les filtres'."
+    },
+    {
+     "id": "Z11-38",
+     "status": "fixed",
+     "note": "Columns: Horodatage (UTC), Acteur (text-coloured link plus lowercase type sub), Action (label, sub '{Catégorie} · k=v, …' from non-null meta; no raw code, no JSON), Cible (label or '—', type sub), IP (route as title), Résultat badge."
+    },
+    {
+     "id": "Z11-39",
+     "status": "fixed",
+     "note": "KPIs: Entrées (an addition), 'Espace total' with 'depuis le …', and 'Rétention' '{n} mois' with 'purge auto avant le …' (good). The oldest and newest tiles are dropped. 'Maintenance' rule, then a 'Purger les journaux' card: legacy lede, radio group with hex accent, the date inline, and a small danger Purger at the inline end (moved to the start under 860px) that keeps the red two-step confirmation."
+    },
+    {
+     "id": "Z11-40",
+     "status": "fixed",
+     "note": "A small ghost 'Voir' comes first in the row actions: /b/{shareToken}, target _blank, rel noopener."
+    },
+    {
+     "id": "Z11-41",
+     "status": "fixed",
+     "note": "KPIs Builds and Publics. 'Builds' rule. Toolbar with the legacy placeholder, a select 'Toutes visibilités / Publics / Privés', Filtrer, Réinitialiser and '{n} build(s)'. Columns: Build (with champion sub), Mode · Patch chips, Auteur badge plus a 'banni' badge from owner.isBanned, signed Score, public/privé badge, Créé le, then Voir, Dépublier (immediate, as the legacy) and Supprimer (danger)."
+    },
+    {
+     "id": "Z11-42",
+     "status": "fixed",
+     "note": "Donations KPIs: Total collecté, '30 derniers jours' (sum of daily with a sparkline), Donateurs identifiés, Supporters actifs. The daily chart is removed. 'Historique' rule, then a table in a card: date to the minute, '12,34 EUR' (new 'money' figure format), and the linked account as a badge (good when supporter) or 'anonyme'."
+    },
+    {
+     "id": "Z11-43",
+     "status": "fixed",
+     "note": "Contacts KPIs: Total, À traiter, Traités, 7 derniers jours. 'Boîte de réception' rule, then the Tous / Nouveaux / Traités segmented filter. The inbox is now a table: Reçu le; Catégorie badge (bug bad, commercial good, legacy labels); Contact (mailto name, e-mail and 'compte : …' subs); Message (bold subject, 160-character excerpt with the full text as title); Statut (Nouveau warn / Traité good); Marquer traité / Rouvrir, and danger Supprimer. Legacy empty texts. contacts.spec updated but NOT run (5/hour quota)."
+    },
+    {
+     "id": "Z11-44",
+     "status": "fixed",
+     "note": "KPIs gain their subs (compact). Cards 'Répartition par plan' (chip, plan colours, legend counts) and 'Top consommateurs' (chip '30 jours', limit 8, '{prefix}… — {user}', legacy empty text). 'Clés' rule. Table: Compte, Clé, Plan chip, Conso mois, Crédits, Req/min, Statut (active / révoquée), Créée le. Active keys get an inline number form (1 to 1 000 000, aria-label, reset after success) with a small Créditer, plus a danger Révoquer. Revoked keys show '—'."
+    },
+    {
+     "id": "Z11-45",
+     "status": "fixed",
+     "note": "Plans labelled Free, Crédits, Mensuel, Mensuel+, Annuel, Annuel+."
+    },
+    {
+     "id": "Z11-46",
+     "status": "fixed",
+     "note": "'Sondes' eyebrow with the generation time as a chip (title hint). The new monitoring/probe-card.ts puts the probes in a 2-column grid: human name (PostgreSQL, Stockage), health badge, chips (ms, version, 'base {size}', '{objects} objets · {bytes}' from probe.objects and bytes), and the detail in .8rem dim."
+    },
+    {
+     "id": "Z11-47",
+     "status": "fixed",
+     "note": "Order: probes; 'Application' rule with the six legacy tiles (or the band 'Compteurs indisponibles.'); 'Volumes' rule with 'Tables principales' (chip pg_total_relation_size, 2-column table, legacy empty text) and an outbox card in the legacy Messenger shape. That card is titled 'File d'e-mails' (chip email_outbox; the new stack has no Messenger queue). The new monitoring-runtime.ts adds the process, ingestion and versions blocks after them. Button 'Rafraîchir'."
+    },
+    {
+     "id": "Z11-48",
+     "status": "fixed",
+     "note": "panel.routes.ts: { path: 'logs', redirectTo: 'journal' }. The query is kept, checked by a unit test and an E2E test."
+    },
+    {
+     "id": "Z11-49",
+     "status": "fixed",
+     "note": "Single 78rem column, padded 2.25rem 1.75rem 4rem (1.5rem 1rem 3rem under 860px). Rows use .admin-grid--2/--3 with .span-2, dropping to one column at 860px, as the legacy did."
+    },
+    {
+     "id": "Z11-M01",
+     "status": "fixed",
+     "note": "The per-point circles and the dots/DOT_LIMIT of plot-marks are removed. Only the crosshair marks a point. Specs updated."
+    },
+    {
+     "id": "Z11-M02",
+     "status": "fixed",
+     "note": "Analytics and API-request KPIs are compact. The WebP KPI and badge use a new whole-percent format ('percent'). The storage WebP card keeps one decimal. figure.ts is refactored into a formatter map (it also gains 'money')."
+    },
+    {
+     "id": "Z11-M03",
+     "status": "fixed",
+     "note": "Login focuses #admin-identifier, then the code or recovery field of the second step (viewChild plus afterRenderEffect). The enrolment page focuses its code field. Unit and E2E (toBeFocused) tests cover it."
+    },
+    {
+     "id": "Z11-M04",
+     "status": "fixed",
+     "note": "New shared/display-name.ts: username#riotTagline in the Invocateur column and in the activity head and document title."
+    },
+    {
+     "id": "Z11-M05",
+     "status": "fixed",
+     "note": "Red bands 'Compteurs applicatifs indisponibles.' (overview), 'Compteurs indisponibles.' (monitoring) and 'Stockage indisponible : {error}' replace the figures on the overview and storage pages."
+    },
+    {
+     "id": "Z11-M06",
+     "status": "fixed",
+     "note": "The signed-in administrator's row (AuthSession user id) offers only Activité and a dim '—'."
+    }
+   ],
+   "outside_edits": [],
+   "checks": "Admin unit specs: 27 files, 208 tests passing. Full front suite (ng test with the limited runner config): 242 files, 2118 tests passing; the two json-ld .snap files it rewrote by line endings only were restored with git checkout. npm run typecheck (app and spec) passes, npx ng lint passes, and the tests/LoDb.E2E typecheck passes. npm run build:web passes; the only warning is the initial-bundle budget (676 kB against 500 kB), which is not caused by this package. The admin-routes chunk stays under its 8 kB budget because the frame is lazy loaded. Prettier --check --end-of-line auto passes on every changed web file. The E2E files were edited by hand: the web Prettier config rewraps whole E2E files, so it was not applied to them. Line length stays at 100 or less, except generated-client import paths, which follow the existing code. E2E against the preview on 4470 (--workers=1): access, analytics, billing, operations and moderation pass, 26/26. contacts.spec.ts was updated but not run (contact quota of 5 per hour). Visual checks with the legacy and new sessions: 1440 captures of every panel against the legacy, plus 390, 1024, 768 and 320. No horizontal overflow on any admin page at 390 or 320 (measured). Failure band, loading skeletons, chart hover and notice band were also checked. The preview is stopped; no node or browser process is left; the worktree is clean (git status empty).",
+   "followups": [
+    "Integration: run tests/LoDb.E2E/specs/admin/contacts.spec.ts once; it was updated to the table layout but not run here (the contact form allows 5 messages per hour).",
+    "Deliberate differences from the legacy: (1) slim admin fields are 16px, not 12.8px, because of the repo rule on inputs; (2) the donut keeps its readable 176px ring, where the legacy ring was tiny because it was drawn on a 760x240 time-series canvas; (3) below 860px the top bar is static and the nav wraps under the brand, where the legacy bar was sticky and overflowed at 390px; (4) the notice band scrolls into view instead of the legacy full-page reload.",
+    "Deliberate choices, open to review: (1) Débannir and Dépublier are now immediate, as in the legacy; Supprimer, Révoquer and Purger keep the two-step confirmation with a red confirm button; (2) the frame paints the legacy admin radial glows, not the site's woven ambient backdrop, which the legacy admin never had; (3) the action outcome texts are the legacy flash wording, adapted where the new API returns other units (rollup: days consolidated; purge: entries deleted).",
+    "Legacy has no counterpart for the enrolment page: only its container and focus changed, inside the new frame.",
+    "Additions kept on top of the legacy, all after the legacy sections: process, ingestion and versions blocks on monitoring; the Entrées KPI and extra filters (outcome, actor type, action, actor) on the journal; the admin and non vérifié badges on users.",
+    "Kpi keeps an explicit isLink input for the link tile. It could be derived from the host tag if preferred."
+   ]
+  },
+  "review": {
+   "verdict": "fixed-issues",
+   "issues": [
+    "Regression (Z11-M01): with the per-point circles removed, a series of a single day drew nothing; the storage 'Ingestion dans le temps' chart looked empty, where the legacy static fallback dots that day. Fixed: plot-marks gives a lone point a dot (r 2.5, the legacy radius), with a unit test.",
+    "Regression: every admin select (builds visibility, journal category/outcome/actor type/action, activity category) had no chevron. The .admin-input 'background' shorthand wiped the image, and the selects never had hx-select. Fixed: the selects are 'hx-select admin-input', .admin-input sets background-color only, and select.admin-input reserves 1.75rem for the chevron. The dead 'w-auto' on the date inputs was removed; the unlayered .admin-input overrode it.",
+    "Legacy mismatch (the legacy wins over the Z11-13/Z11-33 fix): the legacy row actions start their cell, because '.tbl td {text-align:left}' outranked '.actions-cell'. Measured: td text-align left, buttons from x=843 in a 832-1289 cell. The heading stays end-aligned. .admin-tbl .actions is now text-align: start.",
+    "Legacy mismatch (Z11-06): the legacy .page-head keeps its 1.75rem margin inside the centred .page-toolbar, so the actions sit 14px lower and keep that gap when they wrap on phones. PageHead now puts mb-7 on the title block and mb-6 on the host when there are actions (3.25rem total, as before). Measured: the Consolider and Rafraîchir buttons are at the legacy y (201/82).",
+    "Legacy mismatch: the storage WebP card read '100.0 %', where the legacy round(1) reads '100 %'. The 'share' format, used only there, now drops an empty decimal (tested).",
+    "Bug: AdminNotices is root-provided and NoticesOutlet cleared it only on NavigationEnd, which fires after the outlet is destroyed. The last action's band then greeted the next session after a sign-out and sign-in. The outlet now also clears on destroy (tested).",
+    "Convention: admin-rule.ts used physical 'top'. It is now inset-block-start; the justified 'left: 50%' centring of the diamond is kept.",
+    "History: the fix was one 129-file commit plus a small one. It is split into 11 coherent commits (see commits_added). The procedure reset onto the fork point 36709519, not onto docs/reecriture-dotnet-angular: that branch moved to 664926d0 (a docs commit) after the fork, and resetting onto its tip would have reverted that commit's docs in the split."
+   ],
+   "commits_added": [
+    "e7ef4077 feat(i18n): reprendre les libelles de l'ancienne administration",
+    "3596d74d feat(front/admin): reprendre la mise en page et les bandeaux de l'admin",
+    "62d98575 feat(front/admin): reprendre les tuiles, badges et controles de l'admin",
+    "0942b84a feat(front/admin): reprendre les squelettes et le bandeau d'echec",
+    "ec6aa8a5 feat(front/admin): reprendre les graphiques de l'ancienne admin",
+    "e996e9b3 feat(front/admin): poser la barre haute et la connexion de l'admin",
+    "3221e394 feat(front/admin): realigner les panneaux d'analytics",
+    "77ca2782 feat(front/admin): realigner la moderation des comptes et des builds",
+    "3a2c80bb feat(front/admin): realigner les dons et les clients api",
+    "b5ffabdb feat(front/admin): realigner la boite de reception des messages",
+    "c44f4e72 feat(front/admin): realigner la surveillance et le journal d'audit"
+   ],
+   "residual": [
+    "Only the tip of the split is verified. The intermediate commits do not build on their own: the shared admin API changed in place (Kpi tone->accent, Badge tones, PageHead/AdminCard moved to layout/, RangeBar->SegmentBar, toasts->notices), and git add -p is not available. The catalogue commit comes first. Each E2E spec travels with the panels it covers.",
+    "The review fixes were committed first (583e7336, c8a5f6a8, 38c79837, 78c586db, 9abecf3a, 99b67def). OLD=99b67def is in fix/ADMIN/split-old-head.txt; the split folded those commits into the groups above.",
+    "contacts.spec.ts is still not run (5 per hour contact quota); it needs one run at integration. The contact table rows could not be compared with the legacy either: lodb-next has no contact message, so only its empty state and the unit spec were checked.",
+    "Small differences left as they are: the monitoring generation chip reads '27/09/2026 19:49:11' (UTC, no suffix) where the legacy reads '2026-09-27 19:48:56 UTC'. The postgres version chip reads '17.10' where the legacy reads 'PostgreSQL 17.10' (API data). In the new-only 'Collectes GC' tile, '35 / 17 / 15' wraps on two lines at 1440.",
+    "Deliberate differences, accepted: 16px slim fields (iOS rule); a static top bar under 860px; the readable 176px donut; the dedup and WebP readouts drawn as the legacy intended (its .k-label/.r-track rules only applied inside .kpi/.rank, so it printed 'Ratio réfs / blobs1.73×' inline and no bar); the site's backdrop not applied.",
+    "The build keeps the pre-existing initial-bundle budget warning (676 kB against 500 kB). The admin is lazy-loaded, so this package does not cause it; the anyComponentStyle budget holds."
+   ],
+   "checks": "Final tree (identical to the pre-split head: git diff 99b67def HEAD is empty). npm run build:web passes, with only the pre-existing initial-bundle warning. npm run typecheck and npx ng lint pass. Full front suite (ng test with the limited runner config): 242 files and 2120 tests passing; two json-ld .snap files rewritten by line endings only were restored. Prettier --check --end-of-line auto passes on all 116 added or modified web files. E2E against the preview on 4470 (--workers=1): specs/admin access, analytics, billing, moderation and operations pass 26/26; contacts was not run (quota). Visual review with fresh captures of both admins (legacy in French): all 12 pages at 1440 and 390, the user activity page, chart hover, failed reads (red bands), and the Zaun identity cookie with an ar browser (the admin stays hextech, fr, ltr; the site gets zaun, ar, rtl back). No horizontal overflow on 12 pages at 1024, 768, 390 and 320. Blockers Z11-25/30/36 and all majors were checked against the legacy; minors checked: Z11-05, 07, 15, 16, 17, 18, 20, 21, 27, 28, 34, 45, 49, M01, M02, M03, M05, M06. Hygiene: no attribution line in any commit, nothing under editorial/changelog/published (skip-worktree S kept), no edit outside admin/i18n-admin/e2e-admin, no app.config.ts or app.html edit. Worktree clean; preview stopped; no browser or node left."
+  }
+ }
+}

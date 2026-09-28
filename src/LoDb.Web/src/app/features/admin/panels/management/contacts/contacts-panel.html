@@ -1,0 +1,126 @@
+<lodb-page-head
+  [eyebrow]="'admin.eyebrows.management' | adminText"
+  [title]="'admin.contacts.title' | adminText"
+  [documentTitle]="'admin.contacts.document_title' | adminText"
+  [subtitle]="'admin.contacts.lede' | adminText"
+/>
+
+<lodb-panel-state [panel]="contacts" />
+@if (contacts.value(); as inbox) {
+  <div class="kpi-grid">
+    <lodb-kpi
+      [label]="'admin.contacts.kpi.total' | adminText"
+      [value]="inbox.stats.total | figure"
+    />
+    <lodb-kpi
+      [accent]="inbox.stats.new > 0 ? 'warn' : 'good'"
+      [label]="'admin.contacts.kpi.new' | adminText"
+      [value]="inbox.stats.new | figure"
+    />
+    <lodb-kpi
+      accent="good"
+      [label]="'admin.contacts.kpi.handled' | adminText"
+      [value]="inbox.stats.handled | figure"
+    />
+    <lodb-kpi
+      accent="hex"
+      [label]="'admin.contacts.kpi.week' | adminText"
+      [value]="inbox.stats.week | figure"
+    />
+  </div>
+
+  <lodb-admin-rule [label]="'admin.rules.inbox' | adminText" />
+  <lodb-segment-bar
+    param="status"
+    label="admin.contacts.filter"
+    [segments]="statuses"
+    [current]="query.text('status')"
+  />
+
+  <lodb-admin-card>
+    <div class="hx-table-scroll" [attr.aria-busy]="contacts.busy()">
+      <table class="hx-table hx-table--flush admin-tbl">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'admin.contacts.columns.received' | adminText }}</th>
+            <th scope="col">{{ 'admin.contacts.columns.category' | adminText }}</th>
+            <th scope="col">{{ 'admin.contacts.columns.contact' | adminText }}</th>
+            <th scope="col">{{ 'admin.contacts.columns.message' | adminText }}</th>
+            <th scope="col">{{ 'admin.contacts.columns.status' | adminText }}</th>
+            <th scope="col" class="num">{{ 'admin.common.actions' | adminText }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (contact of inbox.items; track contact.id) {
+            <tr [attr.data-contact]="contact.id">
+              <td>{{ contact.createdAt | stamp: 'minute' }}</td>
+              <td>
+                <span [lodbBadge]="categoryTone(contact)">
+                  {{ texts.term('contacts.categories', contact.category) }}
+                </span>
+              </td>
+              <td>
+                <a class="text-gold hover:text-gold-bright" [href]="'mailto:' + contact.email">{{
+                  contact.name || contact.email
+                }}</a>
+                @if (contact.name) {
+                  <span class="cell-sub">{{ contact.email }}</span>
+                }
+                @if (contact.user; as user) {
+                  <span class="cell-sub">
+                    {{ 'admin.contacts.account' | adminText: { name: user.username } }}
+                  </span>
+                }
+              </td>
+              <td class="min-w-60">
+                @if (contact.subject) {
+                  <strong class="block">{{ contact.subject }}</strong>
+                }
+                <span [title]="contact.message">{{ excerpt(contact.message) }}</span>
+              </td>
+              <td>
+                <span [lodbBadge]="isHandled(contact) ? 'good' : 'warn'">
+                  {{ texts.term('contacts.statuses', contact.status) }}
+                </span>
+              </td>
+              <td class="actions">
+                <span class="inline-flex flex-nowrap items-center gap-[0.45rem]">
+                  <button
+                    type="button"
+                    lodbButtonSize="small"
+                    [lodbButton]="isHandled(contact) ? 'ghost' : 'primary'"
+                    [disabled]="actions.pending() === contact.id"
+                    (click)="toggle(contact)"
+                  >
+                    {{
+                      (isHandled(contact) ? 'admin.contacts.reopen' : 'admin.contacts.handle')
+                        | adminText
+                    }}
+                  </button>
+                  <lodb-confirm-button
+                    tone="danger"
+                    confirmTone="danger"
+                    [label]="'admin.actions.delete' | adminText"
+                    [confirmLabel]="'admin.contacts.confirm_delete' | adminText"
+                    [busy]="actions.pending() === contact.id"
+                    (confirmed)="remove(contact)"
+                  />
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="t-empty">
+                {{
+                  (query.text('status') ? 'admin.contacts.empty_status' : 'admin.contacts.empty')
+                    | adminText
+                }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </lodb-admin-card>
+  <lodb-admin-pager [page]="inbox.page" [pages]="inbox.pages" />
+}

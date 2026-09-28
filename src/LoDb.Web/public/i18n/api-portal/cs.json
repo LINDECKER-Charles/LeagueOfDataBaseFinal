@@ -1,0 +1,11 @@
+{
+  "loading": "Načítání API klíče…",
+  "retry": "Zkusit znovu",
+  "error": {
+    "load": "API klíč se nepodařilo načíst.",
+    "failed": "Akce se nezdařila, zkuste to znovu."
+  },
+  "actions": {
+    "revoke_help": "Okamžitě klíč vypne: API jej odmítne od příštího požadavku."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "loading": "Carregando a chave de API…",
+  "retry": "Tentar novamente",
+  "error": {
+    "load": "Não foi possível carregar a chave de API.",
+    "failed": "A ação falhou, tente novamente."
+  },
+  "actions": {
+    "revoke_help": "Desativa a chave imediatamente: a API a recusa a partir da próxima requisição."
+  }
+}

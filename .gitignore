@@ -35,3 +35,19 @@ design
 
 # Note locale de migration edge -> infra-vps (non versionnee)
 /docs/MIGRATION-INFRA-VPS.local.md
+
+# .NET outputs of the new stack. Anchored on src/ and tests/: app/bin/ holds tracked
+# Symfony entry points.
+/src/**/bin/
+/src/**/obj/
+/tests/**/bin/
+/tests/**/obj/
+TestResults/
+
+# Angular workspace outputs
+/src/LoDb.Web/dist/
+/src/LoDb.Web/.angular/
+/src/LoDb.Web/coverage/
+
+# Parity runs (L1.8): exports and manifests of both stacks, regenerated on demand
+/tools/next/parity/.runs/

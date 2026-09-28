@@ -1,0 +1,674 @@
+{
+ "SHELL": {
+  "fix": {
+   "pkg": "SHELL",
+   "commits": [
+    "289d0da5 fix(front/context-switcher): nommer le patch de la session dans la puce",
+    "804fe25b fix(front/core): allumer l'accueil quelle que soit sa query",
+    "0c6aa9f5 perf(front/core): partager le chargement concurrent d'un catalogue",
+    "fe74cdf3 perf(front/catalogue): retirer le scope i18n vide des runes",
+    "12252cd6 fix(front/core): ouvrir le menu du compte vers le logo en RTL",
+    "f2137f6d fix(front/core): centrer en hauteur les cartes de 404, compte et don",
+    "c4b26062 fix(front/core): aligner l'avertissement Riot a droite en RTL",
+    "7863908b fix(front/ui): garder la bordure de la puce de version active a 60%",
+    "0be803a1 fix(front/editorial): decrire les cookies et la retention de la stack",
+    "84c7f55a fix(front/ui): sauter a une section comme une ancre native",
+    "8ef9872c fix(front/editorial): lire de gauche a droite le texte de repli en RTL",
+    "cfbc1c9f feat(front/core): avertir sans javascript sur les pages du navigateur",
+    "5f5b06a5 docs(docs): consigner la puce sans patch des pages prerendues",
+    "2deca3bf build: aligner le budget initial du build web sur sa mesure"
+   ],
+   "results": [
+    {
+     "id": "A2-01",
+     "status": "fixed",
+     "note": "PreferencesStore keeps the session choice in a signal (kept) that current() reads; currentChoice takes the kept context (in ShownPage, 3 params kept) after path and query. Measured vs legacy after picking 14.1.1 on /about: chip '14.1.1 · EN' and #switcher-version=14.1.1 on /en/trends, /en/, /en/developers, codex and bottom links /en/14.1.1/... (legacy identical). Unit specs (selection, switcher, preferences, nav-context) + E2E context-switcher case."
+    },
+    {
+     "id": "A2-M02",
+     "status": "fixed",
+     "note": "Same commit as A2-01: applying 16.19.1 on /en/developers (no URL change) now moves chip, header, footer and bottom links to latest at once (measured: codex /en/champions), as the legacy reload did."
+    },
+    {
+     "id": "A2-02",
+     "status": "fixed",
+     "note": "The verified HOME_ACTIVE options were not enough: the switcher rewrites the home as /en/?version=X, whose UrlTree ends on an empty segment that /en lacks, so paths:'exact' still missed it. NavContext.home (locale root whatever query and trailing slash) now drives the header Home class/aria-current and the bottom-nav home aria-current (routerLinkActive options null for it). Measured at 1440 and 390: /en/?version=14.1.1, /en/?lang=en_GB and the remembered-patch home are lit/current, as legacy."
+    },
+    {
+     "id": "A2-03",
+     "status": "fixed",
+     "note": "TranslocoHttpLoader shares in-flight loads per path (Map + finalize + share), nothing kept once settled, failures requested again. Measured: /en/ -> Items fetches items/en.json and catalogue/en.json once each."
+    },
+    {
+     "id": "A2-04",
+     "status": "fixed",
+     "note": "provideTranslocoScope('runes') removed from runes-page.ts (doc comment corrected), public/i18n/runes (21 files) deleted. /en/runes now fetches only catalogue/en.json."
+    },
+    {
+     "id": "A2-07",
+     "status": "fixed",
+     "note": "account-menu gets switcher--account; chrome.css anchors its panel to the inline start in RTL (the legacy physical right:0). Measured: ar 72..264 at 390, 0..192 at 320, LTR unchanged at -10..182 (legacy's own clip)."
+    },
+    {
+     "id": "A2-08",
+     "status": "fixed",
+     "note": "shell main is a flex column; ErrorPage host flex-1 column. 404 at 1440x2000: gaps 528/528 (was 80/976). No layout shift measured on 24 pages at 320-1440 (heights and footer positions identical to lodb-next, only an animated element jitters 1px)."
+    },
+    {
+     "id": "A2-M01",
+     "status": "fixed",
+     "note": "Same commit as A2-08: AccountPage, the 5 auth views, AuthCard hosts flex-1 columns + .auth-portal flex-grow; DonationOutcomePage host + .donate-outcome-page flex-grow. 1440x2000: login 386/386 (legacy 390/390), donate/cancel 511/511 (legacy 511/511); 1440x900 unchanged."
+    },
+    {
+     "id": "A2-09",
+     "status": "fixed",
+     "note": "rtl:text-right on the disclaimer (lang=en dir=ltr kept). ar last line 1248..1408 at 1440 and 206..366 at 390 (legacy 1251..1408 / 209..366); en unchanged."
+    },
+    {
+     "id": "A2-10",
+     "status": "fixed",
+     "note": "Active chip rule split after the hover rule at 60%. Measured on /en/changelog, at rest and hovered: color(srgb .784 .667 .431 / 0.6), identical to legacy."
+    },
+    {
+     "id": "A2-11",
+     "status": "fixed",
+     "note": "Per the verified fix (ADR 0005 prerender is a decision): recorded as H8 in docs/reecriture/heritage.md. Parity would require amending ADR 0005 and serving the 8 editorial paths per request; not done."
+    },
+    {
+     "id": "A2-12",
+     "status": "fixed",
+     "note": "Static <noscript> notice inside <lodb-root> in index.html (every render replaces it): /en/account/register and /en/account/builds/new show 'JavaScript is required to use this page.' without JS, /en/about and /en/champions do not. password_help deliberately not rendered (verified fix); recorded as H9 in heritage.md. E2E smoke case added (CSS locator: text locators skip <noscript>)."
+    },
+    {
+     "id": "A2-06",
+     "status": "partial",
+     "note": "Verified fix applied: dialog-picker.css and lightbox.css stay global (CDK pane/backdrop classes; a component or lazy stylesheet would not match or would vanish during the close animation), web initial budget warning set to 700kB (measured 685.28 kB, the warning is gone), note in docs/guides/dev-next.md. No CSS moved: the growth is Tailwind utilities of every template; splitting them is a separate perf task. Shell/shell-store budgets untouched (not measured)."
+    },
+    {
+     "id": "D2-01",
+     "status": "fixed",
+     "note": "cookies-en/fr: PHPSESSID and REMEMBERME replaced by __Host-lodb.antiforgery + XSRF-TOKEN (every visit), __Host-lodb.session (sign-in, 1 day browser session or 30 days sliding with 'keep me signed in'), .AspNetCore.Correlation.* (Google sign-in, 15 min), lod_theme (1 year); section 6 rewritten; 'no other cookie' now true (checked in AccountCookies, SessionCookie, XsrfTokens, GoogleSetup, theme-service, preferences-store and curl Set-Cookie). effectiveDate bumped to 2026-09-28."
+    },
+    {
+     "id": "D2-M01",
+     "status": "fixed",
+     "note": "privacy-en/fr: retention cell and section 3 describe the automatic retention of the new stack (IP and User-Agent erased after 30 days, event deleted after 13 months, daily aggregates kept; AnalyticsOptions, AnalyticsRetention, AnalyticsRetentionJob, AnalyticsRollupJob); 'Session and preferences' row updated. Same commit and effectiveDate as D2-01."
+    },
+    {
+     "id": "D2-02",
+     "status": "fixed",
+     "note": "SectionJump focuses the target (tabindex=-1 + data-section-target when not focusable, preventScroll); base.css hides the ring on [data-section-target]:focus only. Measured: TOC '#rights' -> focus on section#rights, next Tab 'charles.lindecker@outlook.fr', as legacy; champion chip focuses section#skins without ring."
+    },
+    {
+     "id": "D2-03",
+     "status": "fixed",
+     "note": "pushState(history.state, ...) for FragmentLink and SectionNav. Measured: /en/about -> privacy -> #rights: history 3->4, Back -> /en/legal/privacy y=0 (legacy identical); chip Skins: Back stays on /en/champions/Ahri at y=0. This reverses heritage H7 (replaceState, commit 2daab252), rewritten in the same commit; see followups."
+    },
+    {
+     "id": "D2-04",
+     "status": "fixed",
+     "note": "dir=ltr on the legal TOC and prose and on the changelog lede and notes when they fall back to another language; fixes label dir=auto. Measured /ar/legal/privacy: TOC '1. Data controller', direction ltr; fr text has no dir; de keeps lang=en dir=ltr. Optional RTL improvement beyond legacy (legacy has the same bidi defect)."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Web/src/app/core/context/preferences/preferences-store.ts + preferences.spec.ts (A2-01/A2-M02: kept signal)",
+    "src/LoDb.Web/src/app/features/account/account-page.ts, auth/card/auth-card.ts + auth-card.css, auth/login/login-view.ts, auth/register/register-view.ts, auth/recovery/forgot-password-view.ts, auth/recovery/reset-password-view.ts, auth/verify/verify-email-view.ts (A2-M01: host flex-1 chain)",
+    "src/LoDb.Web/src/app/ui/navigation/section-jump.ts + navigation.spec.ts (D2-02/D2-03)",
+    "src/LoDb.Web/src/styles/foundation/base.css (D2-02: [data-section-target]:focus)",
+    "src/LoDb.Web/angular.json (A2-06: web initial budget warning 700kB)",
+    "docs/reecriture/heritage.md (H7 rewritten for D2-03, H8 for A2-11, H9 for A2-12)",
+    "docs/guides/dev-next.md (A2-06 budget note)",
+    "tests/LoDb.E2E/specs/context-switcher/context-switcher.spec.ts, specs/editorial/legal.spec.ts, specs/public/smoke.spec.ts (new cases for A2-01, D2-02/D2-03, D2-04, A2-12)"
+   ],
+   "needs_contract_regeneration": false,
+   "checks": "Front: full ng test 247 files / 2185 tests green (vitest-limited config; two json-ld .snap files rewritten by line endings only, restored); npm run typecheck green; ng lint 'All files pass linting'; prettier --check --end-of-line auto green on every changed web file; build:web OK, initial 685.28 kB (no initial budget warning at 700kB; only the pre-existing builds warnings item-armory.css 5.61kB and step-editor.css 4.06kB). E2E against the preview (--workers=1): specs/context-switcher, specs/editorial, specs/public (smoke, navigation, accessibility, layout, identities, media, outcomes, seo, caching), specs/account/access, specs/donate, specs/developers, specs/runes, specs/champions, specs/home, specs/trends: 211 passed, 1 skipped, 1 failed = outcomes.spec 'move a former URL ... in one hop' (/16.19.1/champion/Annie legacy redirect lives in nginx, not served by the preview, like specs/routing and specs/legacy). Own Playwright probes vs legacy :8080 for every finding (session, active state and i18n requests, layout at 320-1440 incl. ar, tall 1440x2000, no-JS, jumps/Back/focus, bidi, legal tables); preview stopped, worktree clean.",
+   "followups": [
+    "D2-03 reverses heritage H7 (replaceState, commit 2daab252 of 2026-09-27, 'a raw pushState desyncs the router'): the router state is copied (history.state) and single-jump Back is measured correct, but after several jumps the intermediate Back presses rewind the URL without scrolling (the added entries share one navigation id, whose stored position the RouterScroller restores). Legacy scrolls the legal page to the top there and has the same dead presses on chips. If unwanted: a popstate handler in SectionJump scrolling to location.hash after the router's scroll, or revert to replaceState and mark D2-03 deliberate.",
+    "A2-06: CSS splitting remains a separate perf task (exclude lazy-only features from the global Tailwind scan with @source not, lazily injected stylesheet); the builds component-style budget warnings (item-armory.css, step-editor.css) belong to BUILDS; shell and shell-store initial budgets still warn at 500kB (not measured here).",
+    "A2-11: parity of the chip on prerendered editorial pages would need an ADR 0005 amendment (RenderMode.Server for the 8 paths); recorded as H8 instead.",
+    "A2-02 deviates from the verified fix: HOME_ACTIVE (paths exact, query ignored) still missed /en/?version=X after the switcher's rewrite (trailing empty segment), so NavContext.home decides the home link state instead.",
+    "Legal effectiveDate is now 2026-09-28 in legal-info-token.ts while its doc comment still points to the legacy legal_info.yaml values; docs/guides/legal-info.md may want the new date.",
+    "The three touched E2E spec files were already prettier-dirty at HEAD under the E2E folder's resolution; left as-is apart from the added cases."
+   ]
+  },
+  "review": {
+   "pkg": "SHELL",
+   "role": "adversarial-review",
+   "verdict": "fixed-issues",
+   "reviewedCommits": "289d0da5..2deca3bf (14 commits by the fixer)",
+   "commits_added": [
+    "5edb1849 fix(front/core): generer la marge de l'avis affiche sans javascript",
+    "b77f4609 fix(front/editorial): preciser la consolidation des vues et la CNIL",
+    "73aedb10 style(front/ui): replier a 100 colonnes le commentaire de SectionJump",
+    "265431d6 docs(docs): preciser le retour apres plusieurs sauts de section"
+   ],
+   "issues": [
+    "A2-12: the <noscript> notice in index.html used m-6, but Tailwind only scans src/app and no template uses m-6, so the class was never generated. Measured margin 0px, notice at x=0. Fixed: @source '../index.html' in src/styles/index.css. The CSS selector diff shows that only .m-6 is added, with no stray utility from the inline theme script. The notice is now at 24/24 at 1440 and 320, dark and light. The smoke E2E case now asserts the notice is clear of the edge.",
+    "D2-M01 (major): privacy-en/fr said the views are 'consolidated every day'. AnalyticsRollupJob folds them into the daily aggregates every five minutes, so this is now 'consolidated into daily aggregates'. The text also presented 13 months as 'the CNIL's limit' for audience measurement; CNIL's figure for the data collected is 25 months, and 13 months applies to tracker lifetime. It now says the retention respects the CNIL recommendations.",
+    "section-jump.ts: a doc comment line of the fixer ran to 116 characters (limit 100). Rewrapped.",
+    "D2-03 / heritage H7: measured against the legacy with two TOC jumps (#rights, then #audience). The new stack's Back presses rewind the URL without scrolling, including the return to the page's own entry, which stays at y=1672. The legacy returns to y=0 on every Back. H7 said only that 'intermediate entries' do not scroll, which implied the last Back reaches the top. H7 now states this precisely. Single-jump Back is at y=0 on both stacks."
+   ],
+   "verification": {
+    "A2-01 (major)": "confirmed against the legacy: after picking 14.1.1 on /en/about, the chip reads '14.1.1 · EN' and #switcher-version is 14.1.1 on /en/trends and /en/developers; codex and bottom links go to /en/14.1.1/champions. Legacy is identical.",
+    "A2-M02": "confirmed: applying 16.19.1 on /en/developers keeps the URL and moves the chip, codex and bottom links to /en/champions at once, like the legacy reload.",
+    "A2-02": "confirmed at 1440 and 390: /en/?version=14.1.1 and /en/?lang=en_GB light Home (rgb 240,230,210) with aria-current in the header and bottom nav, and the SSR HTML carries it too. A MutationObserver shows no hydration flicker, whereas the integration build drops the lit class on ?version=. Divergence from the verified fix (NavContext.home instead of HOME_ACTIVE) is justified: with the null options, Angular 22's RouterLinkActive leaves aria-current alone.",
+    "A2-03": "confirmed: /en/ -> Items fetches items/en.json and catalogue/en.json once each.",
+    "A2-04": "confirmed: /en/runes fetches only catalogue/en.json, and /fr/runes fetches catalogue fr+en. No reference to the runes scope remains.",
+    "A2-07": "confirmed in ar: 72..264 at 390 matches the legacy. At 320 it is 0..192, where the legacy gives 58..250, but the account summary itself sits elsewhere: the new header shows the donate heart and hides the patch at 320. The panel keeps the legacy anchoring and stays in the viewport. LTR is unchanged.",
+    "A2-08 / A2-M01": "confirmed at 1440x2000: login 386/386 (legacy 390/390), register 203/203 (211/211), forgot 474/474 (476/476), donate cancel 511/511 (511/511), success 496/496 (496/496), 404 528/528. The same gaps as the legacy at 1440x900, 768x1400 and 390x844. Regression hunt against lodb-next (integration), comparing main, footer, child and first-block geometry: 32 pages x 3 widths (1440/390/320, en and ar). This covers home, lists, details, trends, developers, editorial, donate, profile, admin, admin login, account api/profile/verify/reset, builds editor, shared build and 404s. All are identical except the two legal pages, which grew with the new content and show no horizontal overflow.",
+    "A2-09": "confirmed in ar: the last line is at 1248..1408 (1440), 206..366 (390) and 136..296 (320), against the legacy's 1251..1408, 209..366 and 139..296. en is unchanged.",
+    "A2-10": "confirmed: color(srgb .784 .667 .431 / 0.6) at rest and on hover, identical to the legacy.",
+    "A2-11": "doc only (H8); the text was checked.",
+    "A2-12": "the notice shows on /en/account/register, /en/account/login and /fr/account/builds/new without JS, and is absent from /en/about and /en/champions. Its margin was fixed (see issues).",
+    "A2-06": "build:web gives 685.32 kB initial with no initial-budget warning. The only warnings left are the builds item-armory.css and step-editor.css ones, which predate this package.",
+    "D2-01 (major)": "checked against the API code. AccountCookies, SessionCookie, AuthenticationSetup (antiforgery Strict, HttpOnly), XsrfTokens (not HttpOnly, Strict) and GoogleSetup (correlation Lax, Secure policy) match the text, and so do theme-cookie and the 'keep me signed in' label (en.json:461). The two-factor flow sets no cookie (in-request second factor, no TwoFactorUserId scheme), so the 'No other cookie' sentence holds. At 390/320 the tables scroll inside .hx-table-scroll (528px, against the legacy's 442px) because of the unbreakable cookie names; the page itself does not overflow.",
+    "D2-02": "confirmed against the legacy: after the #rights TOC jump, the next Tab lands on 'charles.lindecker@outlook.fr' on both stacks, and the focused section shows no ring. The champion Skins chip focuses section#skins.",
+    "D2-03": "confirmed for one jump: history 3->4 on both stacks, and Back returns to /en/legal/privacy at y=0 (chip: /en/champions/Ahri at y=0). Multi-jump behaviour is recorded in H7 (see issues).",
+    "D2-04": "confirmed: in /ar/legal/privacy the TOC and prose are lang=en dir=ltr. In /ar/changelog the lede and notes are lang=fr dir=ltr, and the fixes label is dir=auto. fr carries no dir, and de is lang=en dir=ltr."
+   },
+   "outside_edits": [
+    "src/LoDb.Web/src/styles/index.css (@source '../index.html', needed by A2-12's notice)",
+    "tests/LoDb.E2E/specs/public/smoke.spec.ts (notice clear of the screen edge)",
+    "docs/reecriture/heritage.md (H7 precision)"
+   ],
+   "checks": "npm run typecheck passes. ng lint: all files pass. Full ng test suite (vitest-limited): 247 files and 2185 tests pass; the two json-ld .snap files that Vitest rewrote by line endings only were restored. build:web succeeds at 685.32 kB initial with no initial-budget warning; the two builds component-style warnings predate this package. prettier --check --end-of-line auto passes on every changed web file. E2E against the preview (--workers=1) on specs/context-switcher, editorial, public, account/access, donate, developers, runes, home, champions and trends: 209 passed, 1 skipped, 1 failed. The failure is outcomes.spec's legacy /16.19.1/champion/Annie redirect, which nginx serves: 301 on :18080 and 404 on the preview. No attribution line in any commit. Nothing is staged under changelog/published, openapi, core/api/generated or package-lock. The preview is stopped and git status is clean.",
+   "residual": [
+    "D2-03: after several jumps, Back presses rewind the URL without scrolling, down to the page's own entry, because the pushed entries share the router's navigation id. On the legal pages the legacy returns to the top on every Back; on the chips it has dead presses as well. To match the legal-page legacy exactly, SectionJump would need a Scroll/popstate hook for same-page popstates (path and query equal). That is a design choice left open, and H7 records the current behaviour.",
+    "A2-07 at 320: the new header differs from the legacy there (donate heart shown, patch hidden), so the account panel sits at 0..192 against the legacy's 58..250. The header layout at 320 is outside this package.",
+    "Changelog fixes label: under ar it is marked lang=ar while its text is the English fallback 'Fixes'. The legacy has no ar translation either, and the lang attribute predates this package.",
+    "cookies-en/fr lod_prefs row (not touched here) still says 'the server reads the site language to open the home page (/)'. Worth a check against src/server.ts in the editorial realignment.",
+    "Legal effectiveDate is 2026-09-28 in legal-info-token.ts, but docs/guides/legal-info.md may still name the legacy date (the fixer flagged this)."
+   ]
+  }
+ },
+ "CATALOGUE": {
+  "fix": {
+   "pkg": "CATALOGUE",
+   "commits": [
+    "cf267b41 fix(front/catalogue): couper le titre de liste trop long sur telephone",
+    "e046eccc fix(front/catalogue): garder chiffres et fleche dans le bon sens en rtl",
+    "668b3598 fix(front/catalogue): garder entiers noms de runes et libelles de sorts",
+    "2075b56d fix(front/ui): resserrer le pager quand ses liens depassent l'ecran",
+    "9faaf2d4 fix(front/ui): rendre au sceau noxus et aux rivets zaun leur place",
+    "08c2dfd8 refactor(front/catalogue): remplacer catalogue-empty par empty-state",
+    "e3133a01 fix(front/catalogue): rendre aux listes les espacements de l'ancien site",
+    "158e849c fix(front/catalogue): garder la puce de filtre actif fine au tactile",
+    "f07d2e7c fix(front/ui): retirer l'ecart entre libelle et chevron d'accordeon",
+    "aa0c04ba fix(front/catalogue): aligner titres d'aside et prix des objets",
+    "77b4c5c6 fix(front/ui): redescendre la lettrine du lore de 3 px"
+   ],
+   "results": [
+    {
+     "id": "B2-04",
+     "status": "fixed",
+     "note": "list-heading.ts: the h1 gets [overflow-wrap:anywhere] and nothing else (the verifier's simpler variant). No hyphens-auto, because it would hyphenate fr titles that the legacy wraps at a space. /de and /pl summoners: scrollWidth is now 320 at 320 and 390 at 390 (was 405 and 360); en, fr and ru titles are unchanged. The legacy overflows too in a fr/de session, so this is a deliberate improvement under the 320 px rule. The E2E probe 'fit a list titled with one long word' is added to specs/public/layout.spec.ts and passes."
+    },
+    {
+     "id": "B2-01",
+     "status": "fixed",
+     "note": "marks.css .gauge: unicode-bidi isolate and direction ltr. /ar/items?q=a now reads '2/865' in the rail (1440) and in the sheet (390)."
+    },
+    {
+     "id": "C2-03",
+     "status": "fixed",
+     "note": "stat-board.html: the growth spans carry dir=ltr. In ar they read '+2.2%' and '+104', and the growth stays on the mirrored side of the value. Unit test added in stats.spec.ts."
+    },
+    {
+     "id": "C2-04",
+     "status": "fixed",
+     "note": "stat-board.html: the level counter gets dir=ltr and reads '1/18' in ar (was '18/1'). The same unit test covers it."
+    },
+    {
+     "id": "C2-05",
+     "status": "fixed",
+     "note": "edition-counterpart.ts: rtl:-scale-x-100 is removed from the U+203A arrow. In ar, item 3031 and SummonerFlash show '‹' at the end of the label; en is unchanged ('... VERSION ›')."
+    },
+    {
+     "id": "C2-08",
+     "status": "fixed",
+     "note": "rune-constellation.css: @layer components h3 { overflow-wrap: normal } (no hyphens). At 320, the Domination and Precision h3 boxes and the keystone card (450) are identical to the legacy, with no page overflow (the legacy Precision page overflows to 357)."
+    },
+    {
+     "id": "B2-09",
+     "status": "fixed",
+     "note": "Parity option: [overflow-wrap:normal] on the two stat label spans of summoner-list.html. In fr, 'Niveau d’invocateur' is 30px tall (2 lines) at 1024 and 1280, and the card is 247, as in the legacy fr session."
+    },
+    {
+     "id": "C2-02",
+     "status": "fixed",
+     "note": "The verified fix, applied as a deliberate divergence. pager.ts checks whether the nav overflows in an afterRenderEffect that re-runs with previous()/next(), and through a ResizeObserver on the nav and its cells. It then toggles pager--tight. The observer sets the class one frame later to avoid ResizeObserver loop errors, and does nothing where ResizeObserver is missing (jsdom). navigation.css puts .pager--tight with the <360px rules and adds .pager__name hyphens:auto. /en/items/2420, /pl/items/9273, Wukong, /de/items/3031 and /en/items/3031 now fit at 360, 390 and 414 (scrollWidth == clientWidth). Pairs that fit keep the legacy tracks: 1001, Precision 136/68/114 at 390, and every page at 1440. The class follows viewport resizes and client navigation, left overflow is detected in ar, and no window error events fire. Unit test added in navigation.spec.ts."
+    },
+    {
+     "id": "C2-07",
+     "status": "fixed",
+     "note": "I took the verifier's narrower option: z-index:1 on [data-theme='noxus'] .hx-corners::before and on [data-theme='zaun'] .hx-corners::before/::after, in theme/** (owned), instead of frames.css. This way the Hextech brackets, and the frames other packages own in the default identity, keep their stacking. On the item 3031 hero frame, the seal and the rivets now paint over the icon, and those regions are within 5 colour levels of the legacy capture."
+    },
+    {
+     "id": "C2-09",
+     "status": "fixed",
+     "note": "noxus/ornament.css: [data-theme='noxus'] .slot-node i { rotate: 45deg } after the grouped reset, with a comment saying it reproduces what the legacy minifier rendered. The computed rotate is 45deg with the triangle clip, and the KEYSTONE marker crops match the legacy."
+    },
+    {
+     "id": "B2-06",
+     "status": "fixed",
+     "note": "catalogue-empty.ts is deleted. catalogue-list and rune-detail now use <lodb-empty-state /> from ui/surfaces, and the selectors in list.spec.ts and rune-detail.spec.ts are updated. /en/7.20.1/runes renders the same framed state."
+    },
+    {
+     "id": "B2-02",
+     "status": "fixed",
+     "note": "catalogue-list.css: .list__results::after { content: '' } plus .list__results > .empty { order: 1 }. On /en/items?q=zzzzqq the panel sits at 335 (1440) and 525 (390), the results column is 379/437, and the document heights are 1638/2043, all identical to the legacy."
+    },
+    {
+     "id": "B2-03",
+     "status": "fixed",
+     "note": "Fixed by the same CSS block. On /en/champions and /en/summoners at 1440 and 390, the results, main and footer positions match the legacy (for example, champions at 1440: main 1574, footer 1639)."
+    },
+    {
+     "id": "B2-07",
+     "status": "fixed",
+     "note": "rune-list.html: an @else branch renders <div class=\"mb-6 flex\" aria-hidden=\"true\">, the verifier's amended flex version. On /en/7.20.1/runes the toolbar is at 232 as on the legacy, and at 390 main is 638 as on the legacy. At 1440 main is still 3px taller, because of the rail search field (16px inputs, a deliberate divergence), not this gap."
+    },
+    {
+     "id": "B2-05",
+     "status": "fixed",
+     "note": "active-filters.css: the coarse-pointer min-block-size is removed, so the chip keeps its 25.6px look. A ::before (inset-block -0.45rem) gives it a 40px hit area: elementFromPoint 6px above the chip returns the chip. At 390 with touch the chips are 51x25.6 and 134x25.6, as on the legacy."
+    },
+    {
+     "id": "B2-08",
+     "status": "fixed",
+     "note": "accordion-item.html: gap-3 is removed and only justify-between remains, as on the legacy. fr summoners at 1024 and 1280: no wrapped headings, cards 247, main 1303 and 1036, matching the legacy fr session."
+    },
+    {
+     "id": "C2-06",
+     "status": "fixed",
+     "note": "item-aside.html: the titles use the legacy utilities (mb-4 font-beaufort text-xs tracking-[0.22em] text-gold uppercase), and the .panel-title rule is deleted. Letter-spacing (2.64, -0.18, 0.06 and 1.08px) and weights match the legacy in hextech, noxus, zaun and spirit-blossom."
+    },
+    {
+     "id": "C2-10",
+     "status": "fixed",
+     "note": "item-detail.html: the price span gets text-gold after text-gold-grad. The computed colour is rgb(200,170,110) in hextech and the identity's gold in the other three, as on the legacy."
+    },
+    {
+     "id": "C2-11",
+     "status": "fixed",
+     "note": "ddragon.css: ::first-letter now uses padding-top: 0.05em (physical). padding-inline-end stays logical, since it computes to 0 on both stacks. On Ahri's lore, padding-top is 3.18px and the initial sits at -11.8 (hextech) and -6.8 (noxus), as on the legacy."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Web/src/styles/primitives/navigation.css (C2-02: .pager--tight rules and .pager__name hyphens next to the existing <360px block)",
+    "src/LoDb.Web/src/app/ui/navigation/navigation.spec.ts (C2-02 unit test; the spec sits next to pager* but the glob does not match it)",
+    "tests/LoDb.E2E/specs/public/layout.spec.ts (B2-04: /de/summoners added to the 320 px probe, as the finding asks)"
+   ],
+   "needs_contract_regeneration": false,
+   "checks": "npm run build:web OK (only the existing budget warnings on the builds CSS). Full front suite, run once: 247 files, 2176 tests passed; two json-ld .snap files were rewritten with different line endings only, and I restored them. npm run typecheck OK. ng lint: all files pass. prettier --check --end-of-line auto passes on every changed front file. The E2E spec passes with src/LoDb.Web/.prettierrc.json; without --config it warns, as it already did at HEAD. E2E against the preview (4410), --workers=1: specs/public/layout.spec.ts 35 passed, including the new 320 px probe. specs/catalogue, champions, items, runes, summoners, home, public/navigation and public/identities: 45 passed. My own Playwright probes (v1 to v8 in the scratch dir) compared the preview with the legacy at 320, 360, 390, 414, 1024, 1280 and 1440, in en, fr, de, pl, ru and ar, and in the four identities; the figures are quoted per finding. The preview is stopped and the worktree is clean.",
+   "followups": [
+    "C2-07: the theme-scoped z-index also applies to the other hx-corners panels under Noxus and Zaun (account favourite and skin sockets, build editor sections, changelog hero, stat board). The ACCOUNT and builds owners should take a quick look, as the verifier suggested for the frames.css variant.",
+    "C2-09: under Zaun and Spirit Blossom the legacy also keeps rotate:45deg on .slot-node i (same minifier fold), while the new stack has 0deg. The marker is a circle there, so nothing changes visually, and I left it alone.",
+    "C2-02: hyphens:auto on tight pager names only works where the browser has hyphenation dictionaries. Headless Chromium has none and breaks words mid-word instead. Before hydration (SSR), the tight layout only applies below 360px; the overflow-driven class needs JavaScript.",
+    "B2-04 and C2-02 are deliberate divergences: in the same cases the legacy overflows (the title) or clips its next pager link.",
+    "B2-07 at 1440: the empty runes page stays 3px taller than the legacy because of the rail search field (16px inputs rule), which is outside this package."
+   ]
+  },
+  "review": {
+   "pkg": "CATALOGUE",
+   "role": "adversarial-review",
+   "verdict": "fixed-issues",
+   "reviewed_commits": [
+    "cf267b41",
+    "e046eccc",
+    "668b3598",
+    "2075b56d",
+    "9faaf2d4",
+    "08c2dfd8",
+    "e3133a01",
+    "158e849c",
+    "f07d2e7c",
+    "aa0c04ba",
+    "77b4c5c6"
+   ],
+   "commits_added": [
+    "562795e9 fix(front/catalogue): ne couper le titre de liste qu'au bord de l'ecran",
+    "e35b7aef fix(front/catalogue): arreter au bord de l'ecran les noms de runes cles",
+    "af312e61 refactor(front/catalogue): factoriser les titres de l'aside des objets"
+   ],
+   "issues": [
+    {
+     "finding": "B2-04",
+     "severity": "regression",
+     "problem": "overflow-wrap:anywhere on the list h1 also broke titles that the legacy keeps whole by running them into the page padding. At 320: fr summoners 'SORTS / D'INVOCATEU / R' (108px, legacy 72), ru summoners on 4 lines with an orphan letter (144 vs 72), el champions and items, tr champions, hu summoners, all mid-word, and all fitting the page before. The fixer checked de/pl only.",
+     "fix": "562795e9: h1 back to the body's break-word; the text column gets max-w-[calc(100vw-6rem)]. The cap also clamps the flex item's automatic minimum width, so a word runs into the padding like the legacy and only a word wider than the screen breaks, at the screen edge. 21 locales x 4 lists at 320/390/1440: only de (320, 390) and pl (320) summoners differ from the base, and every page fits; fr/ru/el are identical to a real legacy fr/ru/el session."
+    },
+    {
+     "finding": "C2-08",
+     "severity": "regression",
+     "problem": "h3 overflow-wrap:normal made two rune pages scroll sideways at 320, where the base fitted: /pl/runes/8300-inspiration (scrollWidth 333, the keystone name 37px past its card) and /ru/runes/8100-domination (326). The legacy scrolls too (362 and 387 in a real session), but the 320 px rule forbids it. The fixer checked en only.",
+     "fix": "e35b7aef: the keystone name (.keystone__name) is fit-content with max-inline-size calc(100% + 3rem + 1px), which is the card padding, its 1px frame and the page gutter, and it keeps break-word. It still runs past its card like the legacy (de 'Leichtfuessigkeit' is whole), but it breaks at the screen edge. The en h3 heights at 320 are identical to the legacy on the four paths, and the keystone cards are 450/478 at 320 and 250 at 1440, as on the legacy. There is no page overflow at 320 or 360 in the 21 locales, and none at 320 in the four identities. A new 320 px E2E probe covers /pl/runes/8300-inspiration. mb-3 moved into the class so the template line stays under 100 characters."
+    },
+    {
+     "finding": "C2-06",
+     "severity": "convention",
+     "problem": "The DRY rule was broken: the .panel-title class was replaced by the same six-utility class string, repeated four times in item-aside.html.",
+     "fix": "af312e61: .panel-title is back, inside @layer components (the ListHeading .list-count precedent), so the unlayered [data-theme] h2 rules still win. Letter-spacing, weight, size, line height, colour and margin match the legacy in hextech, noxus, zaun and spirit-blossom."
+    }
+   ],
+   "verified_findings": {
+    "B2-01": "ok: /ar/items?q=a reads '2/865' in the rail (1440) and in the sheet (390)",
+    "B2-02": "ok: /en/items?q=zzzzqq .empty at 335 (1440) and 525 (390/320), results column and document height identical to the legacy at 1440/768/390/320",
+    "B2-03": "ok: champions/items/runes/summoners, main, footer and document height identical to the legacy at 1440/768/390/320 (the base is 16px short)",
+    "B2-04": "regression found and fixed (see issues)",
+    "B2-05": "ok: the chips are 51.3x25.6 and 133.7x25.6 at 390 with touch, as on the legacy; elementFromPoint 6px above and below hits the chip",
+    "B2-06": "ok: /en/7.20.1/runes renders the framed empty state at the legacy position; no stale reference to catalogue-empty",
+    "B2-07": "ok: /en/7.20.1/runes identical to the legacy at 768/390/320; 3px taller at 1440 (the 16 px rail search field, a deliberate divergence)",
+    "B2-08": "ok: fr summoners in a real legacy fr session: cards 247 and main 1303 (1024) and 1036 (1280), identical",
+    "B2-09": "ok: 'Niveau d'invocateur' is 30px tall (2 lines) at 1024/1280",
+    "C2-02": "ok: tight only where the pair overflows (2420/9273/Wukong/3031 de at 360-414), the legacy tracks elsewhere (1001, Precision 136/68/114 at 390, SummonerFlash, every page at 768/1440), ar mirrored, no error events, follows resizes and client navigation",
+    "C2-03": "ok: ar Ahri growths read '+2.2%', '+104'",
+    "C2-04": "ok: ar level counter reads '1/18'",
+    "C2-05": "ok: the ar arrow renders mirrored at the end of the label (crop), en unchanged",
+    "C2-06": "ok, then refactored (see issues)",
+    "C2-07": "ok: the seal and rivets paint over the item icon, and the corner regions are as close to the legacy as hextech's; new vs base on /en/, changelog, Ahri, SummonerFlash and legal notice under noxus/zaun: only the item hero corner changed",
+    "C2-08": "regression found and fixed (see issues)",
+    "C2-09": "ok: noxus rotate 45deg with the triangle clip, as on the legacy; zaun/spirit-blossom stay 0deg against the legacy 45deg on a circle (invisible)",
+    "C2-10": "ok: the price colour is the identity gold in all four identities, as on the legacy",
+    "C2-11": "ok: ::first-letter padding-top 3.1824px and the initial offset identical to the legacy in all four identities"
+   },
+   "outside_edits": [
+    "tests/LoDb.E2E/specs/public/layout.spec.ts (320 px probe of /pl/runes/8300-inspiration, e35b7aef)"
+   ],
+   "checks": "npm run build:web OK (only the existing budget warnings: initial bundle, item-armory.css, step-editor.css). npm run typecheck OK. ng lint: all files pass. Full front suite, run once: 247 files, 2176 tests passed; two json-ld .snap files were rewritten with line-ending changes only and restored. prettier --check --end-of-line auto passes on every changed file, and on the E2E spec with --config src/LoDb.Web/.prettierrc.json. E2E against the preview (4410), --workers=1, on specs/public/{layout,navigation,identities}, catalogue, champions, items, runes, summoners and home: 81 passed, including both 320 px probes. Commit subjects are 70 or 71 characters, with no attribution line in any of the 14 commits. Nothing is staged under the changelog/published path, and no generated artifact changed. The preview is stopped and the worktree is clean.",
+   "residual": [
+    "C2-07: z-index:1 on the Noxus seal and Zaun rivets also applies to the authenticated hx-corners panels (account favourite and skin sockets, build editor sections, auth card), which were not verified against the legacy. The public pages are unchanged apart from the item hero.",
+    "C2-02: hyphens:auto needs browser dictionaries; headless Chromium breaks mid-word without a hyphen (DEMATERIALIZ/ER). Before hydration, tight mode applies only below 360px.",
+    "B2-04 and C2-08: where a single word is wider than the screen (de/pl summoners title, pl/ru keystones at 320), it now breaks at the screen edge, flush with it. This is a deliberate divergence: the legacy scrolls sideways there.",
+    "Style nits left as is: summoner-list.html's two class lines (115 characters) and the navigation.spec.ts test title (101 characters) exceed the 100-character limit. They are prettier-formatted and match 49 existing long class lines. Commit 9faaf2d4 groups C2-07 and C2-09 (two findings in one commit).",
+    "B2-07: /en/7.20.1/runes is 3px taller than the legacy at 1440 because of the 16 px rail input (deliberate divergence, another package)."
+   ]
+  }
+ },
+ "APPS": {
+  "fix": {
+   "pkg": "APPS",
+   "commits": [
+    "bcf80b9c feat(back/accounts): valider un lien de reinitialisation sans l'utiliser",
+    "3dfc63c4 fix(front/account): verifier le lien de reinitialisation a l'ouverture",
+    "cc126fb8 fix(front/builds): deposer un objet sur toute la carte d'une etape",
+    "de70965a refactor(front/builds): alleger les styles de l'editeur de builds",
+    "35200459 fix(front/builds): garder les listes du contexte dans le cadre a 320 px",
+    "aeb1467f fix(front/builds): ne plus couper le nom de la cle de voute a 320 px",
+    "81957569 fix(front/builds): garder le libelle d'etape pres de la poignee a 320 px",
+    "692189ec fix(front/builds): isoler le sens des textes et compteurs en arabe",
+    "32bdcb51 fix(front/account): isoler le sens des textes en arabe"
+   ],
+   "results": [
+    {
+     "id": "E2-01",
+     "status": "fixed",
+     "note": "I went further than the verified fix, to match the legacy 'drop anywhere on the card'. CDK counts a drop only over the drop list's element container, so I made the whole card body (div.forge-step__body, padding included) the cdkDropList. Head, note and counter take full rows (flex-basis 100%). The item slots and '+ Add item' (order 1) flow between them, and the counter has order 2 so the mark the CDK appends to an empty list shows before the tile. Checked on /en/account/builds/2/edit after 'Add a step': a drop on the empty step's note, label, tile or counter gives [2,2,0] -> [1,2,1], as on legacy; a drop on step 2's note gives [1,3,0]; reordering inside a step and moving steps by the handle still work. New E2E in specs/builds-editor ('moves an item onto the note of an empty step'): it passes on the fix and fails on lodb-next. Trade-offs: (1) the item slots are now divs directly in the card body, not ul/li, so they lose list semantics; (2) a drop on a non-empty step outside any medallion lands before the nearest item, where the drop mark shows it, while legacy appended at the end. I left out the optional dropPoint override because it would contradict the visible mark. The E2E lives in specs/builds-editor: specs/builds does not exist."
+    },
+    {
+     "id": "E2-02",
+     "status": "fixed",
+     "note": "The fraction is wrapped in <bdi dir=\"ltr\"> in the per-step counter, the steps footer and the armory footer; the paragraph keeps its RTL alignment. On /ar/account/builds/2/edit, '2' now sits left of '8' (1145 < 1173), '2' left of '10' in the footer, and the same in the armory. E2E 'keeps the counters in reading order on the Arabic page' is in specs/builds-editor/builds-editor.spec.ts. No spec file was added under steps/."
+    },
+    {
+     "id": "E2-03",
+     "status": "obsolete",
+     "note": "Owned by SHELL (with A2-12), as instructed. Not touched here."
+    },
+    {
+     "id": "E2-04",
+     "status": "fixed",
+     "note": "API: POST /api/account/reset-password/check (Recovery/CheckResetTokenEndpoint.cs, operationId checkPasswordResetToken) answers 204, or AccountProblem.InvalidToken as ProblemDetails, and never uses up the token. It is mapped in the Accounts group next to the reset, with no AllowAnonymous. What makes a link valid (decode, then FindById, then VerifyUserTokenAsync) now lives in one place, ResetLinks, which ResetPasswordEndpoint reuses. Rate limit: its own 30-per-hour sliding policy per client address (ResetCheckRateLimit, added through Configure<RateLimiterOptions>), never PasswordReset. Three new tests in PasswordResetTests (a usable link, checked twice, then used; a damaged link, an empty token, another account's id; its own limit, with the forgot endpoint still accepted after it) all pass. Front: ResetPasswordView checks the link behind a 'checking' signal, shows the form only after the 204, and calls reject() on invalid-token. Any other failure of the check shows the form, and the reset still gives the verdict. Checked against legacy with Playwright, with the check mocked because lodb-next does not have the endpoint yet: an expired link now lands on Forgot password with the same toast before any field shows, identical to legacy /reset-password/reset/<bogus>. On today's lodb-next (the check answers 404), the page falls back to the old behaviour. The front commit compiles only once the integration has regenerated the contract."
+    },
+    {
+     "id": "E2-05",
+     "status": "fixed",
+     "note": "The CDK drag states moved to src/styles/primitives/drag.css, imported last by primitives/index.css; that folder now has 10 files. The drop marks are renamed forge-dropslot/forge-droprow -> hx-drop-slot/hx-drop-row, primitive vocabulary. The armory tile is now items/armory-item-tile.ts (inline template) plus items/armory-item-tile.css; items/ now has 10 files. build:web no longer warns about any component style, and the budget was not raised. Trade-off: the initial bundle, whose warning was already there, grows by 0.9 kB (684.24 -> 685.13 kB) because drag.css is global. Screenshots of the armory with a tile hovered are pixel-identical to lodb-next at 1440 and 390, and the step drag and drop marks still render (dashed, 6.4 px seam)."
+    },
+    {
+     "id": "E2-06",
+     "status": "fixed",
+     "note": "Fixed by the E2-01 structure: the tile is a flex sibling after the last item. At 320 the tile is at (184,532), beside the last item at (68,532); legacy has (184,533)/(68,533). At 390 both put it on the next row at x=68. The 320 edit page went from 5381 to 5142 px with E2-V01 (legacy 5101)."
+    },
+    {
+     "id": "E2-07",
+     "status": "fixed",
+     "note": "Added .forge-context__field > select { inline-size: 100% } in editor-context.ts, the legacy w-full mechanism. At 320 the three selects span x 49 to 271 (222 px), as on legacy, against 49 to 296 (247 px) on lodb-next."
+    },
+    {
+     "id": "E2-08",
+     "status": "fixed",
+     "note": "Added .keystone__name { overflow-wrap: normal } in share-runes.css. At 320, 'ELECTROCUTE' is back on one line (scrollWidth 123 over 114, no page overflow), exactly as on legacy; lodb-next breaks it over 2 lines. No hyphens."
+    },
+    {
+     "id": "E2-09",
+     "status": "fixed",
+     "note": "Added dir=\"auto\" to the build name input and description textarea (build-editor.html), the step label and note (step-editor.html), the share-page h1 and .bshare-desc, the share-order step h3 and note, the trend-row and build-row name spans, and .profile-build__name (profile-builds.html). On the ar share page, the '.' of the description is now right of 'S' (897 > 623). The editor fields compute direction ltr for Latin text, so no more 'roam with .Ghost'."
+    },
+    {
+     "id": "E2-10",
+     "status": "partial",
+     "note": "Direction is fixed, translations are not added. The trends chip ('1 result', digit left of letter) and the visibility help (full stop at the end) are wrapped in <bdi>. The favorite and skin picker search fields, and the champion picker search, take dir=\"auto\"; Chromium then renders the English fallback placeholder as 'Search…' instead of '…Search' (measured). I did not add Arabic entries to ar.json: legacy messages.ar.yaml has the same gap, the task's i18n rule allows a new ar string only where legacy had one, and ar.json is a shared file outside this package. The armory search is left unchanged: with dir=auto its leading icon would sit on the wrong side of the query."
+    },
+    {
+     "id": "E2-V01",
+     "status": "fixed",
+     "note": "Applied .forge-step__label { flex: 1 1 min(10rem, 100% - 4rem); min-inline-size: min(10rem, 100% - 4rem); max-inline-size: 18rem }. At 320 the label is back on row 1 beside the touch handle (x=124, 128 px): a step is 423 px, legacy 425. Geometry at 1440 and 390 is unchanged. The touch handle stays visible, a deliberate divergence."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Web/src/styles/primitives/drag.css (new: the global CDK drag states, prescribed by E2-05)",
+    "src/LoDb.Web/src/styles/primitives/index.css (one @import of drag.css, E2-05)"
+   ],
+   "needs_contract_regeneration": true,
+   "checks": "API: dotnet test on tests/LoDb.Api.Tests gives 1398/1403 passed. The 5 failures are the known CRLF text comparisons: CnilPasswordValidatorTests (password list), AccountEmailDeliveryTests x2 (e-mail rendering), MigrationCommandsTests x2 (baseline and migrations). PasswordResetTests passes 9/9, including the 3 new tests. dotnet build-server shutdown was run. Tool note: with SDK 10.0.401 and Microsoft.Testing.Platform, `dotnet test --artifacts-path X` (and -p:ArtifactsPath) fails with MSB1008, because the value is forwarded as a bare 'ArtifactsPath=X'. I exported ArtifactsPath as an environment variable instead; outputs stayed on the SSD. The OpenAPI generation also needs LoDb__Storage__Root (a scratch directory) and LoDb__Workers__Enabled=false, as tools/next/api/lib/generate-contract.mjs sets them; otherwise Storage:Root validation aborts. I regenerated the OpenAPI documents and the client locally, then restored them: not committed. Front: ng test full suite 247 files / 2176 tests passed (2 seo *.snap files rewritten by line endings only, restored); npm run typecheck OK; ng lint OK; prettier --check OK on every changed file (E2E files with --config src/LoDb.Web/.prettierrc.json); build:web shows no component budget warning (only the initial-bundle warning that was already there). E2E against the preview on 4450, --workers=1: builds-editor 4/4, builds-share 4/4, trends 4 passed + 1 skipped by the spec itself, profile 3/3, account/access 6/6. register and contact were not run. E2E project tsc --noEmit OK. Legacy vs preview checks with my own Playwright scripts, one browser at a time (scratch dir fix2/APPS): drops at 1440; step geometry at 1440, 390 and 320; context selects at 320; keystone at 320; ar glyph positions (counters, share description, trends chip, visibility help, picker placeholder); reset page, valid and expired (check mocked), next to legacy /reset-password/reset/<bogus>; armory pixel diff against lodb-next. Git: after committing, I found the API subject was 73 characters. I reworded it ('verifier' -> 'valider', 72) by recreating my own 9 unpushed commits with git commit-tree: same trees, authors and dates, identical final tree checked with git diff, branch moved by git update-ref. No rebase, stash or reset was used. No attribution lines. The worktree is clean and the preview is stopped.",
+   "followups": [
+    "Integration: regenerate the contract (src/LoDb.Api/openapi/*.json and core/api/generated/**) before building the front. Commit 3dfc63c4 calls AccountService.checkPasswordResetToken, which only exists after api:generate.",
+    "lodb-next must run the new API before E2-04 shows there; until then the reset page falls back to showing the form, as before.",
+    "App-wide (i18n owner): 407 keys missing from ar.json (auth.*, build.*, profile.*, filter.*). English fallbacks in RTL paragraphs elsewhere still move their full stops, for example the auth card sentences and the build.editor hints. The armory search placeholder still reads '…Search an item' in ar: it needs a translation, or a direction fix that keeps its icon on the right side.",
+    "E2-01 trade-offs: the step's item slots are no longer a ul/li list (a11y semantics). A drop on a non-empty step outside any medallion goes before the nearest item, where the drop mark shows it, not at the end as in legacy.",
+    "E2-03 stays with SHELL (noscript shell message together with A2-12).",
+    "Tooling: `dotnet test --project … --artifacts-path …` fails with MSB1008 on SDK 10.0.401 (Microsoft.Testing.Platform runner). Use the ArtifactsPath environment variable instead."
+   ]
+  },
+  "review": {
+   "pkg": "APPS",
+   "role": "adversarial review",
+   "verdict": "fixed-issues",
+   "commits_added": [
+    "dc5da53d fix(front/builds): garder le titre du build partage a droite en arabe",
+    "d0519e90 test(e2e): verifier la forge des builds sur un telephone de 320 px",
+    "536fa02b test(e2e): lire le compteur d'etape arabe sans dependre de sa balise"
+   ],
+   "issues": [
+    "E2-09 regression (fixed, dc5da53d): dir=\"auto\" on the share page h1 left-aligned a Latin build name in an RTL column. On /b/708073019671104ebabe9da0?lang=ar_AE the name text went from x 595-1052 (lodb-next, flush with the column like the eyebrow and chips) to x 414-871 at 1440, and at 390 it was ragged against the portrait. The name now sits in a <bdi>: its punctuation stays isolated and the title keeps its column's alignment (x 595-1052 again, gradient intact). An E2E step in specs/builds-share/private.spec.ts checks, in ar, the description's full stop and the name's alignment. It failed on the fixer's build (352 px off) and passes after the fix. The paragraphs (description, step note) and the truncated names (trend row, build row, profile) keep dir=auto. For a truncated name, a <bdi> would clip the start of a long Latin name.",
+    "Missing tests for the 320 px fixes E2-06, E2-07 and E2-V01 (fixed, d0519e90): new E2E 'fits the forge in a 320 px phone' in specs/builds-editor. It checks that the context selects stay inside their section padding, that the step label sits on the handle's row, and that 'Add item' shares the last item's row after two items. It passes on the preview and fails on lodb-next (select right edge 296 against 272). A first draft iterated locator.all() before render, which checks nothing. It now waits for the 3 selects. The helper forge.ts gains boxOf, and centreOf reuses it.",
+    "E2-02 E2E coupled to markup (fixed, 536fa02b): the test targeted '.forge-step__count bdi' and its firstChild. It now reads the counter paragraph and finds the fraction's text node, so it still fails on lodb-next and passes on the fix.",
+    "Not fixed, legacy wins: with E2-08 (overflow-wrap: normal on .keystone__name), ru_RU at 320 px overflows the page by 2 px (scrollWidth 322) because 'Казнь электричеством' no longer wraps inside the word. Legacy /b/a1b2c3d4e5f6a7b8c9d0e1f2?lang=ru_RU measures exactly the same (322, same box), and lodb-next wrapped it. fr, el and ro spill past the panel by 5 to 12 px without any page overflow, as on legacy. The verifier forbids hyphens."
+   ],
+   "verified": {
+    "E2-01 (major)": "Fresh build, mouse drags on /en/account/builds/2/edit after 'Add a step', writes aborted. Drops on the empty step's note, label, tile and padding corner all give [2,2,0] -> [1,2,1]. Legacy /builds/6/edit gives the same 4 results. A drop on step 2's note gives [1,3,0] on both, but the legacy appends at the end ([BG, IE, DB]) while the new inserts before the nearest item ([BG, DB, IE]): this is the accepted trade-off. A drop just before the tile appends at the end. A drop in the gap between cards is cancelled. Reordering within a step matches legacy. A touch press-and-hold drag at 390 (CDP touch events) moves an item into an empty step ([2,2,0] -> [2,1,1]); lodb-next leaves [2,2,0]. Moving a step by its handle still works ('Step moved to position 2'). A release below the shrunken list cancels, the same on lodb-next.",
+    "E2-02": "ar editor: step counter '2' at x 1145, left of '8' at 1173; steps footer '2' at 241, left of '10' at 268; armory footer '2' at 1115, left of '8' at 1141. ar at 320 reads '2 / 8' and '2 / 10'.",
+    "E2-04": "The check was mocked with Playwright because lodb-next lacks the endpoint. invalid-token redirects to /en/account/forgot-password with the toast 'This reset link is invalid or has expired. Please request a new one.' and no password field, as legacy /reset-password/reset/<bogus> lands on /reset-password. A 204 shows the form with 2 fields. Unmocked (404 on lodb-next), the form shows. API: PasswordResetTests pass inside the Accounts run.",
+    "E2-05": "No component budget warning left (the initial-bundle warning grew from 684.24 to 685.13 kB). The armory dialog is pixel-identical to lodb-next at 1440 and 390.",
+    "E2-06 / E2-V01": "Geometry at 1440, 390 and 320, legacy vs preview vs lodb-next. At 320: tile at (184,293) beside the last item (legacy 184,296). Label on row 1 at x 124, 128 px wide, next to the visible handle. Step 423 px (legacy 425, lodb-next 542). Page 5142 px (legacy 5101, lodb-next 5381). At 1440 and 390, geometry and full-page pixels match lodb-next, dark and light, and at 1024 and 768 in en, de and ja.",
+    "E2-07": "At 320 the selects span x 49-271 (222 px), as on legacy. lodb-next had 49-296.",
+    "E2-08": "At 320 'Electrocute' holds 1 line (scrollWidth 123 over 114, no page overflow), as on legacy. lodb-next broke it over 2 lines. Checked in 19 locales; see the ru_RU residual.",
+    "E2-09 / E2-10": "ar share description reads 'Snowball the early game, roam with Ghost.' ('S' at 623, '.' at 897). The editor fields resolve to ltr for Latin text. The visibility help and the trends chip read in order. The en, fr and ja share pages are pixel-identical to lodb-next."
+   },
+   "conventions": "Subjects are 54 to 72 characters, in French without accents. No attribution line in any of the 12 commits. Nothing staged under editorial/changelog/published or under the generated artifacts. Folder limits hold: items/ 10, primitives/ 10, steps/ 10, Recovery/ 9. Changed files stay under 300 lines. CheckAsync and ResetLinks.ReadAsync take no CancellationToken: UserManager takes none, and XsrfTokens.IsValidAsync is a precedent. Accepted.",
+   "checks": "The front commit 3dfc63c4 needs the regenerated contract. I ran api:generate locally with ArtifactsPath on the SSD, then restored the generated files (not committed). build:web: OK, no component budget warning. typecheck: OK. ng lint: OK. prettier: OK on the changed files (E2E files checked with the web .prettierrc.json). Full front suite: 247 files, 2176 tests passed; the 2 snapshots rewritten by line endings were restored. E2E typecheck: OK. E2E on the preview (4450, workers=1): builds-editor, builds-share, trends, profile and account/access give 22 passed and 1 skipped by the spec. The changed counter test was rerun alone and passes. register and contact were not run. .NET Accounts* tests (293): 290 passed. The 3 failures are the known CRLF comparisons (CnilPasswordValidator list, AccountEmailDelivery x2), unrelated to this diff. dotnet build-server shutdown was run.",
+   "outside_edits": [
+    "src/LoDb.Web/src/styles/primitives/drag.css (fixer, E2-05)",
+    "src/LoDb.Web/src/styles/primitives/index.css (fixer, E2-05)"
+   ],
+   "residual": [
+    "Integration: regenerate the contract (openapi/*.json, core/api/generated/**) before building the front. Commit 3dfc63c4 calls AccountService.checkPasswordResetToken. lodb-next must run the new API before E2-04 shows there.",
+    "E2-08: in ru_RU at 320 px the keystone name overflows the page by 2 px, identical to legacy; lodb-next wrapped it. Changing it means breaking legacy parity (for example a negative inline margin into the panel padding, with break-word kept).",
+    "E2-01 trade-offs: the item slots are divs in the card body, so the list semantics are lost (the CDK's cdkDropListElementContainer would move the hit area back to the inner list). A drop on a non-empty step outside any medallion goes before the nearest item, where the drop mark shows it, while legacy appended at the end.",
+    "E2-10 partial, app-wide: 407 ar keys are missing, as in legacy messages.ar.yaml. The armory search placeholder still reads '…Search an item' in ar.",
+    "E2-03 belongs to SHELL (noscript shell message, with A2-12)."
+   ],
+   "worktree": "F:/Git/lodb-parite/account is clean (git status empty), the preview is stopped, and the scratch session-state files are deleted."
+  }
+ },
+ "ADMIN": {
+  "fix": {
+   "pkg": "ADMIN",
+   "commits": [
+    "9b570225 fix(front/admin): garder les filtres d'un signet de l'ancien journal",
+    "4370bc93 fix(front/admin): ecrire en iso l'heure du rapport et le jour du journal",
+    "db9263fc fix(back/admin): nommer postgresql dans la version de sa sonde",
+    "5b3af475 fix(front/admin): placer les anneaux dans le canevas des graphiques",
+    "0f8b45c4 fix(front/admin): garder les courbes a 2 px quelle que soit la largeur",
+    "e7a368f6 docs(docs): consigner la divergence des lectures de carte de l'admin",
+    "bc259109 fix(front/admin): garder la puce en bout d'en-tete de carte sur mobile",
+    "80475a5e fix(front/admin): laisser l'horodatage du journal passer a la ligne",
+    "bb8ab1d3 fix(front/admin): reprendre la taille des puces de l'ancienne admin",
+    "85e1d1e9 fix(front/admin): vider le mot de passe apres un refus de connexion",
+    "2e8fc3b2 fix(front/admin): dire le statut http d'un panneau en echec",
+    "de4be6fd fix(front/admin): titrer les outils de zoom sans les griser",
+    "84abf18b fix(front/admin): tenir la tuile des collectes gc sur une ligne",
+    "75e71114 fix(front/admin): nommer un compte supprime dans son activite",
+    "6431091f fix(front/core): garder l'identite hextech de l'admin avant son amorcage"
+   ],
+   "results": [
+    {
+     "id": "F2-01",
+     "status": "fixed",
+     "note": "panel.routes.ts: redirectTo: () => 'journal' (comment says why). Preview: GET /admin/logs?category=auth answers 200 (CSR shell) instead of 302; /admin/logs?category=auth&from=2026-09-01 lands on /admin/journal?category=auth&from=2026-09-01 with select=auth and from=2026-09-01, same as legacy; ?page=2 kept. access.spec.ts extended (URL + select value)."
+    },
+    {
+     "id": "F2-02",
+     "status": "fixed",
+     "note": "stamp.ts: new 'utc' format (Date-normalised ISO second + ' UTC'), used only by the monitoring chip. Measured: legacy '2026-09-28 02:44:29 UTC', new '2026-09-28 02:45:10 UTC'. format.spec covers a +02:00 offset with 7 decimals; monitoring-panel.spec updated."
+    },
+    {
+     "id": "F2-03",
+     "status": "fixed",
+     "note": "Fixed at the source as the verifier asked: ServiceProbes.cs selects split_part(version(),' ',1) || ' ' || split_part(version(),' ',2); AdminReportTests asserts ^PostgreSQL \\d (3/3 AdminReportTests pass). A read-only query on the lodb-next Postgres returns 'PostgreSQL 17.10', the legacy chip text. No contract change. Visible in the admin only once lodb-next's api image is rebuilt (the preview proxies the deployed API)."
+    },
+    {
+     "id": "F2-04",
+     "status": "fixed",
+     "note": "donut-chart.ts uses the legacy 760x240 canvas: ring at cx 90 cy 120, total at y 118 in 22px, caption y 136, empty text at 380/120, textLength 80 kept. Measured on /admin/audience: 1440 legacy {svg 332x105, ring 47@x42, card 233, total 12} and new identical; 390 legacy {305x96, 43@x41, 224, 11} and new identical. charts.spec updated (viewBox, centres, empty position)."
+    },
+    {
+     "id": "F2-05",
+     "status": "fixed",
+     "note": "vector-effect: non-scaling-stroke on .ts-line. getScreenCTM on /admin/traffic: 1440 scale 1.5 gives 2px on both stacks; 390 scale 0.4 gives 2px on both."
+    },
+    {
+     "id": "F2-06",
+     "status": "fixed",
+     "note": "Verifier's preferred option: new rendering kept and recorded as a deliberate divergence in docs/reecriture/rapports/realignement-front/README.md (new section 6, Admin), with the reason (legacy .k-label/.k-val/.r-track outside the .kpi/.rank-row scopes of data.css render glued text and an invisible bar)."
+    },
+    {
+     "id": "F2-07",
+     "status": "fixed",
+     "note": "admin-card.ts head: 'flex items-baseline justify-between gap-4', no flex-wrap. The verifier's extra min-w-0 on the h2 was NOT added: the legacy h2 has none, and it would let the title shrink under its longest word and run into the chip (320, 'Tables principales'). Measured h2/chip sizes and end placement identical to legacy on /admin, /admin/monitoring, /admin/api-clients, /admin/storage and /admin/traffic at 1024, 768, 390 and 320. Residual shared with the legacy: at 320 the unbreakable 'pg_total_relation_size' chip overflows the monitoring card (document 344px; the legacy page is 466px wide there). A zero-width-space attempt was reverted because it made that chip wrap at 390 where the legacy keeps one line."
+    },
+    {
+     "id": "F2-08",
+     "status": "fixed",
+     "note": "whitespace-nowrap removed from the timestamp cell of the shared audit table (journal and account activity). /admin/journal at 390: Horodatage column 43-143 on both stacks (was 43-200), date and time on two lines as in the legacy."
+    },
+    {
+     "id": "F2-09",
+     "status": "fixed",
+     "note": "admin-frame.css: 'lodb-admin-frame .hx-chip' padding .18rem/.5rem, 0.68rem, .08em, solid gold-deep border; the shared chip is untouched. Overview chips ('vues · visiteurs', 'Détail →', 'Audience →'): height 24.6, padding 2.88px 8px, 10.88px, letter-spacing 0.8704px, border solid rgb(120,90,40) on both stacks, at 1440 and 390."
+    },
+    {
+     "id": "F2-10",
+     "status": "fixed",
+     "note": "fr.json 'Identifiants invalides.' (en 'Invalid credentials.'); refused() at the credentials step empties the password (template ref) and refocuses the identifier. Probe with a nonexistent login on both stacks: alert 'Identifiants invalides.', identifier kept, password empty, focus on the identifier (teal ring), identical. Unit spec and access.spec updated. The probe leaves one expected failed-login entry in each journal."
+    },
+    {
+     "id": "F2-11",
+     "status": "fixed",
+     "note": "PanelFailure is now {kind, status}; panel-state renders admin.state.reasons.server 'HTTP {status}' (fr+en); the session/network/timeout wordings are kept, as the verifier allowed. Forced 500 on /admin/traffic: legacy 'Panneau indisponible (HTTP 500). Réessayer', new identical. panel-state.spec asserts the status and the rendered French band (catalogue excerpt added to the admin testing helper)."
+    },
+    {
+     "id": "F2-12",
+     "status": "fixed",
+     "note": "Tools get [title] (Dézoomer, Zoomer, Réinitialiser le zoom); [disabled] replaced by aria-disabled at the whole view; zoomOut() and reset() no-op there; the :disabled opacity rule dropped; hover as in the legacy. Hovered /admin/traffic: titles and aria-labels identical to legacy, all three at opacity 1, none disabled. time-series-chart.spec updated (titles, aria-disabled, no-op zoom out)."
+    },
+    {
+     "id": "F2-13",
+     "status": "fixed",
+     "note": "GC tile: label 'Collectes GC', value = generation 0, sub 'gen 1 : {gen1} · gen 2 : {gen2}' (fr+en), figures formatted. At 1440 the tile is 185x112 like its five neighbours (value and label no longer wrap). New-only block, no legacy counterpart."
+    },
+    {
+     "id": "F2-14",
+     "status": "fixed",
+     "note": "Subject null: the title uses the actor label of the latest entry whose actorId is the page's id (fallback #id), and the lede is admin.activity.lede_orphan 'Compte supprimé · actions effectuées par ce compte ou le ciblant. Horodatage en UTC.' (fr+en). /admin/users/33/activity now reads 'Activité — e2e-wrk-…' and 'Compte supprimé · …'. The optional not-found state for never-existing ids is not done (the admin has no not-found state): /admin/users/999999/activity reads 'Activité — #999999' with the orphan lede."
+    },
+    {
+     "id": "F2-15",
+     "status": "fixed",
+     "note": "The index.html inline script skips the cookie read when location.pathname matches ^/admin(/|$). With lod_theme=noxus and every script aborted: /admin/users and /admin/login pre-boot are hextech, body rgb(10,20,40), theme-color #010a13; /en/ is still noxus. theme-from-cookie.spec runs the script with a location stub (/admin and /admin/users give hextech; /administration gives noxus). The CSP hash is computed at runtime, unaffected."
+    },
+    {
+     "id": "F2-16",
+     "status": "fixed",
+     "note": "stamp.ts 'day-iso' format used for admin.journal.volume.since: legacy 'depuis le 2026-07-17', new 'depuis le 2026-09-27' (ISO day, UTC). The Rétention sub keeps d/m/Y, as in the legacy."
+    }
+   ],
+   "outside_edits": [
+    "src/LoDb.Api/Modules/Admin/Monitoring/ServiceProbes.cs (F2-03, verifier's source fix)",
+    "tests/LoDb.Api.Tests/Admin/AdminReportTests.cs (F2-03 test)",
+    "docs/reecriture/rapports/realignement-front/README.md (F2-06 divergence record, new section 6)",
+    "src/LoDb.Web/src/index.html (F2-15 inline theme script)",
+    "src/LoDb.Web/src/app/core/theme/theme-from-cookie.spec.ts (F2-15 test)"
+   ],
+   "needs_contract_regeneration": false,
+   "checks": "dotnet test tests/LoDb.Api.Tests --filter AdminReportTests: 3/3 (Debug, warnings as errors). Read-only psql on the lodb-next Postgres: 'PostgreSQL 17.10'. Front, through heavy.sh: full ng test 247 files / 2184 tests passed (vitest-limited); npm run typecheck OK; ng lint OK; prettier --check --end-of-line auto on the changed files OK; build:web OK (only the pre-existing initial-bundle and builds-editor CSS budget warnings). E2E against the preview on 4470: specs/admin/access.spec.ts (4) + analytics.spec.ts (5) + operations.spec.ts -g 'health|filters the journal' (2) = 11 passed. Not run on purpose: moderation and billing (ban, delete, revoke), contacts (5/hour quota), the operations purge test. Parity measured with Playwright against the legacy (8080) at 1440/1024/768/390/320 for every finding (logs and PNGs in fix2/ADMIN/). Vitest snapshot rewrites restored; worktree clean; preview stopped.",
+   "followups": [
+    "F2-03 shows in the admin only after lodb-next's api image is rebuilt at integration.",
+    "At 320 px the unbreakable 'pg_total_relation_size' chip of the monitoring 'Tables principales' card overflows its card (document 344 px wide), as on the legacy (legacy page 466 px wide at 320). Fixing it without changing the 390+ parity needs a per-chip break rule; left as is.",
+    "F2-14 optional part: an id that never existed renders an empty activity titled '#id' with the 'Compte supprimé' lede, where the legacy answered 404; the admin has no not-found state to reuse.",
+    "README section 6 ('Divergences volontaires du second audit') is appended at the end of the file: other packages appending there will conflict trivially at integration.",
+    "The admin E2E fixture creates and deletes its own e2e admin account per run (normal spec lifecycle); the F2-10 probes left one failed-login journal entry per stack for the nonexistent login 'nobody-fix2-probe'."
+   ]
+  },
+  "review": {
+   "pkg": "ADMIN",
+   "role": "adversarial-review",
+   "verdict": "ok",
+   "commits_reviewed": 15,
+   "commits_added": [],
+   "verified": {
+    "F2-01": "Preview 4470: GET /admin/logs?category=auth answers 200 (CSR shell). /admin/logs?category=auth&from=2026-09-01 lands on /admin/journal with category=auth and from=2026-09-01, as the legacy keeps them, at 1440 and 390. E2E access.spec asserts it (passes). nginx server.d has no /admin rule. lodb-next (18080) still answers 302 without the query until it is redeployed.",
+    "F2-02": "Monitoring chip: legacy '2026-09-28 03:40:01 UTC', new '2026-09-28 03:40:47 UTC', at 1440 and 390.",
+    "F2-03": "Read-only query on lodb-next-postgres-1 with the new SQL returns 'PostgreSQL 17.10', the legacy chip text. dotnet-test.log shows AdminReportTests 3/3. The chip still reads '17.10' through the preview, because lodb-next's api image is not rebuilt yet.",
+    "F2-04": "Audience and overview at 1440: legacy svg 332x105, ring 47 at x16, total 12, card 233/363; new identical. At 390: 305x96, ring 43 at x14, total 11 on both. api-clients has no active key on lodb-next, so it shows the empty text at 380/120, the legacy .c-empty geometry (13px).",
+    "F2-05": "/admin/traffic main series: vector-effect non-scaling-stroke, 2px on screen at 1440 (scale 1.50) and 390 (scale 0.40), on both stacks.",
+    "F2-06": "The README section 6 text matches the verifier's amended reasoning, and fits the section numbering of the file.",
+    "F2-07": "Card heads measured on 6 pages: identical h2 and chip sizes, and END position, on both stacks at 390, 768 and 1024. At 320 they are identical, except the monitoring overflow noted in residual.",
+    "F2-08": "/admin/journal at 390: the Horodatage column spans 43-143 on both stacks, with the date and time on two lines. Row heights differ only because of the data (long e2e actor names).",
+    "F2-09": "At 1440 and 390, 'vues · visiteurs', 'Détail →' and 'Audience →' measure the same on both stacks: h 24.6 (41.4 when wrapped), padding 2.88px 8px, 10.88px, letter-spacing 0.8704px, solid rgb(120,90,40). Every admin chip is the muted tone (hx-chip), so the admin rule overrides no coloured variant. The coloured status chips still show their colours.",
+    "F2-10": "E2E 'refuses credentials it does not know' passes on the preview: 'Identifiants invalides.', identifier focused and kept, password empty. The form reads the DOM at submit (formText), so emptying the input's value cannot desync a model. I did not probe the legacy again (the verifier did), to avoid another failed-login entry.",
+    "F2-11": "A 500 fulfilled on the panel request: legacy 'Panneau indisponible (HTTP 500). RÉESSAYER', new identical. A 502 reads 'HTTP 502'.",
+    "F2-12": "While hovering /admin/traffic at 1440 and 390: the titles and aria-labels 'Dézoomer', 'Zoomer' and 'Réinitialiser le zoom' match on both stacks. Opacity is 1 and nothing is disabled; the new side adds aria-disabled=true on − and ⟲ at the whole view.",
+    "F2-13": "The 'COLLECTES GC' tile is 185x112 at 1440, the same height as its neighbours: value 403, then 'gen 1 : 133 · gen 2 : 89'. At 390 it is 358x112.",
+    "F2-14": "/admin/users/33/activity (a deleted e2e account): h1 'Activité — e2e-wrk-mukculh8r2pf', lede 'Compte supprimé · actions effectuées…', document title matching. /admin/users/999999/activity: '#999999'. The actorId match mirrors the API's own filter (AuditReader.ActivityAsync: ActorId == id).",
+    "F2-15": "With lod_theme=noxus and every script aborted: /admin, /admin/users and /admin/login paint hextech (body rgb(10,20,40), theme-color #010a13). /en/ and /fr/champions still paint noxus (rgb(15,18,20), #08090b, its display face preloaded).",
+    "F2-16": "At 390: legacy 'depuis le 2026-07-17', new 'depuis le 2026-09-27' (ISO)."
+   },
+   "issues": [],
+   "residual": [
+    "F2-07 trade-off, accepted: at 320 px /admin/monitoring is 344 px wide on the fixed branch, where the pre-fix branch (lodb-next, 18080) had no horizontal overflow on any admin page at 320. The cause is the unbreakable 'pg_total_relation_size' chip: h2 min-content 117 + gap 16 + chip 169 > head 235. The legacy overflows at exactly the same place (its chip ends at 344), and every legacy admin page is 466 px wide at 320. Measured options: min-w-0 on the h2 breaks 'FRÉQUENTATION' mid-word at 320. overflow-wrap:anywhere or min-w-0 on the chip, a percentage max-width on the chip, or flex-wrap with a flex-1 title each change the chip or title widths at 390 compared with the legacy. No simple rule keeps parity at 390 and removes the 24 px overflow at 320, so I left the fixer's layout as is.",
+    "F2-03 shows in the admin only once lodb-next's api image is rebuilt, and F2-01's fix reaches 18080 only once the web image is redeployed.",
+    "F2-14 optional part not done: an id that never existed shows '#999999' with the deleted-account lede, where the legacy answers 404."
+   ],
+   "outside_edits_checked": [
+    "src/LoDb.Api/Modules/Admin/Monitoring/ServiceProbes.cs (F2-03, needed by the finding)",
+    "tests/LoDb.Api.Tests/Admin/AdminReportTests.cs (F2-03 test)",
+    "docs/reecriture/rapports/realignement-front/README.md (F2-06)",
+    "src/LoDb.Web/src/index.html and core/theme/theme-from-cookie.spec.ts (F2-15)"
+   ],
+   "conventions": "15 subjects of 59 to 72 characters, in French, infinitive, no accents, scopes from the CLAUDE.md map (front/admin, back/admin, front/core, docs(docs) as in earlier history). No Co-Authored-By or 'Generated with' line in any message. No path under changelog/published, openapi/*.json, core/api/generated or package-lock.json in the diff. Tests travel with their code. admin i18n fr/en keys in sync. No file over its limits among the touched ones.",
+   "checks": "build:web OK: only the budget warnings that were already there (initial bundle, step-editor.css, item-armory.css). typecheck: exit 0. ng lint: all files pass. Full front suite: 247 files, 2184 tests passed. Two json-ld .snap files were rewritten by line endings only, and I restored them. prettier --check on the 30 changed web files passes; access.spec.ts passes with src/LoDb.Web/.prettierrc.json (with no config, prettier's defaults reject the whole file, the base version included). E2E against preview 4470, --workers=1: access 4/4, analytics 5/5, operations 'health' and 'filters the journal' 2/2, so 11 passed. Not run on purpose: moderation and billing (they ban, delete and revoke), contacts (quota) and the operations purge. Playwright probes (review/r1-r7) compared legacy 8080, pre-fix 18080 and fixed 4470 at 1440, 1024, 768, 390 and 320. Preview stopped, worktree clean."
+  }
+ }
+}

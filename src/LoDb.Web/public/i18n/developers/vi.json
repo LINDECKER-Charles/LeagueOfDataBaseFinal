@@ -1,0 +1,4 @@
+{
+  "base_url": "URL gốc: {{ url }}",
+  "pricing_unavailable": "Hiện không thể hiển thị bảng giá."
+}

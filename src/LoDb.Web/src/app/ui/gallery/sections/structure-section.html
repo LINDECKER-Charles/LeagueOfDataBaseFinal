@@ -1,0 +1,68 @@
+<header class="codex-header mb-6">
+  <h2>Structure</h2>
+  <span class="codex-header__meta">accordion · tabs · pager · reveal</span>
+</header>
+
+<div class="grid gap-8 md:grid-cols-2">
+  <lodb-accordion class="hextech-frame">
+    <lodb-accordion-item heading="Categories" [count]="3" expanded>
+      <p class="text-sm text-text-muted">Mage, Assassin, Support.</p>
+    </lodb-accordion-item>
+    <lodb-accordion-item heading="Evolutions">
+      <p class="text-sm text-text-muted">The body stays in the DOM while folded.</p>
+    </lodb-accordion-item>
+    <lodb-accordion-item heading="Description">
+      <p class="text-sm text-text-muted">Opening one item closes the others.</p>
+    </lodb-accordion-item>
+  </lodb-accordion>
+
+  <lodb-tabs label="Champion sheet">
+    <lodb-tab key="gallery-stats" label="Stats">
+      <p class="text-sm text-text-muted">Arrows (mirrored in right-to-left), Home and End.</p>
+    </lodb-tab>
+    <lodb-tab key="gallery-spells" label="Spells">
+      <p class="text-sm text-text-muted">Orb of Deception, Fox-Fire, Charm, Spirit Rush.</p>
+    </lodb-tab>
+    <lodb-tab key="gallery-skins" label="Skins">
+      <p class="text-sm text-text-muted">Every panel is rendered; the others are hidden.</p>
+    </lodb-tab>
+  </lodb-tabs>
+</div>
+
+<div class="mt-10 flex flex-wrap items-start gap-4">
+  <details class="switcher" lodbDisclosure>
+    <summary>
+      <span>16.1.1</span>
+      <span class="text-gold-deep" aria-hidden="true">·</span>
+      <span>EN</span>
+      <lodb-icon name="chevron" class="switcher__chevron" />
+    </summary>
+    <div class="switcher__panel">
+      <p class="eyebrow mb-3">Header menu</p>
+      <p class="text-sm text-text-muted">
+        A native details element: it opens without JavaScript and folds on a press elsewhere, Escape
+        or navigation.
+      </p>
+    </div>
+  </details>
+  <span class="hx-version-chip">v2.4.0</span>
+  <span class="hx-version-chip hx-version-chip--lg">v2.4.0</span>
+</div>
+
+<lodb-pager
+  class="mt-10 block"
+  [previous]="{ url: '/en/champions/aatrox', name: 'Aatrox' }"
+  [next]="{ url: '/en/champions/akali', name: 'Akali' }"
+  hub="/en/champions"
+/>
+
+<div class="mt-10 grid gap-4 sm:grid-cols-3">
+  @for (step of [1, 2, 3]; track step) {
+    <div lodbReveal class="hextech-frame p-5">
+      <p class="eyebrow">Reveal {{ step }}</p>
+      <p class="mt-2 text-sm text-text-muted">
+        Rises into view once; appears at once under reduced motion.
+      </p>
+    </div>
+  }
+</div>

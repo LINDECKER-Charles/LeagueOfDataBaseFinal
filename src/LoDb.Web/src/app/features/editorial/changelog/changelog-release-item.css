@@ -1,0 +1,109 @@
+.release {
+  border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+  background: color-mix(in srgb, var(--color-panel) 80%, transparent);
+}
+.release[open] {
+  border-color: color-mix(in srgb, var(--color-gold-deep) 70%, transparent);
+  box-shadow: inset 0 1px 0 0 color-mix(in srgb, var(--color-gold) 18%, transparent);
+}
+.release__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem 1.15rem;
+  cursor: pointer;
+  list-style: none;
+  transition: background 0.25s var(--ease-hextech);
+}
+.release__summary::-webkit-details-marker {
+  display: none;
+}
+.release__summary:hover {
+  background: color-mix(in srgb, var(--color-panel-2) 55%, transparent);
+}
+.release__summary:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-hex) 45%, transparent);
+  outline-offset: -2px;
+}
+.release__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+.release__version {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: var(--color-gold-bright);
+}
+.release__codename {
+  font-family: var(--font-beaufort);
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--color-gold);
+}
+.release__date {
+  margin-inline-start: auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-dim);
+}
+.release__chevron {
+  inline-size: 0.85rem;
+  block-size: 0.85rem;
+  color: var(--color-text-muted);
+  transition: transform 0.3s var(--ease-hextech);
+}
+.release[open] .release__chevron {
+  transform: rotate(180deg);
+}
+.release__lede {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+.release__body {
+  padding: 0.25rem 1.15rem 1.35rem;
+  border-block-start: 1px solid color-mix(in srgb, var(--color-gold-deep) 30%, transparent);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid transparent;
+  font-family: var(--font-beaufort);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.badge--major {
+  border-color: color-mix(in srgb, var(--color-hex) 55%, transparent);
+  background: color-mix(in srgb, var(--color-hex) 12%, transparent);
+  color: var(--color-hex-bright);
+}
+.badge--minor {
+  border-color: color-mix(in srgb, var(--color-gold-deep) 70%, transparent);
+  background: color-mix(in srgb, var(--color-gold) 10%, transparent);
+  color: var(--color-gold-bright);
+}
+.badge--hotfix {
+  border-color: color-mix(in srgb, var(--color-text-muted) 45%, transparent);
+  background: color-mix(in srgb, var(--color-text-muted) 8%, transparent);
+  color: var(--color-text);
+}
+
+@media (max-width: 480px) {
+  .release__date {
+    inline-size: 100%;
+    margin-inline-start: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .release__summary,
+  .release__chevron {
+    transition: none;
+  }
+}

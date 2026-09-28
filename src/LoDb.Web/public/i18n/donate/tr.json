@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Demirhaneye adak",
+  "title": "League Of Data Base'i destekle",
+  "intro": "Bağışın barındırma masraflarını karşılar ve ansiklopediyi hızlı, ücretsiz ve reklamsız tutar.",
+  "pledge": "Oyun içi avantaj yok, ayrıcalık yok — yalnızca minnettarlığımız.",
+  "tiers": {
+    "legend": "Bir adak seç"
+  },
+  "tier": {
+    "spark": "Kıvılcım",
+    "gem": "Mücevher",
+    "crest": "Arma",
+    "relic": "Kutsal Emanet"
+  },
+  "custom": {
+    "label": "Serbest tutar",
+    "placeholder": "örn. 7,50",
+    "hint": "{{ min }} € ile {{ max }} € arası — serbest tutar seçili kademenin yerine geçer."
+  },
+  "submit": "Stripe ile bağış yap",
+  "busy": "Güvenli ödeme açılıyor…",
+  "unavailable": {
+    "title": "Bağışlar çok yakında",
+    "body": "Ödeme altyapısı henüz etkin değil. Yakında tekrar uğra — ansiklopedi her durumda ücretsiz kalır."
+  },
+  "legal": {
+    "secure": "Stripe ile güvenli ödeme — hiçbir kart bilgisi bu siteye ulaşmaz",
+    "secure_short": "güvenli ödeme",
+    "privacy": "Gizlilik politikası",
+    "terms": "Kullanım koşulları"
+  },
+  "error": {
+    "csrf": "Oturumun sona erdi. Sayfayı yenileyip tekrar dene.",
+    "unavailable": "Bağışlar şu anda kullanılamıyor.",
+    "invalid_amount": "Geçersiz tutar — {{ min }} € ile {{ max }} € arasında bir tutar gir.",
+    "gateway": "Ödeme hizmetine ulaşılamıyor, lütfen daha sonra tekrar dene.",
+    "throttled": "Çok fazla ödeme denemesi. Tekrar denemeden önce biraz bekle."
+  },
+  "success": {
+    "eyebrow": "Adak kabul edildi",
+    "title": "Teşekkürler, Sihirdar",
+    "body": "Desteğin demirhanenin ateşini canlı tutuyor — her bağış barındırmaya gider ve ansiklopediyi herkes için ücretsiz tutar.",
+    "receipt": "Stripe makbuzunu e-postayla gönderir.",
+    "back": "Ansiklopediye dön"
+  },
+  "cancel": {
+    "eyebrow": "Adak geri çekildi",
+    "title": "Bağış iptal edildi",
+    "body": "Hiçbir ücret alınmadı. Ansiklopedi bağışla ya da bağışsız ücretsiz ve açık kalır.",
+    "retry": "Tekrar dene",
+    "back": "Ana sayfaya dön"
+  }
+}

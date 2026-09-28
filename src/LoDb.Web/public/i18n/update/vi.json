@@ -1,0 +1,13 @@
+{
+  "banner_label": "Cập nhật ứng dụng",
+  "banner_ready": "Bản cập nhật đã sẵn sàng.",
+  "restart": "Khởi động lại",
+  "later": "Để sau",
+  "restart_failed": "Khởi động lại thất bại. Hãy đóng rồi mở lại ứng dụng.",
+  "required_title": "Cần cập nhật",
+  "required_body": "Phiên bản League of Data Base này không còn được hỗ trợ. Hãy cập nhật để tiếp tục sử dụng ứng dụng.",
+  "required_versions": "Phiên bản của bạn: {{ current }} — yêu cầu: {{ minimum }} trở lên",
+  "restart_now": "Khởi động lại và cập nhật",
+  "downloading": "Đang tải bản cập nhật…",
+  "waiting": "Bản cập nhật tự động tải xuống. Hãy giữ ứng dụng mở."
+}

@@ -1,0 +1,205 @@
+/*
+ * In-page navigation: the sticky section chips (ui/section-nav), the previous / next pager
+ * (ui/pager) and the release version chip of the header and the changelog.
+ */
+@layer components {
+  .section-nav {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 20;
+    display: flex;
+    gap: 0.35rem;
+    overflow-x: auto;
+    padding: 0.55rem 1.5rem;
+    background: color-mix(in srgb, var(--color-hextech-black) 82%, transparent);
+    backdrop-filter: blur(12px);
+    border-block-end: 1px solid color-mix(in srgb, var(--color-gold) 25%, transparent);
+    scrollbar-width: none;
+  }
+  .section-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .section-nav a {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 2.5rem;
+    padding: 0.3rem 0.95rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--color-text-muted);
+    border: 1px solid transparent;
+    transition:
+      color 0.25s var(--ease-hextech),
+      border-color 0.25s var(--ease-hextech);
+  }
+  .section-nav a:hover {
+    color: var(--color-hex);
+  }
+  .section-nav a:focus-visible {
+    outline: none;
+    border-color: var(--color-hex);
+  }
+  .section-nav a[aria-current] {
+    color: var(--color-gold-bright);
+    border-color: color-mix(in srgb, var(--color-gold) 50%, transparent);
+    background: color-mix(in srgb, var(--color-gold) 8%, transparent);
+  }
+
+  /*
+   * Previous / next pager. The link arrows are the bidi-mirrored angle quotes, so they turn
+   * round by themselves in right-to-left pages.
+   */
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  .pager__link {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+    min-block-size: 4.25rem;
+    padding: 0.85rem 1.15rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 30%, transparent);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-panel) 70%, transparent),
+      color-mix(in srgb, var(--color-abyss) 85%, transparent)
+    );
+    transition:
+      border-color 0.3s var(--ease-hextech),
+      transform 0.3s var(--ease-hextech);
+  }
+  .pager__link:hover,
+  .pager__link:focus-visible {
+    border-color: var(--color-gold);
+    transform: translateY(-2px);
+    outline: none;
+  }
+  .pager__link--next {
+    align-items: flex-end;
+    text-align: end;
+  }
+  .pager__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-text-dim);
+  }
+  .pager__name {
+    font-family: var(--font-beaufort);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-gold-bright);
+  }
+  .pager__hub {
+    display: grid;
+    place-items: center;
+    min-inline-size: 4.25rem;
+    min-block-size: 4.25rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+    color: var(--color-gold);
+    background: color-mix(in srgb, var(--color-hextech-black) 60%, transparent);
+    transition:
+      border-color 0.3s var(--ease-hextech),
+      color 0.3s var(--ease-hextech),
+      box-shadow 0.3s var(--ease-hextech);
+  }
+  .pager__hub:hover,
+  .pager__hub:focus-visible {
+    border-color: var(--color-hex);
+    color: var(--color-hex-bright);
+    box-shadow: 0 0 22px -6px color-mix(in srgb, var(--color-hex) 50%, transparent);
+    outline: none;
+  }
+  .pager__hub .hx-icon {
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+    rotate: 45deg;
+  }
+  /*
+   * The legacy pager as is while it fits: its links as wide as their longest word, so a name
+   * never breaks inside a word. Below 360px, or wherever that would overflow (ui/pager sets
+   * `pager--tight`, as on a 390px phone next to a long German or Polish name), the hub sits
+   * between two narrower links that may break a long name, at a hyphen where it can.
+   */
+  @media (width < 360px) {
+    .pager {
+      gap: 0.4rem;
+    }
+    .pager__link {
+      min-inline-size: 0;
+      padding: 0.7rem 0.75rem;
+    }
+    .pager__name {
+      hyphens: auto;
+    }
+    .pager__hub {
+      min-inline-size: 3rem;
+    }
+  }
+  .pager--tight {
+    gap: 0.4rem;
+  }
+  .pager--tight .pager__link {
+    min-inline-size: 0;
+    padding: 0.7rem 0.75rem;
+  }
+  .pager--tight .pager__name {
+    hyphens: auto;
+  }
+  .pager--tight .pager__hub {
+    min-inline-size: 3rem;
+  }
+
+  /* Release version chip: the app release, distinct from the Data Dragon patch. */
+  .hx-version-chip {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
+    background: color-mix(in srgb, var(--color-void) 85%, transparent);
+    padding: 0.1rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    color: var(--color-gold);
+    transition:
+      color 0.25s var(--ease-hextech),
+      border-color 0.25s var(--ease-hextech);
+  }
+  a.hx-version-chip:hover,
+  a.hx-version-chip:focus-visible {
+    color: var(--color-gold-bright);
+    border-color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+    outline: none;
+  }
+  /* After the hover rule, as the legacy `.is-active`: the current chip stays at 60%. */
+  a.hx-version-chip[aria-current] {
+    color: var(--color-gold-bright);
+    border-color: color-mix(in srgb, var(--color-gold) 60%, transparent);
+  }
+  .hx-version-chip--lg {
+    padding: 0.2rem 0.65rem;
+    font-size: 0.85rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pager__link,
+    .pager__hub,
+    .section-nav a,
+    .hx-version-chip {
+      transition: none;
+    }
+    .pager__link:hover {
+      transform: none;
+    }
+  }
+}

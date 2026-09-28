@@ -1,0 +1,26 @@
+<lodb-navigation-progress />
+@if (!bare()) {
+  <lodb-header>
+    <ng-container ngProjectAs="[lodbSlot=account]">
+      <ng-content select="[lodbSlot=account]" />
+    </ng-container>
+    <ng-container ngProjectAs="[lodbSlot=switcher]">
+      <ng-content select="[lodbSlot=switcher]" />
+    </ng-container>
+  </lodb-header>
+  <ng-content select="[lodbSlot=banner]" />
+}
+<!-- A column, so a routed page that centres its card (404, sign-in, donation outcome) can
+     grow into the height the footer leaves, as the legacy `[&>main]:flex-1` main did. -->
+<main class="flex flex-1 flex-col">
+  <ng-content />
+</main>
+@if (!bare()) {
+  <lodb-footer>
+    <ng-container ngProjectAs="[lodbSlot=contact]">
+      <ng-content select="[lodbSlot=contact]" />
+    </ng-container>
+  </lodb-footer>
+  <lodb-bottom-nav />
+}
+<lodb-toaster />

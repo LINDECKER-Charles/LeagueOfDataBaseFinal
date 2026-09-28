@@ -1,0 +1,4 @@
+{
+  "base_url": "Temel URL: {{ url }}",
+  "pricing_unavailable": "Fiyatlar şu anda gösterilemiyor."
+}

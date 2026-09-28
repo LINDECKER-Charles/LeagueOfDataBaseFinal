@@ -1,0 +1,88 @@
+@let current = build();
+@let champion = current.champion;
+@let missing = 'build.show.missing' | transloco;
+<div class="relative isolate px-6 py-12" [class]="pathClass()">
+  <lodb-backdrop />
+  <div aria-hidden="true" class="path-ambient pointer-events-none absolute inset-0"></div>
+
+  <div class="relative mx-auto max-w-4xl">
+    <header class="bshare-head">
+      <div
+        class="bshare-portrait path-glow"
+        [class.forge-ghost]="champion.missing"
+        [attr.title]="champion.missing ? missing : null"
+      >
+        <lodb-image
+          class="size-full"
+          [src]="portrait()"
+          [alt]="champion.name"
+          [width]="96"
+          [height]="96"
+          [initials]="initials()"
+          imgClass="object-cover"
+          eager
+        />
+      </div>
+
+      <div class="bshare-title">
+        <p class="eyebrow path-text">
+          {{ champion.name }}
+          @if (champion.title) {
+            <span class="tracking-normal text-text-muted normal-case">· {{ champion.title }}</span>
+          }
+        </p>
+        <!-- A bdi, not dir="auto": the name keeps the column's alignment in a RTL page. -->
+        <h1
+          class="mt-1.5 font-beaufort text-3xl font-bold tracking-wide text-gold-grad uppercase sm:text-4xl"
+        >
+          <bdi>{{ current.name }}</bdi>
+        </h1>
+      </div>
+
+      <p class="bshare-meta flex flex-wrap items-center gap-2 font-mono text-xs text-text-muted">
+        <lodb-owner-credit [owner]="current.owner" />
+        <span aria-hidden="true" class="opacity-50">◆</span>
+        <span>{{ updated() }}</span>
+        <span lodbChip [title]="'build.show.mode' | transloco" [attr.data-mode]="current.gameMode">
+          {{ modeKey() | transloco }}
+        </span>
+        @if (current.gameVersion) {
+          <span lodbChip [attr.data-version]="current.gameVersion">
+            @if (current.patchMismatch && current.currentVersion) {
+              {{
+                'build.show.patch_current'
+                  | transloco: { version: current.gameVersion, current: current.currentVersion }
+              }}
+            } @else {
+              {{ 'build.show.patch' | transloco: { version: current.gameVersion } }}
+            }
+          </span>
+        }
+        @if (current.language) {
+          <span lodbChip [attr.lang]="languageTag()">{{ language() }}</span>
+        }
+      </p>
+
+      <div class="bshare-actions">
+        @if (current.isPublic && vote(); as score) {
+          <lodb-vote-score [buildId]="current.id" [vote]="score" />
+        }
+        <lodb-copy-link
+          [url]="link()"
+          [labels]="{
+            copy: 'build.show.copy' | transloco,
+            copied: 'build.show.copied' | transloco,
+            error: 'build.show.copy_error' | transloco,
+          }"
+        />
+      </div>
+    </header>
+
+    @if (current.description) {
+      <p class="bshare-desc" dir="auto">{{ current.description }}</p>
+    }
+
+    <lodb-share-runes [runes]="current.runes" />
+    <lodb-share-order [steps]="current.steps" [totalGold]="current.totalGold" />
+  </div>
+</div>

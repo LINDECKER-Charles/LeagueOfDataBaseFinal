@@ -1,0 +1,64 @@
+<div class="mx-auto mt-[4vh] max-w-2xl">
+  <lodb-page-head
+    [eyebrow]="'admin.enroll.eyebrow' | adminText"
+    [title]="'admin.enroll.title' | adminText"
+    [subtitle]="'admin.enroll.lede' | adminText"
+  />
+
+  @if (recoveryCodes(); as codes) {
+    <section lodbFrame="ornate" class="block p-6" aria-labelledby="enroll-codes">
+      <h2 id="enroll-codes" class="font-beaufort text-xl text-gold">
+        {{ 'admin.enroll.codes_title' | adminText }}
+      </h2>
+      <p class="mt-2 text-sm text-text-muted">{{ 'admin.enroll.codes_lede' | adminText }}</p>
+      <ul class="mt-4 grid grid-cols-2 gap-2 font-mono text-sm sm:grid-cols-3">
+        @for (code of codes; track code) {
+          <li class="stat-cell text-center">{{ code }}</li>
+        }
+      </ul>
+      <a lodbButton class="mt-6" [routerLink]="home">{{ 'admin.enroll.open' | adminText }}</a>
+    </section>
+  } @else {
+    <lodb-panel-state [panel]="setup" shape="block" />
+    @if (setup.value(); as key) {
+      <section lodbFrame="ornate" class="grid gap-6 p-6 sm:grid-cols-[14rem_1fr]">
+        <lodb-qr-image
+          class="mx-auto w-56 max-w-full"
+          [text]="key.authenticatorUri"
+          [label]="'admin.enroll.qr_label' | adminText"
+        />
+        <div class="min-w-0">
+          <p class="text-sm text-text-muted">{{ 'admin.enroll.scan' | adminText }}</p>
+          <p class="mt-4 eyebrow">{{ 'admin.enroll.key' | adminText }}</p>
+          <p class="mt-1 font-mono text-sm break-all text-gold-light" data-shared-key>
+            {{ sharedKey() }}
+          </p>
+          @if (error(); as message) {
+            <p class="mt-4 text-sm text-danger-light" role="alert">
+              {{ 'admin.' + message | adminText }}
+            </p>
+          }
+          <form class="mt-5 space-y-4" (submit)="confirm($event)">
+            <div>
+              <label for="enroll-code" class="eyebrow">{{ 'admin.enroll.code' | adminText }}</label>
+              <input
+                #code
+                lodbField
+                id="enroll-code"
+                name="code"
+                type="text"
+                class="mt-1.5 font-mono tracking-[0.3em]"
+                required
+                inputmode="numeric"
+                autocomplete="one-time-code"
+              />
+            </div>
+            <button lodbButton type="submit" [disabled]="busy()">
+              {{ 'admin.enroll.confirm' | adminText }}
+            </button>
+          </form>
+        </div>
+      </section>
+    }
+  }
+</div>

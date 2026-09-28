@@ -1,0 +1,191 @@
+/*
+ * The hero of a public card: the splash full bleed, a scrim that darkens toward the name, and
+ * the favorites drifting around it, kept clear of the centered text. The orbs are decorative
+ * and still for those who ask for less motion. The owner's preview has the same.
+ */
+@layer components {
+  :host {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: flex-end;
+    min-block-size: 22rem;
+    overflow: hidden;
+  }
+  :host(.profile-hero--art) {
+    min-block-size: 30rem;
+  }
+  @media (width >= 48rem) {
+    :host(.profile-hero--art) {
+      min-block-size: 34rem;
+    }
+  }
+
+  .profile-hero__art {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: 50% 22%;
+  }
+  .profile-hero__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-ink) 15%, transparent) 0%,
+        color-mix(in srgb, var(--color-ink) 55%, transparent) 55%,
+        color-mix(in srgb, var(--color-ink) 96%, transparent) 100%
+      ),
+      radial-gradient(
+        120% 90% at 50% 0%,
+        transparent 42%,
+        color-mix(in srgb, var(--color-ink) 50%, transparent) 100%
+      );
+  }
+
+  .profile-hero__body {
+    position: relative;
+    z-index: 2;
+    inline-size: 100%;
+    max-inline-size: 72rem;
+    margin-inline: auto;
+    padding: 2rem 1.5rem 2.25rem;
+    text-align: center;
+  }
+  @media (width >= 48rem) {
+    .profile-hero__body {
+      padding: 2.5rem 2.5rem 2.75rem;
+    }
+  }
+  .profile-hero__name {
+    margin-block-start: 0.4rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-family: var(--font-beaufort);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: clamp(1.9rem, 5vw, 3rem);
+  }
+  .profile-hero__meta {
+    margin-block-start: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+  .profile-hero__skin {
+    font-family: var(--font-beaufort);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.72rem;
+    color: var(--color-gold-bright);
+  }
+
+  .profile-orbits {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .profile-orb {
+    --orb-size: 3.6rem;
+    position: absolute;
+    inline-size: var(--orb-size);
+    block-size: var(--orb-size);
+    animation: profile-float var(--float-duration, 7s) var(--ease-hextech) infinite;
+    animation-delay: var(--float-delay, 0s);
+  }
+  .profile-orb--primary {
+    --orb-size: 5.25rem;
+  }
+  .profile-orb__disc {
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 60%, transparent);
+    background: color-mix(in srgb, var(--color-void) 70%, transparent);
+    box-shadow:
+      0 12px 30px -12px color-mix(in srgb, var(--color-shadow) 85%, transparent),
+      0 0 22px -6px color-mix(in srgb, var(--color-hex) 55%, transparent);
+  }
+  .profile-orb--primary .profile-orb__disc {
+    border-color: var(--color-gold);
+    box-shadow:
+      0 16px 40px -14px color-mix(in srgb, var(--color-shadow) 90%, transparent),
+      0 0 30px -6px color-mix(in srgb, var(--color-gold) 55%, transparent);
+  }
+  /* Scattered on both sides of the name, each drifting out of step with the others. */
+  .profile-orb--p1 {
+    inset-block-start: 16%;
+    inset-inline-start: 7%;
+    --float-duration: 6.5s;
+  }
+  .profile-orb--p2 {
+    inset-block-start: 22%;
+    inset-inline-end: 8%;
+    --float-duration: 8s;
+    --float-delay: -1.4s;
+  }
+  .profile-orb--p3 {
+    inset-block-end: 26%;
+    inset-inline-start: 12%;
+    --float-duration: 7.4s;
+    --float-delay: -0.7s;
+  }
+  .profile-orb--p4 {
+    inset-block-end: 20%;
+    inset-inline-end: 13%;
+    --float-duration: 6.9s;
+    --float-delay: -2.1s;
+  }
+  @media (width < 40rem) {
+    .profile-orb {
+      --orb-size: 2.9rem;
+    }
+    .profile-orb--primary {
+      --orb-size: 3.9rem;
+    }
+    .profile-orb--p1 {
+      inset-block-start: 8%;
+      inset-inline-start: 5%;
+    }
+    .profile-orb--p2 {
+      inset-block-start: 9%;
+      inset-inline-end: 5%;
+    }
+    .profile-orb--p3 {
+      inset-block-end: 30%;
+      inset-inline-start: 6%;
+    }
+    .profile-orb--p4 {
+      inset-block-end: 28%;
+      inset-inline-end: 6%;
+    }
+  }
+
+  @keyframes profile-float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-14px) rotate(2.5deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .profile-orb {
+      animation: none;
+    }
+  }
+}

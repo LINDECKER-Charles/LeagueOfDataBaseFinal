@@ -1,0 +1,15 @@
+# Build context of docker/next/web-ssr/Dockerfile (repository root): deny everything, then
+# admit the Angular workspace. BuildKit prefers this file to the root .dockerignore.
+*
+
+!src/LoDb.Web/
+# The published changelog, read by the build through the committed symlink
+# src/app/features/editorial/changelog/published (L3.10).
+!app/public/changelog/
+
+# Installed and built inside the image, never copied from the host (other platform).
+src/LoDb.Web/node_modules/
+src/LoDb.Web/dist/
+src/LoDb.Web/.angular/
+src/LoDb.Web/coverage/
+src/LoDb.Web/android/

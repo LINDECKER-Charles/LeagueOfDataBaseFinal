@@ -1,0 +1,65 @@
+<section class="portal-panel" aria-labelledby="api-key-title">
+  <div class="portal-panel__head">
+    <h2 id="api-key-title" class="portal-panel__title">{{ 'api.portal.key.title' | transloco }}</h2>
+    <span lodbChip="live" data-testid="api-key-plan">{{
+      'api.plan.' + key().plan | transloco
+    }}</span>
+  </div>
+
+  <div class="key-plates">
+    <div class="hx-plate">
+      <span class="hx-plate__label">{{ 'api.portal.key.label_key' | transloco }}</span>
+      <span class="hx-plate__value font-mono" data-testid="api-key-prefix"
+        ><bdi>{{ key().prefix }}…</bdi></span
+      >
+    </div>
+    <div class="hx-plate">
+      <span class="hx-plate__label">{{ 'api.portal.key.label_name' | transloco }}</span>
+      <span class="hx-plate__value">{{ key().name }}</span>
+    </div>
+    <div class="hx-plate">
+      <span class="hx-plate__label">{{ 'api.portal.key.label_created' | transloco }}</span>
+      <span class="hx-plate__value">{{ created() }}</span>
+    </div>
+    <div class="hx-plate">
+      <span class="hx-plate__label">{{ 'api.portal.key.label_quota' | transloco }}</span>
+      <span class="hx-plate__value" data-testid="api-key-quota">
+        {{ 'api.portal.key.quota_used' | transloco: quota() }}
+      </span>
+      <span class="key-meter" aria-hidden="true">
+        <span class="key-meter__fill" [style.inline-size.%]="quota().percent"></span>
+      </span>
+      <span class="key-plate__note">
+        {{ 'api.portal.key.quota_remaining' | transloco: quota() }}
+      </span>
+    </div>
+    <div class="hx-plate">
+      <span class="hx-plate__label">{{ 'api.portal.key.label_credits' | transloco }}</span>
+      <span class="hx-plate__value font-mono">{{ credits() }}</span>
+    </div>
+    <div class="hx-plate">
+      <span class="hx-plate__label">{{ 'api.portal.key.label_rate' | transloco }}</span>
+      <span class="hx-plate__value">
+        {{ 'api.portal.key.rate_unit' | transloco: { rate: key().rateLimitPerMin } }}
+      </span>
+      @if (key().subscribed) {
+        <span class="key-plate__note">{{ 'api.portal.key.subscription_active' | transloco }}</span>
+      }
+    </div>
+  </div>
+
+  <div class="key-actions">
+    <div>
+      <button lodbButton="ghost" type="button" [disabled]="busy()" (click)="regenerate.emit()">
+        {{ 'api.portal.actions.regenerate' | transloco }}
+      </button>
+      <p class="key-actions__help">{{ 'api.portal.actions.regenerate_help' | transloco }}</p>
+    </div>
+    <div class="key-actions__end">
+      <button type="button" class="key-actions__revoke" [disabled]="busy()" (click)="revoke.emit()">
+        {{ 'api.portal.actions.revoke' | transloco }}
+      </button>
+      <p class="key-actions__help">{{ 'apiPortal.actions.revoke_help' | transloco }}</p>
+    </div>
+  </div>
+</section>

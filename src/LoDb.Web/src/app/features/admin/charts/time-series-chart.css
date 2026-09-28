@@ -1,0 +1,165 @@
+/*
+ * The drawing of the time-series chart: SVG strokes and fills, and the tooltip laid over
+ * the plot. Every colour is a token of the design system.
+ */
+.ts-chart {
+  position: relative;
+  margin: 0;
+}
+
+/* The zoom tools sit over the corner of the plot, out of sight until they are wanted. */
+.ts-tools {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  z-index: 1;
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease-hextech);
+}
+
+.ts-chart:hover .ts-tools,
+.ts-chart:focus-within .ts-tools,
+.ts-tools.is-zoomed {
+  opacity: 1;
+}
+
+.ts-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+  background: color-mix(in srgb, var(--color-void) 85%, transparent);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.25s var(--ease-hextech),
+    border-color 0.25s var(--ease-hextech);
+}
+
+.ts-tool:hover {
+  color: var(--color-hex);
+  border-color: color-mix(in srgb, var(--color-hex) 50%, transparent);
+}
+
+.ts-tool:focus-visible {
+  outline: 1px solid var(--color-hex);
+  outline-offset: 2px;
+}
+
+svg:focus-visible {
+  outline: 1px solid var(--color-hex);
+  outline-offset: 2px;
+}
+
+.ts-grid {
+  stroke: var(--color-track);
+}
+
+.ts-axis,
+.ts-empty {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--color-text-dim);
+}
+
+.ts-empty {
+  font-size: 14px;
+}
+
+.ts-area {
+  fill-opacity: 0.12;
+}
+
+/* 2px on screen at any width and any zoom, as the legacy lines: the viewBox scales the rest. */
+.ts-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.ts-cross {
+  stroke: var(--color-gold);
+  stroke-dasharray: 3 3;
+  opacity: 0.55;
+}
+
+.ts-hover-dot {
+  stroke: var(--color-hextech-black);
+  stroke-width: 2;
+}
+
+.ts-hit {
+  cursor: crosshair;
+}
+
+.is-zoomed .ts-hit {
+  cursor: grab;
+}
+
+.ts-tip {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-inline-size: 8.5rem;
+  padding-block: 0.5rem;
+  padding-inline: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+  background: color-mix(in srgb, var(--color-hextech-black) 95%, transparent);
+  box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--color-hextech-black) 95%, transparent);
+  pointer-events: none;
+  translate: 0.6rem 0;
+}
+
+.ts-tip.is-flipped {
+  translate: calc(-100% - 0.6rem) 0;
+}
+
+.ts-tip-date {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--color-gold);
+}
+
+.ts-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.ts-tip-row b {
+  margin-inline-start: auto;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-gold-bright);
+}
+
+.ts-swatch {
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  rotate: 45deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-tools,
+  .ts-tool {
+    transition: none;
+  }
+}

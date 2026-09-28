@@ -1,0 +1,45 @@
+/*
+ * Image lifecycle (ui/image): what an `<img class="hx-img">` looks like while its bytes are in
+ * flight or never arrive. The state is stamped as `data-img-state` (loading | loaded | error)
+ * in the browser only: the server-rendered image carries no state and renders plainly.
+ * The loading sweep is a `background-image` for the reason skeleton.css gives.
+ */
+.hx-img[data-img-state='loading'] {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-gold) 5%, transparent),
+    color-mix(in srgb, var(--color-gold) 13%, transparent),
+    color-mix(in srgb, var(--color-gold) 5%, transparent)
+  );
+  background-size: 200% 100%;
+  animation: hx-sk-sweep 1.6s linear infinite;
+}
+
+/* Failed art: keep the box (no layout shift), hide the alt text, mark it. */
+.hx-img[data-img-state='error'] {
+  color: transparent;
+  background:
+    radial-gradient(
+        circle at center,
+        color-mix(in srgb, var(--color-gold) 18%, transparent) 0 2px,
+        transparent 2.5px
+      )
+      center / 100% 100% no-repeat,
+    color-mix(in srgb, var(--color-void) 80%, transparent);
+}
+
+/* Definitive absence known at render time: the initials box. */
+.hx-img-initials {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-beaufort);
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--color-gold) 70%, transparent);
+  background: color-mix(in srgb, var(--color-void) 80%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hx-img[data-img-state='loading'] {
+    animation: none;
+  }
+}

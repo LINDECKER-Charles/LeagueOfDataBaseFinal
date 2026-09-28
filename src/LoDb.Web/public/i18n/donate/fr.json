@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Offrande à la forge",
+  "title": "Soutenir League Of Data Base",
+  "intro": "Votre don couvre les frais d'hébergement et garde l'encyclopédie rapide, gratuite et sans publicité.",
+  "pledge": "Aucun avantage en jeu, aucun privilège — seulement notre gratitude.",
+  "tiers": {
+    "legend": "Choisir une offrande"
+  },
+  "tier": {
+    "spark": "Étincelle",
+    "gem": "Gemme",
+    "crest": "Blason",
+    "relic": "Relique"
+  },
+  "custom": {
+    "label": "Montant libre",
+    "placeholder": "ex. 7,50",
+    "hint": "Entre {{ min }} € et {{ max }} € — le montant libre remplace le palier sélectionné."
+  },
+  "submit": "Faire un don via Stripe",
+  "busy": "Ouverture du paiement sécurisé…",
+  "unavailable": {
+    "title": "Dons bientôt disponibles",
+    "body": "La passerelle de paiement n'est pas encore activée. Revenez bientôt — l'encyclopédie reste gratuite quoi qu'il arrive."
+  },
+  "legal": {
+    "secure": "Paiement sécurisé par Stripe — aucune donnée bancaire ne transite par ce site",
+    "secure_short": "paiement sécurisé",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation"
+  },
+  "error": {
+    "csrf": "Session expirée, merci de recharger la page puis de réessayer.",
+    "unavailable": "Les dons ne sont pas disponibles pour le moment.",
+    "invalid_amount": "Montant invalide — saisissez entre {{ min }} € et {{ max }} €.",
+    "gateway": "Le service de paiement est injoignable, merci de réessayer plus tard.",
+    "throttled": "Trop de tentatives de paiement. Merci de patienter un moment avant de réessayer."
+  },
+  "success": {
+    "eyebrow": "Offrande reçue",
+    "title": "Merci, invocateur",
+    "body": "Votre soutien maintient la forge allumée — chaque don sert l'hébergement et garde l'encyclopédie gratuite pour tous.",
+    "receipt": "Stripe vous envoie votre reçu par e-mail.",
+    "back": "Retour à l'encyclopédie"
+  },
+  "cancel": {
+    "eyebrow": "Offrande retirée",
+    "title": "Don annulé",
+    "body": "Rien n'a été débité. L'encyclopédie reste gratuite et ouverte, avec ou sans don.",
+    "retry": "Réessayer",
+    "back": "Retour à l'accueil"
+  }
+}

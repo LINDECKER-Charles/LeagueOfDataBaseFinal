@@ -1,0 +1,30 @@
+/* Laid over the picture's inline edges; the look is the global hx-viewer-button. */
+.arrow {
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+  translate: 0 -50%;
+}
+.arrow svg {
+  inline-size: 1.3rem;
+  block-size: 1.3rem;
+}
+.arrow:dir(rtl) svg {
+  scale: -1 1;
+}
+.arrow--previous {
+  inset-inline-start: 0.6rem;
+}
+.arrow--next {
+  inset-inline-end: 0.6rem;
+}
+/* The chroma card's smaller stage. */
+:host(.compact) .arrow {
+  inline-size: 2.2rem;
+  block-size: 2.2rem;
+}
+:host(.compact) .arrow svg {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+}

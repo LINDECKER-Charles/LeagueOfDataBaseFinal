@@ -1,0 +1,101 @@
+<lodb-champion-hero [details]="details()" [context]="context()" />
+
+<lodb-section-nav [sections]="sections()" [label]="'detail.nav.sections' | transloco" />
+
+<div class="relative isolate px-6 py-14">
+  <lodb-backdrop />
+  <div
+    class="relative mx-auto max-w-7xl lg:grid lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:gap-12"
+  >
+    <div class="space-y-16">
+      @if (details().abilities.length > 0) {
+        <section id="abilities" lodbReveal>
+          <div class="codex-header mb-6">
+            <h2>{{ 'champion.detail.abilities' | transloco }}</h2>
+            <span class="codex-header__meta">P · Q · W · E · R</span>
+          </div>
+          <lodb-ability-showcase
+            [abilities]="details().abilities"
+            [resource]="profile().partype ?? ''"
+          />
+        </section>
+      }
+
+      @if (skinCount() > 0) {
+        <section id="skins" lodbReveal>
+          <div class="codex-header mb-6">
+            <h2>{{ 'champion.detail.skins' | transloco }}</h2>
+            <span class="codex-header__meta">{{ skinCount() }}</span>
+          </div>
+          @defer (on viewport) {
+            <lodb-skin-gallery [skins]="details().skins" [championName]="profile().name" />
+          } @placeholder {
+            <div class="flex gap-4 overflow-hidden" aria-hidden="true">
+              @for (tile of [1, 2, 3]; track tile) {
+                <lodb-skeleton class="w-72 shrink-0" shape="tile" />
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (lore()) {
+        <section id="lore" lodbReveal>
+          <div class="codex-header mb-6">
+            <h2>{{ 'champion.detail.lore.title' | transloco }}</h2>
+          </div>
+          <div class="hextech-frame hx-corners p-7 sm:p-9">
+            <div
+              class="ddragon-rich ddragon-rich--lore max-w-[65ch]"
+              [innerHTML]="lore() | ddragonHtml"
+            ></div>
+          </div>
+        </section>
+      }
+
+      @if (allyTips().length > 0 || enemyTips().length > 0) {
+        <section id="tips" lodbReveal>
+          <div class="codex-header mb-6">
+            <h2>{{ 'champion.detail.tips' | transloco }}</h2>
+          </div>
+          <div class="grid gap-6 md:grid-cols-2">
+            @if (allyTips().length > 0) {
+              <div class="hextech-frame p-6">
+                <h3 class="mb-4 font-beaufort text-sm tracking-[0.2em] text-gold uppercase">
+                  {{ 'champion.detail.tips_as' | transloco }}
+                </h3>
+                <ul class="space-y-2.5 text-sm text-text-muted">
+                  @for (tip of allyTips(); track $index) {
+                    <li class="border-s-2 border-gold-deep ps-3">{{ tip }}</li>
+                  }
+                </ul>
+              </div>
+            }
+            @if (enemyTips().length > 0) {
+              <div class="hextech-frame p-6">
+                <h3 class="mb-4 font-beaufort text-sm tracking-[0.2em] text-danger-light uppercase">
+                  {{ 'champion.detail.tips_against' | transloco }}
+                </h3>
+                <ul class="space-y-2.5 text-sm text-text-muted">
+                  @for (tip of enemyTips(); track $index) {
+                    <li class="border-s-2 border-danger-strong/60 ps-3">{{ tip }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    <aside id="stats" class="mt-16 lg:sticky lg:top-[4.25rem] lg:mt-0" lodbReveal>
+      <lodb-stat-board [profile]="profile()" [version]="context().version" />
+    </aside>
+  </div>
+
+  <div class="relative mx-auto mt-14 max-w-7xl">
+    <lodb-pager [previous]="pager().previous" [next]="pager().next" [hub]="pager().hub" />
+  </div>
+</div>
+
+<lodb-load-time />

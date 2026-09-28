@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "Bezárás",
+    "previous": "Előző",
+    "next": "Következő",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "{{ skin }} – chromák"
+  }
+}

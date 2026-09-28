@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "出了点问题，请重试。",
+    "invalid": "该值无效。",
+    "required": "此项为必填项。",
+    "email_invalid": "请输入有效的电子邮件地址。",
+    "email_too_long": "该电子邮件地址过长。",
+    "email_taken": "该电子邮件地址已被其他账号使用。",
+    "terms_required": "你必须接受使用条款。",
+    "password_too_long": "该密码过长。",
+    "invalid_credentials": "账号或密码不正确。",
+    "invalid_two_factor": "该验证码不正确或已过期。",
+    "locked": "失败次数过多：此账号已被锁定几分钟。",
+    "google_cancelled": "Google 登录已取消。",
+    "google_email_unverified": "Google 尚未验证此电子邮件地址，因此无法用它登录。",
+    "google_two_factor": "此账号已启用双重验证：请使用电子邮件和密码登录。",
+    "sign_out": "退出登录失败，请重试。"
+  },
+  "two_factor": {
+    "lede": "请输入身份验证器应用中的 6 位验证码。",
+    "code": "验证码",
+    "recovery_code": "恢复码",
+    "use_recovery": "改用恢复码",
+    "use_app": "改用身份验证器应用"
+  },
+  "password": {
+    "met": "（已满足）",
+    "unmet": "（未满足）"
+  },
+  "verify": {
+    "title": "确认电子邮件",
+    "verifying": "正在确认你的电子邮件地址…",
+    "pending": "确认链接已发送至 {{ email }}。打开链接以确认你的地址，或重新获取一个。",
+    "sign_in": "登录后即可获取新的确认链接。",
+    "continue": "继续"
+  },
+  "editor": {
+    "loading": "正在加载你的个人资料…",
+    "load_error": "无法加载你的个人资料。",
+    "version_error": "无法更改收藏的版本。"
+  }
+}

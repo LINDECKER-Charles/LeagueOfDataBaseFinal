@@ -1,0 +1,68 @@
+[
+  {
+    "id": 8100,
+    "key": "Domination",
+    "icon": "perk-images/Styles/7200_Domination.png",
+    "name": "Domination",
+    "slots": [
+      {
+        "runes": [
+          {
+            "id": 8112,
+            "key": "Electrocute",
+            "icon": "perk-images/Styles/Domination/Electrocute/Electrocute.png",
+            "name": "Electrocute"
+          },
+          {
+            "id": 8128,
+            "key": "DarkHarvest",
+            "icon": "perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png",
+            "name": "Dark Harvest"
+          },
+          {
+            "id": 9923,
+            "key": "HailOfBlades",
+            "icon": "perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
+            "name": "Hail of Blades"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 8000,
+    "key": "Precision",
+    "icon": "perk-images/Styles/7201_Precision.png",
+    "name": "Precision",
+    "slots": [
+      {
+        "runes": [
+          {
+            "id": 8005,
+            "key": "PressTheAttack",
+            "icon": "perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png",
+            "name": "Press the Attack"
+          },
+          {
+            "id": 8008,
+            "key": "LethalTempo",
+            "icon": "perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
+            "name": "Lethal Tempo"
+          },
+          {
+            "id": 8021,
+            "key": "FleetFootwork",
+            "icon": "perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
+            "name": "Fleet Footwork"
+          },
+          {
+            "id": 8010,
+            "key": "Conqueror",
+            "icon": "perk-images/Styles/Precision/Conqueror/Conqueror.png",
+            "name": "Conqueror"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,2409 @@
+{
+  "recordedOn": "2026-09-26",
+  "roles": {
+    "latest": "16.19.1",
+    "previous": "16.18.1"
+  },
+  "responses": [
+    {
+      "url": "https://ddragon.leagueoflegends.com/api/versions.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "recorded versions and first lolpatch_* entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ar_AE/champion.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ar_AE/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ar_AE/item.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ar_AE/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ar_AE/summoner.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/en_US/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/en_US/champion/Ahri.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/en_US/champion/FiddleSticks.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/en_US/champion/Garen.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/en_US/champion/MonkeyKing.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/en_US/champion/Teemo.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/en_US/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/en_US/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/en_US/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/en_US/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/fr_FR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/fr_FR/champion/Ahri.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/fr_FR/champion/FiddleSticks.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/fr_FR/champion/Garen.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/fr_FR/champion/MonkeyKing.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/fr_FR/champion/Teemo.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/fr_FR/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/fr_FR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/fr_FR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/fr_FR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ko_KR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ko_KR/champion/Ahri.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ko_KR/champion/FiddleSticks.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ko_KR/champion/Garen.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ko_KR/champion/MonkeyKing.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ko_KR/champion/Teemo.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ko_KR/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ko_KR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ko_KR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/ko_KR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/zh_CN/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/zh_CN/champion/Ahri.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/zh_CN/champion/FiddleSticks.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/zh_CN/champion/Garen.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/zh_CN/champion/MonkeyKing.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/zh_CN/champion/Teemo.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/zh_CN/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/zh_CN/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/zh_CN/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/0.151.2/data/zh_CN/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/ar_AE/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/ar_AE/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/ar_AE/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/ar_AE/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/ar_AE/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/en_US/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/en_US/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/en_US/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/en_US/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/en_US/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/fr_FR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/fr_FR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/fr_FR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/fr_FR/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/fr_FR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/ko_KR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/ko_KR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/ko_KR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/ko_KR/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/ko_KR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/zh_CN/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/zh_CN/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/zh_CN/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/zh_CN/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/data/zh_CN/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/champion/Ahri.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/champion/Fiddlesticks.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/champion/Garen.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/champion/MonkeyKing.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/champion/Teemo.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/1001.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/1004.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/1042.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/2003.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/2008.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/226660.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/3001.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/3006.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/3078.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/3599.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/3901.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/3902.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/3903.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/7050.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/771004.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/772139.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/772140.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/item/773001.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/passive/Ahri_SoulEater2.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/passive/FiddlesticksP.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/passive/Garen_Passive.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/passive/MonkeyKingStoneSkin.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/passive/TeemoPassive.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/AhriE.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/AhriQ.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/AhriR.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/AhriW.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/FiddleSticksE.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/FiddleSticksQ.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/FiddleSticksR.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/FiddleSticksW.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/GarenE.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/GarenQ.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/GarenR.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/GarenW.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/MonkeyKingDecoy.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/MonkeyKingDoubleAttack.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/MonkeyKingNimbus.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/MonkeyKingSpinToWin.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/SummonerExhaust.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/SummonerFlash.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/SummonerFlash_Jade.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/SummonerHeal.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/SummonerHeal_Jade.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/SummonerSnowball.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/TeemoE.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/TeemoQ.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/TeemoR.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.18.1/img/spell/TeemoW.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/ar_AE/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/ar_AE/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/ar_AE/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/ar_AE/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/ar_AE/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/en_US/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/en_US/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/en_US/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/en_US/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/en_US/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/fr_FR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/fr_FR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/fr_FR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/fr_FR/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/fr_FR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/ko_KR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/ko_KR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/ko_KR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/ko_KR/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/ko_KR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/champion/Ahri.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/champion/Fiddlesticks.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/champion/Garen.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/champion/MonkeyKing.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/champion/Teemo.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/1001.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/1004.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/1042.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/2003.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/2008.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/226660.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/3001.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/3006.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/3078.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/3599.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/3901.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/3902.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/3903.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/7050.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/771004.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/772139.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/772140.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/item/773001.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/passive/Ahri_SoulEater2.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/passive/FiddlesticksP.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/passive/Garen_Passive.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/passive/MonkeyKingStoneSkin.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/passive/TeemoPassive.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/AhriE.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/AhriQ.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/AhriR.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/AhriW.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/FiddleSticksE.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/FiddleSticksQ.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/FiddleSticksR.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/FiddleSticksW.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/GarenE.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/GarenQ.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/GarenR.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/GarenW.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/MonkeyKingDecoy.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/MonkeyKingDoubleAttack.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/MonkeyKingNimbus.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/MonkeyKingSpinToWin.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/SummonerExhaust.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/SummonerFlash.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/SummonerFlash_Jade.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/SummonerHeal.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/SummonerHeal_Jade.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/SummonerSnowball.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/TeemoE.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/TeemoQ.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/TeemoR.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/img/spell/TeemoW.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/ar_AE/champion.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/ar_AE/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/ar_AE/item.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/ar_AE/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/ar_AE/summoner.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/en_US/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/en_US/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/en_US/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/en_US/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/en_US/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/fr_FR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/fr_FR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/fr_FR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/fr_FR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/fr_FR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/ko_KR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/ko_KR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/ko_KR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/ko_KR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/ko_KR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/zh_CN/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/zh_CN/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/zh_CN/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/zh_CN/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.24/data/zh_CN/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/ar_AE/champion.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/ar_AE/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/ar_AE/item.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/ar_AE/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/ar_AE/summoner.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/en_US/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/en_US/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/en_US/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/en_US/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/en_US/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/fr_FR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/fr_FR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/fr_FR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/fr_FR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/fr_FR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/ko_KR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/ko_KR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/ko_KR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/ko_KR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/ko_KR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/zh_CN/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/zh_CN/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/zh_CN/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/zh_CN/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.13.8/data/zh_CN/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ar_AE/champion.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ar_AE/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ar_AE/item.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ar_AE/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ar_AE/summoner.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/en_US/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/en_US/champion/Ahri.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/en_US/champion/FiddleSticks.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/en_US/champion/Garen.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/en_US/champion/MonkeyKing.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/en_US/champion/Teemo.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/en_US/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/en_US/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/en_US/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/en_US/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/fr_FR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/fr_FR/champion/Ahri.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/fr_FR/champion/FiddleSticks.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/fr_FR/champion/Garen.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/fr_FR/champion/MonkeyKing.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/fr_FR/champion/Teemo.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/fr_FR/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/fr_FR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/fr_FR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/fr_FR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ko_KR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ko_KR/champion/Ahri.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ko_KR/champion/FiddleSticks.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ko_KR/champion/Garen.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ko_KR/champion/MonkeyKing.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ko_KR/champion/Teemo.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ko_KR/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ko_KR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ko_KR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/ko_KR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/zh_CN/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/zh_CN/champion/Ahri.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/zh_CN/champion/FiddleSticks.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/zh_CN/champion/Garen.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/zh_CN/champion/MonkeyKing.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/zh_CN/champion/Teemo.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/zh_CN/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/zh_CN/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/zh_CN/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/3.6.14/data/zh_CN/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/ar_AE/champion.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/ar_AE/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/ar_AE/item.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/ar_AE/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/ar_AE/summoner.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/en_US/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/en_US/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/en_US/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/en_US/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/en_US/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/fr_FR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/fr_FR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/fr_FR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/fr_FR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/fr_FR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/ko_KR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/ko_KR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/ko_KR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/ko_KR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/ko_KR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/zh_CN/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/zh_CN/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/zh_CN/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/zh_CN/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.21.1/data/zh_CN/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/ar_AE/champion.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/ar_AE/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/ar_AE/item.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/ar_AE/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/ar_AE/summoner.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/en_US/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/en_US/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/en_US/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/en_US/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/en_US/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/fr_FR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/fr_FR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/fr_FR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/fr_FR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/fr_FR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/ko_KR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/ko_KR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/ko_KR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/ko_KR/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/ko_KR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/zh_CN/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/zh_CN/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/zh_CN/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/zh_CN/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/7.22.1/data/zh_CN/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/ar_AE/champion.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/ar_AE/championFull.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/ar_AE/item.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/ar_AE/runesReforged.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/ar_AE/summoner.json",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/en_US/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/en_US/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/en_US/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/en_US/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/en_US/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/fr_FR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/fr_FR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/fr_FR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/fr_FR/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/fr_FR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/ko_KR/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/ko_KR/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/ko_KR/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/ko_KR/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/ko_KR/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/zh_CN/champion.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/zh_CN/championFull.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "champions Ahri, Fiddlesticks, MonkeyKing, Garen, Teemo; recommended dropped"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/zh_CN/item.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/zh_CN/runesReforged.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "trees 8000, 8100 only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/8.7.1/data/zh_CN/summoner.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "listed entries only"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/7200_Domination.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/7201_Precision.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/BigGameHunter/BigGameHunter.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/Bully/Bully.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/CheapShot/CheapShot.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/DarkHarvest/DarkHarvest.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/DashAttack/DashAttack.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/Electrocute/Electrocute.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/EyeballCollection/EyeballCollection.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/Feast/GreenTerror_Feast.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/GhostPoro/GhostPoro.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/IngeniousHunter/IngeniousHunter.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/InsatiableHunter/InsatiableHunter.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/KSLycanthropy/KSLycanthropy.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/KSSoulReaper/KSSoulReaper.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/Predator/Predator.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/ProlificHunter/ProlificHunter.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/RavenousHunter/RavenousHunter.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/RelentlessHunter/RelentlessHunter.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/SuddenImpact/SuddenImpact.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/TLords/TLords.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/TasteOfBlood/GreenTerror_TasteOfBlood.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/ViciousPoro/ViciousPoro.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/WardSlayer/WardSlayer.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Domination/ZombieWard/ZombieWard.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/Conqueror/Conqueror.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/CoupDeGrace/CoupDeGrace.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/CutDown/CutDown.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/DangerousGame.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/FleetFootwork/FleetFootwork.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/FlowofBattle/FlowofBattleTemp.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/GiantSlayer/GiantSlayer.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/KSFleetFootwork/KSFleetFootwork.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/LastResort/LastResortIcon.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/Legend_Heroism.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/Legend_Infamy.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/Legend_Tenacity.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/Overheal.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/PressTheAttack/PressTheAttack.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Precision/PressThreeAttacks/PressThreeAttacks.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Sorcery/LastStand/LastStand.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/ASSETS/Perks/Styles/Sorcery/ToTheDeath/ToTheDeath.dds",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/champion/centered/FiddleSticks_0.jpg",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "bodyless": true,
+      "reduction": "status only: champion art is hotlinked, never ingested"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/champion/centered/FiddleSticks_27.jpg",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "bodyless": true,
+      "reduction": "status only: champion art is hotlinked, never ingested"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/champion/centered/Fiddlesticks_0.jpg",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/champion/centered/Fiddlesticks_27.jpg",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/FiddleSticks_0.jpg",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "bodyless": true,
+      "reduction": "status only: champion art is hotlinked, never ingested"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/FiddleSticks_27.jpg",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "bodyless": true,
+      "reduction": "status only: champion art is hotlinked, never ingested"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Fiddlesticks_0.jpg",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "bodyless": true,
+      "reduction": "status only: champion art is hotlinked, never ingested"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Fiddlesticks_27.jpg",
+      "status": 403
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7200_Domination.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7201_Precision.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/CheapShot/CheapShot.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/DeepWard/DeepWard.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/Electrocute/Electrocute.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/GrislyMementos/GrislyMementos.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/RelentlessHunter/RelentlessHunter.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/SixthSense/SixthSense.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/SuddenImpact/SuddenImpact.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/TasteOfBlood/GreenTerror_TasteOfBlood.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/TreasureHunter/TreasureHunter.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/UltimateHunter/UltimateHunter.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/AbsorbLife/AbsorbLife.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Conqueror/Conqueror.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/CoupDeGrace/CoupDeGrace.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/CutDown/CutDown.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LegendAlacrity/LegendAlacrity.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LegendBloodline/LegendBloodline.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LegendHaste/LegendHaste.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/PresenceOfMind/PresenceOfMind.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Triumph.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/LastStand/LastStand.png",
+      "status": 200,
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://ddragon.leagueoflegends.com/cdn/languages.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "recorded languages only"
+    },
+    {
+      "url": "https://raw.communitydragon.org/0.151/plugins/rcp-be-lol-game-data/global/default/v1/skins.json",
+      "status": 404
+    },
+    {
+      "url": "https://raw.communitydragon.org/16.18/plugins/rcp-be-lol-game-data/global/default/v1/skins.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "skins of the recorded champions; id, name and chromas fields only"
+    },
+    {
+      "url": "https://raw.communitydragon.org/16.19/plugins/rcp-be-lol-game-data/global/default/v1/skins.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "skins of the recorded champions; id, name and chromas fields only"
+    },
+    {
+      "url": "https://raw.communitydragon.org/3.13/plugins/rcp-be-lol-game-data/global/default/v1/skins.json",
+      "status": 404
+    },
+    {
+      "url": "https://raw.communitydragon.org/3.6/plugins/rcp-be-lol-game-data/global/default/v1/skins.json",
+      "status": 404
+    },
+    {
+      "url": "https://raw.communitydragon.org/7.21/plugins/rcp-be-lol-game-data/global/default/v1/skins.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "skins of the recorded champions; id, name and chromas fields only"
+    },
+    {
+      "url": "https://raw.communitydragon.org/7.22/plugins/rcp-be-lol-game-data/global/default/v1/skins.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "skins of the recorded champions; id, name and chromas fields only"
+    },
+    {
+      "url": "https://raw.communitydragon.org/8.7/plugins/rcp-be-lol-game-data/global/default/v1/skins.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "skins of the recorded champions; id, name and chromas fields only"
+    },
+    {
+      "url": "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json",
+      "status": 200,
+      "contentType": "application/json",
+      "reduction": "skins of the recorded champions; id, name and chromas fields only"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "base_url": "URL de base : {{ url }}",
+  "pricing_unavailable": "Les tarifs ne peuvent pas être affichés pour le moment."
+}

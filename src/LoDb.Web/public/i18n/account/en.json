@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "invalid": "This value is not valid.",
+    "required": "This field is required.",
+    "email_invalid": "Enter a valid email address.",
+    "email_too_long": "This email address is too long.",
+    "email_taken": "An account already uses this email address.",
+    "terms_required": "You must accept the terms of use.",
+    "password_too_long": "This password is too long.",
+    "invalid_credentials": "Incorrect identifier or password.",
+    "invalid_two_factor": "This code is incorrect or has expired.",
+    "locked": "Too many failed attempts: this account is locked for a few minutes.",
+    "google_cancelled": "Google sign-in was cancelled.",
+    "google_email_unverified": "Google has not verified this email address, so it cannot be used to sign in.",
+    "google_two_factor": "This account uses two-factor authentication: sign in with your email and password.",
+    "sign_out": "Sign-out failed. Please try again."
+  },
+  "two_factor": {
+    "lede": "Enter the 6-digit code from your authenticator app.",
+    "code": "Authentication code",
+    "recovery_code": "Recovery code",
+    "use_recovery": "Use a recovery code instead",
+    "use_app": "Use my authenticator app instead"
+  },
+  "password": {
+    "met": "(met)",
+    "unmet": "(not met)"
+  },
+  "verify": {
+    "title": "Email confirmation",
+    "verifying": "Confirming your email address…",
+    "pending": "A confirmation link was sent to {{ email }}. Open it to confirm your address, or get a new one.",
+    "sign_in": "Sign in to get a new confirmation link.",
+    "continue": "Continue"
+  },
+  "editor": {
+    "loading": "Loading your profile…",
+    "load_error": "Your profile could not be loaded.",
+    "version_error": "The version of your favorites could not be changed."
+  }
+}

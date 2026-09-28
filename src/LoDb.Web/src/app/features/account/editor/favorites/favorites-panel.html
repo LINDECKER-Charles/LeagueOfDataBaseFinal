@@ -1,0 +1,44 @@
+<section aria-labelledby="profile-favorites-title">
+  <div class="codex-header mb-6">
+    <h2 id="profile-favorites-title">{{ 'profile.favorites.title' | transloco }}</h2>
+    <div class="profile-version">
+      <label class="profile-version__label max-sm:sr-only" for="profile-version">
+        {{ 'profile.favorites.version_label' | transloco }}
+      </label>
+      <select
+        #version
+        id="profile-version"
+        lodbField
+        class="profile-version__select"
+        [disabled]="busy()"
+        (change)="pinFrom(version)"
+      >
+        <option value="" [selected]="preferredVersion() === null">
+          {{ 'profile.favorites.version_auto' | transloco }}
+        </option>
+        @for (candidate of versions(); track candidate) {
+          <option [value]="candidate" [selected]="candidate === preferredVersion()">
+            {{ candidate }}
+          </option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="mb-6">
+    <span class="skin-field__label" aria-hidden="true">{{ 'profile.slot.skin' | transloco }}</span>
+    <lodb-skin-socket [skin]="form.skin()" (choose)="chooseSkin()" />
+  </div>
+
+  <div class="socket-grid">
+    @for (slot of slots; track slot) {
+      <lodb-favorite-socket
+        [slot]="slot"
+        [choice]="form.favorites()[slot]"
+        (choose)="choose(slot)"
+      />
+    }
+  </div>
+
+  <lodb-autosave-indicator class="mt-6" />
+</section>

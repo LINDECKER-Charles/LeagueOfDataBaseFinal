@@ -1,0 +1,78 @@
+{
+  "description": "Daily analytics aggregates written under analytics/daily/<date>.json, where date is the capture day (UTC) minus offset. A day with raw is written verbatim (corrupt file).",
+  "days": [
+    {
+      "offset": 0,
+      "entities": {
+        "champion:Ahri": 30,
+        "champion:Aatrox": 11,
+        "champion:Jinx": 11,
+        "champion:MonkeyKing": 4,
+        "champion:Unreleased": 2,
+        "champion:": 5,
+        "item:1001": 2,
+        "item:3006": 9,
+        "item:1004": 4,
+        "item:771004": 4,
+        "summoner:SummonerFlash": 6,
+        "summoner:SummonerFlash_Jade": 6,
+        "summoner:SummonerDot": 1,
+        "runesReforged:8100": 6,
+        "runesReforged:8112": 3,
+        "runesReforged:Electrocute": 2,
+        "runesReforged:9999": 1,
+        "skin:Ahri_1": 3
+      }
+    },
+    { "offset": 1, "raw": "not-json{" },
+    {
+      "offset": 3,
+      "entities": { "champion:Ahri": 5, "champion:Jinx": 7, "item:771004": 3 }
+    },
+    {
+      "offset": 6,
+      "entities": { "champion:Aatrox": 7, "summoner:SummonerDot": 2 }
+    },
+    {
+      "offset": 7,
+      "entities": { "champion:Zed": 100, "item:3006": 50 }
+    },
+    { "offset": 10, "withoutEntities": true },
+    {
+      "offset": 29,
+      "entities": {
+        "champion:Ahri": 1,
+        "champion:Akali": 1,
+        "champion:Akshan": 1,
+        "champion:Alistar": 1,
+        "champion:Ambessa": 1,
+        "champion:Amumu": 1,
+        "champion:Anivia": 1,
+        "champion:Annie": 1,
+        "champion:Aphelios": 1,
+        "champion:Ashe": 1,
+        "champion:AurelionSol": 1,
+        "champion:Aurora": 1,
+        "champion:Azir": 1,
+        "champion:Bard": 1,
+        "champion:Belveth": 1,
+        "champion:Blitzcrank": 1,
+        "champion:Brand": 1,
+        "champion:Braum": 1,
+        "champion:Briar": 1,
+        "champion:Caitlyn": 1,
+        "champion:Camille": 1,
+        "champion:Cassiopeia": 1,
+        "champion:Chogath": 1,
+        "champion:Corki": 1,
+        "champion:Darius": 1,
+        "champion:Diana": 1,
+        "champion:DrMundo": 1
+      }
+    },
+    {
+      "offset": 30,
+      "entities": { "champion:Teemo": 1000 }
+    }
+  ]
+}

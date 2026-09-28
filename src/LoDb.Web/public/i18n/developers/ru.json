@@ -1,0 +1,4 @@
+{
+  "base_url": "Базовый URL: {{ url }}",
+  "pricing_unavailable": "Цены сейчас не удаётся показать."
+}
