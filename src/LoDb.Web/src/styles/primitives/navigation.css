@@ -125,9 +125,10 @@
     rotate: 45deg;
   }
   /*
-   * From 360px up, the legacy pager as is: its links as wide as their longest word, so a name
-   * never breaks inside a word. Below, where that would overflow, the hub sits between two
-   * narrower links that may break a long name.
+   * The legacy pager as is while it fits: its links as wide as their longest word, so a name
+   * never breaks inside a word. Below 360px, or wherever that would overflow (ui/pager sets
+   * `pager--tight`, as on a 390px phone next to a long German or Polish name), the hub sits
+   * between two narrower links that may break a long name, at a hyphen where it can.
    */
   @media (width < 360px) {
     .pager {
@@ -137,9 +138,25 @@
       min-inline-size: 0;
       padding: 0.7rem 0.75rem;
     }
+    .pager__name {
+      hyphens: auto;
+    }
     .pager__hub {
       min-inline-size: 3rem;
     }
+  }
+  .pager--tight {
+    gap: 0.4rem;
+  }
+  .pager--tight .pager__link {
+    min-inline-size: 0;
+    padding: 0.7rem 0.75rem;
+  }
+  .pager--tight .pager__name {
+    hyphens: auto;
+  }
+  .pager--tight .pager__hub {
+    min-inline-size: 3rem;
   }
 
   /* Release version chip: the app release, distinct from the Data Dragon patch. */

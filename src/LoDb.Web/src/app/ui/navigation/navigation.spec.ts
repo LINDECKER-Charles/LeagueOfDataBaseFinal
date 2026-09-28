@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { provideTransloco } from '@jsverse/transloco';
@@ -6,6 +6,7 @@ import { of } from 'rxjs';
 import { activeSection } from './active-section';
 import { FragmentLink } from './fragment-link';
 import { Pager } from './pager';
+import type { PagerLink } from './pager-link';
 import { SectionNav } from './section-nav';
 
 describe('activeSection', () => {
@@ -72,6 +73,16 @@ class MarkedPagerHost {
     name: 'Faerie Charm',
     mark: { label: 'LoL Classic', hint: 'League of Legends Classic version' },
   };
+}
+
+@Component({
+  imports: [Pager],
+  template: `<lodb-pager [previous]="previous" [next]="next()" hub="/en/items" />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class FittingPagerHost {
+  readonly previous = { url: '/en/items/2420-seekers-armguard', name: "Seeker's Armguard" };
+  readonly next = signal<PagerLink | null>(null);
 }
 
 describe('navigation primitives', () => {
@@ -161,6 +172,25 @@ describe('navigation primitives', () => {
     const chip = names[1]?.querySelector('.hx-chip-hex');
     expect(chip?.getAttribute('title')).toBe('League of Legends Classic version');
     expect(names[0]?.querySelector('.hx-chip-hex')).toBeNull();
+  });
+
+  it('turns tight only where its links would overflow it, measured with each neighbour', async () => {
+    const fixture = TestBed.createComponent(FittingPagerHost);
+    await fixture.whenStable();
+    const nav = (fixture.nativeElement as HTMLElement).querySelector('nav') as HTMLElement;
+    // jsdom lays nothing out: the widths a 390px phone gives a pair of long names.
+    const widths = { scroll: 415, client: 342 };
+    Object.defineProperty(nav, 'scrollWidth', { get: () => widths.scroll });
+    Object.defineProperty(nav, 'clientWidth', { get: () => widths.client });
+
+    fixture.componentInstance.next.set({ url: '/en/items/2421-x', name: 'Shattered Armguard' });
+    await fixture.whenStable();
+    expect(nav.classList).toContain('pager--tight');
+
+    widths.scroll = widths.client;
+    fixture.componentInstance.next.set({ url: '/en/items/2422-x', name: 'Boots' });
+    await fixture.whenStable();
+    expect(nav.classList).not.toContain('pager--tight');
   });
 
   it('carries the regional variant of UrlTree links, query unescaped', async () => {
