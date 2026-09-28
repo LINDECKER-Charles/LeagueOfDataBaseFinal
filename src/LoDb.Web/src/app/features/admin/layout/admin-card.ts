@@ -5,7 +5,8 @@ import { Frame } from '../../../ui/surfaces/frame';
 /**
  * A block of a panel in the Hextech frame, the legacy `.card`: headed by a bold `h2` under
  * the page's `h1`, with an optional chip at the end of its head that says what it counts, or
- * a projected chip link ("Détail →"). Without a heading it simply frames a table.
+ * a projected chip link ("Détail →"), which stays there on a phone while the title wraps.
+ * Without a heading it simply frames a table.
  */
 @Component({
   selector: 'lodb-admin-card',
@@ -13,7 +14,7 @@ import { Frame } from '../../../ui/surfaces/frame';
   hostDirectives: [Frame],
   template: `
     @if (heading()) {
-      <div class="mb-[1.15rem] flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+      <div class="mb-[1.15rem] flex items-baseline justify-between gap-4">
         <h2 [class]="headingClass">
           {{ heading() }}
         </h2>
