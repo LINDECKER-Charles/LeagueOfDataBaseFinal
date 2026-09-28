@@ -57,6 +57,20 @@
     block-size: 9rem;
     inline-size: 100%;
   }
+  /*
+   * As tall as the card it stands for (a champion's portrait card measures 183 to 231 px of
+   * text under its art): a shorter placeholder collapses the page while the list loads, and
+   * everything sized on the page's height, the backdrop's glows first, shifts with it.
+   */
+  .hx-sk-portrait {
+    inline-size: 100%;
+    padding-block-end: 12rem;
+  }
+  .hx-sk-portrait::before {
+    content: '';
+    display: block;
+    aspect-ratio: 4 / 5;
+  }
   .hx-sk-circle {
     block-size: 3rem;
     inline-size: 3rem;

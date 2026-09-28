@@ -85,6 +85,26 @@ class Host {
   readonly schema = currentSchema;
 }
 
+// A list of portrait cards, such as the champions'.
+@Component({
+  imports: [CatalogueList, CatalogueCardTemplate],
+  template: `<lodb-catalogue-list
+    [source]="source"
+    [adapter]="adapter"
+    [schema]="schema"
+    searchLabel="Search"
+    label="Champions"
+    columns="portrait"
+  >
+    <p class="card" *lodbCatalogueCard="let item of source">{{ item.name }}</p>
+  </lodb-catalogue-list>`,
+})
+class PortraitHost {
+  readonly source = current;
+  readonly adapter = ADAPTER;
+  readonly schema = currentSchema;
+}
+
 // A page under its own catalogue scope, which translates the label it hands the list.
 @Component({
   imports: [CatalogueList, CatalogueCardTemplate, TranslocoPipe],
@@ -164,6 +184,13 @@ describe('lodb-catalogue-list', () => {
     const fixture = await render('/en/items?q=dag', sourceOf(null).source);
     expect(names(fixture)).toEqual([]);
     expect(all(fixture, '[aria-busy=true] lodb-skeleton')).toHaveLength(2);
+  });
+
+  it('keeps the height of portrait cards in the skeleton of a portrait grid', async () => {
+    const fixture = await render('/en/champions?q=ahr', sourceOf(null).source, PortraitHost);
+    const skeletons = all(fixture, '[aria-busy=true] lodb-skeleton');
+    expect(skeletons).toHaveLength(2);
+    for (const skeleton of skeletons) expect(skeleton.classList).toContain('hx-sk-portrait');
   });
 
   it('filters as the reader types, accents aside, and keeps it in the URL', async () => {

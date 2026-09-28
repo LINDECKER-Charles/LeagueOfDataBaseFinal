@@ -10,6 +10,8 @@ export const SKELETON_SHAPES = {
   block: 'hx-sk hx-sk-block',
   /** A grid tile. */
   tile: 'hx-sk hx-sk-tile',
+  /** A portrait card of a list: its 4:5 art and the text under it. */
+  portrait: 'hx-sk hx-sk-portrait',
   /** An avatar or an icon. */
   circle: 'hx-sk hx-sk-circle',
 } as const;

@@ -43,7 +43,9 @@
         >
           <div class="sr-only" role="listitem">{{ 'catalogue.loading' | transloco }}</div>
           @for (slot of skeletonSlots(); track $index) {
-            <div role="listitem"><lodb-skeleton shape="tile" /></div>
+            <div role="listitem">
+              <lodb-skeleton [shape]="columns() === 'portrait' ? 'portrait' : 'tile'" />
+            </div>
           }
         </div>
       }

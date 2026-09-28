@@ -17,6 +17,7 @@ import { Skeleton } from './skeleton';
     <section id="ornate" lodbFrame="ornate">ornate</section>
     <lodb-card id="card" eyebrow="Codex" heading="Ahri" frame="interactive">body</lodb-card>
     <lodb-skeleton id="tile" shape="tile" />
+    <lodb-skeleton id="portrait" shape="portrait" />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -49,6 +50,7 @@ describe('surfaces', () => {
     ['ornate', ['hextech-frame', 'hx-corners']],
     ['card', ['block', 'p-5', 'hextech-frame', 'hextech-frame-hover']],
     ['tile', ['hx-sk', 'hx-sk-tile']],
+    ['portrait', ['hx-sk', 'hx-sk-portrait']],
   ])('gives #%s the classes %j', (id, expected) => {
     const classes = Array.from(render().querySelector(`#${id}`)?.classList ?? []);
 
