@@ -83,6 +83,10 @@
     </script>
   </head>
   <body>
-    <lodb-root></lodb-root>
+    <!-- Every render replaces the root's content, so the notice stays only on the pages
+         rendered in the browser (account, build editor, admin), which need JavaScript. -->
+    <lodb-root>
+      <noscript><p class="hx-chip m-6">JavaScript is required to use this page.</p></noscript>
+    </lodb-root>
   </body>
 </html>
