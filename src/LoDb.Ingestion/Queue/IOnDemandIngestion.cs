@@ -45,6 +45,16 @@ public interface IOnDemandIngestion
         IReadOnlyCollection<DdragonImage> images,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Settles the images as the other overload does, reporting each one this call fetches
+    /// as soon as its fetch ends.
+    /// </summary>
+    /// <remarks>
+    /// An image already settling for another caller is waited for, not reported: the watcher
+    /// learns it is done when the call returns.
+    /// </remarks>
+    Task EnsureImagesAsync(WatchedImages images, CancellationToken cancellationToken);
+
     /// <summary>Queues work for the background worker, merged with the same work waiting.</summary>
     /// <returns>
     /// True when the work is queued or already waiting; false when the queue is full or the

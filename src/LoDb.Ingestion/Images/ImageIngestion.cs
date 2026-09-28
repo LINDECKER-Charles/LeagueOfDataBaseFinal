@@ -101,6 +101,8 @@ internal sealed partial class ImageIngestion(
                     {
                         entries.Enqueue(entry);
                     }
+
+                    run.Batch.Progress?.Report(image);
                 })
             .ConfigureAwait(false);
         await assets.RecordAsync(entries, run.Batch.Force, cancellationToken)
