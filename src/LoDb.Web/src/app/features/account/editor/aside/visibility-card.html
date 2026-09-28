@@ -28,8 +28,9 @@
     (change)="changed.emit(toggle.checked)"
   />
 </div>
+<!-- Isolated: an English fallback in an RTL page would move its full stops. -->
 <p id="profile-visibility-help" class="visibility-card__help">
-  {{ 'profile.visibility.help' | transloco }}
+  <bdi>{{ 'profile.visibility.help' | transloco }}</bdi>
 </p>
 @if (isPublic()) {
   <a class="visibility-card__link" [routerLink]="publicLink()">
