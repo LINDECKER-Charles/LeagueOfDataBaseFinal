@@ -31,6 +31,10 @@
             </a>
           }
         </nav>
+      } @else {
+        <!-- The legacy kept its empty path nav, 24px over the list; flex, so that margin does
+             not collapse into the heading's. -->
+        <div class="mb-6 flex" aria-hidden="true"></div>
       }
 
       <lodb-catalogue-list

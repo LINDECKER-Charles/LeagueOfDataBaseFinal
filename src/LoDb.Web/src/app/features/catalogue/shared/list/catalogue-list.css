@@ -31,6 +31,17 @@
   gap: 1rem;
   min-inline-size: 0;
 }
+/*
+ * The legacy column always ended on an empty slot for its "no match" panel, one more gap
+ * under the grid. The panel itself, when shown, came after an empty grid box: one more gap
+ * above it, which the order reproduces around the same zero-height slot.
+ */
+.list__results::after {
+  content: '';
+}
+.list__results > .empty {
+  order: 1;
+}
 @media (width >= 64rem) {
   .list {
     grid-template-columns: 18.75rem minmax(0, 1fr);
