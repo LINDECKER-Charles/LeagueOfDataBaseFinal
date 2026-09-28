@@ -65,7 +65,7 @@
       "timeout": "timed out",
       "session": "session expired or rights missing",
       "network": "API unreachable",
-      "server": "API error"
+      "server": "HTTP {status}"
     }
   },
   "errors": {

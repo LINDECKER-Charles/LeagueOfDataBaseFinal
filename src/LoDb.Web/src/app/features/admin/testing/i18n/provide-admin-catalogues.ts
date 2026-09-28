@@ -7,6 +7,10 @@ import { of } from 'rxjs';
 const CATALOGUES: Readonly<Record<string, Translation>> = {
   'admin/fr': {
     actions: { refresh: 'Rafraîchir' },
+    state: {
+      unavailable: 'Panneau indisponible ({reason}).',
+      reasons: { server: 'HTTP {status}' },
+    },
     storage: { unavailable: 'Stockage indisponible : {error}' },
     monitoring: { counters: { unavailable: 'Compteurs indisponibles.' } },
     contacts: {
@@ -21,6 +25,7 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
   },
   'admin/en': {
     actions: { refresh: 'Refresh' },
+    state: { unavailable: 'Panel unavailable ({reason}).', reasons: { server: 'HTTP {status}' } },
     storage: { unavailable: 'Storage unavailable: {error}' },
     monitoring: { counters: { unavailable: 'Counters unavailable.' } },
     contacts: {

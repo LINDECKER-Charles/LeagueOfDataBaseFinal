@@ -1,5 +1,5 @@
 import { type HttpClient, HttpStatusCode } from '@angular/common/http';
-import { Component, signal } from '@angular/core';
+import { Component, type EnvironmentProviders, type Provider, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import type { Observable } from 'rxjs';
@@ -7,6 +7,7 @@ import type { StrictHttpResponse } from '../../../core/api/generated/strict-http
 import { ADMIN_TIMEOUT } from '../shared/http/admin-timeout';
 import { ADMIN_API } from '../testing/admin-api';
 import { configureAdminTestBed } from '../testing/admin-test-bed';
+import { provideAdminCatalogues } from '../testing/i18n/provide-admin-catalogues';
 import { injectPanel } from './inject-panel';
 import { PanelState } from './panel-state';
 
@@ -44,8 +45,11 @@ class Host {
 // Short enough for a spec to see a panel give up.
 const TIMEOUT_MS = 20;
 
-function open(): { fixture: ComponentFixture<Host>; http: HttpTestingController } {
-  configureAdminTestBed([], [{ provide: ADMIN_TIMEOUT, useValue: TIMEOUT_MS }]);
+function open(...providers: (Provider | EnvironmentProviders)[]): {
+  fixture: ComponentFixture<Host>;
+  http: HttpTestingController;
+} {
+  configureAdminTestBed([], [{ provide: ADMIN_TIMEOUT, useValue: TIMEOUT_MS }, ...providers]);
   const fixture = TestBed.createComponent(Host);
   fixture.detectChanges();
   return { fixture, http: TestBed.inject(HttpTestingController) };
@@ -102,7 +106,7 @@ describe('injectPanel and PanelState', () => {
     await vi.waitFor(() => expect(fixture.componentInstance.report.failure()).not.toBeNull());
     await settle(fixture);
 
-    expect(fixture.componentInstance.report.failure()).toBe('timeout');
+    expect(fixture.componentInstance.report.failure()).toEqual({ kind: 'timeout', status: 0 });
     expect(element(fixture, 'lodb-admin-band[role="alert"]')?.textContent).toContain(
       'admin.state.unavailable',
     );
@@ -118,14 +122,29 @@ describe('injectPanel and PanelState', () => {
     [HttpStatusCode.Unauthorized, 'session'],
     [HttpStatusCode.Forbidden, 'session'],
     [HttpStatusCode.InternalServerError, 'server'],
-  ] as const)('reads an answer %s as a %s failure', async (status, failure) => {
+    [HttpStatusCode.BadGateway, 'server'],
+  ] as const)('reads an answer %s as a %s failure, its status kept', async (status, kind) => {
     const { fixture, http } = open();
 
     http.expectOne(`${REPORT_URL}?page=1`).flush({ code: 'x' }, { status, statusText: 'x' });
     await settle(fixture);
 
-    expect(fixture.componentInstance.report.failure()).toBe(failure);
+    // The legacy band says "HTTP 500": the status goes with the failure.
+    expect(fixture.componentInstance.report.failure()).toEqual({ kind, status });
     expect(element(fixture, '[role="alert"]')?.textContent).toContain('admin.state.unavailable');
+  });
+
+  it('says the HTTP status of an error of the API, as the legacy band did', async () => {
+    const { fixture, http } = open(...provideAdminCatalogues());
+
+    http
+      .expectOne(`${REPORT_URL}?page=1`)
+      .flush(null, { status: HttpStatusCode.InternalServerError, statusText: 'x' });
+    await settle(fixture);
+
+    expect(element(fixture, '[role="alert"] span')?.textContent?.trim()).toBe(
+      'Panneau indisponible (HTTP 500).',
+    );
   });
 
   it('offers to sign in again when the session was lost', async () => {
@@ -146,6 +165,6 @@ describe('injectPanel and PanelState', () => {
     http.expectOne(`${REPORT_URL}?page=1`).error(new ProgressEvent('error'));
     await settle(fixture);
 
-    expect(fixture.componentInstance.report.failure()).toBe('network');
+    expect(fixture.componentInstance.report.failure()).toEqual({ kind: 'network', status: 0 });
   });
 });
