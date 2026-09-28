@@ -13,6 +13,7 @@ import { ResetPasswordView } from './reset-password-view';
 class Probe {}
 
 const RESET_URL = '/api/account/reset-password';
+const CHECK_URL = '/api/account/reset-password/check';
 const STRONG = 'Correct-horse-42';
 const FORGOT = '/fr/account/forgot-password';
 
@@ -62,6 +63,26 @@ async function submit(harness: RouterTestingHarness, password: string) {
   await harness.fixture.whenStable();
 }
 
+interface Refusal {
+  readonly status: number;
+  readonly code: string;
+}
+
+const EXPIRED: Refusal = { status: 400, code: 'invalid-token' };
+const LIMITED: Refusal = { status: 429, code: 'rate-limited' };
+
+// Answers the check the page sends when it opens: 204 for a usable link, else the refusal.
+async function answerCheck(harness: RouterTestingHarness, refusal: Refusal | null) {
+  const request = TestBed.inject(HttpTestingController).expectOne(CHECK_URL);
+  expect(request.request.body).toEqual({ userId: 7, token: 'token' });
+  if (refusal === null) {
+    request.flush(null, { status: 204, statusText: 'No Content' });
+  } else {
+    request.flush({ code: refusal.code }, { status: refusal.status, statusText: 'Refused' });
+  }
+  await settle(harness);
+}
+
 function toasted(): string[] {
   return TestBed.inject(ToastService)
     .toasts()
@@ -87,11 +108,34 @@ describe('ResetPasswordView', () => {
 
     expect(TestBed.inject(Router).url).toBe(FORGOT);
     expect(toasted()).toEqual(['error:auth.flash.reset_error']);
-    TestBed.inject(HttpTestingController).expectNone(RESET_URL);
+    TestBed.inject(HttpTestingController).expectNone(CHECK_URL);
   });
 
-  it('sends a link found expired back to a new request, with the same toast', async () => {
+  it('sends a link found expired on opening back to a new request, formless', async () => {
+    const { harness, host } = await open('/fr/account/reset-password/token?user=7');
+    expect(host.querySelector('form')).toBeNull();
+
+    await answerCheck(harness, EXPIRED);
+
+    expect(TestBed.inject(Router).url).toBe(FORGOT);
+    expect(toasted()).toEqual(['error:auth.flash.reset_error']);
+  });
+
+  it('shows the form once the link is found usable, or when the check fails', async () => {
+    const usable = await open('/fr/account/reset-password/token?user=7');
+    await answerCheck(usable.harness, null);
+    expect(usable.host.querySelector('form')).not.toBeNull();
+
+    TestBed.resetTestingModule();
+    const unchecked = await open('/fr/account/reset-password/token?user=7');
+    await answerCheck(unchecked.harness, LIMITED);
+    expect(unchecked.host.querySelector('form')).not.toBeNull();
+    expect(toasted()).toEqual([]);
+  });
+
+  it('sends a link found expired when sent back to a new request, with the same toast', async () => {
     const { harness } = await open('/fr/account/reset-password/token?user=7');
+    await answerCheck(harness, null);
 
     await submit(harness, STRONG);
     const request = TestBed.inject(HttpTestingController).expectOne(RESET_URL);

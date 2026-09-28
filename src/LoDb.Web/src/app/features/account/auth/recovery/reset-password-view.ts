@@ -21,11 +21,13 @@ import { AuthCard } from '../card/auth-card';
 const USER_PARAM = 'user';
 const USER_ID = /^[1-9][0-9]*$/;
 const MISMATCH: FieldErrors = { confirmation: 'auth.register.password_mismatch' };
+const INVALID_TOKEN = 'invalid-token';
 
 /**
- * Sets a new password from the link of a reset e-mail, then sends to the login page. A link
- * damaged, or found expired or used when sent, goes back to the request of another one with
- * a toast, as the legacy page did; the API cannot tell an expired link before it is used.
+ * Sets a new password from the link of a reset e-mail, then sends to the login page. The link
+ * is checked when the page opens, without using it up: a damaged, expired or used one goes
+ * back to the request of another one with a toast before any password is typed, as the legacy
+ * page did. The reset checks it again, since it may expire while the form is filled.
  */
 @Component({
   selector: 'lodb-reset-password-view',
@@ -47,6 +49,8 @@ export class ResetPasswordView {
   protected readonly password = signal('');
   protected readonly confirmation = signal('');
   protected readonly busy = signal(false);
+  /** The link is being checked: the form waits for the API's verdict. */
+  protected readonly checking = signal(true);
   /** The link was refused: the page leaves for a new request, its form gone. */
   protected readonly rejected = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -58,6 +62,8 @@ export class ResetPasswordView {
   constructor() {
     if (!USER_ID.test(this.user) || this.token === '') {
       void this.reject();
+    } else {
+      void this.check();
     }
   }
 
@@ -67,6 +73,23 @@ export class ResetPasswordView {
       void this.send();
     } else {
       this.errors.set(MISMATCH);
+    }
+  }
+
+  /**
+   * Only a refused link leaves the page: when the check itself fails, the form shows, and the
+   * reset gives the verdict.
+   */
+  private async check(): Promise<void> {
+    try {
+      const body = { userId: Number(this.user), token: this.token };
+      await firstValueFrom(this.account.checkPasswordResetToken({ body }));
+    } catch (error) {
+      if (problemOf(error).code === INVALID_TOKEN) {
+        void this.reject();
+      }
+    } finally {
+      this.checking.set(false);
     }
   }
 
@@ -87,7 +110,7 @@ export class ResetPasswordView {
   }
 
   private refused(problem: ApiProblem): void {
-    if (problem.code === 'invalid-token') {
+    if (problem.code === INVALID_TOKEN) {
       void this.reject();
       return;
     }
