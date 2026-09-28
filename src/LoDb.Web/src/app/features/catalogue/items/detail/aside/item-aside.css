@@ -1,3 +1,18 @@
+/*
+ * A panel's title, layered as the legacy utilities were: the identities restyle headings with
+ * unlayered `[data-theme] h2` rules (styles/theme/<identity>/type.css), which must keep winning.
+ */
+@layer components {
+  .panel-title {
+    margin-block-end: 1rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--color-gold);
+  }
+}
 /* The engraved stat board: one ruled row per stat, the value in cyan figures. */
 .stat-row {
   display: flex;
