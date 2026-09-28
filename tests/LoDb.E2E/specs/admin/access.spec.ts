@@ -59,9 +59,13 @@ test('refuses credentials it does not know, without a second step', async ({
   });
 
   await expect(
-    page.getByRole('alert').filter({ hasText: 'Identifiants incorrects.' }),
+    page.getByRole('alert').filter({ hasText: 'Identifiants invalides.' }),
   ).toBeVisible();
   await expect(page.getByLabel(LOGIN.code)).toHaveCount(0);
+  // As the legacy page came back: the identifier kept and focused, the password emptied.
+  await expect(page.getByLabel(LOGIN.identifier)).toBeFocused();
+  await expect(page.getByLabel(LOGIN.identifier)).not.toHaveValue('');
+  await expect(page.getByLabel(LOGIN.password, { exact: true })).toHaveValue('');
 });
 
 test('signs the administrator in with the code of the authenticator, then out', async ({

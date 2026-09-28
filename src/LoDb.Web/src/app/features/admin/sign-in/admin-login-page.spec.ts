@@ -149,4 +149,16 @@ describe('AdminLoginPage', () => {
 
     expect(page.querySelector('[role="alert"]')?.textContent).toContain(key);
   });
+
+  it('keeps the identifier, in focus, and empties the password after a refusal', async () => {
+    const { page, harness } = await open('/admin/login', 'invalid-credentials');
+
+    await signIn(page);
+    harness.detectChanges();
+
+    const identifier = page.querySelector<HTMLInputElement>('input[name="identifier"]');
+    expect(identifier?.value).toBe(' root ');
+    expect(document.activeElement).toBe(identifier);
+    expect(page.querySelector<HTMLInputElement>('input[name="password"]')?.value).toBe('');
+  });
 });

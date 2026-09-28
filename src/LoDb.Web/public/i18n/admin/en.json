@@ -28,7 +28,7 @@
     "use_recovery": "Use a recovery code",
     "verify": "Verify",
     "errors": {
-      "invalid_credentials": "Wrong credentials.",
+      "invalid_credentials": "Invalid credentials.",
       "invalid_code": "This code is not valid. Try again with the current code.",
       "banned": "This account is banned.",
       "locked": "Too many attempts: this account is locked for a few minutes.",

@@ -28,7 +28,7 @@
     "use_recovery": "Utiliser un code de récupération",
     "verify": "Vérifier",
     "errors": {
-      "invalid_credentials": "Identifiants incorrects.",
+      "invalid_credentials": "Identifiants invalides.",
       "invalid_code": "Ce code n'est pas valide. Réessayez avec le code actuel.",
       "banned": "Ce compte est banni.",
       "locked": "Trop de tentatives : ce compte est verrouillé quelques minutes.",
