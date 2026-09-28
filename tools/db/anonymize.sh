@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Anonymizes a dump of the LoDb database, for preprod and for local trials (plan, L1.4).
+# Anonymizes a dump of the LoDb database, for staging and for local trials (plan, L1.4).
 #
 #   LODB_ANON_PASSWORD='…' tools/db/anonymize.sh <input> <output>
 #
@@ -10,7 +10,7 @@
 # Everything happens in a throwaway postgres:17-alpine container without any network: the
 # input is copied in and restored, anonymize.sql runs in one transaction, the result is
 # dumped, and the container is removed with its data. Every account with a password gets
-# LODB_ANON_PASSWORD (bcrypt); for a dump that goes to preprod, pick a strong one and share
+# LODB_ANON_PASSWORD (bcrypt); for a dump that goes to staging, pick a strong one and share
 # it like a secret, since it opens every account there. Row counts are printed before and
 # after: only the queues, the tokens and the key ring change (emptied): messenger_messages
 # and reset_password_request, then email_outbox, identity_user_tokens and

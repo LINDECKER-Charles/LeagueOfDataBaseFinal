@@ -77,7 +77,7 @@ pourrait plus écrire, et `EventStore::append()` avale cet échec en silence.
 > Fenêtre de perte : le volume `app_state` couvre la recréation de conteneur (donc
 > tout déploiement). Restent le `down -v` et la perte de l'hôte — c'est le rôle du
 > rollup, exécuté à chaque déploiement sur les journées closes
-> (`.github/workflows/_deploy.yml`). Pour rétrécir encore la fenêtre, planifier un
+> (`legacy/.github/workflows/_deploy.yml`). Pour rétrécir encore la fenêtre, planifier un
 > rollup horaire `--include-today`.
 
 ## Vie privée & sécurité

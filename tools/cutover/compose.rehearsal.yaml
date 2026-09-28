@@ -1,6 +1,7 @@
 # Overlay of compose.yaml for the local rehearsal (L8.2, rehearse.sh): the new stack
-# joins the legacy stack's PostgreSQL, on the rehearsal's copy of its database, as it joins
-# the existing database in production (L8.1). Its own postgres service stays up but unused.
+# joins the legacy stack's PostgreSQL, on the rehearsal's copy of its database, as it takes
+# over the legacy database in production (same project, same pgdata volume). Its own
+# postgres service stays up but unused.
 #
 #   docker compose -p lodb-dev-e2 -f compose.yaml -f compose.override.yaml \
 #     -f tools/cutover/compose.rehearsal.yaml …

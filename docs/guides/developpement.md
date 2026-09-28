@@ -6,9 +6,10 @@ emplacements et dépannage. Les règles de code et les invariants sont dans
 [`docs/reecriture/`](../reecriture/README.md), et le découpage en chantiers dans le
 [plan d'implémentation](../reecriture/plan-implementation.md).
 
-> Toutes les commandes se lancent depuis la **racine du dépôt**. La nouvelle stack ne
-> partage rien avec l'ancienne, archivée sous `legacy/` (`legacy/compose.yaml`, projet
-> `lodb`) : fichiers, projet Compose, images, volumes et ports sont distincts.
+> Toutes les commandes se lancent depuis la **racine du dépôt**. En local, la nouvelle
+> stack ne partage rien avec l'ancienne, archivée sous `legacy/` (`legacy/compose.yaml`,
+> projet `lodb`) : fichiers, projet Compose, images, volumes et ports sont distincts. Sur
+> les hôtes, elle prend la place de l'ancienne ([`configuration.md`](configuration.md)).
 
 ## Prérequis
 
@@ -126,8 +127,8 @@ docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml up -d --wait
 `--wait` rend la main quand toutes les sondes sont `healthy` : c'est la forme à utiliser
 avant des E2E ou un script.
 
-`down -v` supprime aussi la base et le volume `storage` : ne le lancez sur la stack
-d'intégration qu'en connaissance de cause.
+`down -v` supprime aussi la base et le volume `ddragon` (blobs Data Dragon) : ne le lancez
+sur la stack d'intégration qu'en connaissance de cause.
 
 ## Tests E2E
 

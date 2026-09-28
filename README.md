@@ -32,7 +32,7 @@
 | Couche | Techno |
 |---|---|
 | API et tâches de fond | ASP.NET Core 10, un seul hôte `LoDb.Api` (`/api`, `/v1`, `/webhooks`, ingestion Data Dragon) |
-| Données | PostgreSQL 17 + EF Core ; blobs adressés par contenu sur le volume `storage` |
+| Données | PostgreSQL 17 + EF Core ; blobs adressés par contenu sur le volume `ddragon` |
 | Web | Angular 22 en SSR (Node 24), locale dans l'URL (`/fr/…`), 21 langues |
 | Apps | Desktop Photino + Velopack (Windows, macOS) ; Android Capacitor 8 |
 | Frontal | nginx (cache des pages, `/cdn/blobs/`) derrière l'edge Caddy du VPS |
@@ -71,8 +71,8 @@ src/LoDb.Api/             hôte unique, modules, CLI, workers
 src/LoDb.Web/             workspace Angular (web, desktop, Android)
 src/LoDb.Desktop/         coquille desktop
 tests/                    tests .NET, E2E Playwright, fixtures
-docker/  compose*.yaml.yaml   images et stack Compose
-tools/               outils : contrat, i18n, parité, bascule, releases
+docker/  compose*.yaml    images et stack Compose
+tools/                    outils : contrat, i18n, parité, bascule, releases
 legacy/                   ancienne stack, archivée
 ```
 
@@ -82,8 +82,8 @@ legacy/                   ancienne stack, archivée
 |---|---|
 | [`docs/reecriture/README.md`](docs/reecriture/README.md) | Pourquoi la réécriture, décisions, architecture cible |
 | [`docs/guides/developpement.md`](docs/guides/developpement.md) | Développer : commandes, stack locale, E2E |
-| [`docs/guides/configuration.md`](docs/guides/configuration.md) | Tous les secrets et variables à configurer (`preprod`, prod, apps) |
-| [`docs/guides/github-actions-secrets.md`](docs/guides/github-actions-secrets.md) | Pipeline : CI, images, déploiement de `preprod`, promotion en prod |
+| [`docs/guides/configuration.md`](docs/guides/configuration.md) | Tous les secrets et variables à configurer (`staging`, `prod`, apps) |
+| [`docs/guides/github-actions-secrets.md`](docs/guides/github-actions-secrets.md) | Pipeline : CI, `dev` → `test` → `main`, déploiement de `staging`, promotion en `prod` |
 | [`docs/reecriture/bascule.md`](docs/reecriture/bascule.md) | Runbook de la bascule et du retour arrière |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribuer : branches, commits, garde-fous |
 | [`docs/README.md`](docs/README.md) | Index complet de la documentation |

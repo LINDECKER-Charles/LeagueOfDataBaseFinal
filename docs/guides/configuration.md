@@ -1,108 +1,103 @@
 # Configuration de la nouvelle stack : secrets et variables
 
 Inventaire complet de ce qu'il faut configurer pour faire tourner la nouvelle stack (.NET +
-Angular) en local, sur `preprod` et en production, et pour publier les apps. Le déroulé du
+Angular) en local, sur `staging` et en `prod`, et pour publier les apps. Le déroulé du
 pipeline est dans [`github-actions-secrets.md`](github-actions-secrets.md), celui de la
 bascule dans le [runbook](../reecriture/bascule.md). La configuration de l'ancienne stack
 est archivée dans [`legacy/docs/guides/configuration.md`](../../legacy/docs/guides/configuration.md).
 
+La nouvelle stack reprend les conventions de l'ancienne : mêmes environnements (`staging`,
+`prod`), mêmes projets Compose (`lodb-staging`, `lodb-prod`), mêmes dossiers sur l'hôte,
+mêmes secrets de dépôt. Seul le contenu des `.env` change, et un certificat s'ajoute par
+environnement.
+
 Légende : ✅ requis · ➖ optionnel · 🔒 secret · ⚙️ contrôlé par le job de déploiement avant
-toute modification de l'hôte · 🔁 repris de l'ancienne stack (`ENV_PROD`).
+toute modification de l'hôte · 🔁 repris du `.env` de l'ancienne stack du même
+environnement.
 
 ## 1. Où vit chaque réglage
 
 | Où | Contenu | Écrit par |
 |---|---|---|
-| Secrets de dépôt de l'ancienne stack | Connexion SSH au VPS : `PROD_SSH_KEY`, `PROD_HOST`, `PROD_SSH_USER`, **réutilisés tels quels** | déjà en place |
-| Environnements GitHub `preprod`, `production` | Par environnement : son `.env` et son certificat (2 secrets) | l'exploitant (*Settings ▸ Environments*) |
+| Secrets de dépôt `STAGING_*`, `PROD_*` | Connexion SSH et dossier de l'hôte, **ceux de l'ancienne stack, réutilisés tels quels** ; certificat Data Protection (nouveau) | déjà en place, sauf le certificat |
+| Secrets de dépôt `ENV_STAGING`, `ENV_PROD` | Le `.env` complet de l'environnement : **contenu remplacé** par celui de la nouvelle stack | l'exploitant (*Settings ▸ Secrets*) |
 | Environnements GitHub `desktop-release`, `android-release`, variables de dépôt | Clés de signature des apps, drapeaux de release | l'exploitant |
-| `.env` de l'hôte (`/opt/lodb-preprod/.env`, `/opt/lodb-production/.env`) | Variables Compose et réglages de l'API (§ 4) | le job, depuis `ENV_FILE` ou `ENV_FILE` |
-| `.deploy/data-protection.pfx` de l'hôte | Certificat Data Protection | le job, depuis `*_DATA_PROTECTION_PFX` |
+| `.env` de l'hôte (`$STAGING_PATH/.env`, `$PROD_PATH/.env`) | Variables Compose et réglages de l'API (§ 4) | le job, depuis `ENV_STAGING` ou `ENV_PROD` |
+| `.deploy/data-protection.pfx` de l'hôte | Certificat Data Protection | le job, depuis `STAGING_DATA_PROTECTION_PFX` ou `PROD_DATA_PROTECTION_PFX` |
 | `.deploy/android/` de l'hôte | `latest.json`, `assetlinks.json` | l'exploitant, à chaque release Android |
 | Services externes | DNS, SMTP, Stripe, Google, Play, Apple, Azure (§ 6) | l'exploitant |
 | Poste de dev | rien : tout a une valeur par défaut (§ 7) | — |
 
-Modèles prêts à remplir : [`.env.preprod.example`](../../.env.preprod.example) (`ENV_FILE`) et
-[`.env.production.example`](../../.env.production.example) (`ENV_FILE`).
+Modèles versionnés : [`.env.staging.example`](../../.env.staging.example) et
+[`.env.prod.example`](../../.env.prod.example). Remplis, ils deviennent `.env.staging` et
+`.env.prod` à la racine du dépôt (ignorés par Git), dont le contenu est collé tel quel dans
+`ENV_STAGING` et `ENV_PROD`.
 
 ## 2. Mise en place, dans l'ordre
 
-**`preprod`** (préproduction, déployée à chaque push de `dev`) :
+Les valeurs 🔁 ne se lisent que dans le `.env` de l'hôte (`$STAGING_PATH/.env`,
+`$PROD_PATH/.env`), les secrets GitHub n'étant pas relisibles. Les relever **avant** la
+bascule de l'environnement : son premier déploiement remplace ce fichier.
 
-1. Hôte prêt : Docker Engine et `docker compose`, `infra-vps` déployé (edge Caddy, réseaux
-   `edge` et `observability`), ports 80/443 ouverts, `docker login ghcr.io` persistant si
-   les packages GHCR sont privés (PAT `read:packages`).
-2. DNS de `CADDY_DOMAINS` et `API_CADDY_DOMAINS` pointés vers l'hôte (§ 6.1).
-3. Certificat Data Protection de `preprod` (§ 6.2). La connexion SSH réutilise les secrets de
-   l'ancienne stack (§ 3.2) : rien à générer.
-4. `.env.preprod.example` rempli ; son contenu devient le secret `ENV_FILE`.
-5. `ENV_FILE` et `DATA_PROTECTION_PFX` dans l'environnement GitHub `preprod` (§ 3.2).
-6. Dump anonymisé restauré dans le Postgres de `preprod` avant le premier `migrate`
-   ([`github-actions-secrets.md`](github-actions-secrets.md), « Avant le premier
-   déploiement de `preprod` »).
-7. Push de `dev` : build, puis déploiement de `preprod`.
+**`staging`** (au moment de fusionner la bascule dans `dev`, dont le push déploie) :
 
-**Production** (à J-3 de la bascule, [runbook](../reecriture/bascule.md) § 1) :
+1. `.env.staging` rempli depuis `.env.staging.example`, valeurs 🔁 de l'ancien staging.
+2. Certificat Data Protection de `staging` (§ 6.2).
+3. Secret `ENV_STAGING` **remplacé** par le contenu de `.env.staging` ; secret
+   `STAGING_DATA_PROTECTION_PFX` créé (§ 3.2).
+4. Packages GHCR `lodb/api` et `lodb/web-ssr` accessibles à l'hôte (§ 3.1).
+5. Push de `dev` : checks, fusion dans `test`, build, déploiement de `staging`.
 
-1. Environnement GitHub `production` créé : *required reviewers*, *deployment branches*
-   limitée à `dev`.
-2. Certificat Data Protection **propre à la prod** (§ 6.2), jamais celui de `preprod`.
-3. `.env.production.example` rempli avec les valeurs 🔁 de l'ancienne prod (§ 4.4) ; son
-   contenu devient `ENV_FILE`.
-4. `ENV_FILE` et `DATA_PROTECTION_PFX` dans l'environnement `production`
-   (§ 3.2).
-5. SMTP, Stripe, Google : § 6.4 à 6.6.
+**`prod`** (juste avant de fusionner `test` dans `main`, [runbook](../reecriture/bascule.md)) :
+
+1. Certificat Data Protection **propre à la prod** (§ 6.2), jamais celui de `staging`.
+2. `.env.prod` rempli depuis `.env.prod.example`, valeurs 🔁 de l'ancienne prod (§ 4.4).
+3. Secret `ENV_PROD` **remplacé** ; secret `PROD_DATA_PROTECTION_PFX` créé. Pas avant :
+   tant que `main` porte l'ancienne stack, un push de `main` la redéploierait avec ce `.env`.
+4. SMTP, Stripe, Google : § 6.4 à 6.6.
+5. Fusion de `test` dans `main` : promotion de `:staging` en `:prod`, déploiement de `prod`.
 
 ## 3. GitHub
 
-### 3.1 Environnements
+### 3.1 Environnements et packages
+
+Les déploiements n'utilisent **aucun environnement GitHub** : comme pour l'ancienne stack,
+ils lisent des secrets de dépôt, et la garde de la prod est la fusion manuelle de `test`
+dans `main`. Seules les releases des apps ont leurs environnements.
 
 | Environnement | Création | Protection | Contenu |
 |---|---|---|---|
-| `preprod` | à la main, ou automatique au premier run | aucune | `ENV_FILE`, `DATA_PROTECTION_PFX` |
-| `production` | **à la main, avant la première promotion** | *required reviewers* ; *deployment branches* : `dev` | `ENV_FILE`, `DATA_PROTECTION_PFX` (jamais en secrets de dépôt) |
 | `desktop-release` | à la main | branche des workflows lancés | secrets et variables du desktop (§ 3.4) |
 | `android-release` | à la main | branche `main` ([`release-android.md`](release-android.md)) | secrets d'Android (§ 3.4) |
 
-`GITHUB_TOKEN` est fourni par GitHub : la CI, le build des images et le retag n'utilisent
-aucun autre secret.
+`GITHUB_TOKEN` est fourni par GitHub : la CI, la fusion dans `test`, le build des images et
+le retag n'utilisent aucun autre secret. Les packages `lodb/api` et `lodb/web-ssr` sont
+nouveaux : leur visibilité se règle comme celle des autres (privés : `docker login
+ghcr.io` persistant sur l'hôte, PAT `read:packages`). `lodb/nginx` est partagé avec
+l'ancienne stack.
 
 ### 3.2 Secrets de déploiement
 
-**Repris de l'ancienne stack, rien à créer.** Les deux stacks tournent sur le même VPS : le
-job de déploiement lit les secrets de dépôt existants, pour `preprod` comme pour la prod.
+`ci.yml` les passe à `_deploy.yml` sous des noms neutres (`SSH_KEY`, `SSH_HOST`,
+`DEPLOY_PATH`, `SSH_USER`, `ENV_FILE`, `DATA_PROTECTION_PFX`).
 
-| Secret de dépôt | Rôle |
-|---|---|
-| `PROD_SSH_KEY` 🔒 | Clé privée SSH de déploiement. |
-| `PROD_HOST` | IP ou FQDN du VPS. |
-| `PROD_SSH_USER` | Utilisateur SSH (➖, `root` par défaut). |
+| `staging` | `prod` | Statut | Rôle |
+|---|---|---|---|
+| `STAGING_SSH_KEY` 🔒 | `PROD_SSH_KEY` 🔒 | existant | Clé privée SSH de déploiement. |
+| `STAGING_HOST` | `PROD_HOST` | existant | IP ou FQDN de l'hôte. |
+| `STAGING_PATH` | `PROD_PATH` | existant | Dossier du dépôt sur l'hôte, celui de l'ancienne stack : la nouvelle y prend sa place. |
+| `STAGING_SSH_USER` | `PROD_SSH_USER` | existant | Utilisateur SSH (➖, `root` par défaut). |
+| `ENV_STAGING` 🔒 | `ENV_PROD` 🔒 | **à remplacer** | Contenu complet de `.env.staging` / `.env.prod` (§ 4). |
+| `STAGING_DATA_PROTECTION_PFX` 🔒 | `PROD_DATA_PROTECTION_PFX` 🔒 | **nouveau** | Le `.pfx` de l'environnement en base64, sur une ligne (§ 6.2). Celui de la prod ne change plus une fois servi : les clés déjà chiffrées deviendraient illisibles (sessions et jetons perdus). |
 
-**Nouveaux : deux par environnement**, leur contenu n'existe pas dans l'ancienne stack.
+Un secret absent arrive vide : la première étape de `_deploy.yml` les vérifie et échoue en
+nommant ceux qui manquent, avant toute connexion à l'hôte.
 
-| Environnement | Secret | Valeur |
-|---|---|---|
-| `preprod` | `ENV_FILE` 🔒 | Contenu complet de `.env.preprod.example` rempli (§ 4). |
-| `preprod` | `DATA_PROTECTION_PFX` 🔒 | Le `.pfx` de `preprod` encodé en base64, sur une ligne (§ 6.2). |
-| `production` | `ENV_FILE` 🔒 | Contenu complet de `.env.production.example` rempli (§ 4). |
-| `production` | `DATA_PROTECTION_PFX` 🔒 | Le `.pfx` **propre à la prod**, en base64. Il ne change plus une fois servi : les clés déjà chiffrées deviendraient illisibles (sessions et jetons perdus). |
+### 3.3 Garde de la prod
 
-Dossiers sur l'hôte : `/opt/lodb-preprod` et `/opt/lodb-production` (`/opt/<projet>`),
-créés par le job. Ils doivent différer de `PROD_PATH`, que l'ancienne stack garde pour le retour
-arrière. Tant qu'un secret manque, le job échoue à « Check the secrets » et les nomme.
-
-`PROD_SSH_KEY` étant un secret de dépôt, tout job du dépôt peut le lire, comme aujourd'hui
-pour l'ancienne stack ; la mise en prod reste gardée par l'approbation de `production`.
-
-**Surcharges, seulement si un environnement change d'hôte** : les secrets `SSH_KEY`,
-`SSH_HOST`, `SSH_USER` et `DEPLOY_PATH`, déclarés dans cet environnement, remplacent les
-valeurs ci-dessus.
-
-### 3.3 Approbation de la prod
-
-L'environnement `production` porte l'approbation qui met en prod (*required reviewers*) et
-limite les déploiements à `dev` (*deployment branches*). Ses deux secrets y sont déclarés,
-jamais en secrets de dépôt : ils ne sont délivrés qu'au job approuvé.
+`main` n'est atteint que par une fusion manuelle de `test` : c'est la validation humaine
+qui met en prod, sans rebuild ni nouveau passage des checks. Les secrets `PROD_*` étant des
+secrets de dépôt, tout workflow du dépôt peut les lire, comme avant la bascule.
 
 ### 3.4 Releases des apps
 
@@ -123,49 +118,45 @@ Sans ces secrets, la release desktop échoue à la signature (`signing.sh`) et l
 Android à la signature des bundles ou de l'AAB. Les deux releases se lancent à la main
 (`gh workflow run …`) : aucun déploiement ne les appelle encore (§ 8).
 
-### 3.5 Secrets de l'ancienne stack
+### 3.5 Autres secrets de dépôt
 
-`PROD_SSH_KEY`, `PROD_HOST` et `PROD_SSH_USER` servent la nouvelle stack : **ne jamais les
-supprimer**. `STAGING_SSH_KEY`, `STAGING_HOST`, `STAGING_PATH`, `STAGING_SSH_USER`,
-`ENV_STAGING`, `PROD_PATH`, `ENV_PROD` et `ENV_TEST` ne sont plus lus par aucun workflow
-actif. Les garder jusqu'à la décommission (runbook § 10) : `ENV_PROD` est la source des
-valeurs 🔁.
+`ENV_TEST` (tests de l'ancienne stack) n'est lu par aucun workflow de la nouvelle ; la CI
+n'a besoin d'aucun `.env`. `ACME_EMAIL` relève de `infra-vps`. Les garder jusqu'à la
+décommission ([runbook](../reecriture/bascule.md)).
 
 ## 4. Le `.env` d'un environnement servi
 
-Le secret `ENV_FILE` ou `ENV_FILE` est le fichier complet, une variable par ligne. Le
-job l'écrit dans `/opt/<projet>/.env` (mode 600) à chaque déploiement.
+Le secret `ENV_STAGING` ou `ENV_PROD` est le fichier complet, une variable par ligne. Le job
+l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque déploiement.
 
 **Pièges du fichier :**
 
 - Pas de ligne `LoDb__*` vide : la commenter. Présente mais vide, elle est transmise à
   l'API comme une valeur vide, que certains réglages refusent au démarrage.
 - Une valeur qui contient `$` se met entre apostrophes (`'…'`) : Compose l'interpolerait.
-- Mots de passe en hexadécimal (`openssl rand -hex 24`) : la chaîne de connexion n'est pas
-  quotée, un `;` la casse.
+- La chaîne de connexion n'est pas quotée : un mot de passe de base qui contient `;` la
+  casse (le changer d'abord, `ALTER ROLE`).
 
 ### 4.1 Variables Compose
 
-| Variable | `preprod` | prod | | Rôle |
+| Variable | `staging` | `prod` | | Rôle |
 |---|---|---|---|---|
-| `COMPOSE_PROJECT_NAME` ⚙️ | `lodb-preprod` | `lodb-production` | ✅ | Isole la stack sur le VPS ; jamais `lodb-prod` ni `lodb-staging`. |
+| `COMPOSE_PROJECT_NAME` ⚙️ | `lodb-staging` | `lodb-prod` | ✅ | Le projet de l'ancienne stack : la nouvelle y prend sa place (même volume `pgdata`). |
 | `REGISTRY` | `ghcr.io/lindecker-charles/lodb` | idem | ✅ | Registre des images. |
-| `IMAGE_TAG` ⚙️ | `preprod` | `production` | ✅ | Tag déployé ; jamais `prod` (celui de l'ancienne stack). |
-| `COMPOSE_PROFILES` | `bundled-database` | absente | ➖ | Postgres embarqué ; le job l'impose, la ligne sert aux commandes lancées à la main. |
-| `CADDY_DOMAINS` | domaine de `preprod` | `league-of-data-base.com, league-of-data-base.fr` 🔁 | ✅ | Label `caddy_0` du site ; DNS pointé d'abord. |
-| `API_CADDY_DOMAINS` | `api.` + domaine | `api.league-of-data-base.com, api.league-of-data-base.fr` 🔁 | ✅ | Label `caddy_1` ; chaque hôte commence par `api.`. |
-| `LODB_CANONICAL_HOST` | domaine de `preprod` | `league-of-data-base.com` | ✅ | Hôte canonique : cible des 301 (`www.`, `.fr`), origine des liens d'e-mail, des sitemaps et des `share_url` de `/v1`. |
-| `LODB_ALLOWED_HOSTS` | domaine de `preprod` | `league-of-data-base.com` | ✅ | Hôtes que le SSR accepte (virgules) ; les autres reçoivent un 400. |
-| `LODB_PUBLIC_API_ORIGIN` | `https://api.` + domaine | `https://api.league-of-data-base.com` | ✅ | Origine de `/v1` documentée par `/developers`. |
+| `IMAGE_TAG` ⚙️ | `staging` | `prod` | ✅ | Tag déployé : dernier build de `dev`, ou images promues. |
+| `CADDY_DOMAINS` | `test.league-of-data-base.com` 🔁 | `league-of-data-base.com, league-of-data-base.fr` 🔁 | ✅ | Label `caddy_0` du site ; DNS pointé d'abord. |
+| `API_CADDY_DOMAINS` | `api.test.league-of-data-base.com` 🔁 | `api.league-of-data-base.com, api.league-of-data-base.fr` 🔁 | ✅ | Label `caddy_1` ; chaque hôte commence par `api.`. |
+| `LODB_CANONICAL_HOST` | `test.league-of-data-base.com` | `league-of-data-base.com` | ✅ | Hôte canonique : cible des 301 (`www.`, `.fr`), origine des liens d'e-mail, des sitemaps et des `share_url` de `/v1`. |
+| `LODB_ALLOWED_HOSTS` | `test.league-of-data-base.com` | `league-of-data-base.com` | ✅ | Hôtes que le SSR accepte (virgules) ; les autres reçoivent un 400. |
+| `LODB_PUBLIC_API_ORIGIN` | `https://api.test.league-of-data-base.com` | `https://api.league-of-data-base.com` | ✅ | Origine de `/v1` documentée par `/developers`. |
 | `LODB_EDGE_CIDR` | sous-réseau d'`edge` | idem | ✅ | Seul pair cru sur `X-Forwarded-For` (§ 6.7). |
 | `LODB_NOINDEX` ⚙️ | `1` | `0` | ✅ | `X-Robots-Tag: noindex, nofollow` ; le smoke test le vérifie. |
-| `LODB_DB_NETWORK` ⚙️ | **absente** | `lodb-prod_default` | prod | Réseau de la base : absente, Postgres embarqué ; présente, la base de l'ancienne stack, jamais déplacée. |
-| `LODB_DB_HOST`, `LODB_DB_PORT` | défauts | défauts | ➖ | `postgres` et `5432`, le service Postgres du réseau dans les deux cas. |
-| `LODB_DB_NAME`, `LODB_DB_USER` | `lodb` | 🔁 `POSTGRES_DB`, `POSTGRES_USER` | ✅ | Chaîne de connexion de `api` et `migrate`. |
-| `LODB_DB_PASSWORD` 🔒 | fort, propre à `preprod` | 🔁 `POSTGRES_PASSWORD` | ✅ | Idem ; sans `;`. |
+| `LODB_DB_NAME`, `LODB_DB_USER` | 🔁 `POSTGRES_DB`, `POSTGRES_USER` | idem | ✅ | La base existe déjà dans `pgdata`, créée avec ces identifiants ; chaîne de connexion de `api` et `migrate`. |
+| `LODB_DB_PASSWORD` 🔒 | 🔁 `POSTGRES_PASSWORD` | idem | ✅ | Idem ; sans `;`. |
 | `LODB_DATA_PROTECTION_CERT_FILE`, `LODB_ANDROID_DIR` | défauts | défauts | — | Ne pas définir : le job écrit aux emplacements par défaut (§ 5). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | ➖ | ➖ | ➖ | Collecteur de traces OTLP, quand `infra-vps` en expose un. |
 
+Chaque environnement a son propre service `postgres` dans son projet, comme avant.
 `CONTACT_RECIPIENT` et `PUBLIC_API_BASE_URL` n'ont d'effet qu'en local : sur un
 environnement servi, `LoDb__Contact__Recipient` et `LODB_PUBLIC_API_ORIGIN` les remplacent.
 
@@ -177,12 +168,12 @@ et l'API garde sa valeur par défaut.
 | Ligne | Requis | Effet, et effet de l'absence |
 |---|---|---|
 | `LoDb__DataProtection__CertificatePassword` 🔒 | si le `.pfx` en a un | Mot de passe du certificat. Faux : l'API refuse de démarrer. |
-| `LoDb__Mail__Host` ⚙️ | prod | Relais SMTP. Absent : les e-mails attendent dans `email_outbox`, rien n'est envoyé (voulu sur `preprod`). |
+| `LoDb__Mail__Host` ⚙️ | prod (et `staging`, comme l'ancien staging) | Relais SMTP. Absent : les e-mails attendent dans `email_outbox`, rien n'est envoyé. |
 | `LoDb__Mail__Port` | ➖ | `587` par défaut. |
 | `LoDb__Mail__Security` | ➖ | `Auto` par défaut ; `None`, `SslOnConnect`, `StartTls`, `StartTlsWhenAvailable`. |
 | `LoDb__Mail__Username`, `LoDb__Mail__Password` 🔒 | si le relais authentifie | Identifiants SMTP. |
 | `LoDb__Mail__From` | prod | `Nom <adresse>`, sur un domaine couvert par SPF, DKIM et DMARC. Défaut : `no-reply@leagueofdatabase.gg`, **un autre domaine** : toujours le définir. |
-| `LoDb__Billing__StripeSecretKey` 🔒 ⚙️ | prod | `sk_live_…` en prod, `sk_test_…` sur `preprod`. Absente : dons et achats de crédits en 503. |
+| `LoDb__Billing__StripeSecretKey` 🔒 ⚙️ | prod | `sk_live_…` en prod, `sk_test_…` sur `staging`. Absente : dons et achats de crédits en 503. |
 | `LoDb__Billing__StripeWebhookSecret` 🔒 ⚙️ | prod | `whsec_…` de l'endpoint `/webhooks/stripe` de l'environnement. Absent : webhook en 503, alerte `billing.webhook.unconfigured`. |
 | `LoDb__Accounts__Google__ClientId` | ➖ | Client OAuth web. Absent : connexion Google coupée (`google-unavailable`). |
 | `LoDb__Accounts__Google__ClientSecret` 🔒 | avec le précédent | Secret du client web. |
@@ -194,13 +185,14 @@ et l'API garde sa valeur par défaut.
 
 ### 4.3 Fixés par les fichiers compose (hors du `.env`)
 
-`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_*`), `LoDb__Accounts__SiteOrigin`,
-`LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin` (`https://` +
-`LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl` (`LODB_PUBLIC_API_ORIGIN`),
-`LoDb__DataProtection__CertificatePath`, `LoDb__Hosting__KnownProxyNetworks__0..2`,
-`LoDb__Storage__Root` (`/srv/storage`, que nginx sert), et côté SSR `LODB_API_ORIGIN`,
-`LODB_TRUST_PROXY_HEADERS`, `NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur
-un hôte : `Development` exposerait OpenAPI et retirerait `Secure` des cookies.
+`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_*`, hôte `postgres`),
+`LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
+(`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
+(`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
+`LoDb__Hosting__KnownProxyNetworks__0..2`, `LoDb__Storage__Root` (`/srv/storage`, volume
+`ddragon`, que nginx sert), et côté SSR `LODB_API_ORIGIN`, `LODB_TRUST_PROXY_HEADERS`,
+`NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur un hôte : `Development`
+exposerait OpenAPI et retirerait `Secure` des cookies.
 
 <details>
 <summary>Réglages internes de l'API, avec leur défaut (non transmis par compose)</summary>
@@ -223,44 +215,49 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 
 </details>
 
-### 4.4 Correspondance avec l'ancienne prod (`ENV_PROD`)
+### 4.4 Correspondance avec l'ancienne stack (`.env` de l'hôte)
+
+Valable pour les deux environnements : chacun reprend les valeurs de son propre `.env`.
 
 | Ancienne variable | Nouvelle ligne |
 |---|---|
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | `LODB_DB_NAME`, `LODB_DB_USER`, `LODB_DB_PASSWORD` |
-| `APP_SECRET` | `LoDb__Analytics__VisitorKey` (mêmes visiteurs des deux côtés) |
+| `APP_SECRET` | `LoDb__Analytics__VisitorKey` (mêmes visiteurs des deux côtés de la bascule) |
 | `MAILER_DSN` `smtp://USER:MDP@HÔTE:587` | `LoDb__Mail__Host`, `Port` `587`, `Security` `StartTls`, `Username`, `Password` (décodés d'URL) ; `smtps://…:465` : `Port` `465`, `Security` `SslOnConnect` |
 | `MAILER_FROM` | `LoDb__Mail__From` |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | `LoDb__Billing__StripeSecretKey`, `LoDb__Billing__StripeWebhookSecret` |
 | `OAUTH_GOOGLE_CLIENT_ID`, `OAUTH_GOOGLE_CLIENT_SECRET` | `LoDb__Accounts__Google__ClientId`, `LoDb__Accounts__Google__ClientSecret` |
 | `CONTACT_RECIPIENT` | `LoDb__Contact__Recipient` |
-| `CADDY_DOMAINS`, `API_CADDY_DOMAINS` | mêmes noms |
-| `ADMIN_LOGIN`, `ADMIN_PASSWORD` | aucune : chaque administrateur reçoit le rôle par `api admin create --email …`, TOTP à la première connexion (runbook § 5.4) |
+| `COMPOSE_PROJECT_NAME`, `REGISTRY`, `IMAGE_TAG`, `CADDY_DOMAINS`, `API_CADDY_DOMAINS` | mêmes noms, mêmes valeurs |
+| `ADMIN_LOGIN`, `ADMIN_PASSWORD` | aucune : chaque administrateur reçoit le rôle par `api admin create --email …`, TOTP à la première connexion ([runbook](../reecriture/bascule.md)) |
 | `GEOIP_DB_PATH` | aucune sur un hôte (§ 8) |
-| `REGISTRY`, `IMAGE_TAG`, `COMPOSE_PROJECT_NAME` | valeurs propres à la nouvelle stack (§ 4.1) |
+| `HTTP_PORT`, `MAILPIT_UI_PORT` | aucune : ports locaux de l'ancienne stack |
 
 ## 5. Fichiers et volumes de l'hôte
 
-| Chemin, dans `/opt/<projet>` | Écrit par | Rôle |
+| Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |
 |---|---|---|
-| `.env` | le job (`ENV_*`), mode 600 | § 4. |
+| dépôt (branche `test` ou `main`) | le job (`git reset --hard`) | Fichiers compose à la racine. |
+| `.env` | le job (`ENV_STAGING`, `ENV_PROD`), mode 600 | § 4. |
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |
 | `.deploy/android/` | l'exploitant, à chaque release Android | `latest.json` (asset `lodb-android-latest.json`) et `assetlinks.json` ([`release-android.md`](release-android.md)). Vide : les deux URL répondent 404. |
 
-Volumes : `<projet>_storage` (Data Dragon, propre à la nouvelle stack, pré-rempli avant la
-bascule en prod), `<projet>_pages-cache`, et `<projet>_pgdata` sur `preprod` seulement.
+Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :
+
+| Volume | Origine | Rôle |
+|---|---|---|
+| `pgdata` | **repris** de l'ancienne stack | La base, mise à jour par `migrate` (une base Doctrine est d'abord marquée à `Baseline`). |
+| `ddragon` | nouveau, vide au premier déploiement | Blobs Data Dragon, remplis par l'ingestion. |
+| `pages-cache` | nouveau | Cache des pages de nginx. |
+| `storage`, `app_state` | ancienne stack, **laissés intacts** | Non montés : ni réutilisés (`storage` appartient à `www-data`, l'API ne pourrait pas y écrire) ni supprimés (retour arrière, reprise des agrégats et de l'audit). Supprimés à la décommission, après export. |
 
 ## 6. Obtenir les valeurs
 
 ### 6.1 DNS
 
-Enregistrements A (et AAAA) vers l'hôte pour chaque nom de `CADDY_DOMAINS` et de
-`API_CADDY_DOMAINS`, avant le premier déploiement : le job contrôle le TLS public. Pour
-`preprod`, le domaine de l'ancien staging (`test.league-of-data-base.com`,
-`api.test.league-of-data-base.com`) est le candidat naturel : il pointe déjà vers l'hôte
-si l'ancien staging y tournait, et c'est celui que vise le canal beta du desktop. Il faut
-alors arrêter d'abord le `nginx` et le `go-api` de `lodb-staging` : sur `preprod`, le job
-refuse de reprendre un domaine.
+Rien à changer : `staging` et `prod` servent les domaines de l'ancienne stack, qui
+pointent déjà vers l'hôte. Pour un nouveau nom, enregistrements A (et AAAA) vers l'hôte
+avant le déploiement : le job contrôle le TLS public.
 
 ### 6.2 Certificat Data Protection (un par environnement)
 
@@ -268,7 +265,7 @@ refuse de reprendre un domaine.
 openssl req -x509 -newkey rsa:3072 -nodes -days 3650 -subj "/CN=lodb data protection" \
   -keyout dp.key -out dp.crt
 openssl pkcs12 -export -inkey dp.key -in dp.crt -out dp.pfx   # mot de passe demandé
-base64 < dp.pfx | tr -d '\n'   # valeur de *_DATA_PROTECTION_PFX
+base64 < dp.pfx | tr -d '\n'   # valeur de STAGING_ ou PROD_DATA_PROTECTION_PFX
 ```
 
 Le mot de passe va dans `LoDb__DataProtection__CertificatePassword`. Garder `dp.pfx` hors
@@ -277,27 +274,27 @@ changer déconnecte tout le monde.
 
 ### 6.3 Clé SSH de déploiement
 
-Aucune à créer : `PROD_SSH_KEY`, celle de l'ancienne stack, est déjà autorisée sur le VPS.
-Seule une stack déplacée sur un autre hôte a besoin de la sienne :
+Aucune à créer : `STAGING_SSH_KEY` et `PROD_SSH_KEY`, celles de l'ancienne stack, sont déjà
+autorisées sur l'hôte. Seul un nouvel hôte a besoin de la sienne :
 
 ```bash
-ssh-keygen -t ed25519 -N '' -C 'lodb-preprod deploy' -f lodb-preprod-deploy
+ssh-keygen -t ed25519 -N '' -C 'lodb-staging deploy' -f lodb-staging-deploy
 ```
 
 La clé publique (`.pub`) va dans `~/.ssh/authorized_keys` de l'utilisateur de déploiement
-sur cet hôte ; la clé privée, complète, dans le secret `SSH_KEY` de l'environnement.
+sur cet hôte ; la clé privée, complète, dans `STAGING_SSH_KEY` ou `PROD_SSH_KEY`.
 
 ### 6.4 SMTP
 
-Mêmes identifiants que le `MAILER_DSN` de l'ancienne prod (§ 4.4). Le domaine de
-`LoDb__Mail__From` doit autoriser le relais : SPF, DKIM et DMARC.
+Mêmes identifiants que le `MAILER_DSN` de l'ancienne stack du même environnement (§ 4.4).
+Le domaine de `LoDb__Mail__From` doit autoriser le relais : SPF, DKIM et DMARC.
 
 ### 6.5 Stripe
 
-| | `preprod` | prod |
+| | `staging` | `prod` |
 |---|---|---|
-| Clés | mode test (`sk_test_…`) | mode live (`sk_live_…`) 🔁 |
-| Endpoint | `https://<domaine de preprod>/webhooks/stripe`, créé pour `preprod` | l'endpoint **existant**, `https://league-of-data-base.com/webhooks/stripe`, inchangé 🔁 |
+| Clés | mode test (`sk_test_…`) 🔁 | mode live (`sk_live_…`) 🔁 |
+| Endpoint | `https://test.league-of-data-base.com/webhooks/stripe`, celui de l'ancien staging 🔁 | l'endpoint **existant**, `https://league-of-data-base.com/webhooks/stripe`, inchangé 🔁 |
 | Événements | `checkout.session.completed`, `customer.subscription.deleted` | idem |
 
 Le secret de signature (`whsec_…`) est celui de l'endpoint de chaque environnement.
@@ -310,10 +307,10 @@ Le projet Google Cloud et l'écran de consentement :
 - **Client web** (celui de l'ancienne stack 🔁) : ajouter l'URI de redirection
   `https://<hôte canonique>/api/account/google/callback` et l'origine
   `https://<hôte canonique>`, **sans retirer** celles de l'ancienne stack avant la
-  décommission (retour arrière). Même chose pour le domaine de `preprod`.
+  décommission (retour arrière). Même chose pour `test.league-of-data-base.com`.
 - **Client desktop** (type *Desktop app*) : son id est compilé dans l'app (propriété MSBuild
   `LoDbDesktopGoogleClientId`) et déclaré côté serveur en `AppClients__N__ClientId` avec son
-  secret, sur chaque API que vise le canal (stable : prod, beta : `test.`).
+  secret, sur chaque API que vise le canal (stable : `prod`, beta : `staging`).
 - **Client Android** : déclaré en `AppClients__N__ClientId`, sans secret ; la redirection
   passe par l'App Link `https://<hôte>/app/oauth/google`. Voir § 8 : l'app ne le lit pas
   encore.
@@ -327,8 +324,8 @@ Sur l'hôte : `docker network inspect edge --format '{{(index .IPAM.Config 0).Su
 Aucun `.env` n'est nécessaire : `compose.yaml` donne une valeur par défaut à tout, et
 `compose.override.yaml` ajoute `ASPNETCORE_ENVIRONMENT=Development` et Mailpit
 (`LoDb__Mail__Host=mailpit`, e-mails sur http://localhost:18025). Un `.env` racine ne sert
-qu'à surcharger un port ou une variable ; ne jamais y copier un modèle d'environnement
-servi. Ports et emplacements : [`developpement.md`](developpement.md).
+qu'à surcharger un port ou une variable ; ne jamais y copier `.env.staging` ni `.env.prod`.
+Ports et emplacements : [`developpement.md`](developpement.md).
 
 L'ancienne stack archivée a son propre `.env`, `legacy/.env` (modèle
 `legacy/.env.example`), lu par `docker compose --project-directory legacy …`.
@@ -341,8 +338,8 @@ L'ancienne stack archivée a son propre `.env`, `legacy/.env` (modèle
 - **Connexion Google sur Android** : aucun fichier d'environnement du front ne définit
   `googleClientId`. La connexion reste coupée dans l'app, quels que soient les
   `AppClients` du serveur.
-- **Releases des apps** : les workflows attendent un appel après le déploiement de prod
-  (« contrat d'appel » des guides de release), que `promote.yml` ne fait pas. Elles se
-  lancent donc à la main.
+- **Releases des apps** : les workflows attendent un appel après le déploiement de `prod`
+  (« contrat d'appel » des guides de release), que `ci.yml` ne fait pas. Elles se lancent
+  donc à la main.
 - **Réglages internes** : aucun n'est réglable depuis le `.env` sans modifier
   `compose.deploy.yaml` (§ 4.3, encadré).

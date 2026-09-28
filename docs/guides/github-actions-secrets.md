@@ -1,119 +1,115 @@
-# 🔐 GitHub Actions — pipeline de la nouvelle stack
+# 🔐 GitHub Actions — pipeline CI/CD
 
 Ce guide décrit le pipeline : qui construit, qui déploie, dans quel ordre. **La liste de
-tout ce qu'il faut configurer** (environnements GitHub, secrets, variables, lignes des
-`.env`, fichiers de l'hôte, services externes) est dans [`configuration.md`](configuration.md).
+tout ce qu'il faut configurer** (secrets, variables, lignes des `.env`, fichiers de l'hôte,
+services externes) est dans [`configuration.md`](configuration.md).
 
-Les workflows de l'ancienne stack (`ci.yml`, `_*.yml`) sont archivés sous
-`legacy/.github/workflows/` et ne tournent plus ; leur guide est
+Le pipeline garde les conventions de l'ancienne stack : mêmes noms de workflows, même
+chemin `dev` → `test` → `main`, mêmes environnements (`staging`, `prod`) et mêmes secrets.
+Ses workflows d'origine sont archivés sous `legacy/.github/workflows/` et ne tournent
+plus ; leur guide est
 [`legacy/docs/guides/github-actions-secrets.md`](../../legacy/docs/guides/github-actions-secrets.md).
 
 ## Workflows
 
 | Fichier | Rôle |
 |---|---|
-| `ci.yml` | Déclenché par `push` (`dev`, `main`, `docs/reecriture-dotnet-angular`) et `pull_request`, filtré sur les chemins de la nouvelle stack. Jobs parallèles : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-preprod` + Playwright). Sur un `push` de **`dev`**, une fois les jobs bloquants verts : `build`, puis `deploy-preprod`. |
-| `build.yml` | Réutilisable, appelé par `ci.yml` : images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}` taguées `:<sha>` + `:preprod`, label OCI et `APP_REVISION` = SHA. |
-| `deploy.yml` | Déploiement SSH. Pour `preprod` : appelé par `ci.yml` après chaque build de `dev`, ou lancé à la main (`workflow_dispatch`, entrée `branch`, `dev` par défaut). Pour la prod : appelé par `promote.yml`. `pull`, puis conteneur éphémère `migrate` **avant** `up -d --wait`, puis smoke test (nginx, `/readyz`, `/en/`, sous-domaine `api.`, `X-Robots-Tag`, TLS public avec relance de l'edge). |
-| `promote.yml` | Manuel (`workflow_dispatch`, entrées `revision`, `branch`, `take_over_domains`) : vérifie que les trois images `:<revision>` existent, puis, **après approbation** de l'environnement `production`, les retague `:production` (sans rebuild) et les déploie par `deploy.yml`. |
+| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main`, `docs/reecriture-dotnet-angular`) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-dev` + Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`. Sur un push de **`main`** : `promote`, `deploy-prod`. |
+| `_build.yml` | Réutilisable : construit depuis `test` les images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, taguées `:<sha>` (le commit poussé sur `dev`) + `:staging`, label OCI et `APP_REVISION` = SHA. |
+| `_deploy.yml` | Réutilisable : déploiement SSH d'un hôte, même logique pour `staging` et `prod`. Entrées `environment` (`staging` ou `prod`) et `branch` (`test` ou `main`) ; secrets passés par `ci.yml` (§ Secrets). |
+| `_promote.yml` | Réutilisable : retague `:staging` en `:prod` et `:latest`, **sans rebuild**. |
 | `release-desktop.yml`, `release-android.yml` | Releases signées des apps ([`release-desktop.md`](release-desktop.md), [`release-android.md`](release-android.md)). |
 
 ```
-push dev ─▶ ci (dotnet, front, contract, e2e ; i18n informatif)
-         ─▶ build (GHCR :<sha> + :preprod)
-         ─▶ deploy-preprod ─▶ hôte preprod : pull ─▶ migrate ─▶ up -d ─▶ smoke test
-                          (annonce « Deployed revision : <sha> »)
-Actions ▸ Promote (revision = <sha>) ─▶ images :<sha> présentes ?
-        ─▶ approbation « production » ─▶ retag :<sha> → :production
-        ─▶ hôte prod : pull ─▶ migrate ─▶ [reprise des domaines] ─▶ up -d ─▶ smoke test
+push dev  ─▶ checks (dotnet, front, contract, e2e ; i18n informatif)
+          ─▶ merge dev → test (créée depuis main si absente)
+          ─▶ _build (GHCR :<sha> + :staging)
+          ─▶ _deploy staging (branche test) : pull ─▶ migrate ─▶ up -d ─▶ smoke test
+fusion manuelle test → main ─▶ push main
+          ─▶ _promote (:staging → :prod + :latest, sans rebuild)
+          ─▶ _deploy prod (branche main) : pull ─▶ migrate ─▶ up -d ─▶ smoke test
 ```
 
-Sur `dev`, un push plus récent **attend** la fin du run en cours au lieu de l'annuler : ce
-run se termine par un déploiement, qu'une annulation couperait en plein milieu. Ailleurs
-(PR, autres branches), le run obsolète est annulé.
+- `test` ne déclenche jamais le workflow : c'est la branche que l'hôte de `staging` suit.
+- `main` n'est atteint que par la fusion manuelle de `test` : c'est la validation humaine
+  qui met en prod. La prod reçoit les images que `staging` a servies, sans rebuild ni
+  nouveau passage des checks.
+- `_promote` promeut ce que `:staging` désigne **au moment du push de `main`**, c'est-à-dire
+  le dernier build de `dev`. Ne pas pousser `dev` entre la validation de `staging` et la
+  fusion dans `main`.
+- Filtre de chemins : un push qui ne touche pas la nouvelle stack (documentation seule) ne
+  lance rien, ni fusion dans `test` ni promotion.
+- Sur `dev` et `main`, un push plus récent **attend** la fin du run en cours au lieu de
+  l'annuler : ce run se termine par un déploiement, qu'une annulation couperait en plein
+  milieu. Ailleurs (PR, autres branches), le run obsolète est annulé.
 
-Les jobs de CI et de build n'utilisent aucun secret (seulement `GITHUB_TOKEN`). Le job de
-déploiement tourne dans l'environnement GitHub `preprod` ou `production` :
+## Secrets
 
-- **`preprod`** : créé à la première exécution ; ses deux secrets (`ENV_FILE`,
-  `DATA_PROTECTION_PFX`) y sont déclarés. Tant qu'ils manquent, le job `deploy-preprod`
-  échoue à son étape « Check the secrets », qui les nomme : le push de `dev` est alors rouge.
-- **`production`** : à créer **avant** la première promotion, avec des *required
-  reviewers* (la validation manuelle qui met en prod) et une règle *deployment branches*
-  limitée à `dev`, la branche qui porte les workflows lancés. Ses deux secrets
-  (`ENV_FILE`, `DATA_PROTECTION_PFX`) y sont déclarés, jamais en secrets de
-  dépôt : ils ne sont alors délivrés qu'au job approuvé.
+Les checks, la fusion dans `test`, le build et le retag n'utilisent que `GITHUB_TOKEN`.
+Le déploiement lit des **secrets de dépôt**, sans environnement GitHub, comme l'ancienne
+stack ; `ci.yml` les passe à `_deploy.yml` :
 
-Le VPS étant commun aux deux stacks, la connexion réutilise les secrets de dépôt de
-l'ancienne : `PROD_SSH_KEY`, `PROD_HOST`, `PROD_SSH_USER`. Le job déploie dans `/opt/lodb-preprod` et
-`/opt/lodb-production` ([`configuration.md`](configuration.md), § 3.2).
+| Entrée de `_deploy.yml` | `deploy-staging` | `deploy-prod` |
+|---|---|---|
+| `SSH_KEY` | `STAGING_SSH_KEY` | `PROD_SSH_KEY` |
+| `SSH_HOST` | `STAGING_HOST` | `PROD_HOST` |
+| `DEPLOY_PATH` | `STAGING_PATH` | `PROD_PATH` |
+| `SSH_USER` (➖, `root`) | `STAGING_SSH_USER` | `PROD_SSH_USER` |
+| `ENV_FILE` | `ENV_STAGING` | `ENV_PROD` |
+| `DATA_PROTECTION_PFX` | `STAGING_DATA_PROTECTION_PFX` | `PROD_DATA_PROTECTION_PFX` |
 
-**Tags d'images** : `:<sha>` (immuable, poussé par `build.yml`), `:preprod` (dernier build
-de `dev`) et `:production` (la révision promue). **Jamais `:prod`** :
-`ghcr.io/<owner>/lodb/nginx` est partagé avec l'ancienne stack, dont les déploiements
-tirent `:prod`, et le retour arrière de la bascule a besoin de cette image intacte.
+Les quatre premières lignes existent déjà (ancienne stack). `ENV_STAGING` et `ENV_PROD`
+existent aussi, mais leur contenu est **remplacé** par le `.env` de la nouvelle stack ; les
+deux certificats sont nouveaux ([`configuration.md`](configuration.md), § 2 et 3.2).
+
+**Tags d'images** : `:<sha>` (immuable, poussé par `_build.yml`), `:staging` (dernier build
+de `dev`), `:prod` et `:latest` (images promues). `ghcr.io/<owner>/lodb/nginx` porte le nom
+qu'avait l'image nginx de l'ancienne stack : ses `:staging` et `:prod` désignent désormais
+la nouvelle, et les images de l'ancienne restent accessibles par leur tag `:<sha>`.
 
 ## Ce que fait le job sur l'hôte, dans l'ordre
 
-1. Synchronise le dépôt sur la branche, contrôle le `.env` (lignes marquées ⚙️ dans
-   [`configuration.md`](configuration.md)), le réseau de la base (créé sur `preprod`, exigé en
-   prod) et le réseau `edge` (exigé, jamais créé).
-2. Cherche les conteneurs **d'autres projets** dont les labels Caddy réclament un domaine
-   de `CADDY_DOMAINS` ou `API_CADDY_DOMAINS`. S'il en trouve sans `take_over_domains`, il
-   s'arrête là, sans rien avoir modifié.
-3. `docker compose pull` (5 tentatives), puis `docker compose run --rm migrate` : la base
-   passe à la dernière migration (une base Doctrine est d'abord marquée à `Baseline`).
-   Un échec arrête le job ; les conteneurs en place continuent de servir.
-4. Avec `take_over_domains` : arrête (`docker stop`) les conteneurs trouvés au point 2.
-5. `docker compose up -d --no-build --wait`, puis smoke test dans la stack. Si l'un échoue
-   après le point 4, le job arrête le nginx de la nouvelle stack et **redémarre** les
-   conteneurs arrêtés : les domaines reviennent à leur ancien propriétaire.
-6. Annonce la révision servie (`::notice` « Deployed revision »), qui doit égaler la
-   révision promue en prod, puis contrôle le TLS public (avec relance de l'edge).
+La nouvelle stack prend la place de l'ancienne dans le même projet Compose
+(`lodb-staging`, `lodb-prod`) et le même dossier (`STAGING_PATH`, `PROD_PATH`).
 
-## Avant le premier déploiement de `preprod`
+1. Écrit le `.env` (mode 600) et `.deploy/data-protection.pfx`, puis synchronise le dépôt
+   sur la branche (`git reset --hard`).
+2. Contrôle le `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
+   `COMPOSE_PROJECT_NAME` = `lodb-<env>`, `IMAGE_TAG` = `<env>`, `LODB_NOINDEX` (`1` sur
+   `staging`, `0` en `prod`) ; en `prod`, relais SMTP et clés Stripe présents. Exige le
+   réseau `edge` (jamais créé).
+3. `docker compose pull` (5 tentatives), puis `docker compose run --rm migrate` : la base du
+   volume `pgdata` passe à la dernière migration (une base Doctrine est d'abord marquée à
+   `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir.
+4. `docker compose up -d --no-build --remove-orphans --wait` : les conteneurs de la nouvelle
+   stack remplacent ceux de l'ancienne, dont `php`, `go-fetcher`, `go-api` et `mailer` sont
+   retirés comme orphelins. `pgdata` est gardé ; les blobs vont dans le volume `ddragon` ;
+   `storage` et `app_state` restent intacts.
+5. Smoke test dans la stack (`/healthz` par nginx, `/readyz` de l'API, `/en/`, sous-domaine
+   `api.`, `X-Robots-Tag`), annonce la révision servie (`::notice` « Deployed revision »),
+   puis contrôle le TLS public (avec relance de l'edge).
 
-1. Tout ce que [`configuration.md`](configuration.md) liste pour `preprod` est en place : hôte
-   (Docker, edge `infra-vps`, DNS de `CADDY_DOMAINS` **et** de `API_CADDY_DOMAINS`),
-   secrets `ENV_FILE` et `DATA_PROTECTION_PFX`.
-2. Les packages GHCR `lodb/api` et `lodb/web-ssr` sont nouveaux : leur visibilité se règle
-   comme celle des autres. `lodb/nginx` est partagé avec l'ancienne stack, qui n'utilise
-   jamais les tags `preprod` et `production`.
-3. Base de `preprod` : un dump anonymisé (`tools/db/anonymize.sh`) restauré dans le
-   Postgres de la stack avant le premier `migrate` (`docker compose up -d --wait postgres`,
-   puis `pg_restore --no-owner --no-privileges`). Sans dump, `migrate` part d'une base vide.
-4. Un push de `dev` qui touche la nouvelle stack déclenche le premier déploiement ; sinon,
-   **Actions ▸ Deploy ▸ Run workflow** sur `dev`.
+## Basculer `staging`
 
-## Promouvoir en prod, et bascule
+1. `.env.staging` rempli, valeurs 🔁 relevées dans `$STAGING_PATH/.env` **avant** ce
+   déploiement ([`configuration.md`](configuration.md), § 2).
+2. `ENV_STAGING` remplacé, `STAGING_DATA_PROTECTION_PFX` créé.
+3. Packages GHCR `lodb/api` et `lodb/web-ssr` accessibles à l'hôte (nouveaux).
+4. Fusion de la bascule dans `dev` : son push déploie `staging`. La base de l'ancien staging
+   est gardée et migrée ; le volume `ddragon` part vide et l'ingestion le remplit.
 
-1. Relever la révision annoncée par le dernier déploiement de `preprod` validé.
-2. **Actions ▸ Promote** : `revision` = ce SHA complet. Le job `candidate` vérifie
-   les trois images (et signale si `:preprod` a bougé depuis) ; les reviewers de
-   `production` approuvent ; le retag puis le déploiement suivent.
-3. **Bascule** (fenêtre du [runbook](../reecriture/bascule.md), sauvegarde de la base
-   faite) : même promotion avec `take_over_domains` coché. Les migrations additives
-   passent pendant que l'ancienne stack sert encore ; ses conteneurs porteurs des domaines
-   (`nginx`, `go-api` de `lodb-prod`) ne sont arrêtés qu'ensuite. Son Postgres, qui est la
-   base partagée, ne s'arrête jamais.
-4. L'ancienne prod n'est plus redéployée : son workflow (`ci.yml`) est archivé. Ne pas le
-   remettre en service après la bascule : son `up -d` redémarrerait les conteneurs
-   arrêtés, qui réclameraient à nouveau les domaines.
+## Mettre en prod, et bascule
 
-**Retour arrière** manuel, tant que le schéma reste compatible (migrations additives) ;
-critères et contrôles : [runbook de bascule](../reecriture/bascule.md), § 8.
+1. `staging` validé.
+2. Juste avant la fusion : `.env.prod` rempli depuis `$PROD_PATH/.env`, `ENV_PROD` remplacé,
+   `PROD_DATA_PROTECTION_PFX` créé. Pas avant : tant que `main` porte l'ancienne stack, un
+   push de `main` la redéploierait avec ce `.env`.
+3. Fenêtre de bascule du [runbook](../reecriture/bascule.md) (sauvegarde de la base faite).
+4. Fusion manuelle de `test` dans `main` : promotion, puis déploiement de `prod`.
 
-```bash
-# La nouvelle stack rend les domaines et arrête ses tâches de fond, puis l'ancienne reprend
-# ses conteneurs arrêtés (start, jamais up) ; son PostgreSQL n'a jamais été arrêté.
-cd "$PRODUCTION_PATH" && COMPOSE_FILE=compose.yaml:compose.deploy.yaml \
-  docker compose stop nginx web-ssr api
-cd "$PROD_PATH" && COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose start
-```
+**Retour arrière** : [runbook de bascule](../reecriture/bascule.md). Il reste possible tant
+que le schéma est compatible (migrations additives) : `pgdata` est partagé, `storage` et
+`app_state` sont intacts et les images de l'ancienne stack restent sous leur tag `:<sha>`.
 
-`$PROD_PATH` est le dossier de l'ancienne prod sur l'hôte, resté sur sa dernière révision
-déployée (compose à sa racine) : l'archivage sous `legacy/` ne l'atteint pas, puisque plus
-aucun job ne le met à jour.
-
-Revenir à une révision précédente de la nouvelle stack : relancer *Promote* avec son
-SHA.
+Revenir à une révision précédente de la nouvelle stack : `git revert` sur `dev`, puis le
+chemin normal (`staging`, puis fusion dans `main`).

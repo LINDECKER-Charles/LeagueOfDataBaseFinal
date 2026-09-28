@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
-# Pre-ingestion (plan-migration.md, cutover step 3; L8.2): fills the new stack's storage volume
-# and its manifest before the switch, with the latest Data Dragon versions in every language.
-# The long tail stays on demand.
+# Pre-ingestion (plan-migration.md, cutover step 3; L8.2): fills the new stack's blob volume
+# (ddragon) and its manifest before the switch, with the latest Data Dragon versions in every
+# language. The long tail stays on demand.
 #
 #   tools/cutover/pre-ingest.sh [--latest 3] [--] [docker compose options…]
 #
 # The compose options name the stack, the integration one by default:
 #   -p lodb-dev -f compose.yaml -f compose.override.yaml
-# The served host passes its own, for instance:
-#   tools/cutover/pre-ingest.sh -- -p lodb-production -f compose.yaml -f compose.deploy.yaml
+# The served host passes its own, from a candidate checkout next to the legacy stack still
+# serving the same project (docs/reecriture/bascule.md, § 5.1):
+#   tools/cutover/pre-ingest.sh -- -p lodb-prod -f compose.yaml -f compose.deploy.yaml
 #
 # Runs `ingest --latest <n> --languages all` in a one-shot container of the api service
-# (--no-deps: the database must already be migrated), which shares the stack's storage volume.
+# (--no-deps: the database must already be migrated, and the legacy postgres is never
+# recreated), which shares the stack's blob volume.
 # Run it with the api stopped, or at least before its patch watch starts on a new version:
 # a version held by another run ends in code 1 (ingest.version.locked). Code 1 (a version
 # incomplete: locked, or an image Data Dragon refused) starts one second pass, which keeps

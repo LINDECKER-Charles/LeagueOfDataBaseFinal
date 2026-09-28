@@ -45,6 +45,7 @@ Pour développer : guide [developpement.md](guides/developpement.md) et
 | [analytics.md](architecture/analytics.md) | Analytics sans base de données (NDJSON local → agrégats journaliers sur le volume de stockage) et panneau `/admin` |
 | [api-publique.md](architecture/api-publique.md) | API REST v1 payante servie par le micro-service Go `go-api` |
 | [responsive-mobile.md](architecture/responsive-mobile.md) | Stratégie responsive, breakpoints, composants mobile |
+| [pieges.md](architecture/pieges.md) | Nouvelle stack : pièges connus, comportements voulus à ne pas « corriger » (build, SSR, E2E, nginx, déploiement) |
 
 ## `guides/` — comment l'exploiter
 
@@ -54,8 +55,8 @@ Pour développer : guide [developpement.md](guides/developpement.md) et
 | [configuration.md](../legacy/docs/guides/configuration.md) | *Ancienne stack, archivée* — Variables d'environnement et paramètres applicatifs |
 | [docker.md](../legacy/docs/guides/docker.md) | *Ancienne stack, archivée* — Référence des commandes de la stack Compose |
 | [developpement.md](guides/developpement.md) | Nouvelle stack `lodb-dev` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
-| [configuration.md](guides/configuration.md) | Nouvelle stack : inventaire des secrets GitHub, des lignes `.env` de `preprod` et de la prod, des fichiers de l'hôte et des services externes |
-| [github-actions-secrets.md](guides/github-actions-secrets.md) | Nouvelle stack : pipeline CI/CD, déploiement de `preprod` depuis `dev`, promotion en prod |
+| [configuration.md](guides/configuration.md) | Nouvelle stack : inventaire des secrets GitHub, des lignes `.env` de `staging` et de `prod`, des fichiers et volumes de l'hôte et des services externes |
+| [github-actions-secrets.md](guides/github-actions-secrets.md) | Nouvelle stack : pipeline CI/CD, `dev` → `test` (déploiement de `staging`) → `main` (promotion en `prod`) |
 | [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
 | [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana : fonctionnement, ce qu'il ne faut surtout pas déclarer, requêtes LogsQL / PromQL, dépannage |
 | [logging.md](guides/logging.md) | Convention de journalisation applicative : clé d'événement, contexte, niveaux, canaux, interdictions |

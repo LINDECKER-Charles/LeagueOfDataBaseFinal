@@ -61,13 +61,13 @@ Page <https://console.cloud.google.com/auth/audience> :
 1. Ouvrir <https://console.cloud.google.com/auth/clients> → **Create client**.
 2. **Application type** : **Web application**. Nom interne libre (ex. `lodb-web`).
 3. **Authorized JavaScript origins** — origine exacte, sans chemin, une par
-   environnement : `https://league-of-data-base.com` (prod) et l'hôte canonique de
-   `preprod` (ex. `https://test.league-of-data-base.com`).
+   environnement : `https://league-of-data-base.com` (`prod`) et
+   `https://test.league-of-data-base.com` (`staging`).
 4. **Authorized redirect URIs** — doivent correspondre **exactement** (schéma, hôte,
    chemin) à ce que l'API envoie :
    - `https://league-of-data-base.com/api/account/google/callback`
-   - `https://<hôte canonique de preprod>/api/account/google/callback`
-   - garder `https://league-of-data-base.com/connect/google/check` (ancienne stack)
+   - `https://test.league-of-data-base.com/api/account/google/callback`
+   - garder les URI `…/connect/google/check` de l'ancienne stack (sur les deux domaines)
      jusqu'à la décommission : le retour arrière en a besoin.
 5. **Create** → récupérer immédiatement le **Client ID**
    (`xxxxxxxx.apps.googleusercontent.com`) et le **Client secret** (affiché une
@@ -89,8 +89,8 @@ clients <https://support.google.com/cloud/answer/15544987> et écran de consente
 ## 4. Poser les identifiants
 
 Les identifiants sont des **secrets** : ils ne vont jamais dans le dépôt, mais dans le
-`.env` de l'environnement servi, c'est-à-dire dans le secret GitHub `ENV_FILE` ou
-`ENV_FILE` ([`configuration.md`](configuration.md), § 4.2) :
+`.env` de l'environnement servi (`.env.staging`, `.env.prod`), c'est-à-dire dans le secret
+GitHub `ENV_STAGING` ou `ENV_PROD` ([`configuration.md`](configuration.md), § 4.2) :
 
 ```dotenv
 LoDb__Accounts__Google__ClientId=xxxxxxxx.apps.googleusercontent.com

@@ -71,13 +71,14 @@ refuse de les recréer. Son `.env` est `legacy/.env`.
 
 ## Pré-ingestion
 
-Avant la fenêtre, sur l'hôte servi, base déjà migrée :
+Avant la fenêtre, sur l'hôte servi, base déjà migrée, depuis le dossier candidat du
+[runbook](../../docs/reecriture/bascule.md) (§ 5.1) :
 
 ```bash
-tools/cutover/pre-ingest.sh --latest 3 -- -p <projet> -f compose.yaml -f compose.deploy.yaml
+tools/cutover/pre-ingest.sh --latest 3 -- -p lodb-prod -f compose.yaml -f compose.deploy.yaml
 ```
 
-Le conteneur ponctuel `api` (`run --rm --no-deps`) remplit le volume `storage` et le
+Le conteneur ponctuel `api` (`run --rm --no-deps`) remplit le volume `ddragon` et le
 manifeste des trois dernières versions de Data Dragon dans toutes les langues. La longue
 traîne reste à la demande. Un code 1 signale une version incomplète : une image refusée par
 Data Dragon (503) ou une version tenue par la veille de patchs (`ingest.version.locked`).

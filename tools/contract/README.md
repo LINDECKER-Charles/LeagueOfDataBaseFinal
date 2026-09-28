@@ -47,8 +47,8 @@ changer (transaction) et se relance plus tard, au lieu de bloquer le site derri�
 ## Appliquer (le jour venu, dans une PR dédiée)
 
 Le *contract* ne s'applique **jamais à la main** en prod : il devient une migration EF
-ordinaire, appliquée par `migrate` avant `up`, comme les autres (`preprod` d'abord, puis prod
-par promotion).
+ordinaire, appliquée par `migrate` avant `up`, comme les autres (`staging` d'abord, puis
+`prod` par la fusion de `test` dans `main`).
 
 1. Changer le modèle, dans le même commit :
    - retirer `User.Roles`, son convertisseur et son comparateur (`UserConfiguration`), et
@@ -76,8 +76,9 @@ par promotion).
      stack décommissionnée (runbook, § Décommission).
 4. `tools/contract/check.sh` une dernière fois sur la branche, **avant** d'y retirer ce
    dossier : il prouve encore la conversion et la garde sur le modèle précédent.
-5. Suites complètes, déploiement sur `preprod` (dont la base, anonymisée, est une copie de la
-   prod), contrôle des dates affichées (profil, builds, admin), puis promotion en prod.
+5. Suites complètes, déploiement sur `staging` (sa base remplacée au préalable par un dump
+   anonymisé de la prod, `tools/db/anonymize.sh`), contrôle des dates affichées (profil,
+   builds, admin), puis promotion en `prod`.
 
 `DatabaseMigrator` ne change pas : une base Doctrine qu'on migrerait encore serait marquée
 à `Baseline`, puis recevrait toutes les migrations, *contract* compris.
