@@ -21,26 +21,22 @@ const TOTAL_WIDTH = 80;
   selector: 'lodb-donut-chart',
   imports: [FigurePipe, Legend, AdminTextPipe],
   template: `
-    <svg
-      viewBox="0 0 180 180"
-      class="mx-auto block w-full max-w-44"
-      role="img"
-      [attr.aria-label]="label()"
-    >
+    <!-- The legacy canvas of every chart, 760 by 240: the ring at its start, as wide as it. -->
+    <svg viewBox="0 0 760 240" class="block w-full" role="img" [attr.aria-label]="label()">
       @if (arcs().length === 0) {
-        <text x="90" y="94" text-anchor="middle" class="donut-empty">
+        <text x="380" y="120" text-anchor="middle" class="donut-empty">
           {{ 'admin.chart.empty' | adminText }}
         </text>
       } @else {
-        <circle cx="90" cy="90" r="54" fill="none" class="donut-track" stroke-width="20" />
+        <circle cx="90" cy="120" r="54" fill="none" class="donut-track" stroke-width="20" />
         @for (arc of arcs(); track arc.name) {
           <circle
             cx="90"
-            cy="90"
+            cy="120"
             r="54"
             fill="none"
             stroke-width="20"
-            transform="rotate(-90 90 90)"
+            transform="rotate(-90 90 120)"
             [attr.stroke]="arc.color"
             [attr.stroke-dasharray]="arc.dasharray"
             [attr.stroke-dashoffset]="arc.dashoffset"
@@ -50,7 +46,7 @@ const TOTAL_WIDTH = 80;
         }
         <text
           x="90"
-          y="88"
+          y="118"
           text-anchor="middle"
           class="donut-total"
           lengthAdjust="spacingAndGlyphs"
@@ -58,7 +54,7 @@ const TOTAL_WIDTH = 80;
         >
           {{ total() }}
         </text>
-        <text x="90" y="106" text-anchor="middle" class="donut-caption">{{ caption() }}</text>
+        <text x="90" y="136" text-anchor="middle" class="donut-caption">{{ caption() }}</text>
       }
     </svg>
     @if (legend().length > 0) {
@@ -71,7 +67,7 @@ const TOTAL_WIDTH = 80;
     }
     .donut-total {
       font-family: var(--font-beaufort);
-      font-size: 1.35rem;
+      font-size: 22px;
       fill: var(--color-gold-bright);
     }
     .donut-caption {
