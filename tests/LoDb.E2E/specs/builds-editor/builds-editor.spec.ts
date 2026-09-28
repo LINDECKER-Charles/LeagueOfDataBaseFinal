@@ -2,6 +2,7 @@ import { metaOf, olderVersion } from '../../support/catalog';
 import { expect, test } from '../../support/worker-account';
 import {
   addItem,
+  boxOf,
   CHAMPION,
   chooseChampion,
   dragTo,
@@ -19,6 +20,7 @@ const EDITING = /\/en\/account\/builds\/\d+\/edit$/;
 const NAME = 'E2E lethality carry';
 const RENAMED = 'E2E lethality carry, revised';
 const PHONE = { width: 390, height: 844 };
+const NARROW = { width: 320, height: 844 };
 const DESKTOP = { width: 1280, height: 720 };
 
 // No account is created here: what a visitor meets on the builds of an account.
@@ -61,6 +63,36 @@ test('keeps the counters in reading order on the Arabic page', async ({ member: 
     return [leftOf(text.data.indexOf('0')), leftOf(text.data.lastIndexOf('8'))];
   });
   expect(count).toBeLessThan(max);
+});
+
+// As the legacy editor on the narrowest phones: the lists of the context stay in their frame,
+// a step's label beside its handle, and "Add item" after the last item, not on a row alone.
+test('fits the forge in a 320 px phone', async ({ member: page }) => {
+  await page.setViewportSize(NARROW);
+  await page.goto(`${LIST}/new`);
+
+  // Patch, game mode and authoring language; all() does not wait for them to render.
+  const selects = page.locator('lodb-editor-context select');
+  await expect(selects).toHaveCount(3);
+  for (const select of await selects.all()) {
+    const [end, frameEnd] = await select.evaluate((field) => {
+      const frame = field.closest('section')!;
+      const padding = parseFloat(getComputedStyle(frame).paddingRight);
+      return [field.getBoundingClientRect().right, frame.getBoundingClientRect().right - padding];
+    });
+    expect(end).toBeLessThanOrEqual(frameEnd);
+  }
+
+  const step = stepsOf(page).first();
+  const handle = await boxOf(step.locator('.forge-drag-handle'));
+  const label = await boxOf(step.getByLabel('Step label'));
+  expect(label.y).toBeLessThan(handle.y + handle.height);
+
+  await addItem(page, 0, ITEM);
+  await addItem(page, 0, ITEM);
+  const last = await boxOf(step.locator('.forge-slot').last());
+  const tile = await boxOf(step.getByRole('button', { name: 'Add item' }));
+  expect(Math.abs(tile.y - last.y)).toBeLessThan(2);
 });
 
 // The worker's verified account: the API limits how many are created in a row. The forge

@@ -1,5 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
+type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
+
 // A champion and an item every patch and Summoner's Rift carry: an import to an older patch
 // keeps them, and the build stays savable.
 export const CHAMPION = 'Annie';
@@ -71,11 +73,17 @@ export async function pickRunes(page: Page): Promise<number> {
   return primaryRows;
 }
 
-/** The centre of an element, in the coordinates of the viewport. */
-async function centreOf(element: Locator): Promise<{ x: number; y: number }> {
+/** The box of an element, in the coordinates of the viewport. */
+export async function boxOf(element: Locator): Promise<Box> {
   const box = await element.boundingBox();
   expect(box, 'the element is laid out').not.toBeNull();
-  return { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 };
+  return box!;
+}
+
+/** The centre of an element, in the coordinates of the viewport. */
+async function centreOf(element: Locator): Promise<{ x: number; y: number }> {
+  const box = await boxOf(element);
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
 /**
