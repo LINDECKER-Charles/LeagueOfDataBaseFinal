@@ -12,6 +12,7 @@
   block-size: 0.375rem;
 }
 .active__chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -34,8 +35,12 @@
 .active__chip:hover .active__x {
   color: var(--color-gold-bright);
 }
+/* A 40px touch target around the legacy's 25.6px chip, which keeps its look. */
 @media (pointer: coarse) {
-  .active__chip {
-    min-block-size: 2.5rem;
+  .active__chip::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block: -0.45rem;
   }
 }
