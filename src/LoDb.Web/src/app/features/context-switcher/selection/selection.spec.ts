@@ -115,13 +115,29 @@ describe('currentChoice', () => {
   ];
 
   it.each(cases)('reads $rule', ({ url, locale, version, language }) => {
-    expect(currentChoice({ url, locale }, META, OPTIONS)).toEqual({ version, language });
+    const shown = { url, locale, remembered: null };
+
+    expect(currentChoice(shown, META, OPTIONS)).toEqual({ version, language });
+  });
+
+  // The legacy `page_selection`: the session's patch on `/about` as on the catalogue.
+  it('shows the kept context where neither the path nor the query names one', () => {
+    const remembered: Preferences = { version: OLDER, lang: 'en_GB' };
+    const on = (url: string) => currentChoice({ url, locale: 'en', remembered }, META, OPTIONS);
+
+    expect(on('/en/about')).toEqual({ version: OLDER, language: 'en:en_GB' });
+    expect(on('/en/16.18.1/champions')).toEqual({ version: '16.18.1', language: 'en:en_GB' });
+    expect(on(`/en/about?version=${LATEST}&lang=en_US`)).toEqual({
+      version: LATEST,
+      language: 'en:en_US',
+    });
   });
 
   it('shows nothing while no version is ingested', () => {
     const empty = { ...META, latest: null, versions: [] };
+    const shown = { url: '/en/', locale: 'en' as const, remembered: null };
 
-    expect(currentChoice({ url: '/en/', locale: 'en' }, empty, OPTIONS)).toBeNull();
+    expect(currentChoice(shown, empty, OPTIONS)).toBeNull();
   });
 });
 

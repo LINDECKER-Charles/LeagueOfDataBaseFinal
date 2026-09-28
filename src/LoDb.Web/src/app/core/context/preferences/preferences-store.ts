@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { DOCUMENT, Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { DOCUMENT, Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { preferencesCookieEntry } from './preferences-cookie-entry';
 import { preferencesFromCookie } from './preferences-from-cookie';
 import { preferencesFromValue } from './preferences-from-value';
@@ -20,6 +20,9 @@ const SESSION_KEY = 'lodb.context';
 export class PreferencesStore {
   private readonly document = inject(DOCUMENT);
   private readonly inBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  // A signal, so the chrome and the switcher follow a choice applied without a navigation
+  // (same URL), as the legacy reload did.
+  private readonly kept = signal<Preferences | null>(this.readSession());
 
   /** What the cookie remembers across visits. */
   read(): Preferences | null {
@@ -34,9 +37,12 @@ export class PreferencesStore {
     }
   }
 
-  /** The context to fill a URL with: this session's choice, else the remembered one. */
+  /**
+   * The context to fill a URL with: this session's choice, else the remembered one. Reactive
+   * to `keep`; the cookie alone is read as it stands.
+   */
   current(): Preferences | null {
-    return this.readSession() ?? this.read();
+    return this.kept() ?? this.read();
   }
 
   /** Remembers `preferences` for a year, or forgets them when null. */
@@ -52,8 +58,9 @@ export class PreferencesStore {
     try {
       this.session()?.setItem(SESSION_KEY, preferencesValue(preferences));
     } catch {
-      // Storage refused (private mode, quota): the choice lives in the URL alone.
+      // Storage refused (private mode, quota): the choice lives until the page reloads.
     }
+    this.kept.set(preferences);
   }
 
   private readSession(): Preferences | null {

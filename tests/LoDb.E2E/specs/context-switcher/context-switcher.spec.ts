@@ -99,6 +99,27 @@ test.describe("context switcher", { tag: '@readonly' }, () => {
     expect(consoleErrors).toEqual([]);
   });
 
+  // The legacy printed the session's patch in the chip of every page (page_selection).
+  test("names the patch of the session on the pages that read none", async ({
+    page,
+    request,
+  }) => {
+    const older = await olderVersion(request);
+    await page.goto("/en/about");
+
+    await openSwitcher(page);
+    await switcher(page).locator("#switcher-version").selectOption(older);
+    await apply(page);
+    await page.locator('header nav a[href="/en/trends"]').click();
+    await expect.poll(() => pathAndQuery(page)).toBe("/en/trends");
+
+    await expect(switcher(page).locator("summary")).toContainText(older);
+    await expect(switcher(page).locator("#switcher-version")).toHaveValue(older);
+    await expect(
+      page.locator(".bottom-nav a").nth(1),
+    ).toHaveAttribute("href", `/en/${older}/champions`);
+  });
+
   test("moves to another locale, and to a regional variant through ?lang=", async ({
     page,
   }) => {

@@ -1,4 +1,4 @@
-import { PLATFORM_ID } from '@angular/core';
+import { PLATFORM_ID, computed } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { Preferences } from './preferences';
 import { preferencesCookieEntry } from './preferences-cookie-entry';
@@ -107,6 +107,17 @@ describe('PreferencesStore', () => {
     expect(preferences.current()).toEqual({ lang: null, version: null, locale: 'fr' });
     expect(preferences.read()).toEqual(REMEMBERED);
     expect(document.cookie).not.toContain('loc=fr');
+  });
+
+  // The chrome and the switcher recompute on a same-URL apply, with no navigation.
+  it('signals the choice it keeps to whoever reads it in a computed', () => {
+    const preferences = store();
+    const version = computed(() => preferences.current()?.version ?? null);
+    expect(version()).toBeNull();
+
+    preferences.keep({ lang: null, version: '14.1.1' });
+
+    expect(version()).toBe('14.1.1');
   });
 
   it('falls back to the remembered choice when the session kept none', () => {

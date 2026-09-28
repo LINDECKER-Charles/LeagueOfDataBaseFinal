@@ -13,6 +13,7 @@ import { Subject } from 'rxjs';
 import type { CatalogMeta } from '../../api/generated/models/catalog-meta';
 import { ApiMeta } from '../../api/meta/api-meta';
 import type { NavSelection } from '../../context/nav/nav-selection';
+import { PreferencesStore } from '../../context/preferences/preferences-store';
 import { NavContext } from './nav-context';
 
 @Component({ template: '', changeDetection: ChangeDetectionStrategy.OnPush })
@@ -63,6 +64,8 @@ async function navContextOn({ platform, request = false, rendered }: Setup) {
 }
 
 describe('NavContext', () => {
+  afterEach(() => sessionStorage.clear());
+
   it('reads /api/meta for a server render, and hands its selection to the browser', async () => {
     const { nav, meta } = await navContextOn({ platform: 'server', request: true });
 
@@ -92,5 +95,18 @@ describe('NavContext', () => {
     TestBed.inject(ApplicationRef).tick();
     meta.next(META);
     expect(nav.selection()).toEqual({ shown: '16.19.1', version: null, lang: null });
+  });
+
+  // A switcher apply on the same URL: the legacy reloaded, so its links followed at once.
+  it('follows the choice kept for the session, with no navigation', async () => {
+    const { nav, meta } = await navContextOn({ platform: 'browser' });
+    await TestBed.inject(Router).navigateByUrl('/en/trends');
+    TestBed.inject(ApplicationRef).tick();
+    meta.next(META);
+    expect(nav.selection()).toEqual({ shown: '16.19.1', version: null, lang: null });
+
+    TestBed.inject(PreferencesStore).keep({ lang: null, version: '14.1.1' });
+
+    expect(nav.selection()).toEqual(PINNED);
   });
 });
