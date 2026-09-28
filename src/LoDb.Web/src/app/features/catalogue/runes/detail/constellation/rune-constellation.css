@@ -77,4 +77,10 @@
     border-radius: 50%;
     background: var(--color-hextech-black);
   }
+
+  /* Rune names stay whole words, as on the legacy cards: the body's break-word would cut
+     ELECTROCU/TE at 320px. No hyphens either, which would split the same English word. */
+  h3 {
+    overflow-wrap: normal;
+  }
 }
