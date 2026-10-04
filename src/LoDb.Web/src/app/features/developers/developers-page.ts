@@ -41,7 +41,7 @@ const ENDPOINTS = [
   providers: [provideTranslocoScope('api', 'developers')],
   templateUrl: './developers-page.html',
   styleUrl: './developers-page.css',
-  host: { class: 'relative isolate block px-6 py-12' },
+  host: { class: 'relative isolate block flex-1 px-6 py-12' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DevelopersPage {

@@ -39,7 +39,7 @@ import { checkoutNotice } from './state/checkout-status';
   providers: [provideTranslocoScope(API_SCOPE, API_PORTAL_SCOPE), ApiKeyPortal],
   templateUrl: './api-portal-page.html',
   styleUrls: ['./shared/portal.css', './api-portal-page.css'],
-  host: { class: 'relative isolate block' },
+  host: { class: 'relative isolate block flex-1' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApiPortalPage {
