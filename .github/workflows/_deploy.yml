@@ -188,6 +188,14 @@ jobs:
             # The edge and its network belong to infra-vps; this job only asserts them.
             docker network inspect edge >/dev/null 2>&1 \
               || fail "Docker network 'edge' is missing — deploy infra-vps before this project."
+            # nginx trusts X-Forwarded-For from this subnet only. Docker picks it when infra-vps
+            # creates the network, so it is read here rather than copied into ENV_FILE, and
+            # kept in the .env so manual `docker compose` runs from this folder resolve it too.
+            edge_cidr="$(docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}')"
+            [[ "$edge_cidr" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$ ]] \
+              || fail "The 'edge' network has no IPv4 subnet for nginx to trust."
+            sed -i '/^LODB_EDGE_CIDR=/d' .env
+            echo "LODB_EDGE_CIDR=$edge_cidr" >> .env
 
             # ── Pull, then migrations before the traffic switch ────────────────────────
             # The registry sometimes resets a layer mid-copy: retry with backoff.

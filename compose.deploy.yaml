@@ -98,7 +98,7 @@ services:
     environment:
       LODB_CANONICAL_HOST: ${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
       # Subnet of the external `edge` network: the only peer allowed to state the client
-      # address (docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}').
+      # address. The deploy job reads it from the network and writes it to the host's .env.
       LODB_EDGE_CIDR: ${LODB_EDGE_CIDR:?LODB_EDGE_CIDR is required (subnet of the edge network)}
       # 1 on staging: "X-Robots-Tag: noindex, nofollow" on the responses of the stack's edge
       # (snippets/security-headers.conf). The deploy job checks it per environment.

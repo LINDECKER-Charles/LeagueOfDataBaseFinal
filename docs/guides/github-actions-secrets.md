@@ -77,7 +77,8 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 2. Contrôle le `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
    `COMPOSE_PROJECT_NAME` = `lodb-<env>`, `IMAGE_TAG` = `<env>`, `LODB_NOINDEX` (`1` sur
    `staging`, `0` en `prod`) ; en `prod`, relais SMTP et clés Stripe présents. Exige le
-   réseau `edge` (jamais créé).
+   réseau `edge` (jamais créé) et écrit son sous-réseau dans le `.env` (`LODB_EDGE_CIDR`,
+   seul pair dont nginx croit `X-Forwarded-For`).
 3. `docker compose pull` (5 tentatives), puis `docker compose run --rm migrate` : la base du
    volume `pgdata` passe à la dernière migration (une base Doctrine est d'abord marquée à
    `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir.

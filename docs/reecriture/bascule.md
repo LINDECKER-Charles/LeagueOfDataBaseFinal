@@ -54,7 +54,7 @@ tout ce qui ne se fait pas dans le dépôt. Chaque ligne est faite avant l'étap
 | Opération | Pour | Avant |
 |---|---|---|
 | Certificat Data Protection **propre à chaque environnement** ([`configuration.md`](../guides/configuration.md)), `.pfx` gardé hors ligne ; secrets `STAGING_DATA_PROTECTION_PFX` et `PROD_DATA_PROTECTION_PFX` | connexions | J-14 / J |
-| `.env.staging` et `.env.prod` complets (modèles `.env.staging.example`, `.env.prod.example`) : `LODB_DB_NAME/USER/PASSWORD` = `POSTGRES_*` de l'ancienne stack du même environnement (la base est déjà dans `pgdata`), `LODB_EDGE_CIDR` relevé sur l'hôte, domaines de l'ancienne stack, `LODB_PUBLIC_API_ORIGIN` | déploiements | J-14 / J-3 |
+| `.env.staging` et `.env.prod` complets (modèles `.env.staging.example`, `.env.prod.example`) : `LODB_DB_NAME/USER/PASSWORD` = `POSTGRES_*` de l'ancienne stack du même environnement (la base est déjà dans `pgdata`), domaines de l'ancienne stack, `LODB_PUBLIC_API_ORIGIN` | déploiements | J-14 / J-3 |
 | Relais SMTP (`LoDb__Mail__*` d'après le `MAILER_DSN` de l'ancienne stack), SPF/DKIM/DMARC du domaine expéditeur | e-mails de compte | J-3 |
 | Stripe : clé live et secret `whsec_` de l'endpoint **existant** (`/webhooks/stripe` ne change pas) ; clés de test et endpoint de staging | paiements | J-3 |
 | Google OAuth : ajouter les URI de retour `https://league-of-data-base.com/api/account/google/callback` et celle de `test.`, **sans retirer** celles de l'ancienne stack (retour arrière) ; clients Android et desktop | connexion Google | J-3 |
@@ -308,6 +308,9 @@ install -d -m 700 "$CANDIDATE_PATH" && cd "$CANDIDATE_PATH"
 git init -q && git remote add origin <url du dépôt> && git fetch origin test
 git checkout -B test origin/test
 (umask 077 && cat > .env)          # coller le contenu de .env.prod, puis Ctrl-D
+# ce que le job de déploiement ajoute au .env (configuration.md, § 6.7)
+subnet='{{(index .IPAM.Config 0).Subnet}}'
+echo "LODB_EDGE_CIDR=$(docker network inspect edge --format "$subnet")" >> .env
 install -d -m 700 .deploy
 (umask 022 && base64 -d > .deploy/data-protection.pfx)   # coller le .pfx en base64, Ctrl-D
 export COMPOSE_FILE=compose.yaml:compose.deploy.yaml IMAGE_TAG="$REV"

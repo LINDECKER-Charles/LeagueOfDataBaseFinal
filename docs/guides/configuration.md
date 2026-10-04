@@ -149,7 +149,7 @@ l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque dé
 | `LODB_CANONICAL_HOST` | `test.league-of-data-base.com` | `league-of-data-base.com` | ✅ | Hôte canonique : cible des 301 (`www.`, `.fr`), origine des liens d'e-mail, des sitemaps et des `share_url` de `/v1`. |
 | `LODB_ALLOWED_HOSTS` | `test.league-of-data-base.com` | `league-of-data-base.com` | ✅ | Hôtes que le SSR accepte (virgules) ; les autres reçoivent un 400. |
 | `LODB_PUBLIC_API_ORIGIN` | `https://api.test.league-of-data-base.com` | `https://api.league-of-data-base.com` | ✅ | Origine de `/v1` documentée par `/developers`. |
-| `LODB_EDGE_CIDR` | sous-réseau d'`edge` | idem | ✅ | Seul pair cru sur `X-Forwarded-For` (§ 6.7). |
+| `LODB_EDGE_CIDR` | — | — | — | Seul pair cru sur `X-Forwarded-For`. **Jamais dans `ENV_*`** : le job l'écrit depuis le réseau `edge` (§ 6.7). |
 | `LODB_NOINDEX` ⚙️ | `1` | `0` | ✅ | `X-Robots-Tag: noindex, nofollow` ; le smoke test le vérifie. |
 | `LODB_DB_NAME`, `LODB_DB_USER` | 🔁 `POSTGRES_DB`, `POSTGRES_USER` | idem | ✅ | La base existe déjà dans `pgdata`, créée avec ces identifiants ; chaîne de connexion de `api` et `migrate`. |
 | `LODB_DB_PASSWORD` 🔒 | 🔁 `POSTGRES_PASSWORD` | idem | ✅ | Idem ; sans `;`. |
@@ -238,7 +238,7 @@ Valable pour les deux environnements : chacun reprend les valeurs de son propre 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |
 |---|---|---|
 | dépôt (branche `test` ou `main`) | le job (`git reset --hard`) | Fichiers compose à la racine. |
-| `.env` | le job (`ENV_STAGING`, `ENV_PROD`), mode 600 | § 4. |
+| `.env` | le job (`ENV_STAGING`, `ENV_PROD`, plus `LODB_EDGE_CIDR`), mode 600 | § 4. |
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |
 | `.deploy/android/` | l'exploitant, à chaque release Android | `latest.json` (asset `lodb-android-latest.json`) et `assetlinks.json` ([`release-android.md`](release-android.md)). Vide : les deux URL répondent 404. |
 
@@ -317,7 +317,10 @@ Le projet Google Cloud et l'écran de consentement :
 
 ### 6.7 Sous-réseau de l'edge
 
-Sur l'hôte : `docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}'`.
+Rien à relever. Docker choisit ce sous-réseau quand `infra-vps` crée le réseau : à chaque
+déploiement, le job le lit (`docker network inspect edge`) et écrit `LODB_EDGE_CIDR` dans
+le `.env` de l'hôte, qui sert aussi aux commandes `docker compose` lancées à la main depuis
+ce dossier. Une ligne `LODB_EDGE_CIDR` venue de `ENV_*` est remplacée.
 
 ## 7. En local
 
