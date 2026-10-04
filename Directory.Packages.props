@@ -32,14 +32,14 @@
   <ItemGroup Label="Runtime services">
     <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.10.0" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.10.0" />
-    <PackageVersion Include="SkiaSharp" Version="4.152.1" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.152.1" />
+    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.1" />
   </ItemGroup>
 
   <ItemGroup Label="Accounts, billing and mail">
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.1" />
     <PackageVersion Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
-    <PackageVersion Include="MailKit" Version="4.18.0" />
+    <PackageVersion Include="MailKit" Version="4.18.1" />
     <PackageVersion Include="MaxMind.GeoIP2" Version="6.1.0" />
     <PackageVersion Include="Otp.NET" Version="1.4.1" />
     <PackageVersion Include="Stripe.net" Version="52.4.2" />
@@ -49,7 +49,7 @@
     <PackageVersion Include="Photino.Native" Version="4.0.22" />
     <PackageVersion Include="Photino.NET" Version="4.0.16" />
     <!-- Same version as the vpk tool installed on the build machines. -->
-    <PackageVersion Include="Velopack" Version="1.2.0" />
+    <PackageVersion Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
   <ItemGroup Label="Observability">
