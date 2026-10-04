@@ -57,10 +57,16 @@ design
 /tests/**/obj/
 TestResults/
 
-# Angular workspace outputs
+# Angular workspace outputs. The CLI cache is unanchored: a tool that runs ng from the
+# repository root (an IDE) writes it there too.
 /src/LoDb.Web/dist/
-/src/LoDb.Web/.angular/
+.angular/
 /src/LoDb.Web/coverage/
 
 # Parity runs (L1.8): exports and manifests of both stacks, regenerated on demand
 /tools/parity/.runs/
+
+# Leftovers of the layout before the cutover: the PHP stack moved to legacy/app/, but a
+# checkout updated in place keeps its ignored files under app/ (vendor, node_modules, var,
+# .env.*.local), which no .gitignore covers any more.
+/app/
