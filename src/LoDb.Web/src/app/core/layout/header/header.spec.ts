@@ -26,6 +26,19 @@ async function hrefs(payments: boolean): Promise<(string | null)[]> {
 }
 
 describe('Header', () => {
+  let lang: string;
+
+  // The links follow <html lang>, which the locale resolver writes: an English page here,
+  // whatever an earlier spec left on the shared document.
+  beforeEach(() => {
+    lang = document.documentElement.lang;
+    document.documentElement.lang = 'en';
+  });
+
+  afterEach(() => {
+    document.documentElement.lang = lang;
+  });
+
   it('links the donation page in a build with payments', async () => {
     expect(await hrefs(true)).toContain('/en/donate');
   });
