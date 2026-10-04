@@ -244,6 +244,7 @@ Valable pour les deux environnements : chacun reprend les valeurs de son propre 
 | dépôt (branche `test` ou `main`) | le job (`git reset --hard`) | Fichiers compose à la racine. |
 | `.env` | le job (`ENV_STAGING`, `ENV_PROD`, plus `LODB_EDGE_CIDR`), mode 600 | § 4. |
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |
+| `.deploy/backups/` | le job, à chaque déploiement | `<horodatage>.env` : le `.env` remplacé ; `<horodatage>.dump` : la base avant `migrate` (`pg_dump -Fc`, relu par `pg_restore --list`). Les dix plus récents de chaque, dossier en 700. Ce que le retour arrière restaure ([runbook](../reecriture/bascule.md), § 8.2). |
 | `.deploy/android/` | l'exploitant, à chaque release Android | `latest.json` (asset `lodb-android-latest.json`) et `assetlinks.json` ([`release-android.md`](release-android.md)). Vide : les deux URL répondent 404. |
 
 Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :
