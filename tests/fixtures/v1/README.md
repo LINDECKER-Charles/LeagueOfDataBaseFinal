@@ -1,6 +1,6 @@
 # Références de contrat `/v1`
 
-Comportement observable de go-api, capturé par `tools/next/v1-capture/` (chantier L6.1).
+Comportement observable de go-api, capturé par `tools/v1-capture/` (chantier L6.1).
 Les tests de contrat du module `/v1` (L6.3) rejouent ces scénarios sur le même jeu de
 données et comparent leurs réponses normalisées à celles-ci. Scénarios, particularités et
 écarts volontaires : [`contrat-v1.md`](../../../docs/reecriture/rapports/contrat-v1.md).

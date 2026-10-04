@@ -23,6 +23,8 @@
 @import './foundation/ddragon.css';
 @import './foundation/prose.css';
 @import './layout/chrome.css';
+@import './layout/loader-core.css';
+@import './layout/loader.css';
 
 /* Alternate identities LAST: unlayered overrides of the token contract. */
 @import './theme/index.css';

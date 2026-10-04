@@ -34,6 +34,11 @@ internal sealed record CatalogProblem : IResult
         "The page or its size is out of range.",
         $"page starts at 1 and size lies between 1 and {PageRequest.MaxSize}.");
 
+    public static CatalogProblem InvalidResource(string resource) => BadRequest(
+        "invalid-resource",
+        "The resource is not a list of the catalog.",
+        $"'{resource}' is none of champions, items, runes and summoners.");
+
     public static CatalogProblem InvalidQuery(string detail) =>
         BadRequest("invalid-query", "The search query is not valid.", detail);
 

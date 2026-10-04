@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LoDb.Api.Hosting.OpenApi;
+using LoDb.Api.Modules.Catalog.WarmUp.Progress;
 using LoDb.Domain.Catalog;
 using LoDb.Domain.Derived.Items;
 using LoDb.Domain.Derived.Ranges;
@@ -54,6 +55,7 @@ internal static class CatalogJson
             new JsonStringEnumConverter<AttackRangeClass>(camel, allowIntegerValues: false));
         converters.Add(new JsonStringEnumConverter<ImageStatus>(camel, allowIntegerValues: false));
         converters.Add(new JsonStringEnumConverter<AbilitySlot>(camel, allowIntegerValues: false));
+        converters.Add(new JsonStringEnumConverter<WarmUpStage>(camel, allowIntegerValues: false));
         converters.Add(new JsonStringEnumConverter<GameStat>(
             JsonNamingPolicy.SnakeCaseLower,
             allowIntegerValues: false));

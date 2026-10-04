@@ -18,10 +18,10 @@
     "lint": "ng lint && prettier --check . && node --test \"lint/**/*.test.mjs\"",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.spec.json",
     "test": "ng test --watch=false",
-    "api:generate": "node ../../tools/next/api/generate.mjs",
-    "api:check": "node ../../tools/next/api/check.mjs",
-    "i18n:convert": "node ../../tools/next/i18n/convert.mjs",
-    "i18n:report": "node ../../tools/next/i18n/report.mjs"
+    "api:generate": "node ../../tools/api/generate.mjs",
+    "api:check": "node ../../tools/api/check.mjs",
+    "i18n:convert": "node ../../tools/i18n/convert.mjs",
+    "i18n:report": "node ../../tools/i18n/report.mjs"
   },
   "dependencies": {
     "@angular/cdk": "^22.2.0",

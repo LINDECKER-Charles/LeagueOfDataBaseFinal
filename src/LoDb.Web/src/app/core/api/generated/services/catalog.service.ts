@@ -35,8 +35,11 @@ import { RuneTreeDetails } from '../models/rune-tree-details';
 import { searchCatalog } from '../fn/catalog/search-catalog';
 import { SearchCatalog$Params } from '../fn/catalog/search-catalog';
 import { SearchResults } from '../models/search-results';
+import { SseItemOfWarmUpProgress } from '../models/sse-item-of-warm-up-progress';
 import { SummonerDetails } from '../models/summoner-details';
 import { SummonerList } from '../models/summoner-list';
+import { warmUpCatalog } from '../fn/catalog/warm-up-catalog';
+import { WarmUpCatalog$Params } from '../fn/catalog/warm-up-catalog';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogService extends BaseService {
@@ -356,6 +359,41 @@ export class CatalogService extends BaseService {
     const resp = this.searchCatalog$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<SearchResults>): SearchResults => r.body)
+    );
+  }
+
+  /** Path part for operation `warmUpCatalog()` */
+  static readonly WarmUpCatalogPath = '/api/catalog/{version}/{lang}/warm-up';
+
+  /**
+   * Ingests the datasets, then the images the named lists show, streaming each state as a Server-Sent Event.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `warmUpCatalog()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  warmUpCatalog$Response(params: WarmUpCatalog$Params, context?: HttpContext): Observable<StrictHttpResponse<SseItemOfWarmUpProgress>> {
+    const obs = warmUpCatalog(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * Ingests the datasets, then the images the named lists show, streaming each state as a Server-Sent Event.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `warmUpCatalog$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  warmUpCatalog(params: WarmUpCatalog$Params, context?: HttpContext): Observable<SseItemOfWarmUpProgress> {
+    const resp = this.warmUpCatalog$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<SseItemOfWarmUpProgress>): SseItemOfWarmUpProgress => r.body)
     );
   }
 

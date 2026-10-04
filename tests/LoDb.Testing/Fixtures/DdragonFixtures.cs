@@ -7,7 +7,7 @@ namespace LoDb.Testing.Fixtures;
 /// The recorded Data Dragon and CommunityDragon answers, copied next to the test assembly.
 /// </summary>
 /// <remarks>
-/// Recorded by <c>node tools/next/fixtures/record.mjs</c> into <c>tests/fixtures/ddragon</c>:
+/// Recorded by <c>node tools/fixtures/record.mjs</c> into <c>tests/fixtures/ddragon</c>:
 /// the two newest versions of the recording day in full, and the trap versions (0.151.2,
 /// 3.6.14, 3.13.8, 3.13.24, 7.21.1, 7.22.1, 8.7.1) for their datasets and rune icons.
 /// </remarks>

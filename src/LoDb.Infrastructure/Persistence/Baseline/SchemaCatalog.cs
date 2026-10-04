@@ -9,7 +9,7 @@ namespace LoDb.Infrastructure.Persistence.Baseline;
 /// </summary>
 /// <remarks>
 /// <c>doctrine-catalog.txt</c> is that description for a database the Doctrine migrations
-/// created, written by <c>tools/next/schema/</c> with the same query.
+/// created, written by <c>tools/schema/</c> with the same query.
 /// </remarks>
 internal static class SchemaCatalog
 {

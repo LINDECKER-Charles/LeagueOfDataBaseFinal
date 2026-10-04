@@ -8,9 +8,9 @@ l'[ADR 0008](../reecriture/adr/0008-mises-a-jour-integrees.md), les chantiers da
 | Élément | Emplacement |
 |---|---|
 | Mises à jour dans l'app | `src/LoDb.Web/src/app/core/platform/android/updates/` |
-| Signature des bundles | `tools/next/live-update/` |
-| Workflow de release | `.github/workflows/next-release-android.yml` |
-| Scripts (version, signature, porte, publication, vérification locale) | `tools/next/android-release/` |
+| Signature des bundles | `tools/live-update/` |
+| Workflow de release | `.github/workflows/release-android.yml` |
+| Scripts (version, signature, porte, publication, vérification locale) | `tools/android-release/` |
 
 ## Côté app
 
@@ -57,7 +57,7 @@ signataire, si c'est une clé privée, ou si `readyTimeout` n'est pas positif.
 ### Version native minimale des bundles
 
 Chaque bundle déclare la plus ancienne coquille qui le supporte (`minimumNativeVersion`).
-`tools/next/android-release/native-baseline.json` la fixe, avec l'empreinte de la couche
+`tools/android-release/native-baseline.json` la fixe, avec l'empreinte de la couche
 native : fichiers suivis de `src/LoDb.Web/android/` et `capacitor.config.ts`, puis nom et
 version de chaque plugin inclus dans `capacitor.settings.gradle`.
 
@@ -67,8 +67,8 @@ version de chaque plugin inclus dans `capacitor.settings.gradle`.
 
   ```sh
   git add <fichiers natifs>   # l'empreinte lit l'index
-  node tools/next/android-release/build/native-fingerprint.mjs --update X.Y.Z
-  git add tools/next/android-release/native-baseline.json
+  node tools/android-release/build/native-fingerprint.mjs --update X.Y.Z
+  git add tools/android-release/native-baseline.json
   ```
 
   Ses bundles ne vont alors qu'aux coquilles X.Y.Z et plus. Les autres passent d'abord par
@@ -80,7 +80,7 @@ version de chaque plugin inclus dans `capacitor.settings.gradle`.
    `git tag android-vX.Y.Z <sha>`, puis `git push origin android-vX.Y.Z`.
 2. Déployer la prod. Le déploiement appelle le workflow avec le SHA déployé
    (voir [Contrat d'appel](#contrat-dappel)). À défaut, on le lance à la main :
-   `gh workflow run next-release-android.yml -f sha=<sha>`.
+   `gh workflow run release-android.yml -f sha=<sha>`.
 3. Suivre le run : `build`, `stage`, `gate`, `cleanup`, `publish`, puis `play` quand Play
    est activé.
 4. Publier la politique client : le résumé du job `publish` donne la commande (voir
@@ -100,7 +100,7 @@ SHA exact :
 ```yaml
   android:
     needs: deploy
-    uses: ./.github/workflows/next-release-android.yml
+    uses: ./.github/workflows/release-android.yml
     with:
       sha: ${{ github.sha }}
     permissions:
@@ -212,14 +212,14 @@ seulement : il ne publie pas cet APK, et s'arrête si `ANDROID_TRANSITIONAL_CHAN
 `true`.
 
 Les empreintes des deux clés (`signing.txt`) vont dans `assetlinks.json`
-(`tools/next/android/assetlinks.mjs`) : sans elles, l'App Link de l'OAuth n'est pas vérifié.
+(`tools/android/assetlinks.mjs`) : sans elles, l'App Link de l'OAuth n'est pas vérifié.
 
 ### Clé RSA des bundles
 
 ```sh
 openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out /secure/lodb-live-update.pem
 LODB_LIVE_UPDATE_PRIVATE_KEY="$(cat /secure/lodb-live-update.pem)" \
-  node tools/next/live-update/public-key.mjs > lodb-live-update.pub.pem
+  node tools/live-update/public-key.mjs > lodb-live-update.pub.pem
 ```
 
 - 4096 bits au plus : la signature (684 caractères) doit tenir dans les 1024 de l'API.
@@ -298,11 +298,11 @@ lue : deux keystores jetables (RSA 4096, valides un jour, `CN=LoDb throwaway …
 de bundle jetable naissent et meurent dans le conteneur.
 
 ```sh
-tools/next/android-release/verify-local.sh               # version 1.0.0
-tools/next/android-release/verify-local.sh --version 2.4.0
+tools/android-release/verify-local.sh               # version 1.0.0
+tools/android-release/verify-local.sh --version 2.4.0
 ```
 
-1. Build de `docker/next/android-build` (`lodb-android-build:local`, `linux/amd64`).
+1. Build de `docker/android-build` (`lodb-android-build:local`, `linux/amd64`).
 2. Dans le conteneur (6 Gio, 6 CPU, checkout en lecture seule) : `npm ci`,
    `build:shell:store`, `cap sync android`, `gradlew bundleRelease assembleRelease` avec le
    `versionCode` de la version.

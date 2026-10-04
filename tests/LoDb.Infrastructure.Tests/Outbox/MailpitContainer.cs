@@ -6,7 +6,7 @@ using DotNet.Testcontainers.Containers;
 namespace LoDb.Infrastructure.Tests.Outbox;
 
 /// <summary>
-/// The Mailpit of the development stack (<c>compose.next.override.yaml</c>), started for the
+/// The Mailpit of the development stack (<c>compose.override.yaml</c>), started for the
 /// tests of a class: an SMTP relay that keeps what it receives and shows it through its API.
 /// </summary>
 public sealed class MailpitContainer : IAsyncLifetime

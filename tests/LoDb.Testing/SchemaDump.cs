@@ -1,7 +1,7 @@
 namespace LoDb.Testing;
 
 /// <summary>
-/// The normalization of <c>pg_dump</c> shared with <c>tools/next/schema/check.sh</c>: the
+/// The normalization of <c>pg_dump</c> shared with <c>tools/schema/check.sh</c>: the
 /// header, the settings and the blank lines vary with the run and the version.
 /// </summary>
 public static class SchemaDump

@@ -3,7 +3,7 @@ using System.Reflection;
 namespace LoDb.Testing;
 
 /// <summary>
-/// The schema the Doctrine migrations create, frozen by <c>tools/next/schema/check.sh</c> in
+/// The schema the Doctrine migrations create, frozen by <c>tools/schema/check.sh</c> in
 /// <c>tests/fixtures/schema/</c>: the tests compare with it without the legacy stack.
 /// </summary>
 public static class LegacySchema
@@ -19,7 +19,7 @@ public static class LegacySchema
     public static IReadOnlyList<string> DoctrineVersions { get; } =
         ReadResource("doctrine-versions.txt").Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-    /// <summary><c>tools/next/db/anonymize.sql</c>.</summary>
+    /// <summary><c>tools/db/anonymize.sql</c>.</summary>
     public static string AnonymizeSql { get; } = ReadResource("anonymize.sql");
 
     private static string ReadResource(string name)

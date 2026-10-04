@@ -1,356 +1,118 @@
-# 🔐 GitHub Actions — Secrets
+# 🔐 GitHub Actions — pipeline CI/CD
 
-Secrets à configurer pour le pipeline `CI/CD` (`.github/workflows/ci.yml`).
+Ce guide décrit le pipeline : qui construit, qui déploie, dans quel ordre. **La liste de
+tout ce qu'il faut configurer** (secrets, variables, lignes des `.env`, fichiers de l'hôte,
+services externes) est dans [`configuration.md`](configuration.md).
 
-**Où** : `Settings` → `Secrets and variables` → `Actions` → onglet `Repository secrets`.
+Le pipeline garde les conventions de l'ancienne stack : mêmes noms de workflows, même
+chemin `dev` → `test` → `main`, mêmes environnements (`staging`, `prod`) et mêmes secrets.
+Ses workflows d'origine sont archivés sous `legacy/.github/workflows/` et ne tournent
+plus ; leur guide est
+[`legacy/docs/guides/github-actions-secrets.md`](../../legacy/docs/guides/github-actions-secrets.md).
 
-## 🔁 Flux (promotion à deux étages, *build once*)
-
-```
-push dev  ─▶ _tests ─▶ merge-to-test (dev→test)
-          ─▶ _build (GHCR: :<sha> + :staging) ─▶ _deploy staging  (test.league-of-data-base.com)
-
-merge test→main (manuel)  ─▶ push main
-          ─▶ _promote : retag :staging→:prod (sans rebuild) ─▶ _deploy prod (league-of-data-base.fr/.com)
-```
-
-### 🧩 Structure des workflows (reusable, responsabilité unique)
+## Workflows
 
 | Fichier | Rôle |
 |---|---|
-| `ci.yml` | Orchestrateur : déclencheurs `dev`/`main`, gardes `if`, câblage. Aucun secret en dur. |
-| `_tests.yml` | PHP / Go / JS. |
-| `_build.yml` | Build + push des 3 images (`:<sha>` + tag mouvant). |
-| `_deploy.yml` | Déploiement SSH d'**un** hôte, **paramétré** → appelé pour staging **et** prod (DRY). |
-| `_promote.yml` | Retag `:staging → :prod` (aucun rebuild). |
+| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main`, `docs/reecriture-dotnet-angular`) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-dev` + Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`. Sur un push de **`main`** : `promote`, `deploy-prod`. |
+| `_build.yml` | Réutilisable : construit depuis `test` les images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, taguées `:<sha>` (le commit poussé sur `dev`) + `:staging`, label OCI et `APP_REVISION` = SHA. |
+| `_deploy.yml` | Réutilisable : déploiement SSH d'un hôte, même logique pour `staging` et `prod`. Entrées `environment` (`staging` ou `prod`) et `branch` (`test` ou `main`) ; secrets passés par `ci.yml` (§ Secrets). |
+| `_promote.yml` | Réutilisable : retague `:staging` en `:prod` et `:latest`, **sans rebuild**. |
+| `release-desktop.yml`, `release-android.yml` | Releases signées des apps ([`release-desktop.md`](release-desktop.md), [`release-android.md`](release-android.md)). |
 
-- `test` est mis à jour automatiquement depuis `dev` et **ne déclenche jamais** le workflow (pas de boucle).
-- `main` n'est atteint que par un **merge manuel `test → main`** : c'est le *gate* humain qui met en production.
-- La prod **ne rebuild pas** : elle retague et déploie **exactement l'image validée en staging**
-  (`:staging` courant → `:prod`). Corollaire : toujours passer par `test → main` — un push direct
-  sur `main` déploierait l'image staging courante, pas le code poussé.
+```
+push dev  ─▶ checks (dotnet, front, contract, e2e ; i18n informatif)
+          ─▶ merge dev → test (créée depuis main si absente)
+          ─▶ _build (GHCR :<sha> + :staging)
+          ─▶ _deploy staging (branche test) : pull ─▶ migrate ─▶ up -d ─▶ smoke test
+fusion manuelle test → main ─▶ push main
+          ─▶ _promote (:staging → :prod + :latest, sans rebuild)
+          ─▶ _deploy prod (branche main) : pull ─▶ migrate ─▶ up -d ─▶ smoke test
+```
 
----
+- `test` ne déclenche jamais le workflow : c'est la branche que l'hôte de `staging` suit.
+- `main` n'est atteint que par la fusion manuelle de `test` : c'est la validation humaine
+  qui met en prod. La prod reçoit les images que `staging` a servies, sans rebuild ni
+  nouveau passage des checks.
+- `_promote` promeut ce que `:staging` désigne **au moment du push de `main`**, c'est-à-dire
+  le dernier build de `dev`. Ne pas pousser `dev` entre la validation de `staging` et la
+  fusion dans `main`.
+- Filtre de chemins : un push qui ne touche pas la nouvelle stack (documentation seule) ne
+  lance rien, ni fusion dans `test` ni promotion.
+- Sur `dev` et `main`, un push plus récent **attend** la fin du run en cours au lieu de
+  l'annuler : ce run se termine par un déploiement, qu'une annulation couperait en plein
+  milieu. Ailleurs (PR, autres branches), le run obsolète est annulé.
 
-## 🧪 Tests appli (workflow `_tests.yml` — jobs `php` / `go` / `js`)
+## Secrets
 
-| Secret | Requis | Description |
-|---|:---:|---|
-| `ENV_TEST` | ✅ | Dotenv de test appli **complet** (source : `.env.test`). Écrit dans `app/.env.test.local` avant PHPUnit / lints. **Sans rapport avec le déploiement staging.** |
+Les checks, la fusion dans `test`, le build, le retag et le `pull` des images sur l'hôte
+n'utilisent que `GITHUB_TOKEN`.
+Le déploiement lit des **secrets de dépôt**, sans environnement GitHub, comme l'ancienne
+stack ; `ci.yml` les passe à `_deploy.yml` :
 
----
-
-## 🟡 Déploiement staging (job `deploy-staging`)
-
-Son `.env` doit fixer `COMPOSE_PROJECT_NAME=lodb-staging`, `IMAGE_TAG=staging` et
-`CADDY_DOMAINS=test.league-of-data-base.com`. Le VPS peut être mutualisé avec la
-prod (et d'autres projets) : l'isolation vient du `COMPOSE_PROJECT_NAME` distinct
-et le TLS d'un **edge proxy partagé**, fourni par le dépôt d'infrastructure `infra-vps`
-(section TLS ci-dessous).
-
-| Secret | Requis | Description |
-|---|:---:|---|
-| `STAGING_SSH_KEY` | ✅ | Clé privée SSH (PEM complet) chargée dans `ssh-agent`. Clé publique dans les `authorized_keys` du serveur staging. |
-| `STAGING_HOST` | ✅ | Hôte staging (IP ou FQDN). `ssh-keyscan` + connexions SSH. |
-| `STAGING_PATH` | ✅ | Chemin absolu du projet sur le serveur (dossier des `compose.*.yaml`). Cible du `git pull origin test` et du `docker compose`. |
-| `STAGING_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
-| `ENV_STAGING` | ✅ | Dotenv staging **complet**. Poussé dans `${STAGING_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-staging`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=staging`, les secrets applicatifs (`APP_SECRET`, `ADMIN_*`, `POSTGRES_PASSWORD`, `STRIPE_*` — cf. section base de données & Stripe) **et** `CADDY_DOMAINS=test.league-of-data-base.com`. Aucun paramètre de l'edge (contact Let's Encrypt) ici : il vit dans `infra-vps`. |
-
----
-
-## 🚀 Déploiement production (jobs `promote` + `deploy-prod`)
-
-Son `.env` doit fixer `COMPOSE_PROJECT_NAME=lodb-prod`, `IMAGE_TAG=prod` et les domaines apex.
-Peut cohabiter avec staging sur le même VPS (projets Compose distincts + edge partagé).
-
-| Secret | Requis | Description |
-|---|:---:|---|
-| `PROD_SSH_KEY` | ✅ | Clé privée SSH (PEM complet) chargée dans `ssh-agent`. Clé publique dans les `authorized_keys` du serveur prod. |
-| `PROD_HOST` | ✅ | Hôte prod (IP ou FQDN). `ssh-keyscan` + connexions SSH. |
-| `PROD_PATH` | ✅ | Chemin absolu du projet sur le serveur. Cible du `git pull origin main` et du `docker compose`. |
-| `PROD_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
-| `ENV_PROD` | ✅ | Dotenv prod **complet**. Poussé dans `${PROD_PATH}/.env`. Doit inclure `COMPOSE_PROJECT_NAME=lodb-prod`, `REGISTRY=ghcr.io/<owner>/lodb`, `IMAGE_TAG=prod`, les secrets applicatifs (dont `POSTGRES_PASSWORD` et `STRIPE_*` — cf. section suivante) **et** `CADDY_DOMAINS=league-of-data-base.fr, league-of-data-base.com`. Aucun paramètre de l'edge (contact Let's Encrypt) ici : il vit dans `infra-vps`. |
-
----
-
-## 🗄️ Base de données & Stripe — lignes à porter dans `ENV_STAGING` / `ENV_PROD` / `ENV_TEST`
-
-Ces variables sont des **lignes des dotenv** ci-dessus (pas des secrets GitHub distincts).
-
-| Variable | Où | Description |
+| Entrée de `_deploy.yml` | `deploy-staging` | `deploy-prod` |
 |---|---|---|
-| `POSTGRES_PASSWORD` | `ENV_STAGING`, `ENV_PROD` | Mot de passe du service Postgres du stack. **Fort et unique par environnement** — le défaut compose (`lodb`) n'est acceptable qu'en dev local. |
-| `DATABASE_URL` | optionnel | Assemblée par le compose depuis `POSTGRES_*` ; ne la définir explicitement que pour pointer une base **externe** au stack (format `postgresql://user:pass@host:5432/db?serverVersion=17&charset=utf8`). |
-| `STRIPE_SECRET_KEY` | `ENV_PROD` (`sk_live_…`), `ENV_STAGING`/`ENV_TEST` (`sk_test_…`) | Clé API secrète Stripe de la page de don ; vide ⇒ passerelle désactivée proprement. |
-| `STRIPE_WEBHOOK_SECRET` | `ENV_STAGING`, `ENV_PROD` | Secret de signature `whsec_…` de l'endpoint `POST /webhooks/stripe` (un endpoint Stripe distinct par environnement). |
+| `SSH_KEY` | `STAGING_SSH_KEY` | `PROD_SSH_KEY` |
+| `SSH_HOST` | `STAGING_HOST` | `PROD_HOST` |
+| `DEPLOY_PATH` | `STAGING_PATH` | `PROD_PATH` |
+| `SSH_USER` (➖, `root`) | `STAGING_SSH_USER` | `PROD_SSH_USER` |
+| `ENV_FILE` | `ENV_STAGING` | `ENV_PROD` |
+| `DATA_PROTECTION_PFX` | `STAGING_DATA_PROTECTION_PFX` | `PROD_DATA_PROTECTION_PFX` |
 
-> ℹ️ Les tests CI actuels (`ENV_TEST` → PHPUnit `tests/Unit`) ne touchent pas la base.
-> Si des tests fonctionnels DB apparaissent un jour, `ENV_TEST` (côté CI) devra porter
-> un `DATABASE_URL` pointant un service Postgres du job.
+Les quatre premières lignes existent déjà (ancienne stack). `ENV_STAGING` et `ENV_PROD`
+existent aussi, mais leur contenu est **remplacé** par le `.env` de la nouvelle stack ; les
+deux certificats sont nouveaux ([`configuration.md`](configuration.md), § 2 et 3.2).
 
----
+**Tags d'images** : `:<sha>` (immuable, poussé par `_build.yml`), `:staging` (dernier build
+de `dev`), `:prod` et `:latest` (images promues). `ghcr.io/<owner>/lodb/nginx` porte le nom
+qu'avait l'image nginx de l'ancienne stack : ses `:staging` et `:prod` désignent désormais
+la nouvelle, et les images de l'ancienne restent accessibles par leur tag `:<sha>`.
 
-## 🔒 TLS / reverse-proxy — edge partagé (caddy-docker-proxy)
+## Ce que fait le job sur l'hôte, dans l'ordre
 
-Les stacks app **ne publient plus** `80/443` et n'embarquent plus Caddy. Le point
-d'entrée TLS est un **edge proxy unique et global** au VPS, partagé par staging, prod
-et tout futur projet. Il est **déployé par le dépôt d'infrastructure `infra-vps`
-(privé)**, seul propriétaire de l'edge et des réseaux Docker externes `edge` /
-`observability` — jamais par ce dépôt. Il détecte les domaines via des **labels**
-sur le conteneur nginx et émet/renouvelle seul les certificats Let's Encrypt.
-Chaque stack app se contente de déclarer `CADDY_DOMAINS` (→ label) et de rejoindre
-le réseau externe `edge` (via `compose.deploy.yaml`). Onboarding d'un nouveau projet :
-**`docs/guides/migration-edge-proxy.md`** (« la méthode »).
+La nouvelle stack prend la place de l'ancienne dans le même projet Compose
+(`lodb-staging`, `lodb-prod`) et le même dossier (`STAGING_PATH`, `PROD_PATH`).
 
-**Ordre de déploiement** : `infra-vps` doit avoir convergé l'hôte **avant** tout projet
-applicatif. Le job `_deploy.yml` ne converge plus rien côté edge : il **vérifie** seulement
-que le réseau `edge` existe et **échoue explicitement** sinon (« deploy infra-vps before
-this project »). Aucun secret lié à l'edge n'est requis dans ce dépôt : le contact
-Let's Encrypt est configuré dans `infra-vps`.
+1. Écrit le `.env` (mode 600) et `.deploy/data-protection.pfx`, puis synchronise le dépôt
+   sur la branche (`git reset --hard`).
+2. Contrôle le `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
+   `COMPOSE_PROJECT_NAME` = `lodb-<env>`, `IMAGE_TAG` = `<env>`, `LODB_NOINDEX` (`1` sur
+   `staging`, `0` en `prod`) ; en `prod`, relais SMTP et clés Stripe présents. Exige le
+   réseau `edge` (jamais créé) et écrit son sous-réseau dans le `.env` (`LODB_EDGE_CIDR`,
+   seul pair dont nginx croit `X-Forwarded-For`).
+3. `docker compose pull` (5 tentatives), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
+   run le temps du seul `pull` (transmis par l'entrée de `ssh`, jamais en ligne de
+   commande), puis `docker compose run --rm migrate` : la base du
+   volume `pgdata` passe à la dernière migration (une base Doctrine est d'abord marquée à
+   `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir.
+4. `docker compose up -d --no-build --remove-orphans --wait` : les conteneurs de la nouvelle
+   stack remplacent ceux de l'ancienne, dont `php`, `go-fetcher`, `go-api` et `mailer` sont
+   retirés comme orphelins. `pgdata` est gardé ; les blobs vont dans le volume `ddragon` ;
+   `storage` et `app_state` restent intacts.
+5. Smoke test dans la stack (`/healthz` par nginx, `/readyz` de l'API, `/en/`, sous-domaine
+   `api.`, `X-Robots-Tag`), annonce la révision servie (`::notice` « Deployed revision »),
+   puis contrôle le TLS public (avec relance de l'edge).
 
-| Variable | Où | Staging | Prod |
-|---|---|---|---|
-| `CADDY_DOMAINS` | `ENV_STAGING`/`ENV_PROD` | `test.league-of-data-base.com` | `league-of-data-base.fr, league-of-data-base.com` |
+## Basculer `staging`
 
-> ⚠️ **Ordre au premier déploiement** : les enregistrements DNS (A/AAAA) de chaque
-> domaine doivent pointer vers le VPS **avant** que le déploiement tourne, et les
-> ports **80 + 443** doivent être joignables — l'émission ACME échoue sinon. Caddy
-> réessaie tout seul une fois le DNS propagé.
+1. `.env.staging` rempli, valeurs 🔁 relevées dans `$STAGING_PATH/.env` **avant** ce
+   déploiement ([`configuration.md`](configuration.md), § 2).
+2. `ENV_STAGING` remplacé, `STAGING_DATA_PROTECTION_PFX` créé.
+3. Fusion de la bascule dans `dev` : son push déploie `staging`. La base de l'ancien staging
+   est gardée et migrée ; le volume `ddragon` part vide et l'ingestion le remplit.
 
-### 🖥️ Prérequis serveur (one-shot)
+## Mettre en prod, et bascule
 
-**Sur le VPS, une fois** :
+1. `staging` validé.
+2. Juste avant la fusion : `.env.prod` rempli depuis `$PROD_PATH/.env`, `ENV_PROD` remplacé,
+   `PROD_DATA_PROTECTION_PFX` créé. Pas avant : tant que `main` porte l'ancienne stack, un
+   push de `main` la redéploierait avec ce `.env`.
+3. Fenêtre de bascule du [runbook](../reecriture/bascule.md) (sauvegarde de la base faite).
+4. Fusion manuelle de `test` dans `main` : promotion, puis déploiement de `prod`.
 
-1. Docker Engine + plugin `docker compose` installés.
-2. **Déployer `infra-vps` d'abord** : edge (caddy-docker-proxy) + réseaux `edge` et
-   `observability`. Sans ça, le job de ce dépôt s'arrête sur l'assertion réseau.
-3. Ports **80/443** ouverts et DNS des domaines pointé (cf. ci-dessus).
-4. `docker login ghcr.io` persistant si les packages GHCR sont **privés** (PAT `read:packages`),
-   sinon les rendre publics — sans ça `docker compose pull` échoue.
-5. Le `*_PATH` peut être vide : le job initialise le dépôt (`git init` + `reset`), pousse le `.env`,
-   vérifie le réseau `edge`, puis déploie. staging suit `test`, prod suit `main`.
+**Retour arrière** : [runbook de bascule](../reecriture/bascule.md). Il reste possible tant
+que le schéma est compatible (migrations additives) : `pgdata` est partagé, `storage` et
+`app_state` sont intacts et les images de l'ancienne stack restent sous leur tag `:<sha>`.
 
----
-
-## ⚙️ Secrets automatiques (aucune action requise)
-
-| Secret | Description |
-|---|---|
-| `GITHUB_TOKEN` | Fourni automatiquement par GitHub Actions. Utilisé pour le merge `dev → test`, le push et le retag des images sur GHCR. **Ne pas créer manuellement.** |
-
----
-
-## 📝 Notes
-
-- **Mapping fichier → secret** : le dotenv local de chaque environnement devient le secret correspondant.
-  - `.env.test` → secret **`ENV_TEST`** → env de test appli (PHPUnit/CI ; écrit dans `app/.env.test.local`)
-  - `.env.staging` → secret **`ENV_STAGING`** → déploiement staging (`test.league-of-data-base.com`)
-  - `.env.prod` → secret **`ENV_PROD`** → déploiement prod
-  - ⚠️ `test` (env applicatif) ≠ `staging` (déploiement pré-prod) : deux choses distinctes, deux fichiers, deux secrets.
-- **`CADDY_DOMAINS`** est une **ligne** de ces dotenv (donc dans `ENV_STAGING` / `ENV_PROD`), jamais dans les workflows. Le contact Let's Encrypt de l'edge ne s'y trouve pas : il est géré par `infra-vps`.
-- **`ENV_*`** contiennent le fichier dotenv intégral (une variable par ligne), pas une valeur unique — coller le contenu complet du `.env` correspondant.
-- **Staging et prod ne diffèrent que par leur `.env`** (`COMPOSE_PROJECT_NAME`, `IMAGE_TAG`, `CADDY_DOMAINS`, secrets) : mêmes fichiers compose. Le `COMPOSE_PROJECT_NAME` distinct est ce qui les isole sur un VPS mutualisé.
-- **Plus aucune variable `MINIO_*`** : le stockage Data Dragon est un volume Docker (`storage`), sans identifiants ni bucket. Les lignes `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` encore présentes dans `ENV_STAGING` / `ENV_PROD` ne sont plus lues et peuvent être retirées. L'ancien volume `<projet>_minio_data` reste sur l'hôte jusqu'à suppression manuelle (`docker volume rm lodb-staging_minio_data`, idem `lodb-prod_minio_data`).
-- **`*_SSH_KEY`** : copier l'intégralité du fichier clé, en-têtes `-----BEGIN … PRIVATE KEY-----` / `-----END … PRIVATE KEY-----` inclus.
-- Les secrets ne sont **jamais** affichés dans les logs (masqués par GitHub) ; leur mise à jour ne s'applique qu'aux exécutions suivantes.
-
----
-
-## 🆕 Nouvelle stack (`lodb-next`, réécriture .NET + Angular)
-
-Workflows propres à la réécriture, indépendants de `ci.yml` et des `_*.yml` ci-dessus :
-
-| Fichier | Rôle |
-|---|---|
-| `next-ci.yml` | Déclenché par `push` (branche d'intégration `docs/reecriture-dotnet-angular`, `dev`, `main`) et `pull_request`, filtré sur les chemins de la nouvelle stack. Jobs parallèles : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-next` + Playwright). |
-| `next-build.yml` | Réutilisable, appelé par `next-ci.yml` sur `push` de la branche d'intégration une fois les jobs bloquants verts : images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}` taguées `:<sha>` + `:next`, label OCI et `APP_REVISION` = SHA. |
-| `next-deploy.yml` | Déploiement SSH, manuel pour `next` (`workflow_dispatch`, entrée `branch`), appelé par `next-promote.yml` pour la prod. `pull`, puis conteneur éphémère `migrate` **avant** `up -d --wait`, puis smoke test (nginx, `/readyz`, `/en/`, sous-domaine `api.`, `X-Robots-Tag`, TLS public avec relance de l'edge). |
-| `next-promote.yml` | Manuel (`workflow_dispatch`, entrées `revision`, `branch`, `take_over_domains`) : vérifie que les trois images `:<revision>` existent, puis, **après approbation** de l'environnement `production`, les retague `:next-prod` (sans rebuild) et les déploie par `next-deploy.yml`. |
-
-```
-push docs/reecriture-dotnet-angular ─▶ next-ci (dotnet, front, contract, e2e ; i18n informatif)
-                                    ─▶ next-build (GHCR :<sha> + :next)
-Actions ▸ next deploy ▸ Run workflow ─▶ hôte next : pull ─▶ migrate ─▶ up -d ─▶ smoke test
-                                       (annonce « Deployed revision : <sha> »)
-Actions ▸ next promote (revision = <sha>) ─▶ images :<sha> présentes ?
-        ─▶ approbation « production » ─▶ retag :<sha> → :next-prod
-        ─▶ hôte prod : pull ─▶ migrate ─▶ [reprise des domaines] ─▶ up -d ─▶ smoke test
-```
-
-Les jobs de CI et de build n'utilisent aucun secret (seulement `GITHUB_TOKEN`). Le job de
-déploiement tourne dans l'environnement GitHub `next` ou `production` :
-
-- **`next`** : créé à la première exécution ; ses secrets peuvent y être déclarés (ou en
-  secrets de dépôt).
-- **`production`** : à créer **avant** la première promotion, avec des *required
-  reviewers* (la validation manuelle qui met en prod) et une règle *deployment branches*
-  limitée à la branche qui porte les workflows. Ses secrets `PROD_NEXT_*` y sont
-  déclarés, jamais en secrets de dépôt : ils ne sont alors délivrés qu'au job approuvé.
-
-**Tags d'images** : `:<sha>` (immuable, poussé par `next-build.yml`), `:next` (dernier build
-de la branche d'intégration) et `:next-prod` (la révision promue). **Jamais `:prod`** :
-`ghcr.io/<owner>/lodb/nginx` est partagé avec l'ancienne stack, dont les déploiements
-tirent `:prod`, et le retour arrière de la bascule a besoin de cette image intacte.
-
-### Secrets du déploiement `next` (préfixe `NEXT`)
-
-| Secret | Requis | Description |
-|---|:---:|---|
-| `NEXT_SSH_KEY` | ✅ | Clé privée SSH (PEM complet) chargée dans `ssh-agent`. Clé publique dans les `authorized_keys` de l'hôte. |
-| `NEXT_HOST` | ✅ | Hôte `next` (IP ou FQDN), le même VPS que staging et prod le cas échéant. |
-| `NEXT_PATH` | ✅ | Chemin absolu du projet sur l'hôte, **distinct** de `STAGING_PATH` et `PROD_PATH` (chaque dossier a son `.env`). Le job y initialise le dépôt et suit la branche passée en entrée. |
-| `NEXT_SSH_USER` | ➖ | Utilisateur SSH. **Optionnel**, défaut `root`. |
-| `ENV_NEXT` | ✅ | Dotenv `next` **complet**, écrit dans `${NEXT_PATH}/.env` (lisible par root seul). Modèle : `.env.next.example` et le tableau ci-dessous. |
-| `NEXT_DATA_PROTECTION_PFX` | ✅ | Certificat Data Protection (PKCS#12, `.pfx`) **encodé en base64**, écrit dans `${NEXT_PATH}/.deploy/data-protection.pfx`. Il chiffre les clés des cookies et des jetons : hors Development, aucune connexion sans lui. Son mot de passe va dans `ENV_NEXT`. |
-
-### Secrets du déploiement prod (préfixe `PROD_NEXT`, environnement `production`)
-
-Mêmes rôles que ci-dessus : `PROD_NEXT_SSH_KEY`, `PROD_NEXT_HOST`, `PROD_NEXT_PATH`,
-`PROD_NEXT_SSH_USER` (optionnel), `ENV_PROD_NEXT` et `PROD_NEXT_DATA_PROTECTION_PFX`.
-
-- `PROD_NEXT_PATH` est un dossier **neuf**, distinct de `PROD_PATH` (l'ancienne stack y
-  garde son `.env` et ses fichiers pour le retour arrière).
-- `PROD_NEXT_DATA_PROTECTION_PFX` est un certificat **propre à la prod**, jamais celui de
-  `next` ; il ne change plus une fois servi, sinon les clés déjà chiffrées deviennent
-  illisibles (sessions et jetons perdus).
-
-Certificat (une fois par environnement, hors du dépôt) :
-
-```bash
-openssl req -x509 -newkey rsa:3072 -nodes -days 3650 -subj "/CN=lodb data protection" \
-  -keyout dp.key -out dp.crt
-openssl pkcs12 -export -inkey dp.key -in dp.crt -out dp.pfx   # mot de passe demandé
-base64 < dp.pfx | tr -d '\n'   # valeur du secret ; garder dp.pfx hors ligne, détruire dp.key
-```
-
-### Secrets des releases des apps (environnements `desktop-release` et `android-release`)
-
-Les workflows `next-release-desktop.yml` et `next-release-android.yml` ont chacun leur
-environnement GitHub ; leurs secrets n'y sont délivrés qu'aux jobs qui signent et publient.
-Les variables du desktop vivent dans son environnement, celles d'Android au niveau du dépôt
-(`stage` lit la clé publique hors de l'environnement). La liste complète, avec la façon
-d'obtenir chaque valeur, est tenue dans leur guide :
-
-| Environnement | Secrets | Variables | Guide |
-|---|---|---|---|
-| `desktop-release` | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `APPLE_DEVELOPER_ID_P12`, `APPLE_DEVELOPER_ID_P12_PASSWORD`, `APPLE_NOTARY_KEY_P8`, `APPLE_NOTARY_KEY_ID`, `APPLE_NOTARY_ISSUER_ID` | `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`, `AZURE_SIGNING_PROFILE`, `APPLE_APP_IDENTITY`, `APPLE_INSTALL_IDENTITY` | [`release-desktop.md`](release-desktop.md) § Signature |
-| `android-release` | `ANDROID_UPLOAD_KEYSTORE_BASE64`, `ANDROID_UPLOAD_STORE_PASSWORD`, `ANDROID_UPLOAD_KEY_PASSWORD`, `ANDROID_APP_SIGNING_KEYSTORE_BASE64`, `ANDROID_APP_SIGNING_STORE_PASSWORD`, `ANDROID_APP_SIGNING_KEY_PASSWORD`, `LODB_LIVE_UPDATE_PRIVATE_KEY`, `PLAY_SERVICE_ACCOUNT_JSON` | `ANDROID_UPLOAD_KEY_ALIAS`, `ANDROID_APP_SIGNING_KEY_ALIAS`, `LODB_LIVE_UPDATE_PUBLIC_KEY`, `ANDROID_TRANSITIONAL_CHANNEL`, `ANDROID_PLAY_ENABLED`, `ANDROID_APP_LINK_HOST` | [`release-android.md`](release-android.md) § Secrets et variables |
-
-Sans ces secrets, la release desktop échoue à la signature (`signing.sh`) et la release
-Android à la signature des bundles ou de l'AAB ; sans `LODB_LIVE_UPDATE_PUBLIC_KEY`, l'app
-accepterait des bundles non signés, ce que l'étape « Check the LiveUpdate settings of the
-APKs » refuse.
-
-### Lignes de `ENV_NEXT` et `ENV_PROD_NEXT`
-
-Variables lues par `compose.next.yaml` et `compose.next.deploy.yaml`. Le job **vérifie**
-celles marquées ⚙️ avant toute modification de l'hôte et s'arrête si elles ne
-correspondent pas à la cible.
-
-| Variable | `next` | prod | Description |
-|---|---|---|---|
-| `COMPOSE_PROJECT_NAME` ⚙️ | `lodb-next` | `lodb-next-prod` | Isolation des stacks du VPS ; jamais `lodb-prod` ni `lodb-staging` (l'ancienne stack). |
-| `REGISTRY` | `ghcr.io/<owner>/lodb` | idem | Registre des images. |
-| `IMAGE_TAG` ⚙️ | `next` | `next-prod` | Tag déployé (voir « Tags d'images »). |
-| `CADDY_DOMAINS` | domaine de `next` | `league-of-data-base.com, league-of-data-base.fr` (ceux de l'ancienne stack) | Label Caddy `caddy_0` du site. Les hôtes `www.` et `.fr` reçoivent une 301 vers l'hôte canonique ; un `www.` ajouté ici exige d'abord son DNS (contrôle TLS). |
-| `API_CADDY_DOMAINS` | `api.` + domaine | `api.league-of-data-base.com, api.league-of-data-base.fr` | Label `caddy_1` ; chaque hôte **doit commencer par `api.`** (nginx le reconnaît à ce préfixe). |
-| `LODB_CANONICAL_HOST` | domaine de `next` | `league-of-data-base.com` | Hôte canonique : cible des 301, origine des liens des e-mails, des sitemaps et des `share_url` de `/v1`. |
-| `LODB_ALLOWED_HOSTS` | domaine de `next` | l'hôte canonique | Hôtes que le serveur SSR accepte, séparés par des virgules. |
-| `LODB_PUBLIC_API_ORIGIN` | `https://api.` + domaine | `https://api.league-of-data-base.com` | Origine de `/v1` documentée par `/developers`. |
-| `LODB_EDGE_CIDR` | sous-réseau d'`edge` | idem | Seul pair cru sur `X-Forwarded-For` : `docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}'`. |
-| `LODB_NOINDEX` ⚙️ | `1` | `0` ou absente | `X-Robots-Tag: noindex, nofollow` sur les réponses de nginx ; le smoke test contrôle l'en-tête. |
-| `LODB_DB_NETWORK` ⚙️ | **absente** | `lodb-prod_default` | Réseau de la base. Absente : la stack a son Postgres (dump anonymisé) sur le réseau `lodb-next-db`, que le job crée. Présente : le Postgres embarqué est écarté et `api` et `migrate` rejoignent la base existante sur ce réseau, **sans la déplacer**. |
-| `COMPOSE_PROFILES` | `bundled-database` | **absente** | Active le Postgres embarqué. Le job l'impose de lui-même (`bundled-database` sur `next`, vide en prod, quel que soit le `.env`) ; la ligne ne sert qu'aux commandes `docker compose` lancées à la main sur l'hôte `next`. |
-| `LODB_DB_HOST`, `LODB_DB_PORT` | défauts | défauts | `postgres` et `5432` : le nom du service Postgres sur ce réseau, dans les deux cas. |
-| `LODB_DB_NAME`, `LODB_DB_USER`, `LODB_DB_PASSWORD` | Postgres de `next` (mot de passe fort et unique) | ceux de l'ancienne stack (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` de `ENV_PROD`) | Chaîne de connexion de l'API et de `migrate`. |
-| `LODB_DATA_PROTECTION_CERT_FILE`, `LODB_ANDROID_DIR` | défauts | défauts | Fichiers de l'hôte, voir plus bas. Ne pas les définir : le job écrit aux emplacements par défaut. |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | optionnel | optionnel | Collecteur de traces, quand `infra-vps` en expose un. |
-
-Réglages de l'API, sous leur nom de configuration exact (`LoDb__<Section>__<Clé>`, casse
-comprise) : absents du `.env`, ils ne sont pas transmis et l'API garde sa valeur par
-défaut. Le job exige en prod ceux marqués ⚙️.
-
-| Ligne | Description |
-|---|---|
-| `LoDb__DataProtection__CertificatePassword` | Mot de passe du `.pfx` de `*_DATA_PROTECTION_PFX`. |
-| `LoDb__Mail__Host` ⚙️ | Relais SMTP. Absent : les e-mails attendent dans `email_outbox` (rien n'est perdu, rien n'est envoyé). |
-| `LoDb__Mail__Port`, `LoDb__Mail__Security`, `LoDb__Mail__Username`, `LoDb__Mail__Password`, `LoDb__Mail__From` | Port (587), mode TLS (`Auto`, `StartTls`, `SslOnConnect`…), identifiants et expéditeur (`Nom <adresse>`, domaine autorisé par SPF/DKIM/DMARC). |
-| `LoDb__Billing__StripeSecretKey` ⚙️, `LoDb__Billing__StripeWebhookSecret` ⚙️ | Clé `sk_…` et secret `whsec_…` de l'endpoint `POST /webhooks/stripe` (un endpoint Stripe par environnement). Clés de test sur `next`. |
-| `LoDb__Accounts__Google__ClientId`, `LoDb__Accounts__Google__ClientSecret` | Client OAuth web, retour `https://<hôte canonique>/api/account/google/callback` ([`oauth-google-setup.md`](oauth-google-setup.md)). |
-| `LoDb__Accounts__Google__AppClients__0__ClientId` (et `__ClientSecret`), `…__1__…` | Clients Android et desktop, jamais sans le client web. |
-| `LoDb__Contact__Recipient`, `LoDb__Contact__NotificationLocale` | Destinataire des messages de contact (vide : stockés, non notifiés) et langue de la notification. |
-| `LoDb__Analytics__VisitorKey` | Clé du hachage des visiteurs ; en prod, l'`APP_SECRET` de l'ancienne stack garde les mêmes visiteurs des deux côtés. |
-
-### Fichiers de l'hôte
-
-Dans `${*_PATH}`, à côté du dépôt suivi par le job :
-
-| Chemin | Écrit par | Rôle |
-|---|---|---|
-| `.env` | le job (`ENV_*`), mode 600 | Variables ci-dessus. |
-| `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api` (`/run/secrets/data-protection.pfx`). Dossier `.deploy/` en 700, fichier en 644 : l'utilisateur non root de l'API le lit par le montage. Absent, la stack ne démarre pas. |
-| `.deploy/android/` | l'exploitant, à chaque release Android | `latest.json` (asset `lodb-android-latest.json` de la release) et `assetlinks.json` ([`release-android.md`](release-android.md)), montés en lecture seule sur `/etc/nginx/android`. Vide : les deux URL répondent 404. |
-
-Volumes : `<projet>_storage` (Data Dragon, propre à la nouvelle stack : `lodb-next-prod_storage`
-en prod, pré-rempli avant la bascule), `<projet>_pages-cache`, et `<projet>_pgdata` sur
-`next` seulement.
-
-### Ce que fait le job sur l'hôte, dans l'ordre
-
-1. Synchronise le dépôt sur la branche, contrôle le `.env` (lignes ⚙️), le réseau de la
-   base (créé sur `next`, exigé en prod) et le réseau `edge` (exigé, jamais créé).
-2. Cherche les conteneurs **d'autres projets** dont les labels Caddy réclament un domaine
-   de `CADDY_DOMAINS` ou `API_CADDY_DOMAINS`. S'il en trouve sans `take_over_domains`, il
-   s'arrête là, sans rien avoir modifié.
-3. `docker compose pull` (5 tentatives), puis `docker compose run --rm migrate` : la base
-   passe à la dernière migration (une base Doctrine est d'abord marquée à `Baseline`).
-   Un échec arrête le job ; les conteneurs en place continuent de servir.
-4. Avec `take_over_domains` : arrête (`docker stop`) les conteneurs trouvés au point 2.
-5. `docker compose up -d --no-build --wait`, puis smoke test dans la stack. Si l'un échoue
-   après le point 4, le job arrête le nginx de la nouvelle stack et **redémarre** les
-   conteneurs arrêtés : les domaines reviennent à leur ancien propriétaire.
-6. Annonce la révision servie (`::notice` « Deployed revision »), qui doit égaler la
-   révision promue en prod, puis contrôle le TLS public (avec relance de l'edge).
-
-### Avant le premier déploiement de `next`
-
-1. Les prérequis serveur ci-dessus (edge `infra-vps`, `docker login ghcr.io` si les
-   packages sont privés) valent aussi pour `next` ; DNS de `CADDY_DOMAINS` **et** de
-   `API_CADDY_DOMAINS` pointés vers l'hôte.
-2. La branche d'intégration doit être poussée (l'hôte la récupère) et avoir produit des
-   images `:next` (un `push` avec `next-ci.yml` vert).
-3. Les packages GHCR `lodb/api` et `lodb/web-ssr` sont nouveaux : leur visibilité se règle
-   comme celle des autres. `lodb/nginx` est partagé avec l'ancienne stack, qui n'utilise
-   jamais les tags `next` et `next-prod`.
-4. Base de `next` : un dump anonymisé (`tools/next/db/anonymize.sh`) restauré dans le
-   Postgres de la stack avant le premier `migrate` (`docker compose up -d --wait postgres`,
-   puis `pg_restore --no-owner --no-privileges`). Sans dump, `migrate` part d'une base vide.
-
-### Promouvoir en prod, et bascule
-
-1. Relever la révision annoncée par le dernier déploiement de `next` validé.
-2. **Actions ▸ next promote** : `revision` = ce SHA complet. Le job `candidate` vérifie
-   les trois images (et signale si `:next` a bougé depuis) ; les reviewers de
-   `production` approuvent ; le retag puis le déploiement suivent.
-3. **Bascule** (fenêtre du runbook, sauvegarde de la base faite) : même promotion avec
-   `take_over_domains` coché. Les migrations additives passent pendant que l'ancienne
-   stack sert encore ; ses conteneurs porteurs des domaines (`nginx`, `go-api` de
-   `lodb-prod`) ne sont arrêtés qu'ensuite. Son Postgres, qui est la base partagée, ne
-   s'arrête jamais.
-4. Après la bascule, **plus aucun déploiement de l'ancienne prod** (`ci.yml` sur `main`) :
-   son `up -d` redémarrerait les conteneurs arrêtés, qui réclameraient à nouveau les
-   domaines.
-
-**Retour arrière** manuel, tant que le schéma reste compatible (migrations additives) ;
-critères et contrôles : [runbook de bascule](../reecriture/bascule.md), § 8.
-
-```bash
-# La nouvelle stack rend les domaines et arrête ses tâches de fond, puis l'ancienne reprend
-# ses conteneurs arrêtés (start, jamais up) ; son PostgreSQL n'a jamais été arrêté.
-cd "$PROD_NEXT_PATH" && COMPOSE_FILE=compose.next.yaml:compose.next.deploy.yaml \
-  docker compose stop nginx web-ssr api
-cd "$PROD_PATH" && COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose start
-```
-
-Revenir à une révision précédente de la nouvelle stack : relancer `next promote` avec son
-SHA.
+Revenir à une révision précédente de la nouvelle stack : `git revert` sur `dev`, puis le
+chemin normal (`staging`, puis fusion dans `main`).

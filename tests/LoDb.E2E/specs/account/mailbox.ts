@@ -1,6 +1,6 @@
 import { type APIRequestContext, expect } from '@playwright/test';
 
-// The stack's Mailpit (compose.next.override.yaml); a slot points the suite at its own.
+// The stack's Mailpit (compose.override.yaml); a slot points the suite at its own.
 const MAIL_URL = process.env['LODB_E2E_MAIL_URL'] ?? 'http://localhost:18025';
 // The API's outbox sends in the background: the e-mail comes within seconds, not at once.
 const DELIVERY_TIMEOUT_MS = 30_000;

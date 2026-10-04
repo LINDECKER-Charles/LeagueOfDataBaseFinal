@@ -1,18 +1,20 @@
-name: lodb
-
-# Production-oriented stack. Local dev conveniences live in compose.override.yaml
-# (auto-merged by `docker compose`). Variable substitution reads the repo-root .env
-# (copy .env.example -> .env). See docs/guides/github-actions-secrets.md for the required secrets.
-
-# Bounded local log retention for every container of the stack.
+# The LeagueOfDataBase stack (.NET + Angular).
 #
-# json-file is not a style choice: the host's collector reads container output
-# through the Docker Engine API, which can only replay logs for the json-file,
-# local and journald drivers. Any forwarding driver (syslog, fluentd, gelf, none)
-# makes a container unreadable there, and the loss is silent.
+# Local (integration stack, from the repository root):
+#   docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml up -d --build
+# Served environment (staging, prod), without the dev overlay:
+#   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
 #
-# Deliberately redundant with the host's /etc/docker/daemon.json: this repo does
-# not provision the VPS, so it cannot assume the daemon default is bounded.
+# On a host, it takes the place of the archived legacy stack (legacy/compose.yaml) in the
+# same project (lodb-staging, lodb-prod): same `pgdata` volume, own blob volume (`ddragon`).
+#
+# Every interpolated variable has a local default here; compose.deploy.yaml makes the
+# secrets and the public hosts mandatory. Reference: .env.staging.example.
+
+# json-file is imposed, not a style choice: the host's collector replays container output
+# through the Docker Engine API, which only supports json-file, local and journald
+# (docs/guides/observabilite.md). Bounded here because this repo does not provision the
+# daemon's defaults.
 x-logging: &default-logging
   driver: json-file
   options:
@@ -20,184 +22,158 @@ x-logging: &default-logging
     max-file: "3"
 
 services:
-  php:
-    image: ${REGISTRY:-lodb}/app:${IMAGE_TAG:-latest}
+  api:
+    build: &api-build
+      context: .
+      dockerfile: docker/api/Dockerfile
+      args:
+        APP_REVISION: ${APP_REVISION:-dev}
+    environment:
+      # Gss Encryption Mode=Disable: Npgsql would otherwise probe GSS and the chiseled
+      # image, which has no libgssapi_krb5, writes non-JSON lines to stderr.
+      ConnectionStrings__LoDb: &lodb-connection >-
+        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable
+      # X-Forwarded-* are trusted from the private ranges: only nginx and web-ssr reach
+      # this port on a served host (no host port, not on the edge network). The stack's
+      # own subnet is picked by Docker, so it cannot be named more precisely here.
+      LoDb__Hosting__KnownProxyNetworks__0: 10.0.0.0/8
+      LoDb__Hosting__KnownProxyNetworks__1: 172.16.0.0/12
+      LoDb__Hosting__KnownProxyNetworks__2: 192.168.0.0/16
+      LoDb__Storage__Root: /srv/storage
+      # Empty: contact messages are stored but no notification is sent (L7.5).
+      LoDb__Contact__Recipient: ${CONTACT_RECIPIENT:-}
+      # The origin /developers documents for /v1: the api. subdomain nginx serves it on.
+      LoDb__PublicApi__Reference__BaseUrl: ${PUBLIC_API_BASE_URL:-https://api.league-of-data-base.com}
+      # Empty: traces stay local (log correlation) until infra-vps exposes a collector.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    volumes:
+      # DDragon storage: the API is its only writer; nginx serves blobs/ read-only.
+      - ddragon:/srv/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      # Exec form: the chiseled image has no shell. The command opens no port and asks
+      # /healthz, which checks no dependency (a database outage must not restart the API).
+      test: ["CMD", "dotnet", "LoDb.Api.dll", "healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # One-shot: the API's image brings the database to the latest migration (a database
+  # created by Doctrine is marked at the baseline first), then exits. The API starts only
+  # once it has succeeded: a schema it refuses stays untouched and keeps the API down.
+  # Every run after the first applies nothing.
+  migrate:
+    build: *api-build
+    command: ["migrate"]
+    environment:
+      ConnectionStrings__LoDb: *lodb-connection
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    logging: *default-logging
+
+  web-ssr:
     build:
       context: .
-      dockerfile: docker/php/Dockerfile
-      target: app
+      dockerfile: docker/web-ssr/Dockerfile
+      args:
+        APP_REVISION: ${APP_REVISION:-dev}
+    # Node ignores SIGTERM as PID 1: tini forwards it, so a stop takes no 10 s timeout.
+    init: true
     environment:
-      APP_ENV: prod
-      APP_DEBUG: "0"
-      APP_SECRET: ${APP_SECRET:?APP_SECRET is required}
-      # Behind Caddy -> nginx (Docker): trust the direct upstream so Symfony reads
-      # the relayed X-Forwarded-* (https scheme + real client IP). See framework.yaml.
-      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.1,REMOTE_ADDR}
-      GO_FETCHER_URL: http://go-fetcher:8085
-      STORAGE_DIR: /srv/storage
-      ADMIN_LOGIN: ${ADMIN_LOGIN:?ADMIN_LOGIN is required}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
-      # Optional GeoLite2-Country .mmdb for audience geo (empty -> var/geoip/ fallback,
-      # absent -> geo degrades to "unknown"). Mount the DB and point this at it.
-      GEOIP_DB_PATH: ${GEOIP_DB_PATH:-}
-      # User data (accounts, favourites, builds) lives in Postgres; DDragon data stays
-      # on the storage volume.
-      DATABASE_URL: postgresql://${POSTGRES_USER:-lodb}:${POSTGRES_PASSWORD:-lodb}@postgres:5432/${POSTGRES_DB:-lodb}?serverVersion=17&charset=utf8
-      # Stripe (donations) — implemented by a later feature; variables centralised here.
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
-      # Google OAuth (Sign in with Google) — empty disables the feature gracefully.
-      OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}
-      OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET:-}
-      # Account emails (confirmation, password reset). Dev defaults to the bundled
-      # Mailpit SMTP; served environments MUST inject a real relay DSN.
-      MAILER_DSN: ${MAILER_DSN:-smtp://mailer:1025}
-      MAILER_FROM: "${MAILER_FROM:-LeagueOfDataBase <no-reply@leagueofdatabase.gg>}"
-      # Mailbox receiving footer contact-form submissions (empty -> admin inbox only).
-      CONTACT_RECIPIENT: ${CONTACT_RECIPIENT:-}
-    volumes:
-      # Durable local state. A deploy is `compose pull` + `up -d`, which RECREATES
-      # this container: anything written to the image's writable layer is destroyed.
-      # Analytics events, the audit journal, sessions and the GeoLite2 DB therefore
-      # live under var/state, the only volume-backed path. The rest of var/ (cache,
-      # log) stays disposable ON PURPOSE — persisting var/cache would serve a
-      # compiled container from a previous image after a deploy.
-      - app_state:/var/www/html/var/state
-      # DDragon storage (blobs, datasets, manifests, rollups): php is its only
-      # writer; nginx and go-api mount it read-only. Regenerable from Data Dragon.
-      - storage:/srv/storage
+      PORT: "4000"
+      LODB_API_ORIGIN: http://api:8080
+      # Hosts the renders accept (Host or trusted X-Forwarded-Host); others get a 400.
+      LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      # Set by nginx (snippets/proxy-headers.conf); Angular ignores them unless listed.
+      LODB_TRUST_PROXY_HEADERS: x-forwarded-proto,x-forwarded-host,x-forwarded-for
+      # Heap ceiling under the container's memory limit (512 MiB when served): V8 collects
+      # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
+      # whole heap stops at 448 MiB and leaves room for code and buffers.
+      NODE_OPTIONS: --max-old-space-size=256
     depends_on:
-      go-fetcher:
-        condition: service_healthy
-      postgres:
+      api:
         condition: service_healthy
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      # Answered by a CHILD process: a pass proves a worker accepted and ran a
-      # request, not merely that the master bound the socket. `php -r 'exit(0);'`
-      # only proved the CLI binary existed — the container stayed healthy with a
-      # dead FPM master. The body must be matched: cgi-fcgi also exits 0 on an
-      # FPM "File not found".
-      test: ["CMD-SHELL", "SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000 | grep -q pong"]
-      interval: 30s
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:4000/healthz').then((r) => process.exit(r.ok ? 0 : 1),
+          () => process.exit(1))
+      interval: 15s
       timeout: 5s
-      retries: 3
-      # The entrypoint warms the cache before exec'ing FPM. Without a start_period
-      # every probe of that window counts as a real failure, so the container flips
-      # to `unhealthy` at each deploy — exactly when the stack is being watched.
-      start_period: 30s
+      retries: 5
+      start_period: 10s
 
   nginx:
-    image: ${REGISTRY:-lodb}/nginx:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: docker/nginx/Dockerfile
       args:
-        APP_IMAGE: ${REGISTRY:-lodb}/app:${IMAGE_TAG:-latest}
-    # No host port here: when deployed, Caddy (compose.deploy.yaml) is the public
-    # entrypoint and reaches nginx internally; dev publishes ${HTTP_PORT} via compose.override.yaml.
-    volumes:
-      # Serves /cdn/blobs/ straight from disk (see default.conf).
-      - storage:/srv/storage:ro
-    depends_on:
-      php:
-        condition: service_started
-    restart: unless-stopped
-    logging: *default-logging
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
-  go-fetcher:
-    image: ${REGISTRY:-lodb}/go-fetcher:${IMAGE_TAG:-latest}
-    build:
-      context: ./go/fetcher
-      dockerfile: Dockerfile
+        APP_REVISION: ${APP_REVISION:-dev}
     environment:
-      PORT: "8085"
-      # raw.communitydragon.org backs the chroma metadata (colours + preview art) —
-      # Data Dragon exposes only a boolean `chromas` flag, no chroma assets.
-      ALLOWED_HOSTS: ddragon.leagueoflegends.com,raw.communitydragon.org
-    restart: unless-stopped
-    logging: *default-logging
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8085/healthz"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
-
-  go-api:
-    image: ${REGISTRY:-lodb}/go-api:${IMAGE_TAG:-latest}
-    build:
-      context: ./go/api
-      dockerfile: Dockerfile
-    # Public paid API. In dev the host port is published via compose.override.yaml;
-    # in staging/prod it is reached through the shared edge proxy on its own
-    # subdomain (compose.deploy.yaml). No host port is bound here: a fixed :8090
-    # bind would collide between the co-located lodb-staging / lodb-prod stacks.
-    environment:
-      PORT: "8090"
-      # pgx needs a plain connection URL: same credentials/database as php, but
-      # without Doctrine's serverVersion/charset query params.
-      DATABASE_URL: postgresql://${POSTGRES_USER:-lodb}:${POSTGRES_PASSWORD:-lodb}@postgres:5432/${POSTGRES_DB:-lodb}
-      STORAGE_DIR: /srv/storage
-      # Origin the API prefixes onto share_url. Third-party clients call from
-      # another origin, so a relative path would be unusable on their side; the
-      # default targets production, hence staging/dev MUST override it or they
-      # hand out links pointing at prod.
-      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://league-of-data-base.com}
+      LODB_CANONICAL_HOST: ${LODB_CANONICAL_HOST:-localhost}
+      LODB_EDGE_CIDR: ${LODB_EDGE_CIDR:-127.0.0.1/32}
+      LODB_NOINDEX: ${LODB_NOINDEX:-0}
+      # First part of the page cache's key: a new revision never serves a page of the previous
+      # build, and needs no purge. A served host drops this key (compose.deploy.yaml)
+      # and keeps the image's own revision, its tags being the same for every build.
+      LODB_REVISION: ${IMAGE_TAG:-${APP_REVISION:-dev}}
+      # Silences the plain-text start-up lines of the image's docker-entrypoint.sh.
+      NGINX_ENTRYPOINT_QUIET_LOGS: "1"
     volumes:
-      - storage:/srv/storage:ro
+      - ddragon:/srv/storage:ro
+      # The page cache outlives a restart or a recreated container; its key sorts revisions.
+      - pages-cache:/var/cache/nginx/pages
     depends_on:
-      postgres:
+      api:
+        condition: service_healthy
+      web-ssr:
         condition: service_healthy
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8090/healthz"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 15s
-
-  mailer:
-    image: axllent/mailpit:latest
-    # Dev-only SMTP sink. Kept out of every served environment: it accepts and
-    # swallows mail, so a staging/prod stack falling back to it would silently
-    # drop account emails instead of failing loudly. Enabled by COMPOSE_PROFILES=dev
-    # in the repo-root .env (see .env.example).
-    profiles: ["dev"]
-    restart: unless-stopped
-    logging: *default-logging
-    environment:
-      MP_SMTP_AUTH_ACCEPT_ANY: "1"
-      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+      retries: 3
+      start_period: 5s
 
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-lodb}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lodb}
-      POSTGRES_DB: ${POSTGRES_DB:-lodb}
+      POSTGRES_DB: ${LODB_DB_NAME:-lodb}
+      POSTGRES_USER: ${LODB_DB_USER:-lodb}
+      POSTGRES_PASSWORD: ${LODB_DB_PASSWORD:-lodb}
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 15s
+      interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
 
 volumes:
-  # DDragon storage — see the php service.
-  storage:
+  # Created by the api container first (depends_on order), which seeds it with its own
+  # /srv/storage: the volume is then owned by the API's non-root user. Not named `storage`:
+  # on a host, the legacy stack's volume of that name (same project, owned by www-data)
+  # would be reused and stay unwritable; it is kept as is for the rollback.
+  ddragon:
+  # Shared with the legacy stack on a host: `migrate` brings its database up to date.
   pgdata:
-  # Analytics events, audit journal, sessions, GeoLite2 DB — see the php service.
-  app_state:
+  pages-cache:

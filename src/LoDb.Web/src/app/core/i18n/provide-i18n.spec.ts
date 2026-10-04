@@ -8,7 +8,7 @@ import EN from '../../../../public/i18n/en.json';
 import FR from '../../../../public/i18n/fr.json';
 import { provideI18n } from './provide-i18n';
 
-// Shaped like the converted catalogues (tools/next/i18n): `{{ }}` parameters.
+// Shaped like the converted catalogues (tools/i18n): `{{ }}` parameters.
 const CATALOGUES: Record<string, Translation> = {
   'i18n/en.json': {
     filter: { page: 'page {{ page }} / {{ count }}' },

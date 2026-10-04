@@ -4,7 +4,7 @@ using Npgsql;
 namespace LoDb.Infrastructure.Tests.Persistence;
 
 /// <summary>
-/// <c>tools/next/db/anonymize.sql</c> leaves no personal data, keeps the structure and the
+/// <c>tools/db/anonymize.sql</c> leaves no personal data, keeps the structure and the
 /// row counts, empties the secrets, and stops on any text column it has not reviewed; with or
 /// without the tables of the new stack.
 /// </summary>

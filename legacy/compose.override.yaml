@@ -1,0 +1,79 @@
+# Local development overrides (auto-merged by `docker compose`).
+# - php runs against the live ./app source; vendor/ and var/ are named volumes on
+#   the Linux VM (off the ./app 9p bind-mount) so file I/O isn't slow — see docs/guides/docker.md
+# - nginx uses the stock image + bind-mounted public/ and config
+# - Mailpit UI and the Go service ports are published for convenience
+#
+# Prerequisite for a fresh clone (once):
+#   docker compose up -d
+#   docker compose exec php composer install   # populates the vendor volume
+#   cd app && npm run build                     # builds public/build (bind-mounted)
+
+services:
+  php:
+    build:
+      target: php_dev   # dev: php_base + composer (deps install in-container)
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "1"
+    # vendor/ (9k files) and var/ (3k files) live in named volumes on the Linux VM
+    # instead of the ./app 9p bind-mount — the A1 fix (docs/guides/docker.md). They start
+    # empty & root-owned, so run as root and hand the mount points to the www-data
+    # FPM pool before starting. Populate vendor once (as www-data so it can write):
+    #   docker compose exec -u www-data php composer install
+    #
+    # var/ is chowned RECURSIVELY: the container runs as root, so any `docker compose
+    # exec php php bin/console|phpunit` leaves root-owned subtrees under var/cache
+    # (var/cache/dev/profiler, var/cache/test, var/log/test.log). The FPM pool is
+    # www-data and then cannot write them — the profiler throws after the response
+    # headers are flushed, appending a 500 error page to every dev page. Non-recursive
+    # chown never healed that; keep the -R. /srv/storage (the DDragon storage volume)
+    # gets the same treatment: a root-run `bin/console app:ddragon:warmup` would
+    # leave root-owned blobs/ or data/ directories the FPM pool can no longer write.
+    user: root
+    command: sh -c "mkdir -p var/cache var/log && chown -R www-data:www-data var /srv/storage && chown www-data:www-data vendor && exec php-fpm"
+    volumes:
+      - ./app:/var/www/html
+      - app_vendor:/var/www/html/vendor
+      - app_var:/var/www/html/var
+      - ./docker/php/php-dev.ini:/usr/local/etc/php/conf.d/zz-dev.ini:ro
+
+  nginx:
+    build: !reset null
+    image: nginx:1.31-alpine
+    ports:
+      - "${HTTP_PORT:-8080}:80"   # dev only: hit nginx directly (deployed entry is Caddy)
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # default.conf `include`s this — the stock dev image has no /etc/nginx/snippets,
+      # so it must be bind-mounted or nginx fails to start.
+      - ./docker/nginx/snippets/security-headers.conf:/etc/nginx/snippets/security-headers.conf:ro
+      - ./app/public:/var/www/html/public:ro
+
+  go-fetcher:
+    ports:
+      - "8085:8085"
+
+  go-api:
+    ports:
+      - "8090:8090"   # dev only: hit the paid API directly (deployed entry is the edge subdomain)
+    environment:
+      # share_url is absolute: without this override the dev API would hand out
+      # links into production. Staging sets it through the repo-root .env.staging.
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8080}
+
+  mailer:
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+      - "1025:1025"
+
+  postgres:
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+# Dev-only named volumes keeping vendor/ and var/ on the Linux VM filesystem,
+# out of the slow ./app bind-mount (A1). Reset them with `docker compose down -v`.
+volumes:
+  app_vendor:
+  app_var:

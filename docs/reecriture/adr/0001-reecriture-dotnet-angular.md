@@ -2,7 +2,7 @@
 
 - **Statut** : acceptée — 2026-09-24
 - **Révise** : la décision « SPA rejetée » citée dans
-  [`packaging-apk.md`](../../guides/packaging-apk.md) (TWA de la PWA plutôt qu'un front
+  [`packaging-apk.md`](../../../legacy/docs/guides/packaging-apk.md) (TWA de la PWA plutôt qu'un front
   embarqué)
 
 ## Contexte

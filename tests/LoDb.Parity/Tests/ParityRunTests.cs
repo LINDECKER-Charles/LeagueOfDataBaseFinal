@@ -4,7 +4,7 @@ using LoDb.Parity.Runs;
 namespace LoDb.Parity.Tests;
 
 /// <summary>
-/// The parity check itself, on a run collected by tools/next/parity: skipped unless
+/// The parity check itself, on a run collected by tools/parity: skipped unless
 /// <c>LODB_PARITY_RUN</c> names its directory, since it needs both stacks warmed.
 /// </summary>
 public sealed class ParityRunTests
