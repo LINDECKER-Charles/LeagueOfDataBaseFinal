@@ -45,8 +45,7 @@ bascule de l'environnement : son premier déploiement remplace ce fichier.
 2. Certificat Data Protection de `staging` (§ 6.2).
 3. Secret `ENV_STAGING` **remplacé** par le contenu de `.env.staging` ; secret
    `STAGING_DATA_PROTECTION_PFX` créé (§ 3.2).
-4. Packages GHCR `lodb/api` et `lodb/web-ssr` accessibles à l'hôte (§ 3.1).
-5. Push de `dev` : checks, fusion dans `test`, build, déploiement de `staging`.
+4. Push de `dev` : checks, fusion dans `test`, build, déploiement de `staging`.
 
 **`prod`** (juste avant de fusionner `test` dans `main`, [runbook](../reecriture/bascule.md)) :
 
@@ -70,11 +69,13 @@ dans `main`. Seules les releases des apps ont leurs environnements.
 | `desktop-release` | à la main | branche des workflows lancés | secrets et variables du desktop (§ 3.4) |
 | `android-release` | à la main | branche `main` ([`release-android.md`](release-android.md)) | secrets d'Android (§ 3.4) |
 
-`GITHUB_TOKEN` est fourni par GitHub : la CI, la fusion dans `test`, le build des images et
-le retag n'utilisent aucun autre secret. Les packages `lodb/api` et `lodb/web-ssr` sont
-nouveaux : leur visibilité se règle comme celle des autres (privés : `docker login
-ghcr.io` persistant sur l'hôte, PAT `read:packages`). `lodb/nginx` est partagé avec
-l'ancienne stack.
+`GITHUB_TOKEN` est fourni par GitHub : la CI, la fusion dans `test`, le build des images,
+le retag et le `pull` sur l'hôte n'utilisent aucun autre secret. Le job de déploiement
+connecte l'hôte à GHCR avec le jeton du run le temps du `pull`, puis le déconnecte : les
+packages `lodb/api` et `lodb/web-ssr`, nouveaux, peuvent rester privés. Une commande tirée
+à la main sur l'hôte (runbook, § 5.1) n'a pas ce jeton : packages publics, comme les autres
+`lodb/*`, ou `docker login ghcr.io` le temps de la commande (PAT `read:packages`).
+`lodb/nginx` est partagé avec l'ancienne stack.
 
 ### 3.2 Secrets de déploiement
 

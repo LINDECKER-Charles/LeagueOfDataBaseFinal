@@ -238,6 +238,9 @@ jobs:
 
   deploy-staging:
     needs: build
+    permissions:
+      contents: read
+      packages: read   # the host pulls the images with this run's token
     uses: ./.github/workflows/_deploy.yml
     with:
       environment: staging
@@ -263,6 +266,9 @@ jobs:
 
   deploy-prod:
     needs: promote
+    permissions:
+      contents: read
+      packages: read   # the host pulls the images with this run's token
     uses: ./.github/workflows/_deploy.yml
     with:
       environment: prod

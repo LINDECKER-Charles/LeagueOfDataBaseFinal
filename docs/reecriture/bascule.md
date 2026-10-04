@@ -314,6 +314,7 @@ echo "LODB_EDGE_CIDR=$(docker network inspect edge --format "$subnet")" >> .env
 install -d -m 700 .deploy
 (umask 022 && base64 -d > .deploy/data-protection.pfx)   # coller le .pfx en base64, Ctrl-D
 export COMPOSE_FILE=compose.yaml:compose.deploy.yaml IMAGE_TAG="$REV"
+# lodb/api privé : docker login ghcr.io d'abord (configuration.md, § 3.1)
 docker compose config --quiet && docker compose pull api
 ```
 

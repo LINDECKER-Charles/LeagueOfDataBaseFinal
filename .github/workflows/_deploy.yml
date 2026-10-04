@@ -48,6 +48,7 @@ on:
 
 permissions:
   contents: read
+  packages: read   # the host pulls the images with this run's token
 
 # Two deployments of the same environment never overlap; a queued one waits.
 concurrency:
@@ -134,16 +135,23 @@ jobs:
             | ssh "$ssh_target" "umask 022 && cat > $remote_path/.deploy/data-protection.pfx"
 
       - name: Deploy (pull, migrate, up, smoke test)
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # The remote script receives its inputs as variables, expanded on the runner on
           # purpose (SC2029) and quoted for the remote shell; the script is sent verbatim.
           remote_env=""
           for name in DEPLOY_PATH BRANCH REPO_URL TARGET EXPECTED_PROJECT IMAGE_TAG \
-            EXPECTED_NOINDEX; do
+            EXPECTED_NOINDEX GHCR_USER; do
             remote_env="$remote_env $name=$(printf '%q' "${!name}")"
           done
+          # The token goes first on the remote shell's input, never on a command line that
+          # `ps` would show on the host; the script follows it.
           # shellcheck disable=SC2029
-          ssh "$DEPLOY_USER@$DEPLOY_HOST" "$remote_env bash -s" <<'EOSSH'
+          { printf '%s\n' "$GHCR_TOKEN"; cat; } <<'EOSSH' \
+            | ssh "$DEPLOY_USER@$DEPLOY_HOST" \
+              "$remote_env bash -c 'IFS= read -r GHCR_TOKEN && export GHCR_TOKEN && exec bash -s'"
             set -euo pipefail
             cd "$DEPLOY_PATH"
             fail() {
@@ -198,6 +206,12 @@ jobs:
             echo "LODB_EDGE_CIDR=$edge_cidr" >> .env
 
             # ── Pull, then migrations before the traffic switch ────────────────────────
+            # Logged in with this run's token for the pull only: the packages may be private,
+            # and the host keeps no registry credential once the images are in.
+            trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+            printf '%s' "$GHCR_TOKEN" \
+              | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+            unset GHCR_TOKEN
             # The registry sometimes resets a layer mid-copy: retry with backoff.
             for attempt in 1 2 3 4 5; do
               if docker compose pull; then break; fi
@@ -205,6 +219,8 @@ jobs:
               echo "pull failed (attempt $attempt), retrying in $((attempt * 10))s…" >&2
               sleep $((attempt * 10))
             done
+            docker logout ghcr.io >/dev/null
+            trap - EXIT
 
             # Fail-fast: the containers in place keep serving if it fails. Idempotent: a
             # database already up to date applies nothing.

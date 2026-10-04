@@ -45,7 +45,8 @@ fusion manuelle test → main ─▶ push main
 
 ## Secrets
 
-Les checks, la fusion dans `test`, le build et le retag n'utilisent que `GITHUB_TOKEN`.
+Les checks, la fusion dans `test`, le build, le retag et le `pull` des images sur l'hôte
+n'utilisent que `GITHUB_TOKEN`.
 Le déploiement lit des **secrets de dépôt**, sans environnement GitHub, comme l'ancienne
 stack ; `ci.yml` les passe à `_deploy.yml` :
 
@@ -79,7 +80,9 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
    `staging`, `0` en `prod`) ; en `prod`, relais SMTP et clés Stripe présents. Exige le
    réseau `edge` (jamais créé) et écrit son sous-réseau dans le `.env` (`LODB_EDGE_CIDR`,
    seul pair dont nginx croit `X-Forwarded-For`).
-3. `docker compose pull` (5 tentatives), puis `docker compose run --rm migrate` : la base du
+3. `docker compose pull` (5 tentatives), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
+   run le temps du seul `pull` (transmis par l'entrée de `ssh`, jamais en ligne de
+   commande), puis `docker compose run --rm migrate` : la base du
    volume `pgdata` passe à la dernière migration (une base Doctrine est d'abord marquée à
    `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir.
 4. `docker compose up -d --no-build --remove-orphans --wait` : les conteneurs de la nouvelle
@@ -95,8 +98,7 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 1. `.env.staging` rempli, valeurs 🔁 relevées dans `$STAGING_PATH/.env` **avant** ce
    déploiement ([`configuration.md`](configuration.md), § 2).
 2. `ENV_STAGING` remplacé, `STAGING_DATA_PROTECTION_PFX` créé.
-3. Packages GHCR `lodb/api` et `lodb/web-ssr` accessibles à l'hôte (nouveaux).
-4. Fusion de la bascule dans `dev` : son push déploie `staging`. La base de l'ancien staging
+3. Fusion de la bascule dans `dev` : son push déploie `staging`. La base de l'ancien staging
    est gardée et migrée ; le volume `ddragon` part vide et l'ingestion le remplit.
 
 ## Mettre en prod, et bascule
