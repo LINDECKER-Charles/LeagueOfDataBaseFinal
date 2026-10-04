@@ -252,7 +252,7 @@ jobs:
                 "http://127.0.0.1$2"
             }
             fetch "$canonical" /healthz
-            docker compose exec -T nginx wget -qO- http://api:8080/readyz
+            docker compose exec -T nginx wget -qO- http://lodb-api:8080/readyz
             echo
             # A page rendered by the SSR server, then the API subdomain.
             fetch "$canonical" /en/
