@@ -1,6 +1,54 @@
 {
   "patches": [
     {
+      "id": "2026-09-23-cellier",
+      "version": "2.3.1",
+      "codename": "Cellier",
+      "date": "2026-09-23",
+      "type": "hotfix",
+      "title": "LeagueOfDataBase 2.3.1 — Cellier",
+      "summary": "Un maillon de moins entre les pages et leurs images : elles sont désormais servies directement depuis le disque du serveur, les données internes ne sont plus exposées sur le web, et la console d'administration s'affiche nettement plus vite.",
+      "tags": [
+        {
+          "kind": "feature",
+          "label": "Images servies depuis le disque"
+        },
+        {
+          "kind": "feature",
+          "label": "Console admin plus rapide"
+        }
+      ],
+      "stats": {
+        "fixes": 0
+      }
+    },
+    {
+      "id": "2026-08-24-blason",
+      "version": "2.3.0",
+      "codename": "Blason",
+      "date": "2026-08-24",
+      "type": "minor",
+      "title": "LeagueOfDataBase 2.3.0 — Blason",
+      "summary": "Le site change d'habit à la demande : Zaun, Noxus et Spirit Blossom rejoignent Hextech dans un sélecteur qui montre chaque identité avant de la choisir, tandis que les pannes discrètes du serveur sont désormais repérées et signalées.",
+      "tags": [
+        {
+          "kind": "feature",
+          "label": "Thèmes Zaun, Noxus & Spirit Blossom"
+        },
+        {
+          "kind": "feature",
+          "label": "Sélecteur de thèmes"
+        },
+        {
+          "kind": "feature",
+          "label": "Pannes repérées"
+        }
+      ],
+      "stats": {
+        "fixes": 0
+      }
+    },
+    {
       "id": "2026-08-22-tamis",
       "version": "2.2.1",
       "codename": "Tamis",
