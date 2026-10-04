@@ -88,7 +88,9 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 4. `docker compose up -d --no-build --remove-orphans --wait` : les conteneurs de la nouvelle
    stack remplacent ceux de l'ancienne, dont `php`, `go-fetcher`, `go-api` et `mailer` sont
    retirés comme orphelins. `pgdata` est gardé ; les blobs vont dans le volume `ddragon` ;
-   `storage` et `app_state` restent intacts.
+   `storage` et `app_state` restent intacts. Si le `.env` définit `LODB_ADMIN_LOGIN`,
+   `api admin root` tient l'administrateur racine (mot de passe passé par l'entrée de la
+   commande, sortie hors du journal public).
 5. Smoke test dans la stack (`/healthz` par nginx, `/readyz` de l'API, `/en/`, sous-domaine
    `api.`, `X-Robots-Tag`), annonce la révision servie (`::notice` « Deployed revision »),
    puis contrôle le TLS public (avec relance de l'edge).

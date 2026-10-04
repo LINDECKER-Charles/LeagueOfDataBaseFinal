@@ -1,14 +1,9 @@
-using System.Globalization;
 using System.Net;
 using LoDb.Api.Cli;
-using LoDb.Api.Modules.Accounts;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Admin.Support;
-using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Testing;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace LoDb.Api.Tests.Admin;
 
@@ -16,6 +11,7 @@ namespace LoDb.Api.Tests.Admin;
 /// <c>admin create --email</c>, as an operator runs it in the API container: the first
 /// administrator created, an account promoted, and the enrollment that then opens the admin.
 /// </summary>
+[Collection(ShellCommandsGroup.Name)]
 public sealed class AdminCreateCommandTests(PostgresContainerFixture postgres)
     : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
 {
@@ -122,31 +118,6 @@ public sealed class AdminCreateCommandTests(PostgresContainerFixture postgres)
             .Single(static line => line.StartsWith(PasswordLine, StringComparison.Ordinal))
             [PasswordLine.Length..];
 
-    // The command prints on the standard output, captured for the run.
-    private async Task<(int Exit, string Output)> RunAsync(params string[] arguments)
-    {
-        var connection = App.Services.GetRequiredService<IConfiguration>()
-            .GetConnectionString("LoDb");
-        var original = Console.Out;
-        await using var output = new StringWriter(CultureInfo.InvariantCulture);
-        Console.SetOut(output);
-        try
-        {
-            var exit = await CliRunner.RunAsync(
-                [
-                    "admin", "create",
-                    $"--ConnectionStrings:LoDb={connection}",
-                    "--Logging:LogLevel:Default=Warning",
-                    .. arguments,
-                ],
-                typeof(Program).Assembly,
-                static (services, configuration) =>
-                    services.AddLoDbPersistence(configuration).AddAccounts(configuration));
-            return (exit, output.ToString());
-        }
-        finally
-        {
-            Console.SetOut(original);
-        }
-    }
+    private Task<(int Exit, string Output)> RunAsync(params string[] arguments) =>
+        AdminShell.RunAsync(App, string.Empty, ["admin", "create", .. arguments]);
 }

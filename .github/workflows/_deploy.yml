@@ -236,6 +236,18 @@ jobs:
             # retires the containers of the legacy stack (php, go-fetcher, go-api, mailer).
             docker compose up -d --no-build --remove-orphans --wait --wait-timeout 180
 
+            # ── Root administrator of the .env (the legacy ADMIN_LOGIN / ADMIN_PASSWORD) ──
+            # The password goes on the command's input, never on a command line; the output,
+            # which names the account, stays off the public log.
+            admin_login="$(env_value LODB_ADMIN_LOGIN)"
+            if [ -n "$admin_login" ]; then
+              admin_email="$(env_value LODB_ADMIN_EMAIL)"
+              admin_email="${admin_email:-$admin_login@$(env_value LODB_CANONICAL_HOST)}"
+              env_value LODB_ADMIN_PASSWORD \
+                | docker compose run --rm -T --no-deps api admin root \
+                  --username "$admin_login" --email "$admin_email" >/dev/null
+            fi
+
             # ── Smoke test inside the stack ────────────────────────────────────────────
             one_per_line() {
               tr -s ', ' '\n' | sed '/^$/d'

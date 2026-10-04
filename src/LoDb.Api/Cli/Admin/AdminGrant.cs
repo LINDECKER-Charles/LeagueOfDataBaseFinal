@@ -30,14 +30,7 @@ internal sealed partial class AdminGrant(
             user = await CreateAsync(email, password, cancellation);
         }
 
-        await EnsureRoleAsync();
-        var promoted = !await users.IsInRoleAsync(user, Role.Admin);
-        if (promoted)
-        {
-            Succeed(await users.AddToRoleAsync(user, Role.Admin), "grant the role");
-            LogGranted(logger, user.Id);
-        }
-
+        var promoted = await PromoteAsync(user);
         return new AdminGrantResult
         {
             Username = user.UserName ?? string.Empty,
@@ -46,6 +39,20 @@ internal sealed partial class AdminGrant(
             Promoted = promoted,
             TwoFactorEnabled = user.TwoFactorEnabled,
         };
+    }
+
+    /// <summary>Gives the role to <paramref name="user"/>; false when it already had it.</summary>
+    public async Task<bool> PromoteAsync(User user)
+    {
+        await EnsureRoleAsync();
+        if (await users.IsInRoleAsync(user, Role.Admin))
+        {
+            return false;
+        }
+
+        Succeed(await users.AddToRoleAsync(user, Role.Admin), "grant the role");
+        LogGranted(logger, user.Id);
+        return true;
     }
 
     // The operator vouches for the address, so it counts as verified.
@@ -76,7 +83,7 @@ internal sealed partial class AdminGrant(
         }
     }
 
-    private static void Succeed(IdentityResult result, string step)
+    internal static void Succeed(IdentityResult result, string step)
     {
         if (!result.Succeeded)
         {
