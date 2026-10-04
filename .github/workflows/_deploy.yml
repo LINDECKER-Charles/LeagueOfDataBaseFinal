@@ -147,11 +147,17 @@ jobs:
             remote_env="$remote_env $name=$(printf '%q' "${!name}")"
           done
           # The token goes first on the remote shell's input, never on a command line that
-          # `ps` would show on the host; the script follows it.
+          # `ps` would show on the host; the script follows it. The script is read whole, then
+          # run with an empty input: under `bash -s`, `docker compose run` and `exec` would read
+          # the rest of the script as their own input, and the job would stop after `migrate`
+          # with a success status.
+          # shellcheck disable=SC2016  # expanded by the host's shell, not here
+          remote_shell='IFS= read -r GHCR_TOKEN && export GHCR_TOKEN && script="$(cat)"'
+          # shellcheck disable=SC2016
+          remote_shell="$remote_shell"' && exec bash -c "$script" </dev/null'
           # shellcheck disable=SC2029
           { printf '%s\n' "$GHCR_TOKEN"; cat; } <<'EOSSH' \
-            | ssh "$DEPLOY_USER@$DEPLOY_HOST" \
-              "$remote_env bash -c 'IFS= read -r GHCR_TOKEN && export GHCR_TOKEN && exec bash -s'"
+            | ssh "$DEPLOY_USER@$DEPLOY_HOST" "$remote_env bash -c $(printf '%q' "$remote_shell")"
             set -euo pipefail
             cd "$DEPLOY_PATH"
             fail() {
