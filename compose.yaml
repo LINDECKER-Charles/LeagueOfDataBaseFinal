@@ -49,6 +49,11 @@ services:
     volumes:
       # DDragon storage: the API is its only writer; nginx serves blobs/ read-only.
       - ddragon:/srv/storage
+    networks:
+      default:
+        # The name nginx proxies to. On a host, nginx also sits on the shared `edge` network,
+        # where `api` names other projects' services: Docker's DNS answers with theirs too.
+        aliases: [lodb-api]
     depends_on:
       postgres:
         condition: service_healthy
@@ -99,6 +104,10 @@ services:
       # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
       # whole heap stops at 448 MiB and leaves room for code and buffers.
       NODE_OPTIONS: --max-old-space-size=256
+    networks:
+      default:
+        # The name nginx proxies to, unique on the shared `edge` network (see api).
+        aliases: [lodb-web-ssr]
     depends_on:
       api:
         condition: service_healthy
