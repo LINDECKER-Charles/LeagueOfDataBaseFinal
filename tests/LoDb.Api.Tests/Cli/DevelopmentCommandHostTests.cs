@@ -75,6 +75,7 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
 
     // An unknown option stops these before any work, once their host is built.
     [Theory]
+    [InlineData("admin root")]
     [InlineData("audit import")]
     [InlineData("catalog export")]
     [InlineData("client-policy publish")]
@@ -88,8 +89,9 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
     {
         var covered = new[]
         {
-            "admin create", "analytics import", "audit import", "baseline mark-applied",
-            "catalog export", "client-policy publish", "ingest", "migrate",
+            "admin create", "admin root", "analytics import", "audit import",
+            "baseline mark-applied", "catalog export", "client-policy publish", "ingest",
+            "migrate",
         };
 
         var hosted = CliCommandCatalog.Discover(typeof(Program).Assembly).Commands
