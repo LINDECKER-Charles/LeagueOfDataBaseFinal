@@ -1,5 +1,5 @@
 ---
-date: AAAA-MM-JJ
+date: 2026-10-04
 type: perf
 scope: back
 title: Les nouveaux patchs sont prêts dès leur sortie, sans écran d'attente

@@ -1,0 +1,61 @@
+{
+  "id": "2026-10-04-metamorphose",
+  "version": "3.0.0",
+  "codename": "Métamorphose",
+  "date": "2026-10-04",
+  "type": "major",
+  "title": "LeagueOfDataBase 3.0.0 — Métamorphose",
+  "summary": "LeagueOfDataBase change de moteur : chaque page a son adresse dans votre langue et arrive prête à lire, les nouveaux patchs sont préparés dès leur sortie, et vos anciens liens comme votre compte vous suivent, au prix d'une seule reconnexion.",
+  "intro": "Métamorphose remplace tout ce qui fait tourner le site, sans rien vous retirer. La langue entre dans l'adresse de chaque page, dans les 21 langues, et vos anciens liens mènent toujours au même endroit. Les pages de l'encyclopédie arrivent déjà prêtes à lire, les plus consultées sont gardées prêtes à servir, et les images passent en WebP quand votre navigateur le permet. Un nouveau patch est préparé dès sa sortie, dans toutes les langues, avant votre première visite. Seule contrepartie : chacun se reconnecte une fois ; comptes, builds, favoris et clés d'API sont intacts.",
+  "stats": {
+    "fixes": 2,
+    "cards": 4
+  },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "§",
+      "tag": "Langues",
+      "title": "La langue dans l'adresse de chaque page",
+      "description": "Chaque page existe dans votre langue à sa propre adresse : /fr/champions/Ahri en français, /en/champions/Ahri en anglais, et ainsi pour les 21 langues. Un lien partagé s'ouvre dans la langue de celui qui l'envoie, le sélecteur de langue change l'adresse de la page affichée, et les langues qui s'écrivent de droite à gauche s'affichent dans ce sens. Favoris, liens partagés et résultats de recherche redirigent vers la nouvelle adresse de la même page ; les liens de builds partagés (/b/…) ne changent pas."
+    },
+    {
+      "kind": "mana",
+      "glyph": "⚡",
+      "tag": "Performance",
+      "title": "Des pages prêtes à lire dès leur arrivée",
+      "description": "Les pages de l'encyclopédie et les pages éditoriales arrivent déjà construites : leur contenu s'affiche avant la fin du chargement, puis la page devient interactive. Les pages les plus consultées sont gardées prêtes à servir, et les images passent en WebP quand le navigateur le prend en charge. Sur une connexion mobile ou lente, plus besoin d'attendre que toute la page soit montée pour la lire."
+    },
+    {
+      "kind": "mana",
+      "glyph": "⧗",
+      "tag": "Patchs",
+      "title": "Les nouveaux patchs prêts dès leur sortie",
+      "description": "Dès qu'un patch sort, le site en récupère les données et les images dans toutes les langues : ses pages sont prêtes à votre première visite, sans écran de chargement. Les patchs plus anciens restent consultables ; le premier qui ouvre une version ancienne peut encore voir quelques images se compléter pendant qu'elles arrivent."
+    },
+    {
+      "kind": "feature",
+      "glyph": "◉",
+      "tag": "Compte",
+      "title": "Une seule reconnexion, rien d'autre à changer",
+      "description": "Le jour de la mise à jour, tout le monde est déconnecté une fois : le site change de système de connexion, et les connexions ouvertes avec l'ancien ne peuvent pas être reprises. Votre compte, vos builds, vos favoris et vos clés d'API sont intacts ; reconnectez-vous avec votre e-mail ou votre pseudo et votre mot de passe habituels. Aucun mot de passe à changer, et « Se souvenir de moi » vous garde connecté 30 jours."
+    }
+  ],
+  "bugfixes": [
+    {
+      "id": "LDB-031",
+      "area": "Tendances",
+      "text": "Les cartes de build des Tendances gardent leur organisation sur tous les écrans : le score n'est plus seul au-dessus du portrait sur un petit téléphone, et les objets ne partent plus seuls sur une ligne sur une tablette."
+    },
+    {
+      "id": "LDB-032",
+      "area": "Affichage",
+      "text": "Sur un grand écran, le décor des pages courtes (Tendances, build partagé, Développeurs, portail API) descend désormais jusqu'au pied de page, sans bande unie sous le contenu."
+    }
+  ],
+  "balances": [],
+  "devNote": {
+    "body": "Métamorphose est le plus gros chantier de l'histoire du site : tout a été reconstruit, des pages aux données, en gardant vos comptes, vos builds et vos anciens liens. Si une page, un lien ou une connexion se comporte autrement qu'avant, dites-le-nous : c'est le meilleur moyen de finir le travail.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

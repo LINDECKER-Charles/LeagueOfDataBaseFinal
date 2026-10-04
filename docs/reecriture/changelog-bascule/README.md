@@ -8,11 +8,15 @@ changelog.
 
 | Brouillon | Type | Sujet |
 |---|---|---|
-| `AAAA-MM-JJ-adresses-par-langue.md` | `feat` | la langue dans l'adresse, anciens liens redirigés |
-| `AAAA-MM-JJ-pages-plus-rapides.md` | `perf` | pages rendues par le serveur et mises en cache |
-| `AAAA-MM-JJ-nouveau-patch-sans-attente.md` | `perf` | les derniers patchs prêts dès leur sortie |
-| `AAAA-MM-JJ-reconnexion-unique.md` | `devops` | une reconnexion demandée une fois, comptes et mots de passe inchangés |
+| ~~`AAAA-MM-JJ-adresses-par-langue.md`~~ publié le 2026-10-04 | `feat` | la langue dans l'adresse, anciens liens redirigés |
+| ~~`AAAA-MM-JJ-pages-plus-rapides.md`~~ publié le 2026-10-04 | `perf` | pages rendues par le serveur et mises en cache |
+| ~~`AAAA-MM-JJ-nouveau-patch-sans-attente.md`~~ publié le 2026-10-04 | `perf` | les derniers patchs prêts dès leur sortie |
+| ~~`AAAA-MM-JJ-reconnexion-unique.md`~~ publié le 2026-10-04 | `devops` | une reconnexion demandée une fois, comptes et mots de passe inchangés |
 | `AAAA-MM-JJ-applications.md` | `feat` | applications Windows, macOS et Android |
+
+La bascule de la prod (2026-10-04) en a publié quatre, dans la release 3.0.0 Métamorphose ;
+« Google » est retiré de `reconnexion-unique`, la connexion Google n'étant pas vérifiée en
+prod ce jour-là. `applications` attend la publication des applications.
 
 ## Publication (runbook, § 4)
 
