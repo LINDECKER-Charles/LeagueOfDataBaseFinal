@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
@@ -96,6 +97,24 @@ public sealed class OnDemandIngestionTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task AWatcherHearsOfEachImageTheCallFetches()
+    {
+        await using var harness = await IngestionHarness.CreateAsync(postgres);
+        await harness.StartInstance().Get<IOnDemandIngestion>()
+            .EnsureImagesAsync(Latest, [Garen], Token);
+        var instance = harness.StartInstance();
+        instance.Replay.FailWith(static url => Is(url, Teemo), HttpStatusCode.ServiceUnavailable);
+        var watcher = new Watcher();
+
+        await instance.Get<IOnDemandIngestion>().EnsureImagesAsync(
+            new WatchedImages { Version = Latest, Images = [Ahri, Garen, Teemo], Progress = watcher },
+            Token);
+
+        // Garen was settled before: skipped, unheard. Teemo failed: fetched all the same.
+        Assert.Equal(["Ahri.png", "Teemo.png"], watcher.Files.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
     public async Task ImagesOfAnUnlistedVersionAreLeftAlone()
     {
         await using var harness = await IngestionHarness.CreateAsync(postgres);
@@ -113,4 +132,14 @@ public sealed class OnDemandIngestionTests(PostgresContainerFixture postgres)
 
     private static bool IsDataset(Uri url) =>
         url.AbsolutePath.Contains("/data/", StringComparison.Ordinal);
+
+    // Progress<T> reports through the thread pool, after the call may have returned.
+    private sealed class Watcher : IProgress<DdragonImage>
+    {
+        private readonly ConcurrentQueue<DdragonImage> heard = new();
+
+        public IEnumerable<string> Files => heard.Select(static image => image.File);
+
+        public void Report(DdragonImage value) => heard.Enqueue(value);
+    }
 }

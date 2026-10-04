@@ -24,7 +24,10 @@ class InMemoryLoader implements TranslocoLoader {
 }
 
 describe('activateLocale', () => {
+  let lang: string;
+
   beforeEach(() => {
+    lang = document.documentElement.lang;
     TestBed.configureTestingModule({
       providers: [
         provideTransloco({
@@ -42,7 +45,11 @@ describe('activateLocale', () => {
     });
   });
 
-  afterEach(() => vi.restoreAllMocks());
+  // The document outlives the test: a locale left on <html lang> leaks into the next spec.
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.documentElement.lang = lang;
+  });
 
   function activate(locale: string): Promise<unknown> {
     const route = new ActivatedRouteSnapshot();

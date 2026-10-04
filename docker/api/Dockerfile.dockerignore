@@ -1,0 +1,18 @@
+# Build context of docker/api/Dockerfile (repository root): deny everything, then
+# admit what the publish reads. BuildKit prefers this file to a root .dockerignore (the
+# legacy images have theirs, legacy/.dockerignore).
+*
+
+!global.json
+!Directory.Build.props
+!Directory.Packages.props
+!.editorconfig
+!src/LoDb.Domain/
+!src/LoDb.Infrastructure/
+!src/LoDb.Ingestion/
+!src/LoDb.Api/
+
+# Host build outputs would shadow the container's own restore.
+**/bin/
+**/obj/
+src/LoDb.Api/openapi/

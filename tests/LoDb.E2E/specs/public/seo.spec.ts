@@ -5,7 +5,7 @@ import { INDEXED_PAGES, LOCALES, pageUrl } from '../../support/public-pages';
 import { expect, test } from '../../support/test';
 
 // The head crawlers read (ADR 0005): the server's, JavaScript off. The head after hydration
-// is specs/seo/head.spec.ts's; the diff against production is tools/next/seo-diff's.
+// is specs/seo/head.spec.ts's; the diff against production is tools/seo-diff's.
 const BRAND = 'League Of Data Base';
 const INDEXABLE = 'index, follow';
 // L3.4: the ItemList describes the first page the server renders, 20 entries at most.

@@ -26,8 +26,8 @@ public sealed class UnrecordedFixtureException : InvalidOperationException
 
     public UnrecordedFixtureException(Uri url)
         : base(
-            $"No recorded answer for {url}. Add it to tools/next/fixtures/lib/recording-plan.mjs "
-            + "and run `node tools/next/fixtures/record.mjs`.")
+            $"No recorded answer for {url}. Add it to tools/fixtures/lib/recording-plan.mjs "
+            + "and run `node tools/fixtures/record.mjs`.")
     {
         Url = url;
     }

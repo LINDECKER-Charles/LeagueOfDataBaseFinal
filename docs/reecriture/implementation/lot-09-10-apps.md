@@ -134,7 +134,7 @@ dans les workflows de release et s'exécutent avant toute publication.
 - **Objectif** : l'app Android qui embarque le build `shell` et démarre sans réseau.
 - **À lire** : ADR 0007 (Android), le projet Capacitor de Bloodborne Legendary Run,
   `app/public/.well-known/assetlinks.json` (gabarit actuel),
-  [`packaging-apk.md`](../../guides/packaging-apk.md) (remplacé).
+  [`packaging-apk.md`](../../../legacy/docs/guides/packaging-apk.md) (remplacé).
 - **Périmètre** : `src/LoDb.Web/android/**`, `src/LoDb.Web/capacitor.config.ts`,
   environnements `shell` (dont la variante store), `docker/next/android-build/**`,
   `tools/next/android/**`, `assetlinks.json` servi par nginx (fichier à part).

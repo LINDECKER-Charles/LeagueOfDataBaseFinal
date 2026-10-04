@@ -1,7 +1,13 @@
 # 🤝 Guide de contribution
 
-> 📌 **Guide court & canonique :** [`CONTRIBUTING.md`](../CONTRIBUTING.md) · **Conventions de code complètes :** [`CLAUDE.md`](../CLAUDE.md).
-> Ce document en est la version détaillée et multilingue (onboarding, templates d'issue et de PR). En cas de divergence, `CONTRIBUTING.md` et `CLAUDE.md` font foi.
+> ⚠️ **À réécrire.** Les sections « Prérequis », « Configuration initiale » et « Garde-fous »
+> ci-dessous décrivent l'ancienne stack (Symfony + Go + Vue), archivée sous `legacy/`. Pour la
+> nouvelle stack, suivez [`CONTRIBUTING.md`](../CONTRIBUTING.md) et
+> [`guides/developpement.md`](guides/developpement.md). *EN / ES : the setup and guardrail sections
+> below describe the archived stack; follow `CONTRIBUTING.md` instead.*
+
+> 📌 **Guide court & canonique :** [`CONTRIBUTING.md`](../CONTRIBUTING.md) · **Conventions de code complètes :** [`AGENTS.md`](../AGENTS.md).
+> Ce document en est la version détaillée et multilingue (onboarding, templates d'issue et de PR). En cas de divergence, `CONTRIBUTING.md` et `AGENTS.md` font foi.
 
 ## 🌍 Languages / Langues
 
@@ -40,7 +46,7 @@ Nous sommes ravis que vous souhaitiez contribuer à **League of Database** ! Ce 
    docker compose up -d --build
    # app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Détails : [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
+   Détails : [`docker.md`](../legacy/docs/guides/docker.md), [`configuration.md`](../legacy/docs/guides/configuration.md).
 
 3. **Dev front (optionnel, depuis `app/`)**
    ```bash
@@ -116,7 +122,7 @@ Rien à copier : ouvrir une PR pré-remplit automatiquement le [template natif](
 
 ### 🎨 Standards de code
 
-> Les règles complètes vivent dans [`../CLAUDE.md`](../CLAUDE.md) (source unique). Résumé de ce qui bloque une revue :
+> Les règles complètes vivent dans [`../AGENTS.md`](../AGENTS.md) (source unique). Résumé de ce qui bloque une revue :
 
 #### PHP (Symfony)
 - `declare(strict_types=1);` en tête de chaque fichier ; classes `final` par défaut (sauf base abstraite).
@@ -175,7 +181,7 @@ We're excited that you want to contribute to **League of Database**! This guide 
    docker compose up -d --build
    # app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Details: [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
+   Details: [`docker.md`](../legacy/docs/guides/docker.md), [`configuration.md`](../legacy/docs/guides/configuration.md).
 
 3. **Frontend dev (optional, from `app/`)**
    ```bash
@@ -251,7 +257,7 @@ Nothing to copy: opening a PR automatically pre-fills the [native template](../.
 
 ### 🎨 Code Standards
 
-> The full rules live in [`../CLAUDE.md`](../CLAUDE.md) (single source). Summary of what blocks a review:
+> The full rules live in [`../AGENTS.md`](../AGENTS.md) (single source). Summary of what blocks a review:
 
 #### PHP (Symfony)
 - `declare(strict_types=1);` at the top of every file; classes `final` by default (except abstract bases).
@@ -310,7 +316,7 @@ The tracker provides **guided forms** (bug / feature): see [`.github/ISSUE_TEMPL
    docker compose up -d --build
    # app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Detalles: [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
+   Detalles: [`docker.md`](../legacy/docs/guides/docker.md), [`configuration.md`](../legacy/docs/guides/configuration.md).
 
 3. **Dev frontend (opcional, desde `app/`)**
    ```bash
@@ -386,7 +392,7 @@ Nada que copiar: abrir una PR pre-rellena automáticamente el [template nativo](
 
 ### 🎨 Estándares de Código
 
-> Las reglas completas viven en [`../CLAUDE.md`](../CLAUDE.md) (fuente única). Resumen de lo que bloquea una revisión:
+> Las reglas completas viven en [`../AGENTS.md`](../AGENTS.md) (fuente única). Resumen de lo que bloquea una revisión:
 
 #### PHP (Symfony)
 - `declare(strict_types=1);` al inicio de cada archivo; clases `final` por defecto (salvo bases abstractas).

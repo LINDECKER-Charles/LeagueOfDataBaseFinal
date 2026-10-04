@@ -67,7 +67,7 @@ Points de contrôle : débordement horizontal, largeur forcée vs device, cibles
 erreurs JS, `font-size` des inputs (≥16 px sinon zoom iOS), et vérification visuelle des
 captures (empilement, chevauchements, troncatures).
 
-Régénérer les captures : `node tools/screenshots/capture.mjs` (desktop 1440 + mobile 390).
+Régénérer les captures : `node legacy/tools/screenshots/capture.mjs` (desktop 1440 + mobile 390).
 
 ## État & limitations
 

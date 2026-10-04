@@ -1,6 +1,6 @@
 /**
  * `latest.json` of the transitional channel (ADR 0008), written by the release workflow
- * next to the APK it describes (tools/next/android-release/latest-manifest.mjs).
+ * next to the APK it describes (tools/android-release/latest-manifest.mjs).
  */
 export interface ApkManifest {
   /** `versionCode` of the APK: the channel offers it when it is above the installed one. */

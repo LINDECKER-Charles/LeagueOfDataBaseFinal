@@ -1,7 +1,7 @@
 namespace LoDb.Testing.Fixtures;
 
 /// <summary>
-/// The table of contents of the recording, written by <c>tools/next/fixtures/record.mjs</c>.
+/// The table of contents of the recording, written by <c>tools/fixtures/record.mjs</c>.
 /// </summary>
 public sealed record FixtureIndex
 {

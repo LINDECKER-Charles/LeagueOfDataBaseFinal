@@ -1,0 +1,113 @@
+name: lodb
+
+# Deployment overlay — applied ON TOP of compose.yaml for ANY served environment
+# (staging AND prod), explicitly and WITHOUT compose.override.yaml (dev conveniences).
+# The deploy jobs select the files via COMPOSE_FILE (see .github/workflows/_deploy.yml):
+#
+#   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
+#
+# This host is multi-tenant: the public TLS entrypoint is a SINGLE shared edge
+# proxy (caddy-docker-proxy) that owns 80/443 for every project on the VPS. It
+# is deployed once per host by the 'infra-vps' infrastructure repo — never by
+# this project. This stack therefore publishes NO host port; it just declares
+# its domains as labels on nginx and joins the external `edge` network. Caddy
+# reads the labels, provisions Let's Encrypt certs and reverse-proxies to nginx:80.
+#
+# staging vs prod differ ONLY by the host .env:
+#   COMPOSE_PROJECT_NAME  lodb-staging | lodb-prod  (distinct Compose projects →
+#                         no cross-env clobber even on the same host)
+#   CADDY_DOMAINS         test.league-of-data-base.com | league-of-data-base.fr, .com
+#   IMAGE_TAG             staging | prod  (+ secrets)
+
+# Invariant: this overlay must NEVER override the `logging:` block compose.yaml
+# attaches to every service. The host's collector replays container output through
+# the Docker Engine API, which only supports the json-file, local and journald
+# drivers — swapping in a forwarding driver here would make the whole stack
+# invisible to Grafana with no error anywhere.
+
+# Memory limits live HERE, never in compose.yaml: that file is also the developer's,
+# where `composer install` and `npm ci` run in-container and a 1 GiB ceiling would
+# turn a dependency install into an OOM unrelated to production.
+#
+# Without a limit cAdvisor publishes container_spec_memory_limit_bytes = 0, which the
+# `> 0` guard of the infra alert rules discards: two of infra-vps' alerts
+# (ConteneurProcheDeSaLimiteMemoire, ConteneurMemoireSaturationPrevue) are
+# structurally inert until these values exist.
+#
+# Starting values, rule = 2 x the observed peak. Re-derive after a week of history:
+#   max_over_time(container_memory_working_set_bytes{stack=~"lodb-.*"}[7d])
+#
+# Deliberately NO `cpus` ceiling: set too low it throttles silently and fires
+# ConteneurCpuBride — slowness no host load graph ever shows.
+
+services:
+  nginx:
+    # Reachable by the shared edge proxy over `edge`; still on `default` for the
+    # intra-stack link to php. `{{upstreams 80}}` resolves this container's
+    # IP on the edge network (CADDY_INGRESS_NETWORKS=edge in the edge stack).
+    networks:
+      - default
+      - edge
+    labels:
+      caddy: ${CADDY_DOMAINS:?CADDY_DOMAINS is required (e.g. "example.fr, example.com")}
+      caddy.reverse_proxy: "{{upstreams 80}}"
+    deploy:
+      resources:
+        limits:
+          # FastCGI pass + static files. The page cache of the blobs it serves from
+          # the storage volume is charged to this cgroup, and cAdvisor's working set
+          # (what ConteneurProcheDeSaLimiteMemoire reads) counts its active part —
+          # small here: ~17 MiB of blobs per Data Dragon version (2026-09).
+          memory: 256m
+
+  go-api:
+    # Public paid API — reached through the SAME shared edge proxy as the site, but
+    # on its OWN subdomain (API_CADDY_DOMAINS, e.g. api.example.fr). No host port is
+    # published: a fixed :8090 bind would collide between the co-located lodb-staging
+    # / lodb-prod stacks. `{{upstreams 8090}}` resolves this container's IP on `edge`.
+    networks:
+      - default
+      - edge
+    labels:
+      caddy: ${API_CADDY_DOMAINS:?API_CADDY_DOMAINS is required (e.g. "api.example.fr")}
+      caddy.reverse_proxy: "{{upstreams 8090}}"
+    deploy:
+      resources:
+        limits:
+          # Reads one whole object per request; the largest measured is 1.3 MiB.
+          memory: 256m
+
+  php:
+    environment:
+      # Mailpit sits behind the `dev` profile (compose.yaml), so the base file's
+      # ${MAILER_DSN:-smtp://mailer:1025} default would resolve to an unreachable
+      # host on a served environment and drop every account email in silence.
+      # Required here instead: a missing relay fails the deploy, loudly.
+      MAILER_DSN: ${MAILER_DSN:?MAILER_DSN is required on a served environment}
+    deploy:
+      resources:
+        limits:
+          # memory_limit 256M x pm.max_children 20 is a ~5 GiB theoretical worst case;
+          # 1 GiB covers the real concurrency and turns a leak into a bounded OOM.
+          memory: 1g
+
+  go-fetcher:
+    deploy:
+      resources:
+        limits:
+          # MAX_CONCURRENCY 16 x DefaultMaxBodyBytes 32 MiB = 512 MiB, bounded but real.
+          memory: 768m
+
+  postgres:
+    deploy:
+      resources:
+        limits:
+          # shared_buffers 128 MiB + connections.
+          memory: 512m
+
+networks:
+  # Shared ingress fabric, created once per host by the 'infra-vps' infrastructure
+  # repo. Owned by no single stack: the deploy job only asserts it exists.
+  edge:
+    external: true
+    name: edge

@@ -15,7 +15,7 @@
       Include="../fixtures/hashes/*"
       LinkBase="fixtures/hashes"
       CopyToOutputDirectory="PreserveNewest" />
-    <!-- go-api's /v1 contract recorded by tools/next/v1-capture/, replayed by PublicApi/. -->
+    <!-- go-api's /v1 contract recorded by tools/v1-capture/, replayed by PublicApi/. -->
     <None
       Include="../fixtures/v1/**"
       LinkBase="fixtures/v1"

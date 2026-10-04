@@ -4,7 +4,7 @@ import type { ReleaseType } from './release-type';
 
 /**
  * One release of the player-facing changelog, read from `changelog/<id>.json`. The files are
- * written by the release tooling of the current stack (`app/public/changelog/`), in French,
+ * written by the release tooling (`changelog/published/`), in French,
  * and shown as they are under every locale.
  */
 export interface ChangelogRelease {

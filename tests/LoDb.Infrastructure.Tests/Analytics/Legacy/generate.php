@@ -11,7 +11,7 @@ declare(strict_types=1);
 $root = dirname(__DIR__, 4);
 foreach (['Model/UserAgentProfile', 'Model/RefererSource', 'Model/RefererOrigin',
     'AnalyticsAggregator', 'RangeReportBuilder', 'UserAgentParser', 'RefererClassifier'] as $file) {
-    require $root . "/app/src/Service/Analytics/{$file}.php";
+    require $root . "/legacy/app/src/Service/Analytics/{$file}.php";
 }
 
 use App\Service\Analytics\AnalyticsAggregator;

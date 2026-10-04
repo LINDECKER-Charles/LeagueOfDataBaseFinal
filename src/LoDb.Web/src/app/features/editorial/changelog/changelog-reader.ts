@@ -6,8 +6,8 @@ import type { ManifestEntry } from './model/manifest-entry';
 import { parseManifest } from './parsing/parse-manifest';
 import { parseRelease } from './parsing/parse-release';
 
-// Copied into the build from app/public/changelog/ (angular.json), where the release tooling
-// of the current stack keeps writing them until the switch.
+// Copied into the build from ./published/ (angular.json), where the release tooling writes
+// them.
 const CHANGELOG_DIR = 'changelog';
 
 /**

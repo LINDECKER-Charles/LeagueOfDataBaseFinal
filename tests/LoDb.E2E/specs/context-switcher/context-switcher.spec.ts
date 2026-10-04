@@ -10,6 +10,8 @@ interface Meta {
 const PREFERENCES_COOKIE = "lod_prefs";
 // Every internal navigation sends its page-view beacon: telemetry, not a preference.
 const ANALYTICS_PATH = "/api/analytics/";
+// A cold patch: its datasets, then the images of a list, fetched from Data Dragon.
+const WARM_UP_TIMEOUT_MS = 60_000;
 
 async function olderVersion(request: APIRequestContext): Promise<string> {
   const meta = (await (await request.get("/api/meta")).json()) as Meta;
@@ -38,10 +40,17 @@ async function openSwitcher(page: Page): Promise<void> {
   await expect(panelOf(page)).toHaveAttribute("open", "");
 }
 
-// Sends the choice, then waits for the navigation it starts to end: its end folds the panel.
+function loaderOf(page: Page) {
+  return page.locator("lodb-loader-dialog");
+}
+
+// Sends the choice, then waits for the loader to come and go: another context is warmed
+// behind it before the visit, for seconds when the stack has not ingested the patch yet.
 async function apply(page: Page): Promise<void> {
   await switcher(page).getByRole("button").click();
   await expect(panelOf(page)).not.toHaveAttribute("open");
+  await expect(loaderOf(page)).toBeVisible();
+  await expect(loaderOf(page)).toBeHidden({ timeout: WARM_UP_TIMEOUT_MS });
 }
 
 async function preferencesCookie(
@@ -96,6 +105,29 @@ test.describe("context switcher", { tag: '@readonly' }, () => {
     await expect.poll(() => pathAndQuery(page)).toBe(`/en/${older}/champions`);
     expect(posts).toEqual([]);
     expect(await preferencesCookie(context)).toBeUndefined();
+    expect(consoleErrors).toEqual([]);
+  });
+
+  // The legacy loader: the patch is warmed behind a modal naming the page's lists, then
+  // visited. It holds its full bar a beat even on a warm patch, which the check relies on.
+  test("warms the chosen patch behind the loader, then lands on the page", async ({
+    page,
+    request,
+    consoleErrors,
+  }) => {
+    const older = await olderVersion(request);
+    await page.goto("/en/champions");
+
+    await openSwitcher(page);
+    await switcher(page).locator("#switcher-version").selectOption(older);
+    await switcher(page).getByRole("button").click();
+
+    const loader = page.getByRole("dialog", { name: "Summoning data" });
+    await expect(loader).toBeVisible();
+    await expect(loader.getByRole("listitem")).toHaveText([/Champions/]);
+    await expect(loader.getByRole("progressbar")).toBeAttached();
+    await expect(loader).toBeHidden({ timeout: WARM_UP_TIMEOUT_MS });
+    expect(pathAndQuery(page)).toBe(`/en/${older}/champions`);
     expect(consoleErrors).toEqual([]);
   });
 

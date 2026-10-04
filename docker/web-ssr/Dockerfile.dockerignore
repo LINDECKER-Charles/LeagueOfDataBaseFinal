@@ -1,0 +1,12 @@
+# Build context of docker/web-ssr/Dockerfile (repository root): deny everything, then
+# admit the Angular workspace. BuildKit prefers this file to the root .dockerignore.
+*
+
+!src/LoDb.Web/
+
+# Installed and built inside the image, never copied from the host (other platform).
+src/LoDb.Web/node_modules/
+src/LoDb.Web/dist/
+src/LoDb.Web/.angular/
+src/LoDb.Web/coverage/
+src/LoDb.Web/android/

@@ -2,16 +2,20 @@
 
 Merci de votre intérêt pour le projet ! Ce document est le point d'entrée **court et à jour** pour contribuer.
 
-- **Conventions de code complètes** (DRY / KISS / SOLID, limites de taille, nommage, règles par langage, invariants d'architecture) : [`CLAUDE.md`](CLAUDE.md) — source unique, à respecter.
+- **Conventions de code complètes** (DRY / KISS / SOLID, limites de taille, nommage, règles par langage, invariants d'architecture) : [`AGENTS.md`](AGENTS.md) — source unique, à respecter.
 - **Guide détaillé multilingue** (FR / EN / ES, templates d'issue & de PR) : [`docs/contribution.md`](docs/contribution.md).
 
 ---
 
 ## Prérequis
 
-- **Docker** + **Docker Compose** — la stack complète (PHP 8.5 / Symfony 7.4, Go 1.26, PostgreSQL) tourne en conteneurs ; rien à installer en local côté backend.
-- **Node.js 20+** / **npm** — uniquement pour le dev et les garde-fous front (hors conteneur, depuis `app/`).
+- **.NET SDK 10.0.400** (`global.json`) — API, tests, desktop.
+- **Node.js 24** (ou `^22.22.3`, `>= 26`) / **npm** — workspace Angular `src/LoDb.Web`, E2E.
+- **Docker** + **Docker Compose** — stack locale `lodb-dev` et Testcontainers.
 - **Git**.
+
+> L'ancienne stack (Symfony + Go + Vue) est archivée sous [`legacy/`](legacy/README.md) :
+> elle ne reçoit plus de contributions.
 
 ## Démarrer
 
@@ -19,11 +23,12 @@ Merci de votre intérêt pour le projet ! Ce document est le point d'entrée **c
 git clone https://github.com/VOTRE_USERNAME/LeagueOfDataBaseFinal.git
 cd LeagueOfDataBaseFinal
 
-docker compose up -d --build
-# app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
+npm ci --prefix src/LoDb.Web
+docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml up -d --build
+# site :18080 · API :18081 · Mailpit :18025
 ```
 
-Détails : [`docs/guides/docker.md`](docs/guides/docker.md), [`docs/guides/configuration.md`](docs/guides/configuration.md).
+Détails : [`docs/guides/developpement.md`](docs/guides/developpement.md).
 
 ## Workflow Git
 
@@ -32,7 +37,7 @@ Détails : [`docs/guides/docker.md`](docs/guides/docker.md), [`docs/guides/confi
 ```bash
 git checkout dev
 git pull upstream dev
-git checkout -b feature/ma-fonctionnalite   # ou fix/… docs/… refactor/… test/…
+git checkout -b feat/ma-fonctionnalite      # ou fix/… docs/… refactor/… test/…
 ```
 
 Ouvrez ensuite la PR **vers `dev`**.
@@ -41,11 +46,12 @@ Ouvrez ensuite la PR **vers `dev`**.
 
 Format [Conventional Commits](https://www.conventionalcommits.org/) : `type(scope): description`.
 
-Types : `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`. Le scope reflète la zone touchée (`front`, `back`, `i18n`, `champion`, `docker`, …).
+Types : `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`… Le scope suit la carte
+de [`AGENTS.md`](AGENTS.md) (`back/<module>`, `front/<feature>`, `i18n`, `infra`, …).
 
 ```bash
-git commit -m "feat(champion): recherche par rôle"
-git commit -m "fix(loader): course manifeste read-merge-write"
+git commit -m "feat(front/catalogue): filtrer les champions par role"
+git commit -m "fix(back/builds): refuser un build sans champion"
 ```
 
 ## Garde-fous avant d'ouvrir une PR
@@ -53,28 +59,29 @@ git commit -m "fix(loader): course manifeste read-merge-write"
 À faire passer **au vert** avant toute PR (identique à la CI) :
 
 ```bash
-# Backend — dans le conteneur
-docker compose exec -T php php vendor/bin/phpunit tests/Unit
-
-# Front — depuis app/
-npm test          # vitest
-npm run typecheck # vue-tsc --noEmit
-npm run build     # vite build
+dotnet build LoDb.slnx -c Release            # 0 avertissement
+dotnet test LoDb.slnx                        # Testcontainers : Docker démarré
+npm --prefix src/LoDb.Web run lint
+npm --prefix src/LoDb.Web run typecheck
+npm --prefix src/LoDb.Web run test
+npm --prefix src/LoDb.Web run build:web
+npm --prefix src/LoDb.Web run api:check      # le client généré suit le contrat OpenAPI
 ```
 
-> `tests/Functional/AdminAccessTest` échoue en conteneur `APP_ENV=dev` (`framework.test` inactif) — **pré-existant**, vert en CI. La baseline backend est `tests/Unit`.
+Les E2E (`tests/LoDb.E2E`) tournent contre la stack locale : voir
+[`docs/guides/developpement.md`](docs/guides/developpement.md).
 
 ## Standards de code
 
-Ne dupliquez pas les règles ici : elles vivent dans [`CLAUDE.md`](CLAUDE.md). En résumé, ce qui bloque une revue :
+Ne dupliquez pas les règles ici : elles vivent dans [`AGENTS.md`](AGENTS.md). En résumé, ce qui bloque une revue :
 
-- `declare(strict_types=1);` en tête de chaque fichier PHP ; classes `final` par défaut ; typage strict partout.
-- Limites : fichier ≤ 300 lignes (500 max), fonction ≤ 30 lignes, ≤ 4 paramètres, imbrication ≤ 3, complexité ≤ 10, ligne ≤ 120.
+- C# : classes `sealed`, `record` pour les DTO, `TimeProvider` injecté, `CancellationToken` partout, aucun avertissement.
+- Angular : composants standalone, signals, `OnPush`, pas de `any` ; l'orchestration vit dans des services et des fonctions pures.
+- Limites : fichier ≤ 300 lignes (400 max), fonction ≤ 30 lignes, ≤ 3 paramètres, imbrication ≤ 3, complexité ≤ 10, ligne ≤ 100.
 - Un seul élément public par fichier, nommé comme le fichier. Pas de nombres/chaînes magiques.
-- Front : `<script setup lang="ts">`, pas de `any`, orchestration en composables, réutiliser le design system (`app.css`).
 - Commentaires en anglais, expliquant le **pourquoi**.
 
-**Invariants d'architecture à préserver** (voir `CLAUDE.md` § « Architecture ») : tout l'egress Data Dragon / CommunityDragon passe par le gateway Go ; stockage sans base de données (manifeste en read-merge-write) ; les ressources dérivent d'`AbstractManager` / `AbstractResourceController`. Prouvez l'équivalence de comportement (tests + rendu) sur un refacto.
+**Invariants d'architecture à préserver** (voir `AGENTS.md` § « Invariants d'architecture ») : un seul hôte `LoDb.Api` ; egress Data Dragon par le client `ddragon` et son allow-list ; blobs écrits de façon atomique ; objets et sorts indexés par id ; SSR sans cookie ni secret ; le front ne consomme que le client généré.
 
 ## Signaler un bug · proposer une fonctionnalité
 

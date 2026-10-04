@@ -7,7 +7,7 @@ using LoDb.Parity.Projections;
 namespace LoDb.Parity.Runs;
 
 /// <summary>
-/// A run directory of tools/next/parity: <c>sample.json</c>,
+/// A run directory of tools/parity: <c>sample.json</c>,
 /// <c>{legacy,next}/export/{version}/{language}.json</c>,
 /// <c>legacy/manifest/{version}/{type}.json</c> and <c>next/assets.json</c>.
 /// </summary>

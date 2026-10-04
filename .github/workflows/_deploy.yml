@@ -4,10 +4,24 @@ name: _deploy
 # the environment is fully parameterized by inputs + secrets (DRY / open-closed).
 # No environment-specific value is hardcoded here; everything sensitive comes from
 # the caller's secrets, and the host config (domains, tags, app secrets) lives in
-# ENV_FILE, pushed to the host as .env.
+# ENV_FILE, pushed to the host as .env. Nothing is built on the host: it pulls the images
+# _build.yml built once.
+#
+# The stack takes the place of the legacy one in the same Compose project (lodb-staging,
+# lodb-prod): `up --remove-orphans` retires the legacy containers, the database volume
+# (pgdata) is kept and brought up to date by `migrate`, which marks a Doctrine database at
+# the baseline first. The legacy `storage` and `app_state` volumes are left untouched.
+#
+# Order (heritage.md F3, ADR 0010): pull, migrations in the ephemeral `migrate` container,
+# then `up -d`, then smoke tests. A failed migration stops the job while the running
+# containers keep serving.
 on:
   workflow_call:
     inputs:
+      environment:
+        description: Target environment (staging | prod), checked against the host's .env.
+        required: true
+        type: string
       branch:
         description: Branch the target host tracks and pulls (test | main).
         required: true
@@ -28,102 +42,235 @@ on:
       ENV_FILE:
         description: Full dotenv for this host, written to ${DEPLOY_PATH}/.env.
         required: true
+      DATA_PROTECTION_PFX:
+        description: Base64 of the Data Protection certificate (PKCS#12) of this host.
+        required: true
 
 permissions:
   contents: read
+  packages: read   # the host pulls the images with this run's token
+
+# Two deployments of the same environment never overlap; a queued one waits.
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      TARGET: ${{ inputs.environment }}
+      BRANCH: ${{ inputs.branch }}
+      REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+      DEPLOY_HOST: ${{ secrets.SSH_HOST }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      DEPLOY_USER: ${{ secrets.SSH_USER || 'root' }}
     steps:
+      # A secret the caller maps but GitHub does not hold arrives empty: fail here, not
+      # later when the API refuses to start without its certificate.
+      - name: Check the secrets
+        env:
+          SSH_KEY_SET: ${{ secrets.SSH_KEY != '' }}
+          ENV_FILE_SET: ${{ secrets.ENV_FILE != '' }}
+          PFX_SET: ${{ secrets.DATA_PROTECTION_PFX != '' }}
+        run: |
+          prefix="$(echo "$TARGET" | tr '[:lower:]' '[:upper:]')"
+          missing=""
+          [ -n "$DEPLOY_HOST" ] || missing="$missing ${prefix}_HOST"
+          [ -n "$DEPLOY_PATH" ] || missing="$missing ${prefix}_PATH"
+          [ "$SSH_KEY_SET" = true ] || missing="$missing ${prefix}_SSH_KEY"
+          [ "$ENV_FILE_SET" = true ] || missing="$missing ENV_$prefix"
+          [ "$PFX_SET" = true ] || missing="$missing ${prefix}_DATA_PROTECTION_PFX"
+          if [ -n "$missing" ]; then
+            echo "Missing secrets for $TARGET:$missing" >&2
+            exit 1
+          fi
+
+      # Everything that depends on the target, settled before any connection. The inputs
+      # reach a remote shell: only plain names go through.
+      - name: Resolve the target
+        run: |
+          if [[ ! "$BRANCH" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+            echo "Invalid branch name: $BRANCH" >&2
+            exit 1
+          fi
+          case "$TARGET" in
+            staging) noindex=1 ;;
+            prod) noindex=0 ;;
+            *)
+              echo "Unknown environment: $TARGET (staging or prod)." >&2
+              exit 1
+              ;;
+          esac
+          {
+            echo "EXPECTED_PROJECT=lodb-$TARGET"
+            echo "IMAGE_TAG=$TARGET"
+            echo "EXPECTED_NOINDEX=$noindex"
+          } >> "$GITHUB_ENV"
+
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
       - name: Known hosts
-        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+        run: ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
 
-      - name: Push env to host (from ENV_FILE secret)
+      # The .env stays readable by root alone. The certificate is read by the API's non-root
+      # user through a bind mount: the file is world-readable, its folder root's only.
+      - name: Push env and Data Protection certificate to host
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
+          DATA_PROTECTION_PFX: ${{ secrets.DATA_PROTECTION_PFX }}
         run: |
-          ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} "mkdir -p ${{ secrets.DEPLOY_PATH }}"
-          printf '%s\n' "$ENV_FILE" \
-            | ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} "cat > ${{ secrets.DEPLOY_PATH }}/.env"
+          ssh_target="$DEPLOY_USER@$DEPLOY_HOST"
+          # Expanded on the runner on purpose (SC2029), already quoted for the remote shell.
+          remote_path="$(printf '%q' "$DEPLOY_PATH")"
+          # shellcheck disable=SC2029
+          ssh "$ssh_target" "mkdir -p $remote_path/.deploy && chmod 700 $remote_path/.deploy"
+          # shellcheck disable=SC2029
+          printf '%s\n' "$ENV_FILE" | ssh "$ssh_target" "umask 077 && cat > $remote_path/.env"
+          # shellcheck disable=SC2029
+          printf '%s' "$DATA_PROTECTION_PFX" | base64 -d \
+            | ssh "$ssh_target" "umask 022 && cat > $remote_path/.deploy/data-protection.pfx"
 
-      - name: Deploy (compose pull + up)
+      - name: Deploy (pull, migrate, up, smoke test)
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} <<'EOSSH'
-            set -e
-            mkdir -p ${{ secrets.DEPLOY_PATH }}
-            cd ${{ secrets.DEPLOY_PATH }}
-            # Idempotent init: `git clone .` refuse un répertoire non vide (le .env y est
-            # déjà poussé à l'étape précédente). `git init` + remote tolère ce cas et
-            # `reset --hard` ne touche pas au .env non suivi.
+          # The remote script receives its inputs as variables, expanded on the runner on
+          # purpose (SC2029) and quoted for the remote shell; the script is sent verbatim.
+          remote_env=""
+          for name in DEPLOY_PATH BRANCH REPO_URL TARGET EXPECTED_PROJECT IMAGE_TAG \
+            EXPECTED_NOINDEX GHCR_USER; do
+            remote_env="$remote_env $name=$(printf '%q' "${!name}")"
+          done
+          # The token goes first on the remote shell's input, never on a command line that
+          # `ps` would show on the host; the script follows it.
+          # shellcheck disable=SC2029
+          { printf '%s\n' "$GHCR_TOKEN"; cat; } <<'EOSSH' \
+            | ssh "$DEPLOY_USER@$DEPLOY_HOST" \
+              "$remote_env bash -c 'IFS= read -r GHCR_TOKEN && export GHCR_TOKEN && exec bash -s'"
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+            fail() {
+              echo "$*" >&2
+              exit 1
+            }
+
+            # Idempotent init: the directory already holds the .env pushed just before.
             if [ ! -d .git ]; then
               git init -q
-              git remote add origin ${{ secrets.REPO_URL || 'https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git' }}
+              git remote add origin "$REPO_URL"
             fi
+            git fetch origin "$BRANCH"
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+            git reset --hard "origin/$BRANCH"
+
             # Deploy overlay (edge labels + external network), WITHOUT
             # compose.override.yaml (dev conveniences).
             export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
-            git fetch origin ${{ inputs.branch }}
-            git checkout -B ${{ inputs.branch }} origin/${{ inputs.branch }}
-            git reset --hard origin/${{ inputs.branch }}
-            # ── Edge proxy (VPS-global) ──────────────────────────────────────────
-            # The edge (caddy-docker-proxy) and the shared 'edge' network are owned by
-            # the infra-vps repo, sole owner of the edge stack on the host. This job no
-            # longer converges anything there: it only asserts the network exists. A
-            # project must never be able to rewrite the infrastructure shared with the
-            # other projects.
-            docker network inspect edge >/dev/null 2>&1 || {
-              echo "Docker network 'edge' is missing — deploy infra-vps before this project." >&2
-              exit 1
+
+            # ── The .env against the target, before anything changes ─────────────────
+            env_value() {
+              grep -E "^$1=" .env | tail -n 1 | cut -d= -f2- | tr -d "\"'" || true
             }
-            # Pull résilient : le registry casse parfois un layer en cours de copie
-            # (connection reset by peer). Retry avec backoff avant d'abandonner, sinon
-            # `up` retomberait sur un build local lourd des services à `build:`.
+            expect() {
+              local actual
+              actual="$(env_value "$1")"
+              actual="${actual:-${3:-}}"
+              [ "$actual" = "$2" ] || fail "$1 is '$actual' in the .env; $TARGET expects '$2'."
+            }
+            expect COMPOSE_PROJECT_NAME "$EXPECTED_PROJECT"
+            expect IMAGE_TAG "$IMAGE_TAG"
+            # staging is never indexed; prod always is.
+            expect LODB_NOINDEX "$EXPECTED_NOINDEX" 0
+            if [ "$TARGET" = prod ]; then
+              for key in LoDb__Mail__Host LoDb__Billing__StripeSecretKey \
+                LoDb__Billing__StripeWebhookSecret; do
+                [ -n "$(env_value "$key")" ] || fail "$key is required in prod."
+              done
+            fi
+
+            # The edge and its network belong to infra-vps; this job only asserts them.
+            docker network inspect edge >/dev/null 2>&1 \
+              || fail "Docker network 'edge' is missing — deploy infra-vps before this project."
+            # nginx trusts X-Forwarded-For from this subnet only. Docker picks it when infra-vps
+            # creates the network, so it is read here rather than copied into ENV_FILE, and
+            # kept in the .env so manual `docker compose` runs from this folder resolve it too.
+            edge_cidr="$(docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}')"
+            [[ "$edge_cidr" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$ ]] \
+              || fail "The 'edge' network has no IPv4 subnet for nginx to trust."
+            sed -i '/^LODB_EDGE_CIDR=/d' .env
+            echo "LODB_EDGE_CIDR=$edge_cidr" >> .env
+
+            # ── Pull, then migrations before the traffic switch ────────────────────────
+            # Logged in with this run's token for the pull only: the packages may be private,
+            # and the host keeps no registry credential once the images are in.
+            trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+            printf '%s' "$GHCR_TOKEN" \
+              | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+            unset GHCR_TOKEN
+            # The registry sometimes resets a layer mid-copy: retry with backoff.
             for attempt in 1 2 3 4 5; do
               if docker compose pull; then break; fi
-              [ "$attempt" = 5 ] && { echo "docker compose pull: échec après 5 tentatives" >&2; exit 1; }
-              echo "pull échec (tentative $attempt), retry dans $((attempt * 10))s…" >&2
+              [ "$attempt" != 5 ] || fail "docker compose pull failed after 5 attempts."
+              echo "pull failed (attempt $attempt), retrying in $((attempt * 10))s…" >&2
               sleep $((attempt * 10))
             done
-            docker compose up -d --remove-orphans
-            # Schema migrations: synchronous and fail-fast — a deploy must not serve
-            # code whose schema didn't apply. Waits on postgres via the php service's
-            # depends_on (service_healthy); no-op when nothing is pending.
-            docker compose exec -T php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
-            # Pré-chauffe (détaché → hors chemin critique) : JSON + images des 3 dernières
-            # versions dans le volume storage, puis backfill WebP. Idempotent +
-            # best-effort — c'est aussi elle qui repeuple un volume storage vide.
-            docker compose exec -d php php bin/console app:ddragon:warmup --limit=3
-            docker compose exec -d php php bin/console app:ddragon:webp
-            # Observabilité : les journées CLOSES sont consolidées dans le volume storage
-            # à chaque déploiement (agrégats immuables, lecture d'historique bon marché).
-            # Le volume app_state protège déjà les NDJSON de la recréation du conteneur.
-            # Ni l'un ni l'autre ne sort de l'hôte : ce n'est pas une sauvegarde.
-            # Volontairement SANS --include-today : le rollup écrase l'agrégat du jour,
-            # et un jour encore ouvert n'a rien à gagner à être figé ici.
-            # Best-effort : une consolidation ratée ne doit pas faire échouer un déploiement.
-            docker compose exec -T php php bin/console app:analytics:rollup || true
-            docker compose exec -T php php bin/console app:audit:rollup || true
+            docker logout ghcr.io >/dev/null
+            trap - EXIT
+
+            # Fail-fast: the containers in place keep serving if it fails. Idempotent: a
+            # database already up to date applies nothing.
+            docker compose run --rm migrate
+
+            # --wait: the job fails if a probe does not turn healthy. --remove-orphans
+            # retires the containers of the legacy stack (php, go-fetcher, go-api, mailer).
+            docker compose up -d --no-build --remove-orphans --wait --wait-timeout 180
+
+            # ── Smoke test inside the stack ────────────────────────────────────────────
+            one_per_line() {
+              tr -s ', ' '\n' | sed '/^$/d'
+            }
+            domains() {
+              for key in CADDY_DOMAINS API_CADDY_DOMAINS; do
+                env_value "$key" | one_per_line
+              done
+            }
+            canonical="$(env_value LODB_CANONICAL_HOST)"
+            api_host="$(env_value API_CADDY_DOMAINS | one_per_line | head -n 1)"
+            fetch() {
+              docker compose exec -T nginx wget -qO /dev/null --header "Host: $1" \
+                "http://127.0.0.1$2"
+            }
+            fetch "$canonical" /healthz
+            docker compose exec -T nginx wget -qO- http://api:8080/readyz
+            echo
+            # A page rendered by the SSR server, then the API subdomain.
+            fetch "$canonical" /en/
+            fetch "$api_host" /healthz
+            robots="$(docker compose exec -T nginx wget -S -qO /dev/null \
+              --header "Host: $canonical" http://127.0.0.1/en/ 2>&1 \
+              | grep -i 'x-robots-tag' || true)"
+            if [ "$EXPECTED_NOINDEX" = 1 ]; then
+              [ -n "$robots" ] || fail "$TARGET must answer X-Robots-Tag: noindex."
+            else
+              [ -z "$robots" ] || fail "$TARGET must be indexable, got '$robots'."
+            fi
+            revision="$(docker inspect --format \
+              '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+              "$(docker compose ps -q api)")"
+            echo "::notice title=Deployed revision::$TARGET ($EXPECTED_PROJECT) serves $revision"
             docker image prune -f
-            # ── Public TLS smoke test + edge cert self-heal ──────────────────────
-            # The shared edge (caddy-docker-proxy) issues Let's Encrypt certs from
-            # this stack's labels. If issuance failed earlier (e.g. DNS not yet
-            # pointing here on the first attempt), the cert stays stuck in back-off
-            # and a plain `up -d` never retries it. So once the app is live on the
-            # `edge` network, assert every public domain serves a trusted cert; if
-            # one doesn't, force a single edge reload to re-attempt issuance, then
-            # re-check. Fail the deploy if TLS is still broken — a prod domain must
-            # never be silently certless again.
+
+            # ── Public TLS smoke test + edge cert self-heal ────────────────────────────
+            # A domain whose issuance failed earlier stays in back-off until the edge reloads.
             assert_tls() {
-              for domain in $(grep -E '^CADDY_DOMAINS=' .env | cut -d= -f2- | tr -d '"' | tr ',' ' '); do
-                # No -f/-k: success means the TLS handshake + cert verification passed,
-                # regardless of the HTTP status the app returns behind it.
-                curl -sS --max-time 10 -o /dev/null "https://${domain}/" || return 1
+              for domain in $(domains); do
+                # No -f/-k: success means the handshake and the certificate check passed.
+                curl -sS --max-time 10 -o /dev/null "https://${domain}/healthz" || return 1
               done
             }
             # Edge Caddy container, resolved from its Compose labels (project 'edge',
@@ -135,22 +282,22 @@ jobs:
             }
             if assert_tls; then
               echo "TLS OK for all public domains."
-            else
-              echo "TLS check failed — forcing edge to re-attempt certificate issuance…" >&2
-              caddy_id="$(edge_caddy)"
-              [ -n "$caddy_id" ] || { echo "Edge Caddy container not found — is infra-vps deployed?" >&2; exit 1; }
-              docker restart "$caddy_id" >/dev/null
-              recovered=0
-              for _ in $(seq 1 18); do   # up to ~90s: challenge solve is usually a few seconds
-                sleep 5
-                if assert_tls; then recovered=1; break; fi
-              done
-              if [ "$recovered" != 1 ]; then
-                echo "TLS still failing after edge reload. Check DNS (A -> this host), CAA, LE rate-limits:" >&2
-                docker logs --since 3m "$caddy_id" 2>&1 \
-                  | grep -iE 'challenge failed|could not get certificate|rateLimited|unauthorized' >&2 || true
-                exit 1
-              fi
-              echo "TLS recovered after edge reload."
+              exit 0
             fi
+            echo "TLS check failed — forcing the edge to retry certificate issuance…" >&2
+            caddy_id="$(edge_caddy)"
+            [ -n "$caddy_id" ] || fail "Edge Caddy container not found — is infra-vps deployed?"
+            docker restart "$caddy_id" >/dev/null
+            for _ in $(seq 1 18); do
+              sleep 5
+              if assert_tls; then
+                echo "TLS recovered after edge reload."
+                exit 0
+              fi
+            done
+            echo "TLS still failing after edge reload. Check DNS, CAA, LE rate limits:" >&2
+            docker logs --since 3m "$caddy_id" 2>&1 \
+              | grep -iE 'challenge failed|could not get certificate|rateLimited|unauthorized' >&2 \
+              || true
+            exit 1
           EOSSH

@@ -1,0 +1,115 @@
+/*
+ * The loader's charging Hextech core (core/context/warm-up/dialog/loader-core.ts), the
+ * legacy one: purely decorative, still under reduced motion.
+ */
+@layer components {
+  .hx-core {
+    position: relative;
+    inline-size: 122px;
+    block-size: 122px;
+    margin: 0 auto 1.5rem;
+  }
+  .hx-core__glow {
+    position: absolute;
+    inset: -22%;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--color-hex) 40%, transparent),
+      transparent 70%
+    );
+    filter: blur(6px);
+    animation: hx-loader-glow 3.2s ease-in-out infinite;
+  }
+  .hx-core__svg {
+    position: relative;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: visible;
+  }
+  .hx-core__ring {
+    stroke: color-mix(in srgb, var(--color-gold) 45%, transparent);
+    stroke-width: 1.5;
+  }
+  .hx-core__sweep {
+    stroke: var(--color-hex);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 22 78;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-hex) 70%, transparent));
+    animation: hx-loader-sweep 1.6s linear infinite;
+  }
+  .hx-core__inner {
+    fill: color-mix(in srgb, var(--color-hex) 6%, transparent);
+    stroke: color-mix(in srgb, var(--color-gold) 30%, transparent);
+    stroke-width: 1;
+    transform-box: view-box;
+    transform-origin: 60px 60px;
+    animation: hx-loader-inner 3.2s ease-in-out infinite;
+  }
+  .hx-core__orbit {
+    fill: var(--color-hex-bright);
+    transform-box: view-box;
+    transform-origin: 60px 60px;
+    animation: hx-loader-spin 6s linear infinite;
+  }
+  .hx-core__gem {
+    fill: var(--color-gold);
+    stroke: var(--color-gold-bright);
+    stroke-width: 1;
+    transform-box: view-box;
+    transform-origin: 60px 60px;
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--color-gold) 60%, transparent));
+    animation: hx-loader-gem 7s linear infinite;
+  }
+
+  @keyframes hx-loader-sweep {
+    to {
+      stroke-dashoffset: -100;
+    }
+  }
+  @keyframes hx-loader-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes hx-loader-gem {
+    from {
+      transform: rotate(45deg);
+    }
+    to {
+      transform: rotate(405deg);
+    }
+  }
+  @keyframes hx-loader-inner {
+    0%,
+    100% {
+      opacity: 0.5;
+      transform: scale(0.97);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.03);
+    }
+  }
+  @keyframes hx-loader-glow {
+    0%,
+    100% {
+      opacity: 0.55;
+      transform: scale(0.94);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.06);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hx-core__glow,
+    .hx-core__sweep,
+    .hx-core__inner,
+    .hx-core__orbit,
+    .hx-core__gem {
+      animation: none;
+    }
+  }
+}

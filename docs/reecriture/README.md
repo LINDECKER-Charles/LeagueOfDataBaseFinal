@@ -1,9 +1,10 @@
 # Réécriture .NET 10 + Angular — dossier de décision
 
 > **Statut** : décisions actées le 2026-09-24, avant la première ligne de code.
-> Ce dossier est la source de vérité de la réécriture. Tant qu'elle n'a pas basculé en
-> prod, [`../../CLAUDE.md`](../../CLAUDE.md) continue de décrire la stack **en service**
-> (Symfony + Go + Vue).
+> Ce dossier est la source de vérité de la réécriture. Elle est désormais la stack du
+> dépôt, décrite par [`../../AGENTS.md`](../../AGENTS.md) ; l'ancienne (Symfony + Go +
+> Vue) est archivée sous `legacy/` et reste en production jusqu'à la
+> [bascule](bascule.md).
 
 ## Pourquoi réécrire
 
@@ -11,7 +12,7 @@ La stack actuelle a livré le produit, mais trois limites freinent désormais so
 
 1. **Portabilité.** Un front Twig + îlots Vue ne peut pas devenir une app desktop ou
    Android : l'APK prévu n'est qu'une coquille TWA qui affiche le site en ligne
-   ([`packaging-apk.md`](../guides/packaging-apk.md)). Web, desktop (Windows, macOS) et
+   ([`packaging-apk.md`](../../legacy/docs/guides/packaging-apk.md)). Web, desktop (Windows, macOS) et
    Android doivent partager **un seul front**.
 2. **Scaling.** Tout l'état vit sur le disque d'un seul hôte (sessions, manifeste
    d'images, analytics, cache), et le pool PHP-FPM est dimensionné à l'aveugle
