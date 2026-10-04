@@ -1,6 +1,36 @@
 {
   "patches": [
     {
+      "id": "2026-10-04-metamorphose",
+      "version": "3.0.0",
+      "codename": "Métamorphose",
+      "date": "2026-10-04",
+      "type": "major",
+      "title": "LeagueOfDataBase 3.0.0 — Métamorphose",
+      "summary": "LeagueOfDataBase change de moteur : chaque page a son adresse dans votre langue et arrive prête à lire, les nouveaux patchs sont préparés dès leur sortie, et vos anciens liens comme votre compte vous suivent, au prix d'une seule reconnexion.",
+      "tags": [
+        {
+          "kind": "feature",
+          "label": "La langue dans l'adresse"
+        },
+        {
+          "kind": "feature",
+          "label": "Pages prêtes à lire"
+        },
+        {
+          "kind": "feature",
+          "label": "Patchs prêts dès leur sortie"
+        },
+        {
+          "kind": "bugfix",
+          "label": "2 correctifs"
+        }
+      ],
+      "stats": {
+        "fixes": 2
+      }
+    },
+    {
       "id": "2026-09-23-cellier",
       "version": "2.3.1",
       "codename": "Cellier",

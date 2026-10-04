@@ -128,6 +128,16 @@ jobs:
           remote_path="$(printf '%q' "$DEPLOY_PATH")"
           # shellcheck disable=SC2029
           ssh "$ssh_target" "mkdir -p $remote_path/.deploy && chmod 700 $remote_path/.deploy"
+          # The .env in place is kept before it is replaced, the ten latest: a rollback runs
+          # the previous stack with its own .env (runbook, § 8.2).
+          # Expanded by the host's shell, not here.
+          # shellcheck disable=SC2016
+          keep_env='cd .deploy/backups && stamp="$(date -u +%Y%m%dT%H%M%SZ)"'
+          # shellcheck disable=SC2016
+          keep_env="$keep_env"' && { [ ! -f ../../.env ] || cp -p ../../.env "$stamp.env"; }'
+          keep_env="$keep_env"' && ls -1t ./*.env 2>/dev/null | tail -n +11 | xargs -r rm --'
+          # shellcheck disable=SC2029
+          ssh "$ssh_target" "cd $remote_path && install -d -m 700 .deploy/backups && $keep_env"
           # shellcheck disable=SC2029
           printf '%s\n' "$ENV_FILE" | ssh "$ssh_target" "umask 077 && cat > $remote_path/.env"
           # shellcheck disable=SC2029
@@ -227,6 +237,17 @@ jobs:
             done
             docker logout ghcr.io >/dev/null
             trap - EXIT
+
+            # The database as it is, before any migration: the dump a rollback restores. Taken
+            # by the running postgres with its own credentials, checked readable, ten kept.
+            if [ -n "$(docker compose ps -q postgres)" ]; then
+              dump=".deploy/backups/$(date -u +%Y%m%dT%H%M%SZ).dump"
+              (umask 077 && docker compose exec -T postgres \
+                sh -c 'pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB"' > "$dump")
+              docker compose exec -T postgres pg_restore --list < "$dump" > /dev/null \
+                || fail "The database backup $dump cannot be read back."
+              ls -1t .deploy/backups/*.dump | tail -n +11 | xargs -r rm --
+            fi
 
             # Fail-fast: the containers in place keep serving if it fails. Idempotent: a
             # database already up to date applies nothing.

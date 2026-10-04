@@ -533,7 +533,9 @@ garde le contenu de la nouvelle stack, qui servira à la rebascule.
 
 1. Remettre le `.env` et l'image `nginx` de l'ancienne stack. Le checkout de `$PROD_PATH`
    porte ses fichiers sous `legacy/`, dont le `.env`, ignoré par Git, survit aux `git reset
-   --hard` des déploiements suivants :
+   --hard` des déploiements suivants. Le job de la bascule a gardé l'ancien `.env` et la base
+   d'avant `migrate` dans `$PROD_PATH/.deploy/backups/` (le plus ancien `*.env` de la
+   fenêtre, le `*.dump` du même horodatage) ; sans sauvegarde manuelle, `dir` est ce dossier :
 
    ```bash
    dir=/root/lodb-backups/<dossier de la fenêtre>

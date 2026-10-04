@@ -1,5 +1,5 @@
 ---
-date: AAAA-MM-JJ
+date: 2026-10-04
 type: perf
 scope: full-stack
 title: Des pages qui s'affichent plus vite, même sur mobile

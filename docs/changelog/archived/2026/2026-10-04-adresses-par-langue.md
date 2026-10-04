@@ -1,5 +1,5 @@
 ---
-date: AAAA-MM-JJ
+date: 2026-10-04
 type: feat
 scope: full-stack
 title: La langue du site apparaît désormais dans l'adresse de chaque page

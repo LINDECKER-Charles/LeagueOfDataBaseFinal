@@ -73,14 +73,14 @@ la nouvelle, et les images de l'ancienne restent accessibles par leur tag `:<sha
 La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 (`lodb-staging`, `lodb-prod`) et le même dossier (`STAGING_PATH`, `PROD_PATH`).
 
-1. Écrit le `.env` (mode 600) et `.deploy/data-protection.pfx`, puis synchronise le dépôt
-   sur la branche (`git reset --hard`).
+1. Garde le `.env` en place sous `.deploy/backups/`, écrit le nouveau (mode 600) et
+   `.deploy/data-protection.pfx`, puis synchronise le dépôt sur la branche (`git reset --hard`).
 2. Contrôle le `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
    `COMPOSE_PROJECT_NAME` = `lodb-<env>`, `IMAGE_TAG` = `<env>`, `LODB_NOINDEX` (`1` sur
    `staging`, `0` en `prod`) ; en `prod`, relais SMTP et clés Stripe présents. Exige le
    réseau `edge` (jamais créé) et écrit son sous-réseau dans le `.env` (`LODB_EDGE_CIDR`,
    seul pair dont nginx croit `X-Forwarded-For`).
-3. `docker compose pull` (5 tentatives), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
+3. `docker compose pull` (5 tentatives), sauvegarde de la base en service (`.deploy/backups/`), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
    run le temps du seul `pull` (transmis par l'entrée de `ssh`, jamais en ligne de
    commande), puis `docker compose run --rm migrate` : la base du
    volume `pgdata` passe à la dernière migration (une base Doctrine est d'abord marquée à

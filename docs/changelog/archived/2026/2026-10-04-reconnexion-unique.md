@@ -1,5 +1,5 @@
 ---
-date: AAAA-MM-JJ
+date: 2026-10-04
 type: devops
 scope: full-stack
 title: Une reconnexion demandée une seule fois, avec vos identifiants habituels
@@ -11,7 +11,7 @@ tags: [compte, connexion]
 
 Le jour de cette mise à jour, tout le monde est déconnecté une fois. Votre compte, vos
 builds, vos favoris et vos clés d'API sont intacts : reconnectez-vous avec votre e-mail ou
-votre pseudo et votre mot de passe habituels, ou avec Google. « Se souvenir de moi » vous
+votre pseudo et votre mot de passe habituels. « Se souvenir de moi » vous
 garde connecté 30 jours.
 
 ## Pourquoi
