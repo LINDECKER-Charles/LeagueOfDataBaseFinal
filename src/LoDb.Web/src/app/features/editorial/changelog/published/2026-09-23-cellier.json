@@ -1,0 +1,36 @@
+{
+  "id": "2026-09-23-cellier",
+  "version": "2.3.1",
+  "codename": "Cellier",
+  "date": "2026-09-23",
+  "type": "hotfix",
+  "title": "LeagueOfDataBase 2.3.1 — Cellier",
+  "summary": "Un maillon de moins entre les pages et leurs images : elles sont désormais servies directement depuis le disque du serveur, les données internes ne sont plus exposées sur le web, et la console d'administration s'affiche nettement plus vite.",
+  "intro": "Cellier est un patch d'intendance. Les images des champions, objets, runes et sorts ne passent plus par un service de stockage intermédiaire qui redémarrait régulièrement : elles viennent tout droit du disque du serveur, avec le même cache d'un an dans votre navigateur. Au passage, seules les images restent accessibles par une adresse publique ; les données internes du site ne le sont plus. Côté coulisses, la console d'administration charge ses panneaux en parallèle et ne recalcule plus ce qui n'a pas changé.",
+  "stats": {
+    "fixes": 0,
+    "cards": 2
+  },
+  "features": [
+    {
+      "kind": "mana",
+      "glyph": "⚡",
+      "tag": "Infra",
+      "title": "Des images servies directement depuis le disque",
+      "description": "Le service de stockage qui rangeait les images dépassait régulièrement sa limite mémoire et redémarrait en boucle, alors qu'il ne faisait que les poser sur le même disque que le reste du site. Il est supprimé : les images sont servies directement depuis le disque du serveur, avec le même cache d'un an. Seul le dossier des images est exposé sur le web ; jeux de données, statistiques et journal d'audit ne sont plus joignables par une adresse publique."
+    },
+    {
+      "kind": "mana",
+      "glyph": "⧗",
+      "tag": "Administration",
+      "title": "Une console d'administration nettement plus rapide",
+      "description": "Les sections d'une page de la console (compteurs, trafic, stockage) se chargent désormais réellement en même temps, au lieu d'attendre les unes derrière les autres. Le voyant du stockage répond en quelques millisecondes, le rapport de stockage se recalcule deux fois plus vite, et le trafic des journées passées n'est plus relu à chaque affichage."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "Cellier ne se voit pas, et c'est voulu : moins de pièces mobiles entre une page et ses images, c'est moins de choses qui peuvent casser. Si une image vous semble lente ou manquante depuis ce patch, dites-le-nous : c'est exactement le genre de retour qui nous aide à garder le site solide.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

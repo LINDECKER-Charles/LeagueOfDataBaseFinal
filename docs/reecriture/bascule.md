@@ -365,9 +365,12 @@ après la bascule : les premières pages d'une version pas encore ingérée sont
 
 ### 5.4 Administrateurs et anciens sitemaps
 
-Les rôles Symfony (`users.roles`) ne sont pas repris : chaque administrateur reçoit le rôle
-de la nouvelle stack (compte existant, mot de passe conservé ; TOTP enrôlé à la première
-connexion), depuis `$CANDIDATE_PATH` :
+L'administrateur unique de l'ancienne stack (`ADMIN_LOGIN`, `ADMIN_PASSWORD`) devient un
+compte, tenu par le job de déploiement depuis `LODB_ADMIN_LOGIN` et `LODB_ADMIN_PASSWORD`
+de `.env.prod` ([`configuration.md`](../guides/configuration.md), § 4.1) ; TOTP enrôlé à la
+première connexion. Les rôles Symfony (`users.roles`) ne sont pas repris : chaque autre
+administrateur reçoit le rôle de la nouvelle stack (compte existant, mot de passe
+conservé ; TOTP enrôlé à la première connexion), depuis `$CANDIDATE_PATH` :
 
 ```bash
 docker compose run --rm --no-deps api admin create --email <adresse de l'administrateur>

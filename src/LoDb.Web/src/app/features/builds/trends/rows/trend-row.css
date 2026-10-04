@@ -1,19 +1,32 @@
 /*
- * A ranked build: the score, then its identity, its credits and chips, and its first items
- * pushed to the end of the row, or below it on a narrow screen.
+ * A ranked build: the score in its own column, the whole height of the row, then its
+ * identity, its credits and chips, and its first items. A grid, not a wrapping flex row: the
+ * legacy flex row left the score alone above the portrait on a small phone, and the items
+ * alone on a line of their own on a tablet.
+ *   phone   identity, credits and items stacked beside the score;
+ *   tablet  identity and items, then the credits below them;
+ *   wide    everything on one line.
  */
 @layer components {
   :host {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'vote id'
+      'vote meta'
+      'vote items';
     align-items: center;
-    gap: 0.9rem 1.25rem;
+    gap: 0.75rem 1rem;
     padding: 1rem 1.25rem;
   }
 
+  lodb-vote-score {
+    grid-area: vote;
+  }
+
   .trend-row__id {
+    grid-area: id;
     display: flex;
-    flex: 1 1 14rem;
     align-items: center;
     gap: 0.9rem;
     min-inline-size: 0;
@@ -38,6 +51,7 @@
   }
 
   .trend-row__meta {
+    grid-area: meta;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
@@ -57,10 +71,10 @@
     gap: 0.4rem;
   }
   .trend-row__items {
+    grid-area: items;
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
-    margin-inline-start: auto;
   }
 
   .forge-ghost {
@@ -68,9 +82,24 @@
     filter: saturate(0.2);
   }
 
-  @media (width < 40rem) {
+  @media (width >= 40rem) {
+    :host {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        'vote id items'
+        'vote meta meta';
+      column-gap: 1.25rem;
+    }
     .trend-row__items {
-      margin-inline-start: 0;
+      justify-self: end;
+    }
+  }
+
+  /* The list is 64rem at most: from there on, the row holds the chips and the items. */
+  @media (width >= 64rem) {
+    :host {
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      grid-template-areas: 'vote id meta items';
     }
   }
 }
