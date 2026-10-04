@@ -1,0 +1,72 @@
+<section class="relative h-[62vh] max-h-[46rem] min-h-[26rem] w-full overflow-hidden">
+  <img
+    #splash
+    class="hx-img absolute inset-0 size-full object-cover object-[50%_18%]"
+    [src]="art()"
+    alt=""
+    loading="eager"
+    fetchpriority="high"
+    decoding="async"
+    (error)="fallBack()"
+  />
+  <div class="splash-scrim absolute inset-0"></div>
+
+  <div class="absolute inset-x-0 bottom-0">
+    <div class="mx-auto max-w-7xl px-6 pb-9">
+      <p class="eyebrow mb-3">
+        {{ 'champion.list.title' | transloco }}
+        <span class="hx-pip mx-2 text-gold-deep" aria-hidden="true">◆</span>&ngsp;
+        <span class="font-mono text-[11px] tracking-normal text-text-muted normal-case"
+          >{{ context().version }} · {{ context().language }}</span
+        >
+      </p>
+      <h1
+        class="hero-name hero-name--epic text-gold-grad drop-shadow-[0_2px_18px_var(--hx-shadow-hard)]"
+      >
+        {{ profile().name }}
+      </h1>
+      @if (title()) {
+        <p class="mt-2.5 font-spiegel text-lg text-text-muted sm:text-xl">{{ title() }}</p>
+      }
+
+      <div class="mt-5 flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
+        <div class="flex flex-wrap items-center gap-2">
+          @for (tag of profile().tags; track tag) {
+            <span class="hx-chip">{{ tag }}</span>
+          }
+          @if (profile().partype; as partype) {
+            <span class="hx-chip text-text-dim">
+              {{ 'champion.detail.partype' | transloco: { partype } }}
+            </span>
+          }
+        </div>
+
+        @if (gauges().length > 0) {
+          <div class="flex flex-wrap gap-x-8 gap-y-3">
+            @for (gauge of gauges(); track gauge.key) {
+              @let label = 'champion.detail.profile.' + gauge.key | transloco;
+              <div>
+                <div class="mb-1.5 flex items-baseline justify-between gap-3">
+                  <span class="font-mono text-[10px] tracking-wider text-text-muted uppercase">
+                    {{ label }}
+                  </span>
+                  <span class="font-beaufort text-xs text-gold-light">{{ gauge.value }}</span>
+                </div>
+                <div
+                  class="gauge"
+                  [class]="'gauge--' + gauge.key"
+                  role="img"
+                  [attr.aria-label]="label + ' : ' + gauge.value + '/10'"
+                >
+                  @for (step of steps; track step) {
+                    <i [class.on]="step < gauge.value"></i>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

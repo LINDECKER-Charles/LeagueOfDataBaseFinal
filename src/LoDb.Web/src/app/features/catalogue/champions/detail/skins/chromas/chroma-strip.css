@@ -1,0 +1,43 @@
+.swatch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--color-gold-deep);
+  background: var(--color-void);
+  cursor: pointer;
+  transition:
+    border-color 0.2s var(--ease-hextech),
+    transform 0.2s var(--ease-hextech);
+}
+.swatch:hover,
+.swatch:focus-visible {
+  border-color: var(--color-gold);
+  transform: translateY(-1px);
+  outline: none;
+}
+.swatch__ring {
+  position: absolute;
+  inset: 0;
+  opacity: 0.28;
+}
+.swatch:hover .swatch__ring {
+  opacity: 0.45;
+}
+.swatch img {
+  position: relative;
+  inline-size: 1.85rem;
+  block-size: 1.85rem;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--color-shadow) 60%, transparent));
+}
+@media (prefers-reduced-motion: reduce) {
+  .swatch {
+    transition: none;
+  }
+  .swatch:hover {
+    transform: none;
+  }
+}

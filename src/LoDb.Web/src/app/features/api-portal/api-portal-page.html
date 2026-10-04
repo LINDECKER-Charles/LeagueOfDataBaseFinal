@@ -1,0 +1,75 @@
+<lodb-backdrop />
+<div class="portal-page">
+  <header class="portal-header">
+    <div>
+      <p class="eyebrow">{{ 'api.portal.eyebrow' | transloco }}</p>
+      <h1 class="mt-2 font-beaufort text-4xl font-bold tracking-wide text-gold-grad uppercase">
+        {{ 'api.portal.title' | transloco }}
+      </h1>
+    </div>
+    <div class="portal-header__links">
+      <a class="nav-link text-sm text-gold" [routerLink]="link('developers')">
+        {{ 'api.portal.docs_link' | transloco }} →
+      </a>
+      <a lodbButton="ghost" [routerLink]="link('account/profile')">
+        {{ 'api.portal.back_profile' | transloco }}
+      </a>
+    </div>
+  </header>
+
+  @if (portal.secret(); as secret) {
+    <lodb-key-reveal [secret]="secret" />
+  }
+
+  @if (portal.notice(); as notice) {
+    <p
+      class="portal-banner"
+      data-testid="api-portal-notice"
+      [class.portal-banner--success]="notice.tone === 'success'"
+      [class.portal-banner--muted]="notice.tone === 'muted'"
+      [attr.role]="notice.tone === 'error' ? 'alert' : 'status'"
+    >
+      {{ notice.key | transloco }}
+    </p>
+  }
+
+  @switch (portal.status()) {
+    @case ('loading') {
+      <p class="portal-text" role="status">{{ 'apiPortal.loading' | transloco }}</p>
+    }
+    @case ('failed') {
+      <div class="portal-banner" role="alert">
+        <p>{{ 'apiPortal.error.load' | transloco }}</p>
+        <button lodbButton="ghost" type="button" class="mt-3" (click)="portal.load()">
+          {{ 'apiPortal.retry' | transloco }}
+        </button>
+      </div>
+    }
+    @default {
+      @if (portal.key(); as key) {
+        <lodb-key-overview
+          [key]="key"
+          [busy]="portal.busy()"
+          (regenerate)="portal.regenerate()"
+          (revoke)="portal.revoke()"
+        />
+        @if (payments) {
+          <lodb-offers-panel
+            class="mt-14"
+            [offers]="portal.offers()"
+            [key]="key"
+            [busy]="portal.busy()"
+            (buy)="buy($event)"
+          />
+        }
+        <lodb-usage-table class="mt-14" [key]="key" />
+      } @else {
+        <lodb-create-key
+          [verified]="verified()"
+          [busy]="portal.busy()"
+          (create)="portal.create($event)"
+        />
+      }
+    }
+  }
+</div>

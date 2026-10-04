@@ -1,0 +1,95 @@
+<form class="forge" (submit)="submit($event)">
+  <header class="forge__head">
+    <p class="eyebrow">{{ 'build.editor.eyebrow' | transloco }}</p>
+    <h1 class="font-beaufort text-3xl font-bold tracking-wide text-gold-grad uppercase sm:text-4xl">
+      {{ (isEdit ? 'build.editor.title_edit' : 'build.editor.title_create') | transloco }}
+    </h1>
+    <hr class="hx-rule mt-3" />
+  </header>
+
+  <section class="hextech-frame hx-corners forge-section" aria-labelledby="forge-identity">
+    <div class="codex-header">
+      <h2 id="forge-identity">{{ 'build.editor.identity' | transloco }}</h2>
+    </div>
+    <label class="forge-field">
+      <span class="forge-field__label">{{ 'build.editor.name' | transloco }}</span>
+      <input
+        #name
+        lodbField
+        type="text"
+        name="name"
+        dir="auto"
+        required
+        minlength="3"
+        maxlength="80"
+        autocomplete="off"
+        [value]="initialName"
+        [placeholder]="'build.editor.name_placeholder' | transloco"
+        (input)="store.name.set(name.value)"
+      />
+    </label>
+    <label class="forge-field">
+      <span class="forge-field__label">{{ 'build.editor.description' | transloco }}</span>
+      <textarea
+        #description
+        lodbField
+        name="description"
+        dir="auto"
+        rows="3"
+        maxlength="2000"
+        [value]="store.description()"
+        (input)="store.description.set(description.value)"
+      ></textarea>
+    </label>
+    <label class="forge-switch">
+      <input
+        #isPublic
+        lodbField="switch"
+        type="checkbox"
+        name="isPublic"
+        [checked]="store.isPublic()"
+        (change)="store.isPublic.set(isPublic.checked)"
+      />
+      <span>{{ 'build.editor.public' | transloco }}</span>
+    </label>
+  </section>
+
+  <section class="hextech-frame hx-corners forge-section" aria-labelledby="forge-context">
+    <div class="codex-header">
+      <h2 id="forge-context">{{ 'build.editor.context.title' | transloco }}</h2>
+    </div>
+    <lodb-editor-context />
+  </section>
+
+  <section class="hextech-frame hx-corners forge-section" aria-labelledby="forge-champion">
+    <div class="codex-header">
+      <h2 id="forge-champion">{{ 'build.editor.champion.title' | transloco }}</h2>
+    </div>
+    <lodb-champion-picker />
+  </section>
+
+  <section class="hextech-frame hx-corners forge-section" aria-labelledby="forge-runes">
+    <div class="codex-header">
+      <h2 id="forge-runes">{{ 'build.editor.runes.title' | transloco }}</h2>
+    </div>
+    <lodb-rune-board />
+  </section>
+
+  <section class="hextech-frame hx-corners forge-section" aria-labelledby="forge-steps">
+    <div class="codex-header">
+      <h2 id="forge-steps">{{ 'build.editor.steps.title' | transloco }}</h2>
+    </div>
+    <lodb-step-editor />
+  </section>
+
+  <footer class="forge__foot">
+    <a lodbButton="ghost" [routerLink]="listLink">{{ 'build.editor.back' | transloco }}</a>
+    <button lodbButton="gold" type="submit" [disabled]="saver.saving()">
+      @if (saver.saving()) {
+        {{ 'buildsEditor.editor.saving' | transloco }}
+      } @else {
+        {{ (isEdit ? 'build.editor.submit_update' : 'build.editor.submit_create') | transloco }}
+      }
+    </button>
+  </footer>
+</form>

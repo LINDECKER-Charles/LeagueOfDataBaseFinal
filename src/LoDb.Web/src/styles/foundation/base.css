@@ -1,0 +1,78 @@
+/* Base layer: canvas, typography defaults, form chrome. */
+@layer base {
+  body {
+    background-color: var(--color-void);
+    color: var(--color-text);
+    font-family: var(--font-spiegel);
+    background-image:
+      radial-gradient(
+        1200px 600px at 50% -10%,
+        color-mix(in srgb, var(--color-hex-deep) 10%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        900px 500px at 100% 0%,
+        color-mix(in srgb, var(--color-gold) 6%, transparent),
+        transparent 55%
+      );
+    background-attachment: fixed;
+    /* A long unbreakable token (an id, a URL) wraps instead of widening the page at 320px. */
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3,
+  .display {
+    font-family: var(--font-beaufort);
+    letter-spacing: 0.06em;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-hex) 30%, transparent);
+    color: var(--color-gold-bright);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gold-deep) transparent;
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  select {
+    appearance: none;
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+  }
+  select:dir(rtl) {
+    background-position: left 1rem center;
+  }
+
+  /*
+   * iOS Safari zooms the page when a focused field computes under 16px. Every field is set at
+   * 16px at least (plan, section 4), whatever the pointer, so no page ever zooms on focus.
+   */
+  input,
+  select,
+  textarea {
+    font-size: max(1rem, 1em);
+  }
+
+  /* Anchored sections stop below the sticky in-page section navigation. */
+  [id] {
+    scroll-margin-block-start: 5.5rem;
+  }
+  /* A section focused by a jump (SectionJump) is no control: it shows no ring. */
+  [data-section-target]:focus {
+    outline: none;
+  }
+}

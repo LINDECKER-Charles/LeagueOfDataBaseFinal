@@ -1,0 +1,21 @@
+{
+  "type": "summoner",
+  "version": "16.18.1",
+  "data": {
+    "SummonerDot": {
+      "id": "SummonerDot",
+      "name": "Ignite",
+      "key": "14"
+    },
+    "SummonerFlash": {
+      "id": "SummonerFlash",
+      "name": "Flash",
+      "key": "4"
+    },
+    "SummonerFlash_Jade": {
+      "id": "SummonerFlash_Jade",
+      "name": "Flash",
+      "key": "74"
+    }
+  }
+}

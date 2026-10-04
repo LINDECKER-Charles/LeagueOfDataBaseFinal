@@ -1,0 +1,13 @@
+{
+  "banner_label": "应用更新",
+  "banner_ready": "更新已就绪。",
+  "restart": "重新启动",
+  "later": "稍后",
+  "restart_failed": "重新启动失败。请关闭并重新打开应用。",
+  "required_title": "需要更新",
+  "required_body": "此版本的 League of Data Base 已不再受支持。请更新以继续使用应用。",
+  "required_versions": "你的版本：{{ current }} — 最低要求：{{ minimum }}",
+  "restart_now": "重新启动并更新",
+  "downloading": "正在下载更新…",
+  "waiting": "更新会自动下载。请保持应用打开。"
+}

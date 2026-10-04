@@ -1,0 +1,4 @@
+{
+  "base_url": "기본 URL: {{ url }}",
+  "pricing_unavailable": "지금은 요금을 표시할 수 없습니다."
+}

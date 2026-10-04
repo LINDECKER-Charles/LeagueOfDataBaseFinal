@@ -1,0 +1,80 @@
+/* The engraved statistics: mono labels, luminous values, the growth in a whisper. */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.15rem;
+  border-block-end: 1px solid color-mix(in srgb, var(--color-gold) 14%, transparent);
+}
+.row:last-child {
+  border-block-end: 0;
+}
+.row__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-muted);
+}
+/* The stat icon is decorative: the label carries the meaning. */
+.row__icon {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  flex-shrink: 0;
+  object-fit: contain;
+  opacity: 0.92;
+}
+.row__value {
+  font-family: var(--font-beaufort);
+  font-size: 1rem;
+  color: var(--color-hex-bright);
+  font-variant-numeric: tabular-nums;
+}
+.row__growth {
+  margin-inline-start: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--color-text-dim);
+}
+
+/* Level slider: a gold rail and a diamond thumb. */
+.level input {
+  appearance: none;
+  inline-size: 100%;
+  block-size: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+.level input::-webkit-slider-runnable-track {
+  block-size: 2px;
+  background: linear-gradient(90deg, var(--color-gold-deep), var(--color-gold));
+}
+.level input::-webkit-slider-thumb {
+  appearance: none;
+  inline-size: 16px;
+  block-size: 16px;
+  margin-block-start: -7px;
+  background: var(--color-gold);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-gold) 70%, transparent);
+}
+.level input::-moz-range-track {
+  block-size: 2px;
+  background: linear-gradient(90deg, var(--color-gold-deep), var(--color-gold));
+}
+.level input::-moz-range-thumb {
+  inline-size: 16px;
+  block-size: 16px;
+  border: 0;
+  border-radius: 0;
+  background: var(--color-gold);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+.level input:focus-visible {
+  outline: 1px solid var(--color-hex);
+  outline-offset: 4px;
+}

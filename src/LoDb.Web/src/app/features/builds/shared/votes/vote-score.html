@@ -1,0 +1,69 @@
+@let current = state();
+@let up = 'community.vote.up' | transloco;
+@let down = 'community.vote.down' | transloco;
+@let login = 'community.vote.login' | transloco;
+@if (signedIn()) {
+  <button
+    type="button"
+    class="vote-arrow"
+    [class.vote-arrow--on-up]="current.myVote === 1"
+    [attr.aria-pressed]="current.myVote === 1"
+    [disabled]="pending()"
+    [title]="up"
+    [attr.aria-label]="up"
+    (click)="cast(1)"
+  >
+    <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+      <path d="M6 2.4 10.4 9H1.6z" />
+    </svg>
+  </button>
+} @else {
+  <a
+    class="vote-arrow"
+    [routerLink]="loginLink()"
+    [queryParams]="loginQuery()"
+    [title]="login"
+    [attr.aria-label]="login"
+  >
+    <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+      <path d="M6 2.4 10.4 9H1.6z" />
+    </svg>
+  </a>
+}
+
+<span
+  class="vote-score"
+  [class]="scoreClass()"
+  [title]="'community.vote.score_label' | transloco"
+  aria-live="polite"
+  >{{ scoreText() }}</span
+>
+
+@if (signedIn()) {
+  <button
+    type="button"
+    class="vote-arrow"
+    [class.vote-arrow--on-down]="current.myVote === -1"
+    [attr.aria-pressed]="current.myVote === -1"
+    [disabled]="pending()"
+    [title]="down"
+    [attr.aria-label]="down"
+    (click)="cast(-1)"
+  >
+    <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+      <path d="M6 9.6 1.6 3h8.8z" />
+    </svg>
+  </button>
+} @else {
+  <a
+    class="vote-arrow"
+    [routerLink]="loginLink()"
+    [queryParams]="loginQuery()"
+    [title]="login"
+    [attr.aria-label]="login"
+  >
+    <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+      <path d="M6 9.6 1.6 3h8.8z" />
+    </svg>
+  </a>
+}

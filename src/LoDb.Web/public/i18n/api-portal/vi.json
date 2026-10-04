@@ -1,0 +1,11 @@
+{
+  "loading": "Đang tải khóa API…",
+  "retry": "Thử lại",
+  "error": {
+    "load": "Không thể tải khóa API.",
+    "failed": "Thao tác thất bại, vui lòng thử lại."
+  },
+  "actions": {
+    "revoke_help": "Vô hiệu hóa khóa ngay lập tức: API từ chối khóa từ yêu cầu tiếp theo."
+  }
+}

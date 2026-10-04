@@ -1,0 +1,13 @@
+{
+  "banner_label": "Mise à jour de l'application",
+  "banner_ready": "Mise à jour prête.",
+  "restart": "Redémarrer",
+  "later": "Plus tard",
+  "restart_failed": "Le redémarrage a échoué. Fermez puis rouvrez l'application.",
+  "required_title": "Mise à jour requise",
+  "required_body": "Cette version de League of Data Base n'est plus prise en charge. Mettez-la à jour pour continuer à utiliser l'application.",
+  "required_versions": "Votre version : {{ current }} — requise : {{ minimum }} ou plus récente",
+  "restart_now": "Redémarrer et mettre à jour",
+  "downloading": "Téléchargement de la mise à jour…",
+  "waiting": "La mise à jour se télécharge d'elle-même. Gardez l'application ouverte."
+}

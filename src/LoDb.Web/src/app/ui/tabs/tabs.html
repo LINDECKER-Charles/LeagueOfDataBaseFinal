@@ -1,0 +1,25 @@
+<div
+  role="tablist"
+  class="flex overflow-x-auto border-b border-gold-deep/40 [scrollbar-width:none]"
+  [attr.aria-label]="label()"
+>
+  @for (tab of tabs(); track tab.key(); let index = $index) {
+    <button
+      #tabButton
+      type="button"
+      role="tab"
+      class="-mb-px min-h-11 shrink-0 cursor-pointer border-b-2 border-transparent px-4 py-2.5 font-beaufort text-xs tracking-[0.18em] text-text-muted uppercase transition-colors hover:text-hex focus-visible:text-hex focus-visible:outline-none aria-selected:border-gold aria-selected:text-gold-bright motion-reduce:transition-none"
+      [id]="tab.tabId()"
+      [attr.aria-controls]="tab.panelId()"
+      [attr.aria-selected]="tab.selected()"
+      [tabIndex]="tab.selected() ? 0 : -1"
+      (click)="select(tab.key())"
+      (keydown)="onKeydown($event, index)"
+    >
+      {{ tab.label() }}
+    </button>
+  }
+</div>
+<div class="pt-5">
+  <ng-content />
+</div>

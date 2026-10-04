@@ -1,0 +1,97 @@
+/*
+ * The page column, its hero and the gold rail every release is threaded on. Layered with
+ * the design system, so an identity restyles the rail's nodes (theme/<identity>/ornament.css).
+ */
+@layer components {
+  .page {
+    inline-size: 100%;
+    max-inline-size: 52rem;
+    margin-inline: auto;
+    padding: 2.5rem 1rem 4rem;
+  }
+  .hero {
+    margin-block-start: 1.5rem;
+    padding: 1.75rem 1.5rem;
+  }
+  .hero__title {
+    margin-block-start: 0.5rem;
+    font-family: var(--font-beaufort);
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.05;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .hero__lede {
+    max-inline-size: 42rem;
+    margin-block-start: 1rem;
+    color: var(--color-text-muted);
+  }
+  .hero__current {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-block-start: 1.25rem;
+    font-family: var(--font-beaufort);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-dim);
+  }
+  .timeline {
+    position: relative;
+    margin-block-start: 2.5rem;
+    padding-inline-start: 2rem;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    inset-block: 0.5rem;
+    inset-inline-start: 7px;
+    inline-size: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--color-gold-deep) 90%, transparent) 6%,
+      color-mix(in srgb, var(--color-gold-deep) 90%, transparent) 94%,
+      transparent
+    );
+  }
+  /* A node of the rail: a diamond marker level with its release's summary, blue on the latest. */
+  .node {
+    position: relative;
+  }
+  .node + .node {
+    margin-block-start: 1.1rem;
+  }
+  .node::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: -1.63rem;
+    inset-block-start: 1.35rem;
+    z-index: 1;
+    inline-size: 11px;
+    block-size: 11px;
+    transform: rotate(45deg);
+    background: var(--color-gold);
+    box-shadow: 0 0 10px -1px color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  .node:first-child::before {
+    background: var(--color-hex);
+    box-shadow: 0 0 12px -1px color-mix(in srgb, var(--color-hex) 70%, transparent);
+  }
+  .empty {
+    margin-block-start: 2.5rem;
+    text-align: center;
+    color: var(--color-text-dim);
+  }
+
+  @media (max-width: 480px) {
+    .timeline {
+      padding-inline-start: 1.5rem;
+    }
+    .node::before {
+      inset-inline-start: -1.13rem;
+    }
+  }
+}

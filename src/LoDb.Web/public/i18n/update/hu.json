@@ -1,0 +1,13 @@
+{
+  "banner_label": "Alkalmazásfrissítés",
+  "banner_ready": "Egy frissítés készen áll.",
+  "restart": "Újraindítás",
+  "later": "Később",
+  "restart_failed": "Az újraindítás nem sikerült. Zárd be, majd nyisd meg újra az alkalmazást.",
+  "required_title": "Frissítés szükséges",
+  "required_body": "A League of Data Base ezen verziója már nem támogatott. Frissítsd, hogy tovább használhasd az alkalmazást.",
+  "required_versions": "A te verziód: {{ current }} — szükséges: {{ minimum }} vagy újabb",
+  "restart_now": "Újraindítás és frissítés",
+  "downloading": "A frissítés letöltése…",
+  "waiting": "A frissítés magától letöltődik. Tartsd nyitva az alkalmazást."
+}

@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Terjadi kesalahan. Silakan coba lagi.",
+    "invalid": "Nilai ini tidak valid.",
+    "required": "Kolom ini wajib diisi.",
+    "email_invalid": "Masukkan alamat email yang valid.",
+    "email_too_long": "Alamat email ini terlalu panjang.",
+    "email_taken": "Alamat email ini sudah dipakai akun lain.",
+    "terms_required": "Kamu harus menyetujui ketentuan penggunaan.",
+    "password_too_long": "Kata sandi ini terlalu panjang.",
+    "invalid_credentials": "Pengenal atau kata sandi salah.",
+    "invalid_two_factor": "Kode ini salah atau sudah kedaluwarsa.",
+    "locked": "Terlalu banyak percobaan gagal: akun ini dikunci selama beberapa menit.",
+    "google_cancelled": "Login Google dibatalkan.",
+    "google_email_unverified": "Google belum memverifikasi alamat email ini, jadi alamat ini tidak bisa dipakai untuk login.",
+    "google_two_factor": "Akun ini memakai autentikasi dua faktor: login dengan email dan kata sandimu.",
+    "sign_out": "Gagal keluar. Silakan coba lagi."
+  },
+  "two_factor": {
+    "lede": "Masukkan kode 6 digit dari aplikasi autentikatormu.",
+    "code": "Kode autentikasi",
+    "recovery_code": "Kode pemulihan",
+    "use_recovery": "Pakai kode pemulihan saja",
+    "use_app": "Pakai aplikasi autentikator saja"
+  },
+  "password": {
+    "met": "(terpenuhi)",
+    "unmet": "(belum terpenuhi)"
+  },
+  "verify": {
+    "title": "Konfirmasi email",
+    "verifying": "Mengonfirmasi alamat emailmu…",
+    "pending": "Tautan konfirmasi telah dikirim ke {{ email }}. Buka tautan itu untuk mengonfirmasi alamatmu, atau minta yang baru.",
+    "sign_in": "Login untuk mendapatkan tautan konfirmasi baru.",
+    "continue": "Lanjutkan"
+  },
+  "editor": {
+    "loading": "Memuat profilmu…",
+    "load_error": "Profilmu tidak dapat dimuat.",
+    "version_error": "Versi favoritmu tidak dapat diubah."
+  }
+}

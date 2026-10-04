@@ -1,0 +1,46 @@
+/*
+ * The pages of the trends, centred under the list: two square arrows around "page / pages",
+ * as the legacy pager drew them. The arrows follow the reading direction.
+ */
+@layer components {
+  .trends-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-block-start: 2rem;
+  }
+  .trends-pager__nav {
+    display: grid;
+    place-items: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border: 1px solid var(--color-gold-deep);
+    color: var(--color-text-muted);
+    background: color-mix(in srgb, var(--color-void) 60%, transparent);
+    transition:
+      color 0.2s var(--ease-hextech),
+      border-color 0.2s var(--ease-hextech);
+  }
+  .trends-pager__nav svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+  .trends-pager__nav:hover,
+  .trends-pager__nav:focus-visible {
+    color: var(--color-gold-bright);
+    border-color: var(--color-gold);
+  }
+  .trends-pager__nav--off {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .trends-pager__position {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+  :host-context([dir='rtl']) .trends-pager svg {
+    transform: scaleX(-1);
+  }
+}

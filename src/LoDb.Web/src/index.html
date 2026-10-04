@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>League of Data Base</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#010a13" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="LoDB" />
+    <!-- The faces above the fold, fetched with the page rather than once the CSS is parsed. -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/Spiegel_TT_Regular.woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/BeaufortforLOL-Regular.woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/BeaufortforLOL-Bold.woff2"
+      crossorigin
+    />
+    <script>
+      // Paints the chosen identity before the first frame: the SSR HTML never depends on the
+      // theme. Inline and ES5 because it runs before any bundle, so the CSP must admit it.
+      // Mirror of src/app/core/theme/theme-from-cookie.ts and of the colours and display faces
+      // of theme-identities.ts, whose spec runs this very script. An alternate identity also
+      // tints the browser chrome and preloads its own display face.
+      (function () {
+        var themes = ['hextech', 'zaun', 'noxus', 'spirit-blossom'];
+        var colors = ['#010a13', '#030706', '#08090b', '#07070e'];
+        var faces = [
+          null,
+          '/fonts/grenze/latin.woff2',
+          '/fonts/archivo/latin.woff2',
+          '/fonts/shippori/latin-400.woff2',
+        ];
+        var prefix = 'lod_theme=';
+        var index = 0;
+        var entries = [];
+        // The admin keeps the default identity, as the legacy back office did, before its
+        // bundle pins it: it never reads the visitor's choice.
+        if (!/^\/admin(\/|$)/.test(location.pathname)) {
+          try {
+            entries = document.cookie.split(';');
+          } catch (unreadable) {
+            // Sandboxed documents throw on cookie access: the default theme still applies.
+          }
+        }
+        for (var i = 0; i < entries.length; i++) {
+          var entry = entries[i].trim();
+          if (entry.indexOf(prefix) === 0) {
+            var value = entry.slice(prefix.length);
+            index = themes.indexOf(value) === -1 ? index : themes.indexOf(value);
+            break;
+          }
+        }
+        document.documentElement.setAttribute('data-theme', themes[index]);
+        var color = document.querySelector('meta[name="theme-color"]');
+        if (color) {
+          color.setAttribute('content', colors[index]);
+        }
+        if (faces[index]) {
+          var face = document.createElement('link');
+          face.rel = 'preload';
+          face.as = 'font';
+          face.type = 'font/woff2';
+          face.href = faces[index];
+          face.crossOrigin = 'anonymous';
+          document.head.appendChild(face);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Every render replaces the root's content, so the notice stays only on the pages
+         rendered in the browser (account, build editor, admin), which need JavaScript. -->
+    <lodb-root>
+      <noscript><p class="hx-chip m-6">JavaScript is required to use this page.</p></noscript>
+    </lodb-root>
+  </body>
+</html>

@@ -1,0 +1,191 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`game JSON-LD builders > states a champion as the character of the game, with roles, ratings and stats 1`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://league-of-data-base.com/en/champions/Ahri#game",
+  "@type": "VideoGame",
+  "character": {
+    "@id": "https://league-of-data-base.com/en/champions/Ahri#character",
+    "@type": "Person",
+    "additionalProperty": [
+      {
+        "@type": "PropertyValue",
+        "name": "Role",
+        "value": "Mage",
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Role",
+        "value": "Assassin",
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Resource",
+        "value": "Mana",
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Attack rating",
+        "value": 3,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Defense rating",
+        "value": 4,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Magic rating",
+        "value": 8,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Difficulty",
+        "value": 5,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Health",
+        "value": 590,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Attack speed",
+        "value": 0.668,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Attack range",
+        "value": 550,
+      },
+    ],
+    "alternateName": "the Nine-Tailed Fox",
+    "description": "Innately connected to the magic of the spirit realm, Ahri is a fox-like vastaya.",
+    "image": "https://league-of-data-base.com/cdn/blobs/ab12.png",
+    "name": "Ahri",
+  },
+  "gamePlatform": "PC",
+  "name": "League of Legends",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Riot Games",
+  },
+  "url": "https://league-of-data-base.com/en/champions/Ahri",
+}
+`;
+
+exports[`game JSON-LD builders > states a rune path with its slots, without the image it lacks 1`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://league-of-data-base.com/en/runes/8000-precision#game",
+  "@type": "VideoGame",
+  "gameItem": {
+    "@id": "https://league-of-data-base.com/en/runes/8000-precision#rune-path",
+    "@type": "Thing",
+    "additionalProperty": [
+      {
+        "@type": "PropertyValue",
+        "name": "Slots",
+        "value": 4,
+      },
+    ],
+    "name": "Precision",
+  },
+  "gamePlatform": "PC",
+  "name": "League of Legends",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Riot Games",
+  },
+  "url": "https://league-of-data-base.com/en/runes/8000-precision",
+}
+`;
+
+exports[`game JSON-LD builders > states a summoner spell with its rank-1 cooldown, range and unlock level 1`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://league-of-data-base.com/en/summoners/SummonerFlash#game",
+  "@type": "VideoGame",
+  "gameItem": {
+    "@id": "https://league-of-data-base.com/en/summoners/SummonerFlash#spell",
+    "@type": "Thing",
+    "additionalProperty": [
+      {
+        "@type": "PropertyValue",
+        "name": "Cooldown",
+        "unitText": "seconds",
+        "value": 300,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Range",
+        "unitText": "units",
+        "value": 425,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Required level",
+        "value": 7,
+      },
+    ],
+    "description": "Teleports your champion a short distance toward your cursor.",
+    "image": "https://league-of-data-base.com/cdn/blobs/ab12.png",
+    "name": "Flash",
+  },
+  "gamePlatform": "PC",
+  "name": "League of Legends",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Riot Games",
+  },
+  "url": "https://league-of-data-base.com/en/summoners/SummonerFlash",
+}
+`;
+
+exports[`game JSON-LD builders > states an item as a game item priced in gold, never as a product 1`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://league-of-data-base.com/en/items/1004-faerie-charm#game",
+  "@type": "VideoGame",
+  "gameItem": {
+    "@id": "https://league-of-data-base.com/en/items/1004-faerie-charm#item",
+    "@type": "Thing",
+    "additionalProperty": [
+      {
+        "@type": "PropertyValue",
+        "name": "Total cost",
+        "unitText": "gold",
+        "value": 200,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Combine cost",
+        "unitText": "gold",
+        "value": 200,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Sell value",
+        "unitText": "gold",
+        "value": 140,
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Category",
+        "value": "ManaRegen",
+      },
+    ],
+    "description": "Slightly increases Mana Regen.",
+    "image": "https://league-of-data-base.com/cdn/blobs/ab12.png",
+    "name": "Faerie Charm",
+  },
+  "gamePlatform": "PC",
+  "name": "League of Legends",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Riot Games",
+  },
+  "url": "https://league-of-data-base.com/en/items/1004-faerie-charm",
+}
+`;

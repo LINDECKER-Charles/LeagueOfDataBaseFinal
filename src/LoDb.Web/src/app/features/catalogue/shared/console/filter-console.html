@@ -1,0 +1,41 @@
+<div class="console" [class.console--engaged]="filter.isEngaged()">
+  <span class="console__glow" aria-hidden="true"></span>
+  <div class="console__head">
+    <span class="marker" aria-hidden="true"></span>
+    <h2 class="title">{{ 'filter.filters' | transloco }}</h2>
+    @if (filter.activeCount() > 0) {
+      <b class="badge">{{ filter.activeCount() }}</b>
+    }
+    @if (filter.isEngaged()) {
+      <button type="button" class="clear console__clear" (click)="filter.clearAll()">
+        {{ 'filter.clear_all' | transloco }}
+      </button>
+    }
+  </div>
+  <div class="console__body">
+    <lodb-filter-search [label]="searchLabel()" hint />
+    <div>
+      <div class="console__gauge-head">
+        <span class="facet-label">{{ 'filter.gauge' | transloco }}</span>
+        <span class="gauge">{{ filter.view().matching }} / {{ filter.view().total }}</span>
+      </div>
+      <div class="console__track" aria-hidden="true">
+        <span class="console__fill" [style.inline-size.%]="gauge()"></span>
+      </div>
+    </div>
+    @if (filter.offered().length > 0) {
+      <lodb-facet-panel />
+    }
+  </div>
+  <div class="console__foot">
+    <lodb-copy-link
+      [url]="shareUrl()"
+      [labels]="{
+        copy: 'filter.copy_link' | transloco,
+        copied: 'filter.copied' | transloco,
+        error: 'filter.copy_error' | transloco,
+      }"
+      stretch
+    />
+  </div>
+</div>

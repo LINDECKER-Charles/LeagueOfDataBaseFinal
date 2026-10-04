@@ -1,0 +1,68 @@
+<lodb-editorial-frame
+  headingSpacing="plate"
+  [eyebrow]="'legal.eyebrow' | transloco"
+  [heading]="heading() | transloco"
+>
+  <div lodbLead class="hx-plate max-w-max">
+    <span class="hx-plate__label">{{ 'legal.updated' | transloco }}</span>
+    <time class="hx-plate__value" [attr.datetime]="info.effectiveDate">{{
+      info.effectiveDate
+    }}</time>
+  </div>
+  <nav
+    class="mb-12 border border-gold-deep/40 bg-void/60 p-5"
+    [attr.aria-label]="'legal.toc' | transloco"
+  >
+    <p class="eyebrow mb-3">{{ 'legal.toc' | transloco }}</p>
+    <!-- A fallback text (English or French under ar) reads left to right, its numbering and
+         final stops included. -->
+    <ol
+      class="grid gap-1.5 text-sm text-text-muted sm:grid-cols-2"
+      [attr.lang]="textLanguage()"
+      [attr.dir]="textLanguage() ? 'ltr' : null"
+    >
+      @for (section of contents(); track section.id) {
+        <li>
+          <a class="nav-link" [lodbFragmentLink]="section.id">{{ section.label }}</a>
+        </li>
+      }
+    </ol>
+  </nav>
+  <div
+    class="hx-prose flex flex-col gap-10"
+    [attr.lang]="textLanguage()"
+    [attr.dir]="textLanguage() ? 'ltr' : null"
+  >
+    @let fr = language() === 'fr';
+    @switch (page()) {
+      @case ('notice') {
+        @if (fr) {
+          <lodb-notice-fr [info]="info" [locale]="locale()" />
+        } @else {
+          <lodb-notice-en [info]="info" [locale]="locale()" />
+        }
+      }
+      @case ('privacy') {
+        @if (fr) {
+          <lodb-privacy-fr [info]="info" [locale]="locale()" />
+        } @else {
+          <lodb-privacy-en [info]="info" [locale]="locale()" />
+        }
+      }
+      @case ('terms') {
+        @if (fr) {
+          <lodb-terms-fr [info]="info" [locale]="locale()" />
+        } @else {
+          <lodb-terms-en [info]="info" [locale]="locale()" />
+        }
+      }
+      @case ('cookies') {
+        @if (fr) {
+          <lodb-cookies-fr [info]="info" [locale]="locale()" />
+        } @else {
+          <lodb-cookies-en [info]="info" [locale]="locale()" />
+        }
+      }
+    }
+  </div>
+</lodb-editorial-frame>

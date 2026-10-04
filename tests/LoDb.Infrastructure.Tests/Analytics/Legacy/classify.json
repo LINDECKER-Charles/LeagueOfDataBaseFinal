@@ -1,0 +1,354 @@
+{
+    "appHost": "league-of-data-base.com",
+    "userAgents": [
+        {
+            "ua": null,
+            "browser": "other",
+            "os": "other",
+            "device": "other",
+            "bot": false
+        },
+        {
+            "ua": "",
+            "browser": "other",
+            "os": "other",
+            "device": "other",
+            "bot": false
+        },
+        {
+            "ua": "   ",
+            "browser": "other",
+            "os": "other",
+            "device": "other",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+            "browser": "Chrome",
+            "os": "Windows",
+            "device": "desktop",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+            "browser": "Edge",
+            "os": "Windows",
+            "device": "desktop",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15",
+            "browser": "Safari",
+            "os": "macOS",
+            "device": "desktop",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",
+            "browser": "Safari",
+            "os": "iOS",
+            "device": "mobile",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (iPad; CPU OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/140.0 Mobile/15E148 Safari/604.1",
+            "browser": "Chrome",
+            "os": "iPadOS",
+            "device": "tablet",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+            "browser": "Chrome",
+            "os": "Android",
+            "device": "mobile",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (Linux; Android 14; SM-X710) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/27.0 Chrome/125.0.0.0 Safari/537.36",
+            "browser": "Samsung Internet",
+            "os": "Android",
+            "device": "tablet",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0",
+            "browser": "Firefox",
+            "os": "Linux",
+            "device": "desktop",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+            "browser": "Chrome",
+            "os": "ChromeOS",
+            "device": "desktop",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 OPR/120.0.0.0",
+            "browser": "Opera",
+            "os": "Windows",
+            "device": "desktop",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko",
+            "browser": "Internet Explorer",
+            "os": "Windows",
+            "device": "desktop",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Microsoft; Lumia 950) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0 Mobile Safari/537.36 Edge/15.14977",
+            "browser": "Edge",
+            "os": "Android",
+            "device": "mobile",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (Linux; Android 11; KFTRWI) AppleWebKit/537.36 (KHTML, like Gecko) Silk/128.0 like Chrome/128.0 Safari/537.36",
+            "browser": "Chrome",
+            "os": "Android",
+            "device": "tablet",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+            "browser": "Bot",
+            "os": "other",
+            "device": "bot",
+            "bot": true
+        },
+        {
+            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.0.0 Safari/537.36",
+            "browser": "Bot",
+            "os": "other",
+            "device": "bot",
+            "bot": true
+        },
+        {
+            "ua": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+            "browser": "Bot",
+            "os": "other",
+            "device": "bot",
+            "bot": true
+        },
+        {
+            "ua": "curl/8.4.0",
+            "browser": "Bot",
+            "os": "other",
+            "device": "bot",
+            "bot": true
+        },
+        {
+            "ua": "python-requests/2.32.3",
+            "browser": "Bot",
+            "os": "other",
+            "device": "bot",
+            "bot": true
+        },
+        {
+            "ua": "Go-http-client/2.0",
+            "browser": "Bot",
+            "os": "other",
+            "device": "bot",
+            "bot": true
+        },
+        {
+            "ua": "UptimeRobot/2.0; http://www.uptimerobot.com/",
+            "browser": "Bot",
+            "os": "other",
+            "device": "bot",
+            "bot": true
+        },
+        {
+            "ua": "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)",
+            "browser": "Bot",
+            "os": "other",
+            "device": "bot",
+            "bot": true
+        },
+        {
+            "ua": "Chrome Lighthouse",
+            "browser": "Bot",
+            "os": "other",
+            "device": "bot",
+            "bot": true
+        },
+        {
+            "ua": "Opera/9.80 (Windows NT 6.1) Presto/2.12.388 Version/12.16",
+            "browser": "Opera",
+            "os": "Windows",
+            "device": "desktop",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 YaBrowser/25.8 Safari/537.36",
+            "browser": "Yandex",
+            "os": "Linux",
+            "device": "desktop",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Vivaldi/7.5",
+            "browser": "Vivaldi",
+            "os": "macOS",
+            "device": "desktop",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (PlayBook; U; RIM Tablet OS 2.1.0; en-US) AppleWebKit/536.2+ (KHTML, like Gecko) Version/7.2.1.0 Safari/536.2+",
+            "browser": "Safari",
+            "os": "other",
+            "device": "tablet",
+            "bot": false
+        },
+        {
+            "ua": "Mozilla/5.0 (BlackBerry; U; BlackBerry 9900; en) AppleWebKit/534.11+ (KHTML, like Gecko) Version/7.1.0.346 Mobile Safari/534.11+",
+            "browser": "Safari",
+            "os": "other",
+            "device": "mobile",
+            "bot": false
+        },
+        {
+            "ua": "SomethingElse/1.0",
+            "browser": "other",
+            "os": "other",
+            "device": "desktop",
+            "bot": false
+        }
+    ],
+    "referers": [
+        {
+            "referer": null,
+            "host": null,
+            "source": "direct"
+        },
+        {
+            "referer": "",
+            "host": null,
+            "source": "direct"
+        },
+        {
+            "referer": "not a url",
+            "host": null,
+            "source": "direct"
+        },
+        {
+            "referer": "www.google.com/search?q=ahri",
+            "host": null,
+            "source": "direct"
+        },
+        {
+            "referer": "https://www.google.com/search?q=ahri",
+            "host": "www.google.com",
+            "source": "search"
+        },
+        {
+            "referer": "https://www.google.fr/",
+            "host": "www.google.fr",
+            "source": "search"
+        },
+        {
+            "referer": "https://duckduckgo.com/?q=lol",
+            "host": "duckduckgo.com",
+            "source": "search"
+        },
+        {
+            "referer": "https://search.yahoo.co.jp/search?p=lol",
+            "host": "search.yahoo.co.jp",
+            "source": "search"
+        },
+        {
+            "referer": "https://www.bing.com/search?q=lol",
+            "host": "www.bing.com",
+            "source": "search"
+        },
+        {
+            "referer": "https://www.reddit.com/r/leagueoflegends/",
+            "host": "www.reddit.com",
+            "source": "social"
+        },
+        {
+            "referer": "https://t.co/abc",
+            "host": "t.co",
+            "source": "social"
+        },
+        {
+            "referer": "https://x.com/someone/status/1",
+            "host": "x.com",
+            "source": "social"
+        },
+        {
+            "referer": "https://www.youtube.com/watch?v=x",
+            "host": "www.youtube.com",
+            "source": "social"
+        },
+        {
+            "referer": "https://discord.com/channels/1/2",
+            "host": "discord.com",
+            "source": "social"
+        },
+        {
+            "referer": "https://m.facebook.com/",
+            "host": "m.facebook.com",
+            "source": "social"
+        },
+        {
+            "referer": "https://mastodon.social/@lol",
+            "host": "mastodon.social",
+            "source": "social"
+        },
+        {
+            "referer": "https://league-of-data-base.com/champion/Ahri",
+            "host": "league-of-data-base.com",
+            "source": "internal"
+        },
+        {
+            "referer": "https://fr.league-of-data-base.com/objects",
+            "host": "fr.league-of-data-base.com",
+            "source": "internal"
+        },
+        {
+            "referer": "https://LEAGUE-OF-DATA-BASE.COM/",
+            "host": "league-of-data-base.com",
+            "source": "internal"
+        },
+        {
+            "referer": "https://notleague-of-data-base.com/",
+            "host": "notleague-of-data-base.com",
+            "source": "external"
+        },
+        {
+            "referer": "https://some-blog.example/post",
+            "host": "some-blog.example",
+            "source": "external"
+        },
+        {
+            "referer": "https://user:pass@blog.example:8443/path",
+            "host": "blog.example",
+            "source": "external"
+        },
+        {
+            "referer": "http://[2001:db8::1]:8080/page",
+            "host": "[2001:db8::1]",
+            "source": "external"
+        },
+        {
+            "referer": "//cdn.example.org/page",
+            "host": "cdn.example.org",
+            "source": "external"
+        },
+        {
+            "referer": "android-app://com.google.android.gm/",
+            "host": "com.google.android.gm",
+            "source": "search"
+        },
+        {
+            "referer": "https://www.pinterest.fr/pin/1",
+            "host": "www.pinterest.fr",
+            "source": "social"
+        }
+    ]
+}

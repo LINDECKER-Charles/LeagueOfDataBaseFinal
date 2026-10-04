@@ -1,0 +1,48 @@
+# Metrics of the cutover window (plan-migration.md, cutover step 4.6; L8.2), in PromQL, next to
+# queries.logsql. The API exposes them on its port 9464, inside the stack's network only: they
+# are visible once the host's collector scrapes api:9464 (never a published port).
+#
+# Names as the OpenTelemetry Prometheus exporter writes them, read from /metrics of a slot:
+# dots become underscores, a {unit} is dropped, "s" becomes _seconds, counters end in _total.
+# Every series carries otel_scope_name. A counter appears on its first increment only: an
+# absent series means nothing happened yet, not a broken query.
+#
+# Format: each query follows a `# name: what it answers` line, blank lines between queries.
+# {{window}} is the range, for instance 1h during the window.
+
+# name: versions-ready: versions fully ingested (pre-ingestion, patch watch, on demand)
+sum(increase(lodb_ingestion_versions_ready_total[{{window}}]))
+
+# name: fetch-failures: images left without a verdict after a transient Data Dragon failure
+sum(increase(lodb_ingestion_fetch_failures_total[{{window}}]))
+
+# name: absences: images recorded absent (403 or 404), by manifest type
+sum by (type) (increase(lodb_ingestion_absences_total[{{window}}]))
+
+# name: blobs-written: blobs and WebP siblings written, by format
+sum by (format) (increase(lodb_ingestion_blobs_written_total[{{window}}]))
+
+# name: ingestion-duration-p95: 95th percentile of an ingestion stage (datasets, images)
+histogram_quantile(0.95,
+  sum by (le, stage) (rate(lodb_ingestion_duration_seconds_bucket[{{window}}])))
+
+# name: queue-depth: work waiting, by queue (versions, on_demand)
+max by (queue) (lodb_ingestion_queue_depth)
+
+# name: on-demand-refused: on-demand work refused, by reason (queue full, crawler budget)
+sum by (reason) (increase(lodb_ingestion_on_demand_refused_total[{{window}}]))
+
+# name: jobs-failed: failed runs of the periodic jobs, by job
+sum by (job) (increase(lodb_job_failures_total[{{window}}]))
+
+# name: jobs-stale: seconds since each job last succeeded
+time() - max by (job) (lodb_job_last_success_seconds)
+
+# name: api-5xx: 5xx the API answered, by route
+sum by (http_route) (increase(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[{{window}}]))
+
+# name: outbox-pending: account e-mails waiting to be sent
+max(lodb_outbox_pending)
+
+# name: build: the revision served
+lodb_build_info

@@ -1,0 +1,40 @@
+/*
+ * The purchase order as a timeline: diamond nodes, tinted by the primary path (`--path`,
+ * set by the page), on a gold spine that fades out at both ends.
+ */
+@layer components {
+  .bsteps {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-inline-start: 1.6rem;
+  }
+  .bsteps::before {
+    content: '';
+    position: absolute;
+    inset-block: 0.4rem;
+    inset-inline-start: 0.32rem;
+    inline-size: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--color-gold) 55%, transparent) 8%,
+      color-mix(in srgb, var(--color-gold) 55%, transparent) 92%,
+      transparent
+    );
+  }
+  .bsteps-node {
+    position: relative;
+  }
+  .bsteps-marker {
+    position: absolute;
+    inset-block-start: 1.35rem;
+    inset-inline-start: -1.6rem;
+    inline-size: 0.65rem;
+    block-size: 0.65rem;
+    transform: rotate(45deg);
+    background: var(--path, var(--color-gold));
+    box-shadow: 0 0 10px -1px var(--path, var(--color-gold));
+  }
+}

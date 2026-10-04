@@ -1,0 +1,12 @@
+/dist
+/out-tsc
+/coverage
+/.angular
+/node_modules
+package-lock.json
+
+# Generated or converted artefacts keep the formatting of their generator.
+/src/app/core/api/generated
+/public/i18n
+# Templates of the generated client: TypeScript once rendered, not Handlebars HTML.
+/src/app/core/api/templates

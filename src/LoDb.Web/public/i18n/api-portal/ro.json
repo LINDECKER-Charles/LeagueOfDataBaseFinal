@@ -1,0 +1,11 @@
+{
+  "loading": "Se încarcă cheia API…",
+  "retry": "Încearcă din nou",
+  "error": {
+    "load": "Cheia API nu a putut fi încărcată.",
+    "failed": "Acțiunea a eșuat, încearcă din nou."
+  },
+  "actions": {
+    "revoke_help": "Dezactivează cheia imediat: API-ul o refuză de la următoarea cerere."
+  }
+}

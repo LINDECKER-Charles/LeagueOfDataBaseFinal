@@ -1,0 +1,22 @@
+<Project>
+  <!-- MSBuild stops at the nearest Directory.Build.props: the root one is chained explicitly. -->
+  <Import Project="$(MSBuildThisFileDirectory)../Directory.Build.props" />
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!--
+    xUnit v3 test projects are executables run by Microsoft.Testing.Platform (global.json).
+    Shared test libraries such as LoDb.Testing stay class libraries and reference
+    xunit.v3.extensibility.core instead.
+  -->
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <PackageReference Include="xunit.v3" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

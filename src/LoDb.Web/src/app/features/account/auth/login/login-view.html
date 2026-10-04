@@ -1,0 +1,123 @@
+<lodb-auth-card [heading]="'auth.login.title' | transloco">
+  @if (error(); as message) {
+    <p class="auth-error mt-6" role="alert">{{ message | transloco }}</p>
+  }
+
+  @if (step() === 'credentials') {
+    <form class="mt-6 space-y-5" (submit)="signIn($event)">
+      <div>
+        <label for="login-identifier" class="auth-label">
+          {{ 'auth.login.identifier' | transloco }}
+        </label>
+        <input
+          #identifier
+          lodbField
+          id="login-identifier"
+          name="identifier"
+          type="text"
+          class="mt-1.5"
+          required
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+        />
+      </div>
+      <div>
+        <label for="login-password" class="auth-label">
+          {{ 'auth.login.password' | transloco }}
+        </label>
+        <input
+          lodbField
+          id="login-password"
+          name="password"
+          type="password"
+          class="mt-1.5"
+          required
+          autocomplete="current-password"
+        />
+        <p class="mt-1.5 text-end">
+          <a
+            class="nav-link text-xs text-text-muted"
+            [routerLink]="link('account/forgot-password')"
+          >
+            {{ 'auth.login.forgot' | transloco }}
+          </a>
+        </p>
+      </div>
+      <label class="flex items-center gap-2.5 text-sm text-text-muted">
+        <input
+          lodbField
+          type="checkbox"
+          name="rememberMe"
+          [checked]="remember()"
+          (change)="rememberFrom($event)"
+        />
+        {{ 'auth.login.remember' | transloco }}
+      </label>
+      <button lodbButton type="submit" class="w-full" [disabled]="busy()">
+        {{ 'auth.login.submit' | transloco }}
+      </button>
+    </form>
+    <lodb-google-button [rememberMe]="remember()" />
+  } @else {
+    <form class="mt-6 space-y-5" (submit)="confirm($event)">
+      <p class="text-sm text-text-muted">{{ 'account.two_factor.lede' | transloco }}</p>
+      @if (useRecovery()) {
+        <div>
+          <label for="login-recovery-code" class="auth-label">
+            {{ 'account.two_factor.recovery_code' | transloco }}
+          </label>
+          <input
+            lodbField
+            id="login-recovery-code"
+            name="recoveryCode"
+            type="text"
+            class="mt-1.5 font-mono"
+            required
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+        </div>
+      } @else {
+        <div>
+          <label for="login-two-factor-code" class="auth-label">
+            {{ 'account.two_factor.code' | transloco }}
+          </label>
+          <input
+            lodbField
+            id="login-two-factor-code"
+            name="twoFactorCode"
+            type="text"
+            class="mt-1.5 font-mono tracking-[0.3em]"
+            required
+            inputmode="numeric"
+            autocomplete="one-time-code"
+          />
+        </div>
+      }
+      <p>
+        <button type="button" class="nav-link text-xs text-text-muted" (click)="toggleRecovery()">
+          {{
+            (useRecovery() ? 'account.two_factor.use_app' : 'account.two_factor.use_recovery')
+              | transloco
+          }}
+        </button>
+      </p>
+      <button lodbButton type="submit" class="w-full" [disabled]="busy()">
+        {{ 'auth.login.submit' | transloco }}
+      </button>
+    </form>
+  }
+
+  <div class="gold-hairline mt-8 pt-5 text-center text-sm text-text-muted">
+    {{ 'auth.login.no_account' | transloco }}
+    <a
+      class="nav-link text-gold"
+      [routerLink]="link('account/register')"
+      [queryParams]="registerQuery"
+    >
+      {{ 'auth.register.title' | transloco }}
+    </a>
+  </div>
+</lodb-auth-card>

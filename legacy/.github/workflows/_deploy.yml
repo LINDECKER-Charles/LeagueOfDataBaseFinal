@@ -1,0 +1,156 @@
+name: _deploy
+
+# Reusable: deploy the stack to ONE host over SSH. Same logic for staging and prod —
+# the environment is fully parameterized by inputs + secrets (DRY / open-closed).
+# No environment-specific value is hardcoded here; everything sensitive comes from
+# the caller's secrets, and the host config (domains, tags, app secrets) lives in
+# ENV_FILE, pushed to the host as .env.
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: Branch the target host tracks and pulls (test | main).
+        required: true
+        type: string
+    secrets:
+      SSH_KEY:
+        description: SSH private key (PEM) for the target host.
+        required: true
+      SSH_HOST:
+        description: Target host (IP or FQDN).
+        required: true
+      DEPLOY_PATH:
+        description: Absolute project path on the host (dir holding compose.*.yaml).
+        required: true
+      SSH_USER:
+        description: SSH user (defaults to root when unset).
+        required: false
+      ENV_FILE:
+        description: Full dotenv for this host, written to ${DEPLOY_PATH}/.env.
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Known hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Push env to host (from ENV_FILE secret)
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} "mkdir -p ${{ secrets.DEPLOY_PATH }}"
+          printf '%s\n' "$ENV_FILE" \
+            | ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} "cat > ${{ secrets.DEPLOY_PATH }}/.env"
+
+      - name: Deploy (compose pull + up)
+        run: |
+          ssh ${{ secrets.SSH_USER || 'root' }}@${{ secrets.SSH_HOST }} <<'EOSSH'
+            set -e
+            mkdir -p ${{ secrets.DEPLOY_PATH }}
+            cd ${{ secrets.DEPLOY_PATH }}
+            # Idempotent init: `git clone .` refuse un répertoire non vide (le .env y est
+            # déjà poussé à l'étape précédente). `git init` + remote tolère ce cas et
+            # `reset --hard` ne touche pas au .env non suivi.
+            if [ ! -d .git ]; then
+              git init -q
+              git remote add origin ${{ secrets.REPO_URL || 'https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git' }}
+            fi
+            # Deploy overlay (edge labels + external network), WITHOUT
+            # compose.override.yaml (dev conveniences).
+            export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
+            git fetch origin ${{ inputs.branch }}
+            git checkout -B ${{ inputs.branch }} origin/${{ inputs.branch }}
+            git reset --hard origin/${{ inputs.branch }}
+            # ── Edge proxy (VPS-global) ──────────────────────────────────────────
+            # The edge (caddy-docker-proxy) and the shared 'edge' network are owned by
+            # the infra-vps repo, sole owner of the edge stack on the host. This job no
+            # longer converges anything there: it only asserts the network exists. A
+            # project must never be able to rewrite the infrastructure shared with the
+            # other projects.
+            docker network inspect edge >/dev/null 2>&1 || {
+              echo "Docker network 'edge' is missing — deploy infra-vps before this project." >&2
+              exit 1
+            }
+            # Pull résilient : le registry casse parfois un layer en cours de copie
+            # (connection reset by peer). Retry avec backoff avant d'abandonner, sinon
+            # `up` retomberait sur un build local lourd des services à `build:`.
+            for attempt in 1 2 3 4 5; do
+              if docker compose pull; then break; fi
+              [ "$attempt" = 5 ] && { echo "docker compose pull: échec après 5 tentatives" >&2; exit 1; }
+              echo "pull échec (tentative $attempt), retry dans $((attempt * 10))s…" >&2
+              sleep $((attempt * 10))
+            done
+            docker compose up -d --remove-orphans
+            # Schema migrations: synchronous and fail-fast — a deploy must not serve
+            # code whose schema didn't apply. Waits on postgres via the php service's
+            # depends_on (service_healthy); no-op when nothing is pending.
+            docker compose exec -T php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+            # Pré-chauffe (détaché → hors chemin critique) : JSON + images des 3 dernières
+            # versions dans le volume storage, puis backfill WebP. Idempotent +
+            # best-effort — c'est aussi elle qui repeuple un volume storage vide.
+            docker compose exec -d php php bin/console app:ddragon:warmup --limit=3
+            docker compose exec -d php php bin/console app:ddragon:webp
+            # Observabilité : les journées CLOSES sont consolidées dans le volume storage
+            # à chaque déploiement (agrégats immuables, lecture d'historique bon marché).
+            # Le volume app_state protège déjà les NDJSON de la recréation du conteneur.
+            # Ni l'un ni l'autre ne sort de l'hôte : ce n'est pas une sauvegarde.
+            # Volontairement SANS --include-today : le rollup écrase l'agrégat du jour,
+            # et un jour encore ouvert n'a rien à gagner à être figé ici.
+            # Best-effort : une consolidation ratée ne doit pas faire échouer un déploiement.
+            docker compose exec -T php php bin/console app:analytics:rollup || true
+            docker compose exec -T php php bin/console app:audit:rollup || true
+            docker image prune -f
+            # ── Public TLS smoke test + edge cert self-heal ──────────────────────
+            # The shared edge (caddy-docker-proxy) issues Let's Encrypt certs from
+            # this stack's labels. If issuance failed earlier (e.g. DNS not yet
+            # pointing here on the first attempt), the cert stays stuck in back-off
+            # and a plain `up -d` never retries it. So once the app is live on the
+            # `edge` network, assert every public domain serves a trusted cert; if
+            # one doesn't, force a single edge reload to re-attempt issuance, then
+            # re-check. Fail the deploy if TLS is still broken — a prod domain must
+            # never be silently certless again.
+            assert_tls() {
+              for domain in $(grep -E '^CADDY_DOMAINS=' .env | cut -d= -f2- | tr -d '"' | tr ',' ' '); do
+                # No -f/-k: success means the TLS handshake + cert verification passed,
+                # regardless of the HTTP status the app returns behind it.
+                curl -sS --max-time 10 -o /dev/null "https://${domain}/" || return 1
+              done
+            }
+            # Edge Caddy container, resolved from its Compose labels (project 'edge',
+            # service 'caddy'): no dependency on where infra-vps keeps its files.
+            edge_caddy() {
+              docker ps -q \
+                --filter label=com.docker.compose.project=edge \
+                --filter label=com.docker.compose.service=caddy
+            }
+            if assert_tls; then
+              echo "TLS OK for all public domains."
+            else
+              echo "TLS check failed — forcing edge to re-attempt certificate issuance…" >&2
+              caddy_id="$(edge_caddy)"
+              [ -n "$caddy_id" ] || { echo "Edge Caddy container not found — is infra-vps deployed?" >&2; exit 1; }
+              docker restart "$caddy_id" >/dev/null
+              recovered=0
+              for _ in $(seq 1 18); do   # up to ~90s: challenge solve is usually a few seconds
+                sleep 5
+                if assert_tls; then recovered=1; break; fi
+              done
+              if [ "$recovered" != 1 ]; then
+                echo "TLS still failing after edge reload. Check DNS (A -> this host), CAA, LE rate-limits:" >&2
+                docker logs --since 3m "$caddy_id" 2>&1 \
+                  | grep -iE 'challenge failed|could not get certificate|rateLimited|unauthorized' >&2 || true
+                exit 1
+              fi
+              echo "TLS recovered after edge reload."
+            fi
+          EOSSH

@@ -1,0 +1,34 @@
+<div class="page">
+  <header class="codex-header">
+    <p class="codex-header__title">{{ 'changelog.eyebrow' | transloco }}</p>
+    @if (version(); as current) {
+      <span class="codex-header__meta">v{{ current }}</span>
+    }
+  </header>
+
+  <section class="hero hextech-frame hx-corners">
+    <p class="eyebrow">{{ 'changelog.eyebrow' | transloco }}</p>
+    <h1 class="hero__title text-gold-grad">{{ heading() | transloco }}</h1>
+    <p class="hero__lede">{{ 'changelog.lede' | transloco }}</p>
+    @if (version(); as current) {
+      <p class="hero__current">
+        <span>{{ 'changelog.current' | transloco }}</span>
+        <span class="hx-version-chip hx-version-chip--lg">v{{ current }}</span>
+      </p>
+    }
+  </section>
+
+  @if (releases(); as list) {
+    @if (list.length === 0) {
+      <p class="empty" role="status">{{ 'changelog.empty' | transloco }}</p>
+    } @else {
+      <ol class="timeline" role="list">
+        @for (release of list; track release.version) {
+          <li class="node" [id]="anchor(release.version)">
+            <lodb-changelog-release [release]="release" [open]="$first" [locale]="locale()" />
+          </li>
+        }
+      </ol>
+    }
+  }
+</div>

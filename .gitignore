@@ -1,20 +1,33 @@
 commande.md
 
-# Env & secrets (see docs/guides/github-actions-secrets.md).
+# Agent instructions of this repository: versioned here even when a global excludes file
+# ignores AGENTS.md.
+!/AGENTS.md
+!/legacy/AGENTS.md
+
+# Env & secrets (see docs/guides/configuration.md).
 # Real env files are git-ignored; committed *.example templates and the non-secret
-# Symfony defaults (app/.env, app/.env.test) are not.
+# Symfony defaults of the archived stack (legacy/app/.env, legacy/app/.env.test) are not.
 
-# Repo-root compose env — single source of truth per environment (anchored: only repo root)
+# Repo-root compose env (local overrides) and the filled env of each served environment
+# (.env.staging, .env.prod): only the *.example templates are versioned.
 /.env
-/.env.test
-/.env.staging
-/.env.prod
+/.env.*
+!/.env.*.example
+# Local checklist of the secrets to set (values included): never versioned.
+/SECRETS.md
 
-# Symfony host-level secret overrides (real secrets live here locally / written by CI)
-/app/.env.local
-/app/.env.*.local
+# Compose env of the archived legacy stack, read by `docker compose --project-directory legacy`
+/legacy/.env
+/legacy/.env.test
+/legacy/.env.staging
+/legacy/.env.prod
 
-# Node deps anywhere outside app/ (e.g. tools/screenshots). Unanchored: matches at any depth.
+# Symfony host-level secret overrides (legacy/app/.gitignore ignores them too)
+/legacy/app/.env.local
+/legacy/app/.env.*.local
+
+# Node deps anywhere (e.g. legacy/tools/screenshots). Unanchored: matches at any depth.
 node_modules/
 
 # JetBrains IDE
@@ -35,3 +48,25 @@ design
 
 # Note locale de migration edge -> infra-vps (non versionnee)
 /docs/MIGRATION-INFRA-VPS.local.md
+
+# .NET outputs of the new stack. Anchored on src/ and tests/: legacy/app/bin/ holds tracked
+# Symfony entry points.
+/src/**/bin/
+/src/**/obj/
+/tests/**/bin/
+/tests/**/obj/
+TestResults/
+
+# Angular workspace outputs. The CLI cache is unanchored: a tool that runs ng from the
+# repository root (an IDE) writes it there too.
+/src/LoDb.Web/dist/
+.angular/
+/src/LoDb.Web/coverage/
+
+# Parity runs (L1.8): exports and manifests of both stacks, regenerated on demand
+/tools/parity/.runs/
+
+# Leftovers of the layout before the cutover: the PHP stack moved to legacy/app/, but a
+# checkout updated in place keeps its ignored files under app/ (vendor, node_modules, var,
+# .env.*.local), which no .gitignore covers any more.
+/app/

@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Valami hiba történt. Próbáld újra.",
+    "invalid": "Ez az érték érvénytelen.",
+    "required": "Ez a mező kötelező.",
+    "email_invalid": "Adj meg egy érvényes e-mail-címet.",
+    "email_too_long": "Ez az e-mail-cím túl hosszú.",
+    "email_taken": "Ezt az e-mail-címet már egy másik fiók használja.",
+    "terms_required": "El kell fogadnod a felhasználási feltételeket.",
+    "password_too_long": "Ez a jelszó túl hosszú.",
+    "invalid_credentials": "Hibás azonosító vagy jelszó.",
+    "invalid_two_factor": "Ez a kód hibás vagy lejárt.",
+    "locked": "Túl sok sikertelen próbálkozás: ez a fiók néhány percre zárolva van.",
+    "google_cancelled": "A Google-bejelentkezés megszakadt.",
+    "google_email_unverified": "A Google nem erősítette meg ezt az e-mail-címet, ezért nem használható bejelentkezésre.",
+    "google_two_factor": "Ez a fiók kétlépcsős azonosítást használ: jelentkezz be az e-mail-címeddel és a jelszavaddal.",
+    "sign_out": "A kijelentkezés nem sikerült. Próbáld újra."
+  },
+  "two_factor": {
+    "lede": "Írd be a hitelesítő alkalmazásod 6 jegyű kódját.",
+    "code": "Hitelesítési kód",
+    "recovery_code": "Helyreállító kód",
+    "use_recovery": "Inkább helyreállító kódot használok",
+    "use_app": "Inkább a hitelesítő alkalmazást használom"
+  },
+  "password": {
+    "met": "(teljesül)",
+    "unmet": "(nem teljesül)"
+  },
+  "verify": {
+    "title": "E-mail-cím megerősítése",
+    "verifying": "Az e-mail-címed megerősítése folyamatban…",
+    "pending": "Megerősítő linket küldtünk ide: {{ email }}. Nyisd meg a címed megerősítéséhez, vagy kérj újat.",
+    "sign_in": "Jelentkezz be, hogy új megerősítő linket kapj.",
+    "continue": "Tovább"
+  },
+  "editor": {
+    "loading": "A profilod betöltése…",
+    "load_error": "Nem sikerült betölteni a profilodat.",
+    "version_error": "Nem sikerült módosítani a kedvenceid verzióját."
+  }
+}

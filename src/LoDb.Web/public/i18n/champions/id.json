@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "Tutup",
+    "previous": "Sebelumnya",
+    "next": "Berikutnya",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "Chroma {{ skin }}"
+  }
+}

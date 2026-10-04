@@ -1,0 +1,112 @@
+import { expect, type Locator, type Page } from '@playwright/test';
+
+type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
+
+// A champion and an item every patch and Summoner's Rift carry: an import to an older patch
+// keeps them, and the build stays savable.
+export const CHAMPION = 'Annie';
+export const ITEM = 'Long Sword';
+
+/** The row of a build on the list of the account, found by its name. */
+export function rowOf(page: Page, name: string): Locator {
+  return page.locator('lodb-build-row').filter({ hasText: name });
+}
+
+/**
+ * The patch of the build. Its label wraps the select, as the legacy editor's did: the label's
+ * text holds every version offered, so the field is found by its accessible name, "Patch".
+ */
+export function patchOf(page: Page): Locator {
+  return page.locator('lodb-editor-context').getByRole('combobox', { name: 'Patch', exact: true });
+}
+
+/** The purchase-order steps of the editor, in their order. */
+export function stepsOf(page: Page): Locator {
+  return page.locator('lodb-step-editor li.forge-step');
+}
+
+/** The rows of the rune board: the primary path's, then the secondary path's once chosen. */
+export function runeRowsOf(page: Page): Locator {
+  return page.locator('lodb-rune-board .rune-slot');
+}
+
+/**
+ * Chooses the champion through the picker's search; the chosen one shows on its toggle. The
+ * picker opens its list at once for a build without a champion: the toggle is only pressed
+ * when the list is closed, since pressing it would close the list.
+ */
+export async function chooseChampion(page: Page, name: string): Promise<void> {
+  const toggle = page.locator('lodb-champion-picker .champ-toggle');
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+    await toggle.click();
+  }
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await page.getByRole('searchbox', { name: 'Search a champion…' }).fill(name);
+  await page.getByRole('listbox', { name: 'Champion' }).getByRole('option', { name }).click();
+  await expect(page.locator('lodb-champion-picker .champ-toggle')).toContainText(name);
+}
+
+/**
+ * Fills the rune page: the first path and its first rune of every row, then the first other
+ * path and its first rune of its first two rows. Returns how many rows the primary path has.
+ */
+export async function pickRunes(page: Page): Promise<number> {
+  const board = page.locator('lodb-rune-board');
+  const primaryPath = board.getByRole('group', { name: 'Primary path' }).getByRole('button');
+  await primaryPath.first().click();
+  // count() does not wait: the rows are counted once the chosen path has rendered them.
+  await expect(primaryPath.first()).toHaveAttribute('aria-pressed', 'true');
+  await expect(runeRowsOf(page).first()).toBeVisible();
+  const primaryRows = await runeRowsOf(page).count();
+  for (let row = 0; row < primaryRows; row++) {
+    await runeRowsOf(page).nth(row).locator('.rune-perk').first().click();
+  }
+  await board.getByRole('group', { name: 'Secondary path' }).getByRole('button').first().click();
+  await runeRowsOf(page).nth(primaryRows).locator('.rune-perk').first().click();
+  await runeRowsOf(page)
+    .nth(primaryRows + 1)
+    .locator('.rune-perk')
+    .first()
+    .click();
+  await expect(board.locator('.rune-perk[aria-pressed="true"]')).toHaveCount(primaryRows + 2);
+  return primaryRows;
+}
+
+/** The box of an element, in the coordinates of the viewport. */
+export async function boxOf(element: Locator): Promise<Box> {
+  const box = await element.boundingBox();
+  expect(box, 'the element is laid out').not.toBeNull();
+  return box!;
+}
+
+/** The centre of an element, in the coordinates of the viewport. */
+async function centreOf(element: Locator): Promise<{ x: number; y: number }> {
+  const box = await boxOf(element);
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+/**
+ * Drags with the mouse, as a hand does: the CDK starts a drag once the pointer has moved a few
+ * pixels, and only then follows it from list to list. Both elements must be in the viewport.
+ */
+export async function dragTo(page: Page, source: Locator, target: Locator): Promise<void> {
+  const from = await centreOf(source);
+  const to = await centreOf(target);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 10, from.y + 10, { steps: 5 });
+  await page.mouse.move(to.x, to.y, { steps: 20 });
+  await page.mouse.up();
+}
+
+/** Adds an item to a step through the armory, found by its search, then closes it. */
+export async function addItem(page: Page, step: number, name: string): Promise<void> {
+  await stepsOf(page).nth(step).getByRole('button', { name: 'Add item' }).click();
+  const armory = page.getByRole('dialog', { name: 'Armory' });
+  await armory.getByRole('searchbox', { name: 'Search an item…' }).fill(name);
+  await armory.getByRole('button', { name }).first().click();
+  await expect(armory.getByText('1 added')).toBeVisible();
+  await armory.getByRole('button', { name: 'Done' }).click();
+  await expect(armory).toHaveCount(0);
+}

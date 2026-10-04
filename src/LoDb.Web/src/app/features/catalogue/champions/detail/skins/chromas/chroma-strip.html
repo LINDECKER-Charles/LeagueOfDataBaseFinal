@@ -1,0 +1,26 @@
+<div
+  class="mt-2 flex flex-wrap gap-1.5"
+  role="group"
+  [attr.aria-label]="'champions.chromas.label' | transloco: { skin: skinName() }"
+>
+  @for (chroma of chromas(); track chroma.id; let index = $index) {
+    <button
+      type="button"
+      class="swatch"
+      [title]="chroma.label"
+      [attr.aria-label]="chroma.label"
+      (click)="open(index)"
+    >
+      <span class="swatch__ring" [style.background]="ramp(chroma.colors)" aria-hidden="true"></span>
+      <img
+        class="hx-img"
+        [src]="chroma.swatch"
+        alt=""
+        width="34"
+        height="34"
+        loading="lazy"
+        decoding="async"
+      />
+    </button>
+  }
+</div>

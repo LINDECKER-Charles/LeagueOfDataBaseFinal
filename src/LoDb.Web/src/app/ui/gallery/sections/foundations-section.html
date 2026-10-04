@@ -1,0 +1,103 @@
+<header class="codex-header mb-6">
+  <h2>Foundations</h2>
+  <span class="codex-header__meta">tokens · type · rules</span>
+</header>
+
+<div class="grid grid-cols-3 gap-3 sm:grid-cols-6 lg:grid-cols-9">
+  @for (token of palette; track token) {
+    <figure class="flex min-w-0 flex-col gap-1.5">
+      <span
+        class="block h-10 border border-gold-deep/40"
+        [style.background-color]="swatch(token)"
+      ></span>
+      <figcaption class="truncate font-mono text-[10px] text-text-dim">{{ token }}</figcaption>
+    </figure>
+  }
+</div>
+
+<div class="mt-10 grid gap-8 md:grid-cols-2">
+  <div class="flex flex-col gap-3">
+    <p class="eyebrow">Eyebrow · Beaufort caps</p>
+    <p class="font-beaufort text-3xl text-gold-grad uppercase">Display name</p>
+    <p class="font-spiegel text-base text-text">
+      Body copy in Spiegel. Champions, items, runes and summoner spells, patch after patch.
+    </p>
+    <p class="font-mono text-xs text-text-muted">Mono · 16.1.1 · 1 250 gold</p>
+    <p class="text-sm">
+      <a routerLink="." fragment="foundations" class="nav-link text-text-muted"
+        >A navigation link</a
+      >
+    </p>
+  </div>
+
+  <div class="flex flex-col gap-6">
+    <hr class="hx-rule" />
+    <div class="gold-rule pt-3 text-xs text-text-muted">gold-rule above</div>
+    <div class="gold-hairline bg-void/60 p-3 text-xs text-text-muted">gold-hairline inset</div>
+    <div class="hex-glow border border-hex/40 bg-void/60 p-3 text-xs text-hex">hex-glow</div>
+  </div>
+</div>
+
+<div class="mt-10 grid gap-6 md:grid-cols-3">
+  <div
+    class="relative h-40 overflow-hidden border border-gold-deep/40 bg-linear-to-br from-hex-deep/40 to-gold/30"
+  >
+    <div class="splash-scrim absolute inset-0"></div>
+    <p class="absolute start-4 bottom-4 font-beaufort text-xl text-gold-bright uppercase">
+      Splash scrim
+    </p>
+  </div>
+  <div class="grid grid-cols-2 gap-3">
+    <div class="hx-plate">
+      <span class="hx-plate__label">Role</span>
+      <span class="hx-plate__value">Mage</span>
+    </div>
+    <div class="hx-plate">
+      <span class="hx-plate__label">Range</span>
+      <span class="hx-plate__value">550</span>
+    </div>
+    <div class="stat-cell">
+      <p class="font-mono text-[10px] text-text-dim uppercase">HP</p>
+      <p class="font-beaufort text-gold-bright">590</p>
+    </div>
+    <div class="stat-cell">
+      <p class="font-mono text-[10px] text-text-dim uppercase">Armor</p>
+      <p class="font-beaufort text-gold-bright">21</p>
+    </div>
+  </div>
+  <div class="hx-prose text-sm">
+    <h3>Prose</h3>
+    <p>Long-form text from the <strong>about</strong> and legal pages.</p>
+    <ul>
+      <li>Lists keep their rhythm</li>
+      <li>Links <a routerLink="." fragment="foundations">stay legible</a></li>
+    </ul>
+  </div>
+</div>
+
+<div class="hx-table-scroll mt-10">
+  <table class="hx-table">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th class="num">Cost</th>
+        <th>Stats</th>
+        <th>Build path</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Rabadon's Deathcap</td>
+        <td class="num">3600</td>
+        <td>+130 ability power, +30% ability power</td>
+        <td>Needlessly Large Rod, Blasting Wand, Amplifying Tome</td>
+      </tr>
+      <tr>
+        <td>Zhonya's Hourglass</td>
+        <td class="num">3250</td>
+        <td>+105 ability power, +50 armor</td>
+        <td>Seeker's Armguard, Stopwatch, Amplifying Tome</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

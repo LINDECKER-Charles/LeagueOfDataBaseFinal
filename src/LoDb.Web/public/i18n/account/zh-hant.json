@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "發生錯誤，請再試一次。",
+    "invalid": "此值無效。",
+    "required": "此欄位為必填。",
+    "email_invalid": "請輸入有效的電子郵件地址。",
+    "email_too_long": "此電子郵件地址過長。",
+    "email_taken": "此電子郵件地址已被其他帳號使用。",
+    "terms_required": "你必須接受使用條款。",
+    "password_too_long": "此密碼過長。",
+    "invalid_credentials": "帳號或密碼不正確。",
+    "invalid_two_factor": "此驗證碼不正確或已過期。",
+    "locked": "失敗次數過多：此帳號已被鎖定數分鐘。",
+    "google_cancelled": "已取消 Google 登入。",
+    "google_email_unverified": "Google 尚未驗證此電子郵件地址，因此無法用來登入。",
+    "google_two_factor": "此帳號已啟用雙重驗證：請使用電子郵件和密碼登入。",
+    "sign_out": "登出失敗，請再試一次。"
+  },
+  "two_factor": {
+    "lede": "請輸入驗證器應用程式中的 6 位數驗證碼。",
+    "code": "驗證碼",
+    "recovery_code": "復原碼",
+    "use_recovery": "改用復原碼",
+    "use_app": "改用驗證器應用程式"
+  },
+  "password": {
+    "met": "（已符合）",
+    "unmet": "（未符合）"
+  },
+  "verify": {
+    "title": "確認電子郵件",
+    "verifying": "正在確認你的電子郵件地址…",
+    "pending": "確認連結已寄至 {{ email }}。開啟連結以確認你的地址，或重新索取一個。",
+    "sign_in": "登入後即可取得新的確認連結。",
+    "continue": "繼續"
+  },
+  "editor": {
+    "loading": "正在載入你的個人檔案…",
+    "load_error": "無法載入你的個人檔案。",
+    "version_error": "無法變更收藏的版本。"
+  }
+}

@@ -1,0 +1,380 @@
+{
+  "homepage": {
+    "title": "League of Data Base",
+    "meta": "Bine ai venit pe League of Data Base. Explorează obiectele și vrăjile de invocator din League of Legends, cu statistici și detalii pentru patch-ul {{ version }}.",
+    "hero": {
+      "browse": "Răsfoiește informații detaliate despre <strong>Vrăjile de Invocator</strong> și <strong>Obiectele</strong> din League of Legends. Actualizat pentru patch-ul {{ version }}.",
+      "explore_summoners": "Explorează Vrăjile de Invocator",
+      "explore_items": "Explorează Obiectele",
+      "explore_champions": "Explorează Campionii",
+      "explore_runes": "Explorează Runele"
+    },
+    "summoners": {
+      "title": "Vrăji de Invocator",
+      "see_all": "Vezi toate vrăjile"
+    },
+    "items": {
+      "title": "Obiecte",
+      "see_all": "Vezi toate obiectele"
+    },
+    "champions": {
+      "title": "Campioni",
+      "see_all": "Vezi toți campionii",
+      "no_data": "Niciun campion disponibil pentru această versiune.",
+      "wip": "Această secțiune este în construcție. În curând vei putea răsfoi toți campionii."
+    },
+    "runes": {
+      "title": "Rune",
+      "wip": "Această secțiune este în construcție. În curând vei putea explora runele.",
+      "see_all": "Vezi toate runele"
+    }
+  },
+  "setup": {
+    "form": {
+      "version": "Versiune",
+      "language": "Limbă",
+      "remember": "Ține-mă minte",
+      "submit": "Trimite"
+    }
+  },
+  "system": {
+    "under_construction": {
+      "title": "În construcție",
+      "meta_description": "League of Data Base este în prezent în construcție. Lucrăm din greu pentru a-ți aduce statistici detaliate, informații și instrumente pentru League of Legends. Rămâi pe fază pentru actualizări.",
+      "heading": "Această pagină este în construcție",
+      "subheading": "Forjăm această funcționalitate pe Rift. Revino în curând pentru ceva epic.",
+      "info": "Dacă ai ajuns pe această pagină, conținutul nu a fost încă lansat. Lucrăm la performanță, acuratețea datelor și o experiență fluidă care se potrivește cu restul League Of Data Base.",
+      "progress_label": "Progresul construcției",
+      "back": "← Înapoi",
+      "summoners": "Vezi Vrăjile de Invocator",
+      "footer": "Ai nevoie de asta în curând? Contactează-ne sau verifică planul de dezvoltare. Mai vin actualizări.",
+      "meanwhile": "Între timp, poți:"
+    }
+  },
+  "item": {
+    "detail": {
+      "meta_description": "Descoperă totul despre obiectul {{ name }} din League of Legends. Statistici, efecte și informații despre build actualizate pentru patch-ul {{ version }}.",
+      "version_locale": "Versiune: {{ version }} — Limbă: {{ locale }}",
+      "price_total": "Cost total",
+      "price_base": "Cost de achiziție",
+      "price_sell": "Valoare de vânzare",
+      "categories": "Categorii",
+      "evolutions": "Evoluții posibile",
+      "stats": "Statistici",
+      "description": "Descriere",
+      "recipe": "Rețetă",
+      "builds_from": "Compus din",
+      "tier": "Nivel {{ depth }}",
+      "availability": "Disponibilitate",
+      "back": "← Înapoi la listă"
+    },
+    "list": {
+      "title": "Obiecte",
+      "meta_description": "Răsfoiește toate obiectele din League of Legends disponibile în patch-ul {{ version }}. Găsește statistici, costuri și efecte detaliate, actualizate pentru cea mai recentă versiune.",
+      "header": "Obiecte",
+      "subtitle": "Catalog de obiecte",
+      "results_per_page": "Rezultate pe pagină:",
+      "max": "MAX",
+      "ok": "OK",
+      "search_placeholder": "Caută un obiect…",
+      "cost_total": "Cost total",
+      "cost_sell": "Valoare de vânzare",
+      "categories": "Categorii",
+      "evolutions": "Evoluții posibile",
+      "description": "Descriere"
+    }
+  },
+  "summoner": {
+    "detail": {
+      "meta_description": "Explorează detaliile vrăjii de invocator {{ name }} din League of Legends. Statistici și efecte actualizate pentru patch-ul {{ version }}.",
+      "version_locale": "Versiune: {{ version }} — Limbă: {{ locale }}",
+      "fields": {
+        "cooldown": "Timp de reîncărcare",
+        "maxammo": "Număr de încărcări",
+        "range": "Rază de utilizare",
+        "cost": "Cost",
+        "summoner_level": "Nivel de invocator"
+      },
+      "unlocked_at": "Deblocat la nivelul {{ level }}",
+      "range_global": "Global",
+      "no_cost": "Fără cost",
+      "modes": "Moduri compatibile",
+      "description": "Descriere"
+    },
+    "card": {
+      "cooldown": "Timp de reîncărcare",
+      "level": "Nivel de invocator",
+      "modes": "Moduri compatibile",
+      "description": "Descriere"
+    },
+    "list": {
+      "title": "Vrăji de Invocator",
+      "subtitle": "Catalog de Vrăji de Invocator",
+      "count": "count vrăji"
+    }
+  },
+  "champion": {
+    "list": {
+      "title": "Campioni",
+      "meta_description": "Răsfoiește toți campionii din League of Legends. Găsește statistici detaliate, abilități și povestea fiecărui campion din joc.",
+      "header": "Campioni",
+      "subtitle": "Catalog de campioni",
+      "search_placeholder": "Caută un campion…"
+    },
+    "detail": {
+      "meta_description": "Descoperă {{ name }} din League of Legends, cu statistici, roluri și detalii pentru patch-ul {{ version }}.",
+      "version_locale": "Patch {{ version }} • {{ locale }}",
+      "partype": "Resursă: {{ partype }}",
+      "roles": "Roluri",
+      "abilities": "Abilități",
+      "passive": "Pasivă",
+      "skins": "Skinuri",
+      "cooldown": "Timp de reîncărcare",
+      "cost": "Cost",
+      "range": "Rază de acțiune",
+      "video_play": "Redă videoclipul",
+      "video_pause": "Întrerupe videoclipul",
+      "video_mute": "Dezactivează sunetul",
+      "video_unmute": "Activează sunetul",
+      "tips_as": "Când joci cu",
+      "tips_against": "Când joci împotriva",
+      "stats": {
+        "title": "Statistici de bază"
+      },
+      "profile": {
+        "title": "Profilul campionului",
+        "attack": "Atac",
+        "defense": "Apărare",
+        "magic": "Magie",
+        "difficulty": "Dificultate"
+      },
+      "lore": {
+        "title": "Poveste"
+      }
+    }
+  },
+  "rune": {
+    "list": {
+      "title": "Rune",
+      "meta_description": "Răsfoiește toate runele din League of Legends. Găsește statistici și efecte detaliate pentru fiecare rună din joc.",
+      "header": "Rune",
+      "subtitle": "Catalog de rune",
+      "search_placeholder": "Caută o rună…"
+    },
+    "detail": {
+      "title": "Rună: {{ name }}",
+      "meta_description": "Descoperă detaliile runei {{ name }} din League of Legends. Statistici și efecte actualizate pentru patch-ul {{ version }}.",
+      "overview": "Prezentare generală",
+      "keystone": "Rună principală",
+      "minor": "Runi minore",
+      "slot_n": "Slot {{ n }}"
+    },
+    "slot": "Loc"
+  },
+  "common": {
+    "back": "Înapoi",
+    "search": "Caută…",
+    "no_result": {
+      "text": "Nu s-au găsit rezultate pentru căutarea ta.",
+      "back": "← Înapoi"
+    },
+    "detail": "Vezi detalii"
+  },
+  "base": {
+    "title": "League of Data Base",
+    "description": "League of Data Base este o platformă susținută de comunitate, care oferă informații detaliate, statistici și analize despre League of Legends. Rapidă, fiabilă și mereu la zi."
+  },
+  "footer": {
+    "copyright": "© 2025 LINDECKER Charles / Hexanti",
+    "legal": "Notă legală",
+    "navigation": {
+      "title": "Navigare",
+      "home": "Acasă",
+      "champion": "Campion",
+      "item": "Obiect",
+      "runes": "Rune",
+      "summoner": "Invocator",
+      "sitemap": "Harta site-ului"
+    },
+    "links": {
+      "title": "Linkuri utile",
+      "lol": "League of Legends",
+      "riotapi": "Riot API",
+      "ddragon": "CDN Data Dragon",
+      "support": "Riot Support",
+      "opgg": "OP.GG"
+    },
+    "project": {
+      "title": "Proiect",
+      "version": "Versiune: {{ version }}",
+      "updated": "Actualizat: 17/07/2026"
+    },
+    "contact": {
+      "title": "Contact",
+      "email": "Email",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    }
+  },
+  "loader": {
+    "eyebrow": "Data Dragon",
+    "title": "Se invocă datele",
+    "subtitle": "Se preiau resursele de pe Rift…",
+    "preparing": "Se pregătesc datele…",
+    "status": {
+      "fetching": "se preiau",
+      "ready": "gata"
+    }
+  },
+  "pagination": {
+    "ok": "OK",
+    "more": "…"
+  },
+  "header": {
+    "navigation": {
+      "home": "Acasă",
+      "champion": "Campioni",
+      "item": "Obiecte",
+      "runes": "Rune",
+      "summoner": "Vrăji de Invocator"
+    },
+    "theme": {
+      "label": "Temă vizuală",
+      "close": "Închide"
+    }
+  },
+  "auth": {
+    "or": "sau",
+    "google": {
+      "cta": "Continuă cu Google",
+      "unavailable": "Autentificarea cu Google nu este configurată pe acest server.",
+      "failed": "Autentificarea cu Google a eșuat. Încearcă din nou."
+    },
+    "register": {
+      "password": "Parolă",
+      "password_confirm": "Confirmă parola",
+      "password_mismatch": "Cele două parole nu coincid.",
+      "password_help": "Cel puțin 12 caractere, cu o literă mică, o literă mare, o cifră și un caracter special."
+    },
+    "password": {
+      "rule_length": "Cel puțin 12 caractere",
+      "rule_lowercase": "Cel puțin o literă mică",
+      "rule_uppercase": "Cel puțin o literă mare",
+      "rule_digit": "Cel puțin o cifră",
+      "rule_special": "Cel puțin un caracter special",
+      "rule_match": "Cele două parole coincid",
+      "too_common": "Această parolă este prea comună. Alege una mai personală."
+    },
+    "flash": {
+      "banned": "Acest cont a fost suspendat de echipa de moderare."
+    }
+  },
+  "profile": {
+    "identity": {
+      "title": "Identitate de invocator",
+      "username": "Nume de invocator",
+      "tag": "Tag Riot",
+      "tag_help": "Opțional: partea de după # din Riot ID — pentru GG#EUW, introdu EUW.",
+      "url_warning": "Schimbarea numelui de invocator schimbă și adresa profilului tău public.",
+      "submit": "Actualizează identitatea",
+      "username_taken": "Acest nume de invocator este deja folosit.",
+      "username_invalid": "Nume de invocator nevalid: 3–24 de caractere (litere, cifre, punct, cratimă, underscore), începând cu literă sau cifră.",
+      "tag_invalid": "Tag Riot nevalid: 3–5 litere sau cifre."
+    },
+    "password": {
+      "title": "Setează o parolă",
+      "help": "Contul tău se autentifică doar cu Google. Setează o parolă pentru a intra și cu e-mailul.",
+      "submit": "Setează parola"
+    },
+    "danger": {
+      "help_no_password": "Ștergerea contului este definitivă: favoritele și buildurile sunt șterse."
+    },
+    "flash": {
+      "identity_saved": "Identitatea de invocator a fost actualizată.",
+      "password_set": "Parola a fost setată — acum te poți autentifica și cu e-mailul.",
+      "password_exists": "Acest cont are deja o parolă."
+    }
+  },
+  "build": {
+    "mode": {
+      "sr": "Falia Invocatorilor",
+      "aram": "ARAM",
+      "nexus_blitz": "Nexus Blitz",
+      "arena": "Arenă"
+    },
+    "editor": {
+      "ghost_mode": "Indisponibil în acest mod de joc",
+      "context": {
+        "title": "Context de joc",
+        "version": "Patch",
+        "mode": "Mod de joc",
+        "mode_hint": "Disponibilitatea obiectelor depinde de modul ales. Obiectele deja plasate nu sunt niciodată eliminate — sunt doar marcate."
+      },
+      "dnd": {
+        "handle": "Trage pentru a reordona",
+        "moved_step": "Etapa a fost mutată pe poziția {{ position }}",
+        "moved_item": "Obiectul a fost mutat pe poziția {{ position }}",
+        "transferred": "Obiectul a fost mutat în etapa {{ step }}",
+        "added": "Obiectul a fost adăugat în etapa {{ step }}",
+        "cancelled": "Mutare anulată"
+      }
+    },
+    "show": {
+      "mode": "Mod de joc",
+      "patch_current": "Făurit pe patch-ul {{ version }} — actual: {{ current }}"
+    },
+    "error": {
+      "version": {
+        "unknown": "Versiune de joc necunoscută."
+      },
+      "mode": {
+        "unknown": "Mod de joc necunoscut."
+      },
+      "steps": {
+        "item_mode": "Indisponibil în modul de joc ales: {{ items }}."
+      }
+    }
+  },
+  "community": {
+    "nav": {
+      "trends": "Tendințe"
+    },
+    "trends": {
+      "eyebrow": "Pulsul comunității",
+      "title": "Builduri în tendințe",
+      "filter": {
+        "champion": "Campion",
+        "mode": "Mod de joc",
+        "all_champions": "Toți campionii",
+        "all_modes": "Toate modurile",
+        "apply": "Filtrează"
+      },
+      "empty": "Niciun build public nu corespunde acestui filtru — făurește-l pe al tău.",
+      "empty_cta": "Făurește-mi buildul"
+    },
+    "vote": {
+      "up": "Votează pentru acest build",
+      "down": "Votează împotriva acestui build",
+      "score_label": "Scor comunitar",
+      "login": "Autentifică-te pentru a vota",
+      "invalid": "Vot invalid."
+    },
+    "supporter": {
+      "badge": "Susținător"
+    }
+  },
+  "stat": {
+    "attack_damage": "Daune de atac",
+    "ability_power": "Putere de abilitate",
+    "attack_speed": "Viteză de atac",
+    "crit_chance": "Șansă de critic",
+    "life_steal": "Furt de viață",
+    "health": "Viață",
+    "health_regen": "Regen. de viață",
+    "armor": "Armură",
+    "magic_resist": "Rezistență magică",
+    "mana": "Mana",
+    "move_speed": "Viteză de mișcare",
+    "attack_range": "Rază de atac"
+  }
+}

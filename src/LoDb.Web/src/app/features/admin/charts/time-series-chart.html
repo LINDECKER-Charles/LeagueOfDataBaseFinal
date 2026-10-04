@@ -1,0 +1,150 @@
+<!-- A time axis runs left to right in every language: the chart keeps its own direction. -->
+<figure class="ts-chart" dir="ltr">
+  @if (dates().length === 0) {
+    <svg [attr.viewBox]="viewBox" class="block w-full" role="img" [attr.aria-label]="label()">
+      <text [attr.x]="box.w / 2" [attr.y]="box.h / 2" text-anchor="middle" class="ts-empty">
+        {{ 'admin.chart.empty' | adminText }}
+      </text>
+    </svg>
+  } @else {
+    <!--
+      The legacy tools: over the plot's corner, shown on hover, on focus and once zoomed, alike
+      at rest and titled. At the whole view, − and ⟲ do nothing, which only assistive
+      technology is told: a disabled button would dim and lose its title.
+    -->
+    @let whole = view().zoomed ? null : 'true';
+    <div class="ts-tools" [class.is-zoomed]="view().zoomed">
+      <button
+        type="button"
+        class="ts-tool"
+        [title]="'admin.chart.zoom_out' | adminText"
+        [attr.aria-label]="'admin.chart.zoom_out' | adminText"
+        [attr.aria-disabled]="whole"
+        (click)="zoomOut()"
+      >
+        −
+      </button>
+      <button
+        type="button"
+        class="ts-tool"
+        [title]="'admin.chart.zoom_in' | adminText"
+        [attr.aria-label]="'admin.chart.zoom_in' | adminText"
+        (click)="zoomIn()"
+      >
+        +
+      </button>
+      <button
+        type="button"
+        class="ts-tool"
+        [title]="'admin.chart.reset' | adminText"
+        [attr.aria-label]="'admin.chart.reset' | adminText"
+        [attr.aria-disabled]="whole"
+        (click)="reset()"
+      >
+        ⟲
+      </button>
+    </div>
+    <svg
+      #plot
+      [attr.viewBox]="viewBox"
+      class="block w-full touch-pan-y select-none"
+      role="img"
+      tabindex="0"
+      [class.is-zoomed]="view().zoomed"
+      [attr.aria-label]="label()"
+      [attr.aria-describedby]="hintId"
+      (keydown)="onKeydown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="endDrag()"
+      (pointercancel)="endDrag()"
+      (pointerleave)="onLeave()"
+      (dblclick)="reset()"
+    >
+      <defs>
+        <clipPath [attr.id]="clipId">
+          <rect
+            [attr.x]="box.padX"
+            [attr.y]="box.padTop"
+            [attr.width]="box.plotW"
+            [attr.height]="box.plotH"
+          />
+        </clipPath>
+      </defs>
+      @for (line of marks().grid; track $index) {
+        <line
+          class="ts-grid"
+          [attr.x1]="box.padX"
+          [attr.x2]="box.padX + box.plotW"
+          [attr.y1]="line.y"
+          [attr.y2]="line.y"
+        />
+        <text class="ts-axis" [attr.x]="line.labelX" [attr.y]="line.labelY" text-anchor="end">
+          {{ line.label }}
+        </text>
+      }
+      <g [attr.clip-path]="'url(#' + clipId + ')'">
+        @for (line of marks().lines; track $index) {
+          @if (line.area) {
+            <polygon [attr.points]="line.area" [attr.fill]="line.color" class="ts-area" />
+          }
+          <polyline [attr.points]="line.line" [attr.stroke]="line.color" class="ts-line" />
+          @if (line.dot; as dot) {
+            <circle [attr.cx]="dot[0]" [attr.cy]="dot[1]" r="2.5" [attr.fill]="line.color" />
+          }
+        }
+      </g>
+      @for (tick of axis(); track tick.index) {
+        <text class="ts-axis" [attr.x]="tick.x" [attr.y]="axisY" [attr.text-anchor]="tick.anchor">
+          {{ tick.text }}
+        </text>
+      }
+      @if (cursor(); as cursor) {
+        <line
+          class="ts-cross"
+          [attr.x1]="cursor.x"
+          [attr.x2]="cursor.x"
+          [attr.y1]="box.padTop"
+          [attr.y2]="box.padTop + box.plotH"
+        />
+        @for (dot of cursor.dots; track $index) {
+          <circle
+            class="ts-hover-dot"
+            [attr.cx]="cursor.x"
+            [attr.cy]="dot.y"
+            r="4"
+            [attr.fill]="dot.color"
+          />
+        }
+      }
+      <rect
+        class="ts-hit"
+        [attr.x]="box.padX"
+        [attr.y]="box.padTop"
+        [attr.width]="box.plotW"
+        [attr.height]="box.plotH"
+        fill="transparent"
+        (wheel)="onWheel($event)"
+        (pointerdown)="onPointerDown($event)"
+      />
+    </svg>
+    <p [id]="hintId" class="sr-only">{{ 'admin.chart.hint' | adminText }}</p>
+    @if (cursor(); as cursor) {
+      <div
+        class="ts-tip"
+        role="status"
+        [class.is-flipped]="cursor.flipped"
+        [style.inset-inline-start.%]="cursor.left"
+        [style.inset-block-start.%]="tipTop"
+      >
+        <span class="ts-tip-date">{{ cursor.date }}</span>
+        @for (row of cursor.rows; track $index) {
+          <span class="ts-tip-row">
+            <span class="ts-swatch" [style.background]="row.color"></span>
+            {{ row.label }}
+            <b>{{ row.value }}</b>
+          </span>
+        }
+      </div>
+    }
+  }
+</figure>

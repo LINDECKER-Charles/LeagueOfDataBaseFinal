@@ -1,0 +1,45 @@
+<lodb-editorial-frame
+  ambient
+  [eyebrow]="'about.eyebrow' | transloco"
+  [heading]="heading() | transloco"
+>
+  <p lodbLead class="max-w-[62ch] font-spiegel text-lg leading-relaxed text-text-muted">
+    {{ 'about.faq.lead' | transloco }}
+  </p>
+  <div class="hx-prose relative flex flex-col gap-10">
+    <section id="questions">
+      <dl class="flex flex-col gap-8">
+        @for (entry of entries; track entry) {
+          <div [id]="entry" class="scroll-mt-26">
+            <dt class="mb-2 font-beaufort text-lg leading-snug tracking-[0.03em] text-gold-bright">
+              {{ 'about.faq.' + entry + '.question' | transloco }}
+            </dt>
+            <dd class="font-spiegel leading-relaxed text-text-muted">
+              {{ 'about.faq.' + entry + '.answer' | transloco }}
+            </dd>
+          </div>
+        }
+      </dl>
+    </section>
+
+    <hr class="hx-rule" />
+
+    <section id="more">
+      <div class="codex-header mb-6">
+        <h2>{{ 'about.faq.more.title' | transloco }}</h2>
+      </div>
+      <p>{{ 'about.faq.more.body' | transloco }}</p>
+      <ul>
+        <li>
+          <a [routerLink]="link('about')">{{ 'about.index.title' | transloco }}</a>
+        </li>
+        <li>
+          <a [routerLink]="link('about/data')">{{ 'about.data.title' | transloco }}</a>
+        </li>
+        <li>
+          <a [routerLink]="link('developers')">{{ 'api.nav.developers' | transloco }}</a>
+        </li>
+      </ul>
+    </section>
+  </div>
+</lodb-editorial-frame>

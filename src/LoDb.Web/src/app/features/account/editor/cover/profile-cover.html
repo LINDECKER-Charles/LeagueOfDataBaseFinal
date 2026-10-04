@@ -1,0 +1,33 @@
+@if (orbs().length > 0) {
+  <div class="profile-orbits" aria-hidden="true">
+    @for (orb of orbs(); track orb.slot) {
+      <div class="profile-orb" [class.profile-orb--primary]="orb.slot === 'champion'">
+        <lodb-image
+          class="profile-orb__disc"
+          [src]="orb.image"
+          [width]="84"
+          [height]="84"
+          [initials]="orb.initials"
+          imgClass="object-cover"
+        />
+      </div>
+    }
+  </div>
+}
+<div class="profile-cover__body">
+  <div class="min-w-0">
+    <p class="eyebrow">{{ 'profile.eyebrow' | transloco }}</p>
+    <h1 class="profile-cover__name text-gold-grad">
+      <span class="min-w-0 break-words">{{ name() }}</span>
+      @if (supporter()) {
+        <lodb-supporter-badge />
+      }
+    </h1>
+  </div>
+  <div class="profile-cover__actions">
+    <a lodbButton="ghost" [routerLink]="preview()">{{ 'profile.preview.button' | transloco }}</a>
+    <button lodbButton="ghost" type="button" [disabled]="leaving()" (click)="signOut()">
+      {{ 'auth.logout' | transloco }}
+    </button>
+  </div>
+</div>

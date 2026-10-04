@@ -1,0 +1,97 @@
+<div class="relative isolate px-6 py-12">
+  <lodb-backdrop />
+  <div class="relative mx-auto max-w-[110rem]">
+    @if (context(); as current) {
+      <lodb-list-heading
+        [version]="current.version"
+        [title]="'item.list.header' | transloco"
+        [count]="list.list()?.total ?? null"
+        [countLabel]="'item.list.title' | transloco | lowercase"
+      />
+
+      <lodb-catalogue-list
+        [source]="list"
+        [adapter]="adapter"
+        [schema]="schema()"
+        [searchLabel]="'item.list.search_placeholder' | transloco"
+        [label]="'item.list.title' | transloco"
+      >
+        <lodb-entity-card
+          *lodbCatalogueCard="let card of list; index as position"
+          [href]="hrefOf(current, card)"
+          [image]="card.image"
+          [name]="card.name"
+          [caption]="card.id"
+          [edition]="card.edition"
+          [eager]="position < eagerCards"
+          fit="contain"
+        >
+          <div class="grid grid-cols-2 gap-2 px-4 pb-3">
+            <p class="stat-cell">
+              <span class="block font-mono text-[10px] tracking-wider text-text-muted uppercase">
+                {{ 'item.list.cost_total' | transloco }}
+              </span>
+              <span class="mt-0.5 block font-beaufort text-gold">{{ card.gold.total }}</span>
+            </p>
+            <p class="stat-cell">
+              <span class="block font-mono text-[10px] tracking-wider text-text-muted uppercase">
+                {{ 'item.list.cost_sell' | transloco }}
+              </span>
+              <span class="mt-0.5 block font-beaufort text-text">{{ card.gold.sell }}</span>
+            </p>
+          </div>
+
+          @if (card.tags.length > 0 || card.upgrades.length > 0 || card.summary) {
+            <lodb-accordion class="mt-auto" multi>
+              @if (card.tags.length > 0) {
+                <lodb-accordion-item [heading]="'item.list.categories' | transloco" [level]="4">
+                  <div class="flex flex-wrap gap-1.5">
+                    @for (tag of card.tags; track tag) {
+                      <span class="hx-chip">{{ tagLabel(tag) }}</span>
+                    }
+                  </div>
+                </lodb-accordion-item>
+              }
+              @if (card.upgrades.length > 0) {
+                <lodb-accordion-item [heading]="'item.list.evolutions' | transloco" [level]="4">
+                  <div class="flex flex-wrap gap-2">
+                    @for (id of card.upgrades; track id) {
+                      @if (relatedOf().get(id); as upgrade) {
+                        <a
+                          class="group/evo flex items-center gap-1.5 rounded border border-gold-deep/40 bg-void/60 px-1.5 py-1 transition-colors hover:border-gold hover:bg-void/90"
+                          [routerLink]="linkOf(current, upgrade.canonicalPath)"
+                          [title]="upgrade.name"
+                        >
+                          @if (upgrade.image.status !== 'absent') {
+                            <lodb-catalogue-image
+                              class="size-6"
+                              imgClass="object-contain"
+                              [image]="upgrade.image"
+                              [name]="upgrade.name"
+                              [size]="evolutionIconSize"
+                            />
+                          }
+                          <span class="font-mono text-xs text-text-muted group-hover/evo:text-hex">
+                            {{ upgrade.name }}
+                          </span>
+                        </a>
+                      }
+                    }
+                  </div>
+                </lodb-accordion-item>
+              }
+              @if (card.summary) {
+                <lodb-accordion-item [heading]="'item.list.description' | transloco" [level]="4">
+                  <lodb-rich-text
+                    class="text-[13px] leading-snug text-text-muted"
+                    [text]="card.summary"
+                  />
+                </lodb-accordion-item>
+              }
+            </lodb-accordion>
+          }
+        </lodb-entity-card>
+      </lodb-catalogue-list>
+    }
+  </div>
+</div>

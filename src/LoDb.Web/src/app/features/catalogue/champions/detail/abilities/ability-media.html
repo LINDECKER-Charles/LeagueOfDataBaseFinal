@@ -1,0 +1,78 @@
+@switch (mode()) {
+  @case ('video') {
+    @for (clip of clips(); track clip.webm) {
+      <video
+        #video
+        [poster]="clip.poster"
+        autoplay
+        [muted]="playback.isMuted()"
+        loop
+        playsinline
+        preload="metadata"
+        aria-hidden="true"
+        (play)="playback.onPlay()"
+        (pause)="playback.onPause()"
+      >
+        <source [src]="clip.webm" type="video/webm" />
+        <source [src]="clip.mp4" type="video/mp4" (error)="failed.emit()" />
+      </video>
+    }
+    @let paused = playback.isPaused();
+    @let muted = playback.isMuted();
+    <button
+      type="button"
+      class="toggle"
+      [attr.aria-label]="
+        (paused ? 'champion.detail.video_play' : 'champion.detail.video_pause') | transloco
+      "
+      (click)="playback.toggle()"
+    >
+      <svg class="toggle__glyph" viewBox="0 0 24 24" aria-hidden="true">
+        @if (paused) {
+          <path d="M8 5.5v13l11-6.5z" />
+        } @else {
+          <path d="M7 5h4v14H7zM13 5h4v14h-4z" />
+        }
+      </svg>
+    </button>
+    <button
+      type="button"
+      class="sound"
+      [class.is-active]="!muted"
+      [attr.aria-label]="
+        (muted ? 'champion.detail.video_unmute' : 'champion.detail.video_mute') | transloco
+      "
+      [attr.aria-pressed]="!muted"
+      (click)="playback.toggleMute()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 9v6h4l5 4V5L8 9H4z" />
+        @if (muted) {
+          <path class="sound__wave" d="M16 9.5l5 5M21 9.5l-5 5" />
+        } @else {
+          <path class="sound__wave" d="M16 8.5a4.5 4.5 0 0 1 0 7M18.5 6a8 8 0 0 1 0 12" />
+        }
+      </svg>
+    </button>
+    <div class="progress" aria-hidden="true">
+      <i class="progress__fill" [style.transform]="'scaleX(' + playback.progress() + ')'"></i>
+    </div>
+  }
+  @case ('poster') {
+    <img
+      class="hx-img poster"
+      [src]="clip()?.poster"
+      alt=""
+      decoding="async"
+      (error)="failed.emit()"
+    />
+  }
+  @default {
+    <lodb-catalogue-image
+      class="icon"
+      [image]="ability().image"
+      [name]="ability().name"
+      [size]="iconSize"
+    />
+  }
+}

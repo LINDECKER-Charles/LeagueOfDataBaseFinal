@@ -1,0 +1,11 @@
+{
+  "loading": "API-kulcs betöltése…",
+  "retry": "Újra",
+  "error": {
+    "load": "Nem sikerült betölteni az API-kulcsot.",
+    "failed": "A művelet nem sikerült, próbáld újra."
+  },
+  "actions": {
+    "revoke_help": "Azonnal letiltja a kulcsot: az API a következő kéréstől elutasítja."
+  }
+}

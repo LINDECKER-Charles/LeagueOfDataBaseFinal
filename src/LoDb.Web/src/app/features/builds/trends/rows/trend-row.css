@@ -1,0 +1,105 @@
+/*
+ * A ranked build: the score in its own column, the whole height of the row, then its
+ * identity, its credits and chips, and its first items. A grid, not a wrapping flex row: the
+ * legacy flex row left the score alone above the portrait on a small phone, and the items
+ * alone on a line of their own on a tablet.
+ *   phone   identity, credits and items stacked beside the score;
+ *   tablet  identity and items, then the credits below them;
+ *   wide    everything on one line.
+ */
+@layer components {
+  :host {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'vote id'
+      'vote meta'
+      'vote items';
+    align-items: center;
+    gap: 0.75rem 1rem;
+    padding: 1rem 1.25rem;
+  }
+
+  lodb-vote-score {
+    grid-area: vote;
+  }
+
+  .trend-row__id {
+    grid-area: id;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-inline-size: 0;
+  }
+  .trend-row__portrait {
+    position: relative;
+    flex: none;
+    inline-size: 3.5rem;
+    block-size: 3.5rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 50%, transparent);
+    background: var(--color-void);
+  }
+  .trend-row__keystone {
+    position: absolute;
+    inset-block-end: -0.55rem;
+    inset-inline-end: -0.55rem;
+    inline-size: 1.7rem;
+    block-size: 1.7rem;
+    border: 1px solid var(--color-gold-deep);
+    border-radius: 50%;
+    background: var(--color-hextech-black);
+  }
+
+  .trend-row__meta {
+    grid-area: meta;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-inline-size: 0;
+  }
+  .trend-row__author {
+    display: inline-flex;
+    align-items: center;
+    min-inline-size: 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+  .trend-row__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .trend-row__items {
+    grid-area: items;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .forge-ghost {
+    opacity: 0.45;
+    filter: saturate(0.2);
+  }
+
+  @media (width >= 40rem) {
+    :host {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        'vote id items'
+        'vote meta meta';
+      column-gap: 1.25rem;
+    }
+    .trend-row__items {
+      justify-self: end;
+    }
+  }
+
+  /* The list is 64rem at most: from there on, the row holds the chips and the items. */
+  @media (width >= 64rem) {
+    :host {
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      grid-template-areas: 'vote id meta items';
+    }
+  }
+}

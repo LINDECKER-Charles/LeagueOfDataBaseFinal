@@ -1,0 +1,13 @@
+{
+  "banner_label": "Aktualizace aplikace",
+  "banner_ready": "Aktualizace je připravena.",
+  "restart": "Restartovat",
+  "later": "Později",
+  "restart_failed": "Restart se nezdařil. Zavřete aplikaci a znovu ji otevřete.",
+  "required_title": "Vyžadována aktualizace",
+  "required_body": "Tato verze League of Data Base již není podporována. Aktualizujte ji, abyste mohli aplikaci dál používat.",
+  "required_versions": "Vaše verze: {{ current }} — vyžadována: {{ minimum }} nebo novější",
+  "restart_now": "Restartovat a aktualizovat",
+  "downloading": "Stahování aktualizace…",
+  "waiting": "Aktualizace se stáhne sama. Nechte aplikaci otevřenou."
+}

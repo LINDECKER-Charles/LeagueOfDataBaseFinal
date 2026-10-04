@@ -1,0 +1,13 @@
+{
+  "banner_label": "Application update",
+  "banner_ready": "A new version is ready.",
+  "restart": "Restart",
+  "later": "Later",
+  "restart_failed": "The restart failed. Close and reopen the application.",
+  "required_title": "Update required",
+  "required_body": "This version of League of Data Base is no longer supported. Update it to keep using the application.",
+  "required_versions": "Your version: {{ current }} — required: {{ minimum }} or later",
+  "restart_now": "Restart and update",
+  "downloading": "Downloading the update…",
+  "waiting": "The update downloads on its own. Keep the application open."
+}

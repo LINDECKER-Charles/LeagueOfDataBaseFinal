@@ -1,0 +1,13 @@
+{
+  "banner_label": "앱 업데이트",
+  "banner_ready": "업데이트가 준비되었습니다.",
+  "restart": "다시 시작",
+  "later": "나중에",
+  "restart_failed": "다시 시작하지 못했습니다. 앱을 닫았다가 다시 여세요.",
+  "required_title": "업데이트 필요",
+  "required_body": "이 버전의 League of Data Base는 더 이상 지원되지 않습니다. 앱을 계속 사용하려면 업데이트하세요.",
+  "required_versions": "현재 버전: {{ current }} — 필요 버전: {{ minimum }} 이상",
+  "restart_now": "다시 시작하고 업데이트",
+  "downloading": "업데이트를 다운로드하는 중…",
+  "waiting": "업데이트는 자동으로 다운로드됩니다. 앱을 열어 두세요."
+}

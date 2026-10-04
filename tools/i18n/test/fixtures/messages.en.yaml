@@ -1,0 +1,16 @@
+# Sample catalogue for the conversion tests: every shape the converter handles.
+greeting: 'Hello %name%, welcome back %name%!'
+patch: 42
+nested:
+  deeper:
+    deepest: "Patch %version% of l'Atelier"
+  syntax: "Braces {like this}, a hash # and it''s quoted"
+filter:
+  results: '%count% results'
+  results_one: '%count% result'
+  orphan_one: 'Kept: no base key'
+apples: '{0} No apples|{1} One apple|]1,Inf[ %count% apples for %name%'
+pears: 'one: One pear|other: %count% pears'
+pipe_text: 'Left || right, no count here|really'
+email:
+  subject: 'Server-side only'

@@ -1,0 +1,42 @@
+{
+  "errors": {
+    "generic": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+    "invalid": "Bu değer geçerli değil.",
+    "required": "Bu alan zorunludur.",
+    "email_invalid": "Geçerli bir e-posta adresi girin.",
+    "email_too_long": "Bu e-posta adresi çok uzun.",
+    "email_taken": "Bu e-posta adresi zaten başka bir hesap tarafından kullanılıyor.",
+    "terms_required": "Kullanım koşullarını kabul etmelisiniz.",
+    "password_too_long": "Bu şifre çok uzun.",
+    "invalid_credentials": "Kimlik bilgisi veya şifre hatalı.",
+    "invalid_two_factor": "Bu kod hatalı veya süresi dolmuş.",
+    "locked": "Çok fazla başarısız deneme: bu hesap birkaç dakikalığına kilitlendi.",
+    "google_cancelled": "Google ile giriş iptal edildi.",
+    "google_email_unverified": "Google bu e-posta adresini doğrulamadığı için giriş yapmakta kullanılamaz.",
+    "google_two_factor": "Bu hesap iki adımlı doğrulama kullanıyor: e-posta adresiniz ve şifrenizle giriş yapın.",
+    "sign_out": "Çıkış yapılamadı. Lütfen tekrar deneyin."
+  },
+  "two_factor": {
+    "lede": "Kimlik doğrulama uygulamanızdaki 6 haneli kodu girin.",
+    "code": "Doğrulama kodu",
+    "recovery_code": "Kurtarma kodu",
+    "use_recovery": "Bunun yerine kurtarma kodu kullan",
+    "use_app": "Bunun yerine kimlik doğrulama uygulamamı kullan"
+  },
+  "password": {
+    "met": "(karşılandı)",
+    "unmet": "(karşılanmadı)"
+  },
+  "verify": {
+    "title": "E-posta doğrulaması",
+    "verifying": "E-posta adresiniz doğrulanıyor…",
+    "pending": "{{ email }} adresine bir doğrulama bağlantısı gönderildi. Adresinizi doğrulamak için bağlantıyı açın veya yenisini isteyin.",
+    "sign_in": "Yeni bir doğrulama bağlantısı almak için giriş yapın.",
+    "continue": "Devam et"
+  },
+  "editor": {
+    "loading": "Profiliniz yükleniyor…",
+    "load_error": "Profiliniz yüklenemedi.",
+    "version_error": "Favorilerinizin sürümü değiştirilemedi."
+  }
+}

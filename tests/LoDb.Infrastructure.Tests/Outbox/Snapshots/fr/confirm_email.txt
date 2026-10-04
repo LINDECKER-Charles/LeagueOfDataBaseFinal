@@ -1,0 +1,18 @@
+Subject: Confirmez votre adresse e-mail · LeagueOfDataBase
+
+Encyclopédie League of Legends
+LEAGUE OF DATABASE
+========================================
+
+Bienvenue, Faker
+
+Confirmez votre adresse e-mail pour activer pleinement votre compte et débloquer la création de builds.
+
+Confirmer mon adresse :
+https://lodb.test/account/link?token=a&sig=b
+
+Ce lien expire dans 1 heure. Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail.
+
+--
+Vous recevez cet e-mail car un compte a été créé avec cette adresse sur LeagueOfDataBase.
+© LeagueOfDataBase — projet indépendant, non affilié à Riot Games.

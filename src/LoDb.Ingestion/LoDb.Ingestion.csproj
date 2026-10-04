@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <!-- Background services, HTTP clients and options come from the ASP.NET Core framework. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+    <PackageReference Include="SkiaSharp" />
+    <!-- The chiseled image has no fontconfig: the native library that needs none. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="LoDb.Ingestion.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../LoDb.Infrastructure/LoDb.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -253,7 +253,7 @@ final class StripeWebhookController extends AbstractController
 
 ## Tests
 
-Le CLAUDE.md impose que toute feature s'accompagne de tests. Pour la journalisation, on
+`AGENTS.md` impose que toute feature s'accompagne de tests. Pour la journalisation, on
 teste le **comportement**, jamais le texte exact du message :
 
 - qu'un chemin d'échec émet bien un enregistrement (et à quel niveau) ;

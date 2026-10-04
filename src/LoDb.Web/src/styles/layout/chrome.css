@@ -1,0 +1,358 @@
+/*
+ * App chrome of core/layout's shell: header disclosures, mobile bottom navigation, toasts.
+ * Global rather than component styles so a theme (unlayered, imported last) restyles them.
+ */
+@layer components {
+  /*
+   * Header disclosure: a native <details>, so a menu opens without JavaScript; the
+   * lodbDisclosure directive only closes it on outside click, Escape and navigation.
+   */
+  .switcher {
+    position: relative;
+  }
+  .switcher > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: 2.75rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
+    background: color-mix(in srgb, var(--color-hextech-black) 60%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--color-gold-light);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition:
+      border-color 0.25s var(--ease-hextech),
+      color 0.25s var(--ease-hextech);
+  }
+  .switcher > summary::-webkit-details-marker {
+    display: none;
+  }
+  .switcher > summary:hover {
+    border-color: var(--color-gold);
+    color: var(--color-gold-bright);
+  }
+  .switcher > summary:focus-visible {
+    outline: none;
+    border-color: var(--color-hex);
+  }
+  /* A menu holding the current page lights its summary, as a nav link would. */
+  .switcher.switcher--current > summary {
+    color: var(--color-gold-bright);
+  }
+  /* The disclosure chevron, named so a leading icon is neither resized nor flipped. */
+  .switcher__chevron {
+    inline-size: 0.65rem;
+    block-size: 0.65rem;
+    transition: rotate 0.25s var(--ease-hextech);
+  }
+  .switcher[open] > summary .switcher__chevron {
+    rotate: 180deg;
+  }
+  .switcher__panel {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: calc(100% + 0.5rem);
+    z-index: 40;
+    inline-size: min(20rem, calc(100vw - 2rem));
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-panel) 98%, transparent),
+      color-mix(in srgb, var(--color-hextech-black) 98%, transparent)
+    );
+    box-shadow: 0 22px 60px -18px color-mix(in srgb, var(--color-hextech-black) 95%, transparent);
+  }
+  /*
+   * The legacy anchored the account panel with a physical `right: 0`: in RTL it grows from
+   * the summary toward the logo, where a mirrored panel would run past the screen's edge on
+   * phones. LTR keeps the logical anchor, the same geometry.
+   */
+  [dir='rtl'] .switcher--account > .switcher__panel {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+  }
+
+  /*
+   * Disclosure menus (Codex, account): `--nav` blends the summary into the primary-nav type,
+   * `__panel--menu` turns the panel into a plain link column.
+   */
+  .switcher--nav > summary {
+    min-block-size: 0;
+    padding: 0.25rem 0.1rem;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+  }
+  .switcher--nav .switcher__panel {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+  }
+  .switcher__panel--menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    inline-size: max-content;
+    min-inline-size: 12rem;
+    padding: 0.5rem;
+  }
+  .switcher__panel--menu a,
+  .switcher__panel--menu button {
+    display: block;
+    inline-size: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 0;
+    background: transparent;
+    text-align: start;
+    font-family: var(--font-beaufort);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  /* Bottom navigation under md: thumb-first primary nav, labels always visible. */
+  .bottom-nav {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 40;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border-block-start: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+    background: color-mix(in srgb, var(--color-hextech-black) 92%, transparent);
+    backdrop-filter: blur(14px);
+    padding-block-end: env(safe-area-inset-bottom);
+  }
+  .bottom-nav::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: -1px;
+    block-size: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-gold) 70%, transparent),
+      transparent
+    );
+  }
+  .bottom-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    min-block-size: 3.9rem;
+    padding: 0.45rem 0.25rem;
+    color: var(--color-text-muted);
+    transition: color 0.25s var(--ease-hextech);
+  }
+  .bottom-nav a:focus-visible {
+    outline: none;
+    color: var(--color-hex);
+  }
+  .bottom-nav .hx-icon {
+    inline-size: 1.35rem;
+    block-size: 1.35rem;
+  }
+  /*
+   * Every label is read whole: a column grows to fit its label (the `1fr` columns keep their
+   * min-content width) and the others give it room. Under 360px the tracking tightens so
+   * that the six labels still fit 320px in every locale.
+   */
+  .bottom-nav span {
+    font-family: var(--font-beaufort);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+  }
+  @media (width < 22.5rem) {
+    .bottom-nav span {
+      letter-spacing: 0.08em;
+    }
+  }
+  .bottom-nav a[aria-current] {
+    color: var(--color-gold-bright);
+  }
+  .bottom-nav a[aria-current] .hx-icon {
+    color: var(--color-gold);
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-gold) 80%, transparent));
+  }
+
+  /* The fixed bar needs breathing room at the end of every page that shows it. */
+  @media (width < 48rem) {
+    .hx-shell:not(.hx-shell--bare) {
+      padding-block-end: calc(3.9rem + env(safe-area-inset-bottom));
+    }
+  }
+  @media (width >= 48rem) {
+    .bottom-nav {
+      display: none;
+    }
+  }
+
+  /*
+   * Navigation progress (core/layout/progress): the legacy site's Turbo Drive bar, 3px along
+   * the top, in the accent colour. It creeps towards 90% while the page loads, then sweeps
+   * to the end and fades.
+   */
+  .hx-nav-progress {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: 60;
+    block-size: 3px;
+    background: var(--color-hex);
+    transform: scaleX(0);
+    transform-origin: left center;
+    pointer-events: none;
+  }
+  .hx-nav-progress:dir(rtl) {
+    transform-origin: right center;
+  }
+  .hx-nav-progress--pending {
+    transform: scaleX(0.9);
+    transition: transform 10s cubic-bezier(0.08, 0.6, 0.2, 1);
+  }
+  .hx-nav-progress--done {
+    transform: scaleX(1);
+    opacity: 0;
+    transition:
+      transform 0.3s var(--ease-hextech),
+      opacity 0.15s ease-in 0.15s;
+  }
+
+  /*
+   * Toasts (core/layout's toaster): stacked at the top of the inline end, full text wrapped,
+   * each kind told by a glyph as well as a hue so colour never carries the meaning alone.
+   * Each wears the `hextech-frame` plate, as the legacy ones did; they slide in from the edge
+   * they sit on and back out to it.
+   */
+  .hx-toaster {
+    position: fixed;
+    inset-block-start: 1.25rem;
+    inset-inline-end: 1.25rem;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    inline-size: min(20rem, calc(100vw - 2.5rem));
+    pointer-events: none;
+  }
+  .hx-toast {
+    --toast-from: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    pointer-events: auto;
+    animation: hx-toast-in 0.3s var(--ease-hextech);
+  }
+  .hx-toast:dir(rtl) {
+    --toast-from: -1.5rem;
+  }
+  .hx-toast__glyph {
+    flex: none;
+    inline-size: 1rem;
+    block-size: 1rem;
+    margin-block-start: 0.1rem;
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+  .hx-toast__text {
+    flex: 1;
+    min-inline-size: 0;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--color-text);
+    white-space: pre-line;
+  }
+  .hx-toast__close {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    margin: -0.25rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .hx-toast__close:hover,
+  .hx-toast__close:focus-visible {
+    outline: none;
+    color: var(--color-gold-bright);
+  }
+}
+
+/*
+ * What a toast changes on its frame, a utility: the border and the glyph take the kind's
+ * hue, and a leaving toast fades back to its edge (220ms, as the legacy one did).
+ */
+@layer utilities {
+  .hx-toast.hx-toast--info {
+    color: var(--color-hex-bright);
+    border-color: color-mix(in srgb, var(--color-hex) 50%, transparent);
+  }
+  .hx-toast.hx-toast--success {
+    color: var(--color-success-light);
+    border-color: color-mix(in srgb, var(--color-success) 50%, transparent);
+  }
+  .hx-toast.hx-toast--warning {
+    color: var(--color-warning-light);
+    border-color: color-mix(in srgb, var(--color-warning) 50%, transparent);
+  }
+  .hx-toast.hx-toast--error {
+    color: var(--color-danger-light);
+    border-color: color-mix(in srgb, var(--color-danger) 60%, transparent);
+  }
+  .hx-toast.hx-toast--leaving {
+    opacity: 0;
+    translate: var(--toast-from) 0;
+    transition:
+      opacity 0.22s var(--ease-hextech),
+      translate 0.22s var(--ease-hextech);
+  }
+}
+
+@keyframes hx-toast-in {
+  from {
+    opacity: 0;
+    translate: var(--toast-from) 0;
+  }
+  to {
+    opacity: 1;
+    translate: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hx-toast {
+    animation: none;
+  }
+  .hx-toast.hx-toast--leaving {
+    transition: none;
+  }
+  /* A static bar: the page is loading, nothing moves. */
+  .hx-nav-progress {
+    transform: scaleX(1);
+  }
+  .hx-nav-progress--pending,
+  .hx-nav-progress--done {
+    transition: none;
+  }
+  .switcher__chevron {
+    transition: none;
+  }
+}

@@ -1,0 +1,169 @@
+<lodb-catalog-state [status]="runes.status()" (retry)="runes.retry()">
+  @if (runes.options(); as trees) {
+    <div [class]="pathClass(primaryTree())">
+      <p class="rune-hint mb-2.5">{{ 'build.editor.runes.primary' | transloco }}</p>
+      <div
+        class="rune-trees"
+        role="group"
+        [attr.aria-label]="'build.editor.runes.primary' | transloco"
+      >
+        @for (tree of trees; track tree.id) {
+          <button
+            type="button"
+            class="rune-tree"
+            [class]="pathClass(tree)"
+            [class.rune-tree--on]="tree.id === page().primaryStyleId"
+            [attr.aria-pressed]="tree.id === page().primaryStyleId"
+            (click)="editing.setPrimaryStyle(tree.id)"
+          >
+            <lodb-image
+              class="rune-tree__icon"
+              [src]="imageSource(tree.image)"
+              [width]="22"
+              [height]="22"
+              [initials]="initialsOf(tree.name)"
+            />
+            {{ tree.name }}
+          </button>
+        }
+      </div>
+
+      @if (primaryTree(); as tree) {
+        <div class="mt-4">
+          @for (row of tree.slots; track $index; let slot = $index) {
+            <div
+              class="rune-slot"
+              role="group"
+              [attr.aria-label]="
+                (slot === keystoneSlot ? 'build.editor.runes.keystone' : 'build.editor.runes.slot')
+                  | transloco: { n: slot }
+              "
+              [class.rune-slot--picked]="page().primaryPerks[slot] !== null"
+            >
+              <span class="rune-slot__name" aria-hidden="true">
+                {{
+                  (slot === keystoneSlot
+                    ? 'build.editor.runes.keystone'
+                    : 'build.editor.runes.slot'
+                  ) | transloco: { n: slot }
+                }}
+              </span>
+              @for (rune of row; track rune.id) {
+                <button
+                  type="button"
+                  class="rune-perk"
+                  [class.rune-perk--big]="slot === keystoneSlot"
+                  [class.rune-perk--on]="page().primaryPerks[slot] === rune.id"
+                  [attr.aria-pressed]="page().primaryPerks[slot] === rune.id"
+                  [attr.aria-label]="rune.name"
+                  [title]="titleOf(rune)"
+                  (click)="editing.setPrimaryPerk(slot, rune.id)"
+                >
+                  <lodb-image
+                    class="size-full"
+                    imgClass="object-cover"
+                    [src]="imageSource(rune.image)"
+                    [width]="48"
+                    [height]="48"
+                    [initials]="initialsOf(rune.name)"
+                  />
+                </button>
+              }
+              @if (primaryGhost(slot, row); as ghost) {
+                <span class="hx-chip rune-ghost" [title]="'build.editor.ghost' | transloco">
+                  #{{ ghost }}
+                </span>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (page().primaryStyleId !== null) {
+      <div class="mt-6" [class]="pathClass(secondaryTree())">
+        <p class="rune-hint mb-1">{{ 'build.editor.runes.secondary' | transloco }}</p>
+        <p class="rune-hint mb-2.5 opacity-80">
+          {{ 'build.editor.runes.secondary_hint' | transloco }}
+        </p>
+        <div
+          class="rune-trees"
+          role="group"
+          [attr.aria-label]="'build.editor.runes.secondary' | transloco"
+        >
+          @for (tree of secondaryChoices(); track tree.id) {
+            <button
+              type="button"
+              class="rune-tree"
+              [class]="pathClass(tree)"
+              [class.rune-tree--on]="tree.id === page().secondaryStyleId"
+              [attr.aria-pressed]="tree.id === page().secondaryStyleId"
+              (click)="editing.setSecondaryStyle(tree.id)"
+            >
+              <lodb-image
+                class="rune-tree__icon"
+                [src]="imageSource(tree.image)"
+                [width]="22"
+                [height]="22"
+                [initials]="initialsOf(tree.name)"
+              />
+              {{ tree.name }}
+            </button>
+          }
+        </div>
+
+        @if (page().secondaryGhosts().length > 0) {
+          <div class="mt-3 flex flex-wrap gap-2">
+            @for (ghost of page().secondaryGhosts(); track ghost.perkId) {
+              <span class="hx-chip rune-ghost" [title]="'build.editor.ghost' | transloco">
+                #{{ ghost.perkId }}
+              </span>
+            }
+          </div>
+        }
+
+        @if (secondaryTree(); as tree) {
+          <div class="mt-4">
+            @for (row of tree.slots; track $index; let slot = $index) {
+              @if (slot !== keystoneSlot) {
+                <div
+                  class="rune-slot"
+                  role="group"
+                  [attr.aria-label]="'build.editor.runes.slot' | transloco: { n: slot }"
+                  [class.rune-slot--picked]="page().isSecondarySlotUsed(slot)"
+                  [class.rune-slot--locked]="
+                    page().isSecondaryFull() && !page().isSecondarySlotUsed(slot)
+                  "
+                >
+                  <span class="rune-slot__name" aria-hidden="true">
+                    {{ 'build.editor.runes.slot' | transloco: { n: slot } }}
+                  </span>
+                  @for (rune of row; track rune.id) {
+                    <button
+                      type="button"
+                      class="rune-perk"
+                      [class.rune-perk--on]="page().isSecondaryPick(rune.id)"
+                      [attr.aria-pressed]="page().isSecondaryPick(rune.id)"
+                      [attr.aria-label]="rune.name"
+                      [title]="titleOf(rune)"
+                      (click)="editing.setSecondaryPerk(slot, rune.id)"
+                    >
+                      <lodb-image
+                        class="size-full"
+                        imgClass="object-cover"
+                        [src]="imageSource(rune.image)"
+                        [width]="48"
+                        [height]="48"
+                        [initials]="initialsOf(rune.name)"
+                      />
+                    </button>
+                  }
+                </div>
+              }
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</lodb-catalog-state>

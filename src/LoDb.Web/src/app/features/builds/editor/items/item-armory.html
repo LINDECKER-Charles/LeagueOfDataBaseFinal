@@ -1,0 +1,94 @@
+<header class="armory__head">
+  <div class="min-w-0">
+    <h2 class="eyebrow" [id]="headingId">{{ 'build.editor.armory.title' | transloco }}</h2>
+    <p class="armory__target">{{ target() }}</p>
+  </div>
+  <button
+    type="button"
+    class="armory__close"
+    [attr.aria-label]="'build.editor.armory.close' | transloco"
+    (click)="close()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  </button>
+</header>
+
+<div class="armory__tools">
+  <label class="armory__search">
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.7"
+      aria-hidden="true"
+    >
+      <circle cx="9" cy="9" r="6" />
+      <path d="M14 14l4 4" stroke-linecap="round" />
+    </svg>
+    <input
+      #search
+      type="search"
+      class="armory__query"
+      autocomplete="off"
+      [placeholder]="'build.editor.steps.search_item' | transloco"
+      [attr.aria-label]="'build.editor.steps.search_item' | transloco"
+      (input)="query.set(search.value)"
+    />
+  </label>
+  <div
+    class="armory__cats"
+    role="group"
+    [attr.aria-label]="'build.editor.armory.title' | transloco"
+  >
+    @for (key of categories; track key) {
+      <button
+        type="button"
+        class="armory__cat"
+        [attr.aria-pressed]="category() === key"
+        (click)="category.set(key)"
+      >
+        {{ 'build.editor.armory.categories.' + key | transloco }}
+      </button>
+    }
+  </div>
+</div>
+
+<div class="armory__body">
+  <lodb-catalog-state [status]="items.status()" (retry)="items.retry()">
+    @if (shown().length > 0) {
+      <div class="armory__grid">
+        @for (item of shown(); track item.id) {
+          <lodb-armory-item-tile
+            [item]="item"
+            [count]="countInStep(item.id)"
+            [disabled]="!canAdd()"
+            (picked)="add(item.id)"
+          />
+        }
+      </div>
+    } @else {
+      <p class="py-6 text-center font-mono text-[0.7rem] tracking-[0.06em] text-text-dim">
+        {{ 'build.editor.steps.item_empty' | transloco }}
+      </p>
+    }
+  </lodb-catalog-state>
+</div>
+
+<footer class="armory__foot">
+  <span class="armory__count" [class.armory__count--full]="!canAdd()" aria-live="polite">
+    @if (added() > 0) {
+      {{ 'build.editor.armory.added' | transloco: { count: added() } }} ·
+    }
+    <bdi dir="ltr">{{
+      'build.editor.counter' | transloco: { count: placed().length, max: maxItems }
+    }}</bdi>
+    @if (!canAdd()) {
+      — {{ 'build.editor.armory.full' | transloco }}
+    }
+  </span>
+  <button type="button" class="armory__done" (click)="close()">
+    {{ 'build.editor.armory.done' | transloco }}
+  </button>
+</footer>

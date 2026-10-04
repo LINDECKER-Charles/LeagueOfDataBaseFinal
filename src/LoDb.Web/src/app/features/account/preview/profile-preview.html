@@ -1,0 +1,35 @@
+<div class="preview-ribbon">
+  <p class="preview-ribbon__text">
+    <span class="preview-ribbon__badge">{{ 'profile.preview.badge' | transloco }}</span>
+    @if (profile(); as profile) {
+      <span>
+        {{
+          (profile.isPublic ? 'profile.preview.note_public' : 'profile.preview.note_private')
+            | transloco
+        }}
+      </span>
+    }
+  </p>
+  <a lodbButton="ghost" class="flex-none" [routerLink]="editor()">
+    {{ 'profile.preview.back' | transloco }}
+  </a>
+</div>
+@switch (state().status) {
+  @case ('loading') {
+    <p class="px-6 py-24 text-center font-mono text-sm text-text-muted" role="status">
+      {{ 'account.editor.loading' | transloco }}
+    </p>
+  }
+  @case ('failed') {
+    <div class="flex flex-col items-center gap-4 px-6 py-24 text-center" role="alert">
+      <p class="text-text-muted">{{ 'account.editor.load_error' | transloco }}</p>
+      <button lodbButton="ghost" type="button" (click)="load()">
+        {{ 'profile.picker.retry' | transloco }}
+      </button>
+    </div>
+  }
+}
+@if (profile(); as profile) {
+  <lodb-profile-hero [profile]="profile" />
+  <lodb-profile-builds [builds]="profile.builds" />
+}

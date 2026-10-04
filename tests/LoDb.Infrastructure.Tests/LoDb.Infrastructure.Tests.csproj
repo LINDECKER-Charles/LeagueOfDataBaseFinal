@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../src/LoDb.Infrastructure/LoDb.Infrastructure.csproj" />
+    <ProjectReference Include="../LoDb.Testing/LoDb.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The reviewed renderings of the e-mail templates, read by EmailSnapshotTests. -->
+    <None Update="Outbox/Snapshots/**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The legacy stack's analytics on a sample (Analytics/Legacy/generate.php). -->
+    <None Include="Analytics/Legacy/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

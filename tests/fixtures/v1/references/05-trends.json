@@ -1,0 +1,734 @@
+{
+  "group": "05-trends",
+  "title": "Trends: types, 7d/30d windows, top 25, ties, names from the latest en_US dataset, editions",
+  "source": {
+    "service": "go-api",
+    "goApiTree": "0b2172d52a4e9786470909b8616f41395ed3d431"
+  },
+  "exchanges": [
+    {
+      "id": "champions-default-range",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "59",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "champions-7d",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions?range=7d",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "58",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "champions-30d",
+      "note": "32 ranked champions truncated to 25; day 30 is outside the window",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions?range=30d",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "57",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "30d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Zed",
+              "name": "Zed",
+              "views": 100
+            },
+            {
+              "rank": 2,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 36
+            },
+            {
+              "rank": 3,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 5,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 6,
+              "id": "Unreleased",
+              "views": 2
+            },
+            {
+              "rank": 7,
+              "id": "Akali",
+              "name": "Akali",
+              "views": 1
+            },
+            {
+              "rank": 8,
+              "id": "Akshan",
+              "name": "Akshan",
+              "views": 1
+            },
+            {
+              "rank": 9,
+              "id": "Alistar",
+              "name": "Alistar",
+              "views": 1
+            },
+            {
+              "rank": 10,
+              "id": "Ambessa",
+              "name": "Ambessa",
+              "views": 1
+            },
+            {
+              "rank": 11,
+              "id": "Amumu",
+              "name": "Amumu",
+              "views": 1
+            },
+            {
+              "rank": 12,
+              "id": "Anivia",
+              "name": "Anivia",
+              "views": 1
+            },
+            {
+              "rank": 13,
+              "id": "Annie",
+              "name": "Annie",
+              "views": 1
+            },
+            {
+              "rank": 14,
+              "id": "Aphelios",
+              "name": "Aphelios",
+              "views": 1
+            },
+            {
+              "rank": 15,
+              "id": "Ashe",
+              "name": "Ashe",
+              "views": 1
+            },
+            {
+              "rank": 16,
+              "id": "AurelionSol",
+              "name": "Aurelion Sol",
+              "views": 1
+            },
+            {
+              "rank": 17,
+              "id": "Aurora",
+              "name": "Aurora",
+              "views": 1
+            },
+            {
+              "rank": 18,
+              "id": "Azir",
+              "name": "Azir",
+              "views": 1
+            },
+            {
+              "rank": 19,
+              "id": "Bard",
+              "name": "Bard",
+              "views": 1
+            },
+            {
+              "rank": 20,
+              "id": "Belveth",
+              "name": "Bel'Veth",
+              "views": 1
+            },
+            {
+              "rank": 21,
+              "id": "Blitzcrank",
+              "name": "Blitzcrank",
+              "views": 1
+            },
+            {
+              "rank": 22,
+              "id": "Brand",
+              "name": "Brand",
+              "views": 1
+            },
+            {
+              "rank": 23,
+              "id": "Braum",
+              "name": "Braum",
+              "views": 1
+            },
+            {
+              "rank": 24,
+              "id": "Briar",
+              "name": "Briar",
+              "views": 1
+            },
+            {
+              "rank": 25,
+              "id": "Caitlyn",
+              "name": "Caitlyn",
+              "views": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "items-7d",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/items",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "56",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "items",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "3006",
+              "name": "Berserker's Greaves",
+              "edition": "modern",
+              "views": 9
+            },
+            {
+              "rank": 2,
+              "id": "771004",
+              "name": "Faerie Charm",
+              "edition": "classic",
+              "views": 7
+            },
+            {
+              "rank": 3,
+              "id": "1004",
+              "name": "Faerie Charm",
+              "edition": "modern",
+              "views": 4
+            },
+            {
+              "rank": 4,
+              "id": "1001",
+              "name": "Boots",
+              "edition": "modern",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "items-30d",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/items?range=30d",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "55",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "items",
+          "range": "30d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "3006",
+              "name": "Berserker's Greaves",
+              "edition": "modern",
+              "views": 59
+            },
+            {
+              "rank": 2,
+              "id": "771004",
+              "name": "Faerie Charm",
+              "edition": "classic",
+              "views": 7
+            },
+            {
+              "rank": 3,
+              "id": "1004",
+              "name": "Faerie Charm",
+              "edition": "modern",
+              "views": 4
+            },
+            {
+              "rank": 4,
+              "id": "1001",
+              "name": "Boots",
+              "edition": "modern",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "runes-7d",
+      "note": "ids and keys both resolve; an unknown id has no name",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/runes",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "54",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "runes",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "8100",
+              "name": "Domination",
+              "views": 6
+            },
+            {
+              "rank": 2,
+              "id": "8112",
+              "name": "Electrocute",
+              "views": 3
+            },
+            {
+              "rank": 3,
+              "id": "Electrocute",
+              "name": "Electrocute",
+              "views": 2
+            },
+            {
+              "rank": 4,
+              "id": "9999",
+              "views": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "summoners-7d",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/summoners",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "53",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "summoners",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "SummonerFlash",
+              "name": "Flash",
+              "edition": "modern",
+              "views": 6
+            },
+            {
+              "rank": 2,
+              "id": "SummonerFlash_Jade",
+              "name": "Flash",
+              "edition": "classic",
+              "views": 6
+            },
+            {
+              "rank": 3,
+              "id": "SummonerDot",
+              "name": "Ignite",
+              "edition": "modern",
+              "views": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "empty-range",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions?range=",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "52",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "type": "champions",
+          "range": "7d",
+          "entries": [
+            {
+              "rank": 1,
+              "id": "Ahri",
+              "name": "Ahri",
+              "views": 35
+            },
+            {
+              "rank": 2,
+              "id": "Aatrox",
+              "name": "Aatrox",
+              "views": 18
+            },
+            {
+              "rank": 3,
+              "id": "Jinx",
+              "name": "Jinx",
+              "views": 18
+            },
+            {
+              "rank": 4,
+              "id": "MonkeyKing",
+              "name": "Wukong",
+              "views": 4
+            },
+            {
+              "rank": 5,
+              "id": "Unreleased",
+              "views": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "range-invalid",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions?range=90d",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "51",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "invalid_request",
+            "message": "range must be 7d or 30d"
+          }
+        }
+      }
+    },
+    {
+      "id": "range-uppercase",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/champions?range=7D",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "50",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "invalid_request",
+            "message": "range must be 7d or 30d"
+          }
+        }
+      }
+    },
+    {
+      "id": "type-invalid",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/skins",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "49",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "not_found",
+            "message": "type must be one of champions, items, runes, summoners"
+          }
+        }
+      }
+    },
+    {
+      "id": "type-case",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/Champions",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "48",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "not_found",
+            "message": "type must be one of champions, items, runes, summoners"
+          }
+        }
+      }
+    },
+    {
+      "id": "type-and-range-invalid",
+      "note": "the range is checked first",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/skins?range=90d",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "47",
+          "x-ratelimit-reset": "<unix-time>"
+        },
+        "body": {
+          "error": {
+            "code": "invalid_request",
+            "message": "range must be 7d or 30d"
+          }
+        }
+      }
+    },
+    {
+      "id": "missing-type",
+      "request": {
+        "method": "GET",
+        "path": "/v1/trends/",
+        "headers": {
+          "X-Api-Key": "{{key:credits}}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "x-content-type-options": "nosniff",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Authorization, X-Api-Key"
+        },
+        "text": "404 page not found\n"
+      }
+    }
+  ]
+}

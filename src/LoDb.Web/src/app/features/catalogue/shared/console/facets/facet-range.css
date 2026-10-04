@@ -1,0 +1,148 @@
+.facet__readout {
+  margin-inline-start: auto;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-dim);
+}
+.facet__readout--on {
+  color: var(--color-hex);
+}
+.facet__reset {
+  padding-inline: 0.15rem;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: var(--color-text-dim);
+  cursor: pointer;
+}
+.facet__reset:hover {
+  color: var(--color-gold-bright);
+}
+.fields {
+  display: flex;
+  gap: 0.5rem;
+}
+.field {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.3rem;
+  min-inline-size: 0;
+}
+.field span {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+/* 16px: iOS zooms into any smaller field. */
+.field input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding: 0.2rem 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--color-text);
+  border: 1px solid color-mix(in srgb, var(--color-gold-deep) 60%, transparent);
+  background: color-mix(in srgb, var(--color-hextech-black) 55%, transparent);
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--color-hex);
+}
+/* Two native sliders stacked on one drawn track. */
+.range {
+  position: relative;
+  block-size: 1.5rem;
+}
+.range__track {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 50%;
+  block-size: 2px;
+  translate: 0 -50%;
+  background: color-mix(in srgb, var(--color-gold-deep) 60%, transparent);
+}
+.range__fill {
+  position: absolute;
+  inset-block: 0;
+  background: linear-gradient(90deg, var(--color-gold-deep), var(--color-gold));
+}
+/* The fill brightens toward the high thumb, which sits at the inline start in RTL. */
+.range__fill:dir(rtl) {
+  background: linear-gradient(270deg, var(--color-gold-deep), var(--color-gold));
+}
+.range__input {
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+  touch-action: none;
+}
+.range__input--high {
+  z-index: 2;
+}
+.range__input--low {
+  z-index: 1;
+}
+.range--low-on-top .range__input--low {
+  z-index: 3;
+}
+.range__input::-webkit-slider-runnable-track {
+  block-size: 100%;
+  background: transparent;
+}
+.range__input::-moz-range-track {
+  block-size: 100%;
+  background: transparent;
+}
+.range__input::-webkit-slider-thumb {
+  appearance: none;
+  inline-size: 1rem;
+  block-size: 1rem;
+  margin-block-start: 0.25rem;
+  background: var(--color-gold);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.range__input::-moz-range-thumb {
+  inline-size: 1rem;
+  block-size: 1rem;
+  border: 0;
+  border-radius: 0;
+  background: var(--color-gold);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.range__input:focus-visible {
+  outline: none;
+}
+.range__input:focus-visible::-webkit-slider-thumb {
+  background: var(--color-hex);
+}
+.range__input:focus-visible::-moz-range-thumb {
+  background: var(--color-hex);
+}
+@media (pointer: coarse) {
+  .range {
+    block-size: 2.75rem;
+  }
+  .range__input::-webkit-slider-thumb {
+    inline-size: 1.375rem;
+    block-size: 1.375rem;
+    margin-block-start: 0.6875rem;
+  }
+  .range__input::-moz-range-thumb {
+    inline-size: 1.375rem;
+    block-size: 1.375rem;
+  }
+  .facet__reset {
+    min-block-size: 2.5rem;
+    min-inline-size: 2.5rem;
+  }
+}

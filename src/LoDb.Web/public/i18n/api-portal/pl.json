@@ -1,0 +1,11 @@
+{
+  "loading": "Wczytywanie klucza API…",
+  "retry": "Spróbuj ponownie",
+  "error": {
+    "load": "Nie udało się wczytać klucza API.",
+    "failed": "Akcja nie powiodła się, spróbuj ponownie."
+  },
+  "actions": {
+    "revoke_help": "Natychmiast wyłącza klucz: API odrzuca go od następnego żądania."
+  }
+}

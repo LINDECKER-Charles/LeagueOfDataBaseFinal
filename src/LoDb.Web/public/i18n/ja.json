@@ -1,0 +1,380 @@
+{
+  "homepage": {
+    "title": "League of Data Base",
+    "meta": "League of Data Baseへようこそ。パッチ{{ version }}のステータスと詳細情報とともに、League of Legendsのアイテムとサモナースペルをチェックしましょう。",
+    "hero": {
+      "browse": "League of Legendsの<strong>サモナースペル</strong>と<strong>アイテム</strong>の詳細情報をご覧ください。パッチ{{ version }}に対応。",
+      "explore_summoners": "サモナースペルを見る",
+      "explore_items": "アイテムを見る",
+      "explore_champions": "チャンピオンを見る",
+      "explore_runes": "ルーンを見る"
+    },
+    "summoners": {
+      "title": "サモナースペル",
+      "see_all": "すべてのスペルを見る"
+    },
+    "items": {
+      "title": "アイテム",
+      "see_all": "すべてのアイテムを見る"
+    },
+    "champions": {
+      "title": "チャンピオン",
+      "see_all": "すべてのチャンピオンを見る",
+      "no_data": "このバージョンで利用可能なチャンピオンはありません。",
+      "wip": "このセクションは現在準備中です。近日中にすべてのチャンピオンを閲覧できるようになります。"
+    },
+    "runes": {
+      "title": "ルーン",
+      "wip": "このセクションは現在準備中です。近日中にルーンを閲覧できるようになります。",
+      "see_all": "すべてのルーンを見る"
+    }
+  },
+  "setup": {
+    "form": {
+      "version": "バージョン",
+      "language": "言語",
+      "remember": "ログイン状態を保持する",
+      "submit": "送信"
+    }
+  },
+  "system": {
+    "under_construction": {
+      "title": "準備中",
+      "meta_description": "League of Data Baseは現在準備中です。League of Legendsに関する詳細なステータス、分析、ツールをお届けするために鋭意開発中です。今後の更新をお楽しみに。",
+      "heading": "このページは準備中です",
+      "subheading": "この機能はリフトで鍛造中です。すごいものが完成するまで、しばらくお待ちください。",
+      "info": "このページにアクセスした場合、コンテンツはまだ公開されていません。パフォーマンス、データの正確性、そしてLeague Of Data Base全体と同様の快適なUXの実現に向けて開発を進めています。",
+      "progress_label": "開発進捗",
+      "back": "← 戻る",
+      "summoners": "サモナースペルを見る",
+      "footer": "お急ぎですか?お問い合わせいただくか、ロードマップをご確認ください。今後も更新を予定しています。",
+      "meanwhile": "その間、以下をご利用いただけます:"
+    }
+  },
+  "item": {
+    "detail": {
+      "meta_description": "League of Legendsのアイテム「{{ name }}」に関するすべての情報をご覧ください。ステータス、効果、ビルド情報はパッチ{{ version }}に対応しています。",
+      "version_locale": "バージョン: {{ version }} — 言語: {{ locale }}",
+      "price_total": "合計コスト",
+      "price_base": "購入コスト",
+      "price_sell": "売却額",
+      "categories": "カテゴリー",
+      "evolutions": "進化候補",
+      "stats": "ステータス",
+      "description": "説明",
+      "recipe": "レシピ",
+      "builds_from": "構成アイテム",
+      "tier": "ティア {{ depth }}",
+      "availability": "入手可否",
+      "back": "← リストに戻る"
+    },
+    "list": {
+      "title": "アイテム",
+      "meta_description": "パッチ{{ version }}で利用可能なLeague of Legendsのすべてのアイテムをご覧いただけます。最新バージョンに対応した詳細なステータス、コスト、効果を確認できます。",
+      "header": "アイテム",
+      "subtitle": "アイテムカタログ",
+      "results_per_page": "1ページあたりの表示件数:",
+      "max": "MAX",
+      "ok": "OK",
+      "search_placeholder": "アイテムを検索…",
+      "cost_total": "合計コスト",
+      "cost_sell": "売却額",
+      "categories": "カテゴリー",
+      "evolutions": "進化候補",
+      "description": "説明"
+    }
+  },
+  "summoner": {
+    "detail": {
+      "meta_description": "League of Legendsのサモナースペル「{{ name }}」の詳細をご覧ください。ステータスと効果はパッチ{{ version }}に対応しています。",
+      "version_locale": "バージョン: {{ version }} — 言語: {{ locale }}",
+      "fields": {
+        "cooldown": "クールダウン",
+        "maxammo": "チャージ数",
+        "range": "使用射程",
+        "cost": "コスト",
+        "summoner_level": "サモナーレベル"
+      },
+      "unlocked_at": "レベル {{ level }} で解放",
+      "range_global": "グローバル",
+      "no_cost": "コストなし",
+      "modes": "対応モード",
+      "description": "説明"
+    },
+    "card": {
+      "cooldown": "クールダウン",
+      "level": "サモナーレベル",
+      "modes": "対応モード",
+      "description": "説明"
+    },
+    "list": {
+      "title": "サモナースペル",
+      "subtitle": "サモナースペルカタログ",
+      "count": "スペル数"
+    }
+  },
+  "champion": {
+    "list": {
+      "title": "チャンピオン",
+      "meta_description": "League of Legendsのすべてのチャンピオンをご覧いただけます。各チャンピオンの詳細なステータス、スキル、ストーリーを確認できます。",
+      "header": "チャンピオン",
+      "subtitle": "チャンピオンカタログ",
+      "search_placeholder": "チャンピオンを検索…"
+    },
+    "detail": {
+      "meta_description": "League of Legendsの{{ name }}について、パッチ{{ version }}のステータス、ロール、詳細情報をご覧ください。",
+      "version_locale": "パッチ{{ version }} • {{ locale }}",
+      "partype": "リソース: {{ partype }}",
+      "roles": "ロール",
+      "abilities": "スキル",
+      "passive": "パッシブ",
+      "skins": "スキン",
+      "cooldown": "クールダウン",
+      "cost": "コスト",
+      "range": "射程",
+      "video_play": "動画を再生",
+      "video_pause": "動画を一時停止",
+      "video_mute": "音を消す",
+      "video_unmute": "音を出す",
+      "tips_as": "使用時のコツ",
+      "tips_against": "対策のコツ",
+      "stats": {
+        "title": "基本ステータス"
+      },
+      "profile": {
+        "title": "チャンピオンプロフィール",
+        "attack": "攻撃",
+        "defense": "防御",
+        "magic": "魔法",
+        "difficulty": "難易度"
+      },
+      "lore": {
+        "title": "ストーリー"
+      }
+    }
+  },
+  "rune": {
+    "list": {
+      "title": "ルーン",
+      "meta_description": "League of Legendsのすべてのルーンをご覧いただけます。各ルーンの詳細なステータスと効果を確認できます。",
+      "header": "ルーン",
+      "subtitle": "ルーンカタログ",
+      "search_placeholder": "ルーンを検索…"
+    },
+    "detail": {
+      "title": "ルーン: {{ name }}",
+      "meta_description": "League of Legendsのルーン「{{ name }}」の詳細をご覧ください。ステータスと効果はパッチ{{ version }}に対応しています。",
+      "overview": "概要",
+      "keystone": "キーストーン",
+      "minor": "マイナールーン",
+      "slot_n": "スロット {{ n }}"
+    },
+    "slot": "スロット"
+  },
+  "common": {
+    "back": "戻る",
+    "search": "検索…",
+    "no_result": {
+      "text": "検索結果が見つかりませんでした。",
+      "back": "← 戻る"
+    },
+    "detail": "詳細を見る"
+  },
+  "base": {
+    "title": "League of Data Base",
+    "description": "League of Data Baseは、League of Legendsに関する詳細な情報、ステータス、分析を提供するコミュニティ主導のプラットフォームです。高速で信頼性が高く、常に最新の情報をお届けします。"
+  },
+  "footer": {
+    "copyright": "© 2025 LINDECKER Charles / Hexanti",
+    "legal": "法的表示",
+    "navigation": {
+      "title": "ナビゲーション",
+      "home": "ホーム",
+      "champion": "チャンピオン",
+      "item": "アイテム",
+      "runes": "ルーン",
+      "summoner": "サモナー",
+      "sitemap": "サイトマップ"
+    },
+    "links": {
+      "title": "便利なリンク",
+      "lol": "League of Legends",
+      "riotapi": "Riot API",
+      "ddragon": "CDN Data Dragon",
+      "support": "Riot Support",
+      "opgg": "OP.GG"
+    },
+    "project": {
+      "title": "プロジェクト",
+      "version": "バージョン: {{ version }}",
+      "updated": "更新日: 17/07/2026"
+    },
+    "contact": {
+      "title": "お問い合わせ",
+      "email": "メール",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    }
+  },
+  "loader": {
+    "eyebrow": "Data Dragon",
+    "title": "データをサモン中",
+    "subtitle": "リフトからリソースを取得中…",
+    "preparing": "データを準備中…",
+    "status": {
+      "fetching": "取得中",
+      "ready": "準備完了"
+    }
+  },
+  "pagination": {
+    "ok": "OK",
+    "more": "…"
+  },
+  "header": {
+    "navigation": {
+      "home": "ホーム",
+      "champion": "チャンピオン",
+      "item": "アイテム",
+      "runes": "ルーン",
+      "summoner": "サモナースペル"
+    },
+    "theme": {
+      "label": "表示テーマ",
+      "close": "閉じる"
+    }
+  },
+  "auth": {
+    "or": "または",
+    "google": {
+      "cta": "Google で続行",
+      "unavailable": "このサーバーでは Google ログインが設定されていません。",
+      "failed": "Google ログインに失敗しました。もう一度お試しください。"
+    },
+    "register": {
+      "password": "パスワード",
+      "password_confirm": "パスワード（確認）",
+      "password_mismatch": "パスワードが一致しません。",
+      "password_help": "12文字以上で、小文字・大文字・数字・特殊文字をそれぞれ含めてください。"
+    },
+    "password": {
+      "rule_length": "12文字以上",
+      "rule_lowercase": "小文字を1文字以上",
+      "rule_uppercase": "大文字を1文字以上",
+      "rule_digit": "数字を1文字以上",
+      "rule_special": "特殊文字を1文字以上",
+      "rule_match": "2つのパスワードが一致",
+      "too_common": "このパスワードは一般的すぎます。より独自のものを選んでください。"
+    },
+    "flash": {
+      "banned": "このアカウントはモデレーションチームにより停止されています。"
+    }
+  },
+  "profile": {
+    "identity": {
+      "title": "サモナーのアイデンティティ",
+      "username": "サモナーネーム",
+      "tag": "Riot タグ",
+      "tag_help": "任意：Riot ID の # 以降の部分 — GG#EUW なら EUW を入力します。",
+      "url_warning": "サモナーネームを変更すると、公開プロフィールのURLも変わります。",
+      "submit": "アイデンティティを更新",
+      "username_taken": "このサモナーネームは既に使われています。",
+      "username_invalid": "無効なサモナーネーム：3〜24文字（英数字、ピリオド、ハイフン、アンダースコア）で、先頭は英数字。",
+      "tag_invalid": "無効な Riot タグ：3〜5文字の英数字。"
+    },
+    "password": {
+      "title": "パスワードを設定",
+      "help": "このアカウントは現在 Google ログインのみです。パスワードを設定すると、メールでもログインできます。",
+      "submit": "パスワードを設定"
+    },
+    "danger": {
+      "help_no_password": "アカウントの削除は取り消せません。お気に入りとビルドは消去されます。"
+    },
+    "flash": {
+      "identity_saved": "サモナーのアイデンティティを更新しました。",
+      "password_set": "パスワードを設定しました — メールでもログインできます。",
+      "password_exists": "このアカウントには既にパスワードが設定されています。"
+    }
+  },
+  "build": {
+    "mode": {
+      "sr": "サモナーズリフト",
+      "aram": "ARAM",
+      "nexus_blitz": "ネクサスブリッツ",
+      "arena": "アリーナ"
+    },
+    "editor": {
+      "ghost_mode": "このゲームモードでは使用できません",
+      "context": {
+        "title": "ゲームコンテキスト",
+        "version": "パッチ",
+        "mode": "ゲームモード",
+        "mode_hint": "アイテムの入手可否は選択したモードに従います。配置済みのアイテムは削除されず、マークが付くだけです。"
+      },
+      "dnd": {
+        "handle": "ドラッグで並べ替え",
+        "moved_step": "ステップを{{ position }}番目に移動しました",
+        "moved_item": "アイテムを{{ position }}番目に移動しました",
+        "transferred": "アイテムをステップ{{ step }}に移動しました",
+        "added": "アイテムをステップ{{ step }}に追加しました",
+        "cancelled": "移動をキャンセルしました"
+      }
+    },
+    "show": {
+      "mode": "ゲームモード",
+      "patch_current": "パッチ{{ version }}で作成 — 現在: {{ current }}"
+    },
+    "error": {
+      "version": {
+        "unknown": "不明なゲームバージョンです。"
+      },
+      "mode": {
+        "unknown": "不明なゲームモードです。"
+      },
+      "steps": {
+        "item_mode": "選択したゲームモードでは使用できません: {{ items }}"
+      }
+    }
+  },
+  "community": {
+    "nav": {
+      "trends": "トレンド"
+    },
+    "trends": {
+      "eyebrow": "コミュニティの鼓動",
+      "title": "トレンドビルド",
+      "filter": {
+        "champion": "チャンピオン",
+        "mode": "ゲームモード",
+        "all_champions": "すべてのチャンピオン",
+        "all_modes": "すべてのモード",
+        "apply": "絞り込む"
+      },
+      "empty": "このフィルターに一致する公開ビルドはありません — 自分のビルドを鍛えましょう。",
+      "empty_cta": "ビルドを鍛える"
+    },
+    "vote": {
+      "up": "このビルドに賛成票を投じる",
+      "down": "このビルドに反対票を投じる",
+      "score_label": "コミュニティスコア",
+      "login": "投票するにはログイン",
+      "invalid": "無効な投票です。"
+    },
+    "supporter": {
+      "badge": "サポーター"
+    }
+  },
+  "stat": {
+    "attack_damage": "攻撃力",
+    "ability_power": "魔力",
+    "attack_speed": "攻撃速度",
+    "crit_chance": "クリティカル率",
+    "life_steal": "ライフスティール",
+    "health": "体力",
+    "health_regen": "体力自動回復",
+    "armor": "物理防御",
+    "magic_resist": "魔法防御",
+    "mana": "マナ",
+    "move_speed": "移動速度",
+    "attack_range": "射程"
+  }
+}

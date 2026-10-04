@@ -1,0 +1,46 @@
+{
+  "type": "item",
+  "version": "16.18.1",
+  "data": {
+    "1001": {
+      "name": "Boots",
+      "plaintext": "Slightly increases Move Speed",
+      "gold": {
+        "base": 300,
+        "purchasable": true,
+        "total": 300,
+        "sell": 210
+      }
+    },
+    "1004": {
+      "name": "Faerie Charm",
+      "plaintext": "Slightly increases Mana Regen",
+      "gold": {
+        "base": 200,
+        "purchasable": true,
+        "total": 200,
+        "sell": 140
+      }
+    },
+    "3006": {
+      "name": "Berserker's Greaves",
+      "plaintext": "Enhances Move Speed and Attack Speed",
+      "gold": {
+        "base": 300,
+        "purchasable": true,
+        "total": 1100,
+        "sell": 770
+      }
+    },
+    "771004": {
+      "name": "Faerie Charm",
+      "plaintext": "",
+      "gold": {
+        "base": 180,
+        "purchasable": true,
+        "total": 180,
+        "sell": 126
+      }
+    }
+  }
+}

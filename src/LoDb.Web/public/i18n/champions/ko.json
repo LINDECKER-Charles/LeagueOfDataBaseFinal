@@ -1,0 +1,11 @@
+{
+  "viewer": {
+    "close": "닫기",
+    "previous": "이전",
+    "next": "다음",
+    "counter": "{{ index }} / {{ count }}"
+  },
+  "chromas": {
+    "label": "{{ skin }} 크로마"
+  }
+}

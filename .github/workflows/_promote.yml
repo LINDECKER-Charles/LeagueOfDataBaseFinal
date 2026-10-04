@@ -43,8 +43,9 @@ jobs:
           SOURCE_TAG: ${{ inputs.source_tag }}
           TARGET_TAGS: ${{ inputs.target_tags }}
         run: |
-          for svc in app nginx go-fetcher go-api; do
+          for svc in api web-ssr nginx; do
             tags=""
             for t in $TARGET_TAGS; do tags="$tags --tag ${IMG}/${svc}:${t}"; done
+            # shellcheck disable=SC2086 # one --tag flag per word
             docker buildx imagetools create $tags "${IMG}/${svc}:${SOURCE_TAG}"
           done

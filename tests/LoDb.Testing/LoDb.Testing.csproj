@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Shared test library: the in-memory API host, the PostgreSQL container and the fake clock
+    (Microsoft.Extensions.TimeProvider.Testing), for every test project of the solution.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="xunit.v3.extensibility.core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/LoDb.Api/LoDb.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Doctrine schema frozen by tools/schema/, and the script of tools/db/. -->
+    <EmbeddedResource
+      Include="../fixtures/schema/doctrine-schema.sql" LogicalName="doctrine-schema.sql" />
+    <EmbeddedResource
+      Include="../fixtures/schema/doctrine-versions.txt" LogicalName="doctrine-versions.txt" />
+    <EmbeddedResource Include="../../tools/db/anonymize.sql" LogicalName="anonymize.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Data Dragon answers recorded by tools/fixtures/, replayed by Fixtures/: copied to
+      the output of every project that references this one.
+    -->
+    <None
+      Include="../fixtures/ddragon/**"
+      LinkBase="fixtures/ddragon"
+      CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

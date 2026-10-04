@@ -1,0 +1,108 @@
+/*
+ * Long-form editorial typography and data tables. Legal notices, the About pages and the
+ * developer docs are raw HTML bodies: utility classes on every paragraph of a 300-line text
+ * would be unreadable, so the container styles its own children.
+ */
+@layer components {
+  .hx-prose {
+    font-family: var(--font-spiegel);
+  }
+  .hx-prose section {
+    scroll-margin-block-start: 6.5rem;
+  }
+  .hx-prose h2 {
+    margin-block-end: 1rem;
+    font-family: var(--font-beaufort);
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-gold-bright);
+  }
+  .hx-prose h3 {
+    margin-block: 1.25rem 0.5rem;
+    font-family: var(--font-beaufort);
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+    color: var(--color-gold);
+  }
+  .hx-prose p,
+  .hx-prose li,
+  .hx-prose blockquote {
+    color: var(--color-text-muted);
+    line-height: 1.75;
+  }
+  .hx-prose p + p {
+    margin-block-start: 0.75rem;
+  }
+  .hx-prose a {
+    color: var(--color-hex);
+    text-underline-offset: 4px;
+  }
+  .hx-prose a:hover {
+    text-decoration: underline;
+  }
+  .hx-prose ul,
+  .hx-prose ol {
+    margin-block: 0.75rem;
+    padding-inline-start: 1.4rem;
+  }
+  .hx-prose ul {
+    list-style: square;
+  }
+  .hx-prose ol {
+    list-style: decimal;
+  }
+  .hx-prose li + li {
+    margin-block-start: 0.4rem;
+  }
+  .hx-prose strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  /* Data table: framed by default, inside prose or standalone. */
+  .hx-table-scroll {
+    overflow-x: auto;
+  }
+  .hx-prose table,
+  .hx-table {
+    inline-size: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .hx-prose table {
+    margin-block: 1rem;
+  }
+  .hx-prose th,
+  .hx-prose td,
+  .hx-table th,
+  .hx-table td {
+    border: 1px solid color-mix(in srgb, var(--color-gold-deep) 45%, transparent);
+    padding: 0.6rem 0.75rem;
+    text-align: start;
+    vertical-align: top;
+  }
+  .hx-prose th,
+  .hx-table th {
+    font-family: var(--font-beaufort);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-gold);
+    background: color-mix(in srgb, var(--color-void) 70%, transparent);
+  }
+  /* Flush variant: rule-separated rows for dense readouts, where a grid would out-shout. */
+  .hx-table--flush th,
+  .hx-table--flush td {
+    border: 0;
+    border-block-end: 1px solid color-mix(in srgb, var(--color-gold-deep) 35%, transparent);
+    padding: 0.5rem 0.75rem;
+  }
+  .hx-table--flush th {
+    background: none;
+  }
+  .hx-table .num {
+    text-align: end;
+    font-family: var(--font-mono);
+  }
+}

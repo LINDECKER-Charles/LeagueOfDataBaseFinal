@@ -1,0 +1,43 @@
+{
+  "id": "2026-08-24-blason",
+  "version": "2.3.0",
+  "codename": "Blason",
+  "date": "2026-08-24",
+  "type": "minor",
+  "title": "LeagueOfDataBase 2.3.0 — Blason",
+  "summary": "Le site change d'habit à la demande : Zaun, Noxus et Spirit Blossom rejoignent Hextech dans un sélecteur qui montre chaque identité avant de la choisir, tandis que les pannes discrètes du serveur sont désormais repérées et signalées.",
+  "intro": "Blason donne au site quatre visages. Hextech reste l'identité par défaut, celle de Piltover ; Zaun, Noxus et Spirit Blossom la rejoignent, chacune dessinée de sa propre main — cadres, ornements, polices et lumière compris, pas une simple variation de couleurs. Le choix se fait dans une fenêtre qui pose chaque thème sur son propre fond, s'applique tout de suite et se retient d'une visite à l'autre. Les couleurs qui appartiennent au jeu, elles, ne bougent jamais : voies de runes, types de dégâts et raretés restent ceux de Riot. En coulisses, le serveur signale enfin les pannes qu'il rattrapait sans bruit.",
+  "stats": {
+    "fixes": 0,
+    "cards": 3
+  },
+  "features": [
+    {
+      "kind": "feature",
+      "glyph": "❖",
+      "tag": "Thèmes",
+      "title": "Zaun, la Cité de Fer et de Verre",
+      "description": "Là où Piltover est géométrique, Zaun est courbe : noir verdi, vert chimique, violet Shimmer et laiton corrodé, une lumière qui remonte du Sump et une grille de ferronnerie Art nouveau à la place de la trame d'hexagones. Les cadres sont pliés et boulonnés, les losanges deviennent des rivets et des volants de vanne, et le titrage change de police. Les illustrations ne reçoivent aucune teinte : l'art reste le point de mire."
+    },
+    {
+      "kind": "feature",
+      "glyph": "✶",
+      "tag": "Thèmes",
+      "title": "Noxus et Spirit Blossom, et un sélecteur pour les voir avant de choisir",
+      "description": "Noxus pose une plaque d'acier martelé sous un ciel gris, aux coins vifs, marquée d'un bandeau cramoisi comme la hampe d'une bannière. Spirit Blossom ne dessine aucun cadre : chaque panneau est une feuille de papier posée sur le noir, en indigo spectral, cyan de feu follet et ruban sakura. Le sélecteur s'ouvre d'un clic sur la crête du haut de page et montre chaque thème sur son propre fond ; seule la police du thème actif est téléchargée, et la page arrive déjà dans le bon thème, sans clignotement."
+    },
+    {
+      "kind": "mana",
+      "glyph": "◉",
+      "tag": "Infra",
+      "title": "Les pannes discrètes sont désormais repérées",
+      "description": "Une section vide sur l'accueil, une image qui ne se charge pas, un e-mail de confirmation qui ne part pas : le site rattrapait ces défaillances pour vous, mais sans laisser de trace de notre côté. Elles sont maintenant signalées à la supervision dès qu'elles surviennent, un moteur qui ne répond plus redémarre aussitôt, et chaque service a un plafond mémoire surveillé. Rien ne change à l'écran ; les pannes se corrigent plus tôt."
+    }
+  ],
+  "bugfixes": [],
+  "balances": [],
+  "devNote": {
+    "body": "Blason est né d'une envie simple : que le site ait l'air de Runeterra, et pas d'un seul de ses quartiers. Chaque thème a été dessiné comme une ville à part, jusqu'au détail des coins de cadre, en gardant intactes les couleurs que le jeu vous a appris à lire. Dites-nous lequel vous avez adopté, et quelle région vous aimeriez voir arriver ensuite.",
+    "signature": "L'équipe LeagueOfDataBase"
+  }
+}

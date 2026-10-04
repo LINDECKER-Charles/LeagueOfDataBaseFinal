@@ -1,0 +1,20 @@
+{
+  "list": {
+    "loading": "Carregando suas builds…",
+    "failed": "Não foi possível carregar suas builds.",
+    "delete_failed": "Não foi possível excluir a build. Tente novamente."
+  },
+  "delete": {
+    "title": "Excluir a build",
+    "cancel": "Cancelar"
+  },
+  "editor": {
+    "saving": "Salvando…"
+  },
+  "errors": {
+    "generic": "Algo deu errado. Tente novamente.",
+    "signed_out": "Sua sessão expirou. Entre novamente para salvar esta build.",
+    "email_unverified": "Verifique seu endereço de e-mail para salvar uma build.",
+    "not_found": "Esta build não existe mais."
+  }
+}
