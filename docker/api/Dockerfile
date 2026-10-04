@@ -9,18 +9,18 @@ FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG TARGETARCH
 WORKDIR /source
 
-# Project files first: the restore layer survives every source-only change.
+# Project files first: the restore layer survives every source-only change. The packages
+# stay in that layer, not in a cache mount: the CI's layer cache (type=gha) brings the layer
+# back on a fresh runner but never a mount, and `publish --no-restore` then found none.
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY src/LoDb.Domain/LoDb.Domain.csproj src/LoDb.Domain/
 COPY src/LoDb.Infrastructure/LoDb.Infrastructure.csproj src/LoDb.Infrastructure/
 COPY src/LoDb.Ingestion/LoDb.Ingestion.csproj src/LoDb.Ingestion/
 COPY src/LoDb.Api/LoDb.Api.csproj src/LoDb.Api/
-RUN --mount=type=cache,id=lodb-nuget,target=/root/.nuget/packages \
-    dotnet restore src/LoDb.Api/LoDb.Api.csproj -a "$TARGETARCH"
+RUN dotnet restore src/LoDb.Api/LoDb.Api.csproj -a "$TARGETARCH"
 
 COPY src/ src/
-RUN --mount=type=cache,id=lodb-nuget,target=/root/.nuget/packages \
-    dotnet publish src/LoDb.Api/LoDb.Api.csproj -c Release -a "$TARGETARCH" --no-restore \
+RUN dotnet publish src/LoDb.Api/LoDb.Api.csproj -c Release -a "$TARGETARCH" --no-restore \
         -p:UseAppHost=false -o /out/app \
     # The storage mount point, created here because the runtime image has no shell. Docker
     # seeds an empty named volume from the image, ownership included: the API can then
