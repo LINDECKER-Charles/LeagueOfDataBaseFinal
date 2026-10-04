@@ -1,7 +1,7 @@
 @let current = build();
 @let champion = current.champion;
 @let missing = 'build.show.missing' | transloco;
-<div class="relative isolate px-6 py-12" [class]="pathClass()">
+<div class="relative isolate flex-1 px-6 py-12" [class]="pathClass()">
   <lodb-backdrop />
   <div aria-hidden="true" class="path-ambient pointer-events-none absolute inset-0"></div>
 

@@ -32,7 +32,7 @@ import { votedRows } from './rows/voted-rows';
   imports: [Backdrop, Chip, ForgeCta, TranslocoPipe, TrendFilters, TrendRow, TrendsPager],
   templateUrl: './trends-page.html',
   styleUrl: './trends-page.css',
-  host: { class: 'block' },
+  host: { class: 'flex flex-1 flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TrendsPage {

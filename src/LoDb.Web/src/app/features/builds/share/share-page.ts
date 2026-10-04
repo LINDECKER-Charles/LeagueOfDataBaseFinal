@@ -52,7 +52,7 @@ import { ShareRunes } from './sections/share-runes';
   ],
   templateUrl: './share-page.html',
   styleUrl: './share-page.css',
-  host: { class: 'block' },
+  host: { class: 'flex flex-1 flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SharePage {

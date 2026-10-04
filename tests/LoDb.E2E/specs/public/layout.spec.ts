@@ -9,6 +9,9 @@ import { expect, test } from '../../support/test';
 // the 404 page and a sample of Arabic pages, laid out right to left.
 const RTL_PATHS = ['', 'champions', 'champions/Annie', 'about'];
 const DESKTOP = { width: 1280, height: 800 };
+// Taller than any short page: what it leaves above the footer must still be the page.
+const TALL_SCREEN = { width: 1920, height: 2000 };
+const SHORT_PAGES = ['trends', 'developers'];
 
 async function expectFitsPhone(page: Page, url: string): Promise<void> {
   await page.goto(url);
@@ -99,4 +102,25 @@ test.describe('header brand', { tag: '@readonly' }, () => {
     const logo = await page.locator('header a.brand-link lodb-logo').boundingBox();
     expect(link?.height).toBe(logo?.height);
   });
+});
+
+// The backdrop of a short page reached only as far as its content: on a tall screen the
+// shell's plain background showed between the page and the footer.
+test.describe('short pages on a tall screen', { tag: '@readonly' }, () => {
+  test.use({ viewport: TALL_SCREEN });
+
+  for (const path of SHORT_PAGES) {
+    const url = pageUrl('en', path);
+
+    test(`fill ${url} with its backdrop down to the footer`, async ({ page }) => {
+      await page.goto(url);
+      await page.waitForLoadState('networkidle');
+
+      const backdrop = await page.locator('main lodb-backdrop').first().boundingBox();
+      const footer = await page.locator('footer').first().boundingBox();
+      expect(Math.round((backdrop?.y ?? 0) + (backdrop?.height ?? 0))).toBe(
+        Math.round(footer?.y ?? Number.NaN),
+      );
+    });
+  }
 });
