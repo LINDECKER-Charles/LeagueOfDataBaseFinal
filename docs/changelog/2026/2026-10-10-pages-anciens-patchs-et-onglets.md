@@ -32,3 +32,7 @@ recharge une fois, de lui-même, et vous arrivez directement sur la page demand�
   après le calcul de la CSP ; `LODB_HTML_GZIP_LEVEL`) ; nginx demande gzip à l'amont, garde
   la copie compressée (plus de recompression à chaque HIT, cache plusieurs fois plus dense),
   la décompresse pour un client sans gzip et pose un seul `Vary: Accept-Encoding`.
+- Pages du dernier patch : `public, max-age=0, s-maxage=1800, stale-while-revalidate=86400`
+  (au lieu de 300 s et 3 600 s) : une page demandée souvent est rendue au plus deux fois par
+  heure au lieu de douze. Un nouveau patch apparaît sur une page en cache au plus 30 minutes
+  après sa promotion ; un déploiement change toujours la clé du cache.

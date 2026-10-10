@@ -25,7 +25,7 @@ readonly MISSING_ITEM=999999
 # associative array: macOS still ships bash 3.2.
 cache_of() {
   case "$1" in
-    latest) echo 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600' ;;
+    latest) echo 'public, max-age=0, s-maxage=1800, stale-while-revalidate=86400' ;;
     archived) echo 'public, max-age=3600, s-maxage=604800' ;;
     transient) echo 'public, max-age=0, s-maxage=60' ;;
     private) echo 'private, no-store' ;;
