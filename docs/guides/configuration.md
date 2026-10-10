@@ -187,6 +187,10 @@ et l'API garde sa valeur par défaut.
 | `LoDb__Contact__Recipient` | ➖ | Destinataire des messages de contact. Absent : stockés pour l'admin, sans notification. |
 | `LoDb__Contact__NotificationLocale` | ➖ | Langue de la notification, `Fr` par défaut (`Ar`… `ZhHant`). Une valeur invalide ne se voit qu'au premier message. |
 | `LoDb__Analytics__VisitorKey` 🔒 | recommandé | Clé du hachage des visiteurs. Absente : une clé aléatoire par processus, les visiteurs sont recomptés à chaque redémarrage. |
+| `LoDb__Catalog__MaxEntries`, `PinnedLanguages`, `PinnedBudgetMegabytes` | ➖ | Catalogues en mémoire : ceux du dernier patch dans les langues épinglées (défaut : les 21 de l'interface, en_US en tête), jamais évincés, dans `256` Mio estimés ; `16` autres au plus, le moins récemment lu évincé. |
+| `LoDb__Catalog__ColdLoadConcurrency`, `ColdLoadsPerSecond`, `ColdLoadBurst`, `PublicColdLoadsPerSecond`, `InternalColdLoadWait`, `MaxPendingLoads` | ➖ | Chargement d'un catalogue absent de la mémoire : `2` à la fois, `3` par seconde (rafale `6`), dont `1` pour les appels publics, refusés sans attente ; le SSR attend `2` s au plus, derrière `16` autres. Refus : `503` + `Retry-After`. |
+| `LoDb__Catalog__WarmUp__MaxStreams`, `MaxStreamsPerClient`, `StreamLifetime`, `PerClientPerHour` | ➖ | Loader de changement de patch : `8` flux ouverts, `2` par client, `120` s chacun, `20` démarrages par heure et par client (`429` au-delà). |
+| `LoDb__Ingestion__ColdDatasetsPerMinute`, `ColdImagesPerMinute`, `MaxWaitingIngestions`, `SlotWait` | ➖ | Ingestion à froid pour un visiteur : `6` couples (version, langue) et `1500` images par minute, `32` ingestions en attente d'un emplacement, `3` s d'attente au plus. Au-delà : catalogue « en attente », images en placeholders. |
 
 ### 4.3 Fixés par les fichiers compose (hors du `.env`)
 
@@ -215,7 +219,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:Analytics` | `GeoIpDatabase` (aucune), `QueueCapacity` (10000), `BatchSize` (500), `BatchWindow` (2 s), `ClientDataRetention` (30 j), `EventRetentionMonths` (13, plafond CNIL 25), `PartitionsAhead` (7) |
 | `LoDb:Egress` | `AllowedHosts` (`ddragon.leagueoflegends.com`, `raw.communitydragon.org`), `FetchConcurrency` (16), `AttemptTimeout` (15 s), `MaxRetryAttempts` (3), `RetryBaseDelay` (1 s), `MaxRedirects` (10), `MaxResponseBytes` (32 Mio) |
 | `LoDb:Ingestion` | `WatchPeriod` (10 min), `MaxAttempts` (5), `RetryDelay` (10 min), `LanguageConcurrency` (4), `RecordBatchSize` (64), `SyncConcurrency` (4), `QueueCapacity` (256), `CrawlerRequestsPerMinute` (30) |
-| `LoDb:Catalog` | `MaxEntries` (16), `VersionsLifetime` (1 min) |
+| `LoDb:Catalog` | `VersionsLifetime` (1 min) |
 | `LoDb:PublicApi` | `KeyCacheLifetime` (1 min), `TrendsLifetime` (5 min), `MeteringInterval` (1 s) |
 
 </details>
