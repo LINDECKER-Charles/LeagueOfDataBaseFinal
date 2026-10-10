@@ -5,8 +5,9 @@ namespace LoDb.Api.Workers.Analytics;
 
 /// <summary>
 /// The daily upkeep of <c>analytics_event</c>, on one instance at a time: the partitions of
-/// the coming days, then the retention the CNIL allows (addresses and user agents erased
-/// after 30 days, views dropped with their partition after 13 months).
+/// the coming days, then the retention the CNIL allows (views dropped with their partition
+/// after 13 months; the addresses and user agents of the views stored before the capture
+/// stopped keeping them erased after 30 days).
 /// </summary>
 /// <remarks>
 /// The daily aggregates are kept: they hold neither addresses nor user agents. The summary

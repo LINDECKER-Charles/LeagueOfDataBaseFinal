@@ -2,9 +2,9 @@
 date: 2026-10-11
 type: perf
 scope: full-stack
-title: Le site tient mieux la charge et partage mieux son serveur
-summary: Chaque partie du site dispose d'une part réservée du serveur, et la version de test n'en prend qu'une petite fraction.
-tags: [disponibilite, performance]
+title: Le site tient mieux la charge, et la mesure d'audience ne garde plus votre adresse IP
+summary: Chaque partie du site a sa part du serveur, et la mesure d'audience n'enregistre plus ni votre adresse IP ni votre navigateur.
+tags: [disponibilite, performance, confidentialite]
 ---
 
 ## Ce qui change
@@ -15,11 +15,17 @@ prend plus qu'une petite fraction. Sous une charge exceptionnelle, le site deman
 patienter quelques secondes plutôt que de ralentir tout le serveur qu'il partage avec
 d'autres services.
 
+La mesure d'audience du site n'enregistre plus votre adresse IP ni l'identifiant de votre
+navigateur. Ils servent, au moment de votre visite, à reconnaître le type d'appareil, le
+navigateur et le pays, puis ils sont oubliés. Les visites déjà enregistrées voient les leurs
+effacés au bout de 30 jours, comme jusqu'ici.
+
 ## Pourquoi
 
 Le 10 octobre 2026, une vague de requêtes automatiques a occupé tout le serveur, au point que
 l'hébergeur l'a bridé pour tous ses services. Le site ne peut plus en prendre davantage que
-sa part.
+sa part. Ne pas garder l'adresse IP ni l'identifiant du navigateur, que rien ne relisait,
+protège davantage votre vie privée.
 
 ## Technique
 
@@ -37,3 +43,9 @@ sa part.
   langues et téléchargements un à la fois. `compose.staging-auth.yaml`, facultatif : un
   identifiant sur les pages du staging, jamais sur l'API, les sondes, les bundles ni les
   blobs. `docs/guides/configuration.md` § 4.3 et 4.5.
+- Analytics maison : `analytics_event` n'écrit plus `ip` ni `user_agent` (colonnes laissées
+  nullables jusqu'au *contract*) ; l'effacement des vues stockées avant ne lit plus que les
+  partitions voisines du seuil des 30 jours ; l'agrégat du jour garde 200 hôtes référents au
+  plus (les moins comptés sous `(autres)`) et 200 000 visiteurs (au-delà, `visitorsTruncated`
+  dans `totals`) ; une seule ligne de journal par lot de vues non résolues. Réglages
+  `LoDb__Analytics__MaxRefererHostsPerDay`, `MaxVisitorsPerDay`, `ClientDataEraseDays`.

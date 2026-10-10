@@ -9,7 +9,10 @@ namespace LoDb.Infrastructure.Analytics.Capture;
 /// one copy. A view that cannot be resolved, or a batch that cannot be written, is dropped
 /// and counted: the capture never stops on one bad view or one database outage.
 /// </summary>
-/// <remarks>Logs carry counts only, never a path, an address or a user agent.</remarks>
+/// <remarks>
+/// At most one line per batch and per failure, with counts only, never a path, an address or
+/// a user agent.
+/// </remarks>
 internal sealed partial class PageViewPump(
     PageViewQueue queue,
     ViewEventFactory factory,
@@ -61,35 +64,56 @@ internal sealed partial class PageViewPump(
         return views.Count;
     }
 
+    // One line for the whole batch, never one per view: an outage behind the resolution (the
+    // catalog, the database) fails every view of every batch while it lasts.
     private async Task<List<AnalyticsEvent>> ResolveAsync(
         IReadOnlyList<CapturedView> batch,
         CancellationToken cancellationToken)
     {
         var views = new List<AnalyticsEvent>(batch.Count);
+        var unresolved = 0;
+        string? firstError = null;
         foreach (var captured in batch)
         {
-            try
+            var (view, error) = await ResolveOneAsync(captured, cancellationToken);
+            if (view is not null)
             {
-                if (await factory.CreateAsync(captured, cancellationToken) is { } view)
-                {
-                    views.Add(view);
-                }
+                views.Add(view);
             }
-            catch (Exception exception) when (!IsStopping(exception, cancellationToken))
-            {
-                _metrics.RecordDropped(1, AnalyticsMetrics.Unresolved);
-                LogUnresolved(logger, exception.GetType().Name);
-            }
+
+            unresolved += error is null ? 0 : 1;
+            firstError ??= error;
+        }
+
+        if (firstError is not null)
+        {
+            _metrics.RecordDropped(unresolved, AnalyticsMetrics.Unresolved);
+            LogUnresolved(logger, unresolved, firstError);
         }
 
         return views;
     }
 
+    /// <returns>The view, null when it is not of a counted page; or the failure's type.</returns>
+    private async Task<(AnalyticsEvent? View, string? Error)> ResolveOneAsync(
+        CapturedView captured,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return (await factory.CreateAsync(captured, cancellationToken), null);
+        }
+        catch (Exception exception) when (!IsStopping(exception, cancellationToken))
+        {
+            return (null, exception.GetType().Name);
+        }
+    }
+
     private static bool IsStopping(Exception exception, CancellationToken cancellationToken) =>
         exception is OperationCanceledException && cancellationToken.IsCancellationRequested;
 
-    // The type and the state only: the details of a failed copy may quote a row, its
-    // address and user agent included.
+    // The type and the state only: the details of a failed copy may quote a row, its path
+    // and its visitor hash included.
     [LoggerMessage(
         EventName = "analytics.views.write_failed",
         Level = LogLevel.Error,
@@ -100,10 +124,11 @@ internal sealed partial class PageViewPump(
         string errorType,
         string? sqlState);
 
-    // The type only: the message of a resolution failure may quote the requested path.
+    // The type of the first failure only: its message may quote the requested path.
     [LoggerMessage(
         EventName = "analytics.views.unresolved",
         Level = LogLevel.Warning,
-        Message = "A page view could not be resolved ({ErrorType}) and is lost.")]
-    private static partial void LogUnresolved(ILogger logger, string errorType);
+        Message = "{Count} page views of a batch could not be resolved ({ErrorType} first) "
+            + "and are lost.")]
+    private static partial void LogUnresolved(ILogger logger, int count, string errorType);
 }

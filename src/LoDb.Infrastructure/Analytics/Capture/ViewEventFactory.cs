@@ -10,8 +10,14 @@ namespace LoDb.Infrastructure.Analytics.Capture;
 /// where it came from.
 /// </summary>
 /// <remarks>
+/// <para>
+/// The client's address and user agent are read here and never kept: they give the visitor
+/// hash, the browser, the system, the device and the country, and the row stores those only.
+/// </para>
+/// <para>
 /// An internal navigation is counted as the legacy stack counted a click on a link of the
 /// site: an internal referral from the site's own host.
+/// </para>
 /// </remarks>
 internal sealed class ViewEventFactory(
     ITrackedPageResolver resolver,
@@ -33,7 +39,6 @@ internal sealed class ViewEventFactory(
         var address = view.ClientAddress is { IsIPv4MappedToIPv6: true } mapped
             ? mapped.MapToIPv4()
             : view.ClientAddress;
-        var ip = address?.ToString();
         var client = UserAgentParser.Parse(view.UserAgent);
         var referer = RefererOf(view);
         var country = geo.Locate(address);
@@ -50,9 +55,7 @@ internal sealed class ViewEventFactory(
             Version = page.Version,
             Lang = page.Lang,
             Locale = page.Locale,
-            Ip = ip,
-            Visitor = hasher.Hash(ip, view.UserAgent),
-            UserAgent = view.UserAgent,
+            Visitor = hasher.Hash(address?.ToString(), view.UserAgent),
             Browser = client.Browser,
             Os = client.Os,
             Device = client.Device,

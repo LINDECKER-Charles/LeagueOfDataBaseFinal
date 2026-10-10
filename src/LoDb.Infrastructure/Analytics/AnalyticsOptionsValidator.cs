@@ -42,9 +42,20 @@ internal sealed class AnalyticsOptionsValidator : IValidateOptions<AnalyticsOpti
             failures,
             options.PartitionsAhead is < 1 or > MaxPartitionsAhead,
             $"PartitionsAhead must lie between 1 and {MaxPartitionsAhead}.");
+        AddDailyBoundFailures(failures, options);
         return failures.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);
+    }
+
+    private static void AddDailyBoundFailures(List<string> failures, AnalyticsOptions options)
+    {
+        AddIf(failures, options.ClientDataEraseDays < 1, "ClientDataEraseDays must be positive.");
+        AddIf(failures, options.MaxVisitorsPerDay < 1, "MaxVisitorsPerDay must be positive.");
+        AddIf(
+            failures,
+            options.MaxRefererHostsPerDay < 1,
+            "MaxRefererHostsPerDay must be positive.");
     }
 
     private static bool IsWithinEventRetention(TimeSpan retention, int eventMonths) =>
