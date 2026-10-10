@@ -2,8 +2,8 @@
 date: 2026-10-10
 type: fix
 scope: back
-title: Une réponse « réessayez » rapide quand le site est saturé, plutôt qu'une longue attente
-summary: Quand la base de données est très sollicitée, le site répond aussitôt de réessayer un peu plus tard au lieu de faire attendre puis d'échouer.
+title: Un « réessayez » rapide plutôt qu'une longue attente quand le site est saturé
+summary: Quand la base de données est très sollicitée, le site répond en quelques secondes de réessayer un peu plus tard au lieu de faire attendre puis d'échouer.
 tags: [disponibilite, performance]
 ---
 
