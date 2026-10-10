@@ -149,6 +149,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `LODB_PAGES_*`, `LODB_API_READS_*`, `LODB_LEGACY_*` et `LODB_SITEMAPS_*` (débit et rafale) ;
   jamais `compose.deploy.yaml`. Pour retrouver un défaut, retirer la clé (`!reset null`) :
   une valeur vide fait refuser la configuration de nginx.
+- **Tout relèvement ajouté à `compose.override.yaml` s'annule aussi dans
+  `tools/load/compose.bench.yaml`**, le calque du banc de charge, sinon le banc mesure une pile
+  sans borne : `tools/load/test/compose-bench.test.mjs` échoue tant qu'une clé relevée garde sa
+  valeur relevée. Compose n'applique pas le `!reset` par clé d'un troisième fichier à une clé
+  que le deuxième a ajoutée : le calque redonne l'entrée de `compose.yaml` (SSR, nginx) ou
+  nomme la clé sans valeur (API, comme `compose.deploy.yaml`). Le banc ne tourne jamais sur le
+  staging, qui partage les vCPU de la prod ([`tools/load/`](../../tools/load/README.md)).
 
 ## Infra et déploiement
 
