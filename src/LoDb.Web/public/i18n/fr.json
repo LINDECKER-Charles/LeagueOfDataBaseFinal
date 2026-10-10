@@ -902,6 +902,9 @@
       "down": "Voter contre ce build",
       "score_label": "Score communautaire",
       "login": "Connectez-vous pour voter",
+      "refused_unverified": "Confirmez votre adresse e-mail pour voter.",
+      "refused_too_recent": "Un nouveau compte peut voter un jour après son inscription.",
+      "refused_too_many": "Trop de votes en peu de temps — réessayez plus tard.",
       "invalid": "Vote invalide."
     },
     "supporter": {

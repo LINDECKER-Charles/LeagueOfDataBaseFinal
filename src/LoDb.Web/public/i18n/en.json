@@ -902,6 +902,9 @@
       "down": "Downvote this build",
       "score_label": "Community score",
       "login": "Sign in to vote",
+      "refused_unverified": "Confirm your email address to vote.",
+      "refused_too_recent": "A new account can vote one day after signing up.",
+      "refused_too_many": "Too many votes in a short time — try again later.",
       "invalid": "Invalid vote."
     },
     "supporter": {
