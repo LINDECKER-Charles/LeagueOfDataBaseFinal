@@ -4,8 +4,8 @@ using Microsoft.Extensions.Options;
 namespace LoDb.Api.Tests.Hosting;
 
 /// <summary>
-/// A wrong network setting stops the host at start, with the name of the setting, instead
-/// of serving on a port nobody expects.
+/// A wrong network or request setting stops the host at start, with the name of the setting,
+/// instead of serving on a port nobody expects.
 /// </summary>
 public sealed class HostingOptionsTests
 {
@@ -13,6 +13,7 @@ public sealed class HostingOptionsTests
     [InlineData("LoDb:Hosting:MetricsPort", "8080", "must differ")]
     [InlineData("LoDb:Hosting:HttpPort", "0", "HttpPort")]
     [InlineData("LoDb:Hosting:KnownProxyNetworks:0", "not-a-network", "CIDR")]
+    [InlineData("LoDb:Hosting:DatabaseBusyRetryAfter", "00:00:00", "DatabaseBusyRetryAfter")]
     public async Task InvalidSettingStopsTheHostAtStart(string key, string value, string reason)
     {
         await using var factory = new ApiFactory

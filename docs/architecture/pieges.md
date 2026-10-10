@@ -59,6 +59,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - `/readyz` se lit sur l'API (18081 ou `api:8080`) ; demandé à nginx, il part au SSR (404).
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
+- **Pool Postgres** : `Maximum Pool Size=32;Timeout=5` dans la chaîne de connexion. Une
+  requête `/api` qui n'obtient pas de connexion à temps reçoit un **503** `service-busy`
+  avec `Retry-After` : délestage voulu, non compté. Une base injoignable donne un **500**,
+  compté par `lodb_db_unavailable_total`. Npgsql ne donne au pool épuisé ni type ni code :
+  son message est reconnu par son texte, et `DatabaseFailureTests` le revérifie sur un vrai
+  pool à chaque montée de version.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en
   littéral (sinon `dead` dès le premier essai). L'outbox n'envoie rien sans

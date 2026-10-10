@@ -21,7 +21,7 @@
 # No `cpus` ceiling: set too low, it throttles silently.
 
 x-lodb-connection: &lodb-connection >-
-  Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment};Gss Encryption Mode=Disable
+  Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
 
 services:
   api:
