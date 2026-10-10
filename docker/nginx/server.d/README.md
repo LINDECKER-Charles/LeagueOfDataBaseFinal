@@ -9,12 +9,13 @@ Reserved files (plan, §7.3):
 
 | File | Chantier |
 |---|---|
-| `seo.conf` | L3.4 (sitemaps, robots.txt, llms.txt routed to the API) |
-| `legacy-redirects.conf` | L3.12 (301 of the old URLs) |
+| `seo.conf` | L3.4 (sitemaps, robots.txt, llms.txt routed to the API, cached) |
+| `legacy-redirects.conf` | L3.12 (301 of the old URLs, cached) |
 | `analytics.conf` | L7.1 (internal target of the page-view mirror) |
-| `hardening.conf` | L3.11 (client timeouts, dotfiles) |
 
-What goes inside a `location` belongs in `../snippets/` instead.
+What goes inside a `location` belongs in `../snippets/` instead. The guards both server
+blocks share (refused agents, client timeouts, paths that exist nowhere, the 429 answer)
+live in `../snippets/server-guards.conf`, which the API subdomain includes too.
 
 Files of the served environment, not of the image: the environment mounts a folder
 read-only on `/etc/nginx/android/` (a folder rather than each file, so that a replaced

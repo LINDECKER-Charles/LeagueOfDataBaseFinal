@@ -88,6 +88,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
   une correction.
 - Les instantanés de `tests/LoDb.E2E/test-results/` sont écrasés au passage suivant.
+- **Débits par adresse de nginx relevés** : toute la suite arrive sous une seule adresse (la
+  passerelle Docker), plus vite qu'un visiteur. `compose.override.yaml` relève
+  `LODB_PAGES_*`, `LODB_API_READS_*`, `LODB_LEGACY_*` et `LODB_SITEMAPS_*` (débit et rafale) ;
+  jamais `compose.deploy.yaml`. Pour retrouver un défaut, retirer la clé (`!reset null`) :
+  une valeur vide fait refuser la configuration de nginx.
 
 ## Infra et déploiement
 
@@ -104,6 +109,14 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `server.d/legacy-redirects.conf` envoie à `/api/legacy` les premiers segments de l'ancien
   site : tout nouveau chemin hors locale se vérifie contre cette liste. `server.d/seo.conf`
   possède `/sitemap.xml`, `/sitemaps/`, `/robots.txt` et `/llms.txt`.
+- nginx, bornes (`sites/site.conf`) : `limit_req` par adresse sur les pages, les lectures
+  publiques de l'API, l'ancien site et `/sitemaps/` ; **jamais** sur les autres
+  `/api/` (actions d'un compte, ADR 0009), `/v1/`, `/webhooks/`, `/build/`, `/cdn/`. Le 429
+  vient de `snippets/server-guards.conf` : une location qui déclare son propre `error_page`
+  doit répéter `error_page 429`. `/api/catalog` et `/api/meta` ne sont **jamais** mis en
+  cache par nginx (un HIT contournerait le `426` des apps). Les caches `lodb_seo` et
+  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages` sur un volume.
+  Vérification : `tools/nginx/` (`node --test`).
 - `gzip_types` de `docker/nginx/nginx.conf` doit lister `text/javascript` et
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé

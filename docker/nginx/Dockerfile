@@ -3,10 +3,11 @@
 # Build context = repository root; Dockerfile.dockerignore admits docker/nginx/ only.
 #
 # Layout, fixed for the later lots (they add files here without touching this Dockerfile):
-#   nginx.conf  http block: upstreams, resolver, proxy_cache zone, shared maps
-#   sites/      one file per server block
+#   nginx.conf  http block: upstreams, resolver, shared maps
+#   sites/      one file per server block; site.conf also holds the http-level bounds and
+#               cache zones that LODB_* variables tune
 #   server.d/   *.conf included INSIDE the site's server block (seo, legacy redirects…)
-#   snippets/   files included inside a location (security headers, proxy headers…)
+#   snippets/   files included by a server block or a location (guards, headers, caches…)
 FROM nginx:1.31-alpine
 ARG APP_REVISION=unknown
 LABEL org.opencontainers.image.title="lodb-nginx" \
@@ -20,8 +21,11 @@ LABEL org.opencontainers.image.title="lodb-nginx" \
 #
 # Defaults suit a local stack; a served environment sets the first three
 # (compose.deploy.yaml). LODB_REVISION, first part of the page cache's key, defaults to the
-# image's revision (compose.yaml sets it). An empty value makes nginx refuse its
-# configuration: leave a variable out to keep its default, never set it empty.
+# image's revision (compose.yaml sets it). The others bound each client and the caches
+# (sites/site.conf): a rate in requests per second or minute (r/s, r/m), a burst in requests
+# admitted at once past the rate, sizes in nginx units (k, m, g), durations in s, m, h, d.
+# An empty value makes nginx refuse its configuration: leave a variable out to keep its
+# default, never set it empty.
 ENV APP_REVISION=${APP_REVISION} \
     NGINX_ENVSUBST_TEMPLATE_SUFFIX=.template \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx \
@@ -29,10 +33,24 @@ ENV APP_REVISION=${APP_REVISION} \
     LODB_CANONICAL_HOST=localhost \
     LODB_EDGE_CIDR=127.0.0.1/32 \
     LODB_NOINDEX=0 \
-    LODB_REVISION=${APP_REVISION}
+    LODB_REVISION=${APP_REVISION} \
+    LODB_PAGES_RATE=20r/s \
+    LODB_PAGES_BURST=100 \
+    LODB_API_READS_RATE=10r/s \
+    LODB_API_READS_BURST=40 \
+    LODB_LEGACY_RATE=2r/s \
+    LODB_LEGACY_BURST=10 \
+    LODB_SITEMAPS_RATE=1r/s \
+    LODB_SITEMAPS_BURST=20 \
+    LODB_RATE_LIMITED_RETRY_AFTER=10 \
+    LODB_MAX_BODY_SIZE=128k \
+    LODB_WEBHOOK_MAX_BODY_SIZE=1m \
+    LODB_PAGE_CACHE_SIZE=2g \
+    LODB_PAGE_CACHE_KEYS_SIZE=32m \
+    LODB_PAGE_CACHE_INACTIVE=7d
 
-# /var/cache/nginx/pages holds the page cache (nginx.conf); created here so that the volume
-# mounted on it (compose.yaml) starts owned by the workers' user.
+# /var/cache/nginx/pages holds the page cache (sites/site.conf); created here so that the
+# volume mounted on it (compose.yaml) starts owned by the workers' user.
 RUN rm -f /etc/nginx/conf.d/default.conf \
  && mkdir -p /var/cache/nginx/pages \
  && chown nginx:nginx /var/cache/nginx/pages

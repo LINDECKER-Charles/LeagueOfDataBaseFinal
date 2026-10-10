@@ -108,6 +108,23 @@ services:
       # (APP_REVISION, the commit SHA baked by _build.yml), so a promoted build never
       # serves the previous one's pages.
       LODB_REVISION: !reset null
+      # Bounds per client address and sizes of the caches (docker/nginx/Dockerfile): passed
+      # only when the host's .env sets them, under these exact names, so an absent one keeps
+      # the image's default. Never set one empty: nginx would refuse its configuration.
+      LODB_PAGES_RATE:
+      LODB_PAGES_BURST:
+      LODB_API_READS_RATE:
+      LODB_API_READS_BURST:
+      LODB_LEGACY_RATE:
+      LODB_LEGACY_BURST:
+      LODB_SITEMAPS_RATE:
+      LODB_SITEMAPS_BURST:
+      LODB_RATE_LIMITED_RETRY_AFTER:
+      LODB_MAX_BODY_SIZE:
+      LODB_WEBHOOK_MAX_BODY_SIZE:
+      LODB_PAGE_CACHE_SIZE:
+      LODB_PAGE_CACHE_KEYS_SIZE:
+      LODB_PAGE_CACHE_INACTIVE:
     volumes:
       # Host folder of the Android files, latest.json and assetlinks.json
       # (server.d/android-latest.conf, assetlinks.conf): empty, both URLs answer 404.
@@ -125,8 +142,11 @@ services:
     deploy:
       resources:
         limits:
-          # Peak 19 MiB; the kernel's page cache of the blobs it serves is charged here.
-          memory: 64m
+          # Not the 2 x peak rule (19 MiB of processes): the shared memory of the cache keys
+          # (32 MiB for the pages) and of the rate zones is charged here, and so is the
+          # kernel's page cache of the cached pages and blobs it serves, which fills whatever
+          # the limit leaves. Too tight, every cache HIT reads the disk again.
+          memory: 256m
 
   postgres:
     environment:

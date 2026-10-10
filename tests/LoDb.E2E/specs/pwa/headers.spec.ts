@@ -118,6 +118,17 @@ test.describe('headers of the front files', { tag: '@readonly' }, () => {
     expect(response.headers()['x-cache-status']).toBeUndefined();
   });
 
+  test('answer a server script or a dump with a plain 404, without rendering', async ({
+    request,
+  }) => {
+    for (const path of ['/wp-login.php', '/en/config.env', '/backup.sql']) {
+      const response = await request.get(path);
+
+      expect(response.status(), path).toBe(404);
+      expect(response.headers()['x-cache-status'], path).toBeUndefined();
+    }
+  });
+
   test('refuse a blocked crawler with a 403, without rendering', async ({ request }) => {
     const crawler =
       'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko)' +
