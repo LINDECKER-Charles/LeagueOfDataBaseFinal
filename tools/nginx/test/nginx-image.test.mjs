@@ -108,6 +108,9 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.equal(await cacheOf('/robots.txt'), 'HIT');
     assert.equal(await cacheOf('/sitemaps/en/latest.xml'), 'MISS');
     assert.equal(await cacheOf('/sitemaps/en/latest.xml?page=2'), 'HIT');
+    // The API receives the path as sent: an encoded slash names another file there (a 404
+    // kept a minute), which must never answer for the decoded one.
+    assert.equal(await cacheOf('/sitemaps/en%2Flatest.xml'), 'MISS');
   });
 
   test("keeps the former site's 301 per query, then holds a client to its rate", async () => {
@@ -121,8 +124,8 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
   });
 
   test('holds a client sweeping the sitemaps to its rate', async () => {
-    // Two of its burst of five went to the cache check above.
-    const statuses = await statusesOf(stack.port, '/sitemaps/fr/latest.xml', 5);
-    assert.deepEqual(statuses, [200, 200, 200, 200, 429]);
+    // Three of its burst of five went to the cache check above.
+    const statuses = await statusesOf(stack.port, '/sitemaps/fr/latest.xml', 4);
+    assert.deepEqual(statuses, [200, 200, 200, 429]);
   });
 });
