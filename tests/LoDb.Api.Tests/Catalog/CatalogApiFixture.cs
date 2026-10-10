@@ -8,6 +8,7 @@ using LoDb.Testing.Fixtures;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using OpenTelemetry.Exporter;
 
 namespace LoDb.Api.Tests.Catalog;
 
@@ -50,7 +51,12 @@ public sealed class CatalogApiFixture : IAsyncLifetime
         };
         var replay = DdragonFixtures.CreateReplay();
         var host = _factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(
-            services => services.AddDdragonFixtureReplay(replay)));
+            services => services
+                .AddDdragonFixtureReplay(replay)
+                // Each scrape reads the measures of the test asking: the exporter's response
+                // cache would hand a test the scrape another one took just before.
+                .Configure<PrometheusAspNetCoreOptions>(static prometheus =>
+                    prometheus.ScrapeResponseCacheDurationMilliseconds = 0)));
         var ingestion = host.Services.GetRequiredService<IVersionIngestion>();
         await IngestAsync(ingestion, DdragonFixtures.Latest);
         _client = host.CreateClient();
