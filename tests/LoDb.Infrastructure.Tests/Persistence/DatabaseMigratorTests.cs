@@ -16,10 +16,11 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
     private const string Lot1 = "20260926022150_Lot1DataDragon";
     private const string Lot4 = "20260926091745_Lot4Accounts";
     private const string Lot6 = "20260926185409_Lot6BillingAnalyticsApps";
+    private const string PaymentStates = "20261010231234_StripePaymentStates";
     private const string EfHistory = "__EFMigrationsHistory";
 
     private static readonly string[] AllMigrations =
-        [DoctrineBaseline.MigrationId, Lot1, Lot4, Lot6];
+        [DoctrineBaseline.MigrationId, Lot1, Lot4, Lot6, PaymentStates];
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -75,7 +76,7 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
         var report = await database.MigrateAsync(Cancellation);
 
         Assert.Equal(BaselineOutcome.Marked, report.Baseline);
-        Assert.Equal([Lot1, Lot4, Lot6], report.Applied);
+        Assert.Equal([Lot1, Lot4, Lot6, PaymentStates], report.Applied);
         Assert.Equal(AllMigrations, await database.AppliedMigrationsAsync(Cancellation));
         await BaselineSchemaTests.AssertOnlyAdditionsAsync(database);
     }

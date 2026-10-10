@@ -610,6 +610,96 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                     b.ToTable("donations", (string)null);
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Billing.Payments.StripeCheckout", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("id");
+
+                    b.Property<long>("AmountCents")
+                        .HasColumnType("bigint")
+                        .HasColumnName("amount_cents");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("PaymentIntentId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("payment_intent_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_stripe_checkout");
+
+                    b.HasIndex("PaymentIntentId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_stripe_checkout_payment_intent_id")
+                        .HasFilter("payment_intent_id IS NOT NULL");
+
+                    b.ToTable("stripe_checkout", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_stripe_checkout_kind", "kind IN ('api_pack', 'api_plan', 'donation')");
+
+                            t.HasCheckConstraint("ck_stripe_checkout_status", "status IN ('pending', 'paid', 'failed', 'refused', 'revoked')");
+                        });
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Billing.Payments.StripeSubscription", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("plan");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_stripe_subscription");
+
+                    b.ToTable("stripe_subscription", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_stripe_subscription_status", "status IN ('entitled', 'suspended', 'ended')");
+                        });
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Billing.StripeEvent", b =>
                 {
                     b.Property<string>("Id")
