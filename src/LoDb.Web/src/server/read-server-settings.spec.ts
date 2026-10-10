@@ -1,4 +1,7 @@
+import { readRenderLimits } from './admission/read-render-limits';
 import { readServerSettings } from './read-server-settings';
+
+const DEFAULT_RENDER_LIMITS = readRenderLimits({});
 
 describe('readServerSettings', () => {
   it('runs locally without any variable', () => {
@@ -8,6 +11,7 @@ describe('readServerSettings', () => {
       trustProxyHeaders: undefined,
       apiOrigin: 'http://api:8080',
       selfOrigin: 'http://127.0.0.1:4000',
+      renderLimits: DEFAULT_RENDER_LIMITS,
     });
   });
 
@@ -18,6 +22,7 @@ describe('readServerSettings', () => {
         LODB_ALLOWED_HOSTS: 'league-of-data-base.com, next.league-of-data-base.com ,',
         LODB_TRUST_PROXY_HEADERS: 'x-forwarded-proto,x-forwarded-host',
         LODB_API_ORIGIN: 'http://api:8080/',
+        LODB_PINNED_RENDERS_PER_MINUTE: '30',
       },
       true,
     );
@@ -28,6 +33,7 @@ describe('readServerSettings', () => {
       trustProxyHeaders: ['x-forwarded-proto', 'x-forwarded-host'],
       apiOrigin: 'http://api:8080',
       selfOrigin: 'http://127.0.0.1:4100',
+      renderLimits: { ...DEFAULT_RENDER_LIMITS, pinnedPerMinute: 30 },
     });
   });
 
