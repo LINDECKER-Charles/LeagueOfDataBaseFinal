@@ -34,8 +34,10 @@ services:
       # Maximum Pool Size=32 keeps the API well under Postgres's max_connections, with room
       # for migrate, the deploy backup and psql. Timeout=5 bounds the wait for a pooled
       # connection (and the connection attempt): past it, /api answers 503 with Retry-After.
+      # Host=lodb-postgres, the project's alias: on a shared network (observability), the
+      # short name `postgres` would also name other projects' databases.
       ConnectionStrings__LoDb: &lodb-connection >-
-        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+        Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
       # X-Forwarded-* are trusted from the private ranges: only nginx and web-ssr reach
       # this port on a served host (no host port, not on the edge network). The stack's
       # own subnet is picked by Docker, so it cannot be named more precisely here.
@@ -54,8 +56,9 @@ services:
       - ddragon:/srv/storage
     networks:
       default:
-        # The name nginx proxies to. On a host, nginx also sits on the shared `edge` network,
-        # where `api` names other projects' services: Docker's DNS answers with theirs too.
+        # The name nginx and web-ssr call. On a host, nginx also sits on the shared `edge`
+        # network and api on `observability`, where `api` names other projects' services:
+        # Docker's DNS answers with theirs too. Containers only ever use the prefixed aliases.
         aliases: [lodb-api]
     depends_on:
       postgres:
@@ -98,7 +101,8 @@ services:
     init: true
     environment:
       PORT: "4000"
-      LODB_API_ORIGIN: http://api:8080
+      # The API's project alias, never the short name `api` (see api's aliases).
+      LODB_API_ORIGIN: http://lodb-api:8080
       # Hosts the renders accept (Host or trusted X-Forwarded-Host); others get a 400.
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:-localhost,127.0.0.1}
       # Set by nginx (snippets/proxy-headers.conf); Angular ignores them unless listed.
@@ -207,6 +211,10 @@ services:
       POSTGRES_PASSWORD: ${LODB_DB_PASSWORD:-lodb}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      default:
+        # The name of the connection strings, unique once api joins a shared network.
+        aliases: [lodb-postgres]
     restart: unless-stopped
     logging: *default-logging
     healthcheck:

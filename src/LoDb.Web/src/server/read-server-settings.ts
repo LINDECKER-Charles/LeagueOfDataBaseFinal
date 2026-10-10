@@ -7,8 +7,9 @@ const DEFAULT_PORT = 4000;
 const MAX_PORT = 65_535;
 // Enough to run the build locally; every deployed environment lists its own hosts.
 const DEFAULT_ALLOWED_HOSTS = ['localhost'];
-// The API service of the compose stack (plan, section 5.2).
-const DEFAULT_API_ORIGIN = 'http://api:8080';
+// The API's alias in the compose stack: never the short name `api`, which a shared network
+// (observability) resolves to other projects' services too.
+const DEFAULT_API_ORIGIN = 'http://lodb-api:8080';
 const LOOPBACK_HOST = '127.0.0.1';
 
 type Environment = Readonly<Record<string, string | undefined>>;

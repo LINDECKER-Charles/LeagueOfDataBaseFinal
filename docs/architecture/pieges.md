@@ -68,7 +68,7 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 ## API, données et comptes
 
-- `/readyz` se lit sur l'API (18081 ou `api:8080`) et, par nginx, sur le sous-domaine `api.`
+- `/readyz` se lit sur l'API (18081 ou `lodb-api:8080`) et, par nginx, sur le sous-domaine `api.`
   seulement (1 requête/s par adresse, sonde externe) ; demandé au site, il part au SSR (404).
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
@@ -86,7 +86,7 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune limite, et
   Development transforme un corps invalide en exception.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
-- **Porte froide des catalogues** : un appel direct à l'API (18081, `api:8080`) depuis une
+- **Porte froide des catalogues** : un appel direct à l'API (18081, `lodb-api:8080`) depuis une
   adresse privée et sans `X-Forwarded-For` est compté comme le SSR (débit interne, attente
   de 2 s permise). Pour reproduire un client public, passer par nginx (18080). Un `503`
   « en attente » sous charge est un délestage voulu, pas une panne.
