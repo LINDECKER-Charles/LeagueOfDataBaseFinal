@@ -14,9 +14,9 @@ plus ; leur guide est
 
 | Fichier | Rôle |
 |---|---|
-| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main`, `docs/reecriture-dotnet-angular`) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-dev` + Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`. Sur un push de **`main`** : `promote`, `deploy-prod`. |
+| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main` : les seules branches qui déploient) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-dev` + Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`. Sur un push de **`main`** : `promote`, `deploy-prod`. |
 | `_build.yml` | Réutilisable : construit depuis `test` les images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, taguées `:<sha>` (le commit poussé sur `dev`) + `:staging`, label OCI et `APP_REVISION` = SHA. |
-| `_deploy.yml` | Réutilisable : déploiement SSH d'un hôte, même logique pour `staging` et `prod`. Entrées `environment` (`staging` ou `prod`) et `branch` (`test` ou `main`) ; secrets passés par `ci.yml` (§ Secrets). |
+| `_deploy.yml` | Réutilisable : déploiement SSH d'un hôte, même logique pour `staging` et `prod`. Entrées `environment` (`staging` ou `prod`) et `branch` (`test` ou `main`) ; secrets passés par `ci.yml` (§ Secrets). Son job tourne dans l'environnement GitHub `staging` ou `production`. |
 | `_promote.yml` | Réutilisable : retague `:staging` en `:prod` et `:latest`, **sans rebuild**. |
 | `release-desktop.yml`, `release-android.yml` | Releases signées des apps ([`release-desktop.md`](release-desktop.md), [`release-android.md`](release-android.md)). |
 
@@ -47,8 +47,9 @@ fusion manuelle test → main ─▶ push main
 
 Les checks, la fusion dans `test`, le build, le retag et le `pull` des images sur l'hôte
 n'utilisent que `GITHUB_TOKEN`.
-Le déploiement lit des **secrets de dépôt**, sans environnement GitHub, comme l'ancienne
-stack ; `ci.yml` les passe à `_deploy.yml` :
+Le déploiement lit des **secrets de dépôt**, comme l'ancienne stack, dans l'environnement
+GitHub de sa cible (`staging`, `production`), où l'exploitant pose les protections
+([`configuration.md`](configuration.md), § 3.3) ; `ci.yml` les passe à `_deploy.yml` :
 
 | Entrée de `_deploy.yml` | `deploy-staging` | `deploy-prod` |
 |---|---|---|
@@ -56,12 +57,15 @@ stack ; `ci.yml` les passe à `_deploy.yml` :
 | `SSH_HOST` | `STAGING_HOST` | `PROD_HOST` |
 | `DEPLOY_PATH` | `STAGING_PATH` | `PROD_PATH` |
 | `SSH_USER` (➖, `root`) | `STAGING_SSH_USER` | `PROD_SSH_USER` |
+| `SSH_KNOWN_HOSTS` (➖) | `STAGING_SSH_KNOWN_HOSTS` | `PROD_SSH_KNOWN_HOSTS` |
 | `ENV_FILE` | `ENV_STAGING` | `ENV_PROD` |
 | `DATA_PROTECTION_PFX` | `STAGING_DATA_PROTECTION_PFX` | `PROD_DATA_PROTECTION_PFX` |
 
 Les quatre premières lignes existent déjà (ancienne stack). `ENV_STAGING` et `ENV_PROD`
 existent aussi, mais leur contenu est **remplacé** par le `.env` de la nouvelle stack ; les
-deux certificats sont nouveaux ([`configuration.md`](configuration.md), § 2 et 3.2).
+deux certificats sont nouveaux ([`configuration.md`](configuration.md), § 2 et 3.2). Les
+clés de l'hôte (`*_SSH_KNOWN_HOSTS`) sont à créer (§ 6.3 du même guide) : absentes, le job
+les lit par `ssh-keyscan`, sans vérification, et le run porte un avertissement.
 
 **Tags d'images** : `:<sha>` (immuable, poussé par `_build.yml`), `:staging` (dernier build
 de `dev`), `:prod` et `:latest` (images promues). `ghcr.io/<owner>/lodb/nginx` porte le nom

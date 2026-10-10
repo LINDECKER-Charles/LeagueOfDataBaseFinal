@@ -19,8 +19,9 @@ environnement.
 
 | Où | Contenu | Écrit par |
 |---|---|---|
-| Secrets de dépôt `STAGING_*`, `PROD_*` | Connexion SSH et dossier de l'hôte, **ceux de l'ancienne stack, réutilisés tels quels** ; certificat Data Protection (nouveau) | déjà en place, sauf le certificat |
+| Secrets de dépôt `STAGING_*`, `PROD_*` | Connexion SSH et dossier de l'hôte, **ceux de l'ancienne stack, réutilisés tels quels** ; certificat Data Protection (nouveau) ; clés de l'hôte (`*_SSH_KNOWN_HOSTS`, nouveau) | déjà en place, sauf le certificat et les clés de l'hôte |
 | Secrets de dépôt `ENV_STAGING`, `ENV_PROD` | Le `.env` complet de l'environnement : **contenu remplacé** par celui de la nouvelle stack | l'exploitant (*Settings ▸ Secrets*) |
+| Environnements GitHub `staging`, `production` | Règles de protection des déploiements (§ 3.3) | GitHub au premier déploiement ; règles par l'exploitant |
 | Environnements GitHub `desktop-release`, `android-release`, variables de dépôt | Clés de signature des apps, drapeaux de release | l'exploitant |
 | `.env` de l'hôte (`$STAGING_PATH/.env`, `$PROD_PATH/.env`) | Variables Compose et réglages de l'API (§ 4), **sans les secrets** | le job, depuis `ENV_STAGING` ou `ENV_PROD` |
 | `.deploy/secrets/` de l'hôte | Un fichier par secret 🔒 du `.env`, monté dans `/run/secrets` des services qui le lisent (§ 4) | le job, depuis `ENV_STAGING` ou `ENV_PROD` |
@@ -61,12 +62,16 @@ bascule de l'environnement : son premier déploiement remplace ce fichier.
 
 ### 3.1 Environnements et packages
 
-Les déploiements n'utilisent **aucun environnement GitHub** : comme pour l'ancienne stack,
-ils lisent des secrets de dépôt, et la garde de la prod est la fusion manuelle de `test`
-dans `main`. Seules les releases des apps ont leurs environnements.
+Le job de `_deploy.yml` tourne dans l'environnement GitHub de sa cible : `staging` pour
+`deploy-staging`, `production` pour `deploy-prod` (un job qui appelle un workflow réutilisable
+n'accepte pas `environment` : il est posé dans `_deploy.yml`). GitHub crée l'environnement à
+son premier déploiement, **sans règle** : les protections sont à poser par l'exploitant
+(§ 3.3). Les secrets restent des secrets de dépôt, passés par `ci.yml` (§ 3.2).
 
 | Environnement | Création | Protection | Contenu |
 |---|---|---|---|
+| `staging` | par GitHub, au premier déploiement | à poser : branche de déploiement `dev` | aucun secret (ceux de dépôt, `STAGING_*`) |
+| `production` | par GitHub, au premier déploiement | à poser : branche de déploiement `main`, approbation requise | aucun secret (ceux de dépôt, `PROD_*`) |
 | `desktop-release` | à la main | branche des workflows lancés | secrets et variables du desktop (§ 3.4) |
 | `android-release` | à la main | branche `main` ([`release-android.md`](release-android.md)) | secrets d'Android (§ 3.4) |
 
@@ -81,7 +86,7 @@ packages `lodb/api` et `lodb/web-ssr`, nouveaux, peuvent rester privés. Une com
 ### 3.2 Secrets de déploiement
 
 `ci.yml` les passe à `_deploy.yml` sous des noms neutres (`SSH_KEY`, `SSH_HOST`,
-`DEPLOY_PATH`, `SSH_USER`, `ENV_FILE`, `DATA_PROTECTION_PFX`).
+`DEPLOY_PATH`, `SSH_USER`, `SSH_KNOWN_HOSTS`, `ENV_FILE`, `DATA_PROTECTION_PFX`).
 
 | `staging` | `prod` | Statut | Rôle |
 |---|---|---|---|
@@ -89,6 +94,7 @@ packages `lodb/api` et `lodb/web-ssr`, nouveaux, peuvent rester privés. Une com
 | `STAGING_HOST` | `PROD_HOST` | existant | IP ou FQDN de l'hôte. |
 | `STAGING_PATH` | `PROD_PATH` | existant | Dossier du dépôt sur l'hôte, celui de l'ancienne stack : la nouvelle y prend sa place. |
 | `STAGING_SSH_USER` | `PROD_SSH_USER` | existant | Utilisateur SSH (➖, `root` par défaut). |
+| `STAGING_SSH_KNOWN_HOSTS` | `PROD_SSH_KNOWN_HOSTS` | **nouveau**, à créer | Lignes `known_hosts` des clés de l'hôte (§ 6.3) : `ssh` refuse alors toute autre clé. Absent : la clé est lue par `ssh-keyscan` à chaque run, sans vérification, et le run porte un avertissement *Host key not pinned*. |
 | `ENV_STAGING` 🔒 | `ENV_PROD` 🔒 | **à remplacer** | Contenu complet de `.env.staging` / `.env.prod` (§ 4). |
 | `STAGING_DATA_PROTECTION_PFX` 🔒 | `PROD_DATA_PROTECTION_PFX` 🔒 | **nouveau** | Le `.pfx` de l'environnement en base64, sur une ligne (§ 6.2). Celui de la prod ne change plus une fois servi : les clés déjà chiffrées deviendraient illisibles (sessions et jetons perdus). |
 
@@ -98,8 +104,24 @@ nommant ceux qui manquent, avant toute connexion à l'hôte.
 ### 3.3 Garde de la prod
 
 `main` n'est atteint que par une fusion manuelle de `test` : c'est la validation humaine
-qui met en prod, sans rebuild ni nouveau passage des checks. Les secrets `PROD_*` étant des
-secrets de dépôt, tout workflow du dépôt peut les lire, comme avant la bascule.
+qui met en prod, sans rebuild ni nouveau passage des checks. `ci.yml` ne se déclenche plus
+que sur les pushs des branches qui déploient (`dev`, `main`) et sur les pull requests.
+
+**À poser par l'exploitant** (*Settings ▸ Environments*), une fois chaque environnement créé
+par son premier déploiement :
+
+- `production` : *Required reviewers* (le propriétaire) et *Deployment branches* limitées à
+  `main`. Le déploiement de la prod attend alors une approbation. `_promote.yml` retague
+  `:staging` en `:prod` **avant** cette approbation : refusée, `:prod` désigne une image que
+  l'hôte ne sert pas encore, sans effet tant qu'on n'y tire rien à la main.
+- `staging` : *Deployment branches* limitées à `dev`.
+
+Les secrets `PROD_*` restent des secrets de dépôt, lisibles par tout workflow d'une branche
+poussée. Pour les réserver aux runs approuvés : les recréer comme secrets de l'environnement
+`production` sous les noms des entrées de `_deploy.yml` (`SSH_KEY`, `SSH_HOST`, `DEPLOY_PATH`,
+`SSH_USER`, `SSH_KNOWN_HOSTS`, `ENV_FILE`, `DATA_PROTECTION_PFX`) : un secret d'environnement
+prend le pas sur celui que l'appelant passe sous le même nom. Vérifier un déploiement, puis
+supprimer les `PROD_*` de dépôt ; même chose pour `staging`.
 
 ### 3.4 Releases des apps
 
@@ -324,17 +346,34 @@ Le mot de passe va dans `LoDb__DataProtection__CertificatePassword`. Garder `dp.
 ligne, détruire `dp.key`. Le certificat chiffre les clés des cookies et des jetons : le
 changer déconnecte tout le monde.
 
-### 6.3 Clé SSH de déploiement
+### 6.3 Clé SSH de déploiement et clés de l'hôte
 
-Aucune à créer : `STAGING_SSH_KEY` et `PROD_SSH_KEY`, celles de l'ancienne stack, sont déjà
-autorisées sur l'hôte. Seul un nouvel hôte a besoin de la sienne :
+**Une clé par environnement.** `STAGING_SSH_KEY` et `PROD_SSH_KEY` sont celles de l'ancienne
+stack, déjà autorisées sur l'hôte. Si c'est la même clé, en créer une pour chacun : un run de
+`dev` ne doit rien pouvoir faire avec la clé de la prod.
 
 ```bash
 ssh-keygen -t ed25519 -N '' -C 'lodb-staging deploy' -f lodb-staging-deploy
+ssh-keygen -t ed25519 -N '' -C 'lodb-prod deploy' -f lodb-prod-deploy
 ```
 
-La clé publique (`.pub`) va dans `~/.ssh/authorized_keys` de l'utilisateur de déploiement
-sur cet hôte ; la clé privée, complète, dans `STAGING_SSH_KEY` ou `PROD_SSH_KEY`.
+Chaque clé publique (`.pub`) va dans `~/.ssh/authorized_keys` de l'utilisateur de
+déploiement ; chaque clé privée, complète, dans `STAGING_SSH_KEY` ou `PROD_SSH_KEY`. Retirer
+l'ancienne clé commune d'`authorized_keys` une fois les deux déploiements passés.
+
+**Clés de l'hôte** (`STAGING_SSH_KNOWN_HOSTS`, `PROD_SSH_KNOWN_HOSTS`), relevées sous le nom
+exact de `STAGING_HOST` ou `PROD_HOST`, et comparées à l'empreinte que l'hôte donne lui-même
+(console du fournisseur, ou session déjà vérifiée) :
+
+```bash
+ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub        # sur l'hôte : la référence
+ssh-keyscan -t ed25519 <hôte> > lodb-known-hosts        # depuis un poste
+ssh-keygen -lf lodb-known-hosts                         # même empreinte, sinon s'arrêter
+```
+
+Le contenu de `lodb-known-hosts` va dans le secret de l'environnement (même valeur pour les
+deux quand ils partagent l'hôte). À refaire si l'hôte change de clé : le déploiement échoue
+alors à la connexion (`Host key verification failed`).
 
 ### 6.4 SMTP
 

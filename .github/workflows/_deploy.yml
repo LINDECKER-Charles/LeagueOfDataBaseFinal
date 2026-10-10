@@ -9,6 +9,10 @@ name: _deploy
 # (tools/deploy/split-env.sh). Nothing is built on the host: it pulls the images
 # _build.yml built once.
 #
+# The job runs in the GitHub environment of its target (`staging`, `production`), where the
+# repository's owner sets the protection rules (reviewers, deployment branches). Environment
+# secrets named like the secrets below take precedence over those the caller passes.
+#
 # The stack takes the place of the legacy one in the same Compose project (lodb-staging,
 # lodb-prod): `up --remove-orphans` retires the legacy containers, the database volume
 # (pgdata) is kept and brought up to date by `migrate`, which marks a Doctrine database at
@@ -41,6 +45,11 @@ on:
       SSH_USER:
         description: SSH user (defaults to root when unset).
         required: false
+      SSH_KNOWN_HOSTS:
+        description: >-
+          known_hosts lines of the target host's keys. Unset, they are read by ssh-keyscan,
+          unverified, with a warning.
+        required: false
       ENV_FILE:
         description: >-
           Full dotenv for this host, split on the host into ${DEPLOY_PATH}/.env and one file
@@ -62,6 +71,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Here rather than on the caller's job: a job that calls a reusable workflow takes no
+    # `environment`. An unknown target falls on `staging` and stops at "Resolve the target".
+    environment: ${{ inputs.environment == 'prod' && 'production' || 'staging' }}
     env:
       TARGET: ${{ inputs.environment }}
       BRANCH: ${{ inputs.branch }}
@@ -127,8 +139,23 @@ jobs:
           } >> "$GITHUB_ENV"
           install -d -m 700 ~/.ssh
 
+      # The host's keys come from the environment's SSH_KNOWN_HOSTS secret (configuration.md,
+      # § 6.3): ssh then refuses any other key. Until the owner sets it, ssh-keyscan reads
+      # them from whoever answers at that address, which a warning on the run says.
       - name: Known hosts
-        run: ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+        env:
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          if [ -n "$SSH_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            prefix="$(echo "$TARGET" | tr '[:lower:]' '[:upper:]')"
+            echo "::warning title=Host key not pinned::${prefix}_SSH_KNOWN_HOSTS is not set:" \
+              "the host key comes from ssh-keyscan, unverified."
+            ssh-keyscan -H "$DEPLOY_HOST" > ~/.ssh/known_hosts
+          fi
+          chmod 600 ~/.ssh/known_hosts
+          printf 'StrictHostKeyChecking yes\n' > ~/.ssh/config
 
       # The dotenv goes to a file readable by root alone, which the deploy step splits into
       # the .env and the secret files once the checkout is at the deployed revision. The
@@ -187,6 +214,8 @@ jobs:
             | ssh "$DEPLOY_USER@$DEPLOY_HOST" "$remote_env bash -c $(printf '%q' "$remote_shell")"
             set -euo pipefail
             cd "$DEPLOY_PATH"
+            # The pushed dotenv holds every secret: it never outlives this script.
+            trap 'rm -f .deploy/incoming.env' EXIT
             fail() {
               echo "$*" >&2
               exit 1
@@ -205,22 +234,34 @@ jobs:
             # compose.override.yaml (dev conveniences).
             export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
 
+            # ── Secrets out of the .env ──────────────────────────────────────────────
+            # The script of the deployed revision, whose compose.deploy.yaml mounts the files
+            # it writes. The pushed dotenv is removed whatever the outcome; on a refusal, the
+            # .env and the secret files in place stay as they were.
+            split_status=0
+            bash tools/deploy/split-env.sh .env .deploy/secrets < .deploy/incoming.env \
+              || split_status=$?
+            rm -f .deploy/incoming.env
+            [ "$split_status" = 0 ] || fail "ENV_FILE was refused (above); nothing was deployed."
+
             # ── The .env against the target, before anything changes ─────────────────
             env_value() {
               grep -E "^$1=" .env | tail -n 1 | cut -d= -f2- | tr -d "\"'" || true
+            }
+            secret_set() {
+              [ -s ".deploy/secrets/$1" ]
             }
             expect() {
               local actual
               actual="$(env_value "$1")"
               actual="${actual:-${3:-}}"
               [ "$actual" = "$2" ] || fail "$1 is '$actual' in the .env; $TARGET expects '$2'."
-            # The pushed dotenv holds every secret: it never outlives this script.
-            trap 'rm -f .deploy/incoming.env' EXIT
             }
             expect COMPOSE_PROJECT_NAME "$EXPECTED_PROJECT"
             expect IMAGE_TAG "$IMAGE_TAG"
             # staging is never indexed; prod always is.
             expect LODB_NOINDEX "$EXPECTED_NOINDEX" 0
+            secret_set LODB_DB_PASSWORD || fail "LODB_DB_PASSWORD is required on $TARGET."
             if [ "$TARGET" = prod ]; then
               [ -n "$(env_value LoDb__Mail__Host)" ] || fail "LoDb__Mail__Host is required in prod."
               for key in LoDb__Billing__StripeSecretKey LoDb__Billing__StripeWebhookSecret; do
@@ -234,23 +275,10 @@ jobs:
             # nginx trusts X-Forwarded-For from this subnet only. Docker picks it when infra-vps
             # creates the network, so it is read here rather than copied into ENV_FILE, and
             # kept in the .env so manual `docker compose` runs from this folder resolve it too.
-            # ── Secrets out of the .env ──────────────────────────────────────────────
-            # The script of the deployed revision, whose compose.deploy.yaml mounts the files
-            # it writes. The pushed dotenv is removed whatever the outcome; on a refusal, the
-            # .env and the secret files in place stay as they were.
-            split_status=0
-            bash tools/deploy/split-env.sh .env .deploy/secrets < .deploy/incoming.env \
-              || split_status=$?
-            rm -f .deploy/incoming.env
-            [ "$split_status" = 0 ] || fail "ENV_FILE was refused (above); nothing was deployed."
-
             edge_cidr="$(docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}')"
             [[ "$edge_cidr" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$ ]] \
               || fail "The 'edge' network has no IPv4 subnet for nginx to trust."
             sed -i '/^LODB_EDGE_CIDR=/d' .env
-            secret_set() {
-              [ -s ".deploy/secrets/$1" ]
-            }
             echo "LODB_EDGE_CIDR=$edge_cidr" >> .env
 
             # ── Pull, then migrations before the traffic switch ────────────────────────
@@ -261,7 +289,6 @@ jobs:
               | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
             unset GHCR_TOKEN
             # The registry sometimes resets a layer mid-copy: retry with backoff.
-            secret_set LODB_DB_PASSWORD || fail "LODB_DB_PASSWORD is required on $TARGET."
             for attempt in 1 2 3 4 5; do
               if docker compose pull; then break; fi
               [ "$attempt" != 5 ] || fail "docker compose pull failed after 5 attempts."
