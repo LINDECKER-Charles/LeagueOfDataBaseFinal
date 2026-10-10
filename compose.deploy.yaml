@@ -108,25 +108,9 @@ services:
       # (APP_REVISION, the commit SHA baked by _build.yml), so a promoted build never
       # serves the previous one's pages.
       LODB_REVISION: !reset null
-      # Bounds per client address and sizes of the caches (docker/nginx/Dockerfile): passed
-      # only when the host's .env sets them, under these exact names, so an absent one keeps
-      # the image's default. Never set one empty: nginx would refuse its configuration.
-      LODB_PAGES_RATE:
-      LODB_PAGES_BURST:
-      LODB_API_READS_RATE:
-      LODB_API_READS_BURST:
-      LODB_LEGACY_RATE:
-      LODB_LEGACY_BURST:
-      LODB_SITEMAPS_RATE:
-      LODB_SITEMAPS_BURST:
-      LODB_READYZ_RATE:
-      LODB_READYZ_BURST:
-      LODB_RATE_LIMITED_RETRY_AFTER:
-      LODB_MAX_BODY_SIZE:
-      LODB_WEBHOOK_MAX_BODY_SIZE:
-      LODB_PAGE_CACHE_SIZE:
-      LODB_PAGE_CACHE_KEYS_SIZE:
-      LODB_PAGE_CACHE_INACTIVE:
+      # The bounds per client address and the cache sizes come from compose.yaml, which reads
+      # them from the host's .env with the image's defaults. Never as value-less keys here,
+      # unlike the API's settings: a key without a value drops the image's ENV default.
     volumes:
       # Host folder of the Android files, latest.json and assetlinks.json
       # (server.d/android-latest.conf, assetlinks.conf): empty, both URLs answer 404.

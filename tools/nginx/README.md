@@ -11,6 +11,11 @@ docker build -f docker/nginx/Dockerfile -t lodb-nginx:check .
 LODB_NGINX_IMAGE=lodb-nginx:check node --test tools/nginx/test/*.test.mjs
 ```
 
-Without `LODB_NGINX_IMAGE` the checks are skipped. They tighten the rates to a few requests
-per minute (`LIMITS` in the test) so that each burst is exact; the bodies keep the image's
-defaults.
+Without `LODB_NGINX_IMAGE` the image checks are skipped. They tighten the rates to a few
+requests per minute (`LIMITS` in the test) so that each burst is exact; the bodies keep the
+image's defaults.
+
+`compose-environment.test.mjs` needs the Docker CLI only (`docker compose config`): every
+`LODB_*` default of the image reaches nginx with the same value through `compose.yaml`, on a
+local stack and on a served host, and never as a key without a value, which would drop the
+image's default.

@@ -24,8 +24,9 @@ LABEL org.opencontainers.image.title="lodb-nginx" \
 # image's revision (compose.yaml sets it). The others bound each client and the caches
 # (sites/site.conf): a rate in requests per second or minute (r/s, r/m), a burst in requests
 # admitted at once past the rate, sizes in nginx units (k, m, g), durations in s, m, h, d.
-# An empty value makes nginx refuse its configuration: leave a variable out to keep its
-# default, never set it empty.
+# An empty value makes nginx refuse its configuration, and so does a variable that a
+# container names without a value: Docker then drops the default below. compose.yaml
+# therefore passes each bound with this same default (tools/nginx checks that they agree).
 ENV APP_REVISION=${APP_REVISION} \
     NGINX_ENVSUBST_TEMPLATE_SUFFIX=.template \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx \

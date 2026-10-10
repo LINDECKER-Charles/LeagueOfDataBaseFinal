@@ -107,6 +107,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `/cdn/blobs/` en `cross-origin` (coquille Android) ; `access_log off` voulu (l'edge
   journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent par
   `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide).
+  Une variable `LODB_*` de nginx passe par `compose.yaml` avec son défaut
+  (`${LODB_X:-défaut}`), **jamais** en clé sans valeur dans un calque comme les réglages de
+  l'API : Docker effacerait le défaut `ENV` de l'image et nginx refuserait de démarrer.
   `server.d/legacy-redirects.conf` envoie à `/api/legacy` les premiers segments de l'ancien
   site : tout nouveau chemin hors locale se vérifie contre cette liste. `server.d/seo.conf`
   possède `/sitemap.xml`, `/sitemaps/`, `/robots.txt` et `/llms.txt`.

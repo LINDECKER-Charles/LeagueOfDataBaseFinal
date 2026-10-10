@@ -145,6 +145,26 @@ services:
       # build, and needs no purge. A served host drops this key (compose.deploy.yaml)
       # and keeps the image's own revision, its tags being the same for every build.
       LODB_REVISION: ${IMAGE_TAG:-${APP_REVISION:-dev}}
+      # Bounds per client address and sizes of the caches (sites/site.conf), tunable from the
+      # host's .env; absent or empty there, the image's default, repeated here
+      # (docker/nginx/Dockerfile, checked by tools/nginx). Never a key without a value: Docker
+      # would drop the image's default and nginx would refuse its configuration.
+      LODB_PAGES_RATE: ${LODB_PAGES_RATE:-20r/s}
+      LODB_PAGES_BURST: ${LODB_PAGES_BURST:-100}
+      LODB_API_READS_RATE: ${LODB_API_READS_RATE:-10r/s}
+      LODB_API_READS_BURST: ${LODB_API_READS_BURST:-40}
+      LODB_LEGACY_RATE: ${LODB_LEGACY_RATE:-2r/s}
+      LODB_LEGACY_BURST: ${LODB_LEGACY_BURST:-10}
+      LODB_SITEMAPS_RATE: ${LODB_SITEMAPS_RATE:-1r/s}
+      LODB_SITEMAPS_BURST: ${LODB_SITEMAPS_BURST:-20}
+      LODB_READYZ_RATE: ${LODB_READYZ_RATE:-1r/s}
+      LODB_READYZ_BURST: ${LODB_READYZ_BURST:-5}
+      LODB_RATE_LIMITED_RETRY_AFTER: ${LODB_RATE_LIMITED_RETRY_AFTER:-10}
+      LODB_MAX_BODY_SIZE: ${LODB_MAX_BODY_SIZE:-128k}
+      LODB_WEBHOOK_MAX_BODY_SIZE: ${LODB_WEBHOOK_MAX_BODY_SIZE:-1m}
+      LODB_PAGE_CACHE_SIZE: ${LODB_PAGE_CACHE_SIZE:-2g}
+      LODB_PAGE_CACHE_KEYS_SIZE: ${LODB_PAGE_CACHE_KEYS_SIZE:-32m}
+      LODB_PAGE_CACHE_INACTIVE: ${LODB_PAGE_CACHE_INACTIVE:-7d}
       # Silences the plain-text start-up lines of the image's docker-entrypoint.sh.
       NGINX_ENTRYPOINT_QUIET_LOGS: "1"
     volumes:
