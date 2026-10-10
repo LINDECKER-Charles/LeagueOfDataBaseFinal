@@ -45,6 +45,23 @@ describe('usesReferencesOf', () => {
     assert.equal(reference.line, 1);
   });
 
+  it('keeps the other spellings of a uses key, without a comment', () => {
+    for (const line of [
+      '      - "uses": actions/checkout@v7',
+      "      - 'uses': actions/checkout@v7",
+      '      - uses : actions/checkout@v7',
+      '      - Uses: actions/checkout@v7',
+      '      - { "uses": actions/checkout@v7 }',
+      '      - ? uses',
+      `      - "uses": actions/checkout@${SHA} # v7.0.1`,
+    ]) {
+      const references = usesReferencesOf(line);
+
+      assert.equal(references.length, 1, line);
+      assert.equal(pinningProblemOf(references[0]), PROBLEMS.unrecognised, line);
+    }
+  });
+
   it('reads CRLF files line by line', () => {
     const references = usesReferencesOf(`a: b\r\n  uses: actions/checkout@${SHA} # v7\r\n`);
 

@@ -12,9 +12,10 @@ const IMAGE_DIGEST = /@sha256:[0-9a-f]{64}$/;
 // and followed by a comment.
 const USES_LINE =
   /^\s*(?:-\s+)?uses:\s*(?<value>"[^"]*"|'[^']*'|[^\s#]+)\s*(?:#\s*(?<comment>.*?))?\s*$/;
-// Any other mention of a `uses:` key (flow mapping, value on the next line, a script line):
-// reported rather than skipped, so that no form of reference escapes the check.
-const USES_MENTION = /(?:^|[\s{,])uses:/;
+// Any other mention of a `uses` key (flow mapping, value on the next line, a script line, and
+// the spellings YAML reads as the same key: quoted, spaced before the colon, explicit `? uses`,
+// any case): reported rather than skipped, so that no form of reference escapes the check.
+const USES_MENTION = /(?:^|[\s{,])["']?uses["']?\s*:|^\s*(?:-\s+)?\?\s+["']?uses["']?\s*$/i;
 const COMMENT_LINE = /^\s*#/;
 const QUOTES = /^["']|["']$/g;
 
