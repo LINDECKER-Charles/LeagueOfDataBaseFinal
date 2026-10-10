@@ -77,7 +77,8 @@ public sealed class DeletionProtectionTests(ProfilesApp app)
         Assert.Equal(HttpStatusCode.BadRequest, elsewhere.StatusCode);
     }
 
-    private static object WrongPhrase() => new { confirmation = "garder mon compte", locale = "fr" };
+    private static object WrongPhrase() =>
+        new { confirmation = "garder mon compte", locale = "fr" };
 
     // Google subjects are 21 digits; the column holds 30.
     private static string GoogleId() => Guid.NewGuid().ToString("N")[..21];

@@ -2,7 +2,9 @@ using LoDb.Infrastructure.Persistence.Accounts;
 
 namespace LoDb.Api.Modules.Accounts.Security;
 
-/// <summary>How long a locked account stays locked: the <c>Retry-After</c> of its refusal.</summary>
+/// <summary>
+/// How long a locked account stays locked: the <c>Retry-After</c> of its refusal.
+/// </summary>
 internal static class LockoutTime
 {
     /// <summary>
