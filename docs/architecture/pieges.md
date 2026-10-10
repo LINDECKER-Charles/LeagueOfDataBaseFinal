@@ -86,10 +86,16 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune limite, et
   Development transforme un corps invalide en exception.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
-- **Porte froide des catalogues** : un appel direct à l'API (18081, `lodb-api:8080`) depuis une
-  adresse privée et sans `X-Forwarded-For` est compté comme le SSR (débit interne, attente
-  de 2 s permise). Pour reproduire un client public, passer par nginx (18080). Un `503`
-  « en attente » sous charge est un délestage voulu, pas une panne.
+- **Porte réseau de l'API** : le port 8080 ne répond qu'au réseau de la stack
+  (`LoDb:Hosting:KnownProxyNetworks`, le seul `LODB_STACK_SUBNET` sur un hôte, les trois
+  plages privées en local) et à la loopback ; tout autre pair reçoit un 404 vide, compté par
+  `lodb_network_gate_refusals_total`, sans log. Un conteneur d'un réseau partagé
+  (`observability`) ne joint que le port 9464. Un nouveau service qui appelle l'API doit
+  être sur le réseau `default` de la stack.
+- **Porte froide des catalogues** : un appel direct à l'API (18081, `lodb-api:8080`) depuis le
+  réseau de la stack (ou la loopback) et sans `X-Forwarded-For` est compté comme le SSR
+  (débit interne, attente de 2 s permise). Pour reproduire un client public, passer par nginx
+  (18080). Un `503` « en attente » sous charge est un délestage voulu, pas une panne.
 - Une URL de l'ancien site sur une version non stockée répond `302` vers la liste de la
   version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une 404).
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en

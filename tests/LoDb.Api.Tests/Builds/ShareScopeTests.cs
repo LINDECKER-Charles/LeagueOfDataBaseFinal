@@ -1,5 +1,6 @@
 using System.Net;
 using LoDb.Api.Modules.Builds.Sharing;
+using LoDb.Api.Tests.Hosting.Support;
 using LoDb.Ingestion.Catalog;
 using Microsoft.AspNetCore.Http;
 
@@ -43,5 +44,5 @@ public sealed class ShareScopeTests
     }
 
     private static DefaultHttpContext StackCall() =>
-        new() { Connection = { RemoteIpAddress = StackAddress } };
+        StackCalls.From(StackAddress);
 }
