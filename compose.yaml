@@ -67,11 +67,15 @@ services:
     healthcheck:
       # Exec form: the chiseled image has no shell. The command opens no port and asks
       # /healthz, which checks no dependency (a database outage must not restart the API).
+      # Each probe starts a whole .NET runtime in the API's CPU quota: once a minute when
+      # running, every 2 s while starting, so that `up --wait` still sees it healthy early.
+      # start_interval needs Docker Engine 25 or later (checked by _deploy.yml).
       test: ["CMD", "dotnet", "LoDb.Api.dll", "healthcheck"]
-      interval: 15s
+      interval: 60s
       timeout: 5s
       retries: 5
       start_period: 20s
+      start_interval: 2s
 
   # One-shot: the API's image brings the database to the latest migration (a database
   # created by Doctrine is marked at the baseline first), then exits. The API starts only

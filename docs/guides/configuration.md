@@ -209,6 +209,25 @@ et l'API garde sa valeur par défaut.
 `NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur un hôte : `Development`
 exposerait OpenAPI et retirerait `Secure` des cookies.
 
+Ressources de chaque service, dans `compose.deploy.yaml` (la prod, et le staging sous son
+calque, § 4.5) : quota CPU (`cpus`), poids sous contention (`cpu_shares`) et plafond de
+processus (`pids`).
+
+| Service | `cpus` | `cpu_shares` | `pids` | Mémoire |
+|---|---|---|---|---|
+| `web-ssr` | `1.0` | `1024` | `256` | `704m` |
+| `api` | `1.25` | `1024` | `512` | `1152m` |
+| `postgres` | `0.5` | `1024` | `256` | `512m` |
+| `nginx` | `0.25` | `2048` | `256` | `256m` |
+| `migrate` | — | — | `256` | `128m` |
+
+Les quotas totalisent 3 des 4 vCPU de l'hôte : sous une charge qui les dépasse, la stack
+déleste (`503` avec `Retry-After`) au lieu de prendre l'hôte des autres projets. Le bridage se
+lit dans `container_cpu_cfs_throttled_seconds_total` (alerte `ConteneurCpuBride`,
+`infra-vps`) : recalibrer après 7 jours, en regard de la latence. La sonde de santé de l'API
+démarre un runtime .NET dans ce quota : toutes les 60 s en marche, toutes les 2 s au
+démarrage (`start_interval`, Docker Engine 25 au moins, vérifié par le job).
+
 <details>
 <summary>Réglages internes de l'API, avec leur défaut (non transmis par compose)</summary>
 

@@ -18,7 +18,17 @@
 # Memory limits: rule = 2 x the observed peak (docs/reecriture/rapports/memoire.md, E2E
 # peaks of lots 0 to 7, and the migrate run of L8.1). Re-derive after a week of history:
 #   max_over_time(container_memory_working_set_bytes{stack=~"lodb-(staging|prod)"}[7d])
-# No `cpus` ceiling: set too low, it throttles silently.
+#
+# CPU: a quota (`cpus`) and a weight (`cpu_shares`) per service, and a cap on processes
+# (`pids`). This file once set no quota, for fear of a silent throttling. The throttling is
+# now collected and alerted on (ConteneurCpuBride, infra-vps), and an unbounded stack did
+# worse: on 2026-10-10 a crawl took the shared host's vCPUs until the provider throttled the
+# whole machine, the other projects included. Under such a load the stack now sheds (503
+# with Retry-After) within its own quotas, which add up to 3 of the host's 4 vCPUs. nginx
+# weighs twice the others: it answers from its cache while they are saturated.
+# Recalibrate after 7 days of
+#   rate(container_cpu_cfs_throttled_seconds_total{stack=~"lodb-(staging|prod)"}[5m])
+# read against the latency of the same days.
 
 x-lodb-connection: &lodb-connection >-
   Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
@@ -81,11 +91,17 @@ services:
     secrets:
       - source: data-protection
         target: data-protection.pfx
+    cpu_shares: 1024
     deploy:
       resources:
         limits:
           # Peak 571 MiB (lot 3 milestone, E2E reruns); 1 GiB would cut under 2 x.
           memory: 1152m
+          # Above one core: .NET then sizes its thread pool and GC heaps for two
+          # processors, and the healthcheck's runtime starts beside the server.
+          cpus: "1.25"
+          # Thread pool, Npgsql and egress connections; a leak stops here, not at the host.
+          pids: 512
 
   # Ephemeral: `docker compose run --rm migrate` before `up -d` (_deploy.yml).
   migrate:
@@ -98,6 +114,7 @@ services:
         limits:
           # Baseline plus the migrations of lots 1 to 6 pass under 64m (L8.1 trial).
           memory: 128m
+          pids: 256
 
   web-ssr:
     image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/web-ssr:${IMAGE_TAG:?IMAGE_TAG is required}
@@ -105,11 +122,15 @@ services:
     environment:
       # The public hosts of CADDY_DOMAINS, comma-separated: any other Host is refused.
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:?LODB_ALLOWED_HOSTS is required (the public hosts)}
+    cpu_shares: 1024
     deploy:
       resources:
         limits:
           # Peak 338 MiB (lot 2 milestone). The V8 heap stays capped by NODE_OPTIONS.
           memory: 704m
+          # The renderer is one Node thread: past a core, only its GC would gain.
+          cpus: "1.0"
+          pids: 256
 
   nginx:
     image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/nginx:${IMAGE_TAG:?IMAGE_TAG is required}
@@ -144,6 +165,8 @@ services:
       caddy_0.reverse_proxy: "{{upstreams 80}}"
       caddy_1: ${API_CADDY_DOMAINS:?API_CADDY_DOMAINS is required (e.g. "api.test.example.com")}
       caddy_1.reverse_proxy: "{{upstreams 80}}"
+    # Twice the others' weight: under contention, the cached pages keep being served.
+    cpu_shares: 2048
     deploy:
       resources:
         limits:
@@ -152,15 +175,21 @@ services:
           # kernel's page cache of the cached pages and blobs it serves, which fills whatever
           # the limit leaves. Too tight, every cache HIT reads the disk again.
           memory: 256m
+          cpus: "0.25"
+          pids: 256
 
   postgres:
     environment:
       POSTGRES_PASSWORD: ${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment}
+    cpu_shares: 1024
     deploy:
       resources:
         limits:
           # shared_buffers 128 MiB plus the connections, the legacy stack's value.
           memory: 512m
+          cpus: "0.5"
+          # One process per connection (max_connections, compose.yaml) plus its workers.
+          pids: 256
 
 networks:
   # Shared ingress network, created once per host by infra-vps; the deploy job only

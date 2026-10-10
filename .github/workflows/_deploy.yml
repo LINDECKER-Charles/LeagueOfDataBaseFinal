@@ -219,6 +219,11 @@ jobs:
               done
             fi
 
+            # The healthchecks of compose.yaml use start_interval: Docker Engine 25 or later.
+            engine_api="$(docker version --format '{{.Server.APIVersion}}')"
+            [ "$(printf '%s\n' 1.44 "$engine_api" | sort -V | head -n 1)" = 1.44 ] \
+              || fail "Docker Engine 25 or later is required (API $engine_api, 1.44 expected)."
+
             # The edge and its network belong to infra-vps; this job only asserts them.
             docker network inspect edge >/dev/null 2>&1 \
               || fail "Docker network 'edge' is missing — deploy infra-vps before this project."
