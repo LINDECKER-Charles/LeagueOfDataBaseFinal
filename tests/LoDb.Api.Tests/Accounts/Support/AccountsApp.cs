@@ -61,6 +61,9 @@ public sealed class AccountsApp : IAsyncDisposable
 
     public static Uri BaseAddress { get; } = new(SiteOrigin);
 
+    /// <summary>Where the API serves <c>/metrics</c>, never routed by nginx.</summary>
+    public static Uri MetricsAddress { get; } = new("http://localhost:9464");
+
     /// <summary>Starts at the real time, so that the cookies it dates stay in the future.</summary>
     public FakeTimeProvider Clock { get; } = new(TimeProvider.System.GetUtcNow());
 
@@ -105,6 +108,9 @@ public sealed class AccountsApp : IAsyncDisposable
 
     /// <summary>A native app: no cookie, no <c>Origin</c>.</summary>
     public HttpClient App() => _host.CreateDefaultClient(BaseAddress);
+
+    /// <summary>The Prometheus scraper, on the metrics port.</summary>
+    public HttpClient Scraper() => _host.CreateDefaultClient(MetricsAddress);
 
     /// <summary>Creates the account through Identity, as a registration would.</summary>
     public Task<User> SeedAsync(AccountSeed seed)
