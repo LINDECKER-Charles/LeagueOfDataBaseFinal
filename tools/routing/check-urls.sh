@@ -87,6 +87,18 @@ row() {
   fi
 }
 
+# A list of an older version answers `transient` while the images of its first visits are
+# still ingested on demand; it is warmed until it answers otherwise (WAIT seconds at most).
+settle() {
+  local path="$1" deadline=$((SECONDS + WAIT))
+  until fetch "$path" && [ "$(header Cache-Control)" != "$(cache_of transient)" ]; do
+    if [ "$SECONDS" -ge "$deadline" ]; then
+      return 0
+    fi
+    sleep "$POLL"
+  done
+}
+
 # `/` answers a 302 to the negotiated locale; Vary lists Accept-Language (Express adds
 # Accept, for the body of its redirect).
 root() {
@@ -156,11 +168,10 @@ row /ar/legal/cookies 200 latest - -
 row /zh-hant/faq 200 latest - -
 prerendered /fr/about
 prerendered /en/legal/terms
-row /en/trends 200 latest - -
-row /en/u/faker 200 latest - -
-row /en/developers 200 latest - -
-row /en/donate 200 latest - -
-row /b/Zx81kQ 200 latest noindex -
+# Their answer follows the API's state, not a patch: the proxy keeps them a minute.
+row /en/trends 200 transient - -
+row /en/developers 200 transient - -
+row /en/donate 200 transient - -
 
 # ── Private pages: rendered in the browser, never stored, never indexed ──────────────
 row /en/account/login 200 private noindex -
@@ -174,13 +185,16 @@ row /xx/about 404 transient noindex -
 row /xx/champions 404 transient noindex -
 row /en/nowhere 404 transient noindex -
 row /en/u 404 transient noindex -
+row /en/u/faker 404 transient noindex -
 row /b 404 transient noindex -
+row /b/Zx81kQ 404 transient noindex -
 row "/en/$older" 404 transient noindex -
 row /en/99.99.99/champions 404 transient noindex -
 row "/en/items/$MISSING_ITEM" 404 transient noindex -
 
 # ── Catalogue: the latest version on its short URLs, older ones pinned ───────────────
 row /en/champions 200 latest - -
+settle "/fr/$older/runes"
 row "/fr/$older/runes" 200 archived - -
 row "/en/$item" 200 latest - -
 row "/en/$older/$older_item" 200 archived - -
