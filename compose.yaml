@@ -100,6 +100,11 @@ services:
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:-localhost,127.0.0.1}
       # Set by nginx (snippets/proxy-headers.conf); Angular ignores them unless listed.
       LODB_TRUST_PROXY_HEADERS: x-forwarded-proto,x-forwarded-host,x-forwarded-for
+      # Render admission (src/server/admission): empty keeps the defaults sized for the host.
+      LODB_RENDER_MAX_IN_FLIGHT: ${LODB_RENDER_MAX_IN_FLIGHT:-}
+      LODB_PINNED_RENDER_MAX_IN_FLIGHT: ${LODB_PINNED_RENDER_MAX_IN_FLIGHT:-}
+      LODB_PINNED_RENDERS_PER_MINUTE: ${LODB_PINNED_RENDERS_PER_MINUTE:-}
+      LODB_PINNED_RENDER_BURST: ${LODB_PINNED_RENDER_BURST:-}
       # Heap ceiling under the container's memory limit (512 MiB when served): V8 collects
       # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
       # whole heap stops at 448 MiB and leaves room for code and buffers.

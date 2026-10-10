@@ -10,6 +10,7 @@ import type { SsrRequestContext } from './app/core/http/ssr-request-context';
 import { negotiateLocale } from './app/core/routing/locale/negotiate-locale';
 import { parseAcceptLanguage } from './app/core/routing/locale/parse-accept-language';
 import { CACHE_CONTROL } from './app/core/routing/response/cache-control';
+import { RenderAdmission } from './server/admission/render-admission';
 import { createLogger } from './server/create-logger';
 import { failureHandler } from './server/failure-handler';
 import { isHashedAsset } from './server/hashed-asset';
@@ -38,6 +39,7 @@ const requestContext: SsrRequestContext = {
   apiOrigin: settings.apiOrigin,
   selfOrigin: settings.selfOrigin,
 };
+const renderAdmission = new RenderAdmission(settings.renderLimits);
 const app = express();
 
 app.disable('x-powered-by');
@@ -92,10 +94,11 @@ app.use(staticFiles);
 // The renderer fetches them from its own address, which the render's Host check would refuse.
 app.use('/i18n', notFound);
 
+// Pages only: the files above never wait for a slot, the renders' own catalogues included.
 app.use((request, response, next) => {
-  angularApp
-    .handle(request, requestContext)
-    .then(async (rendered) => {
+  renderAdmission
+    .run(request.originalUrl, response, async () => {
+      const rendered = await angularApp.handle(request, requestContext);
       if (rendered === null) {
         next();
         return;

@@ -22,6 +22,12 @@ services:
   web-ssr:
     ports:
       - "${LODB_SSR_PORT:-18082}:4000"
+    # The E2E workers open older patches far faster than a served host admits them.
+    environment:
+      LODB_RENDER_MAX_IN_FLIGHT: "32"
+      LODB_PINNED_RENDER_MAX_IN_FLIGHT: "16"
+      LODB_PINNED_RENDERS_PER_MINUTE: "6000"
+      LODB_PINNED_RENDER_BURST: "1000"
 
   nginx:
     ports:
