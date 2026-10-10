@@ -81,9 +81,10 @@
   normalisé, adresse), comptés **avant** la recherche du compte, avec le même 429 que le
   compte existe ou non. Le compte trouvé, ses échecs se comptent aussi par couple (compte,
   adresse) : son e-mail et son nom partagent le même plafond. Ce plafond reste sous le
-  lockout : une adresse seule ne verrouille plus un compte ; plusieurs adresses le peuvent
-  encore, compromis assumé du lockout. Bornes sous `LoDb:RateLimiting`, en mémoire de
-  l'instance.
+  lockout : une adresse seule ne verrouille plus un compte en une fenêtre ; plusieurs
+  adresses le peuvent encore, compromis assumé du lockout. Le lockout compte les échecs
+  consécutifs, pas par fenêtre : le plafond ralentit une adresse, il n'efface pas le
+  compteur. Bornes sous `LoDb:RateLimiting`, en mémoire de l'instance.
 - **Admission au hachage** : le hasher d'Identity est synchrone, donc chaque point d'entrée
   qui hache (connexion, jeton, inscription, réinitialisation, premier mot de passe,
   suppression) prend d'abord un permis asynchrone (1 permis, file de 8, attente de 500 ms au

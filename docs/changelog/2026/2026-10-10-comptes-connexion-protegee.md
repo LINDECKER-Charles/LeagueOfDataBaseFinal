@@ -3,7 +3,7 @@ date: 2026-10-10
 type: fix
 scope: back
 title: Comptes mieux protégés, et un site qui tient sous un afflux de connexions
-summary: Les tentatives de connexion sont limitées, un compte ne se verrouille plus à cause d'une seule autre connexion, et vérifier un mot de passe ne ralentit plus le reste du site.
+summary: Les tentatives de connexion sont limitées, un compte ne se verrouille plus sous la rafale d'une seule autre connexion, et vérifier un mot de passe ne ralentit plus le reste du site.
 tags: [securite, comptes, disponibilite]
 ---
 
@@ -13,7 +13,7 @@ tags: [securite, comptes, disponibilite]
   site demande de patienter quelques minutes. Se connecter normalement n'est jamais concerné.
 - Après quatre mots de passe faux pour un même identifiant depuis la même connexion, les
   essais suivants attendent un moment, avant que le compte ne se verrouille : votre compte
-  ne se bloque plus à cause des essais d'une seule autre personne.
+  ne se bloque plus sous une rafale d'essais d'une seule autre personne.
 - Supprimer son compte demande toujours son mot de passe ; un mot de passe faux y compte
   comme à la connexion, et les essais sont limités pour chaque compte.
 - Aux heures de grande affluence, une connexion peut demander de réessayer quelques

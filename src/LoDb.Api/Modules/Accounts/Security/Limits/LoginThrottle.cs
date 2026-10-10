@@ -18,7 +18,9 @@ namespace LoDb.Api.Modules.Accounts.Security.Limits;
 /// account is found: its e-mail and its username, in any spelling the lookup accepts, name
 /// one account and share its failures. Only failures count: a member who signs in, out and in
 /// again is never throttled. The bound stays under the lockout threshold, so that one address
-/// alone cannot lock an account; many addresses still can, the compromise the lockout keeps.
+/// alone cannot lock an account within one window; many addresses still can, the compromise
+/// the lockout keeps. The lockout counts failures in a row, not per window: this bound slows
+/// one address down, it does not make the lockout forget.
 /// </para>
 /// <para>
 /// In the memory of the instance, as the host's rate limits: a pair left alone for a window

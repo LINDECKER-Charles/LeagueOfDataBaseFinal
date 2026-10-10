@@ -8,7 +8,8 @@ namespace LoDb.Api.Modules.Accounts.Security.Limits;
 /// </summary>
 /// <remarks>
 /// The failures counted per identifier stay under the lockout threshold of the accounts, so
-/// that one address alone runs out of attempts before it locks the account it names. Each
+/// that one address alone runs out of attempts, within one window, before it locks the
+/// account it names. Each
 /// hashing permit beyond the first lets one more attempt sent together past the bound before
 /// its failure counts, so it asks for one failure less.
 /// </remarks>
