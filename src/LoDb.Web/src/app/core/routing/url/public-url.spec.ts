@@ -42,6 +42,11 @@ describe('URL grammar (ADR 0005)', () => {
     { url: '/EN/champions', locale: null, version: null, page: ['EN', 'champions'] },
     { url: '/15.14.1/champions', locale: null, version: null, page: ['15.14.1', 'champions'] },
     { url: '/fr/16/champions', locale: 'fr', version: null, page: ['16', 'champions'] },
+    // Read decoded, as the router reads them: an encoded spelling names the same page.
+    { url: '/fr/%31%35.13.1/champions', locale: 'fr', version: '15.13.1', page: ['champions'] },
+    { url: '/%66r/15.13.1/items', locale: 'fr', version: '15.13.1', page: ['items'] },
+    { url: '/zh%2Dhant/u/a%20b', locale: 'zh-hant', version: null, page: ['u', 'a%20b'] },
+    { url: '/%E0%A4%A/champions', locale: null, version: null, page: ['%E0%A4%A', 'champions'] },
   ])('cuts $url', ({ url, locale, version, page }) => {
     const parsed = parsePublicUrl(url, isVersion);
 

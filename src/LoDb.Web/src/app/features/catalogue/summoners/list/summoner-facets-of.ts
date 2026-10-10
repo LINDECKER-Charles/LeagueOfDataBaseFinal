@@ -5,6 +5,7 @@ import type { Translate } from '../../shared/codex/texts/translate';
 import { defineFacet } from '../../shared/facets/define-facet';
 import type { FacetDefinition } from '../../shared/facets/model/facet-definition';
 import type { FacetOption } from '../../shared/facets/model/facet-option';
+import { SUMMONER_FACET_KEYS as KEYS } from './summoner-facet-keys';
 
 const EDITIONS: readonly Edition[] = ['modern', 'classic'];
 const COOLDOWN_UNIT = 's';
@@ -27,7 +28,7 @@ function availabilityFacets(options: DataOptions, t: Translate): FacetDefinition
   const editions = EDITIONS.map((value) => ({ value, label: t(`edition.${value}`) }));
   return [
     defineFacet({
-      key: 'mode',
+      key: KEYS.mode,
       kind: 'choice',
       label: t('facet.summoner.mode'),
       group,
@@ -35,7 +36,7 @@ function availabilityFacets(options: DataOptions, t: Translate): FacetDefinition
       primary: true,
     }),
     defineFacet({
-      key: 'edition',
+      key: KEYS.edition,
       kind: 'choice',
       label: t('facet.summoner.edition'),
       group,
@@ -44,7 +45,7 @@ function availabilityFacets(options: DataOptions, t: Translate): FacetDefinition
       multiple: false,
     }),
     defineFacet({
-      key: 'level',
+      key: KEYS.level,
       kind: 'choice',
       label: t('facet.summoner.level'),
       group,
@@ -63,7 +64,7 @@ export function summonerFacetsOf(
   t: Translate,
 ): FacetDefinition[] {
   const cooldown = defineFacet({
-    key: 'cooldown',
+    key: KEYS.cooldown,
     kind: 'range',
     label: t('facet.summoner.cooldown'),
     group: t('facet.group.stats'),

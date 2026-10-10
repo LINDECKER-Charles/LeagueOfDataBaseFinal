@@ -6,6 +6,7 @@ import type { FacetOption } from '../../../shared/facets/model/facet-option';
 import type { Translate } from '../../../shared/codex/texts/translate';
 import { ITEM_STAT_COLUMNS } from '../../stats/item-stat-columns';
 import { itemStatKey } from '../../stats/item-stat-key';
+import { ITEM_FACET_KEYS as KEYS } from './item-facet-keys';
 import { ITEM_MAPS } from './item-maps';
 import { tagLabelOf } from './tag-label-of';
 
@@ -24,7 +25,7 @@ function identityFacets(tags: readonly string[], t: Translate): FacetDefinition[
   const group = t('facet.group.identity');
   return [
     defineFacet({
-      key: 'tag',
+      key: KEYS.tag,
       kind: 'choice',
       label: t('facet.item.tag'),
       group,
@@ -33,7 +34,7 @@ function identityFacets(tags: readonly string[], t: Translate): FacetDefinition[
       matchAll: true,
     }),
     defineFacet({
-      key: 'edition',
+      key: KEYS.edition,
       kind: 'choice',
       label: t('facet.item.edition'),
       group,
@@ -42,7 +43,7 @@ function identityFacets(tags: readonly string[], t: Translate): FacetDefinition[
       multiple: false,
     }),
     defineFacet({
-      key: 'tier',
+      key: KEYS.tier,
       kind: 'choice',
       label: t('facet.item.tier'),
       group,
@@ -55,9 +56,25 @@ function availabilityFacets(t: Translate): FacetDefinition[] {
   const group = t('facet.group.availability');
   const maps = ITEM_MAPS.map((id) => ({ value: String(id), label: t(`map.${id}`) }));
   return [
-    defineFacet({ key: 'map', kind: 'choice', label: t('facet.item.map'), group, options: maps }),
-    defineFacet({ key: 'purchasable', kind: 'toggle', label: t('facet.item.purchasable'), group }),
-    defineFacet({ key: 'consumable', kind: 'toggle', label: t('facet.item.consumable'), group }),
+    defineFacet({
+      key: KEYS.map,
+      kind: 'choice',
+      label: t('facet.item.map'),
+      group,
+      options: maps,
+    }),
+    defineFacet({
+      key: KEYS.purchasable,
+      kind: 'toggle',
+      label: t('facet.item.purchasable'),
+      group,
+    }),
+    defineFacet({
+      key: KEYS.consumable,
+      kind: 'toggle',
+      label: t('facet.item.consumable'),
+      group,
+    }),
   ];
 }
 
@@ -65,7 +82,7 @@ function economyAndStatFacets(t: Translate): FacetDefinition[] {
   const stats = t('facet.group.stats');
   return [
     defineFacet({
-      key: 'price',
+      key: KEYS.price,
       kind: 'range',
       label: t('facet.item.price'),
       group: t('facet.group.economy'),

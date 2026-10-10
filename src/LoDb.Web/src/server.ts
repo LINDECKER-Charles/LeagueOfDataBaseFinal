@@ -10,12 +10,16 @@ import type { SsrRequestContext } from './app/core/http/ssr-request-context';
 import { negotiateLocale } from './app/core/routing/locale/negotiate-locale';
 import { parseAcceptLanguage } from './app/core/routing/locale/parse-accept-language';
 import { CACHE_CONTROL } from './app/core/routing/response/cache-control';
+import { AdmissionSummary } from './server/admission/admission-summary';
+import { clientKeyOf } from './server/admission/client-key-of';
 import { RenderAdmission } from './server/admission/render-admission';
+import { RenderCounts } from './server/admission/render-counts';
 import { createLogger } from './server/create-logger';
 import { failureHandler } from './server/failure-handler';
 import { isHashedAsset } from './server/hashed-asset';
 import { readServerSettings } from './server/read-server-settings';
 import { requestLogging } from './server/request-logging';
+import { preRouter } from './server/routing/pre-router';
 import { applyServerTimeouts } from './server/security/apply-server-timeouts';
 import { boundedRequests } from './server/security/bounded-requests';
 import { documentPolicy } from './server/security/document-policy';
@@ -25,6 +29,10 @@ import { staticCacheControl } from './server/static-cache-control';
 // The server reads no cookie and holds no secret: pages are the same for every visitor, so
 // the proxy may cache them, and a compromised renderer has nothing to leak. It is still an
 // exposed surface (ADR 0005): hosts allowed, requests and timeouts bounded, a CSP per page.
+
+// nginx is the only peer, and writes X-Forwarded-For itself (snippets/proxy-headers.conf):
+// one hop names the visitor's address, which the render admission counts per client.
+const TRUSTED_PROXY_HOPS = 1;
 
 // Under `ng serve`, the dev server mounts `reqHandler` instead of running this file.
 const listening = isMainModule(import.meta.url);
@@ -39,10 +47,12 @@ const requestContext: SsrRequestContext = {
   apiOrigin: settings.apiOrigin,
   selfOrigin: settings.selfOrigin,
 };
-const renderAdmission = new RenderAdmission(settings.renderLimits);
+const renderCounts = new RenderCounts();
+const renderAdmission = new RenderAdmission(settings.renderLimits, renderCounts);
 const app = express();
 
 app.disable('x-powered-by');
+app.set('trust proxy', TRUSTED_PROXY_HOPS);
 
 // Registered before the request log: Docker polls it every few seconds.
 app.get('/healthz', (_request, response) => {
@@ -94,11 +104,19 @@ app.use(staticFiles);
 // The renderer fetches them from its own address, which the render's Host check would refuse.
 app.use('/i18n', notFound);
 
+// What the URL alone decides (a 400, the static 404, a query cleaned by a redirect) costs no
+// render and takes no slot.
+app.use(preRouter(settings.queryLimits));
+
 // Pages only: the files above never wait for a slot, the renders' own catalogues included.
 app.use((request, response, next) => {
+  const admitted = { url: request.originalUrl, client: clientKeyOf(request.ip) };
   renderAdmission
-    .run(request.originalUrl, response, async () => {
-      const rendered = await angularApp.handle(request, requestContext);
+    .run(admitted, response, async () => {
+      // The budget starts with the render: an API call never outlives the deadline.
+      const { deadlineMs, apiCallMs } = settings.renderTimeouts;
+      const renderBudget = { deadline: Date.now() + deadlineMs, callTimeoutMs: apiCallMs };
+      const rendered = await angularApp.handle(request, { ...requestContext, renderBudget });
       if (rendered === null) {
         next();
         return;
@@ -120,6 +138,7 @@ if (listening) {
     logger.info({ port: settings.port }, 'http.server.listening');
   });
   applyServerTimeouts(server);
+  new AdmissionSummary(renderCounts, logger).start();
 }
 
 export const reqHandler = createNodeRequestHandler(app);
