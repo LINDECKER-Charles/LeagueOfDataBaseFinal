@@ -30,6 +30,12 @@ services:
     environment:
       # Same string as compose.yaml, the password made mandatory.
       ConnectionStrings__LoDb: *lodb-connection
+      # The stack's own subnet only (networks.default below): X-Forwarded-* are trusted from
+      # nginx and web-ssr, and port 8080 answers them and the loopback alone, never a
+      # container of a shared network the API joins. compose.yaml's other ranges are dropped.
+      LoDb__Hosting__KnownProxyNetworks__0: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
+      LoDb__Hosting__KnownProxyNetworks__1: !reset null
+      LoDb__Hosting__KnownProxyNetworks__2: !reset null
       # Every origin the API publishes is the canonical host's: e-mail links, sitemaps,
       # share_url of /v1, and the origin /developers documents for /v1.
       LoDb__Accounts__SiteOrigin: https://${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
@@ -163,6 +169,15 @@ services:
           memory: 512m
 
 networks:
+  # The stack's private network, on a subnet fixed per environment (staging and prod share the
+  # host), outside Docker's default pools: the API trusts it by name (KnownProxyNetworks).
+  # The deploy job picks it per target, writes it to the host's .env and recreates the
+  # network once when its subnet differs. compose.yaml lets Docker choose, so that the local
+  # stacks coexist.
+  default:
+    ipam:
+      config:
+        - subnet: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
   # Shared ingress network, created once per host by infra-vps; the deploy job only
   # asserts that it exists.
   edge:

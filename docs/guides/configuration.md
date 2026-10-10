@@ -151,6 +151,7 @@ l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque dé
 | `LODB_ALLOWED_HOSTS` | `test.league-of-data-base.com` | `league-of-data-base.com` | ✅ | Hôtes que le SSR accepte (virgules) ; les autres reçoivent un 400. |
 | `LODB_PUBLIC_API_ORIGIN` | `https://api.test.league-of-data-base.com` | `https://api.league-of-data-base.com` | ✅ | Origine de `/v1` documentée par `/developers`. |
 | `LODB_EDGE_CIDR` | — | — | — | Seul pair cru sur `X-Forwarded-For`. **Jamais dans `ENV_*`** : le job l'écrit depuis le réseau `edge` (§ 6.7). |
+| `LODB_STACK_SUBNET` | — | — | — | Sous-réseau du réseau privé de la stack (`10.231.1.0/24` en staging, `10.231.2.0/24` en prod). **Jamais dans `ENV_*`** : le job l'écrit selon la cible (§ 6.8). |
 | `LODB_NOINDEX` ⚙️ | `1` | `0` | ✅ | `X-Robots-Tag: noindex, nofollow` ; le smoke test le vérifie. |
 | `LODB_DB_NAME`, `LODB_DB_USER` | 🔁 `POSTGRES_DB`, `POSTGRES_USER` | idem | ✅ | La base existe déjà dans `pgdata`, créée avec ces identifiants ; chaîne de connexion de `api` et `migrate`. |
 | `LODB_DB_PASSWORD` 🔒 | 🔁 `POSTGRES_PASSWORD` | idem | ✅ | Idem ; sans `;`. |
@@ -199,12 +200,12 @@ et l'API garde sa valeur par défaut.
 
 ### 4.3 Fixés par les fichiers compose (hors du `.env`)
 
-`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_*`, hôte `postgres`, pool borné par
+`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_*`, hôte `lodb-postgres`, pool borné par
 `Maximum Pool Size=32;Timeout=5`),
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
-`LoDb__Hosting__KnownProxyNetworks__0..2`, `LoDb__Storage__Root` (`/srv/storage`, volume
+`LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `LoDb__Storage__Root` (`/srv/storage`, volume
 `ddragon`, que nginx sert), et côté SSR `LODB_API_ORIGIN`, `LODB_TRUST_PROXY_HEADERS`,
 `NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur un hôte : `Development`
 exposerait OpenAPI et retirerait `Secure` des cookies.
@@ -253,7 +254,7 @@ Valable pour les deux environnements : chacun reprend les valeurs de son propre 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |
 |---|---|---|
 | dépôt (branche `test` ou `main`) | le job (`git reset --hard`) | Fichiers compose à la racine. |
-| `.env` | le job (`ENV_STAGING`, `ENV_PROD`, plus `LODB_EDGE_CIDR`), mode 600 | § 4. |
+| `.env` | le job (`ENV_STAGING`, `ENV_PROD`, plus `LODB_EDGE_CIDR` et `LODB_STACK_SUBNET`), mode 600 | § 4. |
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |
 | `.deploy/backups/` | le job, à chaque déploiement | `<horodatage>.env` : le `.env` remplacé ; `<horodatage>.dump` : la base avant `migrate` (`pg_dump -Fc`, relu par `pg_restore --list`). Les dix plus récents de chaque, dossier en 700. Ce que le retour arrière restaure ([runbook](../reecriture/bascule.md), § 8.2). |
 | `.deploy/android/` | l'exploitant, à chaque release Android | `latest.json` (asset `lodb-android-latest.json`) et `assetlinks.json` ([`release-android.md`](release-android.md)). Vide : les deux URL répondent 404. |
@@ -337,6 +338,17 @@ Rien à relever. Docker choisit ce sous-réseau quand `infra-vps` crée le rése
 déploiement, le job le lit (`docker network inspect edge`) et écrit `LODB_EDGE_CIDR` dans
 le `.env` de l'hôte, qui sert aussi aux commandes `docker compose` lancées à la main depuis
 ce dossier. Une ligne `LODB_EDGE_CIDR` venue de `ENV_*` est remplacée.
+
+### 6.8 Sous-réseau de la stack
+
+Rien à relever non plus. Le réseau privé de la stack (`default`, celui de nginx, du SSR, de
+l'API et de Postgres) a un sous-réseau figé par cible, hors des plages que Docker distribue
+(172.17-31/16, 192.168/16) : `10.231.1.0/24` en staging, `10.231.2.0/24` en prod. L'API ne
+croit les `X-Forwarded-*` que de lui et ne sert le port 8080 qu'à lui et à la loopback : un
+conteneur d'un réseau partagé (`observability`) reçoit un 404. Le job écrit
+`LODB_STACK_SUBNET` dans le `.env`, refuse de continuer si un autre réseau Docker recouvre ce
+sous-réseau, et recrée une fois le réseau de la stack s'il en a un autre (`docker compose
+down` sans `-v`, environ une minute de coupure, volumes conservés).
 
 ## 7. En local
 

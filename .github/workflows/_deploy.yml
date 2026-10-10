@@ -94,9 +94,11 @@ jobs:
             echo "Invalid branch name: $BRANCH" >&2
             exit 1
           fi
+          # The stack's private subnet, one per target (both share the host), outside Docker's
+          # default pools (172.17-31/16, 192.168/16): the API trusts it and it alone.
           case "$TARGET" in
-            staging) noindex=1 ;;
-            prod) noindex=0 ;;
+            staging) noindex=1 stack_subnet=10.231.1.0/24 ;;
+            prod) noindex=0 stack_subnet=10.231.2.0/24 ;;
             *)
               echo "Unknown environment: $TARGET (staging or prod)." >&2
               exit 1
@@ -106,6 +108,7 @@ jobs:
             echo "EXPECTED_PROJECT=lodb-$TARGET"
             echo "IMAGE_TAG=$TARGET"
             echo "EXPECTED_NOINDEX=$noindex"
+            echo "STACK_SUBNET=$stack_subnet"
           } >> "$GITHUB_ENV"
 
       # The runner's own agent, no third-party action: the key goes from the secret to the
@@ -163,7 +166,7 @@ jobs:
           # purpose (SC2029) and quoted for the remote shell; the script is sent verbatim.
           remote_env=""
           for name in DEPLOY_PATH BRANCH REPO_URL TARGET EXPECTED_PROJECT IMAGE_TAG \
-            EXPECTED_NOINDEX GHCR_USER; do
+            EXPECTED_NOINDEX STACK_SUBNET GHCR_USER; do
             remote_env="$remote_env $name=$(printf '%q' "${!name}")"
           done
           # The token goes first on the remote shell's input, never on a command line that
@@ -231,6 +234,45 @@ jobs:
             sed -i '/^LODB_EDGE_CIDR=/d' .env
             echo "LODB_EDGE_CIDR=$edge_cidr" >> .env
 
+            # The stack's own network (compose.deploy.yaml) on the target's fixed subnet, which
+            # no other network may overlap: Docker would refuse to create it once the stack is
+            # stopped to move it. Written to the .env like LODB_EDGE_CIDR.
+            stack_network="${EXPECTED_PROJECT}_default"
+            ipv4_number() {
+              local a b c d
+              IFS=. read -r a b c d <<< "$1"
+              echo $(( (a << 24) | (b << 16) | (c << 8) | d ))
+            }
+            # First and last address of an IPv4 CIDR, as numbers.
+            cidr_bounds() {
+              local size first
+              size=$(( 1 << (32 - ${1#*/}) ))
+              first=$(( $(ipv4_number "${1%/*}") & ~(size - 1) & 0xFFFFFFFF ))
+              echo "$first $(( first + size - 1 ))"
+            }
+            overlaps() {
+              local a_first a_last b_first b_last
+              read -r a_first a_last <<< "$(cidr_bounds "$1")"
+              read -r b_first b_last <<< "$(cidr_bounds "$2")"
+              [ "$a_first" -le "$b_last" ] && [ "$b_first" -le "$a_last" ]
+            }
+            # Space-separated subnets of a network, empty when it does not exist.
+            subnets_of() {
+              local format='{{range .IPAM.Config}}{{.Subnet}} {{end}}'
+              { docker network inspect "$1" --format "$format" 2>/dev/null || true; } | xargs
+            }
+            for network in $(docker network ls --format '{{.Name}}'); do
+              [ "$network" != "$stack_network" ] || continue
+              for subnet in $(subnets_of "$network"); do
+                [[ "$subnet" != *:* ]] || continue
+                if overlaps "$subnet" "$STACK_SUBNET"; then
+                  fail "Docker network '$network' ($subnet) overlaps $STACK_SUBNET."
+                fi
+              done
+            done
+            sed -i '/^LODB_STACK_SUBNET=/d' .env
+            echo "LODB_STACK_SUBNET=$STACK_SUBNET" >> .env
+
             # ── Pull, then migrations before the traffic switch ────────────────────────
             # Logged in with this run's token for the pull only: the packages may be private,
             # and the host keeps no registry credential once the images are in.
@@ -259,6 +301,15 @@ jobs:
               ls -1t .deploy/backups/*.dump | tail -n +11 | xargs -r rm --
             fi
 
+            # A stack network created on another subnet (Docker's choice, before the subnet was
+            # fixed) is recreated once: about a minute without service, volumes kept (never -v).
+            current_subnet="$(subnets_of "$stack_network")"
+            if [ -n "$current_subnet" ] && [ "$current_subnet" != "$STACK_SUBNET" ]; then
+              echo "::notice title=Stack network recreated::$stack_network moves from" \
+                "$current_subnet to $STACK_SUBNET; the stack restarts."
+              docker compose down --remove-orphans
+            fi
+
             # Fail-fast: the containers in place keep serving if it fails. Idempotent: a
             # database already up to date applies nothing.
             docker compose run --rm migrate
@@ -266,6 +317,8 @@ jobs:
             # --wait: the job fails if a probe does not turn healthy. --remove-orphans
             # retires the containers of the legacy stack (php, go-fetcher, go-api, mailer).
             docker compose up -d --no-build --remove-orphans --wait --wait-timeout 180
+            [ "$(subnets_of "$stack_network")" = "$STACK_SUBNET" ] \
+              || fail "$stack_network is not on $STACK_SUBNET, the subnet the API trusts."
 
             # ── Root administrator of the .env (the legacy ADMIN_LOGIN / ADMIN_PASSWORD) ──
             # The password goes on the command's input, never on a command line; the output,
