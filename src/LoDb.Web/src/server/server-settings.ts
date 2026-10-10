@@ -1,3 +1,5 @@
+import type { RenderLimits } from './admission/render-limits';
+
 /** Configuration of the SSR server, read once from its environment at startup. */
 export interface ServerSettings {
   readonly port: number;
@@ -8,4 +10,6 @@ export interface ServerSettings {
   readonly apiOrigin: string;
   /** Loopback origin of this very server, or null when another server hosts the handler. */
   readonly selfOrigin: string | null;
+  /** Bounds of the render admission (`RenderAdmission`). */
+  readonly renderLimits: RenderLimits;
 }
