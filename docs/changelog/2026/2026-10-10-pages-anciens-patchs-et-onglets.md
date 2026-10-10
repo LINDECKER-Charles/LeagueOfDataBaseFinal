@@ -28,3 +28,7 @@ recharge une fois, de lui-même, et vous arrivez directement sur la page demand�
   depuis `LODB_FRONT_BUILDS_RETENTION_DAYS` jours (30).
 - nginx : zone `lodb_assets` pour `/build/` (clé `$uri`, 1 Go, 30 j d'inactivité, réglables
   par `LODB_ASSETS_CACHE_*`), sur un volume ; un `404` n'est jamais gardé.
+- Le SSR compresse le HTML d'une page une fois, au rendu (gzip niveau 6, `zlib` asynchrone,
+  après le calcul de la CSP ; `LODB_HTML_GZIP_LEVEL`) ; nginx demande gzip à l'amont, garde
+  la copie compressée (plus de recompression à chaque HIT, cache plusieurs fois plus dense),
+  la décompresse pour un client sans gzip et pose un seul `Vary: Accept-Encoding`.

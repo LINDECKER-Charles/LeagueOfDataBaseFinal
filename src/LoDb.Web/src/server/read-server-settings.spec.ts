@@ -17,6 +17,7 @@ describe('readServerSettings', () => {
       renderLimits: DEFAULT_RENDER_LIMITS,
       renderTimeouts: DEFAULT_RENDER_TIMEOUTS,
       queryLimits: DEFAULT_QUERY_LIMITS,
+      htmlGzipLevel: 6,
     });
   });
 
@@ -31,6 +32,7 @@ describe('readServerSettings', () => {
         LODB_PINNED_RENDERS_PER_MINUTE: '30',
         LODB_RENDER_DEADLINE_SECONDS: '25',
         LODB_QUERY_MAX_PARAMS: '8',
+        LODB_HTML_GZIP_LEVEL: '9',
       },
       true,
     );
@@ -45,6 +47,7 @@ describe('readServerSettings', () => {
       renderLimits: { ...DEFAULT_RENDER_LIMITS, pinnedPerMinute: 30 },
       renderTimeouts: { ...DEFAULT_RENDER_TIMEOUTS, deadlineMs: 25_000 },
       queryLimits: { ...DEFAULT_QUERY_LIMITS, maxParams: 8 },
+      htmlGzipLevel: 9,
     });
   });
 
@@ -72,6 +75,12 @@ describe('readServerSettings', () => {
   it.each(['srv/front-builds', './front-builds'])('refuses LODB_FRONT_BUILDS_DIR=%s', (folder) => {
     expect(() => readServerSettings({ LODB_FRONT_BUILDS_DIR: folder }, true)).toThrow(
       /LODB_FRONT_BUILDS_DIR/,
+    );
+  });
+
+  it.each(['0', '10', '6.5', 'best'])('refuses LODB_HTML_GZIP_LEVEL=%s', (level) => {
+    expect(() => readServerSettings({ LODB_HTML_GZIP_LEVEL: level }, true)).toThrow(
+      /LODB_HTML_GZIP_LEVEL/,
     );
   });
 });

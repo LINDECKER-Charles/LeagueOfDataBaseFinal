@@ -2,25 +2,27 @@
 // decodes a compressed body, which the checks compare as sent.
 import { request } from 'node:http';
 
-function headersOf({ host, body, agent, encoding }) {
+function headersOf({ host, body, agent, encoding, forwardedFor }) {
   return {
     host,
     ...(body ? { 'content-length': body.length } : {}),
     ...(agent ? { 'user-agent': agent } : {}),
     ...(encoding ? { 'accept-encoding': encoding } : {}),
+    ...(forwardedFor ? { 'x-forwarded-for': forwardedFor } : {}),
   };
 }
 
 /**
  * Sends one request to 127.0.0.1:<port>; resolves to its status, headers and body (a Buffer,
  * as sent). A request body is a Buffer; `encoding` is the Accept-Encoding sent, none by
- * default. nginx may answer 413 and close before the body is sent: the answer wins.
+ * default; `forwardedFor` the client address the edge would state (X-Forwarded-For). nginx
+ * may answer 413 and close before the body is sent: the answer wins.
  */
-export function send(port, path, { host = 'localhost', method = 'GET', body, agent, encoding }
-  = {}) {
+export function send(port, path, options = {}) {
+  const { host = 'localhost', method = 'GET', body } = options;
   return new Promise((resolve, reject) => {
     let answered = false;
-    const headers = headersOf({ host, body, agent, encoding });
+    const headers = headersOf({ ...options, host });
     const outgoing = request({ host: '127.0.0.1', port, path, method, headers }, (response) => {
       answered = true;
       const chunks = [];

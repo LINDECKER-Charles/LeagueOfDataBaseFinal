@@ -1,5 +1,6 @@
 import { isAbsolute } from 'node:path';
 import { readRenderLimits } from './admission/read-render-limits';
+import { readGzipLevel } from './compression/read-gzip-level';
 import { readRenderTimeouts } from './rendering/read-render-timeouts';
 import { readQueryLimits } from './routing/read-query-limits';
 import type { ServerSettings } from './server-settings';
@@ -57,8 +58,8 @@ function folderOf(value: string | undefined): string | null {
 
 /**
  * Reads PORT, LODB_ALLOWED_HOSTS and LODB_TRUST_PROXY_HEADERS (comma-separated lists),
- * LODB_API_ORIGIN, LODB_FRONT_BUILDS_DIR, the bounds of the render admission, of a render's
- * wait on the API and of a catalogue page's query. `listening` tells whether this process serves HTTP itself, which
+ * LODB_API_ORIGIN, LODB_FRONT_BUILDS_DIR, LODB_HTML_GZIP_LEVEL, the bounds of the render
+ * admission, of a render's wait on the API and of a catalogue page's query. `listening` tells whether this process serves HTTP itself, which
  * is what makes its loopback origin usable by the renders.
  */
 export function readServerSettings(env: Environment, listening: boolean): ServerSettings {
@@ -73,5 +74,6 @@ export function readServerSettings(env: Environment, listening: boolean): Server
     renderLimits: readRenderLimits(env),
     renderTimeouts: readRenderTimeouts(env),
     queryLimits: readQueryLimits(env),
+    htmlGzipLevel: readGzipLevel(env),
   };
 }

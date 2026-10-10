@@ -183,6 +183,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
   nom d'utilisateur peut finir en `.bak` ou `.ini`. Vérification : `tools/nginx/`
   (`node --test`).
+- **HTML compressé une fois, par le SSR** (`src/server/compression`, gzip `6`) : les caches
+  de pages de nginx demandent `Accept-Encoding: gzip` à l'amont quel que soit le client,
+  gardent cette seule copie et la décompressent (`gunzip`) pour un client sans gzip. Le
+  `Vary` de l'amont est ignoré par le cache et masqué ; `Vary: Accept-Encoding` vient de
+  nginx (`gzip_vary`), une fois : ni `add_header Vary`, ni retrait de `proxy_hide_header`.
+  Le SSR compresse **après** le calcul de la CSP, qui hache le HTML rendu.
 - `gzip_types` de `docker/nginx/nginx.conf` doit lister `text/javascript` et
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé

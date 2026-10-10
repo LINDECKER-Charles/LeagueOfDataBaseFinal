@@ -122,6 +122,8 @@ services:
       # Each start publishes its hashed bundles there, and /build/ serves the previous builds'
       # from there: a tab or a cached page that names one still loads it after a deploy.
       LODB_FRONT_BUILDS_DIR: /srv/front-builds
+      # gzip level of a rendered page, compressed once per render: empty keeps the default.
+      LODB_HTML_GZIP_LEVEL: ${LODB_HTML_GZIP_LEVEL:-}
       # Heap ceiling under the container's memory limit (512 MiB when served): V8 collects
       # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
       # whole heap stops at 448 MiB and leaves room for code and buffers.

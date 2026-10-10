@@ -16,6 +16,7 @@ import { RenderAdmission } from './server/admission/render-admission';
 import { RenderCounts } from './server/admission/render-counts';
 import { publishFrontBuilds } from './server/assets/publish-front-builds';
 import { staticFolder } from './server/assets/static-folder';
+import { encodedDocument } from './server/compression/encoded-document';
 import { createLogger } from './server/create-logger';
 import { failureHandler } from './server/failure-handler';
 import { isHashedAsset } from './server/hashed-asset';
@@ -101,6 +102,12 @@ app.use('/i18n', notFound);
 // render and takes no slot.
 app.use(preRouter(settings.queryLimits));
 
+// The policy hashes the inline scripts of the page as rendered, before it is compressed.
+async function servedDocument(rendered: Response, request: express.Request): Promise<Response> {
+  const policed = await withDocumentPolicy(rendered);
+  return encodedDocument(policed, request.get('Accept-Encoding'), settings.htmlGzipLevel);
+}
+
 // Pages only: the files above never wait for a slot, the renders' own catalogues included.
 app.use((request, response, next) => {
   const admitted = { url: request.originalUrl, client: clientKeyOf(request.ip) };
@@ -115,7 +122,7 @@ app.use((request, response, next) => {
         return;
       }
       // Under `ng serve`, the dev server adds scripts of its own that no hash would admit.
-      const sent = listening ? await withDocumentPolicy(rendered) : rendered;
+      const sent = listening ? await servedDocument(rendered, request) : rendered;
       await writeResponseToNodeResponse(sent, response);
     })
     .catch(next);

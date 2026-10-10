@@ -24,4 +24,6 @@ export interface ServerSettings {
   readonly renderTimeouts: RenderTimeouts;
   /** Bounds of the query a catalogue page keeps (`preRouter`). */
   readonly queryLimits: QueryLimits;
+  /** gzip level of a rendered page, compressed once per render (`encodedDocument`). */
+  readonly htmlGzipLevel: number;
 }

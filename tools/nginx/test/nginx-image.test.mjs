@@ -3,6 +3,7 @@
 // the image's tag in LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
+import { gunzipSync } from 'node:zlib';
 import { send, statusesOf } from '../lib/client.mjs';
 import { startStack } from '../lib/stack.mjs';
 
@@ -13,8 +14,11 @@ const BLOB = 'ab'.repeat(32);
 const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) '
   + 'Chrome/139.0.0.0 Safari/537.36';
 
-// Rates per minute: no token comes back while the checks run, so each burst is exact.
+// Rates per minute: no token comes back while the checks run, so each burst is exact. Any peer
+// may state the client address, so that a check of the caches speaks for a client of its own
+// (`forwardedFor`) and leaves the bursts of the others whole.
 const LIMITS = {
+  LODB_EDGE_CIDR: '0.0.0.0/0',
   LODB_PAGES_RATE: '1r/m',
   LODB_PAGES_BURST: '3',
   LODB_API_READS_RATE: '1r/m',
@@ -117,6 +121,25 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
       assert.equal((await get(`/cdn/blobs/${name}`)).status, 404, name);
     }
     assert.equal((await get('/cdn/x')).status, 404);
+  });
+
+  test('keeps one compressed copy of a page for every client', async () => {
+    const client = { forwardedFor: '203.0.113.1' };
+    const compressed = await get('/en/about', { ...client, encoding: 'gzip' });
+    const plain = await get('/en/about', client);
+    const browser = await get('/en/about', { ...client, encoding: 'gzip, deflate, br, zstd' });
+
+    assert.equal(compressed.headers['x-cache-status'], 'MISS');
+    assert.equal(compressed.headers['content-encoding'], 'gzip');
+    assert.equal(gunzipSync(compressed.body).toString(), 'page\n');
+    assert.equal(plain.headers['x-cache-status'], 'HIT');
+    assert.equal(plain.headers['content-encoding'], undefined);
+    assert.equal(plain.body.toString(), 'page\n');
+    assert.equal(browser.headers['x-cache-status'], 'HIT');
+    assert.deepEqual(browser.body, compressed.body);
+    for (const response of [compressed, plain, browser]) {
+      assert.equal(response.headers.vary, 'Accept-Encoding');
+    }
   });
 
   test('keeps a bundle under its name alone, whatever the host, but never a 404', async () => {
