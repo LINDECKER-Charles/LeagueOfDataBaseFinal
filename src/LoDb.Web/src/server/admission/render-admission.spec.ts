@@ -177,6 +177,16 @@ describe('RenderAdmission', () => {
     expect(hold(admission, CURRENT).isStarted()).toBe(true);
   });
 
+  it("refills a client's share of the current pages at its own rate, not the lane's", async () => {
+    const admission = admissionOf({ currentPerClientPerMinute: 6, currentPerClientBurst: 1 });
+    await settle([hold(admission, CURRENT)]);
+
+    now += 1_000;
+    expect(hold(admission, CURRENT).answer.status).toBe(503);
+    now += 9_000;
+    expect(hold(admission, CURRENT).isStarted()).toBe(true);
+  });
+
   it('spends nothing from the current lane on a client over its own share', async () => {
     const admission = admissionOf({ currentPerClientBurst: 1, currentBurst: 2 });
     const refusals = 5;
