@@ -34,6 +34,9 @@ et le serveur, partagé avec d'autres services, a ralenti.
 - Cause de la charge de l'API : son cache garde 16 catalogues (version, langue) ; un parcours
   uniforme de ~150 versions × 21 langues le vidait à chaque requête, et chaque requête
   rechargeait un catalogue complet. Borner les rendus borne ces chargements.
+- Le robot ne ralentissait pas face aux `503` : son User-Agent exact (`Chrome/139.0.0.0` sur
+  `X11; Linux aarch64`) reçoit désormais un `403` de nginx (`server.d/blocked-agents.conf`,
+  `map` exacte dans `nginx.conf`), sans atteindre ni le SSR ni l'API.
 - Réglables sans rebuild par `LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDER_MAX_IN_FLIGHT`,
   `LODB_PINNED_RENDERS_PER_MINUTE` et `LODB_PINNED_RENDER_BURST` dans le `.env` de l'hôte.
   La pile de dev les relève, pour que l'E2E ne bute pas sur les limites.
