@@ -90,6 +90,9 @@
   `LoDb:Accounts:Hashing`.
 - Rate limiters par IP sur l'inscription, la réinitialisation, le contact et le checkout
   (pas sur les actions authentifiées, pour éviter les faux positifs derrière un NAT).
+- **Confirmation par mot de passe** (suppression du compte) : limitée **par compte**,
+  jamais par adresse (5 par 15 min), et un mauvais mot de passe compte pour le lockout comme
+  à la connexion.
 - Bannissement : vérifié à la connexion **et** lors de la revalidation périodique du
   security stamp (quelques minutes). Il prend donc effet sur les sessions déjà
   ouvertes. Les builds d'un banni sortent des tendances, mais leurs liens de partage
@@ -138,4 +141,5 @@
 ## Amendements
 
 - **2026-10-10** : limites de connexion par adresse et par couple (identifiant, adresse),
-  admission asynchrone au hachage (§ Protections).
+  admission asynchrone au hachage, confirmation par mot de passe limitée par compte
+  (§ Protections).
