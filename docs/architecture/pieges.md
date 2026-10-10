@@ -72,6 +72,19 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   seulement (1 requête/s par adresse, sonde externe) ; demandé au site, il part au SSR (404).
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
+- **Pool Postgres** : `Maximum Pool Size=32;Timeout=5` dans la chaîne de connexion. Une
+  requête `/api` qui n'obtient pas de connexion à temps reçoit un **503** `service-busy`
+  avec `Retry-After` : délestage voulu, non compté. Une base injoignable donne un **500**,
+  compté par `lodb_db_unavailable_total`. Npgsql ne donne au pool épuisé ni type ni code :
+  son message est reconnu par son texte, et `DatabaseFailureTests` le revérifie sur un vrai
+  pool à chaque montée de version.
+- **Corps de requête** : 128 Kio au plus (`LoDb:Hosting:MaxRequestBodySize`), 413 au-delà.
+  Le plus gros corps légitime, un build maximal dont chaque caractère est échappé, dépasse
+  64 Kio (`tests/LoDb.E2E/specs/builds/maximal-build.spec.ts`) : ne pas descendre à 64 Kio.
+  Un endpoint qui doit lire plus pose son propre `RequestSizeLimit` (webhook Stripe, 1 Mio).
+  Les tests xUnit de cette borne tournent sur un vrai Kestrel, en Production
+  (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune limite, et
+  Development transforme un corps invalide en exception.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
 - **Porte froide des catalogues** : un appel direct à l'API (18081, `api:8080`) depuis une
   adresse privée et sans `X-Forwarded-For` est compté comme le SSR (débit interne, attente

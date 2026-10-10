@@ -31,8 +31,11 @@ services:
     environment:
       # Gss Encryption Mode=Disable: Npgsql would otherwise probe GSS and the chiseled
       # image, which has no libgssapi_krb5, writes non-JSON lines to stderr.
+      # Maximum Pool Size=32 keeps the API well under Postgres's max_connections, with room
+      # for migrate, the deploy backup and psql. Timeout=5 bounds the wait for a pooled
+      # connection (and the connection attempt): past it, /api answers 503 with Retry-After.
       ConnectionStrings__LoDb: &lodb-connection >-
-        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable
+        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
       # X-Forwarded-* are trusted from the private ranges: only nginx and web-ssr reach
       # this port on a served host (no host port, not on the edge network). The stack's
       # own subnet is picked by Docker, so it cannot be named more precisely here.

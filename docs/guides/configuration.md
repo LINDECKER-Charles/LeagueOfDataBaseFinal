@@ -199,7 +199,8 @@ et l'API garde sa valeur par défaut.
 
 ### 4.3 Fixés par les fichiers compose (hors du `.env`)
 
-`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_*`, hôte `postgres`),
+`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_*`, hôte `postgres`, pool borné par
+`Maximum Pool Size=32;Timeout=5`),
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
@@ -216,7 +217,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 
 | Section | Clés (défaut) |
 |---|---|
-| `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié) |
+| `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié), `MaxRequestBodySize` (131072 octets, soit 128 Kio ; au-delà, 413), `DatabaseBusyRetryAfter` (5 s, `Retry-After` du 503 quand le pool Postgres reste occupé) |
 | `LoDb:Workers` | `Enabled` (`true` ; seul `false` coupe toutes les tâches de fond) |
 | `LoDb:Accounts` | `SecureCookies` (vrai hors Development) |
 | `LoDb:Mail` | `Timeout` (`00:00:30`) |
