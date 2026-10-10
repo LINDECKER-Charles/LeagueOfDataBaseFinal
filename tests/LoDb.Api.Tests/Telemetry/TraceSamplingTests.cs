@@ -16,6 +16,7 @@ namespace LoDb.Api.Tests.Telemetry;
 /// Without an exporter no span is recorded, a caller's sampled traceparent included, yet each
 /// request keeps a trace id that the log lines carry; with an exporter, spans are recorded.
 /// </summary>
+[Collection(TraceSamplingGroup.Name)]
 public sealed class TraceSamplingTests
 {
     private const string TraceParentHeader = "traceparent";
