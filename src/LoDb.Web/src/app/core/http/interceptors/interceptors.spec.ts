@@ -1,10 +1,11 @@
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { PLATFORM_ID } from '@angular/core';
+import { PLATFORM_ID, REQUEST_CONTEXT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '../../api/api-base-url';
 import { PLATFORM } from '../../platform/platform';
 import type { PlatformService } from '../../platform/platform-service';
+import type { RenderBudget } from '../render-budget';
 import { clientHeaderInterceptor } from './client-header-interceptor';
 import { isApiRequest } from './is-api-request';
 import { serverApiTimeoutInterceptor } from './server-api-timeout-interceptor';
@@ -14,10 +15,16 @@ const ORIGIN = 'https://leagueofdatabase.com';
 interface Options {
   readonly client?: string | null;
   readonly platform?: 'browser' | 'server';
+  readonly renderBudget?: RenderBudget;
 }
 
-function setUp({ client = null, platform = 'browser' }: Options): HttpTestingController {
+function setUp({
+  client = null,
+  platform = 'browser',
+  renderBudget,
+}: Options): HttpTestingController {
   const service: Pick<PlatformService, 'clientHeader'> = { clientHeader: () => client };
+  const context = { apiOrigin: ORIGIN, selfOrigin: null, renderBudget };
   TestBed.configureTestingModule({
     providers: [
       provideHttpClient(withInterceptors([clientHeaderInterceptor, serverApiTimeoutInterceptor])),
@@ -25,6 +32,7 @@ function setUp({ client = null, platform = 'browser' }: Options): HttpTestingCon
       { provide: API_BASE_URL, useValue: ORIGIN },
       { provide: PLATFORM, useValue: service },
       { provide: PLATFORM_ID, useValue: platform },
+      { provide: REQUEST_CONTEXT, useValue: context },
     ],
   });
   return TestBed.inject(HttpTestingController);
@@ -79,12 +87,29 @@ describe('clientHeaderInterceptor', () => {
 });
 
 describe('serverApiTimeoutInterceptor', () => {
-  it('bounds the API calls of a server render', () => {
+  const NOW = Date.UTC(2026, 9, 10);
+
+  beforeEach(() => vi.useFakeTimers({ now: NOW, toFake: ['Date'] }));
+  afterEach(() => vi.useRealTimers());
+
+  it('bounds the API calls of a server render without budget by default', () => {
     const http = setUp({ platform: 'server' });
 
     get(`${ORIGIN}/api/meta`);
 
-    expect(http.expectOne(`${ORIGIN}/api/meta`).request.timeout).toBe(30_000);
+    expect(http.expectOne(`${ORIGIN}/api/meta`).request.timeout).toBe(10_000);
+  });
+
+  it.each([
+    ['a call its share of the render', NOW + 20_000, 10_000],
+    ['a late call the time left', NOW + 4_000, 4_000],
+    ['a call past the deadline next to nothing', NOW - 1_000, 1],
+  ])('gives %s', (_case, deadline, timeout) => {
+    const http = setUp({ platform: 'server', renderBudget: { deadline, callTimeoutMs: 10_000 } });
+
+    get(`${ORIGIN}/api/meta`);
+
+    expect(http.expectOne(`${ORIGIN}/api/meta`).request.timeout).toBe(timeout);
   });
 
   it('keeps a bound the caller chose', () => {

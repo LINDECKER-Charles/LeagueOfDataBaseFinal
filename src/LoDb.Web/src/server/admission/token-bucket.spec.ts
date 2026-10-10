@@ -9,8 +9,17 @@ function bucketAt(
   return { bucket, wait: (ms) => (now += ms) };
 }
 
+// Spends a token when there is one, as the admission does; tells whether it could.
+function tryTake(bucket: TokenBucket): boolean {
+  if (!bucket.hasToken()) {
+    return false;
+  }
+  bucket.take();
+  return true;
+}
+
 function take(bucket: TokenBucket, count: number): boolean[] {
-  return Array.from({ length: count }, () => bucket.tryTake());
+  return Array.from({ length: count }, () => tryTake(bucket));
 }
 
 describe('TokenBucket', () => {
@@ -25,9 +34,9 @@ describe('TokenBucket', () => {
     take(bucket, 2);
 
     wait(999);
-    expect(bucket.tryTake()).toBe(false);
+    expect(bucket.hasToken()).toBe(false);
     wait(1);
-    expect(bucket.tryTake()).toBe(true);
+    expect(bucket.hasToken()).toBe(true);
   });
 
   it('never holds more than its capacity after a quiet period', () => {
@@ -39,13 +48,20 @@ describe('TokenBucket', () => {
     expect(take(bucket, 3)).toEqual([true, true, false]);
   });
 
-  it('keeps the fraction earned by a refused take', () => {
+  it('keeps the fraction earned while it had no token', () => {
     const { bucket, wait } = bucketAt(60, 1);
-    bucket.tryTake();
+    take(bucket, 1);
 
     wait(600);
-    expect(bucket.tryTake()).toBe(false);
+    expect(bucket.hasToken()).toBe(false);
     wait(400);
-    expect(bucket.tryTake()).toBe(true);
+    expect(tryTake(bucket)).toBe(true);
+  });
+
+  it('spends nothing when only asked', () => {
+    const { bucket } = bucketAt(60, 1);
+
+    expect([bucket.hasToken(), bucket.hasToken()]).toEqual([true, true]);
+    expect(take(bucket, 2)).toEqual([true, false]);
   });
 });

@@ -5,39 +5,61 @@ using Microsoft.Extensions.Options;
 namespace LoDb.Ingestion.Catalog.Reading;
 
 /// <summary>
-/// The catalogs held in memory, the least recently read evicted first
-/// (<c>LoDb:Catalog:MaxEntries</c>), and the loads in flight.
+/// The catalogs held in memory (<see cref="HeldCatalogs"/>) and the loads in flight, each
+/// admitted by the <see cref="ColdLoadGate"/>.
 /// </summary>
 /// <remarks>
 /// Readers of a catalog being loaded wait for the same load, which runs detached from them:
-/// a reader giving up does not cancel what others wait for. Only a built catalog is kept: a
-/// failure, or a dataset missing from the store, is forgotten with its load, and the next
-/// read loads again.
+/// a reader giving up does not cancel what others wait for, and a reader joining a load
+/// consumes nothing of the gate. Only a built catalog is kept: a failure, a dataset missing
+/// from the store or a refusal of the gate is forgotten with its load, and the next read
+/// tries again.
 /// </remarks>
 internal sealed class CatalogCache : IDisposable
 {
     private readonly Lock gate = new();
-    private readonly Dictionary<CatalogKey, LinkedListNode<Held>> held = [];
-    private readonly LinkedList<Held> recency = new();
-    private readonly Dictionary<CatalogKey, Task<CatalogSnapshot?>> loads = [];
+    private readonly HeldCatalogs held;
+    private readonly Dictionary<CatalogKey, Task<CacheRead>> loads = [];
     private readonly CancellationTokenSource stopping = new();
-    private readonly int capacity;
+    private readonly ColdLoadGate coldGate;
+    private readonly CatalogMetrics metrics;
+    private readonly TimeProvider timeProvider;
     private int disposed;
 
-    public CatalogCache(IOptions<CatalogOptions> options)
+    public CatalogCache(
+        IOptions<CatalogOptions> options,
+        ColdLoadGate coldGate,
+        CatalogMetrics metrics,
+        TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(options);
-        capacity = options.Value.MaxEntries;
+        ArgumentNullException.ThrowIfNull(metrics);
+        held = new HeldCatalogs(options.Value.MaxEntries, metrics.RecordEviction);
+        this.coldGate = coldGate;
+        this.metrics = metrics;
+        this.timeProvider = timeProvider;
     }
 
-    /// <summary>The keys held, the most recently read first.</summary>
+    /// <summary>The keys of the evictable tier, the most recently read first.</summary>
     public IReadOnlyList<CatalogKey> Keys
     {
         get
         {
             lock (gate)
             {
-                return [.. recency.Select(static entry => entry.Key)];
+                return held.RecentKeys;
+            }
+        }
+    }
+
+    /// <summary>The keys of the pinned catalogs held.</summary>
+    public IReadOnlyCollection<CatalogKey> PinnedKeys
+    {
+        get
+        {
+            lock (gate)
+            {
+                return held.PinnedKeys;
             }
         }
     }
@@ -47,30 +69,39 @@ internal sealed class CatalogCache : IDisposable
     {
         lock (gate)
         {
-            if (held.TryGetValue(key, out var node))
+            if (!held.TryGet(key, out catalog))
             {
-                Touch(node);
-                catalog = node.Value.Catalog;
-                return true;
+                return false;
             }
         }
 
-        catalog = null;
-        return false;
+        metrics.RecordLookup(CatalogMetrics.HitOutcome);
+        return true;
     }
 
     /// <summary>
-    /// The catalog held under the key, else the one <paramref name="load"/> builds, shared
-    /// with every reader of the key meanwhile.
+    /// Pins <paramref name="keys"/>: held now or once loaded, they are never evicted; the
+    /// catalogs pinned before and left out become evictable.
+    /// </summary>
+    public void Pin(IReadOnlyCollection<CatalogKey> keys)
+    {
+        ArgumentNullException.ThrowIfNull(keys);
+        lock (gate)
+        {
+            held.Pin(keys);
+        }
+    }
+
+    /// <summary>
+    /// The catalog held under the key, else the one <paramref name="load"/> builds once the
+    /// gate admits it, shared with every reader of the key meanwhile.
     /// </summary>
     /// <param name="key">The (version, language).</param>
-    /// <param name="load">
-    /// Builds the catalog; returns <see langword="null"/> when a dataset is missing.
-    /// </param>
+    /// <param name="load">Builds the catalog, and tells the gate who asks.</param>
     /// <param name="cancellationToken">Stops the wait, not the load.</param>
-    public Task<CatalogSnapshot?> GetOrLoadAsync(
+    public Task<CacheRead> GetOrLoadAsync(
         CatalogKey key,
-        Func<CancellationToken, Task<CatalogSnapshot?>> load,
+        ColdLoad load,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(load);
@@ -97,23 +128,24 @@ internal sealed class CatalogCache : IDisposable
     }
 
     // The held catalog, the load in flight, or a new flight that the caller runs.
-    private (Task<CatalogSnapshot?> Wait, TaskCompletionSource<CatalogSnapshot?>? Flight) Claim(
-        CatalogKey key)
+    private (Task<CacheRead> Wait, TaskCompletionSource<CacheRead>? Flight) Claim(CatalogKey key)
     {
         lock (gate)
         {
-            if (held.TryGetValue(key, out var node))
+            if (held.TryGet(key, out var catalog))
             {
-                Touch(node);
-                return (Task.FromResult<CatalogSnapshot?>(node.Value.Catalog), null);
+                metrics.RecordLookup(CatalogMetrics.HitOutcome);
+                return (Task.FromResult(CacheRead.Of(catalog)), null);
             }
 
             if (loads.TryGetValue(key, out var running))
             {
+                metrics.RecordLookup(CatalogMetrics.JoinedOutcome);
                 return (running, null);
             }
 
-            var flight = new TaskCompletionSource<CatalogSnapshot?>(
+            metrics.RecordLookup(CatalogMetrics.MissOutcome);
+            var flight = new TaskCompletionSource<CacheRead>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
             loads[key] = flight.Task;
             return (flight.Task, flight);
@@ -123,15 +155,18 @@ internal sealed class CatalogCache : IDisposable
     // Never throws: the outcome goes to the flight's task.
     private async Task FlyAsync(
         CatalogKey key,
-        TaskCompletionSource<CatalogSnapshot?> flight,
-        Func<CancellationToken, Task<CatalogSnapshot?>> load)
+        TaskCompletionSource<CacheRead> flight,
+        ColdLoad load)
     {
-        CatalogSnapshot? catalog = null;
+        CacheRead? read = null;
         Exception? failure = null;
         try
         {
-            var token = stopping.Token;
-            catalog = await Task.Run(() => load(token), token).ConfigureAwait(false);
+            using var turn = await coldGate.EnterAsync(load.Caller, stopping.Token)
+                .ConfigureAwait(false);
+            read = turn is null
+                ? CacheRead.Refused
+                : await LoadAsync(load.Build).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
@@ -142,18 +177,42 @@ internal sealed class CatalogCache : IDisposable
         lock (gate)
         {
             loads.Remove(key);
-            if (catalog is not null)
+            if (read is { IsHeld: true })
             {
-                Hold(key, catalog);
+                held.Hold(key, read.Catalog);
             }
         }
 
-        Complete(flight, catalog, failure);
+        Complete(flight, read, failure);
+    }
+
+    private async Task<CacheRead> LoadAsync(Func<CancellationToken, Task<CatalogSnapshot?>> build)
+    {
+        var started = timeProvider.GetTimestamp();
+        metrics.LoadStarted();
+        try
+        {
+            var token = stopping.Token;
+            var catalog = await Task.Run(() => build(token), token).ConfigureAwait(false);
+            metrics.RecordLoad(
+                catalog is null ? CatalogMetrics.MissingOutcome : CatalogMetrics.BuiltOutcome,
+                timeProvider.GetElapsedTime(started));
+            return catalog is null ? CacheRead.Missing : CacheRead.Of(catalog);
+        }
+        catch
+        {
+            metrics.RecordLoad(CatalogMetrics.FailedOutcome, timeProvider.GetElapsedTime(started));
+            throw;
+        }
+        finally
+        {
+            metrics.LoadEnded();
+        }
     }
 
     private void Complete(
-        TaskCompletionSource<CatalogSnapshot?> flight,
-        CatalogSnapshot? catalog,
+        TaskCompletionSource<CacheRead> flight,
+        CacheRead? read,
         Exception? failure)
     {
         if (failure is OperationCanceledException && stopping.IsCancellationRequested)
@@ -166,27 +225,7 @@ internal sealed class CatalogCache : IDisposable
         }
         else
         {
-            flight.SetResult(catalog);
+            flight.SetResult(read ?? CacheRead.Missing);
         }
     }
-
-    // Under the gate.
-    private void Hold(CatalogKey key, CatalogSnapshot catalog)
-    {
-        held[key] = recency.AddFirst(new Held(key, catalog));
-        while (held.Count > capacity && recency.Last is { } oldest)
-        {
-            recency.RemoveLast();
-            held.Remove(oldest.Value.Key);
-        }
-    }
-
-    // Under the gate.
-    private void Touch(LinkedListNode<Held> node)
-    {
-        recency.Remove(node);
-        recency.AddFirst(node);
-    }
-
-    private sealed record Held(CatalogKey Key, CatalogSnapshot Catalog);
 }

@@ -11,4 +11,9 @@ export interface MfaConfirmRequest {
    * Six digits, spaces and dashes allowed between them.
    */
   code?: (string | null);
+
+  /**
+   * The invitation that opened the enrolment, sent again with the code.
+   */
+  invitation?: (string | null);
 }

@@ -50,9 +50,11 @@
     "codes_title": "Codes de récupération",
     "codes_lede": "Conservez ces codes en lieu sûr : chacun remplace une fois l'application si vous la perdez. Ils ne seront plus affichés.",
     "open": "Ouvrir l'administration",
+    "invitation_refused": "Cette association demande l'invitation que la commande admin mfa-invite affiche sur le serveur, valable quelques minutes : relancez-la, puis ouvrez le lien qu'elle donne.",
     "errors": {
       "invalid_code": "Ce code ne correspond pas. Vérifiez l'heure du téléphone et réessayez.",
-      "already": "Une application d'authentification est déjà associée à ce compte."
+      "already": "Une application d'authentification est déjà associée à ce compte.",
+      "invitation": "L'invitation a expiré ou ne correspond pas à ce compte : relancez admin mfa-invite sur le serveur."
     },
     "eyebrow": "LODB Admin"
   },

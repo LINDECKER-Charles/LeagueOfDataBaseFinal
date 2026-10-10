@@ -1,14 +1,14 @@
 import { parsePublicUrl } from '../../app/core/routing/url/parse-public-url';
+import { isVersionShaped } from '../routing/is-version-shaped';
 import type { RenderLane } from './render-lane';
 
-// No page segment starts with a digit, so after the locale such a segment is a version.
-// Admission decides before any API call, hence a shape and not the pattern of `/api/meta`:
-// a segment it misjudges only moves a render to the other lane.
-const VERSION_SHAPE = /^\d/;
 const VERSION_PARAMETER = 'version';
 
-/** Lane of a render, from its root-relative URL (ADR 0005 grammar). */
+/**
+ * Lane of a render, from its root-relative URL (ADR 0005 grammar), read decoded as the
+ * router reads it: `/fr/%31%35.13.1/champions` is a pinned page like `/fr/15.13.1/champions`.
+ */
 export function renderLaneOf(url: string): RenderLane {
-  const { version, query } = parsePublicUrl(url, (segment) => VERSION_SHAPE.test(segment));
+  const { version, query } = parsePublicUrl(url, isVersionShaped);
   return version !== null || query.get(VERSION_PARAMETER) !== null ? 'pinned' : 'current';
 }

@@ -7,6 +7,8 @@
   changement de patch ou de langue. Le loader de l'en-tête lit
   `GET /api/catalog/{version}/{lang}/warm-up`, un flux SSE asynchrone dont chaque trame
   est l'état complet, répétée toutes les 5 s pendant l'ingestion des datasets.
+- **Amendement** : le 2026-10-10, les points 4 et 5 sont précisés : le coût de la longue
+  traîne est borné à chaque étage de l'API (voir § « Amendement du 2026-10-10 »).
 
 ## Contexte
 
@@ -99,3 +101,78 @@ Six Labors Split (commerciale au-delà d'un seuil).
   métriques ([ADR 0010](0010-observabilite-tests-ci.md)).
 - **−** Un patch n'apparaît qu'une fois ingéré, quelques minutes après sa publication
   par Riot. C'est assumé : mieux vaut un patch complet qu'un patch immédiat mais froid.
+
+## Amendement du 2026-10-10 — coût borné de la longue traîne
+
+Les points 4 et 5 ne bornaient que la file des crawlers. Une lecture synchrone (page, appel
+de `/api/catalog`, sélecteurs, warm-up) d'une version froide n'avait ni budget ni délai, et
+un catalogue (version, langue) absent de la mémoire se rechargeait à chaque lecture. Le
+coût d'une version froide est désormais borné par instance, quel que soit le nombre de
+clients. Toutes les valeurs ci-dessous sont des défauts, réglables par
+`LoDb__<Section>__<Clé>` (transmis par `compose.deploy.yaml`).
+
+### Point 5 : le budget s'applique aussi aux visiteurs
+
+- Une version prête (ingérée en entier) ne coûte rien. Sinon, l'ingestion synchrone d'un
+  visiteur prend un budget par instance : `LoDb:Ingestion:ColdDatasetsPerMinute`
+  (**6** couples version × langue par minute) et `ColdImagesPerMinute` (**1 500** images
+  par minute). Rejoindre un travail déjà en vol est gratuit. Hors budget : le catalogue est
+  « en attente » (`503` + `Retry-After`), les images restent des placeholders.
+- Une ingestion synchrone attend un emplacement (`SyncConcurrency`) **3 s** au plus
+  (`SlotWait`, sous le délai d'appel du SSR, sinon le travail lancé serait perdu), derrière
+  **32** autres au plus (`MaxWaitingIngestions`) ; au-delà, même réponse « en attente ».
+  Le travail de la file de fond a été admis à sa mise en file : ni budget ni délai.
+- Les sitemaps et `llms.txt` (origine crawler) gardent la file bornée et leur budget de
+  **30** requêtes par minute (`CrawlerRequestsPerMinute`). Toute autre requête HTTP reste
+  celle d'un visiteur.
+
+### Catalogues en mémoire
+
+- **Étage A** : les catalogues du dernier patch dans les langues
+  `LoDb:Catalog:PinnedLanguages` (défaut : les 21 langues de l'interface, en_US en tête),
+  **jamais évincés**, dans la limite de `PinnedBudgetMegabytes` (**256** Mio, estimés
+  d'après les datasets stockés). Mesure sur 16.20.1 : ≈ 7,5 Mio pour en_US, 6,7 à 7,8 Mio
+  pour chaque autre langue (latines, cyrillique, thaï, arabe, CJK), dont les chaînes
+  anglaises restent partagées avec en_US ; ≈ 160 Mio pour les 21 langues. Chargement d'un
+  catalogue : 20 à 30 ms au p50, 30 à 60 ms au p95, ≈ 10 Mio alloués.
+- **Étage B** : les autres catalogues, LRU de `MaxEntries` (**16**) places. Les deux
+  étages restent sous ≈ 400 Mio des 1 152 Mio de l'API.
+- **Porte froide**, sur un vrai miss seulement (un lecteur qui rejoint un chargement en
+  vol ne consomme rien) : **2** chargements simultanés (`ColdLoadConcurrency`), **3** par
+  seconde en rafale de **6** (`ColdLoadsPerSecond`, `ColdLoadBurst`). Le rendu serveur,
+  qui appelle l'API sans passer par nginx (adresse privée, sans `X-Forwarded-For`), a les
+  deux tiers du débit et peut attendre **2 s** son tour (`InternalColdLoadWait`), derrière
+  **16** autres au plus (`MaxPendingLoads`). Tout autre appelant a **1** chargement par
+  seconde (`PublicColdLoadsPerSecond`), jamais le dernier emplacement, et n'attend jamais.
+  Un refus est une réponse « en attente » (`503` + `Retry-After`), distincte d'un dataset
+  absent.
+
+### Point 4 : warm-up, sélecteurs et ancien site
+
+- `GET /api/catalog/{version}/{lang}/warm-up` et `/api/pickers` passent par la porte
+  froide et le budget. Le warm-up est en plus limité à **20** démarrages par heure et par
+  client (adresse, ou /64 en IPv6, politique `cold-work`), à **8** flux ouverts, **2** par
+  client, de **120 s** chacun (`LoDb:Catalog:WarmUp`). Un refus ou une expiration clôt le
+  flux par une trame `failed` de code `catalog-pending` : la visite continue. Jamais de
+  limite par adresse sur `/api/pickers`, lu par des membres qui peuvent partager une
+  adresse ([ADR 0009](0009-identite-authentification-sessions.md)).
+- Une URL de l'ancien site **n'ingère jamais** : son nom se cherche dans le catalogue du
+  dernier patch (les ids sont stables), puis dans celui de la version visée si elle est
+  déjà stockée ; sinon, `302` vers la liste de cette version, pour qu'une entrée retirée
+  du jeu ne devienne pas une 404.
+
+### Exception aux tâches périodiques
+
+`LatestCatalogWarmer` (`Workers/Catalog/`) épingle l'étage A au démarrage, puis à chaque
+changement de dernière version (vérifié toutes les `VersionsLifetime`). Il ne prend **pas**
+de verrou consultatif : il remplit la mémoire de l'instance qui l'exécute, que chaque
+instance doit remplir pour elle-même.
+
+### Mesures
+
+Meter `LoDb.Catalog` : `lodb_catalog_cache_lookups_total{outcome}`,
+`lodb_catalog_cache_evictions_total`, `lodb_catalog_load_duration_seconds{outcome}`,
+`lodb_catalog_loads_in_flight`, `lodb_catalog_cold_admissions_total{partition,result}` ;
+et `lodb_ingestion_sync_waiting` (meter `LoDb.Ingestion`). Les refus d'ingestion restent
+comptés par `lodb_ingestion_on_demand_refused_total{reason}`. Aucune version, langue ni
+adresse en label.

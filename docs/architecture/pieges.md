@@ -32,6 +32,18 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   demandée (`PageResponse`), jamais d'`UrlTree` de redirection côté serveur.
   `/{locale}/account`, `/{locale}/u` et `/b` ont une route 404 explicite (`bareNotFound`).
   Les routes `RenderMode.Client` (compte, `/admin`) ne posent pas de statut.
+- **Pré-routeur SSR** (`src/server/routing/`), avant l'admission : premier segment ni forme
+  de locale, ni `b`, ni `admin` → 404 statique sans Angular ; segment décodé en `/` ou NUL →
+  400 ; liste ou fiche du catalogue → 301 `no-store` vers son URL sans les paramètres
+  qu'elle ne lit pas. Un nouveau paramètre de liste se déclare dans les clés de facettes
+  (`*-facet-keys.ts`) ou dans `owned-params-of.ts`, sinon il disparaît au rechargement.
+  Locale et version se lisent **décodées** (`/%66r/%31%35.13.1/` est épinglée). Un segment
+  `.` ou `..`, ou qui contient `\`, `(`, `)` ou `;`, donne aussi un 400 : le rendu résout
+  l'URL comme un navigateur et son routeur lit outlets et paramètres matriciels
+  (`;version=` compris), il rendrait donc une autre page que celle classée.
+- Une API qui ne répond pas (aucune réponse, 502, 504) donne un **502** ; seule une 503 de
+  l'API (délestage, avec `Retry-After`) reste 503. Chaque appel API d'un rendu est borné
+  par l'échéance du rendu (`LODB_RENDER_DEADLINE_SECONDS`, 20 s).
 - La liaison des entrées de composant par le routeur reste coupée : une query forgée
   remplirait des entrées.
 - `app.routes.server.spec.ts` passe par `ɵextractRoutesAndCreateRouteTree`, API privée
@@ -56,10 +68,30 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 ## API, données et comptes
 
-- `/readyz` se lit sur l'API (18081 ou `api:8080`) ; demandé à nginx, il part au SSR (404).
+- `/readyz` se lit sur l'API (18081 ou `api:8080`) et, par nginx, sur le sous-domaine `api.`
+  seulement (1 requête/s par adresse, sonde externe) ; demandé au site, il part au SSR (404).
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
+- **Pool Postgres** : `Maximum Pool Size=32;Timeout=5` dans la chaîne de connexion. Une
+  requête `/api` qui n'obtient pas de connexion à temps reçoit un **503** `service-busy`
+  avec `Retry-After` : délestage voulu, non compté. Une base injoignable donne un **500**,
+  compté par `lodb_db_unavailable_total`. Npgsql ne donne au pool épuisé ni type ni code :
+  son message est reconnu par son texte, et `DatabaseFailureTests` le revérifie sur un vrai
+  pool à chaque montée de version.
+- **Corps de requête** : 128 Kio au plus (`LoDb:Hosting:MaxRequestBodySize`), 413 au-delà.
+  Le plus gros corps légitime, un build maximal dont chaque caractère est échappé, dépasse
+  64 Kio (`tests/LoDb.E2E/specs/builds/maximal-build.spec.ts`) : ne pas descendre à 64 Kio.
+  Un endpoint qui doit lire plus pose son propre `RequestSizeLimit` (webhook Stripe, 1 Mio).
+  Les tests xUnit de cette borne tournent sur un vrai Kestrel, en Production
+  (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune limite, et
+  Development transforme un corps invalide en exception.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
+- **Porte froide des catalogues** : un appel direct à l'API (18081, `api:8080`) depuis une
+  adresse privée et sans `X-Forwarded-For` est compté comme le SSR (débit interne, attente
+  de 2 s permise). Pour reproduire un client public, passer par nginx (18080). Un `503`
+  « en attente » sous charge est un délestage voulu, pas une panne.
+- Une URL de l'ancien site sur une version non stockée répond `302` vers la liste de la
+  version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une 404).
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en
   littéral (sinon `dead` dès le premier essai). L'outbox n'envoie rien sans
   `LoDb:Mail:Host` : voulu. En local, Mailpit sur http://localhost:18025.
@@ -79,6 +111,22 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   formulaire ; les autres créent leur compte par la CLI (`support/member-account.ts`,
   `support/worker-account.ts`). Entre deux passages complets :
   `docker restart lodb-dev-api-1`. Ne jamais relever le quota pour les tests.
+- **Bornes relevées pour l'E2E**, dans `compose.override.yaml` seulement (jamais
+  `compose.deploy.yaml`) : la suite ouvre des patchs anciens et des langues, d'une seule
+  adresse, bien plus vite qu'un hôte servi ne l'admet. La pile de dev relève l'admission
+  des rendus du SSR (`LODB_*RENDER*`), la porte froide des catalogues
+  (`LoDb__Catalog__ColdLoad*`, `PublicColdLoadsPerSecond`), les flux du warm-up
+  (`LoDb__Catalog__WarmUp__*`) et le budget d'ingestion des visiteurs
+  (`LoDb__Ingestion__ColdDatasetsPerMinute`, `ColdImagesPerMinute`,
+  `MaxWaitingIngestions`, `SlotWait` à 20 s). Ces bornes se testent en xUnit avec leurs
+  valeurs de production, jamais par l'E2E.
+- **Limite de connexions** : 10 connexions par adresse et par 15 min
+  (`LoDb:RateLimiting:SignInPerWindow`), et toute la suite se connecte par
+  `POST /api/account/login` depuis une seule adresse (`support/member-account.ts`, les
+  administrateurs des specs `admin`) : `compose.override.yaml` relève la borne pour la pile
+  locale, jamais `compose.deploy.yaml`. Les 4 échecs par identifiant et par adresse ne se
+  relèvent pas (ils restent sous le verrouillage à 5) ; les tests xUnit gardent les valeurs
+  de production.
 - Comparer le chemin d'une réponse (`new URL(url).pathname`), jamais `url.endsWith(...)`.
   Limiter les comptes de titres ou de boutons à `main` ou au composant visé. Une spec qui
   compte les POST exclut `/api/analytics/`. Un parcours qui crée un compte le supprime aussi
@@ -87,7 +135,20 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   contenu, pas sur `^`/`$`.
 - `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
   une correction.
+- **Bornes du SSR relevées en dev** (`compose.override.yaml`, jamais
+  `compose.deploy.yaml`) : toute la suite arrive d'une adresse et ouvre les anciens patchs
+  bien plus vite qu'un hôte servi ne les admet. Admission : `LODB_RENDER_MAX_IN_FLIGHT`,
+  `LODB_PINNED_*`, `LODB_CURRENT_*` et la part d'un client (`LODB_RENDER_PER_CLIENT_*`,
+  `LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE`). Attente de l'API par un rendu :
+  `LODB_RENDER_DEADLINE_SECONDS` et `LODB_RENDER_API_TIMEOUT_SECONDS` à 30 s, car la
+  première visite d'un patch attend son ingestion. Une 503 ou une 502 du SSR en E2E se
+  cherche d'abord là.
 - Les instantanés de `tests/LoDb.E2E/test-results/` sont écrasés au passage suivant.
+- **Débits par adresse de nginx relevés** : toute la suite arrive sous une seule adresse (la
+  passerelle Docker), plus vite qu'un visiteur. `compose.override.yaml` relève
+  `LODB_PAGES_*`, `LODB_API_READS_*`, `LODB_LEGACY_*` et `LODB_SITEMAPS_*` (débit et rafale) ;
+  jamais `compose.deploy.yaml`. Pour retrouver un défaut, retirer la clé (`!reset null`) :
+  une valeur vide fait refuser la configuration de nginx.
 
 ## Infra et déploiement
 
@@ -99,10 +160,28 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `storage` rendrait le stockage de l'API non inscriptible.
 - nginx : sous-domaine reconnu par `server_name ~^api\.` ; CORP `same-origin` sauf
   `/cdn/blobs/` en `cross-origin` (coquille Android) ; `access_log off` voulu (l'edge
-  journalise) ; `sites/*.conf` passe par `envsubst`, filtré sur `^LODB_`.
+  journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent par
+  `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide).
+  Une variable `LODB_*` de nginx passe par `compose.yaml` avec son défaut
+  (`${LODB_X:-défaut}`), **jamais** en clé sans valeur dans un calque comme les réglages de
+  l'API : Docker effacerait le défaut `ENV` de l'image et nginx refuserait de démarrer.
   `server.d/legacy-redirects.conf` envoie à `/api/legacy` les premiers segments de l'ancien
   site : tout nouveau chemin hors locale se vérifie contre cette liste. `server.d/seo.conf`
   possède `/sitemap.xml`, `/sitemaps/`, `/robots.txt` et `/llms.txt`.
+- nginx, bornes (`sites/site.conf`) : `limit_req` par adresse sur les pages, les lectures
+  publiques de l'API, l'ancien site, `/sitemaps/` et `/readyz` ; **jamais** sur les autres
+  `/api/` (actions d'un compte, ADR 0009), `/v1/`, `/webhooks/`, `/build/`, `/cdn/`. Une
+  location qui vise une route de l'API se compare **sans casse** (`~*`) : l'API route
+  `/api/Catalog/…` comme `/api/catalog/…`, que `location /api/` laisserait passer. Le 429
+  vient de `snippets/server-guards.conf` : une location qui déclare son propre `error_page`
+  doit répéter `error_page 429`. `/api/catalog` et `/api/meta` ne sont **jamais** mis en
+  cache par nginx (un HIT contournerait le `426` des apps). Les caches `lodb_seo` et
+  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages` sur un volume.
+  `/cdn/blobs/` ne sert que `{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` : une nouvelle
+  extension de blob s'ajoute à la regex. La garde des extensions de scripts
+  (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
+  nom d'utilisateur peut finir en `.bak` ou `.ini`. Vérification : `tools/nginx/`
+  (`node --test`).
 - `gzip_types` de `docker/nginx/nginx.conf` doit lister `text/javascript` et
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé

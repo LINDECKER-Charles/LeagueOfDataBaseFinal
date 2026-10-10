@@ -1,4 +1,3 @@
-using LoDb.Api.Modules.Accounts.Security.Hashing;
 using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Identity;
 
@@ -13,8 +12,6 @@ public sealed class PhpHashesTests
     private const string Ascii = "ascii";
     private const string Long = "long";
     private const string Nul = "nul";
-
-    private static readonly HashingGate Gate = new();
 
     private static readonly User Anyone = new() { Roles = [] };
 
@@ -78,6 +75,5 @@ public sealed class PhpHashesTests
     }
 
     private static PasswordVerificationResult Verify(string hash, string password) =>
-        new MigratingPasswordHasher(new Argon2Passwords(Gate))
-            .VerifyHashedPassword(Anyone, hash, password);
+        TestHashing.Hasher().VerifyHashedPassword(Anyone, hash, password);
 }

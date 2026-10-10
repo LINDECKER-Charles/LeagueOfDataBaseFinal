@@ -18,6 +18,10 @@ public sealed class IngestionOptions
     private const int DefaultSyncConcurrency = 4;
     private const int DefaultQueueCapacity = 256;
     private const int DefaultCrawlerRequestsPerMinute = 30;
+    private const int DefaultColdDatasetsPerMinute = 6;
+    private const int DefaultColdImagesPerMinute = 1500;
+    private const int DefaultMaxWaitingIngestions = 32;
+    private const int DefaultSlotWaitSeconds = 3;
 
     /// <summary>Period of the patch watch (ADR 0003).</summary>
     public TimeSpan WatchPeriod { get; set; } = TimeSpan.FromMinutes(DefaultWatchMinutes);
@@ -46,4 +50,28 @@ public sealed class IngestionOptions
     /// Queued requests a crawler may add per minute (C5); zero lets crawlers trigger none.
     /// </summary>
     public int CrawlerRequestsPerMinute { get; set; } = DefaultCrawlerRequestsPerMinute;
+
+    /// <summary>
+    /// (version, language) pairs a visitor's read may ingest per minute while it waits; zero
+    /// lets visitors ingest none. A version already ingested costs nothing.
+    /// </summary>
+    public int ColdDatasetsPerMinute { get; set; } = DefaultColdDatasetsPerMinute;
+
+    /// <summary>
+    /// Images a visitor's read may fetch per minute while it waits; the others stay
+    /// placeholders until a later read.
+    /// </summary>
+    public int ColdImagesPerMinute { get; set; } = DefaultColdImagesPerMinute;
+
+    /// <summary>
+    /// A visitor's ingestions waiting for one of the <see cref="SyncConcurrency"/> slots;
+    /// more are refused at once.
+    /// </summary>
+    public int MaxWaitingIngestions { get; set; } = DefaultMaxWaitingIngestions;
+
+    /// <summary>
+    /// Longest wait of a visitor's ingestion for a slot. It stays under the renderer's own
+    /// timeout on the API: work started for a request already given up would be lost.
+    /// </summary>
+    public TimeSpan SlotWait { get; set; } = TimeSpan.FromSeconds(DefaultSlotWaitSeconds);
 }

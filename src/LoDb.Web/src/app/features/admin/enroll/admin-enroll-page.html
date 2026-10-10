@@ -19,6 +19,11 @@
       <a lodbButton class="mt-6" [routerLink]="home">{{ 'admin.enroll.open' | adminText }}</a>
     </section>
   } @else {
+    @if (uninvited()) {
+      <p class="mb-4 text-sm text-danger-light" role="alert">
+        {{ 'admin.enroll.invitation_refused' | adminText }}
+      </p>
+    }
     <lodb-panel-state [panel]="setup" shape="block" />
     @if (setup.value(); as key) {
       <section lodbFrame="ornate" class="grid gap-6 p-6 sm:grid-cols-[14rem_1fr]">

@@ -33,6 +33,7 @@ internal sealed partial class AdminGrant(
         var promoted = await PromoteAsync(user);
         return new AdminGrantResult
         {
+            AccountId = user.Id,
             Username = user.UserName ?? string.Empty,
             Email = email,
             Password = password,

@@ -3,6 +3,7 @@ using LoDb.Api.Hosting;
 using LoDb.Api.Modules.Accounts.Authentication;
 using LoDb.Api.Modules.Accounts.Http;
 using LoDb.Api.Modules.Accounts.Links;
+using LoDb.Api.Modules.Accounts.Security.Admission;
 using LoDb.Api.Modules.Accounts.Session;
 using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Audit;
@@ -22,6 +23,7 @@ namespace LoDb.Api.Modules.Accounts.Registration;
 internal sealed class RegisterEndpoint(
     UserManager<User> users,
     SignInManager<User> signIn,
+    HashingAdmission admission,
     LoDbDbContext db,
     AccountMail mail,
     AccountAudit audit,
@@ -36,10 +38,12 @@ internal sealed class RegisterEndpoint(
                     [FromServices] RegisterEndpoint endpoint,
                     HttpContext context) => endpoint.RegisterAsync(request, context))
             .RequireRateLimiting(RateLimitingPolicies.Registration)
+            .AddEndpointFilter<HashingBusyFilter>()
             .WithName("registerAccount")
             .WithSummary("Creates an account, signs it in and sends its verification e-mail.")
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status429TooManyRequests);
+            .ProducesProblem(StatusCodes.Status429TooManyRequests)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
     public async Task<Results<Created<AccountSession>, AccountProblem>> RegisterAsync(
         RegisterRequest request,
@@ -90,12 +94,14 @@ internal sealed class RegisterEndpoint(
         CreatedAt = clock.GetUtcNow(),
     };
 
-    // The account and its e-mail are written together, or neither is.
+    // The account and its e-mail are written together, or neither is. The hashing permit is
+    // taken first, so that no transaction stays open while the request waits for it.
     private async Task<AccountProblem?> CreateAsync(
         User user,
         RegisterRequest request,
         CancellationToken cancellationToken)
     {
+        using var permit = await admission.EnterAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         try
         {

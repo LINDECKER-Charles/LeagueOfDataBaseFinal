@@ -1,7 +1,10 @@
 using System.Security.Claims;
 using LoDb.Api.Modules.Accounts.Authentication;
 using LoDb.Api.Modules.Accounts.Http;
+using LoDb.Api.Modules.Accounts.Security;
+using LoDb.Api.Modules.Accounts.Security.Invitations;
 using LoDb.Api.Modules.Accounts.Session;
+using LoDb.Api.Modules.Accounts.SignIn;
 using LoDb.Api.Modules.Admin.Http;
 using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Authentication;
@@ -14,19 +17,30 @@ namespace LoDb.Api.Modules.Admin.Mfa;
 /// turns the second factor on and opens the session with it.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Only an account without a second factor enrols: one that has it signs in with it, so a
 /// stolen password never replaces the authenticator of an administrator. A wrong code counts
 /// toward the lockout, as at sign-in.
+/// </para>
+/// <para>
+/// Both steps also need the invitation <c>admin mfa-invite</c> printed for the account on
+/// the host: the password alone, which is all an account without a second factor signs in
+/// with, never enrols an authenticator.
+/// </para>
 /// </remarks>
 internal sealed class MfaEnrollment(
     UserManager<User> users,
     SignInManager<User> signIn,
     SessionReader sessions,
+    MfaInvitations invitations,
+    SecurityMetrics metrics,
     AdminTrail trail,
     TimeProvider clock)
 {
     public const string CodeField = "code";
     public const string InvalidCode = "invalid-code";
+    public const string InvitationField = "invitation";
+    public const string InvalidInvitation = "invalid-invitation";
 
     // As many codes as the enrollment of Identity's own UI hands out.
     private const int RecoveryCodes = 10;
@@ -36,11 +50,17 @@ internal sealed class MfaEnrollment(
 
     /// <summary>Draws a new key, replacing one drawn before and never confirmed.</summary>
     public async Task<(MfaSetup? Setup, AccountProblem? Problem)> StartAsync(
-        ClaimsPrincipal principal)
+        ClaimsPrincipal principal,
+        string? invitation)
     {
         if (await EnrollingAsync(principal) is not { } user)
         {
             return (null, await RefusalAsync(principal));
+        }
+
+        if (InvitationRefusal(user, invitation) is { } uninvited)
+        {
+            return (null, uninvited);
         }
 
         await users.ResetAuthenticatorKeyAsync(user);
@@ -56,17 +76,19 @@ internal sealed class MfaEnrollment(
         return (setup, null);
     }
 
-    /// <summary>Turns the second factor on once <paramref name="code"/> matches the key.</summary>
+    /// <summary>Turns the second factor on once the code of the request matches the key.</summary>
     public async Task<(MfaConfirmation? Done, AccountProblem? Problem)> ConfirmAsync(
         HttpContext context,
-        string? code)
+        MfaConfirmRequest request)
     {
         if (await EnrollingAsync(context.User) is not { } user)
         {
             return (null, await RefusalAsync(context.User));
         }
 
-        if (await CheckAsync(user, code) is { } refused)
+        var refused = InvitationRefusal(user, request.Invitation)
+            ?? await CheckAsync(user, request.Code);
+        if (refused is not null)
         {
             return (null, refused);
         }
@@ -75,6 +97,7 @@ internal sealed class MfaEnrollment(
         var codes = await users.GenerateNewTwoFactorRecoveryCodesAsync(user, RecoveryCodes);
         await SignInWithSecondFactorAsync(context, user);
         trail.MfaEnrolled(user.Id);
+        metrics.RecordAdminEvent(SecurityMetrics.MfaEnrolled);
         var done = new MfaConfirmation
         {
             RecoveryCodes = [.. codes ?? []],
@@ -91,6 +114,19 @@ internal sealed class MfaEnrollment(
             ? AccountProblem.AuthenticationRequired()
             : AdminProblems.Conflict(AdminProblems.MfaAlreadyEnrolled);
 
+    private AccountProblem? InvitationRefusal(User user, string? invitation)
+    {
+        if (!string.IsNullOrWhiteSpace(invitation) && invitations.Admits(user.Id, invitation))
+        {
+            return null;
+        }
+
+        metrics.RecordAdminEvent(SecurityMetrics.MfaInvitationRefused);
+        return AdminProblems.Invalid(
+            InvitationField,
+            string.IsNullOrWhiteSpace(invitation) ? FieldErrors.Required : InvalidInvitation);
+    }
+
     private async Task<AccountProblem?> CheckAsync(User user, string? code)
     {
         var digits = Digits(code);
@@ -99,9 +135,14 @@ internal sealed class MfaEnrollment(
             return AdminProblems.Invalid(CodeField, FieldErrors.Required);
         }
 
+        if (!SignInFieldBounds.IsAuthenticatorCode(code!))
+        {
+            return AdminProblems.Invalid(CodeField, FieldErrors.Malformed);
+        }
+
         if (await users.IsLockedOutAsync(user))
         {
-            return AccountProblem.AccountLocked(LockoutLeft(user));
+            return AccountProblem.AccountLocked(LockoutTime.Left(user, clock));
         }
 
         var provider = users.Options.Tokens.AuthenticatorTokenProvider;
@@ -122,11 +163,6 @@ internal sealed class MfaEnrollment(
         Claim[] methods = [new(AuthenticationMethods.ClaimType, AuthenticationMethods.MultiFactor)];
         await signIn.SignInWithClaimsAsync(user, current.Properties, methods);
     }
-
-    private TimeSpan LockoutLeft(User user) =>
-        user.LockoutEnd is { } end && end > clock.GetUtcNow()
-            ? end - clock.GetUtcNow()
-            : TimeSpan.Zero;
 
     private static string? Digits(string? code) =>
         string.IsNullOrWhiteSpace(code)

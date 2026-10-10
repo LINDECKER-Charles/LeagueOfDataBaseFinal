@@ -7,14 +7,17 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { MfaEnrollmentRequest } from '../../models/mfa-enrollment-request';
 import { MfaSetup } from '../../models/mfa-setup';
 
 export interface StartAdminMfaEnrollment$Params {
+      body: MfaEnrollmentRequest
 }
 
-export function startAdminMfaEnrollment(http: HttpClient, rootUrl: string, params?: StartAdminMfaEnrollment$Params, context?: HttpContext): Observable<StrictHttpResponse<MfaSetup>> {
+export function startAdminMfaEnrollment(http: HttpClient, rootUrl: string, params: StartAdminMfaEnrollment$Params, context?: HttpContext): Observable<StrictHttpResponse<MfaSetup>> {
   const rb = new RequestBuilder(rootUrl, startAdminMfaEnrollment.PATH, 'post');
   if (params) {
+    rb.body(params.body, 'application/json');
   }
 
   return http.request(

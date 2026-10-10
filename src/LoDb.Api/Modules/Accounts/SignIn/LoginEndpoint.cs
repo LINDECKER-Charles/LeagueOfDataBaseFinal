@@ -1,5 +1,7 @@
 using LoDb.Api.Modules.Accounts.Authentication;
 using LoDb.Api.Modules.Accounts.Http;
+using LoDb.Api.Modules.Accounts.Security.Admission;
+using LoDb.Api.Modules.Accounts.Security.Limits;
 using LoDb.Api.Modules.Accounts.Session;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -19,12 +21,15 @@ internal sealed class LoginEndpoint(PasswordSignIn passwordSignIn, SessionReader
                     [FromBody] LoginRequest request,
                     [FromServices] LoginEndpoint endpoint,
                     HttpContext context) => endpoint.LoginAsync(request, context))
+            .RequireRateLimiting(AccountRateLimits.SignIn)
+            .AddEndpointFilter<HashingBusyFilter>()
             .WithName("signIn")
             .WithSummary("Opens a session with an e-mail or a username and a password.")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
-            .ProducesProblem(StatusCodes.Status429TooManyRequests);
+            .ProducesProblem(StatusCodes.Status429TooManyRequests)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
     public async Task<Results<Ok<AccountSession>, AccountProblem>> LoginAsync(
         LoginRequest request,

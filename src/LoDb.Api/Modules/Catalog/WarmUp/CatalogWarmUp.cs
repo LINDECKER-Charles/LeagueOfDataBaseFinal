@@ -2,11 +2,13 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.Catalog.WarmUp.Limits;
 using LoDb.Api.Modules.Catalog.WarmUp.Progress;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Catalog.Images;
 using LoDb.Ingestion.Egress.Errors;
 using LoDb.Ingestion.Queue;
+using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Modules.Catalog.WarmUp;
 
@@ -16,12 +18,15 @@ namespace LoDb.Api.Modules.Catalog.WarmUp;
 /// </summary>
 /// <remarks>
 /// It waits on the on-demand ingestion the pages use: a warm-up and a visit needing the same
-/// image share one fetch, and the synchronous slots bound them together. A client leaving
-/// stops the stream, never the ingestion, whose work stays for the next visit.
+/// image share one fetch, the synchronous slots and the budget of cold work bound them
+/// together. A client leaving stops the stream, never the ingestion, whose work stays for the
+/// next visit. A stream lives <c>LoDb:Catalog:WarmUp:StreamLifetime</c> at most: past it, or
+/// when the work is refused, it ends with a failed frame and the client visits the page.
 /// </remarks>
 internal sealed class CatalogWarmUp(
     CatalogGateway gateway,
     IOnDemandIngestion onDemand,
+    IOptions<WarmUpOptions> options,
     TimeProvider timeProvider)
 {
     /// <summary>
@@ -39,17 +44,38 @@ internal sealed class CatalogWarmUp(
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(scope);
+        using var expiry = new CancellationTokenSource(options.Value.StreamLifetime, timeProvider);
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(
+            cancellationToken,
+            expiry.Token);
         var frames = Channel.CreateBounded<WarmUpProgress>(LatestOnly);
-        var warming = WarmAsync(scope, frames.Writer, cancellationToken);
-        await foreach (var frame in ReadAsync(frames.Reader, cancellationToken))
+        var warming = WarmAsync(scope, frames.Writer, lifetime.Token);
+        try
         {
-            yield return frame;
+            await foreach (var frame in ReadAsync(frames.Reader, cancellationToken))
+            {
+                yield return frame;
+            }
         }
-
-        await warming;
+        finally
+        {
+            // The reader may have left first: the waits stop before their tokens are disposed.
+            await lifetime.CancelAsync();
+            await warming;
+        }
     }
 
-    // Never throws: an unexpected failure completes the frames, which hand it to the stream.
+    // The code a failed frame tells: an outage upstream, or a run cut short (work refused,
+    // stream expired, client gone) whose work goes on for the next visit.
+    private static string? FailureCode(Exception exception) => exception switch
+    {
+        EgressException => CatalogProblem.UpstreamUnavailable().Code,
+        OnDemandRefusedException or OperationCanceledException => CatalogProblem.Pending().Code,
+        _ => null,
+    };
+
+    // Never throws: a failure ends the frames with a failed one, an unexpected one completes
+    // them with it, which hands it to the stream.
     private async Task WarmAsync(
         WarmUpScope scope,
         ChannelWriter<WarmUpProgress> frames,
@@ -71,9 +97,8 @@ internal sealed class CatalogWarmUp(
 
             frames.TryComplete();
         }
-        catch (EgressException)
+        catch (Exception exception) when (FailureCode(exception) is { } code)
         {
-            var code = CatalogProblem.UpstreamUnavailable().Code;
             frames.TryWrite(WarmUpProgress.Failed(scope.Resources, code));
             frames.TryComplete();
         }

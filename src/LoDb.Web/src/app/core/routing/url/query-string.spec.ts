@@ -39,6 +39,20 @@ describe('QueryString', () => {
   });
 
   it.each([
+    ['?x=1&page=2&utm_source=mail', 2, '?page=2'],
+    ['?page=2&page=3&q=a', 2, '?page=2&q=a'],
+    ['?pa%67e=2&page=3', 2, '?pa%67e=2'],
+    ['?q=a&page=2&size=all', 2, '?q=a&page=2'],
+    [`?q=${'a'.repeat(9)}&page=2`, 2, '?page=2'],
+    ['?=1&&page=2', 2, '?page=2'],
+  ])('retains from %j at most %i known parameters: %j', (search, max, expected) => {
+    const isKept = (name: string, raw: string) =>
+      ['q', 'page', 'size'].includes(name) && raw.length <= 10;
+
+    expect(QueryString.parse(search).retain(isKept, max).toString()).toBe(expected);
+  });
+
+  it.each([
     { search: '', name: 'lang', value: 'en_GB', expected: '?lang=en_GB' },
     { search: '?lang=en_GB&page=2', name: 'lang', value: 'fr_FR', expected: '?page=2&lang=fr_FR' },
     {

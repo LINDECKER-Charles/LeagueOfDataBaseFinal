@@ -1,3 +1,4 @@
+import { readPositiveInteger } from '../read-positive-integer';
 import type { RenderLimits } from './render-limits';
 
 type Environment = Readonly<Record<string, string | undefined>>;
@@ -5,12 +6,20 @@ type Environment = Readonly<Record<string, string | undefined>>;
 // Sized for the production host (4 shared vCPU, one Node thread for the renderer): a render
 // costs about 0.1 s of the renderer and as much of the API, which loads a whole catalog for
 // each (version, language) it no longer holds. One pinned render a second stays a fraction
-// of a core; a crawl of every patch in every language no longer takes the host.
+// of a core; a crawl of every patch in every language no longer takes the host. The current
+// pages get five renders a second, a burst of a minute's worth of their usual misses; one
+// client gets two renders at once and a pinned page every ten seconds, which no reader
+// outpaces, so that it alone never takes what the others need.
 const DEFAULTS: RenderLimits = {
   maxInFlight: 8,
   pinnedMaxInFlight: 3,
   pinnedPerMinute: 60,
   pinnedBurst: 10,
+  currentPerMinute: 300,
+  currentBurst: 60,
+  perClientMaxInFlight: 2,
+  pinnedPerClientPerMinute: 6,
+  trackedClients: 50_000,
 };
 
 const VARIABLES: Readonly<Record<keyof RenderLimits, string>> = {
@@ -18,40 +27,70 @@ const VARIABLES: Readonly<Record<keyof RenderLimits, string>> = {
   pinnedMaxInFlight: 'LODB_PINNED_RENDER_MAX_IN_FLIGHT',
   pinnedPerMinute: 'LODB_PINNED_RENDERS_PER_MINUTE',
   pinnedBurst: 'LODB_PINNED_RENDER_BURST',
+  currentPerMinute: 'LODB_CURRENT_RENDERS_PER_MINUTE',
+  currentBurst: 'LODB_CURRENT_RENDER_BURST',
+  perClientMaxInFlight: 'LODB_RENDER_PER_CLIENT_MAX_IN_FLIGHT',
+  pinnedPerClientPerMinute: 'LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE',
+  trackedClients: 'LODB_RENDER_TRACKED_CLIENTS',
 };
 
-// A misconfigured variable stops the server at startup rather than serving on a guess.
-function positiveIntegerOf(env: Environment, limit: keyof RenderLimits): number {
-  const variable = VARIABLES[limit];
-  const value = env[variable];
-  if (value === undefined || value === '') {
-    return DEFAULTS[limit];
+interface Share {
+  readonly part: keyof RenderLimits;
+  readonly whole: keyof RenderLimits;
+  /** Whether the part must leave some of the whole to the others. */
+  readonly isStrict: boolean;
+}
+
+// The pinned lane leaves room to the current pages, or a crawl of the older patches would
+// take every slot again; a client's share is a share, never more than the whole.
+const SHARES: readonly Share[] = [
+  { part: 'pinnedMaxInFlight', whole: 'maxInFlight', isStrict: true },
+  { part: 'perClientMaxInFlight', whole: 'maxInFlight', isStrict: false },
+  { part: 'pinnedPerClientPerMinute', whole: 'pinnedPerMinute', isStrict: false },
+];
+
+// A client's share left to its default follows a whole set below it: lowering a lane's
+// budget, the lever of an incident, must not stop the server. Only a share set above its
+// whole is a mistake, which `checkShare` refuses.
+function fitShare(limits: RenderLimits, env: Environment, share: Share): RenderLimits {
+  const { part, whole, isStrict } = share;
+  const value = env[VARIABLES[part]];
+  if (isStrict || (value !== undefined && value !== '')) {
+    return limits;
   }
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed < 1) {
-    throw new Error(`${variable} must be a positive integer, got "${value}".`);
+  return { ...limits, [part]: Math.min(limits[part], limits[whole]) };
+}
+
+function checkShare(limits: RenderLimits, { part, whole, isStrict }: Share): void {
+  const isCoherent = isStrict ? limits[part] < limits[whole] : limits[part] <= limits[whole];
+  if (!isCoherent) {
+    throw new Error(
+      `${VARIABLES[part]} must stay ${isStrict ? 'below' : 'within'} ${VARIABLES[whole]},` +
+        ` got ${limits[part]} for ${limits[whole]}.`,
+    );
   }
-  return parsed;
 }
 
 /**
- * Reads the bounds of the render admission from `LODB_RENDER_MAX_IN_FLIGHT`,
- * `LODB_PINNED_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDERS_PER_MINUTE` and
- * `LODB_PINNED_RENDER_BURST`, each optional. The pinned lane must leave room to the current
- * pages, or a crawl of the older patches would take every slot again.
+ * Reads the bounds of the render admission from the `LODB_*` variables of `VARIABLES`, each
+ * optional (its default otherwise, a client's share capped by its whole), then checks that
+ * each share fits in its whole.
  */
 export function readRenderLimits(env: Environment): RenderLimits {
+  const read = (limit: keyof RenderLimits) =>
+    readPositiveInteger(env, VARIABLES[limit], DEFAULTS[limit]);
   const limits: RenderLimits = {
-    maxInFlight: positiveIntegerOf(env, 'maxInFlight'),
-    pinnedMaxInFlight: positiveIntegerOf(env, 'pinnedMaxInFlight'),
-    pinnedPerMinute: positiveIntegerOf(env, 'pinnedPerMinute'),
-    pinnedBurst: positiveIntegerOf(env, 'pinnedBurst'),
+    maxInFlight: read('maxInFlight'),
+    pinnedMaxInFlight: read('pinnedMaxInFlight'),
+    pinnedPerMinute: read('pinnedPerMinute'),
+    pinnedBurst: read('pinnedBurst'),
+    currentPerMinute: read('currentPerMinute'),
+    currentBurst: read('currentBurst'),
+    perClientMaxInFlight: read('perClientMaxInFlight'),
+    pinnedPerClientPerMinute: read('pinnedPerClientPerMinute'),
+    trackedClients: read('trackedClients'),
   };
-  if (limits.pinnedMaxInFlight >= limits.maxInFlight) {
-    throw new Error(
-      `${VARIABLES.pinnedMaxInFlight} must stay below ${VARIABLES.maxInFlight}, got` +
-        ` ${limits.pinnedMaxInFlight} for ${limits.maxInFlight}.`,
-    );
-  }
-  return limits;
+  const fitted = SHARES.reduce((current, share) => fitShare(current, env, share), limits);
+  SHARES.forEach((share) => checkShare(fitted, share));
+  return fitted;
 }

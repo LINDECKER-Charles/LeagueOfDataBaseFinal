@@ -122,6 +122,7 @@ export type { LocaleLanguage } from './models/locale-language';
 export type { LoginRequest } from './models/login-request';
 export type { MfaConfirmation } from './models/mfa-confirmation';
 export type { MfaConfirmRequest } from './models/mfa-confirm-request';
+export type { MfaEnrollmentRequest } from './models/mfa-enrollment-request';
 export type { MfaSetup } from './models/mfa-setup';
 export type { MonitoringReport } from './models/monitoring-report';
 export type { MyBuildRow } from './models/my-build-row';

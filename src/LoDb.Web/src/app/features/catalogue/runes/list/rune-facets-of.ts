@@ -4,13 +4,14 @@ import { defineFacet } from '../../shared/facets/define-facet';
 import type { FacetDefinition } from '../../shared/facets/model/facet-definition';
 import { RUNE_SLOTS } from '../paths/rune-slots';
 import { slotLabelOf } from '../paths/slot-label-of';
+import { RUNE_FACET_KEYS as KEYS } from './rune-facet-keys';
 
 /** The filters of the rune list, translated: its path (the list's own), and its row. */
 export function runeFacetsOf(trees: readonly RuneTreeCard[], t: Translate): FacetDefinition[] {
   const group = t('facet.group.identity');
   return [
     defineFacet({
-      key: 'path',
+      key: KEYS.path,
       kind: 'choice',
       label: t('facet.rune.path'),
       group,
@@ -18,7 +19,7 @@ export function runeFacetsOf(trees: readonly RuneTreeCard[], t: Translate): Face
       primary: true,
     }),
     defineFacet({
-      key: 'slot',
+      key: KEYS.slot,
       kind: 'choice',
       label: t('facet.rune.slot'),
       group,

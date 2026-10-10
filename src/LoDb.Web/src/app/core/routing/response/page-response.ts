@@ -7,7 +7,7 @@ import { NOINDEX_HEADERS } from './noindex-headers';
 
 /**
  * Status and headers of the server response of the page being rendered, written into
- * `RESPONSE_INIT`: the only way to answer a real 301, 302, 404 or 503 without letting the
+ * `RESPONSE_INIT`: the only way to answer a real 301, 302, 404 or 5xx without letting the
  * router redirect, which the SSR engine would turn into a 302. In the browser, and while
  * prerendering, there is no response to write and every call does nothing.
  */

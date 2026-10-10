@@ -1,10 +1,10 @@
 using LoDb.Api.Modules.Catalog.Http;
-using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Legacy.Paths;
 using LoDb.Api.Modules.Legacy.Targets;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Paths;
 using LoDb.Domain.Versions;
+using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Catalog.Reading;
 using LoDb.Ingestion.Egress.Errors;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -12,16 +12,24 @@ using Microsoft.AspNetCore.Http.HttpResults;
 namespace LoDb.Api.Modules.Legacy;
 
 /// <summary>
-/// Resolves an old URL into the one 301 that lands on its new form, or tells why none does.
+/// Resolves an old URL into the one redirect that lands on its new form, or tells why none
+/// does.
 /// </summary>
 /// <remarks>
-/// The old names are looked up in the en_US catalog of the version: keys do not depend on the
-/// language, and en_US is the one every version ships. A cold version is ingested before the
-/// answer, as the page the redirect leads to would do anyway.
+/// <para>
+/// The old names are looked up in en_US catalogs: keys do not depend on the language, and
+/// en_US is the one every version ships. An old URL never ingests anything: crawlers follow
+/// them by the thousand, across every version.
+/// </para>
+/// <para>
+/// The latest catalog answers first, held in memory and with ids stable across versions.
+/// Only a name it lacks opens the catalog of the version the URL names, and only if that
+/// version is stored. A version that is not stays unread: its list stands in, by a 302, for
+/// an entry that may have left the game, which must not become a 404.
+/// </para>
 /// </remarks>
 internal sealed partial class LegacyResolver(
     ICatalogReader reader,
-    CatalogGateway gateway,
     ILogger<LegacyResolver> logger)
 {
     public async Task<Results<LegacyRedirect, CatalogProblem>> ResolveAsync(
@@ -38,7 +46,7 @@ internal sealed partial class LegacyResolver(
         try
         {
             return legacy.Kind == LegacyPathKind.Page
-                ? new LegacyRedirect(LegacyTarget.Of(
+                ? LegacyRedirect.Permanent(LegacyTarget.Of(
                     await LocaleAsync(request.Language, cancellationToken),
                     null,
                     legacy.PagePath))
@@ -50,6 +58,14 @@ internal sealed partial class LegacyResolver(
             return CatalogProblem.UpstreamUnavailable();
         }
     }
+
+    private static CatalogProblem UnknownEntity(EntityLookup lookup) =>
+        CatalogProblem.UnknownEntity(lookup.Segment, lookup.Legacy.Name);
+
+    private static CanonicalPath? Find(CatalogLoad? load, EntityLookup lookup) =>
+        load is { IsReady: true }
+            ? LegacyEntityLookup.Find(load.Catalog, lookup.Legacy.Resource, lookup.Legacy.Name)
+            : null;
 
     private async Task<Results<LegacyRedirect, CatalogProblem>> ResolveCatalogAsync(
         LegacyPath legacy,
@@ -67,20 +83,54 @@ internal sealed partial class LegacyResolver(
         var segment = CanonicalPath.SegmentOf(legacy.Resource);
         if (legacy.Kind == LegacyPathKind.List)
         {
-            return new LegacyRedirect(LegacyTarget.Of(locale, version.Pinned, segment));
+            return LegacyRedirect.Permanent(LegacyTarget.Of(locale, version.Pinned, segment));
         }
 
-        var read = await OpenAsync(version.Catalog, cancellationToken);
-        if (!read.IsOpen)
+        var lookup = new EntityLookup(legacy, version, locale, segment)
         {
-            return read.Problem;
+            Latest = versions.Latest,
+            Demand = ColdDemand.StoredOnly.By(request.Caller),
+        };
+        return await ResolveEntityAsync(lookup, cancellationToken);
+    }
+
+    private async Task<Results<LegacyRedirect, CatalogProblem>> ResolveEntityAsync(
+        EntityLookup lookup,
+        CancellationToken cancellationToken)
+    {
+        var latest = await OpenAsync(lookup.Latest, lookup.Demand, cancellationToken);
+        if (Find(latest, lookup) is { } fromLatest)
+        {
+            return lookup.Moved(fromLatest);
         }
 
-        var path = LegacyEntityLookup.Find(read.Context.Catalog, legacy.Resource, legacy.Name);
-        return path is null
-            ? CatalogProblem.UnknownEntity(segment, legacy.Name)
-            : new LegacyRedirect(LegacyTarget.Of(locale, version.Pinned, path.Value));
+        if (lookup.Version.Pinned is not { } pinned)
+        {
+            return latest is { IsReady: true } ? UnknownEntity(lookup) : CatalogProblem.Pending();
+        }
+
+        var own = await OpenAsync(pinned, lookup.Demand, cancellationToken);
+        return own switch
+        {
+            { IsReady: true } => Find(own, lookup) is { } path
+                ? lookup.Moved(path)
+                : UnknownEntity(lookup),
+            // The list stands in only for a name the latest catalog, once read, lacks too: a
+            // latest catalog not read yet (its load refused for now) may still tell it.
+            { Status: CatalogLoadStatus.Pending, Refused: false } when latest is { IsReady: true }
+                => lookup.ToList(),
+            _ => CatalogProblem.Pending(),
+        };
     }
+
+    // Stored-only: what memory or the store holds, never an ingestion.
+    private async Task<CatalogLoad?> OpenAsync(
+        PatchVersion? version,
+        ColdDemand demand,
+        CancellationToken cancellationToken) =>
+        version is null
+            ? null
+            : await reader.GetAsync(version, DdragonLanguage.EnUs, demand, cancellationToken);
 
     // The list of languages is only read when a variant may have to be kept.
     private async Task<LegacyLocale> LocaleAsync(
@@ -90,18 +140,27 @@ internal sealed partial class LegacyResolver(
             ? LegacyLocales.Choose(language, await reader.GetLanguagesAsync(cancellationToken))
             : LegacyLocale.Fallback;
 
-    private Task<CatalogRead> OpenAsync(
-        PatchVersion? version,
-        CancellationToken cancellationToken) =>
-        version is null
-            ? Task.FromResult(CatalogRead.Fail(CatalogProblem.Pending()))
-            : gateway.ReadAsync(
-                new CatalogScope(version.Value, DdragonLanguage.EnUs.Code),
-                cancellationToken);
-
     [LoggerMessage(
         EventName = "legacy.redirect.failed",
         Level = LogLevel.Warning,
         Message = "Former URL unresolved: Data Dragon's lists could not be read.")]
     private static partial void LogListsFailed(ILogger logger, Exception exception);
+
+    /// <summary>An old detail URL being resolved, and where its redirects land.</summary>
+    private sealed record EntityLookup(
+        LegacyPath Legacy,
+        LegacyVersion Version,
+        LegacyLocale Locale,
+        string Segment)
+    {
+        public PatchVersion? Latest { get; init; }
+
+        public required ColdDemand Demand { get; init; }
+
+        public LegacyRedirect Moved(CanonicalPath path) =>
+            LegacyRedirect.Permanent(LegacyTarget.Of(Locale, Version.Pinned, path.Value));
+
+        public LegacyRedirect ToList() =>
+            LegacyRedirect.ToList(LegacyTarget.Of(Locale, Version.Pinned, Segment));
+    }
 }

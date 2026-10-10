@@ -66,6 +66,10 @@ public sealed class BuildsApp : IAsyncLifetime
                 [Accounts + "SiteOrigin"] = AccountsApp.SiteOrigin,
                 ["LoDb:Egress:RetryBaseDelay"] = "00:00:00.001",
                 ["LoDb:Catalog:VersionsLifetime"] = "00:00:00.001",
+
+                // Every test signs its accounts in from the same address: the limit of the
+                // sign-ins has tests of its own, at its production value.
+                ["LoDb:RateLimiting:SignInPerWindow"] = "1000",
             },
         };
         var replay = Replay();

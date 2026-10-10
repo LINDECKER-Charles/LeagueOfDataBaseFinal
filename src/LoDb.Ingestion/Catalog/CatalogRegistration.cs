@@ -9,13 +9,14 @@ using Microsoft.Extensions.Options;
 namespace LoDb.Ingestion.Catalog;
 
 /// <summary>
-/// Registrations of the catalog zone: the in-memory catalog and the image resolution.
+/// Registrations of the catalog zone: the in-memory catalog, its cold gate and pinning, and
+/// the image resolution.
 /// </summary>
 /// <remarks>
 /// Program.cs calls it from the start and the zone's owner fills it, so no shared file
 /// changes. It must neither do I/O nor throw: the OpenAPI generation builds the host. The
 /// zone builds on the ingestion zone, whose stored datasets, manifest, on-demand ingestion
-/// and <c>HybridCache</c> it reads through.
+/// and <c>HybridCache</c> it reads through, and on the host's metrics.
 /// </remarks>
 public static class CatalogRegistration
 {
@@ -28,8 +29,12 @@ public static class CatalogRegistration
             .ValidateOnStart();
         services.TryAddEnumerable(ServiceDescriptor
             .Singleton<IValidateOptions<CatalogOptions>, CatalogOptionsValidator>());
+        services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton<CatalogMetrics>();
+        services.TryAddSingleton<ColdLoadGate>();
         services.TryAddSingleton<CatalogCache>();
         services.TryAddSingleton<ICatalogReader, CatalogReader>();
+        services.TryAddSingleton<ICatalogPinning, CatalogPinning>();
         services.TryAddSingleton<IImageResolver, ImageResolver>();
         services.TryAddSingleton<CatalogExport>();
         return services;

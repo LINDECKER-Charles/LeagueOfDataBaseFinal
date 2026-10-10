@@ -34,7 +34,7 @@ import { PAYMENTS_ENABLED } from '../environments/payments-enabled';
  * carrying credentials, never a response setting a cookie.
  *
  * Router: the resolvers read `locale` and `version` from their parent routes; a navigation
- * that fails renders its 500 or 503 page in place (core/routing/failure), and one whose
+ * that fails renders its 500, 502 or 503 page in place (core/routing/failure), and one whose
  * error page fails too resolves false instead of rejecting. Component input binding stays
  * off: pages read their data with `injectRouteData`. A new page starts at its top, history
  * restores its position; a filter that rewrites its query navigates with `scroll: 'manual'`.

@@ -5,4 +5,7 @@ internal sealed record MfaConfirmRequest
 {
     /// <summary>Six digits, spaces and dashes allowed between them.</summary>
     public string? Code { get; init; }
+
+    /// <summary>The invitation that opened the enrolment, sent again with the code.</summary>
+    public string? Invitation { get; init; }
 }

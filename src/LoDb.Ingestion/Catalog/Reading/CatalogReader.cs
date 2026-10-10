@@ -68,10 +68,12 @@ internal sealed class CatalogReader(
             return unavailable;
         }
 
-        // Null when a dataset left the store since it was checked.
-        return await BuildAsync(scope, cancellationToken).ConfigureAwait(false) is { } catalog
-            ? CatalogLoad.Ready(catalog)
-            : CatalogLoad.Pending(refused: false);
+        // Missing when a dataset left the store since it was checked.
+        var read = await BuildAsync(scope, demand.Caller, cancellationToken)
+            .ConfigureAwait(false);
+        return read.IsHeld
+            ? CatalogLoad.Ready(read.Catalog)
+            : CatalogLoad.Pending(refused: read.IsRefused);
     }
 
     private static PatchVersion? LatestOf(ReadyVersions ready) =>
@@ -84,20 +86,30 @@ internal sealed class CatalogReader(
             : [scope, scope with { Language = DdragonLanguage.EnUs }];
 
     // The en_US catalog first: the other languages read their slugs and tokens from it.
-    private async Task<CatalogSnapshot?> BuildAsync(
+    private async Task<CacheRead> BuildAsync(
         DatasetScope scope,
+        ColdCaller caller,
         CancellationToken cancellationToken)
     {
         if (scope.Language == DdragonLanguage.EnUs)
         {
-            return await LoadAsync(scope, null, cancellationToken).ConfigureAwait(false);
+            return await cache
+                .GetOrLoadAsync(KeyOf(scope), Load(scope, null, caller), cancellationToken)
+                .ConfigureAwait(false);
         }
 
         var english = scope with { Language = DdragonLanguage.EnUs };
-        return await LoadAsync(english, null, cancellationToken).ConfigureAwait(false)
-            is { } englishCatalog
-                ? await LoadAsync(scope, englishCatalog, cancellationToken).ConfigureAwait(false)
-                : null;
+        var englishRead = await cache
+            .GetOrLoadAsync(KeyOf(english), Load(english, null, caller), cancellationToken)
+            .ConfigureAwait(false);
+        return englishRead.IsHeld
+            ? await cache
+                .GetOrLoadAsync(
+                    KeyOf(scope),
+                    Load(scope, englishRead.Catalog, caller),
+                    cancellationToken)
+                .ConfigureAwait(false)
+            : englishRead;
     }
 
     // Null once every dataset is stored; otherwise what the read answers instead.
@@ -130,19 +142,27 @@ internal sealed class CatalogReader(
         };
     }
 
+    // A refusal of the on-demand ingestion is transient: the catalog is pending, and refused.
     private async Task<CatalogLoad?> IngestAsync(
         List<DatasetScope> missing,
         CancellationToken cancellationToken)
     {
-        foreach (var scope in missing)
+        try
         {
-            var listed = await onDemand
-                .EnsureDatasetsAsync(scope.Version, scope.Language, cancellationToken)
-                .ConfigureAwait(false);
-            if (!listed)
+            foreach (var scope in missing)
             {
-                return CatalogLoad.Unknown;
+                var listed = await onDemand
+                    .EnsureDatasetsAsync(scope.Version, scope.Language, cancellationToken)
+                    .ConfigureAwait(false);
+                if (!listed)
+                {
+                    return CatalogLoad.Unknown;
+                }
             }
+        }
+        catch (OnDemandRefusedException)
+        {
+            return CatalogLoad.Pending(refused: true);
         }
 
         return null;
@@ -174,17 +194,15 @@ internal sealed class CatalogReader(
         return CatalogLoad.Pending(refused: !accepted);
     }
 
-    private Task<CatalogSnapshot?> LoadAsync(
-        DatasetScope scope,
-        CatalogSnapshot? english,
-        CancellationToken cancellationToken) =>
-        cache.GetOrLoadAsync(
-            new CatalogKey(scope.Version, scope.Language),
+    private static CatalogKey KeyOf(DatasetScope scope) => new(scope.Version, scope.Language);
+
+    private ColdLoad Load(DatasetScope scope, CatalogSnapshot? english, ColdCaller caller) =>
+        new(
+            caller,
             async token => await stored.LoadAsync(scope, token).ConfigureAwait(false)
                 is { } datasets
                     ? new CatalogSnapshot(scope.Version, scope.Language, datasets, english)
-                    : null,
-            cancellationToken);
+                    : null);
 
     private ValueTask<ReadyVersions> ReadyAsync(CancellationToken cancellationToken) =>
         hybridCache.GetOrCreateAsync(

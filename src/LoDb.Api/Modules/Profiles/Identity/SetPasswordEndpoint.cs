@@ -1,5 +1,6 @@
 using LoDb.Api.Modules.Accounts.Http;
 using LoDb.Api.Modules.Accounts.Registration;
+using LoDb.Api.Modules.Accounts.Security.Admission;
 using LoDb.Api.Modules.Profiles.Http;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Accounts;
@@ -21,6 +22,7 @@ namespace LoDb.Api.Modules.Profiles.Identity;
 internal sealed class SetPasswordEndpoint(
     ProfileOwners owners,
     UserManager<User> users,
+    HashingAdmission admission,
     LoDbDbContext db,
     ProfileAudit audit)
 {
@@ -31,10 +33,12 @@ internal sealed class SetPasswordEndpoint(
                     [FromBody] SetPasswordRequest request,
                     [FromServices] SetPasswordEndpoint endpoint,
                     HttpContext context) => endpoint.SetAsync(request, context))
+            .AddEndpointFilter<HashingBusyFilter>()
             .WithName("setFirstPassword")
             .WithSummary("Sets a password on an account that has none.")
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
     public async Task<Results<NoContent, AccountProblem>> SetAsync(
         SetPasswordRequest request,
@@ -57,7 +61,11 @@ internal sealed class SetPasswordEndpoint(
             return errors.ToProblem();
         }
 
-        owner.PasswordHash = users.PasswordHasher.HashPassword(owner, request.Password!);
+        using (await admission.EnterAsync(context.RequestAborted))
+        {
+            owner.PasswordHash = users.PasswordHasher.HashPassword(owner, request.Password!);
+        }
+
         await db.SaveChangesAsync(context.RequestAborted);
         await audit.UpdatedAsync(ProfileAudit.PasswordSection, context.RequestAborted);
         return TypedResults.NoContent();
