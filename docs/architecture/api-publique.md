@@ -219,25 +219,52 @@ manipule jamais de moyen de paiement. Présentation publique : page `/developers
 
 ## Opérateur — configuration Stripe
 
-Facturation gérée côté Symfony (`/profile/api`) via Stripe Checkout, `price_data` inline
-(aucun catalogue produit à maintenir dans le dashboard). Webhook : `POST /webhooks/stripe`.
+Paiement par Stripe Checkout, `price_data` inline (aucun catalogue produit à maintenir dans
+le dashboard), **carte uniquement** (`payment_method_types = ["card"]`). Webhook :
+`POST /webhooks/stripe`.
 
 1. **Dashboard → Developers → Webhooks → Add endpoint** : URL
-   `https://<domaine>/webhooks/stripe`, événements à activer :
+   `https://<domaine>/webhooks/stripe`, événements à activer (tous, sinon l'état local
+   diverge de Stripe) :
    - `checkout.session.completed` (packs `metadata.kind=api_pack`, abonnements
-     `metadata.kind=api_plan`, dons — comportement log-only conservé) ;
-   - `customer.subscription.deleted` (retour au plan Free, crédits conservés).
-2. Reporter le signing secret de l'endpoint dans **`STRIPE_WEBHOOK_SECRET`**
-   (et la clé API dans `STRIPE_SECRET_KEY`) — variables d'environnement du conteneur PHP.
-   Sans `STRIPE_WEBHOOK_SECRET`, l'endpoint répond `503` (webhook désactivé volontairement) ;
-   signature absente/invalide → `400` ; échec d'un handler → `500` (Stripe rejoue l'événement).
-3. **Mode test** : utiliser les clés `sk_test_…`/`whsec_…` de test ; en local,
+     `metadata.kind=api_plan`, dons) ;
+   - `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`
+     (paiement différé : accordé à l'encaissement, rien en cas d'échec) ;
+   - `customer.subscription.updated`, `customer.subscription.deleted`,
+     `invoice.payment_failed` (le plan suit le statut de l'abonnement) ;
+   - `charge.refunded`, `charge.dispute.created` (reprise de ce que le paiement a donné).
+2. Reporter le signing secret de l'endpoint dans `LoDb__Billing__StripeWebhookSecret` et la
+   clé API dans `LoDb__Billing__StripeSecretKey`
+   ([`configuration.md`](../guides/configuration.md), § 6.5). Sans secret, l'endpoint
+   répond `503` (Stripe garde ses événements) ; signature absente/invalide → `400` ; échec
+   d'un handler → `500` (Stripe rejoue l'événement).
+3. **Mode test** : clés `sk_test_…`/`whsec_…` ; en local,
    `stripe listen --forward-to localhost:8080/webhooks/stripe` fournit le secret de test.
    Cartes de test : `4242 4242 4242 4242`.
-4. Les webhooks ne journalisent jamais de donnée nominative (ids internes, montants,
-   ids de session uniquement). La livraison Stripe étant *at-least-once*, un événement
-   rejoué après un 2xx perdu peut créditer deux fois un pack — trade-off v1 assumé
-   (pas de table de déduplication), le dashboard Stripe fait foi pour arbitrer.
+4. Livraison *at-least-once* et sans ordre garanti : chaque événement est appliqué une fois
+   (`stripe_event`, clé = id de l'événement), chaque session une fois
+   (`stripe_checkout`), et un événement d'abonnement plus ancien que le dernier appliqué ne
+   change rien (`stripe_subscription.changed_at`). Les journaux ne nomment personne (ids
+   internes, montants, ids Stripe).
+
+### Cycle de vie d'un paiement
+
+| Événement | Effet |
+|---|---|
+| Session terminée et payée (`paid`, `no_payment_required`) au prix du catalogue | Pack crédité, plan appliqué ou don enregistré ; session `paid` |
+| Session terminée `unpaid` (moyen différé) | Rien d'accordé ; session `pending` jusqu'à `async_payment_succeeded` (accordé) ou `async_payment_failed` (`failed`) |
+| Montant ou devise hors catalogue (prix du pack ou du plan, dons de 1 à 500 €, en euros) | Rien d'accordé, session `refused`, avertissement `billing.checkout.refused` : à rembourser ou régulariser à la main |
+| Abonnement `past_due`, `unpaid`, `paused`, `canceled`, `incomplete_expired`, ou facture impayée | Clé au plan Free, abonnement conservé sur la clé ; crédits et plancher de 60 req/min conservés |
+| Abonnement de nouveau `active` (ou `trialing`) | Plan de l'abonnement rétabli |
+| Abonnement supprimé | Plan Free définitif, abonnement retiré de la clé |
+| Remboursement **total** ou litige d'un pack | Ce qui reste du pack (règle FIFO des crédits) est retiré du solde, jamais en dessous de 0 ; les requêtes déjà consommées le restent |
+| Remboursement total ou litige d'un don | Don retiré ; badge supporter retiré s'il ne reste aucun autre don |
+| Remboursement total d'un paiement d'abonnement (trouvé par son client Stripe) | Clé au plan Free jusqu'à ce que Stripe signale l'abonnement de nouveau actif |
+| Remboursement **partiel** | Rien n'est repris (geste commercial) |
+
+À reprendre à la main, signalés par `billing.payment.unmatched` : le remboursement ou le
+litige d'un paiement antérieur à `stripe_checkout`, et le litige d'un paiement d'abonnement
+(mettre fin à l'abonnement dans le dashboard). Un litige gagné ne rend rien de lui-même.
 
 ## Notes d'implémentation (résumé)
 

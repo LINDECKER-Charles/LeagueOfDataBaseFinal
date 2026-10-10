@@ -7,7 +7,8 @@ namespace LoDb.Api.Tests.Billing;
 
 /// <summary>
 /// The sessions the site asks Stripe for: one line in euros named in the visitor's language,
-/// the return pages of the site in that language, and the metadata the webhook reads back.
+/// the return pages of the site in that language, the metadata the webhook reads back, and
+/// cards only, which are paid when the session completes.
 /// </summary>
 public sealed class CheckoutSessionsTests
 {
@@ -22,6 +23,7 @@ public sealed class CheckoutSessionsTests
         var session = CheckoutSessions.Donation(page, 1_500, donorId: 7);
 
         Assert.Equal(("payment", "donate"), (session.Mode, session.SubmitType));
+        Assert.Equal(["card"], session.PaymentMethodTypes);
         AssertLine(session, "Don — League Of Data Base", 1_500);
         Assert.Equal(
             "https://lodb.test/fr/donate/success?session_id={CHECKOUT_SESSION_ID}",
@@ -64,6 +66,7 @@ public sealed class CheckoutSessionsTests
             BuyerId);
 
         Assert.Equal("payment", session.Mode);
+        Assert.Equal(["card"], session.PaymentMethodTypes);
         Assert.Null(session.SubmitType);
         AssertLine(session, $"LoDB API — {requests} request credits", price);
         Assert.Null(session.LineItems[0].PriceData.Recurring);
@@ -93,6 +96,7 @@ public sealed class CheckoutSessionsTests
             BuyerId);
 
         Assert.Equal("subscription", session.Mode);
+        Assert.Equal(["card"], session.PaymentMethodTypes);
         AssertLine(session, $"API LoDB — offre {name}", price);
         Assert.Equal(interval, session.LineItems[0].PriceData.Recurring.Interval);
         Assert.Equal("https://lodb.test/fr/account/api?status=plan_success", session.SuccessUrl);
