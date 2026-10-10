@@ -51,10 +51,29 @@ internal static class AccountsProtectionRegistration
             .Validate(
                 static options => options.HasUsableWindow(),
                 $"{SignInLimitOptions.SectionName}:AccountWindow is too short.")
+            .Validate<IOptions<HashingAdmissionOptions>>(
+                StaysUnderLockout,
+                $"{SignInLimitOptions.SectionName}:SignInFailuresPerIdentifier, plus the "
+                    + "hashing permits beyond the first, must stay under the lockout.")
             .ValidateOnStart();
         services.TryAddSingleton<LoginThrottle>();
         services.AddOptions<RateLimiterOptions>()
             .Configure<IOptions<SignInLimitOptions>>(AccountRateLimits.AddTo);
+    }
+
+    private static bool StaysUnderLockout(
+        SignInLimitOptions limits,
+        IOptions<HashingAdmissionOptions> hashing)
+    {
+        try
+        {
+            return limits.StaysUnderLockout(hashing.Value.Permits);
+        }
+        catch (OptionsValidationException)
+        {
+            // Bounds of the hashing that are invalid stop the host through their own check.
+            return true;
+        }
     }
 
     private static void AddMfaInvitations(

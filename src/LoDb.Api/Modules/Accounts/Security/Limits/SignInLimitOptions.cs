@@ -8,7 +8,9 @@ namespace LoDb.Api.Modules.Accounts.Security.Limits;
 /// </summary>
 /// <remarks>
 /// The failures counted per identifier stay under the lockout threshold of the accounts, so
-/// that one address alone runs out of attempts before it locks the account it names.
+/// that one address alone runs out of attempts before it locks the account it names. Each
+/// hashing permit beyond the first lets one more attempt sent together past the bound before
+/// its failure counts, so it asks for one failure less.
 /// </remarks>
 internal sealed class SignInLimitOptions
 {
@@ -42,4 +44,12 @@ internal sealed class SignInLimitOptions
 
     /// <summary>Whether the window is long enough, which a range cannot state.</summary>
     public bool HasUsableWindow() => AccountWindow >= ShortestWindow;
+
+    /// <summary>
+    /// Whether the failures one address can reach, with <paramref name="hashingPermits"/>
+    /// attempts checked at once, stay under the lockout.
+    /// </summary>
+    public bool StaysUnderLockout(int hashingPermits) =>
+        SignInFailuresPerIdentifier + hashingPermits - 1
+            < AccountsSecurityRegistration.MaxFailedAccessAttempts;
 }

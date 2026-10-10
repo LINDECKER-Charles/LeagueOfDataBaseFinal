@@ -24,6 +24,8 @@ internal sealed class HashingAdmissionOptions
 
     /// <summary>
     /// Requests hashing at once, no more than the gate's slots, so that none waits there.
+    /// Each one beyond the first asks for one failed sign-in less per identifier
+    /// (<see cref="Limits.SignInLimitOptions.StaysUnderLockout"/>).
     /// </summary>
     [Range(1, HashingGate.MaxConcurrentComputations)]
     public int Permits { get; set; } = DefaultPermits;
