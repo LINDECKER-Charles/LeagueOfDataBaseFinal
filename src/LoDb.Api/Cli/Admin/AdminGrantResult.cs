@@ -3,6 +3,8 @@ namespace LoDb.Api.Cli.Admin;
 /// <summary>The administrator account <c>admin create</c> left.</summary>
 internal sealed record AdminGrantResult
 {
+    public required int AccountId { get; init; }
+
     public required string Username { get; init; }
 
     public required string Email { get; init; }

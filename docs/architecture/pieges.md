@@ -120,6 +120,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`LoDb__Ingestion__ColdDatasetsPerMinute`, `ColdImagesPerMinute`,
   `MaxWaitingIngestions`, `SlotWait` à 20 s). Ces bornes se testent en xUnit avec leurs
   valeurs de production, jamais par l'E2E.
+- **Limite de connexions** : 10 connexions par adresse et par 15 min
+  (`LoDb:RateLimiting:SignInPerWindow`), et toute la suite se connecte par
+  `POST /api/account/login` depuis une seule adresse (`support/member-account.ts`, les
+  administrateurs des specs `admin`) : `compose.override.yaml` relève la borne pour la pile
+  locale, jamais `compose.deploy.yaml`. Les 4 échecs par identifiant et par adresse ne se
+  relèvent pas (ils restent sous le verrouillage à 5) ; les tests xUnit gardent les valeurs
+  de production.
 - Comparer le chemin d'une réponse (`new URL(url).pathname`), jamais `url.endsWith(...)`.
   Limiter les comptes de titres ou de boutons à `main` ou au composant visé. Une spec qui
   compte les POST exclut `/api/analytics/`. Un parcours qui crée un compte le supprime aussi

@@ -1,5 +1,6 @@
 using LoDb.Api.Modules.Accounts.Http;
 using LoDb.Api.Modules.Accounts.Security;
+using LoDb.Api.Modules.Accounts.Security.Limits;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,7 @@ internal sealed partial class GoogleExchangeEndpoint(
                     [FromBody] GoogleExchangeRequest request,
                     [FromServices] GoogleExchangeEndpoint endpoint,
                     CancellationToken aborted) => endpoint.ExchangeAsync(request, aborted))
+            .RequireRateLimiting(AccountRateLimits.SignIn)
             .WithName("exchangeGoogleCode")
             .WithSummary("Signs an app in with the code of a Google sign-in, redeemed here.")
             .Produces<AccessTokenResponse>()
@@ -99,8 +101,11 @@ internal sealed partial class GoogleExchangeEndpoint(
     private static FieldErrors Check(GoogleExchangeRequest request, GoogleAppClient? client)
     {
         var errors = new FieldErrors();
-        errors.RequireText(AccountFields.Code, request.Code);
-        errors.RequireText(AccountFields.CodeVerifier, request.CodeVerifier);
+        errors.RequireShape(AccountFields.Code, request.Code, GoogleExchangeShape.IsCode);
+        errors.RequireShape(
+            AccountFields.CodeVerifier,
+            request.CodeVerifier,
+            GoogleExchangeShape.IsVerifier);
         errors.RequireText(AccountFields.RedirectUri, request.RedirectUri);
         if (client is null)
         {

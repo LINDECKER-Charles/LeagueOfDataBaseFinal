@@ -22,6 +22,7 @@ import { formText } from '../shared/form-text';
 import { problemOf } from '../shared/http/problem-of';
 import { injectAdminText } from '../shared/inject-admin-text';
 import { adminLoginErrorKey } from './admin-login-error-key';
+import { enrolmentLanding } from './enrolment-landing';
 
 const SPACES = /\s+/g;
 // Spelled out whole for the Tailwind scanner: the legacy `.form` label and field.
@@ -113,7 +114,7 @@ export class AdminLoginPage {
       this.error.set('login.errors.refused');
       return;
     }
-    await this.router.navigateByUrl(access === 'enroll' ? ADMIN_PATHS.enroll : landing);
+    await this.router.navigateByUrl(access === 'enroll' ? enrolmentLanding(landing) : landing);
   }
 
   private refused(code: string | null): void {

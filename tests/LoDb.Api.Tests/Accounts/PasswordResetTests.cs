@@ -86,7 +86,7 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
     {
         var account = await App.SeedAsync(new AccountSeed());
         using var browser = App.Browser();
-        await LockAsync(browser);
+        await LockAsync();
         using var forgot = await ForgotAsync(browser, AccountSeed.Address);
         var link = App.Outbox.LastLink(EmailTemplate.ResetPassword);
 
@@ -254,14 +254,19 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
     private static Task<HttpResponseMessage> CheckAsync(BrowserClient browser, EmailLink link) =>
         browser.PostAsync(CheckPath, new { userId = link.UserId, token = link.Token });
 
-    private static async Task LockAsync(BrowserClient browser)
+    // From as many addresses: one address alone runs out of attempts before the lockout.
+    private async Task LockAsync()
     {
         for (var failure = 0; failure < FailuresToLock; failure++)
         {
-            using var attempt = await browser.SignInAsync(AccountSeed.Name, WrongPassword);
+            using var stranger = App.Browser().From($"198.51.100.{failure + 1}");
+            using var attempt = await stranger.SignInAsync(AccountSeed.Name, WrongPassword);
         }
 
+        using var browser = App.Browser();
         using var locked = await browser.SignInAsync(AccountSeed.Name);
-        Assert.Equal(HttpStatusCode.TooManyRequests, locked.StatusCode);
+        Assert.Equal(
+            "account-locked",
+            await ApiJson.ProblemCodeAsync(locked, HttpStatusCode.TooManyRequests));
     }
 }

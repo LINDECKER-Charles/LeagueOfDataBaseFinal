@@ -1,6 +1,9 @@
+using System.Net;
 using LoDb.Api.Modules.Accounts.Authentication;
 using LoDb.Api.Modules.Accounts.Http;
 using LoDb.Api.Modules.Accounts.Security;
+using LoDb.Api.Modules.Accounts.Security.Admission;
+using LoDb.Api.Modules.Accounts.Security.Limits;
 using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Identity;
 
@@ -11,55 +14,149 @@ namespace LoDb.Api.Modules.Accounts.SignIn;
 /// the session cookie of the web or to the tokens of the apps.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Every failure counts toward the lockout, a wrong second factor included. A banned account
 /// is refused once its password is right, so that whoever does not know the password does
 /// not learn of the ban.
+/// </para>
+/// <para>
+/// The <see cref="LoginThrottle"/> is consulted for the identifier before the account is
+/// looked up, and again under the permit of the hashing admission, for the account as well,
+/// whatever identifier named it. The permit also covers the second factor and the count of
+/// the failure: attempts sent together from one address cannot all get past it. A throttled
+/// attempt is neither looked up nor journaled, only counted.
+/// </para>
 /// </remarks>
 internal sealed class PasswordSignIn(
     AccountLookup lookup,
     SignInManager<User> signIn,
+    HashingAdmission admission,
+    LoginThrottle throttle,
+    SecurityMetrics metrics,
     AccountAudit audit,
     TimeProvider clock)
 {
     // Authenticator apps show their codes in groups, such as "123 456" or "123-456".
     private const string CodeSeparators = " -";
 
+    // The result each refusal is counted under; a success is counted apart.
+    private static readonly Dictionary<string, string> Results = new(StringComparer.Ordinal)
+    {
+        [AccountProblem.InvalidCredentials().Code] = SecurityMetrics.Failure,
+        [AccountProblem.InvalidTwoFactorCode().Code] = SecurityMetrics.Failure,
+        [AccountProblem.TwoFactorRequired().Code] = SecurityMetrics.TwoFactorRequired,
+        [AccountProblem.AccountLocked(TimeSpan.Zero).Code] = SecurityMetrics.LockedOut,
+        [AccountProblem.AccountBanned().Code] = SecurityMetrics.Banned,
+    };
+
+    // Asking for the second factor is a step of the sign-in, not a failure; a throttled
+    // attempt is counted, never journaled.
+    private static readonly string[] Unjournaled =
+    [
+        AccountProblem.TwoFactorRequired().Code,
+        AccountProblem.SignInThrottled(TimeSpan.Zero).Code,
+    ];
+
     /// <summary>
     /// Signs in with <paramref name="credentials"/> through <paramref name="channel"/>, or
     /// tells why not; on success, the sign-in manager has written the cookie or the tokens.
     /// </summary>
+    /// <exception cref="HashingBusyException">No hashing permit came in time.</exception>
     public async Task<AccountProblem?> SignInAsync(
         PasswordCredentials credentials,
         SignInChannel channel,
         CancellationToken cancellationToken)
     {
-        var errors = new FieldErrors();
-        errors.RequireText(AccountFields.Identifier, credentials.Identifier);
-        errors.RequireText(AccountFields.Password, credentials.Password);
-        if (!errors.IsEmpty)
+        if (Invalid(credentials) is { } invalid)
         {
-            return errors.ToProblem();
+            return invalid;
         }
 
         signIn.AuthenticationScheme = channel.Scheme;
+        var client = signIn.Context.Connection.RemoteIpAddress;
+        var attempt = new Attempt(
+            credentials,
+            channel,
+            [LoginThrottle.KeyOf(credentials.Identifier!, client)]);
+        if (IsThrottled(attempt))
+        {
+            return Throttled(attempt, SecurityMetrics.UncheckedAccount);
+        }
+
         var user = await lookup.FindAsync(credentials.Identifier!);
         var problem = user is null
-            ? AccountProblem.InvalidCredentials()
-            : await CheckAsync(user, credentials);
-        if (problem is null)
+            ? Counted(attempt, SecurityMetrics.NoAccount, AccountProblem.InvalidCredentials())
+            : await CheckAsync(user, attempt.On(user.Id, client), cancellationToken);
+        await AuditAsync(attempt, problem, cancellationToken);
+        return problem;
+    }
+
+    // Checked before anything else: a value past its bound is neither looked up nor counted.
+    private static AccountProblem? Invalid(PasswordCredentials credentials)
+    {
+        var errors = new FieldErrors();
+        errors.RequireShape(
+            AccountFields.Identifier,
+            credentials.Identifier,
+            SignInFieldBounds.IsIdentifier);
+        errors.RequireText(AccountFields.Password, credentials.Password);
+        errors.CheckShape(
+            AccountFields.TwoFactorCode,
+            credentials.TwoFactorCode,
+            SignInFieldBounds.IsAuthenticatorCode);
+        errors.CheckShape(
+            AccountFields.RecoveryCode,
+            credentials.RecoveryCode,
+            SignInFieldBounds.IsRecoveryCode);
+        return errors.IsEmpty ? null : errors.ToProblem();
+    }
+
+    private async Task<AccountProblem?> CheckAsync(
+        User user,
+        Attempt attempt,
+        CancellationToken cancellationToken)
+    {
+        var account = await signIn.UserManager.IsInRoleAsync(user, Role.Admin)
+            ? SecurityMetrics.AdminAccount
+            : SecurityMetrics.MemberAccount;
+        using var permit = await admission.EnterAsync(cancellationToken);
+        if (IsThrottled(attempt))
         {
-            await audit.SignedInAsync(AccountAudit.PasswordMethod, channel, cancellationToken);
+            return Throttled(attempt, account);
         }
-        else if (problem != AccountProblem.TwoFactorRequired())
+
+        var problem = await VerifyAsync(user, attempt.Credentials);
+        return Counted(attempt, account, problem);
+    }
+
+    // Counts the attempt, and toward the throttle a refusal that also counts toward the
+    // lockout: a wrong password or code, or an attempt on a locked account.
+    private AccountProblem? Counted(Attempt attempt, string account, AccountProblem? problem)
+    {
+        var result = problem is null
+            ? SecurityMetrics.Success
+            : Results.GetValueOrDefault(problem.Code, SecurityMetrics.Failure);
+        metrics.RecordSignIn(result, account, attempt.Channel.AuditName);
+        if (result is SecurityMetrics.Failure or SecurityMetrics.LockedOut)
         {
-            // Asking for the second factor is a step of the sign-in, not a failure.
-            await audit.SignInFailedAsync(credentials.Identifier, problem.Code, cancellationToken);
+            foreach (var key in attempt.Keys)
+            {
+                throttle.RecordFailure(key);
+            }
         }
 
         return problem;
     }
 
-    private async Task<AccountProblem?> CheckAsync(User user, PasswordCredentials credentials)
+    private bool IsThrottled(Attempt attempt) => attempt.Keys.Any(throttle.IsThrottled);
+
+    private AccountProblem Throttled(Attempt attempt, string account)
+    {
+        metrics.RecordSignIn(SecurityMetrics.Throttled, account, attempt.Channel.AuditName);
+        return AccountProblem.SignInThrottled(throttle.RetryAfter);
+    }
+
+    private async Task<AccountProblem?> VerifyAsync(User user, PasswordCredentials credentials)
     {
         var result = await signIn.PasswordSignInAsync(
             user,
@@ -102,20 +199,32 @@ internal sealed class PasswordSignIn(
 
         if (result.IsLockedOut)
         {
-            return AccountProblem.AccountLocked(LockoutLeft(user));
+            return AccountProblem.AccountLocked(LockoutTime.Left(user, clock));
         }
 
         // The confirmation options are off: only the ban refuses an account this way.
         return result.IsNotAllowed ? AccountProblem.AccountBanned() : wrong();
     }
 
-    // Identity dates the lockout itself; the delay stays within one lockout.
-    private TimeSpan LockoutLeft(User user)
+    private async Task AuditAsync(
+        Attempt attempt,
+        AccountProblem? problem,
+        CancellationToken cancellationToken)
     {
-        var longest = AccountsSecurityRegistration.LockoutDuration;
-        return user.LockoutEnd is { } end
-            ? TimeSpan.FromTicks(Math.Clamp((end - clock.GetUtcNow()).Ticks, 0, longest.Ticks))
-            : longest;
+        if (problem is null)
+        {
+            await audit.SignedInAsync(
+                AccountAudit.PasswordMethod,
+                attempt.Channel,
+                cancellationToken);
+        }
+        else if (!Unjournaled.Contains(problem.Code, StringComparer.Ordinal))
+        {
+            await audit.SignInFailedAsync(
+                attempt.Credentials.Identifier,
+                problem.Code,
+                cancellationToken);
+        }
     }
 
     private static string? AuthenticatorCode(string? code) =>
@@ -126,4 +235,15 @@ internal sealed class PasswordSignIn(
     // Identity writes recovery codes in capitals, such as "AB3CD-EF4GH".
     private static string? RecoveryCode(string? code) =>
         string.IsNullOrWhiteSpace(code) ? null : code.Trim().ToUpperInvariant();
+
+    /// <summary>One sign-in: what was sent, where it lands, and its throttle keys.</summary>
+    private sealed record Attempt(
+        PasswordCredentials Credentials,
+        SignInChannel Channel,
+        IReadOnlyList<string> Keys)
+    {
+        /// <summary>The attempt, counted for the account it named as well.</summary>
+        public Attempt On(int accountId, IPAddress? client) =>
+            this with { Keys = [.. Keys, LoginThrottle.AccountKeyOf(accountId, client)] };
+    }
 }

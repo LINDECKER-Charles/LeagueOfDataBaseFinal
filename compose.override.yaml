@@ -32,6 +32,9 @@ services:
       LoDb__Ingestion__ColdImagesPerMinute: "1000000"
       LoDb__Ingestion__MaxWaitingIngestions: "1024"
       LoDb__Ingestion__SlotWait: "00:00:20"
+      # The E2E suite signs every account in through the API from one address, far more
+      # often than a served host allows one client (docs/architecture/pieges.md).
+      LoDb__RateLimiting__SignInPerWindow: "1000"
 
   web-ssr:
     ports:

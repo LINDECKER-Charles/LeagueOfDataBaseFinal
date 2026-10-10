@@ -11,9 +11,11 @@ namespace LoDb.Api.Modules.Accounts.Security.Hashing;
 /// bcrypt, argon2i and argon2id weaker than the target answer
 /// <see cref="PasswordVerificationResult.SuccessRehashNeeded"/>: <c>UserManager</c> then
 /// rewrites the hash at the sign-in. Symfony's rules hold: an empty password or one over
-/// 4096 bytes never matches, and an unknown format fails.
+/// 4096 bytes never matches, and an unknown format fails. Every computation, bcrypt
+/// included, runs through the <see cref="HashingGate"/>.
 /// </remarks>
-internal sealed class MigratingPasswordHasher(Argon2Passwords argon2) : IPasswordHasher<User>
+internal sealed class MigratingPasswordHasher(Argon2Passwords argon2, HashingGate gate)
+    : IPasswordHasher<User>
 {
     public string HashPassword(User user, string password)
     {
@@ -36,7 +38,7 @@ internal sealed class MigratingPasswordHasher(Argon2Passwords argon2) : IPasswor
 
         if (LegacyBcrypt.IsBcrypt(hashedPassword))
         {
-            return LegacyBcrypt.Verify(hashedPassword, providedPassword)
+            return gate.Run(() => LegacyBcrypt.Verify(hashedPassword, providedPassword))
                 ? PasswordVerificationResult.SuccessRehashNeeded
                 : PasswordVerificationResult.Failed;
         }

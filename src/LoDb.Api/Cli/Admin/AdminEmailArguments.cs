@@ -3,16 +3,17 @@ using LoDb.Api.Modules.Accounts.Registration;
 
 namespace LoDb.Api.Cli.Admin;
 
-/// <summary>The options of <c>admin create</c>, read from its arguments.</summary>
+/// <summary>
+/// The options of the <c>admin</c> commands that name an account by its e-mail, read from
+/// their arguments.
+/// </summary>
 /// <remarks>
 /// The e-mail comes as <c>--email value</c> or <c>--email=value</c>. A <c>--key=value</c>
 /// whose key holds a colon is a host setting (<c>--ConnectionStrings:LoDb=…</c>), which the
 /// host reads and the parser skips; any other argument is refused.
 /// </remarks>
-internal sealed record AdminCreateArguments
+internal sealed record AdminEmailArguments
 {
-    public const string Usage = "Usage: admin create --email <address>";
-
     private const string EmailOption = "--email";
     private const string EmailAssignment = EmailOption + "=";
     private const string Prefix = "--";
@@ -22,8 +23,27 @@ internal sealed record AdminCreateArguments
     /// <summary>The e-mail in its stored form: trimmed and lowercase.</summary>
     public required string Email { get; init; }
 
+    /// <summary>
+    /// The options of <paramref name="arguments"/>, or null once the reason and
+    /// <paramref name="usage"/> are written to the standard error.
+    /// </summary>
+    public static async Task<AdminEmailArguments?> ReadAsync(
+        IReadOnlyList<string> arguments,
+        string usage)
+    {
+        try
+        {
+            return Parse(arguments);
+        }
+        catch (FormatException exception)
+        {
+            await Console.Error.WriteLineAsync($"{exception.Message} {usage}");
+            return null;
+        }
+    }
+
     /// <exception cref="FormatException">The arguments are not a valid use.</exception>
-    public static AdminCreateArguments Parse(IReadOnlyList<string> arguments)
+    public static AdminEmailArguments Parse(IReadOnlyList<string> arguments)
     {
         ArgumentNullException.ThrowIfNull(arguments);
         string? email = null;
@@ -47,7 +67,7 @@ internal sealed record AdminCreateArguments
             email ??= value;
         }
 
-        return new AdminCreateArguments { Email = Checked(email) };
+        return new AdminEmailArguments { Email = Checked(email) };
     }
 
     private static bool IsHostSetting(string token) =>

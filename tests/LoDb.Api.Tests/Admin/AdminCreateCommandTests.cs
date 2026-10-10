@@ -17,6 +17,9 @@ public sealed class AdminCreateCommandTests(PostgresContainerFixture postgres)
 {
     private const string FirstEmail = "first.admin@example.test";
     private const string PasswordLine = "Password, shown only now: ";
+    private const string InvitationLine =
+        "Invitation to enrol an authenticator, valid 15 minutes: ";
+    private const string EnrollmentPath = "/api/admin/mfa/enrollment";
 
     [Fact]
     public void ApiDeclaresTheCommand()
@@ -43,20 +46,24 @@ public sealed class AdminCreateCommandTests(PostgresContainerFixture postgres)
             $"Created the administrator account first-admin <{FirstEmail}>.",
             output,
             StringComparison.Ordinal);
-        Assert.Contains("Sign in at /admin/login", output, StringComparison.Ordinal);
+        var invitation = ValueOf(output, InvitationLine);
+        Assert.Contains(
+            $"Open /admin/enroll?invitation={invitation} and sign in",
+            output,
+            StringComparison.Ordinal);
 
         using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(FirstEmail, PasswordOf(output));
+        using var signIn = await browser.SignInAsync(FirstEmail, ValueOf(output, PasswordLine));
         Assert.Equal(HttpStatusCode.OK, signIn.StatusCode);
         using var locked = await browser.GetAsync("/api/admin/users");
         Assert.Equal(
             "mfa-required",
             await ApiJson.ProblemCodeAsync(locked, HttpStatusCode.Forbidden));
-        using var start = await browser.PostAsync("/api/admin/mfa/enrollment");
+        using var start = await browser.PostAsync(EnrollmentPath, new { invitation });
         var key = ApiJson.Text(await ApiJson.ReadAsync(start, HttpStatusCode.OK), "sharedKey")!;
         using var confirm = await browser.PostAsync(
             "/api/admin/mfa/confirm",
-            new { code = Totp.Code(key) });
+            new { code = Totp.Code(key), invitation });
         await ApiJson.ReadAsync(confirm, HttpStatusCode.OK);
         await ReadAsync(browser, "/api/admin/users");
     }
@@ -112,11 +119,8 @@ public sealed class AdminCreateCommandTests(PostgresContainerFixture postgres)
         Assert.Equal(["0"], await App.QueryAsync("SELECT count(*)::text FROM users"));
     }
 
-    private static string PasswordOf(string output) =>
-        output.Split('\n')
-            .Select(static line => line.TrimEnd('\r'))
-            .Single(static line => line.StartsWith(PasswordLine, StringComparison.Ordinal))
-            [PasswordLine.Length..];
+    private static string ValueOf(string output, string label) =>
+        AdminShell.ValueOf(output, label);
 
     private Task<(int Exit, string Output)> RunAsync(params string[] arguments) =>
         AdminShell.RunAsync(App, string.Empty, ["admin", "create", .. arguments]);

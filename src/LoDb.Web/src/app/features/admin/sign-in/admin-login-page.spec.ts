@@ -125,6 +125,17 @@ describe('AdminLoginPage', () => {
     await vi.waitFor(() => expect(router.url).toBe('/admin/enroll'));
   });
 
+  it('keeps the invitation of the enrolment link it was sent from', async () => {
+    const { page, router } = await open(
+      '/admin/login?returnUrl=%2Fadmin%2Fenroll%3Finvitation%3Dabc',
+      accountUser({ roles: ['Admin'] }),
+    );
+
+    await signIn(page);
+
+    await vi.waitFor(() => expect(router.url).toBe('/admin/enroll?invitation=abc'));
+  });
+
   it('tells an account that is no administrator the admin is not for it', async () => {
     const { page, harness, router } = await open('/admin/login', accountUser());
 

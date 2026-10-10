@@ -18,6 +18,7 @@ public sealed class BrowserClient : IDisposable
     public const string XsrfHeader = "X-XSRF-TOKEN";
     public const string OriginHeader = "Origin";
     public const string SessionPath = "/api/account/me";
+    public const string ForwardedForHeader = "X-Forwarded-For";
 
     private readonly CookieContainer _cookies = new();
     private readonly HttpClient _client;
@@ -29,6 +30,17 @@ public sealed class BrowserClient : IDisposable
 
     /// <summary>A browser on the site: it keeps its cookies and follows no redirect.</summary>
     public static BrowserClient Open(WebApplicationFactory<Program> host) => new(host);
+
+    /// <summary>
+    /// Sends the next requests of this browser as if from <paramref name="address"/>, the
+    /// client address the proxy forwards, in place of the one set before.
+    /// </summary>
+    public BrowserClient From(string address)
+    {
+        _client.DefaultRequestHeaders.Remove(ForwardedForHeader);
+        _client.DefaultRequestHeaders.Add(ForwardedForHeader, address);
+        return this;
+    }
 
     /// <summary>The value of a cookie the browser holds for the site, or null.</summary>
     public string? Cookie(string name) =>

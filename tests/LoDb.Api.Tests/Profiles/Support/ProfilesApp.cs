@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using LoDb.Api.Modules.Accounts.Security.Hashing;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Outbox;
@@ -14,13 +15,16 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Npgsql;
 
 namespace LoDb.Api.Tests.Profiles.Support;
 
 /// <summary>
 /// The API over the recorded Data Dragon and one database holding the latest patch, ingested
 /// whole. The previous patch is broken on purpose: every file of it fails, so a profile that
-/// pins it has no catalog to read.
+/// pins it has no catalog to read. The password hasher is the API's, behind a
+/// <see cref="HashingProbe"/>.
 /// </summary>
 /// <remarks>
 /// The tests share the database: each one seeds accounts of its own, named by
@@ -29,6 +33,10 @@ namespace LoDb.Api.Tests.Profiles.Support;
 public sealed class ProfilesApp : IAsyncLifetime
 {
     private const string Accounts = "LoDb:Accounts:";
+
+    // The pool of a served host: a flood of requests waits for a connection rather than
+    // opening more than the test server accepts.
+    private const int ServedPoolSize = 32;
 
     private readonly PostgresContainerFixture _postgres = new();
     private TestDatabase? _database;
@@ -57,13 +65,20 @@ public sealed class ProfilesApp : IAsyncLifetime
         await _database.MigrateAsync(Token);
         _factory = new ApiFactory
         {
-            PostgresConnectionString = _database.ConnectionString,
+            PostgresConnectionString = new NpgsqlConnectionStringBuilder(_database.ConnectionString)
+            {
+                MaxPoolSize = ServedPoolSize,
+            }.ConnectionString,
             Settings = new Dictionary<string, string?>
             {
                 [Accounts + "SecureCookies"] = bool.TrueString,
                 [Accounts + "SiteOrigin"] = AccountsApp.SiteOrigin,
                 ["LoDb:Egress:RetryBaseDelay"] = "00:00:00.001",
                 ["LoDb:Catalog:VersionsLifetime"] = "00:00:00.001",
+
+                // Every test signs its accounts in from the same address: the limit of the
+                // sign-ins has tests of its own, at its production value.
+                ["LoDb:RateLimiting:SignInPerWindow"] = "1000",
             },
         };
         var replay = DdragonFixtures.CreateReplay();
@@ -75,11 +90,18 @@ public sealed class ProfilesApp : IAsyncLifetime
         {
             services.AddDdragonFixtureReplay(replay);
             services.AddSingleton<IEmailOutbox>(new RecordingOutbox());
+            services.AddSingleton(static provider => new HashingProbe(
+                ActivatorUtilities.CreateInstance<MigratingPasswordHasher>(provider)));
+            services.Replace(ServiceDescriptor.Singleton<IPasswordHasher<User>>(
+                static provider => provider.GetRequiredService<HashingProbe>()));
         }));
         var ingestion = _host.Services.GetRequiredService<IVersionIngestion>();
         var ingested = await ingestion.IngestAsync(Latest, IngestionRequest.Complete, Token);
         Assert.Equal(VersionIngestionOutcome.Completed, ingested.Outcome);
     }
+
+    /// <summary>What the hasher of the host saw.</summary>
+    internal HashingProbe Hashing => Host.Services.GetRequiredService<HashingProbe>();
 
     /// <summary>A browser on the site: it keeps its cookies and follows no redirect.</summary>
     public BrowserClient Browser() => BrowserClient.Open(Host);

@@ -2,8 +2,11 @@ using LoDb.Api.Cli.Admin;
 
 namespace LoDb.Api.Tests.Admin.Units;
 
-/// <summary>The arguments of <c>admin create</c>: one e-mail, host settings aside.</summary>
-public sealed class AdminCreateArgumentsTests
+/// <summary>
+/// The arguments of <c>admin create</c>, <c>mfa-invite</c> and <c>mfa-reset</c>: one e-mail,
+/// host settings aside.
+/// </summary>
+public sealed class AdminEmailArgumentsTests
 {
     [Theory]
     [InlineData("--email", "Admin@Example.test")]
@@ -11,7 +14,7 @@ public sealed class AdminCreateArgumentsTests
     [InlineData("--ConnectionStrings:LoDb=Host=db", "--email", " admin@example.test ")]
     public void TheEmailIsReadInItsStoredForm(params string[] arguments)
     {
-        var parsed = AdminCreateArguments.Parse(arguments);
+        var parsed = AdminEmailArguments.Parse(arguments);
 
         Assert.Equal("admin@example.test", parsed.Email);
     }
@@ -27,6 +30,6 @@ public sealed class AdminCreateArgumentsTests
     [InlineData("--verbose=true", "--email", "a@example.test")]
     public void AnythingElseIsRefused(params string[] arguments)
     {
-        Assert.Throws<FormatException>(() => AdminCreateArguments.Parse(arguments));
+        Assert.Throws<FormatException>(() => AdminEmailArguments.Parse(arguments));
     }
 }

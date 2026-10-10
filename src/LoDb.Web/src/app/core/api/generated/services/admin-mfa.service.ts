@@ -27,31 +27,31 @@ export class AdminMfaService extends BaseService {
   static readonly StartAdminMfaEnrollmentPath = '/api/admin/mfa/enrollment';
 
   /**
-   * Draws a new authenticator key for an administrator without one.
+   * Draws a new authenticator key for an invited administrator without one.
    *
    *
    *
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
    * To access only the response body, use `startAdminMfaEnrollment()` instead.
    *
-   * This method doesn't expect any request body.
+   * This method sends `application/json` and handles request body of type `application/json`.
    */
-  startAdminMfaEnrollment$Response(params?: StartAdminMfaEnrollment$Params, context?: HttpContext): Observable<StrictHttpResponse<MfaSetup>> {
+  startAdminMfaEnrollment$Response(params: StartAdminMfaEnrollment$Params, context?: HttpContext): Observable<StrictHttpResponse<MfaSetup>> {
     const obs = startAdminMfaEnrollment(this.http, this.rootUrl, params, context);
     return obs;
   }
 
   /**
-   * Draws a new authenticator key for an administrator without one.
+   * Draws a new authenticator key for an invited administrator without one.
    *
    *
    *
    * This method provides access only to the response body.
    * To access the full response (for headers, for example), `startAdminMfaEnrollment$Response()` instead.
    *
-   * This method doesn't expect any request body.
+   * This method sends `application/json` and handles request body of type `application/json`.
    */
-  startAdminMfaEnrollment(params?: StartAdminMfaEnrollment$Params, context?: HttpContext): Observable<MfaSetup> {
+  startAdminMfaEnrollment(params: StartAdminMfaEnrollment$Params, context?: HttpContext): Observable<MfaSetup> {
     const resp = this.startAdminMfaEnrollment$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<MfaSetup>): MfaSetup => r.body)
