@@ -10,6 +10,7 @@ import {
   timeout,
 } from 'rxjs';
 import type { WarmUpProgress } from '../../api/generated/models/warm-up-progress';
+import { isComplete } from './is-complete';
 import { preparingFrame } from './preparing-frame';
 import { WarmUpStream } from './warm-up-stream';
 import type { WarmUpTarget } from './warm-up-target';
@@ -31,7 +32,9 @@ function pause(milliseconds: number): Promise<void> {
  *
  * The run never holds the visit hostage: a stream that fails or falls silent for the
  * watchdog period, like a visitor dismissing the modal (Escape, the backdrop), lets the
- * visit go at once. The modal stays up during the visit and leaves once it has landed.
+ * visit go at once, and so does a run the API stopped with images left pending, which the
+ * page fills as they arrive. The modal stays up during the visit and leaves once it has
+ * landed.
  */
 @Injectable({ providedIn: 'root' })
 export class WarmUpLoader {
@@ -46,7 +49,7 @@ export class WarmUpLoader {
     let dismissed = false;
     dialog.closed.subscribe(() => (dismissed = true));
     await this.warm(target, dialog.closed);
-    if (!dismissed && this.frame().stage === 'done') {
+    if (!dismissed && isComplete(this.frame())) {
       await pause(READY_HOLD_MS);
     }
     try {
