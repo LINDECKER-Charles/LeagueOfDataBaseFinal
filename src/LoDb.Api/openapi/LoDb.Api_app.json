@@ -4334,8 +4334,18 @@
         "tags": [
           "AdminMfa"
         ],
-        "summary": "Draws a new authenticator key for an administrator without one.",
+        "summary": "Draws a new authenticator key for an invited administrator without one.",
         "operationId": "startAdminMfaEnrollment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaEnrollmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "401": {
             "description": "Unauthorized",
@@ -4363,6 +4373,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MfaSetup"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -9749,9 +9769,29 @@
               "string"
             ],
             "description": "Six digits, spaces and dashes allowed between them."
+          },
+          "invitation": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The invitation that opened the enrolment, sent again with the code."
           }
         },
         "description": "A code of the authenticator just set up, proving it holds the key."
+      },
+      "MfaEnrollmentRequest": {
+        "type": "object",
+        "properties": {
+          "invitation": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The invitation `admin mfa-invite` printed for the account, valid a few minutes."
+          }
+        },
+        "description": "What opens the enrolment of an authenticator."
       },
       "MfaSetup": {
         "required": [

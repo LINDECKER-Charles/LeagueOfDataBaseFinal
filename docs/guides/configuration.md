@@ -157,7 +157,7 @@ l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque dé
 | `LODB_DATA_PROTECTION_CERT_FILE`, `LODB_ANDROID_DIR` | défauts | défauts | — | Ne pas définir : le job écrit aux emplacements par défaut (§ 5). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | ➖ | ➖ | ➖ | Collecteur de traces OTLP, quand `infra-vps` en expose un. |
 | `LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDERS_PER_MINUTE`, `LODB_PINNED_RENDER_BURST` | ➖ | ➖ | ➖ | Admission des rendus du SSR : rendus simultanés (`8`), dont pages d'une version épinglée dans l'URL (`3`), rendus de versions épinglées par minute (`60`) et d'affilée (`10`). Au-delà, `503` immédiat avec `Retry-After` (nginx sert sa copie périmée s'il en a une). Absents : ces défauts. |
-| `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé à la première connexion sur `/admin/login`. Absent : aucun, seulement `api admin create`. |
+| `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
 
@@ -234,7 +234,7 @@ Valable pour les deux environnements : chacun reprend les valeurs de son propre 
 | `OAUTH_GOOGLE_CLIENT_ID`, `OAUTH_GOOGLE_CLIENT_SECRET` | `LoDb__Accounts__Google__ClientId`, `LoDb__Accounts__Google__ClientSecret` |
 | `CONTACT_RECIPIENT` | `LoDb__Contact__Recipient` |
 | `COMPOSE_PROJECT_NAME`, `REGISTRY`, `IMAGE_TAG`, `CADDY_DOMAINS`, `API_CADDY_DOMAINS` | mêmes noms, mêmes valeurs |
-| `ADMIN_LOGIN`, `ADMIN_PASSWORD` | `LODB_ADMIN_LOGIN`, `LODB_ADMIN_PASSWORD` : un compte administrateur racine, TOTP à la première connexion ; les autres administrateurs reçoivent le rôle par `api admin create --email …` ([runbook](../reecriture/bascule.md)) |
+| `ADMIN_LOGIN`, `ADMIN_PASSWORD` | `LODB_ADMIN_LOGIN`, `LODB_ADMIN_PASSWORD` : un compte administrateur racine, TOTP enrôlé sur invitation (`api admin mfa-invite`) ; les autres administrateurs reçoivent le rôle par `api admin create --email …` ([runbook](../reecriture/bascule.md)) |
 | `GEOIP_DB_PATH` | aucune sur un hôte (§ 8) |
 | `HTTP_PORT`, `MAILPIT_UI_PORT` | aucune : ports locaux de l'ancienne stack |
 

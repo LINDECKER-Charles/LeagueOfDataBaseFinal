@@ -18,16 +18,22 @@ const SETUP: MfaSetup = {
 };
 const START_URL = `${ADMIN_API}/api/admin/mfa/enrollment`;
 const CONFIRM_URL = `${ADMIN_API}/api/admin/mfa/confirm`;
+const INVITATION = 'CfDJ8-invitation_of-the-cli';
+const REFUSED_INVITATION = { code: 'validation-failed', errors: { invitation: ['required'] } };
 
-async function open(): Promise<AdminVisit> {
+// Opens the page the link of `admin mfa-invite` leads to; `answer` answers the key drawing.
+async function open(
+  answer: (start: TestRequest) => void = (start) => start.flush(SETUP),
+): Promise<AdminVisit> {
   configureAdminTestBed(
     [{ path: 'admin/enroll', component: AdminEnrollPage }],
     [{ provide: AUTH_STRATEGY, useValue: new FakeAuthStrategy() }],
   );
-  return openAdminPage('/admin/enroll', async (http) => {
+  return openAdminPage(`/admin/enroll?invitation=${INVITATION}`, async (http) => {
     const start = await vi.waitFor(() => http.expectOne(START_URL));
     expect(start.request.method).toBe('POST');
-    start.flush(SETUP);
+    expect(start.request.body).toEqual({ invitation: INVITATION });
+    answer(start);
   });
 }
 
@@ -54,7 +60,7 @@ describe('AdminEnrollPage', () => {
     const visit = await open();
     const confirm = await send(visit, '123 456');
 
-    expect(confirm.request.body).toEqual({ code: '123 456' });
+    expect(confirm.request.body).toEqual({ code: '123 456', invitation: INVITATION });
     const admin = accountUser({ roles: ['Admin'], multiFactor: true, twoFactorEnabled: true });
     confirm.flush({ recoveryCodes: ['aaaa-bbbb', 'cccc-dddd'], session: { user: admin } });
     await visit.harness.fixture.whenStable();
@@ -72,6 +78,7 @@ describe('AdminEnrollPage', () => {
     ],
     [{ code: 'mfa-already-enrolled' }, HttpStatusCode.Conflict, 'admin.enroll.errors.already'],
     [{ code: 'account-locked' }, HttpStatusCode.TooManyRequests, 'admin.login.errors.locked'],
+    [REFUSED_INVITATION, HttpStatusCode.BadRequest, 'admin.enroll.errors.invitation'],
   ])('explains a refused code %j', async (problem, status, key) => {
     const visit = await open();
     const confirm = await send(visit, '000000');
@@ -81,5 +88,16 @@ describe('AdminEnrollPage', () => {
 
     expect(visit.page.querySelector('[role="alert"]')?.textContent).toContain(key);
     expect(visit.page.querySelector('input[name="code"]')).not.toBeNull();
+  });
+
+  it('says how to get an invitation when the API refuses to draw a key', async () => {
+    const { page } = await open((start) =>
+      start.flush(REFUSED_INVITATION, { status: HttpStatusCode.BadRequest, statusText: 'x' }),
+    );
+
+    expect(page.querySelector('[role="alert"]')?.textContent).toContain(
+      'admin.enroll.invitation_refused',
+    );
+    expect(page.querySelector('[data-shared-key]')).toBeNull();
   });
 });

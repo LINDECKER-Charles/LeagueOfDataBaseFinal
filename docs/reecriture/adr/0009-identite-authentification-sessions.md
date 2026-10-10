@@ -115,6 +115,10 @@
 
 - **Rôle `Admin` dans Identity**, **MFA TOTP obligatoire**, plusieurs admins possibles.
 - Premier admin créé par une commande CLI, plus par variables d'environnement.
+- L'enrôlement du TOTP exige une **invitation** que la CLI affiche sur l'hôte
+  (`admin create`, puis `admin mfa-invite`) : un jeton Data Protection lié au compte,
+  valable 15 min. Le mot de passe seul n'enrôle jamais d'authentificateur.
+  `admin mfa-reset` retire un TOTP perdu (codes de secours compris) et ferme les sessions.
 - Journal d'audit : acteur polymorphe, ensemble d'actions fermé, best effort (ne fait
   jamais échouer l'action auditée).
 
@@ -142,4 +146,4 @@
 
 - **2026-10-10** : limites de connexion par adresse et par couple (identifiant, adresse),
   admission asynchrone au hachage, confirmation par mot de passe limitée par compte
-  (§ Protections).
+  (§ Protections) ; enrôlement du TOTP sur invitation de la CLI, `admin mfa-reset` (§ Admin).

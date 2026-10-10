@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpStatusCode } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,7 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
 import { confirmAdminMfa } from '../../../core/api/generated/fn/admin-mfa/confirm-admin-mfa';
@@ -26,6 +26,7 @@ import { injectPanel } from '../state/inject-panel';
 import { PanelState } from '../state/panel-state';
 import { PageHead } from '../layout/page-head';
 import { enrollErrorKey } from './enroll-error-key';
+import { INVITATION_PARAM } from './invitation-param';
 import { QrImage } from './qr/qr-image';
 import { AdminTextPipe } from '../shared/admin-text-pipe';
 
@@ -38,6 +39,10 @@ const KEY_GROUPS = /.{1,4}/g;
  * page draws a new key (a QR code and its text), checks a first code of it, then hands out
  * the recovery codes, shown only this once; the session is then open for the admin. The code
  * field takes the focus as soon as the key shows.
+ *
+ * Both calls carry the invitation of the page's query (`?invitation=`), which
+ * `admin mfa-invite` prints on the server: without a valid one the API draws no key, and the
+ * page says how to get one.
  */
 @Component({
   selector: 'lodb-admin-enroll-page',
@@ -51,8 +56,16 @@ export class AdminEnrollPage {
   private readonly wait = inject(ADMIN_TIMEOUT);
   private readonly session = inject(AuthSession);
   private readonly code = viewChild<ElementRef<HTMLInputElement>>('code');
+  private readonly invitation =
+    inject(ActivatedRoute).snapshot.queryParamMap.get(INVITATION_PARAM) ?? '';
 
-  protected readonly setup = injectPanel(startAdminMfaEnrollment, () => ({}));
+  protected readonly setup = injectPanel(startAdminMfaEnrollment, () => ({
+    body: { invitation: this.invitation },
+  }));
+  // The API refuses a missing, expired or foreign invitation as an invalid field.
+  protected readonly uninvited = computed(
+    () => this.setup.failure()?.status === HttpStatusCode.BadRequest,
+  );
   protected readonly sharedKey = computed(
     () => this.setup.value()?.sharedKey.match(KEY_GROUPS)?.join(' ') ?? '',
   );
@@ -74,9 +87,9 @@ export class AdminEnrollPage {
     this.error.set(null);
     try {
       const response = await firstValueFrom(
-        confirmAdminMfa(this.http, this.rootUrl, { body: { code } }).pipe(
-          timeout({ first: this.wait }),
-        ),
+        confirmAdminMfa(this.http, this.rootUrl, {
+          body: { code, invitation: this.invitation },
+        }).pipe(timeout({ first: this.wait })),
       );
       this.session.apply(response.body.session);
       this.recoveryCodes.set(response.body.recoveryCodes);

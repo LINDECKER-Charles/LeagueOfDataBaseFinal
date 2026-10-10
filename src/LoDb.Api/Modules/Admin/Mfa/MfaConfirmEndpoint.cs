@@ -24,7 +24,7 @@ internal static class MfaConfirmEndpoint
         [FromServices] MfaEnrollment enrollment,
         HttpContext context)
     {
-        var (done, problem) = await enrollment.ConfirmAsync(context, request?.Code);
+        var (done, problem) = await enrollment.ConfirmAsync(context, request);
         return done is null ? problem! : TypedResults.Ok(done);
     }
 }
