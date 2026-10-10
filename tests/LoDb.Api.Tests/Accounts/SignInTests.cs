@@ -8,7 +8,8 @@ namespace LoDb.Api.Tests.Accounts;
 /// <summary>
 /// <c>POST /api/account/login</c>: by e-mail or username whatever the case, the same answer
 /// for a wrong password and an unknown account, a banned account refused only once its
-/// password is right, a lock after five failures, and the second factor when it is on.
+/// password is right, a lock after five failures from several addresses, and the second
+/// factor when it is on.
 /// </summary>
 public sealed class SignInTests(PostgresContainerFixture postgres)
     : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
@@ -99,15 +100,17 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
     public async Task FifthFailureLocksTheAccountEvenForItsPassword()
     {
         await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
         var statuses = new List<HttpStatusCode>();
 
+        // From as many addresses: one address alone runs out of attempts before the lockout.
         for (var failure = 0; failure < FailuresToLock; failure++)
         {
-            using var attempt = await browser.SignInAsync(AccountSeed.Name, WrongPassword);
+            using var stranger = App.Browser().From($"198.51.100.{failure + 1}");
+            using var attempt = await stranger.SignInAsync(AccountSeed.Name, WrongPassword);
             statuses.Add(attempt.StatusCode);
         }
 
+        using var browser = App.Browser();
         using var right = await browser.SignInAsync(AccountSeed.Name);
 
         Assert.Equal(

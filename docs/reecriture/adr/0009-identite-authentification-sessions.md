@@ -76,6 +76,18 @@
 ### Protections
 
 - **Lockout Identity** (5 échecs → 15 min), stocké en base : il survit aux déploiements.
+- **Connexion** (`/login`, `/token`, échange Google des apps) : 10 tentatives par adresse
+  (ou /64 IPv6) et par 15 min, puis 4 échecs par 15 min pour un même couple (identifiant
+  normalisé, adresse), comptés **avant** la recherche du compte, avec le même 429 que le
+  compte existe ou non. Ce plafond reste sous le lockout : une adresse seule ne verrouille
+  plus un compte ; plusieurs adresses le peuvent encore, compromis assumé du lockout. Bornes
+  sous `LoDb:RateLimiting`, en mémoire de l'instance.
+- **Admission au hachage** : le hasher d'Identity est synchrone, donc chaque point d'entrée
+  qui hache (connexion, jeton, inscription, réinitialisation, premier mot de passe,
+  suppression) prend d'abord un permis asynchrone (1 permis, file de 8, attente de 500 ms au
+  plus), sinon **503 + `Retry-After`** : un refus de capacité, distinct du 429 d'un débit.
+  La porte synchrone du hasher reste un filet de sécurité. Bornes sous
+  `LoDb:Accounts:Hashing`.
 - Rate limiters par IP sur l'inscription, la réinitialisation, le contact et le checkout
   (pas sur les actions authentifiées, pour éviter les faux positifs derrière un NAT).
 - Bannissement : vérifié à la connexion **et** lors de la revalidation périodique du
@@ -122,3 +134,8 @@
 - **−** Deux schémas d'authentification (cookie et jetons) à tester chacun.
 - **−** Les App Links Android et la redirection loopback du desktop ajoutent de la
   configuration par plateforme.
+
+## Amendements
+
+- **2026-10-10** : limites de connexion par adresse et par couple (identifiant, adresse),
+  admission asynchrone au hachage (§ Protections).

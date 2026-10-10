@@ -1,5 +1,7 @@
+using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Text.Json;
+using LoDb.Api.Modules.Accounts.Security;
 using LoDb.Infrastructure.Outbox;
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Infrastructure.Persistence.Audit;
@@ -11,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Time.Testing;
 
 namespace LoDb.Api.Tests.Accounts.Support;
@@ -88,6 +91,17 @@ public sealed class AccountsApp : IAsyncDisposable
 
     /// <summary>A browser on the site: it keeps its cookies and follows no redirect.</summary>
     public BrowserClient Browser() => BrowserClient.Open(_host);
+
+    /// <summary>
+    /// Collects what <paramref name="instrument"/> of the <c>LoDb.Security</c> meter of this
+    /// host records from now on.
+    /// </summary>
+    public MetricCollector<T> Security<T>(string instrument)
+        where T : struct =>
+        new(
+            _host.Services.GetRequiredService<IMeterFactory>(),
+            SecurityMetrics.MeterName,
+            instrument);
 
     /// <summary>A native app: no cookie, no <c>Origin</c>.</summary>
     public HttpClient App() => _host.CreateDefaultClient(BaseAddress);

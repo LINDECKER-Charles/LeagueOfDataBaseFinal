@@ -18,6 +18,9 @@ services:
       LoDb__Mail__Host: mailpit
       LoDb__Mail__Port: "1025"
       LoDb__Mail__Security: None
+      # The E2E suite signs every account in through the API from one address, far more
+      # often than a served host allows one client (docs/architecture/pieges.md).
+      LoDb__RateLimiting__SignInPerWindow: "1000"
 
   web-ssr:
     ports:

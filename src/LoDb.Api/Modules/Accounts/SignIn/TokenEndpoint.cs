@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Accounts.Authentication;
 using LoDb.Api.Modules.Accounts.Http;
 using LoDb.Api.Modules.Accounts.Security.Admission;
+using LoDb.Api.Modules.Accounts.Security.Limits;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,7 @@ internal sealed class TokenEndpoint(PasswordSignIn passwordSignIn)
                     [FromBody] TokenRequest request,
                     [FromServices] TokenEndpoint endpoint,
                     CancellationToken aborted) => endpoint.CreateAsync(request, aborted))
+            .RequireRateLimiting(AccountRateLimits.SignIn)
             .AddEndpointFilter<HashingBusyFilter>()
             .WithName("createAccountToken")
             .WithSummary("Signs an app in with an e-mail or a username and a password.")

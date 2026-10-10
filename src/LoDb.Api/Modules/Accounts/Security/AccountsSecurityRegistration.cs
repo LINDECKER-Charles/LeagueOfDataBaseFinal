@@ -28,7 +28,8 @@ internal static class AccountsSecurityRegistration
         var builder = services
             .AddIdentityCore<User>(ConfigureLockout)
             .AddRoles<Role>()
-            .AddLoDbStores();
+            .AddLoDbStores()
+            .AddUserManager<LoDbUserManager>();
 
         // Identity's own hasher and validator give way: the CNIL validator holds every rule.
         services.RemoveAll<IPasswordValidator<User>>();
