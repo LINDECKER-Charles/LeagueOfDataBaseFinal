@@ -117,4 +117,18 @@ test.describe('headers of the front files', { tag: '@readonly' }, () => {
     expect(response.status()).toBe(404);
     expect(response.headers()['x-cache-status']).toBeUndefined();
   });
+
+  test('refuse a blocked crawler with a 403, without rendering', async ({ request }) => {
+    const crawler =
+      'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko)' +
+      ' Chrome/139.0.0.0 Safari/537.36';
+    const blocked = await request.get('/en/champions', { headers: { 'User-Agent': crawler } });
+    const otherBuild = await request.get('/en/champions', {
+      headers: { 'User-Agent': crawler.replace('Chrome/139.0.0.0', 'Chrome/140.0.0.0') },
+    });
+
+    expect(blocked.status()).toBe(403);
+    expect(blocked.headers()['x-cache-status']).toBeUndefined();
+    expect(otherBuild.status()).toBe(200);
+  });
 });
