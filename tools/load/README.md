@@ -126,6 +126,9 @@ statuts.
   d'abord à la répartition des statuts et à la sonde, puis aux cœurs.
 - `docker stats` mesure chaque relevé sur environ une seconde : le 95ᵉ centile retient les
   pointes de quelques secondes (compilation à chaud, ramasse-miettes) qu'une moyenne lisse.
+- Les résumés d'admission du SSR couvrent des minutes d'horloge : le premier déborde sur la
+  chauffe, la dernière minute du passage peut manquer. Leurs comptes sont des ordres de
+  grandeur ; les statuts exacts sont ceux de k6.
 - L'ingestion à froid télécharge vraiment Data Dragon : S1, S3 et S5 dépendent du réseau.
 - Les caches (pages de nginx, catalogues de l'API, versions ingérées) durent d'un scénario à
   l'autre : chaque scénario parcourt ses propres URL, et la sonde ses propres fiches.
