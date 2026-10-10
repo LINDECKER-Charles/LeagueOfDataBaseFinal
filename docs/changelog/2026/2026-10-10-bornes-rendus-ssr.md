@@ -17,7 +17,8 @@ un lien qui porte des paramètres inutiles mène directement à la page voulue.
 ## Technique
 
 - Pré-routeur du SSR (`src/server/routing/`), avant l'admission et sans démarrer Angular :
-  `400` pour un segment de chemin mal encodé ou décodé en `/` ou NUL ; page `404` statique
+  `400` pour un segment de chemin mal encodé, décodé en `/` ou NUL, `.` ou `..`, ou qui
+  contient `\`, `(`, `)` ou `;` (le rendu lirait une autre page) ; page `404` statique
   (`public, max-age=0, s-maxage=3600`, CSP sans script, `noindex`) pour un premier segment
   hors de la grammaire de l'ADR 0005 (ni forme de locale, ni `b`, ni `admin`) ; `301`
   `no-store` d'une liste ou d'une fiche du catalogue vers son URL sans les paramètres

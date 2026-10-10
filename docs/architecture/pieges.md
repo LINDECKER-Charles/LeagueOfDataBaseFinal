@@ -37,7 +37,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   400 ; liste ou fiche du catalogue → 301 `no-store` vers son URL sans les paramètres
   qu'elle ne lit pas. Un nouveau paramètre de liste se déclare dans les clés de facettes
   (`*-facet-keys.ts`) ou dans `owned-params-of.ts`, sinon il disparaît au rechargement.
-  Locale et version se lisent **décodées** (`/%66r/%31%35.13.1/` est épinglée).
+  Locale et version se lisent **décodées** (`/%66r/%31%35.13.1/` est épinglée). Un segment
+  `.` ou `..`, ou qui contient `\`, `(`, `)` ou `;`, donne aussi un 400 : le rendu résout
+  l'URL comme un navigateur et son routeur lit outlets et paramètres matriciels
+  (`;version=` compris), il rendrait donc une autre page que celle classée.
 - Une API qui ne répond pas (aucune réponse, 502, 504) donne un **502** ; seule une 503 de
   l'API (délestage, avec `Retry-After`) reste 503. Chaque appel API d'un rendu est borné
   par l'échéance du rendu (`LODB_RENDER_DEADLINE_SECONDS`, 20 s).

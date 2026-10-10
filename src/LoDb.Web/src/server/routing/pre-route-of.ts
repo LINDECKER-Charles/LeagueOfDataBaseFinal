@@ -14,6 +14,13 @@ const LOCALE_SHAPE = /^[a-z]{2}(?:-han[st])?$/;
 const OUTSIDE_LOCALES: ReadonlySet<string> = new Set(['b', 'admin']);
 // A slash or a NUL inside a segment: no page has one, and the router would read another path.
 const UNSAFE_IN_SEGMENT = /[/\0]/;
+// The renderer reads these otherwise than the classification here: it resolves the URL as a
+// browser does (`.` and `..` segments, `\` as a slash), and its router takes `(…)` for outlets
+// and `;name=value` for route parameters, `version` included. `/fr/x/../15.13.1/champions`,
+// `/fr/(15.13.1/champions)` and `/fr/champions;version=15.13.1` would render a pinned page in
+// the current lane. No page has such a segment.
+const DOT_SEGMENTS: ReadonlySet<string> = new Set(['.', '..']);
+const ROUTER_SYNTAX = /[\\();]/;
 
 function splitTarget(url: string): { path: string; search: string } {
   const question = url.indexOf(QUERY_START);
@@ -30,6 +37,10 @@ function decodedSegmentsOf(path: string): string[] | null {
 
 function isSafeSegment(segment: string | null): segment is string {
   return segment !== null && !UNSAFE_IN_SEGMENT.test(segment);
+}
+
+function isReadAsWritten(segment: string): boolean {
+  return !DOT_SEGMENTS.has(segment) && !ROUTER_SYNTAX.test(segment);
 }
 
 function isInGrammar(first: string | undefined): boolean {
@@ -52,9 +63,10 @@ function cleanedSearchOf(path: string, search: string, limits: QueryLimits): str
 /**
  * What the server answers a root-relative URL with before any render (ADR 0005), from its
  * shape alone: a 400 for a segment no decoding makes a path segment of (`%2F`, `%00`, a
- * malformed escape); the static 404 for a first segment outside the grammar; a redirect to
- * the same list or detail without the query parameters the page does not read, so that a
- * page has one URL and an invented parameter costs no render; else the render itself.
+ * malformed escape); the static 404 for a first segment outside the grammar; a 400 for a
+ * segment of the grammar the renderer would read as another path (`..`, `\`, `(`, `;`); a
+ * redirect to the same list or detail without the query parameters the page does not read,
+ * so that a page has one URL and an invented parameter costs no render; else the render.
  */
 export function preRouteOf(url: string, limits: QueryLimits): PreRoute {
   const { path, search } = splitTarget(url);
@@ -64,6 +76,9 @@ export function preRouteOf(url: string, limits: QueryLimits): PreRoute {
   }
   if (!isInGrammar(segments[0])) {
     return { kind: 'not-found' };
+  }
+  if (!segments.every(isReadAsWritten)) {
+    return { kind: 'bad-request' };
   }
   const cleaned = cleanedSearchOf(path, search, limits);
   return cleaned === null || cleaned === search

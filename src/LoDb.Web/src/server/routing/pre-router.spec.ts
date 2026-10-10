@@ -76,12 +76,15 @@ describe('preRouter', () => {
     });
   });
 
-  it('refuses a segment that decodes to a slash with a 400, never stored', () => {
-    const answer = serve('/fr%2Fchampions');
+  it.each(['/fr%2Fchampions', '/fr/x/../15.13.1/champions'])(
+    'refuses %s with a 400, never stored',
+    (url) => {
+      const answer = serve(url);
 
-    expect(answer).toMatchObject({ status: 400, isNextCalled: false });
-    expect(answer.headers['Cache-Control']).toBe('no-store');
-  });
+      expect(answer).toMatchObject({ status: 400, isNextCalled: false });
+      expect(answer.headers['Cache-Control']).toBe('no-store');
+    },
+  );
 
   it.each(['/en/champions', '/en/champions?version=15.14.1', '/b/Zx81?x=1', '/xx/about?x=1'])(
     'lets %s render',
@@ -100,6 +103,28 @@ describe('preRouteOf', () => {
   ])('refuses %s', (url) => {
     expect(route(url)).toEqual({ kind: 'bad-request' });
   });
+
+  // The renderer resolves dot segments and backslashes as a browser does, and its router reads
+  // outlets and matrix parameters: each of these would render 15.13.1 in the current lane.
+  it.each([
+    '/fr/x/../15.13.1/champions',
+    '/fr/./15.13.1/champions',
+    '/fr/x/%2e%2E/15.13.1/champions/103-ahri',
+    '/fr/x\\..\\15.13.1/champions',
+    '/fr/(15.13.1/champions)',
+    '/fr/champions;version=15.13.1',
+    '/fr/champions/103-ahri;version=15.13.1?x=1',
+    '/b/../fr/15.13.1/items',
+  ])('refuses %s, which the renderer would read as another page', (url) => {
+    expect(route(url)).toEqual({ kind: 'bad-request' });
+  });
+
+  it.each(['/./fr/15.13.1/champions', '/wp-login.php;jsessionid=1', '/(fr/15.13.1/champions)'])(
+    'answers %s outside the grammar with the static 404',
+    (url) => {
+      expect(route(url)).toEqual({ kind: 'not-found' });
+    },
+  );
 
   it.each([
     '/wp-login.php',
