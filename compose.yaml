@@ -119,10 +119,17 @@ services:
       LODB_RENDER_API_TIMEOUT_SECONDS: ${LODB_RENDER_API_TIMEOUT_SECONDS:-}
       LODB_QUERY_MAX_PARAMS: ${LODB_QUERY_MAX_PARAMS:-}
       LODB_QUERY_MAX_PARAM_LENGTH: ${LODB_QUERY_MAX_PARAM_LENGTH:-}
+      # Each start publishes its hashed bundles there, and /build/ serves the previous builds'
+      # from there: a tab or a cached page that names one still loads it after a deploy.
+      LODB_FRONT_BUILDS_DIR: /srv/front-builds
       # Heap ceiling under the container's memory limit (512 MiB when served): V8 collects
       # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
       # whole heap stops at 448 MiB and leaves room for code and buffers.
       NODE_OPTIONS: --max-old-space-size=256
+    volumes:
+      # Bundles of the builds served lately; the deploy job purges those no build shipped for
+      # 30 days (.github/workflows/_deploy.yml).
+      - front-builds:/srv/front-builds
     networks:
       default:
         # The name nginx proxies to, unique on the shared `edge` network (see api).
@@ -179,12 +186,17 @@ services:
       LODB_PAGE_CACHE_SIZE: ${LODB_PAGE_CACHE_SIZE:-2g}
       LODB_PAGE_CACHE_KEYS_SIZE: ${LODB_PAGE_CACHE_KEYS_SIZE:-32m}
       LODB_PAGE_CACHE_INACTIVE: ${LODB_PAGE_CACHE_INACTIVE:-7d}
+      LODB_ASSETS_CACHE_SIZE: ${LODB_ASSETS_CACHE_SIZE:-1g}
+      LODB_ASSETS_CACHE_KEYS_SIZE: ${LODB_ASSETS_CACHE_KEYS_SIZE:-8m}
+      LODB_ASSETS_CACHE_INACTIVE: ${LODB_ASSETS_CACHE_INACTIVE:-30d}
       # Silences the plain-text start-up lines of the image's docker-entrypoint.sh.
       NGINX_ENTRYPOINT_QUIET_LOGS: "1"
     volumes:
       - ddragon:/srv/storage:ro
       # The page cache outlives a restart or a recreated container; its key sorts revisions.
       - pages-cache:/var/cache/nginx/pages
+      # The bundles of /build/, under their name alone: a deploy keeps them warm.
+      - assets-cache:/var/cache/nginx/assets
     depends_on:
       api:
         condition: service_healthy
@@ -225,3 +237,6 @@ volumes:
   # Shared with the legacy stack on a host: `migrate` brings its database up to date.
   pgdata:
   pages-cache:
+  assets-cache:
+  # Hashed front bundles of the successive builds (web-ssr, src/server/assets).
+  front-builds:

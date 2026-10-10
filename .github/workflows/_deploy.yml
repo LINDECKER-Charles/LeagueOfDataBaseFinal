@@ -267,6 +267,19 @@ jobs:
             # retires the containers of the legacy stack (php, go-fetcher, go-api, mailer).
             docker compose up -d --no-build --remove-orphans --wait --wait-timeout 180
 
+            # ── Front bundles of the previous builds ───────────────────────────────────
+            # Each start of web-ssr publishes its hashed bundles into the front-builds volume
+            # and refreshes the date of those already there; /build/ serves them to the tabs
+            # and the cached pages that still name them. A bundle no build has shipped for
+            # LODB_FRONT_BUILDS_RETENTION_DAYS (30) goes: longer than any cached page lives.
+            retention="$(env_value LODB_FRONT_BUILDS_RETENTION_DAYS)"
+            retention="${retention:-30}"
+            [[ "$retention" =~ ^[0-9]+$ ]] \
+              || fail "LODB_FRONT_BUILDS_RETENTION_DAYS must be a number of days."
+            docker compose exec -T web-ssr \
+              find /srv/front-builds -type f -mtime +"$retention" -delete \
+              || echo "::warning title=Front bundles::the purge of front-builds failed."
+
             # ── Root administrator of the .env (the legacy ADMIN_LOGIN / ADMIN_PASSWORD) ──
             # The password goes on the command's input, never on a command line; the output,
             # which names the account, stays off the public log.

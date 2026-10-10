@@ -176,7 +176,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   vient de `snippets/server-guards.conf` : une location qui déclare son propre `error_page`
   doit répéter `error_page 429`. `/api/catalog` et `/api/meta` ne sont **jamais** mis en
   cache par nginx (un HIT contournerait le `426` des apps). Les caches `lodb_seo` et
-  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages` sur un volume.
+  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages` et
+  `lodb_assets` (bundles de `/build/`, clé = `$uri` seul) sur des volumes.
   `/cdn/blobs/` ne sert que `{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` : une nouvelle
   extension de blob s'ajoute à la regex. La garde des extensions de scripts
   (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
@@ -186,6 +187,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé
   sans le port).
+- **Bundles des builds précédents** : chaque démarrage de `web-ssr` copie ses bundles hachés
+  dans le volume `front-builds` (`LODB_FRONT_BUILDS_DIR`) sans réécrire l'existant et
+  rafraîchit leur date ; `/build/` sert ceux de l'image, puis ceux du volume. Le job de
+  déploiement supprime ce qu'aucun build n'a livré depuis `LODB_FRONT_BUILDS_RETENTION_DAYS`
+  (30 j) : jamais sous la durée de vie d'une page en cache. Un chunk introuvable recharge
+  la page une fois (`ChunkReload`, drapeau en `sessionStorage`), puis affiche la 500 : un
+  rechargement en boucle se cherche là.
 - SSR : `LODB_TRUST_PROXY_HEADERS` obligatoire derrière nginx, `LODB_ALLOWED_HOSTS` liste
   les hôtes acceptés ; `public/` ne contient ni `media/` ni script racine nommé comme un
   bundle (cache `immutable`).

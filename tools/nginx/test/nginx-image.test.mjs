@@ -119,6 +119,19 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.equal((await get('/cdn/x')).status, 404);
   });
 
+  test('keeps a bundle under its name alone, whatever the host, but never a 404', async () => {
+    assert.equal(await cacheOf('/build/main-ABCD1234.js'), 'MISS');
+    const kept = await get('/build/main-ABCD1234.js', { host: 'test.example.com' });
+    assert.equal(kept.headers['x-cache-status'], 'HIT');
+    assert.equal(kept.headers['cache-control'], 'public, max-age=31536000, immutable');
+    assert.equal(kept.headers['x-content-type-options'], 'nosniff');
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const gone = await get('/build/gone-ABCD1234.js');
+      assert.equal(gone.status, 404);
+      assert.equal(gone.headers['x-cache-status'], 'MISS');
+    }
+  });
+
   test('keeps the crawler files once, whatever their query', async () => {
     assert.equal(await cacheOf('/robots.txt?utm_source=x'), 'MISS');
     assert.equal(await cacheOf('/robots.txt'), 'HIT');

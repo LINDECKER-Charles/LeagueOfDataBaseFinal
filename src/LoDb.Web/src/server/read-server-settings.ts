@@ -1,3 +1,4 @@
+import { isAbsolute } from 'node:path';
 import { readRenderLimits } from './admission/read-render-limits';
 import { readRenderTimeouts } from './rendering/read-render-timeouts';
 import { readQueryLimits } from './routing/read-query-limits';
@@ -44,10 +45,20 @@ function originOf(value: string | undefined): string {
   return url.origin;
 }
 
+function folderOf(value: string | undefined): string | null {
+  if (value === undefined || value === '') {
+    return null;
+  }
+  if (!isAbsolute(value)) {
+    throw new Error(`LODB_FRONT_BUILDS_DIR must be an absolute path, got "${value}".`);
+  }
+  return value;
+}
+
 /**
  * Reads PORT, LODB_ALLOWED_HOSTS and LODB_TRUST_PROXY_HEADERS (comma-separated lists),
- * LODB_API_ORIGIN, the bounds of the render admission, of a render's wait on the API and of
- * a catalogue page's query. `listening` tells whether this process serves HTTP itself, which
+ * LODB_API_ORIGIN, LODB_FRONT_BUILDS_DIR, the bounds of the render admission, of a render's
+ * wait on the API and of a catalogue page's query. `listening` tells whether this process serves HTTP itself, which
  * is what makes its loopback origin usable by the renders.
  */
 export function readServerSettings(env: Environment, listening: boolean): ServerSettings {
@@ -58,6 +69,7 @@ export function readServerSettings(env: Environment, listening: boolean): Server
     trustProxyHeaders: listOf(env['LODB_TRUST_PROXY_HEADERS']),
     apiOrigin: originOf(env['LODB_API_ORIGIN']),
     selfOrigin: listening ? `http://${LOOPBACK_HOST}:${port}` : null,
+    frontBuildsFolder: folderOf(env['LODB_FRONT_BUILDS_DIR']),
     renderLimits: readRenderLimits(env),
     renderTimeouts: readRenderTimeouts(env),
     queryLimits: readQueryLimits(env),

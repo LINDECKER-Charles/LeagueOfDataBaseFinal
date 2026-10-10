@@ -24,6 +24,9 @@ ENV NODE_ENV=production \
 WORKDIR /app
 # Owned by root and read-only for `node`: a compromised renderer cannot rewrite the app.
 COPY --from=build /source/src/LoDb.Web/dist/web ./
+# Mount point of the bundles every build shares (volume `front-builds`, compose.yaml): created
+# here, owned by `node`, so that a new volume starts writable for the bundles each start adds.
+RUN mkdir -p /srv/front-builds && chown node:node /srv/front-builds
 USER node
 EXPOSE 4000
 CMD ["node", "server/server.mjs"]

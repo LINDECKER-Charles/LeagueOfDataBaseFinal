@@ -50,13 +50,16 @@ ENV APP_REVISION=${APP_REVISION} \
     LODB_WEBHOOK_MAX_BODY_SIZE=1m \
     LODB_PAGE_CACHE_SIZE=2g \
     LODB_PAGE_CACHE_KEYS_SIZE=32m \
-    LODB_PAGE_CACHE_INACTIVE=7d
+    LODB_PAGE_CACHE_INACTIVE=7d \
+    LODB_ASSETS_CACHE_SIZE=1g \
+    LODB_ASSETS_CACHE_KEYS_SIZE=8m \
+    LODB_ASSETS_CACHE_INACTIVE=30d
 
-# /var/cache/nginx/pages holds the page cache (sites/site.conf); created here so that the
-# volume mounted on it (compose.yaml) starts owned by the workers' user.
+# /var/cache/nginx/{pages,assets} hold the caches of sites/site.conf; created here so that the
+# volumes mounted on them (compose.yaml) start owned by the workers' user.
 RUN rm -f /etc/nginx/conf.d/default.conf \
- && mkdir -p /var/cache/nginx/pages \
- && chown nginx:nginx /var/cache/nginx/pages
+ && mkdir -p /var/cache/nginx/pages /var/cache/nginx/assets \
+ && chown nginx:nginx /var/cache/nginx/pages /var/cache/nginx/assets
 COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY docker/nginx/sites/     /etc/nginx/templates/sites/
 COPY docker/nginx/server.d/  /etc/nginx/templates/server.d/

@@ -12,6 +12,12 @@ export interface ServerSettings {
   readonly apiOrigin: string;
   /** Loopback origin of this very server, or null when another server hosts the handler. */
   readonly selfOrigin: string | null;
+  /**
+   * Folder shared by the successive builds (volume `front-builds`), where this one publishes
+   * its hashed bundles and /build/ finds those of the previous ones; null serves this
+   * build's alone.
+   */
+  readonly frontBuildsFolder: string | null;
   /** Bounds of the render admission (`RenderAdmission`). */
   readonly renderLimits: RenderLimits;
   /** How long a render may wait on the API (`RenderBudget` of each render). */
