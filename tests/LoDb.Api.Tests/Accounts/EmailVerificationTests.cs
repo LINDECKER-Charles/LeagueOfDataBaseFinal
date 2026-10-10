@@ -15,16 +15,17 @@ namespace LoDb.Api.Tests.Accounts;
 
 /// <summary>
 /// The verification link: it verifies the account and answers <c>alreadyVerified</c> when
-/// used again within its hour; the signed-in account asks for it three times per quarter of
-/// an hour at most.
+/// used again within its hour; the signed-in account asks for it again five times in all,
+/// then once a day.
 /// </summary>
 public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
     : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
 {
     private const string VerifyPath = "/api/account/verify-email";
     private const string ResendPath = "/api/account/verify-email/resend";
-    private const int ResendsPerWindow = 3;
-    private static readonly TimeSpan ResendWindow = TimeSpan.FromMinutes(15);
+    private const int FreeResends = 5;
+    private static readonly TimeSpan ResendInterval = TimeSpan.FromDays(1);
+    private static readonly TimeSpan Minute = TimeSpan.FromMinutes(1);
 
     private AccountsApp? _app;
 
@@ -88,32 +89,36 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task ResendIsLimitedToThreeEveryQuarterOfAnHour()
+    public async Task ResendIsLimitedToFiveInAllThenOneADay()
     {
         await App.SeedAsync(new AccountSeed { EmailConfirmed = false });
         using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name);
+        using var signIn = await browser.SignInAsync(AccountSeed.Name, rememberMe: true);
         var statuses = new List<HttpStatusCode>();
-
-        for (var attempt = 0; attempt < ResendsPerWindow; attempt++)
+        for (var attempt = 0; attempt < FreeResends; attempt++)
         {
             using var sent = await browser.PostAsync(ResendPath);
             statuses.Add(sent.StatusCode);
-            App.Clock.Advance(TimeSpan.FromMinutes(1));
+            App.Clock.Advance(Minute);
         }
 
-        using var throttled = await browser.PostAsync(ResendPath);
-        var retryAfter = throttled.Headers.RetryAfter?.Delta;
-        App.Clock.Advance(ResendWindow - TimeSpan.FromMinutes(ResendsPerWindow));
-        using var again = await browser.PostAsync(ResendPath);
+        // The fifth went a minute ago: the sixth waits a day after it.
+        using var sixth = await browser.PostAsync(ResendPath);
+        App.Clock.Advance(ResendInterval - (2 * Minute));
+        using var early = await browser.PostAsync(ResendPath);
+        App.Clock.Advance(Minute);
+        using var nextDay = await browser.PostAsync(ResendPath);
+        using var sameDay = await browser.PostAsync(ResendPath);
 
         Assert.All(statuses, static status => Assert.Equal(HttpStatusCode.Accepted, status));
         Assert.Equal(
             "resend-throttled",
-            await ApiJson.ProblemCodeAsync(throttled, HttpStatusCode.TooManyRequests));
-        Assert.Equal(ResendWindow - TimeSpan.FromMinutes(ResendsPerWindow), retryAfter);
-        Assert.Equal(HttpStatusCode.Accepted, again.StatusCode);
-        Assert.Equal(ResendsPerWindow + 1, App.Outbox.Sent(EmailTemplate.ConfirmEmail).Count);
+            await ApiJson.ProblemCodeAsync(sixth, HttpStatusCode.TooManyRequests));
+        Assert.Equal(ResendInterval - Minute, sixth.Headers.RetryAfter?.Delta);
+        Assert.Equal(Minute, early.Headers.RetryAfter?.Delta);
+        Assert.Equal(HttpStatusCode.Accepted, nextDay.StatusCode);
+        Assert.Equal(ResendInterval, sameDay.Headers.RetryAfter?.Delta);
+        Assert.Equal(FreeResends + 1, App.Outbox.Sent(EmailTemplate.ConfirmEmail).Count);
         Assert.All(
             App.Outbox.Messages,
             static message => Assert.Equal(UiLocale.En, message.Locale));

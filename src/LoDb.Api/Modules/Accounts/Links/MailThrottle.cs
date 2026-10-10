@@ -1,4 +1,3 @@
-using System.Globalization;
 using LoDb.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 
@@ -16,7 +15,6 @@ internal sealed class MailThrottle(LoDbDbContext db, TimeProvider clock)
 {
     // Identity's own rows use "[AspNetUserStore]".
     private const string LoginProvider = "LoDb";
-    private const char Separator = ' ';
 
     /// <summary>
     /// How long before <paramref name="rule"/> lets another e-mail go; null if it does now.
@@ -26,10 +24,14 @@ internal sealed class MailThrottle(LoDbDbContext db, TimeProvider clock)
         MailThrottleRule rule,
         CancellationToken cancellationToken)
     {
-        var sent = Recent(await FindAsync(userId, rule, cancellationToken), rule);
-        return sent.Count < rule.Limit
-            ? null
-            : sent[sent.Count - rule.Limit] + rule.Window - clock.GetUtcNow();
+        ArgumentNullException.ThrowIfNull(rule);
+        var tally = Tally(await FindAsync(userId, rule, cancellationToken), rule);
+        if (tally.Total < rule.Allowance || tally.Recent.Count < rule.Limit)
+        {
+            return null;
+        }
+
+        return tally.Recent[tally.Recent.Count - rule.Limit] + rule.Window - clock.GetUtcNow();
     }
 
     /// <summary>Counts an e-mail sent now, written by the caller's next save.</summary>
@@ -38,11 +40,9 @@ internal sealed class MailThrottle(LoDbDbContext db, TimeProvider clock)
         MailThrottleRule rule,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(rule);
         var row = await FindAsync(userId, rule, cancellationToken);
-        var value = string.Join(
-            Separator,
-            Recent(row, rule).Append(clock.GetUtcNow()).Select(static sent =>
-                sent.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture)));
+        var value = Tally(row, rule).Add(clock.GetUtcNow()).Format();
         if (row is not null)
         {
             row.Value = value;
@@ -65,20 +65,6 @@ internal sealed class MailThrottle(LoDbDbContext db, TimeProvider clock)
         await db.Set<IdentityUserToken<int>>()
             .FindAsync([userId, LoginProvider, rule.Name], cancellationToken);
 
-    // Oldest first, those still within the window.
-    private List<DateTimeOffset> Recent(IdentityUserToken<int>? row, MailThrottleRule rule)
-    {
-        var since = clock.GetUtcNow() - rule.Window;
-        return [.. (row?.Value ?? string.Empty)
-            .Split(Separator, StringSplitOptions.RemoveEmptyEntries)
-            .Select(static part => long.TryParse(
-                part,
-                NumberStyles.None,
-                CultureInfo.InvariantCulture,
-                out var milliseconds)
-                ? DateTimeOffset.FromUnixTimeMilliseconds(milliseconds)
-                : DateTimeOffset.MinValue)
-            .Where(sent => sent > since)
-            .Order()];
-    }
+    private MailTally Tally(IdentityUserToken<int>? row, MailThrottleRule rule) =>
+        MailTally.Parse(row?.Value, clock.GetUtcNow() - rule.Window);
 }

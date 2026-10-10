@@ -501,7 +501,7 @@
       "banner": "Confirm your email address to unlock build creation.",
       "banner_cta": "Resend the email",
       "resend_done": "Confirmation email resent.",
-      "resend_throttled": "An email was already sent recently — wait a few minutes before trying again.",
+      "resend_throttled": "A confirmation email was already sent recently — check your spam folder, or try again later.",
       "gate_build": "Confirm your email address before creating a build.",
       "gate_api": "Confirm your email address before generating an API key."
     },

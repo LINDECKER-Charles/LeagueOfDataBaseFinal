@@ -41,6 +41,7 @@ internal static class AccountsModule
             .AddDefaultTokenProviders();
         services.AddAccountsAuthentication().AddAccountsGoogle(configuration);
         services.AddAccountsProtection(configuration);
+        AddVerification(services, configuration);
         services.TryAddSingleton<TrustedOrigins>();
         services.Configure<RateLimiterOptions>(ResetCheckRateLimit.AddTo);
         AddAccountServices(services);
@@ -65,6 +66,17 @@ internal static class AccountsModule
         GoogleStartEndpoint.Map(account);
         GoogleExchangeEndpoint.Map(account);
         return endpoints;
+    }
+
+    private static void AddVerification(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<VerificationResendOptions>()
+            .Bind(configuration.GetSection(VerificationResendOptions.SectionName))
+            .ValidateDataAnnotations()
+            .Validate(
+                static options => options.HasUsableInterval(),
+                $"{VerificationResendOptions.SectionName}:Interval must lie in 1 min – 7 days.")
+            .ValidateOnStart();
     }
 
     private static void AddAccountServices(IServiceCollection services)

@@ -501,7 +501,7 @@
       "banner": "Confirmez votre adresse e-mail pour débloquer la création de builds.",
       "banner_cta": "Renvoyer l'e-mail",
       "resend_done": "E-mail de confirmation renvoyé.",
-      "resend_throttled": "Un e-mail a déjà été envoyé récemment — patientez quelques minutes avant de réessayer.",
+      "resend_throttled": "Un e-mail de confirmation a déjà été envoyé récemment — vérifiez vos courriers indésirables, ou réessayez plus tard.",
       "gate_build": "Confirmez votre adresse e-mail avant de créer un build.",
       "gate_api": "Confirmez votre adresse e-mail avant de générer une clé API."
     },
