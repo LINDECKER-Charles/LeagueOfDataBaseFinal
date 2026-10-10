@@ -95,6 +95,15 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en
   littéral (sinon `dead` dès le premier essai). L'outbox n'envoie rien sans
   `LoDb:Mail:Host` : voulu. En local, Mailpit sur http://localhost:18025.
+- **Plafond horaire de l'outbox** (`LoDb:Outbox:HourlyCaps`, 100 confirmations, 50
+  réinitialisations, 20 messages de contact par heure glissante, pour tout le site) : au-delà,
+  les messages restent `pending` avec 0 tentative jusqu'à ce que l'heure libère une place.
+  Un e-mail « qui n'arrive pas » se cherche d'abord dans la jauge `lodb_outbox_deferred` et
+  le journal `outbox.hourly_cap.reached` ; un lien retenu plus d'une heure arrive expiré.
+- **Comptes non vérifiés effacés après 7 jours** (tâche `accounts.unverified_purge`, horaire),
+  sauf build, clé API, don, rôle, bannissement, soutien ou connexion Google : un compte de
+  test non vérifié d'une pile locale qui tourne depuis une semaine disparaît, c'est voulu.
+  Le renvoi de l'e-mail de vérification est limité à 5 par compte, puis 1 par jour.
 - Bannir, c'est `IsBanned` plus `UpdateSecurityStampAsync`. Un hash argon2id **plus fort**
   que la cible est conservé (`Argon2Passwords.IsTarget`) ; un compte hérité arrive sans
   `security_stamp`, la connexion le remplit.
