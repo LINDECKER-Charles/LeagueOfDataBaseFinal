@@ -115,7 +115,10 @@ internal sealed partial class LegacyResolver(
             { IsReady: true } => Find(own, lookup) is { } path
                 ? lookup.Moved(path)
                 : UnknownEntity(lookup),
-            { Status: CatalogLoadStatus.Pending, Refused: false } => lookup.ToList(),
+            // The list stands in only for a name the latest catalog, once read, lacks too: a
+            // latest catalog not read yet (its load refused for now) may still tell it.
+            { Status: CatalogLoadStatus.Pending, Refused: false } when latest is { IsReady: true }
+                => lookup.ToList(),
             _ => CatalogProblem.Pending(),
         };
     }

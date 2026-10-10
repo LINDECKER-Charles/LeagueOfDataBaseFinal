@@ -27,8 +27,12 @@ public sealed class LegacyApiFixture : IAsyncLifetime
     private ApiFactory? _factory;
     private HttpClient? _client;
     private FixtureReplayHandler? _replay;
+    private IServiceProvider? _services;
 
     public static CancellationToken Token => TestContext.Current.CancellationToken;
+
+    /// <summary>The services of the API host, such as its catalog reader.</summary>
+    public IServiceProvider Services => _services ?? throw NotInitialized();
 
     /// <summary>What reached the recorded Data Dragon, the latest's ingestion included.</summary>
     public IReadOnlyList<Uri> UpstreamRequests =>
@@ -61,6 +65,7 @@ public sealed class LegacyApiFixture : IAsyncLifetime
         var host = _factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(
             services => services.AddDdragonFixtureReplay(replay)));
         await IngestAsync(host.Services.GetRequiredService<IVersionIngestion>());
+        _services = host.Services;
         _client = host.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false,

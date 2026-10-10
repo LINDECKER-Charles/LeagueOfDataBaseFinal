@@ -1,13 +1,22 @@
 using System.Net;
 using System.Text.Json;
+using LoDb.Api.Modules.Catalog.Http;
+using LoDb.Api.Modules.Legacy;
+using LoDb.Domain.Languages;
+using LoDb.Domain.Versions;
+using LoDb.Ingestion.Catalog;
+using LoDb.Ingestion.Catalog.Reading;
+using LoDb.Testing.Fixtures;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LoDb.Api.Tests.Legacy;
 
 /// <summary>
 /// An old URL never ingests: the latest catalog answers first, the catalog of the version
 /// it names only once stored, and a name neither knows, in a version not stored, lands on the
-/// list of its version instead of a 404. 16.19.1 is stored and latest; 16.18.1 never is;
-/// 7.22.1 is stored by a catalog call first.
+/// list of its version instead of a 404, once the latest catalog could be read. 16.19.1 is
+/// stored and latest; 16.18.1 never is; 7.22.1 is stored by a catalog call first.
 /// </summary>
 [Collection(LegacyApiGroup.Name)]
 public sealed class LegacyStoredOnlyTests(LegacyApiFixture api)
@@ -40,6 +49,20 @@ public sealed class LegacyStoredOnlyTests(LegacyApiFixture api)
     }
 
     [Fact]
+    public async Task UnreadLatestCatalogDefersInsteadOfLandingOnTheList()
+    {
+        var reader = new LatestUnread(api.Services.GetRequiredService<ICatalogReader>());
+        var resolver = new LegacyResolver(reader, NullLogger<LegacyResolver>.Instance);
+
+        var answer = await resolver.ResolveAsync(
+            new LegacyRequest($"{NeverStored}/champion/Garen", null, null),
+            LegacyApiFixture.Token);
+
+        var problem = Assert.IsType<CatalogProblem>(answer.Result);
+        Assert.Equal(CatalogProblem.Pending().Code, problem.Code);
+    }
+
+    [Fact]
     public async Task StoredVersionTellsANameTheLatestLacks()
     {
         using var stored = await api.GetApiAsync("/api/catalog/7.22.1/en_US/runes");
@@ -52,5 +75,33 @@ public sealed class LegacyStoredOnlyTests(LegacyApiFixture api)
         Assert.Equal(
             "unknown-entity",
             JsonDocument.Parse(body).RootElement.GetProperty("code").GetString());
+    }
+
+    // The latest catalog not readable for now, as when the cold gate refuses its load: it
+    // answers what a stored-only read of a version never stored does.
+    private sealed class LatestUnread(ICatalogReader inner) : ICatalogReader
+    {
+        public Task<CatalogVersions> GetVersionsAsync(CancellationToken cancellationToken) =>
+            inner.GetVersionsAsync(cancellationToken);
+
+        public Task<PatchVersion?> GetLatestAsync(CancellationToken cancellationToken) =>
+            inner.GetLatestAsync(cancellationToken);
+
+        public Task<IReadOnlyList<DdragonLanguage>> GetLanguagesAsync(
+            CancellationToken cancellationToken) =>
+            inner.GetLanguagesAsync(cancellationToken);
+
+        public Task<CatalogLoad> GetAsync(
+            PatchVersion version,
+            DdragonLanguage language,
+            ColdDemand demand,
+            CancellationToken cancellationToken) =>
+            version == DdragonFixtures.Latest
+                ? inner.GetAsync(
+                    PatchVersion.Parse(NeverStored),
+                    language,
+                    ColdDemand.StoredOnly,
+                    cancellationToken)
+                : inner.GetAsync(version, language, demand, cancellationToken);
     }
 }
