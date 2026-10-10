@@ -1,4 +1,5 @@
 using LoDb.Api.Modules.Catalog.Http;
+using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,7 @@ namespace LoDb.Api.Modules.Builds.Sharing;
 /// <param name="Lang">
 /// The Data Dragon language of the names; the build's own language when unset.
 /// </param>
-/// <param name="Context">The call.</param>
+/// <param name="Context">The call, whose connection tells who asks.</param>
 internal sealed record ShareQuery(
     [FromQuery(Name = "version")] string? Version,
     [FromQuery(Name = "lang")] string? Lang,
@@ -26,6 +27,13 @@ internal sealed record ShareQuery(
             : Lang is not null && !DdragonLanguage.TryParse(Lang, out _)
                 ? CatalogProblem.InvalidLanguage(Lang)
                 : null;
+
+    /// <summary>
+    /// The catalog a build is rendered on: its <paramref name="version"/>, in the language of
+    /// the names.
+    /// </summary>
+    public CatalogScope ScopeOf(string? version, string buildLanguage) =>
+        new(version, LanguageFor(buildLanguage)) { Caller = ColdCallers.Of(Context) };
 
     /// <summary>The language of the names: the one asked, else the build's, else en_US.</summary>
     public string LanguageFor(string buildLanguage) =>
