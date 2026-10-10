@@ -194,10 +194,6 @@ jobs:
             git checkout -B "$BRANCH" "origin/$BRANCH"
             git reset --hard "origin/$BRANCH"
 
-            # Deploy overlay (edge labels + external network), WITHOUT
-            # compose.override.yaml (dev conveniences).
-            export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
-
             # ── The .env against the target, before anything changes ─────────────────
             env_value() {
               grep -E "^$1=" .env | tail -n 1 | cut -d= -f2- | tr -d "\"'" || true
@@ -223,6 +219,21 @@ jobs:
             engine_api="$(docker version --format '{{.Server.APIVersion}}')"
             [ "$(printf '%s\n' 1.44 "$engine_api" | sort -V | head -n 1)" = 1.44 ] \
               || fail "Docker Engine 25 or later is required (API $engine_api, 1.44 expected)."
+
+            # ── Compose files: the deploy overlay, then the staging ones ────────────────
+            # Never compose.override.yaml (dev conveniences). Staging takes a small share of
+            # the host (compose.staging.yaml). Joined from a list: no empty element.
+            compose_files=(compose.yaml compose.deploy.yaml)
+            if [ "$TARGET" = staging ]; then
+              compose_files+=(compose.staging.yaml)
+            fi
+            COMPOSE_FILE="$(IFS=:; echo "${compose_files[*]}")"
+            export COMPOSE_FILE
+            # Kept in the .env too, so that a manual `docker compose` run from this folder
+            # applies the same overlays (an exported COMPOSE_FILE still takes precedence).
+            sed -i '/^COMPOSE_FILE=/d' .env
+            echo "COMPOSE_FILE=$COMPOSE_FILE" >> .env
+            echo "Compose files: $COMPOSE_FILE"
 
             # The edge and its network belong to infra-vps; this job only asserts them.
             docker network inspect edge >/dev/null 2>&1 \

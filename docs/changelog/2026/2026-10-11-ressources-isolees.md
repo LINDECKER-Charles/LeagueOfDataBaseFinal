@@ -3,16 +3,17 @@ date: 2026-10-11
 type: perf
 scope: full-stack
 title: Le site tient mieux la charge et partage mieux son serveur
-summary: Chaque partie du site dispose d'une part réservée du serveur, qu'elle ne dépasse plus sous la charge.
+summary: Chaque partie du site dispose d'une part réservée du serveur, et la version de test n'en prend qu'une petite fraction.
 tags: [disponibilite, performance]
 ---
 
 ## Ce qui change
 
 Le site garde sa vitesse quand il est très sollicité. Chacune de ses parties (pages, données,
-base) dispose désormais d'une part réservée du serveur. Sous une charge exceptionnelle, le
-site demande de patienter quelques secondes plutôt que de ralentir tout le serveur qu'il
-partage avec d'autres services.
+base) dispose désormais d'une part réservée du serveur, et la version de test du site n'en
+prend plus qu'une petite fraction. Sous une charge exceptionnelle, le site demande de
+patienter quelques secondes plutôt que de ralentir tout le serveur qu'il partage avec
+d'autres services.
 
 ## Pourquoi
 
@@ -31,3 +32,6 @@ sa part.
   migration additive, requêtes de plus de 500 ms journalisées sans leurs paramètres, session
   inactive en transaction fermée après 60 s, `/dev/shm` de 256 Mio ; réglables par
   `LODB_PG_*`.
+- `compose.staging.yaml`, ajouté par `_deploy.yml` au seul staging : environ 0,75 cœur en
+  tout, poids 128, admission du SSR à 3 rendus (1 épinglé, 10 par minute), ingestion,
+  langues et téléchargements un à la fois. `docs/guides/configuration.md` § 4.3 et 4.5.

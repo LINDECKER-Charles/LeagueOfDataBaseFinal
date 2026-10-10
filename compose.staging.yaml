@@ -1,0 +1,62 @@
+# Staging overlay of compose.deploy.yaml, added by .github/workflows/_deploy.yml when the
+# target is staging (never on prod):
+#
+#   COMPOSE_FILE=compose.yaml:compose.deploy.yaml:compose.staging.yaml
+#
+# The staging stack runs on the production host and serves the same paths, so a crawl of
+# test.* costs the same work as one of the site. It gets a small, fixed share of the host:
+# about three quarters of a core in all, the lowest weight under contention, and the work
+# queues sized to match. Every value below stays tunable from the host's .env, under the
+# same name; the CPU quotas are reviewed with the production ones (compose.deploy.yaml).
+
+services:
+  api:
+    environment:
+      # One ingestion at a time, one language and one download at once: a new patch takes
+      # longer to reach staging, and never takes the production's share of the host.
+      LoDb__Ingestion__SyncConcurrency: ${LoDb__Ingestion__SyncConcurrency:-1}
+      LoDb__Ingestion__LanguageConcurrency: ${LoDb__Ingestion__LanguageConcurrency:-1}
+      LoDb__Egress__FetchConcurrency: ${LoDb__Egress__FetchConcurrency:-1}
+    cpu_shares: 128
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+    healthcheck:
+      # A probe starts a .NET runtime, about 0.17 s of CPU, within the same quarter of a
+      # core as the starting server: every 2 s, it would take a third of it. Spaced, with a
+      # longer grace.
+      start_period: 60s
+      start_interval: 10s
+
+  migrate:
+    cpu_shares: 128
+
+  web-ssr:
+    environment:
+      # Render admission (src/server/admission) at the scale of a quarter of a core. The
+      # pinned lane must stay strictly under the total, or the server refuses to start; a
+      # client's shares, left to their defaults, stay within these totals.
+      LODB_RENDER_MAX_IN_FLIGHT: ${LODB_RENDER_MAX_IN_FLIGHT:-3}
+      LODB_PINNED_RENDER_MAX_IN_FLIGHT: ${LODB_PINNED_RENDER_MAX_IN_FLIGHT:-1}
+      LODB_PINNED_RENDERS_PER_MINUTE: ${LODB_PINNED_RENDERS_PER_MINUTE:-10}
+      LODB_PINNED_RENDER_BURST: ${LODB_PINNED_RENDER_BURST:-5}
+    cpu_shares: 128
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+
+  nginx:
+    cpu_shares: 128
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+
+  postgres:
+    cpu_shares: 128
+    deploy:
+      resources:
+        limits:
+          cpus: "0.15"

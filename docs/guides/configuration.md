@@ -166,6 +166,7 @@ l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque dé
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
 | `LODB_PG_MAX_CONNECTIONS`, `LODB_PG_SLOW_STATEMENT`, `LODB_PG_IDLE_IN_TRANSACTION_TIMEOUT`, `LODB_PG_SHM_SIZE` | ➖ | ➖ | ➖ | Serveur Postgres (`compose.yaml`) : connexions (`60`, pour un pool de l'API à `32` plus `migrate`, la sauvegarde du déploiement, les verrous des tâches et `psql`), requêtes journalisées au-delà de `500ms` (sans leurs paramètres, jamais), session laissée inactive dans une transaction fermée après `60s`, `/dev/shm` de `256m`. `pg_stat_statements` est toujours chargé. |
+| `COMPOSE_FILE` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit dans le `.env` de l'hôte, avec les calques de l'environnement (§ 4.5), pour qu'une commande `docker compose` lancée à la main depuis le dossier les applique aussi. |
 
 Chaque environnement a son propre service `postgres` dans son projet, comme avant.
 `CONTACT_RECIPIENT` et `PUBLIC_API_BASE_URL` n'ont d'effet qu'en local : sur un
@@ -268,12 +269,32 @@ Valable pour les deux environnements : chacun reprend les valeurs de son propre 
 | `GEOIP_DB_PATH` | aucune sur un hôte (§ 8) |
 | `HTTP_PORT`, `MAILPIT_UI_PORT` | aucune : ports locaux de l'ancienne stack |
 
+### 4.5 Calques du staging
+
+Le staging tourne sur l'hôte de la prod et sert les mêmes chemins : un crawl de `test.*`
+coûte autant qu'un crawl du site. Le job de déploiement lui ajoute donc
+[`compose.staging.yaml`](../../compose.staging.yaml), jamais en prod : environ 0,75 cœur en
+tout, le poids le plus bas (`cpu_shares: 128`) et des files à sa taille. Chaque valeur se
+change par une ligne du `.env` du staging, sous le même nom :
+
+| Réglage | Staging | Prod (défaut) |
+|---|---|---|
+| `cpus` : `api`, `web-ssr`, `postgres`, `nginx` | `0.25`, `0.25`, `0.15`, `0.1` | § 4.3 |
+| `LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDER_MAX_IN_FLIGHT` | `3`, `1` | `8`, `3` |
+| `LODB_PINNED_RENDERS_PER_MINUTE`, `LODB_PINNED_RENDER_BURST` | `10`, `5` | `60`, `10` |
+| `LoDb__Ingestion__SyncConcurrency`, `LoDb__Ingestion__LanguageConcurrency`, `LoDb__Egress__FetchConcurrency` | `1`, `1`, `1` | `4`, `4`, `16` |
+| Sonde de santé de l'API au démarrage | toutes les 10 s pendant 60 s | toutes les 2 s pendant 20 s |
+
+Le couloir épinglé reste strictement sous le total des rendus, sinon le SSR refuse de
+démarrer ; la part d'un client (`2` rendus, `6` épinglés par minute) tient dans ces totaux.
+Un nouveau patch met plus longtemps à arriver sur le staging.
+
 ## 5. Fichiers et volumes de l'hôte
 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |
 |---|---|---|
 | dépôt (branche `test` ou `main`) | le job (`git reset --hard`) | Fichiers compose à la racine. |
-| `.env` | le job (`ENV_STAGING`, `ENV_PROD`, plus `LODB_EDGE_CIDR`), mode 600 | § 4. |
+| `.env` | le job (`ENV_STAGING`, `ENV_PROD`, plus `LODB_EDGE_CIDR` et `COMPOSE_FILE`), mode 600 | § 4. |
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |
 | `.deploy/backups/` | le job, à chaque déploiement | `<horodatage>.env` : le `.env` remplacé ; `<horodatage>.dump` : la base avant `migrate` (`pg_dump -Fc`, relu par `pg_restore --list`). Les dix plus récents de chaque, dossier en 700. Ce que le retour arrière restaure ([runbook](../reecriture/bascule.md), § 8.2). |
 | `.deploy/android/` | l'exploitant, à chaque release Android | `latest.json` (asset `lodb-android-latest.json`) et `assetlinks.json` ([`release-android.md`](release-android.md)). Vide : les deux URL répondent 404. |
