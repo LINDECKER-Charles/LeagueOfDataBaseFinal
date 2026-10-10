@@ -32,10 +32,12 @@ internal sealed class VoteEndpoint(
                     [FromBody] VoteRequest request,
                     [FromServices] VoteEndpoint endpoint,
                     HttpContext context) => endpoint.VoteAsync(id, request, context))
+            .RequireRateLimiting(BuildLimits.Vote.Policy)
             .WithName("voteBuild")
             .WithSummary("Votes a public build up or down; the same vote again withdraws it.")
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
     public async Task<Results<Ok<VoteState>, BuildProblem>> VoteAsync(
         int id,

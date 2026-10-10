@@ -38,16 +38,20 @@ internal sealed class ApiKeyEndpoints(
                     [FromServices] ApiKeyEndpoints endpoints,
                     HttpContext context) => endpoints.CreateAsync(request, context))
             .RequireAuthorization(AuthorizationPolicies.VerifiedEmail)
+            .RequireRateLimiting(ApiKeyLimits.Issue.Policy)
             .WithName("createApiKey")
             .WithSummary("Issues the account's API key, whose secret this answer alone shows.")
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
         group.MapPost(
                 Regenerate,
                 static ([FromServices] ApiKeyEndpoints endpoints, HttpContext context) =>
                     endpoints.RegenerateAsync(context))
+            .RequireRateLimiting(ApiKeyLimits.Issue.Policy)
             .WithName("regenerateApiKey")
             .WithSummary("Replaces the secret of the account's API key, keeping its rights.")
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
         group.MapDelete(
                 string.Empty,
                 static ([FromServices] ApiKeyEndpoints endpoints, HttpContext context) =>

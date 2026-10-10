@@ -1,4 +1,5 @@
 using LoDb.Api.Hosting;
+using LoDb.Api.Modules.Accounts.Security.Limits;
 using LoDb.Api.Modules.Builds.Catalogs;
 using LoDb.Api.Modules.Builds.Editing;
 using LoDb.Api.Modules.Builds.Http;
@@ -35,6 +36,8 @@ internal static class BuildsModule
         services.TryAddScoped<BuildSubmissions>();
         services.TryAddScoped<BuildScores>();
         services.TryAddScoped<BallotBox>();
+        services.AddAccountActionLimit(BuildLimits.Edit);
+        services.AddAccountActionLimit(BuildLimits.Vote);
 
         // The profiles module registered an empty source first: the card now lists the
         // public builds.
