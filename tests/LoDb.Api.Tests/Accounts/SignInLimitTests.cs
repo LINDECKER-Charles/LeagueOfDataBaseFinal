@@ -1,6 +1,7 @@
 using System.Net;
 using LoDb.Api.Modules.Accounts.Security;
 using LoDb.Api.Tests.Accounts.Support;
+using LoDb.Infrastructure.Audit;
 using LoDb.Testing;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 
@@ -24,6 +25,14 @@ public sealed class SignInLimitTests(PostgresContainerFixture postgres)
     private const int FailuresPerPair = 4;
     private const string AttemptsCounter = "lodb.sign_in.attempts";
     private const string WaitHistogram = "lodb.hashing.wait";
+    private const int ConcurrentAttempts = 8;
+
+    private static readonly HttpStatusCode[] Refusals =
+    [
+        HttpStatusCode.Unauthorized,
+        HttpStatusCode.TooManyRequests,
+        HttpStatusCode.ServiceUnavailable,
+    ];
 
     private AccountsApp? _app;
 
@@ -130,6 +139,37 @@ public sealed class SignInLimitTests(PostgresContainerFixture postgres)
                 (SecurityMetrics.Throttled, SecurityMetrics.UncheckedAccount, 2),
             ],
             Summary(attempts));
+    }
+
+    [Fact]
+    public async Task FailuresSentTogetherNeverPassTheBoundNorTheJournal()
+    {
+        await App.SeedAsync(new AccountSeed());
+        using var attempts = App.Security<long>(AttemptsCounter);
+        var browsers = Enumerable.Range(0, ConcurrentAttempts)
+            .Select(_ => App.Browser().From(Client))
+            .ToList();
+        try
+        {
+            var statuses = await Task.WhenAll(browsers.Select(static async browser =>
+            {
+                using var failed = await browser.SignInAsync(AccountSeed.Name, WrongPassword);
+                return failed.StatusCode;
+            }));
+
+            var failures = attempts.GetMeasurementSnapshot().Count(static attempt =>
+                (string?)attempt.Tags[SecurityMetrics.ResultTag] == SecurityMetrics.Failure);
+            Assert.InRange(failures, 1, FailuresPerPair);
+            Assert.Equal(failures, statuses.Count(static s => s == HttpStatusCode.Unauthorized));
+            Assert.All(statuses, static status => Assert.Contains(status, Refusals));
+            var journaled = (await App.AuditAsync())
+                .Count(static entry => entry.Action == AuditAction.UserLoginFailed);
+            Assert.Equal(failures, journaled);
+        }
+        finally
+        {
+            browsers.ForEach(static browser => browser.Dispose());
+        }
     }
 
     [Fact]

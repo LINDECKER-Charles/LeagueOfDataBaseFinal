@@ -47,6 +47,14 @@ internal sealed class PasswordSignIn(
         [AccountProblem.AccountBanned().Code] = SecurityMetrics.Banned,
     };
 
+    // Asking for the second factor is a step of the sign-in, not a failure; a throttled
+    // attempt is counted, never journaled.
+    private static readonly string[] Unjournaled =
+    [
+        AccountProblem.TwoFactorRequired().Code,
+        AccountProblem.SignInThrottled(TimeSpan.Zero).Code,
+    ];
+
     /// <summary>
     /// Signs in with <paramref name="credentials"/> through <paramref name="channel"/>, or
     /// tells why not; on success, the sign-in manager has written the cookie or the tokens.
@@ -203,9 +211,8 @@ internal sealed class PasswordSignIn(
                 attempt.Channel,
                 cancellationToken);
         }
-        else if (problem != AccountProblem.TwoFactorRequired())
+        else if (!Unjournaled.Contains(problem.Code, StringComparer.Ordinal))
         {
-            // Asking for the second factor is a step of the sign-in, not a failure.
             await audit.SignInFailedAsync(
                 attempt.Credentials.Identifier,
                 problem.Code,
