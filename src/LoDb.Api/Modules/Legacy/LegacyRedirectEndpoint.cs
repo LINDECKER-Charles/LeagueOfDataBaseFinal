@@ -1,4 +1,5 @@
 using LoDb.Api.Hosting;
+using LoDb.Api.Modules.Catalog.Reading;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LoDb.Api.Modules.Legacy;
@@ -31,7 +32,10 @@ internal static class LegacyRedirectEndpoint
                         new LegacyRequest(
                             path,
                             request.Query[LanguageQuery].ToString(),
-                            request.Query[VersionQuery].ToString()),
+                            request.Query[VersionQuery].ToString())
+                        {
+                            Caller = ColdCallers.Of(request.HttpContext),
+                        },
                         request.HttpContext.RequestAborted))
             .ExcludeFromDescription();
 }

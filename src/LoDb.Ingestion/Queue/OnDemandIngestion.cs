@@ -17,21 +17,31 @@ namespace LoDb.Ingestion.Queue;
 /// duplicates for the background worker.
 /// </summary>
 /// <remarks>
+/// <para>
 /// A unit of work is the four datasets of a (version, language) or one image of a version.
 /// A queued unit stays counted until the worker is done with it, so the same list asked for
 /// again while cold queues nothing more.
+/// </para>
+/// <para>
+/// A visitor's synchronous work takes the per-minute budgets of cold work and waits a
+/// bounded time for its slot (<see cref="SyncSlots"/>); a unit already in flight is joined
+/// for free. The worker's work was admitted when it was queued: no budget, no deadline.
+/// </para>
 /// </remarks>
 internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, IDisposable
 {
     public const string QueueName = "on_demand";
     public const string FullReason = "full";
     public const string CrawlerBudgetReason = "crawler_budget";
+    public const string DatasetBudgetReason = "dataset_budget";
+    public const string ImageBudgetReason = "image_budget";
 
     private readonly Channel<QueuedWork> channel;
     private readonly ConcurrentDictionary<string, byte> queued = new(StringComparer.Ordinal);
     private readonly SingleFlight flights = new();
-    private readonly SemaphoreSlim slots;
     private readonly Services services;
+    private readonly OnDemandLane visitor;
+    private readonly OnDemandLane worker;
 
     public OnDemandIngestion(
         KnownReleases releases,
@@ -39,7 +49,8 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
         DatasetIngestion datasets,
         ImageManifest manifest,
         ImageIngestion images,
-        CrawlerBudget budget,
+        OnDemandBudgets budgets,
+        SyncSlots slots,
         IngestionMetrics metrics,
         IOptions<IngestionOptions> options,
         ILogger<OnDemandIngestion> logger)
@@ -47,8 +58,9 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
         ArgumentNullException.ThrowIfNull(metrics);
         ArgumentNullException.ThrowIfNull(options);
         services = new Services(
-            releases, stored, datasets, manifest, images, budget, metrics, logger);
-        slots = new SemaphoreSlim(options.Value.SyncConcurrency);
+            releases, stored, datasets, manifest, images, budgets, metrics, logger);
+        visitor = OnDemandLane.Visitor(budgets, slots);
+        worker = OnDemandLane.Worker(slots);
         channel = Channel.CreateBounded<QueuedWork>(
             new BoundedChannelOptions(options.Value.QueueCapacity)
             {
@@ -61,7 +73,7 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
 
     public int Count => channel.Reader.Count;
 
-    public async Task<bool> EnsureDatasetsAsync(
+    public Task<bool> EnsureDatasetsAsync(
         PatchVersion version,
         DdragonLanguage language,
         CancellationToken cancellationToken)
@@ -69,25 +81,7 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
         ArgumentNullException.ThrowIfNull(version);
         ArgumentNullException.ThrowIfNull(language);
         var scope = new DatasetScope { Version = version, Language = language };
-        if (await services.Stored.ExistAsync(scope, cancellationToken).ConfigureAwait(false))
-        {
-            return true;
-        }
-
-        if (!await services.Releases.IsListedAsync(version, language, cancellationToken)
-            .ConfigureAwait(false))
-        {
-            return false;
-        }
-
-        await flights.RunAsync(
-                [DatasetUnit(version, language)],
-                (_, token) => WithSlotAsync(
-                    slotToken => services.Datasets.IngestAsync(scope, slotToken),
-                    token),
-                cancellationToken)
-            .ConfigureAwait(false);
-        return true;
+        return EnsureDatasetsAsync(scope, visitor, cancellationToken);
     }
 
     public Task EnsureImagesAsync(
@@ -97,7 +91,7 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
     {
         ArgumentNullException.ThrowIfNull(version);
         ArgumentNullException.ThrowIfNull(images);
-        return EnsureAsync(new ImageBatch(version, images, false), cancellationToken);
+        return EnsureAsync(new ImageBatch(version, images, false), visitor, cancellationToken);
     }
 
     public Task EnsureImagesAsync(WatchedImages images, CancellationToken cancellationToken)
@@ -107,19 +101,19 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
         {
             Progress = images.Progress,
         };
-        return EnsureAsync(batch, cancellationToken);
+        return EnsureAsync(batch, visitor, cancellationToken);
     }
 
     public bool TryEnqueue(OnDemandRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var units = UnitsOf(request);
+        var units = OnDemandUnits.Of(request);
         if (units.All(queued.ContainsKey))
         {
             return true;
         }
 
-        if (request.Origin == OnDemandOrigin.Crawler && !services.Budget.TryTake())
+        if (request.Origin == OnDemandOrigin.Crawler && !services.Budgets.Crawler.TryTake())
         {
             services.Metrics.RecordRefusal(CrawlerBudgetReason);
             return false;
@@ -156,42 +150,20 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
         }
     }
 
-    public void Dispose()
-    {
-        flights.Dispose();
-        slots.Dispose();
-    }
-
-    private static string DatasetUnit(PatchVersion version, DdragonLanguage language) =>
-        $"datasets|{version.Value}|{language.Code}";
-
-    private static string ImageUnit(PatchVersion version, DdragonImage image) =>
-        $"image|{version.Value}|{image.ManifestType}|{image.File}";
-
-    private static List<string> UnitsOf(OnDemandRequest request)
-    {
-        List<string> units =
-            [.. request.Images.Select(image => ImageUnit(request.Version, image)).Distinct()];
-        if (request.Language is { } language)
-        {
-            units.Add(DatasetUnit(request.Version, language));
-        }
-
-        return units;
-    }
+    public void Dispose() => flights.Dispose();
 
     // Only the claimed units: the others are already waiting in another work.
     private static QueuedWork Queued(OnDemandRequest request, List<string> claimed)
     {
         var language = request.Language is { } asked
-            && claimed.Contains(DatasetUnit(request.Version, asked))
+            && claimed.Contains(OnDemandUnits.Dataset(request.Version, asked))
                 ? asked
                 : null;
         var claimedSet = claimed.ToHashSet(StringComparer.Ordinal);
         List<DdragonImage> images =
         [
-            .. request.Images
-                .Where(image => claimedSet.Remove(ImageUnit(request.Version, image))),
+            .. request.Images.Where(image =>
+                claimedSet.Remove(OnDemandUnits.Image(request.Version, image))),
         ];
         return new QueuedWork(request.Version, language, images, claimed);
     }
@@ -203,19 +175,57 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
     {
         if (work.Language is { } language)
         {
-            await EnsureDatasetsAsync(work.Version, language, cancellationToken)
-                .ConfigureAwait(false);
+            var scope = new DatasetScope { Version = work.Version, Language = language };
+            await EnsureDatasetsAsync(scope, worker, cancellationToken).ConfigureAwait(false);
         }
 
         if (work.Images.Count > 0)
         {
-            await EnsureImagesAsync(work.Version, work.Images, cancellationToken)
-                .ConfigureAwait(false);
+            var batch = new ImageBatch(work.Version, work.Images, false);
+            await EnsureAsync(batch, worker, cancellationToken).ConfigureAwait(false);
         }
     }
 
+    private async Task<bool> EnsureDatasetsAsync(
+        DatasetScope scope,
+        OnDemandLane lane,
+        CancellationToken cancellationToken)
+    {
+        if (await services.Stored.ExistAsync(scope, cancellationToken).ConfigureAwait(false))
+        {
+            return true;
+        }
+
+        if (!await services.Releases
+            .IsListedAsync(scope.Version, scope.Language, cancellationToken)
+            .ConfigureAwait(false))
+        {
+            return false;
+        }
+
+        string[] unit = [OnDemandUnits.Dataset(scope.Version, scope.Language)];
+        if (lane.AdmitDatasets(flights, unit).Count == 0)
+        {
+            throw Refuse(DatasetBudgetReason);
+        }
+
+        await flights.RunAsync(
+                unit,
+                (_, token) => lane.RunAsync(
+                    slotToken => services.Datasets.IngestAsync(scope, slotToken),
+                    token),
+                cancellationToken)
+            .ConfigureAwait(false);
+        return true;
+    }
+
     // The flight covering a unit runs only the images it claimed, with the claimer's progress.
-    private async Task EnsureAsync(ImageBatch requested, CancellationToken cancellationToken)
+    // The images over budget stay without a verdict, and the caller is told once the others
+    // have landed.
+    private async Task EnsureAsync(
+        ImageBatch requested,
+        OnDemandLane lane,
+        CancellationToken cancellationToken)
     {
         var version = requested.Version;
         var unrecorded = await services.Manifest
@@ -229,32 +239,30 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
         }
 
         var byUnit = unrecorded
-            .DistinctBy(image => ImageUnit(version, image))
-            .ToDictionary(image => ImageUnit(version, image), StringComparer.Ordinal);
+            .DistinctBy(image => OnDemandUnits.Image(version, image))
+            .ToDictionary(
+                image => OnDemandUnits.Image(version, image),
+                StringComparer.Ordinal);
+        var admitted = lane.AdmitImages(flights, byUnit.Keys);
         await flights.RunAsync(
-                byUnit.Keys,
-                (units, token) => WithSlotAsync(
+                admitted,
+                (units, token) => lane.RunAsync(
                     slotToken => services.Images.IngestAsync(
                         requested with { Images = [.. units.Select(unit => byUnit[unit])] },
                         slotToken),
                     token),
                 cancellationToken)
             .ConfigureAwait(false);
+        if (admitted.Count < byUnit.Count)
+        {
+            throw Refuse(ImageBudgetReason);
+        }
     }
 
-    private async Task WithSlotAsync(
-        Func<CancellationToken, Task> work,
-        CancellationToken cancellationToken)
+    private OnDemandRefusedException Refuse(string reason)
     {
-        await slots.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            await work(cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            slots.Release();
-        }
+        services.Metrics.RecordRefusal(reason);
+        return new OnDemandRefusedException(reason);
     }
 
     private void Release(IEnumerable<string> units)
@@ -277,7 +285,7 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
         DatasetIngestion Datasets,
         ImageManifest Manifest,
         ImageIngestion Images,
-        CrawlerBudget Budget,
+        OnDemandBudgets Budgets,
         IngestionMetrics Metrics,
         ILogger Logger);
 }

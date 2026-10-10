@@ -5,8 +5,8 @@ namespace LoDb.Ingestion.Pipeline;
 
 /// <summary>
 /// Meter <c>LoDb.Ingestion</c>: durations by stage, blobs written, absences recorded,
-/// versions made ready, fetches left without a verdict, refused on-demand work and the depth
-/// of the queues.
+/// versions made ready, fetches left without a verdict, refused on-demand work, the depth
+/// of the queues and the on-demand ingestions waiting for a slot.
 /// </summary>
 internal sealed class IngestionMetrics
 {
@@ -33,6 +33,7 @@ internal sealed class IngestionMetrics
     private readonly Counter<long> fetchFailures;
     private readonly Counter<long> refusals;
     private readonly ConcurrentDictionary<string, Func<int>> queues = new(StringComparer.Ordinal);
+    private Func<int> syncWaiting = static () => 0;
 
     public IngestionMetrics(IMeterFactory meterFactory)
     {
@@ -53,12 +54,17 @@ internal sealed class IngestionMetrics
         refusals = meter.CreateCounter<long>(
             "lodb.ingestion.on_demand.refused",
             "{request}",
-            "On-demand work refused: queue full or crawler budget spent.");
+            "On-demand work refused: queue full, budget spent or no slot in time.");
         meter.CreateObservableGauge(
             "lodb.ingestion.queue.depth",
             ObserveQueues,
             unit: "{item}",
             description: "Work waiting in an ingestion queue.");
+        meter.CreateObservableGauge(
+            "lodb.ingestion.sync.waiting",
+            () => syncWaiting(),
+            unit: "{ingestion}",
+            description: "On-demand ingestions waiting for a slot.");
     }
 
     public void RecordDuration(string stage, TimeSpan elapsed) =>
@@ -96,6 +102,9 @@ internal sealed class IngestionMetrics
 
     /// <summary>Publishes the depth of a queue under the <c>queue</c> tag.</summary>
     public void ObserveQueue(string queue, Func<int> depth) => queues[queue] = depth;
+
+    /// <summary>Publishes how many on-demand ingestions wait for a slot.</summary>
+    public void ObserveSyncWaiting(Func<int> count) => syncWaiting = count;
 
     private IEnumerable<Measurement<int>> ObserveQueues() =>
         queues.Select(static entry => new Measurement<int>(

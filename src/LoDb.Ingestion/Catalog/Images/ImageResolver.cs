@@ -48,7 +48,7 @@ internal sealed partial class ImageResolver(
             ? ResolvedImage.Present(new BlobKey(sha, extension))
             : ResolvedImage.Absent;
 
-    // Records the verdicts it waited for into the rows; true when the queue refused the work.
+    // Records the verdicts it waited for into the rows; true when the work was refused.
     private async Task<bool> SettleAsync(
         PatchVersion version,
         List<DdragonImage> unknown,
@@ -59,8 +59,8 @@ internal sealed partial class ImageResolver(
         switch (demand.Effective)
         {
             case ColdPolicy.Synchronous:
-                await WaitAsync(version, unknown, rows, cancellationToken).ConfigureAwait(false);
-                return false;
+                return await WaitAsync(version, unknown, rows, cancellationToken)
+                    .ConfigureAwait(false);
             case ColdPolicy.Queued:
                 return !onDemand.TryEnqueue(new OnDemandRequest
                 {
@@ -74,21 +74,28 @@ internal sealed partial class ImageResolver(
     }
 
     // An upstream failure leaves the images pending: the page still renders, with placeholders.
-    private async Task WaitAsync(
+    // A refusal (budget spent, no slot) leaves pending what it did not admit, and is told; the
+    // verdicts of the images it admitted are read all the same.
+    private async Task<bool> WaitAsync(
         PatchVersion version,
         List<DdragonImage> unknown,
         Dictionary<(string Type, string Key), DdragonAsset> rows,
         CancellationToken cancellationToken)
     {
+        var refused = false;
         try
         {
             await onDemand.EnsureImagesAsync(version, unknown, cancellationToken)
                 .ConfigureAwait(false);
         }
+        catch (OnDemandRefusedException)
+        {
+            refused = true;
+        }
         catch (EgressException exception)
         {
             LogImagesFailed(logger, version.Value, unknown.Count, exception);
-            return;
+            return false;
         }
 
         var settled = await manifest.FindAsync(version, unknown, cancellationToken)
@@ -97,6 +104,8 @@ internal sealed partial class ImageResolver(
         {
             rows[key] = row;
         }
+
+        return refused;
     }
 
     [LoggerMessage(

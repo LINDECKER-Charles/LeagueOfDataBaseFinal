@@ -40,6 +40,19 @@ internal sealed class SingleFlight : IDisposable
         return Task.WhenAll(waits).WaitAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// The keys a flight runs right now: a caller joining them adds no work, which a budget
+    /// need not count. A snapshot: a flight may start or end just after.
+    /// </summary>
+    public IReadOnlySet<string> InFlight(IEnumerable<string> keys)
+    {
+        ArgumentNullException.ThrowIfNull(keys);
+        lock (gate)
+        {
+            return keys.Where(flights.ContainsKey).ToHashSet(StringComparer.Ordinal);
+        }
+    }
+
     public void Dispose()
     {
         // The container may dispose the instance once per service it is exposed as.

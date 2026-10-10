@@ -9,12 +9,16 @@ namespace LoDb.Ingestion.Catalog.Reading;
 /// </summary>
 /// <remarks>
 /// <para>
-/// A catalog is built once and kept in a least-recently-used cache of
-/// <c>LoDb:Catalog:MaxEntries</c> entries; concurrent reads of a cold one share its load.
+/// A catalog is built once and kept: pinned for the latest version (<see cref="ICatalogPinning"/>),
+/// else in a least-recently-used cache of <c>LoDb:Catalog:MaxEntries</c> entries. Concurrent
+/// reads of a cold one share its load, which a gate admits as the
+/// <see cref="ColdDemand.Caller"/> allows; a refusal is a pending catalog, refused.
+/// </para>
+/// <para>
 /// Datasets the store lacks are ingested as the <see cref="ColdDemand"/> allows: waited for,
-/// queued, or not at all. A catalog in another language than en_US needs the en_US datasets
-/// of its version too, where slugs and resource tokens are read (UP 13): both are ingested,
-/// or queued, together.
+/// within the budget of cold work, queued, or not at all. A catalog in another language than
+/// en_US needs the en_US datasets of its version too, where slugs and resource tokens are
+/// read (UP 13): both are ingested, or queued, together.
 /// </para>
 /// <para>
 /// Only a loaded catalog is cached: an upstream failure is thrown, and the next read tries

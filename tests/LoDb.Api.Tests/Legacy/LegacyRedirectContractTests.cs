@@ -54,7 +54,7 @@ public sealed class LegacyRedirectContractTests(LegacyApiFixture api)
     [InlineData("/object/999999", "unknown-entity")]
     [InlineData("/rune/8100", "unknown-entity")]
     [InlineData("/summoner/Flash", "unknown-entity")]
-    [InlineData("/7.21.1/rune/Domination", "unknown-entity")]
+    [InlineData("/16.19.1/champion/NotAChampion", "unknown-entity")]
     [InlineData("/9.9.9/champions", "unknown-version")]
     [InlineData("/9.9.9/champion/Ahri", "unknown-version")]
     public async Task UnknownNameOrVersionIsNotFound(string oldUrl, string code) =>

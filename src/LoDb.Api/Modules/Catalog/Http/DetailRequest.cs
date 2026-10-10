@@ -11,13 +11,15 @@ namespace LoDb.Api.Modules.Catalog.Http;
 /// decorative and never checked (ADR 0005).
 /// </param>
 /// <param name="Gateway">Opens the catalog.</param>
+/// <param name="Context">The call's, whose connection tells who asks.</param>
 /// <param name="CancellationToken">The request's.</param>
 internal sealed record DetailRequest(
     [FromRoute(Name = "version")] string Version,
     [FromRoute(Name = "lang")] string Lang,
     [FromRoute(Name = "id")] string Id,
     [FromServices] CatalogGateway Gateway,
+    HttpContext Context,
     CancellationToken CancellationToken)
 {
-    public CatalogScope Scope => new(Version, Lang);
+    public CatalogScope Scope => new(Version, Lang) { Caller = ColdCallers.Of(Context) };
 }

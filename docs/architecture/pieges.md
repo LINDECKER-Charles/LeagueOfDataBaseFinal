@@ -60,6 +60,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
+- **Porte froide des catalogues** : un appel direct à l'API (18081, `api:8080`) depuis une
+  adresse privée et sans `X-Forwarded-For` est compté comme le SSR (débit interne, attente
+  de 2 s permise). Pour reproduire un client public, passer par nginx (18080). Un `503`
+  « en attente » sous charge est un délestage voulu, pas une panne.
+- Une URL de l'ancien site sur une version non stockée répond `302` vers la liste de la
+  version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une 404).
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en
   littéral (sinon `dead` dès le premier essai). L'outbox n'envoie rien sans
   `LoDb:Mail:Host` : voulu. En local, Mailpit sur http://localhost:18025.
@@ -79,6 +85,15 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   formulaire ; les autres créent leur compte par la CLI (`support/member-account.ts`,
   `support/worker-account.ts`). Entre deux passages complets :
   `docker restart lodb-dev-api-1`. Ne jamais relever le quota pour les tests.
+- **Bornes relevées pour l'E2E**, dans `compose.override.yaml` seulement (jamais
+  `compose.deploy.yaml`) : la suite ouvre des patchs anciens et des langues, d'une seule
+  adresse, bien plus vite qu'un hôte servi ne l'admet. La pile de dev relève l'admission
+  des rendus du SSR (`LODB_*RENDER*`), la porte froide des catalogues
+  (`LoDb__Catalog__ColdLoad*`, `PublicColdLoadsPerSecond`), les flux du warm-up
+  (`LoDb__Catalog__WarmUp__*`) et le budget d'ingestion des visiteurs
+  (`LoDb__Ingestion__ColdDatasetsPerMinute`, `ColdImagesPerMinute`,
+  `MaxWaitingIngestions`, `SlotWait` à 20 s). Ces bornes se testent en xUnit avec leurs
+  valeurs de production, jamais par l'E2E.
 - Comparer le chemin d'une réponse (`new URL(url).pathname`), jamais `url.endsWith(...)`.
   Limiter les comptes de titres ou de boutons à `main` ou au composant visé. Une spec qui
   compte les POST exclut `/api/analytics/`. Un parcours qui crée un compte le supprime aussi
