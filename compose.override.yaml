@@ -18,20 +18,58 @@ services:
       LoDb__Mail__Host: mailpit
       LoDb__Mail__Port: "1025"
       LoDb__Mail__Security: None
+      # The E2E workers open older patches and languages, all from one address, far
+      # faster than a served host admits their cold catalogs, ingestions and warm-ups
+      # (pieges.md, Tests E2E).
+      LoDb__Catalog__ColdLoadConcurrency: "16"
+      LoDb__Catalog__ColdLoadsPerSecond: "1000"
+      LoDb__Catalog__PublicColdLoadsPerSecond: "500"
+      LoDb__Catalog__ColdLoadBurst: "1000"
+      LoDb__Catalog__WarmUp__MaxStreams: "64"
+      LoDb__Catalog__WarmUp__MaxStreamsPerClient: "64"
+      LoDb__Catalog__WarmUp__PerClientPerHour: "100000"
+      LoDb__Ingestion__ColdDatasetsPerMinute: "6000"
+      LoDb__Ingestion__ColdImagesPerMinute: "1000000"
+      LoDb__Ingestion__MaxWaitingIngestions: "1024"
+      LoDb__Ingestion__SlotWait: "00:00:20"
+      # The E2E suite signs every account in through the API from one address, far more
+      # often than a served host allows one client (docs/architecture/pieges.md).
+      LoDb__RateLimiting__SignInPerWindow: "1000"
 
   web-ssr:
     ports:
       - "${LODB_SSR_PORT:-18082}:4000"
-    # The E2E workers open older patches far faster than a served host admits them.
+    # The E2E workers open older patches far faster than a served host admits them, all from
+    # one address, and their first visit to a patch waits for its ingestion
+    # (docs/architecture/pieges.md, Tests E2E).
     environment:
       LODB_RENDER_MAX_IN_FLIGHT: "32"
       LODB_PINNED_RENDER_MAX_IN_FLIGHT: "16"
       LODB_PINNED_RENDERS_PER_MINUTE: "6000"
       LODB_PINNED_RENDER_BURST: "1000"
+      LODB_CURRENT_RENDERS_PER_MINUTE: "6000"
+      LODB_CURRENT_RENDER_BURST: "1000"
+      LODB_RENDER_PER_CLIENT_MAX_IN_FLIGHT: "32"
+      LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE: "6000"
+      LODB_RENDER_DEADLINE_SECONDS: "30"
+      LODB_RENDER_API_TIMEOUT_SECONDS: "30"
 
   nginx:
     ports:
       - "${LODB_HTTP_PORT:-18080}:80"
+    # The E2E workers all come from one address (the Docker gateway) and open pages, API
+    # reads, old URLs and sitemaps far faster than one visitor: the rates per address are
+    # lifted here only. To get a default back, drop the key (`!reset null`): an empty value
+    # makes nginx refuse its configuration.
+    environment:
+      LODB_PAGES_RATE: 1000r/s
+      LODB_PAGES_BURST: "10000"
+      LODB_API_READS_RATE: 1000r/s
+      LODB_API_READS_BURST: "10000"
+      LODB_LEGACY_RATE: 1000r/s
+      LODB_LEGACY_BURST: "10000"
+      LODB_SITEMAPS_RATE: 1000r/s
+      LODB_SITEMAPS_BURST: "10000"
 
   postgres:
     ports:

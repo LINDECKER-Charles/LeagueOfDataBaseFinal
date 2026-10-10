@@ -51,7 +51,8 @@ public static class IngestionRegistration
     // One instance behind both faces: the callers' and the worker's.
     private static void AddOnDemand(IServiceCollection services)
     {
-        services.TryAddSingleton<CrawlerBudget>();
+        services.TryAddSingleton<OnDemandBudgets>();
+        services.TryAddSingleton<SyncSlots>();
         services.TryAddSingleton<OnDemandIngestion>();
         services.TryAddSingleton<IOnDemandIngestion>(
             static provider => provider.GetRequiredService<OnDemandIngestion>());

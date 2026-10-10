@@ -9,14 +9,17 @@ name: Release desktop
 # `beta` after staging (VersionPrefix-beta.N). The caller grants contents: write and
 # id-token: write. Can also be run by hand on a SHA.
 #
-# Per RID: vpk download of N-1 BEFORE vpk pack, so that vpk writes the delta N-1 -> N;
-# signing (Authenticode through Azure Artifact Signing, Developer ID + notarisation);
-# then the update gate: N-1 installed, updated to N, and --smoke must show N. Nothing is
-# published unless every required RID passed. The release is created as a pre-release and
-# promoted once every RID is uploaded (stable), or stays a pre-release (beta).
+# shell (npm) -> per RID: build (dotnet publish, no secret) -> pack (vpk download of N-1
+# BEFORE vpk pack, so that vpk writes the delta N-1 -> N; signing: Authenticode through
+# Azure Artifact Signing, Developer ID + notarisation; no build) -> gate (no secret: N-1
+# installed, updated to N, and --smoke must show N) -> publish. Nothing is published unless
+# every required RID passed. The release is created as a pre-release and promoted once every
+# RID is uploaded (stable), or stays a pre-release (beta).
 #
-# Environment desktop-release: the signing secrets and variables of the guide. An unsigned
-# build is never published: the signing steps fail when their configuration is missing.
+# Environment desktop-release: the signing secrets and variables of the guide, given to
+# `pack` only, the one job that neither builds nor runs what the build produced. An
+# unsigned build is never published: the signing steps fail when their configuration is
+# missing.
 on:
   workflow_call:
     inputs:
@@ -81,14 +84,14 @@ jobs:
 
       # Every tag: the stable tag of the SHA, and the beta tags to number the next one.
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.sha }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup .NET (version from global.json)
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
 
@@ -136,13 +139,13 @@ jobs:
         working-directory: src/LoDb.Web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.sha }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
           cache: npm
@@ -155,16 +158,77 @@ jobs:
         run: npm run build:shell
 
       - name: Upload the shell
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-shell
           path: src/LoDb.Web/dist/shell/browser/
           if-no-files-found: error
           retention-days: 1
 
+  # No environment, no secret: the .NET build runs the MSBuild targets of its NuGet
+  # packages. The publish folder goes to `pack` as a tar, which keeps the executable bits
+  # that an artifact drops.
+  build:
+    name: build (${{ matrix.rid }})
+    needs: [prepare, shell]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    continue-on-error: ${{ matrix.best-effort }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { rid: win-x64, os: windows-latest, best-effort: false }
+          - { rid: osx-arm64, os: macos-15, best-effort: false }
+          - { rid: osx-x64, os: macos-15-intel, best-effort: false }
+          # Best effort (ADR 0008): published when it passes, never blocking.
+          - { rid: linux-x64, os: ubuntu-24.04, best-effort: true }
+    defaults:
+      run:
+        shell: bash
+    env:
+      RID: ${{ matrix.rid }}
+      CHANNEL: ${{ inputs.channel }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+
+      - name: Setup .NET (version from global.json)
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Download the shell
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: desktop-shell
+          path: shell
+
+      - name: Build (dotnet publish)
+        run: |
+          "$E2E/build.sh" --rid "$RID" --version "$VERSION" --channel "$CHANNEL" \
+            --shell-dir shell --publish-dir publish
+          # COPYFILE_DISABLE: no AppleDouble entries from macOS' bsdtar, which codesign refuses.
+          COPYFILE_DISABLE=1 tar -C publish -cf desktop-publish.tar .
+
+      - name: Upload the publish folder
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-publish-${{ matrix.rid }}
+          path: desktop-publish.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  # The only job holding the signing material. It builds nothing, restores no cache, and
+  # runs nothing the build produced: vpk, the Velopack version of the app, signs the files
+  # of the publish folder as it packs them. The packages run in `gate`, without any secret.
   pack:
     name: pack (${{ matrix.rid }})
-    needs: [prepare, shell]
+    needs: [prepare, build]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     environment: desktop-release
@@ -191,40 +255,54 @@ jobs:
       VERSION: ${{ needs.prepare.outputs.version }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout the release scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.sha }}
           persist-credentials: false
+          sparse-checkout: tools/desktop-update-e2e
 
+      # vpk is a .NET tool: the SDK runs it, never the app's build.
       - name: Setup .NET (version from global.json)
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
 
-      - name: Download the shell
-        uses: actions/download-artifact@v8
+      - name: Download the publish folder
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: desktop-shell
-          path: shell
+          name: desktop-publish-${{ matrix.rid }}
+          path: build
+
+      # The build job holds no secret and this one signs: a link planted in the archive would
+      # make vpk package a file of this runner. A publish folder never needs one.
+      - name: Unpack the publish folder
+        run: |
+          mkdir publish && tar -C publish -xf build/desktop-publish.tar
+          if find publish -type l | grep -q .; then
+            find publish -type l -exec printf '::error::Symbolic link in the publish folder: %s\n' {} +
+            exit 1
+          fi
 
       - name: Install vpk
         env:
           VPK_VERSION: ${{ needs.prepare.outputs.vpk }}
         run: dotnet tool install --global vpk --version "$VPK_VERSION"
 
-      # mksquashfs builds the AppImage; libfuse2 runs it in the gate.
+      # mksquashfs builds the AppImage.
       - name: Linux packages
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install --yes squashfs-tools libfuse2t64
+          sudo apt-get install --yes squashfs-tools
 
+      # previous/version tells the gate which N-1 it installs (empty: first release).
       - name: Fetch N-1 (full package, installable build)
         run: |
           previous="$("$E2E/previous.sh" --rid "$RID" --channel "$CHANNEL" \
             --repo "$GITHUB_REPOSITORY" --releases releases --installable-dir previous)"
           echo "PREVIOUS=$previous" >> "$GITHUB_ENV"
+          printf '%s\n' "$previous" > previous/version
 
       - name: Developer ID and notarisation (macOS)
         if: runner.os == 'macOS'
@@ -249,13 +327,13 @@ jobs:
       # signtool's Artifact Signing library signs with the Azure CLI session.
       - name: Azure login (OIDC)
         if: runner.os == 'Windows'
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Pack (publish, sign, vpk pack)
+      - name: Pack (sign, vpk pack)
         run: |
           # The signing options of the steps above; none on Linux.
           sign_args=()
@@ -265,8 +343,7 @@ jobs:
             done < "$RUNNER_TEMP/signing/sign-args"
           fi
           "$E2E/pack.sh" --rid "$RID" --version "$VERSION" --channel "$CHANNEL" \
-            --shell-dir shell --releases releases --publish-dir publish \
-            -- ${sign_args[@]+"${sign_args[@]}"}
+            --publish-dir publish --releases releases -- ${sign_args[@]+"${sign_args[@]}"}
 
           source "$E2E/lib.sh"
           stem="releases/$LODB_PACK_ID-$VERSION-$(lodb_velopack_channel "$RID" "$CHANNEL")"
@@ -275,12 +352,72 @@ jobs:
             exit 1
           fi
 
+      - name: Remove the signing keychain
+        if: always() && runner.os == 'macOS'
+        run: '"$E2E/signing.sh" cleanup "$RUNNER_TEMP/signing"'
+
+      - name: Upload the packages
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-packed-${{ matrix.rid }}
+          path: |
+            releases/
+            previous/
+          if-no-files-found: error
+          retention-days: 1
+
+  # Installs N-1 and updates it to N, as a user would, in a job without any secret. Only a
+  # release folder that passed goes on to `publish`, as desktop-releases-<rid>.
+  gate:
+    name: gate (${{ matrix.rid }})
+    needs: [prepare, pack]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    continue-on-error: ${{ matrix.best-effort }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { rid: win-x64, os: windows-latest, best-effort: false }
+          - { rid: osx-arm64, os: macos-15, best-effort: false }
+          - { rid: osx-x64, os: macos-15-intel, best-effort: false }
+          # Best effort (ADR 0008): published when it passes, never blocking.
+          - { rid: linux-x64, os: ubuntu-24.04, best-effort: true }
+    defaults:
+      run:
+        shell: bash
+    env:
+      RID: ${{ matrix.rid }}
+      CHANNEL: ${{ inputs.channel }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - name: Checkout the release scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+          sparse-checkout: tools/desktop-update-e2e
+
+      - name: Download the packages
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: desktop-packed-${{ matrix.rid }}
+          path: .
+
+      # libfuse2 runs the AppImage.
+      - name: Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libfuse2t64
+
       - name: Update gate (N-1 -> N, --smoke)
         run: |
           source "$E2E/lib.sh"
+          previous="$(cat previous/version)"
           installable="$(lodb_installable "$RID" "$(lodb_velopack_channel "$RID" "$CHANNEL")")"
-          if [ -n "$PREVIOUS" ]; then
-            "$E2E/gate.sh" --rid "$RID" --channel "$CHANNEL" --from "$PREVIOUS" \
+          if [ -n "$previous" ]; then
+            "$E2E/gate.sh" --rid "$RID" --channel "$CHANNEL" --from "$previous" \
               --to "$VERSION" --feed releases --work gate --artifact "previous/$installable"
           else
             echo "::warning::No N-1 on this channel: the gate only starts $VERSION."
@@ -288,12 +425,8 @@ jobs:
               --artifact "releases/$installable"
           fi
 
-      - name: Remove the signing keychain
-        if: always() && runner.os == 'macOS'
-        run: '"$E2E/signing.sh" cleanup "$RUNNER_TEMP/signing"'
-
       - name: Upload the release folder
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-releases-${{ matrix.rid }}
           path: releases/
@@ -302,7 +435,7 @@ jobs:
 
       - name: Upload the gate reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-gate-${{ matrix.rid }}
           path: gate/logs/
@@ -310,7 +443,7 @@ jobs:
           retention-days: 7
 
   publish:
-    needs: [prepare, pack]
+    needs: [prepare, gate]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -322,13 +455,13 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.sha }}
           persist-credentials: false
 
       - name: Setup .NET (version from global.json)
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
 
@@ -338,7 +471,7 @@ jobs:
         run: dotnet tool install --global vpk --version "$VPK_VERSION"
 
       - name: Download the release folders
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: desktop-releases-*
           path: artifacts

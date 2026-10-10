@@ -31,8 +31,11 @@ services:
     environment:
       # Gss Encryption Mode=Disable: Npgsql would otherwise probe GSS and the chiseled
       # image, which has no libgssapi_krb5, writes non-JSON lines to stderr.
+      # Maximum Pool Size=32 keeps the API well under Postgres's max_connections, with room
+      # for migrate, the deploy backup and psql. Timeout=5 bounds the wait for a pooled
+      # connection (and the connection attempt): past it, /api answers 503 with Retry-After.
       ConnectionStrings__LoDb: &lodb-connection >-
-        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable
+        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
       # X-Forwarded-* are trusted from the private ranges: only nginx and web-ssr reach
       # this port on a served host (no host port, not on the edge network). The stack's
       # own subnet is picked by Docker, so it cannot be named more precisely here.
@@ -105,6 +108,17 @@ services:
       LODB_PINNED_RENDER_MAX_IN_FLIGHT: ${LODB_PINNED_RENDER_MAX_IN_FLIGHT:-}
       LODB_PINNED_RENDERS_PER_MINUTE: ${LODB_PINNED_RENDERS_PER_MINUTE:-}
       LODB_PINNED_RENDER_BURST: ${LODB_PINNED_RENDER_BURST:-}
+      LODB_CURRENT_RENDERS_PER_MINUTE: ${LODB_CURRENT_RENDERS_PER_MINUTE:-}
+      LODB_CURRENT_RENDER_BURST: ${LODB_CURRENT_RENDER_BURST:-}
+      LODB_RENDER_PER_CLIENT_MAX_IN_FLIGHT: ${LODB_RENDER_PER_CLIENT_MAX_IN_FLIGHT:-}
+      LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE: ${LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE:-}
+      LODB_RENDER_TRACKED_CLIENTS: ${LODB_RENDER_TRACKED_CLIENTS:-}
+      # A render's wait on the API (src/server/rendering), and the query a catalogue page
+      # keeps (src/server/routing): empty keeps the defaults.
+      LODB_RENDER_DEADLINE_SECONDS: ${LODB_RENDER_DEADLINE_SECONDS:-}
+      LODB_RENDER_API_TIMEOUT_SECONDS: ${LODB_RENDER_API_TIMEOUT_SECONDS:-}
+      LODB_QUERY_MAX_PARAMS: ${LODB_QUERY_MAX_PARAMS:-}
+      LODB_QUERY_MAX_PARAM_LENGTH: ${LODB_QUERY_MAX_PARAM_LENGTH:-}
       # Heap ceiling under the container's memory limit (512 MiB when served): V8 collects
       # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
       # whole heap stops at 448 MiB and leaves room for code and buffers.
@@ -145,6 +159,26 @@ services:
       # build, and needs no purge. A served host drops this key (compose.deploy.yaml)
       # and keeps the image's own revision, its tags being the same for every build.
       LODB_REVISION: ${IMAGE_TAG:-${APP_REVISION:-dev}}
+      # Bounds per client address and sizes of the caches (sites/site.conf), tunable from the
+      # host's .env; absent or empty there, the image's default, repeated here
+      # (docker/nginx/Dockerfile, checked by tools/nginx). Never a key without a value: Docker
+      # would drop the image's default and nginx would refuse its configuration.
+      LODB_PAGES_RATE: ${LODB_PAGES_RATE:-20r/s}
+      LODB_PAGES_BURST: ${LODB_PAGES_BURST:-100}
+      LODB_API_READS_RATE: ${LODB_API_READS_RATE:-10r/s}
+      LODB_API_READS_BURST: ${LODB_API_READS_BURST:-40}
+      LODB_LEGACY_RATE: ${LODB_LEGACY_RATE:-2r/s}
+      LODB_LEGACY_BURST: ${LODB_LEGACY_BURST:-10}
+      LODB_SITEMAPS_RATE: ${LODB_SITEMAPS_RATE:-1r/s}
+      LODB_SITEMAPS_BURST: ${LODB_SITEMAPS_BURST:-20}
+      LODB_READYZ_RATE: ${LODB_READYZ_RATE:-1r/s}
+      LODB_READYZ_BURST: ${LODB_READYZ_BURST:-5}
+      LODB_RATE_LIMITED_RETRY_AFTER: ${LODB_RATE_LIMITED_RETRY_AFTER:-10}
+      LODB_MAX_BODY_SIZE: ${LODB_MAX_BODY_SIZE:-128k}
+      LODB_WEBHOOK_MAX_BODY_SIZE: ${LODB_WEBHOOK_MAX_BODY_SIZE:-1m}
+      LODB_PAGE_CACHE_SIZE: ${LODB_PAGE_CACHE_SIZE:-2g}
+      LODB_PAGE_CACHE_KEYS_SIZE: ${LODB_PAGE_CACHE_KEYS_SIZE:-32m}
+      LODB_PAGE_CACHE_INACTIVE: ${LODB_PAGE_CACHE_INACTIVE:-7d}
       # Silences the plain-text start-up lines of the image's docker-entrypoint.sh.
       NGINX_ENTRYPOINT_QUIET_LOGS: "1"
     volumes:

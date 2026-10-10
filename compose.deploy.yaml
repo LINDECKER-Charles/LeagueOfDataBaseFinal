@@ -21,7 +21,7 @@
 # No `cpus` ceiling: set too low, it throttles silently.
 
 x-lodb-connection: &lodb-connection >-
-  Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment};Gss Encryption Mode=Disable
+  Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
 
 services:
   api:
@@ -59,6 +59,25 @@ services:
       LoDb__Contact__Recipient:
       LoDb__Contact__NotificationLocale:
       LoDb__Analytics__VisitorKey:
+      # Bounds of the catalogs in memory and of the cold work (ADR 0003, amendment of
+      # 2026-10-10); configuration.md gives their defaults.
+      LoDb__Catalog__MaxEntries:
+      LoDb__Catalog__PinnedLanguages:
+      LoDb__Catalog__PinnedBudgetMegabytes:
+      LoDb__Catalog__ColdLoadConcurrency:
+      LoDb__Catalog__ColdLoadsPerSecond:
+      LoDb__Catalog__PublicColdLoadsPerSecond:
+      LoDb__Catalog__ColdLoadBurst:
+      LoDb__Catalog__InternalColdLoadWait:
+      LoDb__Catalog__MaxPendingLoads:
+      LoDb__Catalog__WarmUp__MaxStreams:
+      LoDb__Catalog__WarmUp__MaxStreamsPerClient:
+      LoDb__Catalog__WarmUp__StreamLifetime:
+      LoDb__Catalog__WarmUp__PerClientPerHour:
+      LoDb__Ingestion__ColdDatasetsPerMinute:
+      LoDb__Ingestion__ColdImagesPerMinute:
+      LoDb__Ingestion__MaxWaitingIngestions:
+      LoDb__Ingestion__SlotWait:
     secrets:
       - source: data-protection
         target: data-protection.pfx
@@ -108,6 +127,9 @@ services:
       # (APP_REVISION, the commit SHA baked by _build.yml), so a promoted build never
       # serves the previous one's pages.
       LODB_REVISION: !reset null
+      # The bounds per client address and the cache sizes come from compose.yaml, which reads
+      # them from the host's .env with the image's defaults. Never as value-less keys here,
+      # unlike the API's settings: a key without a value drops the image's ENV default.
     volumes:
       # Host folder of the Android files, latest.json and assetlinks.json
       # (server.d/android-latest.conf, assetlinks.conf): empty, both URLs answer 404.
@@ -125,8 +147,11 @@ services:
     deploy:
       resources:
         limits:
-          # Peak 19 MiB; the kernel's page cache of the blobs it serves is charged here.
-          memory: 64m
+          # Not the 2 x peak rule (19 MiB of processes): the shared memory of the cache keys
+          # (32 MiB for the pages) and of the rate zones is charged here, and so is the
+          # kernel's page cache of the cached pages and blobs it serves, which fills whatever
+          # the limit leaves. Too tight, every cache HIT reads the disk again.
+          memory: 256m
 
   postgres:
     environment:

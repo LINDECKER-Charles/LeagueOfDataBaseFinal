@@ -105,8 +105,9 @@ docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml exec -T ngin
 docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml exec -T postgres psql -U lodb -d lodb -c 'select version()'
 ```
 
-- `/readyz` se lit sur l'API (18081, ou `api:8080` dans le réseau). Demandé à nginx, il
-  part au SSR et répond 404.
+- `/readyz` se lit sur l'API (18081, ou `api:8080` dans le réseau), ou par nginx sur le
+  sous-domaine `api.` (`curl -H 'Host: api.localhost' http://localhost:18080/readyz`, une
+  requête par seconde et par adresse). Demandé au site, il part au SSR et répond 404.
 - Les métriques se lisent **depuis le réseau de la stack** : 9464 n'est publié ni sur
   l'hôte ni par nginx.
 

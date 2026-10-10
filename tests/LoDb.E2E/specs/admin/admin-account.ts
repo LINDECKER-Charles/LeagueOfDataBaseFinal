@@ -7,6 +7,8 @@ export interface AdminAccount {
   readonly email: string;
   readonly username: string;
   readonly password: string;
+  /** The invitation `admin create` printed, which alone opens the enrolment. */
+  readonly invitation: string;
   /** The shared key of the authenticator, once enrolled. */
   sharedKey?: string;
   /** The last time step whose code was used: Identity may refuse a code used twice. */
@@ -16,6 +18,7 @@ export interface AdminAccount {
 const RANDOM_LENGTH = 4;
 const CREATED = /^Created the administrator account (\S+) </m;
 const PASSWORD = /^Password, shown only now: (\S+)$/m;
+const INVITATION = /^Invitation to enrol an authenticator, valid \d+ minutes: (\S+)$/m;
 
 /** The French copy of the admin (public/i18n/admin/fr.json), which the specs follow. */
 export const LOGIN = {
@@ -46,10 +49,11 @@ export function createAdmin(purpose: string): AdminAccount {
   const output = execInStack('api', command);
   const username = CREATED.exec(output)?.[1];
   const password = PASSWORD.exec(output)?.[1];
-  if (username === undefined || password === undefined) {
+  const invitation = INVITATION.exec(output)?.[1];
+  if (username === undefined || password === undefined || invitation === undefined) {
     throw new Error(`admin create did not create ${email}:\n${output}`);
   }
-  return { email, username, password };
+  return { email, username, password, invitation };
 }
 
 /**
@@ -70,20 +74,25 @@ export async function freshCode(page: Page, admin: AdminAccount): Promise<string
 }
 
 /** Fills the password step of `/admin/login`, the page already open. */
-export async function enterPassword(page: Page, admin: AdminAccount): Promise<void> {
+export async function enterPassword(
+  page: Page,
+  admin: Pick<AdminAccount, 'email' | 'username' | 'password'>,
+): Promise<void> {
   await page.getByLabel(LOGIN.identifier).fill(admin.email);
   await page.getByLabel(LOGIN.password, { exact: true }).fill(admin.password);
   await page.getByRole('button', { name: LOGIN.submit }).click();
 }
 
 /**
- * The first sign-in of a new administrator: the password, then the enrolment of an
+ * The first sign-in of a new administrator, from the link of the invitation `admin create`
+ * printed: the login page, which brings the link back, then the enrolment of an
  * authenticator, whose key the account keeps, and its recovery codes. Lands on the admin.
  */
 export async function enrollAdmin(page: Page, admin: AdminAccount): Promise<void> {
-  await page.goto('/admin/login');
+  await page.goto(`/admin/enroll?invitation=${encodeURIComponent(admin.invitation)}`);
+  await expect(page).toHaveURL(/\/admin\/login\?/);
   await enterPassword(page, admin);
-  await expect(page).toHaveURL(/\/admin\/enroll$/);
+  await expect(page).toHaveURL(/\/admin\/enroll\?invitation=/);
   const key = page.locator('[data-shared-key]');
   await expect(key).toHaveText(/\w{4}/);
   admin.sharedKey = (await key.innerText()).trim();

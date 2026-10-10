@@ -12,6 +12,7 @@ namespace LoDb.Api.Modules.Catalog.Search;
 /// repeated or comma-separated; all of them when absent.
 /// </param>
 /// <param name="Gateway">Opens the catalog.</param>
+/// <param name="Context">The call's, whose connection tells who asks.</param>
 /// <param name="CancellationToken">The request's.</param>
 internal sealed record SearchRequest(
     [FromRoute(Name = "version")] string Version,
@@ -19,7 +20,8 @@ internal sealed record SearchRequest(
     [FromQuery(Name = "q")] string? Q,
     [FromQuery(Name = "types")] string[]? Types,
     [FromServices] CatalogGateway Gateway,
+    HttpContext Context,
     CancellationToken CancellationToken)
 {
-    public CatalogScope Scope => new(Version, Lang);
+    public CatalogScope Scope => new(Version, Lang) { Caller = ColdCallers.Of(Context) };
 }

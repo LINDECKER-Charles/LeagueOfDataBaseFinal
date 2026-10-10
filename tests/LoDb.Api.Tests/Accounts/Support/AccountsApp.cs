@@ -1,5 +1,7 @@
+using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Text.Json;
+using LoDb.Api.Modules.Accounts.Security;
 using LoDb.Infrastructure.Outbox;
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Infrastructure.Persistence.Audit;
@@ -11,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Time.Testing;
 
 namespace LoDb.Api.Tests.Accounts.Support;
@@ -58,6 +61,9 @@ public sealed class AccountsApp : IAsyncDisposable
 
     public static Uri BaseAddress { get; } = new(SiteOrigin);
 
+    /// <summary>Where the API serves <c>/metrics</c>, never routed by nginx.</summary>
+    public static Uri MetricsAddress { get; } = new("http://localhost:9464");
+
     /// <summary>Starts at the real time, so that the cookies it dates stay in the future.</summary>
     public FakeTimeProvider Clock { get; } = new(TimeProvider.System.GetUtcNow());
 
@@ -89,8 +95,22 @@ public sealed class AccountsApp : IAsyncDisposable
     /// <summary>A browser on the site: it keeps its cookies and follows no redirect.</summary>
     public BrowserClient Browser() => BrowserClient.Open(_host);
 
+    /// <summary>
+    /// Collects what <paramref name="instrument"/> of the <c>LoDb.Security</c> meter of this
+    /// host records from now on.
+    /// </summary>
+    public MetricCollector<T> Security<T>(string instrument)
+        where T : struct =>
+        new(
+            _host.Services.GetRequiredService<IMeterFactory>(),
+            SecurityMetrics.MeterName,
+            instrument);
+
     /// <summary>A native app: no cookie, no <c>Origin</c>.</summary>
     public HttpClient App() => _host.CreateDefaultClient(BaseAddress);
+
+    /// <summary>The Prometheus scraper, on the metrics port.</summary>
+    public HttpClient Scraper() => _host.CreateDefaultClient(MetricsAddress);
 
     /// <summary>Creates the account through Identity, as a registration would.</summary>
     public Task<User> SeedAsync(AccountSeed seed)

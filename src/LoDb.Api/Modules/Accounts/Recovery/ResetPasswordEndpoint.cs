@@ -1,5 +1,6 @@
 using LoDb.Api.Modules.Accounts.Http;
 using LoDb.Api.Modules.Accounts.Registration;
+using LoDb.Api.Modules.Accounts.Security.Admission;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -19,6 +20,7 @@ namespace LoDb.Api.Modules.Accounts.Recovery;
 internal sealed class ResetPasswordEndpoint(
     UserManager<User> users,
     ResetLinks links,
+    HashingAdmission admission,
     AccountAudit audit)
 {
     public static void Map(IEndpointRouteBuilder account) =>
@@ -28,9 +30,11 @@ internal sealed class ResetPasswordEndpoint(
                     [FromBody] ResetPasswordRequest request,
                     [FromServices] ResetPasswordEndpoint endpoint,
                     CancellationToken aborted) => endpoint.ResetAsync(request, aborted))
+            .AddEndpointFilter<HashingBusyFilter>()
             .WithName("resetPassword")
             .WithSummary("Sets a new password with the parameters of the link sent by e-mail.")
-            .ProducesProblem(StatusCodes.Status400BadRequest);
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
     public async Task<Results<NoContent, AccountProblem>> ResetAsync(
         ResetPasswordRequest request,
@@ -46,17 +50,27 @@ internal sealed class ResetPasswordEndpoint(
             return weak;
         }
 
-        var user = link.Account;
-        var reset = await users.ResetPasswordAsync(user, link.Token, request.Password!);
-        if (!reset.Succeeded)
+        if (!await ResetPasswordAsync(link, request.Password!, cancellationToken))
         {
             return AccountProblem.InvalidToken();
         }
+
+        var user = link.Account;
 
         await users.ResetAccessFailedCountAsync(user);
         await users.SetLockoutEndDateAsync(user, lockoutEnd: null);
         await audit.RecordAsync(AuditAction.UserPasswordReset, user, cancellationToken);
         return TypedResults.NoContent();
+    }
+
+    // The step that hashes the new password.
+    private async Task<bool> ResetPasswordAsync(
+        ResetLink link,
+        string password,
+        CancellationToken cancellationToken)
+    {
+        using var permit = await admission.EnterAsync(cancellationToken);
+        return (await users.ResetPasswordAsync(link.Account, link.Token, password)).Succeeded;
     }
 
     private static AccountProblem? WeakPassword(string? password)

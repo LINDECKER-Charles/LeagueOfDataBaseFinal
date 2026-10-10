@@ -1,4 +1,5 @@
 using System.Net;
+using LoDb.Api.Modules.Accounts.Security.Invitations;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Identity;
@@ -35,6 +36,17 @@ public static class AdminCalls
         using var signIn = await browser.SignInAsync(NewAdminName);
         Assert.Equal(HttpStatusCode.OK, signIn.StatusCode);
         return browser;
+    }
+
+    /// <summary>
+    /// The invitation <c>admin mfa-invite</c> would print for <paramref name="username"/>,
+    /// issued by the host itself.
+    /// </summary>
+    public static async Task<string> InvitationAsync(AccountsApp app, string username)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        var id = await IdOfAsync(app, username);
+        return app.Services.GetRequiredService<MfaInvitations>().Issue(id);
     }
 
     /// <summary>The account id of <paramref name="username"/>.</summary>

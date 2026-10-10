@@ -10,13 +10,11 @@ namespace LoDb.Api.Tests.AccountsSecurity;
 /// </summary>
 public sealed class PhpCrossCheckTests(PhpContainer php) : IClassFixture<PhpContainer>
 {
-    private static readonly HashingGate Gate = new();
-
     private static readonly User Anyone = new() { Roles = [] };
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
-    private static MigratingPasswordHasher Hasher => new(new Argon2Passwords(Gate));
+    private static MigratingPasswordHasher Hasher => TestHashing.Hasher();
 
     [Fact]
     public async Task ContainerRunsThePhpOfTheFixtures() =>

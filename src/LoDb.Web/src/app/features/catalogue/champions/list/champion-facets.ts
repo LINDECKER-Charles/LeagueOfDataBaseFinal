@@ -2,6 +2,7 @@ import type { ChampionCard } from '../../../../core/api/generated/models/champio
 import { defineFacet } from '../../shared/facets/define-facet';
 import type { FacetDefinition } from '../../shared/facets/model/facet-definition';
 import { CHAMPION_BASE_STATS } from './champion-base-stats';
+import { CHAMPION_FACET_KEYS as KEYS } from './champion-facet-keys';
 import { resourceOptions } from './resource-options';
 
 type Translate = (key: string) => string;
@@ -9,7 +10,6 @@ type Translate = (key: string) => string;
 /** Data Dragon's roles, in the order players know them. */
 const ROLES = ['Fighter', 'Tank', 'Mage', 'Assassin', 'Marksman', 'Support'];
 const RANGES = ['melee', 'ranged'];
-const RATINGS = ['difficulty', 'attack', 'defense', 'magic'];
 /** The attack speed reads in hundredths (0.625); every other stat in units. */
 const ATTACK_SPEED_STEP = 0.01;
 
@@ -26,15 +26,15 @@ function profileFacets(translate: Translate, cards: readonly ChampionCard[]): Fa
     });
   return [
     choice(
-      'role',
+      KEYS.role,
       ROLES.map((role) => ({
         value: role,
         label: translate(`facet.champion.roles.${role.toLowerCase()}`),
       })),
     ),
-    choice('resource', resourceOptions(cards, translate('facet.champion.resource_none'))),
+    choice(KEYS.resource, resourceOptions(cards, translate('facet.champion.resource_none'))),
     choice(
-      'range',
+      KEYS.range,
       RANGES.map((range) => ({ value: range, label: translate(`facet.champion.ranges.${range}`) })),
     ),
   ];
@@ -53,7 +53,7 @@ export function championFacets(
   const stats = translate('facet.group.base_stats');
   return [
     ...profileFacets(translate, cards),
-    ...RATINGS.map((key) =>
+    ...KEYS.ratings.map((key) =>
       defineFacet({
         key,
         kind: 'range',

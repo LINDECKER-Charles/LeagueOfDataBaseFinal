@@ -12,10 +12,15 @@ namespace LoDb.Api.Modules.Profiles.Http;
 /// <param name="Lang">
 /// The Data Dragon language of the names, such as fr_FR; en_US when unset.
 /// </param>
+/// <param name="Context">The call, whose connection tells who asks.</param>
 internal sealed record ProfileQuery(
     [FromQuery(Name = "version")] string? Version,
-    [FromQuery(Name = "lang")] string? Lang)
+    [FromQuery(Name = "lang")] string? Lang,
+    HttpContext Context)
 {
     /// <summary>The browsing scope, the version still to be settled against the pin.</summary>
-    public CatalogScope Browsing => new(Version, Lang ?? DdragonLanguage.EnUs.Code);
+    public CatalogScope Browsing => new(Version, Lang ?? DdragonLanguage.EnUs.Code)
+    {
+        Caller = ColdCallers.Of(Context),
+    };
 }

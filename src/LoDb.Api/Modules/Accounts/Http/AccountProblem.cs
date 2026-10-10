@@ -12,6 +12,9 @@ internal sealed record AccountProblem : IResult
 {
     private const string CodeExtension = "code";
 
+    // The code of the host's rate limits, which the clients already tell their players.
+    private const string RateLimitedCode = "rate-limited";
+
     // A limit that just ran out still asks for one second: zero would invite a busy loop.
     private const double MinRetrySeconds = 1;
 
@@ -72,6 +75,24 @@ internal sealed record AccountProblem : IResult
         "resend-throttled",
         "Verification e-mails were sent too recently.",
         retryAfter);
+
+    /// <summary>
+    /// Too many failed sign-ins for this identifier from this address; the same answer
+    /// whether an account bears the identifier or not.
+    /// </summary>
+    public static AccountProblem SignInThrottled(TimeSpan retryAfter) => TooManyRequests(
+        RateLimitedCode,
+        "Too many failed sign-ins from this address: try again later.",
+        retryAfter);
+
+    /// <summary>Every slot of the password hashing is taken: a capacity refusal.</summary>
+    public static AccountProblem ServerBusy(TimeSpan retryAfter) => new()
+    {
+        Status = StatusCodes.Status503ServiceUnavailable,
+        Code = "server-busy",
+        Title = "The server is busy: try again in a few seconds.",
+        RetryAfter = retryAfter,
+    };
 
     public static AccountProblem InvalidToken() => new()
     {

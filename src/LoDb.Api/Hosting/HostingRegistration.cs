@@ -1,3 +1,4 @@
+using LoDb.Api.Hosting.Errors;
 using LoDb.Api.Hosting.Health;
 using LoDb.Api.Hosting.Logging;
 using LoDb.Api.Hosting.OpenApi;
@@ -37,6 +38,7 @@ internal static class HostingRegistration
             .AddLoDbRateLimiting(builder.Configuration)
             .AddLoDbAuthorization(builder.Configuration)
             .AddProblemDetails()
+            .AddLoDbErrorHandling()
             .AddValidation()
             .AddAntiforgery()
             .AddAuthentication();

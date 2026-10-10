@@ -11,6 +11,7 @@ namespace LoDb.Api.Modules.Catalog.Http;
 /// <param name="Page">One-based page; with neither page nor size, the whole list.</param>
 /// <param name="Size">Entries per page, 1 to 200; 50 when only the page is given.</param>
 /// <param name="Gateway">Opens the catalog.</param>
+/// <param name="Context">The call's, whose connection tells who asks.</param>
 /// <param name="CancellationToken">The request's.</param>
 internal sealed record ListRequest(
     [FromRoute(Name = "version")] string Version,
@@ -18,7 +19,8 @@ internal sealed record ListRequest(
     [FromQuery(Name = "page")] int? Page,
     [FromQuery(Name = "size")] int? Size,
     [FromServices] CatalogGateway Gateway,
+    HttpContext Context,
     CancellationToken CancellationToken)
 {
-    public CatalogScope Scope => new(Version, Lang);
+    public CatalogScope Scope => new(Version, Lang) { Caller = ColdCallers.Of(Context) };
 }

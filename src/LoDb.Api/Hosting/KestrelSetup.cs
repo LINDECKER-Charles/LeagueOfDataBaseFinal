@@ -4,7 +4,8 @@ using Microsoft.Extensions.Options;
 namespace LoDb.Api.Hosting;
 
 /// <summary>
-/// Kestrel listeners: the API port and the metrics port, from <see cref="HostingOptions"/>.
+/// Kestrel listeners, the API port and the metrics port, and the request body limit, from
+/// <see cref="HostingOptions"/>.
 /// </summary>
 internal static class KestrelSetup
 {
@@ -24,7 +25,7 @@ internal static class KestrelSetup
             .ValidateOnStart();
         builder.Services.AddOptions<KestrelServerOptions>()
             .Configure<IOptions<HostingOptions>>(static (kestrel, hosting) =>
-                Listen(kestrel, hosting.Value));
+                Configure(kestrel, hosting.Value));
 
         // The explicit listeners replace ASPNETCORE_URLS and ASPNETCORE_HTTP_PORTS (set by the
         // base image): clearing them keeps Kestrel from warning that it overrides them.
@@ -34,8 +35,11 @@ internal static class KestrelSetup
         return builder;
     }
 
-    private static void Listen(KestrelServerOptions kestrel, HostingOptions hosting)
+    // Kestrel's default (30 MB) lets an anonymous JSON body be buffered whole before any
+    // validation: the bound keeps a few concurrent requests from filling the heap.
+    private static void Configure(KestrelServerOptions kestrel, HostingOptions hosting)
     {
+        kestrel.Limits.MaxRequestBodySize = hosting.MaxRequestBodySize;
         kestrel.ListenAnyIP(hosting.HttpPort);
         kestrel.ListenAnyIP(hosting.MetricsPort);
     }

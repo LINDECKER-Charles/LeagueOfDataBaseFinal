@@ -19,8 +19,9 @@ public sealed record CatalogLoad
     public CatalogSnapshot? Catalog { get; }
 
     /// <summary>
-    /// Whether the queue refused the ingestion (queue full, crawler budget spent): a pending
-    /// catalog then comes with no later read but a new one.
+    /// Whether the work was refused (queue full, budget of cold work spent, no ingestion slot
+    /// in time, load not admitted by the cold gate): a pending catalog then comes with no
+    /// later read but a new one.
     /// </summary>
     public bool Refused { get; }
 

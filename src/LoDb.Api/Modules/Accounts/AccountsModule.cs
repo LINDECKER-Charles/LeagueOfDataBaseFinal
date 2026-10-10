@@ -40,6 +40,7 @@ internal static class AccountsModule
             .AddSignInManager<LoDbSignInManager>()
             .AddDefaultTokenProviders();
         services.AddAccountsAuthentication().AddAccountsGoogle(configuration);
+        services.AddAccountsProtection(configuration);
         services.TryAddSingleton<TrustedOrigins>();
         services.Configure<RateLimiterOptions>(ResetCheckRateLimit.AddTo);
         AddAccountServices(services);

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using LoDb.Api.Modules.Accounts.Security.Hashing;
 using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Identity;
@@ -8,7 +9,8 @@ namespace LoDb.Api.Tests.AccountsSecurity;
 /// <summary>
 /// New hashes are argon2id at the target, salted each time. Symfony's bounds hold both ways:
 /// an empty password or one over 4096 bytes is neither hashed nor matched, and a NUL is part
-/// of the password. A hash of an unknown or broken format fails, never throws.
+/// of the password. A hash of an unknown or broken format fails, never throws, and a bcrypt
+/// hash above the legacy cost is refused without being computed.
 /// </summary>
 public sealed class MigratingPasswordHasherTests
 {
@@ -22,13 +24,18 @@ public sealed class MigratingPasswordHasherTests
     // bcrypt's lowest cost, for a hash made in the test.
     private const int QuickBcryptCost = 4;
 
+    // "$2a$04$…": where the two digits of the cost sit, and a cost that would take about a
+    // minute to compute.
+    private const int CostStart = 4;
+    private const int CostDigits = 2;
+    private const string CostlyCost = "20";
+    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(5);
+
     // What a column too short, or a copy cut short, drops from the end of a hash.
     private const int CutCharacters = 10;
 
     // 'é' takes two bytes of UTF-8.
     private const int AccentBytes = 2;
-
-    private static readonly HashingGate Gate = new();
 
     private static readonly User Anyone = new() { Roles = [] };
 
@@ -56,7 +63,7 @@ public sealed class MigratingPasswordHasherTests
         "$argon2id$v=99$m=19456,t=2,p=1$c2FsdHNhbHRzYWx0c2FsdA$aGFzaGhhc2hoYXNoaGFzaA",
     ];
 
-    private static MigratingPasswordHasher Hasher => new(new Argon2Passwords(Gate));
+    private static MigratingPasswordHasher Hasher => TestHashing.Hasher();
 
     [Fact]
     public void NewHashIsArgon2idAtTheTarget() =>
@@ -119,6 +126,23 @@ public sealed class MigratingPasswordHasherTests
     [MemberData(nameof(Malformed))]
     public void HashOfAnUnknownOrBrokenFormatFails(string hash) =>
         Assert.Equal(PasswordVerificationResult.Failed, Verify(hash, Password));
+
+    [Fact]
+    public void BcryptAboveTheLegacyCostIsRefusedWithoutComputing()
+    {
+        var quick = BCryptHashes.HashPassword(Password, QuickBcryptCost);
+        var costly = string.Concat(
+            quick.AsSpan(0, CostStart),
+            CostlyCost,
+            quick.AsSpan(CostStart + CostDigits));
+        var watch = Stopwatch.StartNew();
+
+        var verdict = Verify(costly, Password);
+
+        Assert.Equal(PasswordVerificationResult.Failed, verdict);
+        Assert.InRange(watch.Elapsed, TimeSpan.Zero, Patience);
+        Assert.Equal(PasswordVerificationResult.SuccessRehashNeeded, Verify(quick, Password));
+    }
 
     [Fact]
     public void CutHashFails()

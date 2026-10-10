@@ -20,14 +20,17 @@ readonly POLL=5
 readonly ITEM=1036
 readonly MISSING_ITEM=999999
 
-# Cache-Control of each response class (core/routing/response/cache-control.ts). A case
-# rather than an associative array: macOS still ships bash 3.2.
+# Cache-Control of each response class (core/routing/response/cache-control.ts), then of the
+# answers settled before any render (server/routing/pre-router.ts). A case rather than an
+# associative array: macOS still ships bash 3.2.
 cache_of() {
   case "$1" in
     latest) echo 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600' ;;
     archived) echo 'public, max-age=3600, s-maxage=604800' ;;
     transient) echo 'public, max-age=0, s-maxage=60' ;;
     private) echo 'private, no-store' ;;
+    outside) echo 'public, max-age=0, s-maxage=3600' ;;
+    unstored) echo 'no-store' ;;
   esac
 }
 
@@ -82,6 +85,18 @@ row() {
   elif [ "$ok" = 0 ]; then
     echo "ok   $code $path -> $location"
   fi
+}
+
+# A list of an older version answers `transient` while the images of its first visits are
+# still ingested on demand; it is warmed until it answers otherwise (WAIT seconds at most).
+settle() {
+  local path="$1" deadline=$((SECONDS + WAIT))
+  until fetch "$path" && [ "$(header Cache-Control)" != "$(cache_of transient)" ]; do
+    if [ "$SECONDS" -ge "$deadline" ]; then
+      return 0
+    fi
+    sleep "$POLL"
+  done
 }
 
 # `/` answers a 302 to the negotiated locale; Vary lists Accept-Language (Express adds
@@ -153,11 +168,10 @@ row /ar/legal/cookies 200 latest - -
 row /zh-hant/faq 200 latest - -
 prerendered /fr/about
 prerendered /en/legal/terms
-row /en/trends 200 latest - -
-row /en/u/faker 200 latest - -
-row /en/developers 200 latest - -
-row /en/donate 200 latest - -
-row /b/Zx81kQ 200 latest noindex -
+# Their answer follows the API's state, not a patch: the proxy keeps them a minute.
+row /en/trends 200 transient - -
+row /en/developers 200 transient - -
+row /en/donate 200 transient - -
 
 # ── Private pages: rendered in the browser, never stored, never indexed ──────────────
 row /en/account/login 200 private noindex -
@@ -171,13 +185,16 @@ row /xx/about 404 transient noindex -
 row /xx/champions 404 transient noindex -
 row /en/nowhere 404 transient noindex -
 row /en/u 404 transient noindex -
+row /en/u/faker 404 transient noindex -
 row /b 404 transient noindex -
+row /b/Zx81kQ 404 transient noindex -
 row "/en/$older" 404 transient noindex -
 row /en/99.99.99/champions 404 transient noindex -
 row "/en/items/$MISSING_ITEM" 404 transient noindex -
 
 # ── Catalogue: the latest version on its short URLs, older ones pinned ───────────────
 row /en/champions 200 latest - -
+settle "/fr/$older/runes"
 row "/fr/$older/runes" 200 archived - -
 row "/en/$item" 200 latest - -
 row "/en/$older/$older_item" 200 archived - -
@@ -193,6 +210,13 @@ row "/en/$latest/$item" 301 transient - "/en/$item"
 row "/en/$latest/items/$ITEM" 301 transient - "/en/items/$ITEM"
 row "/en/$older/items/$ITEM" 301 transient - "/en/$older/$older_item"
 row "/en/$older/items/$MISSING_ITEM" 302 transient - "/en/$older/items"
+
+# ── Settled before any render: outside the grammar, a query the page does not read ────
+row /wordpress/wp-admin/ 404 outside noindex -
+row /fr%2Fchampions 400 unstored - -
+row "/en/champions?utm_source=mail&q=ahri" 301 unstored - "/en/champions?q=ahri"
+row "/en/items/$ITEM?x=1" 301 unstored - "/en/items/$ITEM"
+row "/en/$older/$older_item?q=x" 301 unstored - "/en/$older/$older_item"
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."

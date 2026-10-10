@@ -13,6 +13,12 @@ the keys, the secrets and the publication.
 | `verify-local.sh`      | the release signature, locally, with throwaway keystores                |
 | `native-baseline.json` | minimum native version of the bundles, with its fingerprint             |
 
+The workflow builds in a job without any secret, then signs in a job of its own, `sign`, the
+only one besides `play` that holds the keys. `sign` checks out `tools/android-release` and
+`tools/live-update` only, and runs neither npm nor Gradle: `build/bundles.sh`,
+`sign-release.sh` and `tools/live-update` must keep needing nothing but bash, the Node
+built-ins, `zip`, a JDK and the Android build tools.
+
 ## Version
 
 ```sh

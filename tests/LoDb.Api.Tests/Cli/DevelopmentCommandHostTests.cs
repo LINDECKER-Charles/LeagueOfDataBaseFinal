@@ -45,6 +45,17 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
     }
 
     [Fact]
+    public async Task AdminMfaCommandsRun()
+    {
+        await RunAsync(["admin", "create"], "--email", AdminEmail);
+
+        var reset = await RunAsync(["admin", "mfa-reset"], "--email", AdminEmail);
+        var invite = await RunAsync(["admin", "mfa-invite"], "--email", AdminEmail);
+
+        Assert.Equal((CliExitCodes.Success, CliExitCodes.Success), (reset, invite));
+    }
+
+    [Fact]
     public async Task AnalyticsImportDryRunRuns()
     {
         var exitCode = await RunAsync(
@@ -75,6 +86,8 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
 
     // An unknown option stops these before any work, once their host is built.
     [Theory]
+    [InlineData("admin mfa-invite")]
+    [InlineData("admin mfa-reset")]
     [InlineData("admin root")]
     [InlineData("audit import")]
     [InlineData("catalog export")]
@@ -89,7 +102,8 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
     {
         var covered = new[]
         {
-            "admin create", "admin root", "analytics import", "audit import",
+            "admin create", "admin mfa-invite", "admin mfa-reset", "admin root",
+            "analytics import", "audit import",
             "baseline mark-applied", "catalog export", "client-policy publish", "ingest",
             "migrate",
         };

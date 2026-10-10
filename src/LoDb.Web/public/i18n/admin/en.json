@@ -50,9 +50,11 @@
     "codes_title": "Recovery codes",
     "codes_lede": "Keep these codes somewhere safe: each replaces the app once if you lose it. They will not be shown again.",
     "open": "Open the administration",
+    "invitation_refused": "Linking an app needs the invitation the admin mfa-invite command prints on the server, valid a few minutes: run it again, then open the link it gives.",
     "errors": {
       "invalid_code": "This code does not match. Check the time of the phone and try again.",
-      "already": "An authenticator app is already linked to this account."
+      "already": "An authenticator app is already linked to this account.",
+      "invitation": "The invitation expired or belongs to another account: run admin mfa-invite on the server again."
     },
     "eyebrow": "LODB Admin"
   },

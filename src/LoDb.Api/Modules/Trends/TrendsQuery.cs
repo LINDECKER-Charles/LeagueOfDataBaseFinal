@@ -16,7 +16,7 @@ namespace LoDb.Api.Modules.Trends;
 /// <param name="Page">From 1, 24 builds a page; below 1 reads as 1.</param>
 /// <param name="Version">The version of the names; the latest when unset.</param>
 /// <param name="Lang">The Data Dragon language of the names; en_US when unset.</param>
-/// <param name="Context">The call.</param>
+/// <param name="Context">The call, whose connection tells who asks.</param>
 internal sealed record TrendsQuery(
     [FromQuery(Name = "champion")] string? Champion,
     [FromQuery(Name = "mode")] string? Mode,
@@ -31,5 +31,8 @@ internal sealed record TrendsQuery(
 
     public int PageNumber => Math.Clamp(Page ?? 1, 1, MaxPage);
 
-    public CatalogScope Browsing => new(Version, Lang ?? DdragonLanguage.EnUs.Code);
+    public CatalogScope Browsing => new(Version, Lang ?? DdragonLanguage.EnUs.Code)
+    {
+        Caller = ColdCallers.Of(Context),
+    };
 }

@@ -157,7 +157,12 @@ l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque dé
 | `LODB_DATA_PROTECTION_CERT_FILE`, `LODB_ANDROID_DIR` | défauts | défauts | — | Ne pas définir : le job écrit aux emplacements par défaut (§ 5). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | ➖ | ➖ | ➖ | Collecteur de traces OTLP, quand `infra-vps` en expose un. |
 | `LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDERS_PER_MINUTE`, `LODB_PINNED_RENDER_BURST` | ➖ | ➖ | ➖ | Admission des rendus du SSR : rendus simultanés (`8`), dont pages d'une version épinglée dans l'URL (`3`), rendus de versions épinglées par minute (`60`) et d'affilée (`10`). Au-delà, `503` immédiat avec `Retry-After` (nginx sert sa copie périmée s'il en a une). Absents : ces défauts. |
-| `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé à la première connexion sur `/admin/login`. Absent : aucun, seulement `api admin create`. |
+| `LODB_CURRENT_RENDERS_PER_MINUTE`, `LODB_CURRENT_RENDER_BURST` | ➖ | ➖ | ➖ | Rendus des pages du dernier patch par minute (`300`) et d'affilée (`60`), tous clients confondus. |
+| `LODB_RENDER_PER_CLIENT_MAX_IN_FLIGHT`, `LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE`, `LODB_RENDER_TRACKED_CLIENTS` | ➖ | ➖ | ➖ | Part d'un client (une adresse IPv4, un /64 IPv6) : rendus simultanés (`2`), rendus de versions épinglées par minute (`6`) ; clients suivis en mémoire (`50000`). Une part ne dépasse jamais le tout : absente, elle s'y ramène ; posée au-dessus, le serveur refuse de démarrer. |
+| `LODB_RENDER_DEADLINE_SECONDS`, `LODB_RENDER_API_TIMEOUT_SECONDS` | ➖ | ➖ | ➖ | Attente de l'API par un rendu (`20`) et par appel (`10`, borné par le temps restant) ; au-delà, page `502`. |
+| `LODB_QUERY_MAX_PARAMS`, `LODB_QUERY_MAX_PARAM_LENGTH` | ➖ | ➖ | ➖ | Paramètres gardés par l'URL d'une liste ou d'une fiche (`16`, de `200` caractères au plus) ; les autres sont retirés par une `301`. |
+| `LODB_PAGES_RATE`, `LODB_PAGES_BURST`, `LODB_API_READS_*`, `LODB_LEGACY_*`, `LODB_SITEMAPS_*`, `LODB_READYZ_*`, `LODB_RATE_LIMITED_RETRY_AFTER`, `LODB_MAX_BODY_SIZE`, `LODB_WEBHOOK_MAX_BODY_SIZE`, `LODB_PAGE_CACHE_SIZE`, `LODB_PAGE_CACHE_KEYS_SIZE`, `LODB_PAGE_CACHE_INACTIVE` | ➖ | ➖ | ➖ | Bornes de nginx, par adresse : débit (`_RATE`) et rafale (`_BURST`) des pages (`20r/s`, `100`), des lectures publiques de l'API (`10r/s`, `40`), de l'ancien site (`2r/s`, `10`), de `/sitemaps/` (`1r/s`, `20`) et de `/readyz` (`1r/s`, `5`), au-delà `429` avec `Retry-After` (`10`) ; corps de requête (`128k`, `1m` pour `/webhooks/`) ; cache des pages (`2g`, clés `32m`, inactivité `7d`). Absents ou vides : ces défauts, ceux de `docker/nginx/Dockerfile`, que `compose.yaml` reprend (`tools/nginx` vérifie l'accord). |
+| `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
 
@@ -187,10 +192,15 @@ et l'API garde sa valeur par défaut.
 | `LoDb__Contact__Recipient` | ➖ | Destinataire des messages de contact. Absent : stockés pour l'admin, sans notification. |
 | `LoDb__Contact__NotificationLocale` | ➖ | Langue de la notification, `Fr` par défaut (`Ar`… `ZhHant`). Une valeur invalide ne se voit qu'au premier message. |
 | `LoDb__Analytics__VisitorKey` 🔒 | recommandé | Clé du hachage des visiteurs. Absente : une clé aléatoire par processus, les visiteurs sont recomptés à chaque redémarrage. |
+| `LoDb__Catalog__MaxEntries`, `PinnedLanguages`, `PinnedBudgetMegabytes` | ➖ | Catalogues en mémoire : ceux du dernier patch dans les langues épinglées (défaut : les 21 de l'interface, en_US en tête), jamais évincés, dans `256` Mio estimés ; `16` autres au plus, le moins récemment lu évincé. |
+| `LoDb__Catalog__ColdLoadConcurrency`, `ColdLoadsPerSecond`, `ColdLoadBurst`, `PublicColdLoadsPerSecond`, `InternalColdLoadWait`, `MaxPendingLoads` | ➖ | Chargement d'un catalogue absent de la mémoire : `2` à la fois, `3` par seconde (rafale `6`), dont `1` pour les appels publics, refusés sans attente ; le SSR attend `2` s au plus, derrière `16` autres. Refus : `503` + `Retry-After`. |
+| `LoDb__Catalog__WarmUp__MaxStreams`, `MaxStreamsPerClient`, `StreamLifetime`, `PerClientPerHour` | ➖ | Loader de changement de patch : `8` flux ouverts, `2` par client, `120` s chacun, `20` démarrages par heure et par client (`429` au-delà). |
+| `LoDb__Ingestion__ColdDatasetsPerMinute`, `ColdImagesPerMinute`, `MaxWaitingIngestions`, `SlotWait` | ➖ | Ingestion à froid pour un visiteur : `6` couples (version, langue) et `1500` images par minute, `32` ingestions en attente d'un emplacement, `3` s d'attente au plus. Au-delà : catalogue « en attente », images en placeholders. |
 
 ### 4.3 Fixés par les fichiers compose (hors du `.env`)
 
-`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_*`, hôte `postgres`),
+`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_*`, hôte `postgres`, pool borné par
+`Maximum Pool Size=32;Timeout=5`),
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
@@ -207,7 +217,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 
 | Section | Clés (défaut) |
 |---|---|
-| `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié) |
+| `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié), `MaxRequestBodySize` (131072 octets, soit 128 Kio ; au-delà, 413), `DatabaseBusyRetryAfter` (5 s, `Retry-After` du 503 quand le pool Postgres reste occupé) |
 | `LoDb:Workers` | `Enabled` (`true` ; seul `false` coupe toutes les tâches de fond) |
 | `LoDb:Accounts` | `SecureCookies` (vrai hors Development) |
 | `LoDb:Mail` | `Timeout` (`00:00:30`) |
@@ -215,7 +225,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:Analytics` | `GeoIpDatabase` (aucune), `QueueCapacity` (10000), `BatchSize` (500), `BatchWindow` (2 s), `ClientDataRetention` (30 j), `EventRetentionMonths` (13, plafond CNIL 25), `PartitionsAhead` (7) |
 | `LoDb:Egress` | `AllowedHosts` (`ddragon.leagueoflegends.com`, `raw.communitydragon.org`), `FetchConcurrency` (16), `AttemptTimeout` (15 s), `MaxRetryAttempts` (3), `RetryBaseDelay` (1 s), `MaxRedirects` (10), `MaxResponseBytes` (32 Mio) |
 | `LoDb:Ingestion` | `WatchPeriod` (10 min), `MaxAttempts` (5), `RetryDelay` (10 min), `LanguageConcurrency` (4), `RecordBatchSize` (64), `SyncConcurrency` (4), `QueueCapacity` (256), `CrawlerRequestsPerMinute` (30) |
-| `LoDb:Catalog` | `MaxEntries` (16), `VersionsLifetime` (1 min) |
+| `LoDb:Catalog` | `VersionsLifetime` (1 min) |
 | `LoDb:PublicApi` | `KeyCacheLifetime` (1 min), `TrendsLifetime` (5 min), `MeteringInterval` (1 s) |
 
 </details>
@@ -234,7 +244,7 @@ Valable pour les deux environnements : chacun reprend les valeurs de son propre 
 | `OAUTH_GOOGLE_CLIENT_ID`, `OAUTH_GOOGLE_CLIENT_SECRET` | `LoDb__Accounts__Google__ClientId`, `LoDb__Accounts__Google__ClientSecret` |
 | `CONTACT_RECIPIENT` | `LoDb__Contact__Recipient` |
 | `COMPOSE_PROJECT_NAME`, `REGISTRY`, `IMAGE_TAG`, `CADDY_DOMAINS`, `API_CADDY_DOMAINS` | mêmes noms, mêmes valeurs |
-| `ADMIN_LOGIN`, `ADMIN_PASSWORD` | `LODB_ADMIN_LOGIN`, `LODB_ADMIN_PASSWORD` : un compte administrateur racine, TOTP à la première connexion ; les autres administrateurs reçoivent le rôle par `api admin create --email …` ([runbook](../reecriture/bascule.md)) |
+| `ADMIN_LOGIN`, `ADMIN_PASSWORD` | `LODB_ADMIN_LOGIN`, `LODB_ADMIN_PASSWORD` : un compte administrateur racine, TOTP enrôlé sur invitation (`api admin mfa-invite`) ; les autres administrateurs reçoivent le rôle par `api admin create --email …` ([runbook](../reecriture/bascule.md)) |
 | `GEOIP_DB_PATH` | aucune sur un hôte (§ 8) |
 | `HTTP_PORT`, `MAILPIT_UI_PORT` | aucune : ports locaux de l'ancienne stack |
 

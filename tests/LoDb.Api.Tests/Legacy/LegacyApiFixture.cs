@@ -26,11 +26,24 @@ public sealed class LegacyApiFixture : IAsyncLifetime
     private TestDatabase? _database;
     private ApiFactory? _factory;
     private HttpClient? _client;
+    private FixtureReplayHandler? _replay;
+    private IServiceProvider? _services;
 
     public static CancellationToken Token => TestContext.Current.CancellationToken;
 
+    /// <summary>The services of the API host, such as its catalog reader.</summary>
+    public IServiceProvider Services => _services ?? throw NotInitialized();
+
+    /// <summary>What reached the recorded Data Dragon, the latest's ingestion included.</summary>
+    public IReadOnlyList<Uri> UpstreamRequests =>
+        _replay?.Requests ?? throw NotInitialized();
+
+    /// <summary>The storage of the API: what a call ingested lands under it.</summary>
+    public string StorageRoot =>
+        _factory?.StorageRoot ?? throw NotInitialized();
+
     private HttpClient Client =>
-        _client ?? throw new InvalidOperationException("The fixture is not initialized.");
+        _client ?? throw NotInitialized();
 
     public async ValueTask InitializeAsync()
     {
@@ -48,9 +61,11 @@ public sealed class LegacyApiFixture : IAsyncLifetime
             },
         };
         var replay = DdragonFixtures.CreateReplay();
+        _replay = replay;
         var host = _factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(
             services => services.AddDdragonFixtureReplay(replay)));
         await IngestAsync(host.Services.GetRequiredService<IVersionIngestion>());
+        _services = host.Services;
         _client = host.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false,
@@ -65,6 +80,10 @@ public sealed class LegacyApiFixture : IAsyncLifetime
             new Uri(Prefix + oldUrl, UriKind.Relative));
         return await Client.SendAsync(request, Token);
     }
+
+    /// <summary>A call of the API itself, such as a catalog read ingesting its version.</summary>
+    public Task<HttpResponseMessage> GetApiAsync(string path) =>
+        Client.GetAsync(new Uri(path, UriKind.Relative), Token);
 
     /// <summary>The target of an old URL, its 301 checked.</summary>
     public async Task<string> LocationOfAsync(string oldUrl)
@@ -93,6 +112,9 @@ public sealed class LegacyApiFixture : IAsyncLifetime
 
         await _postgres.DisposeAsync();
     }
+
+    private static InvalidOperationException NotInitialized() =>
+        new("The fixture is not initialized.");
 
     private static async Task IngestAsync(IVersionIngestion ingestion)
     {

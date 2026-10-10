@@ -20,8 +20,8 @@ public sealed class ImageResolution
         images.Values.Any(static image => image.Status == ImageStatus.Pending);
 
     /// <summary>
-    /// Whether the queue refused the pending images (queue full, crawler budget spent): they
-    /// come with no later read but a new one.
+    /// Whether the pending images were refused (queue full, budget spent, no slot in time):
+    /// they come with no later read but a new one.
     /// </summary>
     public bool Refused { get; }
 

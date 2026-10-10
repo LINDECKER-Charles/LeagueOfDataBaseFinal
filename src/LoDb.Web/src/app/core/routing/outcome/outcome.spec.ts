@@ -54,6 +54,11 @@ function routesWith(outcomeResolver: ResolveFn<unknown>): Routes {
       component: Probe,
     },
     {
+      path: 'unanswered',
+      resolve: { page: () => throwError(() => new HttpErrorResponse({ status: 0 })) },
+      component: Probe,
+    },
+    {
       path: 'broken',
       resolve: {
         page: () => {
@@ -171,6 +176,17 @@ describe('handleNavigationError', () => {
     });
     expect(init.status).toBe(HttpStatusCode.ServiceUnavailable);
     expect(headerOf(init, 'Retry-After')).toBe('5');
+    expect(errors.handleError).not.toHaveBeenCalled();
+  });
+
+  it('answers a 502, without Retry-After nor log, when the API does not answer', async () => {
+    const { router, init, errors } = setUp('server');
+
+    await router.navigateByUrl('/unanswered');
+
+    expect(router.url).toBe('/unanswered');
+    expect(init.status).toBe(HttpStatusCode.BadGateway);
+    expect(headerOf(init, 'Retry-After')).toBeNull();
     expect(errors.handleError).not.toHaveBeenCalled();
   });
 

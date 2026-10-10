@@ -9,7 +9,10 @@ using LoDb.Api.Modules.Catalog.Runes;
 using LoDb.Api.Modules.Catalog.Search;
 using LoDb.Api.Modules.Catalog.Summoners;
 using LoDb.Api.Modules.Catalog.WarmUp;
+using LoDb.Api.Modules.Catalog.WarmUp.Limits;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Modules.Catalog;
 
@@ -33,7 +36,7 @@ internal static class CatalogModule
         services.TryAddSingleton<CatalogGateway>();
         services.TryAddSingleton<MetaEndpoint>();
         services.TryAddSingleton(TimeProvider.System);
-        services.TryAddSingleton<CatalogWarmUp>();
+        AddWarmUp(services, configuration);
         return services;
     }
 
@@ -62,4 +65,19 @@ internal static class CatalogModule
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
+    // The loader and its bounds: streams open at once, and starts per client and hour.
+    private static void AddWarmUp(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<WarmUpOptions>()
+            .Bind(configuration.GetSection(WarmUpOptions.SectionName))
+            .ValidateOnStart();
+        services.TryAddEnumerable(ServiceDescriptor
+            .Singleton<IValidateOptions<WarmUpOptions>, WarmUpOptionsValidator>());
+        services.AddOptions<RateLimiterOptions>()
+            .Configure<IOptions<WarmUpOptions>>(static (limiter, warmUp) =>
+                ColdWorkRateLimit.AddTo(limiter, warmUp.Value));
+        services.TryAddSingleton<WarmUpStreams>();
+        services.TryAddSingleton<CatalogWarmUp>();
+    }
 }

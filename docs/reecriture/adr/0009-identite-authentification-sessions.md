@@ -76,8 +76,26 @@
 ### Protections
 
 - **Lockout Identity** (5 échecs → 15 min), stocké en base : il survit aux déploiements.
+- **Connexion** (`/login`, `/token`, échange Google des apps) : 10 tentatives par adresse
+  (ou /64 IPv6) et par 15 min, puis 4 échecs par 15 min pour un même couple (identifiant
+  normalisé, adresse), comptés **avant** la recherche du compte, avec le même 429 que le
+  compte existe ou non. Le compte trouvé, ses échecs se comptent aussi par couple (compte,
+  adresse) : son e-mail et son nom partagent le même plafond. Ce plafond reste sous le
+  lockout : une adresse seule ne verrouille plus un compte en une fenêtre ; plusieurs
+  adresses le peuvent encore, compromis assumé du lockout. Le lockout compte les échecs
+  consécutifs, pas par fenêtre : le plafond ralentit une adresse, il n'efface pas le
+  compteur. Bornes sous `LoDb:RateLimiting`, en mémoire de l'instance.
+- **Admission au hachage** : le hasher d'Identity est synchrone, donc chaque point d'entrée
+  qui hache (connexion, jeton, inscription, réinitialisation, premier mot de passe,
+  suppression) prend d'abord un permis asynchrone (1 permis, file de 8, attente de 500 ms au
+  plus), sinon **503 + `Retry-After`** : un refus de capacité, distinct du 429 d'un débit.
+  La porte synchrone du hasher reste un filet de sécurité. Bornes sous
+  `LoDb:Accounts:Hashing`.
 - Rate limiters par IP sur l'inscription, la réinitialisation, le contact et le checkout
   (pas sur les actions authentifiées, pour éviter les faux positifs derrière un NAT).
+- **Confirmation par mot de passe** (suppression du compte) : limitée **par compte**,
+  jamais par adresse (5 par 15 min), et un mauvais mot de passe compte pour le lockout comme
+  à la connexion.
 - Bannissement : vérifié à la connexion **et** lors de la revalidation périodique du
   security stamp (quelques minutes). Il prend donc effet sur les sessions déjà
   ouvertes. Les builds d'un banni sortent des tendances, mais leurs liens de partage
@@ -100,6 +118,10 @@
 
 - **Rôle `Admin` dans Identity**, **MFA TOTP obligatoire**, plusieurs admins possibles.
 - Premier admin créé par une commande CLI, plus par variables d'environnement.
+- L'enrôlement du TOTP exige une **invitation** que la CLI affiche sur l'hôte
+  (`admin create`, puis `admin mfa-invite`) : un jeton Data Protection lié au compte,
+  valable 15 min. Le mot de passe seul n'enrôle jamais d'authentificateur.
+  `admin mfa-reset` retire un TOTP perdu (codes de secours compris) et ferme les sessions.
 - Journal d'audit : acteur polymorphe, ensemble d'actions fermé, best effort (ne fait
   jamais échouer l'action auditée).
 
@@ -122,3 +144,9 @@
 - **−** Deux schémas d'authentification (cookie et jetons) à tester chacun.
 - **−** Les App Links Android et la redirection loopback du desktop ajoutent de la
   configuration par plateforme.
+
+## Amendements
+
+- **2026-10-10** : limites de connexion par adresse et par couple (identifiant, adresse),
+  admission asynchrone au hachage, confirmation par mot de passe limitée par compte
+  (§ Protections) ; enrôlement du TOTP sur invitation de la CLI, `admin mfa-reset` (§ Admin).

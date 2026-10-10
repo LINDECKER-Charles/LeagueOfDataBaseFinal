@@ -95,6 +95,47 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
         Assert.Empty(App.GoogleServer.Exchanges);
     }
 
+    [Theory]
+    [InlineData("code with spaces", Verifier, "code")]
+    [InlineData("code-été", Verifier, "code")]
+    [InlineData(FakeGoogle.Code, "too-short-for-pkce", "codeVerifier")]
+    [InlineData(FakeGoogle.Code, "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjX+", "codeVerifier")]
+    public async Task MalformedCodeOrVerifierNeverReachesGoogle(
+        string code,
+        string verifier,
+        string field)
+    {
+        App.GoogleServer.Account = new GoogleAccount { Subject = Subject, Email = "a@gmail.test" };
+        using var app = App.App();
+
+        using var response = await ExchangeAsync(app, new
+        {
+            code,
+            codeVerifier = verifier,
+            redirectUri = AndroidRedirect,
+            clientId = AccountsApp.AndroidClientId,
+        });
+
+        var errors = await ApiJson.FieldErrorsAsync(response);
+        Assert.Equal(["malformed"], Assert.Single(errors).Value);
+        Assert.Equal(field, Assert.Single(errors).Key);
+        Assert.Empty(App.GoogleServer.Exchanges);
+    }
+
+    [Fact]
+    public async Task OverlongCodeNeverReachesGoogle()
+    {
+        using var app = App.App();
+
+        using var response = await ExchangeAsync(
+            app,
+            Exchange(AccountsApp.AndroidClientId, code: new string('a', 513)));
+
+        var errors = await ApiJson.FieldErrorsAsync(response);
+        Assert.Equal(["malformed"], errors["code"]);
+        Assert.Empty(App.GoogleServer.Exchanges);
+    }
+
     [Fact]
     public async Task CodeGoogleRefusesGivesNoToken()
     {
