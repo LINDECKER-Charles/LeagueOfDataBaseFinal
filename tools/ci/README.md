@@ -30,6 +30,11 @@ tag:
 gh api repos/OWNER/REPO/commits/vX.Y.Z --jq .sha
 ```
 
+GitHub enforces the same rule on its side once the repository setting *Require actions to be
+pinned to a full-length commit SHA* (Settings → Actions → General) is on: a workflow that
+names an action by tag then fails to start. The check here reports it earlier, in the pull
+request, with the file and the line.
+
 ## actionlint
 
 The `workflows` job downloads the actionlint release named in its `env`, and checks the
