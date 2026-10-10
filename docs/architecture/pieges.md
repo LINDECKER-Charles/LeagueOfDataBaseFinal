@@ -65,6 +65,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   compté par `lodb_db_unavailable_total`. Npgsql ne donne au pool épuisé ni type ni code :
   son message est reconnu par son texte, et `DatabaseFailureTests` le revérifie sur un vrai
   pool à chaque montée de version.
+- **Corps de requête** : 128 Kio au plus (`LoDb:Hosting:MaxRequestBodySize`), 413 au-delà.
+  Le plus gros corps légitime, un build maximal dont chaque caractère est échappé, dépasse
+  64 Kio (`tests/LoDb.E2E/specs/builds/maximal-build.spec.ts`) : ne pas descendre à 64 Kio.
+  Un endpoint qui doit lire plus pose son propre `RequestSizeLimit` (webhook Stripe, 1 Mio).
+  Les tests xUnit de cette borne tournent sur un vrai Kestrel, en Production
+  (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune limite, et
+  Development transforme un corps invalide en exception.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en
   littéral (sinon `dead` dès le premier essai). L'outbox n'envoie rien sans

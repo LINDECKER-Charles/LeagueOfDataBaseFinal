@@ -10,6 +10,7 @@ internal static class ErrorHandlingRegistration
     public static IServiceCollection AddLoDbErrorHandling(this IServiceCollection services)
     {
         services.TryAddSingleton<DatabaseMetrics>();
+        services.AddExceptionHandler<RejectedRequestHandler>();
         services.AddExceptionHandler<DatabaseFailureHandler>();
         return services;
     }

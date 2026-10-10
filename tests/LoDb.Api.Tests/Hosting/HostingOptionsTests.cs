@@ -14,6 +14,7 @@ public sealed class HostingOptionsTests
     [InlineData("LoDb:Hosting:HttpPort", "0", "HttpPort")]
     [InlineData("LoDb:Hosting:KnownProxyNetworks:0", "not-a-network", "CIDR")]
     [InlineData("LoDb:Hosting:DatabaseBusyRetryAfter", "00:00:00", "DatabaseBusyRetryAfter")]
+    [InlineData("LoDb:Hosting:MaxRequestBodySize", "0", "MaxRequestBodySize")]
     public async Task InvalidSettingStopsTheHostAtStart(string key, string value, string reason)
     {
         await using var factory = new ApiFactory

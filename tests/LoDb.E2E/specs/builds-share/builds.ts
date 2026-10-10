@@ -48,9 +48,11 @@ const PICKER_LANGUAGE = 'en_US';
 // Two items with a price: the purchase order shows them, and its total is not nil.
 const ITEMS = 2;
 
-// The headers of an unsafe request of the page's session: the site's origin and the XSRF
-// token the sign-in issued as a cookie.
-async function unsafeHeaders(page: Page): Promise<Record<string, string>> {
+/**
+ * The headers of an unsafe request of the page's session: the site's origin and the XSRF
+ * token the sign-in issued as a cookie.
+ */
+export async function unsafeHeaders(page: Page): Promise<Record<string, string>> {
   const origin = new URL(page.url()).origin;
   const cookies = await page.context().cookies(origin);
   const xsrf = cookies.find((cookie) => cookie.name === 'XSRF-TOKEN')?.value ?? '';

@@ -208,7 +208,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 
 | Section | Clés (défaut) |
 |---|---|
-| `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié), `DatabaseBusyRetryAfter` (5 s, `Retry-After` du 503 quand le pool Postgres reste occupé) |
+| `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié), `MaxRequestBodySize` (131072 octets, soit 128 Kio ; au-delà, 413), `DatabaseBusyRetryAfter` (5 s, `Retry-After` du 503 quand le pool Postgres reste occupé) |
 | `LoDb:Workers` | `Enabled` (`true` ; seul `false` coupe toutes les tâches de fond) |
 | `LoDb:Accounts` | `SecureCookies` (vrai hors Development) |
 | `LoDb:Mail` | `Timeout` (`00:00:30`) |
