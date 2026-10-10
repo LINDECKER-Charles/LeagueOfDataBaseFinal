@@ -32,6 +32,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   demandée (`PageResponse`), jamais d'`UrlTree` de redirection côté serveur.
   `/{locale}/account`, `/{locale}/u` et `/b` ont une route 404 explicite (`bareNotFound`).
   Les routes `RenderMode.Client` (compte, `/admin`) ne posent pas de statut.
+- **Pré-routeur SSR** (`src/server/routing/`), avant l'admission : premier segment ni forme
+  de locale, ni `b`, ni `admin` → 404 statique sans Angular ; segment décodé en `/` ou NUL →
+  400 ; liste ou fiche du catalogue → 301 `no-store` vers son URL sans les paramètres
+  qu'elle ne lit pas. Un nouveau paramètre de liste se déclare dans les clés de facettes
+  (`*-facet-keys.ts`) ou dans `owned-params-of.ts`, sinon il disparaît au rechargement.
+  Locale et version se lisent **décodées** (`/%66r/%31%35.13.1/` est épinglée).
 - Une API qui ne répond pas (aucune réponse, 502, 504) donne un **502** ; seule une 503 de
   l'API (délestage, avec `Retry-After`) reste 503. Chaque appel API d'un rendu est borné
   par l'échéance du rendu (`LODB_RENDER_DEADLINE_SECONDS`, 20 s).
@@ -91,11 +97,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
   une correction.
 - **Bornes du SSR relevées en dev** (`compose.override.yaml`, jamais
-  `compose.deploy.yaml`) : toute la suite ouvre les anciens patchs bien plus vite qu'un
-  hôte servi ne les admet (`LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_*`), et la première
-  visite d'un patch attend son ingestion (`LODB_RENDER_DEADLINE_SECONDS` et
-  `LODB_RENDER_API_TIMEOUT_SECONDS` à 30 s). Une 503 ou une 502 du SSR en E2E se cherche
-  d'abord là.
+  `compose.deploy.yaml`) : toute la suite arrive d'une adresse et ouvre les anciens patchs
+  bien plus vite qu'un hôte servi ne les admet. Admission : `LODB_RENDER_MAX_IN_FLIGHT`,
+  `LODB_PINNED_*`, `LODB_CURRENT_*` et la part d'un client (`LODB_RENDER_PER_CLIENT_*`,
+  `LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE`). Attente de l'API par un rendu :
+  `LODB_RENDER_DEADLINE_SECONDS` et `LODB_RENDER_API_TIMEOUT_SECONDS` à 30 s, car la
+  première visite d'un patch attend son ingestion. Une 503 ou une 502 du SSR en E2E se
+  cherche d'abord là.
 - Les instantanés de `tests/LoDb.E2E/test-results/` sont écrasés au passage suivant.
 
 ## Infra et déploiement

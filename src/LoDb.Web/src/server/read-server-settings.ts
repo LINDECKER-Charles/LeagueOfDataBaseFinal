@@ -1,5 +1,6 @@
 import { readRenderLimits } from './admission/read-render-limits';
 import { readRenderTimeouts } from './rendering/read-render-timeouts';
+import { readQueryLimits } from './routing/read-query-limits';
 import type { ServerSettings } from './server-settings';
 
 const DEFAULT_PORT = 4000;
@@ -45,9 +46,9 @@ function originOf(value: string | undefined): string {
 
 /**
  * Reads PORT, LODB_ALLOWED_HOSTS and LODB_TRUST_PROXY_HEADERS (comma-separated lists),
- * LODB_API_ORIGIN, the bounds of the render admission and of a render's wait on the API.
- * `listening` tells whether this process serves HTTP itself, which is what makes its
- * loopback origin usable by the renders.
+ * LODB_API_ORIGIN, the bounds of the render admission, of a render's wait on the API and of
+ * a catalogue page's query. `listening` tells whether this process serves HTTP itself, which
+ * is what makes its loopback origin usable by the renders.
  */
 export function readServerSettings(env: Environment, listening: boolean): ServerSettings {
   const port = portOf(env['PORT']);
@@ -59,5 +60,6 @@ export function readServerSettings(env: Environment, listening: boolean): Server
     selfOrigin: listening ? `http://${LOOPBACK_HOST}:${port}` : null,
     renderLimits: readRenderLimits(env),
     renderTimeouts: readRenderTimeouts(env),
+    queryLimits: readQueryLimits(env),
   };
 }

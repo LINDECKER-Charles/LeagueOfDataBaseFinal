@@ -1,5 +1,6 @@
 import type { RenderLimits } from './admission/render-limits';
 import type { RenderTimeouts } from './rendering/render-timeouts';
+import type { QueryLimits } from './routing/query-limits';
 
 /** Configuration of the SSR server, read once from its environment at startup. */
 export interface ServerSettings {
@@ -15,4 +16,6 @@ export interface ServerSettings {
   readonly renderLimits: RenderLimits;
   /** How long a render may wait on the API (`RenderBudget` of each render). */
   readonly renderTimeouts: RenderTimeouts;
+  /** Bounds of the query a catalogue page keeps (`preRouter`). */
+  readonly queryLimits: QueryLimits;
 }

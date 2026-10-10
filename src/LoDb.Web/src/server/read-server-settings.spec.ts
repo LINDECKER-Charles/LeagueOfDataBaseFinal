@@ -3,6 +3,7 @@ import { readServerSettings } from './read-server-settings';
 
 const DEFAULT_RENDER_LIMITS = readRenderLimits({});
 const DEFAULT_RENDER_TIMEOUTS = { deadlineMs: 20_000, apiCallMs: 10_000 };
+const DEFAULT_QUERY_LIMITS = { maxParams: 16, maxParamLength: 200 };
 
 describe('readServerSettings', () => {
   it('runs locally without any variable', () => {
@@ -14,6 +15,7 @@ describe('readServerSettings', () => {
       selfOrigin: 'http://127.0.0.1:4000',
       renderLimits: DEFAULT_RENDER_LIMITS,
       renderTimeouts: DEFAULT_RENDER_TIMEOUTS,
+      queryLimits: DEFAULT_QUERY_LIMITS,
     });
   });
 
@@ -26,6 +28,7 @@ describe('readServerSettings', () => {
         LODB_API_ORIGIN: 'http://api:8080/',
         LODB_PINNED_RENDERS_PER_MINUTE: '30',
         LODB_RENDER_DEADLINE_SECONDS: '25',
+        LODB_QUERY_MAX_PARAMS: '8',
       },
       true,
     );
@@ -38,6 +41,7 @@ describe('readServerSettings', () => {
       selfOrigin: 'http://127.0.0.1:4100',
       renderLimits: { ...DEFAULT_RENDER_LIMITS, pinnedPerMinute: 30 },
       renderTimeouts: { ...DEFAULT_RENDER_TIMEOUTS, deadlineMs: 25_000 },
+      queryLimits: { ...DEFAULT_QUERY_LIMITS, maxParams: 8 },
     });
   });
 

@@ -57,6 +57,21 @@ export class QueryString {
     return new QueryString([...this.without(name).params, { name, raw }]);
   }
 
+  /**
+   * The same query reduced to the parameters `isKept` accepts (decoded name, `name=value` as
+   * written), each name once, as the first of its kind is the only one read, and `max` at
+   * most, in their order.
+   */
+  retain(isKept: (name: string, raw: string) => boolean, max: number): QueryString {
+    const kept = new Map<string, QueryParam>();
+    for (const param of this.params) {
+      if (kept.size < max && !kept.has(param.name) && isKept(param.name, param.raw)) {
+        kept.set(param.name, param);
+      }
+    }
+    return new QueryString([...kept.values()]);
+  }
+
   /** `?a=1&b=2`, or '' when no parameter is left. */
   toString(): string {
     return this.params.length === 0
