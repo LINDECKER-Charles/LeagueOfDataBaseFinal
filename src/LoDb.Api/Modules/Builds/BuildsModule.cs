@@ -28,6 +28,13 @@ internal static class BuildsModule
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddOptions<VoteOptions>()
+            .Bind(configuration.GetSection(VoteOptions.SectionName))
+            .Validate(
+                static options => options.HasUsableMinimumAge(),
+                $"{VoteOptions.SectionName}:MinimumAccountAge must lie between 0 and 30 days.")
+            .ValidateOnStart();
+        services.TryAddSingleton<VoterEligibility>();
         services.TryAddScoped<BuildAccounts>();
         services.TryAddScoped<BuildAudit>();
         services.TryAddScoped<BuildVersions>();

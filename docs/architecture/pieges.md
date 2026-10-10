@@ -127,6 +127,14 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   locale, jamais `compose.deploy.yaml`. Les 4 échecs par identifiant et par adresse ne se
   relèvent pas (ils restent sous le verrouillage à 5) ; les tests xUnit gardent les valeurs
   de production.
+- **Âge minimal pour voter** : un compte vote 24 h après sa création
+  (`LoDb:Builds:Votes:MinimumAccountAge`), et le compte de chaque worker est créé au début
+  du passage : `compose.override.yaml` ramène l'âge à zéro pour la pile locale, jamais
+  `compose.deploy.yaml`. L'e-mail vérifié reste exigé (le compte du worker l'est). Les
+  limites horaires par compte (`LoDb:RateLimiting:CheckoutsPerHour` 10,
+  `ApiKeyIssuesPerHour` 5, `BuildEditsPerHour` 60, `VotesPerHour` 120) ne sont pas
+  relevées : la suite reste loin en dessous ; un `429 rate-limited` sur un build, une clé
+  ou un vote se cherche d'abord là.
 - Comparer le chemin d'une réponse (`new URL(url).pathname`), jamais `url.endsWith(...)`.
   Limiter les comptes de titres ou de boutons à `main` ou au composant visé. Une spec qui
   compte les POST exclut `/api/analytics/`. Un parcours qui crée un compte le supprime aussi

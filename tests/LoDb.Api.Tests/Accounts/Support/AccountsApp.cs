@@ -125,7 +125,7 @@ public sealed class AccountsApp : IAsyncDisposable
             GoogleId = seed.GoogleId,
             RiotTagline = seed.RiotTagline,
             Roles = [],
-            CreatedAt = Clock.GetUtcNow(),
+            CreatedAt = Clock.GetUtcNow() - seed.Age,
         };
         return UsersAsync(async users =>
         {
