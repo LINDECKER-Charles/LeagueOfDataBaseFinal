@@ -49,6 +49,18 @@ const SHARES: readonly Share[] = [
   { part: 'pinnedPerClientPerMinute', whole: 'pinnedPerMinute', isStrict: false },
 ];
 
+// A client's share left to its default follows a whole set below it: lowering a lane's
+// budget, the lever of an incident, must not stop the server. Only a share set above its
+// whole is a mistake, which `checkShare` refuses.
+function fitShare(limits: RenderLimits, env: Environment, share: Share): RenderLimits {
+  const { part, whole, isStrict } = share;
+  const value = env[VARIABLES[part]];
+  if (isStrict || (value !== undefined && value !== '')) {
+    return limits;
+  }
+  return { ...limits, [part]: Math.min(limits[part], limits[whole]) };
+}
+
 function checkShare(limits: RenderLimits, { part, whole, isStrict }: Share): void {
   const isCoherent = isStrict ? limits[part] < limits[whole] : limits[part] <= limits[whole];
   if (!isCoherent) {
@@ -61,7 +73,8 @@ function checkShare(limits: RenderLimits, { part, whole, isStrict }: Share): voi
 
 /**
  * Reads the bounds of the render admission from the `LODB_*` variables of `VARIABLES`, each
- * optional (its default otherwise), then checks that each share fits in its whole.
+ * optional (its default otherwise, a client's share capped by its whole), then checks that
+ * each share fits in its whole.
  */
 export function readRenderLimits(env: Environment): RenderLimits {
   const read = (limit: keyof RenderLimits) =>
@@ -77,6 +90,7 @@ export function readRenderLimits(env: Environment): RenderLimits {
     pinnedPerClientPerMinute: read('pinnedPerClientPerMinute'),
     trackedClients: read('trackedClients'),
   };
-  SHARES.forEach((share) => checkShare(limits, share));
-  return limits;
+  const fitted = SHARES.reduce((current, share) => fitShare(current, env, share), limits);
+  SHARES.forEach((share) => checkShare(fitted, share));
+  return fitted;
 }

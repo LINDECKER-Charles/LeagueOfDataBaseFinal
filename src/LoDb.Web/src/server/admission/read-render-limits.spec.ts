@@ -65,6 +65,14 @@ describe('readRenderLimits', () => {
     );
   });
 
+  // The lane's budget lowered in an incident, the client's left alone: the server starts.
+  it('caps a client share left to its default by a whole set below it', () => {
+    const limits = readRenderLimits({ LODB_PINNED_RENDERS_PER_MINUTE: '4' });
+
+    expect(limits.pinnedPerMinute).toBe(4);
+    expect(limits.pinnedPerClientPerMinute).toBe(4);
+  });
+
   it('refuses a client budget of pinned renders above the whole lane', () => {
     expect(() =>
       readRenderLimits({
