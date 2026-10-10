@@ -165,6 +165,7 @@ l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque dé
 | `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
+| `LODB_PG_MAX_CONNECTIONS`, `LODB_PG_SLOW_STATEMENT`, `LODB_PG_IDLE_IN_TRANSACTION_TIMEOUT`, `LODB_PG_SHM_SIZE` | ➖ | ➖ | ➖ | Serveur Postgres (`compose.yaml`) : connexions (`60`, pour un pool de l'API à `32` plus `migrate`, la sauvegarde du déploiement, les verrous des tâches et `psql`), requêtes journalisées au-delà de `500ms` (sans leurs paramètres, jamais), session laissée inactive dans une transaction fermée après `60s`, `/dev/shm` de `256m`. `pg_stat_statements` est toujours chargé. |
 
 Chaque environnement a son propre service `postgres` dans son projet, comme avant.
 `CONTACT_RECIPIENT` et `PUBLIC_API_BASE_URL` n'ont d'effet qu'en local : sur un

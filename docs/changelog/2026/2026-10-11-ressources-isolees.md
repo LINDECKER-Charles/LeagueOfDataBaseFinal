@@ -27,3 +27,7 @@ sa part.
   256 ailleurs), à recalibrer après 7 jours de bridage mesuré (`ConteneurCpuBride`).
 - Sonde de santé de l'API toutes les 60 s (2 s au démarrage, `start_interval`, Docker Engine
   25 vérifié par le déploiement) : elle démarre un runtime .NET à chaque passage.
+- Postgres : `max_connections=60`, `pg_stat_statements` préchargé et installé par une
+  migration additive, requêtes de plus de 500 ms journalisées sans leurs paramètres, session
+  inactive en transaction fermée après 60 s, `/dev/shm` de 256 Mio ; réglables par
+  `LODB_PG_*`.

@@ -205,6 +205,28 @@ services:
 
   postgres:
     image: postgres:17-alpine
+    # The same server settings on every environment, each tunable from the host's .env:
+    # - max_connections: the API's pool (32) plus migrate, the deploy backup, the jobs'
+    #   lock sessions and psql, far from what the memory limit of a served host holds;
+    # - pg_stat_statements, loaded at start, records what each query costs (a migration
+    #   creates the extension that reads it);
+    # - a statement slower than 500 ms is logged, never its parameters (personal data);
+    # - a session left idle inside a transaction for a minute is closed: it would hold its
+    #   locks and its backend.
+    command:
+      - postgres
+      - -c
+      - max_connections=${LODB_PG_MAX_CONNECTIONS:-60}
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - log_min_duration_statement=${LODB_PG_SLOW_STATEMENT:-500ms}
+      - -c
+      - log_parameter_max_length=0
+      - -c
+      - idle_in_transaction_session_timeout=${LODB_PG_IDLE_IN_TRANSACTION_TIMEOUT:-60s}
+    # Parallel queries share memory through /dev/shm, of which Docker gives 64 MiB.
+    shm_size: ${LODB_PG_SHM_SIZE:-256m}
     environment:
       POSTGRES_DB: ${LODB_DB_NAME:-lodb}
       POSTGRES_USER: ${LODB_DB_USER:-lodb}
