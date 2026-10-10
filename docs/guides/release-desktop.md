@@ -9,7 +9,7 @@ chantier dans le [lot 9](../reecriture/implementation/lot-09-10-apps.md) (L9.4).
 |---|---|
 | Mises à jour dans l'app | `src/LoDb.Desktop/Updates/` |
 | Workflow de release | `.github/workflows/release-desktop.yml` |
-| Scripts (pack, porte, publication, E2E local) | `tools/desktop-update-e2e/` |
+| Scripts (build, pack, porte, publication, E2E local) | `tools/desktop-update-e2e/` |
 
 ## Côté app
 
@@ -63,8 +63,9 @@ Noms des assets : `LoDb.Desktop-<version>-<canal>-full.nupkg`, `…-delta.nupkg`
 3. Déployer la prod. Le déploiement appelle le workflow avec le SHA déployé
    (voir [Contrat d'appel](#contrat-dappel)). À défaut, on le lance à la main :
    `gh workflow run release-desktop.yml -f sha=<sha> -f channel=stable`.
-4. Suivre le run : un job `pack` par RID, puis `publish`. La release apparaît d'abord en
-   *pre-release*, puis elle est promue (`--latest`) quand les trois RID requis sont en ligne.
+4. Suivre le run : les jobs `build`, `pack` et `gate` de chaque RID, puis `publish`. La
+   release apparaît d'abord en *pre-release*, puis elle est promue (`--latest`) quand les
+   trois RID requis sont en ligne.
 
 Relancer un run est sans risque :
 
@@ -98,7 +99,9 @@ SHA exact ; le staging fait de même avec `channel: beta`.
 |---|---|
 | `prepare` | Valide les entrées. Résout la version (`release-version.sh`) et celle de `vpk`, qui est celle du package `Velopack`. Saute une release déjà promue. |
 | `shell` | `npm ci` puis `npm run build:shell` : le front embarqué. |
-| `pack` (×4) | N-1 (`previous.sh`), signature (`signing.sh`), `pack.sh`, présence du delta, porte (`gate.sh`). |
+| `build` (×4) | `build.sh` : `dotnet publish` du RID avec le front embarqué. **Sans environnement ni secret.** Le dossier publié passe à `pack` en tar (artefact `desktop-publish-<rid>`, 1 jour), qui garde les bits d'exécution. |
+| `pack` (×4) | N-1 (`previous.sh`), signature (`signing.sh`), `pack.sh` (`vpk pack` seul, sans build), présence du delta. Seul job de l'environnement `desktop-release`. Artefact `desktop-packed-<rid>` (1 jour). |
+| `gate` (×4) | Porte (`gate.sh`) sur les paquets signés, **sans secret**. Seul un RID qui la passe est transmis à `publish` (`desktop-releases-<rid>`). |
 | `publish` | `publish.sh` : RID requis présents, upload en *pre-release*, puis promotion (stable) ou purge des vieilles betas. |
 
 - **Deltas** : `previous.sh` lance `vpk download github` sur N-1 **avant** `vpk pack`. vpk
@@ -110,6 +113,14 @@ SHA exact ; le staging fait de même avec `channel: beta`.
   rapports sont en artefact `desktop-gate-<rid>`.
 - **Rien n'est publié** si un RID requis (`win-x64`, `osx-arm64`, `osx-x64`) a échoué.
   `linux-x64` est publié quand il passe, sans jamais bloquer.
+- **Isolation de la signature** : le build .NET exécute les cibles MSBuild de ses paquets
+  NuGet, et la porte exécute l'app construite. Les deux tournent donc dans des jobs sans
+  secret. `pack`, seul à recevoir les certificats et le jeton OIDC d'Azure, n'extrait du
+  commit que `tools/desktop-update-e2e`, ne restaure aucun cache et ne lance que `vpk` (le
+  paquet `Velopack` de l'app), qui signe les fichiers du dossier publié en les empaquetant.
+  Le trousseau macOS est supprimé dès `vpk pack` terminé. La séparation protège les clés,
+  pas le contenu : `pack` signe ce que `build` a produit, et la porte reste le contrôle de
+  ce qui est publié.
 
 Première mise à jour après une installation : le postinstall du `.pkg` vide le cache de
 l'updater, et un portable n'en a pas encore. Ce premier téléchargement est donc complet ;
@@ -118,7 +129,7 @@ les suivants passent par les deltas.
 ## E2E local (macOS arm64, non signé)
 
 C'est le critère de sortie du lot 9. Il se rejoue sur l'hôte, sans Docker ni réseau autre
-que NuGet, avec le même `pack.sh` et le même `gate.sh` que la CI.
+que NuGet, avec les mêmes `build.sh`, `pack.sh` et `gate.sh` que la CI.
 
 ```bash
 npm ci --prefix src/LoDb.Web
@@ -188,8 +199,8 @@ signtool signe ensuite avec la session Azure CLI ouverte par `azure/login` (OIDC
 | `APPLE_INSTALL_IDENTITY` | variable | `Developer ID Installer: <Nom> (<TEAMID>)` |
 
 `signing.sh macos` importe les certificats dans un trousseau propre au job, que le job
-supprime en fin de course. Il y enregistre aussi le profil `notarytool`, puis passe à vpk
-`--signAppIdentity`, `--signInstallIdentity`, `--notaryProfile` et `--keychain`. Les
+supprime dès `vpk pack` terminé. Il y enregistre aussi le profil `notarytool`, puis passe à
+vpk `--signAppIdentity`, `--signInstallIdentity`, `--notaryProfile` et `--keychain`. Les
 entitlements par défaut de vpk (hardened runtime, JIT de .NET) suffisent.
 
 ### Linux
@@ -234,7 +245,7 @@ avant l'ouverture publique : le publier ainsi, ou le retirer de la matrice.
 4. **Vérifier** :
    1. lancer une beta à la main
       (`gh workflow run release-desktop.yml -f sha=<sha> -f channel=beta`) ;
-   2. contrôler les jobs `pack`, avec la signature, la notarisation et la porte ;
+   2. contrôler les jobs `pack` (signature, notarisation) et `gate` (porte) ;
    3. sauvegarder les nouveaux éléments hors ligne.
 
 ## Dépannage
@@ -252,7 +263,8 @@ avant l'ouverture publique : le publier ainsi, ou le retirer de la matrice.
 ## Limites connues
 
 - Les chemins Windows et Linux, et les chemins signés, n'ont tourné qu'en CI. Le premier
-  run réel est à suivre de près.
+  run réel est à suivre de près, en particulier le passage `build` → `pack` → `gate` sur
+  trois runners distincts par RID (tar du dossier publié, paquets transmis en artefact).
 - `GithubSource` ne lit qu'une page de l'API des releases, les plus récentes toutes
   confondues. D'où la purge des betas. D'autres releases du dépôt, comme les bundles
   Android, pèsent aussi.

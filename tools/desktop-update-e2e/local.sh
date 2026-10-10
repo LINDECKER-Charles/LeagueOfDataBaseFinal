@@ -53,8 +53,9 @@ cleanup() {
 trap cleanup EXIT
 
 pack() {
-  "$here/pack.sh" --rid "$RID" --version "$1" --channel "$CHANNEL" --shell-dir "$shell_dir" \
-    --releases "$2" --publish-dir "$work/publish-$1" >"$work/pack-$1.log" 2>&1 \
+  local options=(--rid "$RID" --version "$1" --channel "$CHANNEL" --publish-dir "$work/publish-$1")
+  { "$here/build.sh" "${options[@]}" --shell-dir "$shell_dir" \
+    && "$here/pack.sh" "${options[@]}" --releases "$2"; } >"$work/pack-$1.log" 2>&1 \
     || { tail -n 30 "$work/pack-$1.log" >&2; lodb_fail "pack of $1 failed"; }
 }
 
