@@ -55,6 +55,10 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     const reads = await statusesOf(stack.port, '/api/catalog/16.1.1/en_US/champions', 4);
     assert.deepEqual(reads, [200, 200, 200, 429]);
     assert.equal((await get('/api/meta')).status, 429);
+    // The API routes a path whatever its case, an encoded letter included: so does the limit.
+    for (const path of ['/api/Catalog/16.1.1/en_US/champions', '/api/%53hare/abc']) {
+      assert.equal((await get(path)).status, 429, path);
+    }
     for (const path of ['/api/account/me', '/v1/champions', '/webhooks/stripe', '/build/a.js']) {
       assert.ok(!(await statusesOf(stack.port, path, 6)).includes(429), path);
     }

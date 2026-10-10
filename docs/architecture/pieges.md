@@ -115,7 +115,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   possède `/sitemap.xml`, `/sitemaps/`, `/robots.txt` et `/llms.txt`.
 - nginx, bornes (`sites/site.conf`) : `limit_req` par adresse sur les pages, les lectures
   publiques de l'API, l'ancien site, `/sitemaps/` et `/readyz` ; **jamais** sur les autres
-  `/api/` (actions d'un compte, ADR 0009), `/v1/`, `/webhooks/`, `/build/`, `/cdn/`. Le 429
+  `/api/` (actions d'un compte, ADR 0009), `/v1/`, `/webhooks/`, `/build/`, `/cdn/`. Une
+  location qui vise une route de l'API se compare **sans casse** (`~*`) : l'API route
+  `/api/Catalog/…` comme `/api/catalog/…`, que `location /api/` laisserait passer. Le 429
   vient de `snippets/server-guards.conf` : une location qui déclare son propre `error_page`
   doit répéter `error_page 429`. `/api/catalog` et `/api/meta` ne sont **jamais** mis en
   cache par nginx (un HIT contournerait le `426` des apps). Les caches `lodb_seo` et
