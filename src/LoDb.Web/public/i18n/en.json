@@ -498,7 +498,7 @@
       "banned": "This account has been suspended by the moderation team."
     },
     "verify": {
-      "banner": "Confirm your email address to unlock build creation.",
+      "banner": "Confirm your email address to create builds and vote: an unconfirmed account is deleted after 7 days.",
       "banner_cta": "Resend the email",
       "resend_done": "Confirmation email resent.",
       "resend_throttled": "A confirmation email was already sent recently — check your spam folder, or try again later.",

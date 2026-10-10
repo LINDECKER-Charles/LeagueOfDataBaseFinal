@@ -77,6 +77,14 @@ internal static class AccountsModule
                 static options => options.HasUsableInterval(),
                 $"{VerificationResendOptions.SectionName}:Interval must lie in 1 min – 7 days.")
             .ValidateOnStart();
+        services.AddOptions<UnverifiedPurgeOptions>()
+            .Bind(configuration.GetSection(UnverifiedPurgeOptions.SectionName))
+            .ValidateDataAnnotations()
+            .Validate(
+                static options => options.HasUsableDelay(),
+                $"{UnverifiedPurgeOptions.SectionName}:After must lie in 1 – 365 days.")
+            .ValidateOnStart();
+        services.TryAddScoped<UnverifiedAccountPurge>();
     }
 
     private static void AddAccountServices(IServiceCollection services)

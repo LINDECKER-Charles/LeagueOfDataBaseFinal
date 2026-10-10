@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using LoDb.Api.Modules.Accounts.Security;
 using LoDb.Infrastructure.Outbox;
+using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Infrastructure.Persistence.Audit;
 using LoDb.Testing;
@@ -201,6 +202,9 @@ public sealed class AccountsApp : IAsyncDisposable
 
     public Task<IReadOnlyList<string>> QueryAsync(string sql) =>
         _database.QueryAsync(sql, Cancellation);
+
+    /// <summary>A context on the database, to seed rows and read them back.</summary>
+    public LoDbDbContext Database() => _database.CreateContext();
 
     public async ValueTask DisposeAsync()
     {
