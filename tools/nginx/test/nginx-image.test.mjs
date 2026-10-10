@@ -66,7 +66,10 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
       assert.equal(response.status, 404, path);
       assert.equal(response.headers['x-cache-status'], undefined, path);
     }
-    assert.equal((await get('/index.php', { host: API_HOST })).status, 404);
+    // Under /v1/, which the API host proxies: a 404 there comes from the guards alone.
+    for (const path of ['/v1/index.php', '/v1/.env']) {
+      assert.equal((await get(path, { host: API_HOST })).status, 404, path);
+    }
   });
 
   test('refuses the blocked agent on both hosts', async () => {
