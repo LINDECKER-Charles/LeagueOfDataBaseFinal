@@ -17,7 +17,9 @@ node --test 'tools/load/test/*.test.mjs'
 ```
 
 Rien à installer : k6 tourne dans son image officielle, épinglée par version et empreinte
-(`run.sh`), sur le réseau de l'emplacement. Il faut Docker, `curl` et Node (le résumé).
+(`K6_IMAGE` de `run.sh`), sur le réseau de l'emplacement. Il faut Docker, `curl` et Node (le
+résumé). Pour changer de version, relever l'empreinte de l'index multi-plateforme :
+`docker buildx imagetools inspect grafana/k6:<version>` (ligne `Digest`).
 
 ## Jamais sur le staging
 
