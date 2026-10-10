@@ -14,11 +14,14 @@ namespace LoDb.Ingestion.Tests.Queue;
 
 /// <summary>
 /// The budgets of the visitors' cold work: what a sweep may make the instance fetch per
-/// minute, datasets and images apart; what is stored costs nothing, and the worker's queued
-/// work was admitted when queued.
+/// minute, datasets and images apart; what is stored costs nothing, work in flight is paid
+/// once whatever its readers, and the worker's queued work was admitted when queued.
 /// </summary>
 public sealed class OnDemandBudgetTests(PostgresContainerFixture postgres)
 {
+    // Readers of one cold catalog at once, as a page and its API calls.
+    private const int Readers = 8;
+
     private static readonly PatchVersion Latest = DdragonFixtures.Latest;
 
     private static CancellationToken Token => IngestionHarness.Token;
@@ -46,6 +49,25 @@ public sealed class OnDemandBudgetTests(PostgresContainerFixture postgres)
         Assert.Equal(
             OnDemandIngestion.DatasetBudgetReason,
             refusal.Tags[IngestionMetrics.ReasonTag]);
+    }
+
+    [Fact]
+    public async Task ConcurrentReadersOfAColdCatalogPayItsWorkOnce()
+    {
+        // fr_FR and the en_US it reads over: two units of work, whatever the readers.
+        await using var harness = await IngestionHarness.CreateAsync(
+            postgres,
+            Setting("ColdDatasetsPerMinute", "2"));
+        var instance = harness.StartInstance();
+        using var refusals = VersionIngestionTests.Collect(
+            instance, "lodb.ingestion.on_demand.refused");
+        var reader = instance.Get<ICatalogReader>();
+
+        var loads = await Task.WhenAll(Enumerable.Range(0, Readers).Select(_ =>
+            reader.GetAsync(Latest, French, ColdDemand.Synchronous, Token)));
+
+        Assert.All(loads, static load => Assert.True(load.IsReady));
+        Assert.Empty(refusals.GetMeasurementSnapshot());
     }
 
     [Fact]

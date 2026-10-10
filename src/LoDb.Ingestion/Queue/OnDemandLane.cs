@@ -7,7 +7,8 @@ namespace LoDb.Ingestion.Queue;
 /// <remarks>
 /// A visitor's work takes the budgets and waits a bounded time; the background worker's was
 /// admitted when it was queued, and waits as long as it takes. A unit already in flight is
-/// joined for free: only the work a call adds is counted.
+/// joined for free: only the work a call adds is counted, and the datasets of a flight are
+/// paid by the flight itself.
 /// </remarks>
 internal sealed class OnDemandLane
 {
@@ -46,10 +47,10 @@ internal sealed class OnDemandLane
         run(work, cancellationToken);
 
     /// <summary>
-    /// The dataset units the caller may run: those in flight, then what the budget grants.
+    /// Takes the budget of one (version, language) to ingest, if the minute has one left;
+    /// called by the flight that runs the work, so that its callers pay once.
     /// </summary>
-    public List<string> AdmitDatasets(SingleFlight flights, IReadOnlyCollection<string> units) =>
-        Admit(datasets, flights, units);
+    public bool TakeDataset() => datasets?.TryTake() ?? true;
 
     /// <summary>
     /// The image units the caller may run: those in flight, then what the budget grants.

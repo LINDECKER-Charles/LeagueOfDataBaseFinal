@@ -203,20 +203,35 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
             return false;
         }
 
-        string[] unit = [OnDemandUnits.Dataset(scope.Version, scope.Language)];
-        if (lane.AdmitDatasets(flights, unit).Count == 0)
+        await flights.RunAsync(
+                [OnDemandUnits.Dataset(scope.Version, scope.Language)],
+                (_, token) => IngestDatasetsAsync(scope, lane, token),
+                cancellationToken)
+            .ConfigureAwait(false);
+        return true;
+    }
+
+    // Paid by the flight that runs the work, never by its callers: one racing the claim, or
+    // arriving once the datasets are stored, would pay again and be refused paid-for work.
+    private async Task IngestDatasetsAsync(
+        DatasetScope scope,
+        OnDemandLane lane,
+        CancellationToken cancellationToken)
+    {
+        if (await services.Stored.ExistAsync(scope, cancellationToken).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        if (!lane.TakeDataset())
         {
             throw Refuse(DatasetBudgetReason);
         }
 
-        await flights.RunAsync(
-                unit,
-                (_, token) => lane.RunAsync(
-                    slotToken => services.Datasets.IngestAsync(scope, slotToken),
-                    token),
+        await lane.RunAsync(
+                slotToken => services.Datasets.IngestAsync(scope, slotToken),
                 cancellationToken)
             .ConfigureAwait(false);
-        return true;
     }
 
     // The flight covering a unit runs only the images it claimed, with the claimer's progress.
