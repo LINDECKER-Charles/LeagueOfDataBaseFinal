@@ -36,7 +36,8 @@ de vérifications à la fois pouvaient occuper le serveur et ralentir toutes les
 - Politique `sign-in` (connexion, jeton, échange Google des apps) : 10 par adresse (ou /64)
   et par 15 min. Plafond de 4 échecs par 15 min pour un couple (identifiant normalisé,
   adresse), consulté avant la recherche du compte, même `429 rate-limited` que le compte
-  existe ou non. Bornes sous `LoDb:RateLimiting` ; `compose.override.yaml` relève
+  existe ou non ; le compte trouvé, aussi par couple (compte, adresse), que l'e-mail ou le
+  nom le désigne. Bornes sous `LoDb:RateLimiting` ; `compose.override.yaml` relève
   `SignInPerWindow` pour l'E2E seulement.
 - Suppression de compte : `CheckPasswordSignInAsync` avec verrouillage, et politique
   `password-confirm` de 5 par 15 min, partitionnée par compte (jamais par adresse).

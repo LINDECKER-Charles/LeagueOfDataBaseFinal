@@ -114,6 +114,24 @@ public sealed class SignInLimitTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task NameAndEmailOfOneAccountShareItsFailuresFromOneAddress()
+    {
+        await App.SeedAsync(new AccountSeed());
+        using var browser = App.Browser().From(Client);
+        var failures = await FailAsync(browser, AccountSeed.Name);
+
+        using var throughEmail = await browser.SignInAsync(AccountSeed.Address, WrongPassword);
+        using var other = App.Browser().From(OtherClient);
+        using var elsewhere = await other.SignInAsync(AccountSeed.Address);
+
+        Assert.All(failures, static status => Assert.Equal(HttpStatusCode.Unauthorized, status));
+        Assert.Equal(
+            RateLimited,
+            await ApiJson.ProblemCodeAsync(throughEmail, HttpStatusCode.TooManyRequests));
+        Assert.Equal(HttpStatusCode.OK, elsewhere.StatusCode);
+    }
+
+    [Fact]
     public async Task UnknownIdentifierIsRefusedAlikeAndCounted()
     {
         await App.SeedAsync(new AccountSeed());

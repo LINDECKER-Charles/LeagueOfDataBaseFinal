@@ -1,3 +1,4 @@
+using System.Net;
 using LoDb.Api.Modules.Accounts.Authentication;
 using LoDb.Api.Modules.Accounts.Http;
 using LoDb.Api.Modules.Accounts.Security;
@@ -19,10 +20,11 @@ namespace LoDb.Api.Modules.Accounts.SignIn;
 /// not learn of the ban.
 /// </para>
 /// <para>
-/// The <see cref="LoginThrottle"/> is consulted before the account is looked up, and again
-/// under the permit of the hashing admission, which also covers the second factor and the
-/// count of the failure: attempts sent together from one address cannot all get past it.
-/// A throttled attempt is neither looked up nor journaled, only counted.
+/// The <see cref="LoginThrottle"/> is consulted for the identifier before the account is
+/// looked up, and again under the permit of the hashing admission, for the account as well,
+/// whatever identifier named it. The permit also covers the second factor and the count of
+/// the failure: attempts sent together from one address cannot all get past it. A throttled
+/// attempt is neither looked up nor journaled, only counted.
 /// </para>
 /// </remarks>
 internal sealed class PasswordSignIn(
@@ -75,8 +77,8 @@ internal sealed class PasswordSignIn(
         var attempt = new Attempt(
             credentials,
             channel,
-            LoginThrottle.KeyOf(credentials.Identifier!, client));
-        if (throttle.IsThrottled(attempt.Key))
+            [LoginThrottle.KeyOf(credentials.Identifier!, client)]);
+        if (IsThrottled(attempt))
         {
             return Throttled(attempt, SecurityMetrics.UncheckedAccount);
         }
@@ -84,7 +86,7 @@ internal sealed class PasswordSignIn(
         var user = await lookup.FindAsync(credentials.Identifier!);
         var problem = user is null
             ? Counted(attempt, SecurityMetrics.NoAccount, AccountProblem.InvalidCredentials())
-            : await CheckAsync(user, attempt, cancellationToken);
+            : await CheckAsync(user, attempt.On(user.Id, client), cancellationToken);
         await AuditAsync(attempt, problem, cancellationToken);
         return problem;
     }
@@ -118,7 +120,7 @@ internal sealed class PasswordSignIn(
             ? SecurityMetrics.AdminAccount
             : SecurityMetrics.MemberAccount;
         using var permit = await admission.EnterAsync(cancellationToken);
-        if (throttle.IsThrottled(attempt.Key))
+        if (IsThrottled(attempt))
         {
             return Throttled(attempt, account);
         }
@@ -137,11 +139,16 @@ internal sealed class PasswordSignIn(
         metrics.RecordSignIn(result, account, attempt.Channel.AuditName);
         if (result is SecurityMetrics.Failure or SecurityMetrics.LockedOut)
         {
-            throttle.RecordFailure(attempt.Key);
+            foreach (var key in attempt.Keys)
+            {
+                throttle.RecordFailure(key);
+            }
         }
 
         return problem;
     }
+
+    private bool IsThrottled(Attempt attempt) => attempt.Keys.Any(throttle.IsThrottled);
 
     private AccountProblem Throttled(Attempt attempt, string account)
     {
@@ -220,7 +227,6 @@ internal sealed class PasswordSignIn(
         }
     }
 
-
     private static string? AuthenticatorCode(string? code) =>
         string.IsNullOrWhiteSpace(code)
             ? null
@@ -230,9 +236,14 @@ internal sealed class PasswordSignIn(
     private static string? RecoveryCode(string? code) =>
         string.IsNullOrWhiteSpace(code) ? null : code.Trim().ToUpperInvariant();
 
-    /// <summary>One sign-in: what was sent, where it lands, and its throttle key.</summary>
+    /// <summary>One sign-in: what was sent, where it lands, and its throttle keys.</summary>
     private sealed record Attempt(
         PasswordCredentials Credentials,
         SignInChannel Channel,
-        string Key);
+        IReadOnlyList<string> Keys)
+    {
+        /// <summary>The attempt, counted for the account it named as well.</summary>
+        public Attempt On(int accountId, IPAddress? client) =>
+            this with { Keys = [.. Keys, LoginThrottle.AccountKeyOf(accountId, client)] };
+    }
 }

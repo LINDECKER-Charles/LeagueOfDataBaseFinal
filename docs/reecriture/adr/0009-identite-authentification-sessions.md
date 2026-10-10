@@ -79,9 +79,11 @@
 - **Connexion** (`/login`, `/token`, échange Google des apps) : 10 tentatives par adresse
   (ou /64 IPv6) et par 15 min, puis 4 échecs par 15 min pour un même couple (identifiant
   normalisé, adresse), comptés **avant** la recherche du compte, avec le même 429 que le
-  compte existe ou non. Ce plafond reste sous le lockout : une adresse seule ne verrouille
-  plus un compte ; plusieurs adresses le peuvent encore, compromis assumé du lockout. Bornes
-  sous `LoDb:RateLimiting`, en mémoire de l'instance.
+  compte existe ou non. Le compte trouvé, ses échecs se comptent aussi par couple (compte,
+  adresse) : son e-mail et son nom partagent le même plafond. Ce plafond reste sous le
+  lockout : une adresse seule ne verrouille plus un compte ; plusieurs adresses le peuvent
+  encore, compromis assumé du lockout. Bornes sous `LoDb:RateLimiting`, en mémoire de
+  l'instance.
 - **Admission au hachage** : le hasher d'Identity est synchrone, donc chaque point d'entrée
   qui hache (connexion, jeton, inscription, réinitialisation, premier mot de passe,
   suppression) prend d'abord un permis asynchrone (1 permis, file de 8, attente de 500 ms au
