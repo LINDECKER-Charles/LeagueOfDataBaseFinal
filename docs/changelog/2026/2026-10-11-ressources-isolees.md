@@ -34,4 +34,6 @@ sa part.
   `LODB_PG_*`.
 - `compose.staging.yaml`, ajouté par `_deploy.yml` au seul staging : environ 0,75 cœur en
   tout, poids 128, admission du SSR à 3 rendus (1 épinglé, 10 par minute), ingestion,
-  langues et téléchargements un à la fois. `docs/guides/configuration.md` § 4.3 et 4.5.
+  langues et téléchargements un à la fois. `compose.staging-auth.yaml`, facultatif : un
+  identifiant sur les pages du staging, jamais sur l'API, les sondes, les bundles ni les
+  blobs. `docs/guides/configuration.md` § 4.3 et 4.5.

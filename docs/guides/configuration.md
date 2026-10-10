@@ -167,6 +167,7 @@ l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque dé
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
 | `LODB_PG_MAX_CONNECTIONS`, `LODB_PG_SLOW_STATEMENT`, `LODB_PG_IDLE_IN_TRANSACTION_TIMEOUT`, `LODB_PG_SHM_SIZE` | ➖ | ➖ | ➖ | Serveur Postgres (`compose.yaml`) : connexions (`60`, pour un pool de l'API à `32` plus `migrate`, la sauvegarde du déploiement, les verrous des tâches et `psql`), requêtes journalisées au-delà de `500ms` (sans leurs paramètres, jamais), session laissée inactive dans une transaction fermée après `60s`, `/dev/shm` de `256m`. `pg_stat_statements` est toujours chargé. |
 | `COMPOSE_FILE` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit dans le `.env` de l'hôte, avec les calques de l'environnement (§ 4.5), pour qu'une commande `docker compose` lancée à la main depuis le dossier les applique aussi. |
+| `LODB_STAGING_BASIC_AUTH_USER`, `LODB_STAGING_BASIC_AUTH_HASH` 🔒 | ➖ | **jamais** | ➖ | Identifiant demandé sur les pages du staging (§ 4.5). Les deux ou aucun ; en prod, le job refuse de déployer. |
 
 Chaque environnement a son propre service `postgres` dans son projet, comme avant.
 `CONTACT_RECIPIENT` et `PUBLIC_API_BASE_URL` n'ont d'effet qu'en local : sur un
@@ -274,8 +275,9 @@ Valable pour les deux environnements : chacun reprend les valeurs de son propre 
 Le staging tourne sur l'hôte de la prod et sert les mêmes chemins : un crawl de `test.*`
 coûte autant qu'un crawl du site. Le job de déploiement lui ajoute donc
 [`compose.staging.yaml`](../../compose.staging.yaml), jamais en prod : environ 0,75 cœur en
-tout, le poids le plus bas (`cpu_shares: 128`) et des files à sa taille. Chaque valeur se
-change par une ligne du `.env` du staging, sous le même nom :
+tout, le poids le plus bas (`cpu_shares: 128`) et des files à sa taille. Les réglages de
+l'API et du SSR se changent par une ligne du `.env` du staging, sous le même nom ; les
+quotas se revoient avec ceux de la prod :
 
 | Réglage | Staging | Prod (défaut) |
 |---|---|---|
@@ -288,6 +290,26 @@ change par une ligne du `.env` du staging, sous le même nom :
 Le couloir épinglé reste strictement sous le total des rendus, sinon le SSR refuse de
 démarrer ; la part d'un client (`2` rendus, `6` épinglés par minute) tient dans ces totaux.
 Un nouveau patch met plus longtemps à arriver sur le staging.
+
+**Identifiant sur les pages (facultatif).** Avec `LODB_STAGING_BASIC_AUTH_USER` et
+`LODB_STAGING_BASIC_AUTH_HASH` dans le `.env` du staging, le job ajoute
+[`compose.staging-auth.yaml`](../../compose.staging-auth.yaml) : l'edge demande cet
+identifiant (`basic_auth` de Caddy) sur les pages, jamais sur `/api/*`, `/v1/*`,
+`/webhooks/*`, `/healthz`, `/build/*`, `/cdn/blobs/*` ni `/u/*` (apps, canal desktop beta,
+webhooks Stripe de test, retours OAuth, sondes). Il écarte les robots et l'indexation ; ce
+n'est pas une frontière d'authentification.
+
+- Le hash : bcrypt, par `caddy hash-password` (présent dans le conteneur de l'edge), mis
+  **entre apostrophes** dans le `.env` (il contient des `$`) ; le job refuse un hash mal formé
+  ou non quoté avant toute modification, car il atteindrait l'edge, partagé par tous les
+  projets. Le nom : lettres, chiffres, `.`, `_`, `-`.
+- Pour le retirer : supprimer les deux lignes du secret `ENV_STAGING`, puis redéployer.
+- **Compromis à peser avant de l'activer** : l'edge vérifie l'identifiant par bcrypt, sur le
+  CPU que partagent tous les projets de l'hôte et qu'aucun quota de cette stack ne borne.
+  Désactivé par défaut ; à n'activer que si des robots coûtent au staging, en surveillant le
+  CPU de l'edge, et à retirer s'il monte.
+- Les smoke tests du déploiement passent par l'intérieur de la stack ; le test TLS public lit
+  `/healthz`, exclu de l'identifiant.
 
 ## 5. Fichiers et volumes de l'hôte
 

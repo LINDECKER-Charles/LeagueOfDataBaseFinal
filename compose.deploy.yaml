@@ -3,8 +3,8 @@
 #
 #   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
 #
-# The staging host adds compose.staging.yaml; the deploy job writes the resulting
-# COMPOSE_FILE to the host's .env.
+# The staging host adds compose.staging.yaml, and compose.staging-auth.yaml when its .env
+# asks for it; the deploy job writes the resulting COMPOSE_FILE to the host's .env.
 #
 # Driven by .github/workflows/_deploy.yml. The host's .env (secret ENV_STAGING or ENV_PROD,
 # templates .env.staging.example and .env.prod.example) sets the project, the images, the

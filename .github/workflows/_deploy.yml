@@ -220,12 +220,41 @@ jobs:
             [ "$(printf '%s\n' 1.44 "$engine_api" | sort -V | head -n 1)" = 1.44 ] \
               || fail "Docker Engine 25 or later is required (API $engine_api, 1.44 expected)."
 
+            # The page login of compose.staging-auth.yaml: both values, a plain user name, and
+            # a bcrypt hash that Compose hands over intact (single-quoted, or each `$` doubled).
+            # A malformed one would reach the edge, shared by every project of the host.
+            check_staging_auth() {
+              local bcrypt doubled line pattern
+              [ -n "$1" ] && [ -n "$2" ] \
+                || fail "LODB_STAGING_BASIC_AUTH_USER and _HASH are set together, or neither."
+              [[ "$1" =~ ^[A-Za-z0-9._-]+$ ]] \
+                || fail "LODB_STAGING_BASIC_AUTH_USER: letters, digits, '.', '_' and '-' only."
+              # Regular expressions, not expansions: each \$ matches a `$` of the hash.
+              # shellcheck disable=SC2016
+              bcrypt='\$2[aby]\$[0-9]{2}\$[./A-Za-z0-9]{53}'
+              # shellcheck disable=SC2016
+              doubled='\$\$2[aby]\$\$[0-9]{2}\$\$[./A-Za-z0-9]{53}'
+              pattern="^LODB_STAGING_BASIC_AUTH_HASH=('${bcrypt}'|${doubled})\$"
+              line="$(grep -E '^LODB_STAGING_BASIC_AUTH_HASH=' .env | tail -n 1 || true)"
+              [[ "$line" =~ $pattern ]] \
+                || fail "LODB_STAGING_BASIC_AUTH_HASH must be a single-quoted bcrypt hash."
+            }
+
             # ── Compose files: the deploy overlay, then the staging ones ────────────────
             # Never compose.override.yaml (dev conveniences). Staging takes a small share of
-            # the host (compose.staging.yaml). Joined from a list: no empty element.
+            # the host (compose.staging.yaml) and, when its .env asks for it, a login on its
+            # pages (compose.staging-auth.yaml). Joined from a list: no empty element.
             compose_files=(compose.yaml compose.deploy.yaml)
+            auth_user="$(env_value LODB_STAGING_BASIC_AUTH_USER)"
+            auth_hash="$(env_value LODB_STAGING_BASIC_AUTH_HASH)"
             if [ "$TARGET" = staging ]; then
               compose_files+=(compose.staging.yaml)
+              if [ -n "$auth_user$auth_hash" ]; then
+                check_staging_auth "$auth_user" "$auth_hash"
+                compose_files+=(compose.staging-auth.yaml)
+              fi
+            elif [ -n "$auth_user$auth_hash" ]; then
+              fail "LODB_STAGING_BASIC_AUTH_* are for staging: remove them from the $TARGET .env."
             fi
             COMPOSE_FILE="$(IFS=:; echo "${compose_files[*]}")"
             export COMPOSE_FILE

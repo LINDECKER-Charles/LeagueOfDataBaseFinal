@@ -1,0 +1,27 @@
+# Optional overlay of the staging deploy: HTTP basic authentication, at the shared edge, on
+# the pages of the site. Added by .github/workflows/_deploy.yml after compose.staging.yaml,
+# and only when the staging host's .env defines both variables below; never on prod.
+#
+#   LODB_STAGING_BASIC_AUTH_USER=<name>
+#   LODB_STAGING_BASIC_AUTH_HASH='<bcrypt hash>'   # single-quoted: it holds `$`
+#
+# It keeps crawlers and indexing away from test.*; it is no authentication boundary. The
+# paths that clients call without a browser prompt stay open: the API and its subdomain
+# (apps, desktop beta channel, Stripe's test webhooks, the OAuth callbacks under /api/),
+# the probes, the front bundles, the blobs and the audience emitter.
+#
+# Trade-off: the edge checks the credentials with bcrypt, on CPU that every project of the
+# host shares and that no quota of this stack bounds. Off by default; see
+# docs/guides/configuration.md before enabling it.
+#
+# The labels are a list on purpose: Compose interpolates a list item whole, but never the
+# key of a mapping, and the user name is part of the key. The escaped line break joins the
+# two halves of the last item without a space.
+
+services:
+  nginx:
+    labels:
+      - "caddy_0.@lodb_pages.not=path /api/* /v1/* /webhooks/* /healthz /build/* /cdn/blobs/* /u/*"
+      - "caddy_0.basic_auth=@lodb_pages"
+      - "caddy_0.basic_auth.${LODB_STAGING_BASIC_AUTH_USER:?is required}=\
+        ${LODB_STAGING_BASIC_AUTH_HASH:?is required}"
