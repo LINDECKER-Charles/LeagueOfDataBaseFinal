@@ -17,6 +17,10 @@ against the public key the app embeds.
 The keys come from the environment only, never from a file of the repository. The tests
 generate throwaway keys at each run; none is committed, not even a test one.
 
+The release workflow signs in a job that runs neither npm nor Gradle
+(`tools/android-release/README.md`): this tool uses the Node built-ins only, and must keep
+doing so.
+
 ## Key
 
 Generated once, on the release host, outside the checkout (the guide

@@ -81,7 +81,7 @@ version de chaque plugin inclus dans `capacitor.settings.gradle`.
 2. Déployer la prod. Le déploiement appelle le workflow avec le SHA déployé
    (voir [Contrat d'appel](#contrat-dappel)). À défaut, on le lance à la main :
    `gh workflow run release-android.yml -f sha=<sha>`.
-3. Suivre le run : `build`, `stage`, `gate`, `cleanup`, `publish`, puis `play` quand Play
+3. Suivre le run : `build`, `sign`, `stage`, `gate`, `cleanup`, `publish`, puis `play` quand Play
    est activé.
 4. Publier la politique client : le résumé du job `publish` donne la commande (voir
    [Politique client](#politique-client)).
@@ -133,7 +133,8 @@ client-policy publish --platform android --minimum <minimum en vigueur> --latest
 | Job | Rôle |
 |---|---|
 | `prepare` | Valide le SHA, résout la version (`release-version.mjs`), saute une release déjà promue, calcule le minimum natif (`native-fingerprint.mjs --check`). |
-| `build` | `npm ci`, tests des outils, `build:shell:store`, bundles signés (`bundles.sh`), `cap sync android`, `gradlew bundleRelease assembleRelease assembleDebug`, contrôle de la config embarquée, signature (`sign-release.sh`). Environnement `android-release`. |
+| `build` | `npm ci`, tests des outils, `build:shell:store`, `cap sync android`, `gradlew bundleRelease assembleRelease assembleDebug`, contrôle de la config embarquée. **Sans environnement ni secret** : il livre l'AAB, l'APK de release et le front, non signés (artefact `android-unsigned`), et l'APK de porte. |
+| `sign` | Bundles signés (`bundles.sh`), puis AAB et APK signés (`sign-release.sh`), à partir de l'artefact `android-unsigned`. Environnement `android-release`. Ni `npm` ni Gradle (voir [Isolation de la signature](#isolation-de-la-signature)). |
 | `stage` | `stage.sh` : *pre-release* `android-vX.Y.Z`, upload des bundles (release et porte), relecture du bundle depuis son URL publique. |
 | `gate` | `gate.mjs` sur un émulateur API 35 x86_64 (voir ci-dessous). Le logcat est en artefact `android-gate-logcat`. |
 | `cleanup` | Retire les bundles de porte de la release, quel que soit le verdict. |
@@ -142,7 +143,27 @@ client-policy publish --platform android --minimum <minimum en vigueur> --latest
 
 Artefacts du run : `android-release` (AAB, APK, `signing.txt`, 30 jours : c'est l'AAB à
 déposer à la main avant l'automatisation de Play), `android-bundles` et `android-gate-apk`
-(7 jours).
+(7 jours), `android-unsigned` (AAB, APK et front non signés, passés de `build` à `sign`,
+1 jour).
+
+### Isolation de la signature
+
+Le build exécute le code de centaines de dépendances (paquets npm, builders Angular, plugins
+Gradle). Il tourne donc sans aucun secret, et la signature se fait dans un job à part :
+
+- `build` n'entre pas dans l'environnement `android-release` : aucun secret ne lui est
+  accessible. Il ne lit que des variables publiques du dépôt (clé publique des bundles,
+  hôte de l'App Link).
+- `sign` est le seul job, avec `play`, qui reçoit les clés. Il n'extrait du commit que
+  `tools/android-release` et `tools/live-update` (scripts shell et Node sans dépendance),
+  ne restaure aucun cache, et n'exécute rien de ce que le build a produit : `zip`, Node,
+  `jarsigner` (JDK 21) et `zipalign`/`apksigner` (SDK Android du runner) traitent l'artefact
+  `android-unsigned` comme de simples données.
+- Chaque secret n'est exposé qu'à l'étape qui l'utilise : la clé des bundles à
+  `bundles.sh`, les keystores à `sign-release.sh`.
+
+La séparation protège les clés, pas le contenu : `sign` signe ce que `build` a produit. La
+porte et la relecture de la release restent le contrôle de ce qui est publié.
 
 ### Porte E2E
 
@@ -229,8 +250,10 @@ LODB_LIVE_UPDATE_PRIVATE_KEY="$(cat /secure/lodb-live-update.pem)" \
 ## Secrets et variables
 
 Les secrets vivent dans l'environnement GitHub **`android-release`** (`Settings` →
-`Environments`), limité à la branche `main`. Les variables sont celles du dépôt : `stage`
-lit la clé publique hors de l'environnement.
+`Environments`), limité à la branche `main`, et ne servent qu'aux jobs `sign` et `play`.
+Les variables sont celles du dépôt : `build` et `stage` lisent la clé publique hors de
+l'environnement. Une variable déclarée dans l'environnement plutôt que dans le dépôt
+manquerait donc au build.
 
 | Nom | Type | Valeur |
 |---|---|---|
@@ -249,7 +272,7 @@ lit la clé publique hors de l'environnement.
 | `ANDROID_PLAY_ENABLED` | variable | `true` une fois l'envoi à Play prêt |
 | `ANDROID_APP_LINK_HOST` | variable | hôte de l'App Link, `league-of-data-base.com` par défaut |
 
-Le workflow décode les keystores dans le dossier temporaire du runner, le temps de l'étape
+Le job `sign` décode les keystores dans le dossier temporaire du runner, le temps de l'étape
 de signature ; les mots de passe passent par l'environnement, jamais par une ligne de
 commande.
 
@@ -383,7 +406,8 @@ ces fichiers.
   - le déploiement de prod doit appeler ce workflow ([Contrat d'appel](#contrat-dappel)) ;
   - les secrets sont à ajouter au guide des secrets GitHub Actions.
 - La porte et le workflow n'ont tourné qu'à blanc (`actionlint`) : le premier run réel est à
-  suivre de près.
+  suivre de près. Le passage de `build` à `sign` a été rejoué dans un conteneur Linux, avec
+  des sorties de build factices et des clés jetables.
 - La porte pilote le plugin par l'APK debug : même front et mêmes réglages que la release,
   vérifiés, mais pas le même binaire. L'APK de release n'est testé qu'au démarrage.
 - Chaque release Android ajoute une release au dépôt, lue aussi par `GithubSource` du
