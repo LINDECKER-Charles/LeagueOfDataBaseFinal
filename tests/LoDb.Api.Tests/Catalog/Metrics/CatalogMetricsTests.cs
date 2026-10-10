@@ -1,10 +1,10 @@
-namespace LoDb.Api.Tests.Catalog;
+namespace LoDb.Api.Tests.Catalog.Metrics;
 
 /// <summary>
 /// The catalog's series as Prometheus reads them, under the names the alerts rely on, and
 /// without a version, a language or an address in a label.
 /// </summary>
-[Collection(CatalogApiGroup.Name)]
+[Collection(CatalogMetricsGroup.Name)]
 public sealed class CatalogMetricsTests(CatalogApiFixture api)
 {
     public static TheoryData<string, string> Series => new()
