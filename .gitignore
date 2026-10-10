@@ -65,6 +65,8 @@ TestResults/
 
 # Parity runs (L1.8): exports and manifests of both stacks, regenerated on demand
 /tools/parity/.runs/
+# Load bench runs: k6 summaries, docker stats samples and the summary of each run
+/tools/load/.runs/
 
 # Leftovers of the layout before the cutover: the PHP stack moved to legacy/app/, but a
 # checkout updated in place keeps its ignored files under app/ (vendor, node_modules, var,
