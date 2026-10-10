@@ -201,6 +201,8 @@ jobs:
           name: android-unsigned
           path: unsigned/
           if-no-files-found: error
+          # The bundles must hold every file of the front, as the APK does.
+          include-hidden-files: true
           retention-days: 1
 
       - name: Upload the gate APK
