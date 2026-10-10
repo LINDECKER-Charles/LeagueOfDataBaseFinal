@@ -55,6 +55,33 @@ public sealed class OutboxOptionsTests
         Assert.True(new OutboxOptionsValidator().Validate(null, options).Failed);
     }
 
+    [Theory]
+    [InlineData(EmailTemplate.ConfirmEmail, 0)]
+    [InlineData(EmailTemplate.ResetPassword, 0)]
+    [InlineData(EmailTemplate.ContactNotification, 1_000_001)]
+    public void CapThatWouldHoldATemplateForEverOrBoundNothingIsRefused(
+        EmailTemplate template,
+        int cap)
+    {
+        var caps = new OutboxHourlyCaps();
+        switch (template)
+        {
+            case EmailTemplate.ConfirmEmail:
+                caps.ConfirmEmail = cap;
+                break;
+            case EmailTemplate.ResetPassword:
+                caps.ResetPassword = cap;
+                break;
+            default:
+                caps.ContactNotification = cap;
+                break;
+        }
+
+        var options = new OutboxOptions { HourlyCaps = caps };
+
+        Assert.True(new OutboxOptionsValidator().Validate(null, options).Failed);
+    }
+
     private static OutboxOptions Broken(string setting) => setting switch
     {
         nameof(OutboxOptions.BatchSize) => new OutboxOptions { BatchSize = 0 },

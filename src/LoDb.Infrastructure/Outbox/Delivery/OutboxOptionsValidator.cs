@@ -28,12 +28,25 @@ internal sealed class OutboxOptionsValidator : IValidateOptions<OutboxOptions>
             failures,
             OutOfRange(options.MaxRetryDelay) || options.MaxRetryDelay < options.RetryDelay,
             "MaxRetryDelay must lie in RetryDelay – 1 day.");
+        CheckCaps(failures, options.HourlyCaps);
         return failures.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);
     }
 
     private static bool OutOfRange(TimeSpan value) => value < MinDelay || value > MaxDelay;
+
+    // A cap of zero would hold its template back for ever: deferred must not mean dropped.
+    private static void CheckCaps(List<string> failures, OutboxHourlyCaps caps)
+    {
+        foreach (var template in Enum.GetValues<EmailTemplate>())
+        {
+            AddIf(
+                failures,
+                caps.Of(template) is < 1 or > OutboxHourlyCaps.MostPerHour,
+                $"HourlyCaps:{template} must lie between 1 and {OutboxHourlyCaps.MostPerHour}.");
+        }
+    }
 
     private static void AddIf(List<string> failures, bool failed, string message)
     {

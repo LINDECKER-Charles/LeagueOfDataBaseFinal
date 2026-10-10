@@ -40,4 +40,7 @@ public sealed class OutboxOptions
     /// dies while sending, it is tried again once the lease is over.
     /// </summary>
     public TimeSpan Lease { get; set; } = TimeSpan.FromMinutes(DefaultLeaseMinutes);
+
+    /// <summary>E-mails of each template sent in a sliding hour, the excess deferred.</summary>
+    public OutboxHourlyCaps HourlyCaps { get; set; } = new();
 }
