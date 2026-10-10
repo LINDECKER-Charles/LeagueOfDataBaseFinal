@@ -59,6 +59,25 @@ services:
       LoDb__Contact__Recipient:
       LoDb__Contact__NotificationLocale:
       LoDb__Analytics__VisitorKey:
+      # Bounds of the catalogs in memory and of the cold work (ADR 0003, amendment of
+      # 2026-10-10); configuration.md gives their defaults.
+      LoDb__Catalog__MaxEntries:
+      LoDb__Catalog__PinnedLanguages:
+      LoDb__Catalog__PinnedBudgetMegabytes:
+      LoDb__Catalog__ColdLoadConcurrency:
+      LoDb__Catalog__ColdLoadsPerSecond:
+      LoDb__Catalog__PublicColdLoadsPerSecond:
+      LoDb__Catalog__ColdLoadBurst:
+      LoDb__Catalog__InternalColdLoadWait:
+      LoDb__Catalog__MaxPendingLoads:
+      LoDb__Catalog__WarmUp__MaxStreams:
+      LoDb__Catalog__WarmUp__MaxStreamsPerClient:
+      LoDb__Catalog__WarmUp__StreamLifetime:
+      LoDb__Catalog__WarmUp__PerClientPerHour:
+      LoDb__Ingestion__ColdDatasetsPerMinute:
+      LoDb__Ingestion__ColdImagesPerMinute:
+      LoDb__Ingestion__MaxWaitingIngestions:
+      LoDb__Ingestion__SlotWait:
     secrets:
       - source: data-protection
         target: data-protection.pfx

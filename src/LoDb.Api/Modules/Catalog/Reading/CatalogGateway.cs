@@ -15,9 +15,10 @@ namespace LoDb.Api.Modules.Catalog.Reading;
 /// (503 with <c>Retry-After</c>).
 /// </summary>
 /// <remarks>
-/// The datasets of a cold version are ingested before the answer (ADR 0003): only their
-/// images may stay placeholders, and only on a list. Every read is a visitor's: the crawler
-/// budget applies to the pages, which know who asks.
+/// The datasets of a cold version are ingested before the answer (ADR 0003), within the
+/// budget of cold work: only their images may stay placeholders, and only on a list or once
+/// the budget is spent. Every read is a visitor's; the scope tells whether the renderer or a
+/// public caller asks, which the gate admitting a cold catalog's load needs.
 /// </remarks>
 internal sealed partial class CatalogGateway(
     ICatalogReader reader,
@@ -42,8 +43,8 @@ internal sealed partial class CatalogGateway(
         var requested = new DatasetScope { Version = version, Language = language };
         try
         {
-            var load = await reader
-                .GetAsync(version, language, ColdDemand.Synchronous, cancellationToken);
+            var demand = ColdDemand.Synchronous.By(scope.Caller);
+            var load = await reader.GetAsync(version, language, demand, cancellationToken);
             return await OpenAsync(load, requested, cancellationToken);
         }
         catch (EgressException exception)

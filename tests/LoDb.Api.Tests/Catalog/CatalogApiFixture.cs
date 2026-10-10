@@ -5,8 +5,10 @@ using LoDb.Domain.Versions;
 using LoDb.Ingestion.Pipeline.Versions;
 using LoDb.Testing;
 using LoDb.Testing.Fixtures;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using OpenTelemetry.Exporter;
 
 namespace LoDb.Api.Tests.Catalog;
 
@@ -24,6 +26,7 @@ public sealed class CatalogApiFixture : IAsyncLifetime
     private TestDatabase? _database;
     private ApiFactory? _factory;
     private HttpClient? _client;
+    private HttpClient? _metricsClient;
 
     public static CancellationToken Token => TestContext.Current.CancellationToken;
 
@@ -48,11 +51,25 @@ public sealed class CatalogApiFixture : IAsyncLifetime
         };
         var replay = DdragonFixtures.CreateReplay();
         var host = _factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(
-            services => services.AddDdragonFixtureReplay(replay)));
+            services => services
+                .AddDdragonFixtureReplay(replay)
+                // Each scrape reads the measures of the test asking: the exporter's response
+                // cache would hand a test the scrape another one took just before.
+                .Configure<PrometheusAspNetCoreOptions>(static prometheus =>
+                    prometheus.ScrapeResponseCacheDurationMilliseconds = 0)));
         var ingestion = host.Services.GetRequiredService<IVersionIngestion>();
         await IngestAsync(ingestion, DdragonFixtures.Latest);
         _client = host.CreateClient();
+        _metricsClient = host.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("http://localhost:9464"),
+        });
     }
+
+    /// <summary>The Prometheus scrape of the metrics port, as text.</summary>
+    public Task<string> ScrapeAsync() =>
+        (_metricsClient ?? throw new InvalidOperationException("The fixture is not initialized."))
+            .GetStringAsync(new Uri("/metrics", UriKind.Relative), Token);
 
     /// <summary>A GET, optionally conditional on a tag the client holds.</summary>
     public async Task<HttpResponseMessage> GetAsync(string path, string? ifNoneMatch = null)
@@ -88,6 +105,7 @@ public sealed class CatalogApiFixture : IAsyncLifetime
     public async ValueTask DisposeAsync()
     {
         _client?.Dispose();
+        _metricsClient?.Dispose();
         if (_factory is not null)
         {
             await _factory.DisposeAsync();

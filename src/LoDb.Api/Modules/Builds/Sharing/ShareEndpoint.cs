@@ -75,7 +75,7 @@ internal sealed class ShareEndpoint(
     private async Task<BuildScene> SceneAsync(Build build, ShareQuery query, string? current)
     {
         var version = string.IsNullOrWhiteSpace(build.GameVersion) ? current : build.GameVersion;
-        var scope = new CatalogScope(version, query.LanguageFor(build.Language));
+        var scope = query.ScopeOf(version, build.Language);
         var aborted = query.Context.RequestAborted;
         var read = version is null ? null : await gateway.ReadAsync(scope, aborted);
         return await BuildScene.OpenAsync(

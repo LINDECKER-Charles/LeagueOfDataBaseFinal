@@ -1,4 +1,5 @@
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.Catalog.WarmUp.Limits;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LoDb.Api.Modules.Catalog.WarmUp;
@@ -13,15 +14,19 @@ namespace LoDb.Api.Modules.Catalog.WarmUp;
 /// datasets alone, what a page without a list needs.
 /// </param>
 /// <param name="WarmUp">Runs the warm-up.</param>
-/// <param name="Context">The call's, whose answer the proxy must not buffer.</param>
+/// <param name="Streams">The places of the streams open on the instance.</param>
+/// <param name="Context">
+/// The call's, whose answer the proxy must not buffer and whose connection tells who asks.
+/// </param>
 /// <param name="CancellationToken">The request's: the stream stops, the ingestion goes on.</param>
 internal sealed record WarmUpRequest(
     [FromRoute(Name = "version")] string Version,
     [FromRoute(Name = "lang")] string Lang,
     [FromQuery(Name = "resources")] string[]? Resources,
     [FromServices] CatalogWarmUp WarmUp,
+    [FromServices] WarmUpStreams Streams,
     HttpContext Context,
     CancellationToken CancellationToken)
 {
-    public CatalogScope Scope => new(Version, Lang);
+    public CatalogScope Scope => new(Version, Lang) { Caller = ColdCallers.Of(Context) };
 }

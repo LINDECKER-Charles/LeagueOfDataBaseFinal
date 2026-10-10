@@ -7,8 +7,8 @@ public enum CatalogLoadStatus
     Ready,
 
     /// <summary>
-    /// The datasets are not stored yet: queued, refused by the queue, or not asked for by a
-    /// stored-only read. A later read may find them.
+    /// The datasets are not stored yet (queued, refused, or not asked for by a stored-only
+    /// read), or their load was not admitted. A later read may find them.
     /// </summary>
     Pending,
 

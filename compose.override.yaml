@@ -18,6 +18,20 @@ services:
       LoDb__Mail__Host: mailpit
       LoDb__Mail__Port: "1025"
       LoDb__Mail__Security: None
+      # The E2E workers open older patches and languages, all from one address, far
+      # faster than a served host admits their cold catalogs, ingestions and warm-ups
+      # (pieges.md, Tests E2E).
+      LoDb__Catalog__ColdLoadConcurrency: "16"
+      LoDb__Catalog__ColdLoadsPerSecond: "1000"
+      LoDb__Catalog__PublicColdLoadsPerSecond: "500"
+      LoDb__Catalog__ColdLoadBurst: "1000"
+      LoDb__Catalog__WarmUp__MaxStreams: "64"
+      LoDb__Catalog__WarmUp__MaxStreamsPerClient: "64"
+      LoDb__Catalog__WarmUp__PerClientPerHour: "100000"
+      LoDb__Ingestion__ColdDatasetsPerMinute: "6000"
+      LoDb__Ingestion__ColdImagesPerMinute: "1000000"
+      LoDb__Ingestion__MaxWaitingIngestions: "1024"
+      LoDb__Ingestion__SlotWait: "00:00:20"
 
   web-ssr:
     ports:
