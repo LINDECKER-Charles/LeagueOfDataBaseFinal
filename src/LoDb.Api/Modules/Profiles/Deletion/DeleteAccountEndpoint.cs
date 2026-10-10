@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using LoDb.Api.Modules.Accounts.Authentication;
 using LoDb.Api.Modules.Accounts.Http;
+using LoDb.Api.Modules.Accounts.Security.Admission;
 using LoDb.Api.Modules.Profiles.Http;
 using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Persistence.Accounts;
@@ -23,6 +24,7 @@ internal sealed class DeleteAccountEndpoint(
     ProfileOwners owners,
     UserManager<User> users,
     SignInManager<User> signIn,
+    HashingAdmission admission,
     XsrfTokens xsrf,
     ProfileAudit audit)
 {
@@ -36,9 +38,11 @@ internal sealed class DeleteAccountEndpoint(
                     [FromBody] DeleteAccountRequest request,
                     [FromServices] DeleteAccountEndpoint endpoint,
                     HttpContext context) => endpoint.DeleteAsync(request, context))
+            .AddEndpointFilter<HashingBusyFilter>()
             .WithName("deleteOwnAccount")
             .WithSummary("Erases the signed-in account once confirmed, and signs it out.")
-            .ProducesProblem(StatusCodes.Status400BadRequest);
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
     public async Task<Results<NoContent, AccountProblem>> DeleteAsync(
         DeleteAccountRequest request,
@@ -49,7 +53,7 @@ internal sealed class DeleteAccountEndpoint(
             return ProfileProblems.SignedOut();
         }
 
-        if (await RefusalAsync(owner, request) is { } refused)
+        if (await RefusalAsync(owner, request, context.RequestAborted) is { } refused)
         {
             return refused;
         }
@@ -67,7 +71,10 @@ internal sealed class DeleteAccountEndpoint(
         return TypedResults.NoContent();
     }
 
-    private async Task<AccountProblem?> RefusalAsync(User owner, DeleteAccountRequest request)
+    private async Task<AccountProblem?> RefusalAsync(
+        User owner,
+        DeleteAccountRequest request,
+        CancellationToken cancellationToken)
     {
         switch (DeletionRules.ConfirmationOf(owner))
         {
@@ -77,12 +84,22 @@ internal sealed class DeleteAccountEndpoint(
                     ? null
                     : Refused(ProfileFields.Confirmation, ConfirmationIncorrect);
             case DeletionConfirmation.Password:
-                return await users.CheckPasswordAsync(owner, request.Password ?? string.Empty)
+                return await PasswordMatchesAsync(owner, request.Password, cancellationToken)
                     ? null
                     : Refused(ProfileFields.Password, PasswordIncorrect);
             default:
                 return null;
         }
+    }
+
+    // The step that hashes.
+    private async Task<bool> PasswordMatchesAsync(
+        User owner,
+        string? password,
+        CancellationToken cancellationToken)
+    {
+        using var permit = await admission.EnterAsync(cancellationToken);
+        return await users.CheckPasswordAsync(owner, password ?? string.Empty);
     }
 
     // The apps forget their tokens themselves; a browser gets its cookie removed.

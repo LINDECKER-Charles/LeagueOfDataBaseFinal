@@ -8,7 +8,8 @@ namespace LoDb.Api.Tests.AccountsSecurity;
 /// <summary>
 /// What an argon2 hash made elsewhere is worth: below the target it is rewritten, above it
 /// it is kept; argon2d, which PHP does not read, fails, and so does a memory cost above PHP's
-/// default, before any computation. Two computations at most run at once.
+/// default, before any computation. Two computations at most run at once, and the gauge of
+/// the computations in flight says so.
 /// </summary>
 public sealed class Argon2PasswordsTests
 {
@@ -18,10 +19,9 @@ public sealed class Argon2PasswordsTests
     private const int PhpDefaultMemoryKib = 65_536;
 
     private const int Computations = 3;
+    private const string InFlightGauge = "lodb.hashing.in_flight";
     private static readonly TimeSpan Patience = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan GracePeriod = TimeSpan.FromMilliseconds(200);
-
-    private static readonly HashingGate Gate = new();
 
     private static readonly User Anyone = new() { Roles = [] };
 
@@ -63,7 +63,7 @@ public sealed class Argon2PasswordsTests
         PasswordVerificationResult verdict) =>
         Assert.Equal(
             verdict,
-            new MigratingPasswordHasher(new Argon2Passwords(Gate)).VerifyHashedPassword(
+            TestHashing.Hasher().VerifyHashedPassword(
                 Anyone,
                 Argon2Hashes.Make(Password, Changes[change]),
                 Password));
@@ -71,7 +71,9 @@ public sealed class Argon2PasswordsTests
     [Fact]
     public async Task AtMostTwoComputationsRunAtOnce()
     {
-        using var gate = new HashingGate();
+        using var meters = new SecurityMeters();
+        using var inFlight = meters.Collect<int>(InFlightGauge);
+        using var gate = new HashingGate(meters.Metrics);
         using var release = new ManualResetEventSlim();
         var running = 0;
 
@@ -90,7 +92,11 @@ public sealed class Argon2PasswordsTests
         // Time for the third one to get in, had the gate let it.
         await Task.Delay(GracePeriod, TestContext.Current.CancellationToken);
         Assert.Equal(2, Volatile.Read(ref running));
+        inFlight.RecordObservableInstruments();
+        Assert.Equal(2, inFlight.LastMeasurement?.Value);
         release.Set();
         await Task.WhenAll(computations);
+        inFlight.RecordObservableInstruments();
+        Assert.Equal(0, inFlight.LastMeasurement?.Value);
     }
 }

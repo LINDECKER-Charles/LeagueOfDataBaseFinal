@@ -73,6 +73,15 @@ internal sealed record AccountProblem : IResult
         "Verification e-mails were sent too recently.",
         retryAfter);
 
+    /// <summary>Every slot of the password hashing is taken: a capacity refusal.</summary>
+    public static AccountProblem ServerBusy(TimeSpan retryAfter) => new()
+    {
+        Status = StatusCodes.Status503ServiceUnavailable,
+        Code = "server-busy",
+        Title = "The server is busy: try again in a few seconds.",
+        RetryAfter = retryAfter,
+    };
+
     public static AccountProblem InvalidToken() => new()
     {
         Status = StatusCodes.Status400BadRequest,

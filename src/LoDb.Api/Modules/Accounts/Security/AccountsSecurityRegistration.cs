@@ -37,6 +37,7 @@ internal static class AccountsSecurityRegistration
             ServiceDescriptor.Singleton<IPasswordHasher<User>, MigratingPasswordHasher>());
         services.TryAddSingleton<Argon2Passwords>();
         services.TryAddSingleton<HashingGate>();
+        services.TryAddSingleton<SecurityMetrics>();
         return builder;
     }
 

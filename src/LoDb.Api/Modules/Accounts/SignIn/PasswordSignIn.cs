@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Accounts.Authentication;
 using LoDb.Api.Modules.Accounts.Http;
 using LoDb.Api.Modules.Accounts.Security;
+using LoDb.Api.Modules.Accounts.Security.Admission;
 using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Identity;
 
@@ -13,11 +14,12 @@ namespace LoDb.Api.Modules.Accounts.SignIn;
 /// <remarks>
 /// Every failure counts toward the lockout, a wrong second factor included. A banned account
 /// is refused once its password is right, so that whoever does not know the password does
-/// not learn of the ban.
+/// not learn of the ban. The password check waits for a permit of the hashing admission.
 /// </remarks>
 internal sealed class PasswordSignIn(
     AccountLookup lookup,
     SignInManager<User> signIn,
+    HashingAdmission admission,
     AccountAudit audit,
     TimeProvider clock)
 {
@@ -45,7 +47,7 @@ internal sealed class PasswordSignIn(
         var user = await lookup.FindAsync(credentials.Identifier!);
         var problem = user is null
             ? AccountProblem.InvalidCredentials()
-            : await CheckAsync(user, credentials);
+            : await CheckAsync(user, credentials, cancellationToken);
         if (problem is null)
         {
             await audit.SignedInAsync(AccountAudit.PasswordMethod, channel, cancellationToken);
@@ -59,13 +61,12 @@ internal sealed class PasswordSignIn(
         return problem;
     }
 
-    private async Task<AccountProblem?> CheckAsync(User user, PasswordCredentials credentials)
+    private async Task<AccountProblem?> CheckAsync(
+        User user,
+        PasswordCredentials credentials,
+        CancellationToken cancellationToken)
     {
-        var result = await signIn.PasswordSignInAsync(
-            user,
-            credentials.Password!,
-            credentials.RememberMe,
-            lockoutOnFailure: true);
+        var result = await CheckPasswordAsync(user, credentials, cancellationToken);
         if (!result.RequiresTwoFactor)
         {
             return Refusal(user, result, AccountProblem.InvalidCredentials);
@@ -74,6 +75,20 @@ internal sealed class PasswordSignIn(
         return await SecondFactorAsync(credentials) is { } second
             ? Refusal(user, second, AccountProblem.InvalidTwoFactorCode)
             : AccountProblem.TwoFactorRequired();
+    }
+
+    // The step that hashes: the check, and the rewrite of a legacy hash it may bring.
+    private async Task<SignInResult> CheckPasswordAsync(
+        User user,
+        PasswordCredentials credentials,
+        CancellationToken cancellationToken)
+    {
+        using var permit = await admission.EnterAsync(cancellationToken);
+        return await signIn.PasswordSignInAsync(
+            user,
+            credentials.Password!,
+            credentials.RememberMe,
+            lockoutOnFailure: true);
     }
 
     // Only within the request whose password check asked for it: no cookie keeps the account
