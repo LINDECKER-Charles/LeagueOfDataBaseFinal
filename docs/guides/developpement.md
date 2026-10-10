@@ -109,7 +109,9 @@ docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml exec -T post
   sous-domaine `api.` (`curl -H 'Host: api.localhost' http://localhost:18080/readyz`, une
   requête par seconde et par adresse). Demandé au site, il part au SSR et répond 404.
 - Les métriques se lisent **depuis le réseau de la stack** : 9464 n'est publié ni sur
-  l'hôte ni par nginx.
+  l'hôte ni par nginx. Celles du SSR :
+  `… exec -T web-ssr node -e "fetch('http://127.0.0.1:9464/metrics').then(r => r.text()).then(console.log)"`.
+  Noms et labels : [`metriques.md`](metriques.md).
 
 Journaux (JSON, une ligne par enregistrement) :
 
