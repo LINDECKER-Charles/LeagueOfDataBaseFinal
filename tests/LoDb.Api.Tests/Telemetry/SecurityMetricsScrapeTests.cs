@@ -40,13 +40,21 @@ public sealed class SecurityMetricsScrapeTests(PostgresContainerFixture postgres
         Assert.Contains(lines, static line => line.StartsWith(
             "lodb_hashing_wait_seconds_count{",
             StringComparison.Ordinal));
-        var attempt = Assert.Single(lines, static line => line.StartsWith(
-            "lodb_sign_in_attempts_total{",
-            StringComparison.Ordinal));
-        Assert.Contains("result=\"failure\"", attempt, StringComparison.Ordinal);
-        Assert.Contains("account=\"member\"", attempt, StringComparison.Ordinal);
-        Assert.Contains("channel=\"session\"", attempt, StringComparison.Ordinal);
-        Assert.DoesNotContain(AccountSeed.Name, attempt, StringComparison.OrdinalIgnoreCase);
+        // The exporter listens to every meter of the name in the process, the other test hosts'
+        // included: other series may show up, never with an identifier.
+        var attempts = lines
+            .Where(static line => line.StartsWith(
+                "lodb_sign_in_attempts_total{",
+                StringComparison.Ordinal))
+            .ToList();
+        Assert.Contains(attempts, static attempt =>
+            attempt.Contains("result=\"failure\"", StringComparison.Ordinal)
+            && attempt.Contains("account=\"member\"", StringComparison.Ordinal)
+            && attempt.Contains("channel=\"session\"", StringComparison.Ordinal));
+        Assert.All(attempts, static attempt => Assert.DoesNotContain(
+            AccountSeed.Name,
+            attempt,
+            StringComparison.OrdinalIgnoreCase));
     }
 
     public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);
