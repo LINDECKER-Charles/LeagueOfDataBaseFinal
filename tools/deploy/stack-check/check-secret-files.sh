@@ -6,14 +6,13 @@
 #   - the Stripe webhook accepts an event signed with the secret of the file only;
 #   - Mailpit, which accepts no other login, receives the mail the API sends with the
 #     password of the file;
-#   - no secret value is in the environment of a container, and the API names the settings
-#     it read from files.
+#   - no secret value is in the environment of api, migrate or postgres, and the API names
+#     the settings it read from files.
 #
-# From the repository root, through the slot script, which exports the project and its ports
-# and removes the stack afterwards:
-#   LODB_SLOT_FILES="-f compose.yaml -f compose.override.yaml \
-#     -f tools/deploy/stack-check/compose.secret-files.yaml" \
-#     bash slot.sh "bash tools/deploy/stack-check/check-secret-files.sh"
+# From the repository root, Docker running, on the slot lodb-dev-e1 (developpement.md) unless
+# COMPOSE_PROJECT_NAME and the LODB_*_PORT variables name another; the stack is removed
+# (`down -v`) at the end:
+#   bash tools/deploy/stack-check/check-secret-files.sh
 # The checks are functions that check() runs:
 # shellcheck disable=SC2329
 set -euo pipefail
@@ -29,11 +28,13 @@ readonly OVERLAY=tools/deploy/stack-check/compose.secret-files.yaml
 readonly MAIL_WAIT_ATTEMPTS=45
 readonly MAIL_WAIT_SECONDS=2
 
-project="${LODB_SLOT_PROJECT:?run through slot.sh}"
-api="http://localhost:${LODB_API_PORT:?run through slot.sh}"
-mailpit="http://localhost:${LODB_MAIL_PORT:?run through slot.sh}"
+project="${COMPOSE_PROJECT_NAME:-lodb-dev-e1}"
+export LODB_HTTP_PORT="${LODB_HTTP_PORT:-18180}" LODB_API_PORT="${LODB_API_PORT:-18181}"
+export LODB_SSR_PORT="${LODB_SSR_PORT:-18182}" LODB_PG_PORT="${LODB_PG_PORT:-15532}"
+export LODB_MAIL_PORT="${LODB_MAIL_PORT:-18125}"
+api="http://localhost:$LODB_API_PORT"
+mailpit="http://localhost:$LODB_MAIL_PORT"
 work="$(mktemp -d)"
-trap 'rm -rf "$work"' EXIT
 failed=0
 
 compose() {
@@ -96,14 +97,21 @@ relay_takes_the_file_password() {
   return 1
 }
 
+# Mailpit, a stand-in for the relay, holds the login it accepts: only the stack's own
+# services are read. A failure names the service and the setting, never the value.
 no_secret_in_any_environment() {
-  local environments value
-  environments="$(compose ps -aq | xargs docker inspect \
-    --format '{{range .Config.Env}}{{println .}}{{end}}')"
-  for value in "$DB_PASSWORD" "$MAIL_PASSWORD" "$WEBHOOK_SECRET" "$STRIPE_KEY" "$VISITOR_KEY"; do
-    if grep -qF -- "$value" <<<"$environments"; then
-      return 1
-    fi
+  local service environment index
+  local -a names=(LODB_DB_PASSWORD Mail__Password StripeWebhookSecret StripeSecretKey VisitorKey)
+  local -a secrets=("$DB_PASSWORD" "$MAIL_PASSWORD" "$WEBHOOK_SECRET" "$STRIPE_KEY" "$VISITOR_KEY")
+  for service in api migrate postgres; do
+    environment="$(compose ps -aq "$service" | xargs docker inspect \
+      --format '{{range .Config.Env}}{{println .}}{{end}}')"
+    for index in "${!secrets[@]}"; do
+      if grep -qF -- "${secrets[$index]}" <<<"$environment"; then
+        echo "  $service holds ${names[$index]} in its environment" >&2
+        return 1
+      fi
+    done
   done
 }
 
@@ -122,6 +130,7 @@ fi
 write_dotenv | bash tools/deploy/split-env.sh "$work/.env" "$secrets_dir"
 export LODB_SECRET_FILES_DIR="$secrets_dir"
 export LODB_CHECK_SMTP_AUTH="lodb:$MAIL_PASSWORD"
+trap 'compose down -v --remove-orphans > /dev/null 2>&1 || true; rm -rf "$work"' EXIT
 compose up -d --build --wait --wait-timeout 300 api mailpit
 
 check "postgres, migrate and the API use the database password of the file" \
@@ -130,7 +139,8 @@ check "the Stripe webhook takes the secret of the file over the environment's" \
   webhook_takes_the_file_secret
 check "the mail relay takes the password of the file over the environment's" \
   relay_takes_the_file_password
-check "no secret value in the environment of a container" no_secret_in_any_environment
+check "no secret value in the environment of api, migrate or postgres" \
+  no_secret_in_any_environment
 check "the API names the settings it read from files, without their values" \
   api_names_its_secret_files
 exit "$failed"
