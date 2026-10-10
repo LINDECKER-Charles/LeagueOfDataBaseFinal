@@ -176,6 +176,11 @@ jobs:
 
       - name: Actions pinned to a full commit SHA
         run: node tools/ci/check-pinned-actions.mjs
+      # The split of the dotenv into secret files on the host, and the overlay that mounts
+      # them (Compose renders it from the .env templates).
+      - name: Test the deploy tools
+        run: node --test tools/deploy/test/*.test.mjs
+
 
       - name: actionlint
         run: |

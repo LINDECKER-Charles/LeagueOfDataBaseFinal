@@ -22,7 +22,8 @@ environnement.
 | Secrets de dépôt `STAGING_*`, `PROD_*` | Connexion SSH et dossier de l'hôte, **ceux de l'ancienne stack, réutilisés tels quels** ; certificat Data Protection (nouveau) | déjà en place, sauf le certificat |
 | Secrets de dépôt `ENV_STAGING`, `ENV_PROD` | Le `.env` complet de l'environnement : **contenu remplacé** par celui de la nouvelle stack | l'exploitant (*Settings ▸ Secrets*) |
 | Environnements GitHub `desktop-release`, `android-release`, variables de dépôt | Clés de signature des apps, drapeaux de release | l'exploitant |
-| `.env` de l'hôte (`$STAGING_PATH/.env`, `$PROD_PATH/.env`) | Variables Compose et réglages de l'API (§ 4) | le job, depuis `ENV_STAGING` ou `ENV_PROD` |
+| `.env` de l'hôte (`$STAGING_PATH/.env`, `$PROD_PATH/.env`) | Variables Compose et réglages de l'API (§ 4), **sans les secrets** | le job, depuis `ENV_STAGING` ou `ENV_PROD` |
+| `.deploy/secrets/` de l'hôte | Un fichier par secret 🔒 du `.env`, monté dans `/run/secrets` des services qui le lisent (§ 4) | le job, depuis `ENV_STAGING` ou `ENV_PROD` |
 | `.deploy/data-protection.pfx` de l'hôte | Certificat Data Protection | le job, depuis `STAGING_DATA_PROTECTION_PFX` ou `PROD_DATA_PROTECTION_PFX` |
 | `.deploy/android/` de l'hôte | `latest.json`, `assetlinks.json` | l'exploitant, à chaque release Android |
 | Services externes | DNS, SMTP, Stripe, Google, Play, Apple, Azure (§ 6) | l'exploitant |
@@ -127,16 +128,45 @@ décommission ([runbook](../reecriture/bascule.md)).
 
 ## 4. Le `.env` d'un environnement servi
 
-Le secret `ENV_STAGING` ou `ENV_PROD` est le fichier complet, une variable par ligne. Le job
-l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque déploiement.
+Le secret `ENV_STAGING` ou `ENV_PROD` est le fichier complet, une variable par ligne. À chaque
+déploiement, le job le pose sur l'hôte (`.deploy/incoming.env`, root seul), puis, le dépôt à
+la révision déployée, [`tools/deploy/split-env.sh`](../../tools/deploy/README.md) le sépare et
+le supprime :
+
+- chaque secret de la liste ci-dessous va dans un fichier de `.deploy/secrets/` portant
+  son nom (fichier en 444, dossier en 700), vide si la ligne est absente ;
+- le reste va dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600), suivi de
+  `LODB_SECRETS_REVISION`.
+
+`compose.deploy.yaml` monte chaque fichier dans `/run/secrets` des seuls services qui le
+lisent : aucun secret n'est dans l'environnement d'un conteneur, que `docker inspect` montre.
+L'API lit un fichier nommé d'après la clé de son réglage (`LoDb__Billing__StripeSecretKey`) ;
+un fichier y prime sur toute autre source, un fichier vide vaut un réglage absent. Les secrets
+mis en fichiers :
+
+- `LODB_DB_PASSWORD` ;
+- `LoDb__DataProtection__CertificatePassword`, `LoDb__Mail__Password` ;
+- `LoDb__Billing__StripeSecretKey`, `LoDb__Billing__StripeWebhookSecret` ;
+- `LoDb__Accounts__Google__ClientSecret`, `LoDb__Accounts__Google__AppClients__N__ClientSecret`
+  (`N` = `0` ou `1`) ;
+- `LoDb__Analytics__VisitorKey`.
+
+`LODB_ADMIN_PASSWORD` reste dans le `.env` : aucun conteneur ne le reçoit par l'environnement
+(§ 4.1).
 
 **Pièges du fichier :**
 
-- Pas de ligne `LoDb__*` vide : la commenter. Présente mais vide, elle est transmise à
-  l'API comme une valeur vide, que certains réglages refusent au démarrage.
-- Une valeur qui contient `$` se met entre apostrophes (`'…'`) : Compose l'interpolerait.
-- La chaîne de connexion n'est pas quotée : un mot de passe de base qui contient `;` la
-  casse (le changer d'abord, `ALTER ROLE`).
+- Pas de ligne `LoDb__*` vide hors secrets : la commenter. Présente mais vide, elle est
+  transmise à l'API comme une valeur vide, que certains réglages refusent au démarrage.
+- Une valeur qui contient `$` se met entre apostrophes (`'…'`) : Compose l'interpolerait. Le
+  job refuse un secret mis en fichier avec un `$` hors apostrophes, un `\` entre guillemets
+  ou un guillemet non fermé, avant d'écrire quoi que ce soit et sans afficher la valeur.
+
+**Changer un secret** : modifier sa ligne dans `ENV_*` et relancer le déploiement. Le fichier
+change, `LODB_SECRETS_REVISION` monte d'un cran et `up` recrée l'API, qui ne lit ses fichiers
+qu'au démarrage (un conteneur garde le fichier monté à sa création). Mot de passe de la base :
+`ALTER ROLE` d'abord, la nouvelle valeur ensuite ; `POSTGRES_PASSWORD_FILE` ne sert qu'à la
+création d'une base, sur un volume vide.
 
 ### 4.1 Variables Compose
 
@@ -153,7 +183,8 @@ l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque dé
 | `LODB_EDGE_CIDR` | — | — | — | Seul pair cru sur `X-Forwarded-For`. **Jamais dans `ENV_*`** : le job l'écrit depuis le réseau `edge` (§ 6.7). |
 | `LODB_NOINDEX` ⚙️ | `1` | `0` | ✅ | `X-Robots-Tag: noindex, nofollow` ; le smoke test le vérifie. |
 | `LODB_DB_NAME`, `LODB_DB_USER` | 🔁 `POSTGRES_DB`, `POSTGRES_USER` | idem | ✅ | La base existe déjà dans `pgdata`, créée avec ces identifiants ; chaîne de connexion de `api` et `migrate`. |
-| `LODB_DB_PASSWORD` 🔒 | 🔁 `POSTGRES_PASSWORD` | idem | ✅ | Idem ; sans `;`. |
+| `LODB_DB_PASSWORD` 🔒 ⚙️ | 🔁 `POSTGRES_PASSWORD` | idem | ✅ | Idem. Fichier (§ 4) : `api` et `migrate` le lisent en `LoDb__Database__Password`, que l'API pose dans la chaîne de connexion (un `;` y est donc permis), `postgres` en `POSTGRES_PASSWORD_FILE`. |
+| `LODB_SECRETS_REVISION` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit et le monte d'un cran quand un fichier secret change ; label de `api`, il fait recréer l'API (§ 4). |
 | `LODB_DATA_PROTECTION_CERT_FILE`, `LODB_ANDROID_DIR` | défauts | défauts | — | Ne pas définir : le job écrit aux emplacements par défaut (§ 5). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | ➖ | ➖ | ➖ | Collecteur de traces OTLP, quand `infra-vps` en expose un. |
 | `LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDERS_PER_MINUTE`, `LODB_PINNED_RENDER_BURST` | ➖ | ➖ | ➖ | Admission des rendus du SSR : rendus simultanés (`8`), dont pages d'une version épinglée dans l'URL (`3`), rendus de versions épinglées par minute (`60`) et d'affilée (`10`). Au-delà, `503` immédiat avec `Retry-After` (nginx sert sa copie périmée s'il en a une). Absents : ces défauts. |
@@ -163,7 +194,7 @@ l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque dé
 | `LODB_QUERY_MAX_PARAMS`, `LODB_QUERY_MAX_PARAM_LENGTH` | ➖ | ➖ | ➖ | Paramètres gardés par l'URL d'une liste ou d'une fiche (`16`, de `200` caractères au plus) ; les autres sont retirés par une `301`. |
 | `LODB_PAGES_RATE`, `LODB_PAGES_BURST`, `LODB_API_READS_*`, `LODB_LEGACY_*`, `LODB_SITEMAPS_*`, `LODB_READYZ_*`, `LODB_RATE_LIMITED_RETRY_AFTER`, `LODB_MAX_BODY_SIZE`, `LODB_WEBHOOK_MAX_BODY_SIZE`, `LODB_PAGE_CACHE_SIZE`, `LODB_PAGE_CACHE_KEYS_SIZE`, `LODB_PAGE_CACHE_INACTIVE` | ➖ | ➖ | ➖ | Bornes de nginx, par adresse : débit (`_RATE`) et rafale (`_BURST`) des pages (`20r/s`, `100`), des lectures publiques de l'API (`10r/s`, `40`), de l'ancien site (`2r/s`, `10`), de `/sitemaps/` (`1r/s`, `20`) et de `/readyz` (`1r/s`, `5`), au-delà `429` avec `Retry-After` (`10`) ; corps de requête (`128k`, `1m` pour `/webhooks/`) ; cache des pages (`2g`, clés `32m`, inactivité `7d`). Absents ou vides : ces défauts, ceux de `docker/nginx/Dockerfile`, que `compose.yaml` reprend (`tools/nginx` vérifie l'accord). |
 | `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
-| `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). |
+| `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). Reste dans le `.env` : le job le passe à la commande par son entrée. |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
 
 Chaque environnement a son propre service `postgres` dans son projet, comme avant.
@@ -173,7 +204,8 @@ environnement servi, `LoDb__Contact__Recipient` et `LODB_PUBLIC_API_ORIGIN` les 
 ### 4.2 Réglages de l'API transmis par le `.env`
 
 Nom exact de la configuration, casse comprise. Absents du `.env`, ils ne sont pas transmis
-et l'API garde sa valeur par défaut.
+et l'API garde sa valeur par défaut. Les lignes 🔒 deviennent des fichiers (§ 4), lus sous le
+même nom.
 
 | Ligne | Requis | Effet, et effet de l'absence |
 |---|---|---|
@@ -188,7 +220,7 @@ et l'API garde sa valeur par défaut.
 | `LoDb__Accounts__Google__ClientId` | ➖ | Client OAuth web. Absent : connexion Google coupée (`google-unavailable`). |
 | `LoDb__Accounts__Google__ClientSecret` 🔒 | avec le précédent | Secret du client web. |
 | `LoDb__Accounts__Google__AppClients__0__ClientId` (et `__1__`) | ➖ | Clients des apps acceptés par l'échange de code ; jamais sans le client web. Deux au plus sans modifier `compose.deploy.yaml`. |
-| `LoDb__Accounts__Google__AppClients__N__ClientSecret` | desktop | Secret du client desktop (livré avec l'app, donc public) ; aucun pour Android. |
+| `LoDb__Accounts__Google__AppClients__N__ClientSecret` 🔒 | desktop | Secret du client desktop (livré avec l'app, donc public) ; aucun pour Android. |
 | `LoDb__Contact__Recipient` | ➖ | Destinataire des messages de contact. Absent : stockés pour l'admin, sans notification. |
 | `LoDb__Contact__NotificationLocale` | ➖ | Langue de la notification, `Fr` par défaut (`Ar`… `ZhHant`). Une valeur invalide ne se voit qu'au premier message. |
 | `LoDb__Analytics__VisitorKey` 🔒 | recommandé | Clé du hachage des visiteurs. Absente : une clé aléatoire par processus, les visiteurs sont recomptés à chaque redémarrage. |
@@ -199,8 +231,9 @@ et l'API garde sa valeur par défaut.
 
 ### 4.3 Fixés par les fichiers compose (hors du `.env`)
 
-`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_*`, hôte `postgres`, pool borné par
-`Maximum Pool Size=32;Timeout=5`),
+`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_NAME` et `LODB_DB_USER`, hôte `postgres`,
+pool borné par `Maximum Pool Size=32;Timeout=5`, **sans mot de passe** : l'API y pose
+`LoDb__Database__Password`, lu dans `/run/secrets`),
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
@@ -217,7 +250,8 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 
 | Section | Clés (défaut) |
 |---|---|
-| `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié), `MaxRequestBodySize` (131072 octets, soit 128 Kio ; au-delà, 413), `DatabaseBusyRetryAfter` (5 s, `Retry-After` du 503 quand le pool Postgres reste occupé) |
+| `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié), `MaxRequestBodySize` (131072 octets, soit 128 Kio ; au-delà, 413), `DatabaseBusyRetryAfter` (5 s, `Retry-After` du 503 quand le pool Postgres reste occupé), `SecretsDirectory` (`/run/secrets` : un fichier par réglage, nommé d'après sa clé avec `__`, lu au démarrage ; vide, il vaut un réglage absent ; il prime sur toute autre source) |
+| `LoDb:Database` | `Password` (aucun : sans lui, la chaîne de connexion reste telle quelle ; posé, il y remplace le mot de passe) |
 | `LoDb:Workers` | `Enabled` (`true` ; seul `false` coupe toutes les tâches de fond) |
 | `LoDb:Accounts` | `SecureCookies` (vrai hors Development) |
 | `LoDb:Mail` | `Timeout` (`00:00:30`) |
@@ -253,9 +287,11 @@ Valable pour les deux environnements : chacun reprend les valeurs de son propre 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |
 |---|---|---|
 | dépôt (branche `test` ou `main`) | le job (`git reset --hard`) | Fichiers compose à la racine. |
-| `.env` | le job (`ENV_STAGING`, `ENV_PROD`, plus `LODB_EDGE_CIDR`), mode 600 | § 4. |
+| `.env` | le job (`ENV_STAGING`, `ENV_PROD` sans ses secrets, plus `LODB_SECRETS_REVISION` et `LODB_EDGE_CIDR`), mode 600 | § 4. |
+| `.deploy/secrets/` | le job (`ENV_STAGING`, `ENV_PROD`), à chaque déploiement | Un fichier par secret (§ 4), monté dans `/run/secrets` des services qui le lisent. Dossier en 700, fichiers en 444 : Compose monte un fichier secret avec son propriétaire et son mode, et l'API comme l'entrée de Postgres le lisent sans être root. Tous présents, vides pour un secret absent : Docker monterait un fichier manquant comme un dossier. |
+| `.deploy/incoming.env` | le job, le temps d'un déploiement | `ENV_*` tel quel, root seul, supprimé dès qu'il est séparé (et à la fin du script, quoi qu'il arrive). |
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |
-| `.deploy/backups/` | le job, à chaque déploiement | `<horodatage>.env` : le `.env` remplacé ; `<horodatage>.dump` : la base avant `migrate` (`pg_dump -Fc`, relu par `pg_restore --list`). Les dix plus récents de chaque, dossier en 700. Ce que le retour arrière restaure ([runbook](../reecriture/bascule.md), § 8.2). |
+| `.deploy/backups/` | le job, à chaque déploiement | `<horodatage>.env` : le `.env` remplacé (sans secret depuis les fichiers secrets ; les copies plus anciennes en contiennent encore) ; `<horodatage>.dump` : la base avant `migrate` (`pg_dump -Fc`, relu par `pg_restore --list`). Les dix plus récents de chaque, dossier en 700. Ce que le retour arrière restaure ([runbook](../reecriture/bascule.md), § 8.2). |
 | `.deploy/android/` | l'exploitant, à chaque release Android | `latest.json` (asset `lodb-android-latest.json`) et `assetlinks.json` ([`release-android.md`](release-android.md)). Vide : les deux URL répondent 404. |
 
 Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :

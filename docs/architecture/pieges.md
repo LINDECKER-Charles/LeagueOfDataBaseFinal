@@ -182,6 +182,15 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
   nom d'utilisateur peut finir en `.bak` ou `.ini`. Vérification : `tools/nginx/`
   (`node --test`).
+- **Secrets en fichiers** (`compose.deploy.yaml`, `tools/deploy/split-env.sh`) : sur un hôte,
+  aucun secret sous `environment:` (une clé sans valeur l'y ramènerait, visible par
+  `docker inspect`) ; un nouveau secret s'ajoute à `SECRET_KEYS` **et** aux `secrets` du
+  calque (`tools/deploy` vérifie l'accord). Le job écrit un fichier par secret, vide s'il est
+  absent : Docker monterait un fichier manquant comme un dossier, et l'API lit un fichier
+  vide comme un réglage absent. Un conteneur garde le fichier monté à sa création et l'API
+  ne lit ses fichiers qu'au démarrage : le label `LODB_SECRETS_REVISION` de `api` est ce qui
+  la fait recréer quand un secret change, ne pas le retirer. `POSTGRES_PASSWORD_FILE` ne
+  sert qu'à la création d'une base (volume vide).
 - `gzip_types` de `docker/nginx/nginx.conf` doit lister `text/javascript` et
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé
