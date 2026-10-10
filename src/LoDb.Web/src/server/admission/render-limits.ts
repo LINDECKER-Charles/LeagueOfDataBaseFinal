@@ -16,6 +16,10 @@ export interface RenderLimits {
   readonly perClientMaxInFlight: number;
   /** Renders of a pinned version one client starts per minute, which it may also spend at once. */
   readonly pinnedPerClientPerMinute: number;
+  /** Renders of the current pages one client starts per minute, on average. */
+  readonly currentPerClientPerMinute: number;
+  /** Renders of the current pages one client starts at once, from a full budget. */
+  readonly currentPerClientBurst: number;
   /** Clients whose renders the admission remembers; the least recently seen is forgotten. */
   readonly trackedClients: number;
 }

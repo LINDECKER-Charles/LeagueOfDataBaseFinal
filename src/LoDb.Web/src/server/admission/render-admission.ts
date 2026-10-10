@@ -28,8 +28,8 @@ function refuse(response: Response): void {
  *
  * Every lane has a budget of renders per minute: pinned versions a small one and slots of
  * their own, the current pages a larger one, the guard of the host when many clients each
- * ask little. Every client has its own share: renders at once, and pinned renders per
- * minute, so that one client alone never takes what the others need. A slot is held until
+ * ask little. Every client has its own share: renders at once, and renders per minute in
+ * each lane, so that one client alone never takes what the others need. A slot is held until
  * the render settles, not until the client leaves, since a render whose client is gone still
  * costs its CPU. Over a 503, nginx serves the stale copy it may hold
  * (`proxy_cache_use_stale`).
@@ -48,9 +48,15 @@ export class RenderAdmission {
       pinned: new TokenBucket(limits.pinnedPerMinute, limits.pinnedBurst, now),
       current: new TokenBucket(limits.currentPerMinute, limits.currentBurst, now),
     };
-    const perClient = limits.pinnedPerClientPerMinute;
-    const budgetOf = () => new TokenBucket(perClient, perClient, now);
-    this.clients = new ClientTable(limits.trackedClients, budgetOf);
+    // A client's pinned share is small enough to be spent at once. Its current share is as
+    // large as the lane's whole burst: it gets a burst of its own, below the lane's, or one
+    // client spending it at once would empty the lane's burst for every other.
+    const { pinnedPerClientPerMinute: pinned, currentPerClientPerMinute: current } = limits;
+    const budgetsOf = () => ({
+      pinned: new TokenBucket(pinned, pinned, now),
+      current: new TokenBucket(current, limits.currentPerClientBurst, now),
+    });
+    this.clients = new ClientTable(limits.trackedClients, budgetsOf);
   }
 
   /** Runs `render` for the request when admitted, else answers the 503. */
@@ -89,7 +95,7 @@ export class RenderAdmission {
     if (lane === 'pinned' && this.inFlight.pinned >= limits.pinnedMaxInFlight) {
       return 'lane_capacity';
     }
-    if (lane === 'pinned' && !client.pinnedBudget.hasToken()) {
+    if (!client.budgets[lane].hasToken()) {
       return 'client_rate';
     }
     return this.laneBudgets[lane].hasToken() ? null : 'lane_rate';
@@ -98,9 +104,7 @@ export class RenderAdmission {
   // Spent only once every check passed: a refused render costs no budget.
   private admit(lane: RenderLane, client: ClientState): void {
     this.laneBudgets[lane].take();
-    if (lane === 'pinned') {
-      client.pinnedBudget.take();
-    }
+    client.budgets[lane].take();
     this.inFlight[lane] += 1;
     client.inFlight += 1;
   }
