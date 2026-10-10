@@ -108,10 +108,20 @@ jobs:
             echo "EXPECTED_NOINDEX=$noindex"
           } >> "$GITHUB_ENV"
 
+      # The runner's own agent, no third-party action: the key goes from the secret to the
+      # agent's memory through a pipe, never to a file. The exported socket serves every ssh
+      # of the following steps.
       - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.10.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+        run: |
+          eval "$(ssh-agent -s)" > /dev/null
+          printf '%s\n' "$SSH_KEY" | ssh-add -q -
+          {
+            echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+            echo "SSH_AGENT_PID=$SSH_AGENT_PID"
+          } >> "$GITHUB_ENV"
+          install -d -m 700 ~/.ssh
 
       - name: Known hosts
         run: ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
@@ -340,3 +350,8 @@ jobs:
               || true
             exit 1
           EOSSH
+
+      # The key leaves the agent's memory as soon as the job no longer needs it.
+      - name: Stop the SSH agent
+        if: always() && env.SSH_AGENT_PID != ''
+        run: ssh-agent -k > /dev/null
