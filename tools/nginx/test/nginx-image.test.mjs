@@ -23,6 +23,8 @@ const LIMITS = {
   LODB_LEGACY_BURST: '5',
   LODB_SITEMAPS_RATE: '1r/m',
   LODB_SITEMAPS_BURST: '5',
+  LODB_READYZ_RATE: '1r/m',
+  LODB_READYZ_BURST: '1',
 };
 
 describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' }, () => {
@@ -71,6 +73,11 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.equal((await get('/v1/champions', { agent: BLOCKED_AGENT })).status, 403);
     const onApiHost = await get('/v1/champions', { host: API_HOST, agent: BLOCKED_AGENT });
     assert.equal(onApiHost.status, 403);
+  });
+
+  test('exposes /readyz on the API host at its own rate', async () => {
+    const statuses = await statusesOf(stack.port, '/readyz', 3, { host: API_HOST });
+    assert.deepEqual(statuses, [200, 200, 429]);
   });
 
   test('caps request bodies at 128 KiB, the webhooks at 1 MiB', async () => {

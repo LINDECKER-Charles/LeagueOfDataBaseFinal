@@ -29,7 +29,7 @@ demander.
 
 - nginx (`docker/nginx/`) : `limit_req` par adresse réelle sur les pages, les lectures
   publiques de l'API (`/api/catalog`, `pickers`, `meta`, `legacy`, `trends`, `share`), les
-  URL de l'ancien site et `/sitemaps/` ; `429` avec `Retry-After` et `no-store`
+  URL de l'ancien site, `/sitemaps/` et `/readyz` ; `429` avec `Retry-After` et `no-store`
   (`snippets/server-guards.conf`). Jamais sur les actions d'un compte, `/v1/`, `/webhooks/`,
   `/build/` ni `/cdn/`. Débits et rafales réglables par `LODB_*` (défauts dans le
   `Dockerfile`), relevés pour l'E2E dans `compose.override.yaml` seulement.
@@ -46,5 +46,6 @@ demander.
   cachés et les extensions de scripts serveur ou de sauvegardes.
 - Blobs : seul `/cdn/blobs/{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` est servi, avec
   `Content-Security-Policy: default-src 'none'; sandbox` ; tout autre `/cdn/` répond `404`.
+- `/readyz` (base et stockage) exposé sur le sous-domaine `api.` pour une sonde externe.
 - Vérification : `tools/nginx/` démarre l'image derrière des amonts factices
   (`node --test`).

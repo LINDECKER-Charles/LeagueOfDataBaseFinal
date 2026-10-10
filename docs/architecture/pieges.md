@@ -56,7 +56,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 ## API, données et comptes
 
-- `/readyz` se lit sur l'API (18081 ou `api:8080`) ; demandé à nginx, il part au SSR (404).
+- `/readyz` se lit sur l'API (18081 ou `api:8080`) et, par nginx, sur le sous-domaine `api.`
+  seulement (1 requête/s par adresse, sonde externe) ; demandé au site, il part au SSR (404).
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
@@ -110,7 +111,7 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   site : tout nouveau chemin hors locale se vérifie contre cette liste. `server.d/seo.conf`
   possède `/sitemap.xml`, `/sitemaps/`, `/robots.txt` et `/llms.txt`.
 - nginx, bornes (`sites/site.conf`) : `limit_req` par adresse sur les pages, les lectures
-  publiques de l'API, l'ancien site et `/sitemaps/` ; **jamais** sur les autres
+  publiques de l'API, l'ancien site, `/sitemaps/` et `/readyz` ; **jamais** sur les autres
   `/api/` (actions d'un compte, ADR 0009), `/v1/`, `/webhooks/`, `/build/`, `/cdn/`. Le 429
   vient de `snippets/server-guards.conf` : une location qui déclare son propre `error_page`
   doit répéter `error_page 429`. `/api/catalog` et `/api/meta` ne sont **jamais** mis en
