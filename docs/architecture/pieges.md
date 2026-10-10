@@ -123,7 +123,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   cache par nginx (un HIT contournerait le `426` des apps). Les caches `lodb_seo` et
   `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages` sur un volume.
   `/cdn/blobs/` ne sert que `{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` : une nouvelle
-  extension de blob s'ajoute à la regex. Vérification : `tools/nginx/` (`node --test`).
+  extension de blob s'ajoute à la regex. La garde des extensions de scripts
+  (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
+  nom d'utilisateur peut finir en `.bak` ou `.ini`. Vérification : `tools/nginx/`
+  (`node --test`).
 - `gzip_types` de `docker/nginx/nginx.conf` doit lister `text/javascript` et
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé

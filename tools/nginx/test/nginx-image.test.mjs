@@ -16,11 +16,11 @@ const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTM
 // Rates per minute: no token comes back while the checks run, so each burst is exact.
 const LIMITS = {
   LODB_PAGES_RATE: '1r/m',
-  LODB_PAGES_BURST: '2',
+  LODB_PAGES_BURST: '3',
   LODB_API_READS_RATE: '1r/m',
   LODB_API_READS_BURST: '2',
   LODB_LEGACY_RATE: '1r/m',
-  LODB_LEGACY_BURST: '5',
+  LODB_LEGACY_BURST: '6',
   LODB_SITEMAPS_RATE: '1r/m',
   LODB_SITEMAPS_BURST: '5',
   LODB_READYZ_RATE: '1r/m',
@@ -41,6 +41,15 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
   test('accepts its rendered configuration', async () => {
     const { stderr } = await stack.exec('nginx', '-t');
     assert.match(stderr, /test is successful/);
+  });
+
+  // Before the page and legacy checks: it spends one request of each burst (LIMITS).
+  test('leaves a username that ends like a script to the profiles', async () => {
+    assert.equal((await get('/en/u/kevin.bak')).status, 200);
+    assert.equal((await get('/u/kevin.bak')).status, 301);
+    assert.equal((await get('/api/profiles/kevin.ini')).status, 200);
+    assert.equal((await get('/v1/profiles/kevin.env', { host: API_HOST })).status, 200);
+    assert.equal((await get('/en/u/kevin/x.php')).status, 404);
   });
 
   test('refuses a client past its page burst with a 429 and Retry-After', async () => {
