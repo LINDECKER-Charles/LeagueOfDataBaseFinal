@@ -212,7 +212,8 @@ jobs:
         run: |
           "$E2E/build.sh" --rid "$RID" --version "$VERSION" --channel "$CHANNEL" \
             --shell-dir shell --publish-dir publish
-          tar -C publish -cf desktop-publish.tar .
+          # COPYFILE_DISABLE: no AppleDouble entries from macOS' bsdtar, which codesign refuses.
+          COPYFILE_DISABLE=1 tar -C publish -cf desktop-publish.tar .
 
       - name: Upload the publish folder
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -273,8 +274,15 @@ jobs:
           name: desktop-publish-${{ matrix.rid }}
           path: build
 
+      # The build job holds no secret and this one signs: a link planted in the archive would
+      # make vpk package a file of this runner. A publish folder never needs one.
       - name: Unpack the publish folder
-        run: mkdir publish && tar -C publish -xf build/desktop-publish.tar
+        run: |
+          mkdir publish && tar -C publish -xf build/desktop-publish.tar
+          if find publish -type l | grep -q .; then
+            find publish -type l -exec printf '::error::Symbolic link in the publish folder: %s\n' {} +
+            exit 1
+          fi
 
       - name: Install vpk
         env:

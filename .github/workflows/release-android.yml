@@ -239,6 +239,9 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
+          # No cache in the job that holds the signing keys, even if a package manager is
+          # declared at the root one day.
+          package-manager-cache: false
 
       # keytool and jarsigner; zipalign and apksigner come from the runner's Android SDK.
       - name: Setup Java
