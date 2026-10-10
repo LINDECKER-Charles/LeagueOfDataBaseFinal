@@ -16,6 +16,8 @@ public sealed class ColdLoadGateTests
     private const int MaxLoads = 2;
     private const int Joiners = 20;
     private const int InternalKey = 1000;
+    private const int LargeRate = 50_000;
+    private const int RendererReads = 4;
 
     [Fact]
     public async Task FiftySimultaneousMissesRunAtMostTwoLoads()
@@ -115,6 +117,30 @@ public sealed class ColdLoadGateTests
         release.SetResult();
         Assert.All(await Task.WhenAll(blocking), static read => Assert.True(read.IsHeld));
         Assert.False(harness.Cache.TryGet(Key(InternalKey), out _));
+    }
+
+    [Fact]
+    public async Task RendererKeepsItsShareOfTheBurstAtLargeRates()
+    {
+        // The burst times the renderer's rate exceeds what an int holds.
+        var options = new CatalogOptions
+        {
+            ColdLoadConcurrency = 64,
+            ColdLoadsPerSecond = LargeRate,
+            PublicColdLoadsPerSecond = 1,
+            ColdLoadBurst = LargeRate,
+            InternalColdLoadWait = TimeSpan.FromMilliseconds(1),
+        };
+        using var harness = new CacheHarness(options);
+
+        for (var minor = 0; minor < RendererReads; minor++)
+        {
+            var read = await harness.Cache.GetOrLoadAsync(
+                Key(minor),
+                Build(Key(minor), ColdCaller.Internal),
+                Token);
+            Assert.True(read.IsHeld, $"Internal load {minor} was refused.");
+        }
     }
 
     [Fact]

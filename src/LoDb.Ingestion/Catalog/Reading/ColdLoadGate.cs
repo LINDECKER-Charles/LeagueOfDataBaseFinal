@@ -39,9 +39,11 @@ internal sealed class ColdLoadGate : IDisposable
         ArgumentNullException.ThrowIfNull(options);
         var settings = options.Value;
         var internalPerSecond = settings.ColdLoadsPerSecond - settings.PublicColdLoadsPerSecond;
-        var internalBurst = Math.Max(
-            1,
-            settings.ColdLoadBurst * internalPerSecond / settings.ColdLoadsPerSecond);
+        // In 64 bits: the product of two large settings overflows an int, and the quotient,
+        // at most the burst, fits back.
+        var internalBurst = (int)Math.Max(
+            1L,
+            (long)settings.ColdLoadBurst * internalPerSecond / settings.ColdLoadsPerSecond);
         loads = Concurrency(settings.ColdLoadConcurrency, settings.MaxPendingLoads);
         publicLoads = Concurrency(Math.Max(1, settings.ColdLoadConcurrency - 1), 0);
         internalRate = Rate(internalPerSecond, internalBurst, settings.MaxPendingLoads);
