@@ -203,6 +203,11 @@ describe('report', () => {
       admission: { admitted: { pinned: 40 }, refused: { 'pinned/lane_rate': 500 } },
       apiEvents: {},
     };
+    const quiet = {
+      ...scenario,
+      name: 'S3',
+      logs: { admission: { admitted: {}, refused: {} }, apiEvents: { 'catalog.read.failed': 2 } },
+    };
     const report = renderReport({
       run: {
         date: '2026-10-10T21:00Z',
@@ -213,7 +218,7 @@ describe('report', () => {
         k6Image: 'grafana/k6:2.3.0@sha256:x',
         docker: { cpus: 24, memoryBytes: 32 * 2 ** 30 },
       },
-      scenarios: [scenario],
+      scenarios: [scenario, quiet],
     });
     assert.match(report, /^# Banc de charge k6/);
     assert.match(report, /\| S1 \| 4140 \| 0\.45 \/ 0\.90 \|/);
@@ -222,6 +227,8 @@ describe('report', () => {
     assert.match(report, /✓ `probe-miss-p95-ms` : 900 ms \(borne 1500 ms\)/);
     assert.match(report, /✓ `no-oom` : aucun \(borne aucun\)/);
     assert.match(report, /503: 3900/);
-    assert.match(report, /admis pinned 40 ; refusés pinned\/lane_rate 500/);
+    assert.match(report, /refus\) : admis pinned 40 ; refusés pinned\/lane_rate 500/);
+    assert.match(report, /## S3[^#]*Admission du SSR : aucun rendu refusé\./);
+    assert.match(report, /## S3[^#]*de l'API : catalog\.read\.failed 2\./);
   });
 });

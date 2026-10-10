@@ -130,6 +130,15 @@ function counts(byKey) {
   return entries.length === 0 ? 'aucun' : entries.map(([key, n]) => `${key} ${n}`).join(', ');
 }
 
+// The SSR logs its admissions only for a minute in which it refused a render.
+function admissionLine(admission) {
+  if (Object.keys(admission?.refused ?? {}).length === 0) {
+    return '- Admission du SSR : aucun rendu refusé.';
+  }
+  return `- Admission du SSR (minutes avec refus) : admis ${counts(admission.admitted)} ; ` +
+    `refusés ${counts(admission.refused)}.`;
+}
+
 // What the generator saw, then what the SSR and the API logged meanwhile.
 function trafficLines({ name, result, logs }) {
   const warmUps = name === 'S5'
@@ -143,8 +152,7 @@ function trafficLines({ name, result, logs }) {
       `(p95 ${milliseconds(result.probe.hit.p95)}), MISS ${result.probe.miss.count} ` +
       `(p95 ${milliseconds(result.probe.miss.p95)}).`,
     ...warmUps,
-    `- Admission du SSR (résumés journalisés pendant le passage) : admis ` +
-      `${counts(logs?.admission.admitted)} ; refusés ${counts(logs?.admission.refused)}.`,
+    admissionLine(logs?.admission),
     `- Avertissements et erreurs de l'API : ${counts(logs?.apiEvents)}.`,
   ];
 }

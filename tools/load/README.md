@@ -81,10 +81,11 @@ bloc). La durée est rangée selon `X-Cache-Status` ; une réponse autre que 200
 1. Construit et démarre l'emplacement avec le calque, attend que le dernier patch soit promu
    (`/api/meta`), puis laisse à l'API le temps d'épingler ses catalogues.
 2. Pour chaque scénario : une chauffe de même charge (non mesurée), puis le passage mesuré,
-   pendant lequel `docker stats` relève web-ssr, api, postgres et nginx toutes les 5 s, puis
-   l'état des conteneurs (`OOMKilled`, redémarrages, processus tués par le noyau ou à court de
-   mémoire dans leurs journaux) et ce que le SSR et l'API ont journalisé pendant le passage.
-   Un repos sépare deux scénarios.
+   pendant lequel `docker stats` relève web-ssr, api, postgres et nginx toutes les 5 s ; leurs
+   compteurs cgroup (`cpu.stat`) sont lus avant et après par un conteneur jetable de l'image
+   k6. Puis l'état des conteneurs (`OOMKilled`, redémarrages, processus tués par le noyau ou à
+   court de mémoire dans leurs journaux) et ce que le SSR et l'API ont journalisé pendant le
+   passage. Un repos sépare deux scénarios.
 3. Écrit le résumé et supprime l'emplacement.
 
 Réglages : `LODB_BENCH_PROJECT` (`lodb-dev-e1`), les ports `LODB_*_PORT` de l'emplacement,
@@ -97,10 +98,12 @@ de la construction et de chaque scénario, par exemple `nice -n 10`).
 
 `tools/load/.runs/<heure UTC>/summary.md` (et `summary.json`) : un tableau de synthèse, puis
 chaque scénario en détail : statuts de la charge et de la sonde, rendus admis et refusés par le
-SSR (couloir et raison, qui disent quelle borne a délesté), avertissements de l'API par
-événement, cœurs et mémoire de chaque conteneur, critères un par un. Code de sortie : 0 si tous
-les critères tiennent, 1 si l'un manque, 2 si le banc n'a pas tourné jusqu'au bout. Les
-fichiers bruts restent à côté : `<S>.k6.json` (résumé k6), `<S>.stats.ndjson`,
+SSR (couloir et raison, qui disent quelle borne a délesté ; le SSR ne journalise que les minutes
+où il a refusé), avertissements de l'API par événement, cœurs et mémoire de chaque conteneur
+(centiles de `docker stats`, moyenne exacte et part des périodes bridées par le quota, lues
+dans les compteurs cgroup), critères un par un. Code de sortie : 0 si tous les critères
+tiennent, 1 si l'un manque, 2 si le banc n'a pas tourné jusqu'au bout. Les fichiers bruts
+restent à côté : `<S>.k6.json` (résumé k6), `<S>.stats.ndjson`, `<S>.cpu.txt`,
 `<S>.health.ndjson`, `<S>.admission.ndjson`, `<S>.api-events.txt`.
 
 | Critère | Borne |
