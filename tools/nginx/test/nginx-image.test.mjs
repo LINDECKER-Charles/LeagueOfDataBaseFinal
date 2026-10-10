@@ -16,9 +16,12 @@ const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTM
 
 // Rates per minute: no token comes back while the checks run, so each burst is exact. Any peer
 // may state the client address, so that a check of the caches speaks for a client of its own
-// (`forwardedFor`) and leaves the bursts of the others whole.
+// (`forwardedFor`) and leaves the bursts of the others whole. The first parts of the page
+// caches' keys are named, to be found in the stored keys.
 const LIMITS = {
   LODB_EDGE_CIDR: '0.0.0.0/0',
+  LODB_REVISION: 'r1',
+  LODB_ARCHIVE_EPOCH: 'e7',
   LODB_PAGES_RATE: '1r/m',
   LODB_PAGES_BURST: '3',
   LODB_API_READS_RATE: '1r/m',
@@ -35,6 +38,11 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
   let stack;
   const get = (path, options) => send(stack.port, path, options);
   const cacheOf = async (path) => (await get(path)).headers['x-cache-status'];
+  // The keys a cache folder holds, as nginx wrote them into its files.
+  const keysOf = async (folder) => {
+    const { stdout } = await stack.exec('grep', '-rah', '^KEY: ', `/var/cache/nginx/${folder}`);
+    return stdout.split('\n').filter(Boolean);
+  };
 
   before(async () => {
     stack = await startStack(IMAGE, LIMITS);
@@ -140,6 +148,29 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     for (const response of [compressed, plain, browser]) {
       assert.equal(response.headers.vary, 'Accept-Encoding');
     }
+  });
+
+  test("keeps a past patch's page from its second request, under a key without revision",
+    async () => {
+      const client = { forwardedFor: '203.0.113.2' };
+      const path = '/en/15.1.1/champions';
+      const first = await get(path, { ...client, encoding: 'gzip' });
+      const second = await get(path, { ...client, encoding: 'gzip' });
+      const third = await get(path, client);
+
+      assert.deepEqual([first, second, third].map((answer) => answer.headers['x-cache-status']),
+        ['MISS', 'MISS', 'HIT']);
+      assert.equal(gunzipSync(second.body).toString(), 'archive\n');
+      assert.equal(third.body.toString(), 'archive\n');
+      assert.equal(third.headers.vary, 'Accept-Encoding');
+      assert.deepEqual(await keysOf('archive'), [`KEY: e7|http://localhost${path}`]);
+      assert.ok((await keysOf('pages')).includes('KEY: r1|http://localhost/en/about'));
+    });
+
+  test("holds a client to the pages' rate on a past patch too", async () => {
+    const statuses = await statusesOf(stack.port, '/fr/14.24.1/items', 5,
+      { forwardedFor: '203.0.113.3' });
+    assert.deepEqual(statuses, [200, 200, 200, 200, 429]);
   });
 
   test('keeps a bundle under its name alone, whatever the host, but never a 404', async () => {

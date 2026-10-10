@@ -176,8 +176,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   vient de `snippets/server-guards.conf` : une location qui déclare son propre `error_page`
   doit répéter `error_page 429`. `/api/catalog` et `/api/meta` ne sont **jamais** mis en
   cache par nginx (un HIT contournerait le `426` des apps). Les caches `lodb_seo` et
-  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages` et
-  `lodb_assets` (bundles de `/build/`, clé = `$uri` seul) sur des volumes.
+  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages`,
+  `lodb_archive` et `lodb_assets` (bundles de `/build/`, clé = `$uri` seul) sur des volumes.
   `/cdn/blobs/` ne sert que `{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` : une nouvelle
   extension de blob s'ajoute à la regex. La garde des extensions de scripts
   (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
@@ -193,6 +193,18 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé
   sans le port).
+- **Pages des anciens patchs** (`location ~ "^/{locale}/[0-9]"`, `snippets/archive-cache.conf`) :
+  clé **sans révision**, préfixée par `LODB_ARCHIVE_EPOCH`. Elles survivent aux déploiements
+  et gardent jusqu'à une semaine le chrome, la CSP et les bundles du build qui les a rendues :
+  voulu. Monter l'epoch quand le chrome, la CSP ou le contrat `/api` changent de façon
+  visible, et après tout correctif de sécurité du front (procédure :
+  [`configuration.md`](../guides/configuration.md)). Gardées à la **2ᵉ** demande
+  (`min_uses 2`) : `MISS`, `MISS`, puis `HIT` ; une spec qui attend un `HIT` les demande trois
+  fois. En local aussi, une page d'ancien patch survit à un rebuild : `down -v` ou monter
+  l'epoch. `archive-cache.conf` sert la copie périmée pendant le rafraîchissement
+  (`updating`) ; `page-cache.conf` **jamais** (elle primerait sur le
+  `stale-while-revalidate` du dernier patch). Les regex de location contenant `{` sont entre
+  guillemets, sinon nginx refuse sa configuration.
 - **Bundles des builds précédents** : chaque démarrage de `web-ssr` copie ses bundles hachés
   dans le volume `front-builds` (`LODB_FRONT_BUILDS_DIR`) sans réécrire l'existant et
   rafraîchit leur date ; `/build/` sert ceux de l'image, puis ceux du volume. Le job de

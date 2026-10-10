@@ -162,11 +162,26 @@ l'écrit dans `$STAGING_PATH/.env` ou `$PROD_PATH/.env` (mode 600) à chaque dé
 | `LODB_RENDER_DEADLINE_SECONDS`, `LODB_RENDER_API_TIMEOUT_SECONDS` | ➖ | ➖ | ➖ | Attente de l'API par un rendu (`20`) et par appel (`10`, borné par le temps restant) ; au-delà, page `502`. |
 | `LODB_QUERY_MAX_PARAMS`, `LODB_QUERY_MAX_PARAM_LENGTH` | ➖ | ➖ | ➖ | Paramètres gardés par l'URL d'une liste ou d'une fiche (`16`, de `200` caractères au plus) ; les autres sont retirés par une `301`. |
 | `LODB_HTML_GZIP_LEVEL` | ➖ | ➖ | ➖ | Niveau gzip (`6`, de `1` à `9`) auquel le SSR compresse une page, une fois par rendu ; nginx garde la copie compressée. |
-| `LODB_PAGES_RATE`, `LODB_PAGES_BURST`, `LODB_API_READS_*`, `LODB_LEGACY_*`, `LODB_SITEMAPS_*`, `LODB_READYZ_*`, `LODB_RATE_LIMITED_RETRY_AFTER`, `LODB_MAX_BODY_SIZE`, `LODB_WEBHOOK_MAX_BODY_SIZE`, `LODB_PAGE_CACHE_SIZE`, `LODB_PAGE_CACHE_KEYS_SIZE`, `LODB_PAGE_CACHE_INACTIVE`, `LODB_ASSETS_CACHE_SIZE`, `LODB_ASSETS_CACHE_KEYS_SIZE`, `LODB_ASSETS_CACHE_INACTIVE` | ➖ | ➖ | ➖ | Bornes de nginx, par adresse : débit (`_RATE`) et rafale (`_BURST`) des pages (`20r/s`, `100`), des lectures publiques de l'API (`10r/s`, `40`), de l'ancien site (`2r/s`, `10`), de `/sitemaps/` (`1r/s`, `20`) et de `/readyz` (`1r/s`, `5`), au-delà `429` avec `Retry-After` (`10`) ; corps de requête (`128k`, `1m` pour `/webhooks/`) ; cache des pages (`2g`, clés `32m`, inactivité `7d`) ; cache des bundles de `/build/` (`1g`, clés `8m`, inactivité `30d`). Absents ou vides : ces défauts, ceux de `docker/nginx/Dockerfile`, que `compose.yaml` reprend (`tools/nginx` vérifie l'accord). |
+| `LODB_PAGES_RATE`, `LODB_PAGES_BURST`, `LODB_API_READS_*`, `LODB_LEGACY_*`, `LODB_SITEMAPS_*`, `LODB_READYZ_*`, `LODB_RATE_LIMITED_RETRY_AFTER`, `LODB_MAX_BODY_SIZE`, `LODB_WEBHOOK_MAX_BODY_SIZE`, `LODB_PAGE_CACHE_SIZE`, `LODB_PAGE_CACHE_KEYS_SIZE`, `LODB_PAGE_CACHE_INACTIVE`, `LODB_ARCHIVE_CACHE_SIZE`, `LODB_ARCHIVE_CACHE_KEYS_SIZE`, `LODB_ARCHIVE_CACHE_INACTIVE`, `LODB_ASSETS_CACHE_SIZE`, `LODB_ASSETS_CACHE_KEYS_SIZE`, `LODB_ASSETS_CACHE_INACTIVE` | ➖ | ➖ | ➖ | Bornes de nginx, par adresse : débit (`_RATE`) et rafale (`_BURST`) des pages (`20r/s`, `100`), des lectures publiques de l'API (`10r/s`, `40`), de l'ancien site (`2r/s`, `10`), de `/sitemaps/` (`1r/s`, `20`) et de `/readyz` (`1r/s`, `5`), au-delà `429` avec `Retry-After` (`10`) ; corps de requête (`128k`, `1m` pour `/webhooks/`) ; cache des pages du dernier patch (`2g`, clés `32m`, inactivité `24h`), des anciens patchs (`6g`, clés `32m`, inactivité `7d`) et des bundles de `/build/` (`1g`, clés `8m`, inactivité `30d`), soit ≈ 9 Go de disque au plus. Absents ou vides : ces défauts, ceux de `docker/nginx/Dockerfile`, que `compose.yaml` reprend (`tools/nginx` vérifie l'accord). |
+| `LODB_ARCHIVE_EPOCH` | ➖ | ➖ | ➖ | Première partie de la clé du cache des anciens patchs (`1`), leur seule purge : voir « Monter l'epoch des anciens patchs » ci-dessous. |
 | `LODB_FRONT_BUILDS_RETENTION_DAYS` | ➖ | ➖ | ➖ | Lu par le job de déploiement : un bundle du volume `front-builds` qu'aucun build n'a livré depuis ce nombre de jours (`30`) est supprimé. Jamais sous la durée de vie d'une page en cache (une semaine pour un ancien patch) : un onglet ou une page gardée nommerait un bundle disparu. |
 | `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
+
+**Monter l'epoch des anciens patchs.** Les pages d'une version épinglée dans l'URL sont
+gardées par nginx à travers les déploiements, avec le chrome, la CSP et les bundles du build
+qui les a rendues. Monter `LODB_ARCHIVE_EPOCH` (`1` → `2`…) dans `ENV_STAGING` / `ENV_PROD`
+quand le chrome (en-tête, pied, puce de release), la CSP ou le contrat `/api` changent de
+façon visible, et **après tout correctif de sécurité du front** ; le déploiement suivant
+recrée nginx sur des clés neuves, les anciennes s'éteignent en 7 jours. Pour un correctif
+de sécurité, retirer aussi le chunk vulnérable, du volume des bundles et du cache de nginx :
+
+```bash
+docker compose exec -T web-ssr rm -f /srv/front-builds/<chunk>.js
+docker compose exec -T nginx sh -c \
+  "grep -rlax 'KEY: /build/<chunk>.js' /var/cache/nginx/assets | xargs -r rm -f"
+```
 
 Chaque environnement a son propre service `postgres` dans son projet, comme avant.
 `CONTACT_RECIPIENT` et `PUBLIC_API_BASE_URL` n'ont d'effet qu'en local : sur un
@@ -267,6 +282,7 @@ Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :
 | `pgdata` | **repris** de l'ancienne stack | La base, mise à jour par `migrate` (une base Doctrine est d'abord marquée à `Baseline`). |
 | `ddragon` | nouveau, vide au premier déploiement | Blobs Data Dragon, remplis par l'ingestion. |
 | `pages-cache` | nouveau | Cache des pages de nginx. |
+| `archive-cache` | nouveau | Cache des pages des anciens patchs de nginx, clé sans révision : il survit aux déploiements (`LODB_ARCHIVE_EPOCH`). |
 | `assets-cache` | nouveau | Cache des bundles de `/build/` de nginx, clé = nom du fichier : un déploiement le trouve chaud. |
 | `front-builds` | nouveau | Bundles hachés des builds successifs : chaque démarrage de `web-ssr` y ajoute les siens, `/build/` y trouve ceux des builds précédents ; le job supprime ceux qu'aucun build n'a livrés depuis 30 jours. |
 | `storage`, `app_state` | ancienne stack, **laissés intacts** | Non montés : ni réutilisés (`storage` appartient à `www-data`, l'API ne pourrait pas y écrire) ni supprimés (retour arrière, reprise des agrégats et de l'audit). Supprimés à la décommission, après export. |

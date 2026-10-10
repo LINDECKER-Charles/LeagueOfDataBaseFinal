@@ -2,12 +2,17 @@
 date: 2026-10-10
 type: perf
 scope: full-stack
-title: Un onglet ouvert avant une mise à jour du site continue de fonctionner
-summary: Après une mise à jour du site, un onglet déjà ouvert garde tout ce qu'il lui faut, ou se recharge de lui-même au lieu d'afficher une erreur.
+title: Anciens patchs plus rapides, et plus d'onglet cassé après une mise à jour
+summary: Les pages des anciens patchs restent prêtes d'une mise à jour du site à l'autre, et un onglet déjà ouvert continue de fonctionner.
 tags: [disponibilite, performance]
 ---
 
 ## Ce qui change
+
+Les pages des anciens patchs s'affichent plus vite : une fois consultées, elles restent
+prêtes pendant une semaine, même quand le site est mis à jour, au lieu d'être recalculées à
+chaque mise à jour. Les pages du dernier patch sont, elles aussi, recalculées moins souvent :
+un nouveau patch y apparaît au plus une demi-heure après son arrivée sur le site.
 
 Si le site est mis à jour pendant que vous le consultez, l'onglet déjà ouvert continue de
 fonctionner : les éléments de la version précédente restent disponibles pendant un mois. Et
@@ -16,6 +21,13 @@ recharge une fois, de lui-même, et vous arrivez directement sur la page demand�
 
 ## Technique
 
+- nginx, pages d'une version épinglée dans le chemin (`^/{locale}/[0-9]`) : zone
+  `lodb_archive` (6 Go, 7 j d'inactivité, clés 32 Mo), clé **sans révision de déploiement**,
+  préfixée par `LODB_ARCHIVE_EPOCH`, montée à la main ; gardée à la deuxième demande
+  (`proxy_cache_min_uses 2`) ; copie périmée servie pendant son rafraîchissement
+  (`updating`). Même débit par adresse que les autres pages. `lodb_pages` (dernier patch,
+  clé avec révision) redescend à 24 h d'inactivité. Tailles réglables par `LODB_ARCHIVE_*`
+  et `LODB_PAGE_CACHE_*`.
 - Navigateur : un import dynamique qui échoue (message de Chromium, Firefox ou WebKit,
   `isChunkLoadFailure`) recharge la page entière à l'adresse demandée, une seule fois
   (`ChunkReload`, adresse retenue en `sessionStorage`) ; un second échec à la même adresse
@@ -36,3 +48,4 @@ recharge une fois, de lui-même, et vous arrivez directement sur la page demand�
   (au lieu de 300 s et 3 600 s) : une page demandée souvent est rendue au plus deux fois par
   heure au lieu de douze. Un nouveau patch apparaît sur une page en cache au plus 30 minutes
   après sa promotion ; un déploiement change toujours la clé du cache.
+- ADR 0005 amendée (clé de cache des anciens patchs, bundles conservés).
