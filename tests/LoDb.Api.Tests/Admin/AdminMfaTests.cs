@@ -46,9 +46,11 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
 
         using var wrong = await admin.PostAsync(ConfirmPath, new { code = Totp.WrongCode(key) });
         using var blank = await admin.PostAsync(ConfirmPath, new { code = " " });
+        using var malformed = await admin.PostAsync(ConfirmPath, new { code = "12345a" });
 
         Assert.Equal(["invalid-code"], (await ApiJson.FieldErrorsAsync(wrong))["code"]);
         Assert.Equal(["required"], (await ApiJson.FieldErrorsAsync(blank))["code"]);
+        Assert.Equal(["malformed"], (await ApiJson.FieldErrorsAsync(malformed))["code"]);
         var stored = await App.FindAsync(AdminCalls.NewAdminName);
         Assert.Equal((1, false), (stored.AccessFailedCount, stored.TwoFactorEnabled));
         using var panel = await admin.GetAsync("/api/admin/users");

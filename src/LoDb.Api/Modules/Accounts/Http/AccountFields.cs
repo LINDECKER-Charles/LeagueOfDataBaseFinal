@@ -17,4 +17,6 @@ internal static class AccountFields
     public const string CodeVerifier = "codeVerifier";
     public const string RedirectUri = "redirectUri";
     public const string ClientId = "clientId";
+    public const string TwoFactorCode = "twoFactorCode";
+    public const string RecoveryCode = "recoveryCode";
 }

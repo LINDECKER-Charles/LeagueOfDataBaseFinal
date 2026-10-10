@@ -11,6 +11,9 @@ internal sealed class FieldErrors
     /// <summary>The field is missing or blank.</summary>
     public const string Required = "required";
 
+    /// <summary>The field holds a value of a shape it can never take.</summary>
+    public const string Malformed = "malformed";
+
     private readonly Dictionary<string, List<string>> _codes = new(StringComparer.Ordinal);
 
     public bool IsEmpty => _codes.Count == 0;
@@ -41,6 +44,29 @@ internal sealed class FieldErrors
         if (string.IsNullOrWhiteSpace(value))
         {
             Add(field, Required);
+        }
+    }
+
+    /// <summary>
+    /// Adds <see cref="Required"/> to a blank field, and <see cref="Malformed"/> to a value
+    /// <paramref name="isWellFormed"/> refuses.
+    /// </summary>
+    public void RequireShape(string field, string? value, Func<string, bool> isWellFormed)
+    {
+        RequireText(field, value);
+        CheckShape(field, value, isWellFormed);
+    }
+
+    /// <summary>
+    /// Adds <see cref="Malformed"/> to a value <paramref name="isWellFormed"/> refuses; a
+    /// blank field, left out, is not checked.
+    /// </summary>
+    public void CheckShape(string field, string? value, Func<string, bool> isWellFormed)
+    {
+        ArgumentNullException.ThrowIfNull(isWellFormed);
+        if (!string.IsNullOrWhiteSpace(value) && !isWellFormed(value))
+        {
+            Add(field, Malformed);
         }
     }
 

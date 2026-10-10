@@ -101,8 +101,11 @@ internal sealed partial class GoogleExchangeEndpoint(
     private static FieldErrors Check(GoogleExchangeRequest request, GoogleAppClient? client)
     {
         var errors = new FieldErrors();
-        errors.RequireText(AccountFields.Code, request.Code);
-        errors.RequireText(AccountFields.CodeVerifier, request.CodeVerifier);
+        errors.RequireShape(AccountFields.Code, request.Code, GoogleExchangeShape.IsCode);
+        errors.RequireShape(
+            AccountFields.CodeVerifier,
+            request.CodeVerifier,
+            GoogleExchangeShape.IsVerifier);
         errors.RequireText(AccountFields.RedirectUri, request.RedirectUri);
         if (client is null)
         {

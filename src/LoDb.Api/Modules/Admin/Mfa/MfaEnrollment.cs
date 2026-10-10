@@ -2,6 +2,7 @@ using System.Security.Claims;
 using LoDb.Api.Modules.Accounts.Authentication;
 using LoDb.Api.Modules.Accounts.Http;
 using LoDb.Api.Modules.Accounts.Session;
+using LoDb.Api.Modules.Accounts.SignIn;
 using LoDb.Api.Modules.Admin.Http;
 using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Authentication;
@@ -97,6 +98,11 @@ internal sealed class MfaEnrollment(
         if (digits is null)
         {
             return AdminProblems.Invalid(CodeField, FieldErrors.Required);
+        }
+
+        if (!SignInFieldBounds.IsAuthenticatorCode(code!))
+        {
+            return AdminProblems.Invalid(CodeField, FieldErrors.Malformed);
         }
 
         if (await users.IsLockedOutAsync(user))

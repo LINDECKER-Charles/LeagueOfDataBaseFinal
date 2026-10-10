@@ -57,9 +57,9 @@ internal sealed class PasswordSignIn(
         SignInChannel channel,
         CancellationToken cancellationToken)
     {
-        if (Blanks(credentials) is { } blanks)
+        if (Invalid(credentials) is { } invalid)
         {
-            return blanks;
+            return invalid;
         }
 
         signIn.AuthenticationScheme = channel.Scheme;
@@ -81,11 +81,23 @@ internal sealed class PasswordSignIn(
         return problem;
     }
 
-    private static AccountProblem? Blanks(PasswordCredentials credentials)
+    // Checked before anything else: a value past its bound is neither looked up nor counted.
+    private static AccountProblem? Invalid(PasswordCredentials credentials)
     {
         var errors = new FieldErrors();
-        errors.RequireText(AccountFields.Identifier, credentials.Identifier);
+        errors.RequireShape(
+            AccountFields.Identifier,
+            credentials.Identifier,
+            SignInFieldBounds.IsIdentifier);
         errors.RequireText(AccountFields.Password, credentials.Password);
+        errors.CheckShape(
+            AccountFields.TwoFactorCode,
+            credentials.TwoFactorCode,
+            SignInFieldBounds.IsAuthenticatorCode);
+        errors.CheckShape(
+            AccountFields.RecoveryCode,
+            credentials.RecoveryCode,
+            SignInFieldBounds.IsRecoveryCode);
         return errors.IsEmpty ? null : errors.ToProblem();
     }
 
