@@ -3,7 +3,8 @@ name: CI/CD
 # Continuous integration (.NET 10 + Angular) and delivery. The legacy stack's workflows are
 # archived under legacy/.github/workflows/ and no longer run; changes under legacy/ trigger
 # nothing. The checks run in parallel: build and tests .NET, front checks, API contract,
-# i18n report (informative) and E2E on the local stack. No sensitive value here: hosts,
+# i18n report (informative), the workflows themselves (actions pinned to a commit,
+# actionlint) and E2E on the local stack. No sensitive value here: hosts,
 # paths and app secrets are repository secrets / live inside the per-host ENV_FILE.
 #
 # Two-stage promotion (build once, promote the same artifact):
@@ -149,6 +150,42 @@ jobs:
       - name: Report translation completeness
         run: npm --prefix src/LoDb.Web run i18n:report
 
+  # The workflows themselves (tools/ci): every action pinned to a full commit SHA, so that a
+  # moved tag never changes what runs with the secrets, then actionlint, its release archive
+  # checked against the SHA-256 of its checksums.txt before it runs.
+  workflows:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ACTIONLINT_VERSION: 1.7.12
+      ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Test the pin check
+        run: node --test tools/ci/test/*.test.mjs
+
+      - name: Actions pinned to a full commit SHA
+        run: node tools/ci/check-pinned-actions.mjs
+
+      - name: actionlint
+        run: |
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          base="https://github.com/rhysd/actionlint/releases/download/v$ACTIONLINT_VERSION"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$archive" "$base/$archive"
+          echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
+
   e2e:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -202,7 +239,7 @@ jobs:
 
   # ───────────────────────────────── dev path ────────────────────────────────
   merge-to-test:
-    needs: [dotnet, front, contract, e2e]
+    needs: [dotnet, front, contract, workflows, e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     permissions:
