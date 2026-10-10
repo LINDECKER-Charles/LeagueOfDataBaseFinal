@@ -1,17 +1,16 @@
 import type { ClientState } from './client-state';
-import type { TokenBucket } from './token-bucket';
 
 /**
  * The admission state of the clients seen lately, bounded to `capacity` entries: past it,
  * the client seen least recently is forgotten (a Map keeps insertion order, and a client
- * seen again moves to its end). A forgotten client starts afresh, with a full budget.
+ * seen again moves to its end). A forgotten client starts afresh, with full budgets.
  */
 export class ClientTable {
   private readonly clients = new Map<string, ClientState>();
 
   constructor(
     private readonly capacity: number,
-    private readonly budgetOf: () => TokenBucket,
+    private readonly budgetsOf: () => ClientState['budgets'],
   ) {}
 
   /** The state of the client `key`, made on its first request, now the most recent. */
@@ -26,7 +25,7 @@ export class ClientTable {
     if (this.clients.size >= this.capacity && oldest.done !== true) {
       this.clients.delete(oldest.value);
     }
-    const created: ClientState = { inFlight: 0, pinnedBudget: this.budgetOf() };
+    const created: ClientState = { inFlight: 0, budgets: this.budgetsOf() };
     this.clients.set(key, created);
     return created;
   }

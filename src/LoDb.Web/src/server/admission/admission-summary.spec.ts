@@ -40,6 +40,15 @@ describe('AdmissionSummary', () => {
     ]);
   });
 
+  it("tells a client over its share of the current pages from the lane's own budget", () => {
+    repeat(4, () => counts.record('current', 'client_rate'));
+    counts.record('current', 'lane_rate');
+
+    summary.flush();
+
+    expect(lines()[0]).toMatchObject({ refused: { current: { client_rate: 4, lane_rate: 1 } } });
+  });
+
   it('counts each minute from the end of the previous one', () => {
     counts.record('current', 'capacity');
     summary.flush();

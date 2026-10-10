@@ -11,6 +11,8 @@ describe('readRenderLimits', () => {
       currentBurst: 60,
       perClientMaxInFlight: 2,
       pinnedPerClientPerMinute: 6,
+      currentPerClientPerMinute: 60,
+      currentPerClientBurst: 20,
       trackedClients: 50_000,
     });
   });
@@ -25,6 +27,8 @@ describe('readRenderLimits', () => {
       LODB_CURRENT_RENDER_BURST: '100',
       LODB_RENDER_PER_CLIENT_MAX_IN_FLIGHT: '4',
       LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE: '12',
+      LODB_CURRENT_RENDERS_PER_CLIENT_PER_MINUTE: '120',
+      LODB_CURRENT_RENDER_PER_CLIENT_BURST: '30',
       LODB_RENDER_TRACKED_CLIENTS: '1000',
     });
 
@@ -37,6 +41,8 @@ describe('readRenderLimits', () => {
       currentBurst: 100,
       perClientMaxInFlight: 4,
       pinnedPerClientPerMinute: 12,
+      currentPerClientPerMinute: 120,
+      currentPerClientBurst: 30,
       trackedClients: 1000,
     });
   });
@@ -66,19 +72,20 @@ describe('readRenderLimits', () => {
   });
 
   // The lane's budget lowered in an incident, the client's left alone: the server starts.
-  it('caps a client share left to its default by a whole set below it', () => {
-    const limits = readRenderLimits({ LODB_PINNED_RENDERS_PER_MINUTE: '4' });
-
-    expect(limits.pinnedPerMinute).toBe(4);
-    expect(limits.pinnedPerClientPerMinute).toBe(4);
+  it.each([
+    ['LODB_PINNED_RENDERS_PER_MINUTE', 'pinnedPerClientPerMinute'],
+    ['LODB_CURRENT_RENDERS_PER_MINUTE', 'currentPerClientPerMinute'],
+    ['LODB_CURRENT_RENDER_BURST', 'currentPerClientBurst'],
+  ] as const)('caps a client share left to its default by %s set below it', (whole, part) => {
+    expect(readRenderLimits({ [whole]: '4' })[part]).toBe(4);
   });
 
-  it('refuses a client budget of pinned renders above the whole lane', () => {
-    expect(() =>
-      readRenderLimits({
-        LODB_PINNED_RENDERS_PER_MINUTE: '10',
-        LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE: '11',
-      }),
-    ).toThrow(/LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE/);
+  it.each([
+    ['LODB_PINNED_RENDERS_PER_MINUTE', 'LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE'],
+    ['LODB_CURRENT_RENDERS_PER_MINUTE', 'LODB_CURRENT_RENDERS_PER_CLIENT_PER_MINUTE'],
+    ['LODB_CURRENT_RENDER_BURST', 'LODB_CURRENT_RENDER_PER_CLIENT_BURST'],
+  ])('lets the whole %s be reached by its client share %s, never exceeded', (whole, part) => {
+    expect(() => readRenderLimits({ [whole]: '10', [part]: '10' })).not.toThrow();
+    expect(() => readRenderLimits({ [whole]: '10', [part]: '11' })).toThrow(new RegExp(part));
   });
 });

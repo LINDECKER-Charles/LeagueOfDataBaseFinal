@@ -139,7 +139,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `compose.deploy.yaml`) : toute la suite arrive d'une adresse et ouvre les anciens patchs
   bien plus vite qu'un hôte servi ne les admet. Admission : `LODB_RENDER_MAX_IN_FLIGHT`,
   `LODB_PINNED_*`, `LODB_CURRENT_*` et la part d'un client (`LODB_RENDER_PER_CLIENT_*`,
-  `LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE`). Attente de l'API par un rendu :
+  `LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE`, `LODB_CURRENT_RENDERS_PER_CLIENT_PER_MINUTE`,
+  `LODB_CURRENT_RENDER_PER_CLIENT_BURST` : sans elles, la suite entière n'aurait qu'un rendu
+  par seconde des pages du dernier patch). Attente de l'API par un rendu :
   `LODB_RENDER_DEADLINE_SECONDS` et `LODB_RENDER_API_TIMEOUT_SECONDS` à 30 s, car la
   première visite d'un patch attend son ingestion. Une 503 ou une 502 du SSR en E2E se
   cherche d'abord là.
