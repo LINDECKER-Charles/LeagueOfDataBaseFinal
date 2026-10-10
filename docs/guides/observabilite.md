@@ -9,6 +9,8 @@
 > - Mettre l'application en état d'y verser quelque chose d'exploitable :
 >   [`../audits/observabilite-2026-08-23.md`](../audits/observabilite-2026-08-23.md).
 > - Ce qu'on écrit dans un log applicatif : [`logging.md`](logging.md).
+> - Les métriques de l'API et du SSR (noms, labels, cardinalité) :
+>   [`metriques.md`](metriques.md).
 > - Ce que l'hôte porte : [`migration-edge-proxy.md`](migration-edge-proxy.md).
 
 ---
@@ -152,6 +154,11 @@ container_memory_working_set_bytes{stack=~"lodb-.*"}
 sum by (hote) (rate(caddy_http_response_size_bytes_sum{handler="subroute", hote!=""}[5m]))
 ```
 
+Les métriques **applicatives** de l'API et du SSR (`lodb_*`, ASP.NET Core, Node) sont
+collectées sur leur port 9464 par le réseau `observability` : le contrat des noms et des
+labels, la règle de cardinalité et des requêtes types sont dans
+[`metriques.md`](metriques.md). Toujours filtrer sur `stack` (`lodb-prod`, `lodb-staging`).
+
 ---
 
 ## 🔙 Dépannage
@@ -164,4 +171,5 @@ sum by (hote) (rate(caddy_http_response_size_bytes_sum{handler="subroute", hote!
 | Staging et prod se mélangent dans un panneau | requête sans filtre `stack` | toujours préfixer `stack:lodb-prod` — les deux stacks sont co-localisés |
 | Le niveau `error` explose sans incident | `.level` deviné, ou clé de contexte `error` | filtrer sur la clé d'événement, jamais sur `level` |
 | Une ligne JSON est coupée en plein milieu | `log_limit` FPM | vérifier que `[global] log_limit = 65536` est bien dans `php-fpm.conf` ; alléger le contexte |
+| Aucune série `lodb_*` pour un `stack` | `api` ou `web-ssr` hors du réseau `observability`, ou labels `prometheus.*` absents | `docker inspect <conteneur> --format '{{json .NetworkSettings.Networks}}'` ; redéployer (`compose.deploy.yaml` les pose) |
 | Le site disparaît du dashboard *Edge — trafic* | une directive `log` ou `caddy.import: journal-acces` a été réintroduite quelque part | `docker inspect <conteneur> --format '{{json .Config.Labels}}'` ; retirer le label. L'alerte `SiteAbsentDuJournalAcces` le détecte site par site |
