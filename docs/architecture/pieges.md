@@ -68,7 +68,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 ## API, données et comptes
 
-- `/readyz` se lit sur l'API (18081 ou `api:8080`) ; demandé à nginx, il part au SSR (404).
+- `/readyz` se lit sur l'API (18081 ou `api:8080`) et, par nginx, sur le sous-domaine `api.`
+  seulement (1 requête/s par adresse, sonde externe) ; demandé au site, il part au SSR (404).
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
@@ -108,6 +109,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   première visite d'un patch attend son ingestion. Une 503 ou une 502 du SSR en E2E se
   cherche d'abord là.
 - Les instantanés de `tests/LoDb.E2E/test-results/` sont écrasés au passage suivant.
+- **Débits par adresse de nginx relevés** : toute la suite arrive sous une seule adresse (la
+  passerelle Docker), plus vite qu'un visiteur. `compose.override.yaml` relève
+  `LODB_PAGES_*`, `LODB_API_READS_*`, `LODB_LEGACY_*` et `LODB_SITEMAPS_*` (débit et rafale) ;
+  jamais `compose.deploy.yaml`. Pour retrouver un défaut, retirer la clé (`!reset null`) :
+  une valeur vide fait refuser la configuration de nginx.
 
 ## Infra et déploiement
 
@@ -119,10 +125,28 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `storage` rendrait le stockage de l'API non inscriptible.
 - nginx : sous-domaine reconnu par `server_name ~^api\.` ; CORP `same-origin` sauf
   `/cdn/blobs/` en `cross-origin` (coquille Android) ; `access_log off` voulu (l'edge
-  journalise) ; `sites/*.conf` passe par `envsubst`, filtré sur `^LODB_`.
+  journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent par
+  `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide).
+  Une variable `LODB_*` de nginx passe par `compose.yaml` avec son défaut
+  (`${LODB_X:-défaut}`), **jamais** en clé sans valeur dans un calque comme les réglages de
+  l'API : Docker effacerait le défaut `ENV` de l'image et nginx refuserait de démarrer.
   `server.d/legacy-redirects.conf` envoie à `/api/legacy` les premiers segments de l'ancien
   site : tout nouveau chemin hors locale se vérifie contre cette liste. `server.d/seo.conf`
   possède `/sitemap.xml`, `/sitemaps/`, `/robots.txt` et `/llms.txt`.
+- nginx, bornes (`sites/site.conf`) : `limit_req` par adresse sur les pages, les lectures
+  publiques de l'API, l'ancien site, `/sitemaps/` et `/readyz` ; **jamais** sur les autres
+  `/api/` (actions d'un compte, ADR 0009), `/v1/`, `/webhooks/`, `/build/`, `/cdn/`. Une
+  location qui vise une route de l'API se compare **sans casse** (`~*`) : l'API route
+  `/api/Catalog/…` comme `/api/catalog/…`, que `location /api/` laisserait passer. Le 429
+  vient de `snippets/server-guards.conf` : une location qui déclare son propre `error_page`
+  doit répéter `error_page 429`. `/api/catalog` et `/api/meta` ne sont **jamais** mis en
+  cache par nginx (un HIT contournerait le `426` des apps). Les caches `lodb_seo` et
+  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages` sur un volume.
+  `/cdn/blobs/` ne sert que `{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` : une nouvelle
+  extension de blob s'ajoute à la regex. La garde des extensions de scripts
+  (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
+  nom d'utilisateur peut finir en `.bak` ou `.ini`. Vérification : `tools/nginx/`
+  (`node --test`).
 - `gzip_types` de `docker/nginx/nginx.conf` doit lister `text/javascript` et
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé

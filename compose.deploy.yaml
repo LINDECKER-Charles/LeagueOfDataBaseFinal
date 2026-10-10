@@ -108,6 +108,9 @@ services:
       # (APP_REVISION, the commit SHA baked by _build.yml), so a promoted build never
       # serves the previous one's pages.
       LODB_REVISION: !reset null
+      # The bounds per client address and the cache sizes come from compose.yaml, which reads
+      # them from the host's .env with the image's defaults. Never as value-less keys here,
+      # unlike the API's settings: a key without a value drops the image's ENV default.
     volumes:
       # Host folder of the Android files, latest.json and assetlinks.json
       # (server.d/android-latest.conf, assetlinks.conf): empty, both URLs answer 404.
@@ -125,8 +128,11 @@ services:
     deploy:
       resources:
         limits:
-          # Peak 19 MiB; the kernel's page cache of the blobs it serves is charged here.
-          memory: 64m
+          # Not the 2 x peak rule (19 MiB of processes): the shared memory of the cache keys
+          # (32 MiB for the pages) and of the rate zones is charged here, and so is the
+          # kernel's page cache of the cached pages and blobs it serves, which fills whatever
+          # the limit leaves. Too tight, every cache HIT reads the disk again.
+          memory: 256m
 
   postgres:
     environment:

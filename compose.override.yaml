@@ -40,6 +40,19 @@ services:
   nginx:
     ports:
       - "${LODB_HTTP_PORT:-18080}:80"
+    # The E2E workers all come from one address (the Docker gateway) and open pages, API
+    # reads, old URLs and sitemaps far faster than one visitor: the rates per address are
+    # lifted here only. To get a default back, drop the key (`!reset null`): an empty value
+    # makes nginx refuse its configuration.
+    environment:
+      LODB_PAGES_RATE: 1000r/s
+      LODB_PAGES_BURST: "10000"
+      LODB_API_READS_RATE: 1000r/s
+      LODB_API_READS_BURST: "10000"
+      LODB_LEGACY_RATE: 1000r/s
+      LODB_LEGACY_BURST: "10000"
+      LODB_SITEMAPS_RATE: 1000r/s
+      LODB_SITEMAPS_BURST: "10000"
 
   postgres:
     ports:
