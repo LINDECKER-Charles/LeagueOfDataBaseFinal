@@ -99,7 +99,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `storage` rendrait le stockage de l'API non inscriptible.
 - nginx : sous-domaine reconnu par `server_name ~^api\.` ; CORP `same-origin` sauf
   `/cdn/blobs/` en `cross-origin` (coquille Android) ; `access_log off` voulu (l'edge
-  journalise) ; `sites/*.conf` passe par `envsubst`, filtré sur `^LODB_`.
+  journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent par
+  `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide).
   `server.d/legacy-redirects.conf` envoie à `/api/legacy` les premiers segments de l'ancien
   site : tout nouveau chemin hors locale se vérifie contre cette liste. `server.d/seo.conf`
   possède `/sitemap.xml`, `/sitemaps/`, `/robots.txt` et `/llms.txt`.

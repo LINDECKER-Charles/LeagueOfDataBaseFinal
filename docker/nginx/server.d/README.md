@@ -2,7 +2,8 @@
 
 Every `*.conf` file of this folder is included inside the site's `server` block
 (`sites/site.conf`), after its own locations. The image copies the whole folder, so a
-new file needs no change to the Dockerfile. Files here are plain nginx, not templates.
+new file needs no change to the Dockerfile. Like `sites/` and `snippets/`, every file is a
+template: `${LODB_…}` is replaced at start (Dockerfile), nginx's own `$variables` are not.
 
 Reserved files (plan, §7.3):
 
