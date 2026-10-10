@@ -77,12 +77,16 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
    `.deploy/data-protection.pfx`, puis synchronise le dépôt sur la branche (`git reset --hard`).
 2. Contrôle le `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
    `COMPOSE_PROJECT_NAME` = `lodb-<env>`, `IMAGE_TAG` = `<env>`, `LODB_NOINDEX` (`1` sur
-   `staging`, `0` en `prod`) ; en `prod`, relais SMTP et clés Stripe présents. Exige le
-   réseau `edge` (jamais créé) et écrit son sous-réseau dans le `.env` (`LODB_EDGE_CIDR`,
-   seul pair dont nginx croit `X-Forwarded-For`).
+   `staging`, `0` en `prod`) ; en `prod`, relais SMTP et clés Stripe présents. Exige les
+   réseaux `edge` et `observability` (jamais créés) et écrit le sous-réseau d'`edge` dans le
+   `.env` (`LODB_EDGE_CIDR`, seul pair dont nginx croit `X-Forwarded-For`), ainsi que celui
+   de la stack, fixé par cible (`LODB_STACK_SUBNET`, `10.231.1.0/24` en staging,
+   `10.231.2.0/24` en prod) ; s'arrête si un autre réseau Docker le recouvre.
 3. `docker compose pull` (5 tentatives), sauvegarde de la base en service (`.deploy/backups/`), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
    run le temps du seul `pull` (transmis par l'entrée de `ssh`, jamais en ligne de
-   commande), puis `docker compose run --rm migrate` : la base du
+   commande). Si le réseau de la stack existe sur un autre sous-réseau, `docker compose
+   down` (sans `-v`) le libère une fois (environ une minute de coupure). Puis
+   `docker compose run --rm migrate` : la base du
    volume `pgdata` passe à la dernière migration (une base Doctrine est d'abord marquée à
    `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir.
 4. `docker compose up -d --no-build --remove-orphans --wait` : les conteneurs de la nouvelle

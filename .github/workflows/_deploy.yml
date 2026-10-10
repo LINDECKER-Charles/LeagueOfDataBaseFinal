@@ -222,9 +222,12 @@ jobs:
               done
             fi
 
-            # The edge and its network belong to infra-vps; this job only asserts them.
+            # The edge, the collection and their networks belong to infra-vps; this job only
+            # asserts them.
             docker network inspect edge >/dev/null 2>&1 \
               || fail "Docker network 'edge' is missing — deploy infra-vps before this project."
+            docker network inspect observability >/dev/null 2>&1 \
+              || fail "Docker network 'observability' is missing — deploy infra-vps first."
             # nginx trusts X-Forwarded-For from this subnet only. Docker picks it when infra-vps
             # creates the network, so it is read here rather than copied into ENV_FILE, and
             # kept in the .env so manual `docker compose` runs from this folder resolve it too.

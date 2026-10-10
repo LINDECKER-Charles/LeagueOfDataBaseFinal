@@ -87,6 +87,15 @@ services:
     secrets:
       - source: data-protection
         target: data-protection.pfx
+    # The host's collector scrapes port 9464 over `observability` (infra-vps,
+    # docs/APPLICATIONS.md § 4); never published nor routed. There, every container of the
+    # host can reach this one: port 8080 answers the stack's subnet only (NetworkGate), and the
+    # API calls its peers by their prefixed aliases (lodb-postgres), never by a short name.
+    networks:
+      observability: {}
+    labels:
+      prometheus.scrape: "true"
+      prometheus.port: "9464"
     deploy:
       resources:
         limits:
@@ -183,6 +192,11 @@ networks:
   edge:
     external: true
     name: edge
+  # Shared collection network, created once per host by infra-vps like `edge`: the scrape of
+  # the metrics ports. The deploy job asserts that it exists.
+  observability:
+    external: true
+    name: observability
 
 secrets:
   # PKCS#12 file of the Data Protection certificate, written by the deploy job from a
