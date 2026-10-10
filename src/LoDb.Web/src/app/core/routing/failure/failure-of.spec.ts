@@ -9,10 +9,20 @@ function httpError(status: number, retryAfter?: string): HttpErrorResponse {
 
 describe('failureOf', () => {
   it.each([
-    ['an unreachable or timed out API', httpError(0), null],
-    ['a proxy without upstream', httpError(HttpStatusCode.BadGateway), null],
+    ['an unreachable or timed out API', httpError(0)],
+    ['a proxy without upstream', httpError(HttpStatusCode.BadGateway)],
+    ['a proxy timeout', httpError(HttpStatusCode.GatewayTimeout)],
+  ])('answers 502 for %s', (_case, error) => {
+    expect(failureOf(error)).toEqual({
+      kind: 'failure',
+      status: HttpStatusCode.BadGateway,
+      retryAfter: null,
+    });
+  });
+
+  it.each([
     ['a cold version being ingested', httpError(HttpStatusCode.ServiceUnavailable, '5'), '5'],
-    ['a proxy timeout', httpError(HttpStatusCode.GatewayTimeout), null],
+    ['a load shed without delay', httpError(HttpStatusCode.ServiceUnavailable), null],
   ])('answers 503 for %s, passing its Retry-After on', (_case, error, retryAfter) => {
     expect(failureOf(error)).toEqual({
       kind: 'failure',

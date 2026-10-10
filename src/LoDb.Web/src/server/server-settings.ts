@@ -1,4 +1,5 @@
 import type { RenderLimits } from './admission/render-limits';
+import type { RenderTimeouts } from './rendering/render-timeouts';
 
 /** Configuration of the SSR server, read once from its environment at startup. */
 export interface ServerSettings {
@@ -12,4 +13,6 @@ export interface ServerSettings {
   readonly selfOrigin: string | null;
   /** Bounds of the render admission (`RenderAdmission`). */
   readonly renderLimits: RenderLimits;
+  /** How long a render may wait on the API (`RenderBudget` of each render). */
+  readonly renderTimeouts: RenderTimeouts;
 }

@@ -2,6 +2,7 @@ import { readRenderLimits } from './admission/read-render-limits';
 import { readServerSettings } from './read-server-settings';
 
 const DEFAULT_RENDER_LIMITS = readRenderLimits({});
+const DEFAULT_RENDER_TIMEOUTS = { deadlineMs: 20_000, apiCallMs: 10_000 };
 
 describe('readServerSettings', () => {
   it('runs locally without any variable', () => {
@@ -12,6 +13,7 @@ describe('readServerSettings', () => {
       apiOrigin: 'http://api:8080',
       selfOrigin: 'http://127.0.0.1:4000',
       renderLimits: DEFAULT_RENDER_LIMITS,
+      renderTimeouts: DEFAULT_RENDER_TIMEOUTS,
     });
   });
 
@@ -23,6 +25,7 @@ describe('readServerSettings', () => {
         LODB_TRUST_PROXY_HEADERS: 'x-forwarded-proto,x-forwarded-host',
         LODB_API_ORIGIN: 'http://api:8080/',
         LODB_PINNED_RENDERS_PER_MINUTE: '30',
+        LODB_RENDER_DEADLINE_SECONDS: '25',
       },
       true,
     );
@@ -34,6 +37,7 @@ describe('readServerSettings', () => {
       apiOrigin: 'http://api:8080',
       selfOrigin: 'http://127.0.0.1:4100',
       renderLimits: { ...DEFAULT_RENDER_LIMITS, pinnedPerMinute: 30 },
+      renderTimeouts: { ...DEFAULT_RENDER_TIMEOUTS, deadlineMs: 25_000 },
     });
   });
 

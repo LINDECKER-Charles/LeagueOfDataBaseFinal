@@ -22,12 +22,16 @@ services:
   web-ssr:
     ports:
       - "${LODB_SSR_PORT:-18082}:4000"
-    # The E2E workers open older patches far faster than a served host admits them.
+    # The E2E workers open older patches far faster than a served host admits them, and
+    # their first visit to a patch waits for its ingestion
+    # (docs/architecture/pieges.md, Tests E2E).
     environment:
       LODB_RENDER_MAX_IN_FLIGHT: "32"
       LODB_PINNED_RENDER_MAX_IN_FLIGHT: "16"
       LODB_PINNED_RENDERS_PER_MINUTE: "6000"
       LODB_PINNED_RENDER_BURST: "1000"
+      LODB_RENDER_DEADLINE_SECONDS: "30"
+      LODB_RENDER_API_TIMEOUT_SECONDS: "30"
 
   nginx:
     ports:

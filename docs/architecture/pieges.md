@@ -32,6 +32,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   demandée (`PageResponse`), jamais d'`UrlTree` de redirection côté serveur.
   `/{locale}/account`, `/{locale}/u` et `/b` ont une route 404 explicite (`bareNotFound`).
   Les routes `RenderMode.Client` (compte, `/admin`) ne posent pas de statut.
+- Une API qui ne répond pas (aucune réponse, 502, 504) donne un **502** ; seule une 503 de
+  l'API (délestage, avec `Retry-After`) reste 503. Chaque appel API d'un rendu est borné
+  par l'échéance du rendu (`LODB_RENDER_DEADLINE_SECONDS`, 20 s).
 - La liaison des entrées de composant par le routeur reste coupée : une query forgée
   remplirait des entrées.
 - `app.routes.server.spec.ts` passe par `ɵextractRoutesAndCreateRouteTree`, API privée
@@ -87,6 +90,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   contenu, pas sur `^`/`$`.
 - `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
   une correction.
+- **Bornes du SSR relevées en dev** (`compose.override.yaml`, jamais
+  `compose.deploy.yaml`) : toute la suite ouvre les anciens patchs bien plus vite qu'un
+  hôte servi ne les admet (`LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_*`), et la première
+  visite d'un patch attend son ingestion (`LODB_RENDER_DEADLINE_SECONDS` et
+  `LODB_RENDER_API_TIMEOUT_SECONDS` à 30 s). Une 503 ou une 502 du SSR en E2E se cherche
+  d'abord là.
 - Les instantanés de `tests/LoDb.E2E/test-results/` sont écrasés au passage suivant.
 
 ## Infra et déploiement

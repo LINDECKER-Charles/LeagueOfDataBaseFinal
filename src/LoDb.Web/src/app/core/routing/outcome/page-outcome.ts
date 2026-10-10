@@ -14,7 +14,10 @@ export type PageOutcome =
   | { readonly kind: 'not-found' }
   | {
       readonly kind: 'failure';
-      readonly status: HttpStatusCode.InternalServerError | HttpStatusCode.ServiceUnavailable;
+      readonly status:
+        | HttpStatusCode.InternalServerError
+        | HttpStatusCode.BadGateway
+        | HttpStatusCode.ServiceUnavailable;
       /** `Retry-After` of the API's 503, passed on to the visitor and the proxy. */
       readonly retryAfter: string | null;
     };

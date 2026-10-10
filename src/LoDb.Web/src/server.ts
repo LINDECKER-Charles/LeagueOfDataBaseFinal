@@ -98,7 +98,10 @@ app.use('/i18n', notFound);
 app.use((request, response, next) => {
   renderAdmission
     .run(request.originalUrl, response, async () => {
-      const rendered = await angularApp.handle(request, requestContext);
+      // The budget starts with the render: an API call never outlives the deadline.
+      const { deadlineMs, apiCallMs } = settings.renderTimeouts;
+      const renderBudget = { deadline: Date.now() + deadlineMs, callTimeoutMs: apiCallMs };
+      const rendered = await angularApp.handle(request, { ...requestContext, renderBudget });
       if (rendered === null) {
         next();
         return;
