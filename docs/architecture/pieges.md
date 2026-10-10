@@ -194,7 +194,14 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   sans le port).
 - SSR : `LODB_TRUST_PROXY_HEADERS` obligatoire derrière nginx, `LODB_ALLOWED_HOSTS` liste
   les hôtes acceptés ; `public/` ne contient ni `media/` ni script racine nommé comme un
-  bundle (cache `immutable`).
+  bundle (cache `immutable`). Ses métriques sont sur un second serveur HTTP, port 9464
+  (`LODB_METRICS_PORT`), que nginx ne route pas et qu'aucun port ne publie ; `/metrics`
+  demandé au site reste la 404 statique du pré-routeur.
+- Collecte (`compose.deploy.yaml`) : `api` et `web-ssr` rejoignent le réseau partagé
+  `observability` avec les labels `prometheus.scrape`/`prometheus.port`. Sur ce réseau, le
+  nom court d'un service (`api`, `postgres`) désigne aussi ceux des autres projets : un
+  conteneur de la stack n'appelle ses voisins que par les alias préfixés (`lodb-api`,
+  `lodb-postgres`, `lodb-web-ssr`).
 - Constats de logs (lignes hors JSON, erreurs multi-lignes) : **à corriger à la source,
   jamais à filtrer**.
 

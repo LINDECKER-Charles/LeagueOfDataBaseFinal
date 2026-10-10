@@ -17,6 +17,8 @@ import { RenderCounts } from './server/admission/render-counts';
 import { createLogger } from './server/create-logger';
 import { failureHandler } from './server/failure-handler';
 import { isHashedAsset } from './server/hashed-asset';
+import { serveMetrics } from './server/metrics/serve-metrics';
+import { SsrMetrics } from './server/metrics/ssr-metrics';
 import { readServerSettings } from './server/read-server-settings';
 import { requestLogging } from './server/request-logging';
 import { preRouter } from './server/routing/pre-router';
@@ -49,6 +51,7 @@ const requestContext: SsrRequestContext = {
 };
 const renderCounts = new RenderCounts();
 const renderAdmission = new RenderAdmission(settings.renderLimits, renderCounts);
+const metrics = new SsrMetrics(renderCounts, renderAdmission);
 const app = express();
 
 app.disable('x-powered-by');
@@ -106,13 +109,14 @@ app.use('/i18n', notFound);
 
 // What the URL alone decides (a 400, the static 404, a query cleaned by a redirect) costs no
 // render and takes no slot.
-app.use(preRouter(settings.queryLimits));
+app.use(preRouter(settings.queryLimits, () => metrics.countRedirect('query')));
 
 // Pages only: the files above never wait for a slot, the renders' own catalogues included.
 app.use((request, response, next) => {
   const admitted = { url: request.originalUrl, client: clientKeyOf(request.ip) };
   renderAdmission
-    .run(admitted, response, async () => {
+    .run(admitted, response, async (lane) => {
+      metrics.timeRender(lane, response);
       // The budget starts with the render: an API call never outlives the deadline.
       const { deadlineMs, apiCallMs } = settings.renderTimeouts;
       const renderBudget = { deadline: Date.now() + deadlineMs, callTimeoutMs: apiCallMs };
@@ -121,6 +125,7 @@ app.use((request, response, next) => {
         next();
         return;
       }
+      metrics.countRendered(rendered.status);
       // Under `ng serve`, the dev server adds scripts of its own that no hash would admit.
       const sent = listening ? await withDocumentPolicy(rendered) : rendered;
       await writeResponseToNodeResponse(sent, response);
@@ -139,6 +144,8 @@ if (listening) {
   });
   applyServerTimeouts(server);
   new AdmissionSummary(renderCounts, logger).start();
+  // Never routed by nginx nor published: the host's collector reads it over its own network.
+  serveMetrics(metrics.registry, settings.metricsPort, logger);
 }
 
 export const reqHandler = createNodeRequestHandler(app);

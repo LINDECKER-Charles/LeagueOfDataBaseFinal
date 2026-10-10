@@ -4,6 +4,8 @@ import { readQueryLimits } from './routing/read-query-limits';
 import type { ServerSettings } from './server-settings';
 
 const DEFAULT_PORT = 4000;
+// The Prometheus scrape, apart from the site's port (src/server/metrics), as on the API.
+const DEFAULT_METRICS_PORT = 9464;
 const MAX_PORT = 65_535;
 // Enough to run the build locally; every deployed environment lists its own hosts.
 const DEFAULT_ALLOWED_HOSTS = ['localhost'];
@@ -23,15 +25,24 @@ function listOf(value: string | undefined): string[] | undefined {
 }
 
 // A misconfigured variable stops the server at startup rather than serving on a guess.
-function portOf(value: string | undefined): number {
+function portOf(env: Environment, variable: string, fallback: number): number {
+  const value = env[variable];
   if (value === undefined || value === '') {
-    return DEFAULT_PORT;
+    return fallback;
   }
   const port = Number(value);
   if (!Number.isInteger(port) || port < 1 || port > MAX_PORT) {
-    throw new Error(`PORT must be a TCP port, got "${value}".`);
+    throw new Error(`${variable} must be a TCP port, got "${value}".`);
   }
   return port;
+}
+
+function metricsPortOf(env: Environment, port: number): number {
+  const metricsPort = portOf(env, 'LODB_METRICS_PORT', DEFAULT_METRICS_PORT);
+  if (metricsPort === port) {
+    throw new Error(`LODB_METRICS_PORT must differ from PORT, both are ${port}.`);
+  }
+  return metricsPort;
 }
 
 function originOf(value: string | undefined): string {
@@ -46,15 +57,16 @@ function originOf(value: string | undefined): string {
 }
 
 /**
- * Reads PORT, LODB_ALLOWED_HOSTS and LODB_TRUST_PROXY_HEADERS (comma-separated lists),
- * LODB_API_ORIGIN, the bounds of the render admission, of a render's wait on the API and of
- * a catalogue page's query. `listening` tells whether this process serves HTTP itself, which
- * is what makes its loopback origin usable by the renders.
+ * Reads PORT, LODB_METRICS_PORT, LODB_ALLOWED_HOSTS and LODB_TRUST_PROXY_HEADERS
+ * (comma-separated lists), LODB_API_ORIGIN, the bounds of the render admission, of a render's
+ * wait on the API and of a catalogue page's query. `listening` tells whether this process
+ * serves HTTP itself, which is what makes its loopback origin usable by the renders.
  */
 export function readServerSettings(env: Environment, listening: boolean): ServerSettings {
-  const port = portOf(env['PORT']);
+  const port = portOf(env, 'PORT', DEFAULT_PORT);
   return {
     port,
+    metricsPort: metricsPortOf(env, port),
     allowedHosts: listOf(env['LODB_ALLOWED_HOSTS']) ?? DEFAULT_ALLOWED_HOSTS,
     trustProxyHeaders: listOf(env['LODB_TRUST_PROXY_HEADERS']),
     apiOrigin: originOf(env['LODB_API_ORIGIN']),

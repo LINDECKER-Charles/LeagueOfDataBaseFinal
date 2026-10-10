@@ -5,6 +5,8 @@ import type { QueryLimits } from './routing/query-limits';
 /** Configuration of the SSR server, read once from its environment at startup. */
 export interface ServerSettings {
   readonly port: number;
+  /** Port of the Prometheus scrape, never proxied by nginx nor published (`serveMetrics`). */
+  readonly metricsPort: number;
   /** Hosts Angular renders for; any other Host header gets a 400 (SSRF protection). */
   readonly allowedHosts: readonly string[];
   /** Proxy headers Angular may read, or undefined to fall back to NG_TRUST_PROXY_HEADERS. */

@@ -120,6 +120,13 @@ services:
     environment:
       # The public hosts of CADDY_DOMAINS, comma-separated: any other Host is refused.
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:?LODB_ALLOWED_HOSTS is required (the public hosts)}
+    # Scraped on its metrics port (9464, src/server/metrics) over `observability`, as the API;
+    # the renderer calls the API by its alias, lodb-api, never by the short name.
+    networks:
+      observability: {}
+    labels:
+      prometheus.scrape: "true"
+      prometheus.port: "9464"
     deploy:
       resources:
         limits:

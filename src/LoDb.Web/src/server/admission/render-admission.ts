@@ -53,11 +53,16 @@ export class RenderAdmission {
     this.clients = new ClientTable(limits.trackedClients, budgetOf);
   }
 
-  /** Runs `render` for the request when admitted, else answers the 503. */
+  /** Renders running now in `lane`, for the metrics (`lodb_ssr_renders_in_flight`). */
+  inFlightOf(lane: RenderLane): number {
+    return this.inFlight[lane];
+  }
+
+  /** Runs `render` in the request's lane when admitted, else answers the 503. */
   async run(
     request: RenderRequest,
     response: Response,
-    render: () => Promise<void>,
+    render: (lane: RenderLane) => Promise<void>,
   ): Promise<void> {
     const lane = renderLaneOf(request.url);
     const client = this.clients.stateOf(request.client);
@@ -69,7 +74,7 @@ export class RenderAdmission {
     }
     this.admit(lane, client);
     try {
-      await render();
+      await render(lane);
     } finally {
       this.inFlight[lane] -= 1;
       client.inFlight -= 1;

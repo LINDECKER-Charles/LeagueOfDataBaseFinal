@@ -19,7 +19,7 @@ interface Answer {
 }
 
 // Runs the middleware on a URL; `isNextCalled` tells that the request went on to the render.
-function serve(url: string): Answer {
+function serve(url: string, onRedirect?: () => void): Answer {
   const answer: Answer = { headers: {}, isNextCalled: false };
   const response = {
     set(fields: string | Record<string, string>, value?: string) {
@@ -45,28 +45,36 @@ function serve(url: string): Answer {
     end: () => response,
   };
   const request = { originalUrl: url } as Request;
-  preRouter(LIMITS)(request, response as unknown as Response, () => (answer.isNextCalled = true));
+  preRouter(LIMITS, onRedirect)(
+    request,
+    response as unknown as Response,
+    () => (answer.isNextCalled = true),
+  );
   return answer;
 }
 
 describe('preRouter', () => {
-  it.each(['/wp-login.php', '/wordpress/wp-admin/', '/champions/Ahri', '/9.3.1/champions'])(
-    'answers %s with the static 404, without Angular',
-    (url) => {
-      const answer = serve(url);
+  // `/metrics` included: the scrape is served on its own port only (src/server/metrics).
+  it.each([
+    '/wp-login.php',
+    '/wordpress/wp-admin/',
+    '/champions/Ahri',
+    '/9.3.1/champions',
+    '/metrics',
+  ])('answers %s with the static 404, without Angular', (url) => {
+    const answer = serve(url);
 
-      expect(answer.isNextCalled).toBe(false);
-      expect(answer.status).toBe(404);
-      expect(answer.headers).toMatchObject({
-        'Cache-Control': 'public, max-age=0, s-maxage=3600',
-        'X-Robots-Tag': 'noindex',
-        'Content-Type': 'html',
-      });
-      expect(answer.headers['Content-Security-Policy']).toContain("script-src 'self'");
-      expect(answer.body).toContain('404');
-      expect(answer.body).not.toContain('<script');
-    },
-  );
+    expect(answer.isNextCalled).toBe(false);
+    expect(answer.status).toBe(404);
+    expect(answer.headers).toMatchObject({
+      'Cache-Control': 'public, max-age=0, s-maxage=3600',
+      'X-Robots-Tag': 'noindex',
+      'Content-Type': 'html',
+    });
+    expect(answer.headers['Content-Security-Policy']).toContain("script-src 'self'");
+    expect(answer.body).toContain('404');
+    expect(answer.body).not.toContain('<script');
+  });
 
   it('redirects a detail with an unknown parameter, out of every cache', () => {
     expect(serve('/en/items/3031-infinity-edge?x=1')).toEqual({
@@ -74,6 +82,17 @@ describe('preRouter', () => {
       headers: { 'Cache-Control': 'no-store', Location: '/en/items/3031-infinity-edge' },
       isNextCalled: false,
     });
+  });
+
+  it('tells each redirect it answers, and nothing else', () => {
+    const onRedirect = vi.fn();
+
+    serve('/en/items/3031-infinity-edge?x=1', onRedirect);
+    serve('/wp-login.php', onRedirect);
+    serve('/fr%2Fchampions', onRedirect);
+    serve('/en/champions', onRedirect);
+
+    expect(onRedirect).toHaveBeenCalledOnce();
   });
 
   it.each(['/fr%2Fchampions', '/fr/x/../15.13.1/champions'])(

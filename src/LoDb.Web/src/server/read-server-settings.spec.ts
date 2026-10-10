@@ -9,6 +9,7 @@ describe('readServerSettings', () => {
   it('runs locally without any variable', () => {
     expect(readServerSettings({}, true)).toEqual({
       port: 4000,
+      metricsPort: 9464,
       allowedHosts: ['localhost'],
       trustProxyHeaders: undefined,
       apiOrigin: 'http://lodb-api:8080',
@@ -23,6 +24,7 @@ describe('readServerSettings', () => {
     const settings = readServerSettings(
       {
         PORT: '4100',
+        LODB_METRICS_PORT: '9465',
         LODB_ALLOWED_HOSTS: 'league-of-data-base.com, next.league-of-data-base.com ,',
         LODB_TRUST_PROXY_HEADERS: 'x-forwarded-proto,x-forwarded-host',
         LODB_API_ORIGIN: 'http://lodb-api.internal:8080/',
@@ -35,6 +37,7 @@ describe('readServerSettings', () => {
 
     expect(settings).toEqual({
       port: 4100,
+      metricsPort: 9465,
       allowedHosts: ['league-of-data-base.com', 'next.league-of-data-base.com'],
       trustProxyHeaders: ['x-forwarded-proto', 'x-forwarded-host'],
       apiOrigin: 'http://lodb-api.internal:8080',
@@ -57,6 +60,19 @@ describe('readServerSettings', () => {
 
   it.each(['0', '65536', '4000.5', 'http'])('refuses PORT=%s', (port) => {
     expect(() => readServerSettings({ PORT: port }, true)).toThrow(/PORT/);
+  });
+
+  it.each(['0', '65536', 'metrics'])('refuses LODB_METRICS_PORT=%s', (port) => {
+    expect(() => readServerSettings({ LODB_METRICS_PORT: port }, true)).toThrow(
+      /LODB_METRICS_PORT must be a TCP port/,
+    );
+  });
+
+  it('refuses a metrics port that is the site port', () => {
+    expect(() => readServerSettings({ PORT: '9464' }, true)).toThrow(/must differ from PORT/);
+    expect(() => readServerSettings({ LODB_METRICS_PORT: '4000' }, true)).toThrow(
+      /must differ from PORT/,
+    );
   });
 
   it.each(['http://api:8080/api', 'http://api:8080?x=1', 'api:8080/v1', 'not a url'])(

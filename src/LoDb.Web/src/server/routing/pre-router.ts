@@ -40,14 +40,21 @@ function answer(route: Exclude<PreRoute, { kind: 'render' }>, response: Response
  * the 400 of a path no page can have, the static 404 of an address outside the grammar,
  * the redirect of a list or a detail to its URL without the parameters it does not read.
  * None of them starts Angular nor takes a render slot; the other requests go on.
+ * `onRedirect` is told of each redirect (`lodb_ssr_normalized_redirects_total`).
  */
-export function preRouter(limits: QueryLimits): RequestHandler {
+export function preRouter(
+  limits: QueryLimits,
+  onRedirect: () => void = () => undefined,
+): RequestHandler {
   return (request, response, next) => {
     const route = preRouteOf(request.originalUrl, limits);
     if (route.kind === 'render') {
       next();
-    } else {
-      answer(route, response);
+      return;
     }
+    if (route.kind === 'redirect') {
+      onRedirect();
+    }
+    answer(route, response);
   };
 }
