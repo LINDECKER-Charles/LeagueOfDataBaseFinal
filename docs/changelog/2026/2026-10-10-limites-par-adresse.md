@@ -44,5 +44,7 @@ demander.
 - Garde-fous communs aux deux hôtes (`snippets/server-guards.conf`, inclus aussi par le
   sous-domaine `api.`) : agents refusés, délais clients, `404` de nginx pour les fichiers
   cachés et les extensions de scripts serveur ou de sauvegardes.
+- Blobs : seul `/cdn/blobs/{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` est servi, avec
+  `Content-Security-Policy: default-src 'none'; sandbox` ; tout autre `/cdn/` répond `404`.
 - Vérification : `tools/nginx/` démarre l'image derrière des amonts factices
   (`node --test`).

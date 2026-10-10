@@ -1,5 +1,5 @@
 // Boots the built nginx image behind stub upstreams and checks its bounds: rates per client,
-// body sizes, the paths answered by nginx alone and the caches. Needs Docker and
+// body sizes, the paths answered by nginx alone, the blobs and the caches. Needs Docker and
 // the image's tag in LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
@@ -9,6 +9,7 @@ import { startStack } from '../lib/stack.mjs';
 const IMAGE = process.env.LODB_NGINX_IMAGE;
 const API_HOST = 'api.localhost';
 const KIB = 1024;
+const BLOB = 'ab'.repeat(32);
 const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) '
   + 'Chrome/139.0.0.0 Safari/537.36';
 
@@ -79,6 +80,20 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.equal(await post('/api/account/login', 129 * KIB), 413);
     assert.equal(await post('/webhooks/stripe', 129 * KIB), 200);
     assert.equal(await post('/webhooks/stripe', 1025 * KIB), 413);
+  });
+
+  test('serves blobs alone from the storage, under a sandbox policy', async () => {
+    await stack.exec('sh', '-c', 'mkdir -p /srv/storage/blobs && cd /srv/storage/blobs'
+      + ` && printf x > ${BLOB}.png && printf x > ${BLOB}.svg && printf x > notes.txt`);
+    const blob = await get(`/cdn/blobs/${BLOB}.png`);
+    assert.equal(blob.status, 200);
+    assert.equal(blob.headers['content-security-policy'], "default-src 'none'; sandbox");
+    assert.equal(blob.headers['cross-origin-resource-policy'], 'cross-origin');
+    assert.equal(blob.headers['cache-control'], 'public, max-age=31536000, immutable');
+    for (const name of [`${BLOB}.svg`, `${BLOB}.PNG`, 'notes.txt', 'ab.png']) {
+      assert.equal((await get(`/cdn/blobs/${name}`)).status, 404, name);
+    }
+    assert.equal((await get('/cdn/x')).status, 404);
   });
 
   test('keeps the crawler files once, whatever their query', async () => {

@@ -2,8 +2,8 @@
 
 Checks of the built nginx image (`docker/nginx/`): the rendered configuration passes
 `nginx -t`, and the bounds hold — rates per address with their `429` and `Retry-After`,
-body sizes, the paths nginx answers alone, the crawler files' and the former site's
-caches. The image runs behind a stub of the API and of the SSR server
+body sizes, the paths nginx answers alone, the blobs and their policy, the crawler files'
+and the former site's caches. The image runs behind a stub of the API and of the SSR server
 (`lib/upstream-stub.conf`), on a Docker network of its own, removed afterwards.
 
 ```bash
