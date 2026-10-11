@@ -51,8 +51,9 @@ Versions publiées depuis plus de deux semaines au moment d'écrire : **sops v3.
 les octets et corrompt un binaire comme un texte non ASCII.
 
 ```bash
-# age (inclut age-keygen) : winget, ou l'archive de la release vérifiée par sa preuve Sigsum
-winget install --id FiloSottile.age
+# age (inclut age-keygen) : winget, ou l'archive de la release vérifiée par sa preuve Sigsum.
+# Version explicite : sans elle, winget installe la dernière, quelle que soit son ancienneté.
+winget install --id FiloSottile.age --exact --version 1.3.2
 
 # sops : l'exécutable de la release et la liste des empreintes, comparées avant usage
 v=v3.13.3; base=https://github.com/getsops/sops/releases/download/$v
