@@ -75,6 +75,22 @@ describe('promote-images.sh', () => {
     assert.deepEqual(prodTags(space), [null, null, null]);
   });
 
+  // main already holds test: merging it again would push nothing and start no run.
+  it('promotes on a re-run of the same commit once staging validated it', () => {
+    const space = workspace();
+    stageValidated(space);
+    untag(space, 'web-ssr', 'staging-validated');
+    const refused = promote(space);
+    tag(space, 'web-ssr', 'staging-validated', tagOf(space, 'web-ssr', 'staging'));
+
+    const rerun = promote(space);
+
+    assert.match(refused.stderr, /re-run the failed jobs of this run/);
+    assert.doesNotMatch(refused.stderr, /merge test into main/);
+    assert.equal(rerun.status, 0, rerun.stderr);
+    assert.deepEqual(prodTags(space), [digestOf('1'), digestOf('2'), digestOf('3')]);
+  });
+
   it('refuses when main holds code that staging never served', () => {
     const space = workspace();
     stageValidated(space);

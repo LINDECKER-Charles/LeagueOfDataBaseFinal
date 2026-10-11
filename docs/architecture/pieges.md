@@ -213,7 +213,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - **Promotion par digest** : `_promote.yml` refuse si `:staging` ne désigne plus
   `:staging-validated` (un build de `dev` en cours, un déploiement de staging en échec) ou si
   la révision servie n'a pas le code de `main`. Voulu : ne pas revenir à un retag de
-  `:staging`. Attendre que staging soit vert, puis fusionner à nouveau `test` dans `main`.
+  `:staging`. Une fois staging vert, relancer le run refusé (*Re-run failed jobs*) ; refusionner
+  `test` dans `main` ne lance rien quand `main` le contient déjà.
 - Sur l'hôte, la stack occupe le projet de l'ancienne (`lodb-staging`, `lodb-prod`) : elle
   reprend son volume `pgdata` et range ses blobs dans `ddragon`. Le volume `storage` de
   l'ancienne stack (propriété de `www-data`) n'est ni réutilisé ni supprimé : le nommer

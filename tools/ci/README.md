@@ -174,9 +174,11 @@ From a full-history checkout of the promoted commit, `promote-images.sh` refuses
   (`stack-paths`, a test keeps both lists equal): otherwise prod would run code staging never
   served. A difference outside them (documentation) does not count.
 
-It then tags `:prod` and `:latest` from the digests themselves (`tag-image.sh`). When it
-refuses, wait for staging to be green on the revision to promote, then merge `test` into
-`main` again.
+It then tags `:prod` and `:latest` from the digests themselves (`tag-image.sh`). A refusal
+moves no tag. Once staging is green on the code `main` holds, re-run the failed jobs of the
+refused run (*Re-run failed jobs*: `promote`, then `deploy-prod`). Merge `test` into `main`
+again only when `main` lacks the code staging now serves: when `main` already holds `test`,
+git has nothing to merge and no run starts.
 
 ## actionlint
 

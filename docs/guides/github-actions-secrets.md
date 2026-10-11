@@ -40,7 +40,10 @@ fusion manuelle test → main ─▶ push main
   construits depuis le code de `main` (chemins surveillés par `ci.yml`). Un push de `dev`
   entre la validation de `staging` et la fusion dans `main`, ou un déploiement de `staging`
   en échec, **arrête** la promotion au lieu d'envoyer en prod une image que `staging` n'a pas
-  servie : attendre que `staging` soit vert, puis fusionner à nouveau `test` dans `main`.
+  servie. Une fois `staging` vert sur le code de `main`, relancer le run refusé (*Re-run
+  failed jobs* : `promote`, puis `deploy-prod`). Ne fusionner à nouveau `test` dans `main`
+  que si `main` n'a pas le code que `staging` sert : quand `main` contient déjà `test`, la
+  fusion n'a rien à fusionner et ne lance aucun run.
 - Filtre de chemins : un push qui ne touche pas la nouvelle stack (documentation seule) ne
   lance rien, ni fusion dans `test` ni promotion.
 - Sur `dev` et `main`, un push plus récent **attend** la fin du run en cours au lieu de

@@ -12,6 +12,10 @@
 # (their OCI revision label), whose code is the code of HEAD on every path the pipeline builds
 # or deploys: otherwise prod would run code that staging never served. Only then are the target
 # tags created, from the digests themselves (tag-image.sh).
+#
+# A refusal moves no tag. Its remedy is to re-run the refused run once staging is green on the
+# code main holds. Merging test into main again helps only when test moved since: when main
+# already holds test, git has nothing to merge, and no run starts.
 set -euo pipefail
 
 readonly REVISION_LABEL=org.opencontainers.image.revision
@@ -22,6 +26,7 @@ readonly STACK_PATHS=(
   .trivyignore
 )
 readonly DIGEST_FORMAT='^sha256:[0-9a-f]{64}$'
+readonly RETRY='Once staging is green on the code of main, re-run the failed jobs of this run.'
 TAG_IMAGE="$(dirname "${BASH_SOURCE[0]}")/tag-image.sh"
 readonly TAG_IMAGE
 : "${IMAGE_PREFIX:?IMAGE_PREFIX is required (ghcr.io/<owner>/lodb)}"
@@ -48,12 +53,12 @@ validated_image() {
   source="$(describe "$IMAGE_PREFIX/$image:$SOURCE_TAG")" \
     || fail "$image: no $SOURCE_TAG image to promote."
   validated="$(describe "$IMAGE_PREFIX/$image:$VALIDATED_TAG")" \
-    || fail "$image: no $VALIDATED_TAG image: staging has validated no build yet."
+    || fail "$image: no $VALIDATED_TAG image: staging has validated no build yet. $RETRY"
   read -r digest revision <<< "$source"
   [[ "$digest" =~ $DIGEST_FORMAT ]] || fail "$image: unreadable digest '$digest'."
   [ "$source" = "$validated" ] \
     || fail "$image: $SOURCE_TAG ($source) is not what staging validated ($validated): a" \
-      "build is under way or its deployment failed. Promote once staging is green again."
+      "build is under way or its deployment failed. $RETRY"
   [ -n "$revision" ] || fail "$image: $digest has no $REVISION_LABEL label."
   echo "$digest $revision"
 }
@@ -66,8 +71,8 @@ check_code() {
     || fail "staging serves $revision, a commit this checkout does not have."
   if ! git diff --quiet "$revision" "$head" -- "${STACK_PATHS[@]}"; then
     git diff --stat "$revision" "$head" -- "${STACK_PATHS[@]}" >&2
-    fail "staging serves $revision, whose code differs from $head (above): merge test into" \
-      "main again once staging serves the revision to promote."
+    fail "staging serves $revision, whose code differs from $head (above). If main lacks" \
+      "that code, merge test into main again; otherwise: $RETRY"
   fi
 }
 
