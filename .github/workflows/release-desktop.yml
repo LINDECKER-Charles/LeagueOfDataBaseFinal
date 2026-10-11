@@ -93,6 +93,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # A commit of this repository's own history only: the SHA of a fork's pull request is
+      # fetchable here too, and these jobs build, sign and publish what they check out. Every
+      # later job needs this one, so nothing of an outside commit ever runs.
+      - name: Check the commit is on main or test
+        run: |
+          if ! git branch --remotes --contains "$SHA" | grep -qE '^ *origin/(main|test)$'; then
+            echo "::error::$SHA is on neither main nor test: refused"
+            exit 1
+          fi
+
       - name: Setup .NET (version from global.json)
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:

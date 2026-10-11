@@ -73,6 +73,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # A commit of this repository's own history only: the SHA of a fork's pull request is
+      # fetchable here too, and these jobs build, sign and publish what they check out. Every
+      # later job needs this one, so nothing of an outside commit ever runs.
+      - name: Check the commit is on main or test
+        run: |
+          if ! git branch --remotes --contains "$SHA" | grep -qE '^ *origin/(main|test)$'; then
+            echo "::error::$SHA is on neither main nor test: refused"
+            exit 1
+          fi
+
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
