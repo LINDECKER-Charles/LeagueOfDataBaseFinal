@@ -6,8 +6,10 @@ import { expect, test } from '../../support/test';
 
 const PAGE = '/en/patches';
 const LISTS = ['champions', 'items', 'runes', 'summoners'];
-// What a link of the history must never answer: it names each page by its own address.
-const DETOURS = [301, 302, 307, 308, 404];
+// What a link of the history answers: its page, never a redirect nor a 404. A past patch not
+// stored yet may answer the 503 of a cold version, shed on purpose while it is ingested.
+const OK = 200;
+const PINNED_ANSWERS = [OK, 503];
 
 // The links of a version's row, found by the version its header names.
 function linksOf(page: Page, version: string): Locator {
@@ -52,10 +54,12 @@ test.describe('patch history as crawlers read it', { tag: '@readonly' }, () => {
     const latest = await hrefsOf(linksOf(page, meta.latest));
     const [pinned] = await hrefsOf(linksOf(page, older).filter({ hasText: 'Runes' }));
 
-    for (const href of [...latest, pinned]) {
+    for (const href of latest) {
       const answer = await request.get(href ?? '', { maxRedirects: 0 });
-      expect(DETOURS, href ?? '').not.toContain(answer.status());
+      expect(answer.status(), href ?? '').toBe(OK);
     }
+    const answer = await request.get(pinned ?? '', { maxRedirects: 0 });
+    expect(PINNED_ANSWERS, pinned ?? '').toContain(answer.status());
   });
 
   test('is an indexable page with its canonical and its breadcrumb', async ({ page }) => {
