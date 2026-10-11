@@ -1,6 +1,7 @@
-// A script element and its raw text: the HTML parser ends script data at the first `</script`,
-// and Angular escapes that sequence inside the state it serializes.
-const SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
+// A script element and its raw text: the HTML parser ends script data at the first `</script`
+// followed by a space, `/` or `>`, whatever attributes the end tag then carries; Angular
+// escapes that sequence inside the state it serializes.
+const SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script(?:[\s/][^>]*)?>/gi;
 const SOURCE_ATTRIBUTE = /(?:^|\s)src\s*=/i;
 const TYPE_ATTRIBUTE = /(?:^|\s)type\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
 // The types a browser executes (HTML's JavaScript MIME type essences, plus modules). Data

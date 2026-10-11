@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { type APIRequest, expect, type Page } from '@playwright/test';
 
 /** An account the suite creates, unique to its run. */
@@ -9,15 +10,13 @@ export interface TestAccount {
 
 // Meets every rule of the checklist, and is on no list of common passwords.
 const PASSWORD = 'Hextech-Forge-2046!';
-// The random part keeps two runs, or two workers, from sharing a name.
-const RANDOM_LENGTH = 4;
+// The random part (four hexadecimal digits) keeps two runs, or two workers, from sharing a name.
+const RANDOM_BYTES = 2;
 const UNAUTHORIZED = 401;
 
 /** A new account; `purpose` (a few letters) says which spec made it, in the database too. */
 export function newAccount(purpose: string): TestAccount {
-  const random = Math.random()
-    .toString(36)
-    .slice(2, 2 + RANDOM_LENGTH);
+  const random = randomBytes(RANDOM_BYTES).toString('hex');
   // A summoner name is 3 to 24 letters, digits, dots, dashes or underscores.
   const username = `e2e_${purpose}_${Date.now().toString(36)}${random}`;
   return { email: `${username}@example.com`, username, password: PASSWORD };
