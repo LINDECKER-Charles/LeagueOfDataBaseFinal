@@ -50,6 +50,20 @@ public sealed class CatalogSearchTests
     }
 
     [Fact]
+    public async Task EntriesAreFoldedOnTheFirstSearchOnly()
+    {
+        var catalog = await CatalogFixtures.LatestAsync(CatalogFixtures.English);
+        var folded = catalog.IsSearchFolded;
+
+        var first = catalog.Search(SearchQuery.Parse("ahri"), AllTypes, 10);
+        var second = catalog.Search(SearchQuery.Parse("ahri"), AllTypes, 10);
+
+        Assert.False(folded);
+        Assert.True(catalog.IsSearchFolded);
+        Assert.Equal(first, second);
+    }
+
+    [Fact]
     public async Task AccentsAndCaseAreIgnored()
     {
         var catalog = await CatalogFixtures.LatestAsync(CatalogFixtures.French);
