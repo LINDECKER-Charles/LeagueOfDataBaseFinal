@@ -61,6 +61,23 @@ describe('imageReferencesOf', () => {
     assert.deepEqual(imageReferencesOf(text.join('\n')), [{ line: 3, value: NODE }]);
   });
 
+  it('continues lines with the escape character the file names', () => {
+    const text = [
+      '# escape=`',
+      `FROM ${NODE} AS build`,
+      'RUN echo C:\\',
+      'FROM alpine:3',
+      'FROM `',
+      `  ${SDK}`,
+    ].join('\n');
+
+    assert.deepEqual(imageReferencesOf(text), [
+      { line: 2, value: NODE },
+      { line: 4, value: 'alpine:3' },
+      { line: 5, value: SDK },
+    ]);
+  });
+
   it('ignores a --from flag outside COPY, ADD and RUN mounts', () => {
     assert.deepEqual(imageReferencesOf('RUN tool --from=node:24 run'), []);
   });

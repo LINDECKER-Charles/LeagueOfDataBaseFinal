@@ -6,8 +6,11 @@
 const DIGEST = /@sha256:[0-9a-f]{64}$/;
 const PARSER_DIRECTIVE = /^#\s*(?<name>[a-z]+)\s*=\s*(?<value>\S*)\s*$/i;
 const SYNTAX = 'syntax';
+const ESCAPE = 'escape';
+// The line continuation character, which the `escape` directive picks among these two.
+const CONTINUATIONS = Object.freeze({ '\\': /\\\s*$/, '`': /`\s*$/ });
+const DEFAULT_ESCAPE = '\\';
 const COMMENT_LINE = /^\s*#/;
-const CONTINUATION = /\\\s*$/;
 const INSTRUCTION = /^(?<keyword>[a-z]+)\s+(?<rest>.*)$/i;
 const FLAG = /^--/;
 const STAGE_ALIAS = /^as$/i;
@@ -25,23 +28,34 @@ export const PROBLEMS = Object.freeze({
   variable: 'named through a variable, which neither this check nor Dependabot can follow',
 });
 
-// Parser directives only count before the first comment, blank line or instruction.
-function syntaxReferenceOf(lines) {
+// Parser directives, name → { line, value }: they only count before the first comment, blank
+// line or instruction, and the first of a name wins.
+function directivesOf(lines) {
+  const directives = new Map();
   for (const [index, content] of lines.entries()) {
     const directive = PARSER_DIRECTIVE.exec(content.trim());
     if (!directive) {
-      return null;
+      break;
     }
-    if (directive.groups.name.toLowerCase() === SYNTAX) {
-      return { line: index + 1, value: directive.groups.value };
+    const name = directive.groups.name.toLowerCase();
+    if (!directives.has(name)) {
+      directives.set(name, { line: index + 1, value: directive.groups.value });
     }
   }
-  return null;
+  return directives;
+}
+
+// With `# escape=` + backtick, a backslash ends no line: reading it as a continuation would
+// fold the next instruction, a FROM included, into the previous one. BuildKit refuses any
+// other escape character.
+function continuationOf(directives) {
+  const escape = directives.get(ESCAPE)?.value ?? DEFAULT_ESCAPE;
+  return CONTINUATIONS[escape] ?? CONTINUATIONS[DEFAULT_ESCAPE];
 }
 
 // One entry per instruction, its continued lines joined; comments are dropped, even between
 // continued lines, as BuildKit does.
-function instructionsOf(lines) {
+function instructionsOf(lines, continuation) {
   const instructions = [];
   let current = null;
   for (const [index, content] of lines.entries()) {
@@ -49,8 +63,8 @@ function instructionsOf(lines) {
       continue;
     }
     current ??= { line: index + 1, text: '' };
-    current.text = `${current.text} ${content.replace(CONTINUATION, '')}`.trim();
-    if (!CONTINUATION.test(content)) {
+    current.text = `${current.text} ${content.replace(continuation, '')}`.trim();
+    if (!continuation.test(content)) {
       instructions.push(current);
       current = null;
     }
@@ -90,9 +104,11 @@ function imagesOfInstruction({ keyword, rest }, stages) {
 /** The images a Dockerfile names (frontend, bases, `--from` images), with their 1-based line. */
 export function imageReferencesOf(text) {
   const lines = text.split(/\r?\n/);
-  const syntax = syntaxReferenceOf(lines);
+  const directives = directivesOf(lines);
+  const syntax = directives.get(SYNTAX) ?? null;
+  const instructions = instructionsOf(lines, continuationOf(directives));
   const stages = new Set();
-  const references = instructionsOf(lines).flatMap(({ line, text: instruction }) => {
+  const references = instructions.flatMap(({ line, text: instruction }) => {
     const match = INSTRUCTION.exec(instruction);
     if (!match) {
       return [];
