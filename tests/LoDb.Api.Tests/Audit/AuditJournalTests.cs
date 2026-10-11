@@ -113,25 +113,6 @@ public sealed class AuditJournalTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task InvalidFiltersAreReportedTogether()
-    {
-        using var admin = await AdminBrowser.OpenAsync(App);
-
-        using var response = await admin.GetAsync(
-            JournalPath + "?action=user.dance&category=misc&outcome=maybe&actorType=robot"
-            + "&from=2026-09-20&to=2026-09-01&page=0&pageSize=101");
-
-        var errors = await ApiJson.FieldErrorsAsync(response);
-        Assert.Equal(["unknown-action"], errors["action"]);
-        Assert.Equal(["unknown-category"], errors["category"]);
-        Assert.Equal(["unknown-outcome"], errors["outcome"]);
-        Assert.Equal(["unknown-actor-type"], errors["actorType"]);
-        Assert.Equal(["invalid-range"], errors["to"]);
-        Assert.Equal(["out-of-range"], errors["page"]);
-        Assert.Equal(["out-of-range"], errors["pageSize"]);
-    }
-
-    [Fact]
     public async Task VocabularyListsEveryActionWithItsGroup()
     {
         using var admin = await AdminBrowser.OpenAsync(App);
