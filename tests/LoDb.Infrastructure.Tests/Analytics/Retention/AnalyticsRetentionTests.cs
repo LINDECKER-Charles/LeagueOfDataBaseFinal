@@ -80,16 +80,22 @@ public sealed class AnalyticsRetentionTests(PostgresContainerFixture postgres)
         Assert.Null(views[1].Ip);
     }
 
-    [Fact]
-    public async Task LateDailyRunLeavesNoViewBehind()
+    // The job runs once a period at most: a host restarted before the next run is due waits
+    // a whole period from its start (37 and 47 hours here), a failed run one more (71).
+    [Theory]
+    [InlineData(26)]
+    [InlineData(37)]
+    [InlineData(47)]
+    [InlineData(71)]
+    public async Task DelayedRunLeavesNoViewBehind(int hoursLater)
     {
-        // Just past the first run's cutoff (noon, 30 days ago), behind the next one's.
-        await WriteStoredClientDataAsync(At(12, 30).AddDays(-30));
+        // Past the first run's cutoff (noon, 30 days ago), behind the next one's.
+        await WriteStoredClientDataAsync(At(12, 30).AddDays(-30), At(23, 30).AddDays(-30));
         Assert.Equal(0, (await Retention.ApplyAsync(Cancellation)).ClientDataErased);
 
-        Time.Advance(TimeSpan.FromHours(26));
+        Time.Advance(TimeSpan.FromHours(hoursLater));
 
-        Assert.Equal(1, (await Retention.ApplyAsync(Cancellation)).ClientDataErased);
+        Assert.Equal(2, (await Retention.ApplyAsync(Cancellation)).ClientDataErased);
     }
 
     [Fact]

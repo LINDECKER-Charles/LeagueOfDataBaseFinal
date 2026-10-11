@@ -27,7 +27,7 @@ public sealed class AnalyticsOptions
     private const int DefaultClientDataDays = 30;
     private const int DefaultEventRetentionMonths = 13;
     private const int DefaultPartitionsAhead = 7;
-    private const int DefaultClientDataEraseDays = 1;
+    private const int DefaultClientDataEraseDays = 3;
     private const int DefaultMaxVisitorsPerDay = 200_000;
     private const int DefaultMaxRefererHostsPerDay = 200;
 
@@ -56,9 +56,11 @@ public sealed class AnalyticsOptions
     public TimeSpan ClientDataRetention { get; set; } = TimeSpan.FromDays(DefaultClientDataDays);
 
     /// <summary>
-    /// Days before the day of the retention's cutoff that a run still erases: the daily
-    /// runs overlap, and none scans the older partitions again. After an outage longer than
-    /// this, raise it for one run.
+    /// Days before the day of the retention's cutoff that a run still erases, so that two
+    /// runs overlap and none scans the older partitions again. The daily job runs at most
+    /// once a day, and a host restarted before it is due waits a whole day from its start:
+    /// two runs can be up to two days apart, three after a failed run. After a longer
+    /// outage, raise it for one run.
     /// </summary>
     public int ClientDataEraseDays { get; set; } = DefaultClientDataEraseDays;
 

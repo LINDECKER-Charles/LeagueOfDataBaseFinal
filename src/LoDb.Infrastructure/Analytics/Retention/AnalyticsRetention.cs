@@ -12,8 +12,8 @@ namespace LoDb.Infrastructure.Analytics.Retention;
 /// The capture no longer stores addresses nor user agents: the erasure only clears the views
 /// written before, as they come of age. It reads the partitions next to the cutoff alone,
 /// from <see cref="AnalyticsOptions.ClientDataEraseDays"/> days before the cutoff's day, so
-/// that the daily runs overlap: an unbounded one would scan every older partition each day,
-/// to rewrite none of them.
+/// that two runs overlap even when a restart or a failure puts days between them: an
+/// unbounded one would scan every older partition each day, to rewrite none of them.
 /// </remarks>
 internal sealed class AnalyticsRetention(
     IAnalyticsPartitions partitions,
