@@ -37,9 +37,9 @@ affichage.
   calqué sur la boîte 62vh en 16:9) et `loadingArtVariants` (cartes de la liste), dans une
   `<source type="image/webp">` ; l'URL Data Dragon reste le `src` de repli (anciens patchs,
   variantes pas encore stockées). Le héros redescend d'un cran à chaque échec : variantes, art
-  centré, splash. Les portraits des aperçus de l'accueil, sous la ligne de flottaison, restent
-  sur Data Dragon : servis par le site, ils partageaient les premiers allers-retours de la page
-  et retardaient son premier affichage (mesuré).
+  centré, splash. Les portraits des aperçus de l'accueil, sous la ligne de flottaison et hors
+  du chemin du LCP, restent sur Data Dragon : servis par le site, ils n'ont apporté aucun gain
+  mesurable à l'accueil.
 - `lodb-image` sépare `eager` (chargée tout de suite) et `priority` (`fetchpriority="high"`) :
   un seul candidat LCP par page (héros, première carte de la liste des champions, icône des
   fiches objet, rune et sort, portrait d'un build partagé), la première rangée restant
