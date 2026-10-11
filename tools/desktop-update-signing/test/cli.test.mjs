@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { appPublicKey } from '../lib/app-key.mjs';
+import { appPublicKeys, keyList } from '../lib/app-key.mjs';
 import { PRIVATE_KEY_VARIABLE, readPrivateKey, rawPublicKey } from '../lib/feed-signature.mjs';
 import { CHANNEL, FEED_NAME, testEntry, testFeed, testKeyPair, testPackage } from './test-keys.mjs';
 
@@ -63,12 +63,28 @@ describe('feed signing tool', () => {
     assert.doesNotMatch(signed.stdout + signed.stderr, /PRIVATE KEY/);
   });
 
-  it('refuses a signing key that is not the pair of the key the app trusts', () => {
+  it('refuses a signing key that is not the pair of a key the app trusts', () => {
     const signed = signing([]);
 
     assert.equal(signed.status, 1);
-    assert.match(signed.stderr, new RegExp(`not the pair of the key the app trusts`));
-    assert.match(signed.stderr, new RegExp(appPublicKey().replaceAll('+', '\\+')));
+    assert.match(signed.stderr, /not the pair of a key the app trusts/);
+    assert.ok(signed.stderr.includes(keyList(appPublicKeys())), signed.stderr);
+  });
+
+  // The release that brings a new key is signed with the old one, which both builds trust.
+  it('signs with either key while a key is rotated', () => {
+    const next = testKeyPair();
+    const rotating = ['--public-key', keyList([next.publicKey, pair.publicKey])];
+
+    const signed = signing(rotating);
+    const verified = run('verify-feed.mjs', { args: [...folder(), ...rotating] });
+
+    assert.equal(signed.status, 0, signed.stderr);
+    assert.equal(verified.status, 0, verified.stderr);
+    assert.equal(
+      run('verify-feed.mjs', { args: [...folder(), rotating[0], next.publicKey] }).status,
+      1,
+    );
   });
 
   it('asks for the private key by name', () => {

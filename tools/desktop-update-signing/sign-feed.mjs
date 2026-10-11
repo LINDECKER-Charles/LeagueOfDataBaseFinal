@@ -2,18 +2,19 @@
 //
 //   LODB_DESKTOP_UPDATE_PRIVATE_KEY="$(cat feed-signing.pem)" \
 //   node tools/desktop-update-signing/sign-feed.mjs --releases DIR --channel win-x64 \
-//        --version 1.4.0 [--public-key BASE64]
+//        --version 1.4.0 [--public-key "BASE64 ..."]
 //
 // Rewrites DIR/releases.<channel>.json as the GitHub Release of --version publishes it (its
 // own packages only), then writes the signature next to it (releases.<channel>.json.sig).
-// Refuses a signing key whose public half is not the key the app trusts: the one compiled
-// into the app (UpdateFeeds.FeedPublicKey), or --public-key for a local E2E build that trusts
-// a throwaway key. The private key comes from the environment only and is never printed.
+// Refuses a signing key whose public half is not among the keys the app trusts: those
+// compiled into the app (UpdateFeeds.FeedPublicKeys), or --public-key for a local E2E build
+// that trusts a throwaway key. The private key comes from the environment only and is never
+// printed.
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { keyFromEnvironment } from '../live-update/lib/key-from-environment.mjs';
-import { appPublicKey } from './lib/app-key.mjs';
+import { appPublicKeys, keyList, parseKeyList } from './lib/app-key.mjs';
 import {
   PRIVATE_KEY_VARIABLE,
   rawPublicKey,
@@ -39,11 +40,11 @@ function readOptions() {
   return values;
 }
 
-function trustedSigningKey(expected) {
+function trustedSigningKey(trusted) {
   const privateKey = readPrivateKey(keyFromEnvironment(PRIVATE_KEY_VARIABLE));
-  if (rawPublicKey(privateKey) !== expected) {
+  if (!trusted.includes(rawPublicKey(privateKey))) {
     throw new Error(
-      `${PRIVATE_KEY_VARIABLE} is not the pair of the key the app trusts (${expected})`,
+      `${PRIVATE_KEY_VARIABLE} is not the pair of a key the app trusts (${keyList(trusted)})`,
     );
   }
   return privateKey;
@@ -51,12 +52,12 @@ function trustedSigningKey(expected) {
 
 try {
   const values = readOptions();
-  const expected = values['public-key'] ?? appPublicKey();
-  const privateKey = trustedSigningKey(expected);
+  const trusted = values['public-key'] ? parseKeyList(values['public-key']) : appPublicKeys();
+  const privateKey = trustedSigningKey(trusted);
   const { fileName, feed } = readFeed(values.releases, values.channel);
   const published = feedOfVersion(feed, values.version);
   const signature = signFeed({ fileName, feed: published, privateKey });
-  const publicKey = readPublicKey(expected);
+  const publicKey = readPublicKey(rawPublicKey(privateKey));
   if (!signatureHolds({ fileName, feed: published, signature, publicKey })) {
     throw new Error(`the signature of ${fileName} does not hold`);
   }

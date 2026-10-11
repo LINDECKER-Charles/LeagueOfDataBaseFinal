@@ -1,10 +1,10 @@
-// Generates the Ed25519 key pair of the desktop release feeds, once, on the owner's machine:
+// Generates an Ed25519 key pair for the desktop release feeds, on the owner's machine:
 //
 //   node tools/desktop-update-signing/generate-key.mjs --out <secure folder>/feed-signing.pem
 //
 // Writes the private key (PKCS#8 PEM, readable by its owner only) to --out, which must not
 // exist yet nor lie inside a git work tree, and prints the public key only: it goes into
-// UpdateFeeds.FeedPublicKey. The private key becomes the release secret
+// UpdateFeeds.FeedPublicKeys. The private key becomes the release secret
 // (`gh secret set LODB_DESKTOP_UPDATE_PRIVATE_KEY < <file>`) and its offline backups.
 import { generateKeyPairSync } from 'node:crypto';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
