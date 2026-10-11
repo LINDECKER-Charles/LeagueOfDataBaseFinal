@@ -490,9 +490,22 @@ Le domaine de `LoDb__Mail__From` doit autoriser le relais : SPF, DKIM et DMARC.
 |---|---|---|
 | Clés | mode test (`sk_test_…`) 🔁 | mode live (`sk_live_…`) 🔁 |
 | Endpoint | `https://test.league-of-data-base.com/webhooks/stripe`, celui de l'ancien staging 🔁 | l'endpoint **existant**, `https://league-of-data-base.com/webhooks/stripe`, inchangé 🔁 |
-| Événements | `checkout.session.completed`, `customer.subscription.deleted` | idem |
+| Événements | les huit ci-dessous | idem |
 
 Le secret de signature (`whsec_…`) est celui de l'endpoint de chaque environnement.
+
+Événements à cocher sur l'endpoint (**Developers → Webhooks → l'endpoint → Select
+events**), tous : un type absent laisse l'état du site diverger de Stripe.
+
+- `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+  `checkout.session.async_payment_failed` ;
+- `customer.subscription.updated`, `customer.subscription.deleted`,
+  `invoice.payment_failed` ;
+- `charge.refunded`, `charge.dispute.created`.
+
+Les sessions ouvertes par le site n'acceptent que la carte : les moyens de paiement actifs
+du dashboard ne changent rien. Ce que chaque événement fait :
+[`api-publique.md`](../architecture/api-publique.md), « Cycle de vie d'un paiement ».
 
 ### 6.6 Google OAuth
 

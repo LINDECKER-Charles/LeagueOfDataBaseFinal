@@ -10,8 +10,8 @@ namespace LoDb.Infrastructure.Tests.Persistence;
 /// <summary>
 /// The Baseline migration reproduces the schema of the Doctrine migrations: same
 /// <c>pg_dump</c>, same catalog, same legacy history. The new stack only adds the EF history,
-/// the tables of its lots and the frozen columns of lot 4 on <c>users</c>; lot 6 adds tables
-/// only.
+/// the tables of its lots and the frozen columns of lot 4 on <c>users</c>; lot 6 and the
+/// payment states add tables only.
 /// </summary>
 public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
 {
@@ -35,6 +35,9 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
         "analytics_daily", "analytics_event", "api_credit_grants", "client_policy",
         "stripe_event",
     ];
+
+    /// <summary>Tables of the payment states; like lot 4's, not in NewTables.</summary>
+    internal static readonly string[] PaymentTables = ["stripe_checkout", "stripe_subscription"];
 
     // Everything a migration adds to a Doctrine table, frozen: Identity's columns on users
     // (nullable, with a default or generated, so that the legacy stack keeps inserting rows)
@@ -148,7 +151,7 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
     }
 
     private static IEnumerable<string> NewTables() =>
-        TestDatabase.NewTables.Concat(Lot4Tables).Concat(Lot6Tables);
+        TestDatabase.NewTables.Concat(Lot4Tables).Concat(Lot6Tables).Concat(PaymentTables);
 
     // The table itself, its columns, constraints, indexes and triggers, and the sequences of
     // its identity columns, which PostgreSQL names after it.
