@@ -16,9 +16,9 @@ affichage.
 
 ## Détails
 
-- L'illustration d'un champion (en tête de sa fiche, sur les cartes de la liste et de
-  l'accueil) arrive au format WebP, à la taille de l'écran, depuis le site ; seule l'image
-  principale de la page est demandée en priorité.
+- L'illustration d'un champion (en tête de sa fiche et sur les cartes de la liste) arrive au
+  format WebP, à la taille de l'écran, depuis le site ; seule l'image principale de la page
+  est demandée en priorité.
 - La vidéo d'un sort ne se télécharge que lorsque la moitié de son cadre est à l'écran, et se
   met en pause quand on s'en éloigne. En mode économie de données ou sur une connexion lente,
   l'image fixe du sort reste affichée.
@@ -34,10 +34,12 @@ affichage.
 ## Technique
 
 - Art des champions : `srcset`/`sizes` construits depuis `centeredArtVariants` (héros, `sizes`
-  calqué sur la boîte 62vh en 16:9) et `loadingArtVariants` (cartes de la liste et de
-  l'accueil), dans une `<source type="image/webp">` ; l'URL Data Dragon reste le `src` de repli
-  (anciens patchs, variantes pas encore stockées). Le héros redescend d'un cran à chaque échec :
-  variantes, art centré, splash.
+  calqué sur la boîte 62vh en 16:9) et `loadingArtVariants` (cartes de la liste), dans une
+  `<source type="image/webp">` ; l'URL Data Dragon reste le `src` de repli (anciens patchs,
+  variantes pas encore stockées). Le héros redescend d'un cran à chaque échec : variantes, art
+  centré, splash. Les portraits des aperçus de l'accueil, sous la ligne de flottaison, restent
+  sur Data Dragon : servis par le site, ils partageaient les premiers allers-retours de la page
+  et retardaient son premier affichage (mesuré).
 - `lodb-image` sépare `eager` (chargée tout de suite) et `priority` (`fetchpriority="high"`) :
   un seul candidat LCP par page (héros, première carte de la liste des champions, icône des
   fiches objet, rune et sort, portrait d'un build partagé), la première rangée restant

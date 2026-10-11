@@ -53,7 +53,6 @@ function sectionOf(locale: string, resource: ResourceType, filled: boolean): Hom
     image: { status: 'absent' as const },
     edition: 'modern' as const,
     art: resource === 'champions' ? LOADING_ART : null,
-    artVariants: [],
   };
   return {
     resource,

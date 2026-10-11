@@ -23,7 +23,6 @@ export const PREVIEW_OF = {
       image: champion.image,
       edition: 'modern',
       art: champion.loadingArt,
-      artVariants: champion.loadingArtVariants,
     })),
   }),
   items: (list: ItemList): Preview => ({
@@ -35,7 +34,6 @@ export const PREVIEW_OF = {
       image: item.image,
       edition: item.edition,
       art: null,
-      artVariants: [],
     })),
   }),
   runes: (list: RuneList): Preview => ({
@@ -47,7 +45,6 @@ export const PREVIEW_OF = {
       image: tree.image,
       edition: 'modern',
       art: null,
-      artVariants: [],
     })),
   }),
   summoners: (list: SummonerList): Preview => ({
@@ -59,7 +56,6 @@ export const PREVIEW_OF = {
       image: spell.image,
       edition: spell.edition,
       art: null,
-      artVariants: [],
     })),
   }),
 } as const;

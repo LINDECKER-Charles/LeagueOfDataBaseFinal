@@ -15,8 +15,6 @@ import { SeeAllArrow } from './see-all-arrow';
 // 308 by 560.
 const LOADING_ART_WIDTH = 308;
 const LOADING_ART_HEIGHT = 560;
-// A portrait's width in its grid below: 4, 3 then 2 abreast, in the 80rem column.
-const LOADING_ART_SIZES = '(width >= 64rem) 20rem, (width >= 40rem) 34vw, 50vw';
 const INITIALS_LENGTH = 2;
 // Spelled out whole for the Tailwind scanner: portraits go three abreast from 640px, as the
 // legacy home's champions did, tiles two.
@@ -46,7 +44,6 @@ export class PreviewSection {
   protected readonly gridClass = computed(() => GRID_CLASSES[this.look()]);
   protected readonly loadingArtWidth = LOADING_ART_WIDTH;
   protected readonly loadingArtHeight = LOADING_ART_HEIGHT;
-  protected readonly loadingArtSizes = LOADING_ART_SIZES;
   private readonly router = inject(Router);
 
   protected initialsOf(name: string): string {
