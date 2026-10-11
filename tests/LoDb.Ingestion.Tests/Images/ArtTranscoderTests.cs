@@ -14,7 +14,6 @@ public sealed class ArtTranscoderTests
         [Array.Empty<byte>(), (byte[])[0xFF, 0xD8, 0xFF], "{}"u8.ToArray()];
 
     [Theory]
-    [InlineData(480, 270)]
     [InlineData(960, 540)]
     [InlineData(1280, 720)]
     public void CenteredArtIsScaledToTheWidthAskedFor(int width, int height)

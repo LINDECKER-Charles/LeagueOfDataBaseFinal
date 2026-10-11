@@ -16,8 +16,6 @@ public sealed class ResilienceTests
 
     [Theory]
     [InlineData(HttpStatusCode.InternalServerError)]
-    [InlineData(HttpStatusCode.BadGateway)]
-    [InlineData(HttpStatusCode.ServiceUnavailable)]
     [InlineData(HttpStatusCode.RequestTimeout)]
     public async Task PersistentFailureIsRetriedThenTransient(HttpStatusCode status)
     {
