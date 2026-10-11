@@ -35,6 +35,7 @@ services:
       LoDb__Ingestion__MaxWaitingIngestions:
       LoDb__Ingestion__SlotWait:
       LoDb__RateLimiting__SignInPerWindow:
+      LoDb__Builds__Votes__MinimumAccountAge:
     cpu_shares: 1024
     deploy:
       resources:

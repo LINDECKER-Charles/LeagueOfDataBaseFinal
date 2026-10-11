@@ -84,7 +84,7 @@ describe('bench overlay through Compose',
       const host = join(folder, 'host.env');
       await writeFile(local, '');
       await writeFile(host, `${await readFile(join(ROOT, '.env.prod.example'), 'utf8')}\n` +
-        'LODB_EDGE_CIDR=172.18.0.0/16\n');
+        'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.2.0/24\n');
       const [base, dev, bench, served] = await Promise.all([
         configOf(local, BASE), configOf(local, DEV), configOf(local, BENCH), configOf(host, HOST),
       ]);
