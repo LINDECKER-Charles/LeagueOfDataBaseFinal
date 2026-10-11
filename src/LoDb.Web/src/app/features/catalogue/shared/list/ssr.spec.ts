@@ -5,7 +5,11 @@ import {
   mergeApplicationConfig,
   signal,
 } from '@angular/core';
-import { type BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
+import {
+  type BootstrapContext,
+  bootstrapApplication,
+  provideClientHydration,
+} from '@angular/platform-browser';
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 import { RouterOutlet, provideRouter } from '@angular/router';
 import { provideTransloco } from '@jsverse/transloco';
@@ -105,7 +109,11 @@ async function renderOnServer(url: string, requests: ListRequest[]): Promise<str
   };
   Reflect.set(globalThis, 'ngServerMode', true);
   try {
-    const server = mergeApplicationConfig(config, { providers: [provideServerRendering()] });
+    // Hydration as app.config has it, in its server flavour (picked from the flag above): the
+    // server then renders the blocks the browser hydrates later, such as the rail, at every
+    // render, not only at the one that loads their code.
+    const providers = [provideServerRendering(), provideClientHydration()];
+    const server = mergeApplicationConfig(config, { providers });
     const bootstrap = (context: BootstrapContext) => bootstrapApplication(Root, server, context);
     return await keepingGlobals(() =>
       renderApplication(bootstrap, { document: DOCUMENT_HTML, url }),
