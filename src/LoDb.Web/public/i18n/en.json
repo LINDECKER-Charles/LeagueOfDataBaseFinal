@@ -189,6 +189,9 @@
       "previous": "Previous",
       "next": "Next",
       "back_to_list": "Back to list"
+    },
+    "history": {
+      "title": "In previous patches"
     }
   },
   "common": {

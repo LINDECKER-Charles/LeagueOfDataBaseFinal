@@ -171,6 +171,11 @@
     },
     "slot": "Θέση"
   },
+  "detail": {
+    "history": {
+      "title": "Σε προηγούμενα patch"
+    }
+  },
   "common": {
     "back": "Πίσω",
     "search": "Αναζήτηση…",

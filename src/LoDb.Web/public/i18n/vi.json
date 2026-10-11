@@ -171,6 +171,11 @@
     },
     "slot": "Ô ngọc"
   },
+  "detail": {
+    "history": {
+      "title": "Trong các phiên bản trước"
+    }
+  },
   "common": {
     "back": "Quay lại",
     "search": "Tìm kiếm…",

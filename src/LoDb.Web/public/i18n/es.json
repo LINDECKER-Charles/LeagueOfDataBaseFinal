@@ -171,6 +171,11 @@
     },
     "slot": "Ranura"
   },
+  "detail": {
+    "history": {
+      "title": "En parches anteriores"
+    }
+  },
   "common": {
     "back": "Volver",
     "search": "Buscar…",

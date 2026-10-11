@@ -171,6 +171,11 @@
     },
     "slot": "Slot"
   },
+  "detail": {
+    "history": {
+      "title": "In früheren Patches"
+    }
+  },
   "common": {
     "back": "Zurück",
     "search": "Suchen…",

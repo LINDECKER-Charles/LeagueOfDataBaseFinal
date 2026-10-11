@@ -171,6 +171,11 @@
     },
     "slot": "Slot"
   },
+  "detail": {
+    "history": {
+      "title": "V předchozích patchích"
+    }
+  },
   "common": {
     "back": "Zpět",
     "search": "Hledat…",

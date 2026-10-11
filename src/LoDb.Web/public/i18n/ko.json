@@ -171,6 +171,11 @@
     },
     "slot": "슬롯"
   },
+  "detail": {
+    "history": {
+      "title": "이전 패치에서"
+    }
+  },
   "common": {
     "back": "뒤로",
     "search": "검색…",

@@ -15,6 +15,10 @@ par numéro (16.x, 15.x…). Chaque patch ouvre directement ses champions, ses o
 ou ses sorts d'invocateur tels qu'ils étaient à l'époque, sans passer par le sélecteur de
 version. La page existe dans les 21 langues du site.
 
+Chaque fiche (champion, objet, page de runes, sort d'invocateur) se termine aussi par un bloc
+« Dans les patchs précédents » : un clic ouvre la même fiche dans l'un des six patchs
+précédents.
+
 ## Pourquoi
 
 Jusqu'ici, un ancien patch ne s'atteignait que par le sélecteur de version. Une page de liens
@@ -29,6 +33,10 @@ sélecteurs, trouvent enfin chaque ancien patch en suivant les liens du site.
   les URL courtes, les autres vers l'URL épinglée : aucun lien ne répond par une redirection.
 - Aucun catalogue n'est lu pour rendre la page : son coût ne dépend pas du nombre de versions.
   Balisage allégé (sans encapsulation de styles), quatre liens `UrlTree` par version.
-- Lien `footer.navigation.patches` dans le pied de page ; textes de la page dans
-  `public/i18n/patches/` pour les 21 locales ; tête indexable (canonique, `hreflang`, fil
-  d'Ariane) par `Seo.apply`.
+- Bloc `lodb-previous-patches` (`features/catalogue/shared/codex/history/`) sous les quatre
+  fiches : la même entrée dans les six versions listées avant celle de la page, par
+  `injectCatalogueLink` (UrlTree, `?lang=` conservé), à partir du `/api/meta` déjà lu par le
+  résolveur. Aucun catalogue de ces versions n'est chargé pour rendre la fiche.
+- Lien `footer.navigation.patches` dans le pied de page, titre `detail.history.title` du
+  bloc, textes de la page dans `public/i18n/patches/` : traduits dans les 21 locales. Tête
+  indexable de la page (canonique, `hreflang`, fil d'Ariane) par `Seo.apply`.

@@ -171,6 +171,11 @@
     },
     "slot": "Slot"
   },
+  "detail": {
+    "history": {
+      "title": "Di patch sebelumnya"
+    }
+  },
   "common": {
     "back": "Kembali",
     "search": "Cari…",

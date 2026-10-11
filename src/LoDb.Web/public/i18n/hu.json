@@ -171,6 +171,11 @@
     },
     "slot": "Hely"
   },
+  "detail": {
+    "history": {
+      "title": "Korábbi patchekben"
+    }
+  },
   "common": {
     "back": "Vissza",
     "search": "Keresés…",

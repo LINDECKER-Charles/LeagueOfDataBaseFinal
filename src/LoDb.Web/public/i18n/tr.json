@@ -171,6 +171,11 @@
     },
     "slot": "Yuva"
   },
+  "detail": {
+    "history": {
+      "title": "Önceki yamalarda"
+    }
+  },
   "common": {
     "back": "Geri",
     "search": "Ara…",

@@ -171,6 +171,11 @@
     },
     "slot": "Loc"
   },
+  "detail": {
+    "history": {
+      "title": "În patch-urile anterioare"
+    }
+  },
   "common": {
     "back": "Înapoi",
     "search": "Caută…",

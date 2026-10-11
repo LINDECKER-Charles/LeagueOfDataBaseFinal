@@ -171,6 +171,11 @@
     },
     "slot": "スロット"
   },
+  "detail": {
+    "history": {
+      "title": "過去のパッチ"
+    }
+  },
   "common": {
     "back": "戻る",
     "search": "検索…",
