@@ -122,6 +122,19 @@ describe('AudienceTracker', () => {
     });
   });
 
+  it('never lets the page address out through the Referer header', async () => {
+    const router = await started();
+
+    await visit(router, '/b/Zx81bQ2token');
+    await visit(router, '/fr/u/Faker');
+    await visit(router, '/fr/champions?q=ahri');
+
+    expect(sentNames()).toEqual(['view', 'view', 'view']);
+    for (const { init } of sent()) {
+      expect(init.referrerPolicy).toBe('no-referrer');
+    }
+  });
+
   it('sends the referrer once, and the template as the title of a private address', async () => {
     page.referrer = 'https://www.reddit.com/r/leagueoflegends/comments/1';
     const router = await started();

@@ -21,7 +21,10 @@ interface SendReply {
  *
  * Raw `fetch`, not HttpClient: the interceptors would add the session's headers, and the
  * apps' bearer token. No credentials, and `keepalive` so a hit outlives the page it leaves.
- * Umami's `cache` token, which spares it a session lookup, lives in memory only.
+ * No referrer either: a same-origin request carries the page's full address in its `Referer`
+ * header (a shared build's token, a pseudonym, a search), past the normalization, and the
+ * edge keeps that header in its access log. Umami's `cache` token, which spares it a session
+ * lookup, lives in memory only.
  *
  * Sends only from the site's canonical host (staging, local stacks and end-to-end runs share
  * the bundle and stay silent), on the web (the apps come later), and while the visitor is
@@ -62,6 +65,7 @@ export class AudienceSender {
         headers,
         body: JSON.stringify(umamiBodyOf(hit, this.device())),
         credentials: 'omit',
+        referrerPolicy: 'no-referrer',
         keepalive: true,
       });
       this.keepCache(response.ok ? ((await response.json()) as SendReply) : null);
