@@ -153,7 +153,9 @@ décommission ([runbook](../reecriture/bascule.md)).
 Le secret `ENV_STAGING` ou `ENV_PROD` est le fichier complet, une variable par ligne. À chaque
 déploiement, le job le pose sur l'hôte (`.deploy/incoming.env`, root seul), puis, le dépôt à
 la révision déployée, [`tools/deploy/split-env.sh`](../../tools/deploy/README.md) le sépare et
-le supprime :
+le supprime. Il le sépare d'abord dans un dossier temporaire, que le job contrôle (§ 4.1, ⚙️) :
+le `.env` et les fichiers en place ne changent qu'une fois ces contrôles passés, un conteneur
+qui redémarre montant les fichiers tels qu'ils sont alors.
 
 - chaque secret de la liste ci-dessous va dans un fichier de `.deploy/secrets/` portant
   son nom (fichier en 444, dossier en 700), vide si la ligne est absente ;

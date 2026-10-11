@@ -80,16 +80,16 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 1. Garde le `.env` en place sous `.deploy/backups/`, pose `ENV_*` dans
    `.deploy/incoming.env` (root seul) et `.deploy/data-protection.pfx`, puis synchronise le
    dépôt sur la branche (`git reset --hard`). `tools/deploy/split-env.sh`, à cette révision,
-   sépare alors `ENV_*` : chaque secret dans un fichier de `.deploy/secrets/`, le reste dans
-   le `.env` (mode 600), et supprime `.deploy/incoming.env`
-   ([`configuration.md`](configuration.md), § 4). Un secret mal écrit arrête le job avant
-   toute écriture.
-2. Contrôle le `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
+   sépare alors `ENV_*` dans un dossier temporaire : chaque secret dans un fichier, le reste
+   dans un `.env` ([`configuration.md`](configuration.md), § 4). Un secret mal écrit arrête
+   le job avant toute écriture.
+2. Contrôle ce `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
    `COMPOSE_PROJECT_NAME` = `lodb-<env>`, `IMAGE_TAG` = `<env>`, `LODB_NOINDEX` (`1` sur
    `staging`, `0` en `prod`), mot de passe de la base présent ; en `prod`, relais SMTP et
-   clés Stripe présents (leurs fichiers non vides). Exige le
-   réseau `edge` (jamais créé) et écrit son sous-réseau dans le `.env` (`LODB_EDGE_CIDR`,
-   seul pair dont nginx croit `X-Forwarded-For`).
+   clés Stripe présents (leurs fichiers non vides). Exige le réseau `edge` (jamais créé).
+   Contrôles passés seulement, sépare `ENV_*` en place (`.deploy/secrets/`, `.env` en mode
+   600), supprime `.deploy/incoming.env` et le dossier temporaire, puis écrit le sous-réseau
+   d'`edge` dans le `.env` (`LODB_EDGE_CIDR`, seul pair dont nginx croit `X-Forwarded-For`).
 3. `docker compose pull` (5 tentatives), sauvegarde de la base en service (`.deploy/backups/`), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
    run le temps du seul `pull` (transmis par l'entrée de `ssh`, jamais en ligne de
    commande), puis `docker compose run --rm migrate` : la base du

@@ -11,7 +11,9 @@ bash tools/deploy/split-env.sh --keys                          # the secret keys
 ```
 
 The job pushes the environment's dotenv (secret `ENV_STAGING` or `ENV_PROD`) to
-`.deploy/incoming.env`, then, once the checkout is at the deployed revision, splits it:
+`.deploy/incoming.env`, then, once the checkout is at the deployed revision, splits it into a
+scratch folder, which it checks against the target, and only then into place (a container
+that restarts mounts the secret files as they are then):
 
 | Output | Content |
 | --- | --- |

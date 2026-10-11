@@ -236,20 +236,23 @@ jobs:
 
             # ── Secrets out of the .env ──────────────────────────────────────────────
             # The script of the deployed revision, whose compose.deploy.yaml mounts the files
-            # it writes. The pushed dotenv is removed whatever the outcome; on a refusal, the
-            # .env and the secret files in place stay as they were.
-            split_status=0
-            bash tools/deploy/split-env.sh .env .deploy/secrets < .deploy/incoming.env \
-              || split_status=$?
-            rm -f .deploy/incoming.env
-            [ "$split_status" = 0 ] || fail "ENV_FILE was refused (above); nothing was deployed."
+            # it writes. It splits into a scratch folder first, which the checks below read:
+            # the .env and the secret files in place change only once the dotenv passes them,
+            # since a container that restarts mounts the secret files as they are then. The
+            # pushed dotenv and the scratch folder are removed whatever the outcome.
+            scratch="$(mktemp -d .deploy/split.XXXXXX)"
+            trap 'rm -rf .deploy/incoming.env "$scratch"' EXIT
+            dotenv="$scratch/.env"
+            secrets_dir="$scratch/secrets"
+            bash tools/deploy/split-env.sh "$dotenv" "$secrets_dir" < .deploy/incoming.env \
+              > /dev/null || fail "ENV_FILE was refused (above); nothing was deployed."
 
             # ── The .env against the target, before anything changes ─────────────────
             env_value() {
-              grep -E "^$1=" .env | tail -n 1 | cut -d= -f2- | tr -d "\"'" || true
+              grep -E "^$1=" "$dotenv" | tail -n 1 | cut -d= -f2- | tr -d "\"'" || true
             }
             secret_set() {
-              [ -s ".deploy/secrets/$1" ]
+              [ -s "$secrets_dir/$1" ]
             }
             expect() {
               local actual
@@ -278,6 +281,11 @@ jobs:
             edge_cidr="$(docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}')"
             [[ "$edge_cidr" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$ ]] \
               || fail "The 'edge' network has no IPv4 subnet for nginx to trust."
+
+            # Checked: the dotenv now becomes the .env and the secret files in place.
+            bash tools/deploy/split-env.sh .env .deploy/secrets < .deploy/incoming.env
+            rm -rf .deploy/incoming.env "$scratch"
+            dotenv=.env
             sed -i '/^LODB_EDGE_CIDR=/d' .env
             echo "LODB_EDGE_CIDR=$edge_cidr" >> .env
 
