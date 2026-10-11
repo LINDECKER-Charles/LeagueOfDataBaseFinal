@@ -8,8 +8,14 @@ namespace LoDb.Api.Hosting.Health;
 /// Liveness (<c>/healthz</c>) and readiness (<c>/readyz</c>) probes.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Liveness runs no check: a database outage must not make Docker restart the API.
 /// Readiness checks what serving needs, the database and a writable storage root.
+/// </para>
+/// <para>
+/// Both answer anonymous callers through the fallback policy of the host, as every endpoint
+/// does: a probe is a GET, which the forgery guard lets through.
+/// </para>
 /// </remarks>
 internal static class HealthRegistration
 {
@@ -50,6 +56,6 @@ internal static class HealthRegistration
             Predicate = predicate,
             ResponseWriter = HealthResponseWriter.WriteAsync,
         };
-        endpoints.MapHealthChecks(path, options).AllowAnonymous().DisableRateLimiting();
+        endpoints.MapHealthChecks(path, options).DisableRateLimiting();
     }
 }
