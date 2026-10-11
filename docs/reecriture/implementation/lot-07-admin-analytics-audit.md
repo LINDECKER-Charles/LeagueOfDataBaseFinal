@@ -13,7 +13,7 @@ repris ; purge de rétention observée avec une horloge simulée.
   ce que la CNIL permet, et reprendre les agrégats existants.
 - **À lire** : `app/src/Service/Analytics/**`, `app/src/EventListener/RecordRequestListener.php`,
   `app/src/Command/AnalyticsRollupCommand.php`, [`analytics.md`](../../architecture/analytics.md),
-  [`legal-info.md`](../../guides/legal-info.md) (durées de conservation), tests PHPUnit
+  la checklist légale (privée) (durées de conservation), tests PHPUnit
   `Service/Analytics/**`, `go/api/internal/trends/**` (clés d'entité lues par
   `/v1/trends`), `heritage.md` A2, D2, D3.
 - **Périmètre** : `src/LoDb.Api/Modules/Analytics/**`, `src/LoDb.Infrastructure/Analytics/**`

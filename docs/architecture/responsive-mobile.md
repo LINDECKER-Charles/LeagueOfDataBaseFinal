@@ -4,9 +4,9 @@ Comment l'interface s'adapte du petit téléphone (320 px) à l'iPad et au deskt
 Ce document décrit la stratégie responsive, les composants spécifiques mobile, les
 breakpoints, la méthode d'audit, et les limitations connues.
 
-> Complément de [`architecture.md`](architecture.md) (§ Architecture frontend). Le brief
-> [`brief-design-pages.md`](../briefs/brief-design-pages.md) laisse volontairement le responsive
-> hors de son périmètre : ce fichier est la référence.
+> Complément de [`architecture.md`](architecture.md) (§ Architecture frontend). Le brief de
+> design laissait volontairement le responsive hors de son périmètre : ce fichier est la
+> référence.
 
 ## Stratégie
 

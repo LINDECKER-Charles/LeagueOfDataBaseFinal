@@ -12,9 +12,8 @@ contributeur est [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
       reecriture/        ← décisions de la réécriture .NET + Angular (ADR, plan)
       architecture/      ← comment le système fonctionne
       guides/            ← comment l'installer, le configurer, l'exploiter
-      audits/            ← constats datés et plans de correction
-      briefs/            ← briefs de design
-      produit/           ← veille, SEO, communication
+      audits/            ← index public ; les audits datés restent privés
+      produit/           ← SEO technique
       changelog/         ← journal technique interne (une entrée par livraison)
       assets/            ← images et icônes utilisées par le README
 
@@ -41,7 +40,6 @@ Pour développer : guide [developpement.md](guides/developpement.md) et
 | Doc | Contenu |
 |---|---|
 | [architecture.md](architecture/architecture.md) | Vue d'ensemble : services, flux, arborescence |
-| [architecture-report.md](architecture/architecture-report.md) | Rapport d'architecture — état avant/après refacto (DRY / SOLID / KISS) |
 | [analytics.md](architecture/analytics.md) | Analytics sans base de données (NDJSON local → agrégats journaliers sur le volume de stockage) et panneau `/admin` |
 | [api-publique.md](architecture/api-publique.md) | API REST v1 payante servie par le micro-service Go `go-api` |
 | [responsive-mobile.md](architecture/responsive-mobile.md) | Stratégie responsive, breakpoints, composants mobile |
@@ -57,44 +55,27 @@ Pour développer : guide [developpement.md](guides/developpement.md) et
 | [developpement.md](guides/developpement.md) | Nouvelle stack `lodb-dev` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
 | [configuration.md](guides/configuration.md) | Nouvelle stack : inventaire des secrets GitHub, des lignes `.env` de `staging` et de `prod`, des fichiers et volumes de l'hôte et des services externes |
 | [github-actions-secrets.md](guides/github-actions-secrets.md) | Nouvelle stack : pipeline CI/CD, `dev` → `test` (déploiement de `staging`) → `main` (promotion en `prod`) |
-| [deploiement-cle-restreinte.md](guides/deploiement-cle-restreinte.md) | Procédure du propriétaire, non activée : clé de déploiement à commande forcée, compte `deploy`, `.env` et secrets posés sur l'hôte |
-| [secrets-poste.md](guides/secrets-poste.md) | Procédure du propriétaire : secrets du poste chiffrés avec `sops` et `age`, clé hors du dépôt et du dossier |
 | [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
 | [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana : fonctionnement, ce qu'il ne faut surtout pas déclarer, requêtes LogsQL / PromQL, dépannage |
-| [mode-siege.md](guides/mode-siege.md) | Runbook préparé, non activé : Anubis devant les pages épinglées (crawl résidentiel), Cloudflare devant les domaines de LoDb (attaque volumétrique) |
 | [logging.md](guides/logging.md) | Convention de journalisation applicative : clé d'événement, contexte, niveaux, canaux, interdictions |
 | [metriques.md](guides/metriques.md) | Contrat des métriques de l'API et du SSR : port 9464, collecte par `observability`, noms, labels, règle de cardinalité |
 | [oauth-google-setup.md](guides/oauth-google-setup.md) | Configuration « Sign in with Google » côté Google Cloud Console |
-| [legal-info.md](guides/legal-info.md) | Checklist des informations légales à trancher avant la prod |
 | [packaging-apk.md](../legacy/docs/guides/packaging-apk.md) | *Ancienne stack, archivée* — Distribution Android (TWA / APK) à partir de la PWA |
 
 ## `audits/` — constats datés
 
-| Doc | Contenu |
-|---|---|
-| [performance-audit.md](audits/performance-audit.md) | Audit de la chaîne de chargement DDragon et du cache |
-| [performance-fix-prompt.md](audits/performance-fix-prompt.md) | Plan de correction dérivé de l'audit ci-dessus |
-| [version-compatibility-audit.md](audits/version-compatibility-audit.md) | Compatibilité des versions Data Dragon — diagnostic et correctifs |
-| [observabilite-2026-08-23.md](audits/observabilite-2026-08-23.md) | Journalisation : les quatre verrous qui rendent l'app muette, et le plan d'implémentation en 5 lots |
-| [observabilite-fix-prompt.md](audits/observabilite-fix-prompt.md) | Mission d'implémentation dérivée du plan ci-dessus — un lot par session, garde-fous et pièges |
+Les audits datés (constats, plans de correction) ne sont pas publiés : le dépôt est
+public. [`audits/README.md`](audits/README.md) dit pourquoi ; une vulnérabilité se signale
+en privé ([`../SECURITY.md`](../SECURITY.md)).
 
 > `report/` (métriques de conformité aux règles chiffrées de `AGENTS.md`) est
 > **généré** par le skill `archi-report` et git-ignoré : ne pas l'éditer à la main.
 
-## `briefs/` — briefs de design
+## `produit/` — SEO
 
 | Doc | Contenu |
 |---|---|
-| [brief-design-pages.md](briefs/brief-design-pages.md) | Contenu attendu par page + charte « Hextech » |
-| [brief-design-prompt.md](briefs/brief-design-prompt.md) | Prompt de mission accompagnant le brief |
-
-## `produit/` — veille et diffusion
-
-| Doc | Contenu |
-|---|---|
-| [analyse-concurrentielle.md](produit/analyse-concurrentielle.md) | Cartographie de l'écosystème data League of Legends |
 | [seo-indexabilite.md](produit/seo-indexabilite.md) | État des lieux et feuille de route SEO technique |
-| [seo-backlinking.md](produit/seo-backlinking.md) | Stratégie d'acquisition de liens |
 
 ## `changelog/` — journal technique
 

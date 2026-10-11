@@ -26,9 +26,8 @@ league-of-database/
 └── docs/                    # Documentation (voir docs/README.md)
     ├── architecture/        # Fonctionnement interne des sous-systèmes
     ├── guides/             # Installation, exploitation, opérations
-    ├── audits/            # Audits ponctuels et plans de correction
-    ├── briefs/            # Briefs de design
-    ├── produit/           # Veille, SEO, communication
+    ├── audits/            # Index public ; les audits datés restent privés
+    ├── produit/           # SEO technique
     └── changelog/         # Journal technique interne
 ```
 

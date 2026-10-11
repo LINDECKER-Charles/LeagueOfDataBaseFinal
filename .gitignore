@@ -1,57 +1,68 @@
-commande.md
-
-# Agent instructions of this repository: versioned here even when a global excludes file
-# ignores AGENTS.md.
+# =============================================================================
+# Versioned despite a global excludes file
+# =============================================================================
+# Agent instructions of this repository, even when a global excludes file ignores AGENTS.md.
 !/AGENTS.md
 !/legacy/AGENTS.md
 
-# Env & secrets (see docs/guides/configuration.md).
-# Real env files are git-ignored; committed *.example templates and the non-secret
-# Symfony defaults of the archived stack (legacy/app/.env, legacy/app/.env.test) are not.
-
-# Repo-root compose env (local overrides) and the filled env of each served environment
-# (.env.staging, .env.prod): only the *.example templates are versioned.
+# =============================================================================
+# Env and secrets (docs/guides/configuration.md)
+# =============================================================================
+# Real env files are ignored; the *.example templates and the non-secret Symfony defaults
+# of the archived stack (legacy/app/.env, legacy/app/.env.test) are versioned.
+# Repo-root compose env (local overrides) and the filled env of each served environment.
 /.env
 /.env.*
 !/.env.*.example
-# Local checklist of the secrets to set (values included): never versioned.
+# Local checklist of the secrets to set, values included.
 /SECRETS.md
-# What the deploy job writes on a host (secret files, the pushed env, backups): a split run in
-# a checkout must never reach a commit.
+# What the deploy job writes on a host (secret files, pushed env, backups): a split run in a
+# checkout must never reach a commit.
 /.deploy/
-
-# Compose env of the archived legacy stack, read by `docker compose --project-directory legacy`
+# Compose env of the archived stack, read by `docker compose --project-directory legacy`.
 /legacy/.env
 /legacy/.env.test
 /legacy/.env.staging
 /legacy/.env.prod
-
-# Symfony host-level secret overrides (legacy/app/.gitignore ignores them too)
+# Symfony host-level secret overrides (legacy/app/.gitignore ignores them too).
 /legacy/app/.env.local
 /legacy/app/.env.*.local
 
+# =============================================================================
+# Maintainer-only material: kept on the workstation, never published
+# =============================================================================
+# The repository is public. Nothing here gets a rule of its own: it follows a convention.
+#   docs/private/   notes, owner procedures, studies, pitches, agent prompts and reports
+#   docs/audits/    dated audits, findings and follow-up; only the index is public
+#   *.local.*       a one-off local file, anywhere (e.g. docs/MIGRATION-INFRA-VPS.local.md)
+#   *.prompt.md     an agent prompt, anywhere
+#   docs/**/*.pdf   rendered reports: the Markdown source decides what is public
+/docs/private/
+/docs/audits/*
+!/docs/audits/README.md
+*.local.*
+*.prompt.md
+/docs/**/*.pdf
+# Exports of the design tool (mock-ups and their uploads), at the root only.
+/design/
+
+# =============================================================================
+# Generated reports and run outputs, regenerated on demand
+# =============================================================================
+# Knowledge-graph cache and report.
+/graphify-out/
+# Metrics against the numeric rules of AGENTS.md, produced by the archi-report tooling.
+/docs/report/
+# Parity runs (L1.8): exports and manifests of both stacks.
+/tools/parity/.runs/
+# Load bench runs: k6 summaries, docker stats samples and the summary of each run.
+/tools/load/.runs/
+
+# =============================================================================
+# Dependencies and build outputs
+# =============================================================================
 # Node deps anywhere (e.g. legacy/tools/screenshots). Unanchored: matches at any depth.
 node_modules/
-
-# JetBrains IDE
-.idea/
-
-# Claude Code (réglages et état locaux, propres à chaque poste)
-/.claude/
-
-# Pitch Discord (local, non versionné)
-/docs/produit/presentation-discord.md
-
-# graphify (cache/rapport knowledge-graph généré)
-/graphify-out/
-design
-
-# Rapports d'audit générés (knowledge-graph, archi, conventions)
-/docs/report/
-
-# Note locale de migration edge -> infra-vps (non versionnee)
-/docs/MIGRATION-INFRA-VPS.local.md
-
 # .NET outputs of the new stack. Anchored on src/ and tests/: legacy/app/bin/ holds tracked
 # Symfony entry points.
 /src/**/bin/
@@ -59,19 +70,23 @@ design
 /tests/**/bin/
 /tests/**/obj/
 TestResults/
-
 # Angular workspace outputs. The CLI cache is unanchored: a tool that runs ng from the
 # repository root (an IDE) writes it there too.
 /src/LoDb.Web/dist/
 .angular/
 /src/LoDb.Web/coverage/
 
-# Parity runs (L1.8): exports and manifests of both stacks, regenerated on demand
-/tools/parity/.runs/
-# Load bench runs: k6 summaries, docker stats samples and the summary of each run
-/tools/load/.runs/
+# =============================================================================
+# Workstation tooling
+# =============================================================================
+# JetBrains IDE.
+.idea/
+# Local settings and state of the coding agent, specific to each workstation.
+/.claude/
 
-# Leftovers of the layout before the cutover: the PHP stack moved to legacy/app/, but a
-# checkout updated in place keeps its ignored files under app/ (vendor, node_modules, var,
-# .env.*.local), which no .gitignore covers any more.
+# =============================================================================
+# Leftovers of the layout before the cutover
+# =============================================================================
+# The PHP stack moved to legacy/app/, but a checkout updated in place keeps its ignored files
+# under app/ (vendor, node_modules, var, .env.*.local), which no .gitignore covers any more.
 /app/
