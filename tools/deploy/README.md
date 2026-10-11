@@ -24,10 +24,11 @@ its password through `POSTGRES_PASSWORD_FILE`. No secret is then in a container'
 which `docker inspect` shows. `LODB_SECRETS_REVISION` goes up by one when a file changes; it
 labels the API, which Compose then recreates: the API reads its files at start-up only.
 
-A value is read as Compose reads a dotenv: unquoted (an inline comment after a blank is
-dropped), single-quoted (literal) or double-quoted. The script refuses, before writing anything
-and without printing a value, a `$` outside single quotes (Compose would interpolate it), a
-`\` inside double quotes, and a quote left open.
+A value is read as Compose reads a dotenv: unquoted (leading blanks dropped, then an inline
+comment from a space followed by `#`), single-quoted (literal) or double-quoted. The script
+refuses, before writing anything and without printing a value, a `$` outside single quotes
+(Compose would interpolate it), a `\` inside double quotes or before a closing quote (Compose
+reads `\'` as an escaped quote), a quote left open, and a secret written `KEY: value`.
 
 A new secret goes to `SECRET_KEYS` **and** to the `secrets` of `compose.deploy.yaml`;
 `test/compose-secrets.test.mjs` checks that they agree.
@@ -38,6 +39,7 @@ A new secret goes to `SECRET_KEYS` **and** to the `secrets` of `compose.deploy.y
 node --test tools/deploy/test/*.test.mjs
 ```
 
-`compose-secrets.test.mjs` renders the overlay with `docker compose config` (skipped without
-Docker). On a local stack, `stack-check/check-secret-files.sh` proves that Postgres, migrate and
+`compose-secrets.test.mjs` renders the overlay with `docker compose config`, and
+`split-env-compose.test.mjs` checks the script's values against Compose's own reading of the
+same dotenv (both skipped without Docker). On a local stack, `stack-check/check-secret-files.sh` proves that Postgres, migrate and
 the API read their secrets from files that win over the environment (header of the script).

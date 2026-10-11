@@ -182,7 +182,8 @@ mis en fichiers :
   transmise à l'API comme une valeur vide, que certains réglages refusent au démarrage.
 - Une valeur qui contient `$` se met entre apostrophes (`'…'`) : Compose l'interpolerait. Le
   job refuse un secret mis en fichier avec un `$` hors apostrophes, un `\` entre guillemets
-  ou un guillemet non fermé, avant d'écrire quoi que ce soit et sans afficher la valeur.
+  ou devant le guillemet fermant, un guillemet non fermé ou la forme `CLÉ: valeur`, avant
+  d'écrire quoi que ce soit et sans afficher la valeur.
 
 **Changer un secret** : modifier sa ligne dans `ENV_*` et relancer le déploiement. Le fichier
 change, `LODB_SECRETS_REVISION` monte d'un cran et `up` recrée l'API, qui ne lit ses fichiers

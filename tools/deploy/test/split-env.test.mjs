@@ -100,6 +100,10 @@ describe('split-env.sh', () => {
       LoDb__Analytics__VisitorKey: ['export LoDb__Analytics__VisitorKey = key', 'key'],
       LoDb__Accounts__Google__ClientSecret: ["LoDb__Accounts__Google__ClientSecret=''", ''],
       LoDb__DataProtection__CertificatePassword: ['LoDb__DataProtection__CertificatePassword=', ''],
+      LoDb__Accounts__Google__AppClients__0__ClientSecret: [
+        'LoDb__Accounts__Google__AppClients__0__ClientSecret= #hash-first\t#tab',
+        '#hash-first\t#tab',
+      ],
     };
 
     splitOk(
@@ -138,6 +142,8 @@ describe('split-env.sh', () => {
     ['a backslash inside double quotes', 'LODB_DB_PASSWORD="pa\\nword"'],
     ['a quote left open', "LODB_DB_PASSWORD='password"],
     ['characters after the closing quote', 'LODB_DB_PASSWORD="pass"word'],
+    ['a quote Compose reads as escaped', "LODB_DB_PASSWORD='pa\\' # word'"],
+    ['a secret written KEY: value', 'LODB_DB_PASSWORD: pa-word'],
   ]) {
     it(`refuses ${form}, naming the key only, and writes nothing`, () => {
       const place = workspace();

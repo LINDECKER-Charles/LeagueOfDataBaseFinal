@@ -10,10 +10,12 @@
 #
 # Every key of SECRET_KEYS gets its file, empty when the dotenv leaves it unset: Compose
 # mounts every secret it declares, and the API reads an empty file as an unset setting.
-# A value is read as Compose reads it, in the forms this script accepts: unquoted (an inline
-# comment after a blank is dropped, surrounding blanks are trimmed), single-quoted (taken
-# literally) or double-quoted without `\` nor `$`. Compose would interpolate a `$` outside
-# single quotes: the script refuses it rather than guess, as it refuses a quote left open.
+# A value is read as Compose reads it, in the forms this script accepts: unquoted (leading
+# blanks dropped, then an inline comment from a space followed by `#`, then trailing blanks),
+# single-quoted (taken literally) or double-quoted, without `\` before the closing quote nor
+# `\` and `$` inside double quotes. Compose would interpolate a `$` outside single quotes and
+# reads `\'` as an escaped quote: the script refuses those rather than guess, as it refuses a
+# quote left open and a secret written `KEY: value`, a form Compose also reads.
 # Nothing is written before every value is read, and no message ever holds a value.
 #
 # The files are world-readable in a folder that only root can enter: Compose bind-mounts a
@@ -37,7 +39,11 @@ readonly SECRET_KEYS=(
   LoDb__Analytics__VisitorKey
 )
 readonly REVISION_KEY=LODB_SECRETS_REVISION
-readonly ASSIGNMENT='^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_.-]*)[[:space:]]*=(.*)$'
+readonly KEY_PREFIX='^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_.-]*)[[:space:]]*'
+readonly ASSIGNMENT="${KEY_PREFIX}=(.*)\$"
+readonly COLON_ASSIGNMENT="${KEY_PREFIX}:"
+# Compose ends an unquoted value at a space followed by `#`, not at a tab.
+readonly INLINE_COMMENT=' #'
 readonly SECRETS_DIR_MODE=700
 readonly SECRET_FILE_MODE=444
 
@@ -78,6 +84,8 @@ read_dotenv() {
       fi
       # Written by this script only, from the files it compares.
       [ "$key" != "$REVISION_KEY" ] || continue
+    elif [[ "$line" =~ $COLON_ASSIGNMENT ]] && is_secret "${BASH_REMATCH[2]}"; then
+      fail "${BASH_REMATCH[2]}: write the secret as KEY=value."
     fi
     kept_lines+=("$line")
   done
@@ -94,18 +102,22 @@ check_tail() {
   [ -z "$tail" ] || [[ "$tail" == \#* ]] || fail "$1: unexpected characters after the quote."
 }
 
-# The quoted value at the start of $2 (opening quote $3), into `parsed`.
+# The quoted value at the start of $2 (opening quote $3), into `parsed`. Compose skips a
+# quote preceded by `\`: the quote found here would not close the value there.
 parse_quoted() {
   local key="$1" rest="${2:1}" quote="$3"
   [[ "$rest" == *"$quote"* ]] || fail "$key: the quote is not closed on its line."
   parsed="${rest%%"$quote"*}"
+  [[ "$parsed" != *\\ ]] || fail "$key: \\ before the closing quote; remove the \\."
   check_tail "$key" "${rest#*"$quote"}"
 }
 
-# The unquoted value $2, into `parsed`: an inline comment starts at a blank followed by `#`.
+# The unquoted value $2, into `parsed`, cut as Compose cuts it: leading blanks, then the
+# inline comment, then trailing blanks.
 parse_unquoted() {
-  local value="${2%%[[:space:]]#*}"
-  value="$(trim_leading "$value")"
+  local value
+  value="$(trim_leading "$2")"
+  value="${value%%"$INLINE_COMMENT"*}"
   parsed="${value%"${value##*[![:space:]]}"}"
   [[ "$parsed" != *'$'* ]] || fail "$1: \$ outside single quotes; write the value as '...'."
 }
