@@ -50,8 +50,7 @@ internal sealed class IngestionHarness : IAsyncDisposable
         IReadOnlyDictionary<string, string?>? settings = null)
     {
         ArgumentNullException.ThrowIfNull(postgres);
-        var database = await postgres.CreateDatabaseAsync(Token);
-        await database.MigrateAsync(Token);
+        var database = await postgres.CreateMigratedDatabaseAsync(Token);
         var root = Directory.CreateTempSubdirectory(StoragePrefix).FullName;
         return new IngestionHarness(database, root, settings ?? new Dictionary<string, string?>());
     }

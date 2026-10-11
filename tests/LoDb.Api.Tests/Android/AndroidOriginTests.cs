@@ -12,7 +12,7 @@ namespace LoDb.Api.Tests.Android;
 /// and only that one, sign in and call <c>/api</c> with a bearer token.
 /// </summary>
 public sealed class AndroidOriginTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string TokenPath = "/api/account/token";
     private const string SessionPath = "/api/account/me";

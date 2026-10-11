@@ -12,7 +12,7 @@ namespace LoDb.Api.Tests.ClientPolicy;
 /// which sends no <c>X-LoDb-Client</c>, never is.
 /// </summary>
 public sealed class ClientVersionGateTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string ClientHeader = "X-LoDb-Client";
     private const string SessionPath = "/api/account/me";

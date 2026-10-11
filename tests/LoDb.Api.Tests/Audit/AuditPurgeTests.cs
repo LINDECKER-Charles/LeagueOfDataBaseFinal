@@ -13,7 +13,7 @@ namespace LoDb.Api.Tests.Audit;
 /// retention would delete, or everything, and the purge itself is recorded after it.
 /// </summary>
 public sealed class AuditPurgeTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string PurgePath = "/api/admin/audit/purge";
     private const string DayFormat = "yyyy-MM-dd";

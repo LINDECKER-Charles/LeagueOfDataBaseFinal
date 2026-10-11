@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// the account, under the same linking rules as the web.
 /// </summary>
 public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string ExchangePath = "/api/account/google/app/exchange";
     private const string Subject = "110248495921238986420";

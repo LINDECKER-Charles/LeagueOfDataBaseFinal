@@ -30,7 +30,7 @@ namespace LoDb.Api.Tests.Profiles.Support;
 /// The tests share the database: each one seeds accounts of its own, named by
 /// <see cref="SeedAsync"/>, and never relies on another's.
 /// </remarks>
-public sealed class ProfilesApp : IAsyncLifetime
+public sealed class ProfilesApp(PostgresContainerFixture postgres) : IAsyncLifetime
 {
     private const string Accounts = "LoDb:Accounts:";
 
@@ -38,7 +38,6 @@ public sealed class ProfilesApp : IAsyncLifetime
     // opening more than the test server accepts.
     private const int ServedPoolSize = 32;
 
-    private readonly PostgresContainerFixture _postgres = new();
     private TestDatabase? _database;
     private ApiFactory? _factory;
     private WebApplicationFactory<Program>? _host;
@@ -60,9 +59,7 @@ public sealed class ProfilesApp : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        await _postgres.InitializeAsync();
-        _database = await _postgres.CreateDatabaseAsync(Token);
-        await _database.MigrateAsync(Token);
+        _database = await postgres.CreateMigratedDatabaseAsync(Token);
         _factory = new ApiFactory
         {
             PostgresConnectionString =
@@ -208,8 +205,6 @@ public sealed class ProfilesApp : IAsyncLifetime
         {
             await _database.DisposeAsync();
         }
-
-        await _postgres.DisposeAsync();
     }
 
     private async Task<T> UsersAsync<T>(Func<UserManager<User>, Task<T>> action)

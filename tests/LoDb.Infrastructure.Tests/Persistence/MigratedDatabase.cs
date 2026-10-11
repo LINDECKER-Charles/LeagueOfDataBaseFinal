@@ -18,11 +18,8 @@ public abstract class MigratedDatabase(PostgresContainerFixture postgres) : IAsy
     /// <summary>The server of <see cref="Database"/>, for a test that needs another one.</summary>
     protected PostgresContainerFixture Server => postgres;
 
-    public async ValueTask InitializeAsync()
-    {
-        _database = await postgres.CreateDatabaseAsync(Cancellation);
-        await _database.MigrateAsync(Cancellation);
-    }
+    public async ValueTask InitializeAsync() =>
+        _database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
 
     public async ValueTask DisposeAsync()
     {

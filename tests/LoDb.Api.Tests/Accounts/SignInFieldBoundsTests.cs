@@ -10,7 +10,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// refused as malformed before the account is looked up, so never hashed.
 /// </summary>
 public sealed class SignInFieldBoundsTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string LoginPath = "/api/account/login";
     private const string TokenPath = "/api/account/token";

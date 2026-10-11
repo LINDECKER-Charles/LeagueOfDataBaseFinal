@@ -13,7 +13,6 @@ namespace LoDb.Api.Tests.Ingestion;
 /// worker then ingests whole: the path of a new patch from Data Dragon to the API.
 /// </summary>
 public sealed class IngestionWorkersTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>
 {
     private const string Promoted =
         "SELECT version FROM ddragon_version WHERE status = 'ready' AND promoted_at IS NOT NULL";

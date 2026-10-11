@@ -5,36 +5,56 @@ using Xunit;
 namespace LoDb.Testing;
 
 /// <summary>
-/// A throwaway PostgreSQL server, shared by the tests of a class, a collection or an
-/// assembly.
+/// A throwaway PostgreSQL server, shared by the tests of an assembly.
 /// </summary>
 /// <remarks>
-/// Same major version and flavour as the production image. The container is removed when the
-/// fixture is disposed, and by the Testcontainers reaper if the run dies first. Tests that
-/// write share the server, never a database: each creates its own. The server's
-/// <see cref="ConnectionString"/> is its superuser's, as <c>migrate</c> connects; the API
-/// connects as the role of <see cref="TestRoles"/>
-/// (<see cref="TestDatabase.AppConnectionString"/>).
+/// Same major version and flavour as the production image, without durability: a test server
+/// never survives a crash, and skipping the flushes makes creating and writing a database
+/// several times faster. The container is removed when the fixture is disposed, and by the
+/// Testcontainers reaper if the run dies first. Tests that write share the server, never a
+/// database: each creates its own. The server's <see cref="ConnectionString"/> is its
+/// superuser's, as <c>migrate</c> connects; the API connects as the role of
+/// <see cref="TestRoles"/> (<see cref="TestDatabase.AppConnectionString"/>).
 /// </remarks>
 public sealed class PostgresContainerFixture : IAsyncLifetime
 {
     public const string Image = "postgres:17-alpine";
 
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder(Image).Build();
+    private const string TemplateName = "lodb_template";
+
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder(Image)
+        .WithCommand("-c", "fsync=off")
+        .WithCommand("-c", "synchronous_commit=off")
+        .WithCommand("-c", "full_page_writes=off")
+        .Build();
+
+    private readonly SemaphoreSlim _templateGate = new(1, 1);
+    private volatile bool _isTemplateReady;
 
     /// <summary>Connection string of the server, for <c>ConnectionStrings:LoDb</c>.</summary>
     public string ConnectionString => _container.GetConnectionString();
 
     /// <summary>A new empty database, dropped when the returned value is disposed.</summary>
-    public async Task<TestDatabase> CreateDatabaseAsync(CancellationToken cancellationToken)
+    public Task<TestDatabase> CreateDatabaseAsync(CancellationToken cancellationToken) =>
+        CreateDatabaseAsync(template: null, cancellationToken);
+
+    /// <summary>
+    /// A new database at the latest migration, as <c>migrate</c> leaves it; dropped when the
+    /// returned value is disposed.
+    /// </summary>
+    /// <remarks>
+    /// A copy of a template migrated once per server, migrated again: <c>CREATE DATABASE</c>
+    /// copies the schema and its grants, not the grants on the database itself nor the API
+    /// role's settings in it, which the second run of <c>migrate</c> puts back with nothing
+    /// left to apply.
+    /// </remarks>
+    public async Task<TestDatabase> CreateMigratedDatabaseAsync(
+        CancellationToken cancellationToken)
     {
-        var name = "test_" + Guid.NewGuid().ToString("N");
-        await ExecuteOnServerAsync($"CREATE DATABASE {name}", cancellationToken);
-        var connectionString = new NpgsqlConnectionStringBuilder(ConnectionString)
-        {
-            Database = name,
-        };
-        return new TestDatabase(this, name, connectionString.ConnectionString);
+        await EnsureTemplateAsync(cancellationToken);
+        var database = await CreateDatabaseAsync(TemplateName, cancellationToken);
+        await database.MigrateAsync(cancellationToken);
+        return database;
     }
 
     /// <summary>
@@ -76,7 +96,56 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         await TestRoles.Create().EnsureRolesAsync(connection, cancellationToken);
     }
 
-    public ValueTask DisposeAsync() => _container.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        _templateGate.Dispose();
+        await _container.DisposeAsync();
+    }
+
+    private async Task<TestDatabase> CreateDatabaseAsync(
+        string? template,
+        CancellationToken cancellationToken)
+    {
+        var name = "test_" + Guid.NewGuid().ToString("N");
+        var copy = template is null ? string.Empty : $" TEMPLATE {template}";
+        await ExecuteOnServerAsync($"CREATE DATABASE {name}{copy}", cancellationToken);
+        return new TestDatabase(this, name, DatabaseConnectionString(name));
+    }
+
+    // Once migrated, the template refuses connections: a copy fails while anyone is connected.
+    private async Task EnsureTemplateAsync(CancellationToken cancellationToken)
+    {
+        if (_isTemplateReady)
+        {
+            return;
+        }
+
+        await _templateGate.WaitAsync(cancellationToken);
+        try
+        {
+            if (_isTemplateReady)
+            {
+                return;
+            }
+
+            await ExecuteOnServerAsync($"CREATE DATABASE {TemplateName}", cancellationToken);
+            await TestDatabase.MigrateAsync(
+                DatabaseConnectionString(TemplateName),
+                cancellationToken);
+            await ExecuteOnServerAsync(
+                $"ALTER DATABASE {TemplateName} WITH IS_TEMPLATE true ALLOW_CONNECTIONS false",
+                cancellationToken);
+            _isTemplateReady = true;
+        }
+        finally
+        {
+            _templateGate.Release();
+        }
+    }
+
+    private string DatabaseConnectionString(string database) =>
+        new NpgsqlConnectionStringBuilder(ConnectionString) { Database = database }
+            .ConnectionString;
 
     internal async Task ExecuteOnServerAsync(string sql, CancellationToken cancellationToken)
     {

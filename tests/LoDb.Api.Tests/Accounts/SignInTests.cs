@@ -12,7 +12,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// factor when it is on.
 /// </summary>
 public sealed class SignInTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string WrongPassword = "Wr0ng-passphrase!";
     private const int FailuresToLock = 5;

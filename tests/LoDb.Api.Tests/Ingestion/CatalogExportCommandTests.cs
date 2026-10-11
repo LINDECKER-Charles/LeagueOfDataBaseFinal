@@ -10,7 +10,6 @@ namespace LoDb.Api.Tests.Ingestion;
 /// catalog ingested if need be and written whole, or an exit code telling why not.
 /// </summary>
 public sealed class CatalogExportCommandTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>
 {
     private static CancellationToken Token => IngestionHost.Token;
 

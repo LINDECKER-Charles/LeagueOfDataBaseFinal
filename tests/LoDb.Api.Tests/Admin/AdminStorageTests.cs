@@ -15,7 +15,7 @@ namespace LoDb.Api.Tests.Admin;
 /// their WebP siblings, the datasets and what the content addressing saves.
 /// </summary>
 public sealed class AdminStorageTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string StoragePath = "/api/admin/storage?refresh=true";
     private const string MonitoringPath = "/api/admin/monitoring?refresh=true";

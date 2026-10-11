@@ -9,7 +9,7 @@ namespace LoDb.Api.Tests.Telemetry;
 /// with closed label values only: never an identifier, an address or a name.
 /// </summary>
 public sealed class SecurityMetricsScrapeTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string WrongPassword = "Wr0ng-passphrase!";
     private static readonly Uri Metrics = new("/metrics", UriKind.Relative);

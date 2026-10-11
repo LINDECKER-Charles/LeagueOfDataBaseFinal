@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Billing;
 /// delivery applies it whole.
 /// </summary>
 public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const long Requests = 5_000;
 

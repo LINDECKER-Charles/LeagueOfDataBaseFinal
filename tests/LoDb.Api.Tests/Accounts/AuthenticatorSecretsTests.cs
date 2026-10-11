@@ -17,7 +17,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// earlier version left in clear protected without locking anyone out.
 /// </summary>
 public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string ClearKey = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
     private const string ClearCodes = "BCDFG-HJKMN;PQRTV-WXY23;45678-9BCDF";

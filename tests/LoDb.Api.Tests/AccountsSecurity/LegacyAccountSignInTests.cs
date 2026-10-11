@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.AccountsSecurity;
 /// fifteen minutes, in <c>users</c>, so on every instance. A new account follows the policy.
 /// </summary>
 public sealed class LegacyAccountSignInTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string UserName = "Legende_42";
     private const string Ascii = "ascii";
@@ -132,8 +132,7 @@ public sealed class LegacyAccountSignInTests(PostgresContainerFixture postgres)
 
     public async ValueTask InitializeAsync()
     {
-        _database = await postgres.CreateDatabaseAsync(Cancellation);
-        await _database.MigrateAsync(Cancellation);
+        _database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
     }
 
     public async ValueTask DisposeAsync()

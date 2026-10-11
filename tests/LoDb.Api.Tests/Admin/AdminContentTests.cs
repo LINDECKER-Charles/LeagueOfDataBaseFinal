@@ -15,7 +15,7 @@ namespace LoDb.Api.Tests.Admin;
 /// the contact messages handled, reopened or deleted.
 /// </summary>
 public sealed class AdminContentTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string BuildsPath = "/api/admin/builds";
     private const string ContactsPath = "/api/admin/contacts";

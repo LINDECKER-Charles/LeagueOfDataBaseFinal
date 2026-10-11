@@ -13,7 +13,7 @@ namespace LoDb.Api.Tests.ClientPolicy;
 /// whole, and an invalid policy refused before anything is written.
 /// </summary>
 public sealed class ClientPolicyPublishCommandTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private TestDatabase? _database;
 
@@ -82,8 +82,7 @@ public sealed class ClientPolicyPublishCommandTests(PostgresContainerFixture pos
 
     public async ValueTask InitializeAsync()
     {
-        _database = await postgres.CreateDatabaseAsync(Cancellation);
-        await _database.MigrateAsync(Cancellation);
+        _database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
     }
 
     public async ValueTask DisposeAsync()

@@ -27,12 +27,11 @@ namespace LoDb.Api.Tests.Builds.Support;
 /// The tests share the database: each one seeds accounts of its own, named by
 /// <see cref="SeedAsync"/>, and never relies on another's builds.
 /// </remarks>
-public sealed class BuildsApp : IAsyncLifetime
+public sealed class BuildsApp(PostgresContainerFixture postgres) : IAsyncLifetime
 {
     private const string Accounts = "LoDb:Accounts:";
     private const string ImagePath = "/img/";
 
-    private readonly PostgresContainerFixture _postgres = new();
     private TestDatabase? _database;
     private ApiFactory? _factory;
     private WebApplicationFactory<Program>? _host;
@@ -54,9 +53,7 @@ public sealed class BuildsApp : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        await _postgres.InitializeAsync();
-        _database = await _postgres.CreateDatabaseAsync(Token);
-        await _database.MigrateAsync(Token);
+        _database = await postgres.CreateMigratedDatabaseAsync(Token);
         _factory = new ApiFactory
         {
             PostgresConnectionString = _database.AppConnectionString,
@@ -222,8 +219,6 @@ public sealed class BuildsApp : IAsyncLifetime
         {
             await _database.DisposeAsync();
         }
-
-        await _postgres.DisposeAsync();
     }
 
     // Only the images of the newest patches are recorded: the others answer as the images a

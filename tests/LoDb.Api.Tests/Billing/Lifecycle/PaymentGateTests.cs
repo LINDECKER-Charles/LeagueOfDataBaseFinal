@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Billing.Lifecycle;
 /// another amount or currency is refused, and neither grants anything.
 /// </summary>
 public sealed class PaymentGateTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private BillingApp? _app;
 

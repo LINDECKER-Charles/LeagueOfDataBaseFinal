@@ -17,7 +17,7 @@ namespace LoDb.Api.Tests.Analytics;
 /// (<c>LegacyDailyImportTests</c>); these check the command around it.
 /// </remarks>
 public sealed class AnalyticsImportCommandTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private static readonly DateOnly Day = new(2026, 7, 14);
 
@@ -99,8 +99,7 @@ public sealed class AnalyticsImportCommandTests(PostgresContainerFixture postgre
 
     public async ValueTask InitializeAsync()
     {
-        _database = await postgres.CreateDatabaseAsync(Cancellation);
-        await _database.MigrateAsync(Cancellation);
+        _database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
     }
 
     public async ValueTask DisposeAsync()

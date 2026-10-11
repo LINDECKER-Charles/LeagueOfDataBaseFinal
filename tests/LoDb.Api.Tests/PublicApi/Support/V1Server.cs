@@ -15,11 +15,10 @@ namespace LoDb.Api.Tests.PublicApi.Support;
 /// The data set dates the requests of the month from the day it is loaded; the daily
 /// aggregates of the trends are dated from that day too, and the runs set their clock to it.
 /// </remarks>
-public sealed class V1Server : IAsyncLifetime
+public sealed class V1Server(PostgresContainerFixture postgres) : IAsyncLifetime
 {
     private const string DayFormat = "yyyy-MM-dd";
 
-    private readonly PostgresContainerFixture _postgres = new();
     private TestDatabase? _template;
 
     public static CancellationToken Token => TestContext.Current.CancellationToken;
@@ -32,9 +31,7 @@ public sealed class V1Server : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        await _postgres.InitializeAsync();
-        _template = await _postgres.CreateDatabaseAsync(Token);
-        await _template.MigrateAsync(Token);
+        _template = await postgres.CreateMigratedDatabaseAsync(Token);
         var dataset = await File.ReadAllTextAsync(V1Fixtures.Seed("dataset.sql"), Token);
         await _template.ExecuteAsync(dataset, Token);
         var today = await _template.QueryAsync("SELECT CURRENT_DATE::text", Token);
@@ -48,7 +45,7 @@ public sealed class V1Server : IAsyncLifetime
     /// <summary>The API over a fresh copy of the data set, extra settings applied last.</summary>
     public async Task<V1Run> StartAsync(IReadOnlyDictionary<string, string?>? settings = null)
     {
-        var database = await V1Database.CopyAsync(_postgres.ConnectionString, Template.Name);
+        var database = await V1Database.CopyAsync(postgres.ConnectionString, Template.Name);
         return new V1Run(database, SeedDay, settings ?? new Dictionary<string, string?>());
     }
 
@@ -58,8 +55,6 @@ public sealed class V1Server : IAsyncLifetime
         {
             await _template.DisposeAsync();
         }
-
-        await _postgres.DisposeAsync();
     }
 
     // daily.json dates each day by its offset from the seed day. Its corrupt file becomes an

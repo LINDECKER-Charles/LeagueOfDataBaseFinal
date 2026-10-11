@@ -13,7 +13,7 @@ namespace LoDb.Api.Tests.ClientPolicy;
 /// whole; anyone else is refused.
 /// </summary>
 public sealed class ClientPolicyPublishTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string AdminPath = "/api/admin/client-policy/";
     private const string PolicyPath = "/api/client-policy";

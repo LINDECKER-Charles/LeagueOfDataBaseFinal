@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// lockout. Every attempt is counted by result, and every lockout.
 /// </summary>
 public sealed class SignInLimitTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string WrongPassword = "Wr0ng-passphrase!";
     private const string Client = "203.0.113.7";

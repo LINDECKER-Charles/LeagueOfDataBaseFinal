@@ -10,7 +10,7 @@ namespace LoDb.Api.Tests.Admin;
 /// the API, its dependencies and its queues.
 /// </summary>
 public sealed class AdminReportTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const int DonationDays = 30;
 

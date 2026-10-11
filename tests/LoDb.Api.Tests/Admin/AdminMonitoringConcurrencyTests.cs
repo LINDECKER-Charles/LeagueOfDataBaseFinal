@@ -16,7 +16,7 @@ namespace LoDb.Api.Tests.Admin;
 /// not kept.
 /// </summary>
 public sealed class AdminMonitoringConcurrencyTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string MonitoringPath = "/api/admin/monitoring";
     private const string RefreshPath = MonitoringPath + "?refresh=true";

@@ -13,7 +13,7 @@ namespace LoDb.Api.Tests.Admin;
 /// </summary>
 [Collection(ShellCommandsGroup.Name)]
 public sealed class AdminRootCommandTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string Username = "root_admin";
     private const string Email = "root_admin@staging.example.test";

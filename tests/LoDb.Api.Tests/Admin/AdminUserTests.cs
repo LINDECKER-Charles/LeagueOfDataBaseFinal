@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Admin;
 /// unban and the deletion, each recorded in the audit journal.
 /// </summary>
 public sealed class AdminUserTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string UsersPath = "/api/admin/users";
 

@@ -12,7 +12,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// unverified one never does, and the browser only ever returns to a page of the site.
 /// </summary>
 public sealed class GoogleWebSignInTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string Subject = "110248495921238986420";
     private const string GoogleAuthorization = "https://accounts.google.com/o/oauth2/v2/auth";

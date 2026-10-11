@@ -10,7 +10,6 @@ namespace LoDb.Api.Tests.Catalog.WarmUp;
 /// failed.
 /// </summary>
 public sealed class WarmUpBudgetTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>
 {
     private const string Cold = "/api/catalog/16.18.1/en_US";
     private const string ChampionsThenSummoners = "resources=champions&resources=summoners";

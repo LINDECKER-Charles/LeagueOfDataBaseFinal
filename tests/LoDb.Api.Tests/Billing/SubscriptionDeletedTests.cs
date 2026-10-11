@@ -13,7 +13,7 @@ namespace LoDb.Api.Tests.Billing;
 /// free plan, at the credits rate while it holds credits, and keeps its Stripe customer.
 /// </summary>
 public sealed class SubscriptionDeletedTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private BillingApp? _app;
 
