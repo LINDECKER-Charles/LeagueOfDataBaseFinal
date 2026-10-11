@@ -116,9 +116,14 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - **Hydratation incrémentale** : vitrine des sorts, stats, pager des fiches, pied de page et
   console de filtres sont rendus en entier par le serveur mais hydratés plus tard
   (`@defer (on immediate; hydrate on …)`). D'ici là, leurs éléments gardent leur `jsaction`
-  et un clic n'agit qu'une fois rejoué, après l'hydratation : voulu. Un bloc qui se mesure
-  une fois hydraté (pager, pied de page) s'hydrate un écran à l'avance (`rootMargin`), sinon
-  son ajustement devient un décalage visible (CLS). Un bloc déshydraté n'est jamais mis à
+  et un clic n'agit qu'une fois rejoué, après l'hydratation : voulu. **Mais** Angular (22.2)
+  ne rejoue qu'à la fin d'une hydratation lancée par un événement : un clic qui tombe pendant
+  une hydratation lancée par `viewport`, `idle` ou `when` reste en file, perdu
+  (`triggerHydrationFromBlockName` sort sans rejouer quand le bloc s'hydrate déjà). Le pager
+  et le pied de page, qu'on clique à peine atteints, s'hydratent donc au repos
+  (`hydrate on idle`), hors de la vue et avant d'être atteints : jamais `viewport`, même avec
+  une marge (un saut en bas de page ou le défilement d'un clic Playwright y tombent). Ils se
+  mesurent une fois hydratés : en vue, leur ajustement deviendrait un décalage visible (CLS). Un bloc déshydraté n'est jamais mis à
   jour : la console s'hydrate donc aussi dès que sa copie serveur est périmée (liste entière
   lue, état changé hors d'elle : filtre retiré des résultats, autre langue), sinon elle
   garderait les comptes de la première page. La console se lit par sa référence

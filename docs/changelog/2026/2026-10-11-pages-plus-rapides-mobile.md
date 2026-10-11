@@ -22,9 +22,10 @@ affichage.
 - La vidéo d'un sort ne se télécharge que lorsque la moitié de son cadre est à l'écran, et se
   met en pause quand on s'en éloigne. En mode économie de données ou sur une connexion lente,
   l'image fixe du sort reste affichée.
-- Les sorts, les statistiques, la navigation entre fiches et le pied de page s'activent quand
-  on approche d'eux ; la console de filtres d'une liste, dès qu'on la survole, qu'on y entre
-  ou qu'on y tape, ou dès que la liste complète est là, pour en montrer les bons comptes.
+- Les sorts et les statistiques s'activent quand on approche d'eux, la navigation entre fiches
+  et le pied de page une fois la page au repos ; la console de filtres d'une liste, dès qu'on
+  la survole, qu'on y entre ou qu'on y tape, ou dès que la liste complète est là, pour en
+  montrer les bons comptes.
 - La liste complète qui sert à filtrer se charge quand on commence à chercher ou à filtrer, ou
   une fois la page affichée et le navigateur au repos ; en mode économie de données, seulement
   quand on en a besoin.
@@ -52,9 +53,9 @@ affichage.
   0,5) la crée et la lance, la met en pause hors écran, sans jamais passer outre la pause du
   lecteur ; poster en `loading="lazy"`. `Save-Data` ou `effectiveType` 2g/3g : poster seul.
 - Hydratation incrémentale : `@defer (on immediate; hydrate on viewport)` sur la vitrine des
-  sorts et le tableau des stats ; `hydrate on viewport({ rootMargin: '100% 0px' })` sur le
-  pager des quatre fiches et le pied de page (ils se mesurent une fois hydratés, hors de la
-  vue) ; `hydrate on interaction`, `hydrate on hover` (survol et focus) et `hydrate when`
+  sorts et le tableau des stats ; `hydrate on idle` sur le pager des quatre fiches et le pied
+  de page (ils se mesurent une fois hydratés, hors de la vue, et un clic pendant une
+  hydratation lancée par `viewport` serait perdu) ; `hydrate on interaction`, `hydrate on hover` (survol et focus) et `hydrate when`
   (raccourci `/`, ou copie serveur périmée : liste entière lue, état changé hors de la
   console) sur la console de filtres.
 - Liste complète : lue sur intention (focus de la recherche, groupe de facettes déplié, feuille

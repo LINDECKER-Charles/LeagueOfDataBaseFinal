@@ -16,8 +16,10 @@
   <ng-content />
 </main>
 @if (!bare()) {
-  <!-- Rendered by the server whole; its code loads and runs a screen before it shows. -->
-  @defer (on immediate; hydrate on viewport({ rootMargin: '100% 0px' })) {
+  <!-- Rendered by the server whole; its code loads and runs once the page is idle, out of the
+       initial bundle. Never on viewport: a click landing while such a hydration runs is lost
+       (docs/architecture/pieges.md). -->
+  @defer (on immediate; hydrate on idle) {
     <lodb-footer>
       <ng-container ngProjectAs="[lodbSlot=contact]">
         <ng-content select="[lodbSlot=contact]" />
