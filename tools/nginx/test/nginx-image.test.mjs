@@ -57,6 +57,20 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.match(stderr, /test is successful/);
   });
 
+  test('denies the unused device features and isolates the pages from their opener',
+    async () => {
+      const answers = [await get('/healthz'), await get('/api/account/me'),
+        await get('/v1/champions', { host: API_HOST }), await get('/cdn/x')];
+      for (const answer of answers) {
+        assert.equal(answer.headers['cross-origin-opener-policy'], 'same-origin');
+        const features = answer.headers['permissions-policy'].split(', ');
+        for (const feature of ['camera=()', 'microphone=()', 'geolocation=()', 'payment=()']) {
+          assert.ok(features.includes(feature), feature);
+        }
+        assert.ok(!features.some((feature) => feature.startsWith('fullscreen')));
+      }
+    });
+
   // Before the page and legacy checks: it spends one request of each burst (LIMITS).
   test('leaves a username that ends like a script to the profiles', async () => {
     assert.equal((await get('/en/u/kevin.bak')).status, 200);

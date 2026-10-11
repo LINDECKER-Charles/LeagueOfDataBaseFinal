@@ -245,8 +245,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   l'ancienne stack (propriété de `www-data`) n'est ni réutilisé ni supprimé : le nommer
   `storage` rendrait le stockage de l'API non inscriptible.
 - nginx : sous-domaine reconnu par `server_name ~^api\.` ; CORP `same-origin` sauf
-  `/cdn/blobs/` en `cross-origin` (coquille Android) ; `access_log off` voulu (l'edge
-  journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent par
+  `/cdn/blobs/` en `cross-origin` (coquille Android) ; COOP `same-origin` et
+  `Permissions-Policy` (caméra, micro, position, paiement… refusés ; plein écran, lecture
+  automatique, partage et presse-papiers laissés) sur toute réponse : une fonction nouvelle du
+  navigateur se vérifie contre cette liste (`snippets/security-headers.conf`) ; `access_log off`
+  voulu (l'edge journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent par
   `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide).
   Une variable `LODB_*` de nginx passe par `compose.yaml` avec son défaut
   (`${LODB_X:-défaut}`), **jamais** en clé sans valeur dans un calque comme les réglages de
