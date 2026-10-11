@@ -2,7 +2,8 @@
 
 Checks of the supply chain: the GitHub Actions workflows themselves, run by the `workflows`
 job of `.github/workflows/ci.yml` next to `actionlint`, and the base images of the
-Dockerfiles, run by its `supply-chain` job. Both jobs gate the merge into `test`.
+Dockerfiles, run by its `supply-chain` job. Both jobs gate the merge into `test`. The scripts
+that tag the images by digest, for `_build.yml` and the promotion to prod, live here too.
 
 ## Actions pinned to a commit
 
@@ -64,6 +65,57 @@ docker buildx imagetools inspect node:24-slim --format '{{.Manifest.Digest}}'
 The `# syntax=` line (`docker/dockerfile`) is not a `FROM`: check it by hand at the same time.
 The images that only the workflows run (Trivy, the SBOM generator in `_build.yml`, actionlint
 below) are pinned the same way, and bumped by hand.
+
+## Images built, attested and scanned
+
+`_build.yml` resolves `test` to one commit, then builds `api`, `web-ssr` and `nginx` from it:
+
+1. **Push under the commit's SHA only** (`:<sha>`, immutable), with an SBOM and a provenance
+   attestation in max mode next to each image (BuildKit; the SBOM generator is pinned by digest
+   in the workflow's `env`). The commit is the image's `org.opencontainers.image.revision`
+   label. The `runtime` stages are rebuilt without cache (`no-cache-filters`): they take the
+   distribution's security fixes of the day (`docker/nginx`, `docker/web-ssr`).
+2. **Scan** the pushed digest with Trivy (pinned by digest, `TRIVY_IMAGE`): pulled, saved as
+   an archive and handed to the scanner, which gets no registry credential. HIGH and CRITICAL
+   vulnerabilities that have a fixed version fail the build: OS packages and the libraries the
+   image ships (`.deps.json` of .NET, `package.json` of Node).
+3. **Tag `:staging`** once the three scans passed, from the scanned digests
+   (`tag-image.sh`): the moving tag never names a mix of two builds nor an unscanned image.
+   The digests are the workflow's outputs.
+
+```sh
+bash tools/ci/tag-image.sh ghcr.io/<owner>/lodb/api sha256:<digest> prod latest
+```
+
+`tag-image.sh` creates the tags from `<repository>@<digest>` (`docker buildx imagetools
+create` copies the index as it is, attestations included), then fails unless each tag names
+that digest.
+
+**A finding that blocks.** Rebuild first: a newer base digest (Dependabot) or the fixes of the
+day often clear it. If the fix cannot ship yet (a library pinned by a dependency, a base image
+not rebuilt), accept it in `.trivyignore` at the repository root, one line per vulnerability,
+with an expiry date at most 30 days ahead and the reason above it:
+
+```text
+# libfoo in the nginx base: fixed upstream, image not rebuilt yet; not reachable (module unused).
+CVE-2026-12345 exp:2026-11-10
+```
+
+Past its date the line no longer applies, and the scan blocks again. To read a report locally,
+build the image, then (Git Bash: `MSYS_NO_PATHCONV=1`):
+
+```sh
+docker save --output image.tar lodb-api:local
+docker run --rm -v "$PWD/image.tar:/scan/image.tar:ro" -v "$PWD:/repo:ro" -w /repo \
+  ghcr.io/aquasecurity/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
+  image --input /scan/image.tar --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed
+```
+
+**Bumping Trivy or the SBOM generator.** Pick a release at least two weeks old, resolve its
+digest (`docker buildx imagetools inspect <image>:<version> --format '{{.Manifest.Digest}}'`),
+and change the version and the digest together in `_build.yml` (and above). For Trivy, check
+the same digest on `ghcr.io/aquasecurity/trivy` and `aquasec/trivy`: both registries receive
+the same release.
 
 ## actionlint
 

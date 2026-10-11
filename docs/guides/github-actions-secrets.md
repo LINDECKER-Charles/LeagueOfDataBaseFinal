@@ -15,7 +15,7 @@ plus ; leur guide est
 | Fichier | Rôle |
 |---|---|
 | `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main` : les seules branches qui déploient) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-dev` + Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`. Sur un push de **`main`** : `promote`, `deploy-prod`. |
-| `_build.yml` | Réutilisable : construit depuis `test` les images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, taguées `:<sha>` (le commit poussé sur `dev`) + `:staging`, label OCI et `APP_REVISION` = SHA. |
+| `_build.yml` | Réutilisable : résout `test` en **un** commit et en construit les images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, poussées sous `:<sha>` (ce commit de `test`) avec leur SBOM et leur attestation de provenance ; label OCI et `APP_REVISION` = ce SHA. Trivy scanne chaque image poussée et **bloque** sur une vulnérabilité HIGH ou CRITICAL corrigée en amont ; `:staging` n'est posé qu'ensuite, sur les digests scannés ([`tools/ci/README.md`](../../tools/ci/README.md)). |
 | `_deploy.yml` | Réutilisable : déploiement SSH d'un hôte, même logique pour `staging` et `prod`. Entrées `environment` (`staging` ou `prod`) et `branch` (`test` ou `main`) ; secrets passés par `ci.yml` (§ Secrets). Son job tourne dans l'environnement GitHub `staging` ou `production`. |
 | `_promote.yml` | Réutilisable : retague `:staging` en `:prod` et `:latest`, **sans rebuild**. |
 | `release-desktop.yml`, `release-android.yml` | Releases signées des apps ([`release-desktop.md`](release-desktop.md), [`release-android.md`](release-android.md)). |
@@ -23,7 +23,7 @@ plus ; leur guide est
 ```
 push dev  ─▶ checks (dotnet, front, contract, e2e ; i18n informatif)
           ─▶ merge dev → test (créée depuis main si absente)
-          ─▶ _build (GHCR :<sha> + :staging)
+          ─▶ _build (GHCR :<sha> ─▶ scan Trivy ─▶ :staging)
           ─▶ _deploy staging (branche test) : pull ─▶ migrate ─▶ up -d ─▶ smoke test
 fusion manuelle test → main ─▶ push main
           ─▶ _promote (:staging → :prod + :latest, sans rebuild)
@@ -67,8 +67,11 @@ deux certificats sont nouveaux ([`configuration.md`](configuration.md), § 2 et 
 clés de l'hôte (`*_SSH_KNOWN_HOSTS`) sont à créer (§ 6.3 du même guide) : absentes, le job
 les lit par `ssh-keyscan`, sans vérification, et le run porte un avertissement.
 
-**Tags d'images** : `:<sha>` (immuable, poussé par `_build.yml`), `:staging` (dernier build
-de `dev`), `:prod` et `:latest` (images promues). `ghcr.io/<owner>/lodb/nginx` porte le nom
+**Tags d'images** : `:<sha>` (immuable, poussé par `_build.yml` : le commit de `test`
+construit, que la notice *Deployed revision* du déploiement affiche), `:staging` (dernier
+build de `dev` dont le scan est passé), `:prod` et `:latest` (images promues). Chaque image
+porte son SBOM et son attestation de provenance (`docker buildx imagetools inspect
+<image> --format '{{json .SBOM}}'`, `.Provenance`). `ghcr.io/<owner>/lodb/nginx` porte le nom
 qu'avait l'image nginx de l'ancienne stack : ses `:staging` et `:prod` désignent désormais
 la nouvelle, et les images de l'ancienne restent accessibles par leur tag `:<sha>`.
 
