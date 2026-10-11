@@ -39,12 +39,22 @@
 # only those it reads. The API's are named after their setting key, which the API reads from
 # the file: none is in a container's environment, which `docker inspect` would show.
 #
-# Same string as compose.yaml, without the password: the API adds LoDb__Database__Password.
+# The same strings as compose.yaml, without the passwords: each service adds its own
+# LoDb__Database__Password. The API signs in as its own role, lodb_app, whose password the
+# deploy job draws on the host once (LODB_APP_DB_PASSWORD, never in ENV_STAGING or ENV_PROD);
+# migrate signs in as the server's superuser and sets that password on the role.
 x-lodb-connection: &lodb-connection >-
-  Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+  Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=lodb_app;Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+
+x-lodb-migrate-connection: &lodb-migrate-connection >-
+  Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Gss Encryption Mode=Disable;Timeout=5;Application Name=lodb-migrate
 
 x-database-password: &database-password
   source: LODB_DB_PASSWORD
+  target: LoDb__Database__Password
+
+x-app-database-password: &app-database-password
+  source: LODB_APP_DB_PASSWORD
   target: LoDb__Database__Password
 
 services:
@@ -104,7 +114,7 @@ services:
     secrets:
       - source: data-protection
         target: data-protection.pfx
-      - *database-password
+      - *app-database-password
       - LoDb__DataProtection__CertificatePassword
       - LoDb__Mail__Password
       - LoDb__Billing__StripeSecretKey
@@ -138,14 +148,21 @@ services:
           # Thread pool, Npgsql and egress connections; a leak stops here, not at the host.
           pids: 512
 
-  # Ephemeral: `docker compose run --rm migrate` before `up -d` (_deploy.yml).
+  # Ephemeral: `docker compose run --rm migrate` before `up -d` (_deploy.yml). The superuser's
+  # password signs it in; the API's is the one it sets on lodb_app, both from their files.
   migrate:
     image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/api:${IMAGE_TAG:?IMAGE_TAG is required}
     build: !reset null
     environment:
-      ConnectionStrings__LoDb: *lodb-connection
+      ConnectionStrings__LoDb: *lodb-migrate-connection
+      LoDb__Database__AppRole__Password: !reset null
+      # The API role's bounds (configuration.md), passed only when the host's .env sets them.
+      LoDb__Database__AppRole__StatementTimeout:
+      LoDb__Database__AppRole__ConnectionLimit:
     secrets:
       - *database-password
+      - source: LODB_APP_DB_PASSWORD
+        target: LoDb__Database__AppRole__Password
     deploy:
       resources:
         limits:
@@ -276,6 +293,9 @@ secrets:
   # then (an unset setting): Docker would mount a missing file as a folder.
   LODB_DB_PASSWORD:
     file: ./.deploy/secrets/LODB_DB_PASSWORD
+  # Drawn by the job on the host at the first deploy, then kept (split-env.sh, GENERATED_KEYS).
+  LODB_APP_DB_PASSWORD:
+    file: ./.deploy/secrets/LODB_APP_DB_PASSWORD
   LoDb__DataProtection__CertificatePassword:
     file: ./.deploy/secrets/LoDb__DataProtection__CertificatePassword
   LoDb__Mail__Password:

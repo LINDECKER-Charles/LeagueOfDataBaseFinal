@@ -2,7 +2,8 @@
 # Proves on a local stack that the services read their secrets from files, as on a served
 # host: split-env.sh splits a dotenv shaped like ENV_PROD, compose.secret-files.yaml mounts
 # its files, and the environment holds wrong values the files must override. Checks:
-#   - Postgres is created with the password of its file, which the API and migrate use;
+#   - Postgres is created with the password of its file, which migrate uses; the API signs
+#     in as its own role, with the password split-env.sh drew and migrate set on it;
 #   - the Stripe webhook accepts an event signed with the secret of the file only;
 #   - Mailpit, which accepts no other login, receives the mail the API sends with the
 #     password of the file;
@@ -101,8 +102,10 @@ relay_takes_the_file_password() {
 # services are read. A failure names the service and the setting, never the value.
 no_secret_in_any_environment() {
   local service environment index
-  local -a names=(LODB_DB_PASSWORD Mail__Password StripeWebhookSecret StripeSecretKey VisitorKey)
-  local -a secrets=("$DB_PASSWORD" "$MAIL_PASSWORD" "$WEBHOOK_SECRET" "$STRIPE_KEY" "$VISITOR_KEY")
+  local -a names=(LODB_DB_PASSWORD Mail__Password StripeWebhookSecret StripeSecretKey VisitorKey
+    LODB_APP_DB_PASSWORD)
+  local -a secrets=("$DB_PASSWORD" "$MAIL_PASSWORD" "$WEBHOOK_SECRET" "$STRIPE_KEY" "$VISITOR_KEY"
+    "$(cat "$secrets_dir/LODB_APP_DB_PASSWORD")")
   for service in api migrate postgres; do
     environment="$(compose ps -aq "$service" | xargs docker inspect \
       --format '{{range .Config.Env}}{{println .}}{{end}}')"
@@ -113,6 +116,19 @@ no_secret_in_any_environment() {
       fi
     done
   done
+}
+
+# The API's sessions are its own role's, which can neither empty a table nor create one.
+psql_value() {
+  compose exec -T postgres psql -U lodb -d lodb -At -c "$1"
+}
+
+api_signs_in_as_its_role() {
+  [ "$(psql_value "SELECT count(*) > 0 FROM pg_stat_activity WHERE usename = 'lodb_app'")" = t ] \
+    && [ "$(psql_value "SELECT count(*) FROM pg_stat_activity
+         WHERE application_name = 'lodb-api' AND usename <> 'lodb_app'")" = 0 ] \
+    && [ "$(psql_value "SELECT has_table_privilege('lodb_app', 'users', 'TRUNCATE')
+         OR has_schema_privilege('lodb_app', 'public', 'CREATE')")" = f ]
 }
 
 api_names_its_secret_files() {
@@ -133,8 +149,10 @@ export LODB_CHECK_SMTP_AUTH="lodb:$MAIL_PASSWORD"
 trap 'compose down -v --remove-orphans > /dev/null 2>&1 || true; rm -rf "$work"' EXIT
 compose up -d --build --wait --wait-timeout 300 api mailpit
 
-check "postgres, migrate and the API use the database password of the file" \
+check "postgres, migrate and the API use the database passwords of the files" \
   curl -fsS -o /dev/null "$api/readyz"
+check "the API signs in as its own role, which can change no table" \
+  api_signs_in_as_its_role
 check "the Stripe webhook takes the secret of the file over the environment's" \
   webhook_takes_the_file_secret
 check "the mail relay takes the password of the file over the environment's" \

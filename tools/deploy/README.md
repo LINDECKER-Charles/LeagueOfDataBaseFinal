@@ -8,6 +8,7 @@ environment, and their tests, run by the `workflows` job of `.github/workflows/c
 ```sh
 bash tools/deploy/split-env.sh ENV_FILE SECRETS_DIR < dotenv   # what the job runs on the host
 bash tools/deploy/split-env.sh --keys                          # the secret keys
+bash tools/deploy/split-env.sh --generated                     # the secrets drawn on the host
 ```
 
 The job pushes the environment's dotenv (secret `ENV_STAGING` or `ENV_PROD`) to
@@ -34,6 +35,12 @@ reads `\'` as an escaped quote), a quote left open, and a secret written `KEY: v
 
 A new secret goes to `SECRET_KEYS` **and** to the `secrets` of `compose.deploy.yaml`;
 `test/compose-secrets.test.mjs` checks that they agree.
+
+The keys of `GENERATED_KEYS` (the password of the API's database role, `LODB_APP_DB_PASSWORD`)
+never come from the dotenv, which is refused when it sets one: the first run draws each one
+with `openssl rand` into its file, every later run keeps it, and no copy exists outside the
+host. Deleting the file draws a new value at the next deploy, which `migrate` sets on the role
+before `up` recreates the API.
 
 ## Tests
 

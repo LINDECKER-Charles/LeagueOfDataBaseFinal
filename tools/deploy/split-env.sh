@@ -6,7 +6,8 @@
 # `docker inspect` shows to whoever can query the Docker API.
 #
 #   bash tools/deploy/split-env.sh ENV_FILE SECRETS_DIR < dotenv
-#   bash tools/deploy/split-env.sh --keys      # the secret keys, one per line
+#   bash tools/deploy/split-env.sh --keys        # the secret keys, one per line
+#   bash tools/deploy/split-env.sh --generated   # the secrets generated on the host
 #
 # Every key of SECRET_KEYS gets its file, empty when the dotenv leaves it unset: Compose
 # mounts every secret it declares, and the API reads an empty file as an unset setting.
@@ -17,6 +18,11 @@
 # reads `\'` as an escaped quote: the script refuses those rather than guess, as it refuses a
 # quote left open and a secret written `KEY: value`, a form Compose also reads.
 # Nothing is written before every value is read, and no message ever holds a value.
+#
+# The keys of GENERATED_KEYS never come from the dotenv, which is refused when it sets one:
+# the first run draws each one at random (openssl rand) into its file, and every later run
+# keeps that file. No copy exists outside the host, GitHub's secrets included. Deleting the
+# file draws a new value at the next run, which `migrate` then sets (configuration.md).
 #
 # The files are world-readable in a folder that only root can enter: Compose bind-mounts a
 # secret file with its owner and mode, and the API runs as a non-root user.
@@ -38,6 +44,11 @@ readonly SECRET_KEYS=(
   LoDb__Accounts__Google__AppClients__1__ClientSecret
   LoDb__Analytics__VisitorKey
 )
+# The password of the API's own database role (lodb_app).
+readonly GENERATED_KEYS=(
+  LODB_APP_DB_PASSWORD
+)
+readonly GENERATED_BYTES=32
 readonly REVISION_KEY=LODB_SECRETS_REVISION
 readonly KEY_PREFIX='^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_.-]*)[[:space:]]*'
 readonly ASSIGNMENT="${KEY_PREFIX}=(.*)\$"
@@ -52,6 +63,7 @@ declare -A values=()
 kept_lines=()
 parsed=''
 secrets_changed=0
+generated=0
 
 fail() {
   echo "split-env: $*" >&2
@@ -59,12 +71,20 @@ fail() {
 }
 
 usage() {
-  fail "usage: split-env.sh ENV_FILE SECRETS_DIR < dotenv | split-env.sh --keys"
+  fail "usage: split-env.sh ENV_FILE SECRETS_DIR < dotenv | split-env.sh --keys|--generated"
 }
 
 is_secret() {
   local key
   for key in "${SECRET_KEYS[@]}"; do
+    [ "$key" != "$1" ] || return 0
+  done
+  return 1
+}
+
+is_generated() {
+  local key
+  for key in "${GENERATED_KEYS[@]}"; do
     [ "$key" != "$1" ] || return 0
   done
   return 1
@@ -78,6 +98,7 @@ read_dotenv() {
     line="${line%$'\r'}"
     if [[ "$line" =~ $ASSIGNMENT ]]; then
       key="${BASH_REMATCH[2]}"
+      ! is_generated "$key" || fail "$key is generated on the host: remove it from the dotenv."
       if is_secret "$key"; then
         raw_values["$key"]="${BASH_REMATCH[3]}"
         continue
@@ -154,6 +175,25 @@ write_secrets() {
   done
 }
 
+# Draws each generated secret that has no file yet, replaced in one rename like the others;
+# notes it in `secrets_changed` and counts it in `generated`.
+write_generated() {
+  local dir="$1" key file staged
+  for key in "${GENERATED_KEYS[@]}"; do
+    file="$dir/$key"
+    [ ! -s "$file" ] || continue
+    command -v openssl > /dev/null || fail "openssl is required to generate $key."
+    staged="$(mktemp "$dir/.$key.XXXXXX")"
+    # Hex digits only: no line end, whichever openssl build prints it.
+    openssl rand -hex "$GENERATED_BYTES" | tr -dc '0-9a-f' > "$staged"
+    [ -s "$staged" ] || fail "openssl drew no value for $key."
+    chmod "$SECRET_FILE_MODE" "$staged"
+    mv -f "$staged" "$file"
+    secrets_changed=1
+    generated=$((generated + 1))
+  done
+}
+
 # The revision the previous run left in ENV_FILE, 0 without one.
 previous_revision() {
   local revision=''
@@ -179,6 +219,10 @@ main() {
     printf '%s\n' "${SECRET_KEYS[@]}"
     return
   fi
+  if [ "$#" -eq 1 ] && [ "$1" = --generated ]; then
+    printf '%s\n' "${GENERATED_KEYS[@]}"
+    return
+  fi
   [ "$#" -eq 2 ] || usage
   local env_file="$1" secrets_dir="$2" key revision filled=0
   umask 077
@@ -189,9 +233,11 @@ main() {
   done
   revision="$(previous_revision "$env_file")"
   write_secrets "$secrets_dir"
+  write_generated "$secrets_dir"
   [ "$secrets_changed" = 0 ] || revision=$((revision + 1))
   write_env "$env_file" "$revision"
-  echo "split-env: $filled of ${#SECRET_KEYS[@]} secrets set, revision $revision."
+  echo "split-env: $filled of ${#SECRET_KEYS[@]} secrets set, $generated generated," \
+    "revision $revision."
 }
 
 main "$@"
