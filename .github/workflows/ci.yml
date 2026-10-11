@@ -327,8 +327,8 @@ jobs:
       DATA_PROTECTION_PFX: ${{ secrets.STAGING_DATA_PROTECTION_PFX }}
 
   # Staging served these digests and passed its smoke tests: `:staging-validated` names them,
-  # the only images _promote.yml may promote. Runs of dev queue (concurrency above): nothing
-  # moves `:staging` between the deploy and this job.
+  # the only images _promote.yml may promote. They are the build's outputs, which `:staging`
+  # still named when the deploy pulled it: runs of dev queue (concurrency above).
   staging-validated:
     needs: [build, deploy-staging]
     runs-on: ubuntu-latest
