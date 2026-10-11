@@ -34,7 +34,8 @@ import { ProfileStore } from './store/profile-store';
 /**
  * The profile of the signed-in account, `/{locale}/account/profile`: the favorites and the
  * visibility, saved as they change; the identity, the first password, the sessions and the
- * erasure, each sent by its own form. Pinning the favorites to a version reads them again on that patch.
+ * erasure, each sent by its own form. Pinning the favorites to a version reads them again on
+ * that patch.
  */
 @Component({
   selector: 'lodb-profile-editor',
