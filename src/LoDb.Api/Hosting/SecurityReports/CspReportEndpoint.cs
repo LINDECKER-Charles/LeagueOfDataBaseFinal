@@ -9,10 +9,11 @@ namespace LoDb.Api.Hosting.SecurityReports;
 /// <remarks>
 /// <para>
 /// No account involved, yet never <c>AllowAnonymous</c>: the default policy checks the
-/// <c>Origin</c> of the report, which a browser sets to the page's own. A report that carries
+/// <c>Origin</c> of the report, which Chromium sets to the page's own. A report that carries
 /// the session cookie without the XSRF token is refused as any such request: a signed-in
 /// visitor's report is lost when the browser attaches cookies to it (<c>report-uri</c>); the
-/// Reporting API sends none.
+/// Reporting API sends none. WebKit posts its reports with <c>Origin: null</c>: they are
+/// refused (403), whatever their format.
 /// </para>
 /// <para>
 /// Called by browsers alone, out of the generated client: kept out of the contract.
