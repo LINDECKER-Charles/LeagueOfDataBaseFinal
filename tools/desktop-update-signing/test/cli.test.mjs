@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -85,6 +85,19 @@ describe('feed signing tool', () => {
       run('verify-feed.mjs', { args: [...folder(), rotating[0], next.publicKey] }).status,
       1,
     );
+  });
+
+  // Checked against its exact-case SHA-256, the package would pass the release checks while
+  // the app, reading key names without case, would take the last one.
+  it('signs no feed whose entry repeats a field under another case', () => {
+    const entry = { ...testEntry('1.4.0'), sha256: testEntry('6.6.6').SHA256 };
+    writeFileSync(join(releases, FEED_NAME), testFeed([entry]));
+
+    const signed = signing();
+
+    assert.equal(signed.status, 1);
+    assert.match(signed.stderr, /unexpected keys: "sha256"/);
+    assert.equal(existsSync(join(releases, `${FEED_NAME}.sig`)), false);
   });
 
   it('asks for the private key by name', () => {

@@ -46,6 +46,21 @@ describe('release feed', () => {
     }
   });
 
+  // The app matches key names without case and keeps the last of two: "sha256" would win.
+  it('refuses a key the app could read otherwise than these checks', () => {
+    const other = 'A'.repeat(64);
+    for (const change of [{ sha256: other }, { Sha256: other }, { size: 1 }, { Extra: '' }]) {
+      const feed = testFeed([{ ...testEntry('1.4.0'), ...change }]);
+
+      assert.throws(() => checkFeed(feed), /unexpected keys/, JSON.stringify(change));
+    }
+    const twoLists = { Assets: [testEntry('1.4.0')], assets: [testEntry('1.5.0')] };
+    assert.throws(
+      () => checkFeed(Buffer.from(JSON.stringify(twoLists))),
+      /the feed holds unexpected keys: "assets"/,
+    );
+  });
+
   it('refuses a feed that lists nothing', () => {
     assert.throws(() => checkFeed(Buffer.from('{"Assets":[]}')), /lists no package/);
     assert.throws(() => checkFeed(Buffer.from('null')), /lists no package/);

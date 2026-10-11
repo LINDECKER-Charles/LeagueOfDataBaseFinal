@@ -265,7 +265,9 @@ soit l'hébergement des releases.
 2. `sign` réécrit chaque flux tel que la release GitHub le publiera : les seuls paquets de la
    version, sans le N-1 que `vpk pack` liste aussi. Puis il le signe. Il refuse une clé
    privée dont la moitié publique n'est pas dans `UpdateFeeds.cs` : une release que les
-   installations refuseraient ne part pas.
+   installations refuseraient ne part pas. Il refuse aussi un flux qui porte une clé que vpk
+   n'écrit pas sous ce nom exact : l'app lit les noms de clés sans casse, et un tel flux
+   pourrait désigner un paquet aux contrôles de la release et un autre à l'app.
 3. `gate` remplace le flux de vpk par le flux signé et vérifie les paquets. N doit montrer
    les clés attendues et ignorer son flux altéré.
 4. `publish` revérifie les paquets contre le flux signé. Après `vpk upload`, qui écrit son

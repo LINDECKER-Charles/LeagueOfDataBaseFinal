@@ -51,7 +51,9 @@ Rewrites `releases/releases.win-x64.json` as the GitHub Release of 1.4.0 publish
 lists every package of the folder, N-1 fetched for the delta included, while the release holds
 only those of its version. Then writes the signature next to it. It refuses a signing key whose
 public half is not among the keys compiled into the app; `--public-key` names others for a
-local E2E build, which trusts a throwaway key (`-p:LoDbDesktopFeedKey`).
+local E2E build, which trusts a throwaway key (`-p:LoDbDesktopFeedKey`). It also refuses a
+feed holding a key vpk does not write under that exact name: the app matches key names without
+case, so such a feed could name one package to these checks and another to the app.
 
 ## Verify
 

@@ -10,6 +10,23 @@ const CHANNEL = /^[a-z0-9]+(-[a-z0-9]+)+$/;
 const PACKAGE_NAME = /^[A-Za-z0-9._-]+\.nupkg$/;
 const SHA256 = /^[0-9A-Fa-f]{64}$/;
 
+// The keys vpk writes (VelopackAssetFeed and VelopackAsset), under their exact names. The app
+// matches key names without case and keeps the last of two that differ only by case, where
+// these checks read the exact name: a feed holding any other key could name one package to them
+// and another to the app, so it is neither signed nor verified.
+const FEED_KEYS = new Set(['Assets']);
+const ENTRY_KEYS = new Set([
+  'PackageId',
+  'Version',
+  'Type',
+  'FileName',
+  'SHA1',
+  'SHA256',
+  'Size',
+  'NotesMarkdown',
+  'NotesHTML',
+]);
+
 /** The feed's file name for a Velopack channel, as Velopack names it. */
 export function feedFileName(channel) {
   if (!CHANNEL.test(channel)) {
@@ -30,6 +47,7 @@ export function checkFeed(feed) {
   if (!Array.isArray(parsed?.Assets) || parsed.Assets.length === 0) {
     throw new Error('the feed lists no package');
   }
+  checkKeys(parsed, FEED_KEYS, 'the feed');
   parsed.Assets.forEach(checkAsset);
   return parsed;
 }
@@ -40,12 +58,19 @@ export function checkFeed(feed) {
  * only holds the packages of V.
  */
 export function feedOfVersion(feed, version) {
-  const { Assets: assets, ...rest } = checkFeed(feed);
-  const own = assets.filter((asset) => asset.Version === version);
+  const own = checkFeed(feed).Assets.filter((asset) => asset.Version === version);
   if (own.length === 0) {
     throw new Error(`the feed lists no package of version ${version}`);
   }
-  return Buffer.from(JSON.stringify({ ...rest, Assets: own }), 'utf8');
+  return Buffer.from(JSON.stringify({ Assets: own }), 'utf8');
+}
+
+function checkKeys(object, known, owner) {
+  const unexpected = Object.keys(object).filter((key) => !known.has(key));
+  if (unexpected.length > 0) {
+    const keys = unexpected.map((key) => JSON.stringify(key)).join(', ');
+    throw new Error(`${owner} holds unexpected keys: ${keys}`);
+  }
 }
 
 function checkAsset(asset) {
@@ -53,6 +78,7 @@ function checkAsset(asset) {
   if (typeof name !== 'string' || !PACKAGE_NAME.test(name)) {
     throw new Error(`invalid package name in the feed: ${JSON.stringify(name)}`);
   }
+  checkKeys(asset, ENTRY_KEYS, name);
   if (typeof asset.SHA256 !== 'string' || !SHA256.test(asset.SHA256)) {
     throw new Error(`${name} has no SHA-256 in the feed`);
   }
