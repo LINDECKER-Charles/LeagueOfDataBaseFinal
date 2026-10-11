@@ -103,7 +103,7 @@ public sealed class AnalyticsRetentionTests(PostgresContainerFixture postgres)
     {
         await WriteStoredClientDataAsync(At(9).AddDays(-40));
         await using var services = AnalyticsServices.Build(
-            Database.ConnectionString,
+            Database.AppConnectionString,
             Time,
             static options => options.ClientDataEraseDays = 15);
 

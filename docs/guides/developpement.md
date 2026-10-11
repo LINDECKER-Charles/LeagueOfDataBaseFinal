@@ -61,7 +61,8 @@ npm --prefix src/LoDb.Web run build:shell
 |---|---|
 | `lint` | ESLint (dont les règles d'architecture), Prettier, tests des règles de lint |
 | `typecheck` | `tsc --noEmit` sur `tsconfig.app.json` et `tsconfig.spec.json` |
-| `test` | Vitest, sans mode veille |
+| `test` | Vitest, sans mode veille, puis les tests du build des catalogues (`test:i18n`) |
+| `i18n:build` | catalogues servis (`dist/i18n`) : complétés par `en`, messages ICU compilés ; lancé avant chaque build et par `npm start` |
 | `build:web` | build SSR, dans `dist/web/{browser,server}` |
 | `build:shell` | build statique des coquilles, dans `dist/shell/browser` |
 | `api:generate`, `api:check` | contrat OpenAPI et client généré : bouchons jusqu'à L2.2 |
@@ -89,7 +90,7 @@ reconstruisent.
 
 | Service | Rôle | Port hôte | Variable |
 |---|---|---|---|
-| `nginx` | point d'entrée : site, sous-domaine `api.`, `/cdn/blobs/` | 18080 | `LODB_HTTP_PORT` |
+| `nginx` | point d'entrée : site, sous-domaine `api.`, `/cdn/blobs/` (8080 dans le réseau) | 18080 | `LODB_HTTP_PORT` |
 | `api` | `LoDb.Api` (8080 dans le réseau ; métriques sur 9464, jamais publié) | 18081 | `LODB_API_PORT` |
 | `web-ssr` | serveur SSR Angular (4000 dans le réseau) | 18082 | `LODB_SSR_PORT` |
 | `postgres` | PostgreSQL 17, base `lodb` (utilisateur et mot de passe `lodb` en dev) | 15432 | `LODB_PG_PORT` |

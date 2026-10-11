@@ -31,7 +31,7 @@ public sealed class DatabaseFailureTests(PostgresContainerFixture postgres)
         await database.MigrateAsync(Cancellation);
         await using var factory = new ApiFactory
         {
-            PostgresConnectionString = SingleConnectionPool(database.ConnectionString),
+            PostgresConnectionString = SingleConnectionPool(database.AppConnectionString),
             Settings = new Dictionary<string, string?>
             {
                 ["LoDb:Hosting:DatabaseBusyRetryAfter"] = "00:00:07",

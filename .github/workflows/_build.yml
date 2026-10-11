@@ -1,8 +1,17 @@
 name: _build
 
-# Reusable: build the 3 images and push them to GHCR, tagged with the triggering SHA
-# (immutable) plus a moving tag (default: staging). Single responsibility = "produce the
-# candidate artifacts". Uses the automatic GITHUB_TOKEN (no extra secret needed).
+# Reusable: build the 3 images from ONE commit of `ref`, push them to GHCR under that commit's SHA
+# (immutable), scan them, and only once the three pass, point the moving tag (default: staging)
+# at their digests. Single responsibility = "produce the candidate artifacts". Uses the
+# automatic GITHUB_TOKEN (no extra secret needed).
+#
+# Each image is an index that carries, next to the image, an SBOM and a provenance attestation
+# (BuildKit, provenance in max mode: the build's source, arguments and steps). The commit is the
+# image's OCI revision label, which the lodb_build_info metric, the deploy notice and
+# tools/ci/promote-images.sh read. The runtime stages are rebuilt without cache: they take the
+# distribution's security fixes of the day (docker/nginx, docker/web-ssr). The scan blocks on
+# HIGH and CRITICAL vulnerabilities that have a fixed version; an accepted one is a dated entry
+# of .trivyignore.
 #
 # Images: ghcr.io/<owner>/lodb/{api,web-ssr,nginx}. lodb/nginx is the name the legacy stack
 # used too: its immutable <sha> tags stay in the registry for a rollback.
@@ -14,27 +23,69 @@ on:
         required: true
         type: string
       moving_tag:
-        description: Moving tag applied alongside the immutable SHA tag (e.g. staging).
+        description: Moving tag pointed at the digests once they passed the scan (e.g. staging).
         required: false
         type: string
         default: staging
+    outputs:
+      revision:
+        description: The commit the images were built from, their immutable tag.
+        value: ${{ jobs.revision.outputs.sha }}
+      api-digest:
+        description: Digest of the api image the moving tag names.
+        value: ${{ jobs.tag.outputs.api }}
+      web-ssr-digest:
+        description: Digest of the web-ssr image the moving tag names.
+        value: ${{ jobs.tag.outputs.web-ssr }}
+      nginx-digest:
+        description: Digest of the nginx image the moving tag names.
+        value: ${{ jobs.tag.outputs.nginx }}
 
 permissions:
   contents: read
   packages: write
 
+env:
+  # Run by digest, bumped by hand (tools/ci/README.md, base images).
+  TRIVY_IMAGE: ghcr.io/aquasecurity/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+  SBOM_GENERATOR: docker/buildkit-syft-scanner:1.12.0@sha256:ae4f3b554449e7e25548e7d8ccc029d17357348e30c6e3df01b92bc93654d6a9
+
 jobs:
-  build:
+  # The ref is a branch: resolved once, so that the three images come from the same commit
+  # even if the branch moves meanwhile, and are tagged and labelled with that commit.
+  revision:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        image: [api, web-ssr, nginx]
+    permissions:
+      contents: read
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
     steps:
       - name: Checkout ${{ inputs.ref }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Resolve the commit
+        id: resolve
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: revision
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        image: [api, web-ssr, nginx]
+    env:
+      REVISION: ${{ needs.revision.outputs.sha }}
+    steps:
+      - name: Checkout ${{ needs.revision.outputs.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.revision.outputs.sha }}
+          persist-credentials: false
 
       - name: Compute image name (lowercase owner)
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb/${{ matrix.image }}" >> "$GITHUB_ENV"
@@ -49,20 +100,106 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # APP_REVISION feeds the OCI revision label and the lodb_build_info metric.
+      # APP_REVISION feeds the OCI revision label and the lodb_build_info metric. Only the
+      # immutable tag here: no moving tag names an image before its scan.
       - name: Build & push ${{ matrix.image }}
+        id: push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: docker/${{ matrix.image }}/Dockerfile
           push: true
+          provenance: mode=max
+          sbom: generator=${{ env.SBOM_GENERATOR }}
           build-args: |
-            APP_REVISION=${{ github.sha }}
+            APP_REVISION=${{ env.REVISION }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.revision=${{ env.REVISION }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
-          tags: |
-            ${{ env.IMAGE }}:${{ github.sha }}
-            ${{ env.IMAGE }}:${{ inputs.moving_tag }}
+          no-cache-filters: runtime
+          tags: ${{ env.IMAGE }}:${{ env.REVISION }}
+
+      # The image as pushed, pulled by its digest and handed to the scanner as an archive: the
+      # scanner gets no registry credential, nor the checkout. Its working folder holds the
+      # archive and the repository's .trivyignore, when there is one, and nothing else: the
+      # scanner also reads its configuration (trivy.yaml) from there, and a file of the
+      # checkout must not change what the scan reports.
+      - name: Scan ${{ matrix.image }}
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          scan="$RUNNER_TEMP/scan"
+          mkdir -p "$scan"
+          docker pull --quiet "$IMAGE@$DIGEST"
+          docker save --output "$scan/image.tar" "$IMAGE@$DIGEST"
+          if [ -f .trivyignore ]; then cp .trivyignore "$scan/.trivyignore"; fi
+          docker run --rm -v "$scan:/scan:ro" -w /scan \
+            "$TRIVY_IMAGE" image --input /scan/image.tar --scanners vuln \
+            --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress \
+            --skip-version-check --timeout 10m
+
+      - name: Record the scanned digest
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          printf '%s\n' "$DIGEST" > "$RUNNER_TEMP/digests/${{ matrix.image }}"
+
+      - name: Upload the scanned digest
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: digest-${{ matrix.image }}
+          path: ${{ runner.temp }}/digests/${{ matrix.image }}
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true
+
+  # Once the three images passed their scan, and only then, the moving tag names them, by
+  # digest (tools/ci/tag-image.sh): never a mix of two builds, nor an image left unscanned.
+  tag:
+    needs: [revision, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      api: ${{ steps.tag.outputs.api }}
+      web-ssr: ${{ steps.tag.outputs.web-ssr }}
+      nginx: ${{ steps.tag.outputs.nginx }}
+    steps:
+      - name: Checkout the tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.revision.outputs.sha }}
+          persist-credentials: false
+          sparse-checkout: tools/ci
+
+      - name: Download the scanned digests
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: digest-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/digests
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Login to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Point ${{ inputs.moving_tag }} at the scanned digests
+        id: tag
+        env:
+          MOVING_TAG: ${{ inputs.moving_tag }}
+        run: |
+          prefix="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb"
+          for image in api web-ssr nginx; do
+            digest="$(cat "$RUNNER_TEMP/digests/$image")"
+            bash tools/ci/tag-image.sh "$prefix/$image" "$digest" "$MOVING_TAG"
+            echo "$image=$digest" >> "$GITHUB_OUTPUT"
+            echo "- \`$image\` \`$digest\`" >> "$GITHUB_STEP_SUMMARY"
+          done

@@ -17,6 +17,8 @@ internal sealed partial class AccountApiClient(
     private const string TokenPath = "/api/account/token";
     private const string RefreshPath = "/api/account/refresh";
     private const string GoogleExchangePath = "/api/account/google/app/exchange";
+    private const string LogoutPath = "/api/account/logout";
+    private const string BearerScheme = "Bearer";
     private const string ProblemCodeMember = "code";
     private const string FallbackContentType = "application/problem+json";
 
@@ -34,6 +36,31 @@ internal sealed partial class AccountApiClient(
         GoogleExchangeBody body,
         CancellationToken cancellationToken) =>
         PostAsync(GoogleExchangePath, body, cancellationToken);
+
+    /// <summary>
+    /// Signs the session out at the API, which revokes the family of its refresh token. Best
+    /// effort: offline or refused, the token is forgotten all the same and runs out.
+    /// </summary>
+    public async Task SignOutAsync(string accessToken, CancellationToken cancellationToken)
+    {
+        using var client = clients.CreateClient(ClientName);
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            new Uri(LogoutPath, UriKind.Relative));
+        request.Headers.Authorization = new AuthenticationHeaderValue(BearerScheme, accessToken);
+        try
+        {
+            using var response = await client.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                LogSignOutRefused(logger, (int)response.StatusCode);
+            }
+        }
+        catch (Exception exception) when (IsUnreachable(exception, cancellationToken))
+        {
+            LogUnreachable(logger, LogoutPath, exception);
+        }
+    }
 
     private async Task<AccountCall> PostAsync<TBody>(
         string path,
@@ -115,4 +142,10 @@ internal sealed partial class AccountApiClient(
         Level = LogLevel.Warning,
         Message = "The API could not be reached for {Path}.")]
     private static partial void LogUnreachable(ILogger logger, string path, Exception exception);
+
+    [LoggerMessage(
+        EventName = "desktop.sign_out.refused",
+        Level = LogLevel.Information,
+        Message = "The API answered the sign-out with {Status}; the tokens are forgotten anyway.")]
+    private static partial void LogSignOutRefused(ILogger logger, int status);
 }

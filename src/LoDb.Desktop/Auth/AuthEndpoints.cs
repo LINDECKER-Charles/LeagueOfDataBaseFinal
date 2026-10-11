@@ -55,11 +55,16 @@ internal sealed class AuthEndpoints(AccountApiClient api, TokenSession session, 
     }
 
     /// <summary>
-    /// 204. The API's tokens are stateless: forgetting them, and the saved refresh token, is
-    /// the whole sign-out.
+    /// 204. The API revokes the family of the refresh token first, as far as it can be
+    /// reached; the host then forgets the tokens and the saved refresh token in any case.
     /// </summary>
     public async Task<IResult> LogoutAsync(CancellationToken cancellationToken)
     {
+        if (await session.GetAccessTokenAsync(cancellationToken) is { } accessToken)
+        {
+            await api.SignOutAsync(accessToken, cancellationToken);
+        }
+
         await session.SignOutAsync(cancellationToken);
         return TypedResults.NoContent();
     }

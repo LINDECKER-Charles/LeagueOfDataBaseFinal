@@ -21,7 +21,7 @@ public sealed class ClientPolicyApp : IAsyncDisposable
     private ClientPolicyApp(TestDatabase database)
     {
         _database = database;
-        _factory = new ApiFactory { PostgresConnectionString = database.ConnectionString };
+        _factory = new ApiFactory { PostgresConnectionString = database.AppConnectionString };
     }
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;

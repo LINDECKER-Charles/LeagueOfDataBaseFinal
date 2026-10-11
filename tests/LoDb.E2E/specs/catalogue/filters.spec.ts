@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { saveData } from '../../support/network';
 import { expect, test } from '../../support/test';
 
 // Any of the four lists would do: items has the most entries, so it always pages.
@@ -8,6 +9,8 @@ const LIST_ROOT = 'lodb-catalogue-list';
 const CARD = `${LIST_ROOT} .grid__cell`;
 const RAIL_SEARCH = 'lodb-filter-console input[type=search]';
 const MOBILE = { width: 390, height: 844 };
+// The cards of the first page, which the server renders.
+const FIRST_PAGE_SIZE = 12;
 const SHORT_PHONE = { width: 360, height: 560 };
 
 function queryOf(page: Page): URLSearchParams {
@@ -118,5 +121,90 @@ test.describe('catalogue filters', { tag: '@readonly' }, () => {
     await expect(sheet.locator('.sheet__done')).toBeInViewport();
     await sheet.locator('.sheet__done').click();
     await expect(sheet).toBeHidden();
+  });
+});
+
+// The browser's read of the whole list: the first page comes with the server's HTML.
+function isWholeRead({ pathname, searchParams }: URL): boolean {
+  return /^\/api\/catalog\/[^/]+\/[^/]+\/items$/.test(pathname) && !searchParams.has('page');
+}
+
+function wholeReadsOf(page: Page): string[] {
+  const reads: string[] = [];
+  page.on('request', (sent) => {
+    if (isWholeRead(new URL(sent.url()))) {
+      reads.push(sent.url());
+    }
+  });
+  return reads;
+}
+
+// The highest count of the rail's options: drawn from the first page alone, never above it.
+async function railTopCount(page: Page): Promise<number> {
+  const counts = await page.locator('lodb-filter-console .chip__count').allTextContents();
+  return Math.max(0, ...counts.map(Number));
+}
+
+test.describe('the whole list, read when it is needed', { tag: '@readonly' }, () => {
+  test('reads it once the page has loaded and gone idle', async ({ page, consoleErrors }) => {
+    const reads = wholeReadsOf(page);
+
+    await openList(page);
+
+    await expect.poll(() => reads.length).toBe(1);
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test('waits for the reader to search when they save data, then filters it all', async ({
+    page,
+    consoleErrors,
+  }) => {
+    const reads = wholeReadsOf(page);
+    await page.addInitScript(saveData);
+    await openList(page);
+    const total = await page.locator(CARD).count();
+    expect(reads).toEqual([]);
+
+    await page.locator(RAIL_SEARCH).click();
+    await page.locator(RAIL_SEARCH).fill('boots');
+
+    await expect.poll(() => reads.length).toBe(1);
+    await expect.poll(() => page.locator(CARD).count()).toBeLessThan(total);
+    await expect.poll(() => queryOf(page).get('q')).toBe('boots');
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test('reads it at once for a link the first page cannot draw', async ({ page }) => {
+    const reads = wholeReadsOf(page);
+    await page.addInitScript(saveData);
+
+    await openList(page, `${LIST}?q=boots`);
+
+    await expect.poll(() => reads.length).toBe(1);
+    await expect.poll(() => page.locator(CARD).count()).toBeGreaterThan(0);
+  });
+});
+
+// The rail is hydrated late (on the reader's hand), but never left showing an outdated copy.
+test.describe('the filter rail, kept true without being touched', { tag: '@readonly' }, () => {
+  test('counts the whole list once it is read', async ({ page, consoleErrors }) => {
+    const reads = wholeReadsOf(page);
+    await openList(page);
+    await expect.poll(() => reads.length).toBe(1);
+
+    await expect.poll(() => railTopCount(page)).toBeGreaterThan(FIRST_PAGE_SIZE);
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test('empties its search when the results clear it', async ({ page }) => {
+    // Without the whole list, only the state moving can outdate the server's copy.
+    await page.route(isWholeRead, (route) => route.abort());
+    await page.goto(`${LIST}?q=boots`);
+    await expect(page.locator(RAIL_SEARCH)).toHaveValue('boots');
+
+    await page.locator('lodb-active-filters .clear').click();
+
+    await expect.poll(() => queryOf(page).get('q')).toBeNull();
+    await expect(page.locator(RAIL_SEARCH)).toHaveValue('');
   });
 });

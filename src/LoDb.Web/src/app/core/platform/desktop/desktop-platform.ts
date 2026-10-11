@@ -1,6 +1,7 @@
 import { DOCUMENT, Injectable, type Signal, inject } from '@angular/core';
 import { AuthStrategies } from '../../auth/strategy/auth-strategies';
 import type { AuthStrategyKind } from '../auth-strategy-kind';
+import { isHttpsUrl } from '../is-https-url';
 import type { PlatformKind } from '../platform-kind';
 import type { PlatformService } from '../platform-service';
 import type { ShareOutcome } from '../share-outcome';
@@ -12,17 +13,8 @@ import { ExternalLinks } from './links/external-links';
 import { DESKTOP_MARKER } from './marker/desktop-marker-token';
 import { DesktopUpdates } from './updates/desktop-updates';
 
-const WEB_SCHEMES = ['http:', 'https:'];
 // The user picks where to save in the host's native dialog, which can stay open a while.
 const SAVE_TIMEOUT_MS = 5 * 60_000;
-
-function isWebUrl(url: string): boolean {
-  try {
-    return WEB_SCHEMES.includes(new URL(url).protocol);
-  } catch {
-    return false;
-  }
-}
 
 /**
  * The Photino desktop app (ADR 0004): pages and API on the host's loopback origin, the host
@@ -64,8 +56,8 @@ export class DesktopPlatform implements PlatformService {
   }
 
   async openExternal(url: string): Promise<void> {
-    if (!isWebUrl(url)) {
-      throw new Error('Only http(s) links can be opened outside the application.');
+    if (!isHttpsUrl(url)) {
+      throw new Error('Only https links can be opened outside the application.');
     }
     await this.bridge.request('openExternal', { url });
   }

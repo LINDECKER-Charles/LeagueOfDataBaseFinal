@@ -23,6 +23,7 @@ import { initialsOf } from './initials-of';
         [height]="size()"
         [initials]="initials(name())"
         [eager]="eager()"
+        [priority]="priority()"
         [imgClass]="imgClass()"
       />
     }`,
@@ -66,7 +67,10 @@ export class CatalogueImage {
   readonly name = input.required<string>();
   /** Intrinsic size in CSS pixels, square: it reserves the box. */
   readonly size = input.required<number>();
+  /** Above the fold: loaded at once. */
   readonly eager = input(false, { transform: booleanAttribute });
+  /** The page's LCP candidate (Image's `priority`). */
+  readonly priority = input(false, { transform: booleanAttribute });
   readonly imgClass = input('object-cover');
 
   protected readonly initials = initialsOf;

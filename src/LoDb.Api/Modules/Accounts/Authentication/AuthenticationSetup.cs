@@ -14,7 +14,9 @@ namespace LoDb.Api.Modules.Accounts.Authentication;
 /// <remarks>
 /// Neither the tokens nor the cookie are stored on the server: they are Data Protection
 /// payloads, whose keys every instance shares. A changed security stamp or a ban reaches
-/// them at the next revalidation of the cookie, and when the access token runs out.
+/// them at the next revalidation of the cookie, and when the access token runs out. Only the
+/// family of each app's refresh tokens is kept, so that one serves once
+/// (<c>Tokens/RefreshFamilies</c>).
 /// </remarks>
 internal static class AuthenticationSetup
 {

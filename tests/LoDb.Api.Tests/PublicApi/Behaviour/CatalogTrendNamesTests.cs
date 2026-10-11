@@ -24,7 +24,7 @@ public sealed class CatalogTrendNamesTests(PostgresContainerFixture postgres)
         await database.MigrateAsync(Token);
         await using var factory = new ApiFactory
         {
-            PostgresConnectionString = database.ConnectionString,
+            PostgresConnectionString = database.AppConnectionString,
             Settings = new Dictionary<string, string?>
             {
                 ["LoDb:Egress:RetryBaseDelay"] = "00:00:00.001",

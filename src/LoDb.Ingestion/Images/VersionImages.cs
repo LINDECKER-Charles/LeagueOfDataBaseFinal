@@ -11,9 +11,10 @@ namespace LoDb.Ingestion.Images;
 /// resolver looks up for a page.
 /// </summary>
 /// <remarks>
-/// Splash art, skins, chromas and ability videos are hotlinked, never ingested (UP 8). An
-/// entry without an image (a summary standing in for a missing champion file, UP 3) yields
-/// none.
+/// Splash art, skins, chromas and ability videos are hotlinked, never ingested with the
+/// version (UP 8): only WebP variants of the base skins' art are, apart
+/// (<see cref="Art.ArtVariants"/>). An entry without an image (a summary standing in for a
+/// missing champion file, UP 3) yields none.
 /// </remarks>
 public static class VersionImages
 {
@@ -72,7 +73,7 @@ public static class VersionImages
             .Concat(datasets.Items.Entries.SelectMany(Of))
             .Concat(datasets.Runes.Entries.SelectMany(Of))
             .Concat(datasets.Summoners.Entries.SelectMany(Of))
-            .DistinctBy(static image => (image.ManifestType, image.File)),
+            .DistinctBy(static image => (image.ManifestType, image.ManifestKey)),
     ];
 
     /// <summary>

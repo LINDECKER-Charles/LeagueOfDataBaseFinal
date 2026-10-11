@@ -4,6 +4,8 @@ using LoDb.Infrastructure.Persistence.Ddragon;
 using LoDb.Infrastructure.Storage.Blobs;
 using LoDb.Ingestion.Egress;
 using LoDb.Ingestion.Egress.Errors;
+using LoDb.Ingestion.Images.Art;
+using LoDb.Ingestion.Images.Media;
 using LoDb.Ingestion.Pipeline;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,12 +13,17 @@ using Microsoft.Extensions.Options;
 namespace LoDb.Ingestion.Images;
 
 /// <summary>
-/// Fetches images, stores each one content-addressed with its WebP sibling, and records its
-/// verdict in the manifest: present, or absent after a 403/404.
+/// Fetches images, stores each one content-addressed with its WebP sibling, or as the WebP
+/// variant an art asks for, and records its verdict in the manifest: present, or absent
+/// after a 403/404.
 /// </summary>
 /// <remarks>
-/// A transient failure records nothing, so that the next run asks again. Fetches run in
-/// parallel up to <c>LoDb:Egress:FetchConcurrency</c>; verdicts are recorded by chunks of
+/// A transient failure records nothing, so that the next run asks again. A file whose
+/// extension is not a blob's, or whose bytes are not of the format its extension names
+/// (<see cref="BlobMediaTypes"/>), is refused: never stored, recorded absent like a 404, and
+/// named in one warning line per batch. Fetches run in parallel up to
+/// <c>LoDb:Egress:FetchConcurrency</c>, or the batch's own bound; the variants of one art
+/// share one fetch. Verdicts are recorded by chunks of
 /// <c>RecordBatchSize</c>, so a run cut short keeps what it settled. One summary line per
 /// batch.
 /// </remarks>
@@ -34,6 +41,8 @@ internal sealed partial class ImageIngestion(
     // The legacy default for a file name without an extension.
     private const string DefaultExtension = WebpSibling.SourceExtension;
 
+    private const string SampleSeparator = ", ";
+
     public async Task<ImageBatchReport> IngestAsync(
         ImageBatch batch,
         CancellationToken cancellationToken)
@@ -41,7 +50,7 @@ internal sealed partial class ImageIngestion(
         ArgumentNullException.ThrowIfNull(batch);
         var started = timeProvider.GetTimestamp();
         List<DdragonImage> images =
-            [.. batch.Images.DistinctBy(static image => (image.ManifestType, image.File))];
+            [.. batch.Images.DistinctBy(static image => (image.ManifestType, image.ManifestKey))];
         var pending = batch.Force
             ? images
             : await manifest.UnrecordedAsync(batch.Version, images, cancellationToken)
@@ -65,12 +74,12 @@ internal sealed partial class ImageIngestion(
         return BlobExtension().IsMatch(extension) ? extension : DefaultExtension;
     }
 
-    private async Task<Tally> SettlePendingAsync(
+    private async Task<ImageBatchTally> SettlePendingAsync(
         ImageBatch batch,
         List<DdragonImage> pending,
         CancellationToken cancellationToken)
     {
-        var tally = new Tally();
+        var tally = new ImageBatchTally();
         using var egressBatch = fetcher.OpenBatch();
         var run = new Run(batch, egressBatch, tally);
         foreach (var chunk in pending.Chunk(options.Value.RecordBatchSize))
@@ -89,87 +98,170 @@ internal sealed partial class ImageIngestion(
         var entries = new ConcurrentQueue<DdragonAssetEntry>();
         var parallelism = new ParallelOptions
         {
-            MaxDegreeOfParallelism = egress.Value.FetchConcurrency,
+            MaxDegreeOfParallelism = run.Batch.MaxParallelism ?? egress.Value.FetchConcurrency,
             CancellationToken = cancellationToken,
         };
         await Parallel.ForEachAsync(
-                chunk,
+                chunk.GroupBy(image => image.Url(run.Batch.Version)),
                 parallelism,
-                async (image, token) =>
+                async (source, token) =>
                 {
-                    if (await SettleAsync(run, image, token).ConfigureAwait(false) is { } entry)
+                    foreach (var entry in await SettleAsync(run, source, token)
+                        .ConfigureAwait(false))
                     {
                         entries.Enqueue(entry);
                     }
 
-                    run.Batch.Progress?.Report(image);
+                    foreach (var image in source)
+                    {
+                        run.Batch.Progress?.Report(image);
+                    }
                 })
             .ConfigureAwait(false);
         await assets.RecordAsync(entries, run.Batch.Force, cancellationToken)
             .ConfigureAwait(false);
     }
 
-    // Null when the image got no verdict: the transient failure is counted, never recorded.
-    private async Task<DdragonAssetEntry?> SettleAsync(
+    // The images of one URL, fetched once. None recorded when the fetch failed: the transient
+    // failure is counted, never recorded.
+    private async Task<List<DdragonAssetEntry>> SettleAsync(
         Run run,
-        DdragonImage image,
+        IGrouping<Uri, DdragonImage> source,
         CancellationToken cancellationToken)
     {
         try
         {
-            var outcome = await run.Egress
-                .FetchAsync(image.Url(run.Batch.Version), cancellationToken)
+            var outcome = await run.Egress.FetchAsync(source.Key, cancellationToken)
                 .ConfigureAwait(false);
             if (outcome is not FetchOutcome.Present present)
             {
-                return Absent(run, image);
+                return [.. source.Select(image => Absent(run, image))];
             }
 
-            var stored = await StoreAsync(present, ExtensionOf(image.File), cancellationToken)
-                .ConfigureAwait(false);
-            run.Tally.CountStored(stored);
-            return Present(run, image, stored.Key);
+            var content = await ReadAsync(present, cancellationToken).ConfigureAwait(false);
+            List<DdragonAssetEntry> entries = [];
+            foreach (var image in source)
+            {
+                entries.Add(await SettleAsync(run, image, content, cancellationToken)
+                    .ConfigureAwait(false));
+            }
+
+            return entries;
         }
         catch (EgressException)
         {
-            run.Tally.CountFailed();
-            return null;
+            run.Tally.CountFailed(source.Count());
+            return [];
         }
+    }
+
+    // An art Skia cannot decode has no variant: absent, the hotlinked art stays.
+    private async Task<DdragonAssetEntry> SettleAsync(
+        Run run,
+        DdragonImage image,
+        byte[] content,
+        CancellationToken cancellationToken)
+    {
+        if (image.Width is not { } width)
+        {
+            return await KeepAsync(run, image, content, cancellationToken).ConfigureAwait(false);
+        }
+
+        var variant = await StoreVariantAsync(content, width, cancellationToken)
+            .ConfigureAwait(false);
+        return variant is null ? Absent(run, image) : Stored(run, image, variant);
+    }
+
+    // Stored when its bytes are of the format its extension names, refused otherwise.
+    private async Task<DdragonAssetEntry> KeepAsync(
+        Run run,
+        DdragonImage image,
+        byte[] content,
+        CancellationToken cancellationToken)
+    {
+        var extension = ExtensionOf(image.File);
+        if (!BlobMediaTypes.Matches(extension, content))
+        {
+            return Refused(run, image);
+        }
+
+        var stored = await StoreAsync(content, extension, cancellationToken)
+            .ConfigureAwait(false);
+        return Stored(run, image, stored);
+    }
+
+    private static DdragonAssetEntry Stored(Run run, DdragonImage image, StoredImage stored)
+    {
+        run.Tally.CountStored(stored.BlobWritten, stored.WebpWritten);
+        return Present(run, image, stored.Key);
     }
 
     private static DdragonAssetEntry Present(Run run, DdragonImage image, BlobKey key) =>
         DdragonAssetEntry.Present(
             run.Batch.Version.Value,
             image.ManifestType,
-            image.File,
+            image.ManifestKey,
             key.Sha256,
             key.Extension);
+
+    // Recorded absent like a 404: upstream serves it, but nothing of it may be stored.
+    private static DdragonAssetEntry Refused(Run run, DdragonImage image)
+    {
+        run.Tally.CountRefused(image.File);
+        return DdragonAssetEntry.Absent(
+            run.Batch.Version.Value,
+            image.ManifestType,
+            image.ManifestKey);
+    }
 
     private DdragonAssetEntry Absent(Run run, DdragonImage image)
     {
         run.Tally.CountAbsent();
         metrics.RecordAbsence(image.ManifestType);
-        return DdragonAssetEntry.Absent(run.Batch.Version.Value, image.ManifestType, image.File);
+        return DdragonAssetEntry.Absent(
+            run.Batch.Version.Value,
+            image.ManifestType,
+            image.ManifestKey);
     }
 
-    private async Task<StoredImage> StoreAsync(
+    private static async Task<byte[]> ReadAsync(
         FetchOutcome.Present present,
-        string extension,
         CancellationToken cancellationToken)
     {
-        byte[] content;
         await using (present.Content.ConfigureAwait(false))
         {
             using var buffer = new MemoryStream();
             await present.Content.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
-            content = buffer.ToArray();
+            return buffer.ToArray();
         }
+    }
 
+    private async Task<StoredImage> StoreAsync(
+        byte[] content,
+        string extension,
+        CancellationToken cancellationToken)
+    {
         var stored = await blobs.StoreAsync(content, extension, cancellationToken)
             .ConfigureAwait(false);
         var webp = await EnsureWebpAsync(stored.Key, content, cancellationToken)
             .ConfigureAwait(false);
         return new StoredImage(stored.Key, stored.Written, webp);
+    }
+
+    // The variant is a blob of its own, addressed by its WebP bytes: no sibling.
+    private async Task<StoredImage?> StoreVariantAsync(
+        byte[] content,
+        int width,
+        CancellationToken cancellationToken)
+    {
+        if (ArtTranscoder.ToWebp(content, width) is not { } webp)
+        {
+            return null;
+        }
+
+        var stored = await blobs.StoreAsync(webp, WebpSibling.Extension, cancellationToken)
+            .ConfigureAwait(false);
+        return new StoredImage(stored.Key, stored.Written, WebpWritten: false);
     }
 
     // Once per blob: the sibling is shared by every key whose image has the same bytes.
@@ -185,6 +277,7 @@ internal sealed partial class ImageIngestion(
         }
 
         return WebpTranscoder.ToWebp(content) is { } webp
+            && BlobMediaTypes.Matches(WebpSibling.Extension, webp)
             && await blobs.StoreWebpSiblingAsync(key, webp, cancellationToken)
                 .ConfigureAwait(false);
     }
@@ -194,7 +287,8 @@ internal sealed partial class ImageIngestion(
         metrics.RecordDuration(IngestionMetrics.ImagesStage, elapsed);
         metrics.RecordBlobs(report.BlobsWritten, report.WebpWritten);
         metrics.RecordFetchFailures(report.Failed);
-        var settled = report.Stored + report.Absent;
+        LogRefusals(batch, report);
+        var settled = report.Stored + report.Absent + report.Refused;
         if (report.IsComplete)
         {
             IngestionLog.ImagesCompleted(
@@ -212,49 +306,22 @@ internal sealed partial class ImageIngestion(
         IngestionLog.ImagesIncomplete(logger, batch.Version.Value, settled, report.Failed);
     }
 
+    private void LogRefusals(ImageBatch batch, ImageBatchReport report)
+    {
+        if (report.Refused > 0)
+        {
+            IngestionLog.ImagesRefused(
+                logger,
+                batch.Version.Value,
+                report.Refused,
+                string.Join(SampleSeparator, report.RefusedSample));
+        }
+    }
+
     [GeneratedRegex("^[a-z0-9]{1,8}\\z", RegexOptions.CultureInvariant)]
     private static partial Regex BlobExtension();
 
-    private sealed record Run(ImageBatch Batch, IEgressBatch Egress, Tally Tally);
+    private sealed record Run(ImageBatch Batch, IEgressBatch Egress, ImageBatchTally Tally);
 
     private sealed record StoredImage(BlobKey Key, bool BlobWritten, bool WebpWritten);
-
-    // Counted from the parallel fetches of one batch.
-    private sealed class Tally
-    {
-        private int stored;
-        private int absent;
-        private int failed;
-        private int blobs;
-        private int webp;
-
-        public void CountAbsent() => Interlocked.Increment(ref absent);
-
-        public void CountFailed() => Interlocked.Increment(ref failed);
-
-        public void CountStored(StoredImage image)
-        {
-            Interlocked.Increment(ref stored);
-            if (image.BlobWritten)
-            {
-                Interlocked.Increment(ref blobs);
-            }
-
-            if (image.WebpWritten)
-            {
-                Interlocked.Increment(ref webp);
-            }
-        }
-
-        public ImageBatchReport Report(int requested, int skipped) => new()
-        {
-            Requested = requested,
-            Skipped = skipped,
-            Stored = Volatile.Read(ref stored),
-            Absent = Volatile.Read(ref absent),
-            Failed = Volatile.Read(ref failed),
-            BlobsWritten = Volatile.Read(ref blobs),
-            WebpWritten = Volatile.Read(ref webp),
-        };
-    }
 }

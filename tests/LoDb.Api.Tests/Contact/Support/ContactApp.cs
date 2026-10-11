@@ -31,7 +31,7 @@ public sealed class ContactApp : IAsyncDisposable
         _database = database;
         _factory = new ApiFactory
         {
-            PostgresConnectionString = database.ConnectionString,
+            PostgresConnectionString = database.AppConnectionString,
             Clock = Clock,
             Settings = new Dictionary<string, string?>
             {

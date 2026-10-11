@@ -98,6 +98,17 @@ internal static partial class IngestionLog
         int webp);
 
     [LoggerMessage(
+        EventName = "ingest.images.refused",
+        Level = LogLevel.Warning,
+        Message = "Refused {Refused} images of {Version}, served with an extension or bytes"
+            + " that are not an allowed media type, recorded absent: {Sample}.")]
+    public static partial void ImagesRefused(
+        ILogger logger,
+        string version,
+        int refused,
+        string sample);
+
+    [LoggerMessage(
         EventName = "ingest.images.incomplete",
         Level = LogLevel.Warning,
         Message = "Settled {Settled} images of {Version}, {Failed} left without a verdict.")]

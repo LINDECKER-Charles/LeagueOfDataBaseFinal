@@ -1,10 +1,16 @@
 namespace LoDb.Desktop.Tests.Support;
 
-/// <summary>A minimal shell build: an index and one script, as Angular emits them.</summary>
+/// <summary>
+/// A minimal shell build: an index with an inline script, and one bundle, as Angular emits them.
+/// </summary>
 internal static class TestShell
 {
+    /// <summary>The inline script of the index, as the build writes the theme's.</summary>
+    public const string InlineScript = "paint();";
+
     public const string Index =
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>LoDb</title>"
+        + "<script>" + InlineScript + "</script>"
         + "</head><body><app-root></app-root><script src=\"main.js\"></script></body></html>";
 
     public const string Script = "console.log('shell');";

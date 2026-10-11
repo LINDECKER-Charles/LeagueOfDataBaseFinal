@@ -38,5 +38,11 @@
     "loading": "Memuat profilmu…",
     "load_error": "Profilmu tidak dapat dimuat.",
     "version_error": "Versi favoritmu tidak dapat diubah."
+  },
+  "sessions": {
+    "title": "Sesi",
+    "help": "Keluarkan akunmu dari semua peramban dan aplikasi tempat akun itu terbuka, termasuk yang ini, jika perangkat hilang atau dipakai bersama. Perangkat lain akan keluar dalam beberapa menit.",
+    "sign_out_everywhere": "Keluar dari semua perangkat",
+    "signed_out": "Kamu telah keluar dari semua perangkat."
   }
 }

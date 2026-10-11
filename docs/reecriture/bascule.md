@@ -573,6 +573,15 @@ nouvelle (analytics, audit, manifeste…), qu'elle ignore ; les sessions (chacun
 reconnecte) ; les nouvelles URL que les moteurs auraient déjà explorées, en 404 côté ancienne
 stack jusqu'à la bascule suivante.
 
+**Rôles Postgres** (`lodb_owner`, `lodb_partitions`, `lodb_app`, tenus par `migrate`,
+[`configuration.md`](../guides/configuration.md) § 4.3) : rien à défaire. L'ancienne stack se
+connecte toujours comme le superutilisateur (`POSTGRES_USER` de son `.env`, intact), que ni
+les propriétaires (`lodb_owner`) ni les droits ne limitent ; les rôles restent en place,
+inertes, et la rebascule les retrouve. Seul cas à part, une restauration du dump sur un
+serveur neuf, qui n'a pas ces rôles : `pg_restore --no-owner --no-privileges`, puis
+`docker compose run --rm migrate` (nouvelle stack), qui recrée rôles, propriétaires et
+droits ; l'ancienne stack n'en a pas besoin.
+
 Rebasculer ensuite : correction, validation sur staging, puis § 6.1 à partir de l'étape 1
 (consolidation et sauvegarde comprises) ; le déploiement réécrit le `.env` depuis `ENV_PROD`
 et retire de nouveau l'ancienne stack. Les imports du § 6.3 ne reprennent que ce qui manque.
@@ -588,6 +597,8 @@ l'ancienne stack ne peut plus tourner sur la base.
 - Sauvegarde de la base juste avant, restaurée à blanc pour la vérifier.
 - Le *contract* devient une migration EF ordinaire, appliquée par `migrate` : staging
   d'abord, puis merge `test`→`main`. Jamais de SQL à la main sur la prod.
+- Le superutilisateur `LODB_DB_USER` ne sert ensuite plus qu'à `migrate`, aux sauvegardes et
+  à `psql` : l'API a son propre rôle (`lodb_app`).
 
 ## 10. Décommission
 

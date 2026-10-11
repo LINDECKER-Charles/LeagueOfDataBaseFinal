@@ -80,7 +80,7 @@ public sealed class AnalyticsRollupTests(PostgresContainerFixture postgres)
     public async Task FoldedDayStaysWithinItsBounds()
     {
         await using var services = AnalyticsServices.Build(
-            Database.ConnectionString,
+            Database.AppConnectionString,
             Time,
             static options =>
             {

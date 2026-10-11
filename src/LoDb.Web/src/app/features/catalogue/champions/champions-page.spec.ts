@@ -23,6 +23,7 @@ function cardOf(id: string, tags: string[]): ChampionCard {
     title: 'the Dark Child',
     image: { status: 'absent' },
     loadingArt: `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${id}_0.jpg`,
+    loadingArtVariants: [],
     blurb: 'Dangerous, yet disarmingly precocious.',
     partype: 'Mana',
     resource: 'mana',
@@ -86,6 +87,14 @@ describe('ChampionsPage', () => {
       '/en/champions/Annie',
     ]);
     expect(cards[0]?.querySelectorAll('.hx-chip')).toHaveLength(2);
+  });
+
+  it('loads the first row at once, the first portrait alone at high priority', async () => {
+    const { host } = await visit();
+    const portraits = [...host.querySelectorAll('lodb-champion-card img')];
+
+    expect(portraits.map((img) => img.getAttribute('loading'))).toEqual(['eager', 'eager']);
+    expect(portraits.map((img) => img.getAttribute('fetchpriority'))).toEqual(['high', null]);
   });
 
   it('writes the head of the list, with the champions it opens on', async () => {

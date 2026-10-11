@@ -1,7 +1,7 @@
 @if (src(); as source) {
   <picture>
     @if (webp(); as candidate) {
-      <source type="image/webp" [attr.srcset]="candidate" />
+      <source type="image/webp" [attr.srcset]="candidate" [attr.sizes]="sizes()" />
     }
     <img
       #img
@@ -11,8 +11,8 @@
       [alt]="alt()"
       [width]="width()"
       [height]="height()"
-      [attr.loading]="eager() ? 'eager' : 'lazy'"
-      [attr.fetchpriority]="eager() ? 'high' : null"
+      [attr.loading]="loading()"
+      [attr.fetchpriority]="priority() ? 'high' : null"
       decoding="async"
       [attr.data-img-state]="state()"
       (load)="settle('loaded')"

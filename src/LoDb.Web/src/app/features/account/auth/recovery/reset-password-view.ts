@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
@@ -16,18 +23,20 @@ import { fieldErrorsOf } from '../../shared/problems/field-errors-of';
 import { formErrorOf } from '../../shared/problems/form-error-of';
 import { problemOf } from '../../shared/problems/problem-of';
 import { AuthCard } from '../card/auth-card';
+import { emailLinkOf } from '../link/email-link';
+import { forgetLinkToken } from '../link/forget-link-token';
 
-// The e-mail link: `reset-password/{token}?user={id}`.
-const USER_PARAM = 'user';
 const USER_ID = /^[1-9][0-9]*$/;
 const MISMATCH: FieldErrors = { confirmation: 'auth.register.password_mismatch' };
 const INVALID_TOKEN = 'invalid-token';
 
 /**
- * Sets a new password from the link of a reset e-mail, then sends to the login page. The link
- * is checked when the page opens, without using it up: a damaged, expired or used one goes
- * back to the request of another one with a toast before any password is typed, as the legacy
- * page did. The reset checks it again, since it may expire while the form is filled.
+ * Sets a new password from the link of a reset e-mail (`reset-password?user={id}#token=…`),
+ * then sends to the login page. The link is checked when the page opens, without using it up:
+ * a damaged, expired or used one goes back to the request of another one with a toast before
+ * any password is typed, as the legacy page did. A usable one leaves the address bar at once,
+ * kept by the page alone. The reset checks it again, since it may expire while the form is
+ * filled.
  */
 @Component({
   selector: 'lodb-reset-password-view',
@@ -44,9 +53,10 @@ export class ResetPasswordView {
   private readonly toasts = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
   private readonly page = inject(PageDirection);
-  private readonly link = inject(ActivatedRoute).snapshot;
-  private readonly token = this.link.paramMap.get('token') ?? '';
-  private readonly user = this.link.queryParamMap.get(USER_PARAM) ?? '';
+  private readonly route = inject(ActivatedRoute).snapshot;
+  private readonly link = emailLinkOf(this.route);
+  private readonly token = this.link.token;
+  private readonly user = this.link.user;
 
   protected readonly password = signal('');
   protected readonly confirmation = signal('');
@@ -60,11 +70,15 @@ export class ResetPasswordView {
   private readonly forgot = computed(() =>
     localePath(this.page.locale(), 'account/forgot-password'),
   );
+  private readonly resetPage = computed(() =>
+    localePath(this.page.locale(), 'account/reset-password'),
+  );
 
   constructor() {
     if (!USER_ID.test(this.user) || this.token === '') {
       void this.reject();
     } else {
+      afterNextRender(() => void forgetLinkToken(this.router, this.resetPage(), this.route));
       void this.check();
     }
   }

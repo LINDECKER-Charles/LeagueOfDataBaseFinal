@@ -29,7 +29,13 @@
             "assets": [
               {
                 "glob": "**/*",
-                "input": "public"
+                "input": "public",
+                "ignore": ["i18n/**"]
+              },
+              {
+                "glob": "**/*.json",
+                "input": "dist/i18n",
+                "output": "i18n"
               },
               {
                 "glob": "*.json",
@@ -37,8 +43,7 @@
                 "output": "changelog"
               }
             ],
-            "styles": ["src/styles/index.css"],
-            "allowedCommonJsDependencies": ["@messageformat/core"]
+            "styles": ["src/styles/index.css"]
           },
           "configurations": {
             "web": {

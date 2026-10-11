@@ -2,9 +2,11 @@ using LoDb.Infrastructure.Persistence.Analytics;
 using LoDb.Infrastructure.Persistence.Analytics.Partitions;
 using LoDb.Infrastructure.Persistence.Baseline;
 using LoDb.Infrastructure.Persistence.Ddragon;
+using LoDb.Infrastructure.Persistence.Roles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace LoDb.Infrastructure.Persistence;
@@ -30,6 +32,12 @@ public static class PersistenceRegistration
         services.TryAddSingleton<IDdragonVersionStore, DdragonVersionStore>();
         services.TryAddSingleton<IAnalyticsPartitions, AnalyticsPartitions>();
         services.TryAddSingleton<IAnalyticsEventWriter, AnalyticsEventWriter>();
+        services.AddOptions<AppRoleOptions>()
+            .Bind(configuration.GetSection(AppRoleOptions.SectionName))
+            .ValidateOnStart();
+        services.TryAddEnumerable(ServiceDescriptor
+            .Singleton<IValidateOptions<AppRoleOptions>, AppRoleOptionsValidator>());
+        services.TryAddSingleton<DatabaseRoles>();
         services.TryAddScoped<DatabaseMigrator>();
         return services;
     }

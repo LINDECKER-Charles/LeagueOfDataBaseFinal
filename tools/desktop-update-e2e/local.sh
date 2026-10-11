@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
-# Local update E2E, unsigned, on macOS arm64: the exit criterion of lot 9. Packs N-1 and N
-# from this checkout, publishes N-1 to a local feed, fetches it back as the workflow does
-# (vpk download, so that vpk writes the delta), installs N-1, then runs gate.sh: --smoke
-# shows N-1, the update to N is applied, --smoke shows N. A second hop N -> N+1 must then
-# be applied from the delta, the updater's cache now holding N.
+# Local update E2E on macOS arm64, without platform signature: the exit criterion of lot 9.
+# Packs N-1 and N from this checkout, publishes N-1 to a local feed, fetches it back as the
+# workflow does (vpk download, so that vpk writes the delta), installs N-1, then runs gate.sh:
+# --smoke shows N-1, the update to N is applied, --smoke shows N. A second hop N -> N+1 must
+# then be applied from the delta, the updater's cache now holding N. The builds trust a
+# throwaway feed key, generated in the work folder, which signs the feeds as the release key
+# does in the workflow.
 #
 # Usage: local.sh [--work DIR] [--keep] [--no-delta-hop]
+#   --work  outside any git work tree: generate-key.mjs refuses to write a key inside one.
 # Environment: LODB_SHELL_DIR (default src/LoDb.Web/dist/shell/browser, npm run
 # build:shell), FROM_VERSION (1.0.0), TO_VERSION (1.0.1), NEXT_VERSION (1.0.2).
-# Needs dotnet and vpk; no network beyond NuGet, no Docker, no signing.
+# Needs dotnet, vpk and Node; no network beyond NuGet, no Docker, no release secret.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$here/lib.sh"
@@ -30,6 +33,7 @@ done
 
 [ "$(uname -s)/$(uname -m)" = "Darwin/arm64" ] || lodb_fail "local.sh runs on macOS arm64"
 root="$(lodb_repo_root)"
+signing="$root/tools/desktop-update-signing"
 shell_dir="${LODB_SHELL_DIR:-$root/src/LoDb.Web/dist/shell/browser}"
 [ -f "$shell_dir/index.html" ] \
   || lodb_fail "no shell build in $shell_dir: npm ci --prefix src/LoDb.Web, then build:shell"
@@ -52,11 +56,22 @@ cleanup() {
 }
 trap cleanup EXIT
 
+feed_key_file="$work/keys/feed-signing.pem"
+feed_key="$(node "$signing/generate-key.mjs" --out "$feed_key_file")" \
+  || lodb_fail "no throwaway feed key in $work"
+
 pack() {
   local options=(--rid "$RID" --version "$1" --channel "$CHANNEL" --publish-dir "$work/publish-$1")
-  { "$here/build.sh" "${options[@]}" --shell-dir "$shell_dir" \
+  { "$here/build.sh" "${options[@]}" --shell-dir "$shell_dir" --feed-key "$feed_key" \
     && "$here/pack.sh" "${options[@]}" --releases "$2"; } >"$work/pack-$1.log" 2>&1 \
     || { tail -n 30 "$work/pack-$1.log" >&2; lodb_fail "pack of $1 failed"; }
+}
+
+# As the workflow's sign job does after vpk pack, with the throwaway key.
+sign_feed() {
+  LODB_DESKTOP_UPDATE_PRIVATE_KEY="$(cat "$feed_key_file")" \
+    node "$signing/sign-feed.mjs" --releases "$work/releases" --channel "$velopack_channel" \
+    --version "$1" --public-key "$feed_key" || lodb_fail "the feed of $1 could not be signed"
 }
 
 expect_delta_package() {
@@ -75,17 +90,19 @@ lodb_vpk download local --path "$work/published" --channel "$velopack_channel" \
 lodb_log "pack N ($to) over it"
 pack "$to" "$work/releases"
 expect_delta_package "$to"
+sign_feed "$to"
 
 "$here/gate.sh" --rid "$RID" --channel "$CHANNEL" --from "$from" --to "$to" \
-  --feed "$work/releases" --work "$work/gate" \
+  --feed "$work/releases" --feed-key "$feed_key" --work "$work/gate" \
   --artifact "$work/published/$(lodb_installable "$RID" "$velopack_channel")"
 
 if [ "$delta_hop" = true ]; then
   lodb_log "pack N+1 ($next) for the delta hop"
   pack "$next" "$work/releases"
   expect_delta_package "$next"
+  sign_feed "$next"
   "$here/gate.sh" --rid "$RID" --channel "$CHANNEL" --from "$to" --to "$next" \
-    --feed "$work/releases" --work "$work/gate" --expect-delta
+    --feed "$work/releases" --feed-key "$feed_key" --work "$work/gate" --expect-delta
 fi
 
 lodb_log "update E2E passed ($from -> $to$([ "$delta_hop" = false ] || echo " -> $next"))"

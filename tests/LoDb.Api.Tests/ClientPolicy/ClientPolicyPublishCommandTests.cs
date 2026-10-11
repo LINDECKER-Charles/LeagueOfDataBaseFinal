@@ -98,7 +98,7 @@ public sealed class ClientPolicyPublishCommandTests(PostgresContainerFixture pos
         CliRunner.RunAsync(
             [
                 "client-policy", "publish",
-                $"--ConnectionStrings:LoDb={Database.ConnectionString}",
+                $"--ConnectionStrings:LoDb={Database.AppConnectionString}",
                 "--Logging:LogLevel:Default=Warning",
                 .. arguments,
             ],

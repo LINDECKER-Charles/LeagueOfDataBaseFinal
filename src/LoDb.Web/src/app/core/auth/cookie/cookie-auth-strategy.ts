@@ -10,6 +10,7 @@ import { API_BASE_URL } from '../../api/api-base-url';
 import { getAccountSession } from '../../api/generated/fn/account/get-account-session';
 import { signIn } from '../../api/generated/fn/account/sign-in';
 import { signOut } from '../../api/generated/fn/account/sign-out';
+import { signOutEverywhere } from '../../api/generated/fn/account/sign-out-everywhere';
 import type { AccountSession } from '../../api/generated/models/account-session';
 import type { LoginRequest } from '../../api/generated/models/login-request';
 import { safeReturnUrl } from '../../routing/safe-return-url';
@@ -41,6 +42,11 @@ export class CookieAuthStrategy implements AuthStrategy {
 
   signOut(): Observable<void> {
     return signOut(this.http, this.apiOrigin).pipe(map(() => undefined));
+  }
+
+  /** The API closes the session cookie of the request with the others. */
+  signOutEverywhere(): Observable<void> {
+    return signOutEverywhere(this.http, this.apiOrigin).pipe(map(() => undefined));
   }
 
   async startGoogleSignIn(request: GoogleSignIn): Promise<void> {

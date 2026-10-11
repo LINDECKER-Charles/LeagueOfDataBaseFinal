@@ -58,7 +58,7 @@ public sealed class AnalyticsApiFixture : IAsyncLifetime
         await _database.MigrateAsync(Token);
         _factory = new ApiFactory
         {
-            PostgresConnectionString = _database.ConnectionString,
+            PostgresConnectionString = _database.AppConnectionString,
             Settings = new Dictionary<string, string?>
             {
                 ["LoDb:Egress:RetryBaseDelay"] = "00:00:00.001",

@@ -1,14 +1,21 @@
 <section class="relative h-[62vh] max-h-[46rem] min-h-[26rem] w-full overflow-hidden">
-  <img
-    #splash
-    class="hx-img absolute inset-0 size-full object-cover object-[50%_18%]"
-    [src]="art()"
-    alt=""
-    loading="eager"
-    fetchpriority="high"
-    decoding="async"
-    (error)="fallBack()"
-  />
+  <picture>
+    @if (variants(); as candidates) {
+      <source type="image/webp" [attr.srcset]="candidates" [attr.sizes]="sizes" />
+    }
+    <img
+      #splash
+      class="hx-img absolute inset-0 size-full object-cover object-[50%_18%]"
+      [src]="art()"
+      alt=""
+      [width]="artWidth"
+      [height]="artHeight"
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+      (error)="fallBack()"
+    />
+  </picture>
   <div class="splash-scrim absolute inset-0"></div>
 
   <div class="absolute inset-x-0 bottom-0">

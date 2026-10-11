@@ -7,6 +7,8 @@ export type { ListChampions$Params as ListChampions$Params } from './fn/catalog/
 export { listChampions as listChampions } from './fn/catalog/list-champions';
 export type { GetChampion$Params as GetChampion$Params } from './fn/catalog/get-champion';
 export { getChampion as getChampion } from './fn/catalog/get-champion';
+export type { GetChampionSkins$Params as GetChampionSkins$Params } from './fn/catalog/get-champion-skins';
+export { getChampionSkins as getChampionSkins } from './fn/catalog/get-champion-skins';
 export type { ListItems$Params as ListItems$Params } from './fn/catalog/list-items';
 export { listItems as listItems } from './fn/catalog/list-items';
 export type { GetItem$Params as GetItem$Params } from './fn/catalog/get-item';
@@ -55,6 +57,8 @@ export type { SignIn$Params as SignIn$Params } from './fn/account/sign-in';
 export { signIn as signIn } from './fn/account/sign-in';
 export type { SignOut$Params as SignOut$Params } from './fn/account/sign-out';
 export { signOut as signOut } from './fn/account/sign-out';
+export type { SignOutEverywhere$Params as SignOutEverywhere$Params } from './fn/account/sign-out-everywhere';
+export { signOutEverywhere as signOutEverywhere } from './fn/account/sign-out-everywhere';
 export type { CreateAccountToken$Params as CreateAccountToken$Params } from './fn/account/create-account-token';
 export { createAccountToken as createAccountToken } from './fn/account/create-account-token';
 export type { RefreshAccountToken$Params as RefreshAccountToken$Params } from './fn/account/refresh-account-token';

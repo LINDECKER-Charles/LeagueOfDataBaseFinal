@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { AudienceTracker } from '../../../core/analytics/audience-tracker';
 import type { SharedBuild } from '../../../core/api/generated/models/shared-build';
 import { BuildsService } from '../../../core/api/generated/services/builds.service';
 import { languageName } from '../../../core/api/meta/language-name';
@@ -62,6 +63,7 @@ export class SharePage {
   private readonly builds = inject(BuildsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly origin = inject(CANONICAL_ORIGIN);
+  private readonly audience = inject(AudienceTracker);
 
   protected readonly vote = linkedSignal(() => this.build().vote ?? null);
   protected readonly pathClass = computed(() => pathClassOf(this.build().runes.primary.key));
@@ -76,6 +78,11 @@ export class SharePage {
   constructor() {
     applyShareHead(this.shared);
     whenSignedIn(this.build, (build) => this.readVote(build));
+  }
+
+  // The link copied is the build shared: counted as such, its token never sent.
+  protected countShare(): void {
+    this.audience.track('build-share');
   }
 
   // The server rendered the score for nobody: the reader's own vote comes with a new read.

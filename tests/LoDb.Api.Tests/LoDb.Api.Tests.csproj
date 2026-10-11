@@ -23,6 +23,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      Four test classes at once, as on the CI runner: most of them start the whole API in
+      memory, and xUnit's default of one per logical CPU held two dozen hosts at once, close
+      to 30 GB on a 24-thread workstation.
+    -->
+    <None Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../../src/LoDb.Api/LoDb.Api.csproj" />
     <ProjectReference Include="../LoDb.Testing/LoDb.Testing.csproj" />
   </ItemGroup>

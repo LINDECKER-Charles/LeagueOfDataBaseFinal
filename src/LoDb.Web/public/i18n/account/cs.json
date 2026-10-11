@@ -38,5 +38,11 @@
     "loading": "Načítání profilu…",
     "load_error": "Profil se nepodařilo načíst.",
     "version_error": "Verzi oblíbených se nepodařilo změnit."
+  },
+  "sessions": {
+    "title": "Relace",
+    "help": "Odhlaste účet ze všech prohlížečů a aplikací, kde je otevřený, včetně tohoto, pro případ ztraceného nebo sdíleného zařízení. Ostatní zařízení budou odhlášena během několika minut.",
+    "sign_out_everywhere": "Odhlásit ze všech zařízení",
+    "signed_out": "Byli jste odhlášeni ze všech zařízení."
   }
 }

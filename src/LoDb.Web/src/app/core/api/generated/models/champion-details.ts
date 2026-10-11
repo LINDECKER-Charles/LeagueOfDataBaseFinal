@@ -6,11 +6,12 @@ import { ChampionArt } from '../models/champion-art';
 import { ChampionCard } from '../models/champion-card';
 import { ChampionSkin } from '../models/champion-skin';
 import { DetailNeighbours } from '../models/detail-neighbours';
+import { ImageVariant } from '../models/image-variant';
 
 /**
  * `GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the
- * abilities and the skins, every image resolved and every art hotlinked, and the champions
- * on either side of it in the list.
+ * abilities and the number of skins, every image resolved and every art hotlinked, and the
+ * champions on either side of it in the list.
  */
 export interface ChampionDetails {
 
@@ -19,6 +20,12 @@ export interface ChampionDetails {
    */
   abilities: Array<ChampionAbility>;
   allyTips: Array<string>;
+
+  /**
+   * The skins besides the base one, which the hero wears: those the gallery shows once it
+   * reads them from `…/skins`.
+   */
+  alternateSkinCount: number;
 
   /**
    * The base skin's art.
@@ -30,6 +37,13 @@ export interface ChampionDetails {
    * The page the routing redirects a stale or slugless URL to.
    */
   canonicalPath: string;
+
+  /**
+   * The base skin's centered art as WebP, from the site's blobs: candidates of a srcset,
+   * the narrowest first; none until the latest version's variants are stored, nor for an
+   * older version, the hotlinked `art.centered` standing in.
+   */
+  centeredArtVariants: Array<ImageVariant>;
   contentLanguage?: (string | null);
   enemyTips: Array<string>;
   language: string;
@@ -44,6 +58,12 @@ export interface ChampionDetails {
    * The facts of the list's card.
    */
   profile: ChampionCard;
-  skins: Array<ChampionSkin>;
+
+  /**
+   * Every skin, the base one first, for an installed app alone: its front may predate
+   * `…/skins` and read them here, the app's API only growing (ADR 0008). Left out for
+   * the web; to remove once the client policy's minimum of each app reads `…/skins`.
+   */
+  skins?: (Array<ChampionSkin> | null);
   version: string;
 }

@@ -14,10 +14,13 @@
             <h2>{{ 'champion.detail.abilities' | transloco }}</h2>
             <span class="codex-header__meta">P · Q · W · E · R</span>
           </div>
-          <lodb-ability-showcase
-            [abilities]="details().abilities"
-            [resource]="profile().partype ?? ''"
-          />
+          <!-- Rendered by the server whole; its code loads and runs once it is scrolled to. -->
+          @defer (on immediate; hydrate on viewport) {
+            <lodb-ability-showcase
+              [abilities]="details().abilities"
+              [resource]="profile().partype ?? ''"
+            />
+          }
         </section>
       }
 
@@ -28,7 +31,12 @@
             <span class="codex-header__meta">{{ skinCount() }}</span>
           </div>
           @defer (on viewport) {
-            <lodb-skin-gallery [skins]="details().skins" [championName]="profile().name" />
+            <lodb-skin-shelf
+              [version]="context().version"
+              [language]="context().language"
+              [champion]="profile().id"
+              [championName]="profile().name"
+            />
           } @placeholder {
             <div class="flex gap-4 overflow-hidden" aria-hidden="true">
               @for (tile of [1, 2, 3]; track tile) {
@@ -89,13 +97,19 @@
     </div>
 
     <aside id="stats" class="mt-16 lg:sticky lg:top-[4.25rem] lg:mt-0" lodbReveal>
-      <lodb-stat-board [profile]="profile()" [version]="context().version" />
+      @defer (on immediate; hydrate on viewport) {
+        <lodb-stat-board [profile]="profile()" [version]="context().version" />
+      }
     </aside>
   </div>
 
   <div class="relative mx-auto mt-14 max-w-7xl">
     <lodb-previous-patches class="mb-14" [context]="context()" [path]="details().canonicalPath" />
-    <lodb-pager [previous]="pager().previous" [next]="pager().next" [hub]="pager().hub" />
+    <!-- Once the page is idle: the pager measures itself once hydrated, out of sight, and
+         a click never lands while it hydrates (docs/architecture/pieges.md). -->
+    @defer (on immediate; hydrate on idle) {
+      <lodb-pager [previous]="pager().previous" [next]="pager().next" [hub]="pager().hub" />
+    }
   </div>
 </div>
 

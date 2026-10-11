@@ -20,7 +20,7 @@
           [name]="path.name"
           [size]="emblemSize"
           imgClass="object-contain p-5"
-          eager
+          priority
         />
       }
       <div class="min-w-0">
@@ -48,12 +48,16 @@
       [path]="current.details.canonicalPath"
     />
 
-    <lodb-pager
-      class="mt-14"
-      [previous]="pager().previous"
-      [next]="pager().next"
-      [hub]="pager().hub"
-    />
+    <!-- Once the page is idle: the pager measures itself once hydrated, out of sight, and
+         a click never lands while it hydrates (docs/architecture/pieges.md). -->
+    @defer (on immediate; hydrate on idle) {
+      <lodb-pager
+        class="mt-14"
+        [previous]="pager().previous"
+        [next]="pager().next"
+        [hub]="pager().hub"
+      />
+    }
   </article>
 </div>
 

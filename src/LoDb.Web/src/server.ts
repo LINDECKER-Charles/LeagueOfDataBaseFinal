@@ -6,6 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express, { type RequestHandler } from 'express';
 import { join } from 'node:path';
+import { ApiResponseMemo } from './app/core/http/api-response-memo';
 import type { SsrRequestContext } from './app/core/http/ssr-request-context';
 import { negotiateLocale } from './app/core/routing/locale/negotiate-locale';
 import { parseAcceptLanguage } from './app/core/routing/locale/parse-accept-language';
@@ -15,6 +16,7 @@ import { clientKeyOf } from './server/admission/client-key-of';
 import { RenderAdmission } from './server/admission/render-admission';
 import { RenderCounts } from './server/admission/render-counts';
 import { FrontBuildsPublication } from './server/assets/front-builds-publication';
+import { readBuildFiles } from './server/assets/read-build-files';
 import { staticFolder } from './server/assets/static-folder';
 import { encodedDocument } from './server/compression/encoded-document';
 import { createLogger } from './server/create-logger';
@@ -27,9 +29,12 @@ import { requestLogging } from './server/request-logging';
 import { preRouter } from './server/routing/pre-router';
 import { applyServerTimeouts } from './server/security/apply-server-timeouts';
 import { boundedRequests } from './server/security/bounded-requests';
+import { readKnownInlineScripts } from './server/security/csp/scripts/read-known-inline-scripts';
+import type { ScriptPolicy } from './server/security/csp/scripts/script-policy';
+import { UnexpectedScripts } from './server/security/csp/scripts/unexpected-scripts';
+import { withDocumentPolicy } from './server/security/csp/with-document-policy';
 import { networkGate } from './server/security/network-gate';
 import { StackPeers } from './server/security/stack-peers';
-import { withDocumentPolicy } from './server/security/with-document-policy';
 
 // The server reads no cookie and holds no secret: pages are the same for every visitor, so
 // the proxy may cache them, and a compromised renderer has nothing to leak. It is still an
@@ -39,10 +44,18 @@ import { withDocumentPolicy } from './server/security/with-document-policy';
 // X-Forwarded-For itself (snippets/proxy-headers.conf): one hop names the visitor's address,
 // which the render admission counts per client.
 const TRUSTED_PROXY_HOPS = 1;
+// The build's files a render reads (i18n catalogues, changelog), held in memory once.
+const BUILD_FILE_FOLDERS = ['i18n', 'changelog'];
+// What every render asks the API for with the same answer, kept for all of them.
+const MEMOISED_API_PATHS = ['/api/meta'];
+// The build's index templates, beside this file and in the browser's folder: the inline
+// scripts they hold are the only ones a page's policy admits (src/server/security/csp).
+const SERVER_TEMPLATE = 'index.server.html';
+const BROWSER_TEMPLATE = 'index.csr.html';
 
 // Under `ng serve`, the dev server mounts `reqHandler` instead of running this file.
 const listening = isMainModule(import.meta.url);
-const settings = readServerSettings(process.env, listening);
+const settings = readServerSettings(process.env);
 const stackPeers = new StackPeers(settings.stackNetworks);
 const logger = createLogger();
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -52,11 +65,32 @@ const angularApp = new AngularNodeAppEngine({
 });
 const requestContext: SsrRequestContext = {
   apiOrigin: settings.apiOrigin,
-  selfOrigin: settings.selfOrigin,
+  // Under `ng serve`, the build lives in the dev server's memory, which serves its files.
+  buildFiles: listening ? readBuildFiles(browserDistFolder, BUILD_FILE_FOLDERS) : null,
+  apiResponses: new ApiResponseMemo(
+    new Set(MEMOISED_API_PATHS.map((path) => `${settings.apiOrigin}${path}`)),
+    settings.apiMetaTtlMs,
+    () => Date.now(),
+  ),
 };
 const renderCounts = new RenderCounts();
 const renderAdmission = new RenderAdmission(settings.renderLimits, renderCounts);
 const metrics = new SsrMetrics(renderCounts, renderAdmission);
+const unexpectedScripts = new UnexpectedScripts(logger);
+// Under `ng serve`, the dev server adds scripts of its own that no hash would admit, and holds
+// the templates in its memory: its pages go without a policy.
+const scriptPolicy: ScriptPolicy | null = listening
+  ? {
+      known: readKnownInlineScripts([
+        join(import.meta.dirname, SERVER_TEMPLATE),
+        join(browserDistFolder, BROWSER_TEMPLATE),
+      ]),
+      onUnexpected: (count) => {
+        metrics.countUnexpectedScripts(count);
+        unexpectedScripts.record(count);
+      },
+    }
+  : null;
 const app = express();
 
 app.disable('x-powered-by');
@@ -104,8 +138,8 @@ app.use('/build', hashedAssetsOnly, staticFiles, ...previousBuilds, notFound);
 
 app.use(staticFiles);
 
-// Catalogues (public/i18n) are static only: a missing one is a plain 404, never an SSR render.
-// The renderer fetches them from its own address, which the render's Host check would refuse.
+// Catalogues are static only: a missing one is a plain 404, never an SSR render. The renders
+// themselves read them from memory (`buildFiles`), never over HTTP.
 app.use('/i18n', notFound);
 
 // What the URL alone decides (a 400, the static 404, a query cleaned by a redirect) costs no
@@ -113,8 +147,12 @@ app.use('/i18n', notFound);
 app.use(preRouter(settings.queryLimits, () => metrics.countRedirect('query')));
 
 // The policy hashes the inline scripts of the page as rendered, before it is compressed.
-async function servedDocument(rendered: Response, request: express.Request): Promise<Response> {
-  const policed = await withDocumentPolicy(rendered);
+async function servedDocument(
+  rendered: Response,
+  request: express.Request,
+  policy: ScriptPolicy,
+): Promise<Response> {
+  const policed = await withDocumentPolicy(rendered, policy);
   return encodedDocument(policed, request.get('Accept-Encoding'), settings.htmlGzipLevel);
 }
 
@@ -133,8 +171,8 @@ app.use((request, response, next) => {
         return;
       }
       metrics.countRendered(rendered.status);
-      // Under `ng serve`, the dev server adds scripts of its own that no hash would admit.
-      const sent = listening ? await servedDocument(rendered, request) : rendered;
+      const sent =
+        scriptPolicy === null ? rendered : await servedDocument(rendered, request, scriptPolicy);
       await writeResponseToNodeResponse(sent, response);
     })
     .catch(next);
@@ -151,6 +189,7 @@ if (listening) {
   });
   applyServerTimeouts(server);
   new AdmissionSummary(renderCounts, logger).start();
+  unexpectedScripts.start();
   // Never routed by nginx nor published: the host's collector reads it over its own network.
   serveMetrics(metrics.registry, settings.metricsPort, logger);
   // In the background: this build's bundles are served from its own folder meanwhile.

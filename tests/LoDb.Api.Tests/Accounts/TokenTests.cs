@@ -143,7 +143,7 @@ public sealed class TokenTests(PostgresContainerFixture postgres)
         {
             identifier = AccountSeed.Name,
             password = AccountSeed.StrongPassword,
-            twoFactorCode = Totp.Code(secrets.Key),
+            twoFactorCode = Totp.Code(secrets.Key, App.Clock),
         });
 
         Assert.Equal(

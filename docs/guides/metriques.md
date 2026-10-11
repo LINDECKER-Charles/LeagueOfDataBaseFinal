@@ -68,6 +68,7 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 |---|---|---|---|---|
 | `lodb_build_info` | jauge, toujours 1 | `revision`, `version` | oui | `LoDb.Api` |
 | `lodb_network_gate_refusals_total` | compteur | — | non | `LoDb.Api`, requêtes du port 8080 venues hors du réseau de la stack |
+| `lodb_csp_reports_total` | compteur | `directive` (nom de directive CSP connu, sinon `other`), `disposition` (`enforce`, `report` pour les Trusted Types en Report-Only, `unknown`) | non | `LoDb.Api`, violations de la CSP signalées par les navigateurs (`POST /api/csp-reports`) ; la ligne `web.csp.violated` les résume une fois par minute |
 | `lodb_db_unavailable_total` | compteur | — | non | `LoDb.Database` : serveur injoignable, délai de commande dépassé, session refusée (500 compté ; le pool plein donne un 503 non compté) |
 | `lodb_hashing_in_flight` | jauge | — | non : à la première requête qui sollicite les comptes | `LoDb.Security` |
 | `lodb_hashing_wait_seconds` | histogramme | — | non | `LoDb.Security`, attente d'un permis de hachage |
@@ -75,6 +76,7 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_sign_in_attempts_total` | compteur | `result` (`success`, `failure`, `two_factor_required`, `locked_out`, `throttled`, `banned`), `account` (`member`, `admin`, `none`, `unchecked`), `channel` | non | `LoDb.Security` |
 | `lodb_lockouts_total` | compteur | `is_admin` (`true`, `false`) | non | `LoDb.Security` |
 | `lodb_admin_security_events_total` | compteur | `event` (`mfa_enrolled`, `mfa_invitation_refused`) | non | `LoDb.Security` |
+| `lodb_sessions_revoked_total` | compteur | `reason` (`sign_out`, `sign_out_everywhere`, `refresh_replayed`) | non | `LoDb.Security` ; `refresh_replayed` : un jeton de rafraîchissement déjà échangé est revenu, sa famille est révoquée |
 | `lodb_catalog_cache_lookups_total` | compteur | `outcome` (`hit`, `joined`, `miss`) | non | `LoDb.Catalog` ; `hit` compte aussi la lecture `en_US` que fait toute lecture froide d'une autre langue |
 | `lodb_catalog_cache_evictions_total` | compteur | — | non | `LoDb.Catalog` |
 | `lodb_catalog_load_duration_seconds` | histogramme | `outcome` (`built`, `missing`, `failed`) | non | `LoDb.Catalog` |
@@ -94,6 +96,7 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_outbox_deferred` | jauge | — | oui (tâches de fond actives) | `LoDb.Outbox`, messages dus que le plafond horaire de leur modèle retient (`LoDb:Outbox:HourlyCaps`) |
 | `lodb_outbox_batch_duration_seconds`, `lodb_outbox_batch_failures_total` | histogramme, compteur | — | non | `LoDb.Outbox` |
 | `lodb_analytics_views_queued_total`, `…_written_total`, `…_dropped_total` | compteurs | `origin` ; `reason` (`queue_full`, `unresolved`, `write_failed`) | non | `LoDb.Analytics` |
+| `lodb_audience_vues_tirees` | jauge | — | non : au premier tirage réussi (jamais tant que le tirage dort) | `LoDb.Audience`, pages vues qu'Umami a comptées sur le site pendant la dernière heure close, relevées par le tirage horaire (`audience.trends`) : la sentinelle de toute la chaîne (émetteur, edge, Umami, tirage). Préfixe `lodb_`, jamais `umami_` (réservé au reconciler d'`infra-vps`) |
 | `lodb_publicapi_refusals_total` | compteur | `code` (codes d'erreur de `/v1`) | non | `LoDb.PublicApi` |
 | `lodb_publicapi_usage_pending` | jauge | — | oui | `LoDb.PublicApi` |
 | `lodb_publicapi_usage_dropped_total`, `…_flush_duration_seconds`, `…_flush_failures_total` | compteurs, histogramme | — | non | `LoDb.PublicApi` |
@@ -118,9 +121,11 @@ Noms à confirmer au premier scrape d'un hôte (`.NET 10`, OpenTelemetry 1.x) :
 - Données : meters `Npgsql` (pool de connexions) et `Microsoft.EntityFrameworkCore`.
 - Client HTTP sortant (Data Dragon) : `http_client_request_duration_seconds`.
 
-Traces : sans `OTEL_EXPORTER_OTLP_ENDPOINT`, aucune n'est enregistrée
-(`ParentBased(TraceIdRatioBased(0))`, y compris sous un `traceparent` marqué échantillonné) ;
-l'identifiant de trace reste dans chaque ligne de log (`trace_id`).
+Traces : sans `OTEL_EXPORTER_OTLP_ENDPOINT`, aucune n'est enregistrée ; avec lui, 5 % le sont
+(`LoDb:Telemetry:TraceSampleRatio`), choisies par leur identifiant
+(`TraceIdRatioBased`, y compris sous un `traceparent` reçu, marqué échantillonné ou non : nginx
+démarre la trace de chaque requête, le SSR la transmet à l'API). L'identifiant de trace reste
+dans chaque ligne de log (`trace_id`), échantillonnée ou non.
 
 ## SSR
 
@@ -131,6 +136,7 @@ l'identifiant de trace reste dans chaque ligne de log (`trace_id`).
 | `lodb_ssr_render_duration_seconds` | histogramme, bornes 0,1 · 0,25 · 0,5 · 1 · 1,5 · 3 · 5 · 10 · 20 s | `lane`, `status_class` (`2xx`…`5xx`, `aborted` quand le client est parti) | non | de l'admission à la fin de la réponse |
 | `lodb_ssr_normalized_redirects_total` | compteur | `reason` : `query` (301 du pré-routeur, paramètres que la page ne lit pas, sans rendu), `canonical` (301/308 d'une page vers son URL canonique : slug, dernier patch dans le chemin, `?version=`) | oui (0) | pré-routeur, réponse du rendu |
 | `lodb_ssr_network_gate_refusals_total` | compteur | — | oui (0) | requêtes du port 4000 venues hors du réseau de la stack (`networkGate`) |
+| `lodb_ssr_csp_unexpected_scripts_total` | compteur | — | oui (0) | scripts inline d'une page rendue qu'aucun gabarit du build n'a écrits : laissés hors de sa CSP, donc jamais exécutés (`KnownInlineScripts`) ; la ligne `ssr.csp.unexpected_scripts` les résume une fois par minute. Au-dessus de 0, quelque chose a glissé un script dans le HTML |
 | `nodejs_*`, `process_*` | — | `nodejs_eventloop_lag_seconds`, `nodejs_eventloop_lag_p99_seconds`, `nodejs_heap_size_used_bytes`, `nodejs_gc_duration_seconds{kind}`, `process_cpu_seconds_total`… | oui | `collectDefaultMetrics` de `prom-client` |
 
 Un refus d'admission n'écrit pas de ligne de log par requête : la ligne `ssr.admission.summary`

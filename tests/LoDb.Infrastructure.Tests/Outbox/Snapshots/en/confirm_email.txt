@@ -9,7 +9,7 @@ Welcome, Faker
 Confirm your email address to fully activate your account and unlock build creation.
 
 Confirm my address :
-https://lodb.test/account/link?token=a&sig=b
+https://lodb.test/en/account/reset-password?user=7#token=Q2ZESjhB-x_y
 
 This link expires in 1 hour. If you didn't create this account, just ignore this email.
 

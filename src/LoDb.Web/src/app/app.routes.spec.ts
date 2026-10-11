@@ -19,6 +19,7 @@ import {
 import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { routes } from './app.routes';
+import { audiencePageOf } from './core/analytics/audience/normalize/audience-page-of';
 import { API_BASE_URL } from './core/api/api-base-url';
 import type { CatalogMeta } from './core/api/generated/models/catalog-meta';
 import { handleNavigationError } from './core/routing/failure/handle-navigation-error';
@@ -163,6 +164,7 @@ const PRIVATE_PAGES: Page[] = [
   { url: '/en/account/register', page: AccountPage, heading: 'auth.register.title' },
   { url: '/en/account/verify-email', page: AccountPage, heading: 'nav.account' },
   { url: '/en/account/forgot-password', page: AccountPage, heading: 'auth.reset.request_title' },
+  { url: '/en/account/reset-password', page: AccountPage, heading: 'auth.reset.reset_title' },
   { url: '/en/account/reset-password/t0k3n', page: AccountPage, heading: 'auth.reset.reset_title' },
   { url: '/en/account/profile', page: AccountPage, heading: 'nav.profile' },
   { url: '/en/account/profile/preview', page: AccountPage, heading: 'profile.preview.badge' },
@@ -203,6 +205,41 @@ describe('routes (ADR 0005)', () => {
       expect((await visit(url)).requested).toEqual([]);
     },
   );
+
+  it.each([
+    ['/en/champions', '/en/champions'],
+    ['/en/items/1036-long-sword', '/en/items/1036-long-sword'],
+    [`/fr/${OLDER}/runes`, `/fr/${OLDER}/runes`],
+    [`/de/${OLDER}/summoners/SummonerFlash`, `/de/${OLDER}/summoners/SummonerFlash`],
+  ])('lets the audience see the real path of the catalogue page %s', async (url, sent) => {
+    const { router } = await visit(url);
+
+    expect(audiencePageOf(router.routerState.snapshot.root, router.url)).toMatchObject({
+      url: sent,
+      isPublicPath: true,
+    });
+  });
+
+  it.each([
+    ['/fr/', '/fr/'],
+    ['/en/trends', '/en/trends'],
+    ['/en/u/faker', '/en/u/:username'],
+    ['/b/Zx81kQ', '/b/:token'],
+    ['/en/legal/privacy', '/en/legal/privacy'],
+  ])('sends the audience the template of %s', async (url, sent) => {
+    const { router } = await visit(url);
+
+    expect(audiencePageOf(router.routerState.snapshot.root, router.url)).toMatchObject({
+      url: sent,
+      isPublicPath: false,
+    });
+  });
+
+  it.each(PRIVATE_PAGES)('sends the audience nothing of $url', async ({ url }) => {
+    const { router } = await visit(url);
+
+    expect(audiencePageOf(router.routerState.snapshot.root, router.url)).toBeNull();
+  });
 
   it('activates the locale of the URL', async () => {
     await visit('/ar/about');

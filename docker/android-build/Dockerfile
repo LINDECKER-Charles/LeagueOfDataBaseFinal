@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
 # Image lodb-android-build: the toolchain of the Android app's build (L10.1): JDK 21,
 # Android SDK 36 and Node 24. It holds no source: tools/android/build-debug.sh mounts
 # the repository read-only and builds a copy inside the container.
@@ -6,9 +6,12 @@
 #
 # linux/amd64 only: aapt2, which the Android Gradle plugin downloads, has no Linux arm64
 # build. On an Apple silicon host it runs under Docker Desktop's Rosetta emulation.
-FROM --platform=linux/amd64 node:24-bookworm-slim AS node
+#
+# Every image this file names is pinned by digest, its tag kept for the reader: a moved tag
+# never changes what is built. Dependabot bumps both (tools/ci/README.md, base images).
+FROM --platform=linux/amd64 node:24-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS node
 
-FROM --platform=linux/amd64 eclipse-temurin:21-jdk-noble
+FROM --platform=linux/amd64 eclipse-temurin:21-jdk-noble@sha256:b468c3fc688b14450571494f588bd939378e7fd542ed5a73f8efc13f17872a87
 
 # Command-line tools 23.0; SHA-1 from Google's repository manifest (repository2-3.xml).
 ARG ANDROID_CMDLINE_TOOLS=16111833

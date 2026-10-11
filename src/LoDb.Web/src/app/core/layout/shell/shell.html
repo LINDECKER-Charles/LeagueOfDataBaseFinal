@@ -16,11 +16,16 @@
   <ng-content />
 </main>
 @if (!bare()) {
-  <lodb-footer>
-    <ng-container ngProjectAs="[lodbSlot=contact]">
-      <ng-content select="[lodbSlot=contact]" />
-    </ng-container>
-  </lodb-footer>
+  <!-- Rendered by the server whole; its code loads and runs once the page is idle, out of the
+       initial bundle. Never on viewport: a click landing while such a hydration runs is lost
+       (docs/architecture/pieges.md). -->
+  @defer (on immediate; hydrate on idle) {
+    <lodb-footer>
+      <ng-container ngProjectAs="[lodbSlot=contact]">
+        <ng-content select="[lodbSlot=contact]" />
+      </ng-container>
+    </lodb-footer>
+  }
   <lodb-bottom-nav />
 }
 <lodb-toaster />

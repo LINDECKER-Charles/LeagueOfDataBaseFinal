@@ -74,5 +74,9 @@ export class FacetPanel {
 
   protected fold(name: string, isOpen: boolean): void {
     this.folds().update((folds) => ({ ...folds, [name]: isOpen }));
+    // Unfolding facets is the start of a filter: the whole list counts their options.
+    if (isOpen) {
+      this.filter.anticipate();
+    }
   }
 }

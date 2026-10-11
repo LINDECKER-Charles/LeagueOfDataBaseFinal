@@ -10,8 +10,9 @@ namespace LoDb.Infrastructure.Audit.Journal;
 /// <remarks>
 /// <para>
 /// Built from an allow-list, as the legacy mirror is: a field added to the journal later
-/// does not leak by default. The address, the labels and <c>meta.identifier</c> (the
-/// e-mail typed on a failed sign-in) stay out; the table remains the legal record.
+/// does not leak by default. The address, the labels and what stands for the identifier
+/// typed on a failed sign-in (<c>meta.identifier_digest</c>, and <c>meta.identifier</c> of
+/// the older entries) stay out; the table remains the legal record.
 /// </para>
 /// <para>
 /// Not a <c>[LoggerMessage]</c>: the event name follows the action and the fields follow
@@ -22,7 +23,8 @@ internal static class AuditMirror
 {
     private const string EventPrefix = "audit.";
     private const string MetaPrefix = "Meta.";
-    private const string IdentifierKey = "identifier";
+    // Pseudonymous at best: neither reaches the logs.
+    private static readonly string[] IdentifierKeys = ["identifier", "identifier_digest"];
 
     public static void Write(
         ILogger logger,
@@ -61,7 +63,7 @@ internal static class AuditMirror
         };
         foreach (var (key, value) in meta)
         {
-            if (!string.Equals(key, IdentifierKey, StringComparison.Ordinal))
+            if (!IdentifierKeys.Contains(key, StringComparer.Ordinal))
             {
                 fields.Add(new(MetaPrefix + key, value));
             }

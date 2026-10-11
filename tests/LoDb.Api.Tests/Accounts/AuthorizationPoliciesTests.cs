@@ -81,7 +81,7 @@ public sealed class AuthorizationPoliciesTests(PostgresContainerFixture postgres
         await GrantAdminAsync(AccountSeed.Name);
         var passwordOnly = await SessionAsync(AccountSeed.Name);
         var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
-        var withCode = await SessionAsync(AccountSeed.Name, Totp.Code(secrets.Key));
+        var withCode = await SessionAsync(AccountSeed.Name, Totp.Code(secrets.Key, App.Clock));
 
         var refused = await AuthorizeAsync(AuthorizationPolicies.Admin, passwordOnly);
         var allowed = await AuthorizeAsync(AuthorizationPolicies.Admin, withCode);
@@ -95,7 +95,7 @@ public sealed class AuthorizationPoliciesTests(PostgresContainerFixture postgres
     {
         await App.SeedAsync(new AccountSeed());
         var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
-        var withCode = await SessionAsync(AccountSeed.Name, Totp.Code(secrets.Key));
+        var withCode = await SessionAsync(AccountSeed.Name, Totp.Code(secrets.Key, App.Clock));
 
         var answer = await AuthorizeAsync(AuthorizationPolicies.Admin, withCode);
 

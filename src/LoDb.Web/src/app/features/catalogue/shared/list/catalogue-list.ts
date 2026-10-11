@@ -3,11 +3,15 @@ import {
   ChangeDetectionStrategy,
   Component,
   DOCUMENT,
+  type ElementRef,
   type OnInit,
+  afterRenderEffect,
   computed,
   contentChild,
   inject,
   input,
+  linkedSignal,
+  signal,
   viewChild,
 } from '@angular/core';
 import { TranslocoPipe, provideTranslocoScope } from '@jsverse/transloco';
@@ -40,6 +44,11 @@ const MAX_SKELETON_TILES = 24;
  * draws. The first page comes from the server as is, readable by crawlers; the whole list
  * then filters in place, and the URL keeps the state (`q`, `page`, `size`, `<key>`,
  * `<key>_all`), so a filtered list is a link. `/` jumps to the search.
+ *
+ * The rail's console is hydrated once the reader points at it, focuses, clicks or types in
+ * it, or presses `/`, else once its server-rendered markup is out of date (the whole list
+ * read, the state moved): until then that markup costs no script, during the page's load
+ * above all.
  */
 @Component({
   selector: 'lodb-catalogue-list',
@@ -88,8 +97,22 @@ export class CatalogueList<C> implements OnInit {
   protected readonly cardTemplate = contentChild.required(CatalogueCardTemplate);
   private readonly document = inject(DOCUMENT);
   private readonly dialogs = inject(DialogService);
-  private readonly console = viewChild.required(FilterConsole);
+  // By reference, not by class: the console's code stays in the chunk its defer block loads.
+  private readonly console = viewChild<FilterConsole>('console');
+  private readonly consoleRail = viewChild.required<ElementRef<HTMLElement>>('consoleRail');
   private readonly barSearch = viewChild.required(FilterSearch);
+  /** `/` was pressed before the console was hydrated: it hydrates, then takes the focus. */
+  protected readonly isConsoleWanted = signal(false);
+  /**
+   * What the server drew the rail from has changed: the whole list came (the counts and
+   * options were the first page's), or the state moved without the rail (a filter cleared
+   * from the results, another language). Left dehydrated, the rail would show its old copy.
+   */
+  private readonly isRailOutdated = linkedSignal<unknown, boolean>({
+    source: () => [this.source().dataset(), this.filter.state()],
+    computation: (_, previous) => previous !== undefined,
+  });
+  protected readonly isConsoleDue = computed(() => this.isConsoleWanted() || this.isRailOutdated());
 
   /** What the list says instead of, or above, its cards when the API could not answer. */
   protected readonly notice = computed(() => {
@@ -105,6 +128,16 @@ export class CatalogueList<C> implements OnInit {
     return Array.from({ length: Math.min(tiles, MAX_SKELETON_TILES) });
   });
 
+  constructor() {
+    afterRenderEffect(() => {
+      const filterConsole = this.console();
+      if (filterConsole !== undefined && this.isConsoleWanted()) {
+        this.isConsoleWanted.set(false);
+        filterConsole.search().focus();
+      }
+    });
+  }
+
   // Not in the constructor: the first navigation ends before the inputs are set, and the
   // filter reads them as soon as it follows the router.
   ngOnInit(): void {
@@ -116,6 +149,7 @@ export class CatalogueList<C> implements OnInit {
   }
 
   protected openFilters(): void {
+    this.filter.anticipate();
     this.dialogs.openSheet(FilterSheet, { labelledBy: FilterSheet.HEADING_ID, data: this.filter });
   }
 
@@ -123,10 +157,13 @@ export class CatalogueList<C> implements OnInit {
     if (!isSearchShortcut(event, this.document.activeElement)) {
       return;
     }
-    const search = [this.console().search(), this.barSearch()].find((field) => field.isShown());
+    const search = [this.console()?.search(), this.barSearch()].find((field) => field?.isShown());
     if (search !== undefined) {
       event.preventDefault();
       search.focus();
+    } else if (this.consoleRail().nativeElement.getClientRects().length > 0) {
+      event.preventDefault();
+      this.isConsoleWanted.set(true);
     }
   }
 }

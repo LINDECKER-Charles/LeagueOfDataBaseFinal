@@ -1,0 +1,17 @@
+<h2 class="profile-panel__title">{{ 'account.sessions.title' | transloco }}</h2>
+<p id="profile-sessions-help" class="mt-2 max-w-2xl text-sm text-text-muted">
+  {{ 'account.sessions.help' | transloco }}
+</p>
+@if (submission.error(); as message) {
+  <p class="auth-error mt-4" role="alert">{{ message | transloco }}</p>
+}
+<button
+  lodbButton="ghost"
+  type="button"
+  class="mt-5"
+  aria-describedby="profile-sessions-help"
+  [disabled]="submission.busy()"
+  (click)="signOutEverywhere()"
+>
+  {{ 'account.sessions.sign_out_everywhere' | transloco }}
+</button>

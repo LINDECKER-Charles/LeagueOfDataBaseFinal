@@ -1,0 +1,70 @@
+---
+date: 2026-10-11
+type: perf
+scope: front
+title: Des pages plus rapides à afficher, surtout sur mobile
+summary: L'image principale passe en premier et arrive plus légère ; le reste attend qu'on en ait besoin.
+tags: [performance, mobile]
+---
+
+## Ce qui change
+
+Les pages du catalogue s'affichent plus vite, en particulier sur un téléphone ou une connexion
+lente : l'image principale arrive en premier et plus légère, et ce qui se trouve plus bas ne
+consomme ni données ni calcul tant qu'on n'y arrive pas. La page reste entière dès son
+affichage.
+
+## Détails
+
+- L'illustration d'un champion (en tête de sa fiche et sur les cartes de la liste) arrive au
+  format WebP, à la taille de l'écran, depuis le site ; seule l'image principale de la page
+  est demandée en priorité.
+- La vidéo d'un sort ne se télécharge que lorsque la moitié de son cadre est à l'écran, et se
+  met en pause quand on s'en éloigne. En mode économie de données ou sur une connexion lente,
+  l'image fixe du sort reste affichée.
+- Les sorts et les statistiques s'activent quand on approche d'eux, la navigation entre fiches
+  et le pied de page une fois la page au repos ; la console de filtres d'une liste, dès qu'on
+  la survole, qu'on y entre ou qu'on y tape, ou dès que la liste complète est là, pour en
+  montrer les bons comptes.
+- La liste complète qui sert à filtrer se charge quand on commence à chercher ou à filtrer, ou
+  une fois la page affichée et le navigateur au repos ; en mode économie de données, seulement
+  quand on en a besoin.
+- Une page s'ouvre plus vite quand le site a déjà été visité, et le code des listes et des
+  fiches est préparé pendant que la page est au repos.
+
+## Technique
+
+- Art des champions : `srcset`/`sizes` construits depuis `centeredArtVariants` (héros, `sizes`
+  calqué sur la boîte 62vh en 16:9) et `loadingArtVariants` (cartes de la liste), dans une
+  `<source type="image/webp">` ; l'URL Data Dragon reste le `src` de repli (anciens patchs,
+  variantes pas encore stockées). Le héros redescend d'un cran à chaque échec : variantes, art
+  centré, splash. Les portraits des aperçus de l'accueil, sous la ligne de flottaison et hors
+  du chemin du LCP, restent sur Data Dragon : servis par le site, ils n'ont apporté aucun gain
+  mesurable à l'accueil.
+- `lodb-image` sépare `eager` (chargée tout de suite) et `priority` (`fetchpriority="high"`) :
+  un seul candidat LCP par page (héros, première carte de la liste des champions, icône des
+  fiches objet, rune et sort, portrait d'un build partagé), la première rangée restant
+  `eager`.
+- Quand l'art LCP vient de Data Dragon, le rendu serveur ajoute `Link: <origine>;
+  rel=preconnect` (`PageResponse.preconnect`) : la connexion s'ouvre dès les en-têtes. Aucun
+  préconnect vers CommunityDragon : seules les pastilles de chroma, au fond de la galerie,
+  en viennent.
+- Vidéo d'un sort : `preload="none"`, plus d'`autoplay` ; un `IntersectionObserver` (seuil
+  0,5) la crée et la lance, la met en pause hors écran, sans jamais passer outre la pause du
+  lecteur ; poster en `loading="lazy"`. `Save-Data` ou `effectiveType` 2g/3g : poster seul.
+- Hydratation incrémentale : `@defer (on immediate; hydrate on viewport)` sur la vitrine des
+  sorts et le tableau des stats ; `hydrate on idle` sur le pager des quatre fiches et le pied
+  de page (ils se mesurent une fois hydratés, hors de la vue, et un clic pendant une
+  hydratation lancée par `viewport` serait perdu) ; `hydrate on interaction`, `hydrate on hover` (survol et focus) et `hydrate when`
+  (raccourci `/`, ou copie serveur périmée : liste entière lue, état changé hors de la
+  console) sur la console de filtres.
+- Liste complète : lue sur intention (focus de la recherche, groupe de facettes déplié, feuille
+  des filtres, tout état que la première page ne sait pas dessiner) ou après l'événement `load`
+  et un `requestIdleCallback` (2 s au plus) ; jamais d'office sous `Save-Data` ou sur
+  connexion lente.
+- Service worker : navigation preload activé ; chaque navigation qu'il voit est servie par ce
+  préchargement (`networkResponse`), y compris celles qu'il laisse sinon passer (compte,
+  admin, partages), qui ne sont jamais mises en cache.
+- Routeur : `withPreloading(CataloguePreloading)` charge à l'inactivité le seul code des routes
+  marquées `PRELOADED_ROUTE` (les quatre ressources du catalogue), ni sur le serveur ni sous
+  `Save-Data`.

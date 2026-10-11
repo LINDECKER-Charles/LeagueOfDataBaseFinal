@@ -1,9 +1,11 @@
+import { isPreloadedNavigation } from './routing/is-preloaded-navigation';
 import { requestFactsOf } from './routing/request-facts-of';
 import { routeRequest } from './routing/route-request';
 import type { WorkerScope } from './scope/worker-scope';
 import { deleteStaleCaches } from './storage/delete-stale-caches';
 import { CACHE_PREFIX, WORKER_CACHES } from './storage/worker-caches';
 import { answerRoute } from './strategies/answer-route';
+import { networkResponse } from './strategies/network-response';
 import { OFFLINE_URL } from './strategies/offline-url';
 
 // Entry of /sw.js, bundled after the `web` build (bundle-worker.mjs), which replaces this
@@ -20,16 +22,21 @@ scope.addEventListener('install', (event) => {
 });
 
 scope.addEventListener('activate', (event) => {
-  // The previous site's worker turned navigation preload on for this same registration. This
-  // worker does not read the preloaded response: left on, every navigation would go out twice.
-  const preload = scope.registration.navigationPreload?.disable() ?? Promise.resolve();
+  // A navigation then leaves for the network while the worker starts, instead of after it.
+  // Every navigation the worker sees is answered with that preload (networkResponse), the
+  // ones it otherwise leaves to the browser included: none goes out twice.
+  const preload = scope.registration.navigationPreload?.enable() ?? Promise.resolve();
   const cleaned = Promise.all([preload, deleteStaleCaches(keptCaches)]);
   event.waitUntil(cleaned.then(() => scope.clients.claim()));
 });
 
 scope.addEventListener('fetch', (event) => {
-  const route = routeRequest(requestFactsOf(event.request), scope.location.origin);
+  const facts = requestFactsOf(event.request);
+  const route = routeRequest(facts, scope.location.origin);
   if (route !== 'bypass') {
     event.respondWith(answerRoute(route, event, offlineCache));
+  } else if (isPreloadedNavigation(facts)) {
+    // Never stored: the paths the worker bypasses (account, admin, shares) stay uncached.
+    event.respondWith(networkResponse(event));
   }
 });

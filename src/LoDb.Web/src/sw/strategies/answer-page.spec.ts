@@ -113,6 +113,34 @@ describe('answerPage', () => {
     expect(await (await response).text()).toBe('slow');
   });
 
+  it('answers a navigation with the page preloaded while the worker started, once', async () => {
+    const preloaded = Promise.resolve(sameOriginResponse('preloaded'));
+    event = new FakeFetchEvent(new Request(PAGE_URL), preloaded);
+
+    const response = await answer();
+    await event.settled();
+
+    expect(await response.text()).toBe('preloaded');
+    expect(fetchPage).not.toHaveBeenCalled();
+    expect(await (await pages.match(PAGE_URL))?.text()).toBe('preloaded');
+  });
+
+  it('fetches the page itself when the browser preloaded nothing', async () => {
+    event = new FakeFetchEvent(new Request(PAGE_URL), Promise.resolve(undefined));
+    fetchPage.mockResolvedValue(sameOriginResponse('fetched'));
+
+    expect(await (await answer()).text()).toBe('fetched');
+    expect(fetchPage).toHaveBeenCalledOnce();
+  });
+
+  it('answers the last copy when the preload fails', async () => {
+    await pages.put(PAGE_URL, new Response('copy'));
+    event = new FakeFetchEvent(new Request(PAGE_URL), Promise.reject(new TypeError('offline')));
+
+    expect(await (await answer()).text()).toBe('copy');
+    expect(fetchPage).not.toHaveBeenCalled();
+  });
+
   it('works without storage', async () => {
     fetchPage.mockResolvedValue(sameOriginResponse('fresh'));
 

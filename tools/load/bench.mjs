@@ -3,8 +3,9 @@
 //
 //   k6 run -e SCENARIO=S1 -e DURATION=3m -e PROBE_BLOCK=1 -e OUT=/out/S1.k6.json bench.mjs
 //
-// BASE_URL is nginx on the stack's network; every request names the site's host and the
-// client it stands for (X-Forwarded-For, believed from the bench's network only).
+// BASE_URL is nginx on the stack's network, on its unprivileged port; every request names the
+// site's host and the client it stands for (X-Forwarded-For, believed from the bench's network
+// only). A bench stack has no edge secret: nginx asks for no X-LoDb-Edge.
 import http from 'k6/http';
 import exec from 'k6/execution';
 import { Counter, Rate, Trend } from 'k6/metrics';
@@ -15,7 +16,7 @@ import { cacheClassOf, warmUpEndOf } from './lib/responses.mjs';
 import { probePageAt, targetAt } from './lib/targets.mjs';
 
 const SCENARIO = __ENV.SCENARIO;
-const BASE_URL = __ENV.BASE_URL || 'http://nginx';
+const BASE_URL = __ENV.BASE_URL || 'http://nginx:8080';
 const SITE_HOST = __ENV.SITE_HOST || 'localhost';
 const PROBE_BLOCK = Number(__ENV.PROBE_BLOCK || 0);
 const OUT = __ENV.OUT || '';

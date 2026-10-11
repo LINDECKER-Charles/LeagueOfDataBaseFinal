@@ -140,10 +140,13 @@ public sealed class GoogleWebSignInTests(PostgresContainerFixture postgres)
         Assert.Null((await App.FindAsync(AccountSeed.Name)).GoogleId);
         var refusal = Assert.Single(await App.AuditAsync());
         Assert.Equal(
-            (AuditAction.UserLoginFailed, AccountSeed.Address, "google-email-unverified"),
+            (AuditAction.UserLoginFailed,
+                AccountsApp.IdentifierDigest(AccountSeed.Address),
+                "google-email-unverified"),
             (refusal.Action,
-                AccountsApp.Meta(refusal, "identifier"),
+                AccountsApp.Meta(refusal, "identifier_digest"),
                 AccountsApp.Meta(refusal, "reason")));
+        Assert.Null(AccountsApp.Meta(refusal, "identifier"));
     }
 
     [Fact]

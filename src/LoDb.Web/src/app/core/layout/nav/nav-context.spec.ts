@@ -50,7 +50,7 @@ async function navContextOn({ platform, request = false, rendered }: Setup) {
   TestBed.configureTestingModule({
     providers: [
       { provide: PLATFORM_ID, useValue: platform },
-      request ? { provide: REQUEST_CONTEXT, useValue: { apiOrigin: '', selfOrigin: null } } : [],
+      request ? { provide: REQUEST_CONTEXT, useValue: { apiOrigin: '' } } : [],
       provideRouter([{ path: '**', component: Page }]),
       { provide: ApiMeta, useValue: { meta: () => (requests.count++, meta) } },
     ],

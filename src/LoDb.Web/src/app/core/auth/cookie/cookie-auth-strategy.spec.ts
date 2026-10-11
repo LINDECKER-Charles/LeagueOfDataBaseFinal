@@ -96,6 +96,21 @@ describe('CookieAuthStrategy', () => {
     await expect(done).resolves.toBeUndefined();
   });
 
+  it('signs out everywhere with the XSRF token too', async () => {
+    const { strategy, http } = setUp();
+    document.cookie = `${XSRF_COOKIE}=everywhere-token; path=/`;
+
+    const done = firstValueFrom(strategy.signOutEverywhere(), { defaultValue: undefined });
+    const request = http.expectOne({
+      method: 'POST',
+      url: `${ORIGIN}/api/account/logout-everywhere`,
+    });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('everywhere-token');
+    await expect(done).resolves.toBeUndefined();
+  });
+
   it('lets the API requests leave as they are: the browser sends the cookie itself', () => {
     const { http } = setUp();
 

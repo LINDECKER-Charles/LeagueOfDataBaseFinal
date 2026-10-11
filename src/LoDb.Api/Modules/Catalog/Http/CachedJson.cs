@@ -1,6 +1,4 @@
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Text.Json;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
@@ -13,12 +11,16 @@ namespace LoDb.Api.Modules.Catalog.Http;
 /// the client already holds it.
 /// </summary>
 /// <remarks>
-/// The tag is the SHA-256 of the body as the API serializes it, so two instances tag the same
-/// content alike and a list that gained an image gets a new tag. The body is serialized once,
-/// before the headers are written, to be hashed.
+/// The tag is that of the <see cref="JsonBody"/>. The body is serialized once, before the
+/// headers are written, to be hashed; an endpoint that memoises its body passes it instead.
 /// </remarks>
 /// <typeparam name="TValue">The documented response schema.</typeparam>
-internal sealed class CachedJson<TValue>(TValue value, CacheHeaders cache)
+/// <param name="value">The answer.</param>
+/// <param name="cache">How long it may be reused.</param>
+/// <param name="body">
+/// <paramref name="value"/> already serialized with the API's options; null to serialize it.
+/// </param>
+internal sealed class CachedJson<TValue>(TValue value, CacheHeaders cache, JsonBody? body = null)
     : IResult, IEndpointMetadataProvider
 {
     private const string JsonContentType = "application/json; charset=utf-8";
@@ -26,6 +28,9 @@ internal sealed class CachedJson<TValue>(TValue value, CacheHeaders cache)
     public TValue Value => value;
 
     public CacheHeaders Cache => cache;
+
+    /// <summary>The body the endpoint serialized ahead, if any.</summary>
+    public JsonBody? Body => body;
 
     public static void PopulateMetadata(MethodInfo method, EndpointBuilder builder)
     {
@@ -40,10 +45,9 @@ internal sealed class CachedJson<TValue>(TValue value, CacheHeaders cache)
     public async Task ExecuteAsync(HttpContext httpContext)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
-        var options = httpContext.RequestServices
-            .GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions;
-        var body = JsonSerializer.SerializeToUtf8Bytes(value, options);
-        var tag = new EntityTagHeaderValue($"\"{Convert.ToBase64String(SHA256.HashData(body))}\"");
+        var written = body ?? JsonBody.Of(value, httpContext.RequestServices
+            .GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions);
+        var tag = written.Tag;
         var response = httpContext.Response;
         response.Headers.ETag = tag.ToString();
         response.Headers.CacheControl = cache.CacheControl;
@@ -60,8 +64,8 @@ internal sealed class CachedJson<TValue>(TValue value, CacheHeaders cache)
 
         response.StatusCode = StatusCodes.Status200OK;
         response.ContentType = JsonContentType;
-        response.ContentLength = body.Length;
-        await response.Body.WriteAsync(body, httpContext.RequestAborted);
+        response.ContentLength = written.Bytes.Length;
+        await response.Body.WriteAsync(written.Bytes, httpContext.RequestAborted);
     }
 
     // If-None-Match compares weakly (RFC 9110 § 13.1.2): a proxy may have weakened the tag.

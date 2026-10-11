@@ -1,11 +1,15 @@
 import { Dialog } from '@angular/cdk/dialog';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { ChampionSkin } from '../../../../../core/api/generated/models/champion-skin';
+import type { ChampionSkins } from '../../../../../core/api/generated/models/champion-skins';
 import { alternateSkins } from './alternate-skins';
 import { SkinGallery } from './skin-gallery';
+import { SkinShelf } from './skin-shelf';
 import { SkinViewer } from './skin-viewer';
 import { viewerIndexAfter } from './viewer/viewer-index-after';
 
@@ -69,6 +73,20 @@ describe('viewerIndexAfter', () => {
   });
 });
 
+function translations() {
+  return provideTransloco({
+    config: {
+      availableLangs: ['en'],
+      defaultLang: 'en',
+      missingHandler: { logMissingKey: false },
+      prodMode: true,
+    },
+    loader: class {
+      getTranslation = (path: string) => of(path.startsWith('champions/') ? CHAMPIONS : {});
+    },
+  });
+}
+
 @Component({
   imports: [SkinGallery],
   template: '<lodb-skin-gallery [skins]="skins()" championName="Annie" />',
@@ -79,21 +97,7 @@ class Host {
 
 describe('lodb-skin-gallery', () => {
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [
-        provideTransloco({
-          config: {
-            availableLangs: ['en'],
-            defaultLang: 'en',
-            missingHandler: { logMissingKey: false },
-            prodMode: true,
-          },
-          loader: class {
-            getTranslation = (path: string) => of(path.startsWith('champions/') ? CHAMPIONS : {});
-          },
-        }),
-      ],
-    });
+    TestBed.configureTestingModule({ providers: [translations()] });
   });
 
   afterEach(() => {
@@ -224,5 +228,91 @@ describe('lodb-skin-gallery', () => {
 
     expect(opened.querySelector('lodb-viewer-arrows')).toBeNull();
     expect(counter()).toBeUndefined();
+  });
+});
+
+describe('lodb-skin-shelf', () => {
+  const SKINS_URL = '/api/catalog/16.19.1/en_US/champions/Annie/skins';
+  // The delay the shelf waits before its one more try.
+  const RETRY_DELAY_MS = 5_000;
+  const ANSWER: ChampionSkins = {
+    version: '16.19.1',
+    language: 'en_US',
+    champion: 'Annie',
+    skins: SKINS,
+  };
+  const COLD = { status: 503, statusText: 'Service Unavailable' };
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), translations()],
+    });
+  });
+
+  afterEach(() => {
+    TestBed.inject(HttpTestingController).verify();
+    vi.useRealTimers();
+  });
+
+  async function settle(fixture: ComponentFixture<SkinShelf>, ms = 0): Promise<void> {
+    await vi.advanceTimersByTimeAsync(ms);
+    fixture.detectChanges();
+  }
+
+  async function shelf(): Promise<ComponentFixture<SkinShelf>> {
+    const fixture = TestBed.createComponent(SkinShelf);
+    const inputs = { version: '16.19.1', language: 'en_US', champion: 'Annie' };
+    for (const [name, value] of Object.entries({ ...inputs, championName: 'Annie' })) {
+      fixture.componentRef.setInput(name, value);
+    }
+    await settle(fixture);
+    return fixture;
+  }
+
+  function shown(fixture: ComponentFixture<SkinShelf>): { tiles: number; placeholders: number } {
+    const element = fixture.nativeElement as HTMLElement;
+    return {
+      tiles: element.querySelectorAll('button.tile').length,
+      placeholders: element.querySelectorAll('lodb-skeleton').length,
+    };
+  }
+
+  it('holds placeholder tiles while the skins are read, then shows the gallery', async () => {
+    const fixture = await shelf();
+    expect(shown(fixture)).toEqual({ tiles: 0, placeholders: 3 });
+
+    TestBed.inject(HttpTestingController).expectOne(SKINS_URL).flush(ANSWER);
+    await settle(fixture);
+
+    expect(shown(fixture)).toEqual({ tiles: 3, placeholders: 0 });
+  });
+
+  it('tries once more after a failure, once the delay a cold catalog asks for passed', async () => {
+    const fixture = await shelf();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne(SKINS_URL).flush(null, COLD);
+
+    await settle(fixture, RETRY_DELAY_MS - 1);
+    http.expectNone(SKINS_URL);
+    expect(shown(fixture)).toEqual({ tiles: 0, placeholders: 3 });
+    await settle(fixture, 1);
+    http.expectOne(SKINS_URL).flush(ANSWER);
+    await settle(fixture);
+
+    expect(shown(fixture)).toEqual({ tiles: 3, placeholders: 0 });
+  });
+
+  it('leaves the section empty after a second failure, and asks no more', async () => {
+    const fixture = await shelf();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne(SKINS_URL).flush(null, COLD);
+    await settle(fixture, RETRY_DELAY_MS);
+    http.expectOne(SKINS_URL).flush(null, COLD);
+
+    await settle(fixture, RETRY_DELAY_MS * 10);
+
+    http.expectNone(SKINS_URL);
+    expect(shown(fixture)).toEqual({ tiles: 0, placeholders: 0 });
   });
 });

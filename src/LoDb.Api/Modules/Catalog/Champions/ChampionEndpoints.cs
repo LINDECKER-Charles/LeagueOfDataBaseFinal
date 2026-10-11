@@ -1,15 +1,19 @@
 using LoDb.Api.Modules.Catalog.Champions.Details;
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.ClientPolicy.Versions;
 using LoDb.Domain.Catalog;
+using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Paths;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Images;
+using LoDb.Ingestion.Images.Art;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Net.Http.Headers;
 
 namespace LoDb.Api.Modules.Catalog.Champions;
 
-/// <summary>The champion list and the champion page.</summary>
+/// <summary>The champion list, the champion page and its skins.</summary>
 internal static class ChampionEndpoints
 {
     private const string Segment = "champion";
@@ -22,6 +26,9 @@ internal static class ChampionEndpoints
         catalog.MapGet("/champions/{id}", GetAsync)
             .WithName("getChampion")
             .WithSummary("A champion's page, its images resolved.");
+        catalog.MapGet("/champions/{id}/skins", SkinsAsync)
+            .WithName("getChampionSkins")
+            .WithSummary("A champion's skins and their chromas, every art hotlinked.");
     }
 
     private static async Task<Results<CachedJson<ChampionList>, CatalogProblem>> ListAsync(
@@ -40,9 +47,13 @@ internal static class ChampionEndpoints
 
         var context = read.Context;
         var shown = page.Slice(ChampionList.EntriesOf(context.Catalog));
-        var images = await context.ResolveAsync(
+        var portraits = await context.ResolveAsync(
             shown.Select(EntityImages.Portrait),
             ColdDemand.Queued,
+            request.CancellationToken);
+        var images = await context.WithStoredArtAsync(
+            portraits,
+            shown.SelectMany(ArtVariants.LoadingOf),
             request.CancellationToken);
         return context.Answer(ChampionList.Of(context.Catalog, page, images), images);
     }
@@ -57,16 +68,49 @@ internal static class ChampionEndpoints
         }
 
         var context = read.Context;
-        var id = CanonicalPath.IdOf(ResourceType.Champions, request.Id);
-        if (id is null || context.Catalog.Champions.Find(id) is not { } champion)
+        if (Find(context, request.Id) is not { } champion)
         {
             return CatalogProblem.UnknownEntity(Segment, request.Id);
         }
 
-        var images = await context.ResolveAsync(
+        var icons = await context.ResolveAsync(
             VersionImages.Of(champion),
             ColdDemand.Synchronous,
             request.CancellationToken);
-        return context.Answer(ChampionDetails.Of(champion, context.Catalog, images), images);
+        var images = await context.WithStoredArtAsync(
+            icons,
+            ArtVariants.Of(champion),
+            request.CancellationToken);
+        var details = ChampionDetails.Of(champion, context.Catalog, images);
+        // An app gets more than the web: no cache may hand one the other's page.
+        request.Context.Response.Headers.Append(HeaderNames.Vary, ClientHeader.Name);
+        return context.Answer(
+            IsApp(request.Context) ? details.WithSkins(champion, context.Catalog) : details,
+            images);
     }
+
+    // The art is hotlinked (UP 8): nothing to resolve.
+    private static async Task<Results<CachedJson<ChampionSkins>, CatalogProblem>> SkinsAsync(
+        [AsParameters] DetailRequest request)
+    {
+        var read = await request.Gateway.ReadAsync(request.Scope, request.CancellationToken);
+        if (!read.IsOpen)
+        {
+            return read.Problem;
+        }
+
+        var context = read.Context;
+        return Find(context, request.Id) is { } champion
+            ? context.Answer(ChampionSkins.Of(champion, context.Catalog), ImageSet.Empty)
+            : CatalogProblem.UnknownEntity(Segment, request.Id);
+    }
+
+    // An installed app names itself on every call (ADR 0008); the web and the renderer never do.
+    private static bool IsApp(HttpContext context) =>
+        ClientHeader.Read(context.Request) is not null;
+
+    private static ChampionDetail? Find(CatalogContext context, string segment) =>
+        CanonicalPath.IdOf(ResourceType.Champions, segment) is { } id
+            ? context.Catalog.Champions.Find(id)
+            : null;
 }

@@ -1,10 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  type ElementRef,
+  ElementRef,
   booleanAttribute,
   inject,
   input,
+  linkedSignal,
   viewChild,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -14,6 +15,7 @@ import { CatalogueFilter } from '../state/catalogue-filter';
 /**
  * The live search of a list, drawn in the rail (with its `/` hint) and in the mobile bar.
  * Every keystroke filters; the list reaches the field through `focus()` for the shortcut.
+ * Focusing it reads the whole list, so it is there by the first keystroke.
  * The placeholder is the short "Search…" of every list, which fits the narrow rail; the
  * accessible name says what the list holds.
  */
@@ -32,7 +34,8 @@ import { CatalogueFilter } from '../state/catalogue-filter';
       enterkeyhint="search"
       [placeholder]="'common.search' | transloco"
       [attr.aria-label]="label()"
-      [value]="filter.state().query"
+      [value]="text()"
+      (focus)="filter.anticipate()"
       (input)="filter.setQuery(field.value)"
       #field
     />
@@ -52,7 +55,22 @@ export class FilterSearch {
 
   protected readonly filter = inject(CatalogueFilter);
   protected readonly shortcut = SEARCH_SHORTCUT_KEY;
+  /** What the field shows: the state's query, once the state has heard what was typed. */
+  protected readonly text = linkedSignal(() => this.filter.state().query);
   private readonly field = viewChild.required<ElementRef<HTMLInputElement>>('field');
+
+  constructor() {
+    // Hydrated after the reader started typing (the rail's console waits for them), the
+    // field already holds their text: drawing the state's query would erase it before the
+    // replayed keystrokes hand it over. Their text is what departs from the value the server
+    // wrote (`defaultValue`), which itself may be out of date: a query cleared since, from
+    // the results. A field the browser builds itself is not there yet (the server's DOM then
+    // answers undefined, not null).
+    const field = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.querySelector('input');
+    if (field && field.value !== field.defaultValue) {
+      this.text.set(field.value);
+    }
+  }
 
   /** Whether the field is laid out: the rail and the bar never show at once. */
   isShown(): boolean {

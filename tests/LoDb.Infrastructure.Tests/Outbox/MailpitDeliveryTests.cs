@@ -109,7 +109,7 @@ public sealed class MailpitDeliveryTests(
 
     private OutboxHarness NewHarness(IReadOnlyDictionary<string, string?> settings)
     {
-        var harness = new OutboxHarness(Database.ConnectionString, settings);
+        var harness = new OutboxHarness(Database.AppConnectionString, settings);
         _harnesses.Add(harness);
         return harness;
     }

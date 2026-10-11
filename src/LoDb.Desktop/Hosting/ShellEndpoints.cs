@@ -56,14 +56,14 @@ internal static class ShellEndpoints
 
     private static IResult ServeIndex(ShellIndex index, HttpResponse response)
     {
-        var html = index.Render();
-        if (html is null)
+        if (index.Render() is not { } page)
         {
             return TypedResults.NotFound();
         }
 
         // The marker changes with each launch (bridge, port): the index is never cached.
         response.Headers[HeaderNames.CacheControl] = NoStore;
-        return TypedResults.Content(html, HtmlContentType);
+        response.Headers[HeaderNames.ContentSecurityPolicy] = page.Policy;
+        return TypedResults.Content(page.Html, HtmlContentType);
     }
 }

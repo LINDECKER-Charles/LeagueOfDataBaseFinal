@@ -1,6 +1,6 @@
 import express, { type RequestHandler } from 'express';
 import { relative } from 'node:path';
-import { documentPolicy } from '../security/document-policy';
+import { documentPolicyHeaders } from '../security/csp/document-policy-headers';
 import { staticCacheControl } from '../static-cache-control';
 
 /**
@@ -17,7 +17,9 @@ export function staticFolder(root: string): RequestHandler {
       response.setHeader('Cache-Control', staticCacheControl(relative(root, filePath)));
       // The offline page: a document of its own, with no script at all.
       if (filePath.endsWith('.html')) {
-        response.setHeader('Content-Security-Policy', documentPolicy([]));
+        for (const [name, value] of Object.entries(documentPolicyHeaders([]))) {
+          response.setHeader(name, value);
+        }
       }
     },
   });

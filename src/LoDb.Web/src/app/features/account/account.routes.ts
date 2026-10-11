@@ -1,6 +1,7 @@
 import type { Routes } from '@angular/router';
 import { authenticatedGuard } from '../../core/auth/guards/authenticated-guard';
 import type { AccountView } from './account-view';
+import { resetPasswordMatcher } from './auth/recovery/reset-password-matcher';
 import { anonymousGuard } from './shared/guards/anonymous-guard';
 import { browserOnly } from './shared/guards/browser-only';
 
@@ -16,15 +17,15 @@ function view(view: AccountView, heading: string) {
 /**
  * The account pages, `/{locale}/account/...`: rendered in the browser only, `noindex` and
  * never cached (app.routes.server.ts). The builds (`account/builds`) and the API keys
- * (`account/api`) belong to their own features. The links of the e-mails land here:
- * `verify-email?user=&token=` and `reset-password/{token}?user=`.
+ * (`account/api`) belong to their own features. The links of the e-mails land here, their
+ * token in the fragment: `verify-email?user=#token=` and `reset-password?user=#token=`.
  */
 export const ACCOUNT_ROUTES: Routes = [
   { path: 'login', canActivate: forVisitors, ...view('login', 'auth.login.title') },
   { path: 'register', canActivate: forVisitors, ...view('register', 'auth.register.title') },
   { path: 'verify-email', ...view('verify-email', 'nav.account') },
   { path: 'forgot-password', ...view('forgot-password', 'auth.reset.request_title') },
-  { path: 'reset-password/:token', ...view('reset-password', 'auth.reset.reset_title') },
+  { matcher: resetPasswordMatcher, ...view('reset-password', 'auth.reset.reset_title') },
   { path: 'profile', canActivate: forAccounts, ...view('profile', 'nav.profile') },
   {
     path: 'profile/preview',

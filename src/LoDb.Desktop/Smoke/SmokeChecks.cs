@@ -1,6 +1,7 @@
 using LoDb.Desktop.Hosting;
 using LoDb.Desktop.Lifecycle;
 using LoDb.Desktop.Proxy;
+using LoDb.Desktop.Updates.Engine.Signing;
 
 namespace LoDb.Desktop.Smoke;
 
@@ -50,6 +51,14 @@ internal sealed class SmokeChecks(LoopbackHost host, HttpClient loopback)
         var current = host.Services.GetRequiredService<IDesktopUpdates>().Current;
         var stage = current.Stage.ToString().ToLowerInvariant();
         return Check("updates", true, stage, current.Version ?? string.Empty);
+    }
+
+    // The update gate checks that a release trusts the keys its feeds are signed with: a
+    // build with other keys would refuse every later update.
+    public SmokeCheck CheckFeedKey()
+    {
+        var keys = host.Services.GetRequiredService<FeedSignature>().PublicKeys;
+        return Check("feed-key", true, "ed25519", string.Join(' ', keys));
     }
 
     public async Task<SmokeCheck> ProbeApiAsync(

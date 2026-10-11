@@ -166,7 +166,7 @@ public sealed class LegacyAccountSignInTests(PostgresContainerFixture postgres)
             + "::timestamptz";
 
     private ServiceProvider Services() =>
-        AccountsSecurityRegistrationTests.Build(Database.ConnectionString);
+        AccountsSecurityRegistrationTests.Build(Database.AppConnectionString);
 
     // A row as the legacy stack inserts it: its nullable columns left null, none of lot 4.
     private Task InsertLegacyAccountAsync(string hash) =>

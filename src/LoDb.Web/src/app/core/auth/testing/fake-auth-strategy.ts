@@ -9,8 +9,8 @@ import { accountUser } from './account-user';
 
 /**
  * An `AuthStrategy` whose calls the spec answers: each `readSession()` opens a subject in
- * `reads`, completed by `answerRead`, unless `sessionAnswer` is set; the sign-in and sign-out
- * answer what the spec set.
+ * `reads`, completed by `answerRead`, unless `sessionAnswer` is set; the sign-in and the
+ * sign-outs answer what the spec set.
  * `authorize` tags the request it forwards, so a spec sees it went through.
  */
 export class FakeAuthStrategy implements AuthStrategy {
@@ -19,6 +19,7 @@ export class FakeAuthStrategy implements AuthStrategy {
   readonly googleSignIns: GoogleSignIn[] = [];
   signInAnswer: Observable<AccountSession> = of({ user: accountUser() });
   signOutAnswer: Observable<void> = of(undefined);
+  signOutEverywhereAnswer: Observable<void> = of(undefined);
   sessionAnswer: Observable<AccountSession> | null = null;
 
   readSession(): Observable<AccountSession> {
@@ -36,6 +37,10 @@ export class FakeAuthStrategy implements AuthStrategy {
 
   signOut(): Observable<void> {
     return this.signOutAnswer;
+  }
+
+  signOutEverywhere(): Observable<void> {
+    return this.signOutEverywhereAnswer;
   }
 
   async startGoogleSignIn(request: GoogleSignIn): Promise<void> {

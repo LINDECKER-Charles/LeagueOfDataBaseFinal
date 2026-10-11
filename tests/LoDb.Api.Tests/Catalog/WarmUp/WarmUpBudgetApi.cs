@@ -57,7 +57,7 @@ internal sealed class WarmUpBudgetApi : IAsyncDisposable
         await database.MigrateAsync(Token);
         var factory = new ApiFactory
         {
-            PostgresConnectionString = database.ConnectionString,
+            PostgresConnectionString = database.AppConnectionString,
             Settings = new Dictionary<string, string?>
             {
                 // The production backoff starts at one second: only the attempts matter.

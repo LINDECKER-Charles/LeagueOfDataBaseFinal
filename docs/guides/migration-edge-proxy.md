@@ -83,6 +83,7 @@ curl -sSI https://<domaine>/healthz
 |---|---|---|
 | Le job s'arrête sur « Docker network 'edge' is missing » | `infra-vps` pas (encore) déployé sur cet hôte | déployer `infra-vps`, relancer le job |
 | Site down après push mais edge `Up` | app pas sur `edge`, ou label absent | `docker inspect <nginx> --format '{{json .Config.Labels}}'` ; vérifier `CADDY_DOMAINS` |
+| `403` de nginx sur tout le site LoDb (hors `/healthz`) | l'edge n'a pas encore relu les labels de nginx (quelques secondes après un `up`), ou `LODB_EDGE_SECRET` a changé d'un seul côté | attendre ; sinon redéployer : le job réécrit les labels et nginx depuis `.deploy/secrets/LODB_EDGE_SECRET` ([`configuration.md`](configuration.md) § 6.7) |
 | « Edge Caddy container not found » pendant le self-heal TLS | le Caddy de l'edge ne tourne pas, ou sous un autre projet Compose que `edge` | `docker ps --filter label=com.docker.compose.project=edge` ; corriger côté `infra-vps` |
 | Collision staging/prod | `COMPOSE_PROJECT_NAME` manquant dans un `ENV_*` | l'ajouter au secret, redéployer |
 | `stat …/compose.deploy.yaml: no such file` | `COMPOSE_FILE` polluée dans le shell | `unset COMPOSE_FILE` (le job l'exporte proprement lui-même) |

@@ -4,7 +4,10 @@ import type { FetchEventLike } from '../scope/fetch-event-like';
 export class FakeFetchEvent implements FetchEventLike {
   readonly extensions: Promise<unknown>[] = [];
 
-  constructor(readonly request: Request) {}
+  constructor(
+    readonly request: Request,
+    readonly preloadResponse?: Promise<Response | undefined>,
+  ) {}
 
   waitUntil(work: Promise<unknown>): void {
     this.extensions.push(work);

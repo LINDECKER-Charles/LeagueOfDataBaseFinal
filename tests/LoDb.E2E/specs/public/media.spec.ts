@@ -6,6 +6,8 @@ import { expect, test } from '../../support/test';
 // out. The pager's way out is specs/champions/champions.spec.ts's.
 const CHAMPION = '/en/champions/Annie';
 const CLIP = '#abilities video';
+// The clip is created once half of its stage is on screen.
+const STAGE = '#abilities lodb-ability-media';
 const LOG = 'lodbClips';
 const KEEP = 'lodbKeptClip';
 const DESKTOP = { width: 1280, height: 800 };
@@ -49,6 +51,7 @@ async function clipLog(page: Page): Promise<ClipEvent[]> {
 
 // Waits for the clip to play; skips when its media host cannot be reached from here.
 async function waitForPlayback(page: Page): Promise<void> {
+  await page.locator(STAGE).scrollIntoViewIfNeeded();
   const clip = page.locator(CLIP);
   await clip.scrollIntoViewIfNeeded();
   const playing = () => clip.evaluate((video: HTMLVideoElement) => !video.paused);
@@ -93,6 +96,9 @@ test.describe('clips of the abilities', { tag: '@readonly' }, () => {
     for (let index = 0; index < count; index += 1) {
       await tabs.nth(index).click();
       await expect(tabs.nth(index)).toHaveAttribute('aria-selected', 'true');
+      // A tab at the bottom of the screen leaves the stage below it: the click scrolls the
+      // tab alone into view, and the clip waits for half of its stage.
+      await page.locator(STAGE).scrollIntoViewIfNeeded();
       await expect(page.locator(CLIP)).toHaveCount(1);
       const muted = await page.locator(CLIP).evaluate((video: HTMLVideoElement) => video.muted);
       expect(muted).toBe(true);

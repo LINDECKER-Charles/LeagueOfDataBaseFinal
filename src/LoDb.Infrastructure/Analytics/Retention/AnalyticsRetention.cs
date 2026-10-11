@@ -1,4 +1,5 @@
 using LoDb.Infrastructure.Persistence.Analytics.Partitions;
+using LoDb.Infrastructure.Persistence.Roles;
 using Microsoft.Extensions.Options;
 using Npgsql;
 
@@ -13,7 +14,9 @@ namespace LoDb.Infrastructure.Analytics.Retention;
 /// written before, as they come of age. It reads the partitions next to the cutoff alone,
 /// from <see cref="AnalyticsOptions.ClientDataEraseDays"/> days before the cutoff's day, so
 /// that two runs overlap even when a restart or a failure puts days between them: an
-/// unbounded one would scan every older partition each day, to rewrite none of them.
+/// unbounded one would scan every older partition each day, to rewrite none of them. That
+/// scan still grows with the traffic of those days: it gets
+/// <see cref="AnalyticsOptions.JobStatementTimeout"/>, not the API's statement timeout.
 /// </remarks>
 internal sealed class AnalyticsRetention(
     IAnalyticsPartitions partitions,
@@ -55,9 +58,18 @@ internal sealed class AnalyticsRetention(
         var cutoff = now - settings.ClientDataRetention;
         var firstDay = DateOnly.FromDateTime(cutoff.UtcDateTime)
             .AddDays(-settings.ClientDataEraseDays);
-        await using var erase = dataSource.CreateCommand(EraseSql);
+        await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using var erase = new NpgsqlCommand(EraseSql, connection);
+        await StatementTimeouts.RaiseAsync(
+            transaction,
+            erase,
+            settings.JobStatementTimeout,
+            cancellationToken);
         erase.Parameters.AddWithValue("from", AnalyticsPartitionNames.StartOf(firstDay));
         erase.Parameters.AddWithValue("cutoff", cutoff);
-        return await erase.ExecuteNonQueryAsync(cancellationToken);
+        var erased = await erase.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return erased;
     }
 }

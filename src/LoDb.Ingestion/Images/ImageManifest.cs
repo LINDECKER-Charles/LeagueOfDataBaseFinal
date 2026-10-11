@@ -28,7 +28,7 @@ internal sealed class ImageManifest(IDbContextFactory<LoDbDbContext> contexts)
         }
 
         var types = images.Select(static image => image.ManifestType).Distinct().ToArray();
-        var keys = images.Select(static image => image.File).Distinct().ToArray();
+        var keys = images.Select(static image => image.ManifestKey).Distinct().ToArray();
         var db = await contexts.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using (db.ConfigureAwait(false))
         {
@@ -52,7 +52,8 @@ internal sealed class ImageManifest(IDbContextFactory<LoDbDbContext> contexts)
         var recorded = await FindAsync(version, images, cancellationToken).ConfigureAwait(false);
         return
         [
-            .. images.Where(image => !recorded.ContainsKey((image.ManifestType, image.File))),
+            .. images.Where(image =>
+                !recorded.ContainsKey((image.ManifestType, image.ManifestKey))),
         ];
     }
 }

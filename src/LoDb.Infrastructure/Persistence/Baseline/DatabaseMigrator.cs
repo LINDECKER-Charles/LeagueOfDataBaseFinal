@@ -1,9 +1,11 @@
 using LoDb.Infrastructure.Locks;
+using LoDb.Infrastructure.Persistence.Roles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace LoDb.Infrastructure.Persistence.Baseline;
 
@@ -22,9 +24,15 @@ namespace LoDb.Infrastructure.Persistence.Baseline;
 /// migration's transaction but lists the pending migrations once, so two runs with two
 /// migrations pending would both apply the second.
 /// </para>
+/// <para>
+/// Once migrated, the database gets its roles and privileges again
+/// (<see cref="DatabaseRoles"/>), under the same lock: the objects a migration created belong
+/// to their owner, and the API can use them as soon as it starts.
+/// </para>
 /// </remarks>
 public sealed partial class DatabaseMigrator(
     LoDbDbContext db,
+    DatabaseRoles roles,
     TimeProvider timeProvider,
     ILogger<DatabaseMigrator> logger)
 {
@@ -104,6 +112,8 @@ public sealed partial class DatabaseMigrator(
 
         var pending = (await db.Database.GetPendingMigrationsAsync(cancellationToken)).ToList();
         await db.Database.MigrateAsync(cancellationToken);
+        var connection = (NpgsqlConnection)db.Database.GetDbConnection();
+        await roles.ApplyAsync(connection, cancellationToken);
         var current = db.Database.GetMigrations().Last();
         var durationMs = (long)timeProvider.GetElapsedTime(started).TotalMilliseconds;
         LogMigrated(
