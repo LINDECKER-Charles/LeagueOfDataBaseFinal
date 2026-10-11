@@ -16,7 +16,8 @@ LABEL org.opencontainers.image.title="lodb-nginx" \
 
 # nginx runs as the image's unprivileged `nginx` user, master process included, and listens
 # on 8080: it needs no capability, and the stack gives it a read-only root filesystem
-# (compose.yaml). There, /tmp is a tmpfs and the only place it writes besides its caches.
+# (compose.yaml). There, it writes to its volumes (caches, temporary files) and to /tmp, a
+# small tmpfs.
 #
 # The image's entrypoint renders /etc/nginx/templates/<folder>/<name>.template into
 # /tmp/<folder>/<name> at start, where /etc/nginx/<folder> links: the include paths stay
@@ -69,12 +70,14 @@ ENV APP_REVISION=${APP_REVISION} \
     LODB_ARCHIVE_CACHE_INACTIVE=7d \
     LODB_ARCHIVE_CACHE_MIN_USES=2
 
-# /var/cache/nginx/{pages,archive,assets,seo,legacy} hold the caches of sites/site.conf;
-# created here so that the volumes mounted on them (compose.yaml) start owned by `nginx`.
+# /var/cache/nginx/{pages,archive,assets,seo,legacy} hold the caches of sites/site.conf, and
+# temp/ the temporary files (nginx.conf); created here so that the volumes mounted on them
+# (compose.yaml) start owned by `nginx`. temp/ stays empty: nginx makes its folders there at
+# start, and refuses to start when no volume makes it writable.
 RUN rm -f /etc/nginx/conf.d/default.conf \
  && cd /var/cache/nginx \
- && mkdir -p pages archive assets seo legacy \
- && chown nginx:nginx pages archive assets seo legacy \
+ && mkdir -p pages archive assets seo legacy temp \
+ && chown nginx:nginx pages archive assets seo legacy temp \
  && for folder in sites server.d snippets; do ln -s "/tmp/$folder" "/etc/nginx/$folder"; done
 COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY docker/nginx/sites/     /etc/nginx/templates/sites/

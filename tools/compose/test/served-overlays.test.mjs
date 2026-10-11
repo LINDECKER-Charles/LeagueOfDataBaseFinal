@@ -28,6 +28,7 @@ const SERVICES = [...RUNNING, 'migrate'];
 // What postgres's entrypoint needs, as root, before it becomes `postgres`.
 const POSTGRES_CAPABILITIES = ['CHOWN', 'DAC_READ_SEARCH', 'FOWNER', 'SETGID', 'SETUID'];
 const NGINX_UPSTREAM = '{{upstreams 8080}}';
+const NGINX_TEMP = '/var/cache/nginx/temp';
 // The staging share of the host: about three quarters of a core.
 const STAGING_CORES = 0.75;
 const HASH = '$2a$14$jM2G4xK0ZDa8W6PF31H9BOKCv81PEwu/7g692HVRaN72tRoi1jH52';
@@ -88,6 +89,10 @@ describe('served overlays through Compose',
       for (const name of SERVICES.filter((service) => service !== 'postgres')) {
         assert.equal(prod[name].cap_add, undefined, `${name} takes no capability back`);
       }
+      // What a slow client has not read waits on a volume, never in nginx's tmpfs
+      // (docker/nginx/nginx.conf): nginx would not start without it.
+      const temp = prod.nginx.volumes.find((mount) => mount.target === NGINX_TEMP);
+      assert.equal(temp?.type, 'volume');
     });
 
     test('keeps Postgres on an internal network that nginx and the SSR are not on', () => {

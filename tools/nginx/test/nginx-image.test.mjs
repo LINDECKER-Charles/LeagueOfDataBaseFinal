@@ -18,6 +18,25 @@ const NGINX_UID = '101';
 const DEPLOY_EDGE_CHECKS = [['localhost', '/cdn/blobs/edge-check'], [API_HOST, '/edge-check']];
 const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) '
   + 'Chrome/139.0.0.0 Safari/537.36';
+// A client inside the container asks for the stub's large answer, then stops reading for a
+// while (its output goes to a `sleep`). Meanwhile, the script prints the temporary files that
+// nginx's processes hold open: nginx unlinks them as it opens them, so only /proc names them.
+const SLOW_READER_SECONDS = 6;
+const SPILL_POLLS = 5;
+const SLOW_READ = [
+  `request='GET /api/large HTTP/1.1\\r\\nHost: localhost\\r\\nX-LoDb-Edge: ${EDGE_SECRET}`
+    + `\\r\\nConnection: close\\r\\n\\r\\n'`,
+  `( (printf "$request"; sleep ${SLOW_READER_SECONDS}) | nc 127.0.0.1 8080`
+    + ` | sleep ${SLOW_READER_SECONDS} ) >/dev/null 2>&1 &`,
+  `for poll in $(seq ${SPILL_POLLS}); do`,
+  '  sleep 1',
+  '  spilled="$(for fd in /proc/[0-9]*/fd/*; do readlink "$fd"; done 2>/dev/null \\',
+  "    | grep ' (deleted)$' | grep 'temp/' || true)\"",
+  '  [ -z "$spilled" ] || break',
+  'done',
+  'echo "$spilled"',
+  'wait',
+].join('\n');
 
 // Rates per minute: no token comes back while the checks run, so each burst is exact. Any peer
 // may state the client address, so that a check of the caches speaks for a client of its own
@@ -102,6 +121,17 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     const answer = await get('/api/edge-header');
     assert.equal(answer.body.toString(), '[]\n');
     assert.ok(!JSON.stringify(answer.headers).includes(EDGE_SECRET));
+  });
+
+  // In the bounded tmpfs of /tmp, a few slow readers of large answers would fill it, and every
+  // answer or request body that outgrows the buffers would then fail.
+  test('keeps what a slow client has not read on its volume, never in /tmp', async () => {
+    const { stdout } = await stack.exec('sh', '-c', SLOW_READ);
+    const spilled = stdout.split('\n').filter(Boolean);
+    assert.ok(spilled.length > 0, 'nginx holds part of the answer in a temporary file');
+    for (const file of spilled) {
+      assert.match(file, /^\/var\/cache\/nginx\/temp\/proxy\//);
+    }
   });
 
   // What the deploy job reads through the edge (_deploy.yml): nginx's own 404 on each site.

@@ -13,16 +13,21 @@ const NGINX_PORT = 8080;
 const HTTP_PORT = `${NGINX_PORT}/tcp`;
 const READY_TIMEOUT_MS = 30_000;
 const READY_POLL_MS = 250;
+// The body of the stub's /api/large: far more than nginx's buffers and the sockets' hold, so
+// that a client reading it slowly leaves the rest in nginx's temporary files.
+const LARGE_ANSWER_BYTES = 8 * 1024 * 1024;
 // The stub's configuration travels in an environment variable: no bind mount, whose host
 // path syntax differs between Docker hosts. The stub is a plain nginx, run as root.
-const STUB_COMMAND =
-  'printf "%s" "$STUB_CONF" > /tmp/stub.conf && exec nginx -c /tmp/stub.conf -g "daemon off;"';
+const STUB_COMMAND = `head -c ${LARGE_ANSWER_BYTES} /dev/zero > /tmp/large`
+  + ' && printf "%s" "$STUB_CONF" > /tmp/stub.conf'
+  + ' && exec nginx -c /tmp/stub.conf -g "daemon off;"';
 // The image runs as compose.yaml runs it: read-only, without any capability nor a way to gain
-// one, /tmp a tmpfs, each cache a volume that Docker seeds from the image (owned by `nginx`).
-// The storage, a read-only volume of the API's on the stack, is a tmpfs the checks write to.
+// one, /tmp a tmpfs, each cache and the temporary files a volume that Docker seeds from the
+// image (owned by `nginx`). The storage, a read-only volume of the API's on the stack, is a
+// tmpfs the checks write to.
 const HARDENING = ['--read-only', '--cap-drop', 'ALL', '--security-opt',
   'no-new-privileges:true', '--tmpfs', '/tmp:size=64m', '--tmpfs', '/srv/storage'];
-const CACHES = ['pages', 'archive', 'assets', 'seo', 'legacy'];
+const VOLUMES = ['pages', 'archive', 'assets', 'seo', 'legacy', 'temp'];
 
 function docker(...args) {
   return run('docker', args, { maxBuffer: 1024 * 1024 });
@@ -38,7 +43,7 @@ async function startStub(image, network, name) {
 async function startNginx(image, network, name, environment) {
   const variables = Object.entries(environment)
     .flatMap(([key, value]) => ['-e', `${key}=${value}`]);
-  const volumes = CACHES.flatMap((cache) => ['-v', `/var/cache/nginx/${cache}`]);
+  const volumes = VOLUMES.flatMap((folder) => ['-v', `/var/cache/nginx/${folder}`]);
   await docker('run', '-d', '--name', name, '--network', network, ...HARDENING, ...volumes,
     '-p', `127.0.0.1::${NGINX_PORT}`, ...variables, image);
   const { stdout } = await docker('port', name, HTTP_PORT);

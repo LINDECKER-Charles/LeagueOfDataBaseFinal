@@ -333,7 +333,7 @@ un tmpfs borné, compté dans sa limite mémoire.
 |---|---|---|---|
 | `api`, `migrate` | `app` (image chiseled) | `ddragon` (`api`), tmpfs `/tmp` (64 Mio) | — |
 | `web-ssr` | `node` | `front-builds`, tmpfs `/tmp` (16 Mio) | — |
-| `nginx` | `nginx`, port 8080 | caches (volumes), tmpfs `/tmp` (64 Mio : configuration rendue, pid, fichiers temporaires) | — |
+| `nginx` | `nginx`, port 8080 | caches et fichiers temporaires (volumes), tmpfs `/tmp` (64 Mio : configuration rendue, pid) | — |
 | `postgres` | root, puis `postgres` | `pgdata`, tmpfs `/var/run/postgresql` (8 Mio) et `/tmp` (16 Mio) | `CHOWN`, `DAC_READ_SEARCH`, `FOWNER`, `SETGID`, `SETUID` (entrée de l'image) |
 
 Réseaux : `default` (nginx, SSR, API, `migrate`) porte le HTTP, sur `LODB_STACK_SUBNET`
@@ -449,6 +449,7 @@ Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :
 | `archive-cache` | nouveau | Cache des pages des anciens patchs de nginx, clé sans révision : il survit aux déploiements (`LODB_ARCHIVE_EPOCH`). |
 | `assets-cache` | nouveau | Cache des bundles de `/build/` de nginx, clé = nom du fichier : un déploiement le trouve chaud. |
 | `seo-cache`, `legacy-cache` | nouveaux | Caches de nginx des fichiers pour les robots (sitemaps, `robots.txt`, `llms.txt`) et des 301 de l'ancien site, clé préfixée par la révision : un déploiement repart de zéro, les entrées précédentes s'éteignent (7 jours, 1 heure). |
+| `nginx-temp` | nouveau | Fichiers temporaires de nginx : corps de requête et réponses plus grands que ses tampons, que le client n'a pas encore lus. Chacun est supprimé dès son ouverture : le volume ne contient que ce qui sert. |
 | `front-builds` | nouveau | Bundles hachés des builds successifs : `web-ssr` y ajoute les siens au démarrage et rafraîchit leur date toutes les heures, `/build/` y trouve ceux des builds précédents ; le job supprime ceux qu'aucun build en service n'a livrés depuis 30 jours. |
 | `storage`, `app_state` | ancienne stack, **laissés intacts** | Non montés : ni réutilisés (`storage` appartient à `www-data`, l'API ne pourrait pas y écrire) ni supprimés (retour arrière, reprise des agrégats et de l'audit). Supprimés à la décommission, après export. |
 

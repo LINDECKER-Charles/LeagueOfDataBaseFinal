@@ -266,8 +266,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   sonde, smoke tests du déploiement, labels de l'edge (`{{upstreams 8080}}`), port publié en
   local (`LODB_HTTP_PORT` → 8080) et banc de charge (`http://nginx:8080`) le visent.
   `absolute_redirect off` : une redirection écrite par nginx garde un `Location` relatif, qui
-  sinon porterait `http://` et le port 8080. Pid, fichiers temporaires et configuration
-  rendue dans `/tmp`.
+  sinon porterait `http://` et le port 8080. Pid et configuration rendue dans `/tmp` ;
+  fichiers temporaires (corps de requête, réponse qu'un client lent n'a pas encore lue) sur
+  le volume `nginx-temp`, jamais dans le tmpfs : quelques lecteurs lents de grosses réponses
+  le rempliraient, et toute réponse plus grande que les tampons échouerait ensuite.
 - **En-tête de l'edge** (`X-LoDb-Edge`, `sites/site.conf`) : sur un hôte, nginx répond `403` à
   toute requête qui ne le porte pas avec la valeur de `LODB_EDGE_SECRET`, `/healthz` excepté,
   et ne le transmet jamais à l'amont. L'edge le pose (labels `caddy_*.reverse_proxy.header_up`),

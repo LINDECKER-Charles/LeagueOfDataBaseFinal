@@ -202,8 +202,8 @@ services:
       args:
         APP_REVISION: ${APP_REVISION:-dev}
     <<: *hardening
-    # Its configuration rendered at start, its pid file, and the request bodies and answers
-    # that outgrow its buffers (docker/nginx/nginx.conf). The caches are volumes.
+    # Its configuration rendered at start and its pid file. The caches and the temporary
+    # files (the request bodies and answers that outgrow its buffers) are volumes.
     tmpfs:
       - /tmp:size=64m
     environment:
@@ -259,6 +259,9 @@ services:
       # The crawler files and the former site's 301, keyed by revision as the latest patch's.
       - seo-cache:/var/cache/nginx/seo
       - legacy-cache:/var/cache/nginx/legacy
+      # What a slow client has not read yet, on disk as before the read-only root: in the
+      # tmpfs, a few slow readers of large answers would fill it (docker/nginx/nginx.conf).
+      - nginx-temp:/var/cache/nginx/temp
     depends_on:
       api:
         condition: service_healthy
@@ -341,6 +344,8 @@ volumes:
   assets-cache:
   seo-cache:
   legacy-cache:
+  # nginx's temporary files, each unlinked as it is opened: it holds only what is in use.
+  nginx-temp:
   # Hashed front bundles of the successive builds (web-ssr, src/server/assets).
   front-builds:
 
