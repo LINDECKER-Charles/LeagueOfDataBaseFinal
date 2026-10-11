@@ -30,7 +30,8 @@ public static class Totp
         return ((code + (Modulus / 2)) % Modulus).ToString(Format, CultureInfo.InvariantCulture);
     }
 
-    private static string Code(string key, DateTimeOffset instant)
+    /// <summary>The code the app shows at <paramref name="instant"/>.</summary>
+    public static string Code(string key, DateTimeOffset instant)
     {
         Span<byte> counter = stackalloc byte[sizeof(ulong)];
         BinaryPrimitives.WriteUInt64BigEndian(

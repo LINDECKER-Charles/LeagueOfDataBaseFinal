@@ -8,6 +8,7 @@ using LoDb.Api.Modules.Accounts.Protection;
 using LoDb.Api.Modules.Accounts.Recovery;
 using LoDb.Api.Modules.Accounts.Registration;
 using LoDb.Api.Modules.Accounts.Security;
+using LoDb.Api.Modules.Accounts.Security.Authenticator;
 using LoDb.Api.Modules.Accounts.Session;
 using LoDb.Api.Modules.Accounts.SignIn;
 using LoDb.Api.Modules.Accounts.Verification;
@@ -36,9 +37,12 @@ internal static class AccountsModule
             .ValidateOnStart();
         services.TryAddEnumerable(ServiceDescriptor
             .Singleton<IValidateOptions<AccountsOptions>, AccountsOptionsValidator>());
+        // Identity's authenticator provider gives way to one that takes each code once.
         services.AddAccountsSecurity()
             .AddSignInManager<LoDbSignInManager>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddTokenProvider<OneTimeAuthenticatorTokenProvider>(
+                TokenOptions.DefaultAuthenticatorProvider);
         services.AddAccountsAuthentication().AddAccountsGoogle(configuration);
         services.AddAccountsProtection(configuration);
         AddVerification(services, configuration);
