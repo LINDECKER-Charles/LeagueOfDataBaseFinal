@@ -11,7 +11,8 @@ namespace LoDb.Ingestion.Tests.Images;
 
 /// <summary>
 /// Images are stored under the extension their name gives, recorded absent after a 403, and
-/// fetched again when forced, without writing a stored blob twice.
+/// fetched again when forced, without writing a stored blob twice. A file whose bytes are not
+/// of the format its name gives is never stored.
 /// </summary>
 public sealed class ImageIngestionTests(PostgresContainerFixture postgres)
 {
@@ -76,6 +77,28 @@ public sealed class ImageIngestionTests(PostgresContainerFixture postgres)
         var row = Assert.Single(await harness.AssetRowsAsync(Latest.Value));
         Assert.Equal(stored.Sha256, row.Sha256);
         Assert.Equal(2, harness.FilesUnder("blobs").Count);
+    }
+
+    [Fact]
+    public async Task MarkupServedUnderAnImageNameIsRefusedAndRecordedAbsent()
+    {
+        await using var harness = await IngestionHarness.CreateAsync(postgres);
+        var instance = harness.StartInstance();
+        instance.Upstream.Serve(
+            VersionIngestionTests.IsAhriPortrait,
+            "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>1</script></svg>"u8.ToArray());
+
+        var report = await instance.Get<ImageIngestion>().IngestAsync(Batch(force: false), Token);
+
+        Assert.Equal((0, 0, 1, 0), (report.Stored, report.Absent, report.Refused, report.Failed));
+        Assert.Equal(["Ahri.png"], report.RefusedSample);
+        var row = Assert.Single(await harness.AssetRowsAsync(Latest.Value));
+        Assert.Equal(DdragonAssetStatus.Absent, row.Status);
+        Assert.Empty(harness.FilesUnder("blobs"));
+        var refusal = Assert.Single(
+            instance.Logs,
+            static log => log.Id.Name == "ingest.images.refused");
+        Assert.Contains("Ahri.png", refusal.Message, StringComparison.Ordinal);
     }
 
     private static ImageBatch Batch(bool force) => new(Latest, [Ahri], force);

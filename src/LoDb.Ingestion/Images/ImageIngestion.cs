@@ -15,8 +15,11 @@ namespace LoDb.Ingestion.Images;
 /// verdict in the manifest: present, or absent after a 403/404.
 /// </summary>
 /// <remarks>
-/// A transient failure records nothing, so that the next run asks again. Fetches run in
-/// parallel up to <c>LoDb:Egress:FetchConcurrency</c>; verdicts are recorded by chunks of
+/// A transient failure records nothing, so that the next run asks again. A file whose
+/// extension is not a blob's, or whose bytes are not of the format its extension names
+/// (<see cref="BlobMediaTypes"/>), is refused: never stored, recorded absent like a 404, and
+/// named in one warning line per batch. Fetches run in parallel up to
+/// <c>LoDb:Egress:FetchConcurrency</c>; verdicts are recorded by chunks of
 /// <c>RecordBatchSize</c>, so a run cut short keeps what it settled. One summary line per
 /// batch.
 /// </remarks>
@@ -33,6 +36,8 @@ internal sealed partial class ImageIngestion(
 {
     // The legacy default for a file name without an extension.
     private const string DefaultExtension = WebpSibling.SourceExtension;
+
+    private const string SampleSeparator = ", ";
 
     public async Task<ImageBatchReport> IngestAsync(
         ImageBatch batch,
@@ -65,12 +70,12 @@ internal sealed partial class ImageIngestion(
         return BlobExtension().IsMatch(extension) ? extension : DefaultExtension;
     }
 
-    private async Task<Tally> SettlePendingAsync(
+    private async Task<ImageBatchTally> SettlePendingAsync(
         ImageBatch batch,
         List<DdragonImage> pending,
         CancellationToken cancellationToken)
     {
-        var tally = new Tally();
+        var tally = new ImageBatchTally();
         using var egressBatch = fetcher.OpenBatch();
         var run = new Run(batch, egressBatch, tally);
         foreach (var chunk in pending.Chunk(options.Value.RecordBatchSize))
@@ -120,21 +125,35 @@ internal sealed partial class ImageIngestion(
             var outcome = await run.Egress
                 .FetchAsync(image.Url(run.Batch.Version), cancellationToken)
                 .ConfigureAwait(false);
-            if (outcome is not FetchOutcome.Present present)
-            {
-                return Absent(run, image);
-            }
-
-            var stored = await StoreAsync(present, ExtensionOf(image.File), cancellationToken)
-                .ConfigureAwait(false);
-            run.Tally.CountStored(stored);
-            return Present(run, image, stored.Key);
+            return outcome is FetchOutcome.Present present
+                ? await KeepAsync(run, image, present, cancellationToken).ConfigureAwait(false)
+                : Absent(run, image);
         }
         catch (EgressException)
         {
             run.Tally.CountFailed();
             return null;
         }
+    }
+
+    // Stored when its bytes are of the format its extension names, refused otherwise.
+    private async Task<DdragonAssetEntry> KeepAsync(
+        Run run,
+        DdragonImage image,
+        FetchOutcome.Present present,
+        CancellationToken cancellationToken)
+    {
+        var extension = ExtensionOf(image.File);
+        var content = await ReadAsync(present, cancellationToken).ConfigureAwait(false);
+        if (!BlobMediaTypes.Matches(extension, content))
+        {
+            return Refused(run, image);
+        }
+
+        var stored = await StoreAsync(content, extension, cancellationToken)
+            .ConfigureAwait(false);
+        run.Tally.CountStored(stored.BlobWritten, stored.WebpWritten);
+        return Present(run, image, stored.Key);
     }
 
     private static DdragonAssetEntry Present(Run run, DdragonImage image, BlobKey key) =>
@@ -145,6 +164,16 @@ internal sealed partial class ImageIngestion(
             key.Sha256,
             key.Extension);
 
+    // Recorded absent like a 404: upstream serves it, but nothing of it may be stored.
+    private static DdragonAssetEntry Refused(Run run, DdragonImage image)
+    {
+        run.Tally.CountRefused(image.File);
+        return DdragonAssetEntry.Absent(
+            run.Batch.Version.Value,
+            image.ManifestType,
+            image.File);
+    }
+
     private DdragonAssetEntry Absent(Run run, DdragonImage image)
     {
         run.Tally.CountAbsent();
@@ -152,19 +181,23 @@ internal sealed partial class ImageIngestion(
         return DdragonAssetEntry.Absent(run.Batch.Version.Value, image.ManifestType, image.File);
     }
 
-    private async Task<StoredImage> StoreAsync(
+    private static async Task<byte[]> ReadAsync(
         FetchOutcome.Present present,
-        string extension,
         CancellationToken cancellationToken)
     {
-        byte[] content;
         await using (present.Content.ConfigureAwait(false))
         {
             using var buffer = new MemoryStream();
             await present.Content.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
-            content = buffer.ToArray();
+            return buffer.ToArray();
         }
+    }
 
+    private async Task<StoredImage> StoreAsync(
+        byte[] content,
+        string extension,
+        CancellationToken cancellationToken)
+    {
         var stored = await blobs.StoreAsync(content, extension, cancellationToken)
             .ConfigureAwait(false);
         var webp = await EnsureWebpAsync(stored.Key, content, cancellationToken)
@@ -185,6 +218,7 @@ internal sealed partial class ImageIngestion(
         }
 
         return WebpTranscoder.ToWebp(content) is { } webp
+            && BlobMediaTypes.Matches(WebpSibling.Extension, webp)
             && await blobs.StoreWebpSiblingAsync(key, webp, cancellationToken)
                 .ConfigureAwait(false);
     }
@@ -194,7 +228,8 @@ internal sealed partial class ImageIngestion(
         metrics.RecordDuration(IngestionMetrics.ImagesStage, elapsed);
         metrics.RecordBlobs(report.BlobsWritten, report.WebpWritten);
         metrics.RecordFetchFailures(report.Failed);
-        var settled = report.Stored + report.Absent;
+        LogRefusals(batch, report);
+        var settled = report.Stored + report.Absent + report.Refused;
         if (report.IsComplete)
         {
             IngestionLog.ImagesCompleted(
@@ -212,49 +247,22 @@ internal sealed partial class ImageIngestion(
         IngestionLog.ImagesIncomplete(logger, batch.Version.Value, settled, report.Failed);
     }
 
+    private void LogRefusals(ImageBatch batch, ImageBatchReport report)
+    {
+        if (report.Refused > 0)
+        {
+            IngestionLog.ImagesRefused(
+                logger,
+                batch.Version.Value,
+                report.Refused,
+                string.Join(SampleSeparator, report.RefusedSample));
+        }
+    }
+
     [GeneratedRegex("^[a-z0-9]{1,8}\\z", RegexOptions.CultureInvariant)]
     private static partial Regex BlobExtension();
 
-    private sealed record Run(ImageBatch Batch, IEgressBatch Egress, Tally Tally);
+    private sealed record Run(ImageBatch Batch, IEgressBatch Egress, ImageBatchTally Tally);
 
     private sealed record StoredImage(BlobKey Key, bool BlobWritten, bool WebpWritten);
-
-    // Counted from the parallel fetches of one batch.
-    private sealed class Tally
-    {
-        private int stored;
-        private int absent;
-        private int failed;
-        private int blobs;
-        private int webp;
-
-        public void CountAbsent() => Interlocked.Increment(ref absent);
-
-        public void CountFailed() => Interlocked.Increment(ref failed);
-
-        public void CountStored(StoredImage image)
-        {
-            Interlocked.Increment(ref stored);
-            if (image.BlobWritten)
-            {
-                Interlocked.Increment(ref blobs);
-            }
-
-            if (image.WebpWritten)
-            {
-                Interlocked.Increment(ref webp);
-            }
-        }
-
-        public ImageBatchReport Report(int requested, int skipped) => new()
-        {
-            Requested = requested,
-            Skipped = skipped,
-            Stored = Volatile.Read(ref stored),
-            Absent = Volatile.Read(ref absent),
-            Failed = Volatile.Read(ref failed),
-            BlobsWritten = Volatile.Read(ref blobs),
-            WebpWritten = Volatile.Read(ref webp),
-        };
-    }
 }

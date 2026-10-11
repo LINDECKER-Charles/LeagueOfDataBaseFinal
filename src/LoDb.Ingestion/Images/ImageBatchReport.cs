@@ -18,6 +18,15 @@ public sealed record ImageBatchReport
     public required int Absent { get; init; }
 
     /// <summary>
+    /// Keys recorded absent by this batch although upstream served them: an extension that
+    /// is not a blob's, or bytes that are not of its format. Never stored.
+    /// </summary>
+    public int Refused { get; init; }
+
+    /// <summary>The first files refused, for the batch's warning line.</summary>
+    public IReadOnlyList<string> RefusedSample { get; init; } = [];
+
+    /// <summary>
     /// Keys left without a verdict after a transient failure: nothing recorded, the next run
     /// tries them again.
     /// </summary>

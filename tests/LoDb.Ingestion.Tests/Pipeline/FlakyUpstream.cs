@@ -15,6 +15,7 @@ internal sealed class FlakyUpstream : DelegatingHandler
 {
     private readonly Lock gate = new();
     private readonly List<Failure> failures = [];
+    private readonly List<Substitute> substitutes = [];
 
     public FlakyUpstream(FixtureReplayHandler replay)
         : base(replay)
@@ -36,14 +37,45 @@ internal sealed class FlakyUpstream : DelegatingHandler
         }
     }
 
+    /// <summary>
+    /// Answers 200 with <paramref name="content"/> to every request matching
+    /// <paramref name="matches"/>, instead of the recording: a file upstream would serve
+    /// under the name of another.
+    /// </summary>
+    public void Serve(Func<Uri, bool> matches, byte[] content)
+    {
+        lock (gate)
+        {
+            substitutes.Add(new Substitute(matches, content));
+        }
+    }
+
     protected override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return Take(request.RequestUri!) is { } status
-            ? Task.FromResult(new HttpResponseMessage(status) { RequestMessage = request })
+        var url = request.RequestUri!;
+        if (Take(url) is { } status)
+        {
+            return Task.FromResult(new HttpResponseMessage(status) { RequestMessage = request });
+        }
+
+        return SubstituteFor(url) is { } content
+            ? Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                RequestMessage = request,
+                Content = new ByteArrayContent(content),
+            })
             : base.SendAsync(request, cancellationToken);
+    }
+
+    private byte[]? SubstituteFor(Uri url)
+    {
+        lock (gate)
+        {
+            return substitutes.Find(substitute => substitute.Matches(url))?.Content;
+        }
     }
 
     private HttpStatusCode? Take(Uri url)
@@ -60,6 +92,8 @@ internal sealed class FlakyUpstream : DelegatingHandler
             return failure.Status;
         }
     }
+
+    private sealed record Substitute(Func<Uri, bool> Matches, byte[] Content);
 
     private sealed record Failure(Func<Uri, bool> Matches, HttpStatusCode Status)
     {

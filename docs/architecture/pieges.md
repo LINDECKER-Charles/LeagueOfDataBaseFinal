@@ -230,7 +230,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages`,
   `lodb_archive` et `lodb_assets` (bundles de `/build/`, clé = `$uri` seul) sur des volumes.
   `/cdn/blobs/` ne sert que `{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` : une nouvelle
-  extension de blob s'ajoute à la regex. La garde des extensions de scripts
+  extension de blob s'ajoute à la regex **et** à `BlobMediaTypes` (ingestion), qui refuse tout
+  fichier hors de cette liste ou dont les premiers octets ne sont pas de son format
+  (enregistré absent, une ligne `ingest.images.refused` par lot). La garde des extensions de scripts
   (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
   nom d'utilisateur peut finir en `.bak` ou `.ini`. Vérification : `tools/nginx/`
   (`node --test`).
