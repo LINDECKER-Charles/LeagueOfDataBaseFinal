@@ -5,7 +5,9 @@ const LEGACY_REPORT = {
   'csp-report': { 'effective-directive': 'script-src-elem', disposition: 'report' },
 };
 
-test.describe('the reports of the pages policies', { tag: '@readonly' }, () => {
+// Not @readonly: the read-only suite may run against the production site (tools/cutover), where
+// a report taken in feeds the monitoring that tells when the pages' policies can be tightened.
+test.describe('the reports of the pages policies', () => {
   test("are taken in from the site's own pages", async ({ request, baseURL }) => {
     const origin = new URL(baseURL ?? '').origin;
 
@@ -23,8 +25,11 @@ test.describe('the reports of the pages policies', { tag: '@readonly' }, () => {
     expect(legacy.status()).toBe(204);
     expect(batch.status()).toBe(204);
   });
+});
 
-  test('are refused from another site', async ({ request }) => {
+// Refused before it is read: nothing is counted, so it may run anywhere.
+test.describe('the reports of another site', { tag: '@readonly' }, () => {
+  test('are refused', async ({ request }) => {
     const forged = await request.post(REPORTS, {
       headers: { Origin: 'https://evil.example', 'Content-Type': 'application/csp-report' },
       data: JSON.stringify(LEGACY_REPORT),
