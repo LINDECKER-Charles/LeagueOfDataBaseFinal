@@ -22,6 +22,8 @@ affichage.
 - La vidéo d'un sort ne se télécharge que lorsque la moitié de son cadre est à l'écran, et se
   met en pause quand on s'en éloigne. En mode économie de données ou sur une connexion lente,
   l'image fixe du sort reste affichée.
+- Les sorts, les statistiques et la navigation entre fiches s'activent quand on approche
+  d'eux.
 
 ## Technique
 
@@ -41,3 +43,6 @@ affichage.
 - Vidéo d'un sort : `preload="none"`, plus d'`autoplay` ; un `IntersectionObserver` (seuil
   0,5) la crée et la lance, la met en pause hors écran, sans jamais passer outre la pause du
   lecteur ; poster en `loading="lazy"`. `Save-Data` ou `effectiveType` 2g/3g : poster seul.
+- Hydratation incrémentale : `@defer (on immediate; hydrate on viewport)` sur la vitrine des
+  sorts et le tableau des stats ; `hydrate on viewport({ rootMargin: '100% 0px' })` sur le
+  pager des quatre fiches (il se mesure une fois hydraté, hors de la vue).

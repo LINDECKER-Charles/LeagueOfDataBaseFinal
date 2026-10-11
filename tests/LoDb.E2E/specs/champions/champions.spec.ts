@@ -203,6 +203,24 @@ test.describe('champion page in the browser', { tag: '@readonly' }, () => {
     expect(clips).toEqual([]);
   });
 
+  test('hydrates every section it scrolls through without a mismatch', async ({
+    page,
+    consoleErrors,
+  }) => {
+    await openDetail(page);
+
+    for (const id of ['abilities', 'stats', 'lore', 'tips']) {
+      await page.locator(`#${id}`).scrollIntoViewIfNeeded();
+    }
+    await page.locator('lodb-pager').scrollIntoViewIfNeeded();
+    await page.locator('lodb-footer').scrollIntoViewIfNeeded();
+    await page.locator('lodb-stat-board input[type=range]').fill('18');
+
+    await expect(page.locator('lodb-stat-board')).toContainText('18 / 18');
+    await page.waitForLoadState('networkidle');
+    expect(consoleErrors).toEqual([]);
+  });
+
   test('switches ability with the keyboard, the clip following', async ({ page }) => {
     await openDetail(page);
     const tabs = page.getByRole('tab');

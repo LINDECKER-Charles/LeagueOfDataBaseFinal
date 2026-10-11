@@ -10,6 +10,8 @@ import { expect, type Locator, type Page } from '@playwright/test';
  * requests are over. Until then, a field of the server's page may change under the spec, or
  * a form be sent without the app. A component the browser rendered itself carries no mark:
  * the wait ends at once. `scope` must hold an element with a listener, or nothing is waited.
+ * A block hydrated later (`@defer (hydrate …)`: the footer, a list's rail, a detail's lower
+ * sections) keeps its marks until it is scrolled to or touched: never wait on the whole page.
  */
 export async function hydrated(scope: Page | Locator): Promise<void> {
   await expect(scope.locator('[jsaction]')).toHaveCount(0);

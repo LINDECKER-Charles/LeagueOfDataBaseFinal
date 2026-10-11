@@ -99,12 +99,15 @@
 
     <lodb-previous-patches class="mt-14" [context]="context" [path]="details.canonicalPath" />
 
-    <lodb-pager
-      class="mt-14"
-      [previous]="pager().previous"
-      [next]="pager().next"
-      [hub]="pager().hub"
-    />
+    <!-- A screen ahead: the pager measures itself once hydrated, out of sight. -->
+    @defer (on immediate; hydrate on viewport({ rootMargin: '100% 0px' })) {
+      <lodb-pager
+        class="mt-14"
+        [previous]="pager().previous"
+        [next]="pager().next"
+        [hub]="pager().hub"
+      />
+    }
   </article>
 </div>
 
