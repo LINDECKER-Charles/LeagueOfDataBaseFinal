@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideTransloco, type Translation } from '@jsverse/transloco';
 import { of } from 'rxjs';
+import { AudienceOptOut } from '../../../core/analytics/audience/send/audience-opt-out';
 import { activateLocale } from '../../../core/i18n/activate-locale';
 import { LOCALES } from '../../../core/i18n/locales';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
@@ -141,6 +142,18 @@ describe('LegalPage', () => {
     const mail = page.querySelector(`${id} a[href^="mailto:"]`);
 
     expect(mail?.parentElement?.textContent?.trim()).toBe(`${label}${mail?.textContent}`);
+  });
+
+  it.each(['fr', 'en'])('lets the visitor opt out of the audience in %s', async (locale) => {
+    const { page } = await visit(`/${locale}/legal/privacy`);
+    const optOut = TestBed.inject(AudienceOptOut);
+    const toggle = page.querySelector<HTMLInputElement>('#audience input[type="checkbox"]');
+
+    expect(toggle?.checked).toBe(true);
+    toggle?.click();
+    expect(optOut.isRefused()).toBe(true);
+    toggle?.click();
+    expect(optOut.isRefused()).toBe(false);
   });
 
   it('links the other legal pages within the locale', async () => {

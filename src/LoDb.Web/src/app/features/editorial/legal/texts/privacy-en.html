@@ -57,20 +57,33 @@
           </td>
         </tr>
         <tr>
-          <td><strong>Audience measurement</strong><br />first-party traffic statistics</td>
+          <td><strong>Audience measurement</strong><br />traffic statistics, without cookies</td>
           <td>
-            See <a lodbFragmentLink="audience">section 3</a> for the full field list (IP address,
-            User-Agent, pages viewed, referrer, optional country…)
+            See <a lodbFragmentLink="audience">section 3</a> for the details (page viewed in a
+            reduced form, origin of the referring site, language, screen, country and city derived
+            from the IP address without keeping it…)
           </td>
           <td>
             Legitimate interest (art. 6(1)(f) GDPR): understanding and improving how the site is
-            used
+            used. A measure exempt from consent (article 82 of the French Data Protection Act),
+            which you can object to in one click (<a lodbFragmentLink="audience">section 3</a>)
           </td>
           <td>
-            Page-view events: IP address and User-Agent erased after 30 days, the event itself
-            deleted after 13 months (within the CNIL's recommendations for audience measurement).
-            Statistical aggregates without IP or User-Agent: kept without a time limit
+            Umami: 25 months at most. In-house measure: events deleted after 13 months, daily
+            aggregates kept without a time limit; neither stores the IP address or the User-Agent
           </td>
+        </tr>
+        <tr>
+          <td><strong>Access log</strong><br />security and operation of the hosting</td>
+          <td>
+            IP address, User-Agent, requested address (path and parameters), response status, city
+            derived from the IP address
+          </td>
+          <td>
+            Legitimate interest (art. 6(1)(f) GDPR): protecting the site against abuse and
+            diagnosing outages
+          </td>
+          <td>90 days</td>
         </tr>
         <tr>
           <td><strong>Donations</strong><br />voluntary support via Stripe</td>
@@ -106,49 +119,103 @@
 <section id="audience">
   <h2>3. Audience measurement in detail</h2>
   <p>
-    Traffic is measured by a <strong>first-party, server-side, cookieless</strong>
-    system built for this site. No third-party tool (Google Analytics or similar) is used and no
-    data is shared with anyone. Only views of the public pages (home page, lists and detail pages
-    for champions, items, runes and summoner spells) are recorded.
+    Traffic is measured <strong>without cookies</strong>, by tools the publisher hosts on the site's
+    own server. No third-party tool (Google Analytics or similar) is used, no data is sold or shared
+    with anyone, and the statistics are accessible to the publisher only. Two measures currently run
+    side by side, while we check that the new one counts like the old one, which will then be
+    removed.
   </p>
-  <p>Each page view produces an event containing:</p>
+
+  <h3>Umami</h3>
+  <p>
+    For every page you open, the site itself sends, from your browser and to its own address, a
+    record to <strong>Umami</strong>, an open-source audience measurement tool the publisher hosts
+    on this server. No Umami script is ever loaded in the pages. A record contains:
+  </p>
   <ul>
     <li>
-      the timestamp (UTC), the page viewed (route and path), the resource and entity displayed (e.g.
-      a champion's page), and the HTTP status code;
+      the page's address, <strong>reduced before it is sent</strong>: the path of the catalogue's
+      lists and detail pages, with the Data Dragon language and version; for any other page, its
+      template only (for example <code>/en/u/:username</code> or <code>/b/:token</code>), without
+      any pseudonym, token or identifier. Never a list's searches and filters, and nothing at all
+      from the account and administration pages;
     </li>
-    <li>the requested Data Dragon version and language, and the interface language;</li>
+    <li>the page's title, for the lists and detail pages only;</li>
     <li>
-      your <strong>IP address</strong> and your browser's <strong>User-Agent</strong> string, from
-      which the browser, operating system, device type and a "bot" flag are derived;
-    </li>
-    <li>
-      the referring site (origin host plus a classification: direct, internal, search engine, social
-      network, other);
-    </li>
-    <li>
-      a <strong>pseudonymous visitor identifier</strong>: a truncated HMAC-SHA256 fingerprint
-      computed from the IP and User-Agent with a secret key known only to the server — it lets us
-      count unique visitors without identifying them;
+      on the first page of a visit, the origin of the site that brought you here (for example
+      <code>https://www.google.com</code>), without any path or parameter;
     </li>
     <li>
-      optionally, the <strong>country</strong> (ISO code and name): only when a local GeoLite2
-      geolocation database is installed on the server; the IP is then resolved <em>locally</em>,
-      with no request to any external service. Without that database, no location data is produced.
+      your browser's language, your screen size, the platform (website), the site's language and the
+      version viewed;
+    </li>
+    <li>
+      three events without content: a page not found or failing, a search started in a list (never
+      its text), a build's link copied.
     </li>
   </ul>
   <p>
-    These events are stored in the site's database, then consolidated into daily statistical
-    aggregates (counters per page, browser, country, and so on).
-    <strong>The aggregates contain neither IP addresses nor User-Agent strings.</strong>
-    Retention is automatic: the IP address and the User-Agent of an event are erased after
-    <strong>30 days</strong>, and the event itself is deleted after <strong>13 months</strong>; the
-    aggregates, which contain no directly identifying data, are kept without a time limit. Access to
-    this data is restricted to the site publisher.
+    Like any server, Umami also receives your IP address and your User-Agent. It derives from them
+    the browser, the operating system, the device type, the country, the region and the city, and a
+    hashed session identifier whose key changes every month: it counts visitors without recognising
+    them from one month to the next, and keeps neither the IP address nor the User-Agent. No account
+    identifier is ever sent to it. These records are kept for
+    <strong>25 months</strong> at most.
+  </p>
+
+  <h3>In-house measure</h3>
+  <p>
+    The server also counts the views of the public pages (home page, lists and detail pages for
+    champions, items, runes and summoner spells). For each page view it records the timestamp (UTC),
+    the page (route and path), the resource and entity displayed, the HTTP status, the Data Dragon
+    version and language and the interface language; the browser, operating system, device type and
+    a "bot" flag, derived from the User-Agent; the referring site (host and category: direct,
+    internal, search engine, social network, other); a
+    <strong>pseudonymous visitor identifier</strong>, a truncated HMAC-SHA256 fingerprint of the IP
+    address and the User-Agent computed with a key known only to the server; and, when a GeoLite2
+    geolocation database is installed on the server, the country, resolved locally, with no request
+    to any external service.
   </p>
   <p>
-    You may object to this legitimate-interest processing as described in
-    <a lodbFragmentLink="rights">section 4</a>.
+    The IP address and the User-Agent serve these computations at the time of the visit and
+    <strong>are not stored</strong>; those of visits before 11 October 2026 are erased 30 days after
+    the visit. Events are deleted after <strong>13 months</strong>. The daily aggregates drawn from
+    them (counters, and the fingerprints of the day's visitors) contain neither IP addresses nor
+    User-Agent strings and are kept without a time limit.
+  </p>
+
+  <h3>Hosting access log</h3>
+  <p>
+    The front server that receives every request sent to the site logs each of them: IP address,
+    User-Agent, requested address (path and parameters), response status and the city derived from
+    the IP address. This log serves security and operations (spotting abuse, diagnosing an outage),
+    on the basis of legitimate interest; it is kept for <strong>90 days</strong> and is accessible
+    to the publisher only.
+  </p>
+
+  <h3>Objecting to the measure</h3>
+  <label class="flex items-center gap-2.5">
+    <input
+      lodbField="switch"
+      type="checkbox"
+      [checked]="!audience.isRefused()"
+      [disabled]="audience.hasGlobalPrivacyControl"
+      (change)="measure($event)"
+    />
+    Count my visits in the audience measurement, on this browser
+  </label>
+  @if (audience.hasGlobalPrivacyControl) {
+    <p>
+      Your browser sends the <strong>Global Privacy Control</strong> signal: your visits are not
+      measured, whatever this setting says.
+    </p>
+  }
+  <p>
+    This choice applies to this browser, which keeps it in its local storage without sending it
+    anywhere. It stops everything your browser sends, to Umami and to the in-house measure alike. A
+    browser that sends the Global Privacy Control signal is never measured. The server cannot read
+    this choice: the in-house measure still counts the first page of each visit until it is removed.
+    To object to it or to the access log, write to us (<a lodbFragmentLink="rights">section 4</a>).
   </p>
 </section>
 
@@ -193,7 +260,8 @@
   </p>
   <ul>
     <li>
-      <strong>{{ info().hostName }}</strong> — hosting of the site and its data;
+      <strong>{{ info().hostName }}</strong> — hosting of the site and its data, audience
+      measurement included: Umami is installed by the publisher on that same server;
     </li>
     <li>
       <strong>Stripe</strong> — donation processing (see the

@@ -59,19 +59,36 @@
           </td>
         </tr>
         <tr>
-          <td><strong>Mesure d'audience</strong><br />statistiques de fréquentation first-party</td>
           <td>
-            Voir le détail en
-            <a lodbFragmentLink="audience">section 3</a> (adresse IP, User-Agent, pages consultées,
-            référent, pays optionnel…)
+            <strong>Mesure d'audience</strong><br />statistiques de fréquentation, sans cookie
           </td>
-          <td>Intérêt légitime (art. 6.1.f RGPD) : connaître et améliorer l'usage du site</td>
           <td>
-            Événements de consultation : adresse IP et User-Agent effacés après 30 jours,
-            l'événement lui-même supprimé après 13 mois (dans le respect des recommandations de la
-            CNIL pour la mesure d'audience). Agrégats statistiques sans IP ni User-Agent : conservés
-            sans limite de durée
+            Voir le détail en <a lodbFragmentLink="audience">section 3</a> (page consultée sous une
+            forme réduite, origine du site référent, langue, écran, pays et ville déduits de
+            l'adresse IP sans la conserver…)
           </td>
+          <td>
+            Intérêt légitime (art. 6.1.f RGPD) : connaître et améliorer l'usage du site. Mesure
+            exemptée de consentement (art. 82 de la loi Informatique et Libertés), à laquelle vous
+            pouvez vous opposer d'un clic (<a lodbFragmentLink="audience">section 3</a>)
+          </td>
+          <td>
+            Umami : 25 mois au plus. Mesure maison : événements supprimés après 13 mois, agrégats
+            quotidiens conservés sans limite de durée ; ni l'une ni l'autre n'enregistre l'adresse
+            IP ni le User-Agent
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Journal d'accès</strong><br />sécurité et exploitation de l'hébergement</td>
+          <td>
+            Adresse IP, User-Agent, adresse demandée (chemin et paramètres), statut de la réponse,
+            ville déduite de l'adresse IP
+          </td>
+          <td>
+            Intérêt légitime (art. 6.1.f RGPD) : protéger le site contre les abus et diagnostiquer
+            les pannes
+          </td>
+          <td>90 jours</td>
         </tr>
         <tr>
           <td><strong>Dons</strong><br />soutien volontaire via Stripe</td>
@@ -109,52 +126,106 @@
 <section id="audience">
   <h2>3. Mesure d'audience en détail</h2>
   <p>
-    La fréquentation est mesurée par un dispositif
-    <strong>first-party, côté serveur et sans cookie</strong>, développé pour ce site. Aucun outil
-    tiers (Google Analytics ou équivalent) n'est utilisé, aucune donnée n'est transmise à un tiers.
-    Seules les consultations des pages publiques (accueil, listes et fiches champions, objets,
-    runes, sorts d'invocateur) sont enregistrées.
+    La fréquentation est mesurée <strong>sans cookie</strong>, par des outils que l'éditeur héberge
+    sur le serveur du site. Aucun outil tiers (Google Analytics ou équivalent) n'est utilisé, aucune
+    donnée n'est vendue ni transmise à un tiers, et les statistiques ne sont accessibles qu'à
+    l'éditeur. Deux mesures fonctionnent aujourd'hui côte à côte, le temps de vérifier que la
+    nouvelle compte comme l'ancienne, qui sera ensuite retirée.
   </p>
-  <p>Pour chaque page vue, un événement contient :</p>
+
+  <h3>Umami</h3>
+  <p>
+    À chaque page que vous ouvrez, le site envoie lui-même, depuis votre navigateur et à sa propre
+    adresse, un relevé à <strong>Umami</strong>, un outil libre de mesure d'audience que l'éditeur
+    héberge sur ce serveur. Aucun script d'Umami n'est chargé dans les pages. Un relevé contient :
+  </p>
   <ul>
     <li>
-      l'horodatage (UTC), la page consultée (route et chemin), la ressource et l'entité affichées
-      (ex. la fiche d'un champion), le code de statut HTTP ;
+      l'adresse de la page, <strong>réduite avant l'envoi</strong> : le chemin des listes et des
+      fiches du catalogue, avec la langue et la version Data Dragon ; pour toute autre page, son
+      seul modèle (par exemple <code>/fr/u/:username</code> ou <code>/b/:token</code>), sans
+      pseudonyme, jeton ni identifiant. Jamais les recherches et les filtres d'une liste, et rien du
+      tout des pages du compte et de l'administration ;
     </li>
-    <li>la version et la langue Data Dragon demandées, ainsi que la langue d'interface ;</li>
+    <li>le titre de la page, pour les listes et les fiches seulement ;</li>
     <li>
-      votre <strong>adresse IP</strong> et la chaîne <strong>User-Agent</strong> de votre
-      navigateur, dont sont dérivés le navigateur, le système d'exploitation, le type d'appareil et
-      un marquage « robot » ;
-    </li>
-    <li>
-      le site référent (hôte d'origine et classification : accès direct, navigation interne, moteur
-      de recherche, réseau social, autre) ;
+      à la première page d'une visite, l'origine du site qui vous a mené ici (par exemple
+      <code>https://www.google.com</code>), sans chemin ni paramètre ;
     </li>
     <li>
-      un <strong>identifiant visiteur pseudonyme</strong> : une empreinte HMAC-SHA256 tronquée,
-      calculée à partir de l'IP et du User-Agent avec une clé secrète connue du seul serveur — elle
-      permet de compter les visiteurs uniques sans les identifier ;
+      la langue de votre navigateur, la taille de votre écran, la plateforme (site web), la langue
+      du site et la version consultée ;
     </li>
     <li>
-      optionnellement, le <strong>pays</strong> (code ISO et nom) : uniquement si une base de
-      géolocalisation GeoLite2 est installée sur le serveur, l'IP est alors résolue
-      <em>localement</em>, sans aucune requête vers un service externe. En son absence, aucune
-      donnée de localisation n'est produite.
+      trois événements sans contenu : une page introuvable ou en erreur, une recherche lancée dans
+      une liste (jamais son texte), le lien d'un build copié.
     </li>
   </ul>
   <p>
-    Ces événements sont enregistrés dans la base de données du site, puis consolidés en agrégats
-    statistiques quotidiens (compteurs par page, navigateur, pays, etc.).
-    <strong>Les agrégats ne contiennent ni adresse IP ni User-Agent.</strong> La conservation est
-    automatique : l'adresse IP et le User-Agent d'un événement sont effacés après
-    <strong>30 jours</strong>, et l'événement lui-même est supprimé après <strong>13 mois</strong> ;
-    les agrégats, dépourvus de données directement identifiantes, sont conservés sans limite de
-    durée. L'accès à ces données est réservé à l'éditeur du site.
+    Comme tout serveur, Umami reçoit aussi votre adresse IP et votre User-Agent. Il en déduit le
+    navigateur, le système, le type d'appareil, le pays, la région et la ville, ainsi qu'un
+    identifiant de session haché dont la clé change chaque mois : il compte les visiteurs sans les
+    reconnaître d'un mois sur l'autre, et ne conserve ni l'adresse IP ni le User-Agent. Aucun
+    identifiant de compte ne lui est jamais transmis. Ces relevés sont conservés
+    <strong>25 mois</strong> au plus.
+  </p>
+
+  <h3>Mesure maison</h3>
+  <p>
+    Le serveur compte aussi les consultations des pages publiques (accueil, listes et fiches des
+    champions, objets, runes et sorts d'invocateur). Pour chaque page vue, il enregistre
+    l'horodatage (UTC), la page (route et chemin), la ressource et l'entité affichées, le statut
+    HTTP, la version et la langue Data Dragon et la langue d'interface ; le navigateur, le système,
+    le type d'appareil et un marquage « robot », déduits du User-Agent ; le site référent (hôte et
+    catégorie : accès direct, navigation interne, moteur de recherche, réseau social, autre) ; un
+    <strong>identifiant visiteur pseudonyme</strong>, empreinte HMAC-SHA256 tronquée de l'adresse IP
+    et du User-Agent, calculée avec une clé connue du seul serveur ; et, si une base de
+    géolocalisation GeoLite2 est installée sur le serveur, le pays, résolu localement, sans aucune
+    requête vers un service externe.
   </p>
   <p>
-    Vous pouvez vous opposer à ce traitement fondé sur l'intérêt légitime dans les conditions
-    décrites en <a lodbFragmentLink="droits">section 4</a>.
+    L'adresse IP et le User-Agent servent à ces calculs au moment de la visite et
+    <strong>ne sont pas enregistrés</strong> ; ceux des visites antérieures au 11 octobre 2026 sont
+    effacés 30 jours après la visite. Les événements sont supprimés après <strong>13 mois</strong>.
+    Les agrégats quotidiens qui en sont tirés (compteurs, et empreintes des visiteurs du jour) ne
+    contiennent ni adresse IP ni User-Agent et sont conservés sans limite de durée.
+  </p>
+
+  <h3>Journal d'accès de l'hébergement</h3>
+  <p>
+    Le serveur frontal qui reçoit toutes les requêtes adressées au site journalise chacune : adresse
+    IP, User-Agent, adresse demandée (chemin et paramètres), statut de la réponse et ville déduite
+    de l'adresse IP. Ce journal sert à la sécurité et à l'exploitation (repérer un abus,
+    diagnostiquer une panne), sur la base de l'intérêt légitime ; il est conservé
+    <strong>90 jours</strong> et n'est accessible qu'à l'éditeur.
+  </p>
+
+  <h3>Vous opposer à la mesure</h3>
+  <label class="flex items-center gap-2.5">
+    <input
+      lodbField="switch"
+      type="checkbox"
+      [checked]="!audience.isRefused()"
+      [disabled]="audience.hasGlobalPrivacyControl"
+      (change)="measure($event)"
+    />
+    Compter mes visites dans la mesure d'audience, sur ce navigateur
+  </label>
+  @if (audience.hasGlobalPrivacyControl) {
+    <p>
+      Votre navigateur envoie le signal <strong>Global Privacy Control</strong> : vos visites ne
+      sont pas mesurées, quel que soit ce réglage.
+    </p>
+  }
+  <p>
+    Ce choix vaut pour ce navigateur, qui le garde dans son stockage local sans le transmettre. Il
+    arrête tout envoi de votre navigateur, à Umami comme à la mesure maison. Un navigateur qui
+    envoie le signal Global Privacy Control n'est jamais mesuré. Le serveur, lui, ne peut pas lire
+    ce choix : la mesure maison compte encore la première page de chaque visite, jusqu'à son
+    retrait. Pour vous opposer à celle-ci ou au journal d'accès, écrivez-nous (<a
+      lodbFragmentLink="droits"
+      >section 4</a
+    >).
   </p>
 </section>
 
@@ -204,7 +275,8 @@
   </p>
   <ul>
     <li>
-      <strong>{{ info().hostName }}</strong> — hébergement du site et de ses données ;
+      <strong>{{ info().hostName }}</strong> — hébergement du site et de ses données, mesure
+      d'audience comprise : Umami est installé par l'éditeur sur ce même serveur ;
     </li>
     <li>
       <strong>Stripe</strong> — traitement des dons (voir la
