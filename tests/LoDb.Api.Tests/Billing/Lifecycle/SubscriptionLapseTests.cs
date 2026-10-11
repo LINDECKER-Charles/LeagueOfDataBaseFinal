@@ -48,6 +48,22 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
         await AssertFreeAsync(key);
     }
 
+    // An endpoint pinned to an API version older than 2025-03-31 names the subscription at the
+    // top of the invoice.
+    [Fact]
+    public async Task FailedRenewalOfAnOlderApiVersionFallsBackToTheFreePlan()
+    {
+        var key = await SubscribedKeyAsync();
+        var failed = StripePayloads.Later(StripePayloads.InvoiceFailed("evt_invoice"), 1);
+        var invoice = failed["data"]!["object"]!.AsObject();
+        invoice.Remove("parent");
+        invoice["subscription"] = StripePayloads.Subscription;
+
+        await DeliverAsync(failed);
+
+        await AssertFreeAsync(key);
+    }
+
     [Fact]
     public async Task ActiveAgainRestoresThePlan()
     {
