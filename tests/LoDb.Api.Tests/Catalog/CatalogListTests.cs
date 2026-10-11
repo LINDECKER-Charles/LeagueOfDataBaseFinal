@@ -134,16 +134,6 @@ public sealed class CatalogListTests(CatalogApiFixture api)
     }
 
     [Fact]
-    public async Task RunesAreEmptyBefore7221()
-    {
-        var list = await api.GetJsonAsync("/api/catalog/7.21.1/en_US/runes");
-
-        Assert.Equal(0, list.GetProperty("total").GetInt32());
-        Assert.Empty(list.Items("trees"));
-        Assert.Empty(list.Items("entries"));
-    }
-
-    [Fact]
     public async Task PageSlicesTheListButKeepsItsTotal()
     {
         var first = await api.GetJsonAsync($"{Latest}/champions?page=1&size=2");

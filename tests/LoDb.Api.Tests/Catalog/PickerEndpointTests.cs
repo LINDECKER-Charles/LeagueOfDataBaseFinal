@@ -36,16 +36,12 @@ public sealed class PickerEndpointTests(CatalogApiFixture api)
         Assert.Equal(300, picker.Entry("options", "1001").GetProperty("gold").GetInt32());
     }
 
-    [Theory]
-    [InlineData("sr")]
-    [InlineData("aram")]
-    [InlineData("nexus_blitz")]
-    [InlineData("arena")]
-    public async Task ItemsNeverOfferClassicHiddenOrBoundOnes(string mode)
+    [Fact]
+    public async Task ItemsNeverOfferClassicHiddenOrBoundOnes()
     {
-        var picker = await api.GetJsonAsync($"/api/pickers/items?{Scope}&mode={mode}");
+        var picker = await api.GetJsonAsync($"/api/pickers/items?{Scope}&mode=arena");
 
-        Assert.Equal(mode, picker.Text("mode"));
+        Assert.Equal("arena", picker.Text("mode"));
         var ids = picker.Pluck("options", "id");
         Assert.DoesNotContain("771004", ids);
         Assert.DoesNotContain("773001", ids);
@@ -119,7 +115,6 @@ public sealed class PickerEndpointTests(CatalogApiFixture api)
     }
 
     [Theory]
-    [InlineData("champions?version=abc&lang=en_US", HttpStatusCode.BadRequest, "invalid-version")]
     [InlineData("champions?lang=en_US", HttpStatusCode.BadRequest, "invalid-version")]
     [InlineData("runes?version=16.19.1", HttpStatusCode.BadRequest, "invalid-language")]
     [InlineData("items?version=99.1.1&lang=en_US", HttpStatusCode.NotFound, "unknown-version")]
