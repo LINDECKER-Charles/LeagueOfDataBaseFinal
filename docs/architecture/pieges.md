@@ -284,7 +284,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - Les blocs hydratés plus tard gardent leur `jsaction` jusqu'à leur tour : `hydrated()` vise
   un composant hydraté d'emblée, jamais la page entière. La vidéo d'un sort n'apparaît qu'une
   fois sa scène à moitié à l'écran (`scrollIntoViewIfNeeded`) ; `support/network.ts`
-  (`saveData`) simule un lecteur en économie de données.
+  (`saveData`) simule un lecteur en économie de données. Chaque page part de
+  `fastConnection` (`support/test.ts`) : sans lui, Chromium déduit `effectiveType` des
+  allers-retours qu'il mesure, et un runner chargé passe pour de la 3g (poster sans vidéo,
+  liste différée).
 - `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
   une correction.
 - **Bornes du SSR relevées en dev** (`compose.override.yaml`, jamais
