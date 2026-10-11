@@ -88,7 +88,9 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
    down` (sans `-v`) le libère une fois (environ une minute de coupure). Puis
    `docker compose run --rm migrate` : la base du
    volume `pgdata` passe à la dernière migration (une base Doctrine est d'abord marquée à
-   `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir.
+   `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir, sauf
+   juste après ce changement de réseau : la stack reste alors arrêtée jusqu'au déploiement
+   suivant.
 4. `docker compose up -d --no-build --remove-orphans --wait` : les conteneurs de la nouvelle
    stack remplacent ceux de l'ancienne, dont `php`, `go-fetcher`, `go-api` et `mailer` sont
    retirés comme orphelins. `pgdata` est gardé ; les blobs vont dans le volume `ddragon` ;

@@ -306,6 +306,8 @@ jobs:
 
             # A stack network created on another subnet (Docker's choice, before the subnet was
             # fixed) is recreated once: about a minute without service, volumes kept (never -v).
+            # Before migrate: `compose run` would try to recreate the network under the running
+            # containers and fail. If migrate fails right after this move, the stack stays down.
             current_subnet="$(subnets_of "$stack_network")"
             if [ -n "$current_subnet" ] && [ "$current_subnet" != "$STACK_SUBNET" ]; then
               echo "::notice title=Stack network recreated::$stack_network moves from" \
@@ -313,8 +315,8 @@ jobs:
               docker compose down --remove-orphans
             fi
 
-            # Fail-fast: the containers in place keep serving if it fails. Idempotent: a
-            # database already up to date applies nothing.
+            # Fail-fast: the containers in place keep serving if it fails (none after the network
+            # move above). Idempotent: a database already up to date applies nothing.
             docker compose run --rm migrate
 
             # --wait: the job fails if a probe does not turn healthy. --remove-orphans
