@@ -123,6 +123,22 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   sauf build, clé API, don, rôle, bannissement, soutien ou connexion Google : un compte de
   test non vérifié d'une pile locale qui tourne depuis une semaine disparaît, c'est voulu.
   Le renvoi de l'e-mail de vérification est limité à 5 par compte, puis 1 par jour.
+- **Hôtes de l'API** (`AllowedHosts`, posé par `compose.deploy.yaml`) : un `Host` absent de la
+  liste reçoit un `400`. Un nouvel appelant interne (service, sonde) doit utiliser un nom
+  listé (`lodb-api`, `localhost`, `127.0.0.1`) ; le port 9464 n'est pas filtré, la collecte
+  y nomme le conteneur par son adresse. Le filtre du framework, qui passerait avant ce port,
+  est retiré exprès (`Hosting/HostFilteringSetup.cs`) : ne pas le remettre. En local,
+  `AllowedHosts` vaut `*`.
+- **Jetons de rafraîchissement à usage unique** : chaque `/refresh` rend le suivant, que le
+  client doit garder à la place du précédent. Rejouer un jeton déjà échangé plus de 30 s
+  après (`LoDb:Accounts:RefreshTokens:ReuseGrace`) révoque toute la famille : un script de
+  test qui réutilise le même jeton deux fois voit la session tomber, c'est voulu.
+- **Codes TOTP** : un code n'est accepté qu'une fois par compte (même à l'enrôlement), avec
+  un pas de 30 s de dérive. Un test qui enchaîne deux connexions prend le code du pas suivant
+  (`specs/admin/admin-account.ts` attend ; les tests xUnit calculent le code à l'horloge de
+  l'hôte, `Totp.Code(key, App.Clock)`, jamais à l'heure réelle). La clé est scellée par Data
+  Protection : si le trousseau est perdu (certificat compris), les TOTP ne s'ouvrent plus et
+  un administrateur se rétablit par `admin mfa-reset` puis `admin mfa-invite`.
 - Bannir, c'est `IsBanned` plus `UpdateSecurityStampAsync`. Un hash argon2id **plus fort**
   que la cible est conservé (`Argon2Passwords.IsTarget`) ; un compte hérité arrive sans
   `security_stamp`, la connexion le remplit.
