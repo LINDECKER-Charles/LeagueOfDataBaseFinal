@@ -28,6 +28,26 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 - **`autoCsp` est incompatible avec le SSR** ; `withFetch` et `withIncrementalHydration`
   sont omis (défauts en v22).
+- **CSP : seuls les scripts inline du build sont hachés** (`src/server/security/csp`) : ceux des
+  gabarits `index.server.html` et `index.csr.html`, lus au démarrage (un gabarit absent arrête
+  le serveur), plus l'appel `window.__jsaction_bootstrap(…)` du rejeu d'événements quand il
+  suit **immédiatement** le contrat `ng-event-dispatch-contract`, sous sa forme exacte. Tout
+  autre script inline n'est pas exécuté par le navigateur et se compte
+  (`lodb_ssr_csp_unexpected_scripts_total`, ligne `ssr.csp.unexpected_scripts`). À chaque
+  montée d'Angular ou de `beasties`, la spec E2E `pwa/content-security-policy.spec.ts` revérifie
+  qu'aucune page ne viole sa politique : un rejeu refusé perd les clics d'avant l'hydratation,
+  un chargeur refusé laisse les feuilles différées en `media="print"`. Un script inline ajouté
+  à `src/index.html` est admis de lui-même ; un script ajouté au rendu ne l'est jamais.
+- **Trusted Types en Report-Only** (`Content-Security-Policy-Report-Only`) : politiques
+  `angular`, `angular#unsafe-bypass` et `lodb#worker` (enregistrement du service worker) ; tout
+  autre `innerHTML`, `eval` ou URL de script en chaîne est signalé, rien n'est bloqué. Un
+  nouveau puits (une bibliothèque, un `innerHTML` direct) fait échouer la spec E2E de la CSP :
+  passer par le sanitizer d'Angular ou déclarer la politique dans `trusted-types-policy.ts`.
+- **Rapports CSP** : `report-to` et `report-uri` visent `POST /api/csp-reports` (API, même
+  origine, sans `AllowAnonymous` : le garde vérifie l'`Origin`). Un rapport envoyé avec le
+  cookie de session sans jeton XSRF est refusé comme toute requête de ce genre : celui d'un
+  visiteur connecté dont le navigateur joint ses cookies (`report-uri`) est perdu, voulu.
+  Rien de la page ni du client n'est gardé ; une ligne `web.csp.violated` par minute.
 - Issues de navigation **rendues en place** : 301, 302, 404 et 5xx s'affichent à l'URL
   demandée (`PageResponse`), jamais d'`UrlTree` de redirection côté serveur.
   `/{locale}/account`, `/{locale}/u` et `/b` ont une route 404 explicite (`bareNotFound`).

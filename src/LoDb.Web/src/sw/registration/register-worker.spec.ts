@@ -6,13 +6,18 @@ interface FakeView {
   fireLoad: () => void;
 }
 
-function fakeView(readyState: DocumentReadyState, withWorkers = true): FakeView {
+function fakeView(
+  readyState: DocumentReadyState,
+  withWorkers = true,
+  trustedTypes?: unknown,
+): FakeView {
   const register = vi.fn().mockResolvedValue({});
   let onLoad: () => void = () => undefined;
   const document = new DOMParser().parseFromString('<!doctype html><head></head>', 'text/html');
   Object.defineProperty(document, 'readyState', { value: readyState });
   const view = {
     document,
+    trustedTypes,
     navigator: withWorkers ? { serviceWorker: { register } } : {},
     addEventListener: (_type: string, listener: () => void) => (onLoad = listener),
   } as unknown as Window;
@@ -28,6 +33,24 @@ describe('registerWorker', () => {
     fireLoad();
 
     expect(register).toHaveBeenCalledWith('/sw.js', { scope: '/', updateViaCache: 'none' });
+  });
+
+  // The pages report any string that reaches a script sink (Trusted Types, Report-Only).
+  it("registers through the site's own Trusted Types policy, for its worker only", () => {
+    const trusted = { url: '/sw.js' };
+    const createPolicy = vi.fn(
+      (_name: string, rules: { createScriptURL(url: string): string }) => ({
+        createScriptURL: (url: string) => (rules.createScriptURL(url) === url ? trusted : null),
+      }),
+    );
+    const { view, register } = fakeView('complete', true, { createPolicy });
+
+    registerWorker(view);
+
+    expect(createPolicy).toHaveBeenCalledWith('lodb#worker', expect.anything());
+    expect(register).toHaveBeenCalledWith(trusted, { scope: '/', updateViaCache: 'none' });
+    const rules = createPolicy.mock.calls[0][1];
+    expect(() => rules.createScriptURL('/evil.js')).toThrow(TypeError);
   });
 
   it('registers at once when the page has already loaded', () => {

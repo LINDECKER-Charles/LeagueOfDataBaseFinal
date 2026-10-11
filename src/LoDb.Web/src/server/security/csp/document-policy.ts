@@ -1,3 +1,5 @@
+import { CSP_REPORTING } from './csp-reporting';
+
 // The Riot CDNs the pages hotlink: Data Dragon art, CommunityDragon previews, ability videos.
 const RIOT_MEDIA = [
   'https://ddragon.leagueoflegends.com',
@@ -8,12 +10,13 @@ const RIOT_MEDIA = [
 const STRIPE_FORMS = 'https://checkout.stripe.com https://billing.stripe.com';
 
 /**
- * Content-Security-Policy of a document, `scriptHashes` being the sources of its inline
- * scripts. Scripts: the site's own bundles and those exact inline scripts, no other inline
- * code, and no `eval` nor `new Function`: the i18n messages are compiled at build time
- * (src/LoDb.Web/i18n), never in the page.
+ * Content-Security-Policy of a document, `scriptHashes` being the sources of the inline
+ * scripts it admits (`KnownInlineScripts`). Scripts: the site's own bundles and those exact
+ * inline scripts, no other inline code, and no `eval` nor `new Function`: the i18n messages
+ * are compiled at build time (src/LoDb.Web/i18n), never in the page.
  * Styles keep 'unsafe-inline': Angular injects component styles and critical CSS inline.
  * Blobs are same-origin images (/cdn/blobs/); `data:` covers inline SVG and placeholders.
+ * Violations are reported to the API (`CSP_REPORTING`).
  */
 export function documentPolicy(scriptHashes: readonly string[]): string {
   return [
@@ -31,5 +34,6 @@ export function documentPolicy(scriptHashes: readonly string[]): string {
     "connect-src 'self'",
     "worker-src 'self'",
     "manifest-src 'self'",
+    ...CSP_REPORTING.directives,
   ].join('; ');
 }

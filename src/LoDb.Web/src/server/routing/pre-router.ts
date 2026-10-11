@@ -1,6 +1,6 @@
 import type { RequestHandler, Response } from 'express';
 import { NOINDEX_HEADERS } from '../../app/core/routing/response/noindex-headers';
-import { documentPolicy } from '../security/document-policy';
+import { documentPolicyHeaders } from '../security/csp/document-policy-headers';
 import { NOT_FOUND_PAGE } from './not-found-page';
 import type { PreRoute } from './pre-route';
 import { preRouteOf } from './pre-route-of';
@@ -25,7 +25,7 @@ function answer(route: Exclude<PreRoute, { kind: 'render' }>, response: Response
       response.set({
         ...NOINDEX_HEADERS,
         'Cache-Control': STATIC_NOT_FOUND_CACHE,
-        'Content-Security-Policy': documentPolicy([]),
+        ...documentPolicyHeaders([]),
       });
       response.status(NOT_FOUND).type('html').send(NOT_FOUND_PAGE);
       return;

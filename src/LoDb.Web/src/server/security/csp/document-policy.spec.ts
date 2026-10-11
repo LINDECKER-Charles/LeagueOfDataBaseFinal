@@ -40,6 +40,8 @@ describe('documentPolicy', () => {
       'connect-src': "'self'",
       'worker-src': "'self'",
       'manifest-src': "'self'",
+      'report-uri': '/api/csp-reports',
+      'report-to': 'csp',
     });
   });
 
