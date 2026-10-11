@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { PAYMENTS_ENABLED } from '../../../../environments/payments-enabled';
 import { Icon } from '../../../ui/media/icon';
 import { Logo } from '../../../ui/media/logo';
@@ -25,15 +25,15 @@ const MAIL_SCHEME = 'mailto:';
  * Site footer: brand and copyright, site map, outside links, release, legal pages, contact
  * links with the `contact` slot under them, then Riot's legal disclaimer, which Riot's
  * policy words in English and is kept verbatim in every locale. The site map labels some
- * pages from the `about` and `api` catalogue scopes, loaded here since the footer sits
- * outside the pages that provide them. Its catalogue links keep the page's version and variant.
+ * pages from the `about` and `api` catalogue scopes, whose labels the build lends to the root
+ * catalogue (src/LoDb.Web/i18n/chrome-keys.json): no page loads those whole scopes for them.
+ * Its catalogue links keep the page's version and variant.
  * A signed-in member also finds their profile there; the session is read in the browser only,
  * so the server renders what a visitor sees. Outside links open a tab, the e-mail one does not.
  */
 @Component({
   selector: 'lodb-footer',
   imports: [Icon, Logo, RouterLink, TranslocoPipe],
-  providers: [provideTranslocoScope('about', 'api')],
   templateUrl: './footer.html',
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,

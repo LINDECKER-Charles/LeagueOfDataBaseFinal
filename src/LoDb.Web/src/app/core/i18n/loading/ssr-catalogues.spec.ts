@@ -36,12 +36,21 @@ import { activateLocale } from '../activate-locale';
 import { provideI18n } from '../provide-i18n';
 import { TranslocoHttpLoader } from './transloco-http-loader';
 
+// The chrome's labels of other scopes, which the build lends to every root catalogue.
+const LENT_FR = {
+  about: {
+    index: { title: 'À propos' },
+    data: { title: 'Nos données' },
+    faq: { title: 'Foire aux questions' },
+  },
+  api: { nav: { developers: 'Développeurs' } },
+};
 // Served by the stubbed fetch, keyed by path: the render resolves the loader's relative URL.
+// Shaped as the build ships them: each locale completed with the `en` messages it lacks.
+// Italian has none, and fails to load (404).
 const CATALOGUES: Record<string, Translation> = {
   '/i18n/en.json': { base: { title: 'Hello', tagline: 'Only in English' } },
-  '/i18n/fr.json': { base: { title: 'Bonjour' } },
-  // Italian lacks the chrome's scopes, which then fail to load (404).
-  '/i18n/it.json': { base: { title: 'Ciao' } },
+  '/i18n/fr.json': { base: { title: 'Bonjour', tagline: 'Only in English' }, ...LENT_FR },
   '/i18n/about/en.json': {
     index: { title: 'About' },
     data: { title: 'Our data' },
@@ -183,6 +192,10 @@ function bodyOf(html: string): string {
   return /<body>([\s\S]*)<\/body>/.exec(html)?.[1] ?? '';
 }
 
+function fetchedPaths(fetch: ReturnType<typeof vi.fn>): string[] {
+  return fetch.mock.calls.map(([input]) => new URL(String(input), PAGE_ORIGIN).pathname);
+}
+
 // What src/server.ts hands a render: the build's files held in memory, the API's memo.
 function serverContext(): SsrRequestContext {
   const files = new Map(
@@ -214,24 +227,24 @@ describe('i18n catalogues in SSR', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders the page already translated, with the en fallback for missing keys', async () => {
+  it('renders the page already translated, from the catalogue of its locale alone', async () => {
     const fetch = stubCatalogueFetch();
 
     const html = await renderOnServer('/fr/');
 
     expect(html).toContain('<html lang="fr">');
     expect(html).toMatch(/<h1>Bonjour<\/h1>\s*<p>Only in English<\/p>/);
-    const fetched = fetch.mock.calls.map(([input]) => new URL(String(input)).pathname);
-    expect(fetched.sort()).toEqual(['/i18n/en.json', '/i18n/fr.json']);
+    expect(fetchedPaths(fetch)).toEqual(['/i18n/fr.json']);
   });
 
-  it('renders the header and footer with the labels of their catalogue scopes', async () => {
-    stubCatalogueFetch();
+  it('renders the header and footer with the labels lent to the root catalogue', async () => {
+    const fetch = stubCatalogueFetch();
     // The stubbed root catalogues lack the chrome's own labels, which is not the point here.
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     const body = bodyOf(await renderOnServer('/fr/chrome'));
 
+    expect(fetchedPaths(fetch)).toEqual(['/i18n/fr.json']);
     expect(body).toContain('Développeurs');
     expect(body).toContain('À propos');
     expect(body).toContain('Nos données');

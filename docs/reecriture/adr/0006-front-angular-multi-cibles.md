@@ -2,6 +2,8 @@
 
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : îlots Vue 3 + PrimeVue montés dans Twig, catalogues YAML Symfony
+- **Amendement** : le 2026-10-11, les catalogues servis sont construits au build, repli sur
+  `en` compris (voir § « Amendement du 2026-10-11 »).
 
 ## Contexte
 
@@ -112,3 +114,15 @@ Les règles de `CLAUDE.md` s'appliquent telles quelles :
 - **−** Le code spécifique à une plateforme doit rester confiné, ce qui demande une
   discipline vérifiée en revue et par une règle de lint : pas d'import `@capacitor/*`
   hors `core/platform/`.
+
+## Amendement du 2026-10-11 — catalogues construits au build
+
+Le repli sur `en` chargeait deux catalogues par portée et par page. Les catalogues servis
+sont désormais produits par `npm run i18n:build` (`src/LoDb.Web/i18n/`, avant chaque build)
+à partir de `public/i18n`, qui reste la source :
+
+- chaque locale est complétée par `en` clé par clé : le repli est décidé au build, le
+  runtime ne charge que la locale de la page (`useFallbackTranslation` coupé) ;
+- le serveur lit les catalogues du build une fois au démarrage et y répond sans requête ;
+- les quelques libellés que le chrome prend à d'autres portées sont prêtés au catalogue
+  racine (`chrome-keys.json`), plutôt que de charger ces portées sur toutes les pages.

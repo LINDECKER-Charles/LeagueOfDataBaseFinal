@@ -59,7 +59,14 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   « Dans les patchs précédents » des fiches, qui ne chargent aucun catalogue.
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
-  sinon la clé brute sort dans le HTML, sans erreur.
+  sinon la clé brute sort dans le HTML, sans erreur. Le chrome (en-tête, pied de page) n'en
+  fournit aucun : le build prête au catalogue racine ses libellés d'autres scopes
+  (`src/LoDb.Web/i18n/chrome-keys.json`, que `core/layout/chrome-keys.spec.ts` vérifie).
+- **Catalogues construits** (`npm run i18n:build`, avant chaque build et `npm start`) :
+  `public/i18n` est la source, `dist/i18n` ce que le site sert, chaque locale complétée par
+  `en`. `useFallbackTranslation` est coupé : une clé ajoutée à `en` seul s'affiche en anglais
+  partout après le build. Un `npx ng serve` lancé à la main sert le dernier `dist/i18n`
+  (`npm run i18n:build` d'abord).
 - **Le SSR ne se requête jamais lui-même** : catalogues et changelog sont lus en mémoire au
   démarrage (un dossier absent l'arrête) et `SsrHttpBackend` répond aux fichiers de la page
   sans HTTP. `/api/meta` est gardée 60 s par processus (`LODB_API_META_TTL_SECONDS`), sa

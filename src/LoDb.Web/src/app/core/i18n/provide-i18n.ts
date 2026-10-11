@@ -32,7 +32,9 @@ function activateUrlLocale(): void {
 
 /**
  * Transloco with ICU messages. A missing key falls back to its `en` translation rather than
- * the whole page switching language (plan, section 5.2).
+ * the whole page switching language (plan, section 5.2): the build completes every catalogue
+ * with the `en` messages it lacks (`npm run i18n:build`), so a page loads its own locale's
+ * catalogues only, never `en` beside them.
  */
 export function provideI18n(): EnvironmentProviders {
   return makeEnvironmentProviders([
@@ -41,14 +43,14 @@ export function provideI18n(): EnvironmentProviders {
         availableLangs: [...LOCALES],
         defaultLang: DEFAULT_LOCALE,
         fallbackLang: DEFAULT_LOCALE,
-        missingHandler: { useFallbackTranslation: true, logMissingKey: isDevMode() },
+        missingHandler: { useFallbackTranslation: false, logMissingKey: isDevMode() },
         reRenderOnLangChange: true,
         prodMode: !isDevMode(),
       },
       loader: TranslocoHttpLoader,
     }),
-    // Per-key fallback renders `en` messages under every locale, and CLDR has no `one`
-    // plural category in ja, ko, th, vi or zh: strict keys would throw on those messages.
+    // The build completes every locale with `en` messages, and CLDR has no `one` plural
+    // category in ja, ko, th, vi or zh: strict keys would throw on those messages.
     provideTranslocoMessageformat({ strictPluralKeys: false }),
     provideAppInitializer(activateUrlLocale),
   ]);
