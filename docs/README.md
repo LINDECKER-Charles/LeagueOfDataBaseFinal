@@ -57,6 +57,8 @@ Pour développer : guide [developpement.md](guides/developpement.md) et
 | [developpement.md](guides/developpement.md) | Nouvelle stack `lodb-dev` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
 | [configuration.md](guides/configuration.md) | Nouvelle stack : inventaire des secrets GitHub, des lignes `.env` de `staging` et de `prod`, des fichiers et volumes de l'hôte et des services externes |
 | [github-actions-secrets.md](guides/github-actions-secrets.md) | Nouvelle stack : pipeline CI/CD, `dev` → `test` (déploiement de `staging`) → `main` (promotion en `prod`) |
+| [deploiement-cle-restreinte.md](guides/deploiement-cle-restreinte.md) | Procédure du propriétaire, non activée : clé de déploiement à commande forcée, compte `deploy`, `.env` et secrets posés sur l'hôte |
+| [secrets-poste.md](guides/secrets-poste.md) | Procédure du propriétaire : secrets du poste chiffrés avec `sops` et `age`, clé hors du dépôt et du dossier |
 | [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
 | [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana : fonctionnement, ce qu'il ne faut surtout pas déclarer, requêtes LogsQL / PromQL, dépannage |
 | [logging.md](guides/logging.md) | Convention de journalisation applicative : clé d'événement, contexte, niveaux, canaux, interdictions |
