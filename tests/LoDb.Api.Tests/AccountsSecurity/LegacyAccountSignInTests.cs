@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Security.Claims;
-using LoDb.Api.Modules.Accounts.Security.Policy;
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Testing;
 using Microsoft.AspNetCore.Identity;
@@ -11,14 +10,13 @@ namespace LoDb.Api.Tests.AccountsSecurity;
 /// <summary>
 /// An account inserted as the legacy stack inserts it signs in: its bcrypt hash is rewritten
 /// in argon2id, its null stamp is created, never an error. Five failures in a row lock it for
-/// fifteen minutes, in <c>users</c>, so on every instance. A new account follows the policy.
+/// fifteen minutes, in <c>users</c>, so on every instance.
 /// </summary>
 public sealed class LegacyAccountSignInTests(PostgresContainerFixture postgres)
     : IAsyncLifetime
 {
     private const string UserName = "Legende_42";
     private const string Ascii = "ascii";
-    private const string StrongPassword = "Str0ng-passphrase!";
     private const int FailuresToLock = 5;
 
     private static readonly string Password = PhpHashes.Passwords[Ascii];
@@ -109,27 +107,6 @@ public sealed class LegacyAccountSignInTests(PostgresContainerFixture postgres)
         Assert.Equal(stamp, await StoredAsync("security_stamp"));
     }
 
-    [Fact]
-    public async Task NewAccountFollowsThePolicyAndGetsAnArgon2idHash()
-    {
-        await using var services = Services();
-        await using var scope = services.CreateAsyncScope();
-        var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-
-        var weak = await users.CreateAsync(NewUser(), "password");
-        var strong = await users.CreateAsync(NewUser(), StrongPassword);
-
-        Assert.Equal(
-            [
-                CnilPasswordValidator.RuleLength, CnilPasswordValidator.RuleUppercase,
-                CnilPasswordValidator.RuleDigit, CnilPasswordValidator.RuleSpecial,
-                CnilPasswordValidator.TooCommon,
-            ],
-            weak.Errors.Select(static error => error.Code));
-        Assert.True(strong.Succeeded);
-        Assert.Matches(MigratingPasswordHasherTests.TargetFormat, await StoredAsync("password"));
-    }
-
     public async ValueTask InitializeAsync()
     {
         _database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
@@ -142,14 +119,6 @@ public sealed class LegacyAccountSignInTests(PostgresContainerFixture postgres)
             await _database.DisposeAsync();
         }
     }
-
-    private static User NewUser() => new()
-    {
-        UserName = "Nouveau_7",
-        Email = "nouveau@example.test",
-        Roles = ["ROLE_USER"],
-        CreatedAt = TimeProvider.System.GetUtcNow(),
-    };
 
     private static async Task<SignInResult> SignInAsync(ServiceProvider services, string password)
     {

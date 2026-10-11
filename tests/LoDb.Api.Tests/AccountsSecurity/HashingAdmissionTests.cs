@@ -1,6 +1,6 @@
 using LoDb.Api.Modules.Accounts.Security;
 using LoDb.Api.Modules.Accounts.Security.Admission;
-using LoDb.Testing;
+using LoDb.Api.Tests.Hosting.Support;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 
@@ -90,22 +90,31 @@ public sealed class HashingAdmissionTests : IDisposable
         Assert.Empty(refused.GetMeasurementSnapshot());
     }
 
+    // One row per check: a range, and the delays no range can state.
     [Theory]
     [InlineData("Permits", "3")]
-    [InlineData("QueueLimit", "-1")]
     [InlineData("MaxWait", "00:00:00")]
-    [InlineData("RetryAfter", "00:00:00")]
-    public async Task BoundsOutOfRangeStopTheHost(string key, string value)
-    {
-        await using var factory = new ApiFactory
-        {
-            Settings = new Dictionary<string, string?>
+    public void BoundsOutOfRangeStopTheHost(string key, string value) =>
+        StartupValidation.RefusalOf<HashingAdmissionOptions>(
+            static builder => builder.Services.AddAccountsProtection(builder.Configuration),
+            new Dictionary<string, string?>
             {
                 [$"{HashingAdmissionOptions.SectionName}:{key}"] = value,
-            },
+            });
+
+    [Theory]
+    [InlineData(1, 1, true)]
+    [InlineData(0, 1, false)]
+    [InlineData(1, 0, false)]
+    public void BothDelaysMustBePositive(long maxWaitTicks, long retryAfterTicks, bool positive)
+    {
+        var options = new HashingAdmissionOptions
+        {
+            MaxWait = TimeSpan.FromTicks(maxWaitTicks),
+            RetryAfter = TimeSpan.FromTicks(retryAfterTicks),
         };
 
-        Assert.Throws<OptionsValidationException>(() => factory.Services);
+        Assert.Equal(positive, options.HasPositiveDelays());
     }
 
     public void Dispose() => _meters.Dispose();
