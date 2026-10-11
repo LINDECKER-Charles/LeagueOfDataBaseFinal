@@ -18,6 +18,8 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
     private const string Development = "Development";
     private const string AdminEmail = "dev.admin@example.test";
 
+    private static readonly string[] SuperuserCommands = ["migrate", "baseline mark-applied"];
+
     private readonly DirectoryInfo _storage =
         Directory.CreateTempSubdirectory("lodb-cli-development-storage-");
 
@@ -133,13 +135,18 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
         _source.Delete(recursive: true);
     }
 
-    // Settings first: a bare switch last never takes one for its value.
+    // Settings first: a bare switch last never takes one for its value. The migrations run as
+    // the server's superuser, as their Compose service does; every other command runs in the
+    // API's container, as the API's role.
     private async Task<int> RunAsync(string[] command, params string[] arguments)
     {
+        var connection = SuperuserCommands.Contains(string.Join(' ', command))
+            ? Database.ConnectionString
+            : Database.AppConnectionString;
         string[] args =
         [
             .. command,
-            $"--ConnectionStrings:LoDb={Database.ConnectionString}",
+            $"--ConnectionStrings:LoDb={connection}",
             $"--LoDb:Storage:Root={_storage.FullName}",
             "--LoDb:Egress:AllowedHosts:0=egress.invalid",
             "--LoDb:Egress:RetryBaseDelay=00:00:00.001",

@@ -12,7 +12,10 @@ const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const SCRIPT = join(ROOT, 'tools', 'deploy', 'split-env.sh');
 const TEMPLATES = ['.env.staging.example', '.env.prod.example'];
 const DATABASE_PASSWORD = 'LODB_DB_PASSWORD';
+const APP_DATABASE_PASSWORD = 'LODB_APP_DB_PASSWORD';
 const DATABASE_PASSWORD_SETTING = 'LoDb__Database__Password';
+const APP_ROLE_PASSWORD_SETTING = 'LoDb__Database__AppRole__Password';
+const APP_ROLE = 'Username=lodb_app;';
 const POSTGRES_PASSWORD_FILE = '/run/secrets/postgres-password';
 const REVISION_LABEL = 'league-of-data-base.secrets-revision';
 // Written by the deploy job on the host (configuration.md); Compose requires it.
@@ -26,8 +29,9 @@ const hasCompose = spawnSync('docker', ['compose', 'version'], { encoding: 'utf8
 const workspace = mkdtempSync(join(tmpdir(), 'lodb-compose-secrets-'));
 after(() => rmSync(workspace, { recursive: true, force: true }));
 
-const secretKeys = () =>
-  spawnSync('bash', [SCRIPT, '--keys'], { encoding: 'utf8' }).stdout.trim().split('\n');
+// --keys: the secrets of the dotenv; --generated: those the job draws on the host.
+const listed = (option) =>
+  spawnSync('bash', [SCRIPT, option], { encoding: 'utf8' }).stdout.trim().split('\n');
 const marker = (key) => `marker-value-of-${key.toLowerCase()}`;
 const targetName = (secret) => basename(secret.target.replaceAll('\\', '/'));
 
@@ -69,10 +73,12 @@ for (const template of TEMPLATES) {
     { skip: !hasCompose && 'no docker compose' },
     () => {
       let keys;
+      let generated;
       let rendered;
       before(() => {
-        keys = secretKeys();
-        rendered = render(template, keys);
+        keys = listed('--keys');
+        generated = listed('--generated');
+        rendered = render(template, [...keys, ...generated]);
       });
 
       it('declares one file of .deploy/secrets per secret key, and no other', () => {
@@ -80,19 +86,19 @@ for (const template of TEMPLATES) {
           .filter(([, secret]) => /[\\/]\.deploy[\\/]secrets[\\/]/.test(secret.file))
           .map(([name, secret]) => [name, basename(secret.file.replaceAll('\\', '/'))]);
 
-        assert.deepEqual(files.map(([name]) => name).sort(), [...keys].sort());
+        assert.deepEqual(files.map(([name]) => name).sort(), [...keys, ...generated].sort());
         for (const [name, file] of files) {
           assert.equal(file, name);
         }
       });
 
       it('never renders a secret value, even from a .env that still holds it', () => {
-        for (const key of keys) {
+        for (const key of [...keys, ...generated]) {
           assert.equal(rendered.text.includes(marker(key)), false, key);
         }
       });
 
-      it('mounts each setting of the API under its key, the database password included', () => {
+      it('mounts each setting of the API under its key, its own role password included', () => {
         const api = rendered.config.services.api;
         const targets = new Map(api.secrets.map((secret) => [secret.source, targetName(secret)]));
 
@@ -100,14 +106,24 @@ for (const template of TEMPLATES) {
           assert.equal(targets.get(key), key);
           assert.equal(key in api.environment, false, key);
         }
-        assert.equal(targets.get(DATABASE_PASSWORD), DATABASE_PASSWORD_SETTING);
+        assert.equal(targets.has(DATABASE_PASSWORD), false);
+        assert.equal(targets.get(APP_DATABASE_PASSWORD), DATABASE_PASSWORD_SETTING);
+        assert.ok(api.environment.ConnectionStrings__LoDb.includes(APP_ROLE));
         assert.match(api.labels[REVISION_LABEL], /^\d+$/);
       });
 
-      it('gives migrate and postgres the database password as a file only', () => {
+      it('gives migrate the superuser and API passwords, postgres its own, as files only', () => {
         const { migrate, postgres, api } = rendered.config.services;
 
-        assert.deepEqual(migrate.secrets.map(targetName), [DATABASE_PASSWORD_SETTING]);
+        assert.deepEqual(
+          migrate.secrets.map((secret) => [secret.source, targetName(secret)]),
+          [
+            [DATABASE_PASSWORD, DATABASE_PASSWORD_SETTING],
+            [APP_DATABASE_PASSWORD, APP_ROLE_PASSWORD_SETTING],
+          ],
+        );
+        assert.equal(APP_ROLE_PASSWORD_SETTING in migrate.environment, false);
+        assert.equal(migrate.environment.ConnectionStrings__LoDb.includes(APP_ROLE), false);
         for (const service of [api, migrate]) {
           assert.doesNotMatch(service.environment.ConnectionStrings__LoDb, /password/i);
         }

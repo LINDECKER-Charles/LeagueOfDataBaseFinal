@@ -37,7 +37,7 @@ public sealed class DdragonStoreTests(PostgresContainerFixture postgres)
     private IDdragonVersionStore Versions => Services.GetRequiredService<IDdragonVersionStore>();
 
     private ServiceProvider Services =>
-        _services ??= PersistenceServices.Build(Database.ConnectionString, _time);
+        _services ??= PersistenceServices.Build(Database.AppConnectionString, _time);
 
     [Fact]
     public async Task ConcurrentRecordsOfOneKeyInsertOneRow()

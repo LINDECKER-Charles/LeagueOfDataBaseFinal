@@ -22,7 +22,7 @@ public sealed class IdentityStoresTests(PostgresContainerFixture postgres)
 
     private ServiceProvider? _services;
 
-    private ServiceProvider Services => _services ??= BuildServices(Database.ConnectionString);
+    private ServiceProvider Services => _services ??= BuildServices(Database.AppConnectionString);
 
     [Fact]
     public async Task NullStampIsCreatedAtFirstUse()

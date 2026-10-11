@@ -96,7 +96,7 @@ public sealed class KeyRingTests(PostgresContainerFixture postgres) : MigratedDa
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [$"ConnectionStrings:{LoDbDataSource.ConnectionStringName}"] =
-                    Database.ConnectionString,
+                    Database.AppConnectionString,
             })
             .Build();
         var services = new ServiceCollection()

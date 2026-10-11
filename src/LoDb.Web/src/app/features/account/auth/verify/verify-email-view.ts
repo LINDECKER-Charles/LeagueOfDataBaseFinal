@@ -1,6 +1,13 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { AccountService } from '../../../../core/api/generated/services/account.service';
@@ -13,18 +20,18 @@ import { Button } from '../../../../ui/controls/button';
 import { problemOf } from '../../shared/problems/problem-of';
 import { ResendVerification } from '../../shared/resend-verification';
 import { AuthCard } from '../card/auth-card';
+import { emailLinkOf } from '../link/email-link';
+import { forgetLinkToken } from '../link/forget-link-token';
 import type { VerifyOutcome } from './verify-outcome';
 
-// The e-mail link: `verify-email?user={id}&token={token}`.
-const USER_PARAM = 'user';
-const TOKEN_PARAM = 'token';
 const USER_ID = /^[1-9][0-9]*$/;
 const SETTLED: readonly VerifyOutcome[] = ['verified', 'already'];
 
 /**
- * The page of the verification link, which checks it at once, and the page the
- * verified-email guard sends to: it tells how to finish, sends the e-mail again for a
- * signed-in account, then goes on to the page asked for.
+ * The page of the verification link (`verify-email?user={id}#token=…`), which checks it at
+ * once and takes its token out of the address bar, and the page the verified-email guard sends
+ * to: it tells how to finish, sends the e-mail again for a signed-in account, then goes on to
+ * the page asked for.
  */
 @Component({
   selector: 'lodb-verify-email-view',
@@ -39,7 +46,9 @@ export class VerifyEmailView {
   private readonly account = inject(AccountService);
   private readonly session = inject(AuthSession);
   private readonly page = inject(PageDirection);
-  private readonly query = inject(ActivatedRoute).snapshot.queryParamMap;
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute).snapshot;
+  private readonly query = this.route.queryParamMap;
   private readonly origin = inject(DOCUMENT).location.origin;
 
   private readonly resendVerification = inject(ResendVerification);
@@ -60,8 +69,11 @@ export class VerifyEmailView {
   }));
 
   constructor() {
-    const user = this.query.get(USER_PARAM) ?? '';
-    const token = this.query.get(TOKEN_PARAM) ?? '';
+    const { user, token } = emailLinkOf(this.route);
+    if (token !== '') {
+      const page = this.path('account/verify-email');
+      afterNextRender(() => void forgetLinkToken(this.router, page, this.route));
+    }
     if (USER_ID.test(user) && token !== '') {
       void this.verify(Number(user), token);
     }

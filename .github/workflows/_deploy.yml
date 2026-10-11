@@ -7,7 +7,9 @@ name: _deploy
 # ENV_FILE, pushed to the host and split there: its secrets each go to a file of
 # .deploy/secrets, which compose.deploy.yaml mounts, and the rest becomes the .env
 # (tools/deploy/split-env.sh). Nothing is built on the host: it pulls the images
-# _build.yml built once.
+# _build.yml built once. One secret never leaves the host: the password of the API's
+# database role (LODB_APP_DB_PASSWORD), drawn there by the split at the first deploy, kept
+# in .deploy/secrets, and set on the role by `migrate`; a dotenv that holds it is refused.
 #
 # The job runs in the GitHub environment of its target (`staging`, `production`), where the
 # repository's owner sets the protection rules (reviewers, deployment branches). Environment
@@ -458,7 +460,9 @@ jobs:
             fi
 
             # Fail-fast: the containers in place keep serving if it fails (none after the network
-            # move above). Idempotent: a database already up to date applies nothing.
+            # move above). Idempotent: a database already up to date applies nothing. It also
+            # keeps the API's role (lodb_app) and sets its password from .deploy/secrets, before
+            # `up` recreates the API, which signs in with it.
             docker compose run --rm migrate
 
             # --wait: the job fails if a probe does not turn healthy. --remove-orphans

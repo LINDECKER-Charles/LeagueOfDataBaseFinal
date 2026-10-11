@@ -47,8 +47,12 @@ services:
       # connection (and the connection attempt): past it, /api answers 503 with Retry-After.
       # Host=lodb-postgres, the project's alias: on a shared network (observability), the
       # short name `postgres` would also name other projects' databases.
-      ConnectionStrings__LoDb: &lodb-connection >-
-        Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+      # Username=lodb_app: the API's own role, which migrate keeps in place. It reads and
+      # writes rows, creates nothing, and its statements stop after 15 s
+      # (docs/guides/configuration.md). Locally its password is a fixed default; a served
+      # host draws its own (compose.deploy.yaml).
+      ConnectionStrings__LoDb: >-
+        Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=lodb_app;Password=${LODB_APP_DB_PASSWORD:-lodb-app};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
       # X-Forwarded-* are trusted from the private ranges: only nginx and web-ssr reach
       # this port on a served host (no host port, not on the edge network). The stack's
       # own subnet is picked by Docker, so it cannot be named more precisely here.
@@ -100,14 +104,18 @@ services:
   # One-shot: the API's image brings the database to the latest migration (a database
   # created by Doctrine is marked at the baseline first), then exits. The API starts only
   # once it has succeeded: a schema it refuses stays untouched and keeps the API down.
-  # Every run after the first applies nothing.
+  # Every run after the first applies nothing. It connects as the server's superuser
+  # (POSTGRES_USER, the legacy stack's role), the only one allowed to change the schema, then
+  # keeps the API's role in place with the password it is given here.
   migrate:
     build: *api-build
     command: ["migrate"]
     <<: *hardening
     tmpfs: *dotnet-tmpfs
     environment:
-      ConnectionStrings__LoDb: *lodb-connection
+      ConnectionStrings__LoDb: >-
+        Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable;Timeout=5;Application Name=lodb-migrate
+      LoDb__Database__AppRole__Password: ${LODB_APP_DB_PASSWORD:-lodb-app}
     # Postgres's network, and the stack's: a database still on the latter (a host whose
     # Postgres predates `data`) stays reachable for the run that precedes `up`.
     networks: [default, data]

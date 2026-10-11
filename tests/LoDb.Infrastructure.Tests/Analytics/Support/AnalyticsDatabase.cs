@@ -28,7 +28,7 @@ public abstract class AnalyticsDatabase(PostgresContainerFixture postgres)
 
     protected T Get<T>()
         where T : notnull =>
-        (_services ??= AnalyticsServices.Build(Database.ConnectionString, Time))
+        (_services ??= AnalyticsServices.Build(Database.AppConnectionString, Time))
             .GetRequiredService<T>();
 
     /// <summary>One sample view at each moment, their partitions created first.</summary>

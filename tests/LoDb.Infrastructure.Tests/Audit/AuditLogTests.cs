@@ -30,7 +30,7 @@ public sealed class AuditLogTests(PostgresContainerFixture postgres) : MigratedD
     [Fact]
     public async Task EventIsRecordedWithTheActorAddressAndRouteOfItsRequest()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
         harness.Requests.HttpContext =
             AuditHarness.Request(AuditHarness.SignedIn(7, "moderator", Role.Admin));
 
@@ -54,7 +54,7 @@ public sealed class AuditLogTests(PostgresContainerFixture postgres) : MigratedD
     [Fact]
     public async Task AccountWithoutTheAdminRoleIsAUser()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
         harness.Requests.HttpContext = AuditHarness.Request(AuditHarness.SignedIn(3, "alice"));
 
         await harness.Journal.RecordAsync(Event(AuditAction.BuildCreate), Cancellation);
@@ -69,7 +69,7 @@ public sealed class AuditLogTests(PostgresContainerFixture postgres) : MigratedD
     [Fact]
     public async Task ActorOfTheEventWinsOverTheRequest()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
         harness.Requests.HttpContext = AuditHarness.Request(new());
 
         await harness.Journal.RecordAsync(
@@ -85,7 +85,7 @@ public sealed class AuditLogTests(PostgresContainerFixture postgres) : MigratedD
     [Fact]
     public async Task OutsideARequestTheActorIsAnonymous()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
 
         await harness.Journal.RecordAsync(Event(AuditAction.AdminLogsPurge), Cancellation);
 
@@ -100,7 +100,7 @@ public sealed class AuditLogTests(PostgresContainerFixture postgres) : MigratedD
     [Fact]
     public async Task ValuesLongerThanTheirColumnAreCut()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
 
         await harness.Journal.RecordAsync(
             Event(AuditAction.AdminBuildHide) with
@@ -127,7 +127,7 @@ public sealed class AuditLogTests(PostgresContainerFixture postgres) : MigratedD
     [Fact]
     public async Task AbortedRequestKeepsTheTrailOfItsAction()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
         using var aborted = new CancellationTokenSource();
         await aborted.CancelAsync();
 

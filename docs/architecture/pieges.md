@@ -87,6 +87,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - Variante store : `environment.payments` n'agit que là où le code le lit ; le paiement se
   retire par le routage et les liens. `cap sync` ne tourne que dans le conteneur
   (`tools/android/build-debug.sh`).
+- **Liens des e-mails de compte** : le jeton est dans le **fragment**
+  (`verify-email?user={id}#token=…`, `reset-password?user={id}#token=…`), que ni le serveur,
+  ni l'edge, ni un `Referer` ne voient. La page le lit au démarrage, côté navigateur, puis le
+  retire de l'URL (`forgetLinkToken`, navigation `replaceUrl`) : rechargée ensuite, la page
+  n'a plus de lien (celle du mot de passe renvoie vers une nouvelle demande), c'est voulu.
+  Les anciennes formes (`verify-email?token=`, `reset-password/{token}`) restent lues pour les
+  liens déjà envoyés (valides une heure) ; ne pas remettre le jeton dans le chemin ni la query.
 
 ## API, données et comptes
 
@@ -100,6 +107,17 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   compté par `lodb_db_unavailable_total`. Npgsql ne donne au pool épuisé ni type ni code :
   son message est reconnu par son texte, et `DatabaseFailureTests` le revérifie sur un vrai
   pool à chaque montée de version.
+- **Rôle Postgres de l'API** : l'API se connecte comme `lodb_app` (lignes seulement, 15 s par
+  requête), `migrate` comme le superutilisateur ([`configuration.md`](../guides/configuration.md)
+  § 4.3). Un `42501` (`permission denied`, `must be owner`) d'une commande lancée dans le
+  conteneur `api` est voulu : ce qui change le schéma passe par `migrate`
+  (`docker compose run --rm migrate …`), jamais par l'API ni par un droit accordé à la main,
+  que le déploiement suivant retire. Les seules tables que l'API crée et supprime, les
+  partitions d'`analytics_event`, passent par deux fonctions `SECURITY DEFINER`. Une tâche
+  dont les requêtes grandissent avec le trafic relève son délai pour sa transaction
+  (`StatementTimeouts.RaiseAsync`), jamais celui du rôle. En test, `TestDatabase.ConnectionString`
+  est le superutilisateur (`migrate`, amorçage, assertions), `AppConnectionString` le rôle de
+  l'API : un hôte de test se branche sur le second.
 - **Corps de requête** : 128 Kio au plus (`LoDb:Hosting:MaxRequestBodySize`), 413 au-delà.
   Le plus gros corps légitime, un build maximal dont chaque caractère est échappé, dépasse
   64 Kio (`tests/LoDb.E2E/specs/builds/maximal-build.spec.ts`) : ne pas descendre à 64 Kio.
@@ -254,7 +272,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `down -v`), `lodb_archive` sous l'epoch, `lodb_assets` (bundles de `/build/`) sous `$uri`
   seul.
   `/cdn/blobs/` ne sert que `{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` : une nouvelle
-  extension de blob s'ajoute à la regex. La garde des extensions de scripts
+  extension de blob s'ajoute à la regex **et** à `BlobMediaTypes` (ingestion), qui refuse tout
+  fichier hors de cette liste ou dont les premiers octets ne sont pas de son format
+  (enregistré absent, une ligne `ingest.images.refused` par lot). La garde des extensions de scripts
   (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
   nom d'utilisateur peut finir en `.bak` ou `.ini`. Vérification : `tools/nginx/`
   (`node --test`).
@@ -263,7 +283,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `docker inspect`) ; un nouveau secret s'ajoute à `SECRET_KEYS` **et** aux `secrets` du
   calque (`tools/deploy` vérifie l'accord). Le job écrit un fichier par secret, vide s'il est
   absent : Docker monterait un fichier manquant comme un dossier, et l'API lit un fichier
-  vide comme un réglage absent. Un conteneur garde le fichier monté à sa création et l'API
+  vide comme un réglage absent. Un secret tiré sur l'hôte (`GENERATED_KEYS`, le mot de passe
+  de `lodb_app`) n'est jamais dans `ENV_*` : supprimer son fichier en tire un autre au
+  déploiement suivant. Un conteneur garde le fichier monté à sa création et l'API
   ne lit ses fichiers qu'au démarrage : le label `LODB_SECRETS_REVISION` de `api` est ce qui
   la fait recréer quand un secret change, ne pas le retirer. `POSTGRES_PASSWORD_FILE` ne
   sert qu'à la création d'une base (volume vide).

@@ -18,6 +18,8 @@ const KEYS = [
   'LoDb__Accounts__Google__AppClients__1__ClientSecret',
   'LoDb__Analytics__VisitorKey',
 ];
+const GENERATED = 'LODB_APP_DB_PASSWORD';
+const HEX_SECRET = /^[0-9a-f]{64}$/;
 const IS_POSIX = process.platform !== 'win32';
 const workspaces = [];
 
@@ -52,6 +54,13 @@ describe('split-env.sh', () => {
     assert.deepEqual(run.stdout.trim().split('\n'), KEYS);
   });
 
+  it('lists the secrets it generates', () => {
+    const run = spawnSync('bash', [SCRIPT, '--generated'], { encoding: 'utf8' });
+
+    assert.equal(run.status, 0, run.stderr);
+    assert.deepEqual(run.stdout.trim().split('\n'), [GENERATED]);
+  });
+
   it('moves every secret to its own file and keeps every other line in order', () => {
     const place = workspace();
     const dotenv = [
@@ -77,10 +86,10 @@ describe('split-env.sh', () => {
       'LODB_SECRETS_REVISION=1',
       '',
     ]);
-    assert.deepEqual(readdirSync(place.secrets).sort(), [...KEYS].sort());
+    assert.deepEqual(readdirSync(place.secrets).sort(), [...KEYS, GENERATED].sort());
     assert.equal(secret(place, 'LODB_DB_PASSWORD'), 'database-secret');
     assert.equal(secret(place, 'LoDb__Billing__StripeSecretKey'), 'sk_live_example');
-    assert.match(run.stdout, /2 of 9 secrets set, revision 1\./);
+    assert.match(run.stdout, /2 of 9 secrets set, 1 generated, revision 1\./);
     assert.doesNotMatch(run.stdout + run.stderr, /database-secret|sk_live_example/);
   });
 
@@ -176,6 +185,54 @@ describe('split-env.sh', () => {
     );
     assert.equal(envLines(place).filter((line) => line.startsWith('LODB_SECRETS')).length, 1);
   });
+
+  it('draws the API database password once, then keeps it', () => {
+    const place = workspace();
+    const dotenv = 'LODB_DB_PASSWORD=one\n';
+
+    const first = splitOk(place, dotenv);
+    const drawn = secret(place, GENERATED);
+    const second = splitOk(place, dotenv);
+
+    assert.match(drawn, HEX_SECRET);
+    assert.equal(secret(place, GENERATED), drawn);
+    assert.equal(revisionOf(place), 'LODB_SECRETS_REVISION=1');
+    assert.match(second.stdout, /0 generated, revision 1\./);
+    assert.doesNotMatch(first.stdout + first.stderr + second.stdout, new RegExp(drawn));
+  });
+
+  it('draws a new one when its file is gone, and raises the revision', () => {
+    const place = workspace();
+    splitOk(place, 'LODB_DB_PASSWORD=one\n');
+    const drawn = secret(place, GENERATED);
+    rmSync(join(place.secrets, GENERATED), { force: true });
+
+    splitOk(place, 'LODB_DB_PASSWORD=one\n');
+
+    assert.match(secret(place, GENERATED), HEX_SECRET);
+    assert.notEqual(secret(place, GENERATED), drawn);
+    assert.equal(revisionOf(place), 'LODB_SECRETS_REVISION=2');
+  });
+
+  for (const [form, line] of [
+    ['KEY=value', `${GENERATED}=from-github`],
+    ['KEY: value, a form Compose also reads', `${GENERATED}: from-github`],
+  ]) {
+    it(`refuses a dotenv that sets the generated password as ${form}, naming it only`, () => {
+      const place = workspace();
+      splitOk(place, 'LODB_DB_PASSWORD=one\n');
+      const drawn = secret(place, GENERATED);
+      const env = readFileSync(place.env, 'utf8');
+
+      const run = split(place, `LODB_DB_PASSWORD=one\n${line}\n`);
+
+      assert.notEqual(run.status, 0);
+      assert.match(run.stderr, new RegExp(`${GENERATED} is generated on the host`));
+      assert.doesNotMatch(run.stderr, /from-github/);
+      assert.equal(secret(place, GENERATED), drawn);
+      assert.equal(readFileSync(place.env, 'utf8'), env);
+    });
+  }
 
   it('refuses to run without its two paths', () => {
     const run = spawnSync('bash', [SCRIPT, '.env'], { input: '', encoding: 'utf8' });

@@ -20,6 +20,8 @@ internal sealed class AnalyticsOptionsValidator : IValidateOptions<AnalyticsOpti
 
     private static readonly TimeSpan MinWindow = TimeSpan.FromMilliseconds(1);
     private static readonly TimeSpan MaxWindow = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan MinJobStatementTimeout = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan MaxJobStatementTimeout = TimeSpan.FromHours(1);
 
     public ValidateOptionsResult Validate(string? name, AnalyticsOptions options)
     {
@@ -63,6 +65,11 @@ internal sealed class AnalyticsOptionsValidator : IValidateOptions<AnalyticsOpti
             failures,
             options.MaxRefererHostsPerDay < 1,
             "MaxRefererHostsPerDay must be positive.");
+        AddIf(
+            failures,
+            options.JobStatementTimeout < MinJobStatementTimeout
+                || options.JobStatementTimeout > MaxJobStatementTimeout,
+            "JobStatementTimeout must lie in 1 second – 1 hour.");
     }
 
     private static bool IsWithinEventRetention(TimeSpan retention, int eventMonths) =>

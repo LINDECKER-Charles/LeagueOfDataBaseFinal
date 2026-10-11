@@ -32,7 +32,17 @@ public sealed class TestDatabase : IAsyncDisposable
 
     public string Name { get; }
 
+    /// <summary>
+    /// The server's superuser on this database: what <c>migrate</c> and the tests' own
+    /// seeding and assertions use.
+    /// </summary>
     public string ConnectionString { get; }
+
+    /// <summary>
+    /// The API's role on this database (<see cref="TestRoles"/>), as a served host connects:
+    /// rows only, once the database is migrated.
+    /// </summary>
+    public string AppConnectionString => TestRoles.AppConnectionString(ConnectionString);
 
     public NpgsqlDataSource DataSource { get; }
 
@@ -46,7 +56,11 @@ public sealed class TestDatabase : IAsyncDisposable
 
     /// <summary>A migrator on the given context, as one run of <c>migrate</c>.</summary>
     public static DatabaseMigrator CreateMigrator(LoDbDbContext context) =>
-        new(context, TimeProvider.System, NullLogger<DatabaseMigrator>.Instance);
+        new(
+            context,
+            TestRoles.Create(),
+            TimeProvider.System,
+            NullLogger<DatabaseMigrator>.Instance);
 
     /// <summary>Brings the database to the latest migration, as <c>migrate</c> does.</summary>
     public async Task<MigrationReport> MigrateAsync(CancellationToken cancellationToken)

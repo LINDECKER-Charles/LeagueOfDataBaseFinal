@@ -182,6 +182,15 @@ mis en fichiers :
   (`N` = `0` ou `1`) ;
 - `LoDb__Analytics__VisitorKey`.
 
+Un secret ne vient **jamais** de `ENV_*` : `LODB_APP_DB_PASSWORD`, le mot de passe du rôle
+Postgres de l'API (`lodb_app`, § 4.3). Le premier déploiement le tire sur l'hôte
+(`openssl rand`, 64 caractères hexadécimaux) dans `.deploy/secrets/LODB_APP_DB_PASSWORD`, que
+les suivants gardent ; il n'existe nulle part ailleurs, ni dans GitHub ni dans les sauvegardes
+du `.env`, et n'est jamais affiché. `migrate` le pose sur le rôle à chaque passage, l'API se
+connecte avec. Un `ENV_*` qui le définit est refusé avant toute écriture. Pour le changer,
+supprimer le fichier et relancer le déploiement : un nouveau est tiré, `migrate` le pose,
+puis `up` recrée l'API.
+
 `LODB_ADMIN_PASSWORD` reste dans le `.env` : aucun conteneur ne le reçoit par l'environnement
 (§ 4.1).
 
@@ -216,8 +225,9 @@ création d'une base, sur un volume vide.
 | `LODB_STACK_SUBNET` | — | — | — | Sous-réseau du réseau privé de la stack (`10.231.1.0/24` en staging, `10.231.2.0/24` en prod). **Jamais dans `ENV_*`** : le job l'écrit selon la cible (§ 6.8). |
 | `LODB_EDGE_SECRET` | — | — | — | Valeur que l'edge envoie à nginx dans `X-LoDb-Edge` ; sans elle, nginx répond `403` (hors `/healthz`). **Jamais dans `ENV_*`** (une ligne qui la nomme est remplacée) : le job la génère une fois par hôte et l'écrit dans le `.env` (§ 6.7). Vide en local : rien n'est exigé. |
 | `LODB_NOINDEX` ⚙️ | `1` | `0` | ✅ | `X-Robots-Tag: noindex, nofollow` ; le smoke test le vérifie. |
-| `LODB_DB_NAME`, `LODB_DB_USER` | 🔁 `POSTGRES_DB`, `POSTGRES_USER` | idem | ✅ | La base existe déjà dans `pgdata`, créée avec ces identifiants ; chaîne de connexion de `api` et `migrate`. |
-| `LODB_DB_PASSWORD` 🔒 ⚙️ | 🔁 `POSTGRES_PASSWORD` | idem | ✅ | Idem. Fichier (§ 4) : `api` et `migrate` le lisent en `LoDb__Database__Password`, que l'API pose dans la chaîne de connexion (un `;` y est donc permis), `postgres` en `POSTGRES_PASSWORD_FILE`. |
+| `LODB_DB_NAME`, `LODB_DB_USER` | 🔁 `POSTGRES_DB`, `POSTGRES_USER` | idem | ✅ | La base existe déjà dans `pgdata`, créée avec ces identifiants. `LODB_DB_NAME` : base de `api` et `migrate` ; `LODB_DB_USER` : le superutilisateur, rôle de `migrate` (et de l'ancienne stack) seulement, l'API se connectant comme `lodb_app` (§ 4.3). |
+| `LODB_DB_PASSWORD` 🔒 ⚙️ | 🔁 `POSTGRES_PASSWORD` | idem | ✅ | Idem. Fichier (§ 4) : `migrate` le lit en `LoDb__Database__Password`, qu'il pose dans sa chaîne de connexion (un `;` y est donc permis), `postgres` en `POSTGRES_PASSWORD_FILE`. L'API ne le reçoit pas. |
+| `LODB_APP_DB_PASSWORD` 🔒 | — | — | — | **Jamais dans `ENV_*`** : tiré sur l'hôte au premier déploiement (§ 4). Fichier : l'API le lit en `LoDb__Database__Password`, `migrate` en `LoDb__Database__AppRole__Password`. En local, `lodb-app`. |
 | `LODB_SECRETS_REVISION` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit et le monte d'un cran quand un fichier secret change ; label de `api`, il fait recréer l'API (§ 4). |
 | `LODB_DATA_PROTECTION_CERT_FILE`, `LODB_ANDROID_DIR` | défauts | défauts | — | Ne pas définir : le job écrit aux emplacements par défaut (§ 5). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | ➖ | ➖ | ➖ | Collecteur de traces OTLP, quand `infra-vps` en expose un. |
@@ -298,12 +308,13 @@ même nom.
 | `LoDb__Catalog__ColdLoadConcurrency`, `ColdLoadsPerSecond`, `ColdLoadBurst`, `PublicColdLoadsPerSecond`, `InternalColdLoadWait`, `MaxPendingLoads` | ➖ | Chargement d'un catalogue absent de la mémoire : `2` à la fois, `3` par seconde (rafale `6`), dont `1` pour les appels publics, refusés sans attente ; le SSR attend `2` s au plus, derrière `16` autres. Refus : `503` + `Retry-After`. |
 | `LoDb__Catalog__WarmUp__MaxStreams`, `MaxStreamsPerClient`, `StreamLifetime`, `PerClientPerHour` | ➖ | Loader de changement de patch : `8` flux ouverts, `2` par client, `120` s chacun, `20` démarrages par heure et par client (`429` au-delà). |
 | `LoDb__Ingestion__ColdDatasetsPerMinute`, `ColdImagesPerMinute`, `MaxWaitingIngestions`, `SlotWait` | ➖ | Ingestion à froid pour un visiteur : `6` couples (version, langue) et `1500` images par minute, `32` ingestions en attente d'un emplacement, `3` s d'attente au plus. Au-delà : catalogue « en attente », images en placeholders. |
+| `LoDb__Database__AppRole__StatementTimeout`, `ConnectionLimit` | ➖ | Transmis à `migrate` seulement, qui les pose sur le rôle de l'API (§ 4.3) : `00:00:15` (une requête plus longue est annulée par le serveur) et `50` sessions (`-1` : sans limite ; sous les 60 du serveur, moins les 3 réservées aux superutilisateurs). Pris en compte au déploiement suivant, par les nouvelles connexions. |
 
 ### 4.3 Fixés par les fichiers compose (hors du `.env`)
 
-`ConnectionStrings__LoDb` (assemblée depuis `LODB_DB_NAME` et `LODB_DB_USER`, hôte `lodb-postgres`,
-pool borné par `Maximum Pool Size=32;Timeout=5`, **sans mot de passe** : l'API y pose
-`LoDb__Database__Password`, lu dans `/run/secrets`),
+`ConnectionStrings__LoDb` (hôte `lodb-postgres`, base `LODB_DB_NAME`, **sans mot de passe** :
+le service y pose `LoDb__Database__Password`, lu dans `/run/secrets` ; pour l'API, rôle
+`lodb_app`, pool borné par `Maximum Pool Size=32;Timeout=5` ; pour `migrate`, `LODB_DB_USER`),
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
@@ -312,6 +323,28 @@ pool borné par `Maximum Pool Size=32;Timeout=5`, **sans mot de passe** : l'API 
 `LODB_STACK_NETWORKS` (`LODB_STACK_SUBNET` seul), `LODB_FRONT_BUILDS_DIR` (`/srv/front-builds`,
 volume `front-builds`), `NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur un hôte : `Development`
 exposerait OpenAPI et retirerait `Secure` des cookies.
+
+**Rôles Postgres.** `migrate` se connecte comme le superutilisateur de l'image (`LODB_DB_USER`,
+celui de l'ancienne stack, laissé intact jusqu'au *contract*) et, après les migrations, tient
+en place trois rôles (`Persistence/Roles/`), de façon idempotente : il ne réécrit que ce qui
+diffère.
+
+| Rôle | Connexion | Droits |
+|---|---|---|
+| `lodb_owner` | jamais | Propriétaire des tables, vues et séquences du schéma `public`. |
+| `lodb_partitions` | jamais | Propriétaire d'`analytics_event`, de ses partitions quotidiennes et des deux fonctions `SECURITY DEFINER` qui les créent et les suppriment (`lodb_create_analytics_partition(date)`, `lodb_drop_analytics_partition(date)`). |
+| `lodb_app` (l'API) | oui, `CONNECTION LIMIT 50` | Lecture et écriture de lignes (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), lecture seule des historiques de migration, séquences ; `EXECUTE` sur les deux fonctions, son seul DDL. Ni `TRUNCATE`, ni création (tables, index, schémas, tables temporaires, fonctions), ni appartenance à un autre rôle, ni rôle superutilisateur ; `statement_timeout` de 15 s. |
+
+Chaque passage rend les objets du schéma à leur propriétaire et refait les droits de
+`lodb_app` (un droit accordé à la main, sur une table, le schéma ou la base, comme une
+appartenance à un autre rôle ou un réglage du rôle, même propre à une base, ne survit pas au
+déploiement suivant) ; les privilèges
+par défaut couvrent une table qu'une migration crée, dès sa création. Les tâches qui lisent
+une journée entière de vues (agrégation, effacement des données client) relèvent leur propre
+délai le temps de leur transaction (`LoDb:Analytics:JobStatementTimeout`, 5 min). Une commande
+lancée dans le conteneur `api` (`admin`, `ingest`, `analytics import`…) a les droits de l'API ;
+ce qui change le schéma passe par `migrate` : `docker compose run --rm migrate` (ou
+`docker compose run --rm migrate baseline mark-applied`).
 
 Ressources de chaque service, dans `compose.deploy.yaml` (la prod, et le staging sous son
 calque, § 4.5) : quota CPU (`cpus`), poids sous contention (`cpu_shares`) et plafond de
@@ -358,14 +391,14 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | Section | Clés (défaut) |
 |---|---|
 | `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié), `MaxRequestBodySize` (131072 octets, soit 128 Kio ; au-delà, 413), `DatabaseBusyRetryAfter` (5 s, `Retry-After` du 503 quand le pool Postgres reste occupé), `SecretsDirectory` (`/run/secrets` : un fichier par réglage, nommé d'après sa clé avec `__`, lu au démarrage ; vide, il vaut un réglage absent ; il prime sur toute autre source) |
-| `LoDb:Database` | `Password` (aucun : sans lui, la chaîne de connexion reste telle quelle ; posé, il y remplace le mot de passe) |
+| `LoDb:Database` | `Password` (aucun : sans lui, la chaîne de connexion reste telle quelle ; posé, il y remplace le mot de passe) ; pour `migrate` seulement, `AppRole:Password` (aucun : le mot de passe de `lodb_app` reste tel quel ; ASCII imprimable), `AppRole:StatementTimeout` (15 s), `AppRole:ConnectionLimit` (50, `-1` sans limite) |
 | `LoDb:Workers` | `Enabled` (`true` ; seul `false` coupe toutes les tâches de fond) |
 | `LoDb:Accounts` | `SecureCookies` (vrai hors Development) ; `VerificationResend:FreeResends` (5 renvois de l'e-mail de vérification par compte), puis un par `VerificationResend:Interval` (1 j) ; `UnverifiedPurge:After` (7 j : un compte encore non vérifié est effacé, sauf build, clé API, don, rôle, bannissement, soutien ou Google), `UnverifiedPurge:BatchSize` (500 comptes par passage horaire) |
 | `LoDb:RateLimiting` | par compte et par heure glissante, jamais par adresse : `CheckoutsPerHour` (10 checkouts de pack ou de plan), `ApiKeyIssuesPerHour` (5 clés créées ou régénérées), `BuildEditsPerHour` (60 builds créés ou remplacés), `VotesPerHour` (120 votes) ; au-delà, `429 rate-limited` |
 | `LoDb:Builds:Votes` | `MinimumAccountAge` (1 j : âge du compte avant son premier vote ; l'e-mail vérifié est aussi exigé) |
 | `LoDb:Mail` | `Timeout` (`00:00:30`) |
 | `LoDb:Outbox` | `BatchSize` (20), `PollInterval` (5 s), `MaxAttempts` (10), `RetryDelay` (30 s), `MaxRetryDelay` (1 h), `Lease` (5 min) ; `HourlyCaps:ConfirmEmail` (100), `HourlyCaps:ResetPassword` (50), `HourlyCaps:ContactNotification` (20) : e-mails de chaque modèle envoyés par heure glissante pour tout le site, l'excédent attend dans la table (jauge `lodb_outbox_deferred`) ; à garder sous le quota du relais |
-| `LoDb:Analytics` | `GeoIpDatabase` (aucune), `QueueCapacity` (10000), `BatchSize` (500), `BatchWindow` (2 s), `ClientDataRetention` (30 j : adresse et user-agent des vues stockées avant qu'ils ne le soient plus), `ClientDataEraseDays` (3, au moins 2 : jours lus avant celui du seuil ; deux passages de la tâche quotidienne peuvent être séparés de deux jours après un redémarrage, de trois après un échec ; à relever le temps d'un passage après une panne plus longue), `EventRetentionMonths` (13, plafond CNIL 25), `PartitionsAhead` (7), `MaxVisitorsPerDay` (200000 empreintes par jour, au-delà le jour est marqué `visitorsTruncated` dans `totals`), `MaxRefererHostsPerDay` (200 hôtes référents par jour, les moins comptés au-delà sous `(autres)`) |
+| `LoDb:Analytics` | `GeoIpDatabase` (aucune), `QueueCapacity` (10000), `BatchSize` (500), `BatchWindow` (2 s), `ClientDataRetention` (30 j : adresse et user-agent des vues stockées avant qu'ils ne le soient plus), `ClientDataEraseDays` (3, au moins 2 : jours lus avant celui du seuil ; deux passages de la tâche quotidienne peuvent être séparés de deux jours après un redémarrage, de trois après un échec ; à relever le temps d'un passage après une panne plus longue), `EventRetentionMonths` (13, plafond CNIL 25), `PartitionsAhead` (7), `MaxVisitorsPerDay` (200000 empreintes par jour, au-delà le jour est marqué `visitorsTruncated` dans `totals`), `MaxRefererHostsPerDay` (200 hôtes référents par jour, les moins comptés au-delà sous `(autres)`), `JobStatementTimeout` (5 min, de 1 s à 1 h : délai d'une requête de l'agrégation quotidienne et de l'effacement des données client, au-dessus des 15 s du rôle de l'API) |
 | `LoDb:Egress` | `AllowedHosts` (`ddragon.leagueoflegends.com`, `raw.communitydragon.org`), `FetchConcurrency` (16), `AttemptTimeout` (15 s), `MaxRetryAttempts` (3), `RetryBaseDelay` (1 s), `MaxRedirects` (10), `MaxResponseBytes` (32 Mio) |
 | `LoDb:Ingestion` | `WatchPeriod` (10 min), `MaxAttempts` (5), `RetryDelay` (10 min), `LanguageConcurrency` (4), `RecordBatchSize` (64), `SyncConcurrency` (4), `QueueCapacity` (256), `CrawlerRequestsPerMinute` (30) |
 | `LoDb:Catalog` | `VersionsLifetime` (1 min), `ImageVerdictsLifetime` (10 min : verdicts d'images lus en base gardés en mémoire, délai avant qu'un `ingest --force` lancé à part se voie), `ImageVerdictVersions` (32 versions gardées), `ArtVariantsPeriod` (30 min : tâche `catalog.art-variants`, qui stocke les variantes WebP de l'art du dernier patch), `ArtVariantsConcurrency` (1 art téléchargé et transcodé à la fois, sous le quota CPU de l'API) |
@@ -440,7 +473,7 @@ n'est pas une frontière d'authentification.
 |---|---|---|
 | dépôt (branche `test` ou `main`) | le job (`git reset --hard`) | Fichiers compose à la racine. |
 | `.env` | le job (`ENV_STAGING`, `ENV_PROD` sans ses secrets, plus `LODB_SECRETS_REVISION`, `LODB_EDGE_CIDR`, `LODB_STACK_SUBNET`, `LODB_EDGE_SECRET` et `COMPOSE_FILE`), mode 600 | § 4. |
-| `.deploy/secrets/` | le job (`ENV_STAGING`, `ENV_PROD`), à chaque déploiement | Un fichier par secret (§ 4), monté dans `/run/secrets` des services qui le lisent. Dossier en 700, fichiers en 444 : Compose monte un fichier secret avec son propriétaire et son mode, et l'API comme l'entrée de Postgres le lisent sans être root. Tous présents, vides pour un secret absent : Docker monterait un fichier manquant comme un dossier. |
+| `.deploy/secrets/` | le job (`ENV_STAGING`, `ENV_PROD`), à chaque déploiement | Un fichier par secret (§ 4), monté dans `/run/secrets` des services qui le lisent. Dossier en 700, fichiers en 444 : Compose monte un fichier secret avec son propriétaire et son mode, et l'API comme l'entrée de Postgres le lisent sans être root. Tous présents, vides pour un secret absent : Docker monterait un fichier manquant comme un dossier. `LODB_APP_DB_PASSWORD` y est tiré une fois, puis gardé : sa seule copie (§ 4). |
 | `.deploy/secrets/LODB_EDGE_SECRET` | le job, au premier déploiement qui ne le trouve pas | Valeur de l'en-tête de l'edge (`openssl rand -hex 32`), mode 600, jamais montée : le job la recopie dans le `.env` à chaque déploiement (§ 6.7). |
 | `.deploy/incoming.env` | le job, le temps d'un déploiement | `ENV_*` tel quel, root seul, supprimé dès qu'il est séparé (et à la fin du script, quoi qu'il arrive). |
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |
@@ -600,7 +633,9 @@ volumes conservés).
 
 Aucun `.env` n'est nécessaire : `compose.yaml` donne une valeur par défaut à tout, et
 `compose.override.yaml` ajoute `ASPNETCORE_ENVIRONMENT=Development` et Mailpit
-(`LoDb__Mail__Host=mailpit`, e-mails sur http://localhost:18025). Un `.env` racine ne sert
+(`LoDb__Mail__Host=mailpit`, e-mails sur http://localhost:18025). L'API s'y connecte aussi
+comme `lodb_app`, mot de passe `lodb-app` (`migrate` le pose), et `migrate` comme `lodb`/`lodb` :
+`psql` sur le port publié (15432) se connecte avec l'un ou l'autre. Un `.env` racine ne sert
 qu'à surcharger un port ou une variable ; ne jamais y copier `.env.staging` ni `.env.prod`.
 Ports et emplacements : [`developpement.md`](developpement.md).
 

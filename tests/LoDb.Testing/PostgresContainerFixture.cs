@@ -11,7 +11,10 @@ namespace LoDb.Testing;
 /// <remarks>
 /// Same major version and flavour as the production image. The container is removed when the
 /// fixture is disposed, and by the Testcontainers reaper if the run dies first. Tests that
-/// write share the server, never a database: each creates its own.
+/// write share the server, never a database: each creates its own. The server's
+/// <see cref="ConnectionString"/> is its superuser's, as <c>migrate</c> connects; the API
+/// connects as the role of <see cref="TestRoles"/>
+/// (<see cref="TestDatabase.AppConnectionString"/>).
 /// </remarks>
 public sealed class PostgresContainerFixture : IAsyncLifetime
 {
@@ -60,8 +63,18 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
             : throw new InvalidOperationException($"pg_dump failed: {result.Stderr}");
     }
 
-    public async ValueTask InitializeAsync() =>
-        await _container.StartAsync(TestContext.Current.CancellationToken);
+    /// <summary>
+    /// Starts the server, then puts the roles of <see cref="TestRoles"/> in place once, before
+    /// any test migrates a database of its own.
+    /// </summary>
+    public async ValueTask InitializeAsync()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await _container.StartAsync(cancellationToken);
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync(cancellationToken);
+        await TestRoles.Create().EnsureRolesAsync(connection, cancellationToken);
+    }
 
     public ValueTask DisposeAsync() => _container.DisposeAsync();
 

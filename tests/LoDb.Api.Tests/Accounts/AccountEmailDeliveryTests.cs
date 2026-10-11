@@ -73,7 +73,7 @@ public sealed partial class AccountEmailDeliveryTests(PostgresContainerFixture p
         Assert.Equal(["sent:NULL"], outcomes);
         var mail = Assert.Single(_relay.Messages);
         Assert.Equal(AccountSeed.Address, Recipient(mail));
-        var link = ActionUrl(mail, "https://localhost/en/account/reset-password/");
+        var link = ActionUrl(mail, "https://localhost/en/account/reset-password?");
         var parts = EmailLink.Of(link);
         Assert.Equal(account.Id, parts.UserId);
         Assert.Equal($"?user={account.Id}", link.Query);

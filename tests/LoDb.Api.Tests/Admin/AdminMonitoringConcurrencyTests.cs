@@ -4,7 +4,6 @@ using LoDb.Api.Modules.Admin.Monitoring.Views;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Admin.Support;
 using LoDb.Api.Tests.Audit.Support;
-using LoDb.Infrastructure.Persistence;
 using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -103,10 +102,10 @@ public sealed class AdminMonitoringConcurrencyTests(PostgresContainerFixture pos
         }
     }
 
+    // As the server's superuser: the API's role may not rename a table.
     private async Task ExecuteAsync(string sql)
     {
-        await using var scope = App.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<LoDbDbContext>();
+        await using var db = App.Database();
         await db.Database.ExecuteSqlRawAsync(sql, Cancellation);
     }
 }

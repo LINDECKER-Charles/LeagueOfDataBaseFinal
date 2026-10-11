@@ -56,6 +56,9 @@ const PROD = {
   EXPECTED_NOINDEX: '0',
   STACK_SUBNET: '10.231.2.0/24',
 };
+// The API's own database password: drawn on the host, never in the pushed dotenv.
+const APP_PASSWORD = 'LODB_APP_DB_PASSWORD';
+const HEX_PASSWORD = /^[0-9a-f]{64}$/;
 const workspaces = [];
 after(() => workspaces.forEach((dir) => rmSync(dir, { recursive: true, force: true })));
 
@@ -111,6 +114,7 @@ function snapshot(dir) {
   return {
     env: read(dir, '.env'),
     password: read(dir, '.deploy', 'secrets', 'LODB_DB_PASSWORD'),
+    appPassword: read(dir, '.deploy', 'secrets', APP_PASSWORD),
   };
 }
 
@@ -129,6 +133,23 @@ describe('_deploy.yml, the dotenv against the target', () => {
     assert.match(read(dir, '.env'), /^LODB_STACK_SUBNET=10\.231\.2\.0\/24$/m);
     assert.doesNotMatch(read(dir, '.env'), /database-secret/);
     assert.deepEqual(leftovers(dir), []);
+  });
+
+  it("draws the API's database password on the first deploy, then keeps it, unprinted", () => {
+    const dir = host();
+
+    const first = deploy(dir, STAGING, dotenvFor(STAGING));
+    const drawn = read(dir, '.deploy', 'secrets', APP_PASSWORD);
+    const second = deploy(dir, STAGING, dotenvFor(STAGING));
+
+    assert.equal(first.status, 0, first.stderr);
+    assert.equal(second.status, 0, second.stderr);
+    assert.match(drawn, HEX_PASSWORD);
+    assert.equal(read(dir, '.deploy', 'secrets', APP_PASSWORD), drawn);
+    assert.match(read(dir, '.env'), /^LODB_SECRETS_REVISION=1$/m);
+    const printed = [first, second].map((run) => run.stdout + run.stderr).join('');
+    assert.equal(printed.includes(drawn), false);
+    assert.equal(read(dir, '.env').includes(drawn), false);
   });
 
   it('leaves the .env and the secret files in place when a network overlaps the stack', () => {
@@ -150,6 +171,7 @@ describe('_deploy.yml, the dotenv against the target', () => {
     ['any target without a database password', STAGING, ['LODB_DB_PASSWORD=']],
     ['a secret the split refuses', STAGING, ['LODB_DB_PASSWORD=pa$x']],
     ['a bundle retention shorter than a cached page', PROD, ['LODB_FRONT_BUILDS_RETENTION_DAYS=7']],
+    ["a dotenv that sets the API's database password", STAGING, [`${APP_PASSWORD}=from-github`]],
   ]) {
     it(`leaves the .env and the secret files in place for ${refusal}`, () => {
       const dir = host();
