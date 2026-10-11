@@ -12,9 +12,10 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
     private const string Latest = "/api/catalog/16.19.1/en_US";
 
     [Fact]
-    public async Task ChampionDetailCarriesAbilitiesSkinsAndArt()
+    public async Task ChampionDetailCarriesAbilitiesArtAndItsSkinCount()
     {
         var ahri = await api.GetJsonAsync($"{Latest}/champions/Ahri");
+        var skins = await api.GetJsonAsync($"{Latest}/champions/Ahri/skins");
 
         Assert.Equal("champions/Ahri", ahri.Text("canonicalPath"));
         Assert.Equal("Ahri", ahri.GetProperty("profile").Text("name"));
@@ -26,7 +27,31 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
         Assert.Equal(
             "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Ahri_0.jpg",
             ahri.GetProperty("art").Text("splash"));
-        Assert.NotEmpty(ahri.Items("skins"));
+        Assert.False(ahri.TryGetProperty("skins", out _));
+        Assert.Equal(
+            skins.Items("skins").Count(static skin => skin.GetProperty("number").GetInt32() != 0),
+            ahri.GetProperty("alternateSkinCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task ChampionSkinsAreReadApartWithTheirArtAndChromas()
+    {
+        using var response = await api.GetAsync($"{Latest}/champions/Ahri/skins");
+        var skins = await api.GetJsonAsync($"{Latest}/champions/Ahri/skins");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(
+            "public, max-age=60, stale-while-revalidate=600",
+            CacheHeaderTests.CacheControlOf(response));
+        Assert.NotNull(response.Headers.ETag);
+        Assert.Equal(("16.19.1", "en_US", "Ahri"),
+            (skins.Text("version"), skins.Text("language"), skins.Text("champion")));
+        var all = skins.Items("skins");
+        Assert.Equal(("Ahri", 0), (all[0].Text("name"), all[0].GetProperty("number").GetInt32()));
+        Assert.Equal(
+            "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Ahri_1.jpg",
+            all[1].GetProperty("art").Text("splash"));
+        Assert.Contains(all, static skin => skin.Items("chromas").Count > 0);
     }
 
     [Fact]
@@ -160,6 +185,7 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
 
     [Theory]
     [InlineData("champions/Nobody")]
+    [InlineData("champions/Nobody/skins")]
     [InlineData("items/999999")]
     [InlineData("items/2008")]
     [InlineData("items/not-a-number")]

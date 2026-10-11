@@ -9,6 +9,10 @@ interface Meta {
 interface Details {
   readonly canonicalPath: string;
   readonly profile: { readonly name: string };
+  readonly alternateSkinCount: number;
+}
+
+interface Skins {
   readonly skins: readonly { readonly number: number; readonly name: string }[];
 }
 
@@ -33,6 +37,17 @@ async function detailsOf(request: APIRequestContext): Promise<Details> {
   const latest = await latestOf(request);
   const response = await request.get(`/api/catalog/${latest}/en_US/champions/${CHAMPION}`);
   return (await response.json()) as Details;
+}
+
+// The gallery's own read, apart from the page's payload.
+async function skinsOf(request: APIRequestContext): Promise<Skins> {
+  const latest = await latestOf(request);
+  const response = await request.get(`/api/catalog/${latest}/en_US/champions/${CHAMPION}/skins`);
+  return (await response.json()) as Skins;
+}
+
+function isSkinsRead(url: string): boolean {
+  return new URL(url).pathname.endsWith(`/champions/${CHAMPION}/skins`);
 }
 
 async function openDetail(page: Page): Promise<void> {
@@ -74,8 +89,14 @@ test.describe('champion pages as crawlers read them', { tag: '@readonly' }, () =
 
     expect(response?.status()).toBe(200);
     expect(response?.headers()['server-timing']).toMatch(SERVER_TIMING);
-    // The pager comes with the page's payload: its neighbours are in the server's HTML.
-    expect(await response?.text()).toMatch(/<a [^>]*rel="next"[^>]*href="\/en\/champions\/\w/);
+    // The pager comes with the page's payload: its neighbours are in the server's HTML; the
+    // skins do not, only their count, the gallery reading them once scrolled to.
+    const html = (await response?.text()) ?? '';
+    expect(html).toMatch(/<a [^>]*rel="next"[^>]*href="\/en\/champions\/\w/);
+    expect(html).not.toContain('"chromas":');
+    await expect(page.locator('#skins .codex-header__meta')).toHaveText(
+      String(details.alternateSkinCount),
+    );
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(details.profile.name);
     for (const id of ['abilities', 'skins', 'lore', 'tips', 'stats']) {
       await expect(page.locator(`#${id}`)).toHaveCount(1);
@@ -141,15 +162,23 @@ test.describe('champion page in the browser', { tag: '@readonly' }, () => {
     await expect(page.locator('#ability-panel-q')).toBeVisible();
   });
 
-  test('loads the skins once scrolled to, and shows one whole in the viewer', async ({
+  test('reads the skins once scrolled to, and shows one whole in the viewer', async ({
     page,
     request,
   }) => {
     const details = await detailsOf(request);
-    const skins = details.skins.filter((skin) => skin.number !== 0);
+    const skins = (await skinsOf(request)).skins.filter((skin) => skin.number !== 0);
+    const reads: string[] = [];
+    page.on('request', (sent) => {
+      if (isSkinsRead(sent.url())) {
+        reads.push(sent.url());
+      }
+    });
     await openDetail(page);
+    expect(reads).toHaveLength(0);
 
     await page.locator('#skins').scrollIntoViewIfNeeded();
+    await expect.poll(() => reads.length).toBe(1);
     const tile = page.locator('#skins button.tile').first();
     await expect(tile).toBeVisible();
     await tile.click();

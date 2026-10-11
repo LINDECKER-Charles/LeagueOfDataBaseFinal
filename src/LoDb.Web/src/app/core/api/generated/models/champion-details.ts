@@ -4,13 +4,12 @@
 import { ChampionAbility } from '../models/champion-ability';
 import { ChampionArt } from '../models/champion-art';
 import { ChampionCard } from '../models/champion-card';
-import { ChampionSkin } from '../models/champion-skin';
 import { DetailNeighbours } from '../models/detail-neighbours';
 
 /**
  * `GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the
- * abilities and the skins, every image resolved and every art hotlinked, and the champions
- * on either side of it in the list.
+ * abilities and the number of skins, every image resolved and every art hotlinked, and the
+ * champions on either side of it in the list.
  */
 export interface ChampionDetails {
 
@@ -19,6 +18,12 @@ export interface ChampionDetails {
    */
   abilities: Array<ChampionAbility>;
   allyTips: Array<string>;
+
+  /**
+   * The skins besides the base one, which the hero wears: those the gallery shows once it
+   * reads them from `…/skins`.
+   */
+  alternateSkinCount: number;
 
   /**
    * The base skin's art.
@@ -44,6 +49,5 @@ export interface ChampionDetails {
    * The facts of the list's card.
    */
   profile: ChampionCard;
-  skins: Array<ChampionSkin>;
   version: string;
 }

@@ -198,6 +198,83 @@
         }
       }
     },
+    "/api/catalog/{version}/{lang}/champions/{id}/skins": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "A champion's skins and their chromas, every art hotlinked.",
+        "operationId": "getChampionSkins",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChampionSkins"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/{version}/{lang}/items": {
       "get": {
         "tags": [
@@ -7917,7 +7994,7 @@
           "enemyTips",
           "abilities",
           "art",
-          "skins",
+          "alternateSkinCount",
           "neighbours"
         ],
         "type": "object",
@@ -7974,18 +8051,17 @@
             "description": "The base skin's art.",
             "$ref": "#/components/schemas/ChampionArt"
           },
-          "skins": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ChampionSkin"
-            }
+          "alternateSkinCount": {
+            "type": "integer",
+            "description": "The skins besides the base one, which the hero wears: those the gallery shows once it\nreads them from `…/skins`.",
+            "format": "int32"
           },
           "neighbours": {
             "description": "The champions before and after it in the list's order.",
             "$ref": "#/components/schemas/DetailNeighbours"
           }
         },
-        "description": "`GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the\nabilities and the skins, every image resolved and every art hotlinked, and the champions\non either side of it in the list."
+        "description": "`GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the\nabilities and the number of skins, every image resolved and every art hotlinked, and the\nchampions on either side of it in the list."
       },
       "ChampionFacets": {
         "required": [
@@ -8173,6 +8249,34 @@
           }
         },
         "description": "A skin of the champion, chroma entries left out, with its art and chromas."
+      },
+      "ChampionSkins": {
+        "required": [
+          "version",
+          "language",
+          "champion",
+          "skins"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "champion": {
+            "type": "string",
+            "description": "The champion's public id, such as MonkeyKing."
+          },
+          "skins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChampionSkin"
+            }
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/champions/{id}/skins`: the skins of a champion,\nthe base one first, each with its art and its chromas."
       },
       "ChampionStat": {
         "required": [

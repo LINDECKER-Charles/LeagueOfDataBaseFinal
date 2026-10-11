@@ -26,7 +26,7 @@ const AHRI: ChampionDetails = {
   abilities: [],
   allyTips: [],
   enemyTips: [],
-  skins: [],
+  alternateSkinCount: 0,
   art: { centered: '', loading: '', splash: 'https://ddragon.example/Ahri_0.jpg' },
   blurb: 'Innately connected to the magic of the spirit realm, <i>Ahri</i> is a fox-like vastaya.',
   profile: {

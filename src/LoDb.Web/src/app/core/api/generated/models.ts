@@ -62,6 +62,7 @@ export type { ChampionOption } from './models/champion-option';
 export type { ChampionPicker } from './models/champion-picker';
 export type { ChampionRatings } from './models/champion-ratings';
 export type { ChampionSkin } from './models/champion-skin';
+export type { ChampionSkins } from './models/champion-skins';
 export type { ChampionStat } from './models/champion-stat';
 export type { ChampionView } from './models/champion-view';
 export type { CheckoutCreated } from './models/checkout-created';

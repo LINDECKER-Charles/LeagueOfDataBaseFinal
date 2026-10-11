@@ -50,7 +50,7 @@ const DETAILS: ChampionDetails = {
   art: { splash: 'splash.jpg', centered: 'centered.jpg', loading: 'loading.jpg' },
   blurb: 'Dangerous, yet disarmingly precocious.',
   abilities: [],
-  skins: [],
+  alternateSkinCount: 0,
   allyTips: [],
   enemyTips: [],
   neighbours: { previous: null, next: null },

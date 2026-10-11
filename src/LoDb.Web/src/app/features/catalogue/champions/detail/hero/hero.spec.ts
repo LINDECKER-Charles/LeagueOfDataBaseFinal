@@ -36,7 +36,7 @@ function detailsOf(
     art: { splash: art('splash'), centered: art('centered'), loading: art('loading') },
     blurb: '',
     abilities: [],
-    skins: [],
+    alternateSkinCount: 0,
     allyTips: [],
     enemyTips: [],
     neighbours: { previous: null, next: null },

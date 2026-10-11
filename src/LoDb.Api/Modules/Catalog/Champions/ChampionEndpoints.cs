@@ -2,6 +2,7 @@ using LoDb.Api.Modules.Catalog.Champions.Details;
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Domain.Catalog;
+using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Paths;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Images;
@@ -9,7 +10,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LoDb.Api.Modules.Catalog.Champions;
 
-/// <summary>The champion list and the champion page.</summary>
+/// <summary>The champion list, the champion page and its skins.</summary>
 internal static class ChampionEndpoints
 {
     private const string Segment = "champion";
@@ -22,6 +23,9 @@ internal static class ChampionEndpoints
         catalog.MapGet("/champions/{id}", GetAsync)
             .WithName("getChampion")
             .WithSummary("A champion's page, its images resolved.");
+        catalog.MapGet("/champions/{id}/skins", SkinsAsync)
+            .WithName("getChampionSkins")
+            .WithSummary("A champion's skins and their chromas, every art hotlinked.");
     }
 
     private static async Task<Results<CachedJson<ChampionList>, CatalogProblem>> ListAsync(
@@ -57,8 +61,7 @@ internal static class ChampionEndpoints
         }
 
         var context = read.Context;
-        var id = CanonicalPath.IdOf(ResourceType.Champions, request.Id);
-        if (id is null || context.Catalog.Champions.Find(id) is not { } champion)
+        if (Find(context, request.Id) is not { } champion)
         {
             return CatalogProblem.UnknownEntity(Segment, request.Id);
         }
@@ -69,4 +72,25 @@ internal static class ChampionEndpoints
             request.CancellationToken);
         return context.Answer(ChampionDetails.Of(champion, context.Catalog, images), images);
     }
+
+    // The art is hotlinked (UP 8): nothing to resolve.
+    private static async Task<Results<CachedJson<ChampionSkins>, CatalogProblem>> SkinsAsync(
+        [AsParameters] DetailRequest request)
+    {
+        var read = await request.Gateway.ReadAsync(request.Scope, request.CancellationToken);
+        if (!read.IsOpen)
+        {
+            return read.Problem;
+        }
+
+        var context = read.Context;
+        return Find(context, request.Id) is { } champion
+            ? context.Answer(ChampionSkins.Of(champion, context.Catalog), ImageSet.Empty)
+            : CatalogProblem.UnknownEntity(Segment, request.Id);
+    }
+
+    private static ChampionDetail? Find(CatalogContext context, string segment) =>
+        CanonicalPath.IdOf(ResourceType.Champions, segment) is { } id
+            ? context.Catalog.Champions.Find(id)
+            : null;
 }

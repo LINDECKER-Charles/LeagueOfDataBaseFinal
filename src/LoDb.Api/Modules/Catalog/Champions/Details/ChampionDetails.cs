@@ -8,11 +8,16 @@ namespace LoDb.Api.Modules.Catalog.Champions.Details;
 
 /// <summary>
 /// <c>GET /api/catalog/{version}/{lang}/champions/{id}</c>: the card, then the lore, the
-/// abilities and the skins, every image resolved and every art hotlinked, and the champions
-/// on either side of it in the list.
+/// abilities and the number of skins, every image resolved and every art hotlinked, and the
+/// champions on either side of it in the list.
 /// </summary>
+/// <remarks>
+/// The skins themselves are read apart (<see cref="ChampionSkins"/>), by the gallery alone.
+/// </remarks>
 internal sealed record ChampionDetails
 {
+    private const int BaseSkin = 0;
+
     public required string Version { get; init; }
 
     public required string Language { get; init; }
@@ -39,7 +44,11 @@ internal sealed record ChampionDetails
     /// <summary>The base skin's art.</summary>
     public required ChampionArt Art { get; init; }
 
-    public required IReadOnlyList<ChampionSkin> Skins { get; init; }
+    /// <summary>
+    /// The skins besides the base one, which the hero wears: those the gallery shows once it
+    /// reads them from <c>…/skins</c>.
+    /// </summary>
+    public required int AlternateSkinCount { get; init; }
 
     /// <summary>The champions before and after it in the list's order.</summary>
     public required DetailNeighbours Neighbours { get; init; }
@@ -64,8 +73,8 @@ internal sealed record ChampionDetails
             AllyTips = champion.AllyTips,
             EnemyTips = champion.EnemyTips,
             Abilities = ChampionAbility.AllOf(champion, images),
-            Art = ChampionArt.Of(profile.Id, 0),
-            Skins = [.. champion.Skins.Select(skin => ChampionSkin.Of(skin, champion.Summary))],
+            Art = ChampionArt.Of(profile.Id, BaseSkin),
+            AlternateSkinCount = champion.Skins.Count(static skin => skin.Number != BaseSkin),
             Neighbours = ChampionList.NeighboursOf(champion, catalog),
         };
     }
