@@ -18,6 +18,7 @@ internal sealed class CatalogPages : ITrackedPageResolver
 
     private const short Ok = 200;
     private const short NotFound = 404;
+    private const short Unavailable = 503;
 
     private static readonly Dictionary<string, TrackedPage> Pages = new(StringComparer.Ordinal)
     {
@@ -28,8 +29,15 @@ internal sealed class CatalogPages : ITrackedPageResolver
         [Champions] = Detail(Champions, "champion", null, Ok) with { Kind = "list" },
     };
 
+    /// <summary>
+    /// Data Dragon out of reach, as the API's resolver then answers: every known page a 503.
+    /// </summary>
+    public bool IsCatalogUnavailable { get; set; }
+
     public Task<TrackedPage?> ResolveAsync(string target, CancellationToken cancellationToken) =>
-        Task.FromResult(Pages.GetValueOrDefault(target));
+        Task.FromResult(Pages.GetValueOrDefault(target) is { } page && IsCatalogUnavailable
+            ? page with { Status = Unavailable }
+            : Pages.GetValueOrDefault(target));
 
     private static TrackedPage Detail(string path, string type, string? entity, short status) =>
         new()

@@ -12,5 +12,8 @@ public interface IAudiencePull
     /// </summary>
     /// <returns>The rows written: one per entity and day.</returns>
     /// <exception cref="HttpRequestException">Umami cannot be reached in time.</exception>
+    /// <exception cref="AudienceCatalogUnavailableException">
+    /// The catalog cannot read the pulled pages: the day is left as it was stored.
+    /// </exception>
     Task<long> PullAsync(CancellationToken cancellationToken);
 }

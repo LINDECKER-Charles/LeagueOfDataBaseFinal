@@ -79,6 +79,27 @@ public sealed class AudiencePullTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task ACatalogOutOfReachKeepsTheStoredDays()
+    {
+        _umami.Days[Today] = [(CatalogPages.AhriFr, 50, 20), (CatalogPages.Sword, 30, 12)];
+        _umami.Days[Yesterday] = [(CatalogPages.Sword, 4, 3)];
+        await Pull().PullAsync(Cancellation);
+        _umami.Days[Today] = [(CatalogPages.AhriFr, 60, 25), (CatalogPages.Sword, 31, 13)];
+        Services.GetRequiredService<CatalogPages>().IsCatalogUnavailable = true;
+
+        await Assert.ThrowsAsync<AudienceCatalogUnavailableException>(
+            () => Pull().PullAsync(Cancellation));
+
+        Assert.Equal(
+            [
+                "2026-10-10 item:1036 4 3",
+                "2026-10-11 champion:Ahri 50 20",
+                "2026-10-11 item:1036 30 12",
+            ],
+            await ReadAsync());
+    }
+
+    [Fact]
     public async Task UmamiIsReadAPageAtATimeUntilAShortOne()
     {
         _umami.Days[Today] =
@@ -220,7 +241,9 @@ public sealed class AudiencePullTests(PostgresContainerFixture postgres)
             .AddMetrics()
             .AddLoDbPersistence(configuration)
             .AddLoDbAnalytics(configuration)
-            .AddSingleton<ITrackedPageResolver, CatalogPages>();
+            .AddSingleton<CatalogPages>()
+            .AddSingleton<ITrackedPageResolver>(static provider =>
+                provider.GetRequiredService<CatalogPages>());
         services.AddHttpClient(UmamiClient.ClientName)
             .ConfigurePrimaryHttpMessageHandler(() => _umami);
         return services.BuildServiceProvider(new ServiceProviderOptions

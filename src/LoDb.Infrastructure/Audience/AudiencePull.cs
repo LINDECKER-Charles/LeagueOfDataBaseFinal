@@ -22,7 +22,8 @@ namespace LoDb.Infrastructure.Audience;
 /// </para>
 /// <para>
 /// Each pull rewrites the last <see cref="AudienceOptions.RefreshDays"/> days whole, so a day
-/// is final once a pull has run after its end.
+/// is final once a pull has run after its end. A catalog that cannot be read is transient:
+/// the pull then stops before writing the day, never replacing its figures with none.
 /// </para>
 /// </remarks>
 internal sealed class AudiencePull(
@@ -33,9 +34,11 @@ internal sealed class AudiencePull(
     IOptions<AudienceOptions> options,
     TimeProvider timeProvider) : IAudiencePull
 {
-    // TrackedPage.Kind of a detail page, and the status of a page that exists.
+    // TrackedPage.Kind of a detail page, the status of a page that exists, and the status of
+    // a page whose catalog could not be read.
     private const string DetailKind = "detail";
     private const short Found = (short)HttpStatusCode.OK;
+    private const short Unavailable = (short)HttpStatusCode.ServiceUnavailable;
 
     public async Task<long> PullAsync(CancellationToken cancellationToken)
     {
@@ -81,6 +84,12 @@ internal sealed class AudiencePull(
     private async Task<string?> EntityOfAsync(string path, CancellationToken cancellationToken)
     {
         var page = await pages.ResolveAsync(path, cancellationToken);
+        if (page?.Status == Unavailable)
+        {
+            throw new AudienceCatalogUnavailableException(
+                "The catalog cannot read the pulled pages: the stored days are kept.");
+        }
+
         if (page is not { Kind: DetailKind, Status: Found, Entity: { } key })
         {
             return null;
