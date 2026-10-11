@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { PLATFORM } from '../platform/platform';
 import type { PlatformKind } from '../platform/platform-kind';
+import { AudienceOptOut } from './audience/send/audience-opt-out';
 import { provideNavigationBeacon } from './provide-navigation-beacon';
 
 @Component({ template: '' })
@@ -78,6 +79,17 @@ describe('NavigationBeacon', () => {
     await router.navigateByUrl('/fr');
 
     expect(sentPaths()).toEqual(['/fr/']);
+  });
+
+  it('stays silent once the visitor opts out of the audience measure', async () => {
+    const router = await started();
+    TestBed.inject(AudienceOptOut).choose(false);
+
+    await router.navigateByUrl('/fr/items');
+    await router.navigateByUrl('/fr/runes');
+    TestBed.inject(AudienceOptOut).choose(true);
+
+    expect(sendBeacon).not.toHaveBeenCalled();
   });
 
   it('stays silent in the desktop and Android shells', async () => {
