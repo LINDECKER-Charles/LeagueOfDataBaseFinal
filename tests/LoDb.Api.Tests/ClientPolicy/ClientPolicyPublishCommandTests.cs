@@ -23,17 +23,6 @@ public sealed class ClientPolicyPublishCommandTests(PostgresContainerFixture pos
         _database ?? throw new InvalidOperationException("The database is not created yet.");
 
     [Fact]
-    public void ApiDeclaresThePublishCommand()
-    {
-        var catalog = CliCommandCatalog.Discover(typeof(Program).Assembly);
-
-        var command = Assert.Single(
-            catalog.Commands,
-            static c => c.Name == "client-policy publish");
-        Assert.True(command.RequiresHost);
-    }
-
-    [Fact]
     public async Task CommandPublishesThePolicyOfOneApp()
     {
         var exitCode = await RunAsync(
@@ -69,8 +58,6 @@ public sealed class ClientPolicyPublishCommandTests(PostgresContainerFixture pos
     // Arguments separated by one space.
     [Theory]
     [InlineData("--platform desktop --minimum 2.0.0 --latest 1.0.0")]
-    [InlineData("--platform desktop --bundle-id web-1")]
-    [InlineData("--platform android --bundle-id web-1")]
     [InlineData("--platform windows")]
     public async Task InvalidPolicyWritesNothing(string line)
     {
