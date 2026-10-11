@@ -1,0 +1,8 @@
+{
+  "title": "Historique des patchs",
+  "description": "Tous les patchs de League of Legends listés par Data Dragon, chacun avec ses champions, objets, runes et sorts d’invocateur tels qu’ils étaient alors.",
+  "intro": "Tous les patchs listés par Data Dragon, du plus récent au plus ancien. Chacun ouvre ses champions, objets, runes et sorts d’invocateur tels qu’ils étaient à l’époque.",
+  "group": "Patchs {{ major }}.x",
+  "latest": "Actuel",
+  "empty": "Aucun patch n’est listé pour l’instant."
+}

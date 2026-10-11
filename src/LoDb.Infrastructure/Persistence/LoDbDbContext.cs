@@ -3,6 +3,7 @@ using LoDb.Infrastructure.Persistence.Analytics;
 using LoDb.Infrastructure.Persistence.Apps;
 using LoDb.Infrastructure.Persistence.Audit;
 using LoDb.Infrastructure.Persistence.Billing;
+using LoDb.Infrastructure.Persistence.Billing.Payments;
 using LoDb.Infrastructure.Persistence.Builds;
 using LoDb.Infrastructure.Persistence.Contact;
 using LoDb.Infrastructure.Persistence.Ddragon;
@@ -54,6 +55,10 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
     public DbSet<StripeEvent> StripeEvents => Set<StripeEvent>();
 
     public DbSet<ApiCreditGrant> ApiCreditGrants => Set<ApiCreditGrant>();
+
+    public DbSet<StripeCheckout> StripeCheckouts => Set<StripeCheckout>();
+
+    public DbSet<StripeSubscription> StripeSubscriptions => Set<StripeSubscription>();
 
     public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
 

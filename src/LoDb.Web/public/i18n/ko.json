@@ -171,6 +171,11 @@
     },
     "slot": "슬롯"
   },
+  "detail": {
+    "history": {
+      "title": "이전 패치에서"
+    }
+  },
   "common": {
     "back": "뒤로",
     "search": "검색…",
@@ -194,7 +199,8 @@
       "item": "아이템",
       "runes": "룬",
       "summoner": "소환사 주문",
-      "sitemap": "사이트맵"
+      "sitemap": "사이트맵",
+      "patches": "패치 기록"
     },
     "links": {
       "title": "유용한 링크",

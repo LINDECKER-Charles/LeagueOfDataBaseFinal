@@ -112,11 +112,12 @@ public sealed class PeriodicJobTests(PostgresContainerFixture postgres)
 
         var failureCount = Assert.Single(failures.GetMeasurementSnapshot());
         Assert.Equal(1, failureCount.Value);
-        Assert.Equal(JobName, failureCount.Tags[JobMetrics.JobTag]);
+        Assert.Equal(JobName, failureCount.Tags[JobMetrics.TaskTag]);
         Assert.Equal(
             ["failed", "succeeded"],
             durations.GetMeasurementSnapshot().Select(static m => m.Tags[JobMetrics.OutcomeTag]));
         Assert.Equal(_time.GetUtcNow().ToUnixTimeSeconds(), lastSuccess.LastMeasurement?.Value);
+        Assert.Equal(JobName, lastSuccess.LastMeasurement?.Tags[JobMetrics.TaskTag]);
 
         var logs = _logs.Collector.GetSnapshot();
         var error = Assert.Single(logs, static log => log.Id.Name == "jobs.run.failed");
@@ -162,6 +163,23 @@ public sealed class PeriodicJobTests(PostgresContainerFixture postgres)
         await job.StopAsync(Cancellation);
 
         Assert.Equal(3, job.Runs);
+    }
+
+    [Fact]
+    public async Task PeriodIsMeasuredFromTheStartUnderTheTaskTag()
+    {
+        using var periods = Collect<double>("lodb.job.period");
+        var job = NewJob();
+
+        await job.StartAsync(Cancellation);
+        Assert.True(await job.Completed.WaitAsync(Patience, Cancellation));
+        await job.StopAsync(Cancellation);
+        periods.RecordObservableInstruments();
+
+        var period = Assert.Single(periods.GetMeasurementSnapshot());
+        Assert.Equal(Period.TotalSeconds, period.Value);
+        Assert.Equal(JobName, period.Tags[JobMetrics.TaskTag]);
+        Assert.DoesNotContain("job", period.Tags.Keys);
     }
 
     [Theory]

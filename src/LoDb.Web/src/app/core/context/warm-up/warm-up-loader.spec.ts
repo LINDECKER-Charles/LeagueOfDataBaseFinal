@@ -93,6 +93,18 @@ describe('WarmUpLoader', () => {
     expect(dialog.close).toHaveBeenCalledOnce();
   });
 
+  it('visits at once, its share kept, when the API stops with images left pending', async () => {
+    const { frames, visit, shown } = await setup();
+    const stopped: WarmUpProgress = { ...IMAGES, stage: 'done', settled: 3 };
+
+    frames.next(stopped);
+    frames.complete();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(shown()).toEqual(stopped);
+    expect(visit).toHaveBeenCalledOnce();
+  });
+
   it('visits at once, with no beat, when the stream fails', async () => {
     const { frames, visit } = await setup();
 

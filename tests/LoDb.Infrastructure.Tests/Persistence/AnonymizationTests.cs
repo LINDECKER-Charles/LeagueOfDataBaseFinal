@@ -12,7 +12,7 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
     : MigratedDatabase(postgres)
 {
     // The example of PHP's password_verify documentation: a valid bcrypt hash.
-    private const string PasswordHash =
+    internal const string PasswordHash =
         "$2y$10$.vGA1O9wmRjrwAVXD98HNOgsNpDczlqm3Jq7KnEd1rVAGv3Fykk1a";
 
     // Neither generated values (hexadecimal, example.invalid, the hash above) nor kept ones
@@ -338,7 +338,8 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
 
     private Task AnonymizeAsync(string? passwordHash) => AnonymizeAsync(Database, passwordHash);
 
-    private static async Task AnonymizeAsync(TestDatabase database, string? passwordHash)
+    /// <summary>Runs the script on <paramref name="database"/>, as anonymize.sh does.</summary>
+    internal static async Task AnonymizeAsync(TestDatabase database, string? passwordHash)
     {
         await using var connection = await database.DataSource.OpenConnectionAsync(Cancellation);
         await using var transaction = await connection.BeginTransactionAsync(Cancellation);

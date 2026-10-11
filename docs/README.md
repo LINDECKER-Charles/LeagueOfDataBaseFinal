@@ -60,6 +60,7 @@ Pour développer : guide [developpement.md](guides/developpement.md) et
 | [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
 | [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana : fonctionnement, ce qu'il ne faut surtout pas déclarer, requêtes LogsQL / PromQL, dépannage |
 | [logging.md](guides/logging.md) | Convention de journalisation applicative : clé d'événement, contexte, niveaux, canaux, interdictions |
+| [metriques.md](guides/metriques.md) | Contrat des métriques de l'API et du SSR : port 9464, collecte par `observability`, noms, labels, règle de cardinalité |
 | [oauth-google-setup.md](guides/oauth-google-setup.md) | Configuration « Sign in with Google » côté Google Cloud Console |
 | [legal-info.md](guides/legal-info.md) | Checklist des informations légales à trancher avant la prod |
 | [packaging-apk.md](../legacy/docs/guides/packaging-apk.md) | *Ancienne stack, archivée* — Distribution Android (TWA / APK) à partir de la PWA |

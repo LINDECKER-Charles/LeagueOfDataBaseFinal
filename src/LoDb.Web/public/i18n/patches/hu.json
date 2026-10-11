@@ -1,0 +1,8 @@
+{
+  "title": "Patch-előzmények",
+  "description": "A Data Dragon által listázott összes League of Legends patch, mindegyik a bajnokaival, tárgyaival, rúnáival és idéző varázslataival, ahogyan abban a patchben voltak.",
+  "intro": "A Data Dragon által listázott összes patch, a legújabbtól kezdve. Mindegyik megnyitja a bajnokait, tárgyait, rúnáit és idéző varázslatait, ahogyan akkoriban voltak.",
+  "group": "{{ major }}.x patchek",
+  "latest": "Aktuális",
+  "empty": "Jelenleg nincs listázott patch."
+}

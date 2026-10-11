@@ -14,9 +14,9 @@ plus ; leur guide est
 
 | Fichier | Rôle |
 |---|---|
-| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main`, `docs/reecriture-dotnet-angular`) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-dev` + Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`. Sur un push de **`main`** : `promote`, `deploy-prod`. |
+| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main` : les seules branches qui déploient) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-dev` + Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`. Sur un push de **`main`** : `promote`, `deploy-prod`. |
 | `_build.yml` | Réutilisable : construit depuis `test` les images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, taguées `:<sha>` (le commit poussé sur `dev`) + `:staging`, label OCI et `APP_REVISION` = SHA. |
-| `_deploy.yml` | Réutilisable : déploiement SSH d'un hôte, même logique pour `staging` et `prod`. Entrées `environment` (`staging` ou `prod`) et `branch` (`test` ou `main`) ; secrets passés par `ci.yml` (§ Secrets). |
+| `_deploy.yml` | Réutilisable : déploiement SSH d'un hôte, même logique pour `staging` et `prod`. Entrées `environment` (`staging` ou `prod`) et `branch` (`test` ou `main`) ; secrets passés par `ci.yml` (§ Secrets). Son job tourne dans l'environnement GitHub `staging` ou `production`. |
 | `_promote.yml` | Réutilisable : retague `:staging` en `:prod` et `:latest`, **sans rebuild**. |
 | `release-desktop.yml`, `release-android.yml` | Releases signées des apps ([`release-desktop.md`](release-desktop.md), [`release-android.md`](release-android.md)). |
 
@@ -47,8 +47,9 @@ fusion manuelle test → main ─▶ push main
 
 Les checks, la fusion dans `test`, le build, le retag et le `pull` des images sur l'hôte
 n'utilisent que `GITHUB_TOKEN`.
-Le déploiement lit des **secrets de dépôt**, sans environnement GitHub, comme l'ancienne
-stack ; `ci.yml` les passe à `_deploy.yml` :
+Le déploiement lit des **secrets de dépôt**, comme l'ancienne stack, dans l'environnement
+GitHub de sa cible (`staging`, `production`), où l'exploitant pose les protections
+([`configuration.md`](configuration.md), § 3.3) ; `ci.yml` les passe à `_deploy.yml` :
 
 | Entrée de `_deploy.yml` | `deploy-staging` | `deploy-prod` |
 |---|---|---|
@@ -56,12 +57,15 @@ stack ; `ci.yml` les passe à `_deploy.yml` :
 | `SSH_HOST` | `STAGING_HOST` | `PROD_HOST` |
 | `DEPLOY_PATH` | `STAGING_PATH` | `PROD_PATH` |
 | `SSH_USER` (➖, `root`) | `STAGING_SSH_USER` | `PROD_SSH_USER` |
+| `SSH_KNOWN_HOSTS` (➖) | `STAGING_SSH_KNOWN_HOSTS` | `PROD_SSH_KNOWN_HOSTS` |
 | `ENV_FILE` | `ENV_STAGING` | `ENV_PROD` |
 | `DATA_PROTECTION_PFX` | `STAGING_DATA_PROTECTION_PFX` | `PROD_DATA_PROTECTION_PFX` |
 
 Les quatre premières lignes existent déjà (ancienne stack). `ENV_STAGING` et `ENV_PROD`
 existent aussi, mais leur contenu est **remplacé** par le `.env` de la nouvelle stack ; les
-deux certificats sont nouveaux ([`configuration.md`](configuration.md), § 2 et 3.2).
+deux certificats sont nouveaux ([`configuration.md`](configuration.md), § 2 et 3.2). Les
+clés de l'hôte (`*_SSH_KNOWN_HOSTS`) sont à créer (§ 6.3 du même guide) : absentes, le job
+les lit par `ssh-keyscan`, sans vérification, et le run porte un avertissement.
 
 **Tags d'images** : `:<sha>` (immuable, poussé par `_build.yml`), `:staging` (dernier build
 de `dev`), `:prod` et `:latest` (images promues). `ghcr.io/<owner>/lodb/nginx` porte le nom
@@ -73,18 +77,32 @@ la nouvelle, et les images de l'ancienne restent accessibles par leur tag `:<sha
 La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 (`lodb-staging`, `lodb-prod`) et le même dossier (`STAGING_PATH`, `PROD_PATH`).
 
-1. Garde le `.env` en place sous `.deploy/backups/`, écrit le nouveau (mode 600) et
-   `.deploy/data-protection.pfx`, puis synchronise le dépôt sur la branche (`git reset --hard`).
-2. Contrôle le `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
+1. Garde le `.env` en place sous `.deploy/backups/`, pose `ENV_*` dans
+   `.deploy/incoming.env` (root seul) et `.deploy/data-protection.pfx`, puis synchronise le
+   dépôt sur la branche (`git reset --hard`). `tools/deploy/split-env.sh`, à cette révision,
+   sépare alors `ENV_*` dans un dossier temporaire : chaque secret dans un fichier, le reste
+   dans un `.env` ([`configuration.md`](configuration.md), § 4). Un secret mal écrit arrête
+   le job avant toute écriture.
+2. Contrôle ce `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
    `COMPOSE_PROJECT_NAME` = `lodb-<env>`, `IMAGE_TAG` = `<env>`, `LODB_NOINDEX` (`1` sur
-   `staging`, `0` en `prod`) ; en `prod`, relais SMTP et clés Stripe présents. Exige le
-   réseau `edge` (jamais créé) et écrit son sous-réseau dans le `.env` (`LODB_EDGE_CIDR`,
-   seul pair dont nginx croit `X-Forwarded-For`).
+   `staging`, `0` en `prod`), mot de passe de la base présent ; en `prod`, relais SMTP et
+   clés Stripe présents (leurs fichiers non vides). Exige les réseaux `edge` et
+   `observability` (jamais créés), et s'arrête si un autre réseau Docker recouvre le
+   sous-réseau de la stack, fixé par cible (`LODB_STACK_SUBNET`, `10.231.1.0/24` en staging,
+   `10.231.2.0/24` en prod). Contrôles passés seulement, sépare `ENV_*` en place
+   (`.deploy/secrets/`, `.env` en mode 600), supprime `.deploy/incoming.env` et le dossier
+   temporaire, puis écrit dans le `.env` le sous-réseau d'`edge` (`LODB_EDGE_CIDR`, seul pair
+   dont nginx croit `X-Forwarded-For`) et celui de la stack ; s'arrête si la configuration
+   résolue fait croire à l'API ou au SSR un autre réseau que celui-là.
 3. `docker compose pull` (5 tentatives), sauvegarde de la base en service (`.deploy/backups/`), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
    run le temps du seul `pull` (transmis par l'entrée de `ssh`, jamais en ligne de
-   commande), puis `docker compose run --rm migrate` : la base du
+   commande). Si le réseau de la stack existe sur un autre sous-réseau, `docker compose
+   down` (sans `-v`) le libère une fois (environ une minute de coupure). Puis
+   `docker compose run --rm migrate` : la base du
    volume `pgdata` passe à la dernière migration (une base Doctrine est d'abord marquée à
-   `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir.
+   `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir, sauf
+   juste après ce changement de réseau : la stack reste alors arrêtée jusqu'au déploiement
+   suivant.
 4. `docker compose up -d --no-build --remove-orphans --wait` : les conteneurs de la nouvelle
    stack remplacent ceux de l'ancienne, dont `php`, `go-fetcher`, `go-api` et `mailer` sont
    retirés comme orphelins. `pgdata` est gardé ; les blobs vont dans le volume `ddragon` ;

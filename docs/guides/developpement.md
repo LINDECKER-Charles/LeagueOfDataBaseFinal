@@ -101,15 +101,17 @@ Vérifier la stack :
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:18080/en/
 curl -s http://localhost:18081/healthz
 curl -s http://localhost:18081/readyz
-docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml exec -T nginx wget -qO- http://api:9464/metrics | grep lodb_build_info
+docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml exec -T nginx wget -qO- http://lodb-api:9464/metrics | grep lodb_build_info
 docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml exec -T postgres psql -U lodb -d lodb -c 'select version()'
 ```
 
-- `/readyz` se lit sur l'API (18081, ou `api:8080` dans le réseau), ou par nginx sur le
+- `/readyz` se lit sur l'API (18081, ou `lodb-api:8080` dans le réseau), ou par nginx sur le
   sous-domaine `api.` (`curl -H 'Host: api.localhost' http://localhost:18080/readyz`, une
   requête par seconde et par adresse). Demandé au site, il part au SSR et répond 404.
 - Les métriques se lisent **depuis le réseau de la stack** : 9464 n'est publié ni sur
-  l'hôte ni par nginx.
+  l'hôte ni par nginx. Celles du SSR :
+  `… exec -T web-ssr node -e "fetch('http://127.0.0.1:9464/metrics').then(r => r.text()).then(console.log)"`.
+  Noms et labels : [`metriques.md`](metriques.md).
 
 Journaux (JSON, une ligne par enregistrement) :
 

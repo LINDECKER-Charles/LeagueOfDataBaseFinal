@@ -50,19 +50,28 @@ internal sealed class ForgotPasswordEndpoint(
             return errors.ToProblem();
         }
 
-        var user = await users.FindByEmailAsync(email);
-        var rule = MailThrottleRule.ResetPassword;
-        if (user is { IsBanned: false }
-            && await throttle.RemainingWaitAsync(user.Id, rule, cancellationToken) is null
-            && await mail.SendPasswordResetAsync(
-                user,
-                request.Locale ?? UiLocales.Fallback,
-                cancellationToken))
+        if (await users.FindByEmailAsync(email) is { IsBanned: false } user)
         {
-            await throttle.RecordAsync(user.Id, rule, cancellationToken);
-            await db.SaveChangesAsync(cancellationToken);
+            await SendAsync(user, request.Locale ?? UiLocales.Fallback, cancellationToken);
         }
 
         return TypedResults.Accepted((string?)null);
+    }
+
+    // At most one per hour, however many requests for the account arrive at once.
+    private async Task SendAsync(User user, UiLocale locale, CancellationToken cancellationToken)
+    {
+        var rule = MailThrottleRule.ResetPassword;
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await throttle.HoldAsync(user.Id, cancellationToken);
+        if (await throttle.RemainingWaitAsync(user.Id, rule, cancellationToken) is not null
+            || !await mail.SendPasswordResetAsync(user, locale, cancellationToken))
+        {
+            return;
+        }
+
+        await throttle.RecordAsync(user.Id, rule, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 }

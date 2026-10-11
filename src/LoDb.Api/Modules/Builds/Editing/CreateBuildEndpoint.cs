@@ -28,9 +28,11 @@ internal sealed class CreateBuildEndpoint(
                     [FromServices] CreateBuildEndpoint endpoint,
                     HttpContext context) => endpoint.CreateAsync(request, lang, context))
             .RequireAuthorization(AuthorizationPolicies.VerifiedEmail)
+            .RequireRateLimiting(BuildLimits.Edit.Policy)
             .WithName("createBuild")
             .WithSummary("Saves a new build, pinned to the patch and the mode it was checked on.")
             .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status429TooManyRequests)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
     public async Task<Results<Created<EditableBuild>, BuildProblem, SubmissionRefusal>> CreateAsync(

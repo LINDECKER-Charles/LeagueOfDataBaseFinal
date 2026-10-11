@@ -16,6 +16,9 @@ commande.md
 !/.env.*.example
 # Local checklist of the secrets to set (values included): never versioned.
 /SECRETS.md
+# What the deploy job writes on a host (secret files, the pushed env, backups): a split run in
+# a checkout must never reach a commit.
+/.deploy/
 
 # Compose env of the archived legacy stack, read by `docker compose --project-directory legacy`
 /legacy/.env
@@ -65,6 +68,8 @@ TestResults/
 
 # Parity runs (L1.8): exports and manifests of both stacks, regenerated on demand
 /tools/parity/.runs/
+# Load bench runs: k6 summaries, docker stats samples and the summary of each run
+/tools/load/.runs/
 
 # Leftovers of the layout before the cutover: the PHP stack moved to legacy/app/, but a
 # checkout updated in place keeps its ignored files under app/ (vendor, node_modules, var,

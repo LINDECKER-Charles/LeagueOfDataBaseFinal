@@ -8,6 +8,7 @@ const PINNED = '/fr/15.13.1/items/3031-infinity-edge';
 const CURRENT = '/fr/items/3031-infinity-edge';
 const VISITOR = '203.0.113.7';
 const OTHER = '192.0.2.1';
+const THIRD = '2001:db8::/64';
 const LIMITS: RenderLimits = {
   maxInFlight: 4,
   pinnedMaxInFlight: 2,
@@ -17,6 +18,8 @@ const LIMITS: RenderLimits = {
   currentBurst: 6,
   perClientMaxInFlight: 4,
   pinnedPerClientPerMinute: 60,
+  currentPerClientPerMinute: 60,
+  currentPerClientBurst: 6,
   trackedClients: 100,
 };
 
@@ -163,6 +166,43 @@ describe('RenderAdmission', () => {
     expect(counts.entries()).toContainEqual({ lane: 'pinned', refusal: 'client_rate', count: 1 });
   });
 
+  it('refuses a client its current renders past its own burst, not the others', async () => {
+    const admission = admissionOf({ currentPerClientBurst: 3, currentBurst: 10 });
+    await settle([hold(admission, CURRENT), hold(admission, CURRENT), hold(admission, CURRENT)]);
+
+    expect(hold(admission, CURRENT).answer.status).toBe(503);
+    expect(hold(admission, CURRENT, OTHER).isStarted()).toBe(true);
+    expect(hold(admission, PINNED).isStarted()).toBe(true);
+    now += 1_000;
+    expect(hold(admission, CURRENT).isStarted()).toBe(true);
+  });
+
+  it("refills a client's share of the current pages at its own rate, not the lane's", async () => {
+    const admission = admissionOf({ currentPerClientPerMinute: 6, currentPerClientBurst: 1 });
+    await settle([hold(admission, CURRENT)]);
+
+    now += 1_000;
+    expect(hold(admission, CURRENT).answer.status).toBe(503);
+    now += 9_000;
+    expect(hold(admission, CURRENT).isStarted()).toBe(true);
+  });
+
+  it('spends nothing from the current lane on a client over its own share', async () => {
+    const admission = admissionOf({ currentPerClientBurst: 1, currentBurst: 2 });
+    const refusals = 5;
+    await settle([hold(admission, CURRENT)]);
+    const refused = Array.from({ length: refusals }, () => hold(admission, CURRENT));
+
+    expect(refused.every((render) => render.answer.status === 503)).toBe(true);
+    expect(hold(admission, CURRENT, OTHER).isStarted()).toBe(true);
+    expect(hold(admission, CURRENT, THIRD).answer.status).toBe(503);
+    expect(counts.entries()).toEqual([
+      { lane: 'current', refusal: null, count: 2 },
+      { lane: 'current', refusal: 'client_rate', count: refusals },
+      { lane: 'current', refusal: 'lane_rate', count: 1 },
+    ]);
+  });
+
   it('spends no budget on a render refused for want of a slot', async () => {
     const admission = admissionOf({ pinnedBurst: 1 });
     const current = holdFromMany(admission, CURRENT, LIMITS.maxInFlight);
@@ -185,6 +225,26 @@ describe('RenderAdmission', () => {
 
     expect(hold(admission, CURRENT).isStarted()).toBe(true);
     expect(hold(admission, CURRENT).isStarted()).toBe(true);
+  });
+
+  it('hands the render its lane and reports the renders in flight per lane', async () => {
+    const admission = admissionOf();
+    const render = vi.fn(async () => undefined);
+    const pinned = hold(admission, PINNED);
+    hold(admission, CURRENT, OTHER);
+    hold(admission, CURRENT, OTHER);
+
+    expect(admission.inFlightOf('pinned')).toBe(1);
+    expect(admission.inFlightOf('current')).toBe(2);
+    await settle([pinned]);
+    await admission.run(
+      { url: PINNED, client: VISITOR },
+      responseOf({ headers: {}, locals: {} }),
+      render,
+    );
+
+    expect(render).toHaveBeenCalledWith('pinned');
+    expect(admission.inFlightOf('pinned')).toBe(0);
   });
 
   it('counts every decision per lane and refusal', () => {

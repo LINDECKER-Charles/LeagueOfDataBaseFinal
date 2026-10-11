@@ -171,6 +171,11 @@
     },
     "slot": "スロット"
   },
+  "detail": {
+    "history": {
+      "title": "過去のパッチ"
+    }
+  },
   "common": {
     "back": "戻る",
     "search": "検索…",
@@ -194,7 +199,8 @@
       "item": "アイテム",
       "runes": "ルーン",
       "summoner": "サモナー",
-      "sitemap": "サイトマップ"
+      "sitemap": "サイトマップ",
+      "patches": "パッチ履歴"
     },
     "links": {
       "title": "便利なリンク",

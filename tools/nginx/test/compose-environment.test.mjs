@@ -20,8 +20,10 @@ const IMAGE_DEFAULT = /^\s*(LODB_[A-Z_]+)=([^\s\\$]+)/gm;
 const ENV_LINE = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/gm;
 // Set on purpose per environment (compose.yaml), dropped on a host (compose.deploy.yaml).
 const REVISION = 'LODB_REVISION';
-// The deploy job writes the edge subnet; a host tunes one bound and leaves another empty.
-const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_PAGES_RATE=5r/s\nLODB_PAGES_BURST=\n';
+// The deploy job writes the edge and stack subnets; a host tunes one bound and leaves another
+// empty.
+const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.2.0/24\n'
+  + 'LODB_PAGES_RATE=5r/s\nLODB_PAGES_BURST=\n';
 const IS_CALLER_SETTING = /^(?:LODB_|COMPOSE_)|^(?:IMAGE_TAG|APP_REVISION)$/;
 
 const hasCompose = await run('docker', ['compose', 'version']).then(() => true, () => false);
@@ -71,6 +73,7 @@ describe('nginx environment through Compose',
 
     test('reads the defaults of the image', () => {
       assert.equal(defaults.get('LODB_PAGES_RATE'), '20r/s');
+      assert.equal(defaults.get('LODB_ARCHIVE_CACHE_MIN_USES'), '2');
       assert.ok(defaults.size >= 16, `${defaults.size} defaults read`);
     });
 

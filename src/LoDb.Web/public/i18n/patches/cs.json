@@ -1,0 +1,8 @@
+{
+  "title": "Historie patchů",
+  "description": "Všechny patche League of Legends, které uvádí Data Dragon, každý se svými šampiony, předměty, runami a přivolávacími kouzly tak, jak byly v daném patchi.",
+  "intro": "Všechny patche, které uvádí Data Dragon, od nejnovějšího. Každý otevírá své šampiony, předměty, runy a přivolávací kouzla tak, jak byly tehdy.",
+  "group": "Patche {{ major }}.x",
+  "latest": "Aktuální",
+  "empty": "Zatím není uveden žádný patch."
+}

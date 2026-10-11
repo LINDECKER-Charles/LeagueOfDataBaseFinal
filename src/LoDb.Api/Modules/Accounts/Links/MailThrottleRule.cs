@@ -1,16 +1,49 @@
+using LoDb.Api.Modules.Accounts.Verification;
+
 namespace LoDb.Api.Modules.Accounts.Links;
 
-/// <summary>How many e-mails of a kind an account may ask for over a sliding window.</summary>
-/// <param name="Name">Name of the row that counts them.</param>
-/// <param name="Limit">E-mails within the window.</param>
-/// <param name="Window">Length of the window.</param>
-internal sealed record MailThrottleRule(string Name, int Limit, TimeSpan Window)
+/// <summary>
+/// How many e-mails of a kind an account may ask for: a first allowance over the life of the
+/// account, at any pace, then <see cref="Limit"/> per sliding <see cref="Window"/>.
+/// </summary>
+internal sealed record MailThrottleRule
 {
-    /// <summary>Verification e-mails asked again: 3 per 15 minutes, as the legacy stack.</summary>
-    public static MailThrottleRule ConfirmEmail { get; } =
-        new(Name: "confirm-email-requests", Limit: 3, Window: TimeSpan.FromMinutes(15));
+    private const int OnePerWindow = 1;
+
+    /// <summary>Name of the row that counts them.</summary>
+    public required string Name { get; init; }
+
+    /// <summary>E-mails asked for before the window applies; none by default.</summary>
+    public int Allowance { get; init; }
+
+    /// <summary>E-mails within the window, once the allowance is spent.</summary>
+    public required int Limit { get; init; }
+
+    /// <summary>Length of the window.</summary>
+    public required TimeSpan Window { get; init; }
 
     /// <summary>Password reset e-mails: 1 an hour, the lifetime of the link.</summary>
-    public static MailThrottleRule ResetPassword { get; } =
-        new(Name: "reset-password-requests", Limit: 1, Window: TimeSpan.FromHours(1));
+    public static MailThrottleRule ResetPassword { get; } = new()
+    {
+        Name = "reset-password-requests",
+        Limit = OnePerWindow,
+        Window = TimeSpan.FromHours(1),
+    };
+
+    /// <summary>
+    /// Verification e-mails asked again: a few in all, 5 by default, then one per interval, a
+    /// day by default. An unverified account is erased after a week, so an address typed by
+    /// someone else receives a handful of them at most.
+    /// </summary>
+    public static MailThrottleRule ConfirmEmail(VerificationResendOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        return new MailThrottleRule
+        {
+            Name = "confirm-email-requests",
+            Allowance = options.FreeResends,
+            Limit = OnePerWindow,
+            Window = options.Interval,
+        };
+    }
 }

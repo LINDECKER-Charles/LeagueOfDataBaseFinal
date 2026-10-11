@@ -4,7 +4,8 @@ namespace LoDb.Infrastructure.Outbox.Delivery;
 
 /// <summary>
 /// Meter <c>LoDb.Outbox</c>: outcome of every message, duration and failures of the
-/// batches, and the depth of the queue as the last batch of this instance saw it.
+/// batches, and the depth of the queue and the messages the hourly caps defer, as the last
+/// look of this instance saw them.
 /// </summary>
 internal sealed class OutboxMetrics
 {
@@ -15,6 +16,7 @@ internal sealed class OutboxMetrics
     private readonly Histogram<double> _duration;
     private readonly Counter<long> _failures;
     private long _pending;
+    private long _deferred;
 
     public OutboxMetrics(IMeterFactory meterFactory)
     {
@@ -37,6 +39,11 @@ internal sealed class OutboxMetrics
             () => Volatile.Read(ref _pending),
             unit: "{message}",
             description: "Messages waiting for a first or next attempt.");
+        meter.CreateObservableGauge(
+            "lodb.outbox.deferred",
+            () => Volatile.Read(ref _deferred),
+            unit: "{message}",
+            description: "Due messages the hourly caps of their template hold back.");
     }
 
     public void RecordMessages(string outcome, int count)
@@ -50,6 +57,8 @@ internal sealed class OutboxMetrics
     public void RecordBatch(TimeSpan duration) => _duration.Record(duration.TotalSeconds);
 
     public void RecordPending(long pending) => Volatile.Write(ref _pending, pending);
+
+    public void RecordDeferred(long deferred) => Volatile.Write(ref _deferred, deferred);
 
     public void RecordFailure() => _failures.Add(1);
 }

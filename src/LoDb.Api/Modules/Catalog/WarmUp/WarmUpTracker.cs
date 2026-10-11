@@ -6,26 +6,51 @@ using LoDb.Ingestion.Images;
 namespace LoDb.Api.Modules.Catalog.WarmUp;
 
 /// <summary>
-/// Counts the images of a warm-up as the ingestion reports them, and publishes each new
-/// state to the frames of the stream.
+/// The state of a warm-up, from its first frame to its last: counts the images as the
+/// ingestion reports them, and publishes each new state to the frames of the stream.
 /// </summary>
 /// <remarks>
 /// Reports come from the fetching threads, hence the lock. Publishing never blocks: the
-/// frames keep the latest state only.
+/// frames keep the latest state only. The last frame keeps the counts reached, so a run cut
+/// short never shows a client its progress falling back to nothing.
 /// </remarks>
-internal sealed class WarmUpTracker(
-    IReadOnlyList<ResourceType> resources,
-    ChannelWriter<WarmUpProgress> frames) : IProgress<DdragonImage>
+internal sealed class WarmUpTracker : IProgress<DdragonImage>
 {
     private readonly Lock gate = new();
+    private readonly IReadOnlyList<ResourceType> resources;
+    private readonly ChannelWriter<WarmUpProgress> frames;
     private readonly Dictionary<(string Type, string File), PlannedImage> unsettled = [];
-    private readonly Dictionary<ResourceType, int> totals = [];
-    private readonly Dictionary<ResourceType, int> settled = [];
+    private readonly Dictionary<ResourceType, int> totals;
+    private readonly Dictionary<ResourceType, int> settled;
     private readonly HashSet<ResourceType> ready = [];
-    private WarmUpStage stage = WarmUpStage.Images;
+    private WarmUpStage stage = WarmUpStage.Preparing;
     private WarmUpLanding? latest;
+    private string? failure;
+
+    /// <param name="resources">The lists of the run, each once, in the requested order.</param>
+    /// <param name="frames">Where each new state goes.</param>
+    public WarmUpTracker(
+        IReadOnlyList<ResourceType> resources,
+        ChannelWriter<WarmUpProgress> frames)
+    {
+        ArgumentNullException.ThrowIfNull(resources);
+        ArgumentNullException.ThrowIfNull(frames);
+        this.resources = resources;
+        this.frames = frames;
+        totals = resources.ToDictionary(static resource => resource, static _ => 0);
+        settled = resources.ToDictionary(static resource => resource, static _ => 0);
+    }
 
     public IReadOnlyList<ResourceType> Resources => resources;
+
+    /// <summary>Publishes the first frame: the datasets are prepared, nothing is counted.</summary>
+    public void Prepare()
+    {
+        lock (gate)
+        {
+            Publish();
+        }
+    }
 
     /// <summary>
     /// Takes the images left to fetch and publishes the first frame of the images stage; a
@@ -39,7 +64,6 @@ internal sealed class WarmUpTracker(
             foreach (var resource in resources)
             {
                 totals[resource] = pending.Count(planned => planned.Resource == resource);
-                settled[resource] = 0;
             }
 
             foreach (var planned in pending)
@@ -48,6 +72,7 @@ internal sealed class WarmUpTracker(
             }
 
             ready.UnionWith(resources.Where(resource => totals[resource] == 0));
+            stage = WarmUpStage.Images;
             Publish();
         }
     }
@@ -96,11 +121,27 @@ internal sealed class WarmUpTracker(
         }
     }
 
+    /// <summary>
+    /// Ends the run, the catalog open. A resource left uncompleted keeps its count and stays
+    /// unready: its images are pending, for the pages to fill.
+    /// </summary>
     public void Finish()
     {
         lock (gate)
         {
             stage = WarmUpStage.Done;
+            Publish();
+        }
+    }
+
+    /// <summary>Ends the run with the problem code that cut it short.</summary>
+    public void Fail(string code)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(code);
+        lock (gate)
+        {
+            stage = WarmUpStage.Failed;
+            failure = code;
             Publish();
         }
     }
@@ -124,5 +165,6 @@ internal sealed class WarmUpTracker(
             }),
         ],
         Latest = latest,
+        Failure = failure,
     });
 }

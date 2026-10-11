@@ -71,6 +71,12 @@ describe('Footer', () => {
     expect(links).toContain('/en/developers');
   });
 
+  it('links the patch history after the four lists', async () => {
+    const links = siteMap(await footer());
+
+    expect(links.indexOf('/en/patches')).toBe(links.indexOf('/en/summoners') + 1);
+  });
+
   it('ends with the XML site map on the web, outside the locale', async () => {
     const web = siteMap(await footer({ platform: { kind: 'web', user: null } }));
 

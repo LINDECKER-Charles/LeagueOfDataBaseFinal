@@ -3,6 +3,7 @@
 // the image's tag in LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
+import { gunzipSync } from 'node:zlib';
 import { send, statusesOf } from '../lib/client.mjs';
 import { startStack } from '../lib/stack.mjs';
 
@@ -13,8 +14,16 @@ const BLOB = 'ab'.repeat(32);
 const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) '
   + 'Chrome/139.0.0.0 Safari/537.36';
 
-// Rates per minute: no token comes back while the checks run, so each burst is exact.
+// Rates per minute: no token comes back while the checks run, so each burst is exact. Any peer
+// may state the client address, so that a check of the caches speaks for a client of its own
+// (`forwardedFor`) and leaves the bursts of the others whole. The first parts of the page
+// caches' keys are named, to be found in the stored keys; a past patch's page waits for a
+// third request rather than the image's second, to show where that count comes from.
 const LIMITS = {
+  LODB_EDGE_CIDR: '0.0.0.0/0',
+  LODB_REVISION: 'r1',
+  LODB_ARCHIVE_EPOCH: 'e7',
+  LODB_ARCHIVE_CACHE_MIN_USES: '3',
   LODB_PAGES_RATE: '1r/m',
   LODB_PAGES_BURST: '3',
   LODB_API_READS_RATE: '1r/m',
@@ -31,6 +40,11 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
   let stack;
   const get = (path, options) => send(stack.port, path, options);
   const cacheOf = async (path) => (await get(path)).headers['x-cache-status'];
+  // The keys a cache folder holds, as nginx wrote them into its files.
+  const keysOf = async (folder) => {
+    const { stdout } = await stack.exec('grep', '-rah', '^KEY: ', `/var/cache/nginx/${folder}`);
+    return stdout.split('\n').filter(Boolean);
+  };
 
   before(async () => {
     stack = await startStack(IMAGE, LIMITS);
@@ -117,6 +131,72 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
       assert.equal((await get(`/cdn/blobs/${name}`)).status, 404, name);
     }
     assert.equal((await get('/cdn/x')).status, 404);
+  });
+
+  test('keeps one compressed copy of a page for every client', async () => {
+    const client = { forwardedFor: '203.0.113.1' };
+    const compressed = await get('/en/about', { ...client, encoding: 'gzip' });
+    const plain = await get('/en/about', client);
+    const browser = await get('/en/about', { ...client, encoding: 'gzip, deflate, br, zstd' });
+
+    assert.equal(compressed.headers['x-cache-status'], 'MISS');
+    assert.equal(compressed.headers['content-encoding'], 'gzip');
+    assert.equal(gunzipSync(compressed.body).toString(), 'page\n');
+    assert.equal(plain.headers['x-cache-status'], 'HIT');
+    assert.equal(plain.headers['content-encoding'], undefined);
+    assert.equal(plain.body.toString(), 'page\n');
+    assert.equal(browser.headers['x-cache-status'], 'HIT');
+    assert.deepEqual(browser.body, compressed.body);
+    for (const response of [compressed, plain, browser]) {
+      assert.equal(response.headers.vary, 'Accept-Encoding');
+    }
+  });
+
+  test("keeps a past patch's page from its third request here, under a key without revision",
+    async () => {
+      const client = { forwardedFor: '203.0.113.2' };
+      const path = '/en/15.1.1/champions';
+      const misses = [];
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        misses.push(await get(path, { ...client, encoding: 'gzip' }));
+      }
+      const kept = await get(path, client);
+
+      assert.deepEqual([...misses, kept].map((answer) => answer.headers['x-cache-status']),
+        ['MISS', 'MISS', 'MISS', 'HIT']);
+      assert.equal(gunzipSync(misses[2].body).toString(), 'archive\n');
+      assert.equal(kept.body.toString(), 'archive\n');
+      assert.equal(kept.headers.vary, 'Accept-Encoding');
+      assert.deepEqual(await keysOf('archive'), [`KEY: e7|http://localhost${path}`]);
+      assert.ok((await keysOf('pages')).includes('KEY: r1|http://localhost/en/about'));
+    });
+
+  test("holds a client to the pages' rate on a past patch too", async () => {
+    const statuses = await statusesOf(stack.port, '/fr/14.24.1/items', 5,
+      { forwardedFor: '203.0.113.3' });
+    assert.deepEqual(statuses, [200, 200, 200, 200, 429]);
+  });
+
+  test('keeps a bundle under its name alone, whatever the host, but never a 404', async () => {
+    assert.equal(await cacheOf('/build/main-ABCD1234.js'), 'MISS');
+    const kept = await get('/build/main-ABCD1234.js', { host: 'test.example.com' });
+    assert.equal(kept.headers['x-cache-status'], 'HIT');
+    assert.equal(kept.headers['cache-control'], 'public, max-age=31536000, immutable');
+    assert.equal(kept.headers['x-content-type-options'], 'nosniff');
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const gone = await get('/build/gone-ABCD1234.js');
+      assert.equal(gone.status, 404);
+      assert.equal(gone.headers['x-cache-status'], 'MISS');
+    }
+  });
+
+  test('keeps a file of /build/ opened directly from running anything', async () => {
+    for (const path of ['/build/main-ABCD1234.js', '/build/media/logo-ABCD1234.svg',
+      '/build/gone-ABCD1234.js']) {
+      const answer = await get(path);
+      assert.equal(answer.headers['content-security-policy'], "default-src 'none'; sandbox",
+        path);
+    }
   });
 
   test('keeps the crawler files once, whatever their query', async () => {

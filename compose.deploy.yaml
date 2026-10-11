@@ -3,9 +3,13 @@
 #
 #   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
 #
+# The staging host adds compose.staging.yaml, and compose.staging-auth.yaml when its .env
+# asks for it; the deploy job writes the resulting COMPOSE_FILE to the host's .env.
+#
 # Driven by .github/workflows/_deploy.yml. The host's .env (secret ENV_STAGING or ENV_PROD,
-# templates .env.staging.example and .env.prod.example) sets the project, the images, the
-# public hosts and the secrets. Like legacy/compose.deploy.yaml, it publishes no host port:
+# templates .env.staging.example and .env.prod.example) sets the project, the images and the
+# public hosts; the job moves its secrets to files first (`secrets` at the end of this file).
+# Like legacy/compose.deploy.yaml, it publishes no host port:
 # the shared edge (caddy-docker-proxy, owned by infra-vps) reads the labels of nginx and
 # reaches it over the external `edge` network.
 #
@@ -18,18 +22,43 @@
 # Memory limits: rule = 2 x the observed peak (docs/reecriture/rapports/memoire.md, E2E
 # peaks of lots 0 to 7, and the migrate run of L8.1). Re-derive after a week of history:
 #   max_over_time(container_memory_working_set_bytes{stack=~"lodb-(staging|prod)"}[7d])
-# No `cpus` ceiling: set too low, it throttles silently.
+#
+# CPU: a quota (`cpus`) and a weight (`cpu_shares`) per service, and a cap on processes
+# (`pids`). This file once set no quota, for fear of a silent throttling. The throttling is
+# now collected and alerted on (ConteneurCpuBride, infra-vps), and an unbounded stack did
+# worse: on 2026-10-10 a crawl took the shared host's vCPUs until the provider throttled the
+# whole machine, the other projects included. Under such a load the stack now sheds (503
+# with Retry-After) within its own quotas, which add up to 3 of the host's 4 vCPUs. nginx
+# weighs twice the others: it answers from its cache while they are saturated. The staging
+# stack, on the same host, takes far less (compose.staging.yaml). Recalibrate after 7 days of
+#   rate(container_cpu_cfs_throttled_seconds_total{stack=~"lodb-(staging|prod)"}[5m])
+# read against the latency of the same days.
 
+# Secrets: the deploy job writes each one to a file of .deploy/secrets
+# (tools/deploy/split-env.sh) and leaves it out of the .env; a service mounts in /run/secrets
+# only those it reads. The API's are named after their setting key, which the API reads from
+# the file: none is in a container's environment, which `docker inspect` would show.
+#
+# Same string as compose.yaml, without the password: the API adds LoDb__Database__Password.
 x-lodb-connection: &lodb-connection >-
-  Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+  Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+
+x-database-password: &database-password
+  source: LODB_DB_PASSWORD
+  target: LoDb__Database__Password
 
 services:
   api:
     image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/api:${IMAGE_TAG:?IMAGE_TAG is required}
     build: !reset null
     environment:
-      # Same string as compose.yaml, the password made mandatory.
       ConnectionStrings__LoDb: *lodb-connection
+      # The stack's own subnet only (networks.default below): X-Forwarded-* are trusted from
+      # nginx and web-ssr, and port 8080 answers them and the loopback alone, never a
+      # container of a shared network the API joins. compose.yaml's other ranges are dropped.
+      LoDb__Hosting__KnownProxyNetworks__0: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
+      LoDb__Hosting__KnownProxyNetworks__1: !reset null
+      LoDb__Hosting__KnownProxyNetworks__2: !reset null
       # Every origin the API publishes is the canonical host's: e-mail links, sitemaps,
       # share_url of /v1, and the origin /developers documents for /v1.
       LoDb__Accounts__SiteOrigin: https://${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
@@ -40,25 +69,19 @@ services:
       # created without it. The file comes from a secret (_deploy.yml).
       LoDb__DataProtection__CertificatePath: /run/secrets/data-protection.pfx
       # Settings without a key of their own: passed only when the host's .env sets them,
-      # under these exact names, so an absent one keeps the API's default.
-      LoDb__DataProtection__CertificatePassword:
+      # under these exact names, so an absent one keeps the API's default. Never a secret:
+      # those are files (`secrets` below).
       LoDb__Mail__Host:
       LoDb__Mail__Port:
       LoDb__Mail__Security:
       LoDb__Mail__Username:
-      LoDb__Mail__Password:
       LoDb__Mail__From:
-      LoDb__Billing__StripeSecretKey:
-      LoDb__Billing__StripeWebhookSecret:
       LoDb__Accounts__Google__ClientId:
-      LoDb__Accounts__Google__ClientSecret:
       LoDb__Accounts__Google__AppClients__0__ClientId:
-      LoDb__Accounts__Google__AppClients__0__ClientSecret:
       LoDb__Accounts__Google__AppClients__1__ClientId:
-      LoDb__Accounts__Google__AppClients__1__ClientSecret:
       LoDb__Contact__Recipient:
       LoDb__Contact__NotificationLocale:
-      LoDb__Analytics__VisitorKey:
+      LoDb__Seo__SitemapVersionWindow:
       # Bounds of the catalogs in memory and of the cold work (ADR 0003, amendment of
       # 2026-10-10); configuration.md gives their defaults.
       LoDb__Catalog__MaxEntries:
@@ -81,11 +104,39 @@ services:
     secrets:
       - source: data-protection
         target: data-protection.pfx
+      - *database-password
+      - LoDb__DataProtection__CertificatePassword
+      - LoDb__Mail__Password
+      - LoDb__Billing__StripeSecretKey
+      - LoDb__Billing__StripeWebhookSecret
+      - LoDb__Accounts__Google__ClientSecret
+      - LoDb__Accounts__Google__AppClients__0__ClientSecret
+      - LoDb__Accounts__Google__AppClients__1__ClientSecret
+      - LoDb__Analytics__VisitorKey
+    labels:
+      # Raised by the deploy job when a secret file changes. The API reads its files at
+      # start-up only, and Compose recreates a service whose definition changed, not one
+      # whose mounted files did.
+      league-of-data-base.secrets-revision: ${LODB_SECRETS_REVISION:-0}
+      prometheus.scrape: "true"
+      prometheus.port: "9464"
+    cpu_shares: 1024
+    # The host's collector scrapes port 9464 over `observability` (infra-vps,
+    # docs/APPLICATIONS.md § 4); never published nor routed. There, every container of the
+    # host can reach this one: port 8080 answers the stack's subnet only (NetworkGate), and the
+    # API calls its peers by their prefixed aliases (lodb-postgres), never by a short name.
+    networks:
+      observability: {}
     deploy:
       resources:
         limits:
           # Peak 571 MiB (lot 3 milestone, E2E reruns); 1 GiB would cut under 2 x.
           memory: 1152m
+          # Above one core: .NET then sizes its thread pool and GC heaps for two
+          # processors, and the healthcheck's runtime starts beside the server.
+          cpus: "1.25"
+          # Thread pool, Npgsql and egress connections; a leak stops here, not at the host.
+          pids: 512
 
   # Ephemeral: `docker compose run --rm migrate` before `up -d` (_deploy.yml).
   migrate:
@@ -93,11 +144,14 @@ services:
     build: !reset null
     environment:
       ConnectionStrings__LoDb: *lodb-connection
+    secrets:
+      - *database-password
     deploy:
       resources:
         limits:
           # Baseline plus the migrations of lots 1 to 6 pass under 64m (L8.1 trial).
           memory: 128m
+          pids: 256
 
   web-ssr:
     image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/web-ssr:${IMAGE_TAG:?IMAGE_TAG is required}
@@ -105,11 +159,25 @@ services:
     environment:
       # The public hosts of CADDY_DOMAINS, comma-separated: any other Host is refused.
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:?LODB_ALLOWED_HOSTS is required (the public hosts)}
+      # The stack's subnet alone, as the API's: the site's port answers nginx and the loopback,
+      # never a container of `observability` (src/server/security/network-gate.ts).
+      LODB_STACK_NETWORKS: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
+    # Scraped on its metrics port (9464, src/server/metrics) over `observability`, as the API;
+    # the renderer calls the API by its alias, lodb-api, never by the short name.
+    networks:
+      observability: {}
+    cpu_shares: 1024
+    labels:
+      prometheus.scrape: "true"
+      prometheus.port: "9464"
     deploy:
       resources:
         limits:
           # Peak 338 MiB (lot 2 milestone). The V8 heap stays capped by NODE_OPTIONS.
           memory: 704m
+          # The renderer is one Node thread: past a core, only its GC would gain.
+          cpus: "1.0"
+          pids: 256
 
   nginx:
     image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/nginx:${IMAGE_TAG:?IMAGE_TAG is required}
@@ -144,33 +212,83 @@ services:
       caddy_0.reverse_proxy: "{{upstreams 80}}"
       caddy_1: ${API_CADDY_DOMAINS:?API_CADDY_DOMAINS is required (e.g. "api.test.example.com")}
       caddy_1.reverse_proxy: "{{upstreams 80}}"
+    # Twice the others' weight: under contention, the cached pages keep being served.
+    cpu_shares: 2048
     deploy:
       resources:
         limits:
           # Not the 2 x peak rule (19 MiB of processes): the shared memory of the cache keys
-          # (32 MiB for the pages) and of the rate zones is charged here, and so is the
-          # kernel's page cache of the cached pages and blobs it serves, which fills whatever
-          # the limit leaves. Too tight, every cache HIT reads the disk again.
+          # (32 MiB each for the latest and the past patches' pages, 8 MiB for the bundles)
+          # and of the rate zones is charged here, and so is the kernel's page cache of the
+          # cached pages and blobs it serves, which fills whatever the limit leaves. Too
+          # tight, every cache HIT reads the disk again.
           memory: 256m
+          cpus: "0.25"
+          pids: 256
 
   postgres:
     environment:
-      POSTGRES_PASSWORD: ${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment}
+      # Read by the image's entrypoint, as root, only when it creates the database on an
+      # empty volume: the password of an existing database changes by ALTER ROLE.
+      POSTGRES_PASSWORD: !reset null
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password
+    secrets:
+      - source: LODB_DB_PASSWORD
+        target: postgres-password
+    cpu_shares: 1024
     deploy:
       resources:
         limits:
           # shared_buffers 128 MiB plus the connections, the legacy stack's value.
           memory: 512m
+          cpus: "0.5"
+          # One process per connection (max_connections, compose.yaml) plus its workers.
+          pids: 256
 
 networks:
+  # The stack's private network, on a subnet fixed per environment (staging and prod share the
+  # host), outside Docker's default pools: the API trusts it by name (KnownProxyNetworks).
+  # The deploy job picks it per target, writes it to the host's .env and recreates the
+  # network once when its subnet differs. compose.yaml lets Docker choose, so that the local
+  # stacks coexist.
+  default:
+    ipam:
+      config:
+        - subnet: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
   # Shared ingress network, created once per host by infra-vps; the deploy job only
   # asserts that it exists.
   edge:
     external: true
     name: edge
+  # Shared collection network, created once per host by infra-vps like `edge`: the scrape of
+  # the metrics ports. The deploy job asserts that it exists.
+  observability:
+    external: true
+    name: observability
 
 secrets:
   # PKCS#12 file of the Data Protection certificate, written by the deploy job from a
   # secret. Missing, the stack does not start.
   data-protection:
     file: ${LODB_DATA_PROTECTION_CERT_FILE:-./.deploy/data-protection.pfx}
+  # One file per secret line of the environment's dotenv, named after it (the list of
+  # tools/deploy/split-env.sh). The job writes each one even when its line is absent, empty
+  # then (an unset setting): Docker would mount a missing file as a folder.
+  LODB_DB_PASSWORD:
+    file: ./.deploy/secrets/LODB_DB_PASSWORD
+  LoDb__DataProtection__CertificatePassword:
+    file: ./.deploy/secrets/LoDb__DataProtection__CertificatePassword
+  LoDb__Mail__Password:
+    file: ./.deploy/secrets/LoDb__Mail__Password
+  LoDb__Billing__StripeSecretKey:
+    file: ./.deploy/secrets/LoDb__Billing__StripeSecretKey
+  LoDb__Billing__StripeWebhookSecret:
+    file: ./.deploy/secrets/LoDb__Billing__StripeWebhookSecret
+  LoDb__Accounts__Google__ClientSecret:
+    file: ./.deploy/secrets/LoDb__Accounts__Google__ClientSecret
+  LoDb__Accounts__Google__AppClients__0__ClientSecret:
+    file: ./.deploy/secrets/LoDb__Accounts__Google__AppClients__0__ClientSecret
+  LoDb__Accounts__Google__AppClients__1__ClientSecret:
+    file: ./.deploy/secrets/LoDb__Accounts__Google__AppClients__1__ClientSecret
+  LoDb__Analytics__VisitorKey:
+    file: ./.deploy/secrets/LoDb__Analytics__VisitorKey

@@ -9,8 +9,15 @@ internal enum WarmUpStage
     /// <summary>The images the lists show are being fetched.</summary>
     Images,
 
+    /// <summary>
+    /// The catalog is open. Images short of the total were refused for now (budget spent, no
+    /// slot): they stay pending, for the pages to fill as they arrive.
+    /// </summary>
     Done,
 
-    /// <summary>The catalog could not be opened: <c>failure</c> tells why.</summary>
+    /// <summary>
+    /// The run was cut short, its counts kept: the catalog could not be opened, Data Dragon
+    /// failed or the stream outlived its lifetime. <c>failure</c> tells why.
+    /// </summary>
     Failed,
 }

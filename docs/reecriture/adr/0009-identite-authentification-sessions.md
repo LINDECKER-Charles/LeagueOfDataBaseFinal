@@ -96,6 +96,18 @@
 - **Confirmation par mot de passe** (suppression du compte) : limitée **par compte**,
   jamais par adresse (5 par 15 min), et un mauvais mot de passe compte pour le lockout comme
   à la connexion.
+- **Actions coûteuses d'un compte connecté**, limitées **par compte** sur une heure
+  glissante, jamais par adresse : checkout d'un pack ou d'un plan (10), clé API créée ou
+  régénérée (5), build créé ou remplacé (60), vote (120). Chaque module déclare sa
+  politique ; bornes sous `LoDb:RateLimiting`, refus `429 rate-limited`.
+- **Vote** : e-mail vérifié et compte vieux de 24 h (`LoDb:Builds:Votes`), sinon 403
+  (`email-not-verified`, `account-too-recent`).
+- **Vérification d'e-mail** : renvoi limité par compte, 5 en tout puis 1 par 24 h
+  (`LoDb:Accounts:VerificationResend`). Un compte encore non vérifié 7 jours après sa
+  création est effacé par une tâche horaire (`LoDb:Accounts:UnverifiedPurge`), sauf s'il
+  détient un build, une clé API, un don, un rôle, un bannissement, le statut de soutien ou
+  une connexion Google ; l'effacement suit le chemin d'une suppression de compte et se
+  journalise (`account.delete`, `reason` `email-unverified`).
 - Bannissement : vérifié à la connexion **et** lors de la revalidation périodique du
   security stamp (quelques minutes). Il prend donc effet sur les sessions déjà
   ouvertes. Les builds d'un banni sortent des tendances, mais leurs liens de partage
@@ -150,3 +162,6 @@
 - **2026-10-10** : limites de connexion par adresse et par couple (identifiant, adresse),
   admission asynchrone au hachage, confirmation par mot de passe limitée par compte
   (§ Protections) ; enrôlement du TOTP sur invitation de la CLI, `admin mfa-reset` (§ Admin).
+- **2026-10-11** : limites horaires par compte des actions coûteuses, vote réservé aux
+  comptes vérifiés d'un jour, renvoi de vérification plafonné par compte et effacement des
+  comptes non vérifiés après 7 jours (§ Protections).

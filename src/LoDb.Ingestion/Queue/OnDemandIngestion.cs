@@ -171,7 +171,22 @@ internal sealed class OnDemandIngestion : IOnDemandIngestion, IOnDemandBacklog, 
     private static bool IsStopping(Exception exception, CancellationToken cancellationToken) =>
         exception is OperationCanceledException && cancellationToken.IsCancellationRequested;
 
+    // The worker's own lane refuses nothing: a refusal comes from a visitor's flight it joined,
+    // which found no slot or no budget. That flight is forgotten before its callers wake, so
+    // once more the worker claims the work and runs it itself.
     private async Task ProcessAsync(QueuedWork work, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await ProcessOnceAsync(work, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OnDemandRefusedException)
+        {
+            await ProcessOnceAsync(work, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task ProcessOnceAsync(QueuedWork work, CancellationToken cancellationToken)
     {
         if (work.Language is { } language)
         {

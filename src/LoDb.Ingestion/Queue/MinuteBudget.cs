@@ -5,9 +5,13 @@ namespace LoDb.Ingestion.Queue;
 /// zero lets none through.
 /// </summary>
 /// <remarks>
-/// The budgets bound the volume of cold work a sweep can cause, not the requests of a single
-/// visitor, who never comes near them: the crawlers' queued requests (C5) and the visitors'
-/// synchronous ingestions (<see cref="OnDemandBudgets"/>).
+/// The budgets bound the volume of cold work an instance takes on per minute, however many
+/// clients cause it: the crawlers' queued requests (C5) and the visitors' synchronous
+/// ingestions (<see cref="OnDemandBudgets"/>). They are shared by everyone, so a sweep can
+/// spend them, and so can a few visitors at once: a single warm-up of a cold patch for the
+/// home page asks for some 900 images. A refusal is transient: a catalog answers pending, and
+/// an image stays pending until a later call, or the background queue a list hands it to,
+/// fetches it.
 /// </remarks>
 /// <param name="perMinute">Units a window holds.</param>
 /// <param name="timeProvider">The clock the windows follow.</param>

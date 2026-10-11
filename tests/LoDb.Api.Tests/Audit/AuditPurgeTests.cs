@@ -34,7 +34,9 @@ public sealed class AuditPurgeTests(PostgresContainerFixture postgres)
             App.Services,
             JournalRows.Entry(Today.AddDays(-10), AuditAction.BuildCreate),
             JournalRows.Entry(Today.AddDays(-5), AuditAction.BuildUpdate),
-            JournalRows.Entry(Today.AddHours(1), AuditAction.BuildDelete));
+            // A minute ago rather than later today: the purge is stamped now, and the journal
+            // reads in time order whatever the hour the suite runs at.
+            JournalRows.Entry(App.Clock.GetUtcNow().AddMinutes(-1), AuditAction.BuildDelete));
         var before = Today.AddDays(-5);
 
         using var response = await admin.PostAsync(

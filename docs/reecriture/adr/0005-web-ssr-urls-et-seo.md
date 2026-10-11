@@ -2,6 +2,11 @@
 
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : rendu Twig + îlots Vue, locale portée par la session et un cookie
+- **Amendements** :
+  - le 2026-10-10, les pages des anciens patchs ont leur propre cache, dont la clé ne contient
+    plus la révision de déploiement (voir § « Amendement du 2026-10-10 ») ;
+  - le 2026-10-11, index des sitemaps borné, anciens patchs découverts par des liens (voir
+    § « Amendement du 2026-10-11 »).
 
 ## Contexte
 
@@ -43,7 +48,7 @@ nginx. Le mode de rendu est choisi route par route :
   - pages de versions anciennes : `s-maxage` long ;
   - dernier patch : court, avec `stale-while-revalidate` ;
   - la **révision de déploiement** fait partie de la clé de cache, donc aucune purge
-    manuelle.
+    manuelle (pages du dernier patch ; les anciens patchs : amendement du 2026-10-10).
 - **Hydratation incrémentale** (`@defer` + hydratation au viewport ou à l'interaction)
   pour les blocs lourds : galerie de skins, filtres, vidéos de sorts.
 - **Listes** : le SSR rend une première page paginée, lisible par les crawlers.
@@ -121,3 +126,74 @@ nginx. Le mode de rendu est choisi route par route :
 - **−** Un conteneur Node à exploiter et à patcher souvent.
 - **−** Toutes les URLs changent : table de 301 exhaustive et suivi dans la Search
   Console pendant la bascule.
+
+## Amendement du 2026-10-10 — cache des anciens patchs et des bundles
+
+La révision dans la clé vidait le cache à chaque déploiement, pages des anciens patchs
+comprises, alors qu'elles ne changent jamais : leur `s-maxage` d'une semaine n'était jamais
+atteint, et chaque passage d'un robot repayait un rendu et un chargement de catalogue. Les
+bundles partaient avec l'image : un onglet ouvert avant un déploiement ne trouvait plus ses
+chunks.
+
+| Zone nginx | Périmètre | Clé | Taille, inactivité |
+|---|---|---|---|
+| `lodb_pages` | dernier patch, et toute réponse hors version épinglée | révision + URL | 2 Go, 24 h |
+| `lodb_archive` | `^/{locale}/[0-9]` : version épinglée dans le chemin | **epoch** + URL, sans révision | 6 Go, 7 j, gardée à la 2ᵉ demande |
+| `lodb_assets` | `/build/` | nom du fichier | 1 Go, 30 j |
+
+- **Epoch** (`LODB_ARCHIVE_EPOCH`) : la seule purge des anciens patchs. Elle se monte à la
+  main quand le chrome, la CSP ou le contrat `/api` changent de façon visible, et après tout
+  correctif de sécurité du front, avec le retrait du chunk vulnérable
+  ([procédure](../../guides/configuration.md)). Compromis assumé : entre deux montées, le
+  chrome d'une page d'ancien patch peut dater de deux semaines (une semaine de `s-maxage`,
+  puis une dernière copie périmée servie pendant son rafraîchissement, avant 7 jours
+  d'inactivité).
+- **Gardée à la 2ᵉ demande** (`LODB_ARCHIVE_CACHE_MIN_USES`, `2`) : un balayage de tous les
+  patchs, qui ne repasse pas, n'écrit pas ses rendus sur le disque et n'évince jamais le
+  dernier patch, rangé à part. Chaque URL distincte y tient pourtant une clé jusqu'à son
+  inactivité, quelle que soit la réponse (`301` d'une query nettoyée, `503` de délestage) :
+  c'est la zone des clés (`LODB_ARCHIVE_CACHE_KEYS_SIZE`, ≈ 8 000 clés par Mo) qui borne le
+  nombre d'URL qu'un balayage parcourt avant que les anciens patchs les moins récemment
+  demandés sortent du cache. À `1`, seules les réponses gardées tiennent une clé.
+- **Bundles conservés** : chaque build publie ses bundles hachés dans le volume
+  `front-builds` tant qu'il est en service (date rafraîchie toutes les heures), servi sous
+  `/build/` après ceux de l'image ; le déploiement retire ceux qu'aucun build n'a livrés
+  depuis 30 jours, plus que la vie d'une page en cache. Un chunk
+  introuvable malgré tout recharge la page une fois. Node sert, nginx met en cache
+  (ADR 0004 inchangée).
+- **HTML compressé une fois**, au rendu (gzip 6) : nginx demande gzip à l'amont, garde cette
+  copie pour tous les clients et la décompresse pour un client sans gzip.
+- **Dernier patch** : `s-maxage=1800, stale-while-revalidate=86400` (au lieu de 300 s et
+  3 600 s). Un nouveau patch apparaît sur une page en cache au plus 30 minutes après sa
+  promotion ; un déploiement change toujours la clé.
+
+## Amendement du 2026-10-11 — anciens patchs : des liens plutôt que l'index des sitemaps
+
+- **Index borné** : `/sitemap.xml` n'annonce plus que les sitemaps du dernier patch
+  (`latest.xml` des 21 locales) et ceux des **12** versions listées ensuite par Data Dragon
+  (`LoDb__Seo__SitemapVersionWindow`, `12` par défaut, `0` pour le dernier patch seul, une
+  valeur négative refusée au démarrage). Il annonçait auparavant chaque version listée dans
+  chaque locale : des milliers de sitemaps, des millions d'URL épinglées.
+- **Rien ne disparaît** : le sitemap d'une version hors de la fenêtre reste servi à son URL,
+  immuable, et ses pages restent canoniques et indexables. Ni `noindex` ni `Disallow`. Le
+  sitemap principal de chaque locale ne change pas, sinon qu'il liste la nouvelle page
+  ci-dessous.
+- **Découverte par liens** : le sélecteur de version est un formulaire, que les robots ne
+  soumettent pas. Deux chemins de liens rendent chaque ancien patch atteignable :
+  - `/{locale}/patches`, « Historique des patchs », lié depuis le pied de page de chaque
+    page : chaque version que Data Dragon liste (`versions` de `/api/meta`, pas seulement
+    les versions prêtes) avec ses quatre listes, rendue par le serveur avec le cache du
+    dernier patch ;
+  - sur chaque fiche, « Dans les patchs précédents » : la même entrée dans les six versions
+    listées avant celle de la page.
+
+  Aucune des deux ne lit de catalogue pour se rendre : des liens seulement, tirés de
+  `/api/meta`.
+- **Pourquoi** : annoncer tout l'espace des versions épinglées invite chaque robot à le
+  parcourir d'un coup, alors que ces pages sont construites à la demande, dans le budget
+  borné des rendus épinglés, et non servies depuis un cache. Par les liens, un robot découvre
+  les anciens patchs au fil de son exploration, à partir de pages déjà en cache.
+- **Mesure** (propriétaire) : dans la Search Console, le rapport Sitemaps par fichier (URL
+  soumises et indexées par version) et le rapport Performances filtré sur les URL
+  versionnées, avant le déploiement puis trois mois après ; la fenêtre se règle sur la
+  demande observée.

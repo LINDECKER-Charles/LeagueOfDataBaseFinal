@@ -1,5 +1,6 @@
 import type { WarmUpProgress } from '../../api/generated/models/warm-up-progress';
 import type { WarmUpStage } from '../../api/generated/models/warm-up-stage';
+import { isComplete } from './is-complete';
 import { percentOf } from './percent-of';
 import { preparingFrame } from './preparing-frame';
 import { resourcesOf } from './resources-of';
@@ -31,7 +32,7 @@ describe('resourcesOf', () => {
 });
 
 describe('percentOf', () => {
-  it('counts nothing while the datasets are prepared, nor after a failure', () => {
+  it('counts nothing while the datasets are prepared, nor for a failure before any image', () => {
     expect(percentOf(frame('preparing', 0, 0))).toBe(0);
     expect(percentOf(frame('failed', 0, 0))).toBe(0);
   });
@@ -43,6 +44,26 @@ describe('percentOf', () => {
 
   it('is full once done, or at once when there is nothing to fetch', () => {
     expect(percentOf(frame('done', 3, 3))).toBe(100);
+    expect(percentOf(frame('done', 0, 0))).toBe(100);
     expect(percentOf(frame('images', 0, 0))).toBe(100);
+  });
+
+  it('keeps the share a run cut short had reached, never falling back to nothing', () => {
+    expect(percentOf(frame('failed', 3, 4))).toBe(75);
+    expect(percentOf(frame('failed', 4, 4))).toBe(99);
+  });
+
+  it('shows the share of a run stopped with images left pending, not a full bar', () => {
+    expect(percentOf(frame('done', 690, 941))).toBe(73);
+  });
+});
+
+describe('isComplete', () => {
+  it('tells a run that landed everything from one stopped short or still going', () => {
+    expect(isComplete(frame('done', 3, 3))).toBe(true);
+    expect(isComplete(frame('done', 0, 0))).toBe(true);
+    expect(isComplete(frame('done', 2, 3))).toBe(false);
+    expect(isComplete(frame('images', 3, 3))).toBe(false);
+    expect(isComplete(frame('failed', 3, 3))).toBe(false);
   });
 });

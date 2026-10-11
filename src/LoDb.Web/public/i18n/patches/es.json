@@ -1,0 +1,8 @@
+{
+  "title": "Historial de parches",
+  "description": "Todos los parches de League of Legends que lista Data Dragon, cada uno con sus campeones, objetos, runas y hechizos de invocador tal como eran en ese parche.",
+  "intro": "Todos los parches que lista Data Dragon, del más reciente al más antiguo. Cada uno abre sus campeones, objetos, runas y hechizos de invocador tal como eran entonces.",
+  "group": "Parches {{ major }}.x",
+  "latest": "Actual",
+  "empty": "Por ahora no hay ningún parche listado."
+}

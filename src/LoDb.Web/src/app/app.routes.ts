@@ -102,6 +102,10 @@ const localeRoutes: Routes = [
       import('./features/developers/developers.routes').then((m) => m.DEVELOPERS_ROUTES),
   },
   {
+    path: 'patches',
+    loadChildren: () => import('./features/patches/patches.routes').then((m) => m.PATCHES_ROUTES),
+  },
+  {
     path: 'donate',
     canMatch: [paymentsOnly],
     loadChildren: () => import('./features/donate/donate.routes').then((m) => m.DONATE_ROUTES),

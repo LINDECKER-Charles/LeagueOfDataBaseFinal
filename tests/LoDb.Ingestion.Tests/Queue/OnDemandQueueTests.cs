@@ -22,6 +22,16 @@ public sealed class OnDemandQueueTests(PostgresContainerFixture postgres)
     private static readonly DdragonImage Fiddlesticks =
         new(DdragonImageKind.Champion, "Fiddlesticks.png");
 
+    private const string FailedEvent = "ingest.on_demand.failed";
+
+    // One slot, and a wait long enough for the worker to join a visitor's flight before the
+    // flight gives up on it.
+    private static readonly Dictionary<string, string?> OneSlot = new()
+    {
+        ["LoDb:Ingestion:SyncConcurrency"] = "1",
+        ["LoDb:Ingestion:SlotWait"] = "00:00:02",
+    };
+
     private static CancellationToken Token => IngestionHarness.Token;
 
     [Fact]
@@ -128,11 +138,54 @@ public sealed class OnDemandQueueTests(PostgresContainerFixture postgres)
             Token);
         await stop.CancelAsync();
 
-        var failure = Assert.Single(
-            instance.Logs,
-            static log => log.Id.Name == "ingest.on_demand.failed");
+        var failure = Assert.Single(instance.Logs, static log => log.Id.Name == FailedEvent);
         Assert.Equal(LogLevel.Warning, failure.Level);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consuming);
+    }
+
+    [Fact]
+    public async Task WorkerRunsTheWorkOfAVisitorFlightRefusedUnderIt()
+    {
+        await using var harness = await IngestionHarness.CreateAsync(postgres, OneSlot);
+        var instance = harness.StartInstance();
+        var ingestion = instance.Get<IOnDemandIngestion>();
+        var backlog = instance.Get<IOnDemandBacklog>();
+        var holder = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var holding = instance.Get<SyncSlots>().RunAsync(_ => holder.Task, Token);
+        // The visitor's flight waits for the only slot, the worker joins it, then it is refused.
+        var visitor = ingestion.EnsureImagesAsync(Latest, [OnDemandIngestionTests.Ahri], Token);
+        await WaitingForASlotAsync(instance);
+        Assert.True(ingestion.TryEnqueue(Visitor(OnDemandIngestionTests.Ahri)));
+        using var stop = CancellationTokenSource.CreateLinkedTokenSource(Token);
+        var consuming = backlog.ConsumeAsync(stop.Token);
+        await Eventually.UntilAsync(() => backlog.Count == 0, Token);
+
+        var refused = await Assert.ThrowsAsync<OnDemandRefusedException>(() => visitor);
+        holder.SetResult();
+        await holding;
+        await Eventually.UntilAsync(
+            async () => (await harness.AssetRowsAsync(Latest.Value)).Count == 1,
+            Token);
+        await stop.CancelAsync();
+
+        Assert.Equal(SyncSlots.SlotWaitReason, refused.Reason);
+        Assert.DoesNotContain(instance.Logs, static log => log.Id.Name == FailedEvent);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consuming);
+    }
+
+    private static async Task WaitingForASlotAsync(IngestionInstance instance)
+    {
+        using var waiting = new MetricCollector<int>(
+            instance.Meters,
+            IngestionMetrics.MeterName,
+            "lodb.ingestion.sync.waiting");
+        await Eventually.UntilAsync(
+            () =>
+            {
+                waiting.RecordObservableInstruments();
+                return waiting.LastMeasurement?.Value == 1;
+            },
+            Token);
     }
 
     private static MetricCollector<long> CollectRefusals(IngestionInstance instance) =>

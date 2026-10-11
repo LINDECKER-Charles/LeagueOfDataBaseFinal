@@ -8,6 +8,7 @@ import { Pager } from '../../../../ui/navigation/pager';
 import { SectionNav } from '../../../../ui/navigation/section-nav';
 import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { Skeleton } from '../../../../ui/surfaces/skeleton';
+import { PreviousPatches } from '../../shared/codex/history/previous-patches';
 import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
 import { applyChampionsHead } from '../seo/apply-champions-head';
 import { championSeo } from '../seo/champion-seo';
@@ -29,7 +30,8 @@ function hasText(tip: string): boolean {
 /**
  * A champion's page, rendered on the server from the entry its route resolved: the hero,
  * sticky section chips, the ability showcase, the skins (loaded once scrolled to), the lore,
- * the tips, the stat board, then the pager through the list and the load-time badge.
+ * the tips, the stat board, the same champion in the previous patches, then the pager through
+ * the list and the load-time badge.
  */
 @Component({
   selector: 'lodb-champion-page',
@@ -40,6 +42,7 @@ function hasText(tip: string): boolean {
     DdragonHtmlPipe,
     LoadTime,
     Pager,
+    PreviousPatches,
     Reveal,
     SectionNav,
     Skeleton,

@@ -15,6 +15,7 @@ import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { EmptyState } from '../../../../ui/surfaces/empty-state';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
+import { PreviousPatches } from '../../shared/codex/history/previous-patches';
 import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
 import { LoadTime } from '../../shared/codex/timing/load-time';
 import { CatalogueImage } from '../../../../ui/cards/catalogue-image';
@@ -32,7 +33,7 @@ const EMBLEM_SIZE = 120;
  * A rune path page, `/{locale}/[{version}/]runes/{key}`: the path's mark and name in its
  * colour, then its constellation of keystones and rows; the list's rune cards link to their
  * card here by anchor, which stops below its row's label. A path without runes shows the
- * framed "no results" of the legacy page.
+ * framed "no results" of the legacy page. The same path in the previous patches follows.
  */
 @Component({
   selector: 'lodb-rune-detail',
@@ -42,6 +43,7 @@ const EMBLEM_SIZE = 120;
     EmptyState,
     LoadTime,
     Pager,
+    PreviousPatches,
     RuneConstellation,
     TranslocoPipe,
   ],

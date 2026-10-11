@@ -171,6 +171,11 @@
     },
     "slot": "Ô ngọc"
   },
+  "detail": {
+    "history": {
+      "title": "Trong các phiên bản trước"
+    }
+  },
   "common": {
     "back": "Quay lại",
     "search": "Tìm kiếm…",
@@ -194,7 +199,8 @@
       "item": "Trang bị",
       "runes": "Ngọc bổ trợ",
       "summoner": "Phép bổ trợ",
-      "sitemap": "Sơ đồ trang web"
+      "sitemap": "Sơ đồ trang web",
+      "patches": "Lịch sử phiên bản"
     },
     "links": {
       "title": "Liên Kết Hữu Ích",

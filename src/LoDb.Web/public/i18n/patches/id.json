@@ -1,0 +1,8 @@
+{
+  "title": "Riwayat patch",
+  "description": "Semua patch League of Legends yang tercantum di Data Dragon, masing-masing dengan champion, item, rune, dan summoner spell seperti pada patch tersebut.",
+  "intro": "Semua patch yang tercantum di Data Dragon, dari yang terbaru. Setiap patch membuka champion, item, rune, dan summoner spell-nya seperti pada saat itu.",
+  "group": "Patch {{ major }}.x",
+  "latest": "Terkini",
+  "empty": "Belum ada patch yang tercantum."
+}

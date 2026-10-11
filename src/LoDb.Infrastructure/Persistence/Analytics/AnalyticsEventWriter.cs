@@ -3,12 +3,17 @@ using NpgsqlTypes;
 
 namespace LoDb.Infrastructure.Persistence.Analytics;
 
+/// <summary>Writes a batch of views to <c>analytics_event</c> in one binary copy.</summary>
+/// <remarks>
+/// <c>ip</c> and <c>user_agent</c> are left out, so they stay null: nothing reads them, and
+/// the columns remain until the schema's contract step drops them.
+/// </remarks>
 internal sealed class AnalyticsEventWriter(NpgsqlDataSource dataSource) : IAnalyticsEventWriter
 {
     // The three typed columns first, then the text ones in the order of TextColumns.
     private const string Copy = """
         COPY analytics_event (occurred_at, status, is_bot, origin, route, path, type, kind,
-            entity, version, lang, locale, ip, visitor, user_agent, browser, os, device,
+            entity, version, lang, locale, visitor, browser, os, device,
             referer_host, referer_source, country, country_name)
         FROM STDIN (FORMAT BINARY)
         """;
@@ -24,9 +29,7 @@ internal sealed class AnalyticsEventWriter(NpgsqlDataSource dataSource) : IAnaly
         (static view => view.Version, AnalyticsEvent.VersionMaxLength),
         (static view => view.Lang, AnalyticsEvent.LangMaxLength),
         (static view => view.Locale, AnalyticsEvent.LocaleMaxLength),
-        (static view => view.Ip, AnalyticsEvent.IpMaxLength),
         (static view => view.Visitor, AnalyticsEvent.VisitorMaxLength),
-        (static view => view.UserAgent, AnalyticsEvent.UserAgentMaxLength),
         (static view => view.Browser, AnalyticsEvent.BrowserMaxLength),
         (static view => view.Os, AnalyticsEvent.OsMaxLength),
         (static view => view.Device, AnalyticsEvent.DeviceMaxLength),
