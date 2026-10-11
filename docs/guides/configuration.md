@@ -34,7 +34,7 @@ Modèles versionnés : [`.env.staging.example`](../../.env.staging.example) et
 [`.env.prod.example`](../../.env.prod.example). Remplis, ils deviennent `.env.staging` et
 `.env.prod` à la racine du dépôt (ignorés par Git), dont le contenu est collé tel quel dans
 `ENV_STAGING` et `ENV_PROD`. Ces copies sont les seules lisibles : les tenir chiffrées hors du
-dépôt et les envoyer à GitHub sans fichier en clair, [`secrets-poste.md`](secrets-poste.md).
+dépôt et les envoyer à GitHub sans fichier en clair.
 
 ## 2. Mise en place, dans l'ordre
 
@@ -101,12 +101,6 @@ packages `lodb/api` et `lodb/web-ssr`, nouveaux, peuvent rester privés. Une com
 
 Un secret absent arrive vide : la première étape de `_deploy.yml` les vérifie et échoue en
 nommant ceux qui manquent, avant toute connexion à l'hôte.
-
-**Cible, non activée** : une clé par environnement limitée à une commande forcée, le compte
-`deploy` au lieu de `root`, le `.env`, les secrets-fichiers et le certificat posés une fois sur
-l'hôte ; `ENV_*`, `*_DATA_PROTECTION_PFX` et `*_PATH` quittent alors GitHub et
-`*_SSH_KNOWN_HOSTS` devient obligatoire. Procédure :
-[`deploiement-cle-restreinte.md`](deploiement-cle-restreinte.md).
 
 ### 3.3 Garde de la prod
 
@@ -567,9 +561,7 @@ ssh-keygen -t ed25519 -N '' -C 'lodb-prod deploy' -f lodb-prod-deploy
 
 Chaque clé publique (`.pub`) va dans `~/.ssh/authorized_keys` de l'utilisateur de
 déploiement ; chaque clé privée, complète, dans `STAGING_SSH_KEY` ou `PROD_SSH_KEY`. Retirer
-l'ancienne clé commune d'`authorized_keys` une fois les deux déploiements passés. Pour que
-ces clés ne puissent plus que déployer (`restrict,command="/usr/local/sbin/lodb-deploy <env>"`,
-compte `deploy`) : [`deploiement-cle-restreinte.md`](deploiement-cle-restreinte.md).
+l'ancienne clé commune d'`authorized_keys` une fois les deux déploiements passés.
 
 **Clés de l'hôte** (`STAGING_SSH_KNOWN_HOSTS`, `PROD_SSH_KNOWN_HOSTS`), relevées sous le nom
 exact de `STAGING_HOST` ou `PROD_HOST`, et comparées à l'empreinte que l'hôte donne lui-même

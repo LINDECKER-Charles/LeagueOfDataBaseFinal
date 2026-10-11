@@ -9,7 +9,7 @@ Critère de sortie local : parité des datasets et manifestes normalisés, PHP v
 (toutes les langues, images des quatre ressources) ingéré sans intervention.
 
 Référence de comportement commune à tout le lot : [`heritage.md`](../heritage.md) § 5 et
-§ 6, [`version-compatibility-audit.md`](../../audits/version-compatibility-audit.md) (matrice
+§ 6, l'audit de compatibilité des versions (privé) (matrice
 des échecs version × langue), et les tests PHPUnit de `app/tests/Unit/Service/{API,Catalog,
 Client,I18n,Picker,Storage}/`.
 
