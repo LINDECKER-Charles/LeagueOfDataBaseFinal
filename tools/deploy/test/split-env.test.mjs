@@ -214,18 +214,25 @@ describe('split-env.sh', () => {
     assert.equal(revisionOf(place), 'LODB_SECRETS_REVISION=2');
   });
 
-  it('refuses a dotenv that sets the generated password, naming it only', () => {
-    const place = workspace();
-    splitOk(place, 'LODB_DB_PASSWORD=one\n');
-    const drawn = secret(place, GENERATED);
+  for (const [form, line] of [
+    ['KEY=value', `${GENERATED}=from-github`],
+    ['KEY: value, a form Compose also reads', `${GENERATED}: from-github`],
+  ]) {
+    it(`refuses a dotenv that sets the generated password as ${form}, naming it only`, () => {
+      const place = workspace();
+      splitOk(place, 'LODB_DB_PASSWORD=one\n');
+      const drawn = secret(place, GENERATED);
+      const env = readFileSync(place.env, 'utf8');
 
-    const run = split(place, `LODB_DB_PASSWORD=one\n${GENERATED}=from-github\n`);
+      const run = split(place, `LODB_DB_PASSWORD=one\n${line}\n`);
 
-    assert.notEqual(run.status, 0);
-    assert.match(run.stderr, new RegExp(`${GENERATED} is generated on the host`));
-    assert.doesNotMatch(run.stderr, /from-github/);
-    assert.equal(secret(place, GENERATED), drawn);
-  });
+      assert.notEqual(run.status, 0);
+      assert.match(run.stderr, new RegExp(`${GENERATED} is generated on the host`));
+      assert.doesNotMatch(run.stderr, /from-github/);
+      assert.equal(secret(place, GENERATED), drawn);
+      assert.equal(readFileSync(place.env, 'utf8'), env);
+    });
+  }
 
   it('refuses to run without its two paths', () => {
     const run = spawnSync('bash', [SCRIPT, '.env'], { input: '', encoding: 'utf8' });

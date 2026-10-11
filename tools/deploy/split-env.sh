@@ -105,8 +105,10 @@ read_dotenv() {
       fi
       # Written by this script only, from the files it compares.
       [ "$key" != "$REVISION_KEY" ] || continue
-    elif [[ "$line" =~ $COLON_ASSIGNMENT ]] && is_secret "${BASH_REMATCH[2]}"; then
-      fail "${BASH_REMATCH[2]}: write the secret as KEY=value."
+    elif [[ "$line" =~ $COLON_ASSIGNMENT ]]; then
+      key="${BASH_REMATCH[2]}"
+      ! is_generated "$key" || fail "$key is generated on the host: remove it from the dotenv."
+      ! is_secret "$key" || fail "$key: write the secret as KEY=value."
     fi
     kept_lines+=("$line")
   done
