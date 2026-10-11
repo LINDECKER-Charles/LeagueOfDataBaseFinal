@@ -84,11 +84,12 @@ public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
         Assert.Single(await App.GrantsOfAsync(key.Id));
     }
 
+    // A buyer without a key: the failed delivery takes back the key it issued, its journal
+    // entry and the notice to /v1, as well as the credits.
     [Fact]
     public async Task FailingHandlerWritesNothingAndTheRedeliveryApplies()
     {
         var buyer = await App.SeedUserAsync("Acheteur");
-        var key = await App.SeedKeyAsync(buyer);
         var paid = StripePayloads.Completed(
             "evt_pack",
             StripePayloads.Pack("cs_test_pack", buyer.Id, Requests));
@@ -99,40 +100,19 @@ public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "handler-failed",
             await ApiJson.ProblemCodeAsync(failed, HttpStatusCode.InternalServerError));
-        Assert.Equal(0, (await App.KeyAsync(key.Id)).CreditsBalance);
-        Assert.Empty(await App.GrantsOfAsync(key.Id));
+        Assert.Empty(await App.KeysOfAsync(buyer.Id));
+        Assert.Empty(await App.AuditAsync());
         Assert.Empty(await EventsAsync());
         Assert.Empty(App.KeyCache.Invalidated);
 
         using var redelivered = await App.DeliverAsync(paid);
 
         Assert.Equal(HttpStatusCode.OK, redelivered.StatusCode);
-        Assert.Equal(Requests, (await App.KeyAsync(key.Id)).CreditsBalance);
+        var key = Assert.Single(await App.KeysOfAsync(buyer.Id));
+        Assert.Equal(Requests, key.CreditsBalance);
         Assert.Single(await App.GrantsOfAsync(key.Id));
         Assert.Equal(StripeEventStatus.Processed, Assert.Single(await EventsAsync()).Status);
         Assert.Equal([key.Id], App.KeyCache.Invalidated);
-    }
-
-    [Fact]
-    public async Task FailingHandlerTakesBackTheKeyItIssued()
-    {
-        var buyer = await App.SeedUserAsync("Acheteur");
-        var paid = StripePayloads.Completed(
-            "evt_pack",
-            StripePayloads.Pack("cs_test_pack", buyer.Id, Requests));
-        App.Fault.Arm();
-
-        using var failed = await App.DeliverAsync(paid);
-
-        Assert.Equal(HttpStatusCode.InternalServerError, failed.StatusCode);
-        Assert.Empty(await App.KeysOfAsync(buyer.Id));
-        Assert.Empty(await App.AuditAsync());
-
-        using var redelivered = await App.DeliverAsync(paid);
-
-        Assert.Equal(HttpStatusCode.OK, redelivered.StatusCode);
-        var key = Assert.Single(await App.KeysOfAsync(buyer.Id));
-        Assert.Equal(Requests, key.CreditsBalance);
         Assert.Equal(
             [AuditAction.ApiKeyCreate],
             (await App.AuditAsync()).Select(static entry => entry.Action));

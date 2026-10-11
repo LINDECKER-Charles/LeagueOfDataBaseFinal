@@ -70,13 +70,12 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
         Assert.Equal(StripeCheckoutStatus.Pending, (await CheckoutAsync("cs_test_don")).Status);
     }
 
-    [Theory]
-    [InlineData("paid")]
-    [InlineData("no_payment_required")]
-    public async Task SettledSessionIsGrantedAndPaid(string paymentStatus)
+    // "paid" is the status of every other session of these tests.
+    [Fact]
+    public async Task SessionWithoutPaymentToMakeIsGrantedAndPaid()
     {
         var session = StripePayloads.Donation("cs_test_don", 1_000);
-        session["payment_status"] = paymentStatus;
+        session["payment_status"] = "no_payment_required";
 
         await DeliverAsync(session);
 
@@ -85,20 +84,13 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
         Assert.Equal(StripeCheckoutStatus.Paid, (await CheckoutAsync("cs_test_don")).Status);
     }
 
-    [Theory]
-    [InlineData("pack below its price")]
-    [InlineData("pack in dollars")]
-    [InlineData("pack of requests not on sale")]
-    [InlineData("pack without amount")]
-    [InlineData("plan below its price")]
-    [InlineData("plan not on sale")]
-    [InlineData("donation above the tiers")]
-    [InlineData("donation below the tiers")]
-    public async Task OffCatalogueSessionIsRefused(string offer)
+    // The prices each kind must charge are CataloguePricesTests'.
+    [Fact]
+    public async Task OffCatalogueSessionIsRefused()
     {
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer);
-        var session = OffCatalogue(offer);
+        var session = With(StripePayloads.Pack("cs_test_off", 0, 5_000), "amount_total", 499);
         session["metadata"]!["user_id"] = buyer.Id.ToString(CultureInfo.InvariantCulture);
         session["client_reference_id"] = buyer.Id.ToString(CultureInfo.InvariantCulture);
 
@@ -123,28 +115,6 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
             await _app.DisposeAsync();
         }
     }
-
-    private static JsonObject OffCatalogue(string offer) => offer switch
-    {
-        "pack below its price" => With(Pack(), "amount_total", 499),
-        "pack in dollars" => With(Pack(), "currency", "usd"),
-        "pack of requests not on sale" => Pack(requests: 7_000),
-        "pack without amount" => With(Pack(), "amount_total", null),
-        "plan below its price" => With(Plan(), "amount_total", 100),
-        "plan not on sale" => Plan("lifetime"),
-        "donation above the tiers" => Donation(50_001),
-        "donation below the tiers" => Donation(99),
-        _ => throw new ArgumentOutOfRangeException(nameof(offer), offer, null),
-    };
-
-    private static JsonObject Pack(long requests = 5_000) =>
-        StripePayloads.Pack("cs_test_off", 0, requests);
-
-    private static JsonObject Plan(string plan = "annual") =>
-        StripePayloads.Plan("cs_test_off", 0, plan);
-
-    private static JsonObject Donation(int amountCents) =>
-        StripePayloads.Donation("cs_test_off", amountCents);
 
     private static JsonObject With(JsonObject session, string field, JsonNode? value)
     {

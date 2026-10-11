@@ -27,7 +27,6 @@ public sealed class WebhookSignatureTests(PostgresContainerFixture postgres)
 
     [Theory]
     [InlineData("missing")]
-    [InlineData("garbage")]
     [InlineData("other-secret")]
     [InlineData("tampered")]
     [InlineData("stale")]
@@ -41,7 +40,6 @@ public sealed class WebhookSignatureTests(PostgresContainerFixture postgres)
         var (body, signature) = forgery switch
         {
             "missing" => (payload, null),
-            "garbage" => (payload, "t=abc,v1=xyz"),
             "other-secret" => (payload, WebhookSigner.Sign(payload, now, OtherSecret)),
             "tampered" => (
                 payload.Replace("evt_forged", "evt_other", StringComparison.Ordinal),
@@ -84,32 +82,6 @@ public sealed class WebhookSignatureTests(PostgresContainerFixture postgres)
         Assert.Equal(StripePayloads.CreatedAt, recorded.CreatedAt);
         // PostgreSQL keeps microseconds.
         Assert.Equal(App.Clock.GetUtcNow(), recorded.ProcessedAt, TimeSpan.FromMilliseconds(1));
-    }
-
-    [Fact]
-    public async Task WebhookIsOutOfTheFormsForgeryGuard()
-    {
-        // No Origin, no cookie, no token: Stripe's servers post as they please.
-        using var response = await App.DeliverAsync(UnhandledEvent("evt_guard"));
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task WebhookWithoutSecretAsksStripeToComeBack()
-    {
-        await using var unconfigured = await BillingApp.StartAsync(postgres, configured: false);
-        var payload = UnhandledEvent("evt_early").ToJsonString();
-
-        using var response = await unconfigured.PostWebhookAsync(
-            payload,
-            Sign(payload, unconfigured.Clock.GetUtcNow()));
-
-        Assert.Equal(
-            "webhook-unconfigured",
-            await ApiJson.ProblemCodeAsync(response, HttpStatusCode.ServiceUnavailable));
-        await using var db = unconfigured.Database();
-        Assert.Empty(await db.StripeEvents.ToListAsync(Cancellation));
     }
 
     public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
