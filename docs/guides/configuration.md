@@ -346,6 +346,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:Ingestion` | `WatchPeriod` (10 min), `MaxAttempts` (5), `RetryDelay` (10 min), `LanguageConcurrency` (4), `RecordBatchSize` (64), `SyncConcurrency` (4), `QueueCapacity` (256), `CrawlerRequestsPerMinute` (30) |
 | `LoDb:Catalog` | `VersionsLifetime` (1 min) |
 | `LoDb:PublicApi` | `KeyCacheLifetime` (1 min), `TrendsLifetime` (5 min), `MeteringInterval` (1 s) |
+| `LoDb:Audience` | `Host`, `WebsiteId` (posés par `compose.umami.yaml`), `Username`, `Password` (secrets) : sans l'un d'eux, le tirage dort ; `PullPeriod` (1 h), `RefreshDays` (2 : aujourd'hui et hier, réécrits à chaque tirage), `PageSize` (500 chemins par requête), `MaxPages` (40 requêtes par jour au plus), `RequestTimeout` (30 s), `MaxResponseBytes` (4 Mio) ; `TrendsSwitchDate` (aucune : `/v1/trends` lit la mesure maison ; posée, Umami à partir de ce jour), `ClipFactor` (3) et `ClipWindowDays` (28) : le jour d'une entité compte au plus 3 fois la médiane de ses jours des 28 derniers (Umami collecte sans authentification) |
 
 </details>
 
