@@ -6,6 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express, { type RequestHandler } from 'express';
 import { join } from 'node:path';
+import { ApiResponseMemo } from './app/core/http/api-response-memo';
 import type { SsrRequestContext } from './app/core/http/ssr-request-context';
 import { negotiateLocale } from './app/core/routing/locale/negotiate-locale';
 import { parseAcceptLanguage } from './app/core/routing/locale/parse-accept-language';
@@ -15,6 +16,7 @@ import { clientKeyOf } from './server/admission/client-key-of';
 import { RenderAdmission } from './server/admission/render-admission';
 import { RenderCounts } from './server/admission/render-counts';
 import { FrontBuildsPublication } from './server/assets/front-builds-publication';
+import { readBuildFiles } from './server/assets/read-build-files';
 import { staticFolder } from './server/assets/static-folder';
 import { encodedDocument } from './server/compression/encoded-document';
 import { createLogger } from './server/create-logger';
@@ -39,10 +41,14 @@ import { withDocumentPolicy } from './server/security/with-document-policy';
 // X-Forwarded-For itself (snippets/proxy-headers.conf): one hop names the visitor's address,
 // which the render admission counts per client.
 const TRUSTED_PROXY_HOPS = 1;
+// The build's files a render reads (i18n catalogues, changelog), held in memory once.
+const BUILD_FILE_FOLDERS = ['i18n', 'changelog'];
+// What every render asks the API for with the same answer, kept for all of them.
+const MEMOISED_API_PATHS = ['/api/meta'];
 
 // Under `ng serve`, the dev server mounts `reqHandler` instead of running this file.
 const listening = isMainModule(import.meta.url);
-const settings = readServerSettings(process.env, listening);
+const settings = readServerSettings(process.env);
 const stackPeers = new StackPeers(settings.stackNetworks);
 const logger = createLogger();
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -52,7 +58,13 @@ const angularApp = new AngularNodeAppEngine({
 });
 const requestContext: SsrRequestContext = {
   apiOrigin: settings.apiOrigin,
-  selfOrigin: settings.selfOrigin,
+  // Under `ng serve`, the build lives in the dev server's memory, which serves its files.
+  buildFiles: listening ? readBuildFiles(browserDistFolder, BUILD_FILE_FOLDERS) : null,
+  apiResponses: new ApiResponseMemo(
+    new Set(MEMOISED_API_PATHS.map((path) => `${settings.apiOrigin}${path}`)),
+    settings.apiMetaTtlMs,
+    () => Date.now(),
+  ),
 };
 const renderCounts = new RenderCounts();
 const renderAdmission = new RenderAdmission(settings.renderLimits, renderCounts);
@@ -104,8 +116,8 @@ app.use('/build', hashedAssetsOnly, staticFiles, ...previousBuilds, notFound);
 
 app.use(staticFiles);
 
-// Catalogues (public/i18n) are static only: a missing one is a plain 404, never an SSR render.
-// The renderer fetches them from its own address, which the render's Host check would refuse.
+// Catalogues are static only: a missing one is a plain 404, never an SSR render. The renders
+// themselves read them from memory (`buildFiles`), never over HTTP.
 app.use('/i18n', notFound);
 
 // What the URL alone decides (a 400, the static 404, a query cleaned by a redirect) costs no

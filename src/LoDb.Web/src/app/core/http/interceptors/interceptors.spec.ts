@@ -24,7 +24,7 @@ function setUp({
   renderBudget,
 }: Options): HttpTestingController {
   const service: Pick<PlatformService, 'clientHeader'> = { clientHeader: () => client };
-  const context = { apiOrigin: ORIGIN, selfOrigin: null, renderBudget };
+  const context = { apiOrigin: ORIGIN, renderBudget };
   TestBed.configureTestingModule({
     providers: [
       provideHttpClient(withInterceptors([clientHeaderInterceptor, serverApiTimeoutInterceptor])),

@@ -60,6 +60,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur.
+- **Le SSR ne se requête jamais lui-même** : catalogues et changelog sont lus en mémoire au
+  démarrage (un dossier absent l'arrête) et `SsrHttpBackend` répond aux fichiers de la page
+  sans HTTP. `/api/meta` est gardée 60 s par processus (`LODB_API_META_TTL_SECONDS`), sa
+  dernière copie servie quand l'API ne répond pas : un patch promu apparaît dans les pages
+  rendues jusqu'à une minute après l'API.
 - **Grilles de cartes en `div role=list`**, jamais `ul/li` ni `<p>` : le texte riche de
   Riot contient des `<li>` nus qui cassent l'hydratation.
 - **Squelette à la hauteur de ce qu'il remplace** (forme `portrait` pour une grille de
