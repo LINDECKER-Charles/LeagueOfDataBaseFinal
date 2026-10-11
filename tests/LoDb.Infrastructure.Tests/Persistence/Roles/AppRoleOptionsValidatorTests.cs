@@ -15,7 +15,7 @@ public sealed class AppRoleOptionsValidatorTests
         var options = new AppRoleOptions();
 
         Assert.Equal(TimeSpan.FromSeconds(15), options.StatementTimeout);
-        Assert.Equal(60, options.ConnectionLimit);
+        Assert.Equal(50, options.ConnectionLimit);
         Assert.Null(options.Password);
         Assert.True(Validate(options).Succeeded);
     }

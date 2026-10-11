@@ -38,7 +38,7 @@ entier : vos comptes restent mieux protégés.
   (propriétaire du schéma, NOLOGIN), `lodb_partitions` (propriétaire d'`analytics_event`, de
   ses partitions et de deux fonctions `SECURITY DEFINER` de création et de suppression des
   partitions quotidiennes, NOLOGIN) et `lodb_app` (LOGIN, DML seul, `statement_timeout` 15 s,
-  `CONNECTION LIMIT 60`, mot de passe posé en vérificateur SCRAM) ; privilèges par défaut pour
+  `CONNECTION LIMIT 50`, mot de passe posé en vérificateur SCRAM) ; privilèges par défaut pour
   les tables des migrations à venir ; `Persistence/Roles/`.
 - L'API se connecte comme `lodb_app` ; l'agrégation quotidienne et l'effacement des données
   client relèvent leur délai pour leur transaction (`LoDb:Analytics:JobStatementTimeout`).

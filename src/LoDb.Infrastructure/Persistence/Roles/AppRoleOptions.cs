@@ -15,8 +15,9 @@ public sealed class AppRoleOptions
     /// <summary>A role connection limit of PostgreSQL that sets none.</summary>
     public const int UnlimitedConnections = -1;
 
-    // The API's pool (32) plus the commands run in its image, with room to spare.
-    private const int DefaultConnectionLimit = 60;
+    // The API's pool (32) plus the commands run in its image, under the server's 60 sessions
+    // less the superusers' reserved ones: the rest stays for migrate, the backup and psql.
+    private const int DefaultConnectionLimit = 50;
     private const int DefaultStatementTimeoutSeconds = 15;
 
     /// <summary>

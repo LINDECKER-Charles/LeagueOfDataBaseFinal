@@ -67,7 +67,7 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
         Assert.Equal(
             [
                 "lodb_app login=t super=f createdb=f createrole=f replication=f"
-                    + " bypassrls=f limit=60",
+                    + " bypassrls=f limit=50",
                 "lodb_owner login=f super=f createdb=f createrole=f replication=f"
                     + " bypassrls=f limit=-1",
                 "lodb_partitions login=f super=f createdb=f createrole=f replication=f"
