@@ -18,6 +18,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   plateforme. Si l'image `web-ssr` échoue au build, c'est la première piste.
 - `npm install --prefix src/LoDb.Web` tire `@capacitor/ios` et `@capacitor/keyboard` par
   `@aparajita/capacitor-secure-storage` : attendu, il n'y a pas de plateforme iOS.
+- **Images** : chaque image d'un Dockerfile est épinglée par digest
+  (`tools/ci/check-pinned-images.mjs`). Les étages `runtime` de nginx et web-ssr font un
+  `apk upgrade` / `apt-get upgrade` **voulu** : la CI les reconstruit sans cache pour qu'ils
+  prennent les correctifs du jour avant le scan Trivy, qui bloquerait sinon sur des failles
+  corrigées en amont. `web-ssr` n'a plus ni npm, ni corepack, ni yarn : seul `node` y tourne.
 - Relever le budget `initial` de `build:web` est une décision du propriétaire.
 - **CLI en `Development`** : l'hôte de `CliRunner` y valide tout le conteneur. Un service
   qui dépend de l'hôte web fait tomber **toutes** les sous-commandes. Après un ajout à un
@@ -205,6 +210,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   directement `compose.yaml` : un calque d'hôte (staging…) se place **après** lui. Sinon,
   l'API croirait encore les plages privées de `compose.yaml`, celles des réseaux partagés
   comprises ; le déploiement le vérifie sur la configuration résolue et s'arrête.
+- **Promotion par digest** : `_promote.yml` refuse si `:staging` ne désigne plus
+  `:staging-validated` (un build de `dev` en cours, un déploiement de staging en échec) ou si
+  la révision servie n'a pas le code de `main`. Voulu : ne pas revenir à un retag de
+  `:staging`. Attendre que staging soit vert, puis fusionner à nouveau `test` dans `main`.
 - Sur l'hôte, la stack occupe le projet de l'ancienne (`lodb-staging`, `lodb-prod`) : elle
   reprend son volume `pgdata` et range ses blobs dans `ddragon`. Le volume `storage` de
   l'ancienne stack (propriété de `www-data`) n'est ni réutilisé ni supprimé : le nommer
