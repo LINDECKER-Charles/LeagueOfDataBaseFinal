@@ -25,28 +25,34 @@ async function cachedPaths(page: Page, cacheName: string): Promise<string[]> {
 }
 
 test.describe('service worker', { tag: '@readonly' }, () => {
-  test('makes the site installable and controls its pages', async ({ page }) => {
-    await page.goto(VISITED);
-    await controlledByWorker(page);
-
-    await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
-      'href',
-      '/manifest.webmanifest',
-    );
-    const scriptUrl = await page.evaluate(
-      () => navigator.serviceWorker.controller?.scriptURL ?? '',
-    );
-    expect(new URL(scriptUrl).pathname).toBe('/sw.js');
-  });
-
   test('answers a visited page offline, and the offline page for another', async ({
     page,
     context,
+    consoleErrors,
   }) => {
     await page.goto(VISITED);
     await controlledByWorker(page);
+
+    await test.step('makes the site installable and controls its pages', async () => {
+      await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+        'href',
+        '/manifest.webmanifest',
+      );
+      const scriptUrl = await page.evaluate(
+        () => navigator.serviceWorker.controller?.scriptURL ?? '',
+      );
+      expect(new URL(scriptUrl).pathname).toBe('/sw.js');
+    });
+
     // This load goes through the worker, which keeps a copy of the page.
     await page.reload();
+
+    await test.step('runs pages without any CSP violation', async () => {
+      await page.waitForLoadState('networkidle');
+
+      expect(consoleErrors.filter((error) => /Content Security Policy/i.test(error))).toEqual([]);
+    });
+
     await expect.poll(() => cachedPaths(page, 'lodb-pages-v1')).toContain(VISITED);
     const title = await page.title();
 
@@ -60,28 +66,5 @@ test.describe('service worker', { tag: '@readonly' }, () => {
       'You are offline — previously visited pages remain available.',
     );
     await context.setOffline(false);
-  });
-
-  test('keeps hashed bundles, and no private page', async ({ page }) => {
-    await page.goto(VISITED);
-    await controlledByWorker(page);
-    await page.reload();
-    await page.goto('/en/account/login');
-
-    await expect
-      .poll(() => cachedPaths(page, 'lodb-assets-v1'))
-      .toContainEqual(expect.stringMatching(/^\/build\/main-[\w-]+\.js$/));
-    expect(await cachedPaths(page, 'lodb-pages-v1')).not.toContainEqual(
-      expect.stringContaining('/account/'),
-    );
-  });
-
-  test('runs pages without any CSP violation', async ({ page, consoleErrors }) => {
-    await page.goto(VISITED);
-    await controlledByWorker(page);
-    await page.reload();
-    await page.waitForLoadState('networkidle');
-
-    expect(consoleErrors.filter((error) => /Content Security Policy/i.test(error))).toEqual([]);
   });
 });

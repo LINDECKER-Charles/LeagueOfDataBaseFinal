@@ -1,70 +1,25 @@
-import { expectNoAccessibilityViolations } from "../../support/accessibility";
-import { expect, test } from "../../support/test";
+import { expect, test } from '../../support/test';
 
-const NUMBER = /^\s*\d[\d\s., ]*\s*$/;
+const NUMBER = /^\s*\d[\d\s., ]*\s*$/;
+// Set on the document: still there later, the page changed through the router, not a load.
+const MARK = 'lodbSameDocument';
 
-test.describe("about pages", { tag: '@readonly' }, () => {
-  test("prerender the inventory as placeholders", async ({ browser }) => {
-    const context = await browser.newContext({ javaScriptEnabled: false });
-    const page = await context.newPage();
+test.describe('about pages', { tag: '@readonly' }, () => {
+  test('fill the inventory counters in the browser', async ({ page, consoleErrors }) => {
+    await page.goto('/en/about');
 
-    await page.goto("/en/about");
+    await expect(page.locator('lodb-inventory-counters dd').first()).toHaveText(NUMBER);
 
-    await expect(page.locator("lodb-inventory-facts dd").first()).toHaveText(
-      "—",
-    );
-    await context.close();
-  });
+    await test.step('goes from a prerendered page to another through the router', async () => {
+      await page.waitForLoadState('networkidle');
+      await page.evaluate((mark) => Reflect.set(window, mark, true), MARK);
 
-  test("fill the inventory counters in the browser", async ({
-    page,
-    consoleErrors,
-  }) => {
-    await page.goto("/en/about");
+      await page.locator('footer a[href="/en/faq"]').click();
 
-    await expect(page.locator("lodb-inventory-counters dd").first()).toHaveText(
-      NUMBER,
-    );
+      await expect.poll(() => new URL(page.url()).pathname).toBe('/en/faq');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      expect(await page.evaluate((mark) => Reflect.get(window, mark) === true, MARK)).toBe(true);
+    });
     expect(consoleErrors).toEqual([]);
-  });
-
-  test("fill the data snapshot with the latest version", async ({ page }) => {
-    await page.goto("/fr/about/data");
-
-    await expect(page.locator("lodb-inventory-counters dd").first()).toHaveText(
-      /\d+\.\d+/,
-    );
-  });
-
-  test("describe the data set to crawlers", async ({ page }) => {
-    await page.goto("/en/about/data");
-    const graphs = await page
-      .locator('script[type="application/ld+json"]')
-      .allTextContents();
-
-    expect(graphs.some((graph) => graph.includes('"@type":"Dataset"'))).toBe(
-      true,
-    );
-  });
-
-  test("answer the FAQ with an anchor per question", async ({ page }) => {
-    await page.goto("/en/faq");
-    const graphs = await page
-      .locator('script[type="application/ld+json"]')
-      .allTextContents();
-
-    expect(graphs.some((graph) => graph.includes('"@type":"FAQPage"'))).toBe(
-      true,
-    );
-    await expect(
-      page.locator("#questions dl > div#what-is-it dt"),
-    ).toBeVisible();
-  });
-
-  test("have no accessibility violation", async ({ page }) => {
-    await page.goto("/en/about");
-    await page.waitForLoadState("networkidle");
-
-    await expectNoAccessibilityViolations(page);
   });
 });

@@ -1,16 +1,27 @@
 import type { Page } from '@playwright/test';
-import { metaOf, olderVersion } from '../../support/catalog';
-import { emptyFields, nodesOfType, readHead, typesOf, type Head } from '../../support/head';
-import { INDEXED_PAGES, LOCALES, pageUrl } from '../../support/public-pages';
+import { emptyFields, readHead, typesOf, type Head } from '../../support/head';
+import { LOCALES, pageUrl } from '../../support/public-pages';
 import { expect, test } from '../../support/test';
 
-// The head crawlers read (ADR 0005): the server's, JavaScript off. The head after hydration
-// is specs/seo/head.spec.ts's; the diff against production is tools/seo-diff's.
+// The head crawlers read (ADR 0005): the server's, JavaScript off. Each page's head is its own
+// unit tests'; two samples prove the integrated head on real data and configuration, rendered
+// on request and prerendered. The head after hydration is specs/public/smoke.spec.ts's; the
+// diff against production is tools/seo-diff's.
 const BRAND = 'League Of Data Base';
 const INDEXABLE = 'index, follow';
-// L3.4: the ItemList describes the first page the server renders, 20 entries at most.
-const MAX_LIST_ENTRIES = 20;
 const X_DEFAULT = 'x-default';
+
+interface SampledPage {
+  /** Path below `/en/`. */
+  readonly path: string;
+  /** JSON-LD types the page carries, besides the graph of the site. */
+  readonly types: readonly string[];
+}
+
+const SAMPLED_PAGES: readonly SampledPage[] = [
+  { path: 'champions/Annie', types: ['BreadcrumbList', 'VideoGame', 'Person'] },
+  { path: 'about', types: ['AboutPage'] },
+];
 
 function pathOf(url: string): string {
   const parsed = new URL(url);
@@ -49,7 +60,7 @@ async function crawl(page: Page, url: string): Promise<Head> {
 test.describe('head of the public pages, as crawlers read it', { tag: '@readonly' }, () => {
   test.use({ javaScriptEnabled: false });
 
-  for (const entry of INDEXED_PAGES) {
+  for (const entry of SAMPLED_PAGES) {
     const url = pageUrl('en', entry.path);
 
     test(`gives ${url} its title, canonical, alternates, robots and typed JSON-LD`, async ({
@@ -67,50 +78,4 @@ test.describe('head of the public pages, as crawlers read it', { tag: '@readonly
       expectJsonLd(head, entry.types);
     });
   }
-
-  test('keeps a page in its locale: html lang, canonical and alternates', async ({ page }) => {
-    const head = await crawl(page, '/fr/champions/Annie');
-
-    await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-    expect(head.canonicals.map(pathOf)).toEqual(['/fr/champions/Annie']);
-    expectAlternates(head, 'champions/Annie');
-  });
-
-  test('points a regional variant and a later page of a list to the canonical URL', async ({
-    page,
-  }) => {
-    const variant = await crawl(page, '/en/champions/Annie?lang=en_GB');
-    expect(variant.canonicals.map(pathOf)).toEqual(['/en/champions/Annie']);
-
-    const later = await crawl(page, '/en/items?page=2');
-    expect(later.canonicals.map(pathOf)).toEqual(['/en/items']);
-  });
-
-  test('suffixes the title of an archived page with its patch', async ({ page, request }) => {
-    const older = olderVersion(await metaOf(request));
-    const path = `${older}/champions/Annie`;
-
-    const head = await crawl(page, pageUrl('en', path));
-
-    expect(head.title).toContain(`patch ${older}`);
-    expect(head.title).toContain(BRAND);
-    expect(head.canonicals.map(pathOf)).toEqual([pageUrl('en', path)]);
-    expectAlternates(head, path);
-    expectJsonLd(head, ['BreadcrumbList', 'VideoGame', 'Person']);
-  });
-
-  test('lists in the ItemList the first entries, each by its canonical URL', async ({ page }) => {
-    for (const resource of ['champions', 'items', 'runes', 'summoners']) {
-      const head = await crawl(page, pageUrl('en', resource));
-      const [list] = nodesOfType(head.jsonLd, 'ItemList');
-      const entries = (list?.['itemListElement'] ?? []) as { url?: string }[];
-
-      expect(entries.length, resource).toBeGreaterThan(0);
-      expect(entries.length, resource).toBeLessThanOrEqual(MAX_LIST_ENTRIES);
-      expect(list?.['numberOfItems'], resource).toBe(entries.length);
-      for (const entry of entries) {
-        expect(pathOf(entry.url ?? ''), resource).toMatch(new RegExp(`^/en/${resource}/[^/?#]+$`));
-      }
-    }
-  });
 });

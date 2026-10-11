@@ -2,10 +2,11 @@ import type { APIRequestContext } from '@playwright/test';
 
 import { expect, test } from '../../support/test';
 
-// The 301 table of docs/reecriture/plan-migration.md, through nginx: every former URL lands
-// in one hop on its new form, with and without ?lang= and a version. The targets are read
-// from the API (latest version, canonical paths), never copied, so the suite follows Data
-// Dragon.
+// The 301 table of docs/reecriture/plan-migration.md, through nginx: a former URL of each
+// routing class lands in one hop on its new form, with and without ?lang= and a version. The
+// targets are read from the API (latest version, canonical paths), never copied, so the suite
+// follows Data Dragon. Every alternative of nginx's legacy location is tools/nginx's, every
+// target the API tests'.
 
 const MOVED_PERMANENTLY = 301;
 const OK = 200;
@@ -34,12 +35,13 @@ interface Catalog {
 }
 
 // Old name → new detail request, below /api/catalog/{version}/en_US/.
+// Faerie Charm's LoL Classic twin is reached by its id alone, never by its homonymous name.
 const DETAILS: Readonly<Record<string, string>> = {
-  'champion/Ahri': 'champions/Ahri',
   'object/1004': 'items/1004',
-  'rune/Domination': 'runes/8100',
-  'summoner/SummonerFlash': 'summoners/SummonerFlash',
+  'object/771004': 'items/771004',
 };
+const UNKNOWN = '/champion/NotAChampion';
+const CONTRACTS = ['/b/000000000000000000000000', '/v1/champions'];
 
 async function readJson<T>(request: APIRequestContext, path: string): Promise<T> {
   const response = await request.get(path);
@@ -74,59 +76,24 @@ function path(catalog: Catalog, old: string): string {
 }
 
 function catalogRows(catalog: Catalog): Row[] {
-  const { latest, previous } = catalog;
+  const { previous } = catalog;
   return [
-    { old: '/champions', target: '/en/champions' },
     { old: '/objects?lang=fr_FR', target: '/fr/items' },
-    { old: '/runes', target: '/en/runes' },
-    { old: '/summoners?lang=ko_KR', target: '/ko/summoners' },
     { old: `/${previous}/champions`, target: `/en/${previous}/champions` },
-    { old: `/objects?version=${previous}&lang=fr_FR`, target: `/fr/${previous}/items` },
-    { old: `/${latest}/runes`, target: '/en/runes' },
-    { old: '/champion/Ahri', target: `/en/${path(catalog, 'champion/Ahri')}` },
     { old: '/object/1004?lang=fr_FR', target: `/fr/${path(catalog, 'object/1004')}` },
-    { old: '/rune/Domination', target: `/en/${path(catalog, 'rune/Domination')}` },
-    {
-      old: '/summoner/SummonerFlash?lang=zh_CN',
-      target: `/zh-hans/${path(catalog, 'summoner/SummonerFlash')}`,
-    },
-    {
-      old: `/${latest}/champion/Ahri?lang=fr_FR`,
-      target: `/fr/${path(catalog, 'champion/Ahri')}`,
-    },
-    {
-      old: `/${latest}/object/1004`,
-      target: `/en/${path(catalog, 'object/1004')}`,
-    },
+    { old: '/object/771004', target: `/en/${path(catalog, 'object/771004')}` },
   ];
 }
 
 const PAGE_ROWS: readonly Row[] = [
   { old: '/home', target: '/en/' },
-  { old: '/home?lang=fr_FR', target: '/fr/' },
-  { old: '/trends', target: '/en/trends' },
-  { old: '/about', target: '/en/about' },
   { old: '/about/data?lang=fr_FR', target: '/fr/about/data' },
-  { old: '/faq', target: '/en/faq' },
-  { old: '/changelog', target: '/en/changelog' },
-  { old: '/developers', target: '/en/developers' },
-  { old: '/donate', target: '/en/donate' },
-  { old: '/legal/notice', target: '/en/legal/notice' },
-  { old: '/legal/privacy?lang=fr_FR', target: '/fr/legal/privacy' },
-  { old: '/legal/terms', target: '/en/legal/terms' },
-  { old: '/legal/cookies', target: '/en/legal/cookies' },
 ];
 
 // Client-rendered pages, or pages whose content depends on data the stack may not hold
 // (a user): their target must not redirect, whatever it answers.
 const UNCHECKED_TARGET_ROWS: readonly Row[] = [
   { old: '/u/Faker', target: '/en/u/Faker' },
-  { old: '/login', target: '/en/account/login' },
-  { old: '/register?lang=fr_FR', target: '/fr/account/register' },
-  { old: '/profile', target: '/en/account/profile' },
-  { old: '/profile/api', target: '/en/account/api' },
-  { old: '/reset-password', target: '/en/account/forgot-password' },
-  { old: '/builds', target: '/en/account/builds' },
   { old: '/builds/42/edit', target: '/en/account/builds/42/edit' },
 ];
 
@@ -153,32 +120,30 @@ test.describe('legacy redirects', { tag: '@readonly' }, () => {
     for (const row of catalogRows(catalog)) {
       await expectOneHop(request, row, OK);
     }
-  });
 
-  test('editorial pages land under the locale in one hop', async ({ request }) => {
-    for (const row of PAGE_ROWS) {
-      await expectOneHop(request, row, OK);
-    }
-  });
+    await test.step('editorial pages land under the locale in one hop', async () => {
+      for (const row of PAGE_ROWS) {
+        await expectOneHop(request, row, OK);
+      }
+    });
 
-  test('account and profile pages land under the locale in one hop', async ({ request }) => {
-    for (const row of UNCHECKED_TARGET_ROWS) {
-      await expectOneHop(request, row, null);
-    }
-  });
+    await test.step('account and profile pages land under the locale in one hop', async () => {
+      for (const row of UNCHECKED_TARGET_ROWS) {
+        await expectOneHop(request, row, null);
+      }
+    });
 
-  test('an unknown former URL is a real 404 page', async ({ request }) => {
-    for (const old of ['/champion/NotAChampion', '/about/team', '/9.9.9/champions']) {
-      const response = await request.get(old, { maxRedirects: 0 });
-      expect(response.status(), old).toBe(NOT_FOUND);
-      expect(response.headers()['content-type'], old).toContain('text/html');
-    }
-  });
+    await test.step('an unknown former URL is a real 404 page', async () => {
+      const response = await request.get(UNKNOWN, { maxRedirects: 0 });
+      expect(response.status()).toBe(NOT_FOUND);
+      expect(response.headers()['content-type']).toContain('text/html');
+    });
 
-  test('the contracts of the old site are not redirected', async ({ request }) => {
-    for (const old of ['/b/000000000000000000000000', '/v1/champions', '/cdn/blobs/none.png']) {
-      const response = await request.get(old, { maxRedirects: 0 });
-      expect(response.status(), old).not.toBe(MOVED_PERMANENTLY);
-    }
+    await test.step('the contracts of the old site are not redirected', async () => {
+      for (const old of CONTRACTS) {
+        const response = await request.get(old, { maxRedirects: 0 });
+        expect(response.status(), old).not.toBe(MOVED_PERMANENTLY);
+      }
+    });
   });
 });

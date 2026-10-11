@@ -23,7 +23,7 @@ const PASSWORD = /^Password, shown only now: (\S+)$/m;
 const INVITATION = /^Invitation to enrol an authenticator, valid \d+ minutes: (\S+)$/m;
 
 /** The French copy of the admin (public/i18n/admin/fr.json), which the specs follow. */
-export const LOGIN = {
+const LOGIN = {
   identifier: 'Identifiant',
   password: 'Mot de passe',
   submit: 'Se connecter',
@@ -74,7 +74,7 @@ export async function freshCode(page: Page, admin: AdminAccount): Promise<string
 }
 
 /** Fills the password step of `/admin/login`, the page already open. */
-export async function enterPassword(
+async function enterPassword(
   page: Page,
   admin: Pick<AdminAccount, 'email' | 'username' | 'password'>,
 ): Promise<void> {

@@ -53,6 +53,7 @@ Pour développer : guide [developpement.md](guides/developpement.md) et
 | [configuration.md](../legacy/docs/guides/configuration.md) | *Ancienne stack, archivée* — Variables d'environnement et paramètres applicatifs |
 | [docker.md](../legacy/docs/guides/docker.md) | *Ancienne stack, archivée* — Référence des commandes de la stack Compose |
 | [developpement.md](guides/developpement.md) | Nouvelle stack `lodb-dev` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
+| [tests.md](guides/tests.md) | Stratégie de test : quelle couche teste quoi, budgets de durée et de mémoire, infrastructure des tests .NET |
 | [configuration.md](guides/configuration.md) | Nouvelle stack : inventaire des secrets GitHub, des lignes `.env` de `staging` et de `prod`, des fichiers et volumes de l'hôte et des services externes |
 | [github-actions-secrets.md](guides/github-actions-secrets.md) | Nouvelle stack : pipeline CI/CD, `dev` → `test` (déploiement de `staging`) → `main` (promotion en `prod`) |
 | [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |

@@ -60,8 +60,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   Rien de la page ni du client n'est gardé ; une ligne `web.csp.violated` par minute. Sur la
   pile locale (http), Chromium n'enregistre pas l'endpoint de `Reporting-Endpoints` (il le veut
   en https) : ses rapports restent en file et n'arrivent jamais, voulu. L'E2E vérifie l'absence
-  de violation par l'événement `securitypolicyviolation`, qui précède tout rapport, et
-  l'endpoint par des envois directs ; la livraison réelle se vérifie sur le staging.
+  de violation par l'événement `securitypolicyviolation`, qui précède tout rapport, les tests
+  xUnit l'endpoint (`CspReportEndpointTests`) ; la livraison réelle se vérifie sur le staging.
 - Issues de navigation **rendues en place** : 301, 302, 404 et 5xx s'affichent à l'URL
   demandée (`PageResponse`), jamais d'`UrlTree` de redirection côté serveur.
   `/{locale}/account`, `/{locale}/u` et `/b` ont une route 404 explicite (`bareNotFound`).
@@ -277,19 +277,18 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - Comparer le chemin d'une réponse (`new URL(url).pathname`), jamais `url.endsWith(...)`.
   Limiter les comptes de titres ou de boutons à `main` ou au composant visé. Une spec qui
   compte les POST exclut `/api/analytics/` ; `/u/api/send` ne part jamais d'une pile locale
-  (`specs/public/audience.spec.ts`). Un parcours qui crée un compte le supprime aussi en cas
-  d'échec.
+  (`core/analytics/audience-tracker.spec.ts`). Un parcours qui crée un compte le supprime aussi
+  en cas d'échec.
 - Angular laisse des espaces autour d'un texte entre balises : ancrer une regex sur le
   contenu, pas sur `^`/`$`.
 - Les blocs hydratés plus tard gardent leur `jsaction` jusqu'à leur tour : `hydrated()` vise
   un composant hydraté d'emblée, jamais la page entière. La vidéo d'un sort n'apparaît qu'une
-  fois sa scène à moitié à l'écran (`scrollIntoViewIfNeeded`) ; `support/network.ts`
-  (`saveData`) simule un lecteur en économie de données. Chaque page part de
-  `fastConnection` (`support/test.ts`) : sans lui, Chromium déduit `effectiveType` des
-  allers-retours qu'il mesure, qui varient d'une machine à l'autre (sous la 4g : poster sans
-  vidéo, liste différée). Un clic sur un onglet ne fait défiler que l'onglet : la scène du
-  clip peut rester sous l'écran, d'où un `scrollIntoViewIfNeeded` sur elle avant d'attendre
-  la vidéo.
+  fois sa scène à moitié à l'écran (`scrollIntoViewIfNeeded`). Chaque page part de
+  `fastConnection` (`support/network.ts`, posé par `support/test.ts`) : sans lui, Chromium
+  déduit `effectiveType` des allers-retours qu'il mesure, qui varient d'une machine à l'autre
+  (sous la 4g : poster sans vidéo, liste différée). Un clic sur un onglet ne fait défiler que
+  l'onglet : la scène du clip peut rester sous l'écran, d'où un `scrollIntoViewIfNeeded` sur
+  elle avant d'attendre la vidéo.
 - `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
   une correction.
 - **Bornes du SSR relevées en dev** (`compose.override.yaml`, jamais

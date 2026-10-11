@@ -25,8 +25,8 @@ export function stepsOf(page: Page): Locator {
   return page.locator('lodb-step-editor li.forge-step');
 }
 
-/** The rows of the rune board: the primary path's, then the secondary path's once chosen. */
-export function runeRowsOf(page: Page): Locator {
+// The rows of the rune board: the primary path's, then the secondary path's once chosen.
+function runeRowsOf(page: Page): Locator {
   return page.locator('lodb-rune-board .rune-slot');
 }
 
@@ -49,9 +49,9 @@ export async function chooseChampion(page: Page, name: string): Promise<void> {
 
 /**
  * Fills the rune page: the first path and its first rune of every row, then the first other
- * path and its first rune of its first two rows. Returns how many rows the primary path has.
+ * path and its first rune of its first two rows.
  */
-export async function pickRunes(page: Page): Promise<number> {
+export async function pickRunes(page: Page): Promise<void> {
   const board = page.locator('lodb-rune-board');
   const primaryPath = board.getByRole('group', { name: 'Primary path' }).getByRole('button');
   await primaryPath.first().click();
@@ -70,11 +70,10 @@ export async function pickRunes(page: Page): Promise<number> {
     .first()
     .click();
   await expect(board.locator('.rune-perk[aria-pressed="true"]')).toHaveCount(primaryRows + 2);
-  return primaryRows;
 }
 
-/** The box of an element, in the coordinates of the viewport. */
-export async function boxOf(element: Locator): Promise<Box> {
+// The box of an element, in the coordinates of the viewport.
+async function boxOf(element: Locator): Promise<Box> {
   const box = await element.boundingBox();
   expect(box, 'the element is laid out').not.toBeNull();
   return box!;

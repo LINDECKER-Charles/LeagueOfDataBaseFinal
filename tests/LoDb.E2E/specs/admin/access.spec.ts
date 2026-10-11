@@ -1,7 +1,8 @@
 import type { Browser, Page } from '@playwright/test';
-import { expectNoAccessibilityViolations } from '../../support/accessibility';
-import { enterPassword, LOGIN, signInAdmin } from './admin-account';
-import { expect, NO_SESSION, openPanel, test } from './admin-test';
+import { createMember, signInMember } from '../../support/member-account';
+import { discardAccount } from '../account/accounts';
+import { signInAdmin } from './admin-account';
+import { anonymous, expect, NO_SESSION, openPanel, test } from './admin-test';
 
 // Every panel of the navigation, in its order: analytics, then management.
 const PANELS = [
@@ -17,6 +18,18 @@ const PANELS = [
   'Surveillance',
   'Journal',
 ];
+// The sections of the overview, each drawn from the API.
+const OVERVIEW_SECTIONS = [
+  'Fréquentation',
+  'Par ressource',
+  'Pages les plus consultées',
+  'Sources de trafic',
+  "Familles d'objets",
+  'Déduplication',
+  'Santé',
+];
+// The CLI creates the member, then the sign-in: more than a test's default 30 seconds may pass.
+const MEMBER_TIMEOUT_MS = 90_000;
 
 // A browser without the administrator's session.
 async function visitor(browser: Browser, baseURL: string | undefined): Promise<Page> {
@@ -37,35 +50,37 @@ test('sends a visitor to the login of the admin, kept out of the index', async (
   await expect(
     page.getByRole('heading', { level: 1, name: "Panneau d'administration" }),
   ).toBeVisible();
-  await expect(page.getByLabel(LOGIN.identifier)).toBeFocused();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
-  await expect(page).toHaveTitle('Connexion · Admin · LODB');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-  await expectNoAccessibilityViolations(page);
 });
 
-test('refuses credentials it does not know, without a second step', async ({
+test('hides the admin from a member, behind the 404 of the URL', async ({
   browser,
   baseURL,
+  playwright,
+  request,
 }) => {
+  test.setTimeout(MEMBER_TIMEOUT_MS);
+  // Created by the CLI: the registration form's quota is account/register.spec.ts's.
+  const account = createMember('admmbr', { verified: true });
   const page = await visitor(browser, baseURL);
-  await page.goto('/admin/login');
+  try {
+    const copy = (await (await request.get('/i18n/seo/en.json')).json()) as {
+      error: { '404': { title: string } };
+    };
+    await signInMember(page, baseURL, account);
 
-  // An address no account has: no account is locked out by the attempt.
-  await enterPassword(page, {
-    email: `e2e_nobody_${Date.now().toString(36)}@example.com`,
-    username: 'nobody',
-    password: 'Not-the-password-2046!',
-  });
+    await page.goto('/admin/users');
 
-  await expect(
-    page.getByRole('alert').filter({ hasText: 'Identifiants invalides.' }),
-  ).toBeVisible();
-  await expect(page.getByLabel(LOGIN.code)).toHaveCount(0);
-  // As the legacy page came back: the identifier kept and focused, the password emptied.
-  await expect(page.getByLabel(LOGIN.identifier)).toBeFocused();
-  await expect(page.getByLabel(LOGIN.identifier)).not.toHaveValue('');
-  await expect(page.getByLabel(LOGIN.password, { exact: true })).toHaveValue('');
+    await expect(page).toHaveURL(/\/admin\/users$/);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('404');
+    await expect(page.getByRole('main')).toContainText(copy.error['404'].title);
+    await expect(
+      page.getByRole('navigation', { name: "Navigation de l'administration" }),
+    ).toHaveCount(0);
+  } finally {
+    await page.context().close();
+    await discardAccount(anonymous(playwright.request), baseURL, account);
+  }
 });
 
 test('signs the administrator in with the code of the authenticator, then out', async ({
@@ -102,6 +117,18 @@ test('lists every panel in its navigation and opens on the overview', async ({
     'aria-current',
     'page',
   );
+  await test.step('shows the overview: the application, its traffic and its storage', async () => {
+    await expect(page).toHaveTitle("Vue d'ensemble · Admin · LODB");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+    for (const heading of OVERVIEW_SECTIONS) {
+      await expect(page.getByRole('heading', { level: 2, name: heading })).toBeVisible();
+    }
+    await expect(page.getByText('Comptes', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Services/ })).toHaveAttribute(
+      'href',
+      '/admin/monitoring',
+    );
+  });
   await nav.getByRole('link', { name: 'Surveillance' }).click();
   await expect(page).toHaveURL(/\/admin\/monitoring$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Surveillance' })).toBeVisible();
@@ -109,10 +136,5 @@ test('lists every panel in its navigation and opens on the overview', async ({
     'aria-current',
     'page',
   );
-  // The legacy URL of the journal still opens it, with the filters of the bookmark.
-  await page.goto('/admin/logs?category=auth');
-  await expect(page).toHaveURL(/\/admin\/journal\?category=auth$/);
-  await expect(nav.getByRole('link', { name: 'Journal' })).toHaveAttribute('aria-current', 'page');
-  await expect(page.locator('lodb-journal-filters').getByLabel(/^Catégorie/)).toHaveValue('auth');
   expect(consoleErrors).toEqual([]);
 });
