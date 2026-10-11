@@ -21,6 +21,7 @@ public sealed class ExternalUrlTests
     [InlineData("file:///etc/passwd")]
     [InlineData("ms-msdt:/id PCWDiagnostic")]
     [InlineData("https://league-of-data-base.com@evil.example")]
+    [InlineData("https://localhost/")]
     [InlineData(" https://example.com")]
     [InlineData("https://example.com/\n")]
     public void RefusesAnythingElse(string? value)
