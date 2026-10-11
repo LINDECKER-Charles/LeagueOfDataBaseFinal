@@ -125,10 +125,25 @@ describe('_deploy.yml, the dotenv against the target', () => {
     assert.match(read(dir, '.env'), /^COMPOSE_PROJECT_NAME=lodb-prod$/m);
     assert.match(read(dir, '.env'), /^LODB_SECRETS_REVISION=1$/m);
     assert.match(read(dir, '.env'), new RegExp(`^LODB_EDGE_CIDR=${EDGE_SUBNET}$`, 'm'));
-    assert.match(read(dir, '.env'), /^COMPOSE_FILE=compose\.yaml:compose\.deploy\.yaml$/m);
+    assert.match(
+      read(dir, '.env'),
+      /^COMPOSE_FILE=compose\.yaml:compose\.deploy\.yaml:compose\.umami\.yaml$/m,
+    );
     assert.match(read(dir, '.env'), /^LODB_STACK_SUBNET=10\.231\.2\.0\/24$/m);
     assert.doesNotMatch(read(dir, '.env'), /database-secret/);
     assert.deepEqual(leftovers(dir), []);
+  });
+
+  it('declares the site to Umami in prod only', () => {
+    const dir = host();
+
+    const run = deploy(dir, STAGING, dotenvFor(STAGING));
+
+    assert.equal(run.status, 0, run.stderr);
+    assert.match(
+      read(dir, '.env'),
+      /^COMPOSE_FILE=compose\.yaml:compose\.deploy\.yaml:compose\.staging\.yaml$/m,
+    );
   });
 
   it('leaves the .env and the secret files in place when a network overlaps the stack', () => {
