@@ -16,6 +16,7 @@ public sealed class SignOutEverywhereTests(PostgresContainerFixture postgres)
 {
     private const string Path = "/api/account/logout-everywhere";
     private const string RevokedCounter = "lodb.sessions.revoked";
+    private static readonly TimeSpan BeforeRevalidation = TimeSpan.FromMinutes(4);
     private static readonly TimeSpan PastRevalidation = TimeSpan.FromMinutes(6);
 
     private AccountsApp? _app;
@@ -36,13 +37,18 @@ public sealed class SignOutEverywhereTests(PostgresContainerFixture postgres)
 
         using var response = await here.PostAsync(Path);
         var elsewhereRightAfter = await elsewhere.SignedInAsAsync();
-        App.Clock.Advance(PastRevalidation);
+        App.Clock.Advance(BeforeRevalidation);
+        var elsewhereBeforeRevalidation = await elsewhere.SignedInAsAsync();
+        App.Clock.Advance(PastRevalidation - BeforeRevalidation);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         Assert.Null(here.Cookie(BrowserClient.SessionCookie));
         Assert.Null(await here.SignedInAsAsync());
-        Assert.Equal(AccountSeed.Name, elsewhereRightAfter);
+        Assert.Equal(
+            (AccountSeed.Name, AccountSeed.Name),
+            (elsewhereRightAfter, elsewhereBeforeRevalidation));
         Assert.Null(await elsewhere.SignedInAsAsync());
+        Assert.Null(elsewhere.Cookie(BrowserClient.SessionCookie));
         using var refresh = await AppTokens.RefreshAsync(app, tokens);
         Assert.Equal(
             "invalid-refresh-token",
@@ -125,25 +131,6 @@ public sealed class SignOutEverywhereTests(PostgresContainerFixture postgres)
             "xsrf-invalid",
             await ApiJson.ProblemCodeAsync(withoutToken, HttpStatusCode.Forbidden));
         Assert.Equal(AccountSeed.Name, await forged.SignedInAsAsync());
-    }
-
-    [Fact]
-    public async Task AnotherSessionDropsAtItsRevalidationAndNotBefore()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var here = App.Browser();
-        using var elsewhere = App.Browser();
-        using var hereSignIn = await here.SignInAsync(AccountSeed.Name);
-        using var elsewhereSignIn = await elsewhere.SignInAsync(AccountSeed.Name);
-
-        using var response = await here.PostAsync(Path);
-        App.Clock.Advance(PastRevalidation - TimeSpan.FromMinutes(2));
-        var beforeRevalidation = await elsewhere.SignedInAsAsync();
-        App.Clock.Advance(TimeSpan.FromMinutes(2));
-
-        Assert.Equal(AccountSeed.Name, beforeRevalidation);
-        Assert.Null(await elsewhere.SignedInAsAsync());
-        Assert.Null(elsewhere.Cookie(BrowserClient.SessionCookie));
     }
 
     public async ValueTask InitializeAsync() =>

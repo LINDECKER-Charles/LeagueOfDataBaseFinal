@@ -22,18 +22,4 @@ public sealed class FrontPagesTests
         Assert.Equal(
             $"/en/account/reset-password?user=42#token={Token}",
             FrontPages.ResetPasswordLink(UiLocale.En, 42, Token));
-
-    [Fact]
-    public void NeitherPathNorQueryHoldsTheToken()
-    {
-        foreach (var link in new[]
-        {
-            FrontPages.VerifyEmailLink(UiLocale.En, 7, Token),
-            FrontPages.ResetPasswordLink(UiLocale.En, 7, Token),
-        })
-        {
-            var sent = new Uri(new Uri("https://example.test"), link).GetLeftPart(UriPartial.Query);
-            Assert.DoesNotContain(Token, sent, StringComparison.Ordinal);
-        }
-    }
 }

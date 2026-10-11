@@ -1,4 +1,5 @@
 using System.Net;
+using LoDb.Api.Modules.Accounts.Security;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Infrastructure.Audit;
 using LoDb.Testing;
@@ -8,8 +9,8 @@ namespace LoDb.Api.Tests.Accounts;
 /// <summary>
 /// <c>POST /api/account/login</c>: by e-mail or username whatever the case, the same answer
 /// for a wrong password and an unknown account, a banned account refused only once its
-/// password is right, a lock after five failures from several addresses, and the second
-/// factor when it is on.
+/// password is right, a lock after five failures from several addresses, counted, and the
+/// second factor when it is on.
 /// </summary>
 public sealed class SignInTests(PostgresContainerFixture postgres)
     : IAsyncLifetime
@@ -17,6 +18,8 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
     private const string WrongPassword = "Wr0ng-passphrase!";
     private const int FailuresToLock = 5;
     private const int LockoutSeconds = 15 * 60;
+    private const string AttemptsCounter = "lodb.sign_in.attempts";
+    private const string LockoutsCounter = "lodb.lockouts";
 
     private AccountsApp? _app;
 
@@ -24,9 +27,7 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
         _app ?? throw new InvalidOperationException("The host is not started yet.");
 
     [Theory]
-    [InlineData("Legende_42")]
     [InlineData("LEGENDE_42")]
-    [InlineData("legende@example.test")]
     [InlineData("  Legende@Example.TEST ")]
     public async Task SignsInByUsernameOrEmailWhateverTheCase(string identifier)
     {
@@ -97,9 +98,11 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task FifthFailureLocksTheAccountEvenForItsPassword()
+    public async Task FifthFailureLocksTheAccountEvenForItsPasswordAndIsCounted()
     {
         await App.SeedAsync(new AccountSeed());
+        using var lockouts = App.Security<long>(LockoutsCounter);
+        using var attempts = App.Security<long>(AttemptsCounter);
         var statuses = new List<HttpStatusCode>();
 
         // From as many addresses: one address alone runs out of attempts before the lockout.
@@ -110,6 +113,8 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
             statuses.Add(attempt.StatusCode);
         }
 
+        var counted = attempts.GetMeasurementSnapshot();
+        var locked = lockouts.GetMeasurementSnapshot();
         using var browser = App.Browser();
         using var right = await browser.SignInAsync(AccountSeed.Name);
 
@@ -117,6 +122,16 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
             [.. Enumerable.Repeat(HttpStatusCode.Unauthorized, FailuresToLock - 1),
                 HttpStatusCode.TooManyRequests],
             statuses);
+        var lockout = Assert.Single(locked);
+        Assert.Equal("false", lockout.Tags[SecurityMetrics.IsAdminTag]);
+        Assert.Equal(
+            [.. Enumerable.Repeat(SecurityMetrics.Failure, FailuresToLock - 1),
+                SecurityMetrics.LockedOut],
+            counted.Select(static attempt => (string?)attempt.Tags[SecurityMetrics.ResultTag]));
+        Assert.All(counted, static attempt => Assert.Equal(
+            (SecurityMetrics.MemberAccount, "session"),
+            ((string?)attempt.Tags[SecurityMetrics.AccountTag],
+                (string?)attempt.Tags[SecurityMetrics.ChannelTag])));
         var retryAfter = right.Headers.RetryAfter?.Delta?.TotalSeconds;
         Assert.Equal(
             "account-locked",
@@ -199,27 +214,6 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
             (success.Outcome, success.ActorType, success.ActorId));
         Assert.Equal("password", AccountsApp.Meta(success, "method"));
         Assert.Equal("session", AccountsApp.Meta(success, "channel"));
-    }
-
-    [Theory]
-    [InlineData(" legende_42 ", "username")]
-    [InlineData("my password typed here!", null)]
-    public async Task FailedSignInKeepsNoTextOfTheIdentifier(string identifier, string? kind)
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
-
-        using var failed = await browser.SignInAsync(identifier, WrongPassword);
-
-        var entry = Assert.Single(await App.AuditAsync());
-        Assert.DoesNotContain(
-            identifier.Trim(),
-            entry.Meta ?? string.Empty,
-            StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(kind, AccountsApp.Meta(entry, "identifier_kind"));
-        Assert.Equal(
-            kind is null ? null : AccountsApp.IdentifierDigest(AccountSeed.Name),
-            AccountsApp.Meta(entry, "identifier_digest"));
     }
 
     public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);

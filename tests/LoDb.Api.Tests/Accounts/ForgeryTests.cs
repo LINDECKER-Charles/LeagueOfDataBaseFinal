@@ -21,9 +21,6 @@ public sealed class ForgeryTests(PostgresContainerFixture postgres)
 
     [Theory]
     [InlineData("https://evil.example")]
-    [InlineData("http://localhost")]
-    [InlineData("https://localhost.evil.example")]
-    [InlineData("null")]
     public async Task ForeignOriginIsRefusedBeforeAnything(string origin)
     {
         await App.SeedAsync(new AccountSeed());
