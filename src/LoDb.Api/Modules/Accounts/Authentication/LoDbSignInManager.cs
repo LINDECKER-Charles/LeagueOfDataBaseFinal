@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using LoDb.Api.Modules.Accounts.Tokens;
 using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -7,7 +9,8 @@ namespace LoDb.Api.Modules.Accounts.Authentication;
 
 /// <summary>
 /// Identity's sign-in manager, which also refuses banned accounts: at the password check,
-/// and at each revalidation of a session cookie or of a refresh token.
+/// and at each revalidation of a session cookie or of a refresh token. A sign-in to the
+/// tokens of an app opens the family of its refresh tokens.
 /// </summary>
 /// <remarks>
 /// The ban is checked after the password, not in <c>CanSignInAsync</c>, which runs before
@@ -20,7 +23,8 @@ internal sealed class LoDbSignInManager(
     IOptions<IdentityOptions> optionsAccessor,
     ILogger<SignInManager<User>> logger,
     IAuthenticationSchemeProvider schemes,
-    IUserConfirmation<User> confirmation)
+    IUserConfirmation<User> confirmation,
+    RefreshFamilies families)
     : SignInManager<User>(
         userManager,
         contextAccessor,
@@ -47,4 +51,27 @@ internal sealed class LoDbSignInManager(
         User? user,
         string? securityStamp) =>
         user is { IsBanned: false } && await base.ValidateSecurityStampAsync(user, securityStamp);
+
+    /// <remarks>
+    /// Every sign-in ends here, with a password, a second factor or Google: one to the
+    /// tokens names the new family in the principal the bearer handler writes into them.
+    /// </remarks>
+    public override async Task SignInWithClaimsAsync(
+        User user,
+        AuthenticationProperties? authenticationProperties,
+        IEnumerable<Claim> additionalClaims)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        if (AuthenticationScheme != IdentityConstants.BearerScheme)
+        {
+            await base.SignInWithClaimsAsync(user, authenticationProperties, additionalClaims);
+            return;
+        }
+
+        var link = await families.OpenAsync(user.Id, Context.RequestAborted);
+        await base.SignInWithClaimsAsync(
+            user,
+            authenticationProperties,
+            [.. additionalClaims, .. RefreshFamilyClaims.Of(link)]);
+    }
 }

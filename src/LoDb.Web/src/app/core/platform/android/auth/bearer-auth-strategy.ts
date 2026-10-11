@@ -11,6 +11,8 @@ import { type Observable, catchError, from, map, of, switchMap, throwError } fro
 import { API_BASE_URL } from '../../../api/api-base-url';
 import { createAccountToken } from '../../../api/generated/fn/account/create-account-token';
 import { getAccountSession } from '../../../api/generated/fn/account/get-account-session';
+import { signOut } from '../../../api/generated/fn/account/sign-out';
+import { signOutEverywhere } from '../../../api/generated/fn/account/sign-out-everywhere';
 import type { AccountSession } from '../../../api/generated/models/account-session';
 import type { LoginRequest } from '../../../api/generated/models/login-request';
 import type { AuthStrategy } from '../../../auth/strategy/auth-strategy';
@@ -68,8 +70,20 @@ export class BearerAuthStrategy implements AuthStrategy {
     );
   }
 
+  /**
+   * Revokes the family of the refresh token at the API, then forgets the tokens whatever it
+   * answered: offline, or once the session ended on the API's side, they go all the same.
+   */
   signOut(): Observable<void> {
-    return from(this.tokens.clear());
+    return signOut(this.http, this.apiOrigin).pipe(
+      catchError(() => of(null)),
+      switchMap(() => this.tokens.clear()),
+    );
+  }
+
+  /** Forgets the tokens once the API has closed every session; keeps them if it refused. */
+  signOutEverywhere(): Observable<void> {
+    return signOutEverywhere(this.http, this.apiOrigin).pipe(switchMap(() => this.tokens.clear()));
   }
 
   startGoogleSignIn(request: GoogleSignIn): Promise<void> {

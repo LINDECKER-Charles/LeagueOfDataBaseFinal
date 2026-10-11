@@ -1,3 +1,4 @@
+using LoDb.Api.Modules.Accounts.Security.Authenticator;
 using LoDb.Api.Modules.Accounts.Security.Hashing;
 using LoDb.Api.Modules.Accounts.Security.Policy;
 using LoDb.Infrastructure.Persistence.Accounts;
@@ -21,7 +22,8 @@ internal static class AccountsSecurityRegistration
     /// </summary>
     /// <remarks>
     /// The accounts module calls it once and chains the sign-in manager and the token
-    /// providers onto the builder it returns. It does no I/O.
+    /// providers onto the builder it returns. It does no I/O. The authenticator key and the
+    /// recovery codes reach the store sealed and hashed (<see cref="LoDbUserManager"/>).
     /// </remarks>
     public static IdentityBuilder AddAccountsSecurity(this IServiceCollection services)
     {
@@ -39,6 +41,9 @@ internal static class AccountsSecurityRegistration
         services.TryAddSingleton<Argon2Passwords>();
         services.TryAddSingleton<HashingGate>();
         services.TryAddSingleton<SecurityMetrics>();
+        services.TryAddSingleton<AuthenticatorKeyProtection>();
+        services.TryAddSingleton<RecoveryCodeHashes>();
+        services.TryAddScoped<AuthenticatorSecretsUpkeep>();
         return builder;
     }
 

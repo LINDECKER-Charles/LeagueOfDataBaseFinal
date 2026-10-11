@@ -38,5 +38,11 @@
     "loading": "Chargement de votre profil…",
     "load_error": "Impossible de charger votre profil.",
     "version_error": "Impossible de changer la version de vos favoris."
+  },
+  "sessions": {
+    "title": "Sessions",
+    "help": "Déconnectez votre compte de tous les navigateurs et applications où il est ouvert, celui-ci compris, en cas d'appareil perdu ou partagé. Les autres appareils sont déconnectés en quelques minutes.",
+    "sign_out_everywhere": "Se déconnecter de tous les appareils",
+    "signed_out": "Vous êtes déconnecté de tous vos appareils."
   }
 }

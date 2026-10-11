@@ -89,13 +89,13 @@ public sealed class AdminMfaCommandTests(PostgresContainerFixture postgres)
         Assert.Equal(CliExitCodes.Failure, exit);
     }
 
-    private static async Task EnrolAsync(BrowserClient admin, string invitation)
+    private async Task EnrolAsync(BrowserClient admin, string invitation)
     {
         using var start = await admin.PostAsync(EnrollmentPath, new { invitation });
         var key = ApiJson.Text(await ApiJson.ReadAsync(start, HttpStatusCode.OK), "sharedKey")!;
         using var confirm = await admin.PostAsync(
             ConfirmPath,
-            new { code = Totp.Code(key), invitation });
+            new { code = Totp.Code(key, App.Clock), invitation });
         await ApiJson.ReadAsync(confirm, HttpStatusCode.OK);
     }
 

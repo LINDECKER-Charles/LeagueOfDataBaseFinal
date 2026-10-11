@@ -9,9 +9,13 @@ namespace LoDb.Api.Modules.Accounts.Protection;
 /// request, and the XSRF token of those a session cookie authenticates.
 /// </summary>
 /// <remarks>
-/// A request authenticated by bearer token is exempt: a browser never attaches one on its
-/// own, and CORS keeps foreign pages from setting the header. Anonymous requests only have
-/// their origin checked: they carry no session to abuse.
+/// A request a bearer token authenticated is exempt: a browser never attaches one on its own,
+/// and CORS keeps foreign pages from setting the header. The exemption follows the scheme
+/// that authenticated the request, not the header: a policy bound to the session cookie
+/// authenticates the cookie of a request that also carries a bearer header, and such a
+/// request is guarded as any other cookie request. A bearer header that authenticated
+/// nothing exempts nothing either. Anonymous requests only have their origin checked: they
+/// carry no session to abuse.
 /// </remarks>
 internal sealed class ForgeryHandler(TrustedOrigins origins, XsrfTokens xsrf)
     : AuthorizationHandler<ForgeryRequirement>
@@ -34,7 +38,13 @@ internal sealed class ForgeryHandler(TrustedOrigins origins, XsrfTokens xsrf)
     private async Task<string?> CheckAsync(HttpContext context)
     {
         var request = context.Request;
-        if (IsExempt(request))
+        if (IsSafe(request.Method) || !request.Path.StartsWithSegments(ApiPaths.App))
+        {
+            return null;
+        }
+
+        var isSignedIn = context.User.Identity?.IsAuthenticated == true;
+        if (isSignedIn && IsByBearerOnly(context))
         {
             return null;
         }
@@ -44,14 +54,13 @@ internal sealed class ForgeryHandler(TrustedOrigins origins, XsrfTokens xsrf)
             return AccessDenials.OriginMismatch;
         }
 
-        var bySession = context.User.Identity?.IsAuthenticated == true;
-        return bySession && !await xsrf.IsValidAsync(context) ? AccessDenials.XsrfInvalid : null;
+        return isSignedIn && !await xsrf.IsValidAsync(context) ? AccessDenials.XsrfInvalid : null;
     }
 
-    private static bool IsExempt(HttpRequest request) =>
-        IsSafe(request.Method)
-        || !request.Path.StartsWithSegments(ApiPaths.App)
-        || AccountSchemes.IsBearer(request);
+    // The default scheme forwards a bearer request to the bearer handler alone; the cookie
+    // only counts when a policy authenticated it as well.
+    private static bool IsByBearerOnly(HttpContext context) =>
+        AccountSchemes.IsBearer(context.Request) && !SessionAuthentication.IsUsed(context);
 
     private static bool IsSafe(string method) =>
         HttpMethods.IsGet(method)

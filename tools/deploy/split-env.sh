@@ -43,6 +43,7 @@ readonly SECRET_KEYS=(
   LoDb__Accounts__Google__AppClients__0__ClientSecret
   LoDb__Accounts__Google__AppClients__1__ClientSecret
   LoDb__Analytics__VisitorKey
+  LoDb__Audit__IdentifierKey
 )
 # The password of the API's own database role (lodb_app).
 readonly GENERATED_KEYS=(

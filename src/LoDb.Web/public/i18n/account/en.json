@@ -38,5 +38,11 @@
     "loading": "Loading your profile…",
     "load_error": "Your profile could not be loaded.",
     "version_error": "The version of your favorites could not be changed."
+  },
+  "sessions": {
+    "title": "Sessions",
+    "help": "Sign out of every browser and app where your account is open, this one included, for a lost or shared device. The other devices are signed out within a few minutes.",
+    "sign_out_everywhere": "Sign out of all devices",
+    "signed_out": "You are signed out of all your devices."
   }
 }

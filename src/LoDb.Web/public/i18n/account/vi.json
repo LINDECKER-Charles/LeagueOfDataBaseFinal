@@ -38,5 +38,11 @@
     "loading": "Đang tải hồ sơ của bạn…",
     "load_error": "Không thể tải hồ sơ của bạn.",
     "version_error": "Không thể đổi phiên bản của mục yêu thích."
+  },
+  "sessions": {
+    "title": "Phiên đăng nhập",
+    "help": "Đăng xuất tài khoản của bạn khỏi mọi trình duyệt và ứng dụng đang mở, kể cả nơi này, khi thiết bị bị mất hoặc dùng chung. Các thiết bị khác sẽ bị đăng xuất trong vài phút.",
+    "sign_out_everywhere": "Đăng xuất khỏi mọi thiết bị",
+    "signed_out": "Bạn đã đăng xuất khỏi mọi thiết bị."
   }
 }

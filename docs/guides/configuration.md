@@ -180,7 +180,7 @@ mis en fichiers :
 - `LoDb__Billing__StripeSecretKey`, `LoDb__Billing__StripeWebhookSecret` ;
 - `LoDb__Accounts__Google__ClientSecret`, `LoDb__Accounts__Google__AppClients__N__ClientSecret`
   (`N` = `0` ou `1`) ;
-- `LoDb__Analytics__VisitorKey`.
+- `LoDb__Analytics__VisitorKey`, `LoDb__Audit__IdentifierKey`.
 
 Un secret ne vient **jamais** de `ENV_*` : `LODB_APP_DB_PASSWORD`, le mot de passe du rôle
 Postgres de l'API (`lodb_app`, § 4.3). Le premier déploiement le tire sur l'hôte
@@ -303,6 +303,7 @@ même nom.
 | `LoDb__Contact__Recipient` | ➖ | Destinataire des messages de contact. Absent : stockés pour l'admin, sans notification. |
 | `LoDb__Contact__NotificationLocale` | ➖ | Langue de la notification, `Fr` par défaut (`Ar`… `ZhHant`). Une valeur invalide ne se voit qu'au premier message. |
 | `LoDb__Analytics__VisitorKey` 🔒 | recommandé | Clé du hachage des visiteurs. Absente : une clé aléatoire par processus, les visiteurs sont recomptés à chaque redémarrage. |
+| `LoDb__Audit__IdentifierKey` 🔒 | recommandé | Clé du condensat (HMAC) que le journal garde à la place de l'identifiant saisi lors d'une connexion refusée : il relie les tentatives sur un même identifiant sans en garder le texte. Absente : une clé aléatoire par processus, les condensats ne se recoupent plus d'un redémarrage à l'autre. |
 | `LoDb__Seo__SitemapVersionWindow` | ➖ | Versions passées annoncées par l'index des sitemaps, après le dernier patch : `12` par défaut, `0` pour le dernier patch seul. Les sitemaps plus anciens restent servis, et leurs pages indexables. |
 | `LoDb__Catalog__MaxEntries`, `PinnedLanguages`, `PinnedBudgetMegabytes` | ➖ | Catalogues en mémoire : ceux du dernier patch dans les langues épinglées (défaut : les 21 de l'interface, en_US en tête), jamais évincés, dans `256` Mio estimés ; `16` autres au plus, le moins récemment lu évincé. |
 | `LoDb__Catalog__ColdLoadConcurrency`, `ColdLoadsPerSecond`, `ColdLoadBurst`, `PublicColdLoadsPerSecond`, `InternalColdLoadWait`, `MaxPendingLoads` | ➖ | Chargement d'un catalogue absent de la mémoire : `2` à la fois, `3` par seconde (rafale `6`), dont `1` pour les appels publics, refusés sans attente ; le SSR attend `2` s au plus, derrière `16` autres. Refus : `503` + `Retry-After`. |
@@ -318,7 +319,9 @@ le service y pose `LoDb__Database__Password`, lu dans `/run/secrets` ; pour l'AP
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
-`LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `LoDb__Storage__Root` (`/srv/storage`, volume
+`LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `AllowedHosts` (les hôtes de
+`CADDY_DOMAINS` et `API_CADDY_DOMAINS`, puis `lodb-api`, `localhost` et `127.0.0.1` : tout autre
+`Host` reçoit un `400`, le port des métriques excepté), `LoDb__Storage__Root` (`/srv/storage`, volume
 `ddragon`, que nginx sert), et côté SSR `LODB_API_ORIGIN`, `LODB_TRUST_PROXY_HEADERS`,
 `LODB_STACK_NETWORKS` (`LODB_STACK_SUBNET` seul), `LODB_FRONT_BUILDS_DIR` (`/srv/front-builds`,
 volume `front-builds`), `NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur un hôte : `Development`
@@ -393,7 +396,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié), `MaxRequestBodySize` (131072 octets, soit 128 Kio ; au-delà, 413), `DatabaseBusyRetryAfter` (5 s, `Retry-After` du 503 quand le pool Postgres reste occupé), `SecretsDirectory` (`/run/secrets` : un fichier par réglage, nommé d'après sa clé avec `__`, lu au démarrage ; vide, il vaut un réglage absent ; il prime sur toute autre source) |
 | `LoDb:Database` | `Password` (aucun : sans lui, la chaîne de connexion reste telle quelle ; posé, il y remplace le mot de passe) ; pour `migrate` seulement, `AppRole:Password` (aucun : le mot de passe de `lodb_app` reste tel quel ; ASCII imprimable), `AppRole:StatementTimeout` (15 s), `AppRole:ConnectionLimit` (50, `-1` sans limite) |
 | `LoDb:Workers` | `Enabled` (`true` ; seul `false` coupe toutes les tâches de fond) |
-| `LoDb:Accounts` | `SecureCookies` (vrai hors Development) ; `VerificationResend:FreeResends` (5 renvois de l'e-mail de vérification par compte), puis un par `VerificationResend:Interval` (1 j) ; `UnverifiedPurge:After` (7 j : un compte encore non vérifié est effacé, sauf build, clé API, don, rôle, bannissement, soutien ou Google), `UnverifiedPurge:BatchSize` (500 comptes par passage horaire) |
+| `LoDb:Accounts` | `SecureCookies` (vrai hors Development) ; `VerificationResend:FreeResends` (5 renvois de l'e-mail de vérification par compte), puis un par `VerificationResend:Interval` (1 j) ; `UnverifiedPurge:After` (7 j : un compte encore non vérifié est effacé, sauf build, clé API, don, rôle, bannissement, soutien ou Google), `UnverifiedPurge:BatchSize` (500 comptes par passage horaire) ; `RefreshTokens:ReuseGrace` (30 s, de 0 à 5 min : le jeton de rafraîchissement qu'un échange vient de remplacer s'échange encore pour la même génération, contre une réponse perdue ou deux échanges simultanés ; au-delà, il révoque sa famille) |
 | `LoDb:RateLimiting` | par compte et par heure glissante, jamais par adresse : `CheckoutsPerHour` (10 checkouts de pack ou de plan), `ApiKeyIssuesPerHour` (5 clés créées ou régénérées), `BuildEditsPerHour` (60 builds créés ou remplacés), `VotesPerHour` (120 votes) ; au-delà, `429 rate-limited` |
 | `LoDb:Builds:Votes` | `MinimumAccountAge` (1 j : âge du compte avant son premier vote ; l'e-mail vérifié est aussi exigé) |
 | `LoDb:Mail` | `Timeout` (`00:00:30`) |

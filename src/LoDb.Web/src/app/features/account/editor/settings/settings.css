@@ -1,6 +1,6 @@
 /*
- * The settings under the favorites: the identity and first-password panels on a gold tint,
- * the erasure on a danger one. In the components layer, so that the utilities keep their
+ * The settings under the favorites: the identity, first-password and sessions panels on a
+ * gold tint, the erasure on a danger one. In the components layer, so that the utilities keep their
  * say.
  */
 @layer components {

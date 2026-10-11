@@ -38,5 +38,11 @@
     "loading": "Dein Profil wird geladen…",
     "load_error": "Dein Profil konnte nicht geladen werden.",
     "version_error": "Die Version deiner Favoriten konnte nicht geändert werden."
+  },
+  "sessions": {
+    "title": "Sitzungen",
+    "help": "Melde dein Konto in allen Browsern und Apps ab, in denen es geöffnet ist, auch in diesem, etwa bei einem verlorenen oder geteilten Gerät. Die anderen Geräte werden innerhalb weniger Minuten abgemeldet.",
+    "sign_out_everywhere": "Von allen Geräten abmelden",
+    "signed_out": "Du bist auf allen deinen Geräten abgemeldet."
   }
 }

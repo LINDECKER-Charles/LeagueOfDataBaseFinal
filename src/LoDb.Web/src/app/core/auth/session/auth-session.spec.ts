@@ -141,6 +141,19 @@ describe('AuthSession', () => {
     expect(session.user()).toBeNull();
   });
 
+  it('becomes anonymous once signed out everywhere, and stays signed in when it fails', async () => {
+    const { session, strategy } = setUp();
+    session.apply({ user: accountUser() });
+    strategy.signOutEverywhereAnswer = throwError(() => new HttpErrorResponse({ status: 503 }));
+
+    await expect(session.signOutEverywhere()).rejects.toBeInstanceOf(HttpErrorResponse);
+    expect(session.isAuthenticated()).toBe(true);
+
+    strategy.signOutEverywhereAnswer = EMPTY;
+    await session.signOutEverywhere();
+    expect(session.status()).toBe('anonymous');
+  });
+
   it('leaves for Google through the strategy', async () => {
     const { session, strategy } = setUp();
     const request = { returnUrl: '/fr/', fallbackUrl: '/fr/', locale: 'fr', rememberMe: true };

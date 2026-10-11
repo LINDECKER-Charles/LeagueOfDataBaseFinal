@@ -56,6 +56,7 @@
       @if (!profile.hasPassword) {
         <lodb-password-panel class="mt-14" (saved)="reload()" />
       }
+      <lodb-sessions-panel class="mt-14" />
       <lodb-danger-panel class="mt-14" [confirmation]="profile.deletionConfirmation" />
     </div>
   </div>
