@@ -34,6 +34,11 @@ function listOf<L>(outcome: ListOutcome<L> | undefined): L | null {
   return outcome?.kind === 'list' ? outcome.list : null;
 }
 
+// An answer that brought no list: a version still cold (503), or a failure.
+function isUnanswered<L>(outcome: ListOutcome<L> | undefined): boolean {
+  return outcome !== undefined && outcome.kind !== 'list';
+}
+
 // A render with placeholders, or without its list, must not be kept like a complete one.
 function markTransient<L>(outcome: ListOutcome<L>, response: PageResponse): void {
   if (outcome.kind !== 'list' || outcome.retryAfterMs !== null) {
@@ -66,7 +71,8 @@ function scopeOf(context: Signal<PageContext | undefined>): Signal<Scope | undef
  * a render with placeholders a minute only. The browser takes that page back from the
  * transfer cache, then fetches the whole list, retried once after its `Retry-After` while
  * the version is cold: once the reader shows they will filter (`loadWhole`), else once the
- * page has loaded and the browser is idle (injectWholeIntent). Both refetch when the version
+ * page has loaded and the browser is idle (injectWholeIntent), at once when the first page
+ * came without its list. Both refetch when the version
  * or the language changes, never on a mere query change such as the filter's own.
  */
 export function injectCatalogueList<R extends ResourceType>(
@@ -87,8 +93,11 @@ export function injectCatalogueList<R extends ResourceType>(
   const inBrowser = (at: Scope) =>
     isWhole ? withOneRetry(() => fetch(opening, at)) : fetch(opening, at);
   const first = scopedFetch(scope, (at) => (isBrowser ? inBrowser(at) : onServer(at)));
+  // The browser never asks again for a first page left unanswered: the whole list, retried
+  // once, is then its only way to fill in, read at once whatever the connection.
+  const wantsWhole = () => isWanted() || isUnanswered(first());
   const whole = rxResource({
-    params: () => (isBrowser && !isWhole && isWanted() ? scope() : undefined),
+    params: () => (isBrowser && !isWhole && wantsWhole() ? scope() : undefined),
     stream: ({ params }) => withOneRetry(() => fetch({}, params)),
   });
   const firstPage = computed(() => listOf(first()));
