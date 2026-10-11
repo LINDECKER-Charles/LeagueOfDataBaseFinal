@@ -1,4 +1,4 @@
-namespace LoDb.Api.Hosting.SecurityReports;
+namespace LoDb.Api.Hosting.SecurityReports.Reports;
 
 /// <summary>
 /// Whether the browser blocked what it reports (<see cref="Enforce"/>) or only reported it,

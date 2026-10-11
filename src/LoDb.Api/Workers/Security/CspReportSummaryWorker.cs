@@ -1,4 +1,4 @@
-using LoDb.Api.Hosting.SecurityReports;
+using LoDb.Api.Hosting.SecurityReports.Summary;
 
 namespace LoDb.Api.Workers.Security;
 

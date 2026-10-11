@@ -1,4 +1,4 @@
-namespace LoDb.Api.Hosting.SecurityReports;
+namespace LoDb.Api.Hosting.SecurityReports.Reports;
 
 /// <summary>
 /// What the API keeps of one violation report: the directive broken and whether the browser

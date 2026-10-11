@@ -1,4 +1,5 @@
-using LoDb.Api.Hosting.SecurityReports;
+using LoDb.Api.Hosting.SecurityReports.Reports;
+using LoDb.Api.Hosting.SecurityReports.Summary;
 using LoDb.Api.Workers.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;

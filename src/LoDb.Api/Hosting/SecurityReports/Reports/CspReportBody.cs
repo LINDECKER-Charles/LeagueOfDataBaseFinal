@@ -1,7 +1,7 @@
 using System.Collections.Frozen;
 using Microsoft.Net.Http.Headers;
 
-namespace LoDb.Api.Hosting.SecurityReports;
+namespace LoDb.Api.Hosting.SecurityReports.Reports;
 
 /// <summary>
 /// Reads a report body whole into memory, within its bound, then its violations.

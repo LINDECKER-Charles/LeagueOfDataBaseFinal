@@ -1,4 +1,4 @@
-namespace LoDb.Api.Hosting.SecurityReports;
+namespace LoDb.Api.Hosting.SecurityReports.Reports;
 
 /// <summary>
 /// The outcome of reading a report body: its violations, or why none could be read.

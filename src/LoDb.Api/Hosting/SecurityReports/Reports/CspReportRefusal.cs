@@ -1,4 +1,4 @@
-namespace LoDb.Api.Hosting.SecurityReports;
+namespace LoDb.Api.Hosting.SecurityReports.Reports;
 
 /// <summary>Why a report body was not read.</summary>
 internal enum CspReportRefusal

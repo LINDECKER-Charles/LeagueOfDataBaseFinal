@@ -1,3 +1,4 @@
+using LoDb.Api.Hosting.SecurityReports.Summary;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

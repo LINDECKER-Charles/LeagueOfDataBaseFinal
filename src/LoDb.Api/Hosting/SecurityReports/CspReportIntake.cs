@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
+using LoDb.Api.Hosting.SecurityReports.Reports;
+using LoDb.Api.Hosting.SecurityReports.Summary;
 using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Hosting.SecurityReports;

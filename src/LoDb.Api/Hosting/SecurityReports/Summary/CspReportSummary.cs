@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace LoDb.Api.Hosting.SecurityReports;
+namespace LoDb.Api.Hosting.SecurityReports.Summary;
 
 /// <summary>
 /// The <c>web.csp.violated</c> line: what browsers reported over one interval, per directive

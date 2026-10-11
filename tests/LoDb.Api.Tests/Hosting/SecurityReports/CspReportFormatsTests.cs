@@ -1,5 +1,5 @@
 using System.Text;
-using LoDb.Api.Hosting.SecurityReports;
+using LoDb.Api.Hosting.SecurityReports.Reports;
 
 namespace LoDb.Api.Tests.Hosting.SecurityReports;
 

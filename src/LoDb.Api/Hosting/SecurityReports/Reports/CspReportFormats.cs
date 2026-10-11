@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace LoDb.Api.Hosting.SecurityReports;
+namespace LoDb.Api.Hosting.SecurityReports.Reports;
 
 /// <summary>
 /// Reads the violations of a report body, in either format browsers send: the Reporting API's

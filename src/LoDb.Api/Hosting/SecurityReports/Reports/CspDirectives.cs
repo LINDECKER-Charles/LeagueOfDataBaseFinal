@@ -1,6 +1,6 @@
 using System.Collections.Frozen;
 
-namespace LoDb.Api.Hosting.SecurityReports;
+namespace LoDb.Api.Hosting.SecurityReports.Reports;
 
 /// <summary>
 /// The directives a report may name, as a bounded vocabulary: any other value, written by a

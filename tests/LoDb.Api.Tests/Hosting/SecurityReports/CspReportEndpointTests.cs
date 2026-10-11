@@ -2,6 +2,8 @@ using System.Diagnostics.Metrics;
 using System.Net;
 using System.Text;
 using LoDb.Api.Hosting.SecurityReports;
+using LoDb.Api.Hosting.SecurityReports.Reports;
+using LoDb.Api.Hosting.SecurityReports.Summary;
 using LoDb.Api.Hosting.Telemetry;
 using LoDb.Testing;
 using Microsoft.Extensions.DependencyInjection;

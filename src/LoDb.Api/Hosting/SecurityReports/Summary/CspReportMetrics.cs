@@ -1,7 +1,8 @@
 using System.Diagnostics.Metrics;
+using LoDb.Api.Hosting.SecurityReports.Reports;
 using LoDb.Api.Hosting.Telemetry;
 
-namespace LoDb.Api.Hosting.SecurityReports;
+namespace LoDb.Api.Hosting.SecurityReports.Summary;
 
 /// <summary>
 /// <c>lodb_csp_reports_total{directive,disposition}</c>: the violations browsers reported. Both

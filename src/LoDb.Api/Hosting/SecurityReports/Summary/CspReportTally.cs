@@ -1,4 +1,6 @@
-namespace LoDb.Api.Hosting.SecurityReports;
+using LoDb.Api.Hosting.SecurityReports.Reports;
+
+namespace LoDb.Api.Hosting.SecurityReports.Summary;
 
 /// <summary>
 /// Counts the reports taken in since the last summary: the summary is one log line a minute,

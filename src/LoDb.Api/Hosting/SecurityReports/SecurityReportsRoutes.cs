@@ -5,7 +5,7 @@ internal static class SecurityReportsRoutes
 {
     /// <summary>
     /// Target of the pages' <c>report-uri</c> and <c>Reporting-Endpoints</c>
-    /// (src/LoDb.Web/src/server/security/report-endpoint.ts): same origin, under the API.
+    /// (src/LoDb.Web/src/server/security/csp/csp-reporting.ts): same origin, under the API.
     /// </summary>
     public const string CspPath = ApiPaths.App + "/csp-reports";
 

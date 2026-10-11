@@ -1,4 +1,6 @@
-namespace LoDb.Api.Hosting.SecurityReports;
+using LoDb.Api.Hosting.SecurityReports.Reports;
+
+namespace LoDb.Api.Hosting.SecurityReports.Summary;
 
 /// <summary>What the API took in over one summary interval.</summary>
 internal sealed record CspReportWindow
