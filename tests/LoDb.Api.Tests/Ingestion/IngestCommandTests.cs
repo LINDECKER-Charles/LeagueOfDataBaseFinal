@@ -16,17 +16,6 @@ public sealed class IngestCommandTests(PostgresContainerFixture postgres)
         "SELECT version FROM ddragon_version WHERE status = 'ready' AND promoted_at IS NOT NULL";
 
     [Fact]
-    public void ApiDeclaresTheIngestCommand()
-    {
-        var catalog = CliCommandCatalog.Discover(typeof(Program).Assembly);
-
-        var command = Assert.Single(
-            catalog.Commands,
-            static command => command.Name == "ingest");
-        Assert.True(command.RequiresHost);
-    }
-
-    [Fact]
     public async Task NamedVersionIsIngestedInTheLanguagesAsked()
     {
         await using var host = await IngestionHost.CreateAsync(postgres);

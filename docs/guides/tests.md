@@ -71,7 +71,7 @@ est une régression à expliquer, comme un test rouge.
 
 | Suite | Local | CI |
 |---|---|---|
-| .NET (`dotnet test LoDb.slnx`, 5 projets) | 3 min 36, pic 2,3 Go | job `dotnet` 5 min 50, build compris |
+| .NET (`dotnet test LoDb.slnx`, 5 projets, 3169 cas) | 2 min 55, pic 2,2 Go | job `dotnet` 5 min 50, build compris |
 | Vitest (2758 tests) | ~10 s d'exécution, pic 1,9 Go | job `front` 2 min |
 | E2E (65 tests, 2 workers) | 1 min 25 d'exécution, 3 min avec la reconstruction de la stack | job `e2e`, `check-urls` et image nginx compris |
 

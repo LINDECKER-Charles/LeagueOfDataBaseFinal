@@ -70,13 +70,10 @@ public sealed class SitemapWindowTests
         Assert.DoesNotContain(SitemapOf(Listed[2]), index);
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(SeoOptions.DefaultSitemapVersionWindow)]
-    [InlineData(500)]
-    public void AcceptsAnyWindowFromZero(int window)
+    [Fact]
+    public void AcceptsAWindowOfZero()
     {
-        var result = Validator.Validate(null, new SeoOptions { SitemapVersionWindow = window });
+        var result = Validator.Validate(null, new SeoOptions { SitemapVersionWindow = 0 });
 
         Assert.True(result.Succeeded, result.FailureMessage);
     }

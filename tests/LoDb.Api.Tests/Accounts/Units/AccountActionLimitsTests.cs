@@ -6,13 +6,12 @@ using LoDb.Api.Modules.Billing.Purchases;
 using LoDb.Api.Modules.Builds.Http;
 using LoDb.Api.Modules.PublicApi.Keys;
 using LoDb.Api.Tests.Accounts.Support;
-using LoDb.Testing;
+using LoDb.Api.Tests.Hosting.Support;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Tests.Accounts.Units;
 
@@ -35,8 +34,6 @@ public sealed class AccountActionLimitsTests
 
     public static TheoryData<string, int> Limits => new()
     {
-        { nameof(PurchaseLimits.Checkout), 10 },
-        { nameof(ApiKeyLimits.Issue), 5 },
         { nameof(BuildLimits.Edit), 60 },
         { nameof(BuildLimits.Vote), 120 },
     };
@@ -96,18 +93,17 @@ public sealed class AccountActionLimitsTests
     }
 
     [Theory]
-    [InlineData("CheckoutsPerHour", "0")]
-    [InlineData("ApiKeyIssuesPerHour", "-1")]
-    [InlineData("BuildEditsPerHour", "1000001")]
-    [InlineData("VotesPerHour", "0")]
-    public async Task BoundOutOfRangeStopsTheHost(string setting, string value)
+    [InlineData(nameof(PurchaseLimits.Checkout), "CheckoutsPerHour", "0")]
+    [InlineData(nameof(ApiKeyLimits.Issue), "ApiKeyIssuesPerHour", "-1")]
+    [InlineData(nameof(BuildLimits.Edit), "BuildEditsPerHour", "1000001")]
+    [InlineData(nameof(BuildLimits.Vote), "VotesPerHour", "0")]
+    public void BoundOutOfRangeStopsTheHost(string name, string setting, string value)
     {
-        await using var factory = new ApiFactory
-        {
-            Settings = new Dictionary<string, string?> { [Section + setting] = value },
-        };
+        var limit = LimitNamed(name);
 
-        Assert.Throws<OptionsValidationException>(() => factory.Services);
+        StartupValidation.RefusalOf<AccountActionLimitOptions>(
+            builder => builder.Services.AddAccountActionLimit(limit),
+            new Dictionary<string, string?> { [Section + setting] = value });
     }
 
     private static AccountActionLimit LimitNamed(string name) => name switch

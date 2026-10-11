@@ -1,5 +1,7 @@
-using LoDb.Testing;
-using Microsoft.Extensions.Options;
+using System.Globalization;
+using LoDb.Api.Modules.Builds;
+using LoDb.Api.Modules.Builds.Votes;
+using LoDb.Api.Tests.Hosting.Support;
 
 namespace LoDb.Api.Tests.Builds;
 
@@ -11,15 +13,23 @@ public sealed class VoteOptionsTests
     private const string MinimumAccountAge = "LoDb:Builds:Votes:MinimumAccountAge";
 
     [Theory]
-    [InlineData("-01:00:00")]
-    [InlineData("31.00:00:00")]
-    public async Task AgeOutOfRangeStopsTheHost(string age)
+    [InlineData("-00:00:00.0000001", false)]
+    [InlineData("00:00:00", true)]
+    [InlineData("30.00:00:00", true)]
+    [InlineData("30.00:00:00.0000001", false)]
+    public void AgeIsUsableFromZeroToThirtyDays(string age, bool isUsable)
     {
-        await using var factory = new ApiFactory
+        var options = new VoteOptions
         {
-            Settings = new Dictionary<string, string?> { [MinimumAccountAge] = age },
+            MinimumAccountAge = TimeSpan.Parse(age, CultureInfo.InvariantCulture),
         };
 
-        Assert.Throws<OptionsValidationException>(() => factory.Services);
+        Assert.Equal(isUsable, options.HasUsableMinimumAge());
     }
+
+    [Fact]
+    public void AgeOutOfRangeStopsTheHost() =>
+        StartupValidation.RefusalOf<VoteOptions>(
+            static builder => builder.Services.AddBuilds(builder.Configuration),
+            new Dictionary<string, string?> { [MinimumAccountAge] = "31.00:00:00" });
 }

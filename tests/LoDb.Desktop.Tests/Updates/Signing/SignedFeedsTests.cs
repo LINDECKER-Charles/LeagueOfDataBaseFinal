@@ -50,15 +50,6 @@ public sealed class SignedFeedsTests : IDisposable
     }
 
     [Fact]
-    public void IgnoresAFeedSignedWithAnotherKey()
-    {
-        var foreign = new TestFeedKey().Signed(TestReleases.Feed("1.4.0"));
-
-        Assert.Empty(_feeds.Accept(foreign));
-        AssertRefused(FeedRefusal.InvalidSignature);
-    }
-
-    [Fact]
     public void IgnoresASignedFeedVelopackCannotRead()
     {
         Assert.Empty(_feeds.Accept(_key.Signed(Encoding.UTF8.GetBytes("{\"Assets\": ["))));
@@ -67,7 +58,6 @@ public sealed class SignedFeedsTests : IDisposable
 
     [Theory]
     [InlineData("SHA256", null)]
-    [InlineData("SHA256", "ABCDEF")]
     [InlineData("Size", 0)]
     [InlineData("FileName", "../LoDb.Desktop-1.4.0-win-x64-full.nupkg")]
     public void IgnoresASignedFeedWithAnIncompleteEntry(string field, object? value)

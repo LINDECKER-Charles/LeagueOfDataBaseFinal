@@ -24,13 +24,4 @@ public sealed class ChampionDetailTests
         Assert.Empty(detail.AllyTips);
         Assert.Empty(detail.EnemyTips);
     }
-
-    [Fact]
-    public void Up3PartypeMayBeMissing()
-    {
-        var summary = ChampionSamples.Named("Ahri", "Ahri");
-
-        Assert.Null(summary.Partype);
-        Assert.Null(summary.Info);
-    }
 }

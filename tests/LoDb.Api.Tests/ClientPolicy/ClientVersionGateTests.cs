@@ -25,12 +25,11 @@ public sealed class ClientVersionGateTests(PostgresContainerFixture postgres)
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
-    [Theory]
-    [InlineData("desktop/1.3.9")]
-    [InlineData("desktop/1.4.0-beta.2")]
-    [InlineData("desktop/0.9.0")]
-    public async Task AppBelowTheMinimumIsToldToUpgrade(string client)
+    // The ordering of versions, pre-releases included, is ClientVersionTests'.
+    [Fact]
+    public async Task AppBelowTheMinimumIsToldToUpgrade()
     {
+        const string client = "desktop/1.3.9";
         await App.SeedAsync(ClientPolicyApp.Policy(AppPlatform.Desktop, "1.4.0", "1.5.2"));
         using var counter = App.UpgradeRequiredCounter();
         using var http = App.Client();
@@ -52,8 +51,6 @@ public sealed class ClientVersionGateTests(PostgresContainerFixture postgres)
 
     [Theory]
     [InlineData("desktop/1.4.0")]
-    [InlineData("desktop/1.4.1-beta.1")]
-    [InlineData("desktop/1.10.0")]
     [InlineData("android/1.0.0")]
     public async Task AppAtOrAboveItsMinimumGoesThrough(string client)
     {
@@ -69,9 +66,7 @@ public sealed class ClientVersionGateTests(PostgresContainerFixture postgres)
 
     [Theory]
     [InlineData(null)]
-    [InlineData("web/0.0.1")]
     [InlineData("desktop/old")]
-    [InlineData("desktop")]
     public async Task RequestWithoutAReadableClientIsNeverConcerned(string? client)
     {
         await App.SeedAsync(ClientPolicyApp.Policy(AppPlatform.Desktop, "99.0.0", "99.0.0"));

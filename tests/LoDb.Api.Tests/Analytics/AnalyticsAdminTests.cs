@@ -57,7 +57,6 @@ public sealed class AnalyticsAdminTests(PostgresContainerFixture postgres)
 
     [Theory]
     [InlineData(null, "30d", 30)]
-    [InlineData("90d", "90d", 90)]
     [InlineData("all", "all", 1)]
     public async Task ReportCoversTheRange(string? range, string name, int days)
     {

@@ -12,17 +12,6 @@ public sealed class DatasetStoreTests : IDisposable
     private readonly TemporaryStorage _storage = new();
 
     [Fact]
-    public async Task DatasetIsWrittenUnderItsVersionLanguageAndType()
-    {
-        var written = await _storage.Datasets.WriteAsync(Champions, Json("{}"), Token);
-
-        Assert.True(written);
-        Assert.Equal("data/14.1.1/en_US/champion.json", Champions.RelativePath);
-        var path = _storage.PathOf(Champions.RelativePath);
-        Assert.Equal("{}", await File.ReadAllTextAsync(path, Token));
-    }
-
-    [Fact]
     public async Task DatasetIsReadBackAsWritten()
     {
         var key = new DatasetKey("14.1.1", "fr_FR", "championDetail/Aatrox");

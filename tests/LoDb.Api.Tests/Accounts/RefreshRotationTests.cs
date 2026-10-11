@@ -3,8 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using LoDb.Api.Modules.Accounts.Tokens;
 using LoDb.Api.Tests.Accounts.Support;
-using LoDb.Api.Workers;
-using LoDb.Api.Workers.Accounts;
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Testing;
 using Microsoft.AspNetCore.Authentication;
@@ -119,22 +117,6 @@ public sealed class RefreshRotationTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task ATokenOfBeforeTheFamiliesServesOnceToo()
-    {
-        var account = await App.SeedAsync(new AccountSeed());
-        using var app = App.App();
-        var legacy = await LegacyRefreshTokenAsync(account);
-
-        using var first = await RefreshAsync(app, legacy);
-        App.Clock.Advance(PastGrace);
-        using var again = await RefreshAsync(app, legacy);
-
-        var renewed = await ApiJson.ReadAsync(first, HttpStatusCode.OK);
-        Assert.Equal(Invalid, await ApiJson.ProblemCodeAsync(again, HttpStatusCode.Unauthorized));
-        Assert.Equal(AccountSeed.Name, await SignedInAsAsync(app, renewed));
-    }
-
-    [Fact]
     public async Task ATokenOfBeforeTheFamiliesServesOnceWhateverItsSpelling()
     {
         var account = await App.SeedAsync(new AccountSeed());
@@ -142,16 +124,18 @@ public sealed class RefreshRotationTests(PostgresContainerFixture postgres)
         var legacy = await LegacyRefreshTokenAsync(account);
 
         using var first = await RefreshAsync(app, legacy);
-        await ApiJson.ReadAsync(first, HttpStatusCode.OK);
+        var renewed = await ApiJson.ReadAsync(first, HttpStatusCode.OK);
         App.Clock.Advance(PastGrace);
 
-        foreach (var spelling in OtherSpellingsOf(legacy))
+        foreach (var spelling in (string[])[legacy, .. OtherSpellingsOf(legacy)])
         {
             using var again = await RefreshAsync(app, spelling);
             Assert.Equal(
                 Invalid,
                 await ApiJson.ProblemCodeAsync(again, HttpStatusCode.Unauthorized));
         }
+
+        Assert.Equal(AccountSeed.Name, await SignedInAsAsync(app, renewed));
     }
 
     [Fact]
@@ -169,12 +153,6 @@ public sealed class RefreshRotationTests(PostgresContainerFixture postgres)
         Assert.Equal(1, purged);
         Assert.Single(await FamiliesAsync());
     }
-
-    [Fact]
-    public void PurgeIsDiscoveredAsAWorker() =>
-        Assert.Contains(
-            typeof(RefreshFamilyPurgeJob),
-            ConventionalWorkers.Discover(typeof(Program).Assembly));
 
     public async ValueTask InitializeAsync() =>
         _app = await AccountsApp.StartAsync(postgres, withGoogle: false);

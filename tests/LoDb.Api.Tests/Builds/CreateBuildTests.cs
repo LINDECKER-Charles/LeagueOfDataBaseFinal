@@ -122,24 +122,6 @@ public sealed partial class CreateBuildTests(BuildsApp app)
     }
 
     [Fact]
-    public async Task StructureRefusalsAreTheValidatorCodes()
-    {
-        using var browser = await app.SignInAsync(await app.SeedAsync());
-        var body = BuildCalls.ValidBody();
-        var structure = BuildCalls.Structure(body);
-        structure["championId"] = "Nobody";
-        structure["steps"] = new JsonArray(BuildCalls.Step(new string('l', 41), null, "999999"));
-
-        using var response = await browser.PostAsync(BuildCalls.Builds, body);
-
-        var codes = (await ApiJson.FieldErrorsAsync(response))["structure"];
-        Assert.Contains("champion.unknown", codes);
-        Assert.Contains("steps.label", codes);
-        Assert.Contains("steps.item_unknown", codes);
-        Assert.DoesNotContain("steps.item_mode", codes);
-    }
-
-    [Fact]
     public async Task ItemsTheModeMapLacksAreNamedInTheEditorLanguage()
     {
         using var browser = await app.SignInAsync(await app.SeedAsync());
@@ -156,28 +138,12 @@ public sealed partial class CreateBuildTests(BuildsApp app)
     }
 
     [Fact]
-    public async Task ClassicItemsAreRefusedAndQualified()
-    {
-        using var browser = await app.SignInAsync(await app.SeedAsync());
-        var body = BuildCalls.ValidBody();
-        body["gameMode"] = "aram";
-        BuildCalls.Structure(body)["steps"] = new JsonArray(
-            BuildCalls.Step("Start", null, "771004", "2003"));
-
-        using var response = await browser.PostAsync(BuildCalls.Builds, body);
-
-        Assert.Equal(["Faerie Charm [771004]"], await UnavailableAsync(response));
-    }
-
-    [Theory]
-    [InlineData("\"gameMode\":\"urf\"")]
-    [InlineData("\"isPublic\":\"yes\"")]
-    public async Task MalformedBodyIsABadRequest(string field)
+    public async Task UnknownGameModeIsABadRequest()
     {
         using var browser = await app.SignInAsync(await app.SeedAsync());
         using var request = browser.Post(BuildCalls.Builds);
         request.Content = new StringContent(
-            $$"""{"name":"Valid name",{{field}}}""",
+            """{"name":"Valid name","gameMode":"urf"}""",
             Encoding.UTF8,
             "application/json");
 

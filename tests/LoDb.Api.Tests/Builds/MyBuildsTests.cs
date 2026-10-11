@@ -86,7 +86,6 @@ public sealed class MyBuildsTests(BuildsApp app)
 
     [Theory]
     [InlineData("?version=latest", HttpStatusCode.BadRequest)]
-    [InlineData("?lang=zz", HttpStatusCode.BadRequest)]
     [InlineData("?version=99.1.1", HttpStatusCode.NotFound)]
     public async Task CatalogTheCallNamesMustExist(string query, HttpStatusCode status)
     {

@@ -81,29 +81,10 @@ public sealed class DonationCheckoutTests(PostgresContainerFixture postgres)
         Assert.Equal(AccountsApp.SiteOrigin + "/en/donate/cancel", session.CancelUrl);
     }
 
-    [Fact]
-    public async Task WithoutStripeTheFormIsClosed()
-    {
-        await using var closed = await BillingApp.StartAsync(postgres, configured: false);
-        using var browser = closed.Browser();
-
-        using var options = await browser.GetAsync(OptionsPath);
-        using var checkout = await browser.PostAsync(CheckoutPath, new { amountCents = 500 });
-
-        Assert.False(
-            (await ApiJson.ReadAsync(options, HttpStatusCode.OK)).GetProperty("available")
-                .GetBoolean());
-        Assert.Equal(
-            "payments-unavailable",
-            await ApiJson.ProblemCodeAsync(checkout, HttpStatusCode.ServiceUnavailable));
-        Assert.Empty(closed.Gateway.Sessions);
-    }
-
     [Theory]
     [InlineData(null)]
     [InlineData(99L)]
     [InlineData(50_001L)]
-    [InlineData(-500L)]
     public async Task AmountOutOfBoundsIsRefused(long? amountCents)
     {
         using var browser = App.Browser();

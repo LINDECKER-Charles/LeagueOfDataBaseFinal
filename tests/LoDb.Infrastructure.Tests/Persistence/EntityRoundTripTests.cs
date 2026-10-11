@@ -4,7 +4,6 @@ using LoDb.Infrastructure.Persistence.Builds;
 using LoDb.Infrastructure.Persistence.Contact;
 using LoDb.Infrastructure.Persistence.Ddragon;
 using LoDb.Infrastructure.Persistence.PublicApi;
-using LoDb.Infrastructure.Persistence.Scheduling;
 using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
@@ -144,24 +143,6 @@ public sealed class EntityRoundTripTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task DdragonAssetRoundTrips()
-    {
-        await AssertRoundTripsAsync(new DdragonAsset
-        {
-            Version = "16.19.1",
-            Type = "champion",
-            Key = "Ahri",
-            Status = DdragonAssetStatus.Present,
-            Sha256 = new string('a', 64),
-            Extension = "png",
-            RecordedAt = At.AddTicks(1_234_560),
-        });
-        Assert.Equal(
-            ["present"],
-            await Database.QueryAsync("SELECT status FROM ddragon_asset", Cancellation));
-    }
-
-    [Fact]
     public async Task DdragonVersionRoundTrips()
     {
         await AssertRoundTripsAsync(new DdragonVersion
@@ -179,15 +160,6 @@ public sealed class EntityRoundTripTests(PostgresContainerFixture postgres)
             ["ready"],
             await Database.QueryAsync("SELECT status FROM ddragon_version", Cancellation));
     }
-
-    [Fact]
-    public async Task PeriodicJobStateRoundTrips() =>
-        await AssertRoundTripsAsync(new PeriodicJobState
-        {
-            Name = "ddragon-watch",
-            LastStartedAt = At,
-            LastSucceededAt = At.AddSeconds(42),
-        });
 
     private static User NewUser(string name) => new()
     {

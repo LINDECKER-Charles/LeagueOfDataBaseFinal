@@ -3,15 +3,13 @@ using System.Text;
 using LoDb.Api.Modules.Billing;
 using LoDb.Api.Modules.Billing.Checkout;
 using LoDb.Domain.Languages;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
 
 namespace LoDb.Api.Tests.Billing;
 
 /// <summary>
 /// The Stripe gateway on the wire, Stripe's API answered by a handler of the test: the session
-/// goes as the form Stripe reads, under the secret key, and whatever goes wrong comes back as
+/// goes under the secret key with an idempotency key, and whatever goes wrong comes back as
 /// a gateway failure.
 /// </summary>
 public sealed class StripeGatewayTests
@@ -22,8 +20,10 @@ public sealed class StripeGatewayTests
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
+    // How the session's fields are encoded is Stripe.net's; what they hold is
+    // CheckoutSessionsTests'.
     [Fact]
-    public async Task SessionIsPostedAsStripesForm()
+    public async Task SessionIsPostedUnderTheSecretKeyOnce()
     {
         using var stripe = new StripeApi(HttpStatusCode.OK, Session(PageUrl));
         var gateway = Gateway(stripe);
@@ -35,17 +35,6 @@ public sealed class StripeGatewayTests
         Assert.Equal((HttpMethod.Post, SessionsUrl), (request.Method, request.Url));
         Assert.Equal("Bearer " + SecretKey, request.Authorization);
         Assert.False(string.IsNullOrEmpty(request.IdempotencyKey));
-        var form = QueryHelpers.ParseQuery(request.Body);
-        Assert.Equal("payment", Field(form, "mode"));
-        Assert.Equal("donate", Field(form, "submit_type"));
-        Assert.Equal("donation", Field(form, "metadata[kind]"));
-        Assert.Equal("lodb-donate", Field(form, "metadata[source]"));
-        Assert.Equal("eur", Field(form, "line_items[0][price_data][currency]"));
-        Assert.Equal("1500", Field(form, "line_items[0][price_data][unit_amount]"));
-        Assert.Equal("1", Field(form, "line_items[0][quantity]"));
-        Assert.Equal(
-            "https://lodb.test/fr/donate/success?session_id={CHECKOUT_SESSION_ID}",
-            Field(form, "success_url"));
     }
 
     [Fact]
@@ -101,15 +90,11 @@ public sealed class StripeGatewayTests
 
     private static string Json(string? text) => text is null ? "null" : $"\"{text}\"";
 
-    private static string? Field(Dictionary<string, StringValues> form, string name) =>
-        form.TryGetValue(name, out var value) ? value.ToString() : null;
-
     private sealed record SentRequest(
         HttpMethod Method,
         string Url,
         string? Authorization,
-        string? IdempotencyKey,
-        string Body);
+        string? IdempotencyKey);
 
     // Stripe's API: it answers every call the same, or fails as a network down when the
     // status is null, and keeps what it was sent.
@@ -124,7 +109,7 @@ public sealed class StripeGatewayTests
             return new HttpClient(this, disposeHandler: false);
         }
 
-        protected override async Task<HttpResponseMessage> SendAsync(
+        protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
@@ -134,19 +119,16 @@ public sealed class StripeGatewayTests
                 request.Headers.Authorization?.ToString(),
                 request.Headers.TryGetValues("Idempotency-Key", out var keys)
                     ? keys.Single()
-                    : null,
-                request.Content is null
-                    ? string.Empty
-                    : await request.Content.ReadAsStringAsync(cancellationToken)));
+                    : null));
             if (status is not { } code)
             {
                 throw new HttpRequestException("Stripe cannot be reached in this test.");
             }
 
-            return new HttpResponseMessage(code)
+            return Task.FromResult(new HttpResponseMessage(code)
             {
                 Content = new StringContent(body, Encoding.UTF8, "application/json"),
-            };
+            });
         }
     }
 }

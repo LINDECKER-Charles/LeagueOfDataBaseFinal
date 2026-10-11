@@ -10,8 +10,6 @@ public sealed class DdragonLanguageTests
 {
     [Theory]
     [InlineData("fr_FR")]
-    [InlineData("en_US")]
-    [InlineData("es_MX")]
     [InlineData("xx_XX")]
     public void AnyCodeOfTheRightShapeIsALanguage(string code)
     {

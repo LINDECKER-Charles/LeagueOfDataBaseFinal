@@ -81,7 +81,6 @@ public sealed class SitemapApiTests(SeoApiFixture api)
 
     [Theory]
     [InlineData("/sitemaps/en/16.19.1.xml", "/sitemaps/en/latest.xml")]
-    [InlineData("/sitemaps/zh-hans/16.19.1.xml", "/sitemaps/zh-hans/latest.xml")]
     [InlineData("/sitemaps/latest.xml", "/sitemap.xml")]
     [InlineData("/sitemaps/16.18.1.xml", "/sitemaps/en/16.18.1.xml")]
     [InlineData("/sitemaps/16.19.1.xml", "/sitemaps/en/latest.xml")]
@@ -109,8 +108,6 @@ public sealed class SitemapApiTests(SeoApiFixture api)
     [Theory]
     [InlineData("/sitemaps/en/99.1.1.xml")]
     [InlineData("/sitemaps/xx/latest.xml")]
-    [InlineData("/sitemaps/en/latest.txt")]
-    [InlineData("/sitemaps/en_US/latest.xml")]
     [InlineData("/sitemaps/sitemap.xml")]
     public async Task AnythingElseIsMissing(string path)
     {

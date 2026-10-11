@@ -13,11 +13,12 @@ namespace LoDb.Infrastructure.Tests.Storage;
 /// </summary>
 public sealed class StorageRegistrationTests
 {
+    private const string RelativeRoot = "relative/storage";
+
+    // The rule is "not blank and fully qualified": one blank and one relative root.
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
-    [InlineData("  ")]
-    [InlineData("relative/storage")]
+    [InlineData(RelativeRoot)]
     public void AStoreIsNotResolvedWithoutAnAbsoluteRoot(string? root)
     {
         using var services = TemporaryStorage.Build(root);
@@ -26,15 +27,11 @@ public sealed class StorageRegistrationTests
         Assert.Throws<OptionsValidationException>(services.GetRequiredService<IDatasetStore>);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("  ")]
-    [InlineData("relative/storage")]
-    public async Task TheHostDoesNotStartWithoutAnAbsoluteRoot(string? root)
+    [Fact]
+    public async Task TheHostDoesNotStartWithoutAnAbsoluteRoot()
     {
         var builder = Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings());
-        builder.Configuration[TemporaryStorage.RootKey] = root;
+        builder.Configuration[TemporaryStorage.RootKey] = RelativeRoot;
         builder.Services.AddLoDbStorage(builder.Configuration);
         using var host = builder.Build();
 

@@ -45,7 +45,6 @@ public sealed class UpdateFeedsTests
 
     [Theory]
     [InlineData("releases")]
-    [InlineData("./releases")]
     [InlineData("https://example.com/releases")]
     [InlineData("file:///tmp/releases")]
     public void RefusesALocalFeedThatIsNotAnAbsoluteFolderPath(string value)

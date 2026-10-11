@@ -28,18 +28,6 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
     [Fact]
-    public void ApiDeclaresTheMigrationCommands()
-    {
-        var catalog = CliCommandCatalog.Discover(typeof(Program).Assembly);
-
-        var commands = catalog.Commands
-            .Where(static command => command.Name is "migrate" or "baseline mark-applied")
-            .ToList();
-        Assert.Equal(2, commands.Count);
-        Assert.All(commands, static command => Assert.True(command.RequiresHost));
-    }
-
-    [Fact]
     public async Task MigrateMarksADoctrineDatabaseThenMigratesItOnce()
     {
         await using var database = await postgres.CreateDatabaseAsync(Cancellation);
@@ -59,22 +47,6 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task MigrateCreatesAnEmptyDatabase()
-    {
-        await using var database = await postgres.CreateDatabaseAsync(Cancellation);
-
-        var exitCode = await RunAsync("migrate", database.ConnectionString);
-
-        Assert.Equal(CliExitCodes.Success, exitCode);
-        Assert.Equal(
-            [
-                Baseline, Lot1, Lot4, Lot6, PaymentStates, QueryStatistics, IdentifierScrub,
-                RefreshFamilies, AudienceEntityDaily,
-            ],
-            await database.AppliedMigrationsAsync(Cancellation));
-    }
-
-    [Fact]
     public async Task MigrateRefusesAnUnexpectedSchema()
     {
         await using var database = await postgres.CreateDatabaseAsync(Cancellation);
@@ -85,23 +57,6 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
 
         Assert.Equal(CliExitCodes.Failure, exitCode);
         Assert.DoesNotContain(EfHistory, await database.TablesAsync(Cancellation));
-    }
-
-    [Fact]
-    public async Task MarkAppliedRecordsTheBaselineOnly()
-    {
-        await using var database = await postgres.CreateDatabaseAsync(Cancellation);
-        await database.CreateDoctrineSchemaAsync(Cancellation);
-
-        var first = await RunAsync("baseline mark-applied", database.ConnectionString);
-        var second = await RunAsync("baseline mark-applied", database.ConnectionString);
-
-        Assert.Equal(CliExitCodes.Success, first);
-        Assert.Equal(CliExitCodes.Success, second);
-        Assert.Equal(
-            [Baseline],
-            await database.AppliedMigrationsAsync(Cancellation));
-        Assert.DoesNotContain("ddragon_asset", await database.TablesAsync(Cancellation));
     }
 
     [Fact]

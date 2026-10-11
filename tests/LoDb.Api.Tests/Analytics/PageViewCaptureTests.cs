@@ -54,13 +54,11 @@ public sealed class PageViewCaptureTests(AnalyticsApiFixture api)
             report.TopEntities.Select(static rank => rank.Name).Order(StringComparer.Ordinal));
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("fr/champions")]
-    [InlineData("//evil.example/fr")]
-    public async Task MirrorWithoutAPageAddressIsRefused(string? target)
+    // Which targets read as a page address is CaptureRoutesTests'.
+    [Fact]
+    public async Task MirrorWithoutAPageAddressIsRefused()
     {
-        using var response = await api.MirrorAsync(target);
+        using var response = await api.MirrorAsync("//evil.example/fr");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -80,7 +78,6 @@ public sealed class PageViewCaptureTests(AnalyticsApiFixture api)
     [InlineData("{\"path\":42}")]
     [InlineData("{\"route\":\"/fr/items\"}")]
     [InlineData("{not json")]
-    [InlineData("")]
     public async Task BeaconWithoutAPageAddressIsRefused(string body)
     {
         using var content = new StringContent(body, Encoding.UTF8, "text/plain");

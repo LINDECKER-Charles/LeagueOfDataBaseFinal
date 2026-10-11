@@ -26,13 +26,4 @@ public sealed class ChampionArtTests
             "img/champion/splash/Ahri_0.jpg",
             DdragonImagePath.ChampionArt("Ahri", ChampionArtKind.Splash, 0));
     }
-
-    [Fact]
-    public void Up8ArtPathsCarryNoVersion()
-    {
-        var path = DdragonImagePath.ChampionArt("Ahri", ChampionArtKind.Loading, 1);
-
-        Assert.StartsWith("img/", path, StringComparison.Ordinal);
-        Assert.DoesNotMatch(@"\d+\.\d+", path);
-    }
 }

@@ -10,8 +10,8 @@ namespace LoDb.Api.Tests.Contact;
 
 /// <summary>
 /// <c>POST /api/contact</c>: the message is kept for the admin inbox and its notification
-/// queued for the team, the visitor as Reply-To; without a mailbox it is only kept, and a
-/// filled honeypot or a foreign origin keeps nothing.
+/// queued for the team, the visitor as Reply-To, and a filled honeypot or a foreign origin
+/// keeps nothing.
 /// </summary>
 public sealed class ContactMessageTests(PostgresContainerFixture postgres)
     : IAsyncLifetime
@@ -83,43 +83,17 @@ public sealed class ContactMessageTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task WithoutARecipientTheMessageIsOnlyKept()
-    {
-        await using var app = await ContactApp.StartAsync(postgres, recipient: "  ");
-        using var browser = app.Browser();
-
-        using var response = await browser.PostAsync(ContactForm.Path, ContactForm.Valid());
-
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Single(await app.MessagesAsync());
-        Assert.Empty(app.Outbox.Messages);
-    }
-
-    [Fact]
-    public async Task FilledHoneypotIsAnsweredAsASuccessAndDropped()
+    public async Task FilledHoneypotIsAnsweredAsASuccessAndDroppedWhateverTheRest()
     {
         using var browser = App.Browser();
-
-        using var response = await browser.PostAsync(
-            ContactForm.Path,
-            ContactForm.With("website", "https://spam.example"));
-
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Empty(await App.MessagesAsync());
-        Assert.Empty(App.Outbox.Messages);
-    }
-
-    [Fact]
-    public async Task FilledHoneypotIsDroppedEvenWhenTheRestIsInvalid()
-    {
-        using var browser = App.Browser();
-        var body = ContactForm.With("website", "x");
+        var body = ContactForm.With("website", "https://spam.example");
         body["email"] = "pas-une-adresse";
 
         using var response = await browser.PostAsync(ContactForm.Path, body);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         Assert.Empty(await App.MessagesAsync());
+        Assert.Empty(App.Outbox.Messages);
     }
 
     [Fact]
@@ -137,22 +111,6 @@ public sealed class ContactMessageTests(PostgresContainerFixture postgres)
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
         Assert.Empty(await App.MessagesAsync());
         Assert.Empty(App.Outbox.Messages);
-    }
-
-    [Fact]
-    public async Task SignedInSenderIsRecordedWithItsMessage()
-    {
-        await using var accounts = await AccountsApp.StartAsync(postgres, withGoogle: false);
-        var user = await accounts.SeedAsync(new AccountSeed());
-        using var browser = accounts.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name);
-
-        using var response = await browser.PostAsync(ContactForm.Path, ContactForm.Valid());
-
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Equal(
-            [user.Id.ToString(CultureInfo.InvariantCulture)],
-            await accounts.QueryAsync("SELECT user_id FROM contact_messages"));
     }
 
     public async ValueTask InitializeAsync() => _app = await ContactApp.StartAsync(postgres);

@@ -25,18 +25,12 @@ public sealed class Argon2PasswordsTests
 
     private static readonly User Anyone = new() { Roles = [] };
 
-    // Changes to the parameters of the target, named for the display of the theory.
+    // Changes to the parameters of the target, named for the display of the theory. The
+    // target itself, a stronger hash, argon2i, two lanes and less memory are PHP's own hashes
+    // (PhpHashesTests) or the target's (MigratingPasswordHasherTests).
     private static readonly Dictionary<string, Action<Argon2Config>> Changes = new()
     {
-        ["target"] = static _ => { },
-        ["more memory and passes"] = static config =>
-            (config.MemoryCost, config.TimeCost) =
-                (Argon2Passwords.MemoryCostKib * 2, Argon2Passwords.TimeCost + 1),
-        ["argon2i"] = static config => config.Type = Argon2Type.DataIndependentAddressing,
         ["version 16"] = static config => config.Version = Argon2Version.Sixteen,
-        ["two lanes"] = static config => (config.Lanes, config.Threads) = (2, 2),
-        ["less memory"] = static config =>
-            config.MemoryCost = Argon2Passwords.MemoryCostKib / 2,
         ["one pass"] = static config => config.TimeCost = 1,
         ["argon2d"] = static config => config.Type = Argon2Type.DataDependentAddressing,
         ["more memory than PHP's default"] = static config =>
@@ -45,12 +39,7 @@ public sealed class Argon2PasswordsTests
 
     public static TheoryData<string, PasswordVerificationResult> Verdicts => new()
     {
-        { "target", PasswordVerificationResult.Success },
-        { "more memory and passes", PasswordVerificationResult.Success },
-        { "argon2i", PasswordVerificationResult.SuccessRehashNeeded },
         { "version 16", PasswordVerificationResult.SuccessRehashNeeded },
-        { "two lanes", PasswordVerificationResult.SuccessRehashNeeded },
-        { "less memory", PasswordVerificationResult.SuccessRehashNeeded },
         { "one pass", PasswordVerificationResult.SuccessRehashNeeded },
         { "argon2d", PasswordVerificationResult.Failed },
         { "more memory than PHP's default", PasswordVerificationResult.Failed },

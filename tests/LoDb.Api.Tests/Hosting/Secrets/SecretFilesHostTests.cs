@@ -1,36 +1,21 @@
 using LoDb.Api.Hosting.Secrets;
-using LoDb.Api.Modules.Billing;
 using LoDb.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
-using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Tests.Hosting.Secrets;
 
 /// <summary>
-/// The API host reads its secret settings from the files of its secrets folder: the options
-/// see the file over any other source, and a setting a check requires fails the start as it
-/// would if it were missing from the environment.
+/// The API host reads its secret settings from the files of its secrets folder: a setting a
+/// check requires fails the start as it would if it were missing from the environment, and
+/// the start names the settings read, never their values.
 /// </summary>
 public sealed class SecretFilesHostTests : IDisposable
 {
-    private const string WebhookSecret = BillingOptions.SectionName + ":StripeWebhookSecret";
     private const string GoogleClientId = "LoDb:Accounts:Google:ClientId";
     private const string GoogleClientSecret = "LoDb:Accounts:Google:ClientSecret";
 
     private readonly SecretFolder _folder = new();
-
-    [Fact]
-    public async Task OptionsReadTheFileOverTheSetting()
-    {
-        _folder.With(WebhookSecret, "whsec_from_file");
-        await using var factory = Factory(new() { [WebhookSecret] = "whsec_from_setting" });
-
-        var billing = factory.Services.GetRequiredService<IOptions<BillingOptions>>().Value;
-
-        Assert.Equal("whsec_from_file", billing.StripeWebhookSecret);
-    }
 
     [Fact]
     public async Task RequiredSecretLeftEmptyStopsTheHostAtStart()
@@ -58,6 +43,10 @@ public sealed class SecretFilesHostTests : IDisposable
     [Fact]
     public async Task StartNamesTheSettingsReadFromFilesWithoutTheirValues()
     {
+        const string StripeKey = "LoDb:Billing:StripeSecretKey";
+        const string MailPassword = "LoDb:Mail:Password";
+        const string Secret = "sk_live_never_logged";
+        _folder.With(StripeKey, Secret).With(MailPassword, Secret);
         var logger = new FakeLogger<SecretFilesLog>();
         var secretFiles = new SecretFileSet(
             _folder.Path,
@@ -66,11 +55,13 @@ public sealed class SecretFilesHostTests : IDisposable
         await new SecretFilesLog(secretFiles, logger).StartAsync(CancellationToken.None);
 
         var record = Assert.Single(logger.Collector.GetSnapshot());
-        Assert.Equal("hosting.secret_files.loaded", record.Id.Name);
-        Assert.Equal(LogLevel.Information, record.Level);
         Assert.Equal(
-            "2 settings read from secret files: LoDb:Billing:StripeSecretKey, LoDb:Mail:Password.",
-            record.Message);
+            ("hosting.secret_files.loaded", LogLevel.Information, "2"),
+            (record.Id.Name, record.Level, record.GetStructuredStateValue("Count")));
+        var settings = record.GetStructuredStateValue("Settings");
+        Assert.Contains(StripeKey, settings, StringComparison.Ordinal);
+        Assert.Contains(MailPassword, settings, StringComparison.Ordinal);
+        Assert.DoesNotContain(Secret, record.Message, StringComparison.Ordinal);
     }
 
     [Fact]

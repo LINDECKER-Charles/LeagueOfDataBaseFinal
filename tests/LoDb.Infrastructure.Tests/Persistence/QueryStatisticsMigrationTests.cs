@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LoDb.Infrastructure.Tests.Persistence;
 
 /// <summary>
-/// The migration of the query statistics: <c>pg_stat_statements</c> installed on a new
-/// database and on one at the previous migration, on a server that does not preload the
-/// library (as the tests' own), and removed by the rollback.
+/// The migration of the query statistics: <c>pg_stat_statements</c> installed on a database
+/// at the previous migration, on a server that does not preload the library (as the tests'
+/// own), and removed by the rollback. A new database runs the same <c>Up()</c>.
 /// </summary>
 public sealed class QueryStatisticsMigrationTests(PostgresContainerFixture postgres)
 {
@@ -17,16 +17,6 @@ public sealed class QueryStatisticsMigrationTests(PostgresContainerFixture postg
         "SELECT extname FROM pg_extension WHERE extname = 'pg_stat_statements'";
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
-
-    [Fact]
-    public async Task NewDatabaseGetsTheExtension()
-    {
-        await using var database = await postgres.CreateDatabaseAsync(Cancellation);
-
-        await database.MigrateAsync(Cancellation);
-
-        Assert.Single(await database.QueryAsync(InstalledSql, Cancellation));
-    }
 
     [Fact]
     public async Task DatabaseAtThePreviousMigrationGetsItAndTheRollbackRemovesIt()

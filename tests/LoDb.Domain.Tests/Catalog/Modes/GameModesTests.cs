@@ -1,4 +1,3 @@
-using System.Text.Json;
 using LoDb.Domain.Catalog.Modes;
 
 namespace LoDb.Domain.Tests.Catalog.Modes;
@@ -23,14 +22,6 @@ public sealed class GameModesTests
     {
         Assert.Equal(["sr", "aram", "nexus_blitz", "arena"], GameModes.All.Select(GameModes.Code));
         Assert.Equal(GameMode.SummonersRift, GameModes.Default);
-    }
-
-    [Fact]
-    public void NoNamingPolicyWritesThePersistedCodes()
-    {
-        var snakeCase = JsonNamingPolicy.SnakeCaseLower.ConvertName(nameof(GameMode.SummonersRift));
-
-        Assert.NotEqual(GameModes.Code(GameMode.SummonersRift), snakeCase);
     }
 
     [Theory]

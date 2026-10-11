@@ -6,35 +6,17 @@ namespace LoDb.Api.Tests.PublicApi.Behaviour;
 
 /// <summary>
 /// The billed requests reach <c>api_usage</c> in groups, on the day they were served, and
-/// none is lost to a failed write or to a shutdown; <c>/v1/usage</c> is never counted.
+/// none is lost to a failed write or to a shutdown. That <c>/v1/usage</c> is never counted is
+/// replayed by the recorded contract (<c>07-billing</c>).
 /// </summary>
 [Collection(V1Group.Name)]
 public sealed class MeteringTests(V1Server server)
 {
     private const string Profile = "/v1/profiles/PublicPlayer";
-    private const string Usage = "/v1/usage";
     private const int BillingId = 12;
     private const int TargetId = 13;
 
     private static readonly string Billing = V1Fixtures.Key("billing");
-
-    [Fact]
-    public async Task BilledRequestsAreCountedUsageIsNot()
-    {
-        await using var run = await server.StartAsync();
-
-        await AskAsync(run, Profile, HttpStatusCode.OK);
-        await AskAsync(run, "/v1/profiles/NobodyHere", HttpStatusCode.NotFound);
-        await AskAsync(run, "/v1/champions/Aatrox/builds?page=0", HttpStatusCode.BadRequest);
-        await AskAsync(run, Usage, HttpStatusCode.OK);
-        var before = await AskAsync(run, Usage, HttpStatusCode.OK);
-        await run.FlushUsageAsync();
-        var after = await AskAsync(run, Usage, HttpStatusCode.OK);
-
-        Assert.Equal(0, before.Body.GetProperty("used_this_month").GetInt64());
-        Assert.Equal(3, after.Body.GetProperty("used_this_month").GetInt64());
-        Assert.Equal([(run.SeedDay, "3")], await RowsAsync(run, BillingId));
-    }
 
     [Fact]
     public async Task ARequestCountsOnTheDayItWasServed()

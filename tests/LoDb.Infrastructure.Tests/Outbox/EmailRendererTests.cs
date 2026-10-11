@@ -12,17 +12,16 @@ namespace LoDb.Infrastructure.Tests.Outbox;
 /// </summary>
 public sealed class EmailRendererTests
 {
-    public static TheoryData<UiLocale> UntranslatedLocales =>
-        [.. UiLocales.All.Where(static locale => locale is not (UiLocale.En or UiLocale.Fr))];
-
-    public static TheoryData<EmailTemplate, UiLocale> EveryTemplateAndLocale
+    // The other locales get the English texts through EmailTexts.For: rendering them again
+    // would only repeat the English rows.
+    public static TheoryData<EmailTemplate, UiLocale> EveryTemplateAndTranslatedLocale
     {
         get
         {
             var data = new TheoryData<EmailTemplate, UiLocale>();
             foreach (var template in Enum.GetValues<EmailTemplate>())
             {
-                foreach (var locale in UiLocales.All)
+                foreach (var locale in EmailTexts.Translated)
                 {
                     data.Add(template, locale);
                 }
@@ -33,33 +32,17 @@ public sealed class EmailRendererTests
     }
 
     [Fact]
-    public void StoredLocaleChoosesTheTexts()
+    public void LocaleWithoutTextsFallsBackToEnglish()
     {
-        var french = Render(EmailTemplate.ConfirmEmail, UiLocale.Fr, OutboxHarness.AccountModel());
-        var english = Render(EmailTemplate.ConfirmEmail, UiLocale.En, OutboxHarness.AccountModel());
-
-        Assert.Equal("Confirmez votre adresse e-mail · LeagueOfDataBase", french.Subject);
-        Assert.Contains("<html lang=\"fr\"", french.Html, StringComparison.Ordinal);
-        Assert.Contains("Bienvenue, Faker", french.Text, StringComparison.Ordinal);
-        Assert.Contains("Ce lien expire dans 1 heure.", french.Text, StringComparison.Ordinal);
-        Assert.Equal("Confirm your email address · LeagueOfDataBase", english.Subject);
-        Assert.Contains("This link expires in 1 hour.", english.Text, StringComparison.Ordinal);
-        Assert.Equal("Faker", french.RecipientName);
-    }
-
-    [Theory]
-    [MemberData(nameof(UntranslatedLocales))]
-    public void LocaleWithoutTextsFallsBackToEnglish(UiLocale locale)
-    {
-        var email = Render(EmailTemplate.ResetPassword, locale, OutboxHarness.AccountModel());
+        var email = Render(EmailTemplate.ResetPassword, UiLocale.De, OutboxHarness.AccountModel());
 
         Assert.Equal("Reset your password · LeagueOfDataBase", email.Subject);
         Assert.Contains("<html lang=\"en\"", email.Html, StringComparison.Ordinal);
     }
 
     [Theory]
-    [MemberData(nameof(EveryTemplateAndLocale))]
-    public void EveryTemplateRendersInEveryLocale(EmailTemplate template, UiLocale locale)
+    [MemberData(nameof(EveryTemplateAndTranslatedLocale))]
+    public void EveryTemplateRendersInEveryTranslatedLocale(EmailTemplate template, UiLocale locale)
     {
         var model = template == EmailTemplate.ContactNotification
             ? OutboxHarness.ContactModel()
