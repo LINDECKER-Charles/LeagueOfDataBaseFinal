@@ -187,6 +187,11 @@ services:
       # Subnet of the external `edge` network: the only peer allowed to state the client
       # address. The deploy job reads it from the network and writes it to the host's .env.
       LODB_EDGE_CIDR: ${LODB_EDGE_CIDR:?LODB_EDGE_CIDR is required (subnet of the edge network)}
+      # What the edge sends in X-LoDb-Edge (labels below), which nginx then requires: any other
+      # container of `edge` reaches nginx too, without it. Generated once per host by the
+      # deploy job and kept in .deploy/secrets; in the environment rather than a file, since
+      # the edge's labels hold it anyway.
+      LODB_EDGE_SECRET: ${LODB_EDGE_SECRET:?LODB_EDGE_SECRET is required (set by the deploy job)}
       # 1 on staging: "X-Robots-Tag: noindex, nofollow" on the responses of the stack's edge
       # (snippets/security-headers.conf). The deploy job checks it per environment.
       LODB_NOINDEX: ${LODB_NOINDEX:-0}
@@ -207,11 +212,14 @@ services:
       - edge
     labels:
       # Two sites on the same container: the site and the API subdomain. Caddy keeps the
-      # Host header, which is how nginx tells them apart (sites/api.conf).
+      # Host header, which is how nginx tells them apart (sites/api.conf). It reaches nginx
+      # on its unprivileged port and sets X-LoDb-Edge, replacing whatever a client sent.
       caddy_0: ${CADDY_DOMAINS:?CADDY_DOMAINS is required (e.g. "test.example.com")}
-      caddy_0.reverse_proxy: "{{upstreams 80}}"
+      caddy_0.reverse_proxy: "{{upstreams 8080}}"
+      caddy_0.reverse_proxy.header_up: X-LoDb-Edge ${LODB_EDGE_SECRET:?LODB_EDGE_SECRET is required}
       caddy_1: ${API_CADDY_DOMAINS:?API_CADDY_DOMAINS is required (e.g. "api.test.example.com")}
-      caddy_1.reverse_proxy: "{{upstreams 80}}"
+      caddy_1.reverse_proxy: "{{upstreams 8080}}"
+      caddy_1.reverse_proxy.header_up: X-LoDb-Edge ${LODB_EDGE_SECRET:?LODB_EDGE_SECRET is required}
     # Twice the others' weight: under contention, the cached pages keep being served.
     cpu_shares: 2048
     deploy:
@@ -221,7 +229,8 @@ services:
           # (32 MiB each for the latest and the past patches' pages, 8 MiB for the bundles)
           # and of the rate zones is charged here, and so is the kernel's page cache of the
           # cached pages and blobs it serves, which fills whatever the limit leaves. Too
-          # tight, every cache HIT reads the disk again.
+          # tight, every cache HIT reads the disk again. Its tmpfs (compose.yaml, 64 MiB at
+          # most, a few hundred KiB in use) counts here as well.
           memory: 256m
           cpus: "0.25"
           pids: 256
@@ -255,6 +264,11 @@ networks:
     ipam:
       config:
         - subnet: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
+  # Postgres's network (compose.yaml), which only the API and migrate share with it. Internal:
+  # no route leaves it. Its subnet stays Docker's choice: nothing trusts it, and the API's
+  # port answers it a 404 (KnownProxyNetworks is the stack's subnet above).
+  data:
+    internal: true
   # Shared ingress network, created once per host by infra-vps; the deploy job only
   # asserts that it exists.
   edge:

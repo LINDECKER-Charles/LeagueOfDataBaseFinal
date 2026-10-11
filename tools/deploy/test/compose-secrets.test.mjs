@@ -16,7 +16,11 @@ const DATABASE_PASSWORD_SETTING = 'LoDb__Database__Password';
 const POSTGRES_PASSWORD_FILE = '/run/secrets/postgres-password';
 const REVISION_LABEL = 'league-of-data-base.secrets-revision';
 // Written by the deploy job on the host (configuration.md); Compose requires it.
-const HOST_ADDITIONS = { LODB_EDGE_CIDR: '172.18.0.0/16', LODB_STACK_SUBNET: '10.231.1.0/24' };
+const HOST_ADDITIONS = {
+  LODB_EDGE_CIDR: '172.18.0.0/16',
+  LODB_STACK_SUBNET: '10.231.1.0/24',
+  LODB_EDGE_SECRET: '5e'.repeat(32),
+};
 
 const hasCompose = spawnSync('docker', ['compose', 'version'], { encoding: 'utf8' }).status === 0;
 const workspace = mkdtempSync(join(tmpdir(), 'lodb-compose-secrets-'));

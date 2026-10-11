@@ -89,7 +89,7 @@ reconstruisent.
 
 | Service | Rôle | Port hôte | Variable |
 |---|---|---|---|
-| `nginx` | point d'entrée : site, sous-domaine `api.`, `/cdn/blobs/` | 18080 | `LODB_HTTP_PORT` |
+| `nginx` | point d'entrée : site, sous-domaine `api.`, `/cdn/blobs/` (8080 dans le réseau) | 18080 | `LODB_HTTP_PORT` |
 | `api` | `LoDb.Api` (8080 dans le réseau ; métriques sur 9464, jamais publié) | 18081 | `LODB_API_PORT` |
 | `web-ssr` | serveur SSR Angular (4000 dans le réseau) | 18082 | `LODB_SSR_PORT` |
 | `postgres` | PostgreSQL 17, base `lodb` (utilisateur et mot de passe `lodb` en dev) | 15432 | `LODB_PG_PORT` |

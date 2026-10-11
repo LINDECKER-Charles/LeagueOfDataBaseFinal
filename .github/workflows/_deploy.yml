@@ -276,6 +276,13 @@ jobs:
                 secret_set "$key" || fail "$key is required in prod."
               done
             fi
+            # The edge's secret: generated on this host once the checks pass (below), then kept.
+            # One left malformed stops the deploy here, its value never printed.
+            edge_secret_file=.deploy/secrets/LODB_EDGE_SECRET
+            if [ -e "$edge_secret_file" ]; then
+              [[ "$(cat "$edge_secret_file")" =~ ^[0-9a-f]{64}$ ]] \
+                || fail "$edge_secret_file must hold 64 hexadecimal digits; remove it to renew."
+            fi
 
             # The healthchecks of compose.yaml use start_interval: Docker Engine 25 or later.
             engine_api="$(docker version --format '{{.Server.APIVersion}}')"
@@ -387,6 +394,18 @@ jobs:
             echo "COMPOSE_FILE=$COMPOSE_FILE" >> .env
             sed -i '/^LODB_STACK_SUBNET=/d' .env
             echo "LODB_STACK_SUBNET=$STACK_SUBNET" >> .env
+            # The value the edge sends nginx in X-LoDb-Edge, without which nginx refuses a
+            # request: other containers of `edge` reach nginx too. Generated here once, never
+            # in ENV_*, kept across deploys; Compose hands it to nginx and to the edge's labels
+            # from the .env. A line of ENV_* that names it is replaced.
+            if [ ! -e "$edge_secret_file" ]; then
+              command -v openssl >/dev/null || fail "openssl is required for the edge's secret."
+              staged="$(mktemp .deploy/secrets/.LODB_EDGE_SECRET.XXXXXX)"
+              openssl rand -hex 32 > "$staged"
+              mv "$staged" "$edge_secret_file"
+            fi
+            sed -i '/^LODB_EDGE_SECRET=/d' .env
+            echo "LODB_EDGE_SECRET=$(cat "$edge_secret_file")" >> .env
             # The API and the renderer answer, and believe X-Forwarded-*, from this subnet
             # alone. Compose drops a `!reset` that follows another file setting the same
             # service's environment: compose.yaml's private ranges, which hold the shared
@@ -480,9 +499,19 @@ jobs:
             }
             canonical="$(env_value LODB_CANONICAL_HOST)"
             api_host="$(env_value API_CADDY_DOMAINS | one_per_line | head -n 1)"
+            # A request to nginx as the edge sends it: <host> <path> [wget options…], on nginx's
+            # port, with X-LoDb-Edge read from nginx's own environment by the container's shell:
+            # the value stays out of this script's command lines and of the job's log.
+            via_edge() {
+              local host="$1" path="$2"
+              shift 2
+              # Single-quoted on purpose: expanded by the container's shell, not this one.
+              docker compose exec -T nginx sh -c \
+                'exec wget --header "X-LoDb-Edge: $LODB_EDGE_SECRET" "$@"' \
+                sh "$@" --header "Host: $host" "http://127.0.0.1:8080$path"
+            }
             fetch() {
-              docker compose exec -T nginx wget -qO /dev/null --header "Host: $1" \
-                "http://127.0.0.1$2"
+              via_edge "$1" "$2" -qO /dev/null
             }
             fetch "$canonical" /healthz
             docker compose exec -T nginx wget -qO- http://lodb-api:8080/readyz
@@ -490,8 +519,12 @@ jobs:
             # A page rendered by the SSR server, then the API subdomain.
             fetch "$canonical" /en/
             fetch "$api_host" /healthz
-            robots="$(docker compose exec -T nginx wget -S -qO /dev/null \
-              --header "Host: $canonical" http://127.0.0.1/en/ 2>&1 \
+            # The same page without the edge's header: nginx refuses it.
+            refused="$(docker compose exec -T nginx wget -qO /dev/null \
+              --header "Host: $canonical" http://127.0.0.1:8080/en/ 2>&1 || true)"
+            [[ "$refused" == *" 403 "* ]] \
+              || fail "nginx answers a request without the edge's header: '$refused'."
+            robots="$(via_edge "$canonical" /en/ -S -qO /dev/null 2>&1 \
               | grep -i 'x-robots-tag' || true)"
             if [ "$EXPECTED_NOINDEX" = 1 ]; then
               [ -n "$robots" ] || fail "$TARGET must answer X-Robots-Tag: noindex."
@@ -519,9 +552,32 @@ jobs:
                 --filter label=com.docker.compose.project=edge \
                 --filter label=com.docker.compose.service=caddy
             }
+            # Through the edge, which sends nginx its header, two paths that nginx answers
+            # itself with a 404, one per site, both outside the staging login: a 403 there is
+            # nginx refusing the edge. The edge applies nginx's labels a few seconds after
+            # `up`, hence the retries.
+            edge_answers() {
+              local url
+              for url in "https://$canonical/cdn/blobs/edge-check" "https://$api_host/edge-check"
+              do
+                curl -sS --max-time 10 -o /dev/null -w '%{http_code} ' "$url" || true
+              done
+            }
+            finish() {
+              local answers=''
+              for _ in $(seq 1 12); do
+                answers="$(edge_answers)"
+                if [ "$answers" = '404 404 ' ]; then
+                  echo "The edge hands nginx its header."
+                  exit 0
+                fi
+                sleep 5
+              done
+              fail "Through the edge, nginx answers '$answers', not '404 404': check its labels."
+            }
             if assert_tls; then
               echo "TLS OK for all public domains."
-              exit 0
+              finish
             fi
             echo "TLS check failed — forcing the edge to retry certificate issuance…" >&2
             caddy_id="$(edge_caddy)"
@@ -531,7 +587,7 @@ jobs:
               sleep 5
               if assert_tls; then
                 echo "TLS recovered after edge reload."
-                exit 0
+                finish
               fi
             done
             echo "TLS still failing after edge reload. Check DNS, CAA, LE rate limits:" >&2

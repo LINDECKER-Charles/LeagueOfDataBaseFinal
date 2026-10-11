@@ -92,8 +92,10 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
    `10.231.2.0/24` en prod). Contrôles passés seulement, sépare `ENV_*` en place
    (`.deploy/secrets/`, `.env` en mode 600), supprime `.deploy/incoming.env` et le dossier
    temporaire, puis écrit dans le `.env` le sous-réseau d'`edge` (`LODB_EDGE_CIDR`, seul pair
-   dont nginx croit `X-Forwarded-For`) et celui de la stack ; s'arrête si la configuration
-   résolue fait croire à l'API ou au SSR un autre réseau que celui-là.
+   dont nginx croit `X-Forwarded-For`), celui de la stack et la valeur de l'en-tête que
+   l'edge envoie à nginx (`LODB_EDGE_SECRET`, générée au premier déploiement dans
+   `.deploy/secrets/`, jamais dans `ENV_*`) ; s'arrête si la configuration résolue fait
+   croire à l'API ou au SSR un autre réseau que celui-là.
 3. `docker compose pull` (5 tentatives), sauvegarde de la base en service (`.deploy/backups/`), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
    run le temps du seul `pull` (transmis par l'entrée de `ssh`, jamais en ligne de
    commande). Si le réseau de la stack existe sur un autre sous-réseau, `docker compose
@@ -110,8 +112,9 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
    `api admin root` tient l'administrateur racine (mot de passe passé par l'entrée de la
    commande, sortie hors du journal public).
 5. Smoke test dans la stack (`/healthz` par nginx, `/readyz` de l'API, `/en/`, sous-domaine
-   `api.`, `X-Robots-Tag`), annonce la révision servie (`::notice` « Deployed revision »),
-   puis contrôle le TLS public (avec relance de l'edge).
+   `api.`, `403` sans l'en-tête de l'edge, `X-Robots-Tag`), annonce la révision servie
+   (`::notice` « Deployed revision »), puis contrôle le TLS public (avec relance de l'edge)
+   et, par l'edge, que nginx accepte ses requêtes.
 
 ## Basculer `staging`
 
