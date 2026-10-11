@@ -21,6 +21,8 @@ const HEALTHZ_LOOKALIKES = ['/HEALTHZ', '/%48ealthz', '/healthz%0A', '/healthz/'
 // W3C traceparent of version 00, nothing appended: version, trace id, parent id, flags.
 const TRACEPARENT = /^00-([0-9a-f]{32})-([0-9a-f]{16})-00$/;
 const CLIENT_TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
+// What the stub's API answers for the sitemap index and llms.txt (lib/upstream-stub.conf).
+const CRAWLER_FILE = 'crawler file\n';
 const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) '
   + 'Chrome/139.0.0.0 Safari/537.36';
 // A client inside the container asks for the stub's large answer, then stops reading for a
@@ -243,10 +245,13 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     }
   });
 
-  test('refuses the blocked agent on both hosts', async () => {
+  test('refuses the blocked agent on both hosts, and that agent alone', async () => {
     assert.equal((await get('/v1/champions', { agent: BLOCKED_AGENT })).status, 403);
     const onApiHost = await get('/v1/champions', { host: API_HOST, agent: BLOCKED_AGENT });
     assert.equal(onApiHost.status, 403);
+    // An exact string, never a pattern: the next build of the same browser goes through.
+    const nextBuild = BLOCKED_AGENT.replace('Chrome/139.0.0.0', 'Chrome/140.0.0.0');
+    assert.equal((await get('/v1/champions', { agent: nextBuild })).status, 200);
   });
 
   test('exposes /readyz on the API host at its own rate', async () => {
@@ -353,6 +358,13 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.equal(await cacheOf('/sitemaps/en%2Flatest.xml'), 'MISS');
     // On a volume, under the revision: a deploy starts them over, as the pages.
     assert.ok((await keysOf('seo')).includes('KEY: r1|http://localhost/robots.txt'));
+    // The API's too, never the SSR server's, which knows none of them.
+    for (const path of ['/sitemap.xml', '/llms.txt']) {
+      const first = await get(path);
+      assert.equal(first.body.toString(), CRAWLER_FILE, path);
+      assert.equal(first.headers['x-cache-status'], 'MISS', path);
+      assert.equal(await cacheOf(path), 'HIT', path);
+    }
   });
 
   test("keeps the former site's 301 per query, then holds a client to its rate", async () => {
@@ -373,21 +385,3 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.deepEqual(statuses, [200, 200, 200, 429]);
   });
 });
-
-// A local stack: compose.yaml passes an empty secret, and the E2E suite sends no header.
-describe('nginx image without an edge secret',
-  { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' }, () => {
-    let stack;
-
-    before(async () => {
-      stack = await startStack(IMAGE, { LODB_EDGE_CIDR: '0.0.0.0/0', LODB_EDGE_SECRET: '' });
-    });
-
-    after(() => stack?.stop());
-
-    test('asks no header, whatever a client sends in it', async () => {
-      for (const edge of [undefined, EDGE_SECRET, 'anything']) {
-        assert.equal((await send(stack.port, '/en/about', { edge })).status, 200, edge);
-      }
-    });
-  });

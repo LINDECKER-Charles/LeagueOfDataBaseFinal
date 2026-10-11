@@ -5,10 +5,6 @@ interface RawMeta {
   readonly versions: readonly string[];
 }
 
-interface List {
-  readonly entries: readonly { readonly id: string }[];
-}
-
 interface DetailNeighbour {
   readonly canonicalPath: string;
   readonly edition: 'modern' | 'classic';
@@ -41,17 +37,6 @@ export function olderVersion(meta: CatalogMeta, steps = 1): string {
   const version = meta.versions[meta.versions.indexOf(meta.latest) + steps];
   expect(version, `the stack must know ${steps} version(s) before ${meta.latest}`).toBeDefined();
   return version ?? '';
-}
-
-/** The ids of a resource (`champions`, `items`…) in a version, in en_US. */
-export async function idsOf(
-  request: APIRequestContext,
-  version: string,
-  resource: string,
-): Promise<string[]> {
-  const response = await request.get(`/api/catalog/${version}/en_US/${resource}`);
-  expect(response.status(), `${resource} of ${version}`).toBe(200);
-  return ((await response.json()) as List).entries.map((entry) => entry.id);
 }
 
 /**

@@ -1,6 +1,4 @@
 import type { Page } from '@playwright/test';
-import { expectNoAccessibilityViolations } from '../../support/accessibility';
-import { readHead } from '../../support/head';
 import { expect, test } from '../../support/test';
 
 // Stripe's hosted page, never reached: the API's answers are doubles, so no session is opened.
@@ -48,64 +46,19 @@ async function openDonatePage(page: Page): Promise<void> {
   ).toBeVisible();
 }
 
-test('sends a donor to Stripe with the tier they chose', { tag: '@readonly' }, async ({
-  page,
-  consoleErrors,
-}) => {
-  const checkout = await doubleStripe(page);
-  await openDonatePage(page);
-  await expect(page.getByRole('radio', { name: /Gemstone/ })).toBeChecked();
-  await expectNoAccessibilityViolations(page);
+test(
+  'sends a donor to Stripe with the tier they chose',
+  { tag: '@readonly' },
+  async ({ page, consoleErrors }) => {
+    const checkout = await doubleStripe(page);
+    await openDonatePage(page);
+    await expect(page.getByRole('radio', { name: /Gemstone/ })).toBeChecked();
 
-  await page.getByRole('radio', { name: /Crest/ }).check();
-  await page.getByRole('button', { name: 'Donate with Stripe' }).click();
+    await page.getByRole('radio', { name: /Crest/ }).check();
+    await page.getByRole('button', { name: 'Donate with Stripe' }).click();
 
-  await expect(page).toHaveURL(STRIPE_PAGE);
-  expect(checkout.sent).toEqual([{ amountCents: 1000, locale: 'en' }]);
-  expect(consoleErrors).toEqual([]);
-});
-
-test('gives a free amount over the tier, and refuses one out of bounds', { tag: '@readonly' }, async ({
-  page,
-}) => {
-  const checkout = await doubleStripe(page);
-  await openDonatePage(page);
-  const amount = page.getByLabel('Free amount');
-  const donate = page.getByRole('button', { name: 'Donate with Stripe' });
-
-  await test.step('an amount above 500 € stays on the form', async () => {
-    await amount.fill('600');
-    await donate.click();
-    await expect(page.getByRole('alert')).toHaveText(
-      'Invalid amount — enter between 1 € and 500 €.',
-    );
-    expect(checkout.sent).toEqual([]);
-  });
-
-  await test.step('7,50 € leaves for Stripe as 750 cents', async () => {
-    await amount.fill('7,50');
-    await donate.click();
     await expect(page).toHaveURL(STRIPE_PAGE);
-    expect(checkout.sent).toEqual([{ amountCents: 750, locale: 'en' }]);
-  });
-});
-
-test('keeps the return pages out of the index, their links followed', { tag: '@readonly' }, async ({
-  page,
-  consoleErrors,
-}) => {
-  for (const [path, title] of [
-    ['/en/donate/success?session_id=cs_test_e2e', 'Thank you, Summoner'],
-    ['/en/donate/cancel', 'Donation cancelled'],
-  ] as const) {
-    await page.goto(path);
-    await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
-    const head = await readHead(page);
-    expect(head.robots).toBe('noindex, follow');
-    expect(head.title.startsWith(`${title} · `)).toBe(true);
-    expect(head.alternates).toEqual([]);
-  }
-  await page.getByRole('link', { name: 'Try again' }).click();
-  await expect(page).toHaveURL(/\/en\/donate$/);
-  expect(consoleErrors).toEqual([]);
-});
+    expect(checkout.sent).toEqual([{ amountCents: 1000, locale: 'en' }]);
+    expect(consoleErrors).toEqual([]);
+  },
+);

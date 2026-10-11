@@ -151,8 +151,11 @@ n'importe que `core/`, `ui/` et elle-même. Styles : jetons Hextech, propriété
 introduits, rien de plus ; un test casse quand le comportement casse. xUnit v3 dans
 `tests/LoDb.<Projet>.Tests/` (Postgres réel par Testcontainers, Data Dragon rejoué depuis
 `tests/fixtures/`) ; Vitest en `*.spec.ts` à côté du code ; E2E Playwright dans
-`tests/LoDb.E2E/specs/<feature>/` ; clés i18n dans `public/i18n/<feature>/` ; outils en
-`node --test` dans `tools/<outil>/test/`.
+`tests/LoDb.E2E/specs/<feature>/`, réservés aux parcours critiques qu'aucune couche basse ne
+voit (navigateur réel, SSR et hydratation, nginx de bout en bout) ; clés i18n dans
+`public/i18n/<feature>/` ; outils en `node --test` dans `tools/<outil>/test/`. Couche, budgets
+et infrastructure de test (base gabarit, hôtes libérés) :
+[`tests.md`](docs/guides/tests.md).
 
 ## Garde-fous (avant de rendre un travail)
 

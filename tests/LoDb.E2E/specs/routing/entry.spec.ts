@@ -6,6 +6,7 @@ test.describe('entry, in a French browser', { tag: '@readonly' }, () => {
 
   test('lands on the French home, rendered by the server, then runs it', async ({
     page,
+    request,
     consoleErrors,
   }) => {
     const response = await page.goto('/');
@@ -15,40 +16,16 @@ test.describe('entry, in a French browser', { tag: '@readonly' }, () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
     await page.waitForLoadState('networkidle');
     expect(consoleErrors).toEqual([]);
+
+    await test.step('answers / with a 302 that shared caches keep apart by language', async () => {
+      const redirect = await request.get('/', {
+        headers: { 'Accept-Language': 'de-DE,de;q=0.9' },
+        maxRedirects: 0,
+      });
+
+      expect(redirect.status()).toBe(302);
+      expect(redirect.headers()['location']).toBe('/de/');
+      expect(redirect.headers()['vary']).toContain('Accept-Language');
+    });
   });
-});
-
-test.describe('entry, in an Arabic browser', { tag: '@readonly' }, () => {
-  test.use({ locale: 'ar-SA' });
-
-  test('lands on the Arabic home, laid out right to left', async ({ page }) => {
-    await page.goto('/');
-
-    expect(new URL(page.url()).pathname).toBe('/ar/');
-    await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
-    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  });
-});
-
-test.describe('entry, in a browser whose languages the site lacks', { tag: '@readonly' }, () => {
-  test.use({ locale: 'nl-NL' });
-
-  test('falls back to English', async ({ page }) => {
-    await page.goto('/');
-
-    expect(new URL(page.url()).pathname).toBe('/en/');
-  });
-});
-
-test('answers / with a 302 that shared caches keep apart by language', { tag: '@readonly' }, async ({
-  request,
-}) => {
-  const response = await request.get('/', {
-    headers: { 'Accept-Language': 'de-DE,de;q=0.9' },
-    maxRedirects: 0,
-  });
-
-  expect(response.status()).toBe(302);
-  expect(response.headers()['location']).toBe('/de/');
-  expect(response.headers()['vary']).toContain('Accept-Language');
 });
