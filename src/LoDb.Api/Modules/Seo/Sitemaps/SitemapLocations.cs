@@ -17,15 +17,24 @@ internal static class SitemapLocations
 {
     /// <summary>
     /// Every locale's primary sitemap, then, version by version from the newest, every
-    /// locale's sitemap of each listed version but the latest one.
+    /// locale's sitemap of the first <paramref name="window"/> versions listed, the latest
+    /// one aside: it is the primary sitemaps.
     /// </summary>
-    public static IEnumerable<string> Index(string origin, CatalogVersions versions)
+    /// <remarks>
+    /// The window bounds what the index pushes at crawlers, not what the site serves: an
+    /// older version's sitemap still answers at its URL, and the patch history links every
+    /// listed version.
+    /// </remarks>
+    public static IEnumerable<string> Index(
+        string origin,
+        CatalogVersions versions,
+        int window)
     {
         ArgumentNullException.ThrowIfNull(versions);
         IEnumerable<PatchVersion?> files =
         [
             null,
-            .. versions.Listed.Where(version => version != versions.Latest),
+            .. versions.Listed.Where(version => version != versions.Latest).Take(window),
         ];
         return files.SelectMany(version => UiLocales.All.Select(locale =>
             origin + SitemapFile.PathOf(locale, version)));

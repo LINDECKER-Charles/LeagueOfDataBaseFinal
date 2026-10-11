@@ -1,6 +1,7 @@
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog.Reading;
+using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Modules.Seo.Sitemaps;
 
@@ -10,15 +11,19 @@ namespace LoDb.Api.Modules.Seo.Sitemaps;
 /// </summary>
 /// <remarks>
 /// <list type="bullet">
-/// <item><c>/sitemap.xml</c>: the index of every locale's sitemaps.</item>
+/// <item><c>/sitemap.xml</c>: the index of every locale's sitemaps, the past versions
+/// limited to <see cref="SeoOptions.SitemapVersionWindow"/>.</item>
 /// <item><c>/sitemaps/{locale}/latest.xml</c>: unversioned pages and short entity URLs.</item>
-/// <item><c>/sitemaps/{locale}/{version}.xml</c>: one past version; the latest one moves
-/// to <c>latest.xml</c>.</item>
+/// <item><c>/sitemaps/{locale}/{version}.xml</c>: one past version, inside the window or
+/// not; the latest one moves to <c>latest.xml</c>.</item>
 /// <item>Previous forms: <c>/sitemaps/latest.xml</c> moves to the index,
 /// <c>/sitemaps/{version}.xml</c> to its <c>en</c> sitemap, in a single hop.</item>
 /// </list>
 /// </remarks>
-internal sealed class SitemapPublisher(CrawlerCatalog catalog, SiteOrigin origins)
+internal sealed class SitemapPublisher(
+    CrawlerCatalog catalog,
+    SiteOrigin origins,
+    IOptions<SeoOptions> options)
 {
     public async Task<SeoAnswer> IndexAsync(
         HttpRequest request,
@@ -30,7 +35,9 @@ internal sealed class SitemapPublisher(CrawlerCatalog catalog, SiteOrigin origin
             return SeoAnswer.Unavailable();
         }
 
-        var body = SitemapXml.Index(SitemapLocations.Index(origins.Of(request), versions));
+        var window = options.Value.SitemapVersionWindow;
+        var locations = SitemapLocations.Index(origins.Of(request), versions, window);
+        var body = SitemapXml.Index(locations);
         return SeoAnswer.File(body, SitemapXml.ContentType, SeoCaching.Hour);
     }
 

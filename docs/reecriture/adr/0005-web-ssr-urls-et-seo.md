@@ -2,6 +2,8 @@
 
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : rendu Twig + îlots Vue, locale portée par la session et un cookie
+- **Amendement du 2026-10-11** : index des sitemaps borné, anciens patchs découverts par des
+  liens (voir en fin de document)
 
 ## Contexte
 
@@ -121,3 +123,34 @@ nginx. Le mode de rendu est choisi route par route :
 - **−** Un conteneur Node à exploiter et à patcher souvent.
 - **−** Toutes les URLs changent : table de 301 exhaustive et suivi dans la Search
   Console pendant la bascule.
+
+## Amendement du 2026-10-11 — anciens patchs : des liens plutôt que l'index des sitemaps
+
+- **Index borné** : `/sitemap.xml` n'annonce plus que les sitemaps du dernier patch
+  (`latest.xml` des 21 locales) et ceux des **12** versions listées ensuite par Data Dragon
+  (`LoDb__Seo__SitemapVersionWindow`, `12` par défaut, `0` pour le dernier patch seul, une
+  valeur négative refusée au démarrage). Il annonçait auparavant chaque version listée dans
+  chaque locale : des milliers de sitemaps, des millions d'URL épinglées.
+- **Rien ne disparaît** : le sitemap d'une version hors de la fenêtre reste servi à son URL,
+  immuable, et ses pages restent canoniques et indexables. Ni `noindex` ni `Disallow`. Le
+  sitemap principal de chaque locale ne change pas, sinon qu'il liste la nouvelle page
+  ci-dessous.
+- **Découverte par liens** : le sélecteur de version est un formulaire, que les robots ne
+  soumettent pas. Deux chemins de liens rendent chaque ancien patch atteignable :
+  - `/{locale}/patches`, « Historique des patchs », lié depuis le pied de page de chaque
+    page : chaque version que Data Dragon liste (`versions` de `/api/meta`, pas seulement
+    les versions prêtes) avec ses quatre listes, rendue par le serveur avec le cache du
+    dernier patch ;
+  - sur chaque fiche, « Dans les patchs précédents » : la même entrée dans les six versions
+    listées avant celle de la page.
+
+  Aucune des deux ne lit de catalogue pour se rendre : des liens seulement, tirés de
+  `/api/meta`.
+- **Pourquoi** : annoncer tout l'espace des versions épinglées invite chaque robot à le
+  parcourir d'un coup, alors que ces pages sont construites à la demande, dans le budget
+  borné des rendus épinglés, et non servies depuis un cache. Par les liens, un robot découvre
+  les anciens patchs au fil de son exploration, à partir de pages déjà en cache.
+- **Mesure** (propriétaire) : dans la Search Console, le rapport Sitemaps par fichier (URL
+  soumises et indexées par version) et le rapport Performances filtré sur les URL
+  versionnées, avant le déploiement puis trois mois après ; la fenêtre se règle sur la
+  demande observée.

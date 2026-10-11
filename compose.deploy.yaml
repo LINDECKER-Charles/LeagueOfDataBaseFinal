@@ -59,6 +59,7 @@ services:
       LoDb__Contact__Recipient:
       LoDb__Contact__NotificationLocale:
       LoDb__Analytics__VisitorKey:
+      LoDb__Seo__SitemapVersionWindow:
       # Bounds of the catalogs in memory and of the cold work (ADR 0003, amendment of
       # 2026-10-10); configuration.md gives their defaults.
       LoDb__Catalog__MaxEntries:

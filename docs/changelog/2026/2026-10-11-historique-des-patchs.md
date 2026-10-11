@@ -37,6 +37,10 @@ sélecteurs, trouvent enfin chaque ancien patch en suivant les liens du site.
   fiches : la même entrée dans les six versions listées avant celle de la page, par
   `injectCatalogueLink` (UrlTree, `?lang=` conservé), à partir du `/api/meta` déjà lu par le
   résolveur. Aucun catalogue de ces versions n'est chargé pour rendre la fiche.
+- Index des sitemaps (`/sitemap.xml`) borné au dernier patch et aux 12 versions listées
+  ensuite (`LoDb__Seo__SitemapVersionWindow`, ADR 0005 amendée). Les sitemaps plus anciens
+  restent servis et immuables, leurs pages canoniques et indexables ; le sitemap principal de
+  chaque locale liste la page d'historique.
 - Lien `footer.navigation.patches` dans le pied de page, titre `detail.history.title` du
   bloc, textes de la page dans `public/i18n/patches/` : traduits dans les 21 locales. Tête
   indexable de la page (canonique, `hreflang`, fil d'Ariane) par `Seo.apply`.
