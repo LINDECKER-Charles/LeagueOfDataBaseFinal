@@ -1,5 +1,6 @@
 using LoDb.Api.Cli;
 using LoDb.Infrastructure.Persistence;
+using LoDb.Infrastructure.Persistence.Roles;
 using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Persistence;
@@ -18,6 +19,9 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
     private const string PaymentStates = "20261010231234_StripePaymentStates";
     private const string QueryStatistics = "20261010232259_QueryStatistics";
     private const string EfHistory = "__EFMigrationsHistory";
+
+    private static readonly string UnlimitedAppRoleConnections =
+        $"--LoDb:Database:AppRole:ConnectionLimit={AppRoleOptions.UnlimitedConnections}";
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -113,14 +117,20 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
         Assert.Equal(CliExitCodes.Failure, exitCode);
     }
 
-    // As the container runs it: settings after the command words, no settings file.
+    // As the container runs it: settings after the command words, no settings file. The
+    // API's role keeps no connection limit: the test server holds parallel tests' sessions.
     private static Task<int> RunAsync(string command, string? connectionString)
     {
         string[] connection = connectionString is null
             ? []
             : [$"--ConnectionStrings:LoDb={connectionString}"];
         return CliRunner.RunAsync(
-            [.. command.Split(' '), "--Logging:LogLevel:Default=Warning", .. connection],
+            [
+                .. command.Split(' '),
+                "--Logging:LogLevel:Default=Warning",
+                UnlimitedAppRoleConnections,
+                .. connection,
+            ],
             typeof(Program).Assembly,
             static (services, configuration) => services.AddLoDbPersistence(configuration));
     }

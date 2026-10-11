@@ -1,5 +1,6 @@
 using System.Reflection;
 using LoDb.Api.Cli;
+using LoDb.Infrastructure.Persistence.Roles;
 using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Cli;
@@ -151,6 +152,7 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
             "--LoDb:Egress:AllowedHosts:0=egress.invalid",
             "--LoDb:Egress:RetryBaseDelay=00:00:00.001",
             "--Logging:LogLevel:Default=Warning",
+            $"--LoDb:Database:AppRole:ConnectionLimit={AppRoleOptions.UnlimitedConnections}",
             .. arguments,
         ];
         var previous = Environment.GetEnvironmentVariable(EnvironmentVariable);
