@@ -79,9 +79,11 @@ function host() {
   return dir;
 }
 
+// On its input, as ssh hands it over: a Windows command line would lose the script's quotes.
 function deploy(dir, target, dotenv) {
   writeFileSync(join(dir, '.deploy', 'incoming.env'), dotenv);
-  return spawnSync('bash', ['-c', `${STUBS}\n${remoteScript()}`], {
+  return spawnSync('bash', ['-s'], {
+    input: `${STUBS}\n${remoteScript()}\n`,
     cwd: dir,
     encoding: 'utf8',
     env: { ...process.env, ...target, DEPLOY_PATH: '.', BRANCH: 'test', REPO_URL: 'unused' },
@@ -147,6 +149,7 @@ describe('_deploy.yml, the dotenv against the target', () => {
     ['prod without its webhook secret', PROD, ['LoDb__Billing__StripeWebhookSecret=']],
     ['any target without a database password', STAGING, ['LODB_DB_PASSWORD=']],
     ['a secret the split refuses', STAGING, ['LODB_DB_PASSWORD=pa$x']],
+    ['a bundle retention shorter than a cached page', PROD, ['LODB_FRONT_BUILDS_RETENTION_DAYS=7']],
   ]) {
     it(`leaves the .env and the secret files in place for ${refusal}`, () => {
       const dir = host();

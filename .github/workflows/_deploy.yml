@@ -264,6 +264,12 @@ jobs:
             # staging is never indexed; prod always is.
             expect LODB_NOINDEX "$EXPECTED_NOINDEX" 0
             secret_set LODB_DB_PASSWORD || fail "LODB_DB_PASSWORD is required on $TARGET."
+            # A page of an older patch names the bundles of its build for up to two weeks (a week of
+            # s-maxage, then a stale copy served while it refreshes): never purge them sooner.
+            retention="$(env_value LODB_FRONT_BUILDS_RETENTION_DAYS)"
+            retention="${retention:-30}"
+            [[ "$retention" =~ ^[0-9]+$ ]] && (( retention >= 15 )) \
+              || fail "LODB_FRONT_BUILDS_RETENTION_DAYS must be a number of days, 15 or more."
             if [ "$TARGET" = prod ]; then
               [ -n "$(env_value LoDb__Mail__Host)" ] || fail "LoDb__Mail__Host is required in prod."
               for key in LoDb__Billing__StripeSecretKey LoDb__Billing__StripeWebhookSecret; do
@@ -446,10 +452,7 @@ jobs:
             # refreshes their date every hour while it runs; /build/ serves them to the tabs
             # and the cached pages that still name them. A bundle no running build has shipped
             # for LODB_FRONT_BUILDS_RETENTION_DAYS (30) goes: longer than any cached page lives.
-            retention="$(env_value LODB_FRONT_BUILDS_RETENTION_DAYS)"
-            retention="${retention:-30}"
-            [[ "$retention" =~ ^[0-9]+$ ]] \
-              || fail "LODB_FRONT_BUILDS_RETENTION_DAYS must be a number of days."
+            # The retention is read with the checks of the .env, above.
             docker compose exec -T web-ssr \
               find /srv/front-builds -type f -mtime +"$retention" -delete \
               || echo "::warning title=Front bundles::the purge of front-builds failed."
