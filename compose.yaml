@@ -165,6 +165,8 @@ services:
       LODB_FRONT_BUILDS_DIR: /srv/front-builds
       # gzip level of a rendered page, compressed once per render: empty keeps the default.
       LODB_HTML_GZIP_LEVEL: ${LODB_HTML_GZIP_LEVEL:-}
+      # How long every render reuses the process's copy of /api/meta: empty keeps the default.
+      LODB_API_META_TTL_SECONDS: ${LODB_API_META_TTL_SECONDS:-}
       # Heap ceiling under the container's memory limit (512 MiB when served): V8 collects
       # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
       # whole heap stops at 448 MiB and leaves room for code and buffers.

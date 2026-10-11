@@ -1,8 +1,10 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { ApplicationInitStatus } from '@angular/core';
+import { APP_ID, ApplicationInitStatus, REQUEST_CONTEXT, TransferState } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
+import { ApiResponseMemo } from '../../../core/http/api-response-memo';
+import type { SsrRequestContext } from '../../../core/http/ssr-request-context';
 import { RELEASE_VERSION } from '../../../core/layout/shell/release-version';
 import { ActivePlatform } from '../../../core/platform/detection/active-platform';
 import { ChangelogReader } from './changelog-reader';
@@ -118,5 +120,51 @@ describe('provideReleaseVersion', () => {
     );
 
     expect(version).toBeNull();
+  });
+
+  describe('in a server render', () => {
+    const context: SsrRequestContext = {
+      apiOrigin: 'http://api.test',
+      buildFiles: new Map([['changelog/manifest.json', MANIFEST]]),
+      apiResponses: new ApiResponseMemo(new Set(), 1, () => 0),
+    };
+
+    it('reads the manifest the server holds, and hands the browser the version alone', async () => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          provideReleaseVersion(),
+          { provide: REQUEST_CONTEXT, useValue: context },
+        ],
+      });
+      await TestBed.inject(ApplicationInitStatus).donePromise;
+
+      expect(TestBed.inject(RELEASE_VERSION)).toBe('2.2.1');
+      TestBed.inject(HttpTestingController).verify();
+      expect(JSON.parse(TestBed.inject(TransferState).toJson())).toEqual({
+        'lodb.release-version': '2.2.1',
+      });
+    });
+  });
+
+  it('takes the version the server rendered the page with, without reading the manifest', async () => {
+    // The page as the server rendered it: its state, which the browser reads at startup.
+    document.body.innerHTML =
+      '<script id="ng-state" type="application/json">{"lodb.release-version":"2.2.0"}</script>';
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideReleaseVersion(),
+        { provide: APP_ID, useValue: 'ng' },
+      ],
+    });
+
+    await TestBed.inject(ApplicationInitStatus).donePromise;
+
+    expect(TestBed.inject(RELEASE_VERSION)).toBe('2.2.0');
+    TestBed.inject(HttpTestingController).verify();
+    document.body.innerHTML = '';
   });
 });

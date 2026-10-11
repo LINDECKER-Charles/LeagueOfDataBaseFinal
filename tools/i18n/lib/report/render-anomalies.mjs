@@ -2,7 +2,7 @@ import { scopeLabel } from './scope-label.mjs';
 
 /**
  * Everything besides missing keys: absent scope files, keys the reference does not know
- * (dead text, never displayed) and messages MessageFormat rejects (a render that throws).
+ * (dead text, never displayed) and messages the web build refuses to compile.
  */
 export function renderAnomalies(measurements) {
   const entries = measurements.flatMap((scope) =>

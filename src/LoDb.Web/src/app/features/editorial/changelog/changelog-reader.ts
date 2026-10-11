@@ -1,13 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { type Observable, catchError, forkJoin, map, of, shareReplay, switchMap } from 'rxjs';
+import { CHANGELOG_MANIFEST_PATH } from './changelog-manifest-path';
 import type { ChangelogRelease } from './model/changelog-release';
 import type { ManifestEntry } from './model/manifest-entry';
 import { parseManifest } from './parsing/parse-manifest';
 import { parseRelease } from './parsing/parse-release';
 
-// Copied into the build from ./published/ (angular.json), where the release tooling writes
-// them.
+// The release files sit beside the manifest (CHANGELOG_MANIFEST_PATH).
 const CHANGELOG_DIR = 'changelog';
 
 /**
@@ -20,7 +20,7 @@ const CHANGELOG_DIR = 'changelog';
 export class ChangelogReader {
   private readonly http = inject(HttpClient);
   private readonly manifest$ = this.http
-    .get<unknown>(`${CHANGELOG_DIR}/manifest.json`)
+    .get<unknown>(CHANGELOG_MANIFEST_PATH)
     .pipe(map(parseManifest), shareReplay({ bufferSize: 1, refCount: false }));
 
   /** The manifest's entries, newest first. A failed read is not kept: the next one retries. */

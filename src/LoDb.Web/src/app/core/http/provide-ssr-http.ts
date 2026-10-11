@@ -3,7 +3,7 @@ import { type EnvironmentProviders, makeEnvironmentProviders } from '@angular/co
 import { API_BASE_URL } from '../api/api-base-url';
 import { injectPageOrigin } from './inject-page-origin';
 import { injectSsrRequestContext } from './inject-ssr-request-context';
-import { SelfOriginFetchBackend } from './self-origin-fetch-backend';
+import { SsrHttpBackend } from './ssr-http-backend';
 
 /**
  * Responses fetched from the internal API origin are stored in the transfer cache under the
@@ -24,6 +24,6 @@ export function provideSsrHttp(): EnvironmentProviders {
   return makeEnvironmentProviders([
     { provide: API_BASE_URL, useFactory: () => injectSsrRequestContext()?.apiOrigin ?? '' },
     { provide: HTTP_TRANSFER_CACHE_ORIGIN_MAP, useFactory: transferCacheOriginMap },
-    { provide: HttpBackend, useClass: SelfOriginFetchBackend },
+    { provide: HttpBackend, useClass: SsrHttpBackend },
   ]);
 }

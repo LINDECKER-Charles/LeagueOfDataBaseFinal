@@ -17,8 +17,8 @@ export interface ServerSettings {
    */
   readonly stackNetworks: readonly string[];
   readonly apiOrigin: string;
-  /** Loopback origin of this very server, or null when another server hosts the handler. */
-  readonly selfOrigin: string | null;
+  /** How long a render reuses the process's copy of `/api/meta` (`ApiResponseMemo`). */
+  readonly apiMetaTtlMs: number;
   /**
    * Folder shared by the successive builds (volume `front-builds`), where this one publishes
    * its hashed bundles and /build/ finds those of the previous ones; null serves this

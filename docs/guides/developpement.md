@@ -61,7 +61,8 @@ npm --prefix src/LoDb.Web run build:shell
 |---|---|
 | `lint` | ESLint (dont les règles d'architecture), Prettier, tests des règles de lint |
 | `typecheck` | `tsc --noEmit` sur `tsconfig.app.json` et `tsconfig.spec.json` |
-| `test` | Vitest, sans mode veille |
+| `test` | Vitest, sans mode veille, puis les tests du build des catalogues (`test:i18n`) |
+| `i18n:build` | catalogues servis (`dist/i18n`) : complétés par `en`, messages ICU compilés ; lancé avant chaque build et par `npm start` |
 | `build:web` | build SSR, dans `dist/web/{browser,server}` |
 | `build:shell` | build statique des coquilles, dans `dist/shell/browser` |
 | `api:generate`, `api:check` | contrat OpenAPI et client généré : bouchons jusqu'à L2.2 |
