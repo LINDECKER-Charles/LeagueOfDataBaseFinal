@@ -44,9 +44,9 @@ const MAX_SKELETON_TILES = 24;
  * then filters in place, and the URL keeps the state (`q`, `page`, `size`, `<key>`,
  * `<key>_all`), so a filtered list is a link. `/` jumps to the search.
  *
- * The rail's console is hydrated at the reader's first click or key in it, or on `/`: until
- * then its server-rendered markup costs no script, and on a phone, where it is hidden, it
- * never runs.
+ * The rail's console is hydrated once the reader points at it, focuses, clicks or types in
+ * it, or presses `/`: until then its server-rendered markup costs no script, and on a phone,
+ * where it is hidden, it never runs.
  */
 @Component({
   selector: 'lodb-catalogue-list',

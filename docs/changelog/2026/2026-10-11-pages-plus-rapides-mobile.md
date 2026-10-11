@@ -23,8 +23,8 @@ affichage.
   met en pause quand on s'en éloigne. En mode économie de données ou sur une connexion lente,
   l'image fixe du sort reste affichée.
 - Les sorts, les statistiques, la navigation entre fiches et le pied de page s'activent quand
-  on approche d'eux ; la console de filtres d'une liste, au premier clic ou à la première
-  touche.
+  on approche d'eux ; la console de filtres d'une liste, dès qu'on la survole, qu'on y entre
+  ou qu'on y tape.
 - La liste complète qui sert à filtrer se charge quand on commence à chercher ou à filtrer, ou
   une fois la page affichée et le navigateur au repos ; en mode économie de données, seulement
   quand on en a besoin.
@@ -52,7 +52,8 @@ affichage.
 - Hydratation incrémentale : `@defer (on immediate; hydrate on viewport)` sur la vitrine des
   sorts et le tableau des stats ; `hydrate on viewport({ rootMargin: '100% 0px' })` sur le
   pager des quatre fiches et le pied de page (ils se mesurent une fois hydratés, hors de la
-  vue) ; `hydrate on interaction` et `hydrate when` (raccourci `/`) sur la console de filtres.
+  vue) ; `hydrate on interaction`, `hydrate on hover` (survol et focus) et `hydrate when`
+  (raccourci `/`) sur la console de filtres.
 - Liste complète : lue sur intention (focus de la recherche, groupe de facettes déplié, feuille
   des filtres, tout état que la première page ne sait pas dessiner) ou après l'événement `load`
   et un `requestIdleCallback` (2 s au plus) ; jamais d'office sous `Save-Data` ou sur
