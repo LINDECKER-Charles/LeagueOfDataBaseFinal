@@ -6,14 +6,10 @@
 > que ce projet doit — et ne doit surtout pas — déclarer, et comment interroger le
 > résultat.
 >
-> - Mettre l'application en état d'y verser quelque chose d'exploitable :
->   [`../audits/observabilite-2026-08-23.md`](../audits/observabilite-2026-08-23.md).
 > - Ce qu'on écrit dans un log applicatif : [`logging.md`](logging.md).
 > - Les métriques de l'API et du SSR (noms, labels, cardinalité) :
 >   [`metriques.md`](metriques.md).
 > - Ce que l'hôte porte : [`migration-edge-proxy.md`](migration-edge-proxy.md).
-> - Crawl réparti ou attaque volumétrique : signaux, requêtes et réponses préparées dans
->   [`mode-siege.md`](mode-siege.md).
 
 ---
 

@@ -104,7 +104,7 @@ Faits de l'existant à garder en tête :
   `app/assets/vue/fx/{theme,reveal,scrollspy,sectionNav}.ts`,
   `app/assets/vue/components/ui/Toaster.vue`, `app/assets/vue/images/imageLifecycle.ts`,
   [`responsive-mobile.md`](../../architecture/responsive-mobile.md),
-  [`brief-design-pages.md`](../../briefs/brief-design-pages.md), `app/public/fonts/`.
+  le brief de design (privé), `app/public/fonts/`.
 - **Périmètre** : `src/LoDb.Web/src/styles/**`, `src/LoDb.Web/src/app/ui/**`,
   `src/LoDb.Web/src/app/core/{layout,theme}/**`, `src/LoDb.Web/public/fonts/**`,
   configuration PostCSS.
@@ -294,7 +294,7 @@ Faits de l'existant à garder en tête :
   21 locales.
 - **À lire** : `app/templates/{about,legal,changelog}/**`, `app/src/Controller/Editorial/**`,
   `app/src/Service/Changelog/ChangelogReader.php`, `app/public/changelog/*.json`,
-  `app/config/packages/legal_info.yaml`, [`legal-info.md`](../../guides/legal-info.md).
+  `app/config/packages/legal_info.yaml`, la checklist légale (privée).
 - **Périmètre** : `src/LoDb.Web/src/app/features/editorial/**`, l'entrée d'assets de
   `angular.json` qui copie `app/public/changelog/` au build.
 - **Conception** : pages à ancres de section ; FAQ tirée du scope `about` ; contenu
@@ -372,7 +372,7 @@ Faits de l'existant à garder en tête :
 ## L3.13 — E2E, accessibilité, diff SEO face à la prod
 
 - **Objectif** : prouver la parité visible et le SEO avant la bascule.
-- **À lire** : [`architecture-report.md`](../../architecture/architecture-report.md)
+- **À lire** : le rapport d'architecture (privé)
   (audits de mise en page et de contraste), `tools/screenshots/capture.mjs`,
   [`responsive-mobile.md`](../../architecture/responsive-mobile.md).
 - **Périmètre** : configuration de `tests/LoDb.E2E/` et `tests/LoDb.E2E/specs/public/**`
