@@ -114,18 +114,29 @@ describe('promote-images.sh', () => {
   });
 
   it('compares the paths ci.yml builds and deploys', () => {
-    const workflow = readFileSync(CI_WORKFLOW, 'utf8');
-    const block = /paths: &stack-paths\n((?:\s+- .+\n)+)/.exec(workflow);
-    const script = readFileSync(join(ROOT, SCRIPT), 'utf8');
-    const list = /readonly STACK_PATHS=\(\n([^)]*)\)/.exec(script);
-    assert.ok(block && list, 'path lists not found');
-    const fromWorkflow = block[1].split('\n').map((line) => line.replace(/^\s+- /, '').trim());
-    const fromScript = list[1].trim().split(/\s+/).map((path) => path.replaceAll("'", ''));
-    // A folder of the script is `folder/**` in the workflow; a file or a glob is as is.
-    const asGlobs = fromScript.map((path) =>
-      /[.*]/.test(path.split('/').pop()) ? path : `${path}/**`,
-    );
+    const { fromWorkflow, fromScript } = stackPaths();
 
-    assert.deepEqual(asGlobs.sort(), fromWorkflow.filter(Boolean).sort());
+    assert.deepEqual(fromScript.sort(), fromWorkflow.sort());
+  });
+
+  // A finding accepted in .trivyignore unblocks the pipeline only if pushing it runs the build.
+  it('runs the pipeline when only the ignore file of the image scan changes', () => {
+    assert.ok(stackPaths().fromWorkflow.includes('.trivyignore'));
   });
 });
+
+// The `stack-paths` of ci.yml, and the STACK_PATHS of the script written as workflow globs.
+function stackPaths() {
+  const workflow = readFileSync(CI_WORKFLOW, 'utf8');
+  const block = /paths: &stack-paths\n((?:\s+- .+\n)+)/.exec(workflow);
+  const script = readFileSync(join(ROOT, SCRIPT), 'utf8');
+  const list = /readonly STACK_PATHS=\(\n([^)]*)\)/.exec(script);
+  assert.ok(block && list, 'path lists not found');
+  const fromWorkflow = block[1].split('\n').map((line) => line.replace(/^\s+- /, '').trim());
+  const fromScript = list[1].trim().split(/\s+/).map((path) => path.replaceAll("'", ''));
+  // A folder of the script is `folder/**` in the workflow; a file or a glob is as is.
+  const asGlobs = fromScript.map((path) =>
+    /[.*]/.test(path.split('/').pop()) ? path : `${path}/**`,
+  );
+  return { fromWorkflow: fromWorkflow.filter(Boolean), fromScript: asGlobs };
+}

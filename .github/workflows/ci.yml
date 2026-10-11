@@ -19,6 +19,8 @@ name: CI/CD
 on:
   push:
     # Only the branches that deploy: a push runs this workflow with the deployment secrets.
+    # .trivyignore is what the image scan of _build.yml accepts: a change of it alone must
+    # rebuild and rescan, or an accepted finding would never unblock the pipeline.
     branches: [dev, main]
     paths: &stack-paths
       - src/**
@@ -30,6 +32,7 @@ on:
       - Directory.*
       - global.json
       - .github/workflows/**
+      - .trivyignore
   pull_request:
     paths: *stack-paths
 

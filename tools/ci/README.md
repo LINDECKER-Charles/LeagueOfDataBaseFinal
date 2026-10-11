@@ -137,7 +137,9 @@ weeks, where a transitive npm fix waits for its parent's release) and the reason
 CVE-2026-12345 exp:2026-11-10
 ```
 
-Past its date the line no longer applies, and the scan blocks again. To read a report locally,
+Past its date the line no longer applies, and the scan blocks again. `.trivyignore` is one of
+the `stack-paths` of `ci.yml`: pushing it alone runs the pipeline, hence a new build and scan.
+To read a report locally,
 build the image, then (Git Bash: `MSYS_NO_PATHCONV=1`):
 
 ```sh

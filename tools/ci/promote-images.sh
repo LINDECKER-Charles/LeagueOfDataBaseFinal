@@ -19,6 +19,7 @@ readonly REVISION_LABEL=org.opencontainers.image.revision
 # deploys (a test keeps both lists equal). A path outside them (docs) may differ.
 readonly STACK_PATHS=(
   src tests tools docker 'compose*.yaml' LoDb.slnx 'Directory.*' global.json .github/workflows
+  .trivyignore
 )
 readonly DIGEST_FORMAT='^sha256:[0-9a-f]{64}$'
 TAG_IMAGE="$(dirname "${BASH_SOURCE[0]}")/tag-image.sh"
